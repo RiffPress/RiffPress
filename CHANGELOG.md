@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.0.1](https://github.com/promptcorner/callboard/compare/v3.0.0...v3.0.1) (2026-10-11)
+
+
+### Dependencies
+
+* **deps-dev:** bump @wordpress/e2e-test-utils-playwright from 1.54.0 to 2.1.0 ([#227](https://github.com/promptcorner/callboard/issues/227)) ([fc034df](https://github.com/promptcorner/callboard/commit/fc034df8898ec6716980ed134a5a0c96683eb45c))
+* **deps-dev:** bump @wordpress/env from 11.14.0 to 11.16.0 in the npm-minor-and-patch group ([#225](https://github.com/promptcorner/callboard/issues/225)) ([e22cadc](https://github.com/promptcorner/callboard/commit/e22cadcd00b3c356428cf4a156107f071a4d9999))
+* **deps-dev:** bump brace-expansion from 1.1.18 to 1.1.21 ([#229](https://github.com/promptcorner/callboard/issues/229)) ([23619c2](https://github.com/promptcorner/callboard/commit/23619c2d40c3fd2c1af1f737da8139eab3104cb6))
+* **deps-dev:** bump compression from 1.8.1 to 1.8.2 ([#234](https://github.com/promptcorner/callboard/issues/234)) ([acddd82](https://github.com/promptcorner/callboard/commit/acddd82d342cb5793d7d7fe41f95964e57e2e282))
+* **deps-dev:** bump shell-quote from 1.10.0 to 1.12.0 ([#236](https://github.com/promptcorner/callboard/issues/236)) ([04527fa](https://github.com/promptcorner/callboard/commit/04527fa05a46fe66786378a9ca0e1c3933c38375))
+* **deps-dev:** bump source-map-js from 1.2.1 to 1.2.2 ([#233](https://github.com/promptcorner/callboard/issues/233)) ([47c1ca0](https://github.com/promptcorner/callboard/commit/47c1ca02d6a5127fc1777881078198299f4c424d))
+* **deps-dev:** bump yoast/phpunit-polyfills from 2.0.5 to 4.0.0 ([#224](https://github.com/promptcorner/callboard/issues/224)) ([2be889a](https://github.com/promptcorner/callboard/commit/2be889a6cfe0957518f4adb3346f1d0942e44249))
+* **deps:** bump http-cache-semantics from 4.2.0 to 4.3.0 ([#235](https://github.com/promptcorner/callboard/issues/235)) ([59a31ba](https://github.com/promptcorner/callboard/commit/59a31bae3f6e28422a126d91ae8e760b83c9d7c8))
+* **deps:** bump ip-address from 10.7.0 to 10.7.2 ([#228](https://github.com/promptcorner/callboard/issues/228)) ([97373a1](https://github.com/promptcorner/callboard/commit/97373a16d9f71405fed2abfd036db433271fcfb0))
+* **deps:** bump markdown-it and @wordpress/scripts ([#223](https://github.com/promptcorner/callboard/issues/223)) ([12a22b5](https://github.com/promptcorner/callboard/commit/12a22b59a493eaff03504389e7b06f6bde5ef683))
+* **deps:** bump proxy-addr from 2.0.7 to 2.0.8 ([#232](https://github.com/promptcorner/callboard/issues/232)) ([3458544](https://github.com/promptcorner/callboard/commit/3458544fbd13e463c45461ea5a0557b16b1f2de0))
+* **deps:** bump the actions-minor-and-patch group with 2 updates ([#226](https://github.com/promptcorner/callboard/issues/226)) ([fff383c](https://github.com/promptcorner/callboard/commit/fff383ce9bc00dc725a8ea52908908fa56e5a16b))
+
 ## [3.0.0](https://github.com/promptcorner/callboard/compare/v2.7.0...v3.0.0) (2026-09-25)
 
 
