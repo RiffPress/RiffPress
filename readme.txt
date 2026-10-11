@@ -64,13 +64,6 @@ Save a set once and it plays with no connection, including seeking inside a trac
 
 Set an accent colour in Settings. Beyond that, `callboard_template_path` swaps any template for one of your own, and `callboard_head` adds to the `<head>` of every front-end page.
 
-== Screenshots ==
-
-1. The home page with the next rehearsal: date, time, place, and the tracks to practice. Tapping a track plays it.
-2. A set's track list, with the player bar at the bottom of the screen.
-3. The full-screen player: cover art, waveform scrubbing, and repeat.
-4. Editing a rehearsal in the admin: date and time, place, note, and the tracks to practice.
-
 == Changelog ==
 
 = 2.0.1 =
