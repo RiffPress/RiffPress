@@ -10,7 +10,6 @@ eslint.config.js
 .phpcs.cache
 .distignore
 .release-please-manifest.json
-.wordpress-org
 .claude
 node_modules
 tests

@@ -13,5 +13,4 @@ extend-exclude = [
   "package-lock.json",
   "composer.lock",
   "tests/fixtures/",
-  ".wordpress-org/",
 ]
