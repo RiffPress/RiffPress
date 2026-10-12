@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.2](https://github.com/riffpress/riffpress/compare/v3.0.1...v3.0.2) (2026-10-12)
+
+
+### Dependencies
+
+* **deps-dev:** bump globals from 17.12.0 to 17.13.0 in the npm-minor-and-patch group ([#237](https://github.com/riffpress/riffpress/issues/237)) ([5c23ae7](https://github.com/riffpress/riffpress/commit/5c23ae7c8bef3b2f855c73ea6bbb036968aa0a7f))
+* **deps:** bump crate-ci/typos from 1.50.2 to 1.50.3 in the actions-minor-and-patch group ([#238](https://github.com/riffpress/riffpress/issues/238)) ([cb3a327](https://github.com/riffpress/riffpress/commit/cb3a327c35a083fcc420634b59652b318564790e))
+
 ## [3.0.1](https://github.com/promptcorner/callboard/compare/v3.0.0...v3.0.1) (2026-10-11)
 
 
