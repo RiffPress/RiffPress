@@ -41,8 +41,8 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
   # release-please only updates the manifest and CHANGELOG.md. The plugin
-  # header, the CALLBOARD_VERSION define, readme.txt's Stable tag and
-  # package.json are synced by scripts/sync-versions.sh, the same script a
+  # header, the RIFF_VERSION define, readme.txt's Stable tag and
+  # the package.json files are synced by scripts/sync-versions.sh, the same script a
   # maintainer runs locally, so the CI behavior is grep-able.
   #
   # This runs on every push to main, not only when release-please reports a
@@ -90,7 +90,7 @@ jobs:
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add callboard.php readme.txt package.json package-lock.json
+            git add plugins/riff/riff.php plugins/riff/readme.txt plugins/riff/package.json package.json package-lock.json
             git commit -m "chore: sync version strings"
             gh auth setup-git
             git push
@@ -142,26 +142,23 @@ jobs:
         with:
           php-version: '8.3'
           coverage: none
-          tools: composer
-      - run: composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
-      - name: Build callboard.zip
+      - name: Build riff.zip
         run: |
           set -euo pipefail
-          mkdir -p build/callboard
-          rsync -a --exclude-from='.distignore' --exclude='build' ./ build/callboard/
-          (cd build && zip -qr callboard.zip callboard/)
+          mkdir -p build/riff
+          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          (cd build && zip -qr riff.zip riff/)
       - name: Smoke-test the build
         run: |
           set -euo pipefail
-          test -f build/callboard/callboard.php
-          test -f build/callboard/vendor/autoload.php
-          find build/callboard -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+          test -f build/riff/riff.php
+          find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
       - name: Attach the zip to the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: gh release upload --clobber "$TAG_NAME" build/callboard.zip
+        run: gh release upload --clobber "$TAG_NAME" build/riff.zip
       - name: Publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

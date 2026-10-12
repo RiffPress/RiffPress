@@ -1,5 +1,5 @@
 /**
- * ESLint flat config. @wordpress/scripts 34 runs ESLint 9, which reads only
+ * ESLint flat config. @wordpress/scripts runs ESLint 9, which reads only
  * this file; the project rules that used to live in .eslintrc.js are here.
  */
 const wpPlugin = require( '@wordpress/eslint-plugin' );
@@ -17,7 +17,7 @@ module.exports = [
 	...wpPlugin.configs[ 'recommended-with-formatting' ],
 	...wpPlugin.configs[ 'test-playwright' ].map( ( c ) => ( {
 		...c,
-		files: [ 'tests/e2e/**/*.js' ],
+		files: [ '**/tests/e2e/**/*.js' ],
 	} ) ),
 	{
 		files: [ '**/*.js' ],
@@ -25,7 +25,6 @@ module.exports = [
 			globals: {
 				...globals.browser,
 				...globals.serviceworker,
-				CALLBOARD: 'readonly',
 			},
 			parserOptions: {
 				requireConfigFile: false,
@@ -37,6 +36,11 @@ module.exports = [
 			},
 		},
 		rules: {
+			// Workspaces: a test inside plugins/riff/ imports tooling the root package.json carries.
+			'import/no-extraneous-dependencies': [
+				'error',
+				{ packageDir: __dirname },
+			],
 			'no-empty': [ 'error', { allowEmptyCatch: true } ],
 			'@wordpress/no-global-active-element': 'off',
 			'@wordpress/no-unused-vars-before-return': 'off', // a group of element lookups at the top of a function reads better together

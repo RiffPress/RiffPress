@@ -1,0 +1,7 @@
+{
+	"name": "@riff/fixtures",
+	"version": "0.1.0",
+	"description": "Public-domain audio, video and artwork for Riff's demos and tests, and the script that seeds them into a site.",
+	"license": "GPL-2.0-or-later",
+	"private": true
+}

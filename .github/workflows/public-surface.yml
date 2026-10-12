@@ -55,7 +55,7 @@ jobs:
         run: |
           # MARKER in detect-public-surface.js.
           ID=$( gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
-            --jq 'map(select(.body | startswith("<!-- callboard:public-surface -->"))) | first | .id // empty' )
+            --jq 'map(select(.body | startswith("<!-- riff:public-surface -->"))) | first | .id // empty' )
 
           if [ "$COUNT" -eq 0 ]; then
             # Removing an absent label is a no-op.

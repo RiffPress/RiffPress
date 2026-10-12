@@ -1,6 +1,6 @@
 name: Playground Preview
 
-# Builds callboard.zip from the pull request commit and uploads it as an
+# Builds riff.zip from the pull request commit and uploads it as an
 # artifact. "Playground Preview Publish" hosts it and comments on the pull
 # request, so every pull request gets a one-click Playground of its own build.
 # Pull request code is untrusted here: read-only token, no composer scripts.
@@ -13,8 +13,8 @@ on:
       - '**'
       - '!**.md'
       - '!.github/**'
-      - '!tests/**'
-      - 'tests/fixtures/callboard/demo-set/**'
+      - '!**/tests/**'
+      - 'packages/fixtures/**'
   workflow_dispatch:
 
 concurrency:
@@ -37,23 +37,22 @@ jobs:
         with:
           php-version: '8.3'
           coverage: none
-          tools: composer
-      - run: composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
-      - name: Build callboard.zip
+      - name: Build riff.zip
         run: |
           set -euo pipefail
-          mkdir -p build/callboard
-          rsync -a --exclude-from='.distignore' --exclude='build' ./ build/callboard/
-          (cd build && zip -qr callboard.zip callboard/)
+          mkdir -p build/riff
+          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          (cd build && zip -qr riff.zip riff/)
           # The demo set travels beside the zip, the same selection the Pages workflow publishes, so the
           # preview plays this pull request's recordings rather than whatever main last published.
           mkdir -p build/demo
-          find tests/fixtures/callboard/demo-set -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} build/demo/ \;
+          cp packages/fixtures/seed.php build/demo/
+          find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} build/demo/ \;
       - name: Smoke-test the build
         run: |
           set -euo pipefail
-          test -f build/callboard/callboard.php
-          find build/callboard -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+          test -f build/riff/riff.php
+          find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
       - name: Schema-validate the blueprint
         run: |
           jq -e '(.steps | length > 0) and (.steps | map(select(.step == "installPlugin" and (.pluginData.resource // "") == "url")) | length == 1)' blueprint.json > /dev/null
@@ -67,7 +66,7 @@ jobs:
         with:
           name: release-assets
           path: |
-            build/callboard.zip
+            build/riff.zip
             build/demo/
           retention-days: 14
           if-no-files-found: error

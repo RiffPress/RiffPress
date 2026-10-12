@@ -1,24 +1,13 @@
-# Security Policy
+# Security
 
-Callboard is a small plugin for a private cast site, but it renders a public front end, serves audio, and sends Web Push, so it deserves a real disclosure path.
+Riff renders a player on every front-end page of a site and reads the media attached to posts, so it deserves a real disclosure path.
 
-## Reporting a vulnerability
+## Reporting
 
-Do **not** open a public GitHub issue for security reports.
+Use [GitHub Security Advisories](https://github.com/riffpress/riffpress/security/advisories/new) to report privately. Expect an acknowledgement within 72 hours and a patched release within 14 days of that, faster if the issue is being exploited.
 
-Use [GitHub Security Advisories](https://github.com/promptcorner/callboard/security/advisories/new) to report privately. Expect an acknowledgement within 72 hours and a patched release within 14 days of that, faster if the issue is being exploited.
+Please do not open a public issue for a vulnerability.
 
 ## Scope
 
-In scope: the plugin's PHP, JavaScript, CSS, service worker, blueprint, and the CI workflows in this repository.
-
-Out of scope: WordPress core itself (report to [HackerOne](https://hackerone.com/wordpress)), hosting-layer issues, and the audio fetch tooling that runs on a maintainer's own machine.
-
-## Supported versions
-
-Only the most recent release receives security updates.
-
-| Version | Supported |
-| --- | --- |
-| `1.3.x` | ✅ |
-| `< 1.3` | ❌ |
+The plugin in `plugins/riff/`. The landing page in `site/` and the fixtures in `packages/` are not installed on anyone's site.

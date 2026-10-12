@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <!--
-	The WordPress test suite, not a mocked stand-in: Callboard's PHP is mostly a conversation with
+	The WordPress test suite, not a mocked stand-in: Riff's PHP is mostly a conversation with
 	WordPress, and a test that mocks that conversation only proves the mock agrees with itself.
-	Run it with `npm run test:php`, which starts the tests container and points this at the real thing.
+	Run it with `npm run test:php`, which runs this inside the tests container, where the repository
+	is mounted at wp-content/riff.
 -->
 <phpunit
-	bootstrap="tests/php/bootstrap.php"
+	bootstrap="plugins/riff/tests/php/bootstrap.php"
 	backupGlobals="false"
 	colors="true"
 	beStrictAboutTestsThatDoNotTestAnything="true"
@@ -14,9 +15,9 @@
 	failOnRisky="true"
 	>
 	<testsuites>
-		<testsuite name="callboard">
-			<directory suffix=".php">./tests/php</directory>
-			<exclude>./tests/php/bootstrap.php</exclude>
+		<testsuite name="riff">
+			<directory suffix=".php">./plugins/riff/tests/php</directory>
+			<exclude>./plugins/riff/tests/php/bootstrap.php</exclude>
 		</testsuite>
 	</testsuites>
 </phpunit>

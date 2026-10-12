@@ -1,0 +1,1368 @@
+/* Riff. The player follows YouTube Music's layout and measurements: a
+   72px bar on a wide screen and the 2025 Now Playing on a phone. It is
+   always dark. Rows in the post use the theme's own colours through
+   currentcolor. Animate only transform and opacity. */
+
+/* Roboto, shipped with the plugin (SIL Open Font License, see
+   fonts/roboto/OFL.txt) rather than fetched from Google, so a listener's
+   address never leaves the site. One variable file, Latin only. */
+@font-face {
+	font-family: "Riff Roboto";
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url(fonts/roboto/roboto.woff2) format("woff2");
+}
+
+:root {
+	--riff-bar-h: 64px;
+	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
+	--riff-safe-b: env(safe-area-inset-bottom, 0px);
+	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
+	--riff-safe-t: env(safe-area-inset-top, 0px);
+}
+
+@media (min-width: 900px) {
+
+	:root {
+		--riff-bar-h: 72px;
+	}
+}
+
+/* Room at the end of the page, so the bar never covers a post's last line. */
+html.has-riff body::after {
+	content: "";
+	display: block;
+	height: calc(var(--riff-bar-h) + var(--riff-safe-b));
+}
+
+/* ---- Rows in the post */
+
+.riff-track > audio[hidden],
+.riff-track > video[hidden] {
+	display: none !important;
+}
+
+.riff-row {
+	all: unset;
+	box-sizing: border-box;
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: 16px;
+	width: 100%;
+	padding: 8px;
+	border-radius: 4px;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	transition: background-color 0.15s;
+}
+
+.riff-row:hover,
+.riff-row[data-current] {
+	background: color-mix(in srgb, currentcolor 8%, transparent);
+}
+
+.riff-row:focus-visible {
+	outline: 2px solid currentcolor;
+	outline-offset: 2px;
+}
+
+.riff-row-art {
+	position: relative;
+	display: block;
+	width: 48px;
+	height: 48px;
+	border-radius: 4px;
+	overflow: hidden;
+	background: color-mix(in srgb, currentcolor 12%, transparent);
+}
+
+.riff-row-art img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+}
+
+/* Bars over the art of the playing track. */
+.riff-row-state {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	gap: 2px;
+	padding-bottom: 30%;
+	background: rgb(0 0 0 / 0.5);
+	opacity: 0;
+	transition: opacity 0.15s;
+}
+
+.riff-row-state i {
+	width: 3px;
+	height: 40%;
+	background: #fff;
+	border-radius: 1px;
+	transform-origin: bottom;
+	transform: scaleY(0.35);
+}
+
+[data-current] .riff-row-state,
+[aria-current] .riff-row-state,
+.riff-row:hover .riff-row-state {
+	opacity: 1;
+}
+
+[data-playing="true"] .riff-row-state i {
+	animation: riff-eq 0.9s ease-in-out infinite alternate;
+}
+
+[data-playing="true"] .riff-row-state i:nth-child(2) {
+	animation-delay: -0.3s;
+}
+
+[data-playing="true"] .riff-row-state i:nth-child(3) {
+	animation-delay: -0.6s;
+}
+
+@keyframes riff-eq {
+
+	to {
+		transform: scaleY(1);
+	}
+}
+
+.riff-row-text {
+	display: grid;
+	min-width: 0;
+}
+
+.riff-row-title,
+.riff-row-sub {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.riff-row-title {
+	font-weight: 500;
+}
+
+.riff-row-sub,
+.riff-row-time {
+	opacity: 0.7;
+}
+
+.riff-row-time {
+	font-variant-numeric: tabular-nums;
+}
+
+.riff-row .riff-row-dot {
+	display: none;
+}
+
+@media (max-width: 599px) {
+
+	.riff-row-badge {
+		display: none;
+	}
+}
+
+.riff-row-badge {
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 0.75em;
+	font-weight: 500;
+	background: color-mix(in srgb, currentcolor 10%, transparent);
+}
+
+/* ---- The player. Theme styles stop at #riff. */
+
+#riff {
+	--riff-bg: #030303;
+	--riff-surface: #212121;
+	--riff-fg: #fff;
+	--riff-fg-2: rgb(255 255 255 / 0.7);
+	--riff-fg-3: rgb(255 255 255 / 0.5);
+	--riff-line: rgb(255 255 255 / 0.1);
+	--riff-hover: rgb(255 255 255 / 0.1);
+	--riff-accent: #ffb020;
+	--riff-tint: #303030;
+	--riff-p: 0;
+	position: relative;
+	z-index: 100000;
+	color: var(--riff-fg);
+	font: 400 16px/1.2 "Riff Roboto", Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+#riff[hidden],
+#riff [hidden] {
+	display: none !important;
+}
+
+#riff *,
+#riff *::before,
+#riff *::after {
+	box-sizing: border-box;
+}
+
+/* Button classes below are written as #riff .class so they outweigh this reset
+   and any theme's. */
+#riff button {
+	all: unset;
+	box-sizing: border-box;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+#riff button:focus-visible,
+#riff input:focus-visible {
+	outline: 2px solid var(--riff-fg);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+#riff h2,
+#riff h3,
+#riff p {
+	margin: 0;
+	padding: 0;
+	color: inherit;
+	font: inherit;
+	letter-spacing: normal;
+	text-transform: none;
+}
+
+#riff img {
+	max-width: none;
+	margin: 0;
+	border: 0;
+	box-shadow: none;
+}
+
+#riff svg {
+	display: block;
+	width: 24px;
+	height: 24px;
+}
+
+#riff .riff-btn {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	color: var(--riff-fg);
+	transition: background-color 0.15s;
+}
+
+#riff .riff-btn:hover {
+	background: var(--riff-hover);
+}
+
+#riff .riff-btn[aria-pressed="false"] {
+	color: var(--riff-fg-2);
+}
+
+/* Repeat shows its "one" glyph only in that mode. */
+#riff [data-riff-action="repeat"] svg:last-child,
+#riff [data-riff-action="repeat"][data-repeat="one"] svg:first-child {
+	display: none;
+}
+
+#riff [data-riff-action="repeat"][data-repeat="one"] svg:last-child {
+	display: block;
+}
+
+/* Play and pause share a button; the state picks the glyph. */
+#riff .riff-play svg:last-child,
+#riff[data-playing="true"] .riff-play svg:first-child {
+	display: none;
+}
+
+#riff[data-playing="true"] .riff-play svg:last-child {
+	display: block;
+}
+
+#riff[data-waiting] .riff-play {
+	animation: riff-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes riff-pulse {
+
+	to {
+		opacity: 0.5;
+	}
+}
+
+/* ---- Seek lines. A native range sits on top of a drawn line. */
+
+.riff-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 50%;
+	height: 2px;
+	margin-top: -1px;
+	background: var(--riff-line);
+	pointer-events: none;
+	transition: transform 0.1s;
+}
+
+.riff-line i {
+	position: absolute;
+	inset: 0;
+	background: var(--riff-accent);
+	transform-origin: left;
+	transform: scaleX(var(--riff-p));
+}
+
+.riff-seek {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.riff-knob,
+.riff-tip {
+	display: none;
+}
+
+/* ---- The filament. Three layers over the played part of the bar's line,
+   each only ever written to in colour and opacity by riff.js: the wire with
+   a tight bloom, a white heart that shows at the peaks, and a soft halo
+   that spreads down into the bar, which is always dark, never up into the
+   page, which may not be. Static gradients, so nothing repaints; opacity is
+   the compositor's to move. */
+
+.riff-wire,
+.riff-hot {
+	position: absolute;
+	inset: 0;
+	transform-origin: left;
+	transform: scaleX(var(--riff-p));
+	opacity: 0;
+	pointer-events: none;
+}
+
+.riff-wire {
+	color: var(--riff-accent);
+	background: currentcolor;
+	box-shadow: 0 0 6px 1px currentcolor;
+}
+
+.riff-hot {
+	/* stylelint-disable-next-line @stylistic/max-line-length */
+	background: linear-gradient(90deg, transparent, #ffd2a8 30%, #fff1dc 50%, #ffd2a8 70%, transparent);
+	box-shadow: 0 0 10px 2px rgb(255 232 200 / 0.6);
+}
+
+.riff-halo {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 20px;
+	color: var(--riff-accent);
+	background: linear-gradient(180deg, currentcolor, transparent);
+	filter: blur(6px);
+	transform-origin: left;
+	transform: scaleX(var(--riff-p)) translateZ(0);
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* The wire's heat washes the top of Now Playing on a phone, as a room
+   brightening rather than a lamp switching. */
+.riff-np-glow {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 220px;
+	color: var(--riff-accent);
+	/* stylelint-disable-next-line @stylistic/max-line-length */
+	background: linear-gradient(180deg, color-mix(in srgb, currentcolor 40%, transparent), color-mix(in srgb, currentcolor 12%, transparent) 45%, transparent);
+	opacity: 0;
+	transition: opacity 0.5s ease-out;
+	pointer-events: none;
+}
+
+/* With a live reading the bars follow it; the keyframes are for when there
+   is none. */
+html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
+	animation: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+
+	.riff-halo,
+	.riff-np-glow {
+		display: none;
+	}
+
+	.riff-wire,
+	.riff-hot {
+		box-shadow: none;
+	}
+}
+
+/* ---- The bar. On a phone: art, title and artist, Cast, play. Swipe it to
+   skip. */
+
+.riff-bar {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: calc(var(--riff-bar-h) + var(--riff-safe-b));
+	padding: 0 8px var(--riff-safe-b) 8px;
+	background: var(--riff-surface);
+}
+
+/* On a phone the line runs along the top edge and is a readout, not a
+   control. */
+.riff-bar-seek {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 2px;
+}
+
+.riff-bar-seek .riff-line {
+	top: 0;
+	margin: 0;
+}
+
+.riff-bar-seek .riff-seek {
+	pointer-events: none;
+}
+
+.riff-bar-start,
+.riff-bar-end {
+	display: flex;
+	align-items: center;
+}
+
+.riff-bar-start {
+	order: 3;
+}
+
+.riff-bar-end {
+	order: 2;
+}
+
+#riff .riff-bar-info {
+	order: 1;
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+	height: 100%;
+	touch-action: pan-y;
+	transition: transform 0.2s;
+}
+
+#riff .riff-bar-info.is-dragging {
+	transition: none;
+}
+
+.riff-thumb {
+	flex: none;
+	width: 40px;
+	height: 40px;
+	border-radius: 2px;
+	overflow: hidden;
+	background: var(--riff-hover);
+}
+
+.riff-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.riff-bar-text {
+	display: grid;
+	min-width: 0;
+}
+
+.riff-title,
+.riff-sub {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.riff-title {
+	font-size: 15px;
+	font-weight: 500;
+}
+
+.riff-sub {
+	color: var(--riff-fg-2);
+	font-size: 14px;
+}
+
+.riff-desk {
+	display: none !important;
+}
+
+@media (min-width: 900px) {
+
+	.riff-desk {
+		display: inline-grid !important;
+	}
+
+	.riff-mobile {
+		display: none !important;
+	}
+
+	/* Three columns: transport and time, the track, then volume, repeat,
+	   shuffle and the caret. */
+	.riff-bar {
+		display: grid;
+		grid-template-columns: 328px minmax(0, 1fr) 328px;
+		gap: 0;
+		padding: 0 4px var(--riff-safe-b) 0;
+	}
+
+	.riff-bar-start,
+	.riff-bar-end,
+	#riff .riff-bar-info {
+		order: 0;
+	}
+
+	.riff-bar-end {
+		justify-content: flex-end;
+		gap: 8px;
+		padding-right: 8px;
+	}
+
+	#riff .riff-bar-info {
+		justify-content: center;
+		gap: 16px;
+		cursor: pointer;
+	}
+
+	.riff-bar-text {
+		max-width: 520px;
+	}
+
+	.riff-title,
+	.riff-sub {
+		font-size: 16px;
+		line-height: 19.2px;
+	}
+
+	#riff .riff-skip-sm {
+		width: 36px;
+		height: 36px;
+		margin: 4px 4px 4px 8px;
+	}
+
+	#riff .riff-bar .riff-play {
+		width: 52px;
+		height: 52px;
+		margin: 4px 4px 4px 8px;
+	}
+
+	#riff .riff-bar .riff-play svg {
+		width: 40px;
+		height: 40px;
+	}
+
+	.riff-time {
+		display: inline-block !important;
+		margin: 0 16px 0 8px;
+		color: #aaa;
+		font-size: 12px;
+		line-height: 14.4px;
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	/* The seek line straddles the top edge: 2px, 4px with a knob and the time
+	   while pointed at. */
+	.riff-bar-seek {
+		top: -15px;
+		height: 32px;
+	}
+
+	.riff-bar-seek .riff-line {
+		top: 15px;
+	}
+
+	.riff-halo {
+		top: 15px;
+	}
+
+	.riff-bar-seek .riff-seek {
+		pointer-events: auto;
+	}
+
+	.riff-bar-seek:hover .riff-line,
+	#riff[data-seeking] .riff-bar-seek .riff-line {
+		transform: scaleY(2);
+	}
+
+	.riff-knob {
+		position: absolute;
+		top: 16px;
+		left: calc(var(--riff-p) * 100%);
+		display: block;
+		width: 13px;
+		height: 13px;
+		margin: -6.5px 0 0 -6.5px;
+		pointer-events: none;
+		border-radius: 50%;
+		background: var(--riff-accent);
+		opacity: 0;
+		transition: opacity 0.1s;
+	}
+
+	.riff-bar-seek:hover .riff-knob {
+		opacity: 1;
+	}
+
+	.riff-tip {
+		position: absolute;
+		bottom: 28px;
+		display: block;
+		padding: 4px 8px;
+		border-radius: 2px;
+		background: var(--riff-surface);
+		color: var(--riff-fg);
+		font-size: 12px;
+		transform: translateX(-50%);
+		pointer-events: none;
+		white-space: nowrap;
+	}
+
+	/* Volume: the slider appears beside the icon while the pointer is over it. */
+	.riff-volume {
+		display: flex !important;
+		align-items: center;
+		gap: 8px;
+		color: var(--riff-fg-2);
+	}
+
+	.riff-volume input {
+		width: 100px;
+		margin: 0;
+		accent-color: var(--riff-fg);
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+
+	.riff-volume:hover input,
+	.riff-volume input:focus-visible {
+		opacity: 1;
+	}
+
+	#riff .riff-bar-end .riff-btn {
+		color: var(--riff-fg-2);
+	}
+
+	#riff .riff-bar-end .riff-btn[aria-pressed="true"] {
+		color: var(--riff-fg);
+	}
+
+	#riff .riff-chevron svg {
+		transition: transform 0.2s;
+	}
+
+	#riff .riff-chevron[aria-expanded="true"] svg {
+		transform: rotate(180deg);
+	}
+}
+
+/* ---- Now Playing on a phone */
+
+.riff-np {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	padding: var(--riff-safe-t) 0 var(--riff-safe-b);
+	background: var(--riff-bg);
+	overflow: hidden;
+	transform: translateY(100%);
+	transition: transform 0.32s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.riff-np.is-in {
+	transform: none;
+}
+
+/* The whole screen takes the artwork's colour, a little darker towards the
+   bottom. */
+.riff-np-bg {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(var(--riff-tint), color-mix(in srgb, var(--riff-tint) 70%, #000));
+	pointer-events: none;
+}
+
+.riff-np-head,
+.riff-np-body,
+.riff-np-mini {
+	position: relative;
+}
+
+.riff-np-head {
+	display: grid;
+	flex: none;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	height: 56px;
+	padding: 0 12px;
+	touch-action: none;
+}
+
+#riff .riff-np-head [data-riff-action="cast"] {
+	grid-column: 3;
+	justify-self: end;
+}
+
+/* Song and Video: two icons on a phone, two words on a wide screen. */
+.riff-modes {
+	grid-column: 2;
+	display: flex;
+	padding: 2px;
+	border-radius: 999px;
+	background: rgb(0 0 0 / 0.3);
+}
+
+#riff .riff-modes button {
+	display: grid;
+	place-items: center;
+	width: 48px;
+	height: 32px;
+	border-radius: 999px;
+	color: var(--riff-fg-3);
+}
+
+#riff .riff-modes button[aria-checked="true"] {
+	background: var(--riff-hover);
+	color: var(--riff-fg);
+}
+
+#riff .riff-modes svg {
+	width: 20px;
+	height: 20px;
+}
+
+.riff-modes span {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.riff-np-mini {
+	display: none;
+}
+
+.riff-np-body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.riff-stage {
+	display: grid;
+	flex: 1;
+	place-items: center;
+	min-height: 0;
+	padding: 34px 32px 24px;
+	container-type: size;
+	touch-action: none;
+}
+
+.riff-cover,
+.riff-video {
+	grid-area: 1 / 1;
+	border-radius: 8px;
+}
+
+.riff-cover {
+	width: min(100cqw, 100cqh);
+	height: min(100cqw, 100cqh);
+	object-fit: cover;
+	user-select: none;
+}
+
+.riff-video {
+	display: none;
+	width: 100cqw;
+	max-height: 100cqh;
+	aspect-ratio: 16 / 9;
+	background: #000;
+}
+
+#riff[data-mode="video"] .riff-video {
+	display: block;
+}
+
+#riff[data-mode="video"] .riff-cover {
+	display: none;
+}
+
+.riff-np-panel {
+	flex: none;
+	padding: 0 32px;
+}
+
+#riff .riff-np-title {
+	overflow: hidden;
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 1.25;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+#riff .riff-np-sub {
+	overflow: hidden;
+	margin-top: 2px;
+	color: var(--riff-fg-2);
+	font-size: 16px;
+	line-height: 1.3;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Boxy and thumbless; it doubles in height while held. */
+.riff-np-seek {
+	position: relative;
+	height: 48px;
+	margin-top: 20px;
+}
+
+.riff-np-seek .riff-line {
+	top: 10px;
+	height: 4px;
+	margin: 0;
+	border-radius: 2px;
+	overflow: hidden;
+	background: rgb(255 255 255 / 0.2);
+	transform-origin: center;
+}
+
+.riff-np-seek .riff-line i {
+	background: var(--riff-fg);
+}
+
+.riff-np-seek .riff-seek {
+	height: 24px;
+}
+
+#riff[data-seeking] .riff-np-seek .riff-line {
+	transform: scaleY(2);
+}
+
+.riff-np-times {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 6px;
+	display: flex;
+	justify-content: space-between;
+	color: var(--riff-fg-2);
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+}
+
+.riff-np-controls {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 8px -8px 0;
+}
+
+#riff .riff-np-controls .riff-btn {
+	width: 48px;
+	height: 48px;
+}
+
+#riff .riff-skip svg {
+	width: 36px;
+	height: 36px;
+}
+
+#riff .riff-np-controls .riff-play-big {
+	width: 72px;
+	height: 72px;
+	background: var(--riff-fg);
+	color: #000;
+}
+
+#riff .riff-play-big:hover {
+	background: var(--riff-fg);
+	opacity: 0.9;
+}
+
+#riff .riff-play-big svg {
+	width: 36px;
+	height: 36px;
+}
+
+/* Actions as pills, in a row that scrolls sideways. */
+.riff-chips {
+	display: flex;
+	gap: 8px;
+	margin: 24px -32px 0;
+	padding: 0 32px;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+#riff .riff-chip {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	height: 36px;
+	padding: 0 16px;
+	border-radius: 999px;
+	background: var(--riff-hover);
+	font-size: 14px;
+	font-weight: 500;
+}
+
+#riff .riff-chip svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* Up next: a handle and the source at the bottom, until it is opened. */
+.riff-queue {
+	position: relative;
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+#riff .riff-peek {
+	display: grid;
+	justify-items: center;
+	gap: 12px;
+	padding: 16px 32px 24px;
+	color: var(--riff-fg-2);
+	font-size: 16px;
+	font-weight: 500;
+	touch-action: none;
+}
+
+.riff-handle {
+	display: block;
+	width: 36px;
+	height: 4px;
+	border-radius: 2px;
+	background: rgb(255 255 255 / 0.4);
+}
+
+.riff-tabs,
+.riff-queue-head,
+.riff-queue-list {
+	display: none;
+}
+
+.riff-queue-head {
+	padding: 4px 24px 16px;
+	border-bottom: 1px solid var(--riff-line);
+}
+
+#riff .riff-queue-head p {
+	color: var(--riff-fg-2);
+	font-size: 14px;
+}
+
+#riff .riff-queue-head h3 {
+	margin-top: 4px;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.riff-queue-list {
+	flex: 1;
+	min-height: 0;
+	margin: 0;
+	padding: 8px 0 16px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	list-style: none;
+}
+
+.riff-queue-list li {
+	margin: 0;
+	padding: 0;
+}
+
+#riff .riff-queue-list button {
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr);
+	align-items: center;
+	gap: 16px;
+	width: 100%;
+	height: 64px;
+	padding: 0 24px;
+}
+
+#riff .riff-queue-list button:hover {
+	background: var(--riff-hover);
+}
+
+#riff .riff-queue-list .riff-row-art {
+	background: var(--riff-hover);
+}
+
+#riff .riff-queue-list .riff-row-sub {
+	color: var(--riff-fg-2);
+	font-size: 14px;
+	opacity: 1;
+}
+
+#riff .riff-queue-list .riff-row-time {
+	display: none;
+}
+
+#riff .riff-queue-list .riff-row-title {
+	font-size: 16px;
+}
+
+#riff .riff-queue-list button:not([aria-current]) .riff-row-state {
+	opacity: 0;
+}
+
+/* Split view: the art shrinks, the controls stay, the list takes the bottom of
+   the screen. */
+.riff-np[data-sheet="half"] .riff-stage {
+	flex: none;
+	height: 34vh;
+	padding: 16px 32px 8px;
+}
+
+.riff-np[data-sheet="half"] .riff-chips {
+	display: none;
+}
+
+.riff-np[data-sheet="half"] .riff-np-seek {
+	margin-top: 12px;
+}
+
+.riff-np[data-sheet="half"] .riff-queue,
+.riff-np[data-sheet="full"] .riff-queue {
+	flex: 1;
+	margin-top: 8px;
+	border-radius: 16px 16px 0 0;
+	background: var(--riff-surface);
+}
+
+.riff-np[data-sheet="half"] .riff-peek span,
+.riff-np[data-sheet="full"] .riff-peek span {
+	display: none;
+}
+
+#riff .riff-np[data-sheet="half"] .riff-peek,
+#riff .riff-np[data-sheet="full"] .riff-peek {
+	padding: 12px 0 8px;
+}
+
+.riff-np[data-sheet="half"] .riff-queue-head,
+.riff-np[data-sheet="full"] .riff-queue-head {
+	display: block;
+}
+
+.riff-np[data-sheet="half"] .riff-queue-list,
+.riff-np[data-sheet="full"] .riff-queue-list {
+	display: block;
+}
+
+/* Full: the player is one row above the sheet. */
+.riff-np[data-sheet="full"] .riff-np-head,
+.riff-np[data-sheet="full"] .riff-stage,
+.riff-np[data-sheet="full"] .riff-np-panel {
+	display: none;
+}
+
+.riff-np[data-sheet="full"] .riff-np-mini {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex: none;
+	height: 88px;
+	padding: 0 12px 0 16px;
+}
+
+.riff-np-mini .riff-bar-text {
+	flex: 1;
+}
+
+.riff-thumb-lg {
+	width: 48px;
+	height: 48px;
+}
+
+.riff-toast {
+	position: fixed;
+	left: 50%;
+	bottom: calc(var(--riff-bar-h) + var(--riff-safe-b) + 16px);
+	z-index: 1;
+	padding: 12px 16px;
+	border-radius: 4px;
+	background: #e6e6e6;
+	color: #030303;
+	font-size: 14px;
+	transform: translateX(-50%);
+}
+
+@media (min-width: 900px) {
+
+	/* On a wide screen Now Playing fills the space above the bar, and the bar
+	   keeps the controls. */
+	.riff-np {
+		bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
+		padding: 0;
+	}
+
+	.riff-np-bg,
+	.riff-np-glow {
+		display: none;
+	}
+
+	.riff-np-head {
+		height: 64px;
+		padding: 0 24px;
+		touch-action: auto;
+	}
+
+	#riff .riff-modes {
+		gap: 0;
+		padding: 0;
+		background: var(--riff-surface);
+	}
+
+	#riff .riff-modes button {
+		width: auto;
+		height: 32px;
+		padding: 0 16px;
+		color: var(--riff-fg-3);
+		font-size: 16px;
+		font-weight: 500;
+	}
+
+	#riff .riff-modes button[aria-checked="true"] {
+		background: rgb(255 255 255 / 0.15);
+		color: var(--riff-fg);
+	}
+
+	#riff .riff-modes svg {
+		display: none;
+	}
+
+	.riff-modes span {
+		position: static;
+		width: auto;
+		height: auto;
+		overflow: visible;
+		clip-path: none;
+	}
+
+	.riff-np-body {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 392px;
+		gap: 56px;
+		padding: 0 56px;
+	}
+
+	.riff-stage {
+		padding: 0 0 40px;
+		touch-action: auto;
+	}
+
+	.riff-cover {
+		max-width: 640px;
+		max-height: 640px;
+	}
+
+	.riff-video {
+		max-width: 640px;
+	}
+
+	/* The caret in the bar and Escape close it; the page itself has no close
+	   control. */
+	#riff .riff-np-head [data-riff-action="close"] {
+		display: none;
+	}
+
+	.riff-cover {
+		border-radius: 4px;
+	}
+
+	.riff-video {
+		border-radius: 0;
+	}
+
+	.riff-np-panel {
+		display: none;
+	}
+
+	.riff-queue {
+		height: 100%;
+		min-height: 0;
+	}
+
+	#riff .riff-peek {
+		display: none;
+	}
+
+	.riff-tabs {
+		display: flex;
+		flex: none;
+		border-bottom: 1px solid var(--riff-line);
+	}
+
+	.riff-tab {
+		display: flex;
+		align-items: center;
+		height: 48px;
+		padding: 0 12px;
+		margin-left: 8px;
+		box-shadow: inset 0 -2px 0 var(--riff-fg);
+		font-size: 14px;
+		font-weight: 500;
+		text-transform: uppercase;
+	}
+
+	.riff-queue-head {
+		display: block;
+		margin: 16px 0;
+		padding: 0;
+		border: 0;
+	}
+
+	#riff .riff-queue-head p {
+		font-size: 12px;
+		line-height: 16.8px;
+	}
+
+	#riff .riff-queue-head h3 {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 500;
+		line-height: 19.2px;
+	}
+
+	.riff-queue-list {
+		display: block;
+		padding: 0 0 24px;
+	}
+
+	.riff-queue-list li + li {
+		border-top: 1px solid var(--riff-line);
+	}
+
+	#riff .riff-queue-list button {
+		grid-template-columns: 32px minmax(0, 1fr) auto;
+		gap: 16px;
+		height: 56px;
+		padding: 0 8px;
+	}
+
+	#riff .riff-queue-list button:hover {
+		background: rgb(255 255 255 / 0.05);
+	}
+
+	#riff .riff-queue-list button[aria-current] {
+		background: var(--riff-hover);
+	}
+
+	#riff .riff-queue-list .riff-row-art {
+		width: 32px;
+		height: 32px;
+		border-radius: 2px;
+	}
+
+	#riff .riff-queue-list .riff-row-title {
+		margin-bottom: 4px;
+		font-size: 16px;
+		line-height: 19.2px;
+	}
+
+	#riff .riff-queue-list .riff-row-sub {
+		color: #aaa;
+		font-size: 16px;
+		line-height: 19.2px;
+	}
+
+	#riff .riff-queue-list .riff-row-dot {
+		display: none;
+	}
+
+	#riff .riff-queue-list .riff-row-time {
+		display: block;
+		padding-left: 8px;
+		color: #aaa;
+		font-size: 16px;
+		opacity: 1;
+	}
+
+	.riff-toast {
+		left: 24px;
+		transform: none;
+	}
+}
+
+@media (max-height: 700px) and (max-width: 899px) {
+
+	.riff-stage {
+		padding-top: 8px;
+	}
+
+	.riff-chips {
+		margin-top: 12px;
+	}
+
+	#riff .riff-peek {
+		padding-bottom: 12px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.riff-np,
+	#riff .riff-bar-info,
+	.riff-line,
+	.riff-knob,
+	.riff-np-glow {
+		transition: none;
+	}
+
+	[data-playing="true"] .riff-row-state i,
+	#riff[data-waiting] .riff-play {
+		animation: none;
+	}
+}

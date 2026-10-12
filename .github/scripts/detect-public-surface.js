@@ -7,16 +7,16 @@
 // It compares the full set of surfaces at each end rather than diff lines, so
 // moving, reindenting, or renaming the function around a hook reads as no change.
 
-// The plugin ships what is in these paths. `tests/` calls `apply_filters` and
+// The plugin ships what is in these paths. Its tests call `apply_filters` and
 // `do_action` constantly without publishing anything. There is no build step,
 // so `assets/` is the source and nothing under it duplicates anything.
 const SCANNED = [
-	/^includes\//,
-	/^assets\//,
-	/^templates\//,
-	/^callboard\.php$/,
+	/^plugins\/riff\/src\//,
+	/^plugins\/riff\/assets\//,
+	/^plugins\/riff\/templates\//,
+	/^plugins\/riff\/riff\.php$/,
 ];
-const IGNORED = [ /\/test\//, /\.test\.js$/ ];
+const IGNORED = [ /\/tests?\//, /\.test\.js$/ ];
 
 // WordPress's own, which a plugin reads without ever owning. `ABSPATH` alone
 // opens every file in the tree, so without this the surfaces that are the
@@ -205,15 +205,15 @@ const PHP_RULES = [
 	],
 	[ /WP_CLI::add_command\s*\(\s*(['"])(.*?)\1/g, ( m ) => `cli:${ m[ 2 ] }` ],
 	// An extension id is a promise the other way round: a site that unregisters
-	// `callboard/quality` by name breaks when that name changes. PHP and the
+	// `riff/lyrics` by name breaks when that name changes. PHP and the
 	// script register the same id, so both read as the one surface.
 	[
-		/\bcallboard_register_extension\s*\(\s*(['"])(.*?)\1/g,
+		/\briff_register_extension\s*\(\s*(['"])(.*?)\1/g,
 		( m ) => `extension:${ m[ 2 ] }`,
 	],
 	// A slot a template prints is a place extensions put things.
 	[
-		/\bcallboard_(?:get_)?slot\s*\(\s*(['"])(.*?)\1/g,
+		/\briff_(?:get_)?slot\s*\(\s*(['"])(.*?)\1/g,
 		( m ) => `slot:${ m[ 2 ] }`,
 	],
 	// The extension contract's version. The plugin defines it outright, so the
@@ -225,11 +225,10 @@ const PHP_RULES = [
 ];
 
 const JS_RULES = [
-	// `window.CALLBOARD` itself is emitted by `wp_localize_script`, so it is
-	// caught on the PHP side through `callboard_app_data`. This is here for a
-	// global the script assigns on its own: `window.callboard`, the extension API.
+	// A global the script assigns on its own, `window.riff`, would be the
+	// extension API; anything else on `window` is a promise too.
 	[
-		/\bwindow\.(CALLBOARD[\w$]*|callboard)\s*=(?!=)/g,
+		/\bwindow\.(RIFF[\w$]*|riff)\s*=(?!=)/g,
 		( m ) => `js-global:window.${ m[ 1 ] }`,
 	],
 	[
@@ -249,7 +248,7 @@ const JS_RULES = [
 const PRIVATE = /@(?:private\b|access\s+private\b)/;
 
 // The workflow greps for this literal to edit its own comment in place.
-const MARKER = '<!-- callboard:public-surface -->';
+const MARKER = '<!-- riff:public-surface -->';
 
 function isScanned( path ) {
 	return (
@@ -461,7 +460,7 @@ if ( require.main === module ) {
 			.map( ( path ) => ( { path, source: read( ref, path ) } ) );
 
 		// One owned set for the whole ref. A constant defined outright in
-		// `callboard.php` is the plugin's own in every file that reads it, which
+		// `riff.php` is the plugin's own in every file that reads it, which
 		// no file can tell on its own.
 		const own = ownConstants( files.map( ( { source } ) => source ) );
 

@@ -1,0 +1,107 @@
+<?php
+/**
+ * The track: what the player is handed for an attachment or a bare file address.
+ *
+ * @package Riff
+ */
+
+use Riff\Media;
+use Riff\Tracks;
+
+/**
+ * @covers \Riff\Tracks
+ */
+class Test_Riff_Tracks extends Riff_TestCase {
+
+	public function test_an_audio_attachment_becomes_a_track_with_its_tags_and_duration(): void {
+		$id    = self::attach( '02 - Underground [underground].mp3' );
+		$track = Tracks::from_attachment( $id );
+
+		$this->assertSame( (string) $id, $track['id'] );
+		$this->assertSame( 'audio', $track['type'] );
+		$this->assertSame( wp_get_attachment_url( $id ), $track['src'] );
+		$this->assertSame( 'Underground', $track['title'] );
+		$this->assertSame( 'Airmen of Note, United States Air Force Band', $track['artist'] );
+		$this->assertSame( 'Compositions', $track['album'] );
+		$this->assertEqualsWithDelta( 40, $track['duration'], 1 );
+		$this->assertSame( array(), $track['art'] );
+		$this->assertNull( $track['video'] );
+		$this->assertNull( $track['post'] );
+	}
+
+	public function test_an_upload_named_after_its_file_takes_its_title_from_the_tags(): void {
+		$id = self::factory()->attachment->create_upload_object( self::fixture( '02 - Underground [underground].mp3' ) );
+		$this->assertStringContainsString( 'Underground-underground', get_post_field( 'post_title', $id, 'raw' ), 'named after the file, as the block editor leaves it' );
+		$this->assertSame( 'Underground', Tracks::from_attachment( $id )['title'] );
+
+		wp_update_post(
+			array(
+				'ID'         => $id,
+				'post_title' => 'Underground (rehearsal take)',
+			)
+		);
+		$this->assertSame( 'Underground (rehearsal take)', Tracks::from_attachment( $id )['title'], 'an edited title stays' );
+	}
+
+	public function test_artwork_comes_from_the_attachment_then_the_post(): void {
+		$post  = self::factory()->post->create();
+		$cover = self::attach( 'cover.png', $post );
+		$id    = self::attach( '03 - Trombone Detritus [detritus].mp3', $post );
+
+		$this->assertSame( array(), Tracks::from_attachment( $id, $post )['art'], 'no artwork anywhere yet' );
+
+		set_post_thumbnail( $post, $cover );
+		$art = Tracks::from_attachment( $id, $post )['art'];
+		$this->assertNotEmpty( $art, 'the post\'s featured image stands in' );
+		$this->assertMatchesRegularExpression( '/^\d+x\d+$/', $art[0]['sizes'] );
+		$this->assertStringContainsString( 'cover', $art[0]['src'] );
+		$this->assertSame( $post, Tracks::from_attachment( $id, $post )['post']['url'] ? $post : 0 );
+
+		$own = self::attach( 'cover.png' );
+		set_post_thumbnail( $id, $own );
+		$this->assertStringContainsString( basename( get_attached_file( $own ), '.png' ), Tracks::from_attachment( $id, $post )['art'][0]['src'], 'the attachment\'s own image wins' );
+	}
+
+	public function test_a_linked_video_becomes_the_video_version_with_a_poster(): void {
+		$post  = self::factory()->post->create();
+		$cover = self::attach( 'cover.png', $post );
+		set_post_thumbnail( $post, $cover );
+		$audio = self::attach( '01 - Intensities in Ten Cities [intensities].mp3', $post );
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm', $post );
+		update_post_meta( $audio, Media::VIDEO_META, $video );
+
+		$track = Tracks::from_attachment( $audio, $post );
+		$this->assertSame( 'audio', $track['type'] );
+		$this->assertSame( wp_get_attachment_url( $video ), $track['video']['src'] );
+		$this->assertStringContainsString( 'cover', $track['video']['poster'], 'the poster falls back to the track\'s art' );
+
+		update_post_meta( $audio, Media::VIDEO_META, $cover );
+		$this->assertNull( Tracks::from_attachment( $audio, $post )['video'], 'an image is not a video' );
+	}
+
+	public function test_a_video_attachment_is_a_video_track(): void {
+		$id    = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$track = Tracks::from_attachment( $id );
+		$this->assertSame( 'video', $track['type'] );
+		$this->assertNull( $track['video'] );
+	}
+
+	public function test_anything_but_audio_or_video_is_not_a_track(): void {
+		$this->assertNull( Tracks::from_attachment( self::attach( 'cover.png' ) ) );
+		$this->assertNull( Tracks::from_attachment( 999999 ) );
+	}
+
+	public function test_a_bare_address_is_titled_from_the_caption_then_the_file_name(): void {
+		$post = self::factory()->post->create( array( 'post_title' => 'A post' ) );
+
+		$track = Tracks::from_url( 'https://example.com/music/03%20-%20Take%20Five.mp3', 'audio', '', $post );
+		$this->assertSame( '03 - Take Five', $track['title'] );
+		$this->assertSame( 'url:' . md5( 'https://example.com/music/03%20-%20Take%20Five.mp3' ), $track['id'] );
+		$this->assertSame( 'A post', $track['post']['title'] );
+		$this->assertSame( get_permalink( $post ), $track['post']['url'] );
+
+		$this->assertSame( 'Take Five', Tracks::from_url( 'https://example.com/x.mp3', 'audio', ' Take Five ' )['title'] );
+		$this->assertNull( Tracks::from_url( 'https://example.com/x.mp3', 'image' ) );
+		$this->assertNull( Tracks::from_url( 'javascript:alert(1)', 'audio' ) );
+	}
+}

@@ -2,28 +2,26 @@
 
 ## Product Character
 
-Callboard is a dedicated music player for WordPress. The listener experience is purpose-built. Administration uses WordPress conventions without a separate branded shell.
+Riff is a music player that sits inside someone else's site. The player is always dark and always the same; the page around it belongs to the theme. Administration uses WordPress conventions without a separate branded shell: one field on audio files in the Media Library.
 
 ## Visual System
 
-### Listener surfaces
+### The player
 
-The existing cast-facing player is the authority. It uses warm neutral light and dark schemes, restrained texture, a single configurable orange accent, compact system typography, square cover art, ruled lists, and a persistent hardware-like playback deck.
+YouTube Music's current layout and measurements are the authority: the 72px bar on a wide screen, the 2025 Now Playing on a phone, Roboto, Material Icons, `#212121` surfaces on `#030303`. Riff's own marks are the amber accent (`#ffb020`) in place of red, and the filament: the played part of the bar's seek line glows with the music, in heat colours from near-black red through amber to yellow-white, and cools when playback stops. The bloom spreads down into the bar, never up into the page.
 
-### WordPress administration
+### Rows in the post
 
-Admin surfaces use core WordPress headings, page actions, buttons, notices, form tables, list tables, descriptions, spacing, and responsive behavior. Setup may use one compact dark listening header with a simple waveform and Callboard orange. It contains the real page title and primary action, never a kicker or marketing slogan. Do not add status cards, promotional sidebars, decorative copy, or a second component system.
+Tracks are rows inside the post's own content and take the theme's colours through `currentcolor`. They add nothing the theme has to style.
 
 ## Layout
 
-Admin pages use the standard `.wrap` container and a readable working width. Setup is a short vertical flow: compact listening header, then one core list table showing the library and listener-facing settings. Settings use the Settings API's headings and form tables without extra panel chrome.
-
-The Set editor stays inside the classic WordPress post editor. Its Tracks panel is a compact working list: numbered rows, editable titles, duration, keyboard reorder controls, and quiet file actions. Audio enters through the core Media Library and removed tracks remain there.
+Phone: the bar along the bottom with its progress line on the top edge; Now Playing full-screen with the Song/Video switch at the top, square art, title and artist, a thick thumbless seek bar, the controls, action pills, and a handle for Up next that opens to a split view and then a full list. Wide screen: the bar keeps the controls, and Now Playing fills the space above it with the art on the left and Up next on the right.
 
 ## Interaction
 
-Use standard WordPress buttons, links, form fields, details elements, and focus behavior. Motion is reserved for listener playback state; administration should feel immediate and stable. New-tab actions include an accessible warning. Empty states name the next useful action.
+Tap a row to play, tap the bar for Now Playing, swipe the bar to skip, drag Now Playing down to close. Motion is transform and opacity only. Reduced motion removes the transitions and holds the filament at half; reduced transparency removes the halo.
 
 ## Accessibility
 
-Maintain WCAG AA text contrast, visible WordPress focus styles, semantic headings, native controls, useful link text, and responsive reading order. Decorative waveform artwork is hidden from assistive technology.
+Native `<audio>` and `<video>` underneath, a native range for seeking, labelled buttons whose labels change with state, a dialog that makes the page inert and returns focus, visible focus rings, and 44px targets on a phone.

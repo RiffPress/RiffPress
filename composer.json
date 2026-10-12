@@ -1,6 +1,6 @@
 {
-  "name": "callboard/callboard",
-  "description": "Rehearsal tracks for a cast. A WordPress plugin.",
+  "name": "riffpress/riff",
+  "description": "The Riff monorepo: a music player for WordPress, its fixtures and its tooling.",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "require": {
@@ -26,7 +26,7 @@
     },
     "optimize-autoloader": true
   },
-  "homepage": "https://promptcorner.github.io/callboard/",
+  "homepage": "https://riffpress.github.io/riffpress/",
   "authors": [
     {
       "name": "Joe Fusco",
@@ -34,7 +34,7 @@
     }
   ],
   "support": {
-    "issues": "https://github.com/promptcorner/callboard/issues",
-    "source": "https://github.com/promptcorner/callboard"
+    "issues": "https://github.com/riffpress/riffpress/issues",
+    "source": "https://github.com/riffpress/riffpress"
   }
 }

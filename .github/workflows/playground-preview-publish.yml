@@ -62,7 +62,7 @@ jobs:
           done
           unzip -q -o -d artifacts/release-assets release-assets.zip
           unzip -q -o -d artifacts/pr-meta pr-meta.zip
-          test -f artifacts/release-assets/callboard.zip
+          test -f artifacts/release-assets/riff.zip
           META_HEAD_SHA=$(jq -r '.head_sha' artifacts/pr-meta/pr-meta.json)
           [[ "$META_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid SHA in pr-meta"; exit 1; }
           [[ "$META_HEAD_SHA" == "$TRUSTED_HEAD_SHA" ]] || { echo "pr-meta SHA does not match the triggering run"; exit 1; }
@@ -82,7 +82,7 @@ jobs:
           HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
           set -euo pipefail
-          mkdir -p "preview/${HEAD_SHA}" && cp artifacts/release-assets/callboard.zip "preview/${HEAD_SHA}/"
+          mkdir -p "preview/${HEAD_SHA}" && cp artifacts/release-assets/riff.zip "preview/${HEAD_SHA}/"
           # Only the demo files the base-ref blueprint names, each checked to be a plain file of a sane size,
           # laid out beside the zip the same way Pages lays them out.
           node .github/scripts/demo-blueprint.js stage blueprint.json artifacts/release-assets/demo "preview/${HEAD_SHA}/demo"
@@ -116,7 +116,7 @@ jobs:
           PLAYGROUND_URL: ${{ steps.playground.outputs.url }}
         with:
           script: |
-            const marker = '<!-- callboard:playground-preview -->';
+            const marker = '<!-- riff:playground-preview -->';
             const sha = process.env.HEAD_SHA;
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
             const badge = 'https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white';

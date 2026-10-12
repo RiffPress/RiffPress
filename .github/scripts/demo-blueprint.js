@@ -1,7 +1,7 @@
 'use strict';
 
 // The demo blueprint names its plugin zip and demo files by where they sit next to it, not by a
-// host: `callboard.zip`, `demo/manifest.json`. The Pages workflow and the pull request preview
+// host: `riff.zip`, `demo/manifest.json`. The Pages workflow and the pull request preview
 // each publish that same layout somewhere and resolve the names against it here.
 //
 // It used to carry the host. When the repository moved to another account the old Pages address
@@ -63,7 +63,9 @@ function isAbsolute( url ) {
 function resolve( blueprint, base, version ) {
 	if ( ! /^https:\/\/[^/]+\/(.*\/)?$/.test( base ) ) {
 		// Playground runs on https, and a browser will not fetch http from it.
-		throw new Error( `Base must be an https URL ending in a slash: ${ base }` );
+		throw new Error(
+			`Base must be an https URL ending in a slash: ${ base }`
+		);
 	}
 	const out = JSON.parse( JSON.stringify( blueprint ) );
 	for ( const { ref } of references( out ) ) {
@@ -72,7 +74,9 @@ function resolve( blueprint, base, version ) {
 				`blueprint.json names a host, which goes stale when the site moves: ${ ref.url }`
 			);
 		}
-		ref.url = new URL( ref.url, base ).href + ( version ? `?v=${ version }` : '' );
+		ref.url =
+			new URL( ref.url, base ).href +
+			( version ? `?v=${ version }` : '' );
 	}
 	return out;
 }
@@ -120,7 +124,9 @@ function stage( blueprint, from, to ) {
 			throw new Error( `Not a regular file: ${ name }` );
 		}
 		if ( stat.size > MAX_FILE_BYTES ) {
-			throw new Error( `Larger than ${ MAX_FILE_BYTES } bytes: ${ name }` );
+			throw new Error(
+				`Larger than ${ MAX_FILE_BYTES } bytes: ${ name }`
+			);
 		}
 		fs.copyFileSync( source, path.join( to, name ) );
 	}
@@ -130,12 +136,18 @@ function stage( blueprint, from, to ) {
 /**
  * Fetch every URL a published blueprint names, as Playground will: from another origin.
  *
- * @param {string[]} list     URLs.
- * @param {Object}   options  Retries, for a deploy that is still reaching the edge.
- * @param {Function} [fetcher] Injected in tests.
+ * @param {string[]} list          URLs.
+ * @param {Object}   options       Retries, for a deploy that is still reaching the edge.
+ * @param            options.tries
+ * @param            options.wait
+ * @param {Function} [fetcher]     Injected in tests.
  * @return {Promise<string[]>} One line per failure. Empty when every URL answered.
  */
-async function check( list, { tries = 1, wait = 10000 } = {}, fetcher = fetch ) {
+async function check(
+	list,
+	{ tries = 1, wait = 10000 } = {},
+	fetcher = fetch
+) {
 	let failures = [];
 	for ( let attempt = 1; attempt <= tries; attempt++ ) {
 		failures = [];
@@ -149,7 +161,9 @@ async function check( list, { tries = 1, wait = 10000 } = {}, fetcher = fetch ) 
 				}
 				if ( res.status !== 200 ) {
 					failures.push( `${ res.status } ${ url }` );
-				} else if ( ! res.headers.get( 'access-control-allow-origin' ) ) {
+				} else if (
+					! res.headers.get( 'access-control-allow-origin' )
+				) {
 					failures.push( `no access-control-allow-origin ${ url }` );
 				}
 			} catch ( error ) {
@@ -174,12 +188,20 @@ if ( require.main === module ) {
 			// resolve <blueprint.json> <base> [version]  ->  the published blueprint, on stdout
 			case 'resolve':
 				process.stdout.write(
-					JSON.stringify( resolve( read( args[ 0 ] ), args[ 1 ], args[ 2 ] ), null, 2 ) + '\n'
+					JSON.stringify(
+						resolve( read( args[ 0 ] ), args[ 1 ], args[ 2 ] ),
+						null,
+						2
+					) + '\n'
 				);
 				break;
 			// stage <blueprint.json> <from> <to>
 			case 'stage':
-				for ( const name of stage( read( args[ 0 ] ), args[ 1 ], args[ 2 ] ) ) {
+				for ( const name of stage(
+					read( args[ 0 ] ),
+					args[ 1 ],
+					args[ 2 ]
+				) ) {
 					process.stdout.write( `${ name }\n` );
 				}
 				break;
@@ -199,21 +221,29 @@ if ( require.main === module ) {
 						} else if ( attempt >= tries ) {
 							throw new Error( `${ res.status } ${ source }` );
 						} else {
-							await new Promise( ( done ) => setTimeout( done, 10000 ) );
+							await new Promise( ( done ) =>
+								setTimeout( done, 10000 )
+							);
 						}
 					}
 				}
 				const list = urls( blueprint );
 				const failures = await check( list, { tries } );
 				for ( const line of failures ) {
-					process.stderr.write( `::error::Demo file not reachable: ${ line }\n` );
+					process.stderr.write(
+						`::error::Demo file not reachable: ${ line }\n`
+					);
 				}
-				process.stdout.write( `${ list.length - failures.length } of ${ list.length } reachable\n` );
+				process.stdout.write(
+					`${ list.length - failures.length } of ${ list.length } reachable\n`
+				);
 				process.exitCode = failures.length ? 1 : 0;
 				break;
 			}
 			default:
-				process.stderr.write( 'usage: demo-blueprint.js resolve|stage|check ...\n' );
+				process.stderr.write(
+					'usage: demo-blueprint.js resolve|stage|check ...\n'
+				);
 				process.exitCode = 2;
 		}
 	} )().catch( ( error ) => {

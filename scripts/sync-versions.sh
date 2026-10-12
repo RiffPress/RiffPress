@@ -3,10 +3,10 @@
 # Reads the canonical version from .release-please-manifest.json and syncs it
 # into every place WordPress reads it verbatim:
 #
-#   - callboard.php plugin header `* Version:`
-#   - callboard.php `CALLBOARD_VERSION` define
-#   - readme.txt `Stable tag:`
-#   - package.json and package-lock.json `version`
+#   - plugins/riff/riff.php plugin header `* Version:`
+#   - plugins/riff/riff.php `RIFF_VERSION` define
+#   - plugins/riff/readme.txt `Stable tag:`
+#   - package.json, package-lock.json and plugins/riff/package.json `version`
 #
 # It also writes readme.txt's `Tested up to:` from the current WordPress
 # release. wp-env runs the suite against current core, so at release time that
@@ -34,12 +34,15 @@ if [[ -z "$VERSION" || "$VERSION" == "null" ]]; then
 	exit 1
 fi
 
-grep -q '^ \* Version: ' callboard.php \
-	|| { echo "Plugin header 'Version:' line not found in callboard.php" >&2; exit 1; }
-grep -q "^define( 'CALLBOARD_VERSION'" callboard.php \
-	|| { echo "CALLBOARD_VERSION define not found in callboard.php" >&2; exit 1; }
-grep -q '^Stable tag: ' readme.txt \
-	|| { echo "'Stable tag:' line not found in readme.txt" >&2; exit 1; }
+PLUGIN=plugins/riff/riff.php
+README=plugins/riff/readme.txt
+
+grep -q '^ \* Version: ' "$PLUGIN" \
+	|| { echo "Plugin header 'Version:' line not found in $PLUGIN" >&2; exit 1; }
+grep -q "^define( 'RIFF_VERSION'" "$PLUGIN" \
+	|| { echo "RIFF_VERSION define not found in $PLUGIN" >&2; exit 1; }
+grep -q '^Stable tag: ' "$README" \
+	|| { echo "'Stable tag:' line not found in $README" >&2; exit 1; }
 
 # BSD and GNU sed disagree on -i, so write through a temp file.
 sed_inplace() {
@@ -47,29 +50,32 @@ sed_inplace() {
 	sed -E "$expr" "$file" > "$file.tmp" && mv "$file.tmp" "$file"
 }
 
-sed_inplace "s/^( \* Version: ).*/\1${VERSION}/" callboard.php
-sed_inplace "s/^(define\( 'CALLBOARD_VERSION', ')[^']*(' \);)/\1${VERSION}\2/" callboard.php
-sed_inplace "s/^(Stable tag: ).*/\1${VERSION}/" readme.txt
+sed_inplace "s/^( \* Version: ).*/\1${VERSION}/" "$PLUGIN"
+sed_inplace "s/^(define\( 'RIFF_VERSION', ')[^']*(' \);)/\1${VERSION}\2/" "$PLUGIN"
+sed_inplace "s/^(Stable tag: ).*/\1${VERSION}/" "$README"
 npm version "$VERSION" --no-git-tag-version --allow-same-version >/dev/null
+npm version "$VERSION" --no-git-tag-version --allow-same-version --workspace=plugins/riff >/dev/null
 
-grep -q "^ \* Version: ${VERSION}\$" callboard.php \
-	|| { echo "Failed to update plugin header Version in callboard.php" >&2; exit 1; }
-grep -q "^define( 'CALLBOARD_VERSION', '${VERSION}' );" callboard.php \
-	|| { echo "Failed to update CALLBOARD_VERSION in callboard.php" >&2; exit 1; }
-grep -q "^Stable tag: ${VERSION}\$" readme.txt \
-	|| { echo "Failed to update Stable tag in readme.txt" >&2; exit 1; }
+grep -q "^ \* Version: ${VERSION}\$" "$PLUGIN" \
+	|| { echo "Failed to update plugin header Version in $PLUGIN" >&2; exit 1; }
+grep -q "^define( 'RIFF_VERSION', '${VERSION}' );" "$PLUGIN" \
+	|| { echo "Failed to update RIFF_VERSION in $PLUGIN" >&2; exit 1; }
+grep -q "^Stable tag: ${VERSION}\$" "$README" \
+	|| { echo "Failed to update Stable tag in $README" >&2; exit 1; }
 
 TESTED=$(curl -sf --max-time 10 https://api.wordpress.org/core/version-check/1.7/ 2>/dev/null \
 	| jq -r '.offers[0].version' 2>/dev/null | grep -oE '^[0-9]+\.[0-9]+' || true)
 if [[ -n "$TESTED" ]]; then
-	sed_inplace "s/^(Tested up to: ).*/\1${TESTED}/" readme.txt
-	grep -q "^Tested up to: ${TESTED}\$" readme.txt \
-		|| { echo "Failed to update Tested up to in readme.txt" >&2; exit 1; }
+	sed_inplace "s/^(Tested up to: ).*/\1${TESTED}/" "$README"
+	grep -q "^Tested up to: ${TESTED}\$" "$README" \
+		|| { echo "Failed to update Tested up to in $README" >&2; exit 1; }
 	echo "Tested up to: ${TESTED}"
 else
 	echo "Could not reach api.wordpress.org; leaving Tested up to as is" >&2
 fi
 [[ "$(jq -r .version package.json)" == "$VERSION" ]] \
 	|| { echo "Failed to update version in package.json" >&2; exit 1; }
+[[ "$(jq -r .version plugins/riff/package.json)" == "$VERSION" ]] \
+	|| { echo "Failed to update version in plugins/riff/package.json" >&2; exit 1; }
 
 echo "Synced all version references to ${VERSION}"

@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
-<ruleset name="Callboard">
-	<description>WordPress Coding Standards for Callboard.</description>
-	<file>.</file>
+<ruleset name="Riff">
+	<description>WordPress Coding Standards for Riff.</description>
+	<file>plugins</file>
+	<file>packages</file>
 	<exclude-pattern>/vendor/*</exclude-pattern>
 	<exclude-pattern>/node_modules/*</exclude-pattern>
 	<exclude-pattern>/.claude/*</exclude-pattern>
@@ -15,12 +16,12 @@
 	</rule>
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array"><element value="callboard"/></property>
+			<property name="text_domain" type="array"><element value="riff"/></property>
 		</properties>
 	</rule>
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
-			<property name="prefixes" type="array"><element value="callboard"/><element value="Callboard"/></property>
+			<property name="prefixes" type="array"><element value="riff"/><element value="Riff"/></property>
 		</properties>
 	</rule>
 	<rule ref="PHPCompatibilityWP"/>
@@ -57,6 +58,18 @@
 	</rule>
 	<rule ref="WordPress.Security.ValidatedSanitizedInput">
 		<exclude-pattern>/tests/php/*</exclude-pattern>
+	</rule>
+	<!-- A test invokes core's own hooks and names its classes after what it tests. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<exclude-pattern>/tests/php/*</exclude-pattern>
+	</rule>
+
+	<!-- Fixture scripts are run with WP-CLI, not loaded by WordPress; they get the test rules. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<exclude-pattern>/packages/fixtures/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.AlternativeFunctions">
+		<exclude-pattern>/packages/fixtures/*</exclude-pattern>
 	</rule>
 
 	<!--

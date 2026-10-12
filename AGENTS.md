@@ -1,6 +1,6 @@
 # Agents
 
-Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup, tests, and pull request conventions. The README's "How it works" section explains the front end; read it before changing `assets/` or `templates/`.
+Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup, tests, and pull request conventions. The README's "How the player works" section explains the front end; read it before changing anything under `plugins/riff/`.
 
 ## Pull request descriptions
 
@@ -12,10 +12,10 @@ Every pull request includes the template's "Use of AI tools" section with the to
 
 ## Before a commit
 
-The Playwright suite runs from the pre-commit hook against the local wp-env site, and again in Actions on the pull request. Do not skip the hook for changes under `assets/`, `templates/`, `includes/`, or `pwa/`. Docs and site changes may skip it with `CALLBOARD_SKIP_E2E=1`.
+The Playwright suite runs from the pre-commit hook against the local wp-env site, and again in Actions on the pull request. Do not skip the hook for changes under `plugins/`. Docs and site changes may skip it with `RIFF_SKIP_E2E=1`.
 
 ## Not bugs
 
-- `blueprint.json` names its zip and demo files relative to itself (`callboard.zip`, `demo/…`), which is not a valid Playground URL on its own. The Pages workflow resolves them against wherever Pages serves the repository and stamps each with the commit, and a pull request's preview resolves them against its own preview branch, so neither demo depends on a hostname written down anywhere. `site/index.html`'s `{{pages_url}}` is filled in the same way.
-- `tests/fixtures/callboard/*/cover-*.png` are WordPress's generated sizes and are gitignored.
-- The dev site's uploads folder is the fixture folder. Deleting files there deletes fixtures.
+- `blueprint.json` names its zip and demo files relative to itself (`riff.zip`, `demo/…`), which is not a valid Playground URL on its own. The Pages workflow resolves them against wherever Pages serves the repository and stamps each with the commit, and a pull request's preview resolves them against its own preview branch, so neither demo depends on a hostname written down anywhere. `site/index.html`'s `{{pages_url}}` is filled in the same way.
+- `packages/fixtures/*/cover-*.png` are WordPress's generated sizes and are gitignored.
+- `tests/` is ignored on purpose: on some machines a personal music library lives there. Never commit it, never screenshot it.

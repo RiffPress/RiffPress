@@ -1,5 +1,5 @@
 /**
- * Playwright config: WordPress defaults, iPhone viewport for the front end.
+ * Playwright config: WordPress defaults, and the player suite again on an iPhone viewport.
  */
 const fs = require( 'fs' );
 const path = require( 'path' );
@@ -39,7 +39,8 @@ process.env.WP_BASE_URL =
 
 module.exports = defineConfig( {
 	...base,
-	testDir: './tests/e2e',
+	testDir: './plugins',
+	testMatch: /tests\/e2e\/.+\.spec\.js$/,
 	reporter: process.env.CI ? [ [ 'github' ], [ 'list' ] ] : 'list',
 	projects: [
 		{ name: 'chromium', use: { ...base.use } },
@@ -50,7 +51,7 @@ module.exports = defineConfig( {
 				...devices[ 'iPhone 14' ],
 				defaultBrowserType: 'chromium',
 			},
-			testMatch: /front\.spec\.js/,
+			testMatch: /tests\/e2e\/player\.spec\.js$/,
 		},
 	],
 } );

@@ -2,13 +2,12 @@
   "core": null,
   "phpVersion": "8.2",
   "plugins": [
-    "."
+    "./plugins/riff"
   ],
   "port": 8890,
   "testsPort": 8891,
   "mappings": {
-    "wp-content/uploads/callboard": "./tests/fixtures/callboard",
-    "wp-content/mu-plugins": "./tests/mu-plugins"
+    "wp-content/riff": "."
   },
   "config": {
     "WP_DEBUG": true,

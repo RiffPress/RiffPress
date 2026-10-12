@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
 # Runs before every commit: lint, then a fast Playwright smoke pass against the local wp-env. CI still
 # runs the full suite on the pull request.
-# Skip the suite for a commit with CALLBOARD_SKIP_E2E=1, or everything with git commit --no-verify.
+# Skip the suite for a commit with RIFF_SKIP_E2E=1, or everything with git commit --no-verify.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 echo "pre-commit: lint"
 npm run -s lint
 
-if [[ -n "${CALLBOARD_SKIP_E2E:-}" ]]; then
-	echo "pre-commit: CALLBOARD_SKIP_E2E set, skipping the Playwright suite"
+if [[ -n "${RIFF_SKIP_E2E:-}" ]]; then
+	echo "pre-commit: RIFF_SKIP_E2E set, skipping the Playwright suite"
 	exit 0
 fi
 
 PORT=$(node -e 'try { console.log( require( "./.wp-env.override.json" ).testsPort || 8891 ) } catch { console.log( 8891 ) }')
 if ! curl -sf -o /dev/null "http://localhost:${PORT}/"; then
 	echo "pre-commit: the wp-env tests site is not answering on port ${PORT}."
-	echo "           npm run env:start, then commit again (or CALLBOARD_SKIP_E2E=1 to commit without the suite)."
+	echo "           npm run env:start, then commit again (or RIFF_SKIP_E2E=1 to commit without the suite)."
 	exit 1
 fi
 
 echo "pre-commit: Playwright smoke tests against http://localhost:${PORT}"
-WP_BASE_URL="http://localhost:${PORT}" npx wp-scripts test-playwright tests/e2e/front.spec.js tests/e2e/site.spec.js --project=chromium --reporter=line
+WP_BASE_URL="http://localhost:${PORT}" npx wp-scripts test-playwright plugins/riff/tests/e2e/player.spec.js --project=chromium --reporter=line
