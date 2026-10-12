@@ -1,0 +1,93 @@
+name: Playground Main Build
+
+# Builds riff.zip from `main`, with the demo media and a blueprint that names them, and force-pushes
+# the lot to the `preview-main` branch. The README's Launch badge points Playground at that branch's
+# blueprint, so it boots the code in the repository rather than the last release. The Pages site
+# publishes the same demo at its own address; this is the copy that needs no site at all.
+#
+# blueprint.json names its files relative to itself. The resolve step below writes a copy with the
+# branch's raw address in front of each name, the same way the Pages workflow does for its origin.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '**/tests/**'
+      - 'site/**'
+  workflow_dispatch:
+
+# Queued, not cancelled: the last push to finish is the one that wins.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Build riff.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff
+          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          (cd build && zip -qr riff.zip riff/)
+
+      # A `.distignore` that drifts out of step with the plugin's requires installs fine and then fatals.
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/riff/riff.php
+          find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+
+      - name: Assemble the branch
+        env:
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p preview/demo
+          cp build/riff.zip preview/
+          cp packages/fixtures/seed.php preview/demo/
+          find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} preview/demo/ \;
+          BASE="https://raw.githubusercontent.com/${GH_REPO}/preview-main/"
+          node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" > preview/blueprint.json
+          ls -la preview preview/demo
+
+      - name: Publish to the preview-main branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # Force-pushed from a throwaway repo so no zip reaches the history everyone clones. The
+          # paths are fixed because the blueprint names them; raw serves them with a five-minute cache.
+          cd preview
+          git init -q -b preview-main
+          git add -A
+          git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -qm "Playground build of ${SHA}"
+          git push -q --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" preview-main
+
+      # The push reports success whether or not raw serves what the blueprint names. Ask for each
+      # file the way Playground will, from another origin, so a dead URL fails here, not on a visitor.
+      - name: Check every file the blueprint fetches
+        run: node .github/scripts/demo-blueprint.js check preview/blueprint.json 30
