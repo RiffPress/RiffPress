@@ -9,7 +9,6 @@ playwright-report/
 plugin-check.json
 *.zip
 .DS_Store
-tests/fixtures/callboard/splash/
 
 # scratch output must never land in the package
 undefined/
@@ -20,21 +19,10 @@ undefined/
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
 
-# Sets are allowlisted, not blocklisted. Anything else under here is something you built or fetched
-# locally, and the import directory is mapped onto this folder, so a `wp callboard fetch` lands in the
-# working tree. Default to ignoring it: music you are entitled to listen to is rarely music the
-# repository is entitled to redistribute.
-tests/fixtures/callboard/*/
-!tests/fixtures/callboard/demo-set/
-!tests/fixtures/callboard/empty-set/
+# WordPress writes its intermediate sizes next to the fixture artwork whenever a site imports it, and
+# those are output, not fixtures.
+packages/fixtures/*/cover-[0-9]*x[0-9]*.png
 
-# Last, so it beats the !tests/fixtures/**/*.png above: WordPress writes its intermediate sizes next
-# to the fixture artwork whenever a dev site imports a set, and those are output, not fixtures.
-tests/fixtures/callboard/*/cover-[0-9]*x[0-9]*.png
-tests/fixtures/callboard/*/share-[0-9]*x[0-9]*.png
-
-# PHPUnit
-.phpunit.result.cache
-
-# Agent worktrees: separate checkouts, never part of this one
-.claude/worktrees/
+# The old fixture mapping. On some machines a personal music library still lives here; it is never
+# part of the repository.
+/tests/

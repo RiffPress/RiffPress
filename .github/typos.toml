@@ -12,5 +12,5 @@ extend-exclude = [
   # Lockfiles and fixtures are not prose.
   "package-lock.json",
   "composer.lock",
-  "tests/fixtures/",
+  "packages/fixtures/",
 ]

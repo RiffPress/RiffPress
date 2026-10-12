@@ -5,6 +5,8 @@
 	"include-v-in-tag": true,
 	"draft": true,
 	"force-tag-creation": true,
+	"bump-minor-pre-major": true,
+	"bump-patch-for-minor-pre-major": true,
 	"changelog-sections": [
 		{ "type": "feat",     "section": "Features" },
 		{ "type": "fix",      "section": "Bug Fixes" },
@@ -20,7 +22,7 @@
 	],
 	"packages": {
 		".": {
-			"package-name": "callboard"
+			"package-name": "riff"
 		}
 	}
 }

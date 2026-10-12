@@ -60,14 +60,12 @@ jobs:
               - '**.js'
               - '**.css'
               - '**.json'
-              - 'templates/**'
+              - 'plugins/**'
+              - 'packages/**'
               - 'site/**'
-              - 'pwa/**'
-              - 'readme.txt'
               - '.distignore'
               - 'phpcs.xml.dist'
               - 'phpunit.xml.dist'
-              - 'tests/php/**'
               - '.github/workflows/**'
 
   phpcs:

@@ -3,79 +3,72 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Callboard</title>
-<meta name="description" content="A music player for your own WordPress site. It keeps playing with the screen off, and offline.">
-<meta property="og:title" content="Callboard">
-<meta property="og:description" content="Your tracks, in every pocket. A WordPress plugin.">
+<title>Riff</title>
+<meta name="description" content="A music player for WordPress. The audio and video in a post play in a player that stays with you, with a full Now Playing screen.">
+<meta property="og:title" content="Riff">
+<meta property="og:description" content="Press play on your own site. A music player for WordPress.">
 <meta property="og:image" content="{{pages_url}}og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="{{pages_url}}">
-<meta name="theme-color" content="#eceae5" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#161616" media="(prefers-color-scheme: dark)">
-<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="color-scheme" content="dark">
 <style>
-:root{--bg:#eceae5;--surface:#f6f5f2;--line:#d3d1cb;--line-2:#e2e0da;--ink:#1c1c1c;--ink-2:#55544f;--ink-3:#6f6e69;--accent:#e8541e;--warmth:rgba(214,184,150,.18);--glass:rgba(236,234,229,.72);--ease:cubic-bezier(.2,.7,.2,1);--t:.2s;--t-slow:.6s;--gap:clamp(40px,5vw,72px);--section:clamp(96px,13vw,168px)}
-@media (prefers-color-scheme:dark){:root{--bg:#161616;--surface:#1d1d1d;--line:#2e2e2e;--line-2:#262626;--ink:#f2f1ee;--ink-2:#b3b2ae;--ink-3:#95948f;--accent:#ff6a2e;--warmth:rgba(120,92,68,.1);--glass:rgba(22,22,22,.72)}}
+:root{--bg:#0f0f0f;--surface:#161616;--bar:#212121;--line:#2a2a2a;--ink:#f5f4f1;--ink-2:#b4b3af;--ink-3:#8a8985;--accent:#ffb020;--accent-ink:#1a1200;--glow:rgba(255,176,32,.18);--glass:rgba(15,15,15,.72);--ease:cubic-bezier(.2,.7,.2,1);--t:.2s;--t-slow:.6s;--gap:clamp(40px,5vw,72px);--section:clamp(96px,13vw,168px)}
 *{box-sizing:border-box}
-html{font:-apple-system-body;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Inter,Arial,sans-serif;scroll-behavior:smooth}
+html{font-family:Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-body{margin:0;background-color:var(--bg);background-image:radial-gradient(120% 70% at 50% -10%,var(--warmth),transparent 60%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .12 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");background-size:auto,200px 200px;background-repeat:no-repeat,repeat;background-blend-mode:normal,overlay;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 a{color:inherit}
 .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
-/* nav: the product name, two links, one button */
-.nav{position:sticky;top:0;z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(160%) blur(16px);backdrop-filter:saturate(160%) blur(16px);border-bottom:1px solid var(--line-2)}
+/* nav: the name, two links, one button */
+.nav{position:sticky;top:0;z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(160%) blur(16px);backdrop-filter:saturate(160%) blur(16px);border-bottom:1px solid var(--line)}
 .nav .wrap{height:52px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.mark{display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;letter-spacing:-.01em;font-size:1.0625rem}
-.mark i{width:24px;height:24px;border-radius:50%;background:var(--ink);position:relative;flex:none}
-.mark i::before{content:"";position:absolute;left:9.5px;top:7px;border-left:8px solid var(--bg);border-top:5px solid transparent;border-bottom:5px solid transparent}
-.mark i::after{content:"";position:absolute;right:-3px;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.mark{display:inline-flex;align-items:center;gap:10px;font-weight:700;text-decoration:none;letter-spacing:-.01em;font-size:1.0625rem}
+.mark i{width:22px;height:22px;border-radius:50%;background:var(--accent);position:relative;flex:none;box-shadow:0 0 14px 2px var(--glow)}
+.mark i::before{content:"";position:absolute;left:8.5px;top:6px;border-left:8px solid var(--accent-ink);border-top:5px solid transparent;border-bottom:5px solid transparent}
 .nav nav{display:flex;align-items:center;gap:24px}
 .nav nav a:not(.btn){color:var(--ink-2);text-decoration:none;font-size:.8125rem;transition:color var(--t)}
 .nav nav a:not(.btn):hover{color:var(--ink)}
 .nav .btn{height:30px;padding:0 14px;font-size:.8125rem}
-/* type: four sizes. A label, a headline, one line under it, and small print */
-.eyebrow{margin:0 0 12px;font-size:clamp(1.0625rem,1.6vw,1.3125rem);font-weight:600;color:var(--ink-3);letter-spacing:-.01em}
+/* type: a label, a headline, one line under it, and small print */
+.eyebrow{margin:0 0 12px;font-size:clamp(1rem,1.5vw,1.25rem);font-weight:500;color:var(--accent);letter-spacing:.02em;text-transform:uppercase}
 h1,h2{letter-spacing:-.035em;line-height:1.02;font-weight:700;margin:0;text-wrap:balance}
 h1{font-size:clamp(3rem,8vw,6rem)}
 h2{font-size:clamp(2.5rem,6vw,4.5rem)}
-.lede{margin:20px auto 0;font-size:clamp(1.1875rem,2vw,1.625rem);font-weight:500;color:var(--ink-2);max-width:34rem;line-height:1.3;letter-spacing:-.01em;text-wrap:balance}
+.lede{margin:20px auto 0;font-size:clamp(1.1875rem,2vw,1.625rem);font-weight:400;color:var(--ink-2);max-width:34rem;line-height:1.3;letter-spacing:-.01em;text-wrap:balance}
 .fine{margin:0;font-size:.875rem;color:var(--ink-3);text-wrap:pretty}
 /* sections: one idea each, centred, text above the picture */
 section{padding:var(--section) 0;text-align:center}
 .alt{background:var(--surface)}
 .shot{margin-top:var(--gap);display:flex;justify-content:center}
-/* buttons: a filled pill, and a plain link with a chevron */
-.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:0 24px;height:48px;display:inline-flex;align-items:center;font-weight:600;text-decoration:none;font-size:1.0625rem;transition:transform var(--t) var(--ease),opacity var(--t)}
+/* the wire: a hairline of amber light along the top of a section, the player's own progress line */
+.wire{position:relative}
+.wire::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--accent) 0 38%,var(--line) 38%)}
+.wire::after{content:"";position:absolute;left:0;top:2px;width:38%;height:22px;background:linear-gradient(180deg,var(--glow),transparent);filter:blur(6px);pointer-events:none}
+/* buttons: a filled pill in amber, and a plain link with a chevron */
+.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 24px;height:48px;display:inline-flex;align-items:center;font-weight:600;text-decoration:none;font-size:1.0625rem;transition:transform var(--t) var(--ease),opacity var(--t)}
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .more{color:var(--accent);text-decoration:none;font-size:1.0625rem;font-weight:500}
 .more::after{content:" ›"}
 .more:hover{text-decoration:underline;text-underline-offset:3px}
 .cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:center}
-/* device frame: a thin machined bezel, nothing more */
-.device{display:inline-block;width:min(360px,78vw);padding:10px;border-radius:46px;background:#0d0d0d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 40px 90px -20px rgba(0,0,0,.45)}
+/* device frame: a thin bezel, nothing more */
+.device{display:inline-block;width:min(360px,78vw);padding:10px;border-radius:46px;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 40px 90px -20px rgba(0,0,0,.8)}
 .device img{display:block;width:100%;height:auto;border-radius:36px}
 .hero{padding:clamp(64px,9vw,112px) 0 var(--section)}
 .hero .device{width:min(380px,80vw)}
-.admin{display:block;width:100%;height:auto;border-radius:18px;border:1px solid var(--line);box-shadow:0 40px 90px -30px rgba(0,0,0,.4);background:#f0f0f1}
+.desk{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);box-shadow:0 40px 90px -30px rgba(0,0,0,.8)}
 /* three short facts under a picture */
 .facts{list-style:none;margin:var(--gap) auto 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:52rem}
 .facts strong{display:block;font-size:1.3125rem;letter-spacing:-.01em}
 .facts span{color:var(--ink-2)}
-/* the dark room: the player, at scale */
-.dark{background:#111;color:#f2f1ee}
-.dark .eyebrow{color:#95948f}
-.dark .lede,.dark .facts span{color:#b3b2ae}
-/* live demo: examples above a phone-sized preview, the button below */
-.presets{margin-top:36px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.chip{appearance:none;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:999px;min-height:44px;padding:0 18px;font:inherit;font-size:.9375rem;font-weight:600;cursor:pointer;transition:color var(--t),border-color var(--t),background var(--t)}
-.chip:hover{color:var(--ink);border-color:var(--ink)}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.chip:disabled{opacity:.5;cursor:progress}
+/* live demo: a phone-sized preview, the button below */
 .demo{margin-top:40px;display:grid;justify-items:center;gap:28px}
-.phone{width:min(390px,100%);padding:10px;border-radius:46px;background:#0d0d0d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 40px 90px -20px rgba(0,0,0,.45)}
+.phone{width:min(390px,100%);padding:10px;border-radius:46px;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 40px 90px -20px rgba(0,0,0,.8)}
 .screen{position:relative;aspect-ratio:390/844;border-radius:36px;overflow:hidden;background:#161616}
 .screen img,.screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .screen img{object-fit:contain;z-index:1}
@@ -84,13 +77,13 @@ section{padding:var(--section) 0;text-align:center}
 .demo-start[aria-disabled="true"]{opacity:.6;cursor:progress}
 .demo-status{margin:0;font-size:.9375rem;color:var(--ink);text-wrap:pretty}
 .demo-status:empty{display:none}
-/* tech specs: grouped, small, for whoever wants them */
+/* for site owners: grouped, small */
 .specs{margin:var(--gap) 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:left;border-top:1px solid var(--line);padding-top:32px}
 .specs h3{margin:0 0 10px;font-size:1.0625rem;letter-spacing:-.01em}
 .specs ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:.9375rem}
+.specs li{color:var(--ink-2)}
 .specs a{color:var(--ink-2);text-decoration:none;transition:color var(--t)}
 .specs a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
-.needs{margin-top:28px}
 footer{border-top:1px solid var(--line);padding:24px 0 56px;color:var(--ink-3);font-size:.8125rem}
 footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
 footer a{text-decoration:none;color:var(--ink-2)}
@@ -103,92 +96,79 @@ html.js .r.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Callboard</a><nav><a href="#yours">Try it</a><a href="#under">Tech specs</a><a href="https://github.com/promptcorner/callboard">GitHub</a><a class="btn" href="https://github.com/promptcorner/callboard/releases/latest">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Riff</a><nav><a href="#try">Try it</a><a href="#owners">For your site</a><a href="https://github.com/riffpress/riffpress">GitHub</a><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
 	<div class="r">
-		<p class="eyebrow">Callboard</p>
-		<h1>Your tracks, in every pocket.</h1>
-		<p class="lede">A music player for your own WordPress site. Send one link.</p>
-		<div class="cta"><a class="btn" href="https://github.com/promptcorner/callboard/releases/latest">Download</a><a class="more" href="#yours">Try the demo</a></div>
+		<p class="eyebrow">A music player for WordPress</p>
+		<h1>Press play on your own site.</h1>
+		<p class="lede">The songs and videos in a post, in a player that feels like the apps you already use.</p>
+		<div class="cta"><a class="btn" href="#try">Try the live demo</a><a class="more" href="#owners">Put it on your site</a></div>
 	</div>
-	<div class="shot r"><span class="device"><img src="home-light.png" width="780" height="1328" alt="The home screen: the sets, each with its track count and length"></span></div>
+	<div class="shot r"><span class="device"><img src="phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls"></span></div>
 </div></section>
 
-<section class="dark" id="player"><div class="wrap">
-	<div class="r"><p class="eyebrow">The player</p><h2>Keeps playing in a pocket.</h2><p class="lede">Screen off, phone away, track still going.</p></div>
-	<div class="shot r"><span class="device"><img src="set-dark.png" width="780" height="1328" alt="The set page with the player along the bottom"></span></div>
+<section class="alt wire" id="bar"><div class="wrap">
+	<div class="r"><p class="eyebrow">The bar</p><h2>Keeps playing while you read.</h2><p class="lede">Tap a track and it starts. Scroll on, open another post, lock the phone; the music carries on.</p></div>
+	<div class="shot r"><span class="device"><img src="phone-post.png" width="780" height="1688" alt="A post with its tracks listed, and the player bar along the bottom of the screen"></span></div>
 	<ul class="facts r">
-		<li><strong>Lock screen</strong><span>Play and skip without unlocking.</span></li>
-		<li><strong>AirPlay</strong><span>Send it to the speaker in the room.</span></li>
-		<li><strong>Offline</strong><span>Save once. No signal needed.</span></li>
+		<li><strong>Swipe to skip</strong><span>Sideways on the bar for the next or previous track.</span></li>
+		<li><strong>Lock screen</strong><span>Artwork, title and controls where your phone puts them.</span></li>
+		<li><strong>Picks up again</strong><span>Reload or come back and it's paused where you left it.</span></li>
 	</ul>
 </div></section>
 
-<section id="now-playing"><div class="wrap">
-	<div class="r"><p class="eyebrow">Now Playing</p><h2>Big enough to hit without looking.</h2><p class="lede">Tap the bar and the track fills the screen. Drag it down to go back.</p></div>
-	<div class="shot r"><span class="device"><img src="now-playing-dark.png" width="780" height="1328" alt="Now Playing on a phone: the track's cover, title and waveform, the time, and the repeat, previous, pause and next controls"></span></div>
+<section id="queue"><div class="wrap">
+	<div class="r"><p class="eyebrow">Up next</p><h2>The whole post, queued.</h2><p class="lede">Every track in the post lines up behind the one you chose. Pull the handle to see what's coming.</p></div>
+	<div class="shot r"><span class="device"><img src="phone-up-next.png" width="780" height="1688" alt="Now Playing with the Up next sheet open, listing the rest of the post's tracks"></span></div>
 </div></section>
 
-<section class="alt" id="hand"><div class="wrap">
-	<div class="r"><p class="eyebrow">Sharing</p><h2>Hand it to someone.</h2><p class="lede">Send the link. No signal? Pass the set file phone to phone.</p></div>
-	<div class="shot r"><span class="device"><img src="set-light.png" width="780" height="1328" alt="A set, with Load from files beside Save offline"></span></div>
+<section class="alt wire" id="video"><div class="wrap">
+	<div class="r"><p class="eyebrow">Song or video</p><h2>Same track, two ways.</h2><p class="lede">When a song has a video, a switch at the top of Now Playing flips between them without losing your place.</p></div>
+	<div class="shot r"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the cover on the left, the Up next list on the right, and the player bar along the bottom"></div>
+	<ul class="facts r">
+		<li><strong>A wire that glows</strong><span>The bar's amber line lights with the music, and cools when you pause.</span></li>
+		<li><strong>AirPlay and Cast</strong><span>Send it to the speakers when they're in reach.</span></li>
+		<li><strong>Keyboard</strong><span>Space plays and pauses, J and L skip ten seconds.</span></li>
+	</ul>
 </div></section>
 
-<section id="yours"><div class="wrap">
-	<div class="r"><p class="eyebrow">Make it yours</p><h2>Your name. Your colour.</h2><p class="lede">Pick one and watch the phone change.</p></div>
-	<div class="presets r" role="group" aria-label="Example settings">
-		<button type="button" class="chip" aria-pressed="true" data-preset="show" data-src="demo-spring-show.png">Spring Show</button>
-		<button type="button" class="chip" aria-pressed="false" data-preset="choir" data-src="demo-chamber-choir.png">Chamber Choir</button>
-		<button type="button" class="chip" aria-pressed="false" data-preset="maya" data-src="demo-maya-sings.png">Maya Sings</button>
-	</div>
+<section id="try"><div class="wrap">
+	<div class="r"><p class="eyebrow">Live demo</p><h2>Hear it.</h2><p class="lede">A WordPress site with ten jazz tracks, running in your browser. Nothing to install.</p></div>
 	<div class="demo r">
-		<div class="phone">
-			<div class="screen">
-				<img id="demo-still" src="demo-spring-show.png" width="780" height="1688" alt="Preview of the Spring Show example: Callboard on a phone, with the next rehearsal call and the Shakespeare's Sonnets set">
-				<iframe id="demo" title="Live demo of Callboard running in WordPress Playground" hidden></iframe>
-			</div>
-		</div>
+		<div class="phone"><div class="screen">
+			<img id="demo-still" src="phone-post.png" width="780" height="1688" alt="Preview of the live demo: a post with ten tracks and the player bar">
+			<iframe id="demo" title="Live demo of Riff running in WordPress Playground" allow="autoplay; clipboard-write" hidden></iframe>
+		</div></div>
 		<div class="demo-go">
 			<a class="btn demo-start" id="demo-start" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Start the live demo</a>
-			<p class="demo-status" id="demo-status" role="status"></p>
-			<p class="fine">A real WordPress site, running in your browser. Nothing to install.</p>
+			<p class="demo-status" id="demo-status" role="status" aria-live="polite"></p>
+			<p class="fine">The recordings are by the Airmen of Note, the United States Air Force Band, and are in the public domain.</p>
 		</div>
 	</div>
 </div></section>
 
-<section class="alt" id="under"><div class="wrap">
-	<div class="r"><p class="eyebrow">Tech specs</p><h2>Built on the web.</h2><p class="lede">One WordPress plugin. No app store, no framework, no build step.</p></div>
+<section class="alt wire" id="owners"><div class="wrap">
+	<div class="r"><p class="eyebrow">For your site</p><h2>Install it. Write a post.</h2><p class="lede">Riff plays the audio and video blocks WordPress already has. No new way to upload, no new place to look.</p></div>
+	<div class="cta r"><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download the plugin</a><a class="more" href="https://github.com/riffpress/riffpress#readme">Read how it works</a></div>
 	<div class="specs r">
-		<div><h3>Playback</h3><ul><li><a href="https://html.spec.whatwg.org/multipage/media.html">HTML media element</a></li><li><a href="https://www.w3.org/TR/mediasession/">Media Session</a></li><li><a href="https://www.w3.org/TR/webaudio/">Web Audio</a></li><li><a href="https://w3c.github.io/audio-session/">Audio Session</a></li><li><a href="https://www.w3.org/TR/remote-playback/">Remote Playback</a></li><li><a href="https://www.w3.org/TR/web-locks/">Web Locks</a></li><li><a href="https://html.spec.whatwg.org/multipage/canvas.html">Canvas 2D</a></li></ul></div>
-		<div><h3>Offline</h3><ul><li><a href="https://w3c.github.io/ServiceWorker/">Service Worker</a></li><li><a href="https://w3c.github.io/ServiceWorker/#cache-interface">Cache API</a></li><li><a href="https://www.rfc-editor.org/rfc/rfc9110.html#name-range-requests">Range requests</a></li><li><a href="https://streams.spec.whatwg.org/">Streams</a></li><li><a href="https://storage.spec.whatwg.org/">Storage</a></li></ul></div>
-		<div><h3>App</h3><ul><li><a href="https://www.w3.org/TR/appmanifest/">Web App Manifest</a></li><li><a href="https://www.w3.org/TR/web-share/">Web Share</a></li><li><a href="https://webkit.org/blog/15054/an-html-switch-control/">WebKit switch haptics</a></li></ul></div>
-		<div><h3>Interface</h3><ul><li><a href="https://www.w3.org/TR/css-view-transitions-1/">View Transitions</a></li><li><a href="https://www.w3.org/TR/css-anchor-position-1/">Anchor positioning</a></li><li><a href="https://www.w3.org/TR/css-contain-3/">Container queries</a></li><li><a href="https://www.w3.org/TR/css-inline-3/#text-box-trim">text-box-trim</a></li><li><a href="https://www.w3.org/TR/css-text-4/#text-wrap">text-wrap: pretty</a></li></ul></div>
+		<div><h3>What it needs</h3><ul><li>WordPress 6.5 or newer</li><li>PHP 8.1 or newer</li><li>Any block theme</li></ul></div>
+		<div><h3>What it adds</h3><ul><li>One script, one stylesheet, no build step</li><li>A <em>Video version</em> field on audio files</li><li>Nothing to configure</li></ul></div>
+		<div><h3>What it uses</h3><ul><li>Media Session for the lock screen</li><li>Web Audio for the glowing wire</li><li>Remote Playback for AirPlay and Cast</li></ul></div>
+		<div><h3>Open</h3><ul><li><a href="https://github.com/riffpress/riffpress">Source on GitHub</a></li><li>GPL, like WordPress</li><li><a href="https://github.com/riffpress/riffpress/issues">Report a problem</a></li></ul></div>
 	</div>
-	<p class="fine needs r">Requires WordPress 6.5 and PHP 8.1 or later.</p>
-</div></section>
-
-<section class="closing"><div class="wrap r">
-	<h2>Ready for rehearsal.</h2>
-	<div class="cta"><a class="btn" href="https://github.com/promptcorner/callboard/releases/latest">Download</a><a class="more" href="https://github.com/promptcorner/callboard">View the source</a></div>
 </div></section>
 </main>
 
-<footer><div class="wrap"><span>Callboard is free software under the GPL. Made by <a href="https://josephfus.co/">Joe Fusco</a>.</span><a href="https://github.com/promptcorner/callboard">Source and issues on GitHub</a></div></footer>
+<footer><div class="wrap"><span>Riff is free software under the GPL. Made by <a href="https://josephfus.co/">Joe Fusco</a>.</span><a href="https://github.com/riffpress/riffpress">Source and issues on GitHub</a></div></footer>
 <script>
 	if ( 'IntersectionObserver' in window && ! matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) document.documentElement.classList.add( 'js' );
 	const io = new IntersectionObserver( ( es ) => es.forEach( ( e ) => { if ( e.isIntersecting ) { e.target.classList.add( 'in' ); io.unobserve( e.target ); } } ), { rootMargin: '0px 0px -5% 0px', threshold: 0.01 } );
 	document.querySelectorAll( '.r' ).forEach( ( el ) => io.observe( el ) );
 </script>
 <script type="module">
-	// Live demo. Nothing from WordPress Playground loads until someone starts the demo.
-	// Keep PRESETS in step with DEMO_PRESETS in scripts/screenshots.js.
-	const PRESETS = {
-		show:  { name: 'Spring Show',   accent: '',        badge: '★', confetti: '',   hearts: false },
-		choir: { name: 'Chamber Choir', accent: '#3b82f6', badge: '♪', confetti: '',   hearts: false },
-		maya:  { name: 'Maya Sings',    accent: '#e0457b', badge: '♥', confetti: '22', hearts: true },
-	};
+	// Live demo. Nothing from WordPress Playground loads until someone starts it.
 	const PLAYGROUND = 'https://playground.wordpress.net/';
 	// Below this width the demo opens in a new tab: a whole site scrolling inside a small frame is hard to use on a phone.
 	const EMBED = matchMedia( '(min-width: 901px)' );
@@ -197,64 +177,28 @@ html.js .r.in{opacity:1;transform:none}
 	const iframe = document.getElementById( 'demo' );
 	const link = document.getElementById( 'demo-start' );
 	const status = document.getElementById( 'demo-status' );
-	const chips = [ ...document.querySelectorAll( '.chip' ) ];
-	let current = 'show';
 	let client = null;
 	let starting = null;
 	let failed = false;
 
-	const presetCode = ( p ) => `<?php require '/wordpress/wp-load.php';
-		update_option( 'blogname', ${ JSON.stringify( p.name ) } );
-		update_option( 'callboard_settings', array_merge( (array) get_option( 'callboard_settings' ), array(
-			'accent' => ${ JSON.stringify( p.accent ) }, 'badge' => ${ JSON.stringify( p.badge ) },
-			'confetti' => ${ JSON.stringify( p.confetti ) }, 'hearts' => ${ p.hearts ? 'true' : 'false' },
-		) ) );
-		Callboard\\Sets::flush();`;
+	const blueprint = () => fetch( 'blueprint.json' ).then( ( r ) => {
+		if ( ! r.ok ) throw new Error( `blueprint.json: ${ r.status }` );
+		return r.json();
+	} );
 
-	// The demo blueprint with the chosen example's settings added as a last step.
-	let blueprintRequest = null;
-	const blueprintFor = async ( key ) => {
-		blueprintRequest ||= fetch( 'blueprint.json' ).then( ( r ) => {
-			if ( ! r.ok ) throw new Error( `blueprint.json: ${ r.status }` );
-			return r.json();
-		} );
-		const base = await blueprintRequest;
-		return { ...base, steps: [ ...base.steps, { step: 'runPHP', code: presetCode( PRESETS[ key ] ) } ] };
-	};
-
-	// Point the new-tab link at a Playground URL that carries the chosen example.
-	const updateLink = async () => {
-		try {
-			const json = JSON.stringify( await blueprintFor( current ) );
-			const bytes = new TextEncoder().encode( json );
-			link.href = `${ PLAYGROUND }?mode=seamless#${ btoa( String.fromCharCode( ...bytes ) ) }`;
-		} catch {
-			// Keep the link in the markup, which opens the demo with its default settings.
-		}
-	};
-
-	const setBusy = ( busy ) => {
-		link.setAttribute( 'aria-disabled', busy ? 'true' : 'false' );
-		chips.forEach( ( c ) => ( c.disabled = busy ) );
-	};
-
-	const showNewTabFallback = () => {
-		failed = true;
-		link.textContent = 'Open the demo in a new tab';
-		status.textContent = 'The live demo couldn’t start on this page.';
-	};
+	const setBusy = ( busy ) => link.setAttribute( 'aria-disabled', busy ? 'true' : 'false' );
 
 	async function start() {
 		if ( starting ) return starting;
 		setBusy( true );
 		status.textContent = 'Starting the live demo…';
 		starting = ( async () => {
-			const [ { startPlaygroundWeb }, blueprint ] = await Promise.all( [
+			const [ { startPlaygroundWeb }, steps ] = await Promise.all( [
 				import( `${ PLAYGROUND }client/index.js` ),
-				blueprintFor( current ),
+				blueprint(),
 			] );
 			iframe.hidden = false;
-			client = await startPlaygroundWeb( { iframe, remoteUrl: `${ PLAYGROUND }remote.html`, blueprint } );
+			client = await startPlaygroundWeb( { iframe, remoteUrl: `${ PLAYGROUND }remote.html`, blueprint: steps } );
 			await client.isReady();
 			still.hidden = true;
 			link.textContent = 'Open the demo in a new tab';
@@ -265,29 +209,13 @@ html.js .r.in{opacity:1;transform:none}
 			iframe.hidden = true;
 			still.hidden = false;
 			starting = null;
+			failed = true;
 			setBusy( false );
-			showNewTabFallback();
+			link.textContent = 'Open the demo in a new tab';
+			status.textContent = 'The live demo couldn’t start on this page.';
 			throw e;
 		} );
 		return starting;
-	}
-
-	async function choose( chip ) {
-		current = chip.dataset.preset;
-		chips.forEach( ( c ) => c.setAttribute( 'aria-pressed', c === chip ? 'true' : 'false' ) );
-		still.src = chip.dataset.src;
-		still.alt = still.alt.replace( /^Preview of the .+? example/, `Preview of the ${ PRESETS[ current ].name } example` );
-		updateLink();
-		if ( ! client ) return;
-		setBusy( true );
-		status.textContent = `Applying ${ PRESETS[ current ].name }…`;
-		try {
-			await client.run( { code: presetCode( PRESETS[ current ] ) } );
-			await client.goTo( '/' );
-			status.textContent = `The live demo is showing ${ PRESETS[ current ].name }. Changes are not saved.`;
-		} finally {
-			setBusy( false );
-		}
 	}
 
 	link.addEventListener( 'click', ( e ) => {
@@ -300,7 +228,6 @@ html.js .r.in{opacity:1;transform:none}
 		e.preventDefault();
 		start().catch( () => {} );
 	} );
-	chips.forEach( ( c ) => c.addEventListener( 'click', () => choose( c ).catch( () => {} ) ) );
 	const labelLink = () => {
 		if ( ! client && ! failed ) {
 			link.textContent = EMBED.matches ? 'Start the live demo' : 'Open the live demo in a new tab';
@@ -308,7 +235,6 @@ html.js .r.in{opacity:1;transform:none}
 	};
 	EMBED.addEventListener( 'change', labelLink );
 	labelLink();
-	updateLink();
 </script>
 </body>
 </html>
