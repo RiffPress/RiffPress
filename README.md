@@ -6,7 +6,7 @@ A music player for WordPress with the fit and finish of a streaming app. Install
 and video blocks in your posts play in a player that stays docked at the bottom of the screen,
 with a full Now Playing view, a queue, and a Song/Video switch for tracks that have both.
 
-This repository is the Riff monorepo. <a href="https://riffpress.github.io/RiffPress/">Landing page</a> and live demo.
+This repository is the Riff monorepo. <a href="https://riffpress.com/">Landing page</a> and live demo.
 
 | Path | What it is |
 | --- | --- |
@@ -22,7 +22,7 @@ No install needed: launch a scratch site with Riff and the demo post, built from
 
 [![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json)
 
-The `preview-main` branch holds `riff.zip`, the demo media and a blueprint that names them, rebuilt by the Playground Main Build workflow on every push to `main`. The [landing page](https://riffpress.github.io/RiffPress/) embeds the same demo.
+The `preview-main` branch holds `riff.zip`, the demo media and a blueprint that names them, rebuilt by the Playground Main Build workflow on every push to `main`. The [landing page](https://riffpress.com/) embeds the same demo.
 
 ## How the player works
 
