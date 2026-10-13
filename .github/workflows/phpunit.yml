@@ -9,20 +9,31 @@ permissions:
 
 jobs:
   phpunit:
-    name: WordPress test suite (${{ matrix.multisite && 'multisite' || 'single site' }})
+    name: WordPress test suite (PHP ${{ matrix.php }}, ${{ matrix.core }}, ${{ matrix.multisite && 'multisite' || 'single site' }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    # The oldest PHP the plugin supports and the newest, on the current WordPress; a network on the
+    # one in between; and core trunk, which is where a plugin aiming at core finds out first. Trunk
+    # does not block a merge, since a nightly can break on its own, but it shows.
+    continue-on-error: ${{ matrix.core == 'trunk' }}
     strategy:
       fail-fast: false
       matrix:
-        multisite: [ false, true ]
+        include:
+          - { php: '8.1', core: 'latest', multisite: false }
+          - { php: '8.3', core: 'latest', multisite: true }
+          - { php: '8.4', core: 'latest', multisite: false }
+          - { php: '8.4', core: 'trunk',  multisite: false }
+    env:
+      WP_ENV_PHP_VERSION: ${{ matrix.php }}
+      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#trunk' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
-          php-version: '8.3'
+          php-version: ${{ matrix.php }}
           coverage: none
           tools: composer
       # Dev dependencies, unlike the E2E job: PHPUnit and the polyfills are the point here.
