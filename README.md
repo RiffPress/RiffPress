@@ -20,7 +20,7 @@ This repository is the Riff monorepo. <a href="https://riffpress.github.io/riffp
 
 No install needed: launch a scratch site with Riff and the demo post, built from `main`.
 
-[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/riffpress/riffpress/preview-main/blueprint.json)
+[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/riffpress/riffpress/preview-main/blueprint.json)
 
 The `preview-main` branch holds `riff.zip`, the demo media and a blueprint that names them, rebuilt by the Playground Main Build workflow on every push to `main`. The [landing page](https://riffpress.github.io/riffpress/) embeds the same demo.
 

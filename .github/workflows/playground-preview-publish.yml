@@ -106,7 +106,7 @@ jobs:
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" > preview-blueprint.json
           # A link to a demo that cannot load its files is worse than no link; wait out the push, then fail.
           node .github/scripts/demo-blueprint.js check preview-blueprint.json 30
-          echo "url=https://playground.wordpress.net/#$(jq -c . preview-blueprint.json | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "url=https://playground.wordpress.net/?mode=seamless#$(jq -c . preview-blueprint.json | base64 -w0)" >> "$GITHUB_OUTPUT"
       - name: Post or update the sticky comment
         if: steps.meta.outputs.skipped != 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
