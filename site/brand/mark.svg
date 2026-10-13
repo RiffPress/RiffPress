@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Riff: a record at LP proportions. The label is a third of the disc, the spindle hole is cut through. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+	<mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="12" fill="#000"/></mask>
+	<g mask="url(#hole)">
+		<circle cx="512" cy="512" r="500" fill="#1e1e1e"/>
+		<circle cx="512" cy="512" r="166.7" fill="#3858e9"/>
+	</g>
+</svg>

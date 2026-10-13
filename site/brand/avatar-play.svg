@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<!-- Riff mark: a ring, a disc, the play triangle knocked out. Transparent outside the ring and inside the triangle, so it reads on light and dark, like the WordPress mark. -->
-<circle cx="512" cy="512" r="494" fill="none" stroke="#3858e9" stroke-width="32"/>
-<mask id="m"><rect width="1024" height="1024" fill="#fff"/><path d="M430 316 L 700 512 L 430 708 Z" fill="#000" stroke="#000" stroke-width="44" stroke-linejoin="round"/></mask>
-<circle cx="512" cy="512" r="428" fill="#3858e9" mask="url(#m)"/>
-</svg>
