@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Riff Music Player
+ * Plugin Name: Riff Player
  * Description: Plays the audio and video in your posts in a player that stays docked at the bottom of the screen, with a full Now Playing view.
  * Version: 4.0.0
  * Requires at least: 6.5
