@@ -58,6 +58,7 @@ jobs:
           cp build/riff.zip out/
           cp packages/fixtures/seed.php out/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;
+          cp site/brand/mark.png out/demo/
           # Where Pages serves this repository, asked rather than written down: the address changed once
           # already, when the repository moved accounts, and every hardcoded URL went dead. Playground runs
           # on https and a browser will not fetch http from it, so the scheme is always https.

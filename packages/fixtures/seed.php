@@ -19,6 +19,41 @@ defined( 'ABSPATH' ) || exit;
 
 if ( ! function_exists( 'riff_seed' ) ) {
 	/**
+	 * Names the site and gives it the record as its icon, so the demo and a fresh local site look
+	 * like the rest of Riff. Nothing is overwritten that someone already set.
+	 *
+	 * @param string $mark Path to the mark, a square PNG; skipped when unreadable.
+	 */
+	function riff_seed_site( string $mark = '' ): void {
+		if ( in_array( get_option( 'blogname' ), array( '', 'callboard', 'WordPress', 'My WordPress Website' ), true ) ) {
+			update_option( 'blogname', 'Riff' );
+		}
+		if ( in_array( get_option( 'blogdescription' ), array( '', 'Just another WordPress site' ), true ) ) {
+			update_option( 'blogdescription', 'A music player for WordPress' );
+		}
+		if ( ! $mark || ! is_readable( $mark ) || (int) get_option( 'site_icon' ) ) {
+			return;
+		}
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$copy = wp_tempnam( 'riff-mark.png' );
+		copy( $mark, $copy );
+		$id = media_handle_sideload(
+			array(
+				'name'     => 'riff-mark.png',
+				'tmp_name' => $copy,
+			),
+			0,
+			'Riff'
+		);
+		if ( ! is_wp_error( $id ) ) {
+			update_post_meta( $id, '_wp_attachment_context', 'site-icon' );
+			update_option( 'site_icon', (int) $id );
+		}
+	}
+
+	/**
 	 * Seeds one folder. Returns the post ID, or 0 when the post already exists.
 	 *
 	 * @param string $dir Folder of audio files.
@@ -207,6 +242,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI && isset( $file ) && realpath( (string) $file
 	if ( ! is_dir( $dir ) ) {
 		WP_CLI::error( esc_html( "No folder at $dir." ) );
 	}
+	riff_seed_site( dirname( __DIR__, 2 ) . '/site/brand/mark.png' );
 	try {
 		$demo_id = riff_seed( $dir );
 	} catch ( RuntimeException $e ) {
