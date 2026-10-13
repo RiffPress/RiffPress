@@ -162,6 +162,38 @@ html.has-riff body::after {
 	font-variant-numeric: tabular-nums;
 }
 
+/* The quality pill: format and bit rate for the playing track, as Tidal
+   sets its tier at the right end of the bar. Centred with the controls. */
+.riff-quality {
+	display: inline-flex;
+	align-items: center;
+	flex: none;
+	height: 28px;
+	padding: 0 12px;
+	border-radius: 999px;
+	background: color-mix(in srgb, currentcolor 10%, transparent);
+	color: var(--riff-accent);
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.riff-quality:empty {
+	display: none;
+}
+
+.riff-bar-end .riff-quality {
+	margin-inline-end: 8px;
+}
+
+#riff .riff-np-quality {
+	margin: 8px 0 0;
+	color: var(--riff-fg-2);
+	line-height: 1;
+}
+
 .riff-row .riff-row-dot {
 	display: none;
 }

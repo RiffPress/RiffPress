@@ -15,6 +15,19 @@ function start() {
 	const data =
 		parse( document.getElementById( 'riff-data' )?.textContent ) || {};
 	const s = data.strings || {};
+
+	// "MP3 · 128 kbps", "FLAC · Lossless", or nothing when the file was never read. Shown on every
+	// track, the way the streaming services show their tier, from what WordPress read on upload.
+	function quality( t ) {
+		if ( ! t || ( ! t.bitrate && ! t.lossless ) ) {
+			return '';
+		}
+		const format = ( t.format || '' ).toUpperCase();
+		const rate = t.lossless
+			? s.lossless || 'Lossless'
+			: fmt( s.kbps || '%s kbps', t.bitrate );
+		return format ? `${ format } · ${ rate }` : rate;
+	}
 	const $ = ( sel ) => root.querySelector( sel );
 	const $$ = ( sel ) => [ ...root.querySelectorAll( sel ) ];
 	const audio = $( '.riff-audio' );
@@ -152,7 +165,7 @@ function start() {
 			`<span class="riff-row-sub">${ esc(
 				subtitle( t )
 			) }</span></span>` +
-			( t.type === 'video' || t.video
+						( t.type === 'video' || t.video
 				? `<span class="riff-row-badge">${ esc(
 						s.video || 'Video'
 					) }</span>`
@@ -685,6 +698,7 @@ function start() {
 		text( 'title', t?.title || '' );
 		text( 'subtitle', t ? subtitle( t ) : '' );
 		text( 'artist', t ? t.artist || t.post?.title || '' : '' );
+		text( 'quality', quality( t ) );
 		text( 'source', t?.post?.title || '' );
 		for ( const img of $$( 'img[data-riff-art]' ) ) {
 			const src =
@@ -825,7 +839,7 @@ function start() {
 						) }</span>`
 					: '' ) +
 				'</span></span>' +
-				`<span class="riff-row-time">${
+								`<span class="riff-row-time">${
 					t.duration ? time( t.duration ) : ''
 				}</span>` +
 				'</button>';

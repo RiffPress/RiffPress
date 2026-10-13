@@ -106,6 +106,9 @@ final class Player {
 			'tracks'      => __( '%s tracks', 'riff' ),
 			/* translators: %s: number of minutes. */
 			'minutes'     => __( '%s min', 'riff' ),
+			/* translators: %s: kilobits per second. */
+			'kbps'        => __( '%s kbps', 'riff' ),
+			'lossless'    => __( 'Lossless', 'riff' ),
 			'appEmpty'    => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
 			'otherTab'    => __( 'Playing in another tab', 'riff' ),
 			/* translators: 1: elapsed time, 2: total time. */

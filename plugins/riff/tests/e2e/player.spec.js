@@ -271,6 +271,16 @@ test.describe( 'Player', () => {
 		);
 	} );
 
+	test( 'the playing track shows its format and bit rate in the bar and Now Playing', async ( {
+		page,
+	} ) => {
+		// In the bar and Now Playing only: in a list it is noise.
+		const row = page.locator( '.riff-row' ).nth( 1 );
+		await expect( row.locator( '.riff-quality' ) ).toHaveCount( 0 );
+		await row.click();
+		await expect( page.locator( '.riff-bar-end .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '.riff-np-quality .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
 	test( 'the single-key shortcuts can be turned off, as WCAG 2.1.4 asks', async ( {
 		page,
 	} ) => {
