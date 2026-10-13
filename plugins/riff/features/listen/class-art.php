@@ -198,10 +198,14 @@ final class Art {
 
 		$title = self::clip( $item['title'], 36 );
 		$big   = $item['count'] ? (string) $item['count'] : mb_strtoupper( mb_substr( $item['title'], 0, 1 ) );
-		$line  = App::meta( $item );
-		$size  = (int) max( 44, min( 96, 1500 / max( 1, mb_strlen( $title ) ) ) );
-		$font  = "Poppins, 'Helvetica Neue', Helvetica, Arial, sans-serif";
-		$id    = 'riff-art-' . (int) $post->ID;
+		// The artist has its own line above; the byline keeps only the count and the length.
+		$line = App::meta( $item );
+		if ( ! empty( $item['artist'] ) && str_starts_with( $line, $item['artist'] . ' · ' ) ) {
+			$line = substr( $line, strlen( $item['artist'] . ' · ' ) );
+		}
+		$size = (int) max( 44, min( 96, 1500 / max( 1, mb_strlen( $title ) ) ) );
+		$font = "Poppins, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+		$id   = 'riff-art-' . (int) $post->ID;
 
 		$svg = '<?xml version="1.0" encoding="UTF-8"?>' .
 			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="' . esc_attr( $item['title'] ) . '">' .

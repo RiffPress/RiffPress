@@ -82,4 +82,11 @@ class Test_Riff_Art extends Riff_TestCase {
 		[ $post ] = $this->bare_post();
 		$this->assertSame( add_query_arg( 'riff-art', $post, home_url( '/' ) ), Art::url( $post ) );
 	}
+
+	public function test_the_cover_does_not_repeat_the_artist_in_its_byline(): void {
+		[ $post ] = $this->bare_post();
+		$svg      = Art::svg( get_post( $post ) );
+		$this->assertSame( 1, substr_count( $svg, 'Airmen of Note, United States Air Force Band' ), 'the artist is on its own line, once' );
+		$this->assertStringContainsString( '>1 track', $svg );
+	}
 }
