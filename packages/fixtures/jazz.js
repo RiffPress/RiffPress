@@ -3,8 +3,9 @@
 
    The United States Air Force publishes the album as public-domain music. Wikimedia Commons marks
    the composition, performance, and recording of every source used here as a U.S. Government work.
-   This script downloads Commons' copies, creates compact 40-second excerpts for the repository and
-   retains the source and rights evidence in manifest.json.
+   This script downloads Commons' copies, re-encodes the whole of each recording at a size the demo
+   can carry (the player is meant to be seen playing full songs, and a full album is also the
+   honest performance test) and retains the source and rights evidence in manifest.json.
 
    Run: node packages/fixtures/jazz.js (needs ffmpeg, ffprobe and a network connection). */
 const fs = require( 'fs' );
@@ -12,8 +13,10 @@ const os = require( 'os' );
 const path = require( 'path' );
 const { execFileSync } = require( 'child_process' );
 
-const CLIP = 40;
-const ROOT = __dirname;
+// RIFF_JAZZ_OUT writes the album somewhere else, for a build that must not touch the checkout.
+const ROOT = process.env.RIFF_JAZZ_OUT
+	? path.resolve( process.env.RIFF_JAZZ_OUT )
+	: __dirname;
 const ALBUM = 'Compositions';
 const PERFORMER = 'Airmen of Note, United States Air Force Band';
 const SOURCE = 'https://www.music.af.mil/Multimedia/Music/Public-Domain-Music/';
@@ -123,20 +126,14 @@ TRACKS.forEach( ( [ id, title, composer, bucket ], index ) => {
 		'-v',
 		'error',
 		'-y',
-		'-ss',
-		'5',
-		'-t',
-		String( CLIP ),
 		'-i',
 		source,
 		'-af',
-		`afade=t=in:d=0.4,afade=t=out:st=${
-			CLIP - 1.2
-		}:d=1.2,loudnorm=I=-18:TP=-1.5:LRA=11`,
+		'loudnorm=I=-18:TP=-1.5:LRA=11',
 		'-ar',
 		'44100',
 		'-b:a',
-		'96k',
+		'128k',
 		'-id3v2_version',
 		'3',
 		'-metadata',
