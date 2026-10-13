@@ -477,11 +477,13 @@ final class Art {
 	private static function text( string $title, string $artist, string $line, int $count, string $ink, string $meta, string $where ): string {
 		$garamond = "'Riff Garamond', 'EB Garamond', Garamond, Georgia, serif";
 		$inter    = "'Riff Inter', Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif";
-		$lines    = self::wrap( $title, 22 );
-		$size     = count( $lines ) > 1 ? 72 : (int) max( 56, min( 104, 2200 / max( 1, mb_strlen( $title ) ) ) );
-		$lead     = (int) ( $size * 1.02 );
-		$ink      = esc_attr( $ink );
-		$meta     = esc_attr( $meta );
+		// The record takes the top right in the horizon layout, so the title breaks sooner there;
+		// everywhere a line is sized to clear the right edge at Garamond's width.
+		$lines = self::wrap( $title, 'top' === $where ? 14 : 18 );
+		$size  = count( $lines ) > 1 ? 72 : (int) max( 56, min( 96, 1700 / max( 1, mb_strlen( $title ) ) ) );
+		$lead  = (int) ( $size * 1.02 );
+		$ink   = esc_attr( $ink );
+		$meta  = esc_attr( $meta );
 
 		$block = count( $lines ) * $lead + ( $artist ? 52 : 0 ) + 44;
 		$top   = 'top' === $where ? 96 + $size : 1024 - 72 - $block + $size;
