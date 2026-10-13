@@ -1,5 +1,41 @@
 # Changelog
 
+## [4.0.0](https://github.com/RiffPress/RiffPress/compare/v3.0.1...v4.0.0) (2026-10-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* Riff, a music player for any WordPress site, replaces Callboard ([#239](https://github.com/RiffPress/RiffPress/issues/239))
+
+### Features
+
+* a Listen page template that is the block and nothing else, and the demo lands inside it ([#249](https://github.com/RiffPress/RiffPress/issues/249)) ([b8a1b6b](https://github.com/RiffPress/RiffPress/commit/b8a1b6be81f466e096df4747112564b2604b74a2))
+* a public extension surface with a hooks reference, a JavaScript api, sources, a versioned track schema, control regions, and theming ([#247](https://github.com/RiffPress/RiffPress/issues/247)) ([ea2c6c5](https://github.com/RiffPress/RiffPress/commit/ea2c6c597857917fb3be902ee655927d9fc0cdf9))
+* Riff, a music player for any WordPress site, replaces Callboard ([#239](https://github.com/RiffPress/RiffPress/issues/239)) ([dc00e8f](https://github.com/RiffPress/RiffPress/commit/dc00e8f17e45b087080744cde4f486c2cd7223df))
+* structured data, icons, a new share card, AVIF screenshots, robots, sitemap and a 404 for the landing page ([#253](https://github.com/RiffPress/RiffPress/issues/253)) ([dc47450](https://github.com/RiffPress/RiffPress/commit/dc47450ad2c29256483c791b98803b3a8ade3374))
+* the Listen block, a Media Library tracks API, drawn covers, and WordPress.org design ([#240](https://github.com/RiffPress/RiffPress/issues/240)) ([a2c0c4d](https://github.com/RiffPress/RiffPress/commit/a2c0c4d55143c6fb2a02eb7e5c2c919f6fb5d0bd))
+* the plugin's author is RiffPress, the organisation behind it ([#256](https://github.com/RiffPress/RiffPress/issues/256)) ([6d7d7eb](https://github.com/RiffPress/RiffPress/commit/6d7d7eb5f4e554ad2454918eed66407f1d2fabc4))
+
+
+### Bug Fixes
+
+* every Playground link opens in seamless mode, without Playground's own toolbar ([#250](https://github.com/RiffPress/RiffPress/issues/250)) ([ba614ea](https://github.com/RiffPress/RiffPress/commit/ba614eaaf46674282c6e228c71821f23af6411a4))
+* name the demo files without commas so raw GitHub can serve them to Playground ([#241](https://github.com/RiffPress/RiffPress/issues/241)) ([757b0a9](https://github.com/RiffPress/RiffPress/commit/757b0a932f334812965d6d4c9abfe4cd35131975))
+* password-protected posts stay out of the library, the app works on plain permalinks, and the player restyles less per frame ([#254](https://github.com/RiffPress/RiffPress/issues/254)) ([bd1e7ce](https://github.com/RiffPress/RiffPress/commit/bd1e7ce398bfbe95eb626471f368b23976968bf1))
+* Release Please continues from 3.0.1 and releases Riff as 4.0.0 ([#260](https://github.com/RiffPress/RiffPress/issues/260)) ([3c34819](https://github.com/RiffPress/RiffPress/commit/3c34819c2cf47f41ed65b838008eeb6e744e12de))
+* the demo reads Written by Riff in Jazz, hides the admin bar, and has a Listen page ([#245](https://github.com/RiffPress/RiffPress/issues/245)) ([9163b43](https://github.com/RiffPress/RiffPress/commit/9163b43c016b67b82741a257053f66a9534fe6de))
+* the hero and the nav open the live demo directly instead of scrolling to a second button ([#248](https://github.com/RiffPress/RiffPress/issues/248)) ([60d620c](https://github.com/RiffPress/RiffPress/commit/60d620c17c00b2fb5ff7f261f09fb5cc62aefb5c))
+* the hooks reference names the file, not the line, so unrelated edits stop making it stale ([#258](https://github.com/RiffPress/RiffPress/issues/258)) ([54efe0f](https://github.com/RiffPress/RiffPress/commit/54efe0fc0b08d5100d86fb2102aad8e651ddd007))
+* the landing page links to the live demo instead of embedding it ([#243](https://github.com/RiffPress/RiffPress/issues/243)) ([03d599e](https://github.com/RiffPress/RiffPress/commit/03d599e8ca70ea9c08d142ef9892eac7bc020594))
+* the seed fills artist, album and length from the manifest where PHP cannot read the tags ([#252](https://github.com/RiffPress/RiffPress/issues/252)) ([b9862ed](https://github.com/RiffPress/RiffPress/commit/b9862ed12ee90d313e1f221be6a160fe824c728f))
+* the seed takes a track's title from the manifest when the file carries no tag ([#246](https://github.com/RiffPress/RiffPress/issues/246)) ([feda327](https://github.com/RiffPress/RiffPress/commit/feda327a68802a8b851f22e94ec830558e20f082))
+
+
+### Dependencies
+
+* **deps-dev:** bump globals from 17.12.0 to 17.13.0 in the npm-minor-and-patch group ([#237](https://github.com/RiffPress/RiffPress/issues/237)) ([5c23ae7](https://github.com/RiffPress/RiffPress/commit/5c23ae7c8bef3b2f855c73ea6bbb036968aa0a7f))
+* **deps:** bump crate-ci/typos from 1.50.2 to 1.50.3 in the actions-minor-and-patch group ([#238](https://github.com/RiffPress/RiffPress/issues/238)) ([cb3a327](https://github.com/RiffPress/RiffPress/commit/cb3a327c35a083fcc420634b59652b318564790e))
+
 ## [3.0.1](https://github.com/promptcorner/callboard/compare/v3.0.0...v3.0.1) (2026-10-11)
 
 
