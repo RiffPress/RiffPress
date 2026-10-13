@@ -49,6 +49,13 @@ jobs:
           cp packages/fixtures/seed.php build/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} build/demo/ \;
           cp site/brand/mark.png build/demo/
+          for m in packages/fixtures/*/manifest.json; do
+            slug=$(basename "$(dirname "$m")")
+            node -e "process.exit(require('./$m').remote ? 0 : 1)" || continue
+            cp "$m" "build/demo/$slug.manifest.json"
+            cp "$(dirname "$m")/levels.json" "build/demo/$slug.levels.json"
+          done
+          printf 'https://riffpress.com/demo/' > build/demo/base.txt
       - name: Smoke-test the build
         run: |
           set -euo pipefail

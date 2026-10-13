@@ -72,7 +72,8 @@ final class Tracks {
 				'format'   => strtolower( (string) ( $meta['dataformat'] ?? $meta['fileformat'] ?? '' ) ),
 				'bitrate'  => isset( $meta['bitrate'] ) ? (int) round( (float) $meta['bitrate'] / 1000 ) : 0,
 				'lossless' => ! empty( $meta['lossless'] ),
-				'levels'   => '',
+				// Level data, when something measured it on upload and stored it as riff_levels.
+				'levels'   => isset( $meta['riff_levels'] ) && is_string( $meta['riff_levels'] ) ? $meta['riff_levels'] : '',
 				'art'      => $art,
 				'video'    => $video,
 				'post'     => self::post( $post_id ),

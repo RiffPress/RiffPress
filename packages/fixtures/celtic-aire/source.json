@@ -1,0 +1,83 @@
+{
+	"name": "Celtic Aire",
+	"slug": "celtic-aire",
+	"artist": "Celtic Aire, United States Air Force Band",
+	"ensemble": "Celtic Aire",
+	"collection": "https://www.music.af.mil/Multimedia/Music/Public-Domain-Music/",
+	"license": "Public domain — U.S. Government work",
+	"license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military-Air_Force",
+	"tracks": [
+		{
+			"id": "brother-green",
+			"title": "Brother Green",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Brother_Green_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Brother_Green_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "birkin-tree",
+			"title": "Birkin Tree",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Birkin_Tree_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Birkin_Tree_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "black-cat",
+			"title": "Black Cat",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/0/04/Black_Cat_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Black_Cat_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "ship",
+			"title": "Ship",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Ship_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Ship_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "cockles-and-mussels",
+			"title": "Cockles and Mussels",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Cockles_and_Mussels_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Cockles_and_Mussels_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "irish-rover",
+			"title": "Irish Rover",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Irish_Rover_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Irish_Rover_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "johnny-jump-up",
+			"title": "Johnny Jump Up",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/83/Johnny_Jump_Up_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Johnny_Jump_Up_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "as-i-roved-out",
+			"title": "As I Roved Out",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/cb/As_I_Roved_Out_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:As_I_Roved_Out_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "danny-boy",
+			"title": "Danny Boy",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/3/39/Danny_Boy_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Danny_Boy_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "i-tell-me-ma",
+			"title": "I Tell Me Ma",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/4/45/I_Tell_Me_Ma_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:I_Tell_Me_Ma_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "black-velvet-band",
+			"title": "Black Velvet Band",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/2/24/Black_Velvet_Band_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Black_Velvet_Band_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "down-by-the-salley-garde",
+			"title": "Down by the Salley Gardens",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Down_by_the_Salley_Gardens_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Down_by_the_Salley_Gardens_-_Celtic_Aire_-_United_States_Air_Force_Band.mp3"
+		}
+	]
+}

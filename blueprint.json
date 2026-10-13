@@ -42,6 +42,178 @@
       }
     },
     {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/base.txt",
+      "data": {
+        "resource": "url",
+        "url": "demo/base.txt"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/hands-across-the-sea"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/hands-across-the-sea/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/hands-across-the-sea.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/hands-across-the-sea/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/hands-across-the-sea.levels.json"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/carols-of-the-season"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/carols-of-the-season/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/carols-of-the-season.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/carols-of-the-season/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/carols-of-the-season.levels.json"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/born-of-a-dream"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/born-of-a-dream/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/born-of-a-dream.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/born-of-a-dream/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/born-of-a-dream.levels.json"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/celtic-aire"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/celtic-aire/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/celtic-aire.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/celtic-aire/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/celtic-aire.levels.json"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/strolling-strings"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/strolling-strings/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/strolling-strings.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/strolling-strings/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/strolling-strings.levels.json"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/silver-wings"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/silver-wings/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/silver-wings.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/silver-wings/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/silver-wings.levels.json"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/stellar-brass"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/stellar-brass/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/stellar-brass.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/stellar-brass/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/stellar-brass.levels.json"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/albums/shades-of-blue"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/shades-of-blue/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/shades-of-blue.manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums/shades-of-blue/levels.json",
+      "data": {
+        "resource": "url",
+        "url": "demo/shades-of-blue.levels.json"
+      }
+    },
+    {
       "step": "writeFile",
       "path": "/wordpress/wp-content/riff-demo/compositions/manifest.json",
       "data": {
@@ -147,7 +319,7 @@
     },
     {
       "step": "runPHP",
-      "code": "<?php require '/wordpress/wp-load.php'; require '/wordpress/wp-content/riff-demo/seed.php'; riff_seed_site( '/wordpress/wp-content/riff-demo/mark.png' ); $id = riff_seed( '/wordpress/wp-content/riff-demo/compositions' ); if ( $id ) { wp_update_post( array( 'ID' => $id, 'post_author' => 1 ) ); } wp_update_user( array( 'ID' => 1, 'display_name' => 'Riff' ) ); update_user_meta( 1, 'show_admin_bar_front', 'false' ); $cat = wp_insert_term( 'Jazz', 'category' ); if ( $id && ! is_wp_error( $cat ) ) { wp_set_post_categories( $id, array( (int) $cat['term_id'] ) ); } wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Listen', 'post_name' => 'listen', 'page_template' => 'listen', 'post_content' => '<!-- wp:riff/app {\"align\":\"full\"} /-->' ) ); flush_rewrite_rules(); ?>"
+      "code": "<?php require '/wordpress/wp-load.php'; require '/wordpress/wp-content/riff-demo/seed.php'; riff_seed_site( '/wordpress/wp-content/riff-demo/mark.png' ); $id = riff_seed( '/wordpress/wp-content/riff-demo/compositions' ); $base = rtrim( trim( (string) file_get_contents( '/wordpress/wp-content/riff-demo/base.txt' ) ), '/' ) . '/'; foreach ( glob( '/wordpress/wp-content/riff-demo/albums/*/manifest.json' ) as $m ) { riff_seed_remote( dirname( $m ), $base . basename( dirname( $m ) ) ); } if ( $id ) { wp_update_post( array( 'ID' => $id, 'post_author' => 1 ) ); } wp_update_user( array( 'ID' => 1, 'display_name' => 'Riff' ) ); update_user_meta( 1, 'show_admin_bar_front', 'false' ); $cat = wp_insert_term( 'Jazz', 'category' ); if ( $id && ! is_wp_error( $cat ) ) { wp_set_post_categories( $id, array( (int) $cat['term_id'] ) ); } wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Listen', 'post_name' => 'listen', 'page_template' => 'listen', 'post_content' => '<!-- wp:riff/app {\"align\":\"full\"} /-->' ) ); flush_rewrite_rules(); ?>"
     }
   ]
 }
