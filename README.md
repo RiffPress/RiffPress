@@ -1,4 +1,4 @@
-<p align="center"><img src="site/brand/avatar-play.png" width="128" height="128" alt=""></p>
+<p align="center"><img src="site/brand/avatar-vinyl.png" width="160" height="160" alt=""></p>
 
 <h1 align="center">Riff</h1>
 
