@@ -56,6 +56,7 @@ section{padding:var(--section) 0;text-align:center}
 .more::after{content:" →"}
 .more:hover{color:var(--blueberry-deep)}
 .cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:16px 32px;align-items:center;justify-content:center}
+.hero .fine{margin-top:14px}
 /* device frame: a thin bezel on a charcoal body */
 .device{display:inline-block;width:min(360px,78vw);padding:10px;border-radius:46px;background:var(--charcoal-1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 30px 60px -24px rgba(30,30,30,.45)}
 .device img{display:block;width:100%;height:auto;border-radius:36px}
@@ -102,7 +103,7 @@ html.js .r.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Riff</a><nav><a href="#listen">The block</a><a href="#try">Try it</a><a href="#owners">For your site</a><a href="https://github.com/riffpress/riffpress">GitHub</a><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Riff</a><nav><a href="#listen">The block</a><a href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Live demo</a><a href="#owners">For your site</a><a href="https://github.com/riffpress/riffpress">GitHub</a><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
@@ -110,7 +111,8 @@ html.js .r.in{opacity:1;transform:none}
 		<p class="eyebrow">A music player for WordPress</p>
 		<h1>Press play on your own site.</h1>
 		<p class="lede">The songs and videos in a post, in a player that feels like the apps you already use.</p>
-		<div class="cta"><a class="btn" href="#try">Try the live demo</a><a class="more" href="#owners">Put it on your site</a></div>
+		<div class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the live demo</a><a class="more" href="#owners">Put it on your site</a></div>
+		<p class="fine">A WordPress site with ten tracks, in a new tab. Nothing to install.</p>
 	</div>
 	<div class="shot r"><span class="device"><img src="phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls"></span></div>
 </div></section>
