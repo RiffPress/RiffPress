@@ -1,9 +1,14 @@
 name: Pages
 
-# Publishes the landing page with GitHub Pages (source "GitHub Actions"), and with it everything the live
-# demo needs: riff.zip built from main, blueprint.json, the seed script and the demo audio, all with URLs
-# stamped by commit so caches never serve an old build. The page embeds WordPress Playground, which fetches those from the Pages origin.
-# blueprint.json names those files relative to itself; this workflow resolves them against wherever Pages serves.
+# Publishes the landing page to Cloudflare Pages at riffpress.com, and with it everything the live demo
+# needs: riff.zip built from main, blueprint.json, the seed script and the demo audio, all with URLs stamped
+# by commit so caches never serve an old build. blueprint.json names those files relative to itself; this
+# workflow resolves them against the site's address. GitHub Pages keeps serving a one-line redirect at the
+# old address, so links to it still land.
+#
+# Needs two repository secrets, CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID,
+# and takes the address from the SITE_URL repository variable when set. The custom domain is attached
+# to the project in the Cloudflare dashboard, which writes the DNS record itself.
 # Runs on every push to main; the weekly run catches commits that do not start push workflows.
 
 on:
@@ -19,17 +24,22 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  PROJECT: riff
+  SITE_URL: ${{ vars.SITE_URL || 'https://riffpress.com/' }}
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: read
-      pages: write
-      id-token: write
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: cloudflare-pages
+      url: ${{ env.SITE_URL }}
+    outputs:
+      base: ${{ steps.site.outputs.base }}
+      version: ${{ steps.site.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -38,6 +48,9 @@ jobs:
         with:
           php-version: '8.3'
           coverage: none
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
       - name: Build riff.zip
         run: |
           set -euo pipefail
@@ -48,9 +61,6 @@ jobs:
           find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
       - name: Assemble the site
         id: site
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           mkdir -p out/demo
@@ -59,29 +69,77 @@ jobs:
           cp packages/fixtures/seed.php out/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;
           cp site/brand/mark.png out/demo/
-          # Where Pages serves this repository, asked rather than written down: the address changed once
-          # already, when the repository moved accounts, and every hardcoded URL went dead. Playground runs
-          # on https and a browser will not fetch http from it, so the scheme is always https.
-          BASE=$(gh api "repos/${GH_REPO}/pages" --jq .html_url | sed -E 's#^http://#https://#; s#/*$#/#')
-          [[ "$BASE" =~ ^https://[^/]+/ ]] || { echo "::error::Unexpected Pages URL: $BASE"; exit 1; }
-          # Pages caches for four hours. Stamp every asset URL with the commit so a deploy is always a new URL:
-          # the page's images and its blueprint fetch, and the blueprint's zip and demo files.
+          # Playground runs on https and a browser will not fetch http from it, so the scheme is always https.
+          BASE=$(printf '%s' "$SITE_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
+          [[ "$BASE" =~ ^https://[^/]+/ ]] || { echo "::error::Unexpected site URL: $BASE"; exit 1; }
+          # Stamp every asset URL with the commit so a deploy is always a new URL: the page's images and its
+          # blueprint fetch, and the blueprint's zip and demo files.
           V="${GITHUB_SHA::7}"
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(srcset=\"[^\"?]+\.avif)\"#\1?v=${V}\"#g; s#(content=\"[^\"?]+/og\.png)\"#\1?v=${V}\"#; s#(\"image\": \"[^\"?]+\.png)\"#\1?v=${V}\"#g" out/index.html
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g" out/robots.txt out/sitemap.xml
           if grep -n '{{' out/index.html out/robots.txt out/sitemap.xml; then echo "::error::A placeholder survived"; exit 1; fi
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" "$V" > out/blueprint.json
           grep -c "?v=${V}" out/index.html out/blueprint.json
+          # Everything stamped by commit can be cached forever; the page and the blueprint are fetched fresh.
+          cat > out/_headers <<'HEADERS'
+          /demo/*
+            Cache-Control: public, max-age=31536000, immutable
+          /riff.zip
+            Cache-Control: public, max-age=31536000, immutable
+          /*.png
+            Cache-Control: public, max-age=31536000, immutable
+          /*.avif
+            Cache-Control: public, max-age=31536000, immutable
+          /fonts/*
+            Cache-Control: public, max-age=31536000, immutable
+          /index.html
+            Cache-Control: public, max-age=600
+          /blueprint.json
+            Cache-Control: public, max-age=600
+          HEADERS
           ls -la out out/demo
           { echo "base=$BASE"; echo "version=$V"; } >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: out
-      - id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Set the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets."
+            exit 1
+          fi
+          # Creating the project fails harmlessly once it exists.
+          npx --yes wrangler@4 pages project create "$PROJECT" --production-branch main 2> /dev/null || true
+          npx --yes wrangler@4 pages deploy out --project-name "$PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
       # The deploy reports success whether or not the demo can load what it names. Ask for each file the
       # way Playground will, from another origin, so a dead URL fails here instead of on a visitor.
       - name: Check every file the demo fetches
         env:
           BLUEPRINT: ${{ steps.site.outputs.base }}blueprint.json?v=${{ steps.site.outputs.version }}
         run: node .github/scripts/demo-blueprint.js check "$BLUEPRINT" 18
+
+  # GitHub Pages keeps the old address alive as a redirect to the site.
+  redirect:
+    needs: deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: A page that sends the old address on
+        env:
+          BASE: ${{ needs.deploy.outputs.base }}
+        run: |
+          set -euo pipefail
+          mkdir -p redirect
+          cat > redirect/index.html <<HTML
+          <!doctype html><html lang="en"><head><meta charset="utf-8"><title>Riff</title><meta http-equiv="refresh" content="0; url=${BASE}"><link rel="canonical" href="${BASE}"><meta name="robots" content="noindex"></head><body><p>Riff has moved to <a href="${BASE}">${BASE}</a>.</p></body></html>
+          HTML
+          cp redirect/index.html redirect/404.html
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: redirect
+      - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
