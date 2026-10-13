@@ -28,7 +28,15 @@ spl_autoload_register(
 		if ( ! str_starts_with( $class_name, 'Riff\\' ) ) {
 			return;
 		}
-		$file = RIFF_DIR . 'src/class-' . strtolower( str_replace( '_', '-', substr( $class_name, 5 ) ) ) . '.php';
+		// Riff\Foo is the foundation, in src/. Riff\Listen\Foo is the Listen feature, in features/listen/,
+		// which builds on the foundation through its filters, actions and REST routes and nothing else.
+		$parts = explode( '\\', substr( $class_name, 5 ) );
+		$dir   = 'src/';
+		if ( count( $parts ) > 1 && 'Listen' === $parts[0] ) {
+			$dir = 'features/listen/';
+			array_shift( $parts );
+		}
+		$file = RIFF_DIR . $dir . 'class-' . strtolower( str_replace( '_', '-', implode( '-', $parts ) ) ) . '.php';
 		if ( is_readable( $file ) ) {
 			require $file;
 		}

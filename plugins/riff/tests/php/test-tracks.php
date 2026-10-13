@@ -43,12 +43,19 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertSame( 'Underground (rehearsal take)', Tracks::from_attachment( $id )['title'], 'an edited title stays' );
 	}
 
+	public function test_a_second_upload_of_the_same_file_still_takes_its_title_from_the_tags(): void {
+		self::factory()->attachment->create_upload_object( self::fixture( '02 - Underground [underground].mp3' ) );
+		$again = self::factory()->attachment->create_upload_object( self::fixture( '02 - Underground [underground].mp3' ) );
+		$this->assertMatchesRegularExpression( '/-\d+\.mp3$/', (string) get_attached_file( $again ), 'the file is numbered' );
+		$this->assertSame( 'Underground', Tracks::from_attachment( $again )['title'] );
+	}
+
 	public function test_artwork_comes_from_the_attachment_then_the_post(): void {
 		$post  = self::factory()->post->create();
 		$cover = self::attach( 'cover.png', $post );
 		$id    = self::attach( '03 - Trombone Detritus [detritus].mp3', $post );
 
-		$this->assertSame( array(), Tracks::from_attachment( $id, $post )['art'], 'no artwork anywhere yet' );
+		$this->assertStringContainsString( 'riff-art=' . $post, Tracks::from_attachment( $id, $post )['art'][0]['src'], 'no image anywhere yet, so the post\'s drawn cover' );
 
 		set_post_thumbnail( $post, $cover );
 		$art = Tracks::from_attachment( $id, $post )['art'];

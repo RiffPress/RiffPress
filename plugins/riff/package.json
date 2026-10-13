@@ -12,6 +12,7 @@
     "src",
     "templates",
     "assets",
+    "features",
     "languages",
     "readme.txt",
     "LICENSE"

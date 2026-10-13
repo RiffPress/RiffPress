@@ -1,6 +1,7 @@
 <?php
 /**
- * The one thing Riff adds to the Media Library: a video version for an audio file.
+ * What Riff adds to the Media Library: artwork for an audio or video file, and a video version for
+ * an audio file.
  *
  * @package Riff
  */
@@ -49,6 +50,17 @@ final class Media {
 	}
 
 	/**
+	 * Keeps only IDs of image attachments.
+	 *
+	 * @param mixed $value Submitted value.
+	 * @return int
+	 */
+	public static function sanitize_image( $value ): int {
+		$id = absint( $value );
+		return $id && wp_attachment_is_image( $id ) ? $id : 0;
+	}
+
+	/**
 	 * Keeps only IDs of video attachments.
 	 *
 	 * @param mixed $value Submitted value.
@@ -60,14 +72,31 @@ final class Media {
 	}
 
 	/**
-	 * Adds the "Video version" field to audio files in the Media Library.
+	 * Adds "Artwork" to audio and video files in the Media Library, and "Video version" to audio.
+	 *
+	 * Artwork is the file's featured image, the same thing WordPress sets from a tag inside the file
+	 * on upload, so a cover set here shows in the player, the queue and on the lock screen.
 	 *
 	 * @param array   $fields Attachment fields.
 	 * @param WP_Post $post   Attachment.
 	 * @return array
 	 */
 	public static function fields( $fields, $post ) {
-		if ( ! $post instanceof WP_Post || ! str_starts_with( (string) $post->post_mime_type, 'audio/' ) ) {
+		if ( ! $post instanceof WP_Post ) {
+			return $fields;
+		}
+		$mime = (string) $post->post_mime_type;
+		if ( ! str_starts_with( $mime, 'audio/' ) && ! str_starts_with( $mime, 'video/' ) ) {
+			return $fields;
+		}
+		$art_id             = (int) get_post_thumbnail_id( $post->ID );
+		$fields['riff_art'] = array(
+			'label' => __( 'Artwork', 'riff' ),
+			'input' => 'text',
+			'value' => $art_id ? (string) wp_get_attachment_url( $art_id ) : '',
+			'helps' => __( 'The address of an image in the Media Library. Without one, the post\'s featured image is used, and failing that a cover is drawn.', 'riff' ),
+		);
+		if ( ! str_starts_with( $mime, 'audio/' ) ) {
 			return $fields;
 		}
 		$video_id             = (int) get_post_meta( $post->ID, self::VIDEO_META, true );
@@ -88,7 +117,20 @@ final class Media {
 	 * @return array
 	 */
 	public static function save( $post, $attachment ) {
-		if ( ! isset( $attachment['riff_video'], $post['ID'] ) ) {
+		if ( ! isset( $post['ID'] ) ) {
+			return $post;
+		}
+		if ( isset( $attachment['riff_art'] ) ) {
+			$value = trim( (string) $attachment['riff_art'] );
+			$id    = ctype_digit( $value ) ? (int) $value : attachment_url_to_postid( esc_url_raw( $value ) );
+			$id    = self::sanitize_image( $id );
+			if ( $id ) {
+				set_post_thumbnail( (int) $post['ID'], $id );
+			} else {
+				delete_post_thumbnail( (int) $post['ID'] );
+			}
+		}
+		if ( ! isset( $attachment['riff_video'] ) ) {
 			return $post;
 		}
 		$value = trim( (string) $attachment['riff_video'] );

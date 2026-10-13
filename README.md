@@ -35,8 +35,8 @@ moves to audio while hidden and back when it returns.
 Everything else is what a listener expects from a player: Media Session metadata and lock-screen
 controls, keyboard shortcuts (Space or K, J and L, Shift+N and Shift+P), AirPlay and Cast when a
 device is in reach, swipe the bar to skip, drag Now Playing down to close it, and the queue and
-position remembered for the tab's session so a reload or a link to another page picks up where it
-left off.
+position remembered for the tab's session, so a link to another page keeps playing and a reload
+picks up paused where it left off.
 
 The layout follows YouTube Music's current design and measurements, in Riff's own amber.
 
@@ -60,6 +60,6 @@ start there. `.wp-env.override.json` moves the ports when another wp-env on the 
 
 ## Licence
 
-GPL-2.0-or-later. Roboto is bundled under the SIL Open Font License; the icons are Google's
-Material Icons under the Apache License 2.0. The demo recordings are by the Airmen of Note, United
+GPL-2.0-or-later. Roboto, Inter and EB Garamond are bundled under the SIL Open Font License; the
+icons are Google's Material Icons under the Apache License 2.0. The demo recordings are by the Airmen of Note, United
 States Air Force Band, and are public domain as U.S. Government works.

@@ -54,13 +54,30 @@ function start() {
 		m === video && isVideo( t ) && t.video ? t.video.src : t.src;
 
 	// ---- Rows in the post. Each block keeps its native player underneath, hidden, so a page where
-	// this script fails still plays.
+	// this script fails still plays. mount() reads every marked figure on the page; the app calls
+	// it again after it swaps a view in, and a figure already turned into a row keeps that row.
 	const rows = [];
-	document.querySelectorAll( 'figure[data-riff-track]' ).forEach( ( fig ) => {
-		const t = parse( fig.dataset.riffTrack );
-		if ( ! t || ! t.src ) {
-			return;
-		}
+	const built = new WeakMap();
+	function mount() {
+		rows.length = 0;
+		document
+			.querySelectorAll( 'figure[data-riff-track]' )
+			.forEach( ( fig ) => {
+				const t = parse( fig.dataset.riffTrack );
+				if ( ! t || ! t.src ) {
+					return;
+				}
+				let row = built.get( fig );
+				if ( ! row ) {
+					row = buildRow( fig, t );
+					built.set( fig, row );
+				}
+				rows.push( { t, row } );
+			} );
+		paint();
+	}
+
+	function buildRow( fig, t ) {
 		const native = fig.querySelector( 'audio, video' );
 		if ( native ) {
 			native.pause();
@@ -98,8 +115,6 @@ function start() {
 				t.duration ? time( t.duration ) : ''
 			}</span>`;
 		fig.insertBefore( row, fig.firstChild );
-		const index = rows.length;
-		rows.push( { t, row } );
 		row.addEventListener( 'click', () => {
 			if ( track()?.id === t.id && sameQueue() ) {
 				toggle();
@@ -107,13 +122,14 @@ function start() {
 			}
 			setQueue(
 				rows.map( ( r ) => r.t ),
-				index
+				rows.findIndex( ( r ) => r.row === row )
 			);
 			if ( t.type === 'video' ) {
 				open();
 			}
 		} );
-	} );
+		return row;
+	}
 
 	// The page's rows are the queue that is playing, so a row tap toggles instead of restarting.
 	const sameQueue = () =>
@@ -264,6 +280,9 @@ function start() {
 	// A phone pauses video when the page goes to the background, and audio keeps going. So the
 	// track moves to audio while hidden and back to video when the page returns.
 	document.addEventListener( 'visibilitychange', () => {
+		if ( ! document.hidden && ! el().paused && ! reduce() ) {
+			follow();
+		}
 		const t = track();
 		if ( ! t || ! t.video ) {
 			return;
@@ -277,10 +296,41 @@ function start() {
 		}
 	} );
 
+	// ---- One tab at a time. When this tab starts playing it says so on a channel; any other tab of
+	// the site that is playing pauses and says why, the way streaming apps hand off between devices.
+	const tabId = Math.random().toString( 36 ).slice( 2 );
+	const channel = 'BroadcastChannel' in window ? new BroadcastChannel( 'riff' ) : null;
+	channel?.addEventListener( 'message', ( e ) => {
+		if ( e.data?.type === 'playing' && e.data.from !== tabId && ! el().paused ) {
+			el().pause();
+			toast( s.otherTab );
+		}
+	} );
+	const announce = () => channel?.postMessage( { type: 'playing', from: tabId } );
+
 	// ---- Media events. Both elements report through the same handlers; only the one in use counts.
+	// While something plays the line follows the time every frame; timeupdate alone comes four
+	// times a second and reads as a line that skips.
+	let followRaf = 0;
+	function follow() {
+		cancelAnimationFrame( followRaf );
+		const step = () => {
+			progress();
+			followRaf = el().paused || document.hidden ? 0 : requestAnimationFrame( step );
+		};
+		followRaf = requestAnimationFrame( step );
+	}
 	for ( const m of [ audio, video ] ) {
 		const live = () => m === el();
-		m.addEventListener( 'play', () => live() && paint() );
+		m.addEventListener( 'play', () => {
+			if ( live() ) {
+				announce();
+				paint();
+				if ( ! reduce() ) {
+					follow();
+				}
+			}
+		} );
 		m.addEventListener( 'pause', () => live() && paint() );
 		m.addEventListener( 'playing', () => {
 			if ( live() ) {
@@ -344,27 +394,31 @@ function start() {
 		preloader.src = t.src;
 	}
 
-	// ---- The filament. The played part of the bar's seek line is a wire that glows with the music:
-	// lit from a live analyser where there is one, a slow breath otherwise. Its colour follows its heat,
-	// near-black red when barely lit, through amber, to a pale yellow-white at the peaks, and cutting
-	// the current cools it rather than switching it off. What counts as fully lit is whatever the
-	// track has been reaching lately, so a quiet recording and a loud mix each use the whole wire.
+	// ---- The filament. The played part of the bar's seek line is a wire with current in it. The
+	// script keeps one number, its heat, and writes it to --riff-heat on the root once a frame; the
+	// stylesheet turns that into the wire's colour and every layer of its light, and a short
+	// transition on the property lets the browser interpolate between frames. The heat follows a
+	// filament's physics: the signal's power drives it up in about 80 ms, and with the current cut
+	// it cools the way a hot thing does, fast while it is bright, then slowly through a long red
+	// tail. What counts as full power is whatever the track has been reaching lately, so a quiet
+	// recording and a loud mix each light the whole wire. Where there is no analyser (iOS, a file
+	// from another origin) the wire breathes at working temperature instead.
 	const wire = $( '[data-riff-wire]' );
-	const hot = $( '[data-riff-hot]' );
-	const halo = $( '[data-riff-halo]' );
-	const npGlow = $( '[data-riff-npglow]' );
 	const isIOS =
 		/iP(hone|ad|od)/.test( navigator.userAgent ) ||
 		( navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 );
 	let analyser = null;
+	let samples = null;
+	let bins = null;
 	let meterRaf = 0;
-	let coolRaf = 0;
 	let breath = null;
 	let bars = [];
-	let bright = 0;
-	let ember = 0;
-	let ref = 0.5;
-	let lastBright = 0;
+	let cooling = false;
+	let lastTick = 0;
+	// The wire's state outlives a restart: a view swap or a row appearing never dips it, and the
+	// reference never has to relearn the track.
+	let heat = 0;
+	let ref = 0.08;
 
 	// Routing audio through Web Audio on iOS breaks lock-screen and background playback, so iPhones
 	// keep the breath. A file from another origin cannot be analysed either; see foreign().
@@ -383,8 +437,12 @@ function start() {
 			const ctx = new AudioContext();
 			const src = ctx.createMediaElementSource( audio );
 			analyser = ctx.createAnalyser();
-			analyser.fftSize = 64;
-			analyser.smoothingTimeConstant = 0.7;
+			// A 1024-sample window is 20 ms at 48 kHz: long enough for a steady RMS, short enough
+			// to catch a transient.
+			analyser.fftSize = 1024;
+			analyser.smoothingTimeConstant = 0.6;
+			samples = new Float32Array( analyser.fftSize );
+			bins = new Uint8Array( analyser.frequencyBinCount );
 			src.connect( analyser );
 			analyser.connect( ctx.destination );
 			audio.addEventListener( 'play', () =>
@@ -396,81 +454,55 @@ function start() {
 		}
 	}
 
-	// Four stops, interpolated. The accent sits at the working temperature of the wire.
-	const KELVIN = [
-		[ 0, [ 74, 16, 0 ] ],
-		[ 0.35, [ 190, 58, 12 ] ],
-		[ 0.7, [ 255, 176, 32 ] ],
-		[ 1, [ 255, 232, 190 ] ],
+	// The signal's level: RMS over the window, as a filament sees current.
+	function level() {
+		analyser.getFloatTimeDomainData( samples );
+		let sum = 0;
+		for ( let n = 0; n < samples.length; n++ ) {
+			sum += samples[ n ] * samples[ n ];
+		}
+		return Math.sqrt( sum / samples.length );
+	}
+
+	// Three bands for the bars on the playing row: bass, the body of a voice, and the air above it.
+	const BANDS = [
+		[ 1, 4 ],
+		[ 4, 22 ],
+		[ 22, 110 ],
 	];
-	function heatColor( b ) {
-		let k = 1;
-		while ( k < KELVIN.length - 1 && KELVIN[ k ][ 0 ] < b ) {
-			k++;
-		}
-		const [ t0, c0 ] = KELVIN[ k - 1 ];
-		const [ t1, c1 ] = KELVIN[ k ];
-		const f = Math.min( 1, Math.max( 0, ( b - t0 ) / ( t1 - t0 ) ) );
-		return `rgb(${ c0
-			.map( ( v, n ) => Math.round( v + ( c1[ n ] - v ) * f ) )
-			.join( ' ' ) })`;
-	}
-
-	// A square root lifts the quiet end into view: speech sits around a tenth of full scale.
-	function paintGlow( b ) {
-		b = Math.sqrt( b );
-		const c = heatColor( b );
-		for ( const node of [ wire, halo, npGlow ] ) {
-			if ( node ) {
-				node.style.color = c;
+	function bandLevels() {
+		analyser.getByteFrequencyData( bins );
+		return BANDS.map( ( [ a, b ] ) => {
+			let sum = 0;
+			for ( let n = a; n < b; n++ ) {
+				sum += bins[ n ];
 			}
-		}
-		if ( wire ) {
-			wire.style.opacity = ( 0.25 + 0.75 * b ).toFixed( 3 );
-		}
-		if ( hot ) {
-			hot.style.opacity = ( 0.6 * b * b * b ).toFixed( 3 );
-		}
-		if ( halo ) {
-			halo.style.opacity = ( 0.45 * b * b ).toFixed( 3 );
-		}
-		if ( npGlow ) {
-			npGlow.style.opacity = ( 0.5 * b * b ).toFixed( 3 );
-		}
+			return Math.min( 1, sum / ( b - a ) / 200 );
+		} );
 	}
 
-	// Pause fades it over a second and a half: fast at first, then the long red tail.
-	function coolDown( from ) {
-		cancelAnimationFrame( coolRaf );
-		if ( reduce() ) {
-			paintGlow( 0 );
-			return;
+	// One step of the wire's physics. drive is the current, 0 to a little over 1; dt is in seconds.
+	// Heating chases the drive with a 120 ms time constant: a wire warms, it does not flash.
+	// Cooling is radiation plus conduction: a heat⁴ term that empties it while it is bright, and a
+	// slow linear term for the tail, so a loud passage settles in half a second and the last red
+	// takes a couple of seconds.
+	function advance( drive, dt ) {
+		if ( drive > heat ) {
+			heat += ( drive - heat ) * ( 1 - Math.exp( -dt / 0.12 ) );
+		} else {
+			const loss = heat / 0.8 + 2.2 * heat * heat * heat * heat;
+			heat = Math.max( drive, heat - loss * dt );
 		}
-		const t0 = performance.now();
-		const step = ( now ) => {
-			const k = Math.min( 1, ( now - t0 ) / 1500 );
-			paintGlow( from * Math.pow( 1 - k, 2.2 ) );
-			if ( k < 1 ) {
-				coolRaf = requestAnimationFrame( step );
-			}
-		};
-		coolRaf = requestAnimationFrame( step );
+		heat = Math.min( 1.2, heat );
 	}
 
-	function meterStop() {
-		if ( ! meterRaf && ! breath ) {
-			return;
-		}
-		cancelAnimationFrame( meterRaf );
-		meterRaf = 0;
-		breath?.cancel();
-		breath = null;
-		root.removeAttribute( 'data-live' );
-		for ( const bar of bars ) {
-			bar.style.transform = '';
-		}
-		coolDown( lastBright );
-		lastBright = 0;
+	// The wire is seen, not measured: a square root lifts the quiet end into view, since speech
+	// sits around a tenth of full scale and would otherwise read as unlit.
+	function setHeat( h ) {
+		root.style.setProperty(
+			'--riff-heat',
+			Math.sqrt( Math.min( 1, Math.max( 0, h ) ) ).toFixed( 3 )
+		);
 	}
 
 	const liveBars = () => [
@@ -479,78 +511,98 @@ function start() {
 		),
 	];
 
-	function meterStart() {
-		cancelAnimationFrame( coolRaf );
-		bright = 0;
-		ember = 0;
-		ref = 0.5;
+	function tick( now = 0 ) {
+		const dt = lastTick ? Math.min( 0.1, ( now - lastTick ) / 1000 ) : 0.016;
+		lastTick = now;
+		if ( cooling ) {
+			advance( 0, dt );
+			setHeat( heat );
+			if ( heat > 0.004 ) {
+				meterRaf = requestAnimationFrame( tick );
+			} else {
+				heat = 0;
+				setHeat( 0 );
+				meterRaf = 0;
+				cooling = false;
+			}
+			return;
+		}
+		const rms = level();
+		// The reference rises to a peak in about 150 ms and forgets it over six seconds: a surge
+		// flashes past full for a moment, as it would, and the wire ranges itself to the material.
+		ref += ( rms - ref ) * ( 1 - Math.exp( -dt / ( rms > ref ? 0.15 : 6 ) ) );
+		advance( rms / Math.max( 0.02, ref ), dt );
+		setHeat( heat );
+		const levels = bandLevels();
+		bars.forEach( ( bar, k ) => {
+			bar.style.transform = `scaleY(${ ( 0.3 + 0.7 * levels[ k ] ).toFixed( 2 ) })`;
+		} );
+		meterRaf = requestAnimationFrame( tick );
+	}
+
+	// Cut the current: the loop keeps running with no drive until the wire is dark.
+	function meterStop() {
+		if ( ! meterRaf && ! breath ) {
+			return;
+		}
+		breath?.cancel();
+		breath = null;
+		root.removeAttribute( 'data-live' );
+		for ( const bar of bars ) {
+			bar.style.transform = '';
+		}
+		bars = [];
 		if ( reduce() ) {
-			paintGlow( 0.5 );
+			cancelAnimationFrame( meterRaf );
+			meterRaf = 0;
+			heat = 0;
+			setHeat( 0 );
+			return;
+		}
+		cooling = true;
+		if ( ! meterRaf ) {
+			lastTick = 0;
+			meterRaf = requestAnimationFrame( tick );
+		}
+	}
+
+	function meterStart() {
+		cooling = false;
+		if ( reduce() ) {
+			cancelAnimationFrame( meterRaf );
+			meterRaf = 0;
+			setHeat( 0.25 );
 			return;
 		}
 		ensureAnalyser();
 		if ( ! analyser || el() !== audio || ! wire ) {
-			if ( wire ) {
-				wire.style.color = '';
-				breath = wire.animate(
-					[ { opacity: 0.25 }, { opacity: 0.7 }, { opacity: 0.25 } ],
-					{
-						duration: 2600,
-						iterations: Infinity,
-						easing: 'ease-in-out',
-					}
-				);
-			}
+			cancelAnimationFrame( meterRaf );
+			meterRaf = 0;
+			heat = 0.5;
+			setHeat( heat );
+			breath = wire.animate(
+				[ { opacity: 0.35 }, { opacity: 0.8 }, { opacity: 0.35 } ],
+				{
+					duration: 2600,
+					iterations: Infinity,
+					easing: 'ease-in-out',
+				}
+			);
 			return;
 		}
-		const bins = new Uint8Array( analyser.frequencyBinCount );
-		const bands = [
-			[ 1, 4 ],
-			[ 4, 10 ],
-			[ 10, 24 ],
-		];
 		root.dataset.live = '';
 		bars = liveBars();
-		let last = 0;
-		const tick = ( now = 0 ) => {
-			const dt = last ? Math.min( 0.1, ( now - last ) / 1000 ) : 0.016;
-			last = now;
-			analyser.getByteFrequencyData( bins );
-			const levels = bands.map( ( [ a, b ] ) => {
-				let sum = 0;
-				for ( let n = a; n < b; n++ ) {
-					sum += bins[ n ];
-				}
-				return Math.min( 1, sum / ( b - a ) / 200 );
-			} );
-			bars.forEach( ( bar, k ) => {
-				bar.style.transform = `scaleY(${ ( 0.3 + 0.7 * levels[ k ] ).toFixed( 2 ) })`;
-			} );
-			// It lights in ~90 ms and cools over ~400 ms, so peaks swell and settle rather than
-			// twitch; a slower store (~1.4 s) holds the residual heat between phrases. The
-			// reference rises to a peak at once and forgets it over a few seconds.
-			const raw =
-				levels[ 0 ] * 0.5 + levels[ 1 ] * 0.3 + levels[ 2 ] * 0.2;
-			ref =
-				raw > ref
-					? raw
-					: ref + ( raw - ref ) * ( 1 - Math.exp( -dt / 6 ) );
-			const target = Math.min( 1, raw / Math.max( 0.12, ref ) );
-			const tau = target > bright ? 0.09 : 0.4;
-			bright += ( target - bright ) * ( 1 - Math.exp( -dt / tau ) );
-			ember += ( bright - ember ) * ( 1 - Math.exp( -dt / 1.4 ) );
-			lastBright = Math.max( bright, ember * 0.45 );
-			paintGlow( Math.min( 1, lastBright ) );
+		if ( ! meterRaf ) {
+			lastTick = 0;
 			meterRaf = requestAnimationFrame( tick );
-		};
-		tick();
+		}
 	}
 
 	// Called from paint(): the wire follows whatever is playing, and the bars follow the current row.
 	function meterSync() {
 		const t = track();
 		if ( t && ! el().paused && ! document.hidden ) {
-			if ( ! meterRaf && ! breath ) {
+			if ( ( ! meterRaf || cooling ) && ! breath ) {
 				meterStart();
 			} else if ( meterRaf ) {
 				bars = liveBars();
@@ -1219,7 +1271,8 @@ function start() {
 	}
 
 	// ---- Picking up where the listener left off. The queue and position live for the tab's
-	// session, so a reload or a link to another page shows the same track, paused at the same place.
+	// session. A link to another page carries the music over: the click that follows the link is
+	// the gesture the new page needs to play with sound. A reload shows the same track, paused.
 	function save() {
 		if ( ! track() ) {
 			return;
@@ -1235,6 +1288,7 @@ function start() {
 				repeat,
 				shuffle,
 				at: el().currentTime || 0,
+				playing: ! el().paused && ! el().ended,
 			} )
 		);
 	}
@@ -1244,6 +1298,8 @@ function start() {
 		} catch {}
 	}
 	window.addEventListener( 'pagehide', save );
+
+	mount();
 
 	const saved = parse( read( sessionStorage, STATE ) );
 	if (
@@ -1260,9 +1316,33 @@ function start() {
 			: 'off';
 		shuffle = !! saved.shuffle;
 		mode = saved.mode === 'video' ? 'video' : 'song';
-		load( { play: false, at: Number( saved.at ) || 0 } );
+		const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;
+		load( {
+			play: !! saved.playing && arrival !== 'reload',
+			at: Number( saved.at ) || 0,
+		} );
 	} else {
 		paint();
+	}
+
+	// ---- The app, on the page that holds it. Loaded only there, and handed the little it needs.
+	if ( document.querySelector( '[data-riff-app]' ) && data.assets?.app ) {
+		const api = {
+			strings: s,
+			mount,
+			play( tracks, index = 0, { shuffle: on = null } = {} ) {
+				if ( on !== null ) {
+					shuffle = on;
+				}
+				setQueue( tracks, index );
+			},
+			current: () => track(),
+		};
+		import( data.assets.app )
+			.then( ( m ) => m.start( api ) )
+			.catch( () => {
+				// Without the module the links are real links; the page still works.
+			} );
 	}
 }
 
