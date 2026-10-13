@@ -22,9 +22,20 @@ export function start( api ) {
 		if ( u.origin !== page.origin || u.pathname !== page.pathname ) {
 			return null;
 		}
+		// The same page, with only the app's own argument allowed to differ: on a site without
+		// pretty permalinks every post link is /?p=N on this very path and must stay a real link.
+		const others = new URLSearchParams( u.search );
+		others.delete( query );
+		others.sort();
+		const own = new URLSearchParams( page.search );
+		own.sort();
+		if ( others.toString() !== own.toString() ) {
+			return null;
+		}
 		const id = Number( u.searchParams.get( query ) );
 		return { id: Number.isInteger( id ) && id > 0 ? id : 0 };
 	};
+	let shown = postOf( location.href )?.id ?? 0;
 	const addressOf = ( id ) => {
 		const u = new URL( page );
 		if ( id ) {
@@ -34,11 +45,27 @@ export function start( api ) {
 	};
 
 	// ---- Fetching, remembered for the session so going back is instant.
-	async function get( path ) {
-		if ( ! cache.has( path ) ) {
+	// The route's address, with a path appended and a page set, whether the site has pretty
+	// permalinks (/wp-json/riff/v1/library/12) or not (/?rest_route=/riff/v1/library/12).
+	function route( path = '', pageNumber = 0 ) {
+		const u = new URL( rest );
+		if ( u.searchParams.has( 'rest_route' ) ) {
+			u.searchParams.set( 'rest_route', u.searchParams.get( 'rest_route' ) + path );
+		} else {
+			u.pathname += path;
+		}
+		if ( pageNumber > 1 ) {
+			u.searchParams.set( 'page', String( pageNumber ) );
+		}
+		return u.toString();
+	}
+
+	async function get( path = '', pageNumber = 0 ) {
+		const key = route( path, pageNumber );
+		if ( ! cache.has( key ) ) {
 			cache.set(
-				path,
-				fetch( rest + path, {
+				key,
+				fetch( key, {
 					headers: { Accept: 'application/json' },
 				} ).then( ( r ) => {
 					if ( ! r.ok ) {
@@ -47,9 +74,9 @@ export function start( api ) {
 					return r.json();
 				} )
 			);
-			cache.get( path ).catch( () => cache.delete( path ) );
+			cache.get( key ).catch( () => cache.delete( key ) );
 		}
-		return cache.get( path );
+		return cache.get( key );
 	}
 
 	// ---- Views.
@@ -78,6 +105,7 @@ export function start( api ) {
 		} else {
 			swap();
 		}
+		shown = id;
 		if ( push ) {
 			// The rest of the state stays: WordPress's Interactivity runtime reloads the page on any
 			// history entry that lost its session id, which would end the music on Back.
@@ -126,8 +154,7 @@ export function start( api ) {
 			return '';
 		}
 		const art = t.art?.length ? t.art[ 0 ].src : '';
-		const id = Number( ( t.post.url.match( /[?&]p=(\\d+)/ ) || [] )[ 1 ] ) || 0;
-		const href = id ? addressOf( id ) : t.post.url;
+		const href = t.post.id ? addressOf( t.post.id ) : t.post.url;
 		return (
 			'<aside class="riff-now">' +
 			`<span class="riff-now-art">${
@@ -151,7 +178,7 @@ export function start( api ) {
 		const next = Number( grid.dataset.riffPage ) + 1;
 		button.disabled = true;
 		try {
-			const { items, pages } = await get( `?page=${ next }` );
+			const { items, pages } = await get( '', next );
 			grid.insertAdjacentHTML( 'beforeend', items.map( card ).join( '' ) );
 			grid.dataset.riffPage = String( next );
 			if ( next >= ( pages || 1 ) ) {
@@ -273,7 +300,8 @@ export function start( api ) {
 
 	window.addEventListener( 'popstate', () => {
 		const to = postOf( location.href );
-		if ( to ) {
+		// Now Playing closes through history.back() on the same address; that is not a view change.
+		if ( to && to.id !== shown ) {
 			show( to.id, { push: false } ).catch( () => {} );
 		}
 	} );

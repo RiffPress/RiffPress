@@ -137,7 +137,10 @@ final class Api {
 				'description' => __( 'The tracks in the post, in order.', 'riff' ),
 				'resolve'     => static function ( $post ): array {
 					$object = get_post( (int) ( $post->databaseId ?? 0 ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- WPGraphQL's own property.
-					return $object instanceof WP_Post ? Library::tracks( $object ) : array();
+					if ( ! $object instanceof WP_Post || ! is_post_publicly_viewable( $object ) || post_password_required( $object ) ) {
+						return array();
+					}
+					return Library::tracks( $object );
 				},
 			)
 		);

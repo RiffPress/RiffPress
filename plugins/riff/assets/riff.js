@@ -555,11 +555,14 @@ function start() {
 
 	// The wire is seen, not measured: a square root lifts the quiet end into view, since speech
 	// sits around a tenth of full scale and would otherwise read as unlit.
+	// Written on the lines and the glow themselves, not the root: a property on the root restyles
+	// every element in the player each frame, these three restyle three.
+	const heated = $$( '.riff-line, .riff-np-glow' );
 	function setHeat( h ) {
-		root.style.setProperty(
-			'--riff-heat',
-			Math.sqrt( Math.min( 1, Math.max( 0, h ) ) ).toFixed( 3 )
-		);
+		const value = Math.sqrt( Math.min( 1, Math.max( 0, h ) ) ).toFixed( 3 );
+		for ( const node of heated ) {
+			node.style.setProperty( '--riff-heat', value );
+		}
 	}
 
 	const liveBars = () => [
@@ -749,23 +752,44 @@ function start() {
 		const duration =
 			( Number.isFinite( m.duration ) && m.duration ) || t?.duration || 0;
 		const ratio = duration ? Math.min( m.currentTime / duration, 1 ) : 0;
-		root.style.setProperty( '--riff-p', ratio.toFixed( 4 ) );
+		setProgress( ratio );
 		text( 'current', time( m.currentTime ) );
 		text( 'duration', time( duration ) );
 		if ( ! seeking ) {
+			// A range's value is written only when it moves a step: each write lays the thumb out again.
+			const value = String( Math.round( ratio * 1000 ) );
 			for ( const input of $$( '[data-riff-seek]' ) ) {
-				input.value = String( Math.round( ratio * 1000 ) );
-				input.setAttribute(
-					'aria-valuetext',
-					`${ time( m.currentTime ) } / ${ time( duration ) }`
-				);
+				if ( input.value !== value ) {
+					input.value = value;
+					input.setAttribute(
+						'aria-valuetext',
+						`${ time( m.currentTime ) } / ${ time( duration ) }`
+					);
+				}
 			}
 		}
 	}
 
+	// The played fraction, on the two seek containers rather than the root, for the same reason as
+	// the heat.
+	const seekers = $$( '.riff-bar-seek, .riff-np-seek' );
+	function setProgress( ratio ) {
+		const value = ratio.toFixed( 4 );
+		for ( const node of seekers ) {
+			node.style.setProperty( '--riff-p', value );
+		}
+	}
+
+	// The text node is changed in place: replacing it is a childList mutation, and core's
+	// comment-reply script watches the whole body for those and re-binds itself on every one.
 	function text( name, value ) {
 		for ( const node of $$( `[data-riff-text="${ name }"]` ) ) {
-			if ( node.textContent !== value ) {
+			if ( node.textContent === value ) {
+				continue;
+			}
+			if ( node.firstChild?.nodeType === Node.TEXT_NODE && node.childNodes.length === 1 ) {
+				node.firstChild.data = value;
+			} else {
 				node.textContent = value;
 			}
 		}
@@ -827,10 +851,7 @@ function start() {
 			root.dataset.seeking = '';
 		} );
 		input.addEventListener( 'input', () => {
-			root.style.setProperty(
-				'--riff-p',
-				( Number( input.value ) / 1000 ).toFixed( 4 )
-			);
+			setProgress( Number( input.value ) / 1000 );
 			if ( ! seeking ) {
 				commit();
 			}

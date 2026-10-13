@@ -355,7 +355,10 @@ html.has-riff body::after {
 	initial-value: 0;
 }
 
-#riff {
+/* On the lines and the glow, where riff.js writes the heat, so nothing
+   above them restyles each frame. */
+.riff-line,
+.riff-np-glow {
 	--riff-heat: 0;
 	--riff-heat-red: calc(min(1, var(--riff-heat) / 0.35));
 	--riff-heat-amber: calc(clamp(0, (var(--riff-heat) - 0.35) / 0.35, 1));
@@ -400,7 +403,7 @@ html.has-riff body::after {
 	/* stylelint-disable-next-line @stylistic/max-line-length */
 	background: linear-gradient(180deg, color-mix(in srgb, currentcolor 40%, transparent), color-mix(in srgb, currentcolor 12%, transparent) 45%, transparent);
 	opacity: calc(0.5 * var(--riff-heat) * var(--riff-heat));
-	transition: opacity 0.5s ease-out;
+	will-change: opacity;
 	pointer-events: none;
 }
 

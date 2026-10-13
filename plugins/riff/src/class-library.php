@@ -246,6 +246,7 @@ final class Library {
 			array(
 				'post_type'           => 'post',
 				'post_status'         => 'publish',
+				'has_password'        => false,
 				'posts_per_page'      => self::PER_PAGE,
 				'ignore_sticky_posts' => true,
 				'no_found_rows'       => false,
