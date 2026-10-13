@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.5.0](https://github.com/RiffPress/RiffPress/compare/v4.4.0...v4.5.0) (2026-10-13)
+
+
+### Features
+
+* eight more albums in the demo, streamed from the site, with the music's level data in every cover's grooves ([#298](https://github.com/RiffPress/RiffPress/issues/298)) ([b663ac4](https://github.com/RiffPress/RiffPress/commit/b663ac4b8919fc5ddff5dec983809f90c150c006))
+* every drawn cover is the record, one groove per track, in wordpress.org's palette and type ([#296](https://github.com/RiffPress/RiffPress/issues/296)) ([c5423b2](https://github.com/RiffPress/RiffPress/commit/c5423b21523e57c6845769af48e13f3c1c1772a5))
+
 ## [4.4.0](https://github.com/RiffPress/RiffPress/compare/v4.3.0...v4.4.0) (2026-10-13)
 
 
