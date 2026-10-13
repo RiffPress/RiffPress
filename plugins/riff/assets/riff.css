@@ -356,6 +356,16 @@ html.has-riff body::after {
 	transform: scaleX(var(--riff-p));
 }
 
+/* How far the file has loaded, a lighter band under the played part. */
+.riff-line::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: color-mix(in srgb, currentcolor 22%, transparent);
+	transform-origin: left;
+	transform: scaleX(var(--riff-buffered, 0));
+}
+
 .riff-seek {
 	position: absolute;
 	inset: 0;
@@ -387,6 +397,7 @@ html.has-riff body::after {
 /* Right to left: the played part grows from the right, and the knob
    sits at its end. */
 [dir="rtl"] .riff-line i,
+[dir="rtl"] .riff-line::before,
 [dir="rtl"] .riff-wire,
 [dir="rtl"] .riff-hot {
 	transform-origin: right;

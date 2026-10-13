@@ -327,6 +327,24 @@ test.describe( 'Player', () => {
 		expect( Math.abs( origin.x - origin.width ) ).toBeLessThan( 1 );
 	} );
 
+	test( 'the seek bar shows how far the file has loaded', async ( { page } ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( 0.5 );
+		await expect
+			.poll( () =>
+				page.evaluate( () =>
+					parseFloat(
+						getComputedStyle(
+							document.querySelector( '.riff-bar-seek' )
+						).getPropertyValue( '--riff-buffered' )
+					)
+				)
+			)
+			.toBeGreaterThan( 0 );
+	} );
+
 	test( 'the keyboard plays, pauses and seeks', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect
