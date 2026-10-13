@@ -128,6 +128,58 @@ test.describe( 'App', () => {
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
+	test( 'closing Now Playing on the app page keeps the view and returns focus', async ( {
+		page,
+	} ) => {
+		// Now Playing closes through history.back(); the app must not read that as a view change.
+		await page.goto( `${ pageUrl }?riff=${ postId }` );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect
+			.poll( async () => ( await playing( page ) ).paused )
+			.toBe( false );
+		const album = await page.evaluateHandle( () =>
+			document.querySelector( '.riff-album' )
+		);
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '.riff-np' ) ).toBeVisible();
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		// Focus returns once the close has settled; the view is checked after that.
+		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
+		expect(
+			await page.evaluate(
+				( el ) => el === document.querySelector( '.riff-album' ),
+				album
+			),
+			'the post view was not swapped for a fresh copy'
+		).toBe( true );
+		expect( ( await playing( page ) ).paused ).toBe( false );
+	} );
+
+	test( 'the library shows what is playing and Open stays in the app', async ( {
+		page,
+	} ) => {
+		await page.locator( `.riff-card[data-riff-post="${ postId }"]` ).click();
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await playing( page ) ).time )
+			.toBeGreaterThan( 0.5 );
+		await page.locator( '.riff-app-home' ).click();
+		const now = page.locator( '.riff-now' );
+		await expect( now ).toBeVisible();
+		await expect( now.locator( '.riff-now-title' ) ).toHaveText(
+			'Trombone Detritus'
+		);
+		await expect( now.locator( 'a.riff-pill' ) ).toHaveAttribute(
+			'href',
+			new RegExp( `[?&]riff=${ postId }$` )
+		);
+		await now.locator( 'a.riff-pill' ).click();
+		await expect( page ).toHaveURL( new RegExp( `riff=${ postId }$` ) );
+		await expect( page.locator( '.riff-row' ) ).toHaveCount( 2 );
+		expect( ( await playing( page ) ).paused ).toBe( false );
+	} );
+
 	test( 'Play and Shuffle start the post from its header', async ( {
 		page,
 	} ) => {

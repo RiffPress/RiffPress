@@ -352,7 +352,7 @@ test.describe( 'Player', () => {
 				page.evaluate( () =>
 					Number(
 						getComputedStyle(
-							document.getElementById( 'riff' )
+							document.querySelector( '.riff-bar-seek .riff-line' )
 						).getPropertyValue( '--riff-heat' )
 					)
 				)
@@ -369,7 +369,7 @@ test.describe( 'Player', () => {
 					page.evaluate( () =>
 						Number(
 							getComputedStyle(
-								document.getElementById( 'riff' )
+								document.querySelector( '.riff-bar-seek .riff-line' )
 							).getPropertyValue( '--riff-heat' )
 						)
 					),

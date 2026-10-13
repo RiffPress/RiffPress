@@ -86,4 +86,32 @@ class Test_Riff_Library extends Riff_TestCase {
 		);
 		$this->assertSame( 404, rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/library/' . $draft ) )->get_status() );
 	}
+
+	public function test_a_password_protected_post_is_listed_nowhere(): void {
+		$locked = $this->post_with_track();
+		wp_update_post(
+			array(
+				'ID'            => $locked,
+				'post_password' => 'secret',
+			)
+		);
+		$this->assertNotContains( $locked, wp_list_pluck( Library::query()->posts, 'ID' ) );
+		$this->assertSame( 404, rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/library/' . $locked ) )->get_status() );
+	}
+
+	public function test_the_list_paginates(): void {
+		$this->post_with_track();
+		$this->post_with_track();
+		$one   = static fn( array $args ): array => array_merge( $args, array( 'posts_per_page' => 1 ) );
+		add_filter( 'riff_library_query', $one );
+		$first = rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/library' ) )->get_data();
+		$next  = new WP_REST_Request( 'GET', '/riff/v1/library' );
+		$next->set_param( 'page', 2 );
+		$second = rest_do_request( $next )->get_data();
+		remove_filter( 'riff_library_query', $one );
+		$this->assertSame( 2, $first['pages'] );
+		$this->assertSame( 2, $first['total'] );
+		$this->assertCount( 1, $first['items'] );
+		$this->assertNotSame( $first['items'][0]['id'], $second['items'][0]['id'] );
+	}
 }
