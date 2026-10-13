@@ -763,7 +763,9 @@ function start() {
 					input.value = value;
 					input.setAttribute(
 						'aria-valuetext',
-						`${ time( m.currentTime ) } / ${ time( duration ) }`
+						( s.times || '%1$s / %2$s' )
+							.replace( '%1$s', time( m.currentTime ) )
+							.replace( '%2$s', time( duration ) )
 					);
 				}
 			}
@@ -946,8 +948,14 @@ function start() {
 		opener = document.activeElement;
 		np.hidden = false;
 		root.classList.add( 'is-open' );
-		for ( const node of document.body.children ) {
-			if ( node !== root && ! node.inert ) {
+		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own
+		// bar and toast, which the dialog covers there and which would otherwise still take focus.
+		// On a wide screen the dialog opens above the bar and the bar stays the control surface.
+		const covered = window.matchMedia( '(min-width: 900px)' ).matches
+			? []
+			: [ $( '.riff-bar' ), $( '.riff-toast' ) ];
+		for ( const node of [ ...document.body.children, ...covered ] ) {
+			if ( node && node !== root && ! node.inert ) {
 				node.inert = true;
 				node.dataset.riffInert = '';
 			}
@@ -1162,7 +1170,9 @@ function start() {
 	}
 
 	// ---- Keyboard: Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P
-	// change track. Nothing fires while typing, and Space leaves buttons and links alone.
+	// change track. Nothing fires while typing, and Space leaves buttons and links alone. Escape
+	// closes Now Playing from anywhere, a field included. The single-key shortcuts can be turned
+	// off through the riff.shortcuts filter, which is what WCAG 2.1.4 asks of them.
 	document.addEventListener( 'keydown', ( e ) => {
 		if (
 			! track() ||
@@ -1173,19 +1183,23 @@ function start() {
 		) {
 			return;
 		}
+		if ( e.key === 'Escape' && ! np.hidden ) {
+			close();
+			e.preventDefault();
+			return;
+		}
 		const target = e.target;
 		if (
 			target.closest?.(
 				'input, textarea, select, [contenteditable=""], [contenteditable="true"]'
-			)
+			) ||
+			! filter( 'shortcuts', true, e )
 		) {
 			return;
 		}
 		const m = el();
 		const key = e.key.toLowerCase();
-		if ( e.key === 'Escape' && ! np.hidden ) {
-			close();
-		} else if (
+		if (
 			( e.key === ' ' && ! target.closest?.( 'button, a, summary' ) ) ||
 			( key === 'k' && ! e.shiftKey )
 		) {

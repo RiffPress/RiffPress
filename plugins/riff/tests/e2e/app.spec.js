@@ -78,6 +78,19 @@ test.describe( 'App', () => {
 		await page.goto( pageUrl );
 	} );
 
+	test( 'a server-rendered card plays from its cover, with the button beside the link', async ( {
+		page,
+	} ) => {
+		const card = page.locator( `.riff-card[data-riff-post="${ postId }"]` );
+		await expect( card.locator( '.riff-card-play' ) ).toBeAttached();
+		await expect( page.locator( 'a .riff-card-play' ) ).toHaveCount( 0 );
+		await card.locator( '.riff-card-play' ).click();
+		await expect
+			.poll( async () => ( await playing( page ) ).paused )
+			.toBe( false );
+		await expect( page ).toHaveURL( pageUrl );
+	} );
+
 	test( 'the page lists the library and opens a post without leaving', async ( {
 		page,
 	} ) => {
