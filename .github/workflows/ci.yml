@@ -79,11 +79,17 @@ jobs:
     uses: ./.github/workflows/phpunit.yml
 
   # The Playwright suite runs here on pull requests, pushes to main, and the weekly run, and locally from
-  # the pre-commit hook. Plugin Check stays manual.
+  # the pre-commit hook.
   e2e:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/e2e.yml
+
+  # What the plugin directory runs on submission, against the built zip, on every change to the code.
+  plugin-check:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    uses: ./.github/workflows/plugin-check.yml
 
   lint-js:
     needs: gate
@@ -102,7 +108,7 @@ jobs:
   # counts as a failure.
   status:
     name: CI status
-    needs: [gate, changes, phpcs, phpunit, lint-js, typos, e2e]
+    needs: [gate, changes, phpcs, phpunit, lint-js, typos, e2e, plugin-check]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

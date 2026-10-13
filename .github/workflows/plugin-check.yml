@@ -2,10 +2,11 @@ name: Plugin Check
 
 # Runs the WordPress.org Plugin Check plugin against the built zip, the same
 # thing the directory runs on submission. Errors fail the job; warnings print.
+# CI calls it on every change to the code.
 
 on:
   workflow_call:
-  workflow_dispatch: # by hand only; the pre-commit hook runs this locally
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -46,6 +47,11 @@ jobs:
         run: |
           npx wp-env run cli wp plugin install plugin-check --activate
           npx wp-env run cli wp plugin activate riff
+
+      # The translation template is generated, not committed: translations come from
+      # translate.wordpress.org, and a release carries the template for everyone else.
+      - name: Generate the translation template into the built plugin
+        run: npm run -s pot
 
       # "Tested up to" is written by scripts/sync-versions.sh at release time
       # from the core version the suite just ran against, so it is allowed to

@@ -38,7 +38,7 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 
 ## Translations
 
-`npm run pot` regenerates `plugins/riff/languages/riff.pot` (wp-env must be running). Commit it when strings change.
+`npm run pot` writes the translation template to `plugins/riff/languages/riff.pot` (wp-env must be running). It is generated, not committed: the Plugin Check job builds it into the zip, and translations come from translate.wordpress.org.
 
 ## Releases
 
