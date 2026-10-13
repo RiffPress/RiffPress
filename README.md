@@ -2,9 +2,9 @@
 
 <h1 align="center">Riff</h1>
 
-A music player for WordPress with the fit and finish of a streaming app. Install it and the audio
-and video blocks in your posts play in a player that stays docked at the bottom of the screen,
-with a full Now Playing view, a queue, and a Song/Video switch for tracks that have both.
+A music player for WordPress that works like a streaming app. Install it and the audio and video
+blocks in your posts play in a player docked at the bottom of the screen, with a full Now Playing
+view, a queue, and a Song/Video switch for tracks that have both.
 
 This repository is the Riff monorepo. <a href="https://riffpress.com/">Landing page</a> and live demo.
 
@@ -34,10 +34,10 @@ whole page; a track with a video version plays through whichever is showing, and
 the position across. A phone pauses video when the page goes to the background, so the track
 moves to audio while hidden and back when it returns.
 
-Everything else is what a listener expects from a player: Media Session metadata and lock-screen
-controls, keyboard shortcuts (Space or K, J and L, Shift+N and Shift+P), AirPlay and Cast when a
-device is in reach, swipe the bar to skip, drag Now Playing down to close it, and the queue and
-position remembered for the tab's session, so a link to another page keeps playing and a reload
+The rest is what a player should do. Media Session gives the lock screen its metadata and
+controls. Space or K, J and L, and Shift+N and Shift+P work on a keyboard. AirPlay and Cast appear
+when a device is in reach. A swipe on the bar skips, and a drag on Now Playing closes it. The queue
+and position are kept for the tab's session, so a link to another page keeps playing and a reload
 picks up paused where it left off.
 
 The layout follows YouTube Music's current design and measurements, in Riff's own amber.
