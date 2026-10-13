@@ -103,4 +103,21 @@ class Test_Riff_App extends Riff_TestCase {
 			)
 		);
 	}
+
+	public function test_the_listen_template_is_registered_and_a_slug_opens_a_post(): void {
+		if ( ! function_exists( 'register_block_template' ) ) {
+			$this->markTestSkipped( 'register_block_template() arrived in WordPress 6.7.' );
+		}
+		$template = get_block_template( App::TEMPLATE );
+		$this->assertNotNull( $template, 'the template is registered' );
+		$this->assertStringContainsString( '<!-- wp:riff/app', $template->content );
+		$this->assertSame( array( 'page' ), $template->post_types );
+
+		[ $post, $page ] = $this->library_and_page();
+		$this->go_to( get_permalink( $page ) );
+		$_GET['riff'] = get_post( $post )->post_name;
+		$html         = App::render();
+		unset( $_GET['riff'] );
+		$this->assertStringContainsString( 'class="riff-album"', $html, 'a slug opens the post the way an id does' );
+	}
 }
