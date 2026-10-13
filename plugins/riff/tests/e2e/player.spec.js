@@ -281,6 +281,8 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-bar-end .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
 		await page.locator( '.riff-bar-info' ).click();
 		await expect( page.locator( '.riff-np-quality .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
+	} );
+
 	test( 'the single-key shortcuts can be turned off, as WCAG 2.1.4 asks', async ( {
 		page,
 	} ) => {
