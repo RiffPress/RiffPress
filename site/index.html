@@ -83,7 +83,7 @@ a{color:var(--accent)}
 .nav nav{display:flex;align-items:center;gap:28px}
 .nav nav a:not(.btn){color:var(--white);text-decoration:none;font-size:.875rem;opacity:.85;transition:opacity var(--t)}
 .nav nav a:not(.btn):hover{opacity:1;text-decoration:underline;text-underline-offset:4px}
-.nav .btn{height:36px;padding:0 16px;font-size:.875rem}
+.nav .btn{height:44px;padding:0 16px;font-size:.875rem}
 /* type: a label, a serif headline, a lead, and small print */
 .eyebrow{margin:0 0 16px;font-size:.875rem;font-weight:600;color:var(--accent);letter-spacing:.02em;text-transform:uppercase;line-height:1.714}
 h1,h2{font-family:var(--serif);font-weight:400;margin:0;letter-spacing:0;text-wrap:balance;color:var(--ink)}
@@ -101,7 +101,7 @@ section{padding:var(--section) 0;text-align:center}
 .btn:hover{background:var(--blueberry-deep);border-color:var(--blueberry-deep)}
 .btn:focus-visible{outline:2px solid var(--blueberry);outline-offset:2px}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--charcoal-1)}
-.more{color:var(--accent);text-decoration:underline;text-underline-offset:4px;font-size:1rem;font-weight:400}
+.more{display:inline-flex;align-items:center;min-height:44px;color:var(--accent);text-decoration:underline;text-underline-offset:4px;font-size:1rem;font-weight:400}
 .more::after{content:" →"}
 .more:hover{color:var(--blueberry-deep)}
 .cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:16px 32px;align-items:center;justify-content:center}
@@ -188,12 +188,12 @@ html.js .r.in{opacity:1;transform:none}
 
 <section class="alt wire" id="video"><div class="wrap">
 	<div class="r"><p class="eyebrow">Song or video</p><h2>Same track, two ways.</h2><p class="lede">When a song has a video, a switch at the top of Now Playing flips between them without losing your place.</p></div>
-	<div class="shot r"><picture><source type="image/avif" srcset="desktop-now-playing.avif"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom" loading="lazy" decoding="async"></picture></div>
+	<div class="shot r"><picture><source type="image/avif" srcset="desktop-now-playing.avif 2880w, desktop-now-playing-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom" loading="lazy" decoding="async"></picture></div>
 </div></section>
 
 <section id="listen"><div class="wrap">
 	<div class="r"><p class="eyebrow">The Riff block</p><h2>One page where everything plays.</h2><p class="lede">Add the block to a page and it becomes your library. Open any post inside it, play from a cover, and the music carries on.</p></div>
-	<div class="shot r"><picture><source type="image/avif" srcset="desktop-listen.avif"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen page: a post open inside the library, its tracks listed, one playing in the bar" loading="lazy" decoding="async"></picture></div>
+	<div class="shot r"><picture><source type="image/avif" srcset="desktop-listen.avif 2880w, desktop-listen-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen page: a post open inside the library, its tracks listed, one playing in the bar" loading="lazy" decoding="async"></picture></div>
 </div></section>
 
 <section class="alt wire" id="try"><div class="wrap">

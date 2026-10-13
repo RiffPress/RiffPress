@@ -75,7 +75,7 @@ jobs:
           # Stamp every asset URL with the commit so a deploy is always a new URL: the page's images and its
           # blueprint fetch, and the blueprint's zip and demo files.
           V="${GITHUB_SHA::7}"
-          sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(srcset=\"[^\"?]+\.avif)\"#\1?v=${V}\"#g; s#(content=\"[^\"?]+/og\.png)\"#\1?v=${V}\"#; s#(\"image\": \"[^\"?]+\.png)\"#\1?v=${V}\"#g" out/index.html
+          sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(\.avif)( [0-9]+w)?(,|\")#\1?v=${V}\2\3#g; s#(content=\"[^\"?]+/og\.png)\"#\1?v=${V}\"#; s#(\"image\": \"[^\"?]+\.png)\"#\1?v=${V}\"#g" out/index.html
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g" out/robots.txt out/sitemap.xml
           if grep -n '{{' out/index.html out/robots.txt out/sitemap.xml; then echo "::error::A placeholder survived"; exit 1; fi
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" "$V" > out/blueprint.json
