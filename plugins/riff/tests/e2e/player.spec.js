@@ -170,10 +170,13 @@ test.describe( 'Player', () => {
 		expect( tab.x ).toBe( tabs.x );
 		const colors = await page.evaluate( () => ( {
 			repeat: getComputedStyle(
-				document.querySelector( '.riff-bar [data-riff-action="repeat"]' )
+				document.querySelector(
+					'.riff-bar [data-riff-action="repeat"]'
+				)
 			).color,
-			chevron: getComputedStyle( document.querySelector( '.riff-chevron' ) )
-				.color,
+			chevron: getComputedStyle(
+				document.querySelector( '.riff-chevron' )
+			).color,
 		} ) );
 		expect( colors.repeat ).toBe( 'rgb(144, 144, 144)' );
 		expect( colors.chevron ).toBe( 'rgb(255, 255, 255)' );
@@ -278,9 +281,13 @@ test.describe( 'Player', () => {
 		const row = page.locator( '.riff-row' ).nth( 1 );
 		await expect( row.locator( '.riff-quality' ) ).toHaveCount( 0 );
 		await row.click();
-		await expect( page.locator( '.riff-bar-end .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
+		await expect(
+			page.locator( '.riff-bar-end .riff-quality' )
+		).toHaveText( /^MP3 · \d+ kbps$/ );
 		await page.locator( '.riff-bar-info' ).click();
-		await expect( page.locator( '.riff-np-quality .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
+		await expect(
+			page.locator( '.riff-np-quality .riff-quality' )
+		).toHaveText( /^MP3 · \d+ kbps$/ );
 	} );
 
 	test( 'the single-key shortcuts can be turned off, as WCAG 2.1.4 asks', async ( {
@@ -317,7 +324,9 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-bar' ) ).toBeVisible();
 		const origin = await page.evaluate( () => {
 			document.documentElement.dir = 'rtl';
-			const fill = document.querySelector( '.riff-bar-seek .riff-line i' );
+			const fill = document.querySelector(
+				'.riff-bar-seek .riff-line i'
+			);
 			const x = parseFloat( getComputedStyle( fill ).transformOrigin );
 			// Layout width: the fill is scaled by the played fraction, which is 0 before playback.
 			const width = fill.offsetWidth;
@@ -327,7 +336,9 @@ test.describe( 'Player', () => {
 		expect( Math.abs( origin.x - origin.width ) ).toBeLessThan( 1 );
 	} );
 
-	test( 'the seek bar shows how far the file has loaded', async ( { page } ) => {
+	test( 'the seek bar shows how far the file has loaded', async ( {
+		page,
+	} ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect
 			.poll( async () => ( await audioState( page ) ).time )
@@ -343,6 +354,19 @@ test.describe( 'Player', () => {
 				)
 			)
 			.toBeGreaterThan( 0 );
+	} );
+
+	test( 'a track with a video carries a film mark by its title, nothing on the right', async ( {
+		page,
+	} ) => {
+		const first = page.locator( '.riff-row' ).nth( 0 );
+		await expect(
+			first.locator( '.riff-row-title .riff-row-video' )
+		).toHaveAttribute( 'aria-label', 'Video' );
+		await expect( first.locator( '.riff-row-badge' ) ).toHaveCount( 0 );
+		await expect(
+			page.locator( '.riff-row' ).nth( 1 ).locator( '.riff-row-video' )
+		).toHaveCount( 0 );
 	} );
 
 	test( 'the keyboard plays, pauses and seeks', async ( { page } ) => {
@@ -427,7 +451,9 @@ test.describe( 'Player', () => {
 				page.evaluate( () =>
 					Number(
 						getComputedStyle(
-							document.querySelector( '.riff-bar-seek .riff-line' )
+							document.querySelector(
+								'.riff-bar-seek .riff-line'
+							)
 						).getPropertyValue( '--riff-heat' )
 					)
 				)
@@ -444,7 +470,9 @@ test.describe( 'Player', () => {
 					page.evaluate( () =>
 						Number(
 							getComputedStyle(
-								document.querySelector( '.riff-bar-seek .riff-line' )
+								document.querySelector(
+									'.riff-bar-seek .riff-line'
+								)
 							).getPropertyValue( '--riff-heat' )
 						)
 					),
@@ -464,7 +492,9 @@ test.describe( 'Player', () => {
 			);
 			document
 				.getElementById( 'riff' )
-				.addEventListener( 'riff:play', () => window.__seen.push( 'event:play' ) );
+				.addEventListener( 'riff:play', () =>
+					window.__seen.push( 'event:play' )
+				);
 			window.wp.hooks.addFilter( 'riff.track', 'e2e', ( track ) => ( {
 				...track,
 				title: track.title + ' (remix)',
@@ -476,14 +506,24 @@ test.describe( 'Player', () => {
 		);
 		await expect
 			.poll( () => page.evaluate( () => window.__seen ) )
-			.toEqual( expect.arrayContaining( [ 'hook:Underground (remix)', 'event:play' ] ) );
+			.toEqual(
+				expect.arrayContaining( [
+					'hook:Underground (remix)',
+					'event:play',
+				] )
+			);
 		const api = await page.evaluate( () => ( {
 			version: window.riff.version,
 			current: window.riff.current().title,
 			queue: window.riff.queue().length,
 			playing: window.riff.playing(),
 		} ) );
-		expect( api ).toEqual( { version: 1, current: 'Underground (remix)', queue: 3, playing: true } );
+		expect( api ).toEqual( {
+			version: 1,
+			current: 'Underground (remix)',
+			queue: 3,
+			playing: true,
+		} );
 		await page.evaluate( () => window.riff.next() );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
 			'Trombone Detritus (remix)'
