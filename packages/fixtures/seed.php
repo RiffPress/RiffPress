@@ -66,14 +66,26 @@ if ( ! function_exists( 'riff_seed' ) ) {
 		add_filter( 'wp_check_filetype_and_ext', $trust, 10, 4 );
 
 		// The manifest's own titles, by file name, for a file whose tags carry none.
+		// The manifest's own titles, artists and lengths, by file name, for a file whose tags carry
+		// none, or a PHP that cannot read them (Playground's cannot).
 		$titles = array();
+		$known  = array();
 		foreach ( (array) ( $manifest['tracks'] ?? array() ) as $track ) {
-			if ( ! empty( $track['file'] ) && ! empty( $track['title'] ) ) {
-				$titles[ (string) $track['file'] ] = (string) $track['title'];
+			if ( empty( $track['file'] ) ) {
+				continue;
 			}
+			$file = (string) $track['file'];
+			if ( ! empty( $track['title'] ) ) {
+				$titles[ $file ] = (string) $track['title'];
+			}
+			$known[ $file ] = array(
+				'artist'   => (string) ( $track['artist'] ?? $track['uploader'] ?? '' ),
+				'album'    => $name,
+				'duration' => (float) ( $track['duration'] ?? 0 ),
+			);
 		}
 
-		$import = static function ( string $file ) use ( $dir, $titles ): int {
+		$import = static function ( string $file ) use ( $dir, $titles, $known ): int {
 			$tmp = wp_tempnam( $file );
 			copy( $dir . $file, $tmp );
 			$attachment_id = media_handle_sideload(
@@ -104,6 +116,26 @@ if ( ! function_exists( 'riff_seed' ) ) {
 					'post_title' => $title,
 				)
 			);
+			// What the tags did not give, the manifest does: the player reads artist, album and
+			// length from the attachment's metadata, where an upload through the Media Library puts them.
+			if ( isset( $known[ $file ] ) ) {
+				$meta    = wp_get_attachment_metadata( $attachment_id );
+				$meta    = is_array( $meta ) ? $meta : array();
+				$changed = false;
+				foreach ( array( 'artist', 'album' ) as $key ) {
+					if ( empty( $meta[ $key ] ) && '' !== $known[ $file ][ $key ] ) {
+						$meta[ $key ] = $known[ $file ][ $key ];
+						$changed      = true;
+					}
+				}
+				if ( empty( $meta['length'] ) && $known[ $file ]['duration'] > 0 ) {
+					$meta['length'] = $known[ $file ]['duration'];
+					$changed        = true;
+				}
+				if ( $changed ) {
+					wp_update_attachment_metadata( $attachment_id, $meta );
+				}
+			}
 			return $attachment_id;
 		};
 
