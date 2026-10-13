@@ -67,6 +67,11 @@ final class Tracks {
 				'artist'   => isset( $meta['artist'] ) ? (string) $meta['artist'] : '',
 				'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
 				'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
+				// What WordPress read from the file on upload: the container, the bit rate, whether it is
+				// lossless. The player shows them on every track, the way the streaming services do.
+				'format'   => strtolower( (string) ( $meta['dataformat'] ?? $meta['fileformat'] ?? '' ) ),
+				'bitrate'  => isset( $meta['bitrate'] ) ? (int) round( (float) $meta['bitrate'] / 1000 ) : 0,
+				'lossless' => ! empty( $meta['lossless'] ),
 				'art'      => $art,
 				'video'    => $video,
 				'post'     => self::post( $post_id ),
@@ -105,6 +110,9 @@ final class Tracks {
 				'artist'   => '',
 				'album'    => '',
 				'duration' => 0,
+				'format'   => '',
+				'bitrate'  => 0,
+				'lossless' => false,
 				'art'      => self::post_art( $post_id ),
 				'video'    => null,
 				'post'     => self::post( $post_id ),
@@ -175,6 +183,18 @@ final class Tracks {
 					'type'        => 'number',
 					'description' => __( 'Seconds, 0 when unknown.', 'riff' ),
 				),
+				'format'   => array(
+					'type'        => 'string',
+					'description' => __( 'The container, lower case, as WordPress read it from the file: mp3, flac, m4a. Empty when unknown.', 'riff' ),
+				),
+				'bitrate'  => array(
+					'type'        => 'integer',
+					'description' => __( 'Kilobits per second, 0 when unknown.', 'riff' ),
+				),
+				'lossless' => array(
+					'type'        => 'boolean',
+					'description' => __( 'Whether the encoding is lossless.', 'riff' ),
+				),
 				'art'      => array(
 					'type'        => 'array',
 					'description' => __( 'Artwork, smallest first.', 'riff' ),
@@ -223,6 +243,9 @@ final class Tracks {
 		$track['artist']   = (string) ( $track['artist'] ?? '' );
 		$track['album']    = (string) ( $track['album'] ?? '' );
 		$track['duration'] = (float) max( 0, (float) ( $track['duration'] ?? 0 ) );
+		$track['format']   = strtolower( (string) ( $track['format'] ?? '' ) );
+		$track['bitrate']  = max( 0, (int) ( $track['bitrate'] ?? 0 ) );
+		$track['lossless'] = ! empty( $track['lossless'] );
 		$track['art']      = array_values(
 			array_filter(
 				(array) ( $track['art'] ?? array() ),

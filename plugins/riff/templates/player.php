@@ -35,7 +35,7 @@ defined( 'ABSPATH' ) || exit;
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
 				<span class="riff-title" data-riff-text="title"></span>
-				<span class="riff-sub" data-riff-text="subtitle"></span>
+				<span class="riff-sub"><span data-riff-text="subtitle"></span> <span class="riff-quality" data-riff-text="quality"></span></span>
 			</span>
 		</button>
 		<div class="riff-bar-end">
@@ -70,7 +70,7 @@ defined( 'ABSPATH' ) || exit;
 			<span class="riff-thumb riff-thumb-lg"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
 				<span class="riff-title" data-riff-text="title"></span>
-				<span class="riff-sub" data-riff-text="artist"></span>
+				<span class="riff-sub"><span data-riff-text="artist"></span> <span class="riff-quality" data-riff-text="quality"></span></span>
 			</span>
 			<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			<button type="button" class="riff-btn riff-play" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><?php echo Player::icon( 'play' ) . Player::icon( 'pause' ); ?></button>
@@ -85,6 +85,7 @@ defined( 'ABSPATH' ) || exit;
 				<div class="riff-np-meta">
 					<h2 class="riff-np-title" data-riff-text="title"></h2>
 					<p class="riff-np-sub" data-riff-text="artist"></p>
+					<p class="riff-np-quality"><span class="riff-quality" data-riff-text="quality"></span></p>
 				</div>
 				<div class="riff-np-seek">
 					<span class="riff-line" aria-hidden="true"><i></i></span>
