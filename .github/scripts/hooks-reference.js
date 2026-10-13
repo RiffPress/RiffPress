@@ -126,7 +126,7 @@ function render( hooks ) {
 			if ( h.since ) {
 				out += `Since ${ h.since }. `;
 			}
-			out += `Fires in \`${ h.file }\` at line ${ h.line }.\n\n`;
+			out += `Fires in \`${ h.file }\`.\n\n`;
 			if ( h.params.length ) {
 				out += '| Parameter | Type | Description |\n| --- | --- | --- |\n';
 				for ( const p of h.params ) {

@@ -7,6 +7,8 @@ cd "$(git rev-parse --show-toplevel)"
 
 echo "pre-commit: lint"
 npm run -s lint
+echo "pre-commit: hooks reference"
+npm run -s docs:hooks:check
 
 if [[ -n "${RIFF_SKIP_E2E:-}" ]]; then
 	echo "pre-commit: RIFF_SKIP_E2E set, skipping the Playwright suite"
