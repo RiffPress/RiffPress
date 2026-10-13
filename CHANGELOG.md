@@ -1,5 +1,24 @@
 # Changelog
 
+## [4.3.0](https://github.com/RiffPress/RiffPress/compare/v4.2.0...v4.3.0) (2026-10-13)
+
+
+### Features
+
+* a permanent demo on WP Engine, deployed on every release and reset to the seed every night ([#292](https://github.com/RiffPress/RiffPress/issues/292)) ([9527330](https://github.com/RiffPress/RiffPress/commit/95273309166add0ea624827d874ead01e700a57f))
+
+
+### Bug Fixes
+
+* a drawn cover's byline no longer repeats the artist that sits on the line above ([#287](https://github.com/RiffPress/RiffPress/issues/287)) ([88823fd](https://github.com/RiffPress/RiffPress/commit/88823fd05fdbc234bb2d78cb64a42129a0fdd3d3))
+* phone touch targets reach 44px, the Listen block keeps wordpress.org's text weight under any theme, and phones get 1440px desktop shots ([#291](https://github.com/RiffPress/RiffPress/issues/291)) ([b6bed45](https://github.com/RiffPress/RiffPress/commit/b6bed4555749a205ee5954a2ec608a9c71e73f81))
+* the demo link carries the commit stamp and the blueprint is never served from a stale cache ([#290](https://github.com/RiffPress/RiffPress/issues/290)) ([2497e2f](https://github.com/RiffPress/RiffPress/commit/2497e2f9cde222913d1d567a67392f62e70fd8be))
+
+
+### Reverts
+
+* the WP Engine demo workflow, since the demo stays on Playground ([#293](https://github.com/RiffPress/RiffPress/issues/293)) ([96159bc](https://github.com/RiffPress/RiffPress/commit/96159bc8a4697a12fba46f3fec90e0d23a77f819))
+
 ## [4.2.0](https://github.com/RiffPress/RiffPress/compare/v4.1.0...v4.2.0) (2026-10-13)
 
 
