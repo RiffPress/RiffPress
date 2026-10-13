@@ -78,5 +78,6 @@ test( 'render sorts by name within filters and actions and writes a table per ho
 	assert.ok( md.indexOf( '### `riff_a`' ) < md.indexOf( '### `riff_b`' ) );
 	assert.ok( md.indexOf( '## Filters' ) < md.indexOf( '## Actions' ) );
 	assert.match( md, /\| `\$b` \| `array` \| B\. \|/ );
-	assert.match( md, /Since 0\.2\.0\. Fires in `x\.php` at line 3\./ );
+	assert.match( md, /Since 0\.2\.0\. Fires in `x\.php`\./ );
+	assert.doesNotMatch( md, /at line/, 'line numbers drift with every edit and would make the doc stale' );
 } );
