@@ -5,13 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Riff, a music player for WordPress</title>
 <meta name="description" content="A music player for WordPress. The songs and videos in a post, in a player that keeps playing while you read.">
-<meta property="og:title" content="Riff">
-<meta property="og:description" content="Press play on your own site. A music player for WordPress.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Riff">
+<meta property="og:url" content="{{pages_url}}">
+<meta property="og:title" content="Riff, a music player for WordPress">
+<meta property="og:description" content="Press play on your own site. The songs and videos in a post, in a player that keeps playing while you read.">
 <meta property="og:image" content="{{pages_url}}og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Riff, a music player for WordPress">
+<meta name="twitter:description" content="Press play on your own site. The songs and videos in a post, in a player that keeps playing while you read.">
+<meta name="twitter:image" content="{{pages_url}}og.png">
 <link rel="canonical" href="{{pages_url}}">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script type="application/ld+json">
+{
+	"@context": "https://schema.org",
+	"@graph": [
+		{
+			"@type": "SoftwareApplication",
+			"@id": "{{pages_url}}#riff",
+			"name": "Riff",
+			"description": "A music player for WordPress. The songs and videos in a post, in a player that keeps playing while you read, with a full Now Playing screen and a page where everything plays.",
+			"url": "{{pages_url}}",
+			"applicationCategory": "MultimediaApplication",
+			"applicationSubCategory": "WordPress plugin",
+			"operatingSystem": "WordPress 6.5 or newer",
+			"softwareRequirements": "PHP 8.1 or newer",
+			"downloadUrl": "https://github.com/RiffPress/riffpress/releases/latest",
+			"image": "{{pages_url}}desktop-now-playing.png",
+			"screenshot": "{{pages_url}}desktop-listen.png",
+			"license": "https://www.gnu.org/licenses/gpl-2.0.html",
+			"isAccessibleForFree": true,
+			"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+			"author": { "@id": "{{pages_url}}#riffpress" }
+		},
+		{
+			"@type": "Organization",
+			"@id": "{{pages_url}}#riffpress",
+			"name": "RiffPress",
+			"url": "{{pages_url}}",
+			"logo": "{{pages_url}}icons/icon-512.png",
+			"sameAs": [ "https://github.com/RiffPress" ]
+		},
+		{
+			"@type": "WebSite",
+			"url": "{{pages_url}}",
+			"name": "Riff",
+			"publisher": { "@id": "{{pages_url}}#riffpress" }
+		}
+	]
+}
+</script>
 <meta name="theme-color" content="#1e1e1e">
 <meta name="color-scheme" content="light">
 <style>
@@ -25,6 +73,8 @@ html{font-family:var(--sans);scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.875;-webkit-font-smoothing:antialiased}
 a{color:var(--accent)}
 .wrap{max-width:1160px;margin:0 auto;padding:0 var(--edge)}
+.skip{position:absolute;left:16px;top:-48px;z-index:20;background:var(--blueberry);color:var(--white);padding:10px 16px;border-radius:2px;text-decoration:none}
+.skip:focus{top:12px}
 /* the global bar: dark, as wordpress.org's is */
 .nav{position:sticky;top:0;z-index:10;background:var(--charcoal-1);color:var(--white)}
 .nav .wrap{height:60px;display:flex;align-items:center;justify-content:space-between;gap:20px}
@@ -63,6 +113,7 @@ section{padding:var(--section) 0;text-align:center}
 .hero{padding:var(--section) 0}
 .hero .device{width:min(380px,80vw)}
 .desk{display:block;width:100%;height:auto;border-radius:2px;border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(30,30,30,.4)}
+picture{display:contents}
 /* short facts under a picture, three to a row */
 .facts{list-style:none;margin:var(--gap) auto 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:32px 32px;max-width:56rem;text-align:left}
 .facts strong{display:block;font-size:1.25rem;font-weight:600;line-height:1.4;margin-bottom:4px}
@@ -103,7 +154,8 @@ html.js .r.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Riff</a><nav><a href="#listen">The block</a><a href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Live demo</a><a href="#owners">For your site</a><a href="https://github.com/riffpress/riffpress">GitHub</a><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download</a></nav></div></div>
+<a class="skip" href="#top">Skip to content</a>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Riff</a><nav><a href="#listen">The block</a><a href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Live demo</a><a href="#owners">For your site</a><a href="https://github.com/RiffPress/riffpress">GitHub</a><a class="btn" href="https://github.com/RiffPress/riffpress/releases/latest">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
@@ -114,12 +166,12 @@ html.js .r.in{opacity:1;transform:none}
 		<div class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the live demo</a><a class="more" href="#owners">Put it on your site</a></div>
 		<p class="fine">A WordPress site with ten tracks, in a new tab. Nothing to install.</p>
 	</div>
-	<div class="shot r"><span class="device"><img src="phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls"></span></div>
+	<div class="shot r"><span class="device"><picture><source type="image/avif" srcset="phone-now-playing.avif"><img src="phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls" fetchpriority="high" decoding="async"></picture></span></div>
 </div></section>
 
 <section class="alt wire" id="bar"><div class="wrap">
 	<div class="r"><p class="eyebrow">The bar</p><h2>Keeps playing while you read.</h2><p class="lede">Tap a track and it starts. Scroll on, open another post, lock the phone; the music carries on.</p></div>
-	<div class="shot r"><span class="device"><img src="phone-post.png" width="780" height="1688" alt="A post with its tracks listed, and the player bar along the bottom of the screen"></span></div>
+	<div class="shot r"><span class="device"><picture><source type="image/avif" srcset="phone-post.avif"><img src="phone-post.png" width="780" height="1688" alt="A post with its tracks listed, and the player bar along the bottom of the screen" loading="lazy" decoding="async"></picture></span></div>
 	<ul class="facts r">
 		<li><strong>Swipe to skip</strong><span>Sideways on the bar for the next or previous track.</span></li>
 		<li><strong>Lock screen</strong><span>Artwork, title and controls where your phone puts them.</span></li>
@@ -132,23 +184,23 @@ html.js .r.in{opacity:1;transform:none}
 
 <section id="queue"><div class="wrap">
 	<div class="r"><p class="eyebrow">Up next</p><h2>The whole post, queued.</h2><p class="lede">Every track in the post lines up behind the one you chose. Pull the handle to see what's coming.</p></div>
-	<div class="shot r"><span class="device"><img src="phone-up-next.png" width="780" height="1688" alt="Now Playing with the Up next sheet open, listing the rest of the post's tracks"></span></div>
+	<div class="shot r"><span class="device"><picture><source type="image/avif" srcset="phone-up-next.avif"><img src="phone-up-next.png" width="780" height="1688" alt="Now Playing with the Up next sheet open, listing the rest of the post's tracks" loading="lazy" decoding="async"></picture></span></div>
 </div></section>
 
 <section class="alt wire" id="video"><div class="wrap">
 	<div class="r"><p class="eyebrow">Song or video</p><h2>Same track, two ways.</h2><p class="lede">When a song has a video, a switch at the top of Now Playing flips between them without losing your place.</p></div>
-	<div class="shot r"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom"></div>
+	<div class="shot r"><picture><source type="image/avif" srcset="desktop-now-playing.avif"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom" loading="lazy" decoding="async"></picture></div>
 </div></section>
 
 <section id="listen"><div class="wrap">
 	<div class="r"><p class="eyebrow">The Riff block</p><h2>One page. Everything plays.</h2><p class="lede">Add the block to a page and it becomes your library. Open any post inside it, play from a cover, and the music carries on.</p></div>
-	<div class="shot r"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen page: a post open inside the library, its tracks listed, one playing in the bar"></div>
+	<div class="shot r"><picture><source type="image/avif" srcset="desktop-listen.avif"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen page: a post open inside the library, its tracks listed, one playing in the bar" loading="lazy" decoding="async"></picture></div>
 </div></section>
 
 <section class="alt wire" id="try"><div class="wrap">
 	<div class="r"><p class="eyebrow">Live demo</p><h2>Hear it.</h2><p class="lede">A WordPress site with ten jazz tracks, running in your browser. Nothing to install.</p></div>
 	<div class="demo r">
-		<div class="phone"><div class="screen"><img src="phone-post.png" width="780" height="1688" alt="The demo post: ten tracks listed, the player bar along the bottom"></div></div>
+		<div class="phone"><div class="screen"><picture><source type="image/avif" srcset="phone-post.avif"><img src="phone-post.png" width="780" height="1688" alt="The demo post: ten tracks listed, the player bar along the bottom" loading="lazy" decoding="async"></picture></div></div>
 		<div class="demo-go">
 			<a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the live demo</a>
 			<p class="fine">Opens in WordPress Playground, in a new tab. Recordings by the Airmen of Note, United States Air Force Band. Public domain.</p>
@@ -158,12 +210,13 @@ html.js .r.in{opacity:1;transform:none}
 
 <section class="wire" id="owners"><div class="wrap">
 	<div class="r"><p class="eyebrow">For your site</p><h2>Install it. Write a post.</h2><p class="lede">Riff plays the audio and video blocks WordPress already has. No new way to upload. One new page, if you want it.</p></div>
-	<div class="cta r"><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download the plugin</a><a class="more" href="https://github.com/riffpress/riffpress#readme">Read how it works</a></div>
+	<div class="cta r"><a class="btn" href="https://github.com/RiffPress/riffpress/releases/latest">Download the plugin</a><a class="more" href="https://github.com/RiffPress/riffpress#readme">Read how it works</a></div>
+	<p class="fine r">A zip from the latest release. Upload it under Plugins, Add New, Upload Plugin, and activate.</p>
 	<div class="specs r">
 		<div><h3>What it needs</h3><ul><li>WordPress 6.5 or newer</li><li>PHP 8.1 or newer</li><li>Any block theme</li></ul></div>
 		<div><h3>What it adds</h3><ul><li>One script, one stylesheet, no build step</li><li><em>Artwork</em> and <em>Video version</em> fields on media</li><li>A block and a shortcode for the Listen page</li><li>Nothing to configure</li></ul></div>
-		<div><h3>Open</h3><ul><li><a href="https://github.com/riffpress/riffpress">Source on GitHub</a></li><li>GPL, like WordPress</li><li><a href="https://github.com/riffpress/riffpress/issues">Report a problem</a></li></ul></div>
-		<div><h3>For developers</h3><ul><li><code>riff_track</code> on every media item in REST</li><li><code>riff/v1/library</code>, with schemas</li><li>WPGraphQL fields when it's installed</li><li>Filters and actions, <a href="https://github.com/riffpress/riffpress/blob/main/plugins/riff/readme.txt">listed in the readme</a></li></ul></div>
+		<div><h3>Open</h3><ul><li><a href="https://github.com/RiffPress/riffpress">Source on GitHub</a></li><li>GPL, like WordPress</li><li><a href="https://github.com/RiffPress/riffpress/releases">Release notes</a></li><li><a href="https://github.com/RiffPress/riffpress/issues">Report a problem</a></li></ul></div>
+		<div><h3>For developers</h3><ul><li><code>riff_track</code> on every media item in REST</li><li><code>riff/v1/library</code>, with schemas</li><li>WPGraphQL fields when it's installed</li><li>Filters and actions, <a href="https://github.com/RiffPress/riffpress/blob/main/plugins/riff/readme.txt">listed in the readme</a></li></ul></div>
 	</div>
 </div></section>
 </main>
@@ -180,7 +233,7 @@ html.js .r.in{opacity:1;transform:none}
 	</div>
 </div></section>
 
-<footer><div class="wrap"><span>Made by <a href="https://josephfus.co/">Joe Fusco</a>.</span><a href="https://github.com/riffpress/riffpress">GitHub</a></div></footer>
+<footer><div class="wrap"><span>Made by <a href="https://josephfus.co/">Joe Fusco</a>.</span><a href="https://github.com/RiffPress/riffpress">GitHub</a></div></footer>
 <script>
 	if ( 'IntersectionObserver' in window && ! matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) document.documentElement.classList.add( 'js' );
 	const io = new IntersectionObserver( ( es ) => es.forEach( ( e ) => { if ( e.isIntersecting ) { e.target.classList.add( 'in' ); io.unobserve( e.target ); } } ), { rootMargin: '0px 0px -5% 0px', threshold: 0.01 } );

@@ -16,6 +16,7 @@ undefined/
 !assets/*.png
 !site/*.png
 !site/brand/*.png
+!site/icons/*.png
 !tests/fixtures/**/*.png
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
