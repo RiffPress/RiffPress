@@ -107,10 +107,10 @@
     },
     {
       "step": "writeFile",
-      "path": "/wordpress/wp-content/riff-demo/compositions/07 - Little Dreamer, Big Dreams [little-dreamer].mp3",
+      "path": "/wordpress/wp-content/riff-demo/compositions/07 - Little Dreamer Big Dreams [little-dreamer].mp3",
       "data": {
         "resource": "url",
-        "url": "demo/07%20-%20Little%20Dreamer%2C%20Big%20Dreams%20%5Blittle-dreamer%5D.mp3"
+        "url": "demo/07%20-%20Little%20Dreamer%20Big%20Dreams%20%5Blittle-dreamer%5D.mp3"
       }
     },
     {
