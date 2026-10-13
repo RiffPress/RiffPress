@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PROJECT: riff
+  PROJECT: riffpress
   SITE_URL: ${{ vars.SITE_URL || 'https://riffpress.com/' }}
 
 jobs:
