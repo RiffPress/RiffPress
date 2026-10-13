@@ -1374,21 +1374,21 @@ function start() {
 		}
 	}
 
-	// ---- AirPlay in Safari, Cast in Chrome. The button shows only while a device is in reach.
-	const castButton = $( '[data-riff-action="cast"]' );
+	// ---- AirPlay in Safari, Cast in Chrome. The buttons, in the bar on a phone and in Now Playing
+	// everywhere, show only while a device is in reach.
+	const castButtons = $$( '[data-riff-action="cast"]' );
+	const castAvailable = ( available ) => {
+		for ( const b of castButtons ) {
+			b.hidden = ! available;
+		}
+	};
 	if ( window.WebKitPlaybackTargetAvailabilityEvent ) {
 		audio.addEventListener(
 			'webkitplaybacktargetavailabilitychanged',
-			( e ) => {
-				castButton.hidden = e.availability !== 'available';
-			}
+			( e ) => castAvailable( e.availability === 'available' )
 		);
 	} else if ( audio.remote?.watchAvailability ) {
-		audio.remote
-			.watchAvailability(
-				( available ) => ( castButton.hidden = ! available )
-			)
-			.catch( () => {} );
+		audio.remote.watchAvailability( castAvailable ).catch( () => {} );
 	}
 	function cast() {
 		const m = el();
