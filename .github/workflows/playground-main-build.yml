@@ -65,6 +65,7 @@ jobs:
           cp build/riff.zip preview/
           cp packages/fixtures/seed.php preview/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} preview/demo/ \;
+          cp site/brand/mark.png preview/demo/
           BASE="https://raw.githubusercontent.com/${GH_REPO}/preview-main/"
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" > preview/blueprint.json
           ls -la preview preview/demo

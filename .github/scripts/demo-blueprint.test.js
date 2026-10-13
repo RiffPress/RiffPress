@@ -189,10 +189,16 @@ test( 'every demo file blueprint.json fetches exists in the fixture set', () => 
 		names.includes( 'seed.php' ),
 		'the demo has no seed script to run'
 	);
-	const where = ( name ) =>
-		name === 'seed.php'
-			? path.join( ROOT, 'packages/fixtures', name )
-			: path.join( ROOT, 'packages/fixtures/compositions', name );
+	// The seed and the mark travel with the demo from elsewhere in the repository.
+	const where = ( name ) => {
+		if ( name === 'seed.php' ) {
+			return path.join( ROOT, 'packages/fixtures', name );
+		}
+		if ( name === 'mark.png' ) {
+			return path.join( ROOT, 'site/brand', name );
+		}
+		return path.join( ROOT, 'packages/fixtures/compositions', name );
+	};
 	const missing = names.filter(
 		( name ) => ! fs.existsSync( where( name ) )
 	);
