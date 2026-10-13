@@ -51,6 +51,7 @@ Only through `wp.hooks`.
 | --- | --- | --- |
 | `riff.queue` | The tracks about to become the queue, and the index that will play. | Before a queue is set. |
 | `riff.track` | One track. | For each track as a queue is set. |
+| `riff.shortcuts` | Whether the single-key shortcuts (Space, K, J, L) act on this key event; the event is the second argument. Return `false` to turn them off, which WCAG 2.1.4 asks to be possible. | On each key press. |
 
 ```js
 wp.hooks.addFilter( 'riff.track', 'my-plugin', ( track ) => ( {

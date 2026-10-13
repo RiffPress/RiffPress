@@ -339,6 +339,33 @@ html.has-riff body::after {
 	display: none;
 }
 
+/* The seek input is invisible, so its focus ring is drawn on the bar
+   around it. */
+#riff .riff-seek:focus-visible {
+	outline: none;
+}
+
+.riff-bar-seek:has(> .riff-seek:focus-visible),
+.riff-np-seek:has(> .riff-seek:focus-visible) {
+	outline: 2px solid var(--riff-fg);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+/* Right to left: the played part grows from the right, and the knob
+   sits at its end. */
+[dir="rtl"] .riff-line i,
+[dir="rtl"] .riff-wire,
+[dir="rtl"] .riff-hot {
+	transform-origin: right;
+}
+
+[dir="rtl"] .riff-knob {
+	left: auto;
+	right: calc(var(--riff-p) * 100%);
+	margin: -7px -7px 0 0;
+}
+
 /* ---- The filament. riff.js writes one number a frame, --riff-heat, 0 cold
    to 1 white-hot; everything below derives from it. Registered, so it is a
    real number the browser can interpolate: the short transition on #riff
@@ -1484,14 +1511,31 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	gap: 32px 20px;
 }
 
+/* A card is a link and a play button side by side, never one inside the
+   other: the link stretches over the whole card through its ::after, and
+   the button sits above that. */
 .riff-app .riff-card {
+	position: relative;
 	display: grid;
 	gap: 2px;
+}
+
+.riff-app .riff-card-link {
 	color: inherit;
 	text-decoration: none;
 }
 
-.riff-app .riff-card:focus-visible {
+.riff-app .riff-card-link::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
+
+.riff-app .riff-card-link:focus-visible {
+	outline: none;
+}
+
+.riff-app .riff-card:has(> .riff-card-link:focus-visible) {
 	outline: 2px solid var(--riff-app-accent);
 	outline-offset: 4px;
 }
@@ -1553,6 +1597,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-card-play {
 	all: unset;
 	position: absolute;
+	z-index: 1;
 	right: 12px;
 	bottom: 12px;
 	display: grid;
