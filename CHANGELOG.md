@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.5.1](https://github.com/RiffPress/RiffPress/compare/v4.5.0...v4.5.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* a cover's grooves follow the music at half the sway, smoothed, and the demo cover carries its level data ([#302](https://github.com/RiffPress/RiffPress/issues/302)) ([6c5d772](https://github.com/RiffPress/RiffPress/commit/6c5d7721a59f2ff44096f49cebfc96a38ef03d24))
+* every cast button follows device availability, two landing page claims are corrected, and a test holds the API list to the code ([#303](https://github.com/RiffPress/RiffPress/issues/303)) ([6595afd](https://github.com/RiffPress/RiffPress/commit/6595afdc50dc9f9cf43dd15371cebeb37ffa28bc))
+* the Listen block keeps wordpress.org's content width, with the library grid and the now-playing strip on one edge ([#305](https://github.com/RiffPress/RiffPress/issues/305)) ([5af4773](https://github.com/RiffPress/RiffPress/commit/5af4773d5b548955d3d35604235db395b554f03d))
+
 ## [4.5.0](https://github.com/RiffPress/RiffPress/compare/v4.4.0...v4.5.0) (2026-10-13)
 
 
