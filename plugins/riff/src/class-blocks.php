@@ -42,7 +42,7 @@ final class Blocks {
 		}
 		$type    = 'core/video' === ( $block['blockName'] ?? '' ) ? 'video' : 'audio';
 		$post_id = $instance instanceof WP_Block && isset( $instance->context['postId'] ) ? (int) $instance->context['postId'] : (int) get_the_ID();
-		$track   = self::track( $content, $block['attrs'] ?? array(), $type, $post_id );
+		$track   = Tracks::from_markup( $content, $block['attrs'] ?? array(), $type, $post_id );
 		if ( ! $track ) {
 			return $content;
 		}
@@ -54,34 +54,5 @@ final class Blocks {
 		$tags->add_class( 'riff-track' );
 		$tags->set_attribute( 'data-riff-track', wp_json_encode( $track ) );
 		return $tags->get_updated_html();
-	}
-
-	/**
-	 * Reads the track out of a block: its attachment when it has one, the file address otherwise.
-	 *
-	 * @param string $content Rendered block.
-	 * @param array  $attrs   Block attributes.
-	 * @param string $type    'audio' or 'video'.
-	 * @param int    $post_id Post ID.
-	 * @return array|null
-	 */
-	private static function track( string $content, array $attrs, string $type, int $post_id ): ?array {
-		if ( ! empty( $attrs['id'] ) ) {
-			$track = Tracks::from_attachment( (int) $attrs['id'], $post_id );
-			if ( $track ) {
-				return $track;
-			}
-		}
-
-		$tags = new WP_HTML_Tag_Processor( $content );
-		if ( ! $tags->next_tag( $type ) ) {
-			return null;
-		}
-		$src = $tags->get_attribute( 'src' );
-		if ( ! is_string( $src ) || '' === $src ) {
-			return null;
-		}
-		$caption = preg_match( '#<figcaption[^>]*>(.*?)</figcaption>#s', $content, $m ) ? wp_strip_all_tags( $m[1] ) : '';
-		return Tracks::from_url( $src, $type, html_entity_decode( $caption, ENT_QUOTES, 'UTF-8' ), $post_id );
 	}
 }

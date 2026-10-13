@@ -58,7 +58,7 @@ final class Player {
 	 * @param string $file Path relative to the plugin folder.
 	 * @return string
 	 */
-	private static function version( string $file ): string {
+	public static function version( string $file ): string {
 		$time = filemtime( RIFF_DIR . $file );
 		return $time ? RIFF_VERSION . '.' . $time : RIFF_VERSION;
 	}
@@ -85,12 +85,50 @@ final class Player {
 			'video'       => __( 'Video', 'riff' ),
 			'unavailable' => __( 'This track could not be played.', 'riff' ),
 			'copied'      => __( 'Link copied', 'riff' ),
+			'library'     => __( 'Library', 'riff' ),
+			'shuffle'     => __( 'Shuffle', 'riff' ),
+			/* translators: %s: number of tracks. */
+			'oneTrack'    => __( '%s track', 'riff' ),
+			/* translators: %s: number of tracks. */
+			'tracks'      => __( '%s tracks', 'riff' ),
+			/* translators: %s: number of minutes. */
+			'minutes'     => __( '%s min', 'riff' ),
+			'appEmpty'    => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
+			'otherTab'    => __( 'Playing in another tab', 'riff' ),
+			'nowPlaying'  => __( 'Now playing', 'riff' ),
+			'open'        => __( 'Open', 'riff' ),
+			'more'        => __( 'Load more', 'riff' ),
 		);
+		/**
+		 * Filters the strings the player shows.
+		 *
+		 * @param array $strings Strings, keyed by name.
+		 */
+		$strings = (array) apply_filters( 'riff_strings', $strings );
+		$data    = array(
+			'strings' => $strings,
+			'assets'  => array(),
+		);
+		/**
+		 * Filters the data handed to the player script: strings, and the addresses of scripts a
+		 * feature wants loaded, such as the Listen feature's app on the page that holds its block.
+		 *
+		 * @param array $data Data.
+		 */
+		$data = (array) apply_filters( 'riff_player_data', $data );
 		printf(
 			'<script type="application/json" id="riff-data">%s</script>',
-			wp_json_encode( array( 'strings' => $strings ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )
+			wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )
 		);
+		/**
+		 * Fires before the player's markup.
+		 */
+		do_action( 'riff_before_player' );
 		require RIFF_DIR . 'templates/player.php';
+		/**
+		 * Fires after the player's markup.
+		 */
+		do_action( 'riff_after_player' );
 	}
 
 	/**

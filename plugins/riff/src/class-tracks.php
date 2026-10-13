@@ -7,6 +7,8 @@
 
 namespace Riff;
 
+use WP_HTML_Tag_Processor;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -44,8 +46,8 @@ final class Tracks {
 		$meta = is_array( $meta ) ? $meta : array();
 
 		$art = self::art( (int) get_post_thumbnail_id( $attachment_id ) );
-		if ( ! $art && $post_id ) {
-			$art = self::art( (int) get_post_thumbnail_id( $post_id ) );
+		if ( ! $art ) {
+			$art = self::post_art( $post_id );
 		}
 
 		$video = null;
@@ -54,17 +56,21 @@ final class Tracks {
 			$video    = $video_id ? self::video( $video_id, $art ) : null;
 		}
 
-		return array(
-			'id'       => (string) $attachment_id,
-			'src'      => $src,
-			'type'     => $type,
-			'title'    => self::title( $attachment_id, $meta ),
-			'artist'   => isset( $meta['artist'] ) ? (string) $meta['artist'] : '',
-			'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
-			'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
-			'art'      => $art,
-			'video'    => $video,
-			'post'     => self::post( $post_id ),
+		return self::filter(
+			array(
+				'id'       => (string) $attachment_id,
+				'src'      => $src,
+				'type'     => $type,
+				'title'    => self::title( $attachment_id, $meta ),
+				'artist'   => isset( $meta['artist'] ) ? (string) $meta['artist'] : '',
+				'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
+				'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
+				'art'      => $art,
+				'video'    => $video,
+				'post'     => self::post( $post_id ),
+			),
+			$attachment_id,
+			$post_id
 		);
 	}
 
@@ -87,18 +93,96 @@ final class Tracks {
 		if ( '' === $title ) {
 			$title = rawurldecode( pathinfo( (string) wp_parse_url( $src, PHP_URL_PATH ), PATHINFO_FILENAME ) );
 		}
-		return array(
-			'id'       => 'url:' . md5( $src ),
-			'src'      => $src,
-			'type'     => $type,
-			'title'    => $title,
-			'artist'   => '',
-			'album'    => '',
-			'duration' => 0,
-			'art'      => $post_id ? self::art( (int) get_post_thumbnail_id( $post_id ) ) : array(),
-			'video'    => null,
-			'post'     => self::post( $post_id ),
+		return self::filter(
+			array(
+				'id'       => 'url:' . md5( $src ),
+				'src'      => $src,
+				'type'     => $type,
+				'title'    => $title,
+				'artist'   => '',
+				'album'    => '',
+				'duration' => 0,
+				'art'      => self::post_art( $post_id ),
+				'video'    => null,
+				'post'     => self::post( $post_id ),
+			),
+			0,
+			$post_id
 		);
+	}
+
+	/**
+	 * Hands a finished track to the site.
+	 *
+	 * @param array $track         Track.
+	 * @param int   $attachment_id Attachment ID, or 0 for a bare address.
+	 * @param int   $post_id       Post ID, or 0.
+	 * @return array
+	 */
+	private static function filter( array $track, int $attachment_id, int $post_id ): array {
+		/**
+		 * Filters a track before the player reads it.
+		 *
+		 * @param array $track         Track: id, src, type, title, artist, album, duration, art, video, post.
+		 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
+		 * @param int   $post_id       The post the track appears in, or 0.
+		 */
+		return (array) apply_filters( 'riff_track', $track, $attachment_id, $post_id );
+	}
+
+	/**
+	 * A post's own image. A cover drawn in its place is the Listen feature's, through riff_track.
+	 *
+	 * @param int $post_id Post ID, or 0.
+	 * @return array List of { src, sizes }.
+	 */
+	private static function post_art( int $post_id ): array {
+		if ( ! $post_id ) {
+			return array();
+		}
+		return self::art( (int) get_post_thumbnail_id( $post_id ) );
+	}
+
+	/**
+	 * Reads the track out of a block's markup: its attachment when it has one, the file address
+	 * otherwise.
+	 *
+	 * @param string $html    The block's markup, rendered or as saved.
+	 * @param array  $attrs   Block attributes.
+	 * @param string $type    'audio' or 'video'.
+	 * @param int    $post_id Post ID.
+	 * @return array|null
+	 */
+	public static function from_markup( string $html, array $attrs, string $type, int $post_id ): ?array {
+		if ( ! empty( $attrs['id'] ) ) {
+			$track = self::from_attachment( (int) $attrs['id'], $post_id );
+			if ( $track ) {
+				return $track;
+			}
+		}
+
+		$tags = new WP_HTML_Tag_Processor( $html );
+		if ( ! $tags->next_tag( $type ) ) {
+			return null;
+		}
+		$src = $tags->get_attribute( 'src' );
+		if ( ! is_string( $src ) || '' === $src ) {
+			return null;
+		}
+		$caption = preg_match( '#<figcaption[^>]*>(.*?)</figcaption>#s', $html, $m ) ? wp_strip_all_tags( $m[1] ) : '';
+		return self::from_url( $src, $type, html_entity_decode( $caption, ENT_QUOTES, 'UTF-8' ), $post_id );
+	}
+
+	/**
+	 * Reads the track out of a parsed block.
+	 *
+	 * @param array $block   Parsed block, from parse_blocks().
+	 * @param int   $post_id Post ID.
+	 * @return array|null
+	 */
+	public static function from_block( array $block, int $post_id ): ?array {
+		$type = 'core/video' === ( $block['blockName'] ?? '' ) ? 'video' : 'audio';
+		return self::from_markup( (string) ( $block['innerHTML'] ?? '' ), (array) ( $block['attrs'] ?? array() ), $type, $post_id );
 	}
 
 	/**
@@ -116,7 +200,9 @@ final class Tracks {
 		$stem  = $file ? pathinfo( $file, PATHINFO_FILENAME ) : '';
 		// Compared loosely: the factory, the editor and a hand upload each punctuate the name differently.
 		$named = static fn( string $s ): string => strtolower( (string) preg_replace( '/[^a-z0-9]+/i', '', (string) preg_replace( '/\.[a-z0-9]{2,4}$/i', '', $s ) ) );
-		if ( ! empty( $meta['title'] ) && ( '' === $title || $named( $title ) === $named( $stem ) ) ) {
+		// A second upload of the same name gets "-1" on the file but not on the title.
+		$stems = array_map( $named, array( $stem, (string) preg_replace( '/-\d+$/', '', $stem ) ) );
+		if ( ! empty( $meta['title'] ) && ( '' === $title || in_array( $named( $title ), $stems, true ) ) ) {
 			$title = (string) $meta['title'];
 		}
 		return html_entity_decode( $title, ENT_QUOTES, 'UTF-8' );
@@ -151,7 +237,7 @@ final class Tracks {
 	 * @param int $image_id Image attachment ID, or 0.
 	 * @return array List of { src, sizes }.
 	 */
-	private static function art( int $image_id ): array {
+	public static function art( int $image_id ): array {
 		if ( ! $image_id ) {
 			return array();
 		}

@@ -153,6 +153,36 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
 	} );
 
+	test( 'on a wide screen the art stays square and the bar keeps its measurements', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'the wide layout only' );
+		// Tall enough that the stage could hold more than 640px of art: the cap, not the stage, must win.
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await page.locator( '.riff-chevron' ).click();
+		const cover = await page.locator( '.riff-cover' ).boundingBox();
+		expect( cover.width ).toBe( cover.height );
+		expect( cover.width ).toBe( 640 );
+		const tabs = await page.locator( '.riff-tabs' ).boundingBox();
+		const tab = await page.locator( '.riff-tab' ).boundingBox();
+		expect( tab.x ).toBe( tabs.x );
+		const colors = await page.evaluate( () => ( {
+			repeat: getComputedStyle(
+				document.querySelector( '.riff-bar [data-riff-action="repeat"]' )
+			).color,
+			chevron: getComputedStyle( document.querySelector( '.riff-chevron' ) )
+				.color,
+		} ) );
+		expect( colors.repeat ).toBe( 'rgb(144, 144, 144)' );
+		expect( colors.chevron ).toBe( 'rgb(255, 255, 255)' );
+		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();
+		await page.mouse.move( seek.x + 300, seek.y + seek.height / 2 );
+		const knob = await page.locator( '.riff-knob' ).boundingBox();
+		expect( knob.width ).toBe( 14 );
+	} );
+
 	test( 'a track with a video switches to it without losing its place', async ( {
 		page,
 	} ) => {
@@ -280,6 +310,31 @@ test.describe( 'Player', () => {
 		expect( state.time ).toBeGreaterThan( 1.5 );
 	} );
 
+	test( 'a link to another page keeps playing', async ( { page } ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( 2 );
+		// Any same-site link will do; the home page has no tracks of its own.
+		await page.evaluate( () => {
+			const a = document.createElement( 'a' );
+			a.href = '/';
+			a.id = 'riff-e2e-link';
+			a.textContent = 'Home';
+			document.body.prepend( a );
+		} );
+		await page.locator( '#riff-e2e-link' ).click();
+		await page.waitForURL( /\/$/ );
+		await expect( page.locator( '.riff-bar' ) ).toBeVisible();
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
+			'Underground'
+		);
+		await expect
+			.poll( async () => ( await audioState( page ) ).paused )
+			.toBe( false );
+		expect( ( await audioState( page ) ).time ).toBeGreaterThan( 1.5 );
+	} );
+
 	test( 'the filament lights with the music and cools when paused', async ( {
 		page,
 	}, testInfo ) => {
@@ -296,12 +351,13 @@ test.describe( 'Player', () => {
 			.poll( () =>
 				page.evaluate( () =>
 					Number(
-						document.querySelector( '[data-riff-wire]' ).style
-							.opacity
+						getComputedStyle(
+							document.getElementById( 'riff' )
+						).getPropertyValue( '--riff-heat' )
 					)
 				)
 			)
-			.toBeGreaterThan( 0.3 );
+			.toBeGreaterThan( 0.2 );
 		await page.locator( '.riff-bar [data-riff-action="toggle"]' ).click();
 		await expect( page.locator( '#riff' ) ).not.toHaveAttribute(
 			'data-live',
@@ -312,13 +368,14 @@ test.describe( 'Player', () => {
 				() =>
 					page.evaluate( () =>
 						Number(
-							document.querySelector( '[data-riff-wire]' ).style
-								.opacity
+							getComputedStyle(
+								document.getElementById( 'riff' )
+							).getPropertyValue( '--riff-heat' )
 						)
 					),
-				{ timeout: 4000 }
+				{ timeout: 6000 }
 			)
-			.toBeLessThan( 0.3 );
+			.toBeLessThan( 0.1 );
 	} );
 
 	test( 'Now Playing has no accessibility violations', async ( { page } ) => {

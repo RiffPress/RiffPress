@@ -339,12 +339,30 @@ html.has-riff body::after {
 	display: none;
 }
 
-/* ---- The filament. Three layers over the played part of the bar's line,
-   each only ever written to in colour and opacity by riff.js: the wire with
-   a tight bloom, a white heart that shows at the peaks, and a soft halo
-   that spreads down into the bar, which is always dark, never up into the
-   page, which may not be. Static gradients, so nothing repaints; opacity is
-   the compositor's to move. */
+/* ---- The filament. riff.js writes one number a frame, --riff-heat, 0 cold
+   to 1 white-hot; everything below derives from it. Registered, so it is a
+   real number the browser can interpolate: the short transition on #riff
+   turns the frame-by-frame writes into a flow. The colour is a filament's:
+   near-black red barely lit, through the accent at working temperature, to a
+   pale yellow-white at the peaks. Three layers over the played part of the
+   line, static gradients that never repaint: the wire with a tight bloom and
+   a white heart that shows only at the peaks. Where the waveform is drawn
+   the glow moves into its played bars instead. */
+
+@property --riff-heat {
+	syntax: "<number>";
+	inherits: true;
+	initial-value: 0;
+}
+
+#riff {
+	--riff-heat: 0;
+	--riff-heat-red: calc(min(1, var(--riff-heat) / 0.35));
+	--riff-heat-amber: calc(clamp(0, (var(--riff-heat) - 0.35) / 0.35, 1));
+	--riff-heat-white: calc(clamp(0, (var(--riff-heat) - 0.7) / 0.3, 1));
+	--riff-glow: color-mix(in oklab, color-mix(in oklab, color-mix(in oklab, rgb(74 16 0), rgb(190 58 12) calc(var(--riff-heat-red) * 100%)), var(--riff-accent) calc(var(--riff-heat-amber) * 100%)), rgb(255 232 190) calc(var(--riff-heat-white) * 100%));
+	transition: --riff-heat 160ms linear;
+}
 
 .riff-wire,
 .riff-hot {
@@ -352,35 +370,22 @@ html.has-riff body::after {
 	inset: 0;
 	transform-origin: left;
 	transform: scaleX(var(--riff-p));
-	opacity: 0;
+	will-change: opacity;
 	pointer-events: none;
 }
 
 .riff-wire {
-	color: var(--riff-accent);
+	color: var(--riff-glow);
 	background: currentcolor;
 	box-shadow: 0 0 6px 1px currentcolor;
+	opacity: calc(0.25 + 0.75 * var(--riff-heat));
 }
 
 .riff-hot {
 	/* stylelint-disable-next-line @stylistic/max-line-length */
 	background: linear-gradient(90deg, transparent, #ffd2a8 30%, #fff1dc 50%, #ffd2a8 70%, transparent);
 	box-shadow: 0 0 10px 2px rgb(255 232 200 / 0.6);
-}
-
-.riff-halo {
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 0;
-	height: 20px;
-	color: var(--riff-accent);
-	background: linear-gradient(180deg, currentcolor, transparent);
-	filter: blur(6px);
-	transform-origin: left;
-	transform: scaleX(var(--riff-p)) translateZ(0);
-	opacity: 0;
-	pointer-events: none;
+	opacity: calc(0.6 * var(--riff-heat) * var(--riff-heat) * var(--riff-heat));
 }
 
 /* The wire's heat washes the top of Now Playing on a phone, as a room
@@ -391,10 +396,10 @@ html.has-riff body::after {
 	right: 0;
 	top: 0;
 	height: 220px;
-	color: var(--riff-accent);
+	color: var(--riff-glow);
 	/* stylelint-disable-next-line @stylistic/max-line-length */
 	background: linear-gradient(180deg, color-mix(in srgb, currentcolor 40%, transparent), color-mix(in srgb, currentcolor 12%, transparent) 45%, transparent);
-	opacity: 0;
+	opacity: calc(0.5 * var(--riff-heat) * var(--riff-heat));
 	transition: opacity 0.5s ease-out;
 	pointer-events: none;
 }
@@ -407,7 +412,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 @media (prefers-reduced-transparency: reduce) {
 
-	.riff-halo,
 	.riff-np-glow {
 		display: none;
 	}
@@ -609,10 +613,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		top: 15px;
 	}
 
-	.riff-halo {
-		top: 15px;
-	}
-
 	.riff-bar-seek .riff-seek {
 		pointer-events: auto;
 	}
@@ -627,9 +627,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		top: 16px;
 		left: calc(var(--riff-p) * 100%);
 		display: block;
-		width: 13px;
-		height: 13px;
-		margin: -6.5px 0 0 -6.5px;
+		width: 14px;
+		height: 14px;
+		margin: -7px 0 0 -7px;
 		pointer-events: none;
 		border-radius: 50%;
 		background: var(--riff-accent);
@@ -676,11 +676,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		opacity: 1;
 	}
 
-	#riff .riff-bar-end .riff-btn {
-		color: var(--riff-fg-2);
+	/* Volume, repeat and shuffle sit back in #909090; the caret is white. */
+	#riff .riff-bar-end .riff-btn,
+	.riff-volume {
+		color: #909090;
 	}
 
-	#riff .riff-bar-end .riff-btn[aria-pressed="true"] {
+	#riff .riff-bar-end .riff-btn[aria-pressed="true"],
+	#riff .riff-bar-end .riff-chevron {
 		color: var(--riff-fg);
 	}
 
@@ -1203,7 +1206,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		touch-action: auto;
 	}
 
-	.riff-cover {
+	/* #riff img clears every theme's max-width; this rule outranks it so the
+	   cap holds and the art stays square. */
+	#riff .riff-cover {
 		max-width: 640px;
 		max-height: 640px;
 	}
@@ -1250,7 +1255,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		align-items: center;
 		height: 48px;
 		padding: 0 12px;
-		margin-left: 8px;
 		box-shadow: inset 0 -2px 0 var(--riff-fg);
 		font-size: 14px;
 		font-weight: 500;
@@ -1353,6 +1357,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 @media (prefers-reduced-motion: reduce) {
 
+	#riff,
 	.riff-np,
 	#riff .riff-bar-info,
 	.riff-line,
@@ -1365,4 +1370,419 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	#riff[data-waiting] .riff-play {
 		animation: none;
 	}
+}
+
+/* ---- The app: the library and a post inside it, on the page that holds the
+   block. Drawn in WordPress.org's own design system, a natural extension of
+   it for a music player: its palette, Inter for text, EB Garamond for the
+   headings, 2px corners. The two fonts are bundled (SIL Open Font License,
+   see fonts/) and fetched only where the block renders. The bar and Now
+   Playing keep their own dark look below. */
+
+@font-face {
+	font-family: "Riff Inter";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(fonts/inter/inter.woff2) format("woff2");
+}
+
+@font-face {
+	font-family: "Riff Garamond";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(fonts/eb-garamond/eb-garamond.woff2) format("woff2");
+}
+
+.riff-app {
+	--riff-app-bg: #f6f6f6;
+	--riff-app-surface: #fff;
+	--riff-app-ink: #1e1e1e;
+	--riff-app-ink-2: #656a71;
+	--riff-app-line: #d9d9d9;
+	--riff-app-accent: #3858e9;
+	--riff-app-accent-deep: #213fd4;
+	--riff-app-accent-tint: #eff2ff;
+
+	box-sizing: border-box;
+	padding: clamp(40px, 5vw, 60px) clamp(20px, 5vw, 80px) clamp(60px, 6vw, 100px);
+	background: var(--riff-app-bg);
+	color: var(--riff-app-ink);
+	font-family: "Riff Inter", Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+	font-size: 16px;
+	line-height: 1.625;
+	-webkit-font-smoothing: antialiased;
+}
+
+.riff-app *,
+.riff-app *::before,
+.riff-app *::after {
+	box-sizing: border-box;
+}
+
+.riff-app[aria-busy="true"] .riff-app-view {
+	opacity: 0.6;
+	transition: opacity 0.2s;
+}
+
+.riff-app-bar {
+	display: flex;
+	align-items: center;
+	height: 40px;
+	margin-bottom: 8px;
+}
+
+.riff-app .riff-app-home {
+	color: var(--riff-app-accent);
+	font-size: 14px;
+	font-weight: 400;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+/* While the library itself is showing, the link to it says nothing. */
+.riff-app:has(.riff-app-title) .riff-app-home {
+	visibility: hidden;
+}
+
+.riff-app .riff-app-home:hover,
+.riff-app .riff-app-home:focus-visible {
+	color: var(--riff-app-accent-deep);
+}
+
+.riff-app h2 {
+	margin: 0;
+	color: inherit;
+	font-family: "Riff Garamond", "EB Garamond", Garamond, Georgia, serif;
+	font-weight: 400;
+	letter-spacing: 0;
+}
+
+.riff-app h2:focus {
+	outline: none;
+}
+
+.riff-app .riff-app-title {
+	margin-bottom: 32px;
+	font-size: clamp(36px, 4vw, 50px);
+	line-height: 1.2;
+}
+
+.riff-app .riff-app-empty {
+	margin: 0;
+	color: var(--riff-app-ink-2);
+}
+
+/* The library grid: square art, two lines under it. */
+.riff-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 32px 20px;
+}
+
+.riff-app .riff-card {
+	display: grid;
+	gap: 2px;
+	color: inherit;
+	text-decoration: none;
+}
+
+.riff-app .riff-card:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 4px;
+}
+
+.riff-card-art {
+	display: block;
+	aspect-ratio: 1;
+	margin-bottom: 12px;
+	border-radius: 2px;
+	overflow: hidden;
+	background: var(--riff-app-line);
+	box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+	transition: box-shadow 0.2s;
+}
+
+.riff-card-art img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+}
+
+.riff-card:hover .riff-card-art {
+	box-shadow: 0 8px 24px -8px rgb(30 30 30 / 0.35);
+}
+
+.riff-card-title {
+	display: block;
+	overflow: hidden;
+	font-weight: 600;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.riff-card:hover .riff-card-title {
+	color: var(--riff-app-accent);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.riff-card-sub {
+	display: block;
+	overflow: hidden;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	line-height: 1.714;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Play from a cover: a blueberry button that appears when the cover is
+   pointed at or focused, as every streaming app has. */
+.riff-card-art {
+	position: relative;
+}
+
+.riff-app .riff-card-play {
+	all: unset;
+	position: absolute;
+	right: 12px;
+	bottom: 12px;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--riff-app-accent);
+	color: #fff;
+	box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+	opacity: 0;
+	transform: translateY(6px);
+	cursor: pointer;
+	transition: opacity 0.15s, transform 0.15s, background-color 0.15s;
+}
+
+.riff-app .riff-card-play svg {
+	width: 26px;
+	height: 26px;
+}
+
+.riff-card:hover .riff-card-play,
+.riff-app .riff-card-play:focus-visible {
+	opacity: 1;
+	transform: none;
+}
+
+.riff-app .riff-card-play:hover {
+	background: var(--riff-app-accent-deep);
+}
+
+.riff-app .riff-card-play:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+
+@media (hover: none) {
+
+	.riff-app .riff-card-play {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* Now playing, at the top of the library: a way back to what is on. */
+.riff-now {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	max-width: 960px;
+	margin: 0 0 32px;
+	padding: 12px 16px;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 2px;
+	background: var(--riff-app-surface);
+}
+
+.riff-now-art {
+	display: block;
+	flex: none;
+	width: 56px;
+	height: 56px;
+	border-radius: 2px;
+	overflow: hidden;
+	background: var(--riff-app-line);
+}
+
+.riff-now-art img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+}
+
+.riff-now-text {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+}
+
+.riff-now-label {
+	color: var(--riff-app-accent);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.riff-now-title,
+.riff-now-sub {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.riff-now-title {
+	font-weight: 600;
+}
+
+.riff-now-sub {
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
+.riff-app .riff-app-more {
+	margin: 32px 0 0;
+	text-align: center;
+}
+
+.riff-app .riff-pill:disabled {
+	opacity: 0.5;
+	cursor: progress;
+}
+
+/* The browser's own view transition between the library and a post. */
+@media (prefers-reduced-motion: no-preference) {
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 0.22s;
+	}
+}
+
+/* A post opened: one line, the title and byline beside Play and Shuffle,
+   then the rows the post itself has, on a white card. */
+.riff-album {
+	display: flex;
+	max-width: 960px;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px 24px;
+	margin-bottom: 24px;
+}
+
+.riff-album-text {
+	min-width: 0;
+}
+
+.riff-app .riff-album-title {
+	font-size: clamp(30px, 3.5vw, 50px);
+	line-height: 1.2;
+	text-wrap: balance;
+}
+
+.riff-app .riff-album-meta {
+	margin: 4px 0 0;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	line-height: 1.714;
+}
+
+.riff-app .riff-album-actions {
+	display: flex;
+	flex: none;
+	gap: 8px;
+	margin: 0;
+}
+
+.riff-app .riff-pill {
+	all: unset;
+	display: inline-flex;
+	align-items: center;
+	height: 44px;
+	padding: 0 24px;
+	border: 1px solid var(--riff-app-ink);
+	border-radius: 2px;
+	font: inherit;
+	font-size: 16px;
+	line-height: 1;
+	cursor: pointer;
+	transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.riff-app .riff-pill:hover {
+	background: var(--riff-app-ink);
+	color: #fff;
+}
+
+.riff-app .riff-pill:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-pill-solid {
+	border-color: var(--riff-app-accent);
+	background: var(--riff-app-accent);
+	color: #fff;
+}
+
+.riff-app .riff-pill-solid:hover {
+	border-color: var(--riff-app-accent-deep);
+	background: var(--riff-app-accent-deep);
+}
+
+.riff-album-tracks {
+	max-width: 960px;
+	padding: 8px;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 2px;
+	background: var(--riff-app-surface);
+}
+
+.riff-app .riff-track {
+	margin: 0;
+}
+
+.riff-app .riff-row {
+	border-radius: 2px;
+}
+
+.riff-app .riff-row:hover,
+.riff-app .riff-row[data-current] {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-row-art {
+	border-radius: 2px;
+}
+
+/* In the editor: the block as a card that says what it is. */
+.riff-app-placeholder {
+	padding: 24px;
+	border: 1px solid #d9d9d9;
+	border-radius: 2px;
+	background: #f6f6f6;
+	color: #1e1e1e;
+	font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.riff-app-placeholder p {
+	margin: 8px 0 0;
+	color: #656a71;
 }

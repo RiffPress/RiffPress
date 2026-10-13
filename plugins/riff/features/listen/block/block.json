@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "riff/app",
+	"title": "Riff",
+	"category": "media",
+	"icon": "playlist-audio",
+	"description": "Your music library and the player, on this page. Every post with audio or video is listed, and the music keeps playing while you browse.",
+	"keywords": [ "music", "player", "audio", "library" ],
+	"textdomain": "riff",
+	"supports": {
+		"align": [ "wide", "full" ],
+		"html": false,
+		"multiple": false
+	},
+	"attributes": {
+		"align": {
+			"type": "string",
+			"default": "full"
+		}
+	},
+	"editorScript": "file:./index.js",
+	"render": "file:./render.php"
+}

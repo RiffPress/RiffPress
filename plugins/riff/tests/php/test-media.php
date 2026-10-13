@@ -67,4 +67,25 @@ class Test_Riff_Media extends Riff_TestCase {
 		Media::save( $post, array( 'riff_video' => 'https://example.com/not-in-the-library.mp4' ) );
 		$this->assertFalse( metadata_exists( 'post', $audio, Media::VIDEO_META ), 'an address outside the library clears it' );
 	}
+
+	public function test_artwork_is_the_files_featured_image_set_from_an_address_or_an_id(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$cover = self::attach( 'cover.png' );
+
+		$this->assertSame( '', Media::fields( array(), get_post( $audio ) )['riff_art']['value'] );
+		$this->assertArrayHasKey( 'riff_art', Media::fields( array(), get_post( $video ) ), 'video files take artwork too' );
+
+		Media::save( array( 'ID' => $audio ), array( 'riff_art' => wp_get_attachment_url( $cover ) ) );
+		$this->assertSame( $cover, (int) get_post_thumbnail_id( $audio ) );
+		$this->assertSame( wp_get_attachment_url( $cover ), Media::fields( array(), get_post( $audio ) )['riff_art']['value'] );
+
+		Media::save( array( 'ID' => $audio ), array( 'riff_art' => (string) $video ) );
+		$this->assertSame( 0, (int) get_post_thumbnail_id( $audio ), 'only an image is kept' );
+
+		Media::save( array( 'ID' => $audio ), array( 'riff_art' => (string) $cover ) );
+		$this->assertSame( $cover, (int) get_post_thumbnail_id( $audio ) );
+		Media::save( array( 'ID' => $audio ), array( 'riff_art' => '' ) );
+		$this->assertSame( 0, (int) get_post_thumbnail_id( $audio ) );
+	}
 }

@@ -63,4 +63,20 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertStringContainsString( 'aria-hidden="true"', Player::icon( 'play' ) );
 		$this->assertStringNotContainsString( '<path', Player::icon( 'nope' ) );
 	}
+
+	public function test_a_feature_can_add_to_the_player_data(): void {
+		$this->go_to( home_url( '/' ) );
+		$add = static function ( array $data ): array {
+			$data['assets']['probe'] = 'https://example.org/probe.js';
+			return $data;
+		};
+		add_filter( 'riff_player_data', $add );
+		ob_start();
+		Player::markup();
+		$html = ob_get_clean();
+		remove_filter( 'riff_player_data', $add );
+
+		$this->assertStringContainsString( 'probe.js', $html );
+		$this->assertStringContainsString( trim( (string) wp_json_encode( 'features/listen/app.js' ), '"' ), $html, 'the Listen feature announces its script through the same filter' );
+	}
 }

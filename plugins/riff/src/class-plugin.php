@@ -21,5 +21,10 @@ final class Plugin {
 		Media::register();
 		Blocks::register();
 		Player::register();
+		Library::register();
+		Api::register();
+		// The Listen feature: the block, its views, the drawn covers. Built on the hooks above.
+		Listen\App::register();
+		Listen\Art::register();
 	}
 }

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Riff</title>
-<meta name="description" content="A music player for WordPress. The audio and video in a post play in a player that stays with you, with a full Now Playing screen.">
+<title>Riff, a music player for WordPress</title>
+<meta name="description" content="A music player for WordPress. The songs and videos in a post, in a player that keeps playing while you read.">
 <meta property="og:title" content="Riff">
 <meta property="og:description" content="Press play on your own site. A music player for WordPress.">
 <meta property="og:image" content="{{pages_url}}og.png">
@@ -12,64 +12,64 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="{{pages_url}}">
-<meta name="theme-color" content="#0f0f0f">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1e1e1e">
+<meta name="color-scheme" content="light">
 <style>
-:root{--bg:#0f0f0f;--surface:#161616;--bar:#212121;--line:#2a2a2a;--ink:#f5f4f1;--ink-2:#b4b3af;--ink-3:#8a8985;--accent:#ffb020;--accent-ink:#1a1200;--glow:rgba(255,176,32,.18);--glass:rgba(15,15,15,.72);--ease:cubic-bezier(.2,.7,.2,1);--t:.2s;--t-slow:.6s;--gap:clamp(40px,5vw,72px);--section:clamp(96px,13vw,168px)}
+/* WordPress.org's design system, extended to a music player: its palette, Inter for text, EB Garamond for headings, 2px corners, its spacing. The player in the pictures keeps its own dark look. */
+@font-face{font-family:Inter;font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/inter.woff2) format("woff2")}
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/eb-garamond.woff2) format("woff2")}
+:root{--charcoal-1:#1e1e1e;--charcoal-2:#23282d;--charcoal-3:#40464d;--charcoal-4:#656a71;--charcoal-5:#979aa1;--grey-1:#d9d9d9;--grey-2:#f6f6f6;--white:#fff;--blueberry:#3858e9;--blueberry-deep:#213fd4;--blueberry-4:#eff2ff;--bg:var(--grey-2);--surface:var(--white);--line:var(--grey-1);--ink:var(--charcoal-1);--ink-2:var(--charcoal-4);--ink-3:var(--charcoal-5);--accent:var(--blueberry);--serif:"EB Garamond",Garamond,Georgia,serif;--sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--ease:cubic-bezier(.2,.7,.2,1);--t:.2s;--t-slow:.6s;--gap:clamp(40px,5vw,60px);--section:clamp(80px,calc(6.67vw + 40px),120px);--edge:clamp(20px,5vw,80px)}
 *{box-sizing:border-box}
-html{font-family:Roboto,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;scroll-behavior:smooth}
+html{font-family:var(--sans);scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
-a{color:inherit}
-.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
-/* nav: the name, two links, one button */
-.nav{position:sticky;top:0;z-index:10;background:var(--glass);-webkit-backdrop-filter:saturate(160%) blur(16px);backdrop-filter:saturate(160%) blur(16px);border-bottom:1px solid var(--line)}
-.nav .wrap{height:52px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.mark{display:inline-flex;align-items:center;gap:10px;font-weight:700;text-decoration:none;letter-spacing:-.01em;font-size:1.0625rem}
-.mark i{width:22px;height:22px;border-radius:50%;background:var(--accent);position:relative;flex:none;box-shadow:0 0 14px 2px var(--glow)}
-.mark i::before{content:"";position:absolute;left:8.5px;top:6px;border-left:8px solid var(--accent-ink);border-top:5px solid transparent;border-bottom:5px solid transparent}
-.nav nav{display:flex;align-items:center;gap:24px}
-.nav nav a:not(.btn){color:var(--ink-2);text-decoration:none;font-size:.8125rem;transition:color var(--t)}
-.nav nav a:not(.btn):hover{color:var(--ink)}
-.nav .btn{height:30px;padding:0 14px;font-size:.8125rem}
-/* type: a label, a headline, one line under it, and small print */
-.eyebrow{margin:0 0 12px;font-size:clamp(1rem,1.5vw,1.25rem);font-weight:500;color:var(--accent);letter-spacing:.02em;text-transform:uppercase}
-h1,h2{letter-spacing:-.035em;line-height:1.02;font-weight:700;margin:0;text-wrap:balance}
-h1{font-size:clamp(3rem,8vw,6rem)}
-h2{font-size:clamp(2.5rem,6vw,4.5rem)}
-.lede{margin:20px auto 0;font-size:clamp(1.1875rem,2vw,1.625rem);font-weight:400;color:var(--ink-2);max-width:34rem;line-height:1.3;letter-spacing:-.01em;text-wrap:balance}
-.fine{margin:0;font-size:.875rem;color:var(--ink-3);text-wrap:pretty}
-/* sections: one idea each, centred, text above the picture */
+body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.875;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.wrap{max-width:1160px;margin:0 auto;padding:0 var(--edge)}
+/* the global bar: dark, as wordpress.org's is */
+.nav{position:sticky;top:0;z-index:10;background:var(--charcoal-1);color:var(--white)}
+.nav .wrap{height:60px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.mark{display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;color:var(--white);font-size:1.125rem;letter-spacing:-.01em}
+.mark i{width:24px;height:24px;border-radius:50%;background:var(--blueberry);position:relative;flex:none}
+.mark i::before{content:"";position:absolute;left:9.5px;top:6.5px;border-left:9px solid var(--white);border-top:5.5px solid transparent;border-bottom:5.5px solid transparent}
+.nav nav{display:flex;align-items:center;gap:28px}
+.nav nav a:not(.btn){color:var(--white);text-decoration:none;font-size:.875rem;opacity:.85;transition:opacity var(--t)}
+.nav nav a:not(.btn):hover{opacity:1;text-decoration:underline;text-underline-offset:4px}
+.nav .btn{height:36px;padding:0 16px;font-size:.875rem}
+/* type: a label, a serif headline, a lead, and small print */
+.eyebrow{margin:0 0 16px;font-size:.875rem;font-weight:600;color:var(--accent);letter-spacing:.02em;text-transform:uppercase;line-height:1.714}
+h1,h2{font-family:var(--serif);font-weight:400;margin:0;letter-spacing:0;text-wrap:balance;color:var(--ink)}
+h1{font-size:clamp(50px,7vw,70px);line-height:1.05}
+h2{font-size:clamp(36px,5vw,50px);line-height:1.2}
+.lede{margin:20px auto 0;font-size:clamp(1.125rem,1.6vw,1.25rem);font-weight:400;color:var(--charcoal-3);max-width:36rem;line-height:1.7;text-wrap:balance}
+.fine{margin:0;font-size:.875rem;line-height:1.714;color:var(--ink-2);text-wrap:pretty}
+/* sections: one idea each, centred, text above the picture; alternate white and off-white */
 section{padding:var(--section) 0;text-align:center}
 .alt{background:var(--surface)}
+.wire{border-top:1px solid var(--line)}
 .shot{margin-top:var(--gap);display:flex;justify-content:center}
-/* the wire: a hairline of amber light along the top of a section, the player's own progress line */
-.wire{position:relative}
-.wire::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--accent) 0 38%,var(--line) 38%)}
-.wire::after{content:"";position:absolute;left:0;top:2px;width:38%;height:22px;background:linear-gradient(180deg,var(--glow),transparent);filter:blur(6px);pointer-events:none}
-/* buttons: a filled pill in amber, and a plain link with a chevron */
-.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 24px;height:48px;display:inline-flex;align-items:center;font-weight:600;text-decoration:none;font-size:1.0625rem;transition:transform var(--t) var(--ease),opacity var(--t)}
-.btn:hover{transform:translateY(-1px)}
-.btn:active{transform:scale(.98)}
-.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.more{color:var(--accent);text-decoration:none;font-size:1.0625rem;font-weight:500}
-.more::after{content:" ›"}
-.more:hover{text-decoration:underline;text-underline-offset:3px}
-.cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:center}
-/* device frame: a thin bezel, nothing more */
-.device{display:inline-block;width:min(360px,78vw);padding:10px;border-radius:46px;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 40px 90px -20px rgba(0,0,0,.8)}
+/* buttons: blueberry, 2px corners, as on wordpress.org; and a text link with an arrow */
+.btn{appearance:none;border:1px solid var(--blueberry);background:var(--blueberry);color:var(--white);border-radius:2px;padding:0 32px;height:52px;display:inline-flex;align-items:center;font-weight:400;text-decoration:none;font-size:1rem;line-height:1;transition:background-color var(--t),border-color var(--t)}
+.btn:hover{background:var(--blueberry-deep);border-color:var(--blueberry-deep)}
+.btn:focus-visible{outline:2px solid var(--blueberry);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--charcoal-1)}
+.more{color:var(--accent);text-decoration:underline;text-underline-offset:4px;font-size:1rem;font-weight:400}
+.more::after{content:" →"}
+.more:hover{color:var(--blueberry-deep)}
+.cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:16px 32px;align-items:center;justify-content:center}
+/* device frame: a thin bezel on a charcoal body */
+.device{display:inline-block;width:min(360px,78vw);padding:10px;border-radius:46px;background:var(--charcoal-1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 30px 60px -24px rgba(30,30,30,.45)}
 .device img{display:block;width:100%;height:auto;border-radius:36px}
-.hero{padding:clamp(64px,9vw,112px) 0 var(--section)}
+.hero{padding:var(--section) 0}
 .hero .device{width:min(380px,80vw)}
-.desk{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);box-shadow:0 40px 90px -30px rgba(0,0,0,.8)}
-/* three short facts under a picture */
-.facts{list-style:none;margin:var(--gap) auto 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:52rem}
-.facts strong{display:block;font-size:1.3125rem;letter-spacing:-.01em}
-.facts span{color:var(--ink-2)}
+.desk{display:block;width:100%;height:auto;border-radius:2px;border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(30,30,30,.4)}
+/* short facts under a picture, three to a row */
+.facts{list-style:none;margin:var(--gap) auto 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:32px 32px;max-width:56rem;text-align:left}
+.facts strong{display:block;font-size:1.25rem;font-weight:600;line-height:1.4;margin-bottom:4px}
+.facts span{color:var(--ink-2);font-size:.9375rem;line-height:1.7}
 /* live demo: a phone-sized preview, the button below */
 .demo{margin-top:40px;display:grid;justify-items:center;gap:28px}
-.phone{width:min(390px,100%);padding:10px;border-radius:46px;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 40px 90px -20px rgba(0,0,0,.8)}
-.screen{position:relative;aspect-ratio:390/844;border-radius:36px;overflow:hidden;background:#161616}
+.phone{width:min(390px,100%);padding:10px;border-radius:46px;background:var(--charcoal-1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 30px 60px -24px rgba(30,30,30,.45)}
+.screen{position:relative;aspect-ratio:390/844;border-radius:36px;overflow:hidden;background:var(--charcoal-2)}
 .screen img,.screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .screen img{object-fit:contain;z-index:1}
 .screen [hidden]{display:none}
@@ -79,24 +79,35 @@ section{padding:var(--section) 0;text-align:center}
 .demo-status:empty{display:none}
 /* for site owners: grouped, small */
 .specs{margin:var(--gap) 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:left;border-top:1px solid var(--line);padding-top:32px}
-.specs h3{margin:0 0 10px;font-size:1.0625rem;letter-spacing:-.01em}
-.specs ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:.9375rem}
+.specs h3{margin:0 0 10px;font-size:1rem;font-weight:600;line-height:1.5}
+.specs ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:.9375rem;line-height:1.7}
 .specs li{color:var(--ink-2)}
-.specs a{color:var(--ink-2);text-decoration:none;transition:color var(--t)}
-.specs a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
-footer{border-top:1px solid var(--line);padding:24px 0 56px;color:var(--ink-3);font-size:.8125rem}
+.specs a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.specs code{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem;background:var(--grey-2);padding:1px 5px;border-radius:2px}
+.specs a:hover{color:var(--blueberry-deep)}
+/* the web it runs on: every browser API and CSS feature the player calls, by name */
+.apis{border-top:1px solid var(--line);padding:var(--section) 0 var(--gap);text-align:left;background:var(--surface)}
+.apis h2{font-size:clamp(26px,3vw,36px);line-height:1.28;margin:0 0 8px}
+.apis .fine{margin-bottom:32px;max-width:40rem}
+.apis-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:28px 24px}
+.apis h3{margin:0 0 10px;font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.apis ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:.875rem;line-height:1.714}
+.apis a{color:var(--ink);text-decoration:none;transition:color var(--t)}
+.apis a:hover{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+/* the global footer: dark, as wordpress.org's is */
+footer{background:var(--charcoal-1);color:var(--charcoal-5);padding:40px 0 56px;font-size:.875rem;line-height:1.714}
 footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
-footer a{text-decoration:none;color:var(--ink-2)}
+footer a{text-decoration:underline;text-underline-offset:3px;color:var(--white)}
 /* reveals: confirm arrival, nothing more */
 html.js .r{opacity:0;transform:translateY(14px);transition:opacity var(--t-slow) var(--ease),transform var(--t-slow) var(--ease)}
 html.js .r.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){.r{opacity:1;transform:none;transition:none}.btn:hover{transform:none}}
-@media (max-width:900px){.specs{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){.r{opacity:1;transform:none;transition:none}}
+@media (max-width:900px){.specs,.apis-grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.nav nav a:not(.btn){display:none}.facts{grid-template-columns:1fr;gap:20px}}
 </style>
 </head>
 <body>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Riff</a><nav><a href="#try">Try it</a><a href="#owners">For your site</a><a href="https://github.com/riffpress/riffpress">GitHub</a><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><i aria-hidden="true"></i>Riff</a><nav><a href="#listen">The block</a><a href="#try">Try it</a><a href="#owners">For your site</a><a href="https://github.com/riffpress/riffpress">GitHub</a><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
@@ -115,7 +126,10 @@ html.js .r.in{opacity:1;transform:none}
 	<ul class="facts r">
 		<li><strong>Swipe to skip</strong><span>Sideways on the bar for the next or previous track.</span></li>
 		<li><strong>Lock screen</strong><span>Artwork, title and controls where your phone puts them.</span></li>
-		<li><strong>Picks up again</strong><span>Reload or come back and it's paused where you left it.</span></li>
+		<li><strong>Picks up again</strong><span>Reload and it's paused where you left it.</span></li>
+		<li><strong>A wire that glows</strong><span>The bar's amber line lights with the music, and cools when you pause.</span></li>
+		<li><strong>AirPlay and Cast</strong><span>Send it to the speakers when they're in reach.</span></li>
+		<li><strong>Keyboard</strong><span>Space plays and pauses, J and L skip ten seconds.</span></li>
 	</ul>
 </div></section>
 
@@ -126,15 +140,15 @@ html.js .r.in{opacity:1;transform:none}
 
 <section class="alt wire" id="video"><div class="wrap">
 	<div class="r"><p class="eyebrow">Song or video</p><h2>Same track, two ways.</h2><p class="lede">When a song has a video, a switch at the top of Now Playing flips between them without losing your place.</p></div>
-	<div class="shot r"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the cover on the left, the Up next list on the right, and the player bar along the bottom"></div>
-	<ul class="facts r">
-		<li><strong>A wire that glows</strong><span>The bar's amber line lights with the music, and cools when you pause.</span></li>
-		<li><strong>AirPlay and Cast</strong><span>Send it to the speakers when they're in reach.</span></li>
-		<li><strong>Keyboard</strong><span>Space plays and pauses, J and L skip ten seconds.</span></li>
-	</ul>
+	<div class="shot r"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom"></div>
 </div></section>
 
-<section id="try"><div class="wrap">
+<section id="listen"><div class="wrap">
+	<div class="r"><p class="eyebrow">The Riff block</p><h2>One page. Everything plays.</h2><p class="lede">Add the block to a page and it becomes your library. Open any post inside it, play from a cover, and the music carries on.</p></div>
+	<div class="shot r"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen page: a post open inside the library, its tracks listed, one playing in the bar"></div>
+</div></section>
+
+<section class="alt wire" id="try"><div class="wrap">
 	<div class="r"><p class="eyebrow">Live demo</p><h2>Hear it.</h2><p class="lede">A WordPress site with ten jazz tracks, running in your browser. Nothing to install.</p></div>
 	<div class="demo r">
 		<div class="phone"><div class="screen">
@@ -144,24 +158,36 @@ html.js .r.in{opacity:1;transform:none}
 		<div class="demo-go">
 			<a class="btn demo-start" id="demo-start" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Start the live demo</a>
 			<p class="demo-status" id="demo-status" role="status" aria-live="polite"></p>
-			<p class="fine">The recordings are by the Airmen of Note, the United States Air Force Band, and are in the public domain.</p>
+			<p class="fine">Recordings by the Airmen of Note, United States Air Force Band. Public domain.</p>
 		</div>
 	</div>
 </div></section>
 
-<section class="alt wire" id="owners"><div class="wrap">
-	<div class="r"><p class="eyebrow">For your site</p><h2>Install it. Write a post.</h2><p class="lede">Riff plays the audio and video blocks WordPress already has. No new way to upload, no new place to look.</p></div>
+<section class="wire" id="owners"><div class="wrap">
+	<div class="r"><p class="eyebrow">For your site</p><h2>Install it. Write a post.</h2><p class="lede">Riff plays the audio and video blocks WordPress already has. No new way to upload. One new page, if you want it.</p></div>
 	<div class="cta r"><a class="btn" href="https://github.com/riffpress/riffpress/releases/latest">Download the plugin</a><a class="more" href="https://github.com/riffpress/riffpress#readme">Read how it works</a></div>
 	<div class="specs r">
 		<div><h3>What it needs</h3><ul><li>WordPress 6.5 or newer</li><li>PHP 8.1 or newer</li><li>Any block theme</li></ul></div>
-		<div><h3>What it adds</h3><ul><li>One script, one stylesheet, no build step</li><li>A <em>Video version</em> field on audio files</li><li>Nothing to configure</li></ul></div>
-		<div><h3>What it uses</h3><ul><li>Media Session for the lock screen</li><li>Web Audio for the glowing wire</li><li>Remote Playback for AirPlay and Cast</li></ul></div>
+		<div><h3>What it adds</h3><ul><li>One script, one stylesheet, no build step</li><li><em>Artwork</em> and <em>Video version</em> fields on media</li><li>A block and a shortcode for the Listen page</li><li>Nothing to configure</li></ul></div>
 		<div><h3>Open</h3><ul><li><a href="https://github.com/riffpress/riffpress">Source on GitHub</a></li><li>GPL, like WordPress</li><li><a href="https://github.com/riffpress/riffpress/issues">Report a problem</a></li></ul></div>
+		<div><h3>For developers</h3><ul><li><code>riff_track</code> on every media item in REST</li><li><code>riff/v1/library</code>, with schemas</li><li>WPGraphQL fields when it's installed</li><li>Filters and actions, <a href="https://github.com/riffpress/riffpress/blob/main/plugins/riff/readme.txt">listed in the readme</a></li></ul></div>
 	</div>
 </div></section>
 </main>
 
-<footer><div class="wrap"><span>Riff is free software under the GPL. Made by <a href="https://josephfus.co/">Joe Fusco</a>.</span><a href="https://github.com/riffpress/riffpress">Source and issues on GitHub</a></div></footer>
+<section class="apis"><div class="wrap">
+	<h2>Built on the open web.</h2>
+	<p class="fine">Every browser API and CSS feature the player calls. A music player touches a lot of them, which is part of the point.</p>
+	<div class="apis-grid">
+		<div><h3>Media</h3><ul><li><a href="https://developer.mozilla.org/docs/Web/API/HTMLMediaElement">HTMLMediaElement</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Media_Session_API">Media Session</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Remote_Playback_API">Remote Playback</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Web_Audio_API">Web Audio</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/AnalyserNode">AnalyserNode</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Page_Visibility_API">Page Visibility</a></li><li><a href="https://developer.mozilla.org/docs/Web/HTML/Element/img#loading">Lazy loading</a></li><li><a href="https://developer.mozilla.org/docs/Web/HTML/Element/img#decoding">Async decoding</a></li></ul></div>
+		<div><h3>Interface</h3><ul><li><a href="https://developer.mozilla.org/docs/Web/API/Pointer_events">Pointer Events</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Web_Animations_API">Web Animations</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame">requestAnimationFrame</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Web_Share_API">Web Share</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Clipboard_API">Clipboard</a></li><li><a href="https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert">inert</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Window/matchMedia">matchMedia</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Element/scrollIntoView">scrollIntoView</a></li></ul></div>
+		<div><h3>Platform</h3><ul><li><a href="https://developer.mozilla.org/docs/Web/JavaScript/Guide/Modules">ES modules</a></li><li><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/import">Dynamic import</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/History_API">History</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Web_Storage_API">Web Storage</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Fetch_API">Fetch</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/PerformanceNavigationTiming">Navigation Timing</a></li><li><a href="https://developer.mozilla.org/docs/Web/API/Window/pagehide_event">pagehide</a></li><li><a href="https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Roles/dialog_role">ARIA dialog</a></li></ul></div>
+		<div><h3>Styling</h3><ul><li><a href="https://developer.mozilla.org/docs/Web/CSS/@property">@property</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/color_value/color-mix">color-mix()</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/color_value/oklab">oklab</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/CSS_containment/Container_queries">Container queries</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/:has">:has()</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/env">env() safe areas</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/text-wrap">text-wrap</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/CSS_fonts/Variable_fonts_guide">Variable fonts</a></li></ul></div>
+		<div><h3>Behaviour</h3><ul><li><a href="https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-motion">prefers-reduced-motion</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-transparency">prefers-reduced-transparency</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/clip-path">clip-path</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/aspect-ratio">aspect-ratio</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/accent-color">accent-color</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/touch-action">touch-action</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/overscroll-behavior">overscroll-behavior</a></li><li><a href="https://developer.mozilla.org/docs/Web/CSS/:focus-visible">:focus-visible</a></li></ul></div>
+	</div>
+</div></section>
+
+<footer><div class="wrap"><span>Made by <a href="https://josephfus.co/">Joe Fusco</a>.</span><a href="https://github.com/riffpress/riffpress">GitHub</a></div></footer>
 <script>
 	if ( 'IntersectionObserver' in window && ! matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) document.documentElement.classList.add( 'js' );
 	const io = new IntersectionObserver( ( es ) => es.forEach( ( e ) => { if ( e.isIntersecting ) { e.target.classList.add( 'in' ); io.unobserve( e.target ); } } ), { rootMargin: '0px 0px -5% 0px', threshold: 0.01 } );
@@ -191,7 +217,7 @@ html.js .r.in{opacity:1;transform:none}
 	async function start() {
 		if ( starting ) return starting;
 		setBusy( true );
-		status.textContent = 'Starting the live demo…';
+		status.textContent = 'Starting…';
 		starting = ( async () => {
 			const [ { startPlaygroundWeb }, steps ] = await Promise.all( [
 				import( `${ PLAYGROUND }client/index.js` ),
@@ -201,8 +227,8 @@ html.js .r.in{opacity:1;transform:none}
 			client = await startPlaygroundWeb( { iframe, remoteUrl: `${ PLAYGROUND }remote.html`, blueprint: steps } );
 			await client.isReady();
 			still.hidden = true;
-			link.textContent = 'Open the demo in a new tab';
-			status.textContent = 'The live demo is running in the phone frame. Changes are not saved.';
+			link.textContent = 'Open in a new tab';
+			status.textContent = 'Running. Nothing you do here is saved.';
 			setBusy( false );
 			return client;
 		} )().catch( ( e ) => {
@@ -211,8 +237,8 @@ html.js .r.in{opacity:1;transform:none}
 			starting = null;
 			failed = true;
 			setBusy( false );
-			link.textContent = 'Open the demo in a new tab';
-			status.textContent = 'The live demo couldn’t start on this page.';
+			link.textContent = 'Open in a new tab';
+			status.textContent = 'The demo couldn’t start here.';
 			throw e;
 		} );
 		return starting;
@@ -230,7 +256,7 @@ html.js .r.in{opacity:1;transform:none}
 	} );
 	const labelLink = () => {
 		if ( ! client && ! failed ) {
-			link.textContent = EMBED.matches ? 'Start the live demo' : 'Open the live demo in a new tab';
+			link.textContent = EMBED.matches ? 'Start the live demo' : 'Open the demo in a new tab';
 		}
 	};
 	EMBED.addEventListener( 'change', labelLink );

@@ -19,8 +19,7 @@ defined( 'ABSPATH' ) || exit;
 <div id="riff" class="riff" hidden>
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
 		<div class="riff-bar-seek">
-			<?php /* The filament: the played part of the line is a wire that glows with the music (riff.js). */ ?>
-			<span class="riff-halo" data-riff-halo aria-hidden="true"></span>
+			<?php // The filament: the played part of the line is a wire that glows with the music (riff.js). ?>
 			<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i></span>
 			<b class="riff-knob" aria-hidden="true"></b>
 			<span class="riff-tip" aria-hidden="true" hidden></span>

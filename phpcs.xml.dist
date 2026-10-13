@@ -49,6 +49,8 @@
 	</rule>
 	<rule ref="WordPress.Files.FileName">
 		<exclude-pattern>/tests/php/*</exclude-pattern>
+		<!-- block.json looks for index.asset.php by that exact name. -->
+		<exclude-pattern>*.asset.php</exclude-pattern>
 	</rule>
 	<rule ref="WordPress.WP.AlternativeFunctions">
 		<exclude-pattern>/tests/php/*</exclude-pattern>
