@@ -64,6 +64,13 @@ jobs:
             --ignore-codes=outdated_tested_upto_header \
             --fields=file,line,column,type,code,message > plugin-check.json
 
+          # With nothing to report the command prints a success line, not JSON.
+          if ! jq -e . plugin-check.json > /dev/null 2>&1; then
+            cat plugin-check.json
+            grep -q '^Success' plugin-check.json && { echo "Plugin Check reported nothing."; exit 0; }
+            echo "::error::Plugin Check produced no result"
+            exit 1
+          fi
           jq -r '.[] | "\(.type)  \(.file):\(.line):\(.column)  \(.code)\n    \(.message)"' plugin-check.json
 
           errors="$( jq '[ .[] | select( .type == "ERROR" ) ] | length' plugin-check.json )"
