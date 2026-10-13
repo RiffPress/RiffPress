@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.1.0](https://github.com/RiffPress/RiffPress/compare/v4.0.1...v4.1.0) (2026-10-13)
+
+
+### Features
+
+* the playing track shows its format and bit rate in the bar and Now Playing, from what WordPress read on upload ([#270](https://github.com/RiffPress/RiffPress/issues/270)) ([6e44cc5](https://github.com/RiffPress/RiffPress/commit/6e44cc545c0663277e985d36c9c7681f3350e801))
+
+
+### Bug Fixes
+
+* the bar's end column grows for the quality pill, so the byline no longer runs under it ([#274](https://github.com/RiffPress/RiffPress/issues/274)) ([3648178](https://github.com/RiffPress/RiffPress/commit/3648178be71918e6683d684604ae7baed92ff876))
+
 ## [4.0.1](https://github.com/RiffPress/RiffPress/compare/v4.0.0...v4.0.1) (2026-10-13)
 
 
