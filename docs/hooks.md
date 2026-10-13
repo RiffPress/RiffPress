@@ -14,6 +14,16 @@ Since 0.2.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$accent` | `string` | A CSS colour, or an empty string for the default amber. |
 
+### `riff_art_layouts`
+
+Filters the layouts a drawn cover picks from: where the record sits. The plugin knows `corner`, `centre` and `horizon`; a layout it does not know draws as `corner`.
+
+Since 4.3.0. Fires in `plugins/riff/features/listen/class-art.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$layouts` | `string[]` | Layout slugs. |
+
 ### `riff_art_palettes`
 
 Filters the palettes a drawn cover picks from: lists of background, accent and ink.

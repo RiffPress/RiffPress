@@ -72,6 +72,7 @@ final class Tracks {
 				'format'   => strtolower( (string) ( $meta['dataformat'] ?? $meta['fileformat'] ?? '' ) ),
 				'bitrate'  => isset( $meta['bitrate'] ) ? (int) round( (float) $meta['bitrate'] / 1000 ) : 0,
 				'lossless' => ! empty( $meta['lossless'] ),
+				'levels'   => '',
 				'art'      => $art,
 				'video'    => $video,
 				'post'     => self::post( $post_id ),
@@ -113,6 +114,7 @@ final class Tracks {
 				'format'   => '',
 				'bitrate'  => 0,
 				'lossless' => false,
+				'levels'   => '',
 				'art'      => self::post_art( $post_id ),
 				'video'    => null,
 				'post'     => self::post( $post_id ),
@@ -195,6 +197,10 @@ final class Tracks {
 					'type'        => 'boolean',
 					'description' => __( 'Whether the encoding is lossless.', 'riff' ),
 				),
+				'levels'   => array(
+					'type'        => 'string',
+					'description' => __( 'The track\'s loudness over time as digits 0 to 9, one per sample, when something has measured it; the drawn cover puts it in the groove. Empty otherwise.', 'riff' ),
+				),
 				'art'      => array(
 					'type'        => 'array',
 					'description' => __( 'Artwork, smallest first.', 'riff' ),
@@ -246,6 +252,7 @@ final class Tracks {
 		$track['format']   = strtolower( (string) ( $track['format'] ?? '' ) );
 		$track['bitrate']  = max( 0, (int) ( $track['bitrate'] ?? 0 ) );
 		$track['lossless'] = ! empty( $track['lossless'] );
+		$track['levels']   = is_string( $track['levels'] ?? null ) ? preg_replace( '/[^0-9]/', '', $track['levels'] ) : '';
 		$track['art']      = array_values(
 			array_filter(
 				(array) ( $track['art'] ?? array() ),
