@@ -604,7 +604,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	   shuffle and the caret. */
 	.riff-bar {
 		display: grid;
-		grid-template-columns: 328px minmax(0, 1fr) 328px;
+
+		/* The end column grows for the quality pill; the middle gives way and
+		   its text trims, instead of running under the controls. */
+		grid-template-columns: 328px minmax(0, 1fr) minmax(328px, auto);
 		gap: 0;
 		padding: 0 4px var(--riff-safe-b) 0;
 	}
