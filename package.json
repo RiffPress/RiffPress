@@ -37,12 +37,12 @@
     "@wordpress/scripts": "^36.1.0",
     "globals": "^17.13.0"
   },
-  "homepage": "https://riffpress.github.io/riffpress/",
+  "homepage": "https://riffpress.github.io/RiffPress/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/riffpress/riffpress.git"
+    "url": "https://github.com/RiffPress/RiffPress.git"
   },
   "bugs": {
-    "url": "https://github.com/riffpress/riffpress/issues"
+    "url": "https://github.com/RiffPress/RiffPress/issues"
   }
 }
