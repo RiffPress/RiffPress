@@ -17,6 +17,8 @@ undefined/
 !site/*.png
 !site/brand/*.png
 !site/icons/*.png
+# Generated at build time by npm run pot; translations come from translate.wordpress.org.
+plugins/riff/languages/
 !tests/fixtures/**/*.png
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
