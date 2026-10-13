@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<!-- Riff mark. Built like the WordPress mark (ring, disc, the letter knocked out) with Riff's own R in EB Garamond; never a modified W. Render PNGs from site/fonts. -->
+
+<rect width="1024" height="1024" fill="#3858e9"/>
+<circle cx="512" cy="512" r="430" fill="none" stroke="#f6f6f6" stroke-width="26"/>
+<mask id="ml"><rect width="1024" height="1024" fill="#fff"/><text x="512" y="672" font-size="470" fill="#000" text-anchor="middle" font-family="EB Garamond,serif">R</text><circle cx="512" cy="512" r="318" fill="none" stroke="#000" stroke-width="6"/><circle cx="512" cy="512" r="268" fill="none" stroke="#000" stroke-width="6"/></mask>
+<circle cx="512" cy="512" r="370" fill="#f6f6f6" mask="url(#ml)"/>
+</svg>

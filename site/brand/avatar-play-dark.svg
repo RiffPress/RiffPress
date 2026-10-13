@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<!-- Riff badge: the play mark knocked out of the disc, built like the WordPress mark (ring, disc, symbol). -->
+
+<rect width="1024" height="1024" fill="#1e1e1e"/>
+<circle cx="512" cy="512" r="430" fill="none" stroke="#3858e9" stroke-width="26"/>
+<mask id="my"><rect width="1024" height="1024" fill="#fff"/><path d="M420 330 L 680 512 L 420 694 Z" fill="#000" stroke="#000" stroke-width="40" stroke-linejoin="round"/></mask>
+<circle cx="512" cy="512" r="370" fill="#3858e9" mask="url(#my)"/>
+</svg>

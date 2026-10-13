@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<!-- Riff org avatar. Text set in EB Garamond; render the PNG from site/fonts if you re-export. -->
+
+<rect width="1024" height="1024" fill="#3858e9"/>
+<circle cx="470" cy="540" r="380" fill="#1e1e1e"/>
+<g fill="none" stroke="#f6f6f6" stroke-opacity=".12" stroke-width="2"><circle cx="470" cy="540" r="352"/><circle cx="470" cy="540" r="324"/><circle cx="470" cy="540" r="296"/><circle cx="470" cy="540" r="268"/><circle cx="470" cy="540" r="240"/><circle cx="470" cy="540" r="212"/><circle cx="470" cy="540" r="184"/></g>
+<circle cx="470" cy="540" r="150" fill="#f4c28f"/>
+<text font-family="EB Garamond, Garamond, Georgia, serif" x="470" y="618" font-size="220" fill="#1e1e1e" text-anchor="middle">R</text>
+<path d="M870 150 L 700 350" stroke="#f6f6f6" stroke-width="22" stroke-linecap="round"/>
+<circle cx="870" cy="150" r="56" fill="#f6f6f6"/><circle cx="870" cy="150" r="22" fill="#3858e9"/>
+<path d="M700 350 l-36 42" stroke="#f6f6f6" stroke-width="30" stroke-linecap="round"/>
+</svg>
