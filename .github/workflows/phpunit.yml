@@ -26,7 +26,8 @@ jobs:
           - { php: '8.4', core: 'trunk',  multisite: false }
     env:
       WP_ENV_PHP_VERSION: ${{ matrix.php }}
-      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#trunk' || '' }}
+      # The mirror's nightly branch is master; trunk is what WordPress calls it.
+      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
