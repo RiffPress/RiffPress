@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.0](https://github.com/RiffPress/RiffPress/compare/v4.3.0...v4.4.0) (2026-10-13)
+
+
+### Features
+
+* riffpress.com/demo always opens the current demo, so no link has to know the stamp ([#294](https://github.com/RiffPress/RiffPress/issues/294)) ([0a68872](https://github.com/RiffPress/RiffPress/commit/0a68872620a382f158bdbc8431e4e2f3d6acbd76))
+
 ## [4.3.0](https://github.com/RiffPress/RiffPress/compare/v4.2.0...v4.3.0) (2026-10-13)
 
 
