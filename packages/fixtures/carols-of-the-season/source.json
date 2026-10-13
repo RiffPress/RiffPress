@@ -1,0 +1,83 @@
+{
+	"name": "Carols of the Season",
+	"slug": "carols-of-the-season",
+	"artist": "Singing Sergeants, United States Air Force Band",
+	"ensemble": "Singing Sergeants",
+	"collection": "https://www.music.af.mil/Multimedia/Music/Public-Domain-Music/",
+	"license": "Public domain — U.S. Government work",
+	"license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military-Air_Force",
+	"tracks": [
+		{
+			"id": "carols-of-the-season",
+			"title": "Carols of the Season",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Carols_of_the_Season_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Carols_of_the_Season_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "ocho-kandelikas",
+			"title": "Ocho Kandelikas",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/6/69/Ocho_Kandelikas_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Ocho_Kandelikas_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "it-came-upon-a-midnight-",
+			"title": "It Came Upon a Midnight Clear",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/b9/It_Came_Upon_a_Midnight_Clear_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:It_Came_Upon_a_Midnight_Clear_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "o-little-town-of-bethleh",
+			"title": "O Little Town of Bethlehem",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/e/e5/O_Little_Town_of_Bethlehem_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:O_Little_Town_of_Bethlehem_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "i-saw-three-ships-o-come",
+			"title": "I Saw Three Ships - O Come All Ye Faithful",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/d/d4/I_Saw_Three_Ships_-_O_Come_All_Ye_Faithful_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:I_Saw_Three_Ships_-_O_Come_All_Ye_Faithful_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "hark-the-herald-angels-s",
+			"title": "Hark the Herald Angels Sing",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Hark_the_Herald_Angels_Sing_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Hark_the_Herald_Angels_Sing_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "o-tannenbaum",
+			"title": "O Tannenbaum",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/3/30/O_Tannenbaum_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:O_Tannenbaum_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "a-joyous-anthem",
+			"title": "A Joyous Anthem",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/89/A_Joyous_Anthem_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:A_Joyous_Anthem_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "america-the-beautiful",
+			"title": "America the Beautiful",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/9/95/America_the_Beautiful_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:America_the_Beautiful_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "vedi-le-fosche-from-il-t",
+			"title": "\"Vedi! Le Fosche\" from Il Trovatore",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/9/9a/%22Vedi%21_Le_Fosche%22_from_Il_Trovatore_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:%22Vedi!_Le_Fosche%22_from_Il_Trovatore_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "soave-sia-il-vento-from-",
+			"title": "\"Soave Sia Il Vento\" from Cosi Fan Tutte",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/9/91/%22Soave_Sia_Il_Vento%22_from_Cosi_Fan_Tutte_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:%22Soave_Sia_Il_Vento%22_from_Cosi_Fan_Tutte_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		},
+		{
+			"id": "king-champagne",
+			"title": "King Champagne",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/0/04/King_Champagne_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:King_Champagne_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3"
+		}
+	]
+}

@@ -54,6 +54,110 @@ if ( ! function_exists( 'riff_seed' ) ) {
 	}
 
 	/**
+	 * Files a post under a category, made if it does not exist.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $name    Category name; nothing happens for an empty one.
+	 */
+	function riff_seed_category( int $post_id, string $name ): void {
+		if ( '' === $name || ! $post_id ) {
+			return;
+		}
+		$term = term_exists( $name, 'category' );
+		if ( ! $term ) {
+			$term = wp_insert_term( $name, 'category' );
+		}
+		if ( is_array( $term ) ) {
+			wp_set_post_categories( $post_id, array( (int) $term['term_id'] ) );
+		}
+	}
+
+	/**
+	 * Seeds an album whose audio is published elsewhere, not uploaded: each track becomes an
+	 * attachment that points at the published file, carrying the manifest's title, artist, length,
+	 * bit rate and level envelope in its metadata, so the player reads it exactly as it reads an
+	 * upload, and the Media Library lists it. Nothing is downloaded. The post has one audio block
+	 * per track and a drawn cover. Returns the post ID, or 0 when the post already exists.
+	 *
+	 * @param string $dir  Folder with manifest.json (remote: true) and levels.json.
+	 * @param string $base Where the album's files are published, up to and including the album's folder.
+	 * @return int
+	 */
+	function riff_seed_remote( string $dir, string $base ): int {
+		$dir      = rtrim( $dir, '/' ) . '/';
+		$base     = rtrim( $base, '/' ) . '/';
+		$manifest = is_readable( $dir . 'manifest.json' ) ? json_decode( (string) file_get_contents( $dir . 'manifest.json' ), true ) : array();
+		$manifest = is_array( $manifest ) ? $manifest : array();
+		$name     = (string) ( $manifest['name'] ?? basename( $dir ) );
+		$slug     = sanitize_title( (string) ( $manifest['slug'] ?? $name ) );
+		if ( empty( $manifest['tracks'] ) || get_page_by_path( $slug, OBJECT, 'post' ) ) {
+			return 0;
+		}
+		$levels = is_readable( $dir . 'levels.json' ) ? json_decode( (string) file_get_contents( $dir . 'levels.json' ), true ) : array();
+		$levels = is_array( $levels ) ? $levels : array();
+
+		// The post first, so the attachments have a parent; its date spread so a library has an order.
+		$post_id = (int) wp_insert_post(
+			array(
+				'post_title'  => $name,
+				'post_name'   => $slug,
+				'post_status' => 'publish',
+				'post_date'   => gmdate( 'Y-m-d H:i:s', time() - ( crc32( $slug ) % 400 ) * DAY_IN_SECONDS ),
+			)
+		);
+		if ( ! $post_id ) {
+			return 0;
+		}
+		$blocks = array();
+		foreach ( (array) $manifest['tracks'] as $track ) {
+			$file = (string) ( $track['file'] ?? '' );
+			if ( '' === $file ) {
+				continue;
+			}
+			$url = $base . rawurlencode( $file );
+			$id  = (int) wp_insert_attachment(
+				array(
+					'post_title'     => (string) ( $track['title'] ?? pathinfo( $file, PATHINFO_FILENAME ) ),
+					'post_mime_type' => 'audio/mpeg',
+					'post_status'    => 'inherit',
+					'guid'           => $url,
+				),
+				'',
+				$post_id
+			);
+			if ( ! $id ) {
+				continue;
+			}
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'artist'      => (string) ( $track['artist'] ?? $track['uploader'] ?? $manifest['curator'] ?? '' ),
+					'album'       => $name,
+					'length'      => (float) ( $track['duration'] ?? 0 ),
+					'dataformat'  => 'mp3',
+					'fileformat'  => 'mp3',
+					'bitrate'     => 1000 * (float) ( $track['bitrate'] ?? 0 ),
+					'riff_levels' => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
+				)
+			);
+			$blocks[] = sprintf(
+				'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
+				$id,
+				esc_url( $url )
+			);
+		}
+		$intro = isset( $manifest['curator'] ) ? sprintf( '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->', esc_html( (string) $manifest['curator'] ) ) : '';
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => $intro . implode( '', $blocks ),
+			)
+		);
+		riff_seed_category( $post_id, (string) ( $manifest['category'] ?? '' ) );
+		return $post_id;
+	}
+
+	/**
 	 * Seeds one folder. Returns the post ID, or 0 when the post already exists.
 	 *
 	 * @param string $dir Folder of audio files.
@@ -105,6 +209,8 @@ if ( ! function_exists( 'riff_seed' ) ) {
 		// none, or a PHP that cannot read them (Playground's cannot).
 		$titles = array();
 		$known  = array();
+		$levels = is_readable( $dir . 'levels.json' ) ? json_decode( (string) file_get_contents( $dir . 'levels.json' ), true ) : array();
+		$levels = is_array( $levels ) ? $levels : array();
 		foreach ( (array) ( $manifest['tracks'] ?? array() ) as $track ) {
 			if ( empty( $track['file'] ) ) {
 				continue;
@@ -117,6 +223,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 				'artist'   => (string) ( $track['artist'] ?? $track['uploader'] ?? '' ),
 				'album'    => $name,
 				'duration' => (float) ( $track['duration'] ?? 0 ),
+				'levels'   => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
 			);
 		}
 
@@ -166,6 +273,11 @@ if ( ! function_exists( 'riff_seed' ) ) {
 				if ( empty( $meta['length'] ) && $known[ $file ]['duration'] > 0 ) {
 					$meta['length'] = $known[ $file ]['duration'];
 					$changed        = true;
+				}
+				// The level envelope, measured when the album was built: the drawn cover's groove.
+				if ( empty( $meta['riff_levels'] ) && '' !== $known[ $file ]['levels'] ) {
+					$meta['riff_levels'] = $known[ $file ]['levels'];
+					$changed             = true;
 				}
 				if ( $changed ) {
 					wp_update_attachment_metadata( $attachment_id, $meta );
@@ -229,6 +341,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 		if ( $cover ) {
 			set_post_thumbnail( $demo_id, $cover );
 		}
+		riff_seed_category( $demo_id, (string) ( $manifest['category'] ?? '' ) );
 		remove_filter( 'upload_mimes', $mimes );
 		remove_filter( 'wp_check_filetype_and_ext', $trust );
 		return $demo_id;
@@ -243,6 +356,20 @@ if ( defined( 'WP_CLI' ) && WP_CLI && isset( $file ) && realpath( (string) $file
 		WP_CLI::error( esc_html( "No folder at $dir." ) );
 	}
 	riff_seed_site( dirname( __DIR__, 2 ) . '/site/brand/mark.png' );
+	// Every album beside it that is published rather than uploaded, pointed at the live demo set,
+	// or wherever RIFF_DEMO_BASE says.
+	$base      = (string) getenv( 'RIFF_DEMO_BASE' );
+	$base      = rtrim( '' !== $base ? $base : 'https://riffpress.com/demo', '/' ) . '/';
+	$manifests = glob( __DIR__ . '/*/manifest.json' );
+	foreach ( is_array( $manifests ) ? $manifests : array() as $remote ) {
+		$album = json_decode( (string) file_get_contents( $remote ), true );
+		if ( ! empty( $album['remote'] ) ) {
+			$made = riff_seed_remote( dirname( $remote ), $base . basename( dirname( $remote ) ) );
+			if ( $made ) {
+				WP_CLI::log( 'Seeded ' . get_permalink( $made ) . ' (streamed)' );
+			}
+		}
+	}
 	try {
 		$demo_id = riff_seed( $dir );
 	} catch ( RuntimeException $e ) {

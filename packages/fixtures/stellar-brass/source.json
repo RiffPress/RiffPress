@@ -1,0 +1,83 @@
+{
+	"name": "Stellar Brass",
+	"slug": "stellar-brass",
+	"artist": "Stellar Brass, United States Air Force Band",
+	"ensemble": "Stellar Brass",
+	"collection": "https://www.music.af.mil/Multimedia/Music/Public-Domain-Music/",
+	"license": "Public domain — U.S. Government work",
+	"license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military-Air_Force",
+	"tracks": [
+		{
+			"id": "the-merry-bells-of-speye",
+			"title": "The Merry Bells of Speyer",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/ba/The_Merry_Bells_of_Speyer_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:The_Merry_Bells_of_Speyer_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3"
+		},
+		{
+			"id": "jauchzet-frohlocket",
+			"title": "Jauchzet, frohlocket!",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Jauchzet%2C_frohlocket%21_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Jauchzet%2C_frohlocket!_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3"
+		},
+		{
+			"id": "wachet-auf",
+			"title": "Wachet Auf!",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Wachet_Auf%21_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Wachet_Auf!_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3"
+		},
+		{
+			"id": "lassus-trombone",
+			"title": "Lassus Trombone",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Lassus_Trombone_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Lassus_Trombone_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3"
+		},
+		{
+			"id": "der-heyser-bulgar",
+			"title": "Der Heyser Bulgar",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Der_Heyser_Bulgar_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Der_Heyser_Bulgar_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3"
+		},
+		{
+			"id": "cousins",
+			"title": "Cousins",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/3/36/Cousins_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Cousins_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3"
+		},
+		{
+			"id": "symphony-no-3-in-c-minor",
+			"title": "Symphony No. 3 in C Minor - II. Maestoso",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/d/da/Symphony_No._3_in_C_Minor_-_II._Maestoso_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Symphony_No._3_in_C_Minor_-_II._Maestoso_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3"
+		},
+		{
+			"id": "st-james-infirmary",
+			"title": "St. James Infirmary",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/a/a8/St._James_Infirmary_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:St._James_Infirmary_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3"
+		},
+		{
+			"id": "volte",
+			"title": "Volte",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/86/Volte_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Volte_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3"
+		},
+		{
+			"id": "believe-me-if-all-those-",
+			"title": "Believe Me, If All Those Endearing Young Charms",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/7/71/Believe_Me%2C_If_All_Those_Endearing_Young_Charms_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Believe_Me%2C_If_All_Those_Endearing_Young_Charms_-_Stellar_Brass_-_United_States_Air_Force_Band_of_the_Rockies.mp3"
+		},
+		{
+			"id": "dance-to-the-spirits-of-",
+			"title": "Dance to the Spirits of Fire",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/0/09/Dance_to_the_Spirits_of_Fire_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Dance_to_the_Spirits_of_Fire_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3"
+		},
+		{
+			"id": "the-stars-and-stripes-fo",
+			"title": "The Stars and Stripes Forever (jazz version)",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c9/The_Stars_and_Stripes_Forever_%28jazz_version%29_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:The_Stars_and_Stripes_Forever_(jazz_version)_-_Stellar_Brass_-_United_States_Air_Force_Academy_Band.mp3"
+		}
+	]
+}

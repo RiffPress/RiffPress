@@ -38,6 +38,8 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 
 ## Translations
 
+The demo library is one uploaded album, `packages/fixtures/compositions`, and a folder per streamed album beside it, each with a `source.json` naming its recordings on Wikimedia Commons. `node packages/fixtures/album.js <slug> --out <dir>` downloads and encodes one, measures each track, and writes its `manifest.json` and `levels.json`, which are committed; the audio is not, since the Pages deploy builds it the same way and publishes it under `demo/<slug>/`. `npm run seed:tests` seeds the uploaded album and every streamed one, pointed at the live demo set (or `RIFF_DEMO_BASE`).
+
 `npm run pot` writes the translation template to `plugins/riff/languages/riff.pot` (wp-env must be running). It is generated, not committed: the Plugin Check job builds it into the zip, and translations come from translate.wordpress.org.
 
 ## Releases

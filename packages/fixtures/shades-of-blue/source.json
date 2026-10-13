@@ -1,0 +1,77 @@
+{
+	"name": "Shades of Blue",
+	"slug": "shades-of-blue",
+	"artist": "Shades of Blue, United States Air Force Band",
+	"ensemble": "Shades of Blue",
+	"collection": "https://www.music.af.mil/Multimedia/Music/Public-Domain-Music/",
+	"license": "Public domain — U.S. Government work",
+	"license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military-Air_Force",
+	"tracks": [
+		{
+			"id": "it-suits-me",
+			"title": "It Suits Me",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/b4/It_Suits_Me_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:It_Suits_Me_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "scarecrow",
+			"title": "Scarecrow",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Scarecrow_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Scarecrow_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "product-of-fear",
+			"title": "Product of Fear",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Product_of_Fear_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Product_of_Fear_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "kuri",
+			"title": "Kuri",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Kuri_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Kuri_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "shrinking-violet",
+			"title": "Shrinking Violet",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/84/Shrinking_Violet_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Shrinking_Violet_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "ave-pancakes",
+			"title": "Ave Pancakes",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Ave_Pancakes_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Ave_Pancakes_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "like-seamus",
+			"title": "Like Seamus",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/6/67/Like_Seamus_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Like_Seamus_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "st-louis-blues-march",
+			"title": "St. Louis Blues March",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/86/St._Louis_Blues_March_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:St._Louis_Blues_March_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "wrong-advices",
+			"title": "Wrong Advices",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Wrong_Advices_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Wrong_Advices_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "america",
+			"title": "America",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/82/America_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:America_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		},
+		{
+			"id": "peekaboo",
+			"title": "Peekaboo",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Peekaboo_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Peekaboo_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3"
+		}
+	]
+}

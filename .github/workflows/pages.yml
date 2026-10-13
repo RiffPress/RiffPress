@@ -51,6 +51,22 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
+      - name: Build the streamed albums
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        id: albums
+        with:
+          path: ~/.cache/riff-albums
+          key: albums-${{ hashFiles('packages/fixtures/*/source.json', 'packages/fixtures/album.js') }}
+      - if: steps.albums.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y -qq ffmpeg > /dev/null
+          for m in packages/fixtures/*/manifest.json; do
+            slug=$(basename "$(dirname "$m")")
+            node -e "process.exit(require('./$m').remote ? 0 : 1)" || continue
+            RIFF_JAZZ_CACHE=~/.cache/riff-albums/src node packages/fixtures/album.js "$slug" --out ~/.cache/riff-albums/built/"$slug"
+          done
+          git checkout -- packages/fixtures
       - name: Build riff.zip
         run: |
           set -euo pipefail
@@ -69,6 +85,18 @@ jobs:
           cp packages/fixtures/seed.php out/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;
           cp site/brand/mark.png out/demo/
+          # The streamed albums: audio under demo/<slug>/, each manifest and its levels flat beside
+          # the seed, and base.txt, where the seed finds the audio.
+          for m in packages/fixtures/*/manifest.json; do
+            slug=$(basename "$(dirname "$m")")
+            node -e "process.exit(require('./$m').remote ? 0 : 1)" || continue
+            mkdir -p "out/demo/$slug"
+            cp ~/.cache/riff-albums/built/"$slug"/*.mp3 "out/demo/$slug/"
+            cp "$m" "out/demo/$slug.manifest.json"
+            cp "$(dirname "$m")/levels.json" "out/demo/$slug.levels.json"
+          done
+          printf '%sdemo/' "$(printf '%s' "$SITE_URL" | sed -E 's#^http://#https://#; s#/*$#/#')" > out/demo/base.txt
+          du -sh out/demo
           # Playground runs on https and a browser will not fetch http from it, so the scheme is always https.
           BASE=$(printf '%s' "$SITE_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
           [[ "$BASE" =~ ^https://[^/]+/ ]] || { echo "::error::Unexpected site URL: $BASE"; exit 1; }

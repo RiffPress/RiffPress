@@ -172,4 +172,13 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		wp_update_attachment_metadata( $id, $meta );
 		$this->assertSame( 'Другая', Tracks::from_attachment( $id )['title'] );
 	}
+
+	public function test_level_data_stored_on_the_attachment_rides_on_the_track(): void {
+		$id   = self::attach( '02 - Underground [underground].mp3' );
+		$meta = (array) wp_get_attachment_metadata( $id );
+		$this->assertSame( '', Tracks::from_attachment( $id )['levels'], 'nothing measured, nothing claimed' );
+		$meta['riff_levels'] = '01234567899876543210';
+		wp_update_attachment_metadata( $id, $meta );
+		$this->assertSame( '01234567899876543210', Tracks::from_attachment( $id )['levels'] );
+	}
 }
