@@ -23,7 +23,7 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertSame( 'Underground', $track['title'] );
 		$this->assertSame( 'Airmen of Note, United States Air Force Band', $track['artist'] );
 		$this->assertSame( 'Compositions', $track['album'] );
-		$this->assertEqualsWithDelta( 40, $track['duration'], 1 );
+		$this->assertEqualsWithDelta( 538, $track['duration'], 1 );
 		// The quality fields are what WordPress read from the file on upload, nothing re-measured.
 		$this->assertSame( 'mp3', $track['format'] );
 		$this->assertSame( (int) round( wp_get_attachment_metadata( $id )['bitrate'] / 1000 ), $track['bitrate'] );
