@@ -65,7 +65,15 @@ if ( ! function_exists( 'riff_seed' ) ) {
 		add_filter( 'upload_mimes', $mimes );
 		add_filter( 'wp_check_filetype_and_ext', $trust, 10, 4 );
 
-		$import = static function ( string $file ) use ( $dir ): int {
+		// The manifest's own titles, by file name, for a file whose tags carry none.
+		$titles = array();
+		foreach ( (array) ( $manifest['tracks'] ?? array() ) as $track ) {
+			if ( ! empty( $track['file'] ) && ! empty( $track['title'] ) ) {
+				$titles[ (string) $track['file'] ] = (string) $track['title'];
+			}
+		}
+
+		$import = static function ( string $file ) use ( $dir, $titles ): int {
 			$tmp = wp_tempnam( $file );
 			copy( $dir . $file, $tmp );
 			$attachment_id = media_handle_sideload(
@@ -82,6 +90,9 @@ if ( ! function_exists( 'riff_seed' ) ) {
 			// An upload through the Media Library titles audio from its tags; a sideload does not.
 			$tags  = wp_read_audio_metadata( $dir . $file );
 			$title = (string) ( $tags['title'] ?? '' );
+			if ( '' === $title && isset( $titles[ $file ] ) ) {
+				$title = $titles[ $file ];
+			}
 			if ( '' === $title ) {
 				// "03 - Artist - Title [id].m4a" becomes "Title".
 				$title = preg_replace( '/^\d+\s*-\s*|\s*\[[^\]]*\]$/', '', pathinfo( $file, PATHINFO_FILENAME ) );
