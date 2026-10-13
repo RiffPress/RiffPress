@@ -31,7 +31,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    # The first build of the streamed albums downloads and encodes ninety-odd tracks; later runs find
+    # them in the cache, which a cancelled job never saves.
+    timeout-minutes: 90
     permissions:
       contents: read
     environment:
