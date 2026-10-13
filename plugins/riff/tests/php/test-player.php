@@ -79,4 +79,51 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertStringContainsString( 'probe.js', $html );
 		$this->assertStringContainsString( trim( (string) wp_json_encode( 'features/listen/app.js' ), '"' ), $html, 'the Listen feature announces its script through the same filter' );
 	}
+
+	public function test_a_plugin_adds_a_chip_and_a_bar_control(): void {
+		$this->go_to( home_url( '/' ) );
+		$chips = static function ( array $chips ): array {
+			$chips['lyrics'] = array(
+				'label'  => 'Lyrics',
+				'action' => 'my-lyrics',
+				'svg'    => '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/><script>alert(1)</script></svg>',
+			);
+			$chips['bad']    = array( 'action' => 'no-label' );
+			return $chips;
+		};
+		$bar   = static fn( array $controls ): array => $controls + array(
+			'eq' => array(
+				'label' => 'Equaliser',
+				'href'  => 'https://example.org/eq',
+				'icon'  => 'volume',
+			),
+		);
+		add_filter( 'riff_chips', $chips );
+		add_filter( 'riff_bar_controls', $bar );
+		ob_start();
+		Player::markup();
+		$html = ob_get_clean();
+		remove_filter( 'riff_chips', $chips );
+		remove_filter( 'riff_bar_controls', $bar );
+
+		$this->assertStringContainsString( 'data-riff-action="share"', $html, 'the player\'s own chip stays' );
+		$this->assertStringContainsString( 'data-riff-action="my-lyrics" data-riff-chip="lyrics"', $html );
+		$this->assertStringContainsString( '<span>Lyrics</span>', $html );
+		$this->assertStringNotContainsString( '<script>alert', $html, 'a script tag in an svg is stripped' );
+		$this->assertStringNotContainsString( 'no-label', $html, 'an item without a label is dropped' );
+		$this->assertStringContainsString( 'class="riff-btn riff-desk" href="https://example.org/eq" aria-label="Equaliser"', $html );
+	}
+
+	public function test_the_accent_comes_from_the_theme_or_a_filter(): void {
+		$this->go_to( home_url( '/' ) );
+		$this->assertSame( '', Player::root_style(), 'nothing set: the default amber' );
+		$accent = static fn(): string => '#3858e9';
+		add_filter( 'riff_accent', $accent );
+		$this->assertSame( ' style="--riff-accent: #3858e9"', Player::root_style() );
+		remove_filter( 'riff_accent', $accent );
+		$bad = static fn(): string => 'red; background: url(x)';
+		add_filter( 'riff_accent', $bad );
+		$this->assertSame( '', Player::root_style(), 'only a colour goes in' );
+		remove_filter( 'riff_accent', $bad );
+	}
 }

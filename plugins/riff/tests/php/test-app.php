@@ -47,7 +47,7 @@ class Test_Riff_App extends Riff_TestCase {
 
 		$html = apply_filters( 'the_content', get_post( $page )->post_content );
 
-		$this->assertStringContainsString( 'class="riff-app alignfull"', $html );
+		$this->assertStringContainsString( 'class="riff-app alignfull wp-block-riff-app"', $html, 'the block wrapper carries its supports' );
 		$this->assertStringContainsString( 'data-riff-rest="' . esc_url( rest_url( 'riff/v1/library' ) ) . '"', $html );
 		$this->assertStringContainsString( 'href="' . esc_url( add_query_arg( 'riff', $post, get_permalink( $page ) ) ) . '"', $html );
 		$this->assertStringContainsString( '1 track', $html );

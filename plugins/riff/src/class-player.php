@@ -2,6 +2,7 @@
 /**
  * The player on the front end: one script module, one stylesheet, and the markup in the footer.
  *
+ * @since 0.1.0
  * @package Riff
  */
 
@@ -19,6 +20,8 @@ final class Player {
 
 	/**
 	 * Hooks the assets and the markup.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function register(): void {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
@@ -28,6 +31,7 @@ final class Player {
 	/**
 	 * Whether the player belongs on this request.
 	 *
+	 * @since 0.1.0
 	 * @return bool
 	 */
 	public static function enabled(): bool {
@@ -35,6 +39,7 @@ final class Player {
 		/**
 		 * Filters whether Riff's player loads on the current front-end request.
 		 *
+		 * @since 0.1.0
 		 * @param bool $enabled Whether to load the player.
 		 */
 		return (bool) apply_filters( 'riff_enabled', $enabled );
@@ -42,12 +47,17 @@ final class Player {
 
 	/**
 	 * Enqueues the stylesheet and the script module.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function enqueue(): void {
 		if ( ! self::enabled() ) {
 			return;
 		}
 		wp_enqueue_style( 'riff', RIFF_URL . 'assets/riff.css', array(), self::version( 'assets/riff.css' ) );
+		// wp.hooks is how a plugin's script listens to the player (see docs/javascript.md); the
+		// module reads it from the window when it is there.
+		wp_enqueue_script( 'wp-hooks' );
 		wp_enqueue_script_module( 'riff', RIFF_URL . 'assets/riff.js', array(), self::version( 'assets/riff.js' ) );
 	}
 
@@ -55,6 +65,7 @@ final class Player {
 	 * The cache key for an asset: the plugin version and the file's own time, so an edit shows up
 	 * without waiting for a release or clearing the browser's cache. One stat per asset per page.
 	 *
+	 * @since 0.1.0
 	 * @param string $file Path relative to the plugin folder.
 	 * @return string
 	 */
@@ -65,6 +76,8 @@ final class Player {
 
 	/**
 	 * Prints the player and the strings the script needs.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function markup(): void {
 		if ( ! self::enabled() ) {
@@ -102,6 +115,7 @@ final class Player {
 		/**
 		 * Filters the strings the player shows.
 		 *
+		 * @since 0.1.0
 		 * @param array $strings Strings, keyed by name.
 		 */
 		$strings = (array) apply_filters( 'riff_strings', $strings );
@@ -113,6 +127,7 @@ final class Player {
 		 * Filters the data handed to the player script: strings, and the addresses of scripts a
 		 * feature wants loaded, such as the Listen feature's app on the page that holds its block.
 		 *
+		 * @since 0.1.0
 		 * @param array $data Data.
 		 */
 		$data = (array) apply_filters( 'riff_player_data', $data );
@@ -122,18 +137,173 @@ final class Player {
 		);
 		/**
 		 * Fires before the player's markup.
+		 *
+		 * @since 0.1.0
 		 */
 		do_action( 'riff_before_player' );
 		require RIFF_DIR . 'templates/player.php';
 		/**
 		 * Fires after the player's markup.
+		 *
+		 * @since 0.1.0
 		 */
 		do_action( 'riff_after_player' );
 	}
 
 	/**
+	 * The chips under Now Playing's controls, as extensions can add to them.
+	 *
+	 * Each item is keyed by a slug and has a `label`, an `action` (the data-riff-action the player
+	 * announces as a `riff.action` hook and a `riff:action` event when it is not one of its own), and
+	 * either an `icon` from Player::icon() or `svg` markup of its own. An item with an `href` is a link.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return array[]
+	 */
+	public static function chips(): array {
+		$chips = array(
+			'share' => array(
+				'label'  => __( 'Share', 'riff' ),
+				'icon'   => 'share',
+				'action' => 'share',
+			),
+		);
+		/**
+		 * Filters the chips under Now Playing's controls.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array[] $chips Chips, keyed by slug: label, action, icon or svg, href.
+		 */
+		return self::items( (array) apply_filters( 'riff_chips', $chips ) );
+	}
+
+	/**
+	 * Controls at the end of the bar on a wide screen, before the caret. Empty until a plugin adds
+	 * some; the player's own controls stay where they are.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return array[]
+	 */
+	public static function bar_controls(): array {
+		/**
+		 * Filters the controls at the end of the bar on a wide screen.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array[] $controls Controls, keyed by slug: label, action, icon or svg, href.
+		 */
+		return self::items( (array) apply_filters( 'riff_bar_controls', array() ) );
+	}
+
+	/**
+	 * Keeps only well-formed items: a string label and either an action or an href.
+	 *
+	 * @param array $items Items.
+	 * @return array[]
+	 */
+	private static function items( array $items ): array {
+		$kept = array();
+		foreach ( $items as $slug => $item ) {
+			if ( ! is_array( $item ) || empty( $item['label'] ) || ( empty( $item['action'] ) && empty( $item['href'] ) ) ) {
+				continue;
+			}
+			$kept[ sanitize_key( (string) $slug ) ] = $item;
+		}
+		return $kept;
+	}
+
+	/**
+	 * Renders one chip or control.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param string $slug      Slug.
+	 * @param array  $item      Item.
+	 * @param string $css_class Class for the element.
+	 * @param bool   $labelled  Whether the label shows (a chip) or is the accessible name (a control).
+	 * @return string
+	 */
+	public static function control( string $slug, array $item, string $css_class, bool $labelled = true ): string {
+		$icon = '';
+		if ( ! empty( $item['icon'] ) ) {
+			$icon = self::icon( (string) $item['icon'] );
+		} elseif ( ! empty( $item['svg'] ) ) {
+			$icon = wp_kses( (string) $item['svg'], self::svg_tags() );
+		}
+		$label  = $labelled ? '<span>' . esc_html( (string) $item['label'] ) . '</span>' : '';
+		$attrs  = $labelled ? '' : ' aria-label="' . esc_attr( (string) $item['label'] ) . '"';
+		$attrs .= ' data-riff-chip="' . esc_attr( $slug ) . '"';
+		if ( ! empty( $item['href'] ) ) {
+			return '<a class="' . esc_attr( $css_class ) . '" href="' . esc_url( (string) $item['href'] ) . '"' . $attrs . '>' . $icon . $label . '</a>';
+		}
+		return '<button type="button" class="' . esc_attr( $css_class ) . '" data-riff-action="' . esc_attr( (string) $item['action'] ) . '"' . $attrs . '>' . $icon . $label . '</button>';
+	}
+
+	/**
+	 * The SVG a control may carry.
+	 *
+	 * @return array
+	 */
+	private static function svg_tags(): array {
+		$attrs = array(
+			'viewbox'      => true,
+			'fill'         => true,
+			'stroke'       => true,
+			'stroke-width' => true,
+			'd'            => true,
+			'cx'           => true,
+			'cy'           => true,
+			'r'            => true,
+			'x'            => true,
+			'y'            => true,
+			'width'        => true,
+			'height'       => true,
+			'aria-hidden'  => true,
+			'focusable'    => true,
+			'class'        => true,
+		);
+		return array(
+			'svg'     => $attrs,
+			'path'    => $attrs,
+			'circle'  => $attrs,
+			'rect'    => $attrs,
+			'g'       => $attrs,
+			'polygon' => array_merge( $attrs, array( 'points' => true ) ),
+		);
+	}
+
+	/**
+	 * The inline style on the player's root: the accent a theme sets in theme.json under
+	 * settings.custom.riff.accent, or nothing.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return string A style attribute with a leading space, or an empty string.
+	 */
+	public static function root_style(): string {
+		$custom = wp_get_global_settings( array( 'custom', 'riff' ) );
+		$accent = is_array( $custom ) && ! empty( $custom['accent'] ) ? sanitize_text_field( (string) $custom['accent'] ) : '';
+		/**
+		 * Filters the player's accent colour, after the theme's own setting.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param string $accent A CSS colour, or an empty string for the default amber.
+		 */
+		$accent = (string) apply_filters( 'riff_accent', $accent );
+		if ( '' === $accent || ! preg_match( '/^[#a-z0-9(),.% -]+$/i', $accent ) ) {
+			return '';
+		}
+		return ' style="--riff-accent: ' . esc_attr( $accent ) . '"';
+	}
+
+	/**
 	 * Inline SVG icon, from Google's Material Icons (Apache License 2.0), the set Google's own apps are drawn in.
 	 *
+	 * @since 0.1.0
 	 * @param string $name Icon name.
 	 * @return string
 	 */

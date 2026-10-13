@@ -43,14 +43,20 @@ From the post. Every audio and video block in the post you are reading is the qu
 
 == Developers ==
 
-Riff is built the way a feature plugin would be: one track shape everywhere, read through WordPress's own APIs. Inside the plugin there is a seam: `src/` is the foundation (tracks, the Media Library fields, the block markup, REST and GraphQL, the player), and `features/listen/` is the Listen block and the drawn covers, which build on the foundation only through the filters, actions and routes below.
+Riff is built the way a feature plugin would be: one track shape everywhere, read through WordPress's own APIs. Inside the plugin there is a seam: `src/` is the foundation (tracks, sources, the Media Library fields, the block markup, REST and GraphQL, the player), and `features/listen/` is the Listen block and the drawn covers, which build on the foundation only through the surface below.
 
-* **REST:** every audio and video item in `wp/v2/media` carries `riff_track`: id, src, type, title, artist, album, duration, art, video, post. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and the rendered blocks. Both describe themselves on OPTIONS.
+**Stability.** Everything listed here is public and carries an `@since`. Within a major version a hook keeps its name and parameters, a REST field or route keeps its shape, the track schema keeps its version, and a public CSS custom property keeps its name. Anything that has to go is first deprecated for a release (`apply_filters_deprecated`, a notice in the changelog) and removed in the next major. Anything not listed, such as a class method, a CSS class or an internal custom property like `--riff-heat`, may change at any time.
+
+* **Hooks:** every filter and action, with its parameters and the line it fires on, is in `docs/hooks.md`, generated from the plugin's docblocks by `npm run docs:hooks` and checked in CI.
+* **JavaScript:** `window.riff` is the player's api; `riff.*` actions and filters through `wp.hooks`, and `riff:*` events on `#riff`, announce every change of state. `docs/javascript.md` has the reference.
+* **Sources:** tracks come from registered sources. The core source reads audio and video blocks in posts; a plugin adds its own post type or catalogue by implementing `Riff\Source` and calling `Riff\Sources::register()` on `init`, or through the `riff_sources` filter.
+* **Track schema:** one shape, `Riff\Tracks::schema()`, version `Riff\Tracks::SCHEMA_VERSION`, shared by REST, GraphQL, the block attribute and the script, and held to after the `riff_track` filter.
+* **REST:** every audio and video item in `wp/v2/media` carries `riff_track`. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and rendered blocks. All describe themselves on OPTIONS.
 * **WPGraphQL:** when it is active, `MediaItem.riffTrack` and `Post.riffTracks`.
-* **Block and shortcode:** `riff/app` and `[riff]` turn a page into the place to listen.
-* **Markup:** every core audio and video block carries its track as `data-riff-track` on the figure; anything can read it.
-* **Filters:** `riff_enabled`, `riff_track`, `riff_library_query`, `riff_strings`, `riff_player_data`, `riff_art_palettes`, `riff_art_svg`.
-* **Actions:** `riff_before_player`, `riff_after_player`.
+* **Controls:** `riff_chips` adds chips under Now Playing's controls; `riff_bar_controls` adds controls to the end of the bar on a wide screen. The player announces a press as `riff.action`.
+* **Block and shortcode:** `riff/app` (with colour, typography and padding supports) and `[riff]` turn a page into the place to listen.
+* **Markup:** every core audio and video block carries its track as `data-riff-track` on the figure; `riff_before_player` and `riff_after_player` wrap the player's markup.
+* **Theming:** the public custom properties on `#riff` are `--riff-accent`, `--riff-bg`, `--riff-surface`, `--riff-fg`, `--riff-fg-2`, `--riff-fg-3`, `--riff-line`, `--riff-hover` and `--riff-bar-h`; on the Listen block, `--riff-app-bg`, `--riff-app-surface`, `--riff-app-ink`, `--riff-app-ink-2`, `--riff-app-line`, `--riff-app-accent`, `--riff-app-accent-deep` and `--riff-app-accent-tint`. A theme sets the accent in `theme.json` under `settings.custom.riff.accent`, or any plugin through `riff_accent`.
 * **Address:** `?riff-art={post}` serves a post's drawn cover as SVG.
 
 == Changelog ==

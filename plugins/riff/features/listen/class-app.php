@@ -2,6 +2,7 @@
 /**
  * The app: a block, with a shortcode alias, that turns the page it sits on into the place to listen.
  *
+ * @since 0.1.0
  * @package Riff
  */
 
@@ -27,11 +28,15 @@ final class App {
 
 	/**
 	 * The query argument that opens a post inside the app.
+	 *
+	 * @since 0.1.0
 	 */
 	public const QUERY = 'riff';
 
 	/**
 	 * Hooks the block and the shortcode.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'init' ) );
@@ -39,6 +44,8 @@ final class App {
 
 	/**
 	 * Registers the block from its folder and the shortcode.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function init(): void {
 		register_block_type( RIFF_DIR . 'features/listen/block' );
@@ -48,6 +55,7 @@ final class App {
 	/**
 	 * [riff], the same as the block.
 	 *
+	 * @since 0.1.0
 	 * @return string
 	 */
 	public static function shortcode(): string {
@@ -57,6 +65,7 @@ final class App {
 	/**
 	 * The app's markup, with the first view rendered on the server.
 	 *
+	 * @since 0.1.0
 	 * @param array $attributes Block attributes.
 	 * @return string
 	 */
@@ -68,11 +77,16 @@ final class App {
 		$post  = self::requested();
 		$view  = $post ? self::post_view( $post, $page ) : self::library_view( $page );
 		$align = isset( $attributes['align'] ) && in_array( $attributes['align'], array( 'wide', 'full' ), true ) ? ' align' . $attributes['align'] : '';
+		// Inside a block render the wrapper carries the block's supports (colours, type); the
+		// shortcode has no block, so it gets the plain class.
+		$wrapper = \WP_Block_Supports::$block_to_render
+			? get_block_wrapper_attributes( array( 'class' => 'riff-app' ) )
+			: 'class="riff-app' . esc_attr( $align ) . '"';
 		return sprintf(
-			'<div class="riff-app%s" data-riff-app data-riff-rest="%s" data-riff-page="%s" data-riff-query="%s">' .
+			'<div %s data-riff-app data-riff-rest="%s" data-riff-page="%s" data-riff-query="%s">' .
 			'<nav class="riff-app-bar" aria-label="%s"><a class="riff-app-home" href="%s">%s</a></nav>' .
 			'<div class="riff-app-view" data-riff-app-view>%s</div></div>',
-			esc_attr( $align ),
+			$wrapper,
 			esc_url( rest_url( Library::REST . '/library' ) ),
 			esc_url( $page ),
 			esc_attr( self::QUERY ),
@@ -86,6 +100,7 @@ final class App {
 	/**
 	 * The post the address opens, when there is one that can be played.
 	 *
+	 * @since 0.1.0
 	 * @return WP_Post|null
 	 */
 	private static function requested(): ?WP_Post {
@@ -115,6 +130,7 @@ final class App {
 	/**
 	 * The library: a grid of the posts with tracks.
 	 *
+	 * @since 0.1.0
 	 * @param string $page The app page's address.
 	 * @return string
 	 */

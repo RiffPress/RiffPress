@@ -11,7 +11,10 @@
 	"supports": {
 		"align": [ "wide", "full" ],
 		"html": false,
-		"multiple": false
+		"multiple": false,
+		"color": { "background": true, "text": true, "link": true },
+		"typography": { "fontSize": true },
+		"spacing": { "padding": true }
 	},
 	"attributes": {
 		"align": {
