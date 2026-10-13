@@ -16,13 +16,14 @@ class Test_Riff_Art extends Riff_TestCase {
 	/**
 	 * A published post with one track and no featured image.
 	 *
+	 * @param string $title Post title.
 	 * @return int[] Post ID and attachment ID.
 	 */
-	private function bare_post(): array {
+	private function bare_post( string $title = 'Night Sessions & Other Tales' ): array {
 		$post = self::factory()->post->create(
 			array(
 				'post_status' => 'publish',
-				'post_title'  => 'Night Sessions & Other Tales',
+				'post_title'  => $title,
 			)
 		);
 		$id   = self::attach( '02 - Underground [underground].mp3', $post );
@@ -56,7 +57,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'riff-art', wp_json_encode( $track['art'] ) );
 	}
 
-	public function test_the_cover_carries_the_title_count_and_the_record(): void {
+	public function test_the_cover_carries_the_title_the_count_and_the_record(): void {
 		[ $post ] = $this->bare_post();
 
 		$svg = Art::svg( get_post( $post ) );
@@ -66,21 +67,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertStringContainsString( '>1</text>', $svg, 'the track count, large' );
 		$this->assertStringContainsString( '1 track', $svg );
 		$this->assertStringContainsString( '<circle', $svg );
-	}
-
-	public function test_the_palette_is_the_posts_own(): void {
-		[ $a ] = $this->bare_post();
-		[ $b ] = $this->bare_post();
-
-		$this->assertSame( Art::svg( get_post( $a ) ), Art::svg( get_post( $a ) ), 'stable' );
-		// Eight palettes: two posts usually differ, and always draw a valid document.
-		$this->assertStringContainsString( '</svg>', Art::svg( get_post( $b ) ) );
-	}
-
-	public function test_the_route_is_a_public_query_variable(): void {
-		$this->assertContains( 'riff-art', apply_filters( 'query_vars', array() ) );
-		[ $post ] = $this->bare_post();
-		$this->assertSame( add_query_arg( 'riff-art', $post, home_url( '/' ) ), Art::url( $post ) );
+		$this->assertSame( 1, substr_count( $svg, 'class="riff-groove"' ), 'one groove per track' );
 	}
 
 	public function test_the_cover_does_not_repeat_the_artist_in_its_byline(): void {
@@ -88,5 +75,72 @@ class Test_Riff_Art extends Riff_TestCase {
 		$svg      = Art::svg( get_post( $post ) );
 		$this->assertSame( 1, substr_count( $svg, 'Airmen of Note, United States Air Force Band' ), 'the artist is on its own line, once' );
 		$this->assertStringContainsString( '>1 track', $svg );
+	}
+
+	public function test_the_fonts_are_embedded_and_are_the_brands(): void {
+		[ $post ] = $this->bare_post();
+		$svg      = Art::svg( get_post( $post ) );
+		$this->assertStringContainsString( "@font-face{font-family:'Riff Garamond'", $svg );
+		$this->assertStringContainsString( "@font-face{font-family:'Riff Inter'", $svg );
+		$this->assertStringContainsString( 'data:font/woff2;base64,', $svg );
+		$this->assertStringNotContainsString( 'Poppins', $svg );
+	}
+
+	public function test_the_cover_comes_from_the_slug_so_it_survives_a_reseed(): void {
+		[ $post ] = $this->bare_post();
+		$a        = get_post( $post );
+		$b        = clone $a;
+		$b->ID    = $a->ID + 1000;
+		$this->assertSame( Art::svg( $a ), Art::svg( $b ), 'the same slug draws the same cover whatever the ID' );
+		$c            = clone $a;
+		$c->post_name = 'another-slug-entirely';
+		$this->assertNotSame( Art::svg( $a ), Art::svg( $c ), 'a different slug draws a different cover' );
+	}
+
+	public function test_every_colour_is_a_wordpress_org_token_and_the_filters_still_shape_it(): void {
+		$tokens = array( '#1e1e1e', '#3858e9', '#f6f6f6', '#ffffff', '#e26f56', '#33f078', '#fff972', '#d7a7ff', '#ffb7a7', '#c7ffdb', '#7a00df', '#40464d', '#1d35b4' );
+		foreach ( Art::palettes() as $palette ) {
+			foreach ( $palette as $colour ) {
+				$this->assertContains( strtolower( $colour ), $tokens, "$colour is a design system token" );
+			}
+		}
+		$this->assertSame( array( 'corner', 'centre', 'horizon' ), Art::layouts() );
+
+		$one      = static fn(): array => array( array( '#101010', '#ff00ff', '#ffffff' ) );
+		add_filter( 'riff_art_palettes', $one );
+		$only     = static fn(): array => array( 'horizon' );
+		add_filter( 'riff_art_layouts', $only );
+		[ $post ] = $this->bare_post();
+		$svg      = Art::svg( get_post( $post ) );
+		remove_filter( 'riff_art_palettes', $one );
+		remove_filter( 'riff_art_layouts', $only );
+		$this->assertStringContainsString( 'fill="#ff00ff"', $svg, 'the filtered accent is the label' );
+		$this->assertStringContainsString( 'cy="1180"', $svg, 'the filtered layout is the horizon' );
+	}
+
+	public function test_a_track_with_level_data_puts_the_music_in_the_groove(): void {
+		$levels = static function ( $track ) {
+			$track['levels'] = str_repeat( '0369', 30 );
+			return $track;
+		};
+		add_filter( 'riff_track', $levels );
+		[ $post ] = $this->bare_post();
+		$svg      = Art::svg( get_post( $post ) );
+		remove_filter( 'riff_track', $levels );
+		$this->assertMatchesRegularExpression( '#<path class="riff-groove" d="M[\d. ]+L#', $svg, 'the groove is a path that follows the levels' );
+	}
+
+	public function test_the_sheet_is_for_editors_only(): void {
+		$this->bare_post();
+		$html = Art::sheet();
+		$this->assertStringContainsString( '<!DOCTYPE html>', $html );
+		$this->assertSame( count( Art::palettes() ) * count( Art::layouts() ), substr_count( $html, '<figure>' ), 'one cell per palette and layout' );
+		$this->assertStringContainsString( 'data:image/svg+xml;base64,', $html );
+	}
+
+	public function test_the_route_is_a_public_query_variable(): void {
+		$this->assertContains( 'riff-art', apply_filters( 'query_vars', array() ) );
+		[ $post ] = $this->bare_post();
+		$this->assertSame( add_query_arg( 'riff-art', $post, home_url( '/' ) ), Art::url( $post ) );
 	}
 }

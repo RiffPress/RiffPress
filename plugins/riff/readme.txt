@@ -57,7 +57,7 @@ Riff is built the way a feature plugin would be: one track shape everywhere, rea
 * **Block and shortcode:** `riff/app` (with colour, typography and padding supports) and `[riff]` turn a page into the place to listen.
 * **Markup:** every core audio and video block carries its track as `data-riff-track` on the figure; `riff_before_player` and `riff_after_player` wrap the player's markup.
 * **Theming:** the public custom properties on `#riff` are `--riff-accent`, `--riff-bg`, `--riff-surface`, `--riff-fg`, `--riff-fg-2`, `--riff-fg-3`, `--riff-line`, `--riff-hover` and `--riff-bar-h`; on the Listen block, `--riff-app-bg`, `--riff-app-surface`, `--riff-app-ink`, `--riff-app-ink-2`, `--riff-app-line`, `--riff-app-accent`, `--riff-app-accent-deep` and `--riff-app-accent-tint`. A theme sets the accent in `theme.json` under `settings.custom.riff.accent`, or any plugin through `riff_accent`.
-* **Address:** `?riff-art={post}` serves a post's drawn cover as SVG.
+* **Covers:** a post with no image of its own gets a drawn cover, a record with one groove per track in wordpress.org's palette, from `?riff-art={post}` as SVG with the fonts embedded; `riff_art_palettes` and `riff_art_layouts` shape it, `riff_art_svg` can replace it, and `?riff-art=sheet` shows every palette and layout to anyone who can edit posts.
 
 == Changelog ==
 
