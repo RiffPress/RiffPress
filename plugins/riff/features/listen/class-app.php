@@ -22,9 +22,18 @@ defined( 'ABSPATH' ) || exit;
  * The page holding the block is the route, the way a shop plugin's shop page is. Inside it the
  * library and every post open without leaving the page, so the music never stops. The server
  * renders the first view, so the page reads without the script and search engines see the posts.
- * A post is addressed by ?riff={id} on the same page.
+ * A post is addressed by ?riff={id} or ?riff={slug} on the same page.
  */
 final class App {
+
+	/**
+	 * The page template that is the block and nothing else, for a page that should be all player.
+	 * Registered on block themes (WordPress 6.7 and newer); a page picks it under Template, which
+	 * stores the slug, "listen", in its page template meta.
+	 *
+	 * @since 0.2.0
+	 */
+	public const TEMPLATE = 'riff//listen';
 
 	/**
 	 * The query argument that opens a post inside the app.
@@ -50,6 +59,17 @@ final class App {
 	public static function init(): void {
 		register_block_type( RIFF_DIR . 'features/listen/block' );
 		add_shortcode( 'riff', array( self::class, 'shortcode' ) );
+		if ( function_exists( 'register_block_template' ) ) {
+			register_block_template(
+				self::TEMPLATE,
+				array(
+					'title'       => __( 'Listen', 'riff' ),
+					'description' => __( 'The Riff block and nothing else: no header, no footer, the whole page is the player.', 'riff' ),
+					'post_types'  => array( 'page' ),
+					'content'     => '<!-- wp:riff/app {"align":"full"} /-->',
+				)
+			);
+		}
 	}
 
 	/**
@@ -105,11 +125,12 @@ final class App {
 	 */
 	private static function requested(): ?WP_Post {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which post to show; nothing changes.
-		$id = isset( $_GET[ self::QUERY ] ) ? absint( wp_unslash( $_GET[ self::QUERY ] ) ) : 0;
-		if ( ! $id ) {
+		$raw = isset( $_GET[ self::QUERY ] ) ? sanitize_text_field( wp_unslash( $_GET[ self::QUERY ] ) ) : '';
+		if ( '' === $raw ) {
 			return null;
 		}
-		$post = get_post( (int) $id );
+		// An ID, or a post's slug: ?riff=compositions reads as well as ?riff=12, for links written by hand.
+		$post = ctype_digit( $raw ) ? get_post( (int) $raw ) : get_page_by_path( $raw, OBJECT, 'post' );
 		if ( ! $post instanceof WP_Post || ! is_post_publicly_viewable( $post ) || post_password_required( $post ) ) {
 			return null;
 		}
