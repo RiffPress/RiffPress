@@ -162,19 +162,21 @@ html.has-riff body::after {
 	font-variant-numeric: tabular-nums;
 }
 
-/* The quality tag: format and bit rate, on every track, as the streaming
-   services tag their tiers. Quiet, in the row's own ink. */
+/* The quality pill: format and bit rate for the playing track, as Tidal
+   sets its tier at the right end of the bar. Centred with the controls. */
 .riff-quality {
+	display: inline-flex;
+	align-items: center;
 	flex: none;
-	padding: 1px 6px;
-	border: 1px solid currentcolor;
-	border-radius: 3px;
-	font-size: 10px;
+	height: 28px;
+	padding: 0 12px;
+	border-radius: 999px;
+	background: color-mix(in srgb, currentcolor 10%, transparent);
+	color: var(--riff-accent);
+	font-size: 12px;
 	font-weight: 500;
-	line-height: 1.5;
-	letter-spacing: 0.04em;
+	letter-spacing: 0.02em;
 	white-space: nowrap;
-	opacity: 0.6;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -182,9 +184,8 @@ html.has-riff body::after {
 	display: none;
 }
 
-.riff-sub .riff-quality {
-	margin-inline-start: 6px;
-	vertical-align: 1px;
+.riff-bar-end .riff-quality {
+	margin-inline-end: 8px;
 }
 
 #riff .riff-np-quality {

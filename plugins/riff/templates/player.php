@@ -35,10 +35,12 @@ defined( 'ABSPATH' ) || exit;
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
 				<span class="riff-title" data-riff-text="title"></span>
-				<span class="riff-sub"><span data-riff-text="subtitle"></span> <span class="riff-quality" data-riff-text="quality"></span></span>
+				<span class="riff-sub" data-riff-text="subtitle"></span>
 			</span>
 		</button>
 		<div class="riff-bar-end">
+			<?php // The format and bit rate, a pill at the bar's right end, as Tidal sets its tier. ?>
+			<span class="riff-quality riff-desk" data-riff-text="quality"></span>
 			<button type="button" class="riff-btn riff-mobile" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			<label class="riff-volume riff-desk">
 				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>">
@@ -70,7 +72,7 @@ defined( 'ABSPATH' ) || exit;
 			<span class="riff-thumb riff-thumb-lg"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
 				<span class="riff-title" data-riff-text="title"></span>
-				<span class="riff-sub"><span data-riff-text="artist"></span> <span class="riff-quality" data-riff-text="quality"></span></span>
+				<span class="riff-sub" data-riff-text="artist"></span>
 			</span>
 			<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			<button type="button" class="riff-btn riff-play" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><?php echo Player::icon( 'play' ) . Player::icon( 'pause' ); ?></button>
