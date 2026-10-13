@@ -36,9 +36,13 @@ spl_autoload_register(
 			$dir = 'features/listen/';
 			array_shift( $parts );
 		}
-		$file = RIFF_DIR . $dir . 'class-' . strtolower( str_replace( '_', '-', implode( '-', $parts ) ) ) . '.php';
-		if ( is_readable( $file ) ) {
-			require $file;
+		$name = strtolower( str_replace( '_', '-', implode( '-', $parts ) ) );
+		foreach ( array( 'class-', 'interface-' ) as $kind ) {
+			$file = RIFF_DIR . $dir . $kind . $name . '.php';
+			if ( is_readable( $file ) ) {
+				require $file;
+				return;
+			}
 		}
 	}
 );

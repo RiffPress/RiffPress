@@ -3,6 +3,7 @@
  * The track on every audio and video file, for anything that reads the Media Library: the REST
  * API, and WPGraphQL where it is installed.
  *
+ * @since 0.1.0
  * @package Riff
  */
 
@@ -25,6 +26,8 @@ final class Api {
 
 	/**
 	 * Hooks the REST field and, when WPGraphQL is active, the GraphQL types.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
@@ -33,6 +36,8 @@ final class Api {
 
 	/**
 	 * Adds `riff_track` to audio and video items in wp/v2/media.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function rest_field(): void {
 		register_rest_field(
@@ -49,61 +54,27 @@ final class Api {
 	}
 
 	/**
-	 * The schema of a track, as REST and GraphQL both describe it.
+	 * The schema of the REST field: the track shape, nullable, read only.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return array JSON Schema.
 	 */
 	public static function track_schema(): array {
-		return array(
-			'description' => __( 'The file as a track the player reads; null for files that are not audio or video.', 'riff' ),
-			'type'        => array( 'object', 'null' ),
-			'context'     => array( 'view', 'edit', 'embed' ),
-			'readonly'    => true,
-			'properties'  => array(
-				'id'       => array( 'type' => 'string' ),
-				'src'      => array(
-					'type'   => 'string',
-					'format' => 'uri',
-				),
-				'type'     => array(
-					'type' => 'string',
-					'enum' => array( 'audio', 'video' ),
-				),
-				'title'    => array( 'type' => 'string' ),
-				'artist'   => array( 'type' => 'string' ),
-				'album'    => array( 'type' => 'string' ),
-				'duration' => array( 'type' => 'number' ),
-				'art'      => array(
-					'type'  => 'array',
-					'items' => array(
-						'type'       => 'object',
-						'properties' => array(
-							'src'   => array( 'type' => 'string' ),
-							'sizes' => array( 'type' => 'string' ),
-						),
-					),
-				),
-				'video'    => array(
-					'type'       => array( 'object', 'null' ),
-					'properties' => array(
-						'src'    => array( 'type' => 'string' ),
-						'poster' => array( 'type' => 'string' ),
-					),
-				),
-				'post'     => array(
-					'type'       => array( 'object', 'null' ),
-					'properties' => array(
-						'title' => array( 'type' => 'string' ),
-						'url'   => array( 'type' => 'string' ),
-					),
-				),
-			),
-		);
+		$schema = Tracks::schema();
+		unset( $schema['$schema'], $schema['title'] );
+		$schema['description'] = __( 'The file as a track the player reads; null for files that are not audio or video.', 'riff' );
+		$schema['type']        = array( 'object', 'null' );
+		$schema['context']     = array( 'view', 'edit', 'embed' );
+		$schema['readonly']    = true;
+		return $schema;
 	}
 
 	/**
 	 * WPGraphQL: a `RiffTrack` type, `riffTrack` on every MediaItem, and `riffTracks` on every post.
 	 * Runs only when WPGraphQL has loaded, since the action is its own.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function graphql(): void {
 		if ( ! function_exists( 'register_graphql_object_type' ) || ! function_exists( 'register_graphql_field' ) ) {

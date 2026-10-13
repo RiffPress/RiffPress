@@ -111,4 +111,42 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertNull( Tracks::from_url( 'https://example.com/x.mp3', 'image' ) );
 		$this->assertNull( Tracks::from_url( 'javascript:alert(1)', 'audio' ) );
 	}
+
+	public function test_a_filtered_track_is_held_to_its_shape(): void {
+		$post   = self::factory()->post->create();
+		$id     = self::attach( '02 - Underground [underground].mp3', $post );
+		$mangle = static function ( array $track ): array {
+			$track['duration'] = 'forty';
+			$track['art']      = array(
+				'not-an-image',
+				array(
+					'src'   => 'https://example.org/cover.png',
+					'sizes' => '100x100',
+				),
+			);
+			$track['video']    = array( 'poster' => 'no-src.png' );
+			$track['mood']     = 'late night';
+			unset( $track['album'] );
+			return $track;
+		};
+		add_filter( 'riff_track', $mangle );
+		$track = Tracks::from_attachment( $id, $post );
+		remove_filter( 'riff_track', $mangle );
+
+		$this->assertSame( 0.0, $track['duration'], 'a duration that is not a number is unknown' );
+		$this->assertCount( 1, $track['art'], 'only real artwork survives' );
+		$this->assertNull( $track['video'], 'a video without a source is no video' );
+		$this->assertSame( '', $track['album'], 'a missing key comes back empty' );
+		$this->assertSame( 'late night', $track['mood'], 'extra keys stay for whoever added them' );
+		$this->assertSame( $post, $track['post']['id'] );
+	}
+
+	public function test_the_schema_names_every_key_a_track_has(): void {
+		$post   = self::factory()->post->create();
+		$id     = self::attach( '02 - Underground [underground].mp3', $post );
+		$track  = Tracks::from_attachment( $id, $post );
+		$schema = Tracks::schema();
+		$this->assertSame( 1, Tracks::SCHEMA_VERSION );
+		$this->assertSame( array_keys( $schema['properties'] ), array_keys( $track ) );
+	}
 }

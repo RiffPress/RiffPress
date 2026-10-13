@@ -45,6 +45,10 @@ The layout follows YouTube Music's current design and measurements, in Riff's ow
 A track with a video version is set in the Media Library: edit an audio file and fill in
 **Video version** with the address of a video in the library.
 
+## Extending it
+
+Every hook is in [docs/hooks.md](docs/hooks.md), generated from the plugin's docblocks. The script's api, actions, filters and events are in [docs/javascript.md](docs/javascript.md). The plugin readme's Developers section has the stability promise, the sources registry, the track schema, REST and GraphQL, and the theming properties.
+
 ## Development
 
 ```

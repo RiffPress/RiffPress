@@ -37,6 +37,52 @@ function start() {
 	let preloader = null;
 
 	const track = () => queue[ order[ pos ] ];
+
+	// ---- The extension surface. Every change of state is announced twice: through wp.hooks as a
+	// riff.<name> action, and as a riff:<name> CustomEvent on #riff for pages without the WordPress
+	// scripts, both with the same detail. Two filters let a plugin reshape what plays: riff.queue
+	// (the tracks about to become the queue) and riff.track (each track as it is queued). The api
+	// object is window.riff, handed to riff.ready, and the only door the Listen feature uses.
+	// Documented in docs/javascript.md; stable within a major version.
+	const hooks = window.wp?.hooks;
+	function emit( name, detail = {} ) {
+		hooks?.doAction( `riff.${ name }`, detail, api );
+		root.dispatchEvent(
+			new CustomEvent( `riff:${ name }`, { detail, bubbles: true } )
+		);
+	}
+	const filter = ( name, value, ...args ) =>
+		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
+	const api = {
+		version: 1,
+		strings: s,
+		play( tracks, index = 0, { shuffle: on = null } = {} ) {
+			if ( on !== null ) {
+				shuffle = on;
+			}
+			setQueue( tracks, index );
+		},
+		toggle: () => toggle(),
+		next: () => next(),
+		prev: () => prev(),
+		seek( seconds ) {
+			if ( track() ) {
+				el().currentTime = Math.max( 0, Number( seconds ) || 0 );
+			}
+		},
+		open: () => open(),
+		close: () => close(),
+		mount: () => mount(),
+		current: () => track() || null,
+		queue: () => order.map( ( i ) => queue[ i ] ),
+		playing: () => !! track() && ! el().paused,
+		on( name, fn ) {
+			const handler = ( e ) => fn( e.detail, api );
+			root.addEventListener( `riff:${ name }`, handler );
+			return () => root.removeEventListener( `riff:${ name }`, handler );
+		},
+	};
+	window.riff = api;
 	const isVideo = ( t = track() ) =>
 		!! t && ( t.type === 'video' || ( mode === 'video' && !! t.video ) );
 	// Once the analyser is wired to <audio>, a file from another origin would play silent through it,
@@ -139,6 +185,9 @@ function start() {
 	// ---- The queue.
 	function setQueue( tracks, index, { play = true, at = 0 } = {} ) {
 		stopAll();
+		tracks = filter( 'queue', tracks, index ).map( ( t ) =>
+			filter( 'track', t )
+		);
 		queue = tracks;
 		order = tracks.map( ( _, i ) => i );
 		pos = index;
@@ -194,6 +243,7 @@ function start() {
 		renderQueue();
 		tint( largest( t.art ) || t.video?.poster );
 		save();
+		emit( 'track', { track: t, index: pos, queue: api.queue() } );
 	}
 
 	function toggle() {
@@ -326,12 +376,18 @@ function start() {
 			if ( live() ) {
 				announce();
 				paint();
+				emit( 'play', { track: track() } );
 				if ( ! reduce() ) {
 					follow();
 				}
 			}
 		} );
-		m.addEventListener( 'pause', () => live() && paint() );
+		m.addEventListener( 'pause', () => {
+			if ( live() ) {
+				paint();
+				emit( 'pause', { track: track() } );
+			}
+		} );
 		m.addEventListener( 'playing', () => {
 			if ( live() ) {
 				root.removeAttribute( 'data-waiting' );
@@ -361,6 +417,7 @@ function start() {
 			if ( ! live() ) {
 				return;
 			}
+			emit( 'ended', { track: track() } );
 			if ( repeat === 'one' ) {
 				m.currentTime = 0;
 				m.play().catch( paint );
@@ -852,6 +909,9 @@ function start() {
 			save();
 		} else if ( action === 'cast' ) {
 			cast();
+		} else {
+			// A control an extension added through riff_chips or riff_bar_controls.
+			emit( 'action', { action, track: track(), button } );
 		}
 	} );
 
@@ -875,6 +935,7 @@ function start() {
 			b.setAttribute( 'aria-expanded', 'true' );
 		}
 		history.pushState( { ...history.state, riff: 'open' }, '' );
+		emit( 'open', { track: track() } );
 		requestAnimationFrame( () => {
 			np.classList.add( 'is-in' );
 			$( '[data-riff-action="close"]' ).focus( { preventScroll: true } );
@@ -886,6 +947,7 @@ function start() {
 			return;
 		}
 		np.classList.remove( 'is-in' );
+		emit( 'close', { track: track() } );
 		sheet( 'none' );
 		np.style.removeProperty( 'transform' );
 		root.classList.remove( 'is-open' );
@@ -1325,19 +1387,10 @@ function start() {
 		paint();
 	}
 
-	// ---- The app, on the page that holds it. Loaded only there, and handed the little it needs.
+	emit( 'ready', { queue: api.queue(), track: track() || null } );
+
+	// ---- The app, on the page that holds it. Loaded only there, through the same public api.
 	if ( document.querySelector( '[data-riff-app]' ) && data.assets?.app ) {
-		const api = {
-			strings: s,
-			mount,
-			play( tracks, index = 0, { shuffle: on = null } = {} ) {
-				if ( on !== null ) {
-					shuffle = on;
-				}
-				setQueue( tracks, index );
-			},
-			current: () => track(),
-		};
 		import( data.assets.app )
 			.then( ( m ) => m.start( api ) )
 			.catch( () => {

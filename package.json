@@ -25,7 +25,9 @@
     "test:php": "wp-env run tests-wordpress --env-cwd=wp-content/riff ./vendor/bin/phpunit",
     "test:php:multisite": "wp-env run tests-wordpress --env-cwd=wp-content/riff env WP_TESTS_MULTISITE=1 ./vendor/bin/phpunit",
     "plugin-zip": "npm run plugin-zip --workspace=plugins/riff",
-    "pot": "wp-env run cli wp i18n make-pot wp-content/plugins/riff wp-content/plugins/riff/languages/riff.pot --domain=riff"
+    "pot": "wp-env run cli wp i18n make-pot wp-content/plugins/riff wp-content/plugins/riff/languages/riff.pot --domain=riff",
+    "docs:hooks": "node .github/scripts/hooks-reference.js",
+    "docs:hooks:check": "node .github/scripts/hooks-reference.js --check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

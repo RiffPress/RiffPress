@@ -2,6 +2,7 @@
 /**
  * Turns attachments and media blocks into the track data the player reads.
  *
+ * @since 0.1.0
  * @package Riff
  */
 
@@ -28,6 +29,7 @@ final class Tracks {
 	/**
 	 * Builds a track from an audio or video attachment.
 	 *
+	 * @since 0.1.0
 	 * @param int $attachment_id Attachment ID.
 	 * @param int $post_id       The post the track appears in, for artwork fallback and "Playing from".
 	 * @return array|null Null when the attachment is not audio or video.
@@ -78,6 +80,7 @@ final class Tracks {
 	 * Builds a track from a file that is not in the Media Library, such as an audio block that
 	 * points at another site. All Riff knows is the address, the caption, and the post.
 	 *
+	 * @since 0.1.0
 	 * @param string $src     Media URL.
 	 * @param string $type    'audio' or 'video'.
 	 * @param string $caption The block's caption, used as the title when there is one.
@@ -123,16 +126,118 @@ final class Tracks {
 		/**
 		 * Filters a track before the player reads it.
 		 *
+		 * @since 0.1.0
+		 *
 		 * @param array $track         Track: id, src, type, title, artist, album, duration, art, video, post.
 		 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
 		 * @param int   $post_id       The post the track appears in, or 0.
 		 */
-		return (array) apply_filters( 'riff_track', $track, $attachment_id, $post_id );
+		return self::normalize( (array) apply_filters( 'riff_track', $track, $attachment_id, $post_id ) );
+	}
+
+	/**
+	 * The version of the track shape. It changes only with a major release, and every consumer
+	 * (REST, GraphQL, the block attribute, riff.js) reads the same shape.
+	 *
+	 * @since 0.2.0
+	 */
+	public const SCHEMA_VERSION = 1;
+
+	/**
+	 * The track shape as JSON Schema, shared by REST and GraphQL.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return array
+	 */
+	public static function schema(): array {
+		return array(
+			'$schema'    => 'http://json-schema.org/draft-04/schema#',
+			'title'      => 'riff-track',
+			'type'       => 'object',
+			'properties' => array(
+				'id'       => array(
+					'type'        => 'string',
+					'description' => __( 'The attachment ID, or "url:" and a hash for a file outside the Media Library.', 'riff' ),
+				),
+				'src'      => array(
+					'type'   => 'string',
+					'format' => 'uri',
+				),
+				'type'     => array(
+					'type' => 'string',
+					'enum' => array( 'audio', 'video' ),
+				),
+				'title'    => array( 'type' => 'string' ),
+				'artist'   => array( 'type' => 'string' ),
+				'album'    => array( 'type' => 'string' ),
+				'duration' => array(
+					'type'        => 'number',
+					'description' => __( 'Seconds, 0 when unknown.', 'riff' ),
+				),
+				'art'      => array(
+					'type'        => 'array',
+					'description' => __( 'Artwork, smallest first.', 'riff' ),
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'src'   => array( 'type' => 'string' ),
+							'sizes' => array( 'type' => 'string' ),
+						),
+					),
+				),
+				'video'    => array(
+					'type'       => array( 'object', 'null' ),
+					'properties' => array(
+						'src'    => array( 'type' => 'string' ),
+						'poster' => array( 'type' => 'string' ),
+					),
+				),
+				'post'     => array(
+					'type'       => array( 'object', 'null' ),
+					'properties' => array(
+						'id'    => array( 'type' => 'integer' ),
+						'title' => array( 'type' => 'string' ),
+						'url'   => array( 'type' => 'string' ),
+					),
+				),
+			),
+		);
+	}
+
+	/**
+	 * Holds a track to its shape after a filter has had it: every key present with the right type,
+	 * extra keys kept for whoever added them. A track that lost its source is returned without one
+	 * and the player skips it.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array $track Track, as filtered.
+	 * @return array
+	 */
+	public static function normalize( array $track ): array {
+		$track['id']       = (string) ( $track['id'] ?? '' );
+		$track['src']      = is_string( $track['src'] ?? null ) ? $track['src'] : '';
+		$track['type']     = 'video' === ( $track['type'] ?? '' ) ? 'video' : 'audio';
+		$track['title']    = (string) ( $track['title'] ?? '' );
+		$track['artist']   = (string) ( $track['artist'] ?? '' );
+		$track['album']    = (string) ( $track['album'] ?? '' );
+		$track['duration'] = (float) max( 0, (float) ( $track['duration'] ?? 0 ) );
+		$track['art']      = array_values(
+			array_filter(
+				(array) ( $track['art'] ?? array() ),
+				static fn( $a ) => is_array( $a ) && ! empty( $a['src'] )
+			)
+		);
+		$track['video']    = is_array( $track['video'] ?? null ) && ! empty( $track['video']['src'] ) ? $track['video'] : null;
+		$track['post']     = is_array( $track['post'] ?? null ) && ! empty( $track['post']['url'] ) ? $track['post'] : null;
+		return $track;
 	}
 
 	/**
 	 * A post's own image. A cover drawn in its place is the Listen feature's, through riff_track.
 	 *
+	 * @since 0.1.0
 	 * @param int $post_id Post ID, or 0.
 	 * @return array List of { src, sizes }.
 	 */
@@ -176,6 +281,7 @@ final class Tracks {
 	/**
 	 * Reads the track out of a parsed block.
 	 *
+	 * @since 0.1.0
 	 * @param array $block   Parsed block, from parse_blocks().
 	 * @param int   $post_id Post ID.
 	 * @return array|null
@@ -190,6 +296,7 @@ final class Tracks {
 	 * better. The block editor and the REST API name an upload after its file; only the classic
 	 * uploader reads the tags. A title somebody has edited is left alone.
 	 *
+	 * @since 0.1.0
 	 * @param int   $attachment_id Attachment ID.
 	 * @param array $meta          Attachment metadata, which carries the tags for audio.
 	 * @return string
@@ -268,6 +375,7 @@ final class Tracks {
 			return null;
 		}
 		return array(
+			'id'    => $post_id,
 			'title' => html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' ),
 			'url'   => (string) get_permalink( $post_id ),
 		);

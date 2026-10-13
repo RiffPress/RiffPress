@@ -378,6 +378,43 @@ test.describe( 'Player', () => {
 			.toBeLessThan( 0.1 );
 	} );
 
+	test( 'a script can listen to the player and reshape what it plays', async ( {
+		page,
+	} ) => {
+		// The extension surface: wp.hooks actions and filters, riff:* events, and window.riff.
+		await page.evaluate( () => {
+			window.__seen = [];
+			window.wp.hooks.addAction( 'riff.track', 'e2e', ( detail ) =>
+				window.__seen.push( 'hook:' + detail.track.title )
+			);
+			document
+				.getElementById( 'riff' )
+				.addEventListener( 'riff:play', () => window.__seen.push( 'event:play' ) );
+			window.wp.hooks.addFilter( 'riff.track', 'e2e', ( track ) => ( {
+				...track,
+				title: track.title + ' (remix)',
+			} ) );
+		} );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
+			'Underground (remix)'
+		);
+		await expect
+			.poll( () => page.evaluate( () => window.__seen ) )
+			.toEqual( expect.arrayContaining( [ 'hook:Underground (remix)', 'event:play' ] ) );
+		const api = await page.evaluate( () => ( {
+			version: window.riff.version,
+			current: window.riff.current().title,
+			queue: window.riff.queue().length,
+			playing: window.riff.playing(),
+		} ) );
+		expect( api ).toEqual( { version: 1, current: 'Underground (remix)', queue: 3, playing: true } );
+		await page.evaluate( () => window.riff.next() );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
+			'Trombone Detritus (remix)'
+		);
+	} );
+
 	test( 'Now Playing has no accessibility violations', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-bar-info' ).click();

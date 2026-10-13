@@ -2,6 +2,7 @@
 /**
  * Marks core audio and video blocks as tracks the player can take over.
  *
+ * @since 0.1.0
  * @package Riff
  */
 
@@ -22,6 +23,8 @@ final class Blocks {
 
 	/**
 	 * Hooks the two block renderers.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function register(): void {
 		add_filter( 'render_block_core/audio', array( self::class, 'render' ), 10, 3 );
@@ -31,6 +34,7 @@ final class Blocks {
 	/**
 	 * Adds the track to one rendered audio or video block.
 	 *
+	 * @since 0.1.0
 	 * @param string        $content  Rendered block.
 	 * @param array         $block    Parsed block.
 	 * @param WP_Block|null $instance Block instance, which carries the post ID in its context.

@@ -2,6 +2,7 @@
 /**
  * The library: every post with something to play, and a REST route the app reads it from.
  *
+ * @since 0.1.0
  * @package Riff
  */
 
@@ -26,16 +27,22 @@ final class Library {
 
 	/**
 	 * REST namespace.
+	 *
+	 * @since 0.1.0
 	 */
 	public const REST = 'riff/v1';
 
 	/**
 	 * Posts per page in the list.
+	 *
+	 * @since 0.1.0
 	 */
 	public const PER_PAGE = 24;
 
 	/**
 	 * Hooks the REST routes.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
@@ -43,6 +50,8 @@ final class Library {
 
 	/**
 	 * Registers /library and /library/{id}.
+	 *
+	 * @since 0.1.0
 	 */
 	public static function routes(): void {
 		register_rest_route(
@@ -89,6 +98,7 @@ final class Library {
 	/**
 	 * The shape of a library item.
 	 *
+	 * @since 0.1.0
 	 * @return array JSON Schema.
 	 */
 	public static function item_schema(): array {
@@ -138,6 +148,7 @@ final class Library {
 	/**
 	 * The schema of GET /library.
 	 *
+	 * @since 0.1.0
 	 * @return array JSON Schema.
 	 */
 	public static function list_schema(): array {
@@ -160,6 +171,7 @@ final class Library {
 	/**
 	 * The schema of GET /library/{id}.
 	 *
+	 * @since 0.1.0
 	 * @return array JSON Schema.
 	 */
 	public static function post_schema(): array {
@@ -181,6 +193,7 @@ final class Library {
 	/**
 	 * GET /library: a page of posts with tracks.
 	 *
+	 * @since 0.1.0
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
@@ -204,6 +217,7 @@ final class Library {
 	/**
 	 * GET /library/{id}: one post, with its tracks and the rendered media blocks.
 	 *
+	 * @since 0.1.0
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response|WP_Error
 	 */
@@ -222,6 +236,7 @@ final class Library {
 	/**
 	 * The posts with tracks, newest first.
 	 *
+	 * @since 0.1.0
 	 * @param array $args WP_Query arguments to merge in.
 	 * @return WP_Query
 	 */
@@ -239,20 +254,17 @@ final class Library {
 		/**
 		 * Filters the query behind the library: which posts the app lists.
 		 *
+		 * @since 0.1.0
 		 * @param array $args WP_Query arguments.
 		 */
 		$args = (array) apply_filters( 'riff_library_query', $args );
 
-		$where = static function ( string $sql ): string {
-			global $wpdb;
-			return $sql . $wpdb->prepare(
-				" AND ({$wpdb->posts}.post_content LIKE %s OR {$wpdb->posts}.post_content LIKE %s)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the posts table name.
-				'%' . $wpdb->esc_like( '<!-- wp:audio' ) . '%',
-				'%' . $wpdb->esc_like( '<!-- wp:video' ) . '%'
-			);
-		};
+		// Each source says in SQL which posts it can read; a source that cannot say contributes nothing
+		// here and is asked post by post instead.
+		$clauses = array_filter( array_map( static fn( Source $source ) => $source->where(), Sources::all() ) );
+		$where   = static fn( string $sql ): string => $clauses ? $sql . ' AND (' . implode( ' OR ', $clauses ) . ')' : $sql;
 		add_filter( 'posts_where', $where );
-		$query = new WP_Query( $args );
+		$query   = new WP_Query( $args );
 		remove_filter( 'posts_where', $where );
 		return $query;
 	}
@@ -260,6 +272,7 @@ final class Library {
 	/**
 	 * A post as the list shows it: title, artwork, how many tracks and how long.
 	 *
+	 * @since 0.1.0
 	 * @param WP_Post $post Post.
 	 * @return array
 	 */
@@ -282,6 +295,7 @@ final class Library {
 		/**
 		 * Filters a post as the library lists it.
 		 *
+		 * @since 0.1.0
 		 * @param array   $item Item: id, title, url, artist, art, count, duration.
 		 * @param WP_Post $post Post.
 		 */
@@ -291,6 +305,7 @@ final class Library {
 	/**
 	 * A post opened in the app: the item, its tracks, and the media blocks rendered.
 	 *
+	 * @since 0.1.0
 	 * @param WP_Post $post Post.
 	 * @return array
 	 */
@@ -302,59 +317,27 @@ final class Library {
 	}
 
 	/**
-	 * The tracks in a post's content, in order.
+	 * The tracks in a post, in order, from the first source that claims it.
 	 *
+	 * @since 0.1.0
 	 * @param WP_Post $post Post.
 	 * @return array[]
 	 */
 	public static function tracks( WP_Post $post ): array {
-		$tracks = array();
-		foreach ( self::media_blocks( parse_blocks( $post->post_content ) ) as $block ) {
-			$track = Tracks::from_block( $block, $post->ID );
-			if ( $track ) {
-				$tracks[] = $track;
-			}
-		}
-		return $tracks;
+		$source = Sources::for_post( $post );
+		return $source ? $source->tracks( $post ) : array();
 	}
 
 	/**
-	 * The post's media blocks rendered as they are on the post, figures marked with their tracks.
+	 * The tracks rendered as blocks the player takes over, from the source that read them.
 	 *
+	 * @since 0.1.0
 	 * @param WP_Post $post Post.
 	 * @return string
 	 */
 	public static function html( WP_Post $post ): string {
-		// The block renderer reads the post from the loop, the way it does on the post's own page.
-		$previous        = $GLOBALS['post'] ?? null;
-		$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- put back below.
-		setup_postdata( $post );
-		$html = '';
-		foreach ( self::media_blocks( parse_blocks( $post->post_content ) ) as $block ) {
-			$html .= render_block( $block );
-		}
-		wp_reset_postdata();
-		$GLOBALS['post'] = $previous; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- as it was.
-		return $html;
-	}
-
-	/**
-	 * Core audio and video blocks, found at any depth.
-	 *
-	 * @param array $blocks Parsed blocks.
-	 * @return array[]
-	 */
-	private static function media_blocks( array $blocks ): array {
-		$found = array();
-		foreach ( $blocks as $block ) {
-			$name = $block['blockName'] ?? '';
-			if ( 'core/audio' === $name || 'core/video' === $name ) {
-				$found[] = $block;
-			} elseif ( ! empty( $block['innerBlocks'] ) ) {
-				$found = array_merge( $found, self::media_blocks( $block['innerBlocks'] ) );
-			}
-		}
-		return $found;
+		$source = Sources::for_post( $post );
+		return $source ? $source->html( $post ) : '';
 	}
 
 	/**

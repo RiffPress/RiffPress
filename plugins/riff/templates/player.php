@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Player::icon() returns static SVG shipped with the plugin.
 ?>
-<div id="riff" class="riff" hidden>
+<div id="riff" class="riff" hidden<?php echo Player::root_style(); ?>>
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
 		<div class="riff-bar-seek">
 			<?php // The filament: the played part of the line is a wire that glows with the music (riff.js). ?>
@@ -46,6 +46,9 @@ defined( 'ABSPATH' ) || exit;
 			</label>
 			<button type="button" class="riff-btn riff-desk" data-riff-action="repeat" aria-label="<?php esc_attr_e( 'Repeat off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
 			<button type="button" class="riff-btn riff-desk" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
+			<?php foreach ( Player::bar_controls() as $riff_slug => $riff_control ) : ?>
+				<?php echo Player::control( (string) $riff_slug, $riff_control, 'riff-btn riff-desk', false ); ?>
+			<?php endforeach; ?>
 			<button type="button" class="riff-btn riff-desk riff-chevron" data-riff-action="open" aria-label="<?php esc_attr_e( 'Open Now Playing', 'riff' ); ?>" aria-haspopup="dialog" aria-expanded="false"><?php echo Player::icon( 'caret' ); ?></button>
 		</div>
 	</section>
@@ -96,7 +99,9 @@ defined( 'ABSPATH' ) || exit;
 					<button type="button" class="riff-btn" data-riff-action="repeat" aria-label="<?php esc_attr_e( 'Repeat off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
 				</div>
 				<div class="riff-chips">
-					<button type="button" class="riff-chip" data-riff-action="share"><?php echo Player::icon( 'share' ); ?><span><?php esc_html_e( 'Share', 'riff' ); ?></span></button>
+					<?php foreach ( Player::chips() as $riff_slug => $riff_chip ) : ?>
+						<?php echo Player::control( (string) $riff_slug, $riff_chip, 'riff-chip' ); ?>
+					<?php endforeach; ?>
 				</div>
 			</div>
 
