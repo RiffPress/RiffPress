@@ -126,6 +126,10 @@ jobs:
           /blueprint.json
             Cache-Control: no-cache
           HEADERS
+          # A stable address for the demo: /demo always sends to Playground with the current stamped
+          # blueprint, so nothing outside this deploy has to know the stamp.
+          printf '/demo https://playground.wordpress.net/?mode=seamless&blueprint-url=%sblueprint.json?v=%s 302\n' "$BASE" "$V" > out/_redirects
+          cat out/_redirects
           ls -la out out/demo
           { echo "base=$BASE"; echo "version=$V"; } >> "$GITHUB_OUTPUT"
       - name: Deploy to Cloudflare Pages
