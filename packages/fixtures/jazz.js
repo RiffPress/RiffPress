@@ -103,7 +103,8 @@ const envelopes = {};
 TRACKS.forEach( ( [ id, title, composer, bucket ], index ) => {
 	const number = String( index + 1 ).padStart( 2, '0' );
 	const source = path.join( tmp, `${ number }.mp3` );
-	const file = `${ number } - ${ title } [${ id }].mp3`;
+	// No comma in a file name: raw.githubusercontent.com will not serve one, and the demo fetches from there.
+	const file = `${ number } - ${ title.replaceAll( ',', '' ) } [${ id }].mp3`;
 	const output = path.join( dir, file );
 
 	console.log( `${ number }  Downloading ${ title }` );
