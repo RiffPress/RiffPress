@@ -26,7 +26,7 @@
     },
     "optimize-autoloader": true
   },
-  "homepage": "https://riffpress.github.io/riffpress/",
+  "homepage": "https://riffpress.github.io/RiffPress/",
   "authors": [
     {
       "name": "Joe Fusco",
@@ -34,7 +34,7 @@
     }
   ],
   "support": {
-    "issues": "https://github.com/riffpress/riffpress/issues",
-    "source": "https://github.com/riffpress/riffpress"
+    "issues": "https://github.com/RiffPress/RiffPress/issues",
+    "source": "https://github.com/RiffPress/RiffPress"
   }
 }

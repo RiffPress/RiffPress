@@ -5,7 +5,7 @@
  * Version: 0.1.0
  * Requires at least: 6.5
  * Requires PHP: 8.1
- * Plugin URI: https://riffpress.github.io/riffpress/
+ * Plugin URI: https://riffpress.github.io/RiffPress/
  * Author: Joe Fusco
  * Author URI: https://josephfus.co/
  * License: GPL-2.0-or-later
