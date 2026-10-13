@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.2.0](https://github.com/RiffPress/RiffPress/compare/v4.1.0...v4.2.0) (2026-10-13)
+
+
+### Features
+
+* a track with a video carries a film mark by its title, in place of the pill on the row's right edge ([#280](https://github.com/RiffPress/RiffPress/issues/280)) ([3bb4f73](https://github.com/RiffPress/RiffPress/commit/3bb4f7300e9450043c9125e0606ff61a6196d1b8))
+* the demo and a seeded local site are named Riff and wear the record as their site icon ([#278](https://github.com/RiffPress/RiffPress/issues/278)) ([3714b8c](https://github.com/RiffPress/RiffPress/commit/3714b8c292dc6212f5eef2c00ea4ab0b5a8a7649))
+* the demo plays the whole album, seventy minutes, in place of forty-second excerpts ([#279](https://github.com/RiffPress/RiffPress/issues/279)) ([6a058aa](https://github.com/RiffPress/RiffPress/commit/6a058aa9733209ac18f1c86bc1460c6197caceee))
+* the seek bar shows what has loaded, the audio graph sleeps when paused, the screen stays on for video, and the page survives the back-forward cache ([#275](https://github.com/RiffPress/RiffPress/issues/275)) ([97cfbb2](https://github.com/RiffPress/RiffPress/commit/97cfbb2fe4358a09f118c2aeabab62148745b67c))
+
+
+### Bug Fixes
+
+* the skip link sits fully above the page until it is focused ([#281](https://github.com/RiffPress/RiffPress/issues/281)) ([2616762](https://github.com/RiffPress/RiffPress/commit/26167620ab05cddef30118c87969f02266edcfd3))
+
 ## [4.1.0](https://github.com/RiffPress/RiffPress/compare/v4.0.1...v4.1.0) (2026-10-13)
 
 
