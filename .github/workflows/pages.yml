@@ -20,9 +20,11 @@ on:
 
 permissions: {}
 
+# Deploys queue rather than cancel each other: the first album build runs long, and a push to main
+# in the meantime would otherwise cut it off before its cache is saved.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   PROJECT: riffpress
