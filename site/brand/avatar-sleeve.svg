@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<!-- Riff org avatar. Text set in EB Garamond; render the PNG from site/fonts if you re-export. -->
+
+<rect width="1024" height="1024" fill="#f6f6f6"/>
+<circle cx="620" cy="512" r="360" fill="#1e1e1e"/>
+<g fill="none" stroke="#f6f6f6" stroke-opacity=".12" stroke-width="2"><circle cx="620" cy="512" r="332"/><circle cx="620" cy="512" r="304"/><circle cx="620" cy="512" r="276"/><circle cx="620" cy="512" r="248"/><circle cx="620" cy="512" r="220"/></g>
+<circle cx="620" cy="512" r="140" fill="#3858e9"/><circle cx="620" cy="512" r="11" fill="#f6f6f6"/>
+<rect x="0" y="0" width="470" height="1024" fill="#f6f6f6"/>
+<rect x="470" y="0" width="6" height="1024" fill="#1e1e1e" opacity=".12"/>
+<text font-family="EB Garamond, Garamond, Georgia, serif" x="120" y="690" font-size="520" fill="#1e1e1e">R</text>
+<rect x="132" y="740" width="130" height="14" fill="#3858e9"/>
+</svg>

@@ -1,4 +1,6 @@
-# Riff
+<p align="center"><img src="site/brand/avatar-play.png" width="128" height="128" alt=""></p>
+
+<h1 align="center">Riff</h1>
 
 A music player for WordPress with the fit and finish of a streaming app. Install it and the audio
 and video blocks in your posts play in a player that stays docked at the bottom of the screen,
