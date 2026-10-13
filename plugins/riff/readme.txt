@@ -8,7 +8,7 @@ Stable tag: 4.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A music player for WordPress. The audio and video in your posts, in a player that stays with you, with a full Now Playing screen.
+A music player for WordPress. The audio and video in your posts, in a player that keeps going while you read, with a full Now Playing screen.
 
 == Description ==
 
@@ -27,7 +27,7 @@ Roboto, Inter and EB Garamond are bundled under the SIL Open Font License, and t
 == Installation ==
 
 1. Upload the plugin folder to `wp-content/plugins/` and activate it.
-2. Add an audio or video block to a post. That is the whole setup.
+2. Add an audio or video block to a post.
 3. To pair a video with a song, edit the audio file in the Media Library and fill in **Video version** with the address of a video in the library.
 4. For one page where everything plays, add the Riff block (or `[riff]`) to a page.
 
