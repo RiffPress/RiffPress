@@ -79,7 +79,7 @@ a{color:var(--accent)}
 .nav{position:sticky;top:0;z-index:10;background:var(--charcoal-1);color:var(--white)}
 .nav .wrap{height:60px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .mark{display:inline-flex;align-items:center;gap:10px;font-weight:600;text-decoration:none;color:var(--white);font-size:1.125rem;letter-spacing:-.01em}
-.mark svg{flex:none;display:block}
+.mark svg{flex:none;display:block;width:28px;height:28px}
 .nav nav{display:flex;align-items:center;gap:28px}
 .nav nav a:not(.btn){color:var(--white);text-decoration:none;font-size:.875rem;opacity:.85;transition:opacity var(--t)}
 .nav nav a:not(.btn):hover{opacity:1;text-decoration:underline;text-underline-offset:4px}
@@ -154,7 +154,7 @@ html.js .r.in{opacity:1;transform:none}
 </head>
 <body>
 <a class="skip" href="#top">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="24" height="24"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="12" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="500" fill="#f6f6f6"/><circle cx="512" cy="512" r="167" fill="#3858e9"/></g></svg>Riff</a><nav><a href="#listen">The block</a><a href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Live demo</a><a href="#owners">For your site</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="https://github.com/RiffPress/RiffPress/releases/latest">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="24" height="24"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="12" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="500" fill="#3a3a3a"/><circle cx="512" cy="512" r="167" fill="#3858e9"/></g></svg>Riff</a><nav><a href="#listen">The block</a><a href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Live demo</a><a href="#owners">For your site</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="https://github.com/RiffPress/RiffPress/releases/latest">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
@@ -172,12 +172,12 @@ html.js .r.in{opacity:1;transform:none}
 	<div class="r"><p class="eyebrow">The bar</p><h2>Keeps playing while you read.</h2><p class="lede">Tap a track and it starts. Scroll on, open another post, lock the phone; the music carries on.</p></div>
 	<div class="shot r"><span class="device"><picture><source type="image/avif" srcset="phone-post.avif"><img src="phone-post.png" width="780" height="1688" alt="A post with its tracks listed, and the player bar along the bottom of the screen" loading="lazy" decoding="async"></picture></span></div>
 	<ul class="facts r">
-		<li><strong>Swipe to skip</strong><span>Sideways on the bar for the next or previous track.</span></li>
-		<li><strong>Lock screen</strong><span>Artwork, title and controls where your phone puts them.</span></li>
-		<li><strong>Picks up again</strong><span>Reload and it's paused where you left it.</span></li>
-		<li><strong>A wire that glows</strong><span>The bar's amber line lights with the music, and cools when you pause.</span></li>
-		<li><strong>AirPlay and Cast</strong><span>Send it to the speakers when they're in reach.</span></li>
-		<li><strong>Keyboard</strong><span>Space plays and pauses, J and L skip ten seconds.</span></li>
+		<li><strong>Swipe the bar</strong><span>Left or right for the next or previous track. Down to stop.</span></li>
+		<li><strong>Lock screen controls</strong><span>Title, artwork and the play controls on the phone's lock screen, and on the media keys.</span></li>
+		<li><strong>Survives a reload</strong><span>Reload the page, or open another one on the site, and the track is still there, paused where it was.</span></li>
+		<li><strong>The filament</strong><span>The amber line in the bar is a level meter. It brightens with the music and fades when you pause.</span></li>
+		<li><strong>AirPlay and Chromecast</strong><span>A cast button appears when a speaker or TV is on the network.</span></li>
+		<li><strong>Keyboard shortcuts</strong><span>Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change track.</span></li>
 	</ul>
 </div></section>
 
