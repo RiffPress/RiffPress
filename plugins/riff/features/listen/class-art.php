@@ -428,7 +428,7 @@ final class Art {
 			$levels = isset( $t['levels'] ) && is_string( $t['levels'] ) && strlen( $t['levels'] ) >= 8 ? $t['levels'] : '';
 			$weight = max( 1.5, min( 6, $width * 0.22 ) );
 			if ( $levels ) {
-				$out .= sprintf( '<path class="riff-groove" d="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.34" stroke-linejoin="round"/>', self::wave( $cx, $cy, $mid, min( ( $width - $weight ) / 2, $r * 0.012 ), $levels ), esc_attr( $ink ), $weight );
+				$out .= sprintf( '<path class="riff-groove" d="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.34" stroke-linejoin="round"/>', self::wave( $cx, $cy, $mid, min( ( $width - $weight ) / 2, $r * 0.006 ), $levels ), esc_attr( $ink ), $weight );
 			} else {
 				$out .= sprintf( '<circle class="riff-groove" cx="%s" cy="%s" r="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.22"/>', $cx, $cy, round( $mid, 1 ), esc_attr( $ink ), $weight );
 			}
@@ -440,7 +440,8 @@ final class Art {
 	}
 
 	/**
-	 * A ring whose radius follows the track's levels around the circle: the waveform wrapped.
+	 * A ring whose radius follows the track's levels around the circle: the waveform wrapped,
+	 * each point averaged with its neighbours so it reads as the music's texture, not a tremor.
 	 *
 	 * @param float  $cx     Centre x.
 	 * @param float  $cy     Centre y.
@@ -454,7 +455,8 @@ final class Art {
 		$points = min( 180, max( 60, $n ) );
 		$d      = '';
 		for ( $i = 0; $i < $points; $i++ ) {
-			$digit = (int) $levels[ (int) floor( $i * $n / $points ) ];
+			$at    = (int) floor( $i * $n / $points );
+			$digit = ( (int) $levels[ ( $at + $n - 1 ) % $n ] + 2 * (int) $levels[ $at ] + (int) $levels[ ( $at + 1 ) % $n ] ) / 4;
 			$rr    = $r + ( $digit / 9 - 0.5 ) * 2 * $amp;
 			$a     = 2 * M_PI * $i / $points;
 			$d    .= ( 0 === $i ? 'M' : 'L' ) . round( $cx + $rr * cos( $a ), 1 ) . ' ' . round( $cy + $rr * sin( $a ), 1 ) . ' ';
