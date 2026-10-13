@@ -13,18 +13,20 @@ use WP_Post;
 
 use Riff\Library;
 use Riff\Player;
-use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Generated covers.
+ * Drawn covers.
  *
  * A site's own images always win: the post's featured image, or the file's artwork set in the
- * Media Library. When there is neither, the player draws a cover in the style of the demo's: a
- * record in the corner, the track count large, the title and artist beneath. The palette is
- * picked from the post, so every album on a site looks like its own. Served by WordPress itself
- * at ?riff-art={post}, as SVG, so it is sharp at any size and costs nothing to store.
+ * Media Library. When there is neither, the player draws a cover. Every cover is the same object,
+ * a record, and what changes is what the record carries: one groove per track, each as wide as
+ * the track is long, textured by the track's own level data when it has any; the title in
+ * EB Garamond and the artist in Inter, as wordpress.org sets them; a ground, an accent and a
+ * layout chosen from the post's slug, so the same post draws the same cover on any site, through
+ * any reseed. The palette is wordpress.org's own. Served by WordPress at ?riff-art={post}, as SVG
+ * with the two fonts embedded, so it is sharp at any size and costs nothing to store.
  */
 final class Art {
 
@@ -36,18 +38,46 @@ final class Art {
 	public const QUERY = 'riff-art';
 
 	/**
-	 * Palettes: background, accent, ink.
+	 * The contact sheet, every ground, accent and layout at once, for whoever can edit posts.
+	 *
+	 * @since 4.3.0
+	 */
+	public const SHEET = 'sheet';
+
+	/**
+	 * Palettes: background, accent, ink. Every colour is a wordpress.org design system token.
+	 * Charcoal grounds take the system's full-strength accents; blueberry grounds its tints and
+	 * white; the light ground the deep colours, with the charcoal record of the mark itself.
 	 */
 	private const PALETTES = array(
-		array( '#14213d', '#f4c28f', '#edf0f7' ),
-		array( '#1d3b2a', '#f2e8c9', '#f6f3e8' ),
-		array( '#3a1b3f', '#e8b954', '#f7eefb' ),
-		array( '#7a2e1e', '#f3d5b5', '#fbf1ea' ),
-		array( '#0f4c5c', '#ff8a7a', '#eafaf9' ),
-		array( '#262626', '#ffb020', '#f5f4f1' ),
-		array( '#2b2d6b', '#9ad0ec', '#eef2ff' ),
-		array( '#5a1f3e', '#ffd6e0', '#fff0f5' ),
+		array( '#1e1e1e', '#3858e9', '#ffffff' ), // charcoal-1, blueberry-1, white.
+		array( '#1e1e1e', '#e26f56', '#ffffff' ), // charcoal-1, pomegrade-1.
+		array( '#1e1e1e', '#33f078', '#ffffff' ), // charcoal-1, acid-green-1.
+		array( '#1e1e1e', '#fff972', '#ffffff' ), // charcoal-1, lemon-1.
+		array( '#1e1e1e', '#d7a7ff', '#ffffff' ), // charcoal-1, purple-3.
+		array( '#3858e9', '#fff972', '#ffffff' ), // blueberry-1, lemon-1.
+		array( '#3858e9', '#ffb7a7', '#ffffff' ), // blueberry-1, pomegrade-2.
+		array( '#3858e9', '#c7ffdb', '#ffffff' ), // blueberry-1, acid-green-2.
+		array( '#3858e9', '#ffffff', '#ffffff' ), // blueberry-1, white.
+		array( '#f6f6f6', '#3858e9', '#1e1e1e' ), // light-grey-2, blueberry-1, charcoal-1: the mark.
+		array( '#f6f6f6', '#e26f56', '#1e1e1e' ), // light-grey-2, pomegrade-1.
+		array( '#f6f6f6', '#7a00df', '#1e1e1e' ), // light-grey-2, purple-2.
 	);
+
+	/**
+	 * The record's own colour on each ground: a step lighter than charcoal, a step darker than
+	 * blueberry, and charcoal on the light ground, as the mark is drawn.
+	 */
+	private const DISCS = array(
+		'#1e1e1e' => '#40464d', // charcoal-3.
+		'#3858e9' => '#1d35b4', // dark-blueberry.
+		'#f6f6f6' => '#1e1e1e', // charcoal-1.
+	);
+
+	/**
+	 * Layouts: where the record sits.
+	 */
+	private const LAYOUTS = array( 'corner', 'centre', 'horizon' );
 
 	/**
 	 * Hooks the query variable and the handler.
@@ -149,7 +179,8 @@ final class Art {
 	}
 
 	/**
-	 * Serves the cover and stops, before the main query runs.
+	 * Serves the cover and stops, before the main query runs. `?riff-art=sheet` serves the contact
+	 * sheet to anyone who can edit posts.
 	 *
 	 * @since 0.1.0
 	 * @param WP $wp The request.
@@ -157,6 +188,17 @@ final class Art {
 	public static function serve( $wp ): void {
 		if ( ! $wp instanceof WP || empty( $wp->query_vars[ self::QUERY ] ) ) {
 			return;
+		}
+		if ( self::SHEET === $wp->query_vars[ self::QUERY ] ) {
+			if ( ! current_user_can( 'edit_posts' ) ) {
+				status_header( 403 );
+				exit;
+			}
+			status_header( 200 );
+			header( 'Content-Type: text/html; charset=utf-8' );
+			header( 'Cache-Control: no-store' );
+			echo self::sheet(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- an HTML document built here, every value escaped where it is placed.
+			exit;
 		}
 		$post = get_post( absint( $wp->query_vars[ self::QUERY ] ) );
 		if ( ! $post instanceof WP_Post || ! is_post_publicly_viewable( $post ) || post_password_required( $post ) ) {
@@ -178,43 +220,68 @@ final class Art {
 	}
 
 	/**
-	 * Draws the cover: a scene, then the title and count over a scrim at the foot.
+	 * The palettes after the filter, each a list of background, accent and ink.
 	 *
-	 * @since 0.1.0
-	 * @param WP_Post $post Post.
-	 * @return string SVG document.
+	 * @since 4.3.0
+	 *
+	 * @return array
 	 */
-	public static function svg( WP_Post $post ): string {
-		$item = Library::item( $post );
-		$seed = crc32( $post->ID . $post->post_name );
+	public static function palettes(): array {
 		/**
 		 * Filters the palettes a drawn cover picks from: lists of background, accent and ink.
 		 *
 		 * @since 0.1.0
 		 * @param array $palettes Palettes.
 		 */
-		$palettes              = (array) apply_filters( 'riff_art_palettes', self::PALETTES );
-		[ $bg, $accent, $ink ] = $palettes[ $seed % max( 1, count( $palettes ) ) ];
+		$palettes = (array) apply_filters( 'riff_art_palettes', self::PALETTES );
+		$palettes = array_values(
+			array_filter(
+				$palettes,
+				static fn( $p ) => is_array( $p ) && count( $p ) >= 3
+			)
+		);
+		return $palettes ? $palettes : self::PALETTES;
+	}
 
-		$title = self::clip( $item['title'], 36 );
-		$big   = $item['count'] ? (string) $item['count'] : mb_strtoupper( mb_substr( $item['title'], 0, 1 ) );
-		$line  = App::meta( $item );
-		$size  = (int) max( 44, min( 96, 1500 / max( 1, mb_strlen( $title ) ) ) );
-		$font  = "Poppins, 'Helvetica Neue', Helvetica, Arial, sans-serif";
-		$id    = 'riff-art-' . (int) $post->ID;
+	/**
+	 * The layouts after the filter.
+	 *
+	 * @since 4.3.0
+	 *
+	 * @return string[]
+	 */
+	public static function layouts(): array {
+		/**
+		 * Filters the layouts a drawn cover picks from: where the record sits. The plugin knows
+		 * `corner`, `centre` and `horizon`; a layout it does not know draws as `corner`.
+		 *
+		 * @since 4.3.0
+		 * @param string[] $layouts Layout slugs.
+		 */
+		$layouts = array_values( array_filter( (array) apply_filters( 'riff_art_layouts', self::LAYOUTS ), 'is_string' ) );
+		return $layouts ? $layouts : self::LAYOUTS;
+	}
 
-		$svg = '<?xml version="1.0" encoding="UTF-8"?>' .
-			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="' . esc_attr( $item['title'] ) . '">' .
-			'<defs><linearGradient id="' . esc_attr( $id ) . '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' . esc_attr( $bg ) . '" stop-opacity="0"/><stop offset="1" stop-color="' . esc_attr( $bg ) . '" stop-opacity="0.92"/></linearGradient></defs>' .
-			'<rect width="1024" height="1024" fill="' . esc_attr( $bg ) . '"/>' .
-			self::scene( $seed, $bg, $accent, $ink ) .
-			'<rect y="560" width="1024" height="464" fill="url(#' . esc_attr( $id ) . ')"/>' .
-			'<text x="80" y="236" font-family="' . esc_attr( $font ) . '" font-size="168" font-weight="700" fill="' . esc_attr( $ink ) . '">' . esc_html( $big ) . '</text>' .
-			'<rect x="84" y="258" width="104" height="12" fill="' . esc_attr( $accent ) . '"/>' .
-			'<text x="80" y="848" font-family="' . esc_attr( $font ) . '" font-size="' . $size . '" font-weight="700" fill="' . esc_attr( $ink ) . '">' . esc_html( $title ) . '</text>' .
-			( $item['artist'] ? '<text x="80" y="908" font-family="' . esc_attr( $font ) . '" font-size="32" font-weight="600" fill="' . esc_attr( $ink ) . '">' . esc_html( self::clip( $item['artist'], 48 ) ) . '</text>' : '' ) .
-			'<text x="80" y="956" font-family="' . esc_attr( $font ) . '" font-size="26" font-weight="500" fill="' . esc_attr( $ink ) . '" opacity="0.85">' . esc_html( $line ) . '</text>' .
-			'</svg>';
+	/**
+	 * Draws the cover for a post: the choices come from its slug, so a post keeps its cover on
+	 * any site and through any reseed.
+	 *
+	 * @since 0.1.0
+	 * @param WP_Post $post Post.
+	 * @return string SVG document.
+	 */
+	public static function svg( WP_Post $post ): string {
+		$item     = Library::item( $post );
+		$tracks   = Library::tracks( $post );
+		$seed     = crc32( (string) $post->post_name );
+		$palettes = self::palettes();
+		$layouts  = self::layouts();
+		$svg      = self::draw(
+			$item,
+			$tracks,
+			$palettes[ $seed % count( $palettes ) ],
+			$layouts[ intdiv( $seed, count( $palettes ) ) % count( $layouts ) ]
+		);
 		/**
 		 * Filters a drawn cover.
 		 *
@@ -226,91 +293,273 @@ final class Art {
 	}
 
 	/**
-	 * One of seven scenes, in the palette: a moon over hills, a sunrise over the sea, a skyline,
-	 * dunes, a record, mountains, or the classic: a disc in the corner and nothing else. Everything
-	 * is drawn from the seed, so a post keeps its cover.
+	 * Draws a cover from an item, its tracks, a palette and a layout.
 	 *
-	 * @param int    $seed   Seed.
-	 * @param string $bg     Background colour.
-	 * @param string $accent Accent colour.
-	 * @param string $ink    Ink colour.
+	 * @since 4.3.0
+	 *
+	 * @param array  $item    Library item: title, artist, count, duration, meta.
+	 * @param array  $tracks  The tracks, for their lengths and level data.
+	 * @param array  $palette Background, accent, ink.
+	 * @param string $layout  `corner`, `centre` or `horizon`.
+	 * @return string SVG document.
+	 */
+	public static function draw( array $item, array $tracks, array $palette, string $layout ): string {
+		[ $bg, $accent, $ink ] = array_map( 'strval', array_slice( array_values( $palette ), 0, 3 ) );
+		$disc                  = self::DISCS[ strtolower( $bg ) ] ?? self::mix( $bg, $ink, 0.18 );
+		$meta                  = self::mix( $ink, $bg, 0.3 );
+
+		$title  = (string) ( $item['title'] ?? '' );
+		$artist = (string) ( $item['artist'] ?? '' );
+		$count  = (int) ( $item['count'] ?? count( $tracks ) );
+		$line   = (string) ( $item['meta'] ?? App::meta(
+			array_merge(
+				array(
+					'artist'   => '',
+					'count'    => $count,
+					'duration' => 0,
+				),
+				$item
+			)
+		) );
+		if ( $artist && str_starts_with( $line, $artist . ' · ' ) ) {
+			$line = substr( $line, strlen( $artist . ' · ' ) );
+		}
+
+		switch ( $layout ) {
+			case 'centre':
+				$record = self::record( 512, 400, 330, $tracks, $disc, $accent, $bg, $ink );
+				$text   = self::text( $title, $artist, $line, $count, $ink, $meta, 'bottom' );
+				break;
+			case 'horizon':
+				$record = self::record( 512, 1180, 720, $tracks, $disc, $accent, $bg, $ink );
+				$text   = self::text( $title, $artist, $line, $count, $ink, $meta, 'top' );
+				break;
+			default:
+				$record = self::record( 880, 150, 520, $tracks, $disc, $accent, $bg, $ink );
+				$text   = self::text( $title, $artist, $line, $count, $ink, $meta, 'bottom' );
+		}
+
+		return '<?xml version="1.0" encoding="UTF-8"?>' .
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="' . esc_attr( $title ) . '">' .
+			self::fonts() .
+			'<rect width="1024" height="1024" fill="' . esc_attr( $bg ) . '"/>' .
+			$record .
+			$text .
+			'</svg>';
+	}
+
+	/**
+	 * The contact sheet: every palette and layout for one sample album, for design review.
+	 *
+	 * @since 4.3.0
+	 *
+	 * @return string HTML document.
+	 */
+	public static function sheet(): string {
+		$posts  = Library::query( array( 'posts_per_page' => 1 ) )->posts;
+		$post   = $posts ? $posts[0] : null;
+		$item   = $post ? Library::item( $post ) : array(
+			'title'    => 'Night Sessions',
+			'artist'   => 'The Example Quartet',
+			'count'    => 9,
+			'duration' => 2460,
+			'meta'     => '9 tracks · 41 min',
+		);
+		$tracks = $post ? Library::tracks( $post ) : array_map(
+			static fn( $i ) => array( 'duration' => 180 + 37 * $i ),
+			range( 1, 9 )
+		);
+		$cells  = '';
+		foreach ( self::layouts() as $layout ) {
+			foreach ( self::palettes() as $palette ) {
+				$svg    = self::draw( $item, $tracks, $palette, $layout );
+				$cells .= '<figure><img src="data:image/svg+xml;base64,' . base64_encode( $svg ) . '" alt="" width="256" height="256"><figcaption>' . esc_html( $layout . ' · ' . implode( ' ', array_slice( array_values( $palette ), 0, 2 ) ) ) . '</figcaption></figure>'; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- an inline image.
+			}
+		}
+		return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>' . esc_html__( 'Riff covers', 'riff' ) . '</title>' .
+			'<style>body{margin:0;padding:24px;background:#f6f6f6;color:#1e1e1e;font:14px/1.5 Inter,system-ui,sans-serif}' .
+			'h1{font:400 32px/1.1 "EB Garamond",Georgia,serif;margin:0 0 16px}' .
+			'.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(256px,1fr));gap:24px}' .
+			'figure{margin:0}img{display:block;width:100%;height:auto;border-radius:2px}figcaption{margin-top:6px;color:#656a71;font-size:12px}</style></head>' .
+			'<body><h1>' . esc_html__( 'Every cover Riff can draw', 'riff' ) . '</h1><div class="grid">' . $cells . '</div></body></html>';
+	}
+
+	/**
+	 * The record: the disc, one groove per track, the label and the hole. A groove's width is the
+	 * track's share of the album's length, and its line follows the track's level data when the
+	 * track carries any, so the music is in the grooves; otherwise it is a quiet, even ring.
+	 *
+	 * @param float  $cx     Centre x.
+	 * @param float  $cy     Centre y.
+	 * @param float  $r      Radius.
+	 * @param array  $tracks Tracks.
+	 * @param string $disc   Disc colour.
+	 * @param string $accent Label colour.
+	 * @param string $bg     Ground colour, which the hole shows.
+	 * @param string $ink    Ink colour, for the grooves.
 	 * @return string SVG fragment.
 	 */
-	private static function scene( int $seed, string $bg, string $accent, string $ink ): string {
-		$bg     = esc_attr( $bg );
-		$accent = esc_attr( $accent );
-		$ink    = esc_attr( $ink );
-		$rand   = static function () use ( &$seed ): float {
-			$seed = ( $seed * 1103515245 + 12345 ) % 2147483648;
-			return $seed / 2147483648;
-		};
-		switch ( intdiv( $seed, 8 ) % 7 ) {
-			case 0: // A moon over hills, under stars.
-				$stars = '';
-				for ( $i = 0; $i < 40; $i++ ) {
-					$stars .= sprintf( '<circle cx="%d" cy="%d" r="%s" fill="%s" opacity="%s"/>', (int) ( $rand() * 1024 ), (int) ( $rand() * 520 ), 1.5 + $rand() * 2.5, $ink, 0.4 + $rand() * 0.6 );
-				}
-				return $stars .
-					'<circle cx="760" cy="250" r="140" fill="' . $accent . '"/>' .
-					'<circle cx="808" cy="214" r="118" fill="' . $bg . '" opacity="0.28"/>' .
-					'<path d="M0 700 C 200 600 330 640 512 690 S 820 640 1024 620 V1024 H0Z" fill="' . $ink . '" opacity="0.1"/>' .
-					'<path d="M0 790 C 260 700 420 760 640 780 S 900 740 1024 760 V1024 H0Z" fill="' . $accent . '" opacity="0.28"/>' .
-					'<path d="M0 880 C 300 820 600 860 1024 820 V1024 H0Z" fill="' . $ink . '" opacity="0.16"/>';
-			case 1: // A sunrise over the sea.
-				$rings = '';
-				for ( $r = 560; $r >= 200; $r -= 90 ) {
-					$rings .= sprintf( '<circle cx="512" cy="640" r="%d" fill="none" stroke="%s" stroke-width="2" opacity="0.18"/>', $r, $accent );
-				}
-				$bands = '';
-				for ( $y = 660; $y < 1024; $y += 44 ) {
-					$bands .= sprintf( '<rect x="0" y="%d" width="1024" height="18" fill="%s" opacity="%s"/>', $y, $accent, 0.1 + ( $y - 660 ) / 2400 );
-				}
-				return $rings .
-					'<circle cx="512" cy="640" r="230" fill="' . $accent . '"/>' .
-					'<rect x="0" y="640" width="1024" height="384" fill="' . $bg . '"/>' .
-					$bands;
-			case 2: // A skyline at night.
-				$blocks = '';
-				for ( $x = 0; $x < 1024; ) {
-					$w       = 40 + (int) ( $rand() * 90 );
-					$h       = 120 + (int) ( $rand() * 420 );
-					$blocks .= sprintf( '<rect x="%d" y="%d" width="%d" height="%d" fill="%s" opacity="0.22"/>', $x, 1024 - $h, $w, $h, $ink );
-					for ( $wy = 1024 - $h + 24; $wy < 1000; $wy += 36 ) {
-						for ( $wx = $x + 12; $wx < $x + $w - 12; $wx += 24 ) {
-							if ( $rand() > 0.55 ) {
-								$blocks .= sprintf( '<rect x="%d" y="%d" width="10" height="14" fill="%s" opacity="0.85"/>', $wx, $wy, $accent );
-							}
-						}
-					}
-					$x += $w + 8 + (int) ( $rand() * 20 );
-				}
-				return '<circle cx="820" cy="200" r="110" fill="' . $accent . '"/>' . $blocks;
-			case 3: // Dunes under a sun.
-				return '<circle cx="300" cy="300" r="150" fill="' . $accent . '"/>' .
-					'<path d="M0 640 C 220 520 400 560 560 660 S 860 600 1024 560 V1024 H0Z" fill="' . $accent . '" opacity="0.45"/>' .
-					'<path d="M0 760 C 180 700 380 820 600 760 S 880 700 1024 740 V1024 H0Z" fill="' . $accent . '" opacity="0.65"/>' .
-					'<path d="M0 880 C 300 840 520 920 760 870 S 960 860 1024 880 V1024 H0Z" fill="' . $ink . '" opacity="0.14"/>';
-			case 4: // A record on the turntable.
-				$grooves = '';
-				for ( $r = 150; $r <= 400; $r += 14 ) {
-					$grooves .= sprintf( '<circle cx="640" cy="500" r="%d" fill="none" stroke="%s" stroke-width="1.5" opacity="0.18"/>', $r, $ink );
-				}
-				return '<circle cx="640" cy="500" r="420" fill="' . $ink . '" opacity="0.1"/>' . $grooves .
-					'<circle cx="640" cy="500" r="130" fill="' . $accent . '"/>' .
-					'<circle cx="640" cy="500" r="12" fill="' . $bg . '"/>' .
-					'<path d="M980 60 L 760 300" stroke="' . $ink . '" stroke-width="10" stroke-linecap="round" opacity="0.5"/>' .
-					'<circle cx="980" cy="60" r="30" fill="' . $ink . '" opacity="0.5"/>';
-			case 5: // Mountains in mist.
-				return '<circle cx="700" cy="260" r="120" fill="' . $accent . '" opacity="0.9"/>' .
-					'<path d="M0 760 L 180 520 L 330 700 L 470 440 L 640 720 L 760 560 L 1024 760 V1024 H0Z" fill="' . $ink . '" opacity="0.12"/>' .
-					'<path d="M0 860 L 150 680 L 300 820 L 520 600 L 700 840 L 860 700 L 1024 880 V1024 H0Z" fill="' . $accent . '" opacity="0.4"/>' .
-					'<rect x="0" y="700" width="1024" height="40" fill="' . $ink . '" opacity="0.08"/>' .
-					'<rect x="0" y="790" width="1024" height="26" fill="' . $ink . '" opacity="0.06"/>';
-			default: // The classic: a disc in the corner.
-				return '<circle cx="880" cy="150" r="300" fill="' . $accent . '"/>' .
-					'<circle cx="880" cy="150" r="46" fill="' . $bg . '"/>' .
-					'<circle cx="880" cy="150" r="14" fill="' . $ink . '"/>';
+	private static function record( float $cx, float $cy, float $r, array $tracks, string $disc, string $accent, string $bg, string $ink ): string {
+		// A groove is cut into the record, so it reads as the lighter line on a dark disc and the
+		// darker on a light one, whatever the ink of the words.
+		$ink   = self::luminance( $disc ) < 0.5 ? '#ffffff' : '#1e1e1e';
+		$label = $r / 3;
+		$hole  = max( 4, $r * 0.024 );
+		$out   = sprintf( '<circle cx="%s" cy="%s" r="%s" fill="%s"/>', $cx, $cy, $r, esc_attr( $disc ) );
+
+		$inner = $label + $r * 0.05;
+		$outer = $r * 0.95;
+		$total = 0.0;
+		foreach ( $tracks as $t ) {
+			$total += max( 30.0, (float) ( $t['duration'] ?? 0 ) );
 		}
+		$tracks = array_values( $tracks );
+		$n      = count( $tracks );
+		$at     = $inner;
+		for ( $i = 0; $i < $n; $i++ ) {
+			$t     = $tracks[ $i ];
+			$share = $total > 0 ? max( 30.0, (float) ( $t['duration'] ?? 0 ) ) / $total : 1 / $n;
+			$width = ( $outer - $inner ) * $share;
+			$mid   = $at + $width / 2;
+			$at   += $width;
+			if ( $width < 3 ) {
+				continue;
+			}
+			$levels = isset( $t['levels'] ) && is_string( $t['levels'] ) && strlen( $t['levels'] ) >= 8 ? $t['levels'] : '';
+			$weight = max( 1.5, min( 6, $width * 0.22 ) );
+			if ( $levels ) {
+				$out .= sprintf( '<path class="riff-groove" d="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.34" stroke-linejoin="round"/>', self::wave( $cx, $cy, $mid, min( ( $width - $weight ) / 2, $r * 0.012 ), $levels ), esc_attr( $ink ), $weight );
+			} else {
+				$out .= sprintf( '<circle class="riff-groove" cx="%s" cy="%s" r="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.22"/>', $cx, $cy, round( $mid, 1 ), esc_attr( $ink ), $weight );
+			}
+		}
+
+		$out .= sprintf( '<circle cx="%s" cy="%s" r="%s" fill="%s"/>', $cx, $cy, $label, esc_attr( $accent ) );
+		$out .= sprintf( '<circle cx="%s" cy="%s" r="%s" fill="%s"/>', $cx, $cy, $hole, esc_attr( $bg ) );
+		return $out;
+	}
+
+	/**
+	 * A ring whose radius follows the track's levels around the circle: the waveform wrapped.
+	 *
+	 * @param float  $cx     Centre x.
+	 * @param float  $cy     Centre y.
+	 * @param float  $r      Mean radius.
+	 * @param float  $amp    Largest departure from the mean.
+	 * @param string $levels Digits 0 to 9, one per sample.
+	 * @return string Path data.
+	 */
+	private static function wave( float $cx, float $cy, float $r, float $amp, string $levels ): string {
+		$n      = strlen( $levels );
+		$points = min( 180, max( 60, $n ) );
+		$d      = '';
+		for ( $i = 0; $i < $points; $i++ ) {
+			$digit = (int) $levels[ (int) floor( $i * $n / $points ) ];
+			$rr    = $r + ( $digit / 9 - 0.5 ) * 2 * $amp;
+			$a     = 2 * M_PI * $i / $points;
+			$d    .= ( 0 === $i ? 'M' : 'L' ) . round( $cx + $rr * cos( $a ), 1 ) . ' ' . round( $cy + $rr * sin( $a ), 1 ) . ' ';
+		}
+		return $d . 'Z';
+	}
+
+	/**
+	 * The words: the count as a numeral, the title in Garamond, the artist and the byline in Inter.
+	 *
+	 * @param string $title  Title.
+	 * @param string $artist Artist.
+	 * @param string $line   Byline.
+	 * @param int    $count  Track count.
+	 * @param string $ink    Ink colour.
+	 * @param string $meta   Byline colour.
+	 * @param string $where  `bottom` or `top`.
+	 * @return string SVG fragment.
+	 */
+	private static function text( string $title, string $artist, string $line, int $count, string $ink, string $meta, string $where ): string {
+		$garamond = "'Riff Garamond', 'EB Garamond', Garamond, Georgia, serif";
+		$inter    = "'Riff Inter', Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif";
+		$lines    = self::wrap( $title, 22 );
+		$size     = count( $lines ) > 1 ? 72 : (int) max( 56, min( 104, 2200 / max( 1, mb_strlen( $title ) ) ) );
+		$lead     = (int) ( $size * 1.02 );
+		$ink      = esc_attr( $ink );
+		$meta     = esc_attr( $meta );
+
+		$block = count( $lines ) * $lead + ( $artist ? 52 : 0 ) + 44;
+		$top   = 'top' === $where ? 96 + $size : 1024 - 72 - $block + $size;
+		$y     = $top;
+		$out   = '';
+		foreach ( $lines as $l ) {
+			$out .= sprintf( '<text x="72" y="%d" font-family="%s" font-size="%d" font-weight="400" fill="%s">%s</text>', $y, esc_attr( $garamond ), $size, $ink, esc_html( $l ) );
+			$y   += $lead;
+		}
+		if ( $artist ) {
+			$y   += 8;
+			$out .= sprintf( '<text x="72" y="%d" font-family="%s" font-size="30" font-weight="500" fill="%s">%s</text>', $y, esc_attr( $inter ), $ink, esc_html( self::clip( $artist, 44 ) ) );
+			$y   += 44;
+		} else {
+			$y += 8;
+		}
+		$out .= sprintf( '<text x="72" y="%d" font-family="%s" font-size="24" font-weight="500" fill="%s">%s</text>', $y, esc_attr( $inter ), $meta, esc_html( $line ) );
+
+		// The count, as the landing page sets its numbers: Garamond, large, in the corner the record leaves free.
+		$numeral = 'top' === $where
+			? sprintf( '<text x="952" y="168" text-anchor="end" font-family="%s" font-size="128" font-weight="400" fill="%s">%s</text>', esc_attr( $garamond ), $ink, (int) $count )
+			: sprintf( '<text x="72" y="168" font-family="%s" font-size="128" font-weight="400" fill="%s">%s</text>', esc_attr( $garamond ), $ink, (int) $count );
+		return $numeral . $out;
+	}
+
+	/**
+	 * The two fonts, subset to Latin, embedded so the cover is set the same wherever it is shown.
+	 * An SVG shown as an image cannot reach the page's fonts.
+	 *
+	 * @return string A style element, or nothing when the files are not there.
+	 */
+	private static function fonts(): string {
+		static $style = null;
+		if ( null !== $style ) {
+			return $style;
+		}
+		$style = '';
+		$faces = array(
+			'Riff Garamond' => array( 'garamond.woff2', 400 ),
+			'Riff Inter'    => array( 'inter.woff2', 500 ),
+		);
+		foreach ( $faces as $family => [ $file, $weight ] ) {
+			$path = RIFF_DIR . 'features/listen/fonts/' . $file;
+			if ( ! is_readable( $path ) ) {
+				continue;
+			}
+			$style .= sprintf(
+				"@font-face{font-family:'%s';font-weight:%d;src:url(data:font/woff2;base64,%s) format('woff2')}",
+				$family,
+				$weight,
+				base64_encode( (string) file_get_contents( $path ) ) // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode,WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- a font file of the plugin's own, embedded.
+			);
+		}
+		$style = $style ? '<style>' . $style . '</style>' : '';
+		return $style;
+	}
+
+	/**
+	 * Breaks a title into at most two lines of about so many characters, at a space.
+	 *
+	 * @param string $text Text.
+	 * @param int    $max  Characters per line.
+	 * @return string[]
+	 */
+	private static function wrap( string $text, int $max ): array {
+		if ( mb_strlen( $text ) <= $max ) {
+			return array( $text );
+		}
+		$words = explode( ' ', $text );
+		$first = '';
+		while ( $words && mb_strlen( $first . ' ' . $words[0] ) <= $max ) {
+			$first .= ( $first ? ' ' : '' ) . array_shift( $words );
+		}
+		if ( '' === $first ) {
+			$first = array_shift( $words );
+		}
+		$rest = implode( ' ', $words );
+		return $rest ? array( $first, self::clip( $rest, $max ) ) : array( self::clip( $first, $max ) );
 	}
 
 	/**
@@ -322,5 +571,40 @@ final class Art {
 	 */
 	private static function clip( string $text, int $max ): string {
 		return mb_strlen( $text ) > $max ? rtrim( mb_substr( $text, 0, $max - 1 ) ) . '…' : $text;
+	}
+
+	/**
+	 * The relative luminance of a hex colour, 0 dark to 1 light.
+	 *
+	 * @param string $hex Colour.
+	 * @return float
+	 */
+	private static function luminance( string $hex ): float {
+		$p = sscanf( ltrim( $hex, '#' ), '%2x%2x%2x' );
+		if ( ! $p || in_array( null, $p, true ) ) {
+			return 0;
+		}
+		return ( 0.2126 * $p[0] + 0.7152 * $p[1] + 0.0722 * $p[2] ) / 255;
+	}
+
+	/**
+	 * Mixes two hex colours.
+	 *
+	 * @param string $a      First colour.
+	 * @param string $b      Second colour.
+	 * @param float  $amount How much of the second, 0 to 1.
+	 * @return string Hex colour.
+	 */
+	private static function mix( string $a, string $b, float $amount ): string {
+		$pa = sscanf( ltrim( $a, '#' ), '%2x%2x%2x' );
+		$pb = sscanf( ltrim( $b, '#' ), '%2x%2x%2x' );
+		if ( ! $pa || ! $pb || in_array( null, $pa, true ) || in_array( null, $pb, true ) ) {
+			return $a;
+		}
+		$out = '#';
+		for ( $i = 0; $i < 3; $i++ ) {
+			$out .= str_pad( dechex( (int) round( $pa[ $i ] * ( 1 - $amount ) + $pb[ $i ] * $amount ) ), 2, '0', STR_PAD_LEFT );
+		}
+		return $out;
 	}
 }
