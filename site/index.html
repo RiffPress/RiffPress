@@ -70,13 +70,8 @@ section{padding:var(--section) 0;text-align:center}
 .demo{margin-top:40px;display:grid;justify-items:center;gap:28px}
 .phone{width:min(390px,100%);padding:10px;border-radius:46px;background:var(--charcoal-1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 30px 60px -24px rgba(30,30,30,.45)}
 .screen{position:relative;aspect-ratio:390/844;border-radius:36px;overflow:hidden;background:var(--charcoal-2)}
-.screen img,.screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
-.screen img{object-fit:contain;z-index:1}
-.screen [hidden]{display:none}
+.screen img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain}
 .demo-go{display:grid;justify-items:center;gap:12px;max-width:26rem}
-.demo-start[aria-disabled="true"]{opacity:.6;cursor:progress}
-.demo-status{margin:0;font-size:.9375rem;color:var(--ink);text-wrap:pretty}
-.demo-status:empty{display:none}
 /* for site owners: grouped, small */
 .specs{margin:var(--gap) 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:left;border-top:1px solid var(--line);padding-top:32px}
 .specs h3{margin:0 0 10px;font-size:1rem;font-weight:600;line-height:1.5}
@@ -151,14 +146,10 @@ html.js .r.in{opacity:1;transform:none}
 <section class="alt wire" id="try"><div class="wrap">
 	<div class="r"><p class="eyebrow">Live demo</p><h2>Hear it.</h2><p class="lede">A WordPress site with ten jazz tracks, running in your browser. Nothing to install.</p></div>
 	<div class="demo r">
-		<div class="phone"><div class="screen">
-			<img id="demo-still" src="phone-post.png" width="780" height="1688" alt="Preview of the live demo: a post with ten tracks and the player bar">
-			<iframe id="demo" title="Live demo of Riff running in WordPress Playground" allow="autoplay; clipboard-write" hidden></iframe>
-		</div></div>
+		<div class="phone"><div class="screen"><img src="phone-post.png" width="780" height="1688" alt="The demo post: ten tracks listed, the player bar along the bottom"></div></div>
 		<div class="demo-go">
-			<a class="btn demo-start" id="demo-start" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Start the live demo</a>
-			<p class="demo-status" id="demo-status" role="status" aria-live="polite"></p>
-			<p class="fine">Recordings by the Airmen of Note, United States Air Force Band. Public domain.</p>
+			<a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the live demo</a>
+			<p class="fine">Opens in WordPress Playground, in a new tab. Recordings by the Airmen of Note, United States Air Force Band. Public domain.</p>
 		</div>
 	</div>
 </div></section>
@@ -192,75 +183,6 @@ html.js .r.in{opacity:1;transform:none}
 	if ( 'IntersectionObserver' in window && ! matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) document.documentElement.classList.add( 'js' );
 	const io = new IntersectionObserver( ( es ) => es.forEach( ( e ) => { if ( e.isIntersecting ) { e.target.classList.add( 'in' ); io.unobserve( e.target ); } } ), { rootMargin: '0px 0px -5% 0px', threshold: 0.01 } );
 	document.querySelectorAll( '.r' ).forEach( ( el ) => io.observe( el ) );
-</script>
-<script type="module">
-	// Live demo. Nothing from WordPress Playground loads until someone starts it.
-	const PLAYGROUND = 'https://playground.wordpress.net/';
-	// Below this width the demo opens in a new tab: a whole site scrolling inside a small frame is hard to use on a phone.
-	const EMBED = matchMedia( '(min-width: 901px)' );
-
-	const still = document.getElementById( 'demo-still' );
-	const iframe = document.getElementById( 'demo' );
-	const link = document.getElementById( 'demo-start' );
-	const status = document.getElementById( 'demo-status' );
-	let client = null;
-	let starting = null;
-	let failed = false;
-
-	const blueprint = () => fetch( 'blueprint.json' ).then( ( r ) => {
-		if ( ! r.ok ) throw new Error( `blueprint.json: ${ r.status }` );
-		return r.json();
-	} );
-
-	const setBusy = ( busy ) => link.setAttribute( 'aria-disabled', busy ? 'true' : 'false' );
-
-	async function start() {
-		if ( starting ) return starting;
-		setBusy( true );
-		status.textContent = 'Starting…';
-		starting = ( async () => {
-			const [ { startPlaygroundWeb }, steps ] = await Promise.all( [
-				import( `${ PLAYGROUND }client/index.js` ),
-				blueprint(),
-			] );
-			iframe.hidden = false;
-			client = await startPlaygroundWeb( { iframe, remoteUrl: `${ PLAYGROUND }remote.html`, blueprint: steps } );
-			await client.isReady();
-			still.hidden = true;
-			link.textContent = 'Open in a new tab';
-			status.textContent = 'Running. Nothing you do here is saved.';
-			setBusy( false );
-			return client;
-		} )().catch( ( e ) => {
-			iframe.hidden = true;
-			still.hidden = false;
-			starting = null;
-			failed = true;
-			setBusy( false );
-			link.textContent = 'Open in a new tab';
-			status.textContent = 'The demo couldn’t start here.';
-			throw e;
-		} );
-		return starting;
-	}
-
-	link.addEventListener( 'click', ( e ) => {
-		if ( link.getAttribute( 'aria-disabled' ) === 'true' ) {
-			e.preventDefault();
-			return;
-		}
-		// Once running, or after a failure, the link opens a new tab like it does on a phone.
-		if ( ! EMBED.matches || client || failed ) return;
-		e.preventDefault();
-		start().catch( () => {} );
-	} );
-	const labelLink = () => {
-		if ( ! client && ! failed ) {
-			link.textContent = EMBED.matches ? 'Start the live demo' : 'Open the demo in a new tab';
-		}
-	};
-	EMBED.addEventListener( 'change', labelLink );
-	labelLink();
 </script>
 </body>
 </html>
