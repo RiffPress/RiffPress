@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.0.1](https://github.com/RiffPress/RiffPress/compare/v4.0.0...v4.0.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* the player is usable by keyboard and screen reader under Now Playing, in right-to-left languages, and with titles in any script ([#268](https://github.com/RiffPress/RiffPress/issues/268)) ([e9b33d0](https://github.com/RiffPress/RiffPress/commit/e9b33d0010e846adc900c6e37ba457ea2c151587))
+* the plugin header and readme title read RiffPlayer, which the directory accepts ([#266](https://github.com/RiffPress/RiffPress/issues/266)) ([0913068](https://github.com/RiffPress/RiffPress/commit/09130683b78ee30ca05ced23228ecdf9f640ad5a))
+
 ## [4.0.0](https://github.com/RiffPress/RiffPress/compare/v3.0.1...v4.0.0) (2026-10-13)
 
 
