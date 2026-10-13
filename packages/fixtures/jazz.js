@@ -129,6 +129,9 @@ TRACKS.forEach( ( [ id, title, composer, bucket ], index ) => {
 		'-y',
 		'-i',
 		source,
+		// No embedded picture: the folder's cover.png is the artwork, and WordPress would otherwise
+		// extract the picture on upload and make it the file's own image.
+		'-vn',
 		'-af',
 		'loudnorm=I=-18:TP=-1.5:LRA=11',
 		'-ar',
