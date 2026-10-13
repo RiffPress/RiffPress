@@ -58,7 +58,9 @@ final class App {
 	 */
 	public static function init(): void {
 		register_block_type( RIFF_DIR . 'features/listen/block' );
+		wp_set_script_translations( 'riff-app-editor-script', 'riff' );
 		add_shortcode( 'riff', array( self::class, 'shortcode' ) );
+		add_filter( 'riff_library_item', array( self::class, 'item_meta' ), 10, 2 );
 		if ( function_exists( 'register_block_template' ) ) {
 			register_block_template(
 				self::TEMPLATE,
@@ -176,14 +178,36 @@ final class App {
 	 */
 	private static function card( array $item, string $page ): string {
 		$art = $item['art'] ? end( $item['art'] )['src'] : '';
+		// The same markup app.js writes in card(): a link and a play button side by side, never one
+		// inside the other.
 		return sprintf(
-			'<a class="riff-card" href="%s" data-riff-post="%d"><span class="riff-card-art">%s</span><span class="riff-card-title">%s</span><span class="riff-card-sub">%s</span></a>',
-			esc_url( self::link( (int) $item['id'], $page ) ),
+			'<div class="riff-card" data-riff-post="%1$d"><span class="riff-card-art">%2$s<button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="%1$d" aria-label="%3$s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="%4$s"><span class="riff-card-title">%5$s</span></a><span class="riff-card-sub">%6$s</span></div>',
 			(int) $item['id'],
 			$art ? '<img src="' . esc_url( $art ) . '" alt="" loading="lazy" decoding="async">' : '',
+			/* translators: %s: track or post title. */
+			esc_attr( sprintf( __( 'Play %s', 'riff' ), $item['title'] ) ),
+			esc_url( self::link( (int) $item['id'], $page ) ),
 			esc_html( $item['title'] ),
-			esc_html( self::meta( $item ) )
+			esc_html( $item['meta'] ?? self::meta( $item ) )
 		);
+	}
+
+	/**
+	 * Writes the byline into a library item, so the app and the REST route carry it with the
+	 * language's own plural forms instead of composing it in JavaScript.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array    $item Library item.
+	 * @param \WP_Post $post Its post.
+	 * @return array
+	 */
+	public static function item_meta( $item, $post ) {
+		unset( $post );
+		if ( is_array( $item ) ) {
+			$item['meta'] = self::meta( $item );
+		}
+		return $item;
 	}
 
 	/**

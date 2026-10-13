@@ -137,6 +137,10 @@ final class Library {
 					'type'        => 'integer',
 					'description' => __( 'Number of tracks.', 'riff' ),
 				),
+				'meta'     => array(
+					'description' => __( 'A one-line byline for the post, written by a feature that knows how to say it in the language.', 'riff' ),
+					'type'        => 'string',
+				),
 				'duration' => array(
 					'type'        => 'number',
 					'description' => __( 'Total length in seconds, 0 when unknown.', 'riff' ),

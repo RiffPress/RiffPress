@@ -12,22 +12,24 @@ jobs:
     name: WordPress test suite (PHP ${{ matrix.php }}, ${{ matrix.core }}, ${{ matrix.multisite && 'multisite' || 'single site' }})
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    # The oldest PHP the plugin supports and the newest, on the current WordPress; a network on the
-    # one in between; and core trunk, which is where a plugin aiming at core finds out first. Trunk
-    # does not block a merge, since a nightly can break on its own, but it shows.
+    # The floor the plugin claims, PHP 8.1 on WordPress 6.5, so Requires at least is tested and not
+    # just written down; the newest PHP on the current WordPress; a network on the one in between;
+    # and core trunk, which is where a plugin aiming at core finds out first. Trunk does not block a
+    # merge, since a nightly can break on its own, but it shows.
     continue-on-error: ${{ matrix.core == 'trunk' }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { php: '8.1', core: 'latest', multisite: false }
+          - { php: '8.1', core: '6.5',    multisite: false }
           - { php: '8.3', core: 'latest', multisite: true }
           - { php: '8.4', core: 'latest', multisite: false }
           - { php: '8.4', core: 'trunk',  multisite: false }
     env:
       WP_ENV_PHP_VERSION: ${{ matrix.php }}
-      # The mirror's nightly branch is master; trunk is what WordPress calls it.
-      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || '' }}
+      # The mirror's nightly branch is master; trunk is what WordPress calls it. A release line is
+      # its branch, which carries that line's latest security release.
+      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || matrix.core == '6.5' && 'WordPress/WordPress#6.5-branch' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

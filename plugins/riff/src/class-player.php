@@ -111,6 +111,8 @@ final class Player {
 			'lossless'    => __( 'Lossless', 'riff' ),
 			'appEmpty'    => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
 			'otherTab'    => __( 'Playing in another tab', 'riff' ),
+			/* translators: 1: elapsed time, 2: total time. */
+			'times'       => __( '%1$s / %2$s', 'riff' ),
 			'nowPlaying'  => __( 'Now playing', 'riff' ),
 			'open'        => __( 'Open', 'riff' ),
 			'more'        => __( 'Load more', 'riff' ),

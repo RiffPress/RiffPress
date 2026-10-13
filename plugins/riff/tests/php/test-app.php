@@ -120,4 +120,43 @@ class Test_Riff_App extends Riff_TestCase {
 		unset( $_GET['riff'] );
 		$this->assertStringContainsString( 'class="riff-album"', $html, 'a slug opens the post the way an id does' );
 	}
+
+	/**
+	 * A published post whose content carries one audio block, which is what the library reads.
+	 */
+	private function post_with_track( string $title = 'Side A' ): int {
+		$post = self::factory()->post->create(
+			array(
+				'post_status' => 'publish',
+				'post_title'  => $title,
+			)
+		);
+		$id   = self::attach( '02 - Underground [underground].mp3', $post );
+		wp_update_post(
+			array(
+				'ID'           => $post,
+				'post_content' => sprintf( '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="%s"></audio></figure><!-- /wp:audio -->', $id, wp_get_attachment_url( $id ) ),
+			)
+		);
+		return $post;
+	}
+
+	public function test_the_library_item_carries_the_byline_for_the_app_and_the_route(): void {
+		$post = $this->post_with_track();
+		$item = \Riff\Library::item( get_post( $post ) );
+		$this->assertSame( App::meta( $item ), $item['meta'] );
+		$this->assertStringContainsString( '1 track', $item['meta'] );
+		$listed = rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/library' ) )->get_data()['items'][0];
+		$this->assertSame( $item['meta'], $listed['meta'] );
+		$this->assertArrayHasKey( 'meta', \Riff\Library::item_schema()['properties'] );
+	}
+
+	public function test_a_card_is_a_link_beside_a_play_button_never_one_inside_the_other(): void {
+		$post = $this->post_with_track();
+		$html = App::render( array(), '' );
+		$this->assertMatchesRegularExpression( '#<div class="riff-card" data-riff-post="' . $post . '">#', $html );
+		$this->assertStringContainsString( 'class="riff-card-play"', $html, 'the server-rendered card can play from its cover' );
+		$this->assertStringContainsString( 'aria-label="Play Side A"', $html );
+		$this->assertDoesNotMatchRegularExpression( '#<a[^>]*>(?:(?!</a>).)*<button#s', $html, 'no button inside a link' );
+	}
 }

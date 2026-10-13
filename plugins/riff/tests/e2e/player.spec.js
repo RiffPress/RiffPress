@@ -244,6 +244,7 @@ test.describe( 'Player', () => {
 	test( 'next, previous, repeat and shuffle', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '.riff-np' ) ).toBeVisible();
 		const control = ( action ) =>
 			page.locator( `[data-riff-action="${ action }"]:visible` ).first();
 		await control( 'next' ).click();
@@ -280,6 +281,48 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-bar-end .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
 		await page.locator( '.riff-bar-info' ).click();
 		await expect( page.locator( '.riff-np-quality .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
+	test( 'the single-key shortcuts can be turned off, as WCAG 2.1.4 asks', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( 0.5 );
+		await page.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
+		await page.evaluate( () =>
+			window.wp.hooks.addFilter( 'riff.shortcuts', 'test', () => false )
+		);
+		const before = ( await audioState( page ) ).time;
+		await page.keyboard.press( 'k' );
+		// Still playing: the time keeps moving past where it was when K was pressed.
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( before + 0.3 );
+		expect( ( await audioState( page ) ).paused ).toBe( false );
+		await page.evaluate( () =>
+			window.wp.hooks.removeFilter( 'riff.shortcuts', 'test' )
+		);
+		await page.keyboard.press( 'k' );
+		await expect
+			.poll( async () => ( await audioState( page ) ).paused )
+			.toBe( true );
+	} );
+
+	test( 'right to left, the played part grows from the right', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect( page.locator( '.riff-bar' ) ).toBeVisible();
+		const origin = await page.evaluate( () => {
+			document.documentElement.dir = 'rtl';
+			const fill = document.querySelector( '.riff-bar-seek .riff-line i' );
+			const x = parseFloat( getComputedStyle( fill ).transformOrigin );
+			// Layout width: the fill is scaled by the played fraction, which is 0 before playback.
+			const width = fill.offsetWidth;
+			document.documentElement.dir = 'ltr';
+			return { x, width };
+		} );
+		expect( Math.abs( origin.x - origin.width ) ).toBeLessThan( 1 );
 	} );
 
 	test( 'the keyboard plays, pauses and seeks', async ( { page } ) => {

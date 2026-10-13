@@ -199,19 +199,20 @@ export function start( api ) {
 
 	function card( item ) {
 		const art = item.art?.length ? item.art[ item.art.length - 1 ].src : '';
+		// The same markup the server writes in Listen\App::card().
 		return (
-			`<a class="riff-card" href="${ esc( addressOf( item.id ) ) }" data-riff-post="${ item.id }">` +
-			`<span class="riff-card-art"><button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="${ item.id }" aria-label="${ esc(
-				fmt( s.playTrack || 'Play %s', item.title )
-			) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>${
+			`<div class="riff-card" data-riff-post="${ item.id }">` +
+			`<span class="riff-card-art">${
 				art
 					? `<img src="${ esc(
 							art
 					  ) }" alt="" loading="lazy" decoding="async">`
 					: ''
-			}</span>` +
-			`<span class="riff-card-title">${ esc( item.title ) }</span>` +
-			`<span class="riff-card-sub">${ esc( meta( item ) ) }</span></a>`
+			}<button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="${ item.id }" aria-label="${ esc(
+				fmt( s.playTrack || 'Play %s', item.title )
+			) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span>` +
+			`<a class="riff-card-link" href="${ esc( addressOf( item.id ) ) }"><span class="riff-card-title">${ esc( item.title ) }</span></a>` +
+			`<span class="riff-card-sub">${ esc( meta( item ) ) }</span></div>`
 		);
 	}
 
@@ -235,8 +236,12 @@ export function start( api ) {
 		);
 	}
 
-	// "Artist · 10 tracks · 7 min", the way the server writes it.
+	// "Artist · 10 tracks · 7 min". The server writes it into the item, with the language's own
+	// plural forms; the rest is for a source that does not.
 	function meta( item ) {
+		if ( typeof item.meta === 'string' ) {
+			return item.meta;
+		}
 		const parts = [];
 		if ( item.artist ) {
 			parts.push( item.artist );

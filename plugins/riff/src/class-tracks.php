@@ -329,7 +329,8 @@ final class Tracks {
 		$file  = (string) get_attached_file( $attachment_id );
 		$stem  = $file ? pathinfo( $file, PATHINFO_FILENAME ) : '';
 		// Compared loosely: the factory, the editor and a hand upload each punctuate the name differently.
-		$named = static fn( string $s ): string => strtolower( (string) preg_replace( '/[^a-z0-9]+/i', '', (string) preg_replace( '/\.[a-z0-9]{2,4}$/i', '', $s ) ) );
+		// Letters and digits in any script: a Cyrillic or Japanese title must not collapse to nothing.
+		$named = static fn( string $s ): string => mb_strtolower( (string) preg_replace( '/[^\p{L}\p{N}]+/u', '', (string) preg_replace( '/\.[a-z0-9]{2,4}$/i', '', $s ) ) );
 		// A second upload of the same name gets "-1" on the file but not on the title.
 		$stems = array_map( $named, array( $stem, (string) preg_replace( '/-\d+$/', '', $stem ) ) );
 		if ( ! empty( $meta['title'] ) && ( '' === $title || in_array( $named( $title ), $stems, true ) ) ) {

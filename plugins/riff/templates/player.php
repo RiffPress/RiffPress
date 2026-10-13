@@ -29,7 +29,13 @@ defined( 'ABSPATH' ) || exit;
 			<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="prev" aria-label="<?php esc_attr_e( 'Previous', 'riff' ); ?>"><?php echo Player::icon( 'prev' ); ?></button>
 			<button type="button" class="riff-btn riff-play" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><?php echo Player::icon( 'play' ) . Player::icon( 'pause' ); ?></button>
 			<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="next" aria-label="<?php esc_attr_e( 'Next', 'riff' ); ?>"><?php echo Player::icon( 'next' ); ?></button>
-			<span class="riff-time riff-desk"><span data-riff-text="current">0:00</span> / <span data-riff-text="duration">0:00</span></span>
+			<?php // Times read left to right in every language; the separator is the translator's. ?>
+			<span class="riff-time riff-desk" dir="ltr">
+				<?php
+				/* translators: 1: elapsed time, 2: total time. */
+				printf( esc_html__( '%1$s / %2$s', 'riff' ), '<span data-riff-text="current">0:00</span>', '<span data-riff-text="duration">0:00</span>' );
+				?>
+			</span>
 		</div>
 		<button type="button" class="riff-bar-info" data-riff-action="open" aria-label="<?php esc_attr_e( 'Open Now Playing', 'riff' ); ?>" aria-haspopup="dialog">
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
@@ -92,7 +98,7 @@ defined( 'ABSPATH' ) || exit;
 				<div class="riff-np-seek">
 					<span class="riff-line" aria-hidden="true"><i></i></span>
 					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Seek', 'riff' ); ?>">
-					<span class="riff-np-times"><span data-riff-text="current">0:00</span><span data-riff-text="duration">0:00</span></span>
+					<span class="riff-np-times" dir="ltr"><span data-riff-text="current">0:00</span><span data-riff-text="duration">0:00</span></span>
 				</div>
 				<div class="riff-np-controls">
 					<button type="button" class="riff-btn" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
@@ -110,7 +116,7 @@ defined( 'ABSPATH' ) || exit;
 
 			<section class="riff-queue" id="riff-queue" aria-labelledby="riff-queue-tab">
 				<?php /* A phone sees a handle and the source; a wide screen sees a tab. Both open the same list. */ ?>
-				<button type="button" class="riff-peek" data-riff-action="queue" aria-expanded="false" aria-controls="riff-queue-list">
+				<button type="button" class="riff-peek" data-riff-action="queue" aria-expanded="false" aria-controls="riff-queue-list" aria-label="<?php esc_attr_e( 'Up next', 'riff' ); ?>">
 					<i class="riff-handle" aria-hidden="true"></i>
 					<span data-riff-text="source"></span>
 				</button>

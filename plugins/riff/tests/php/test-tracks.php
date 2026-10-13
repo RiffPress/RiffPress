@@ -154,4 +154,22 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertSame( 1, Tracks::SCHEMA_VERSION );
 		$this->assertSame( array_keys( $schema['properties'] ), array_keys( $track ) );
 	}
+
+	public function test_a_title_in_another_script_is_not_mistaken_for_the_file_name(): void {
+		// A Cyrillic file name and a Cyrillic title that differ: with Latin-only comparison both collapse
+		// to nothing, look equal, and the tag's title overwrites what the author typed.
+		$copy = get_temp_dir() . 'песня-' . wp_generate_password( 6, false ) . '.mp3';
+		copy( self::fixture( '02 - Underground [underground].mp3' ), $copy );
+		$id = self::factory()->attachment->create_upload_object( $copy );
+		wp_update_post(
+			array(
+				'ID'         => $id,
+				'post_title' => 'Другая',
+			)
+		);
+		$meta          = (array) wp_get_attachment_metadata( $id );
+		$meta['title'] = 'Песня';
+		wp_update_attachment_metadata( $id, $meta );
+		$this->assertSame( 'Другая', Tracks::from_attachment( $id )['title'] );
+	}
 }
