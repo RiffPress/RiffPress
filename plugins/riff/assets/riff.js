@@ -18,6 +18,18 @@ function start() {
 
 	// "MP3 · 128 kbps", "FLAC · Lossless", or nothing when the file was never read. Shown on every
 	// track, the way the streaming services show their tier, from what WordPress read on upload.
+	// A track with a video version carries a small film mark after its title, where the eye already
+	// is, instead of a pill competing with the time on the row's right edge.
+	const FILM =
+		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.5 16.5v-9l7 4.5-7 4.5z"/></svg>';
+	function videoMark( t ) {
+		if ( t.type !== 'video' && ! t.video ) {
+			return '';
+		}
+		const label = esc( s.video || 'Video' );
+		return `<span class="riff-row-video" role="img" aria-label="${ label }">${ FILM }</span>`;
+	}
+
 	function quality( t ) {
 		if ( ! t || ( ! t.bitrate && ! t.lossless ) ) {
 			return '';
@@ -166,15 +178,10 @@ function start() {
 			'<span class="riff-row-state" aria-hidden="true"><i></i><i></i><i></i></span></span>' +
 			`<span class="riff-row-text"><span class="riff-row-title">${ esc(
 				t.title
-			) }</span>` +
+			) }${ videoMark( t ) }</span>` +
 			`<span class="riff-row-sub">${ esc(
 				subtitle( t )
 			) }</span></span>` +
-						( t.type === 'video' || t.video
-				? `<span class="riff-row-badge">${ esc(
-						s.video || 'Video'
-					) }</span>`
-				: '' ) +
 			`<span class="riff-row-time">${
 				t.duration ? time( t.duration ) : ''
 			}</span>`;
@@ -371,14 +378,20 @@ function start() {
 	// ---- One tab at a time. When this tab starts playing it says so on a channel; any other tab of
 	// the site that is playing pauses and says why, the way streaming apps hand off between devices.
 	const tabId = Math.random().toString( 36 ).slice( 2 );
-	const channel = 'BroadcastChannel' in window ? new BroadcastChannel( 'riff' ) : null;
+	const channel =
+		'BroadcastChannel' in window ? new BroadcastChannel( 'riff' ) : null;
 	channel?.addEventListener( 'message', ( e ) => {
-		if ( e.data?.type === 'playing' && e.data.from !== tabId && ! el().paused ) {
+		if (
+			e.data?.type === 'playing' &&
+			e.data.from !== tabId &&
+			! el().paused
+		) {
 			el().pause();
 			toast( s.otherTab );
 		}
 	} );
-	const announce = () => channel?.postMessage( { type: 'playing', from: tabId } );
+	const announce = () =>
+		channel?.postMessage( { type: 'playing', from: tabId } );
 
 	// ---- Media events. Both elements report through the same handlers; only the one in use counts.
 	// While something plays the line follows the time every frame; timeupdate alone comes four
@@ -388,7 +401,10 @@ function start() {
 		cancelAnimationFrame( followRaf );
 		const step = () => {
 			progress();
-			followRaf = el().paused || document.hidden ? 0 : requestAnimationFrame( step );
+			followRaf =
+				el().paused || document.hidden
+					? 0
+					: requestAnimationFrame( step );
 		};
 		followRaf = requestAnimationFrame( step );
 	}
@@ -601,7 +617,9 @@ function start() {
 	];
 
 	function tick( now = 0 ) {
-		const dt = lastTick ? Math.min( 0.1, ( now - lastTick ) / 1000 ) : 0.016;
+		const dt = lastTick
+			? Math.min( 0.1, ( now - lastTick ) / 1000 )
+			: 0.016;
 		lastTick = now;
 		if ( cooling ) {
 			advance( 0, dt );
@@ -619,7 +637,8 @@ function start() {
 		const rms = level();
 		// The reference rises to a peak in about 150 ms and forgets it over six seconds: a surge
 		// flashes past full for a moment, as it would, and the wire ranges itself to the material.
-		ref += ( rms - ref ) * ( 1 - Math.exp( -dt / ( rms > ref ? 0.15 : 6 ) ) );
+		ref +=
+			( rms - ref ) * ( 1 - Math.exp( -dt / ( rms > ref ? 0.15 : 6 ) ) );
 		advance( rms / Math.max( 0.02, ref ), dt );
 		setHeat( heat );
 		const levels = bandLevels();
@@ -847,7 +866,10 @@ function start() {
 			if ( node.textContent === value ) {
 				continue;
 			}
-			if ( node.firstChild?.nodeType === Node.TEXT_NODE && node.childNodes.length === 1 ) {
+			if (
+				node.firstChild?.nodeType === Node.TEXT_NODE &&
+				node.childNodes.length === 1
+			) {
 				node.firstChild.data = value;
 			} else {
 				node.textContent = value;
@@ -883,7 +905,7 @@ function start() {
 						) }</span>`
 					: '' ) +
 				'</span></span>' +
-								`<span class="riff-row-time">${
+				`<span class="riff-row-time">${
 					t.duration ? time( t.duration ) : ''
 				}</span>` +
 				'</button>';
@@ -1468,7 +1490,10 @@ function start() {
 	let wakeLock = null;
 	async function syncWakeLock() {
 		const wanted =
-			mode === 'video' && ! video.paused && ! np.hidden && ! document.hidden;
+			mode === 'video' &&
+			! video.paused &&
+			! np.hidden &&
+			! document.hidden;
 		if ( wanted && ! wakeLock && navigator.wakeLock ) {
 			try {
 				wakeLock = await navigator.wakeLock.request( 'screen' );

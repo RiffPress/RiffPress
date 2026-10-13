@@ -198,19 +198,21 @@ html.has-riff body::after {
 	display: none;
 }
 
-@media (max-width: 599px) {
 
-	.riff-row-badge {
-		display: none;
-	}
+/* The video mark: a small film icon after the title, in the row's ink. */
+.riff-row-video {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin-inline-start: 0.4em;
+	vertical-align: -0.15em;
+	opacity: 0.55;
 }
 
-.riff-row-badge {
-	padding: 2px 8px;
-	border-radius: 999px;
-	font-size: 0.75em;
-	font-weight: 500;
-	background: color-mix(in srgb, currentcolor 10%, transparent);
+.riff-row-video svg {
+	display: block;
+	width: 100%;
+	height: 100%;
 }
 
 /* ---- The player. Theme styles stop at #riff. */
