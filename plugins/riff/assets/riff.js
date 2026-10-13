@@ -32,6 +32,11 @@ function start() {
 	const $$ = ( sel ) => [ ...root.querySelectorAll( sel ) ];
 	const audio = $( '.riff-audio' );
 	const video = $( '.riff-video' );
+	// Data saver (Network Information API): nothing is fetched ahead of a press.
+	if ( navigator.connection?.saveData ) {
+		audio.preload = 'none';
+		video.preload = 'none';
+	}
 	const np = $( '.riff-np' );
 	const queueList = $( '.riff-queue-list' );
 	const STATE = 'riff:state';
@@ -263,6 +268,10 @@ function start() {
 		const m = el();
 		if ( ! track() ) {
 			return;
+		}
+		// A short tick under the thumb on a touch screen (Vibration API), as the phone apps do.
+		if ( window.matchMedia( '(hover: none)' ).matches ) {
+			navigator.vibrate?.( 8 );
 		}
 		if ( m.paused ) {
 			m.play().catch( paint );
@@ -518,6 +527,13 @@ function start() {
 			audio.addEventListener( 'play', () =>
 				ctx.resume().catch( () => {} )
 			);
+			// Suspended while nothing plays: the graph stops pulling samples, and the filament's
+			// cool-down reads silence, which is right.
+			for ( const ev of [ 'pause', 'ended' ] ) {
+				audio.addEventListener( ev, () =>
+					ctx.suspend().catch( () => {} )
+				);
+			}
 			ctx.resume().catch( () => {} );
 		} catch {
 			analyser = null;
@@ -767,6 +783,7 @@ function start() {
 			( Number.isFinite( m.duration ) && m.duration ) || t?.duration || 0;
 		const ratio = duration ? Math.min( m.currentTime / duration, 1 ) : 0;
 		setProgress( ratio );
+		setBuffered( duration ? buffered( m, duration ) : 0 );
 		text( 'current', time( m.currentTime ) );
 		text( 'duration', time( duration ) );
 		if ( ! seeking ) {
@@ -789,6 +806,33 @@ function start() {
 	// The played fraction, on the two seek containers rather than the root, for the same reason as
 	// the heat.
 	const seekers = $$( '.riff-bar-seek, .riff-np-seek' );
+
+	// How far the file has loaded past the playhead, from the element's TimeRanges, as the lighter
+	// band under the played part of the line.
+	function buffered( m, duration ) {
+		const ranges = m.buffered;
+		for ( let i = 0; i < ranges.length; i++ ) {
+			if (
+				ranges.start( i ) <= m.currentTime + 0.5 &&
+				ranges.end( i ) >= m.currentTime
+			) {
+				return Math.min( ranges.end( i ) / duration, 1 );
+			}
+		}
+		return 0;
+	}
+	let lastBuffered = -1;
+	function setBuffered( ratio ) {
+		const value = ratio.toFixed( 3 );
+		if ( value === lastBuffered ) {
+			return;
+		}
+		lastBuffered = value;
+		for ( const node of seekers ) {
+			node.style.setProperty( '--riff-buffered', value );
+		}
+	}
+
 	function setProgress( ratio ) {
 		const value = ratio.toFixed( 4 );
 		for ( const node of seekers ) {
@@ -1409,6 +1453,43 @@ function start() {
 		} catch {}
 	}
 	window.addEventListener( 'pagehide', save );
+	// Back from the back-forward cache: the elements kept their state, the frame loop did not.
+	window.addEventListener( 'pageshow', ( e ) => {
+		if ( e.persisted ) {
+			progress();
+			if ( ! el().paused ) {
+				follow();
+			}
+		}
+	} );
+
+	// ---- Screen Wake Lock: the screen stays on while a video plays in Now Playing, and only then.
+	// The lock lets go by itself when the page is hidden, so it is asked for again on return.
+	let wakeLock = null;
+	async function syncWakeLock() {
+		const wanted =
+			mode === 'video' && ! video.paused && ! np.hidden && ! document.hidden;
+		if ( wanted && ! wakeLock && navigator.wakeLock ) {
+			try {
+				wakeLock = await navigator.wakeLock.request( 'screen' );
+				wakeLock.addEventListener( 'release', () => {
+					wakeLock = null;
+				} );
+			} catch {
+				wakeLock = null;
+			}
+		} else if ( ! wanted && wakeLock ) {
+			wakeLock.release().catch( () => {} );
+			wakeLock = null;
+		}
+	}
+	for ( const ev of [ 'play', 'pause', 'ended' ] ) {
+		video.addEventListener( ev, syncWakeLock );
+	}
+	for ( const ev of [ 'riff:open', 'riff:close', 'riff:track' ] ) {
+		root.addEventListener( ev, syncWakeLock );
+	}
+	document.addEventListener( 'visibilitychange', syncWakeLock );
 
 	mount();
 
