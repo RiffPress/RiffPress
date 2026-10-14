@@ -50,7 +50,7 @@ function head( title, description, url, depth ) {
 <title>${ esc( title ) }</title>
 <meta name="description" content="${ esc( description ) }">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Riff">
+<meta property="og:site_name" content="RiffPress">
 <meta property="og:url" content="{{pages_url}}${ url }">
 <meta property="og:title" content="${ esc( title ) }">
 <meta property="og:description" content="${ esc( description ) }">
@@ -66,7 +66,7 @@ function head( title, description, url, depth ) {
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="${ up }#listen">The block</a><a href="${ up }add-music/">Add your music</a><a href="${ up }web/"${ depth === 1 ? ' aria-current="page"' : "" }>Under the hood</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="${ up }#listen">The block</a><a href="${ up }add-music/">Add your music</a><a href="${ up }web/"${ depth === 1 ? ' aria-current="page"' : "" }>Under the hood</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
 `;
 }
 
@@ -104,10 +104,10 @@ function sidebar( entries, current, depth ) {
 function page( e, i, entries ) {
 	const prev = entries[ i - 1 ];
 	const next = entries[ i + 1 ];
-	let html = head( `${ e.name }, Riff`, e.summary, `web/${ e.slug }/`, 2 );
+	let html = head( `${ e.name }, RiffPress`, e.summary, `web/${ e.slug }/`, 2 );
 	html += `<div class="wrap layout">
 <main id="main">
-<p class="crumb"><a href="../../">Riff</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> ${ esc( e.group ) }</p>
+<p class="crumb"><a href="../../">RiffPress</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> ${ esc( e.group ) }</p>
 <h1>${ esc( e.name ) }</h1>
 <p class="lede">${ inline( e.summary ) }</p>
 <figure>${ picture( e.shot ) }<figcaption>${ inline( e.shot.caption ) }</figcaption></figure>
@@ -135,7 +135,7 @@ ${ sidebar( entries, e.slug, 2 ) }
 }
 
 function index( entries ) {
-	let html = head( 'Built on the open web, Riff', 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.', 'web/', 1 );
+	let html = head( 'Built on the open web, RiffPress', 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.', 'web/', 1 );
 	html += `<main id="main" class="wrap index">
 <h1>Built on the open web</h1>
 <p class="lede">Every browser API and CSS feature the player calls, and what each one is for. A music player touches a lot of them, which is part of the point.</p>
