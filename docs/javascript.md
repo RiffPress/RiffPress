@@ -87,7 +87,7 @@ Since 4.0.0.
 
 The track playing.
 
-Returns `Object\|null`: The track, or null.
+Returns `Object|null`: The track, or null.
 
 Since 4.0.0.
 

@@ -323,6 +323,15 @@ function problems( hooks ) {
 
 // ---- docs/hooks.md
 
+/**
+ * Text for a Markdown table cell: a backslash or a pipe is escaped, so neither can end the cell or
+ * escape the character after it.
+ *
+ * @param {string} text Text.
+ * @return {string} Escaped text.
+ */
+const cell = ( text ) => String( text ).replace( /[\\|]/g, '\\$&' );
+
 function render( hooks ) {
 	const section = ( title, list ) => {
 		if ( ! list.length ) {
@@ -345,7 +354,7 @@ function render( hooks ) {
 			if ( h.params.length ) {
 				out += '| Parameter | Type | Description |\n| --- | --- | --- |\n';
 				for ( const p of h.params ) {
-					out += `| \`${ p.name }\` | \`${ p.type.replace( /\|/g, '\\|' ) }\` | ${ p.description.replace( /\|/g, '\\|' ) } |\n`;
+					out += `| \`${ p.name }\` | \`${ cell( p.type ) }\` | ${ cell( p.description ) } |\n`;
 				}
 				out += '\n';
 			}
@@ -613,4 +622,4 @@ if ( require.main === module ) {
 	main();
 }
 
-module.exports = { hooksIn, parse, render, collect, pages, problems, site, callArgs, docblockAbove, codeBlock, h2, top };
+module.exports = { cell, hooksIn, parse, render, collect, pages, problems, site, callArgs, docblockAbove, codeBlock, h2, top };

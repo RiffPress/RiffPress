@@ -170,12 +170,12 @@ function render( list, jsHooks ) {
 		if ( m.params.length ) {
 			md += '| Parameter | Type | Description |\n| --- | --- | --- |\n';
 			for ( const p of m.params ) {
-				md += `| \`${ p.name }\` | \`${ p.type.replace( /\|/g, '\\|' ) }\` | ${ p.description.replace( /\|/g, '\\|' ) } |\n`;
+				md += `| \`${ p.name }\` | \`${ hooks.cell( p.type ) }\` | ${ hooks.cell( p.description ) } |\n`;
 			}
 			md += '\n';
 		}
 		if ( m.returns ) {
-			md += `Returns \`${ m.returns.type.replace( /\|/g, '\\|' ) }\`: ${ m.returns.description }\n\n`;
+			md += `Returns \`${ m.returns.type }\`: ${ m.returns.description }\n\n`;
 		}
 		md += `Since ${ m.since }.\n\n`;
 	}

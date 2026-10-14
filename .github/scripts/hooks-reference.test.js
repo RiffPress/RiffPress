@@ -230,3 +230,10 @@ test( 'a hook cannot borrow the docblock of the hook above it', () => {
 	const hooks = hooksIn( file );
 	assert.deepEqual( hooks.map( ( h ) => [ h.name, h.documented ] ), [ [ 'riff.ready', true ], [ 'riff.after', false ], [ 'riff.first', true ], [ 'riff.second', false ] ] );
 } );
+
+test( 'a Markdown table cell escapes backslashes as well as pipes', () => {
+	const { cell } = require( './hooks-reference.js' );
+	assert.equal( cell( 'Object|null' ), 'Object\\|null' );
+	assert.equal( cell( 'ends in \\' ), 'ends in \\\\', 'a trailing backslash must not escape the cell\'s closing pipe' );
+	assert.equal( cell( 'Riff\\Source' ), 'Riff\\\\Source' );
+} );
