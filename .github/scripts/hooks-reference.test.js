@@ -197,7 +197,7 @@ test( 'each hook gets a code-reference page with its signature, source at the pu
 	assert.match( accent, /blob\/\{\{commit\}\}\/plugins\/riff\/src\/class-player\.php#L\d+-L\d+">View on GitHub/ );
 	assert.match( accent, /<span class="n" aria-hidden="true">\d+<\/span>\$accent = \(string\) apply_filters/, 'the source quotes the line, numbered as in the file' );
 	assert.match( accent, />Player::root_style\(\)<\/a><code>plugins\/riff\/src\/class-player\.php<\/code><\/td><td>The inline style/, 'used by names the caller with its own summary' );
-	assert.match( accent, /<td>0\.2\.0<\/td><td>Introduced\.<\/td>/ );
+	assert.match( accent, /<td>4\.0\.0<\/td><td>Introduced\.<\/td>/ );
 	assert.match( accent, /<a href="#parameters">Parameters<\/a>/, 'in this article lists the sections' );
 	// riff.track is both an action and a filter, so each gets its own page.
 	assert.ok( pageFor( 'riff.track-action' ) && pageFor( 'riff.track-filter' ) );

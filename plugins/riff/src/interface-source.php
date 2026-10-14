@@ -3,7 +3,7 @@
  * What a source of tracks looks like.
  *
  * @package Riff
- * @since 0.2.0
+ * @since 4.0.0
  */
 
 namespace Riff;
@@ -17,14 +17,14 @@ defined( 'ABSPATH' ) || exit;
  * those tracks render as blocks the player takes over. The library asks every source; the first
  * that claims a post reads it.
  *
- * @since 0.2.0
+ * @since 4.0.0
  */
 interface Source {
 
 	/**
 	 * A short id, such as "blocks".
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return string
 	 */
@@ -33,7 +33,7 @@ interface Source {
 	/**
 	 * Whether this source can read the post.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param WP_Post $post Post.
 	 * @return bool
@@ -43,7 +43,7 @@ interface Source {
 	/**
 	 * The tracks in the post, in order, in the shape Tracks::schema() describes.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param WP_Post $post Post.
 	 * @return array[]
@@ -53,7 +53,7 @@ interface Source {
 	/**
 	 * The tracks rendered as figures carrying data-riff-track, which riff.js turns into rows.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param WP_Post $post Post.
 	 * @return string
@@ -64,7 +64,7 @@ interface Source {
 	 * A WHERE clause fragment (without a leading AND) matching posts this source can read, or an
 	 * empty string when the source cannot say from SQL alone.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return string
 	 */

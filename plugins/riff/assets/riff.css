@@ -239,35 +239,37 @@ html.has-riff body::after {
 #riff {
 
 	/**
-	 * The background of the bar and Now Playing.
+	 * The background of Now Playing.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-bg: #030303;
 
 	/**
-	 * Raised surfaces in the player: the Up next sheet, menus, chips.
+	 * The bar, the Up next sheet, tooltips, and the Song and Video switch.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-surface: #212121;
 
 	/**
-	 * The player's text and icons.
+	 * The player's text and icons, and the played part of the seek bar in Now
+	 * Playing.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-fg: #fff;
 
 	/**
-	 * Secondary text, such as the artist under a title.
+	 * Secondary text, such as the artist, the times and the format, and
+	 * toggles that are off.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-fg-2: rgb(255 255 255 / 0.7);
 
 	/**
-	 * Quiet text, such as times and counts.
+	 * The unselected side of the Song and Video switch.
 	 *
 	 * @since 4.0.0
 	 */
@@ -281,16 +283,18 @@ html.has-riff body::after {
 	--riff-line: rgb(255 255 255 / 0.1);
 
 	/**
-	 * The wash behind a control under the pointer.
+	 * The wash behind a control under the pointer, and behind chips, the
+	 * current Up next item, and artwork while it loads.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-hover: rgb(255 255 255 / 0.1);
 
 	/**
-	 * The played part of the seek bar and the active controls. A theme sets it
-	 * in theme.json under `settings.custom.riff.accent`, and the `riff_accent`
-	 * filter has the last word.
+	 * The played part of the seek bar in the bar, its knob, the format label,
+	 * and the glow behind the cover. A theme sets it in theme.json under
+	 * `settings.custom.riff.accent`, and the `riff_accent` filter has the last
+	 * word.
 	 *
 	 * @since 4.0.0
 	 */
@@ -1554,7 +1558,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	--riff-app-bg: #f6f6f6;
 
 	/**
-	 * Cards and rows in the Listen block.
+	 * The album's track list and the now-playing card in the Listen block.
 	 *
 	 * @since 4.0.0
 	 */
@@ -1575,28 +1579,29 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	--riff-app-ink-2: #656a71;
 
 	/**
-	 * Dividers and borders in the Listen block.
+	 * Borders in the Listen block, and the space artwork fills while it loads.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-app-line: #d9d9d9;
 
 	/**
-	 * Links and the selected item in the Listen block.
+	 * Links, play buttons, focus rings, and the title of the card under the
+	 * pointer in the Listen block.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-app-accent: #3858e9;
 
 	/**
-	 * The accent under the pointer.
+	 * The accent under the pointer or in focus.
 	 *
 	 * @since 4.0.0
 	 */
 	--riff-app-accent-deep: #213fd4;
 
 	/**
-	 * The background of a selected item.
+	 * The background of the row playing.
 	 *
 	 * @since 4.0.0
 	 */

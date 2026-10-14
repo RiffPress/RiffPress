@@ -8,7 +8,7 @@ How a script talks to the player. `window.riff` is set before the `riff.ready` a
 
 ### `window.riff.version`
 
-The version of this api. It changes only in a major release, when something here does.
+The version of this api: 1.
 
 Type: `number`.
 
@@ -131,14 +131,14 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.close`](hooks.md#riffclose), action: Fires when Now Playing closes.
 - [`riff.ended`](hooks.md#riffended), action: Fires when a track plays to its end, before the next one loads.
 - [`riff.open`](hooks.md#riffopen), action: Fires when Now Playing opens.
-- [`riff.pause`](hooks.md#riffpause), action: Fires when the media element pauses.
-- [`riff.play`](hooks.md#riffplay), action: Fires when the media element starts playing.
+- [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.
+- [`riff.play`](hooks.md#riffplay), action: Fires when the track starts or resumes playing.
 - [`riff.ready`](hooks.md#riffready), action: Fires once the player is set up, its state restored and `window.riff` available.
 - [`riff.track`](hooks.md#rifftrack), action: Fires when a track is loaded, before it plays.
 
 ## A track
 
-Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP: `id`, `src`, `type`, `title`, `artist`, `album`, `duration`, `art`, `video`, `post`. The REST API and WPGraphQL return the same shape.
+Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP; the PHP reference lists every property. The REST API returns the same shape.
 
 ## Controls
 

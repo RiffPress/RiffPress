@@ -2,7 +2,7 @@
 /**
  * Turns attachments and media blocks into the track data the player reads.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -29,7 +29,7 @@ final class Tracks {
 	/**
 	 * Builds a track from an audio or video attachment.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param int $attachment_id Attachment ID.
 	 * @param int $post_id       The post the track appears in, for artwork fallback and "Playing from".
 	 * @return array|null Null when the attachment is not audio or video.
@@ -90,7 +90,7 @@ final class Tracks {
 	 * Builds a track from a file that is not in the Media Library, such as an audio block that
 	 * points at another site. All Riff knows is the address, the caption, and the post.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param string $src     Media URL.
 	 * @param string $type    'audio' or 'video'.
 	 * @param string $caption The block's caption, used as the title when there is one.
@@ -142,7 +142,7 @@ final class Tracks {
 		/**
 		 * Filters a track before the player reads it.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 *
 		 * @param array $track         Track: id, src, type, title, artist, album, duration, art, video, post.
 		 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
@@ -155,14 +155,14 @@ final class Tracks {
 	 * The version of the track shape. It changes only with a major release, and every consumer
 	 * (REST, GraphQL, the block attribute, riff.js) reads the same shape.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 */
 	public const SCHEMA_VERSION = 1;
 
 	/**
 	 * The track shape as JSON Schema, shared by REST and GraphQL.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return array
 	 */
@@ -250,7 +250,7 @@ final class Tracks {
 	 * extra keys kept for whoever added them. A track that lost its source is returned without one
 	 * and the player skips it.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param array $track Track, as filtered.
 	 * @return array
@@ -283,7 +283,7 @@ final class Tracks {
 	/**
 	 * A post's own image. A cover drawn in its place is the Listen feature's, through riff_track.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param int $post_id Post ID, or 0.
 	 * @return array List of { src, sizes }.
 	 */
@@ -327,7 +327,7 @@ final class Tracks {
 	/**
 	 * Reads the track out of a parsed block.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array $block   Parsed block, from parse_blocks().
 	 * @param int   $post_id Post ID.
 	 * @return array|null
@@ -351,7 +351,7 @@ final class Tracks {
 	 * better. The block editor and the REST API name an upload after its file; only the classic
 	 * uploader reads the tags. A title somebody has edited is left alone.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param int   $attachment_id Attachment ID.
 	 * @param array $meta          Attachment metadata, which carries the tags for audio.
 	 * @return string

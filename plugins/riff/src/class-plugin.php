@@ -2,7 +2,7 @@
 /**
  * Wires Riff's parts into WordPress.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -18,7 +18,7 @@ final class Plugin {
 	/**
 	 * Registers every hook. Runs on plugins_loaded.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function boot(): void {
 		Sources::register( new Blocks_Source() );

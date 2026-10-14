@@ -367,7 +367,7 @@ function render( hooks ) {
 		'Every filter and action Riff fires, generated from the docblocks in the plugin by `npm run docs:hooks`. ' +
 		'Do not edit by hand. The stability promise is in the readme: a hook listed here keeps its name and parameters ' +
 		'within a major version, and goes through a deprecated release before it is removed.\n\n' +
-		'The same reference, a page per hook, is on the site under Developers, Hooks.\n\n' +
+		'The same reference, a page per hook, is on the site under Developers, PHP and JavaScript.\n\n' +
 		section( 'Filters', of( 'php', 'filter' ) ) +
 		section( 'Actions', of( 'php', 'action' ) ) +
 		( hooks.some( ( h ) => h.lang === 'js' )

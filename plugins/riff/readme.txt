@@ -56,7 +56,7 @@ Riff is built the way a feature plugin would be: one track shape everywhere, rea
 * **Hooks:** every filter and action, with its parameters and the line it fires on, has a page under https://riffpress.com/developers/php/ and https://riffpress.com/developers/javascript/.
 * **JavaScript:** `window.riff` is the player's api; `riff.*` actions and filters through `wp.hooks`, and `riff:*` events on `#riff`, announce every change of state. https://riffpress.com/developers/javascript/ has the reference.
 * **Sources:** tracks come from registered sources. The core source reads audio, video and playlist blocks in posts; a plugin adds its own post type or catalogue by implementing `Riff\Source` and calling `Riff\Sources::register()` on `init`, or through the `riff_sources` filter.
-* **Track schema:** one shape, `Riff\Tracks::schema()`, version `Riff\Tracks::SCHEMA_VERSION`, shared by REST, GraphQL, the block attribute and the script, and held to after the `riff_track` filter.
+* **Track schema:** one shape, `Riff\Tracks::schema()`, version `Riff\Tracks::SCHEMA_VERSION`, shared by REST, the block markup and the script, and held to after the `riff_track` filter. WPGraphQL's `RiffTrack` carries most of it.
 * **REST:** every audio and video item in `wp/v2/media` carries `riff_track`. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and rendered blocks. All describe themselves on OPTIONS.
 * **WPGraphQL:** when it is active, `MediaItem.riffTrack` and `Post.riffTracks`.
 * **Controls:** `riff_chips` adds chips under Now Playing's controls; `riff_bar_controls` adds controls to the end of the bar on a wide screen. The player announces a press as `riff.action`.
