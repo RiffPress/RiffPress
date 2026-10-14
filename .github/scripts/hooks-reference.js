@@ -197,7 +197,7 @@ function hooksIn( file ) {
  */
 function parse( block ) {
 	if ( ! block ) {
-		return { summary: '', description: '', since: '', changelog: [], params: [], documented: false };
+		return { summary: '', description: '', since: '', changelog: [], params: [], returns: null, typeTag: '', documented: false };
 	}
 	const text = block
 		.split( '\n' )
@@ -205,23 +205,33 @@ function parse( block ) {
 	const prose = [];
 	const params = [];
 	const changelog = [];
+	let returns = null;
+	let typeTag = '';
 	let tags = false;
 	for ( const raw of text ) {
 		const line = raw.trim();
 		const php = /^@param\s+(\S+)\s+(\.{3})?(\$\w+)\s*(.*)$/.exec( line );
-		const js = /^@param\s+\{([^}]+)\}\s+\[?([\w$.]+)(?:=[^\]]*)?\]?\s*(.*)$/.exec( line );
+		const js = /^@param\s+\{([^}]+)\}\s+(\[)?([\w$.]+)(?:=([^\]]*))?\]?\s*(.*)$/.exec( line );
 		const since = /^@since\s+(\S+)\s*(.*)$/.exec( line );
+		const ret = /^@returns?\s+(?:\{([^}]+)\}|(\S+))\s*(.*)$/.exec( line );
+		const typed = /^@type\s+\{([^}]+)\}/.exec( line );
 		if ( php || js ) {
 			tags = true;
 			const p = php
 				? { type: php[ 1 ], name: php[ 3 ], description: php[ 4 ] }
-				: { type: js[ 1 ], name: js[ 2 ], description: js[ 3 ] };
+				: { type: js[ 1 ], name: js[ 3 ], description: js[ 5 ], optional: !! js[ 2 ], default: js[ 4 ] };
 			// A dotted JSDoc name documents a property of the parameter before it.
 			p.property = ! php && p.name.includes( '.' );
 			params.push( p );
 		} else if ( since ) {
 			tags = true;
 			changelog.push( { version: since[ 1 ], description: since[ 2 ] || 'Introduced.' } );
+		} else if ( ret ) {
+			tags = true;
+			returns = { type: ret[ 1 ] || ret[ 2 ], description: ret[ 3 ] };
+		} else if ( typed ) {
+			tags = true;
+			typeTag = typed[ 1 ];
 		} else if ( line.startsWith( '@' ) ) {
 			tags = true;
 		} else if ( tags && line && params.length ) {
@@ -242,6 +252,8 @@ function parse( block ) {
 		since: changelog[ 0 ]?.version || '',
 		changelog,
 		params,
+		returns,
+		typeTag,
 		documented: true,
 	};
 }
@@ -599,4 +611,4 @@ if ( require.main === module ) {
 	main();
 }
 
-module.exports = { hooksIn, parse, render, collect, pages, problems, site, callArgs };
+module.exports = { hooksIn, parse, render, collect, pages, problems, site, callArgs, docblockAbove, codeBlock, h2, top };

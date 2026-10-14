@@ -1250,7 +1250,7 @@ figcaption {
 	overflow-wrap: anywhere;
 }
 
-.code-table td code {
+.code-table td:first-child code {
 	display: block;
 	width: fit-content;
 	margin-top: 2px;
@@ -1376,6 +1376,11 @@ figcaption {
 		position: static;
 	}
 
+	.member,
+	.is-toc-heading {
+		scroll-margin-top: 80px;
+	}
+
 	.code-table th,
 	.code-table td {
 		display: block;
@@ -1393,4 +1398,58 @@ figcaption {
 	.code-table thead {
 		display: none;
 	}
+}
+
+/* the JavaScript reference: one section per member of window.riff */
+.member {
+	scroll-margin-top: 140px;
+	padding-top: 30px;
+	border-top: 1px solid var(--grey-1);
+}
+
+.entry > .member + .member {
+	margin-top: 30px;
+}
+
+.reference .member-title {
+	font-size: 20px;
+	margin: 0 0 12px;
+}
+
+.member-title a {
+	color: var(--ink);
+	text-decoration: none;
+}
+
+.member-title a:hover {
+	text-decoration: underline;
+}
+
+.reference h4 {
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 20px 0 8px;
+}
+
+.parameters .required {
+	color: var(--charcoal-4);
+	font-size: 0.875rem;
+}
+
+.member .returns .type,
+.member .parameters p .type {
+	font-family: var(--mono);
+	font-size: 0.875rem;
+	color: var(--syntax-red);
+}
+
+.reference h2 code {
+	background: none;
+	padding: 0;
+	font-size: inherit;
+	font-weight: 600;
+}
+
+.member .dot-links {
+	margin-top: 20px;
 }

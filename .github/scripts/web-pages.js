@@ -125,6 +125,7 @@ function sitemap( entries ) {
 	for ( const e of entries ) {
 		xml += `  <url><loc>{{pages_url}}web/${ e.slug }/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>\n`;
 	}
+	xml += '  <url><loc>{{pages_url}}developers/javascript/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
 	xml += '  <url><loc>{{pages_url}}developers/hooks/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
 	for ( const p of hooksReference.pages( hooksReference.collect() ) ) {
 		xml += `  <url><loc>{{pages_url}}developers/hooks/${ p.slug }/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>\n`;

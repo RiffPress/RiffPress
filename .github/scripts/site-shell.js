@@ -60,7 +60,7 @@ const FOOT = `<div class="dots" aria-hidden="true"></div>
  * Every page under /developers/ and /web/ carries it.
  *
  * @param {string} up      Path back to the site root.
- * @param {string} current Which page this is: 'developers', 'hooks' or 'web'.
+ * @param {string} current Which page this is: 'developers', 'hooks', 'javascript' or 'web'.
  * @return {string} HTML.
  */
 function localNav( up, current ) {
@@ -70,7 +70,7 @@ function localNav( up, current ) {
 		}
 		return key === 'developers' ? ' aria-current="page"' : ' aria-current="true"';
 	};
-	return `<div class="local-nav"><div class="wrap"><a class="local-title" href="${ up }developers/"${ attr( 'developers' ) }>Developers</a><nav aria-label="Developers"><a href="${ up }developers/hooks/"${ attr( 'hooks' ) }>Hooks</a><a href="${ up }web/"${ attr( 'web' ) }>Built on the open web</a><a href="https://github.com/RiffPress/RiffPress/blob/main/docs/javascript.md">JavaScript</a></nav></div></div>
+	return `<div class="local-nav"><div class="wrap"><a class="local-title" href="${ up }developers/"${ attr( 'developers' ) }>Developers</a><nav aria-label="Developers"><a href="${ up }developers/hooks/"${ attr( 'hooks' ) }>Hooks</a><a href="${ up }web/"${ attr( 'web' ) }>Built on the open web</a><a href="${ up }developers/javascript/"${ attr( 'javascript' ) }>JavaScript</a></nav></div></div>
 `;
 }
 

@@ -83,9 +83,9 @@ function start() {
 	// riff.<name> action, and as a riff:<name> CustomEvent on #riff for pages without the WordPress
 	// scripts, both with the same detail. Two filters let a plugin reshape what plays: riff.queue
 	// (the tracks about to become the queue) and riff.track (each track as it is queued). The api
-	// object is window.riff, handed to riff.ready, and the only door the Listen feature uses.
-	// Each hook is documented where it fires; docs/hooks.md and the site are generated from those
-	// docblocks. Stable within a major version.
+	// object is window.riff, handed to riff.ready, and the only door the Listen feature uses. Each
+	// hook is documented where it fires and each api member where it is defined; the hooks and
+	// JavaScript references are generated from those docblocks. Stable within a major version.
 	const hooks = window.wp?.hooks;
 	function emit( name, detail = {} ) {
 		hooks?.doAction( `riff.${ name }`, detail, api );
@@ -96,28 +96,121 @@ function start() {
 	const filter = ( name, value, ...args ) =>
 		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
 	const api = {
+		/**
+		 * The version of this api. It changes only in a major release, when something here does.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @type {number}
+		 */
 		version: 1,
+		/**
+		 * The player's strings, after the `riff_strings` filter.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @type {Object<string, string>}
+		 */
 		strings: s,
+		/**
+		 * Makes `tracks` the queue and plays the one at `index`.
+		 *
+		 * The tracks go through the `riff.queue` and `riff.track` filters first.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {Object[]} tracks            Tracks, in the shape `Tracks::schema()` describes.
+		 * @param {number}   [index=0]         The one to play first.
+		 * @param {Object}   [options]         Options.
+		 * @param {boolean}  [options.shuffle] `true` or `false` sets shuffle before playing.
+		 */
 		play( tracks, index = 0, { shuffle: on = null } = {} ) {
 			if ( on !== null ) {
 				shuffle = on;
 			}
 			setQueue( tracks, index );
 		},
+		/**
+		 * Plays or pauses.
+		 *
+		 * @since 4.0.0
+		 */
 		toggle: () => toggle(),
+		/**
+		 * Skips to the next track.
+		 *
+		 * @since 4.0.0
+		 */
 		next: () => next(),
+		/**
+		 * Goes back a track, or to the start of this one.
+		 *
+		 * @since 4.0.0
+		 */
 		prev: () => prev(),
+		/**
+		 * Moves the current track to a time.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {number} seconds From the start of the track.
+		 */
 		seek( seconds ) {
 			if ( track() ) {
 				el().currentTime = Math.max( 0, Number( seconds ) || 0 );
 			}
 		},
+		/**
+		 * Opens Now Playing.
+		 *
+		 * @since 4.0.0
+		 */
 		open: () => open(),
+		/**
+		 * Closes Now Playing.
+		 *
+		 * @since 4.0.0
+		 */
 		close: () => close(),
+		/**
+		 * Reads every `figure[data-riff-track]` on the page again, after content was swapped in.
+		 *
+		 * @since 4.0.0
+		 */
 		mount: () => mount(),
+		/**
+		 * The track playing.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @return {Object|null} The track, or null.
+		 */
 		current: () => track() || null,
+		/**
+		 * The queue in play order.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @return {Object[]} Tracks.
+		 */
 		queue: () => order.map( ( i ) => queue[ i ] ),
+		/**
+		 * Whether something is playing.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @return {boolean} True while a track plays.
+		 */
 		playing: () => !! track() && ! el().paused,
+		/**
+		 * Listens to one of the player's actions, without `wp-hooks`.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {string}                                name The action without its prefix: `track`, `play`, `pause` and the rest.
+		 * @param {(detail: Object, api: Object) => void} fn   Called with the detail and the api.
+		 * @return {() => void} Stops listening.
+		 */
 		on( name, fn ) {
 			const handler = ( e ) => fn( e.detail, api );
 			root.addEventListener( `riff:${ name }`, handler );
