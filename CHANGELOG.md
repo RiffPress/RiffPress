@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.0](https://github.com/RiffPress/RiffPress/compare/v4.6.0...v4.7.0) (2026-10-14)
+
+
+### Features
+
+* **site:** a page for every browser API and CSS feature the player uses, linked to the deployed source ([#310](https://github.com/RiffPress/RiffPress/issues/310)) ([3a10d02](https://github.com/RiffPress/RiffPress/commit/3a10d02978cb1d5e8c564ac2f733a5c166293604))
+
 ## [4.6.0](https://github.com/RiffPress/RiffPress/compare/v4.5.1...v4.6.0) (2026-10-14)
 
 
