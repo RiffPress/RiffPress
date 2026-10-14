@@ -63,10 +63,10 @@
 <meta name="theme-color" content="#1e1e1e">
 <meta name="color-scheme" content="light">
 <style>
-/* WordPress.org's design system, extended to a music player: its palette, Inter for text, EB Garamond for headings, 2px corners, its spacing. The player in the pictures keeps its own dark look. */
+/* WordPress.org's design system, extended to a music player: its palette, Inter for text, EB Garamond for headings, 2px corners, its spacing. The bands between sections are warmed with the system's pomegranate. The player in the pictures keeps its own dark look. */
 @font-face{font-family:Inter;font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/inter.woff2) format("woff2")}
 @font-face{font-family:"EB Garamond";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/eb-garamond.woff2) format("woff2")}
-:root{--charcoal-1:#1e1e1e;--charcoal-2:#23282d;--charcoal-3:#40464d;--charcoal-4:#656a71;--charcoal-5:#979aa1;--grey-1:#d9d9d9;--grey-2:#f6f6f6;--white:#fff;--blueberry:#3858e9;--blueberry-deep:#213fd4;--blueberry-4:#eff2ff;--bg:var(--white);--surface:var(--grey-2);--line:var(--grey-1);--ink:var(--charcoal-1);--ink-2:var(--charcoal-4);--ink-3:var(--charcoal-5);--accent:var(--blueberry);--serif:"EB Garamond",Garamond,Georgia,serif;--sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--ease:cubic-bezier(.2,.7,.2,1);--t:.2s;--t-slow:.6s;--gap:clamp(40px,5vw,60px);--section:clamp(80px,calc(6.67vw + 40px),120px);--edge:clamp(20px,5vw,80px)}
+:root{--charcoal-1:#1e1e1e;--charcoal-2:#23282d;--charcoal-3:#40464d;--charcoal-4:#656a71;--charcoal-5:#979aa1;--grey-1:#d9d9d9;--grey-2:#f6f6f6;--white:#fff;--blueberry:#3858e9;--blueberry-deep:#213fd4;--blueberry-4:#eff2ff;--pomegranate:#e26f56;--pomegranate-2:#ffb7a7;--pomegranate-3:#ffe9de;--bg:var(--white);--surface:color-mix(in srgb,var(--pomegranate-3) 55%,var(--white));--line:var(--grey-1);--ink:var(--charcoal-1);--ink-2:var(--charcoal-4);--ink-3:var(--charcoal-5);--accent:var(--blueberry);--serif:"EB Garamond",Garamond,Georgia,serif;--sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--ease:cubic-bezier(.2,.7,.2,1);--t:.2s;--t-slow:.6s;--gap:clamp(40px,5vw,60px);--section:clamp(80px,calc(6.67vw + 40px),120px);--edge:clamp(20px,5vw,80px)}
 *{box-sizing:border-box}
 html{font-family:var(--sans);scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
@@ -107,6 +107,7 @@ section{padding:var(--section) 0;text-align:center}
 .btn.outline:focus-visible{background:var(--blueberry);color:var(--white);box-shadow:none;outline:1.5px solid var(--blueberry);outline-offset:-1.5px}
 .cta{margin-top:32px;display:flex;flex-wrap:wrap;gap:16px 20px;align-items:center;justify-content:center}
 .cta+.fine{margin-top:14px}
+.shelf+.fine{margin-top:16px}
 /* screenshots: flat, 2px corners, a hairline, as wordpress.org shows them */
 .device{display:inline-block;width:min(360px,78vw);border-radius:2px;border:1px solid var(--line);overflow:hidden}
 .device img{display:block;width:100%;height:auto}
@@ -133,6 +134,10 @@ picture{display:contents}
 .apis ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:.875rem;line-height:1.714}
 .apis a{color:var(--ink);text-decoration:none;transition:color var(--t)}
 .apis a:hover{color:var(--accent);text-decoration:underline}
+/* the shelf: the demo's nine covers, eight drawn by the player and one real, in a row */
+.shelf{list-style:none;margin:var(--gap) auto 0;padding:0;display:grid;grid-template-columns:repeat(9,1fr);gap:12px;max-width:62rem}
+.shelf li{aspect-ratio:1;border-radius:2px;overflow:hidden;background:var(--surface);box-shadow:0 1px 0 rgba(30,30,30,.06)}
+.shelf img{display:block;width:100%;height:100%;object-fit:cover}
 /* the global footer: dark, as wordpress.org's is */
 footer{background:var(--charcoal-1);color:var(--charcoal-5);padding:40px 0 56px;font-size:.875rem;line-height:1.714}
 footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
@@ -142,12 +147,13 @@ html.js .r{opacity:0;transform:translateY(14px);transition:opacity var(--t-slow)
 html.js .r.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.r{opacity:1;transform:none;transition:none}}
 @media (max-width:900px){.specs,.apis-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:900px){.shelf{grid-template-columns:repeat(3,1fr);gap:10px;max-width:24rem}}
 @media (max-width:640px){.nav nav a:not(.btn){display:none}.facts{grid-template-columns:1fr;gap:20px}.specs{grid-template-columns:1fr;gap:28px}}
 </style>
 </head>
 <body>
 <a class="skip" href="#top">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="#listen">The block</a><a href="add-music/">Add your music</a><a href="web/">Under the hood</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="#listen">The block</a><a href="add-music/">Add your music</a><a href="web/">Under the hood</a><a class="btn" href="download/">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
@@ -195,6 +201,8 @@ html.js .r.in{opacity:1;transform:none}
 		<div class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the live demo</a></div>
 		<p class="fine">Opens in a new tab. Recordings by the United States Air Force Band. Public domain.</p>
 	</div>
+	<ul class="shelf r" aria-hidden="true"><li><img src="covers/compositions.png" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/born-of-a-dream.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/carols-of-the-season.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/celtic-aire.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/hands-across-the-sea.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/shades-of-blue.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/silver-wings.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/stellar-brass.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/strolling-strings.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li></ul>
+	<p class="fine r">The nine albums. Eight of the covers are drawn by Riff, a record with one groove per track, for albums that bring no artwork of their own.</p>
 </div></section>
 
 <section class="wire" id="owners"><div class="wrap">

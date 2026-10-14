@@ -31,6 +31,9 @@
 .dl li::marker{color:var(--ink-2)}
 .dl code{white-space:nowrap}
 .dl kbd{font-family:var(--sans);font-size:.9375em;background:var(--grey-2);border:1px solid var(--line);border-radius:2px;padding:1px 6px}
+.shelf{list-style:none;margin:28px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:34rem}
+.shelf li{aspect-ratio:1;border-radius:2px;overflow:hidden;background:var(--surface)}
+.shelf img{display:block;width:100%;height:100%;object-fit:cover}
 .get{margin-top:32px;padding:32px;background:var(--grey-2);border-radius:2px}
 .get .btn{padding:14px 32px;font-size:1.125rem;line-height:1.3}
 .get .fine{margin:14px 0 0}
@@ -43,12 +46,13 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="../#listen">The block</a><a href="../add-music/">Add your music</a><a href="../web/">Under the hood</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="./" aria-current="page">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="../#listen">The block</a><a href="../add-music/">Add your music</a><a href="../web/">Under the hood</a><a class="btn" href="./" aria-current="page">Download</a></nav></div></div>
 
 <main id="main" class="wrap dl">
 <p class="crumb"><a href="../">Riff</a> <span>/</span> Get Riff</p>
 <h1>Get Riff</h1>
 <p class="lede">Everything you need to put a player on your site, in one zip.</p>
+<ul class="shelf" aria-hidden="true"><li><img src="../covers/shades-of-blue.svg" alt="" width="1024" height="1024" decoding="async"></li><li><img src="../covers/compositions.png" alt="" width="1024" height="1024" decoding="async"></li><li><img src="../covers/strolling-strings.svg" alt="" width="1024" height="1024" decoding="async"></li><li><img src="../covers/celtic-aire.svg" alt="" width="1024" height="1024" decoding="async"></li></ul>
 
 <div class="get">
 	<a class="btn" href="https://github.com/RiffPress/RiffPress/releases/latest/download/riff.zip">Download Riff {{version}}</a>

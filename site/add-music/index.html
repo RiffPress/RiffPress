@@ -33,6 +33,10 @@
 .guide kbd{font-family:var(--sans);font-size:.9375em;background:var(--grey-2);border:1px solid var(--line);border-radius:2px;padding:1px 6px}
 .guide figure{margin-top:28px}
 .guide .fine{margin-top:12px}
+.with-cover{display:grid;grid-template-columns:160px minmax(0,1fr);gap:24px;align-items:start;margin-top:16px}
+.with-cover img{display:block;width:100%;height:auto;border-radius:2px}
+.with-cover p{margin:0}
+@media (max-width:640px){.with-cover{grid-template-columns:1fr}.with-cover img{width:160px}}
 .aside{margin:24px 0 0;padding:16px 20px;background:var(--grey-2);border-radius:2px;font-size:.9375rem;line-height:1.7}
 .cta{margin-top:24px;display:flex;flex-wrap:wrap;gap:16px 20px;align-items:center}
 .cta .btn{padding:14px 32px;font-size:1rem;line-height:1.3}
@@ -42,7 +46,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="../#listen">The block</a><a href="./" aria-current="page">Add your music</a><a href="../web/">Under the hood</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="../download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="../#listen">The block</a><a href="./" aria-current="page">Add your music</a><a href="../web/">Under the hood</a><a class="btn" href="../download/">Download</a></nav></div></div>
 
 <main id="main" class="wrap guide">
 <p class="crumb"><a href="../">Riff</a> <span>/</span> Add your music</p>
@@ -73,7 +77,7 @@
 <p>When a file is uploaded, WordPress reads the tags inside it: the title, the artist, the album, and the cover art if there is one. Riff shows them in the player, on the lock screen and in the library. If a file has no tags, or the wrong ones, go to <kbd>Media</kbd>, then <kbd>Library</kbd>, click the file and edit them there.</p>
 <p>The same screen has two fields Riff adds. <strong>Artwork</strong> is a cover for that one track, if it differs from the album's. <strong>Video version</strong> is the address of a video in the library, for a song that has one; listeners can switch between the song and the video while it plays.</p>
 <figure><picture><source type="image/avif" srcset="../guide-artwork.avif 2880w, ../guide-artwork-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-artwork.png" width="2880" height="1800" alt="The attachment details for an audio file: Title, Artist and Album fields filled in from the file, then Riff's Artwork and Video version fields" loading="lazy" decoding="async"></picture><figcaption>A file's details. WordPress filled in the title, artist and album from the file. Artwork and Video version are Riff's.</figcaption></figure>
-<p>The album's cover is the post's <em>featured image</em>. In the editor, press <kbd>Set featured image</kbd> in the sidebar and upload it. If you skip this, Riff draws a cover: a record with one groove per track.</p>
+<div class="with-cover"><img src="../covers/shades-of-blue.svg" alt="A drawn cover: a charcoal record with a pomegranate label, the title Shades of Blue in serif type, and the band's name beneath" width="1024" height="1024" loading="lazy" decoding="async"><p>The album's cover is the post's <em>featured image</em>. In the editor, press <kbd>Set featured image</kbd> in the sidebar and upload it. If you skip this, Riff draws one: a record with one groove per track, each groove as long as the track, in wordpress.org's colours. The demo's albums wear them.</p></div>
 
 <h2>Publish</h2>
 <p>Press <kbd>Publish</kbd>, then <kbd>View Post</kbd>. Tap a track. The player bar appears along the bottom and keeps playing while you scroll, open another post, or lock your phone. Tap the bar for Now Playing.</p>

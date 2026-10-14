@@ -13,4 +13,6 @@ extend-exclude = [
   "package-lock.json",
   "composer.lock",
   "packages/fixtures/",
+  # Drawn covers: artwork whose long lines end in an ellipsis, not prose.
+  "site/covers/",
 ]
