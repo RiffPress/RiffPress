@@ -1,7 +1,7 @@
 /* The pages under /web/: the same wordpress.org tokens as the landing page, with a sidebar. */
 @font-face{font-family:Inter;font-style:normal;font-weight:400 700;font-display:swap;src:url(../fonts/inter.woff2) format("woff2")}
 @font-face{font-family:"EB Garamond";font-style:normal;font-weight:400 700;font-display:swap;src:url(../fonts/eb-garamond.woff2) format("woff2")}
-:root{--charcoal-1:#1e1e1e;--charcoal-3:#40464d;--charcoal-4:#656a71;--charcoal-5:#979aa1;--grey-1:#d9d9d9;--grey-2:#f6f6f6;--white:#fff;--blueberry:#3858e9;--blueberry-deep:#213fd4;--ink:var(--charcoal-1);--ink-2:var(--charcoal-4);--line:var(--grey-1);--accent:var(--blueberry);--serif:"EB Garamond",Garamond,Georgia,serif;--sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--t:.2s;--gap:clamp(40px,5vw,60px);--section:clamp(60px,calc(5vw + 30px),100px);--edge:clamp(20px,5vw,80px)}
+:root{--charcoal-1:#1e1e1e;--charcoal-3:#40464d;--charcoal-4:#656a71;--charcoal-5:#979aa1;--grey-1:#d9d9d9;--grey-2:#f6f6f6;--white:#fff;--blueberry:#3858e9;--blueberry-deep:#213fd4;--pomegranate:#e26f56;--pomegranate-3:#ffe9de;--surface:color-mix(in srgb,var(--pomegranate-3) 55%,var(--white));--ink:var(--charcoal-1);--ink-2:var(--charcoal-4);--line:var(--grey-1);--accent:var(--blueberry);--serif:"EB Garamond",Garamond,Georgia,serif;--sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--t:.2s;--gap:clamp(40px,5vw,60px);--section:clamp(60px,calc(5vw + 30px),100px);--edge:clamp(20px,5vw,80px)}
 *{box-sizing:border-box}
 html{font-family:var(--sans)}
 body{margin:0;background:var(--white);color:var(--ink);font-size:16px;line-height:1.875;-webkit-font-smoothing:antialiased;text-wrap:pretty}
@@ -45,8 +45,8 @@ main p{max-width:40rem}
 .side ul{list-style:none;margin:0;padding:0}
 .side a{display:block;color:var(--ink);text-decoration:none;padding:3px 10px;margin-left:-10px;border-radius:2px}
 .side a:hover{text-decoration:underline}
-.side a[aria-current]{background:var(--grey-2);color:var(--accent);font-weight:600}
-figure{margin:32px 0 0;padding:32px;background:var(--grey-2);border-radius:2px;display:grid;justify-items:center;gap:16px}
+.side a[aria-current]{background:var(--surface);color:var(--accent);font-weight:600}
+figure{margin:32px 0 0;padding:32px;background:var(--surface);border-radius:2px;display:grid;justify-items:center;gap:16px}
 figcaption{font-size:.875rem;line-height:1.714;color:var(--ink-2);text-align:center;max-width:36rem;text-wrap:balance}
 .device{display:block;width:min(300px,100%);border-radius:2px;border:1px solid var(--line);overflow:hidden}
 .device img{display:block;width:100%;height:auto}
