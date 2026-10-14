@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.10.0](https://github.com/RiffPress/RiffPress/compare/v4.9.0...v4.10.0) (2026-10-14)
+
+
+### Features
+
+* a lossless track shows its bit depth and sample rate, as WordPress read them from the file ([#321](https://github.com/RiffPress/RiffPress/issues/321)) ([5239781](https://github.com/RiffPress/RiffPress/commit/52397813963b5f000b3ce75fbcdadcde6c6e1649))
+* **site:** the copy says what Riff is for, owning your music again, and that it is built to be extended ([#326](https://github.com/RiffPress/RiffPress/issues/326)) ([5be666a](https://github.com/RiffPress/RiffPress/commit/5be666ac244aa839ca541ca81e4dcdd65ca8235d))
+* **site:** the demo's nine covers on the site, and the bands warmed with wordpress.org's pomegranate ([#319](https://github.com/RiffPress/RiffPress/issues/319)) ([55df86c](https://github.com/RiffPress/RiffPress/commit/55df86cec957e8a2962a10abde91807e187e4bbb))
+* **site:** the guide adds an album with the Playlist block, with screenshots of the demo as it is now ([#329](https://github.com/RiffPress/RiffPress/issues/329)) ([5fdad47](https://github.com/RiffPress/RiffPress/commit/5fdad478e6930acc4c5e3e6eea43b7f95091dad8))
+* **site:** wordpress.org's dots between sections, records cropped into the margins, and the cover PNG the ignore rule had kept out ([#323](https://github.com/RiffPress/RiffPress/issues/323)) ([fe86dc0](https://github.com/RiffPress/RiffPress/commit/fe86dc0c0cf74034992d82ec50139330e88a3e19))
+* the demo seeds each album as one Playlist block where WordPress has it ([#327](https://github.com/RiffPress/RiffPress/issues/327)) ([7155c66](https://github.com/RiffPress/RiffPress/commit/7155c6650ac41f0b30f7804c2d1ce915b8277376))
+* the Riff block previews the library in the editor as it renders on the page ([#324](https://github.com/RiffPress/RiffPress/issues/324)) ([60425b0](https://github.com/RiffPress/RiffPress/commit/60425b05d2b3a465f3ac4f2148456491a0f7701e))
+
+
+### Bug Fixes
+
+* the bars on the current Up next item follow the music ([#328](https://github.com/RiffPress/RiffPress/issues/328)) ([b161a3f](https://github.com/RiffPress/RiffPress/commit/b161a3fc51ff33766b172952cdc4317a1b9fcaee))
+
 ## [4.9.0](https://github.com/RiffPress/RiffPress/compare/v4.8.0...v4.9.0) (2026-10-14)
 
 
