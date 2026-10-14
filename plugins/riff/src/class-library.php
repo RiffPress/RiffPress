@@ -2,7 +2,7 @@
 /**
  * The library: every post with something to play, and a REST route the app reads it from.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -28,21 +28,21 @@ final class Library {
 	/**
 	 * REST namespace.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public const REST = 'riff/v1';
 
 	/**
 	 * Posts per page in the list.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public const PER_PAGE = 24;
 
 	/**
 	 * Hooks the REST routes.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
@@ -51,7 +51,7 @@ final class Library {
 	/**
 	 * Registers /library and /library/{id}.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function routes(): void {
 		register_rest_route(
@@ -98,7 +98,7 @@ final class Library {
 	/**
 	 * The shape of a library item.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @return array JSON Schema.
 	 */
 	public static function item_schema(): array {
@@ -152,7 +152,7 @@ final class Library {
 	/**
 	 * The schema of GET /library.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @return array JSON Schema.
 	 */
 	public static function list_schema(): array {
@@ -175,7 +175,7 @@ final class Library {
 	/**
 	 * The schema of GET /library/{id}.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @return array JSON Schema.
 	 */
 	public static function post_schema(): array {
@@ -197,7 +197,7 @@ final class Library {
 	/**
 	 * GET /library: a page of posts with tracks.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
@@ -221,7 +221,7 @@ final class Library {
 	/**
 	 * GET /library/{id}: one post, with its tracks and the rendered media blocks.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response|WP_Error
 	 */
@@ -240,7 +240,7 @@ final class Library {
 	/**
 	 * The posts with tracks, newest first.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array $args WP_Query arguments to merge in.
 	 * @return WP_Query
 	 */
@@ -259,7 +259,7 @@ final class Library {
 		/**
 		 * Filters the query behind the library: which posts the app lists.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 * @param array $args WP_Query arguments.
 		 */
 		$args = (array) apply_filters( 'riff_library_query', $args );
@@ -277,7 +277,7 @@ final class Library {
 	/**
 	 * A post as the list shows it: title, artwork, how many tracks and how long.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP_Post $post Post.
 	 * @return array
 	 */
@@ -300,7 +300,7 @@ final class Library {
 		/**
 		 * Filters a post as the library lists it.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 * @param array   $item Item: id, title, url, artist, art, count, duration.
 		 * @param WP_Post $post Post.
 		 */
@@ -310,7 +310,7 @@ final class Library {
 	/**
 	 * A post opened in the app: the item, its tracks, and the media blocks rendered.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP_Post $post Post.
 	 * @return array
 	 */
@@ -324,7 +324,7 @@ final class Library {
 	/**
 	 * The tracks in a post, in order, from the first source that claims it.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP_Post $post Post.
 	 * @return array[]
 	 */
@@ -336,7 +336,7 @@ final class Library {
 	/**
 	 * The tracks rendered as blocks the player takes over, from the source that read them.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP_Post $post Post.
 	 * @return string
 	 */

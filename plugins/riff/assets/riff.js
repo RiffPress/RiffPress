@@ -97,7 +97,7 @@ function start() {
 		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
 	const api = {
 		/**
-		 * The version of this api. It changes only in a major release, when something here does.
+		 * The version of this api: 1.
 		 *
 		 * @since 4.0.0
 		 *
@@ -550,7 +550,7 @@ function start() {
 				announce();
 				paint();
 				/**
-				 * Fires when the media element starts playing.
+				 * Fires when the track starts or resumes playing.
 				 *
 				 * @since 4.0.0
 				 *
@@ -568,7 +568,7 @@ function start() {
 			if ( live() ) {
 				paint();
 				/**
-				 * Fires when the media element pauses.
+				 * Fires when the track pauses.
 				 *
 				 * @since 4.0.0
 				 *

@@ -2,7 +2,7 @@
 /**
  * Marks core audio, video and playlist blocks as tracks the player can take over.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -25,7 +25,7 @@ final class Blocks {
 	/**
 	 * Hooks the block renderers.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_filter( 'render_block_core/audio', array( self::class, 'render' ), 10, 3 );
@@ -36,7 +36,7 @@ final class Blocks {
 	/**
 	 * Adds the track to one rendered audio or video block.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param string        $content  Rendered block.
 	 * @param array         $block    Parsed block.
 	 * @param WP_Block|null $instance Block instance, which carries the post ID in its context.
@@ -70,7 +70,7 @@ final class Blocks {
 	 * file on every page load to draw its waveform, and the page's one player takes the tracks
 	 * instead. The list, its buttons and the figure's markup stay as core wrote them.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 * @param string        $content  Rendered block.
 	 * @param array         $block    Parsed block, with its track blocks as inner blocks.
 	 * @param WP_Block|null $instance Block instance, which carries the post ID in its context.

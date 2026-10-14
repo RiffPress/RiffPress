@@ -3,7 +3,7 @@
  * The first source: the core audio, video and playlist blocks in a post.
  *
  * @package Riff
- * @since 0.2.0
+ * @since 4.0.0
  */
 
 namespace Riff;
@@ -18,14 +18,14 @@ defined( 'ABSPATH' ) || exit;
  * A playlist block (WordPress 7.1) holds one playlist-track block per track, each naming an
  * attachment; those are tracks the same way an audio block is, in the order they appear.
  *
- * @since 0.2.0
+ * @since 4.0.0
  */
 final class Blocks_Source implements Source {
 
 	/**
 	 * The id: "blocks".
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return string
 	 */
@@ -36,7 +36,7 @@ final class Blocks_Source implements Source {
 	/**
 	 * Whether the post holds a core audio, video or playlist block.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param WP_Post $post Post.
 	 * @return bool
@@ -48,7 +48,7 @@ final class Blocks_Source implements Source {
 	/**
 	 * The tracks in the post's audio, video and playlist blocks, in order.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param WP_Post $post Post.
 	 * @return array[]
@@ -67,7 +67,7 @@ final class Blocks_Source implements Source {
 	/**
 	 * The post's media blocks rendered as they are on the post, figures marked with their tracks.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param WP_Post $post Post.
 	 * @return string
@@ -89,7 +89,7 @@ final class Blocks_Source implements Source {
 	/**
 	 * Posts whose content holds an audio, video or playlist block.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return string
 	 */
@@ -144,7 +144,7 @@ final class Blocks_Source implements Source {
 	/**
 	 * A playlist block's track blocks, in order. Core renders only the ones that name a file.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param array $playlist Parsed playlist block.
 	 * @return array[]
