@@ -50,7 +50,10 @@
   <url><loc>{{pages_url}}web/touch-action/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/overscroll-behavior/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/focus-visible/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>{{pages_url}}developers/php/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/javascript/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/rest/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/css/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/hooks/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_accent/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_art_layouts/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>

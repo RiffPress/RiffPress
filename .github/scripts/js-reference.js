@@ -15,7 +15,7 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { esc, inline, head, FOOT, localNav, crumbs } = require( './site-shell.js' );
+const { esc, inline, referencePage } = require( './site-shell.js' );
 const hooks = require( './hooks-reference.js' );
 
 const ROOT = path.resolve( __dirname, '..', '..' );
@@ -201,7 +201,6 @@ function page( list, jsHooks ) {
 		[ 'actions-and-filters', 'Actions and filters' ],
 		...GUIDE.map( ( g ) => [ g.id, g.title ] ),
 	];
-	const list2 = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ esc( label ) }</a>${ sub ? list2( sub ) : '' }</li>` ).join( '' ) + '</ul>';
 	const table = ( rows ) => `<table class="code-table"><thead><tr><th scope="col">Name</th><th scope="col">Description</th></tr></thead><tbody>${ rows.join( '' ) }</tbody></table>`;
 
 	let body = `<section class="summary"><p>${ inline( INTRO ) }</p></section>\n`;
@@ -249,25 +248,16 @@ function page( list, jsHooks ) {
 		body += `<section>${ hooks.h2( g.id, esc( g.title ) ) }${ g.text.map( ( t ) => `<p>${ inline( t ) }</p>` ).join( '' ) }${ ( g.code || [] ).map( ( [ , code ] ) => hooks.codeBlock( code ) ).join( '' ) }</section>\n`;
 	}
 
-	let html = head( 'JavaScript, RiffPress', 'window.riff and the player\'s actions and filters: how a script talks to the Riff player.', 'developers/javascript/', 2, '../../web/web.css', 'developers' );
-	html += localNav( '../../', 'javascript' );
-	html += crumbs( [ [ 'RiffPress', '../../' ], [ 'Developers', '../' ], [ 'JavaScript' ] ] );
-	html += `<main id="main" class="wrap reference">
-<h1>JavaScript</h1>
-<div class="with-toc">
-<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary>${ list2( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p></aside>
-<article class="entry">
-${ body }</article>
-</div>
-</main>
-<script>
-// Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
-	document.querySelector( '.toc-box' ).open = false;
-}
-</script>
-`;
-	return html + FOOT;
+	return referencePage( {
+		title: 'JavaScript, RiffPress',
+		description: 'window.riff and the player\'s actions and filters: how a script talks to the Riff player.',
+		url: 'developers/javascript/',
+		current: 'javascript',
+		trail: [ [ 'JavaScript' ] ],
+		h1: '<h1>JavaScript</h1>',
+		toc,
+		body,
+	} );
 }
 
 function jsHookPages() {

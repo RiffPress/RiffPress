@@ -15,6 +15,13 @@
 }
 
 :root {
+
+	/**
+	 * The height of the player bar. The page keeps this much room at its end
+	 * so the bar never covers the last line.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-bar-h: 64px;
 	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
 	--riff-safe-b: env(safe-area-inset-bottom, 0px);
@@ -230,13 +237,63 @@ html.has-riff body::after {
 /* ---- The player. Theme styles stop at #riff. */
 
 #riff {
+
+	/**
+	 * The background of the bar and Now Playing.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-bg: #030303;
+
+	/**
+	 * Raised surfaces in the player: the Up next sheet, menus, chips.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-surface: #212121;
+
+	/**
+	 * The player's text and icons.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-fg: #fff;
+
+	/**
+	 * Secondary text, such as the artist under a title.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-fg-2: rgb(255 255 255 / 0.7);
+
+	/**
+	 * Quiet text, such as times and counts.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-fg-3: rgb(255 255 255 / 0.5);
+
+	/**
+	 * Dividers and the unplayed part of the seek bar.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-line: rgb(255 255 255 / 0.1);
+
+	/**
+	 * The wash behind a control under the pointer.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-hover: rgb(255 255 255 / 0.1);
+
+	/**
+	 * The played part of the seek bar and the active controls. A theme sets it
+	 * in theme.json under `settings.custom.riff.accent`, and the `riff_accent`
+	 * filter has the last word.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-accent: #ffb020;
 	--riff-tint: #303030;
 	--riff-p: 0;
@@ -1488,13 +1545,61 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app {
 	font-weight: 400;
 	letter-spacing: 0;
+
+	/**
+	 * The Listen block's background.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-bg: #f6f6f6;
+
+	/**
+	 * Cards and rows in the Listen block.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-surface: #fff;
+
+	/**
+	 * The Listen block's text.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-ink: #1e1e1e;
+
+	/**
+	 * Secondary text in the Listen block.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-ink-2: #656a71;
+
+	/**
+	 * Dividers and borders in the Listen block.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-line: #d9d9d9;
+
+	/**
+	 * Links and the selected item in the Listen block.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-accent: #3858e9;
+
+	/**
+	 * The accent under the pointer.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-accent-deep: #213fd4;
+
+	/**
+	 * The background of a selected item.
+	 *
+	 * @since 4.0.0
+	 */
 	--riff-app-accent-tint: #eff2ff;
 
 	box-sizing: border-box;

@@ -25,6 +25,9 @@ plugins/riff/languages/
 # line its hook fires on, so a committed copy would go stale with any edit above it.
 /site/developers/hooks/
 /site/developers/javascript/
+/site/developers/php/
+/site/developers/rest/
+/site/developers/css/
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
 

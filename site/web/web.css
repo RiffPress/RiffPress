@@ -861,6 +861,20 @@ figcaption {
 	white-space: nowrap;
 }
 
+/* background reading, set apart from the languages by a dot, as wporg's
+   local bars separate their groups */
+.local-nav .aside-link {
+	position: relative;
+	margin-left: 15px;
+}
+
+.local-nav .aside-link::before {
+	content: "\2022";
+	position: absolute;
+	left: -14px;
+	color: var(--charcoal-5);
+}
+
 .local-nav nav a[aria-current] {
 	text-decoration: underline;
 	text-underline-offset: 6px;
@@ -1237,6 +1251,19 @@ figcaption {
 	font-weight: 700;
 }
 
+/* three columns, as a schema has: name and type narrow, description wide */
+.code-table tr > :first-child:nth-last-child(3) {
+	width: 25%;
+}
+
+.code-table tr > :nth-child(2):nth-last-child(2) {
+	width: 20%;
+}
+
+.code-table tr > :nth-child(3):last-child {
+	width: auto;
+}
+
 .changelog .code-table th:first-child,
 .changelog .code-table td:first-child {
 	width: 8%;
@@ -1374,6 +1401,13 @@ figcaption {
 
 	.local-nav {
 		position: static;
+	}
+
+	.local-nav nav {
+		flex-wrap: wrap;
+		overflow: visible;
+		white-space: normal;
+		gap: 4px 10px;
 	}
 
 	.member,

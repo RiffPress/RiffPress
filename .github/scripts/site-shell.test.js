@@ -29,6 +29,6 @@ test( 'every page under /web/ has the bar, with Built on the open web current', 
 	const pages = [ 'index.html', ...fs.readdirSync( dir, { withFileTypes: true } ).filter( ( e ) => e.isDirectory() ).map( ( e ) => `${ e.name }/index.html` ) ];
 	for ( const page of pages ) {
 		const html = fs.readFileSync( path.join( dir, page ), 'utf8' );
-		assert.match( html, /<div class="local-nav">.*<a href="[./]*web\/" aria-current="true">Built on the open web<\/a>/, page );
+		assert.match( html, /<div class="local-nav">.*<a class="aside-link" href="[./]*web\/" aria-current="true">Built on the open web<\/a>/, page );
 	}
 } );

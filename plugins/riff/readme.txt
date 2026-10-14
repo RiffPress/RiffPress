@@ -52,8 +52,9 @@ Riff is built the way a feature plugin would be: one track shape everywhere, rea
 
 **Stability.** Everything listed here is public and carries an `@since`. Within a major version a hook keeps its name and parameters, a REST field or route keeps its shape, the track schema keeps its version, and a public CSS custom property keeps its name. Anything that has to go is first deprecated for a release (`apply_filters_deprecated`, a notice in the changelog) and removed in the next major. Anything not listed, such as a class method, a CSS class or an internal custom property like `--riff-heat`, may change at any time.
 
-* **Hooks:** every filter and action, with its parameters and the line it fires on, is in `docs/hooks.md`, generated from the plugin's docblocks by `npm run docs:hooks` and checked in CI.
-* **JavaScript:** `window.riff` is the player's api; `riff.*` actions and filters through `wp.hooks`, and `riff:*` events on `#riff`, announce every change of state. `docs/javascript.md` has the reference.
+* **Reference:** everything below has a page in the developer reference at https://riffpress.com/developers/, by language (PHP, JavaScript, REST API, CSS), generated from the plugin's docblocks and checked in CI.
+* **Hooks:** every filter and action, with its parameters and the line it fires on, has a page under https://riffpress.com/developers/php/ and https://riffpress.com/developers/javascript/.
+* **JavaScript:** `window.riff` is the player's api; `riff.*` actions and filters through `wp.hooks`, and `riff:*` events on `#riff`, announce every change of state. https://riffpress.com/developers/javascript/ has the reference.
 * **Sources:** tracks come from registered sources. The core source reads audio, video and playlist blocks in posts; a plugin adds its own post type or catalogue by implementing `Riff\Source` and calling `Riff\Sources::register()` on `init`, or through the `riff_sources` filter.
 * **Track schema:** one shape, `Riff\Tracks::schema()`, version `Riff\Tracks::SCHEMA_VERSION`, shared by REST, GraphQL, the block attribute and the script, and held to after the `riff_track` filter.
 * **REST:** every audio and video item in `wp/v2/media` carries `riff_track`. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and rendered blocks. All describe themselves on OPTIONS.

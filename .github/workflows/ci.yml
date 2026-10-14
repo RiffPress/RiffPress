@@ -111,6 +111,8 @@ jobs:
         run: node .github/scripts/hooks-reference.js --check
       - name: The JavaScript reference is current
         run: node .github/scripts/js-reference.js --check
+      - name: The PHP, REST and CSS references are documented
+        run: node .github/scripts/reference-pages.js --check
       - name: The web pages are current
         run: node .github/scripts/web-pages.js --check
 

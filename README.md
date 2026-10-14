@@ -50,7 +50,7 @@ A track with a video version is set in the Media Library: edit an audio file and
 
 ## Extending it
 
-Every hook is in [docs/hooks.md](docs/hooks.md), generated from the plugin's docblocks. The script's api, actions, filters and events are in [docs/javascript.md](docs/javascript.md). The plugin readme's Developers section has the stability promise, the sources registry, the track schema, REST and GraphQL, and the theming properties.
+The developer reference is at [riffpress.com/developers](https://riffpress.com/developers/), one section per language: [PHP](https://riffpress.com/developers/php/), [JavaScript](https://riffpress.com/developers/javascript/), [REST API](https://riffpress.com/developers/rest/) and [CSS](https://riffpress.com/developers/css/). Every page is generated from the plugin's own docblocks and registration code, and CI fails a change that adds something public without documenting it. [docs/hooks.md](docs/hooks.md) and [docs/javascript.md](docs/javascript.md) are the same hooks and `window.riff` reference for reading on GitHub. The plugin readme's Developers section has the stability promise.
 
 ## Development
 
