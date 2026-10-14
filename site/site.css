@@ -157,7 +157,7 @@ a:hover {
 }
 
 .nav nav a:not(.btn):hover,
-.nav nav a[aria-current] {
+.nav nav a:not(.btn)[aria-current] {
 	opacity: 1;
 	text-decoration: underline;
 	text-underline-offset: 4px;
