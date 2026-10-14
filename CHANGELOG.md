@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.12.1](https://github.com/RiffPress/RiffPress/compare/v4.12.0...v4.12.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **site:** the Download button is not underlined on its own page ([#337](https://github.com/RiffPress/RiffPress/issues/337)) ([dff893b](https://github.com/RiffPress/RiffPress/commit/dff893b1faa5364cd637d560880a234dda1ea8d4))
+* what the developer reference says matches the code ([#334](https://github.com/RiffPress/RiffPress/issues/334)) ([43f178e](https://github.com/RiffPress/RiffPress/commit/43f178e2d8dd9c69c42b26cda1b983b0561103fe))
+* WPGraphQL's RiffTrack has every property of the track schema ([#335](https://github.com/RiffPress/RiffPress/issues/335)) ([48ea24f](https://github.com/RiffPress/RiffPress/commit/48ea24f0d5356dc2b8632766df2142c257cdaac0))
+
 ## [4.12.0](https://github.com/RiffPress/RiffPress/compare/v4.11.0...v4.12.0) (2026-10-14)
 
 
