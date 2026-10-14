@@ -284,16 +284,6 @@ main h2 {
 	color: var(--ink-2);
 }
 
-.crumb {
-	margin: 0 0 16px;
-	font-size: 0.875rem;
-	color: var(--ink-2);
-}
-
-.crumb span {
-	margin: 0 6px;
-	color: var(--charcoal-5);
-}
 
 /* the page: sidebar left, article right */
 .layout {
@@ -784,4 +774,716 @@ figcaption {
 		grid-template-columns: 1fr;
 		gap: 0;
 	}
+}
+
+/* ---- the hooks reference, as developer.wordpress.org's code reference
+   sets it: Inter headings, IBM Plex Mono for code, the syntax colours from
+   its titles, and its code tables */
+
+@font-face {
+	font-family: "IBM Plex Mono";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/ibm-plex-mono.woff2) format("woff2");
+}
+
+@font-face {
+	font-family: "IBM Plex Mono";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(../fonts/ibm-plex-mono-600.woff2) format("woff2");
+}
+
+:root {
+	--mono: "IBM Plex Mono", monospace;
+	--charcoal-2: #23282d;
+	--syntax-grey: #646970;
+	--syntax-red: #d63638;
+	--syntax-blue: #135e96;
+	--code-bg: #f7f7f7;
+}
+
+.screen-reader-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* the section bar under the global one */
+.local-nav {
+	position: sticky;
+	top: 60px;
+	z-index: 9;
+	background: var(--charcoal-2);
+	color: var(--white);
+	font-size: 0.875rem;
+}
+
+.local-nav .wrap {
+	height: 60px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+}
+
+.local-nav a {
+	color: var(--white);
+	text-decoration: none;
+	padding: 5px;
+	border-radius: 2px;
+}
+
+.local-nav a:hover {
+	text-decoration: underline;
+}
+
+.local-nav a:focus-visible {
+	outline: none;
+	box-shadow: inset 0 0 0 1.5px #9fb1ff;
+}
+
+.local-nav .local-title {
+	font-size: 1rem;
+	font-weight: 600;
+	margin-left: -5px;
+}
+
+.local-nav nav {
+	display: flex;
+	gap: 10px;
+	overflow-x: auto;
+	white-space: nowrap;
+}
+
+/* background reading, set apart from the languages by a dot, as wporg's
+   local bars separate their groups */
+.local-nav .aside-link {
+	position: relative;
+	margin-left: 15px;
+}
+
+.local-nav .aside-link::before {
+	content: "\2022";
+	position: absolute;
+	left: -14px;
+	color: var(--charcoal-5);
+}
+
+.local-nav nav a[aria-current] {
+	text-decoration: underline;
+	text-underline-offset: 6px;
+}
+
+.crumbs {
+	font-size: 0.875rem;
+	line-height: 1.714;
+	position: relative;
+	z-index: 1;
+}
+
+.crumbs .wrap {
+	padding-top: 18px;
+	padding-bottom: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+
+.crumbs nav {
+	min-width: 0;
+	overflow-x: auto;
+	white-space: nowrap;
+}
+
+.crumbs span {
+	display: inline-block;
+	color: var(--ink);
+}
+
+.crumbs span:not(:last-child)::after {
+	content: "/";
+	color: var(--grey-1);
+	margin: 0 10px;
+}
+
+.crumbs a {
+	color: var(--charcoal-4);
+	text-decoration: none;
+}
+
+.crumbs a:hover {
+	text-decoration: underline;
+}
+
+.hook-search input {
+	width: 232px;
+	max-width: 100%;
+	font: inherit;
+	font-size: 0.875rem;
+	padding: 8px 16px;
+	border: 1px solid var(--charcoal-5);
+	border-radius: 2px;
+	background: var(--white);
+	color: var(--ink);
+}
+
+.hook-search input:focus-visible {
+	outline: 1.5px solid var(--blueberry);
+	outline-offset: -1.5px;
+	border-color: var(--blueberry);
+}
+
+.reference {
+	padding-top: 20px;
+}
+
+/* under the breadcrumbs, a page starts close to them, as on wordpress.org */
+.crumbs + main,
+.crumbs + .layout,
+.crumbs + .marg + main {
+	padding-top: 20px;
+}
+
+.reference h1,
+.reference h2,
+.reference h3 {
+	font-family: var(--sans);
+	color: var(--ink);
+	text-wrap: balance;
+}
+
+.reference h1 {
+	font-size: 38px;
+	font-weight: 400;
+	line-height: 1.2;
+	margin: 0 0 20px;
+}
+
+.reference h2 {
+	font-size: 20px;
+	font-weight: 600;
+	line-height: 1.2;
+	margin: 0 0 16px;
+}
+
+.reference h3 {
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 1.2;
+	margin: 24px 0 12px;
+}
+
+.reference p {
+	max-width: none;
+}
+
+.reference code {
+	font-family: var(--mono);
+	font-size: 0.875rem;
+	background: var(--grey-2);
+	border: 0;
+	border-radius: 2px;
+	padding: 4px 6px;
+}
+
+/* the title: the call, monospace, in the code reference's colours */
+.reference .code-title {
+	font-family: var(--mono);
+	font-size: 24px;
+	font-weight: 400;
+	line-height: 1.73;
+	margin-bottom: 40px;
+	overflow-wrap: anywhere;
+}
+
+.code-title .hook-func {
+	color: var(--syntax-grey);
+}
+
+.code-title .arg-type {
+	color: var(--syntax-red);
+}
+
+.code-title .arg-name {
+	color: var(--syntax-blue);
+}
+
+.is-toc-heading {
+	scroll-margin-top: 140px;
+}
+
+.is-toc-heading a {
+	color: inherit;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.is-toc-heading a::after {
+	content: "#";
+	color: var(--blueberry);
+	font-weight: 400;
+	opacity: 0;
+	transition: opacity var(--t);
+}
+
+.is-toc-heading a:hover::after,
+.is-toc-heading a:focus-visible::after {
+	opacity: 1;
+}
+
+.is-toc-heading:target {
+	border-left: 2px solid var(--blueberry);
+	padding-left: 8px;
+}
+
+/* the article, with "In this article" beside it on a wide screen */
+.with-toc {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 300px;
+	gap: 60px;
+	align-items: start;
+}
+
+.entry {
+	grid-row: 1;
+	min-width: 0;
+}
+
+.entry > section + section {
+	margin-top: 50px;
+}
+
+.entry p {
+	margin: 0 0 16px;
+}
+
+.toc {
+	grid-row: 1;
+	grid-column: 2;
+	position: sticky;
+	top: 140px;
+	font-size: 0.875rem;
+	line-height: 1.6;
+}
+
+.toc-box {
+	border: 1px solid var(--grey-1);
+	border-radius: 2px;
+}
+
+.toc-box summary {
+	padding: 15px 20px;
+	list-style: none;
+	cursor: default;
+	pointer-events: none;
+}
+
+.toc-box summary::-webkit-details-marker {
+	display: none;
+}
+
+.toc-box ul {
+	list-style: none;
+	margin: 0;
+	padding: 0 20px 15px;
+}
+
+.toc ul ul {
+	padding: 0 0 0 14px;
+}
+
+.toc li {
+	margin: 5px 0;
+	color: var(--charcoal-4);
+}
+
+.toc a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.toc a:hover {
+	text-decoration: underline;
+}
+
+.toc .to-top {
+	margin: 16px 0 0;
+}
+
+.toc .to-top a {
+	color: var(--blueberry);
+}
+
+/* parameters */
+.parameters dl {
+	margin: 0;
+}
+
+.parameters dt {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.parameters dt > code,
+.param-hash li > code {
+	background: none;
+	padding: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--charcoal-1);
+}
+
+.parameters .type {
+	font-family: var(--mono);
+	font-size: 0.875rem;
+	color: var(--syntax-red);
+}
+
+.parameters dd {
+	margin: 0;
+}
+
+.parameters dd:not(:last-child) {
+	padding-bottom: 20px;
+}
+
+.param-hash {
+	list-style: none;
+	margin: 10px 0 0;
+	padding-inline-start: 10px;
+	border-left: 1px solid var(--grey-1);
+}
+
+.param-hash li:not(:last-child) {
+	padding-bottom: 20px;
+}
+
+.param-hash .type {
+	margin-inline-start: 5px;
+}
+
+/* code blocks: light, bordered, with line numbers for source */
+.wp-block-code {
+	margin: 0 0 16px;
+	padding: 20px;
+	background: var(--code-bg);
+	border: 1px solid var(--grey-1);
+	border-radius: 2px;
+	overflow: auto;
+	font-family: var(--mono);
+	font-size: 0.875rem;
+	line-height: 1.5;
+	tab-size: 4;
+	color: #101517;
+}
+
+.wp-block-code code {
+	display: block;
+	background: none;
+	padding: 0;
+	font-size: inherit;
+	white-space: pre;
+}
+
+.wp-block-code .row {
+	display: block;
+}
+
+.wp-block-code .n {
+	display: inline-block;
+	min-width: 3.2em;
+	margin-left: -0.4em;
+	padding-right: 0.8em;
+	text-align: right;
+	color: #5c6370;
+	user-select: none;
+}
+
+.dot-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 10px;
+	align-items: center;
+	font-size: 0.875rem;
+}
+
+.dot-links > :not(:last-child)::after {
+	content: "·";
+	margin-left: 10px;
+	color: var(--ink);
+}
+
+.dot-links code {
+	color: var(--charcoal-4);
+	background: none;
+	padding: 0;
+}
+
+/* the code reference's tables: bold heads, a rule under each row */
+.code-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
+
+.code-table th,
+.code-table td {
+	text-align: left;
+	vertical-align: top;
+	font-size: 1rem;
+	padding: 10px 10px 10px 0;
+	border-bottom: 1px solid var(--grey-1);
+	width: 50%;
+}
+
+.code-table th {
+	font-weight: 700;
+}
+
+/* three columns, as a schema has: name and type narrow, description wide */
+.code-table tr > :first-child:nth-last-child(3) {
+	width: 25%;
+}
+
+.code-table tr > :nth-child(2):nth-last-child(2) {
+	width: 20%;
+}
+
+.code-table tr > :nth-child(3):last-child {
+	width: auto;
+}
+
+.changelog .code-table th:first-child,
+.changelog .code-table td:first-child {
+	width: 8%;
+	min-width: 5rem;
+	white-space: nowrap;
+	padding-right: 32px;
+}
+
+.code-table td a {
+	display: block;
+	overflow-wrap: anywhere;
+}
+
+.code-table td:first-child code {
+	display: block;
+	width: fit-content;
+	margin-top: 2px;
+	background: none;
+	padding: 0;
+	color: var(--charcoal-4);
+	word-break: break-all;
+}
+
+/* the index */
+.hooks-index .intro {
+	max-width: 40rem;
+	margin: 0 0 20px;
+	font-size: 1.125rem;
+	line-height: 1.7;
+	color: var(--charcoal-3);
+}
+
+.hook-group h2 {
+	margin-top: 50px;
+}
+
+.hook-group[hidden],
+.hook-list li[hidden] {
+	display: none;
+}
+
+.hook-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border-top: 1px solid var(--grey-1);
+}
+
+.hook-list li {
+	padding: 20px 0;
+	border-bottom: 1px solid var(--grey-1);
+}
+
+.hook-list .hook-name {
+	font-family: var(--mono);
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+
+.hook-list p {
+	margin: 4px 0 0;
+}
+
+.hook-list .meta {
+	font-size: 0.875rem;
+	color: var(--charcoal-4);
+}
+
+.hook-list .meta code {
+	background: none;
+	padding: 0;
+	color: inherit;
+}
+
+@media (max-width: 1100px) {
+
+	.with-toc {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 30px;
+	}
+
+	.toc {
+		position: static;
+		grid-column: 1;
+	}
+
+	.toc-box summary {
+		cursor: pointer;
+		pointer-events: auto;
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.toc-box summary::after {
+		content: "";
+		width: 8px;
+		height: 8px;
+		margin: 4px 4px 0 0;
+		border-right: 1.5px solid var(--charcoal-4);
+		border-bottom: 1.5px solid var(--charcoal-4);
+		transform: rotate(45deg);
+	}
+
+	.toc-box[open] summary::after {
+		transform: rotate(-135deg);
+		margin-top: 8px;
+	}
+
+	.toc .to-top {
+		display: none;
+	}
+
+	.entry {
+		grid-row: 2;
+	}
+}
+
+@media (max-width: 640px) {
+
+	.reference h1 {
+		font-size: 26px;
+	}
+
+	.reference .code-title {
+		font-size: 20px;
+	}
+
+	.local-nav .wrap {
+		height: auto;
+		padding-top: 12px;
+		padding-bottom: 12px;
+		flex-wrap: wrap;
+		gap: 4px 20px;
+	}
+
+	.local-nav {
+		position: static;
+	}
+
+	.local-nav nav {
+		flex-wrap: wrap;
+		overflow: visible;
+		white-space: normal;
+		gap: 4px 10px;
+	}
+
+	.member,
+	.is-toc-heading {
+		scroll-margin-top: 80px;
+	}
+
+	.code-table th,
+	.code-table td {
+		display: block;
+		width: 100%;
+		padding: 5px 0;
+		border: 0;
+	}
+
+	.code-table tr {
+		display: block;
+		padding: 5px 0;
+		border-bottom: 1px solid var(--grey-1);
+	}
+
+	.code-table thead {
+		display: none;
+	}
+}
+
+/* the JavaScript reference: one section per member of window.riff */
+.member {
+	scroll-margin-top: 140px;
+	padding-top: 30px;
+	border-top: 1px solid var(--grey-1);
+}
+
+.entry > .member + .member {
+	margin-top: 30px;
+}
+
+.reference .member-title {
+	font-size: 20px;
+	margin: 0 0 12px;
+}
+
+.member-title a {
+	color: var(--ink);
+	text-decoration: none;
+}
+
+.member-title a:hover {
+	text-decoration: underline;
+}
+
+.reference h4 {
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 20px 0 8px;
+}
+
+.parameters .required {
+	color: var(--charcoal-4);
+	font-size: 0.875rem;
+}
+
+.member .returns .type,
+.member .parameters p .type {
+	font-family: var(--mono);
+	font-size: 0.875rem;
+	color: var(--syntax-red);
+}
+
+.reference h2 code {
+	background: none;
+	padding: 0;
+	font-size: inherit;
+	font-weight: 600;
+}
+
+.member .dot-links {
+	margin-top: 20px;
 }

@@ -83,8 +83,9 @@ function start() {
 	// riff.<name> action, and as a riff:<name> CustomEvent on #riff for pages without the WordPress
 	// scripts, both with the same detail. Two filters let a plugin reshape what plays: riff.queue
 	// (the tracks about to become the queue) and riff.track (each track as it is queued). The api
-	// object is window.riff, handed to riff.ready, and the only door the Listen feature uses.
-	// Documented in docs/javascript.md; stable within a major version.
+	// object is window.riff, handed to riff.ready, and the only door the Listen feature uses. Each
+	// hook is documented where it fires and each api member where it is defined; the hooks and
+	// JavaScript references are generated from those docblocks. Stable within a major version.
 	const hooks = window.wp?.hooks;
 	function emit( name, detail = {} ) {
 		hooks?.doAction( `riff.${ name }`, detail, api );
@@ -95,28 +96,121 @@ function start() {
 	const filter = ( name, value, ...args ) =>
 		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
 	const api = {
+		/**
+		 * The version of this api. It changes only in a major release, when something here does.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @type {number}
+		 */
 		version: 1,
+		/**
+		 * The player's strings, after the `riff_strings` filter.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @type {Object<string, string>}
+		 */
 		strings: s,
+		/**
+		 * Makes `tracks` the queue and plays the one at `index`.
+		 *
+		 * The tracks go through the `riff.queue` and `riff.track` filters first.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {Object[]} tracks            Tracks, in the shape `Tracks::schema()` describes.
+		 * @param {number}   [index=0]         The one to play first.
+		 * @param {Object}   [options]         Options.
+		 * @param {boolean}  [options.shuffle] `true` or `false` sets shuffle before playing.
+		 */
 		play( tracks, index = 0, { shuffle: on = null } = {} ) {
 			if ( on !== null ) {
 				shuffle = on;
 			}
 			setQueue( tracks, index );
 		},
+		/**
+		 * Plays or pauses.
+		 *
+		 * @since 4.0.0
+		 */
 		toggle: () => toggle(),
+		/**
+		 * Skips to the next track.
+		 *
+		 * @since 4.0.0
+		 */
 		next: () => next(),
+		/**
+		 * Goes back a track, or to the start of this one.
+		 *
+		 * @since 4.0.0
+		 */
 		prev: () => prev(),
+		/**
+		 * Moves the current track to a time.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {number} seconds From the start of the track.
+		 */
 		seek( seconds ) {
 			if ( track() ) {
 				el().currentTime = Math.max( 0, Number( seconds ) || 0 );
 			}
 		},
+		/**
+		 * Opens Now Playing.
+		 *
+		 * @since 4.0.0
+		 */
 		open: () => open(),
+		/**
+		 * Closes Now Playing.
+		 *
+		 * @since 4.0.0
+		 */
 		close: () => close(),
+		/**
+		 * Reads every `figure[data-riff-track]` on the page again, after content was swapped in.
+		 *
+		 * @since 4.0.0
+		 */
 		mount: () => mount(),
+		/**
+		 * The track playing.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @return {Object|null} The track, or null.
+		 */
 		current: () => track() || null,
+		/**
+		 * The queue in play order.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @return {Object[]} Tracks.
+		 */
 		queue: () => order.map( ( i ) => queue[ i ] ),
+		/**
+		 * Whether something is playing.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @return {boolean} True while a track plays.
+		 */
 		playing: () => !! track() && ! el().paused,
+		/**
+		 * Listens to one of the player's actions, without `wp-hooks`.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {string}                                name The action without its prefix: `track`, `play`, `pause` and the rest.
+		 * @param {(detail: Object, api: Object) => void} fn   Called with the detail and the api.
+		 * @return {() => void} Stops listening.
+		 */
 		on( name, fn ) {
 			const handler = ( e ) => fn( e.detail, api );
 			root.addEventListener( `riff:${ name }`, handler );
@@ -222,7 +316,25 @@ function start() {
 	// ---- The queue.
 	function setQueue( tracks, index, { play = true, at = 0 } = {} ) {
 		stopAll();
-		tracks = filter( 'queue', tracks, index ).map( ( t ) =>
+		/**
+		 * Filters the tracks about to become the queue.
+		 *
+		 * Return a new array to add, drop or reorder tracks before any of them plays.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {Object[]} tracks The tracks, in the shape `Tracks::schema()` describes.
+		 * @param {number}   index  The position in `tracks` that will play first.
+		 */
+		tracks = filter( 'queue', tracks, index );
+		tracks = tracks.map( ( t ) =>
+			/**
+			 * Filters one track as a queue is set, after `riff.queue`.
+			 *
+			 * @since 4.0.0
+			 *
+			 * @param {Object} track The track, in the shape `Tracks::schema()` describes.
+			 */
 			filter( 'track', t )
 		);
 		queue = tracks;
@@ -280,6 +392,17 @@ function start() {
 		renderQueue();
 		tint( largest( t.art ) || t.video?.poster );
 		save();
+		/**
+		 * Fires when a track is loaded, before it plays.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {Object}   detail       What changed.
+		 * @param {Object}   detail.track The track now loaded.
+		 * @param {number}   detail.index Its position in the play order.
+		 * @param {Object[]} detail.queue The queue in play order.
+		 * @param {Object}   api          `window.riff`.
+		 */
 		emit( 'track', { track: t, index: pos, queue: api.queue() } );
 	}
 
@@ -426,6 +549,15 @@ function start() {
 			if ( live() ) {
 				announce();
 				paint();
+				/**
+				 * Fires when the media element starts playing.
+				 *
+				 * @since 4.0.0
+				 *
+				 * @param {Object} detail       What changed.
+				 * @param {Object} detail.track The track.
+				 * @param {Object} api          `window.riff`.
+				 */
 				emit( 'play', { track: track() } );
 				if ( ! reduce() ) {
 					follow();
@@ -435,6 +567,15 @@ function start() {
 		m.addEventListener( 'pause', () => {
 			if ( live() ) {
 				paint();
+				/**
+				 * Fires when the media element pauses.
+				 *
+				 * @since 4.0.0
+				 *
+				 * @param {Object} detail       What changed.
+				 * @param {Object} detail.track The track.
+				 * @param {Object} api          `window.riff`.
+				 */
 				emit( 'pause', { track: track() } );
 			}
 		} );
@@ -467,6 +608,15 @@ function start() {
 			if ( ! live() ) {
 				return;
 			}
+			/**
+			 * Fires when a track plays to its end, before the next one loads.
+			 *
+			 * @since 4.0.0
+			 *
+			 * @param {Object} detail       What changed.
+			 * @param {Object} detail.track The track that ended.
+			 * @param {Object} api          `window.riff`.
+			 */
 			emit( 'ended', { track: track() } );
 			if ( repeat === 'one' ) {
 				m.currentTime = 0;
@@ -1030,7 +1180,18 @@ function start() {
 		} else if ( action === 'cast' ) {
 			cast();
 		} else {
-			// A control an extension added through riff_chips or riff_bar_controls.
+			/**
+			 * Fires when a control an extension added through `riff_chips` or `riff_bar_controls`
+			 * is pressed.
+			 *
+			 * @since 4.0.0
+			 *
+			 * @param {Object}      detail        What was pressed.
+			 * @param {string}      detail.action The control's `action`, as the PHP filter set it.
+			 * @param {Object}      detail.track  The track playing.
+			 * @param {HTMLElement} detail.button The button that was pressed.
+			 * @param {Object}      api           `window.riff`.
+			 */
 			emit( 'action', { action, track: track(), button } );
 		}
 	} );
@@ -1061,6 +1222,15 @@ function start() {
 			b.setAttribute( 'aria-expanded', 'true' );
 		}
 		history.pushState( { ...history.state, riff: 'open' }, '' );
+		/**
+		 * Fires when Now Playing opens.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {Object} detail       What changed.
+		 * @param {Object} detail.track The track playing.
+		 * @param {Object} api          `window.riff`.
+		 */
 		emit( 'open', { track: track() } );
 		requestAnimationFrame( () => {
 			np.classList.add( 'is-in' );
@@ -1073,6 +1243,15 @@ function start() {
 			return;
 		}
 		np.classList.remove( 'is-in' );
+		/**
+		 * Fires when Now Playing closes.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {Object} detail       What changed.
+		 * @param {Object} detail.track The track playing.
+		 * @param {Object} api          `window.riff`.
+		 */
 		emit( 'close', { track: track() } );
 		sheet( 'none' );
 		np.style.removeProperty( 'transform' );
@@ -1290,6 +1469,16 @@ function start() {
 			target.closest?.(
 				'input, textarea, select, [contenteditable=""], [contenteditable="true"]'
 			) ||
+			/**
+			 * Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
+			 *
+			 * Return `false` to turn them off, which WCAG 2.1.4 asks to be possible.
+			 *
+			 * @since 4.0.1
+			 *
+			 * @param {boolean}       enabled Whether the shortcuts act. Default true.
+			 * @param {KeyboardEvent} event   The key press.
+			 */
 			! filter( 'shortcuts', true, e )
 		) {
 			return;
@@ -1559,6 +1748,16 @@ function start() {
 		paint();
 	}
 
+	/**
+	 * Fires once the player is set up, its state restored and `window.riff` available.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @param {Object}      detail       The player's state.
+	 * @param {Object[]}    detail.queue The queue in play order.
+	 * @param {Object|null} detail.track The track loaded, or null.
+	 * @param {Object}      api          `window.riff`.
+	 */
 	emit( 'ready', { queue: api.queue(), track: track() || null } );
 
 	// ---- The app, on the page that holds it. Loaded only there, through the same public api.

@@ -22,10 +22,11 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="../../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="../../#listen">The block</a><a href="../../add-music/">Add your music</a><a href="../../developers/">Developers</a><a class="btn" href="../../download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="../../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="../../#listen">The block</a><a href="../../add-music/">Add your music</a><a href="../../developers/" aria-current="true">Developers</a><a class="btn" href="../../download/">Download</a></nav></div></div>
+<div class="local-nav"><div class="wrap"><a class="local-title" href="../../developers/">Developers</a><nav aria-label="Developers"><a href="../../developers/php/">PHP</a><a href="../../developers/javascript/">JavaScript</a><a href="../../developers/rest/">REST API</a><a href="../../developers/css/">CSS</a><a class="aside-link" href="../../web/" aria-current="true">Built on the open web</a></nav></div></div>
+<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../../">RiffPress</a></span><span><a href="../../developers/">Developers</a></span><span><a href="../">Built on the open web</a></span><span class="is-current-page">requestAnimationFrame</span></nav></div></div>
 <div class="wrap layout">
 <main id="main">
-<p class="crumb"><a href="../../">RiffPress</a> <span>/</span> <a href="../../developers/">Developers</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> Interface</p>
 <h1>requestAnimationFrame</h1>
 <p class="lede">Moves the seek line and the filament every frame, not four times a second.</p>
 <figure><span class="device"><picture><source type="image/avif" srcset="../../phone-now-playing.avif"><img src="../../phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls" loading="lazy" decoding="async"></picture></span><figcaption>The seek line and elapsed time advance every frame.</figcaption></figure>
@@ -34,7 +35,7 @@
 <h2>Why</h2>
 <p><code>timeupdate</code> fires about four times a second and reads as a line that skips.</p>
 <h2>Where</h2>
-<ul class="where"><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L412">plugins/riff/assets/riff.js, line 412</a><pre><code>function follow() {</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L640">plugins/riff/assets/riff.js, line 640</a><pre><code>meterRaf = requestAnimationFrame( tick );</code></pre></li></ul>
+<ul class="where"><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L535">plugins/riff/assets/riff.js, line 535</a><pre><code>function follow() {</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L790">plugins/riff/assets/riff.js, line 790</a><pre><code>meterRaf = requestAnimationFrame( tick );</code></pre></li></ul>
 <p class="fine">Links open the source at the commit this page was published from.</p>
 <p class="fine">Reference: <a href="https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame">requestAnimationFrame on MDN</a>.</p>
 <nav class="pager" aria-label="Previous and next"><a rel="prev" href="../web-animations/">Web Animations</a><a rel="next" href="../web-share/">Web Share</a></nav>

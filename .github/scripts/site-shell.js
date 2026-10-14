@@ -1,0 +1,141 @@
+/*
+ * The page shell every generated page on the site shares: the head, the nav and the footer, in
+ * wordpress.org's tokens. Used by web-pages.js and hooks-reference.js.
+ */
+const esc = ( s ) => String( s ).replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' ).replace( /"/g, '&quot;' );
+
+/** Inline markup: `code` becomes <code>. */
+const inline = ( s ) => esc( s ).replace( /`([^`]+)`/g, '<code>$1</code>' );
+
+/**
+ * The document head and the global bar.
+ *
+ * @param {string} title       Title.
+ * @param {string} description Meta description.
+ * @param {string} url         Path from the site root.
+ * @param {number} depth       How many folders deep the page is.
+ * @param {string} css         The stylesheet's address from the page.
+ * @param {string} section     The global link this page sits under, marked current: 'developers' or ''.
+ * @return {string} HTML.
+ */
+function head( title, description, url, depth, css, section = '' ) {
+	const up = '../'.repeat( depth );
+	const dev = section === 'developers' ? ' aria-current="true"' : '';
+	return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${ esc( title ) }</title>
+<meta name="description" content="${ esc( description ) }">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="RiffPress">
+<meta property="og:url" content="{{pages_url}}${ url }">
+<meta property="og:title" content="${ esc( title ) }">
+<meta property="og:description" content="${ esc( description ) }">
+<meta property="og:image" content="{{pages_url}}og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{{pages_url}}${ url }">
+<link rel="icon" href="${ up }icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="${ up }icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="${ up }icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1e1e1e">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="${ css }">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="${ up }#listen">The block</a><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
+`;
+}
+
+const FOOT = `<div class="dots" aria-hidden="true"></div>
+<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
+</body>
+</html>
+`;
+
+/**
+ * The Developers bar under the global one, as each developer.wordpress.org section has one: one
+ * entry per thing a developer writes or calls, then the background reading. Every page under
+ * /developers/ and /web/ carries it.
+ *
+ * @param {string} up      Path back to the site root.
+ * @param {string} current Which entry this page is under: 'developers', 'php', 'javascript',
+ *                         'rest', 'css' or 'web'.
+ * @return {string} HTML.
+ */
+function localNav( up, current ) {
+	const attr = ( key ) => {
+		if ( key !== current ) {
+			return '';
+		}
+		return key === 'developers' ? ' aria-current="page"' : ' aria-current="true"';
+	};
+	const links = [
+		[ 'php', 'developers/php/', 'PHP' ],
+		[ 'javascript', 'developers/javascript/', 'JavaScript' ],
+		[ 'rest', 'developers/rest/', 'REST API' ],
+		[ 'css', 'developers/css/', 'CSS' ],
+	]
+		.map( ( [ key, href, label ] ) => `<a href="${ up }${ href }"${ attr( key ) }>${ label }</a>` )
+		.join( '' );
+	return `<div class="local-nav"><div class="wrap"><a class="local-title" href="${ up }developers/"${ attr( 'developers' ) }>Developers</a><nav aria-label="Developers">${ links }<a class="aside-link" href="${ up }web/"${ attr( 'web' ) }>Built on the open web</a></nav></div></div>
+`;
+}
+
+/**
+ * The breadcrumb strip, as wordpress.org sets it: grey links, a light slash between.
+ *
+ * @param {Array}  trail  [ label, href ] pairs; the last, without an href, is the page.
+ * @param {string} extra  HTML for the right-hand side, such as a search form.
+ * @return {string} HTML.
+ */
+function crumbs( trail, extra = '' ) {
+	const parts = trail.map( ( [ label, href ] ) => ( href ? `<span><a href="${ href }">${ esc( label ) }</a></span>` : `<span class="is-current-page">${ esc( label ) }</span>` ) );
+	return `<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs">${ parts.join( '' ) }</nav>${ extra }</div></div>
+`;
+}
+
+/**
+ * A reference page, laid out like developer.wordpress.org's code reference: the bar, the
+ * breadcrumbs, a title, and the article with "In this article" beside it.
+ *
+ * @param {Object} page             The page.
+ * @param {string} page.title       The document title.
+ * @param {string} page.description Meta description.
+ * @param {string} page.url         Path from the site root, ending in a slash.
+ * @param {string} page.current     The bar entry it sits under.
+ * @param {Array}  page.trail       Breadcrumbs after RiffPress and Developers, as [ label, href ].
+ * @param {string} page.h1          The heading's HTML, with its attributes.
+ * @param {Array}  page.toc         [ id, label, children ] entries for "In this article".
+ * @param {string} page.body        The article.
+ * @param {string} page.search      HTML for the right of the breadcrumbs.
+ * @return {string} HTML.
+ */
+function referencePage( { title, description, url, current, trail, h1, toc, body, search = '' } ) {
+	const depth = url.split( '/' ).filter( Boolean ).length;
+	const up = '../'.repeat( depth );
+	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ esc( label ) }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
+	let html = head( title, description, url, depth, `${ up }web/web.css`, 'developers' );
+	html += localNav( up, current );
+	html += crumbs( [ [ 'RiffPress', up ], [ 'Developers', `${ up }developers/` ], ...trail ], search );
+	html += `<main id="main" class="wrap reference">
+${ h1 }
+<div class="with-toc">
+<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p></aside>
+<article class="entry">
+${ body }</article>
+</div>
+</main>
+<script>
+// Folded on a narrow screen, as the code reference folds it.
+if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
+	document.querySelector( '.toc-box' ).open = false;
+}
+</script>
+`;
+	return html + FOOT;
+}
+
+module.exports = { esc, inline, head, FOOT, localNav, crumbs, referencePage };

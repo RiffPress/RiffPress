@@ -1,68 +1,148 @@
 # JavaScript
 
-How a script talks to the player. Everything here is public and keeps working within a major version; see the stability promise in the plugin's readme.
+Generated from the docblocks in `plugins/riff/assets/riff.js` by `npm run docs:js`. Do not edit by hand. The same reference is on the site under Developers, JavaScript.
+
+How a script talks to the player. `window.riff` is set before the `riff.ready` action fires. Everything here is public and keeps working within a major version.
 
 ## `window.riff`
 
-The player's api, set before `riff.ready` fires. `window.riff.version` is `1`.
+### `window.riff.version`
 
-| Member | Does |
-| --- | --- |
-| `play( tracks, index = 0, { shuffle } )` | Makes `tracks` the queue and plays the one at `index`. `shuffle: true` or `false` sets shuffle first. |
-| `toggle()` | Play or pause. |
-| `next()`, `prev()` | Skip. |
-| `seek( seconds )` | Moves the current track. |
-| `open()`, `close()` | Now Playing. |
-| `mount()` | Reads every `figure[data-riff-track]` on the page again, after content was swapped in. |
-| `current()` | The track playing, or `null`. |
-| `queue()` | The queue in play order. |
-| `playing()` | Whether something is playing. |
-| `on( name, fn )` | Listens to a `riff:<name>` event; returns a function that stops listening. |
-| `strings` | The player's strings, after the `riff_strings` filter. |
+The version of this api. It changes only in a major release, when something here does.
 
-A track is the shape `Tracks::schema()` describes in PHP: `id`, `src`, `type`, `title`, `artist`, `album`, `duration`, `art`, `video`, `post`.
+Type: `number`.
 
-## Actions
+Since 4.0.0.
 
-Each change of state is announced twice with the same detail: through `wp.hooks` as `riff.<name>` for scripts that depend on `wp-hooks`, and as a `riff:<name>` `CustomEvent` on `#riff` (it bubbles) for everything else.
+### `window.riff.strings`
 
-```js
-wp.hooks.addAction( 'riff.track', 'my-plugin', ( detail, riff ) => {
-	console.log( detail.track.title );
-} );
+The player's strings, after the `riff_strings` filter.
 
-window.riff.on( 'play', ( detail ) => {} );
-document.getElementById( 'riff' ).addEventListener( 'riff:pause', ( e ) => e.detail );
-```
+Type: `Object<string, string>`.
 
-| Name | When | Detail |
+Since 4.0.0.
+
+### `window.riff.play( tracks, index = 0, options )`
+
+Makes `tracks` the queue and plays the one at `index`.
+
+The tracks go through the `riff.queue` and `riff.track` filters first.
+
+| Parameter | Type | Description |
 | --- | --- | --- |
-| `ready` | The player is set up, state restored, `window.riff` available. | `queue`, `track` |
-| `track` | A track is loaded. | `track`, `index`, `queue` |
-| `play`, `pause`, `ended` | The media element says so. | `track` |
-| `open`, `close` | Now Playing. | `track` |
-| `action` | A control an extension added through `riff_chips` or `riff_bar_controls` was pressed. | `action`, `track`, `button` |
+| `tracks` | `Object[]` | Tracks, in the shape `Tracks::schema()` describes. |
+| `index` | `number` | The one to play first. |
+| `options` | `Object` | Options. |
+| `options.shuffle` | `boolean` | `true` or `false` sets shuffle before playing. |
 
-## Filters
+Since 4.0.0.
 
-Only through `wp.hooks`.
+### `window.riff.toggle()`
 
-| Name | Value | When |
+Plays or pauses.
+
+Since 4.0.0.
+
+### `window.riff.next()`
+
+Skips to the next track.
+
+Since 4.0.0.
+
+### `window.riff.prev()`
+
+Goes back a track, or to the start of this one.
+
+Since 4.0.0.
+
+### `window.riff.seek( seconds )`
+
+Moves the current track to a time.
+
+| Parameter | Type | Description |
 | --- | --- | --- |
-| `riff.queue` | The tracks about to become the queue, and the index that will play. | Before a queue is set. |
-| `riff.track` | One track. | For each track as a queue is set. |
-| `riff.shortcuts` | Whether the single-key shortcuts (Space, K, J, L) act on this key event; the event is the second argument. Return `false` to turn them off, which WCAG 2.1.4 asks to be possible. | On each key press. |
+| `seconds` | `number` | From the start of the track. |
 
-```js
-wp.hooks.addFilter( 'riff.track', 'my-plugin', ( track ) => ( {
-	...track,
-	title: track.title.toUpperCase(),
-} ) );
-```
+Since 4.0.0.
+
+### `window.riff.open()`
+
+Opens Now Playing.
+
+Since 4.0.0.
+
+### `window.riff.close()`
+
+Closes Now Playing.
+
+Since 4.0.0.
+
+### `window.riff.mount()`
+
+Reads every `figure[data-riff-track]` on the page again, after content was swapped in.
+
+Since 4.0.0.
+
+### `window.riff.current()`
+
+The track playing.
+
+Returns `Object|null`: The track, or null.
+
+Since 4.0.0.
+
+### `window.riff.queue()`
+
+The queue in play order.
+
+Returns `Object[]`: Tracks.
+
+Since 4.0.0.
+
+### `window.riff.playing()`
+
+Whether something is playing.
+
+Returns `boolean`: True while a track plays.
+
+Since 4.0.0.
+
+### `window.riff.on( name, fn )`
+
+Listens to one of the player's actions, without `wp-hooks`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | The action without its prefix: `track`, `play`, `pause` and the rest. |
+| `fn` | `(detail: Object, api: Object) => void` | Called with the detail and the api. |
+
+Returns `() => void`: Stops listening.
+
+Since 4.0.0.
+
+## Actions and filters
+
+Each change of state is announced twice with the same detail: through `wp.hooks` as `riff.<name>`, for scripts that depend on `wp-hooks`, and as a `riff:<name>` `CustomEvent` on `#riff` that bubbles, for everything else. The filters run only through `wp.hooks`.
+
+- [`riff.queue`](hooks.md#riffqueue), filter: Filters the tracks about to become the queue.
+- [`riff.shortcuts`](hooks.md#riffshortcuts), filter: Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
+- [`riff.track`](hooks.md#rifftrack), filter: Filters one track as a queue is set, after `riff.queue`.
+- [`riff.action`](hooks.md#riffaction), action: Fires when a control an extension added through `riff_chips` or `riff_bar_controls` is pressed.
+- [`riff.close`](hooks.md#riffclose), action: Fires when Now Playing closes.
+- [`riff.ended`](hooks.md#riffended), action: Fires when a track plays to its end, before the next one loads.
+- [`riff.open`](hooks.md#riffopen), action: Fires when Now Playing opens.
+- [`riff.pause`](hooks.md#riffpause), action: Fires when the media element pauses.
+- [`riff.play`](hooks.md#riffplay), action: Fires when the media element starts playing.
+- [`riff.ready`](hooks.md#riffready), action: Fires once the player is set up, its state restored and `window.riff` available.
+- [`riff.track`](hooks.md#rifftrack), action: Fires when a track is loaded, before it plays.
+
+## A track
+
+Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP: `id`, `src`, `type`, `title`, `artist`, `album`, `duration`, `art`, `video`, `post`. The REST API and WPGraphQL return the same shape.
 
 ## Controls
 
-Add a chip under Now Playing or a control at the end of the bar from PHP, then handle it here:
+Add a chip under Now Playing or a control at the end of the bar from PHP, with the `riff_chips` or `riff_bar_controls` filter, then handle the press with the `riff.action` action.
 
 ```php
 add_filter( 'riff_chips', function ( array $chips ): array {

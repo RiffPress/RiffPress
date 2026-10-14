@@ -8,7 +8,11 @@ cd "$(git rev-parse --show-toplevel)"
 echo "pre-commit: lint"
 npm run -s lint
 echo "pre-commit: hooks reference"
-npm run -s docs:hooks:check
+npm run -s docs:hooks:check || { echo "pre-commit: run npm run docs"; exit 1; }
+echo "pre-commit: JavaScript reference"
+npm run -s docs:js:check || { echo "pre-commit: run npm run docs"; exit 1; }
+echo "pre-commit: PHP, REST and CSS references"
+npm run -s docs:reference:check
 echo "pre-commit: web pages"
 npm run -s docs:web:check
 

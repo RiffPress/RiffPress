@@ -95,6 +95,27 @@ jobs:
     needs: gate
     uses: ./.github/workflows/lint-js.yml
 
+  # The generated references must match the code: docs/hooks.md, docs/javascript.md and site/web/
+  # are current, and every hook and window.riff member has a docblock, an @since and its @params. Node only, so it runs on every change.
+  docs:
+    needs: gate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The hooks reference is current
+        run: node .github/scripts/hooks-reference.js --check
+      - name: The JavaScript reference is current
+        run: node .github/scripts/js-reference.js --check
+      - name: The PHP, REST and CSS references are documented
+        run: node .github/scripts/reference-pages.js --check
+      - name: The web pages are current
+        run: node .github/scripts/web-pages.js --check
+
   # Spell-checks docs too, so it stays outside the code gate.
   typos:
     needs: gate
@@ -108,7 +129,7 @@ jobs:
   # counts as a failure.
   status:
     name: CI status
-    needs: [gate, changes, phpcs, phpunit, lint-js, typos, e2e, plugin-check]
+    needs: [gate, changes, phpcs, phpunit, lint-js, typos, docs, e2e, plugin-check]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

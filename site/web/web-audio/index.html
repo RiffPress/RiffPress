@@ -22,10 +22,11 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="../../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="../../#listen">The block</a><a href="../../add-music/">Add your music</a><a href="../../developers/">Developers</a><a class="btn" href="../../download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="../../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="../../#listen">The block</a><a href="../../add-music/">Add your music</a><a href="../../developers/" aria-current="true">Developers</a><a class="btn" href="../../download/">Download</a></nav></div></div>
+<div class="local-nav"><div class="wrap"><a class="local-title" href="../../developers/">Developers</a><nav aria-label="Developers"><a href="../../developers/php/">PHP</a><a href="../../developers/javascript/">JavaScript</a><a href="../../developers/rest/">REST API</a><a href="../../developers/css/">CSS</a><a class="aside-link" href="../../web/" aria-current="true">Built on the open web</a></nav></div></div>
+<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../../">RiffPress</a></span><span><a href="../../developers/">Developers</a></span><span><a href="../">Built on the open web</a></span><span class="is-current-page">Web Audio</span></nav></div></div>
 <div class="wrap layout">
 <main id="main">
-<p class="crumb"><a href="../../">RiffPress</a> <span>/</span> <a href="../../developers/">Developers</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> Media</p>
 <h1>Web Audio</h1>
 <p class="lede">Reads the signal that lights the filament.</p>
 <figure><span class="device"><picture><source type="image/avif" srcset="../../phone-post.avif"><img src="../../phone-post.png" width="780" height="1688" alt="A post with its tracks listed, and the player bar along the bottom of the screen" loading="lazy" decoding="async"></picture></span><figcaption>The filament on the bar's seek line is lit by the signal's level read through Web Audio.</figcaption></figure>
@@ -36,7 +37,7 @@
 <h2>Without it</h2>
 <p>Where there is no analyser the wire breathes at working temperature on a fixed loop instead.</p>
 <h2>Where</h2>
-<ul class="where"><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L544">plugins/riff/assets/riff.js, line 544</a><pre><code>const ctx = new AudioContext();</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L545">plugins/riff/assets/riff.js, line 545</a><pre><code>const src = ctx.createMediaElementSource( audio );</code></pre></li></ul>
+<ul class="where"><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L694">plugins/riff/assets/riff.js, line 694</a><pre><code>const ctx = new AudioContext();</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L695">plugins/riff/assets/riff.js, line 695</a><pre><code>const src = ctx.createMediaElementSource( audio );</code></pre></li></ul>
 <p class="fine">Links open the source at the commit this page was published from.</p>
 <p class="fine">Reference: <a href="https://developer.mozilla.org/docs/Web/API/Web_Audio_API">Web Audio on MDN</a>.</p>
 <nav class="pager" aria-label="Previous and next"><a rel="prev" href="../remote-playback/">Remote Playback</a><a rel="next" href="../analyser-node/">AnalyserNode</a></nav>
