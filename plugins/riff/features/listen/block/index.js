@@ -1,22 +1,20 @@
-/* The Riff block in the editor: a placeholder that says what the page becomes. No build step. */
+/* The Riff block in the editor: the library as it will be on the page, rendered by the server, the way
+   core's dynamic blocks preview themselves. No build step. */
 ( function( wp ) {
 	const { registerBlockType } = wp.blocks;
 	const { useBlockProps } = wp.blockEditor;
+	const { Disabled } = wp.components;
+	const ServerSideRender = wp.serverSideRender;
 	const { createElement: el } = wp.element;
-	const { __ } = wp.i18n;
 
-	function Edit() {
+	function Edit( { attributes } ) {
 		return el(
 			'div',
-			useBlockProps( { className: 'riff-app-placeholder' } ),
-			el( 'strong', null, __( 'Riff', 'riff' ) ),
+			useBlockProps(),
 			el(
-				'p',
+				Disabled,
 				null,
-				__(
-					'Your library and the player live on this page. Every post with an audio or video block is listed here, and the music keeps playing while you browse.',
-					'riff'
-				)
+				el( ServerSideRender, { block: 'riff/app', attributes } )
 			)
 		);
 	}
