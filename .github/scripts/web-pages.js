@@ -70,7 +70,8 @@ function head( title, description, url, depth ) {
 `;
 }
 
-const FOOT = `<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
+const FOOT = `<div class="dots" aria-hidden="true"></div>
+<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
 </body>
 </html>
 `;

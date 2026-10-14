@@ -93,8 +93,10 @@ h2{font-size:clamp(36px,5vw,50px);line-height:1.2}
 .fine{margin:0;font-size:.875rem;line-height:1.714;color:var(--ink-2);text-wrap:pretty}
 /* sections: one idea each, centred, text above the picture; white, with grey bands between */
 section{padding:var(--section) 0;text-align:center}
+.wrap{position:relative;z-index:1}
 .alt{background:var(--surface)}
 .wire{border-top:1px solid var(--line)}
+#owners.wire{border-top:0}
 .shot{margin-top:var(--gap);display:flex;justify-content:center}
 /* buttons: blueberry, 2px corners, as on wordpress.org; and a text link with an arrow */
 /* buttons, as wordpress.org draws them: 600 weight, 14px by 32px, 2px corners; the outline style for the second action */
@@ -134,6 +136,12 @@ picture{display:contents}
 .apis ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:.875rem;line-height:1.714}
 .apis a{color:var(--ink);text-decoration:none;transition:color var(--t)}
 .apis a:hover{color:var(--accent);text-decoration:underline}
+/* marginalia, as wordpress.org sets it: a band of dots between sections, and a record cropped into the margin on a wide screen */
+.dots{height:60px;margin:0 auto var(--gap);max-width:1160px;background:url(brand/dots.svg) top center repeat-x;background-size:auto}
+.marg{position:absolute;width:440px;height:440px;pointer-events:none;user-select:none;display:none}
+.marg img{display:block;width:100%;height:100%}
+section{position:relative;overflow:hidden}
+@media (min-width:1280px){.marg{display:block}.hero .marg{right:-200px;top:120px}#owners .marg{left:-240px;bottom:-120px}}
 /* the shelf: the demo's nine covers, eight drawn by the player and one real, in a row */
 .shelf{list-style:none;margin:var(--gap) auto 0;padding:0;display:grid;grid-template-columns:repeat(9,1fr);gap:12px;max-width:62rem}
 .shelf li{aspect-ratio:1;border-radius:2px;overflow:hidden;background:var(--surface);box-shadow:0 1px 0 rgba(30,30,30,.06)}
@@ -156,7 +164,7 @@ html.js .r.in{opacity:1;transform:none}
 <div class="nav"><div class="wrap"><a class="mark" href="#top"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="#listen">The block</a><a href="add-music/">Add your music</a><a href="web/">Under the hood</a><a class="btn" href="download/">Download</a></nav></div></div>
 
 <main id="top">
-<section class="hero"><div class="wrap">
+<section class="hero"><div class="marg" aria-hidden="true"><img src="brand/record-literal.svg" alt="" width="1024" height="1024" decoding="async"></div><div class="wrap">
 	<div class="r">
 		<h1>Press play on your own site</h1>
 		<p class="lede">A music player for WordPress that feels like the apps you already use, on a site you own. No accounts, no ads, no cut.</p>
@@ -179,7 +187,7 @@ html.js .r.in{opacity:1;transform:none}
 	</ul>
 </div></section>
 
-<section id="queue"><div class="wrap">
+<section id="queue"><div class="dots" aria-hidden="true"></div><div class="wrap">
 	<div class="r"><h2>The whole post, up next</h2><p class="lede">Every track in the post lines up behind the one you chose. Pull the handle to see what's coming.</p></div>
 	<div class="shot r"><span class="device"><picture><source type="image/avif" srcset="phone-up-next.avif"><img src="phone-up-next.png" width="780" height="1688" alt="Now Playing with the Up next sheet open, listing the rest of the post's tracks" loading="lazy" decoding="async"></picture></span></div>
 </div></section>
@@ -189,7 +197,7 @@ html.js .r.in{opacity:1;transform:none}
 	<div class="shot r"><picture><source type="image/avif" srcset="desktop-now-playing.avif 2880w, desktop-now-playing-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom" loading="lazy" decoding="async"></picture></div>
 </div></section>
 
-<section id="listen"><div class="wrap">
+<section id="listen"><div class="dots" aria-hidden="true"></div><div class="wrap">
 	<div class="r"><h2>One page where everything plays</h2><p class="lede">Add the Riff block to a page and it becomes your library. Open any post inside it, play from a cover, and the music carries on.</p></div>
 	<div class="shot r"><picture><source type="image/avif" srcset="desktop-listen.avif 2880w, desktop-listen-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen page: the library, nine albums as drawn record covers" loading="lazy" decoding="async"></picture></div>
 </div></section>
@@ -205,7 +213,7 @@ html.js .r.in{opacity:1;transform:none}
 	<p class="fine r">The nine albums. Eight of the covers are drawn by Riff, a record with one groove per track, for albums that bring no artwork of their own.</p>
 </div></section>
 
-<section class="wire" id="owners"><div class="wrap">
+<section class="wire" id="owners"><div class="marg" aria-hidden="true"><img src="brand/record-pomegranate.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></div><div class="dots" aria-hidden="true"></div><div class="wrap">
 	<div class="r"><h2>Get Riff</h2><p class="lede">Riff plays the audio, video and playlist blocks WordPress already has. No new way to upload. One new page, if you want it.</p></div>
 	<div class="cta r"><a class="btn" href="download/">Download Riff</a><a class="btn outline" href="add-music/">Add your music</a></div>
 	<p class="fine r">Version {{version}}, as a zip for the Plugins screen. Upload it under Plugins, Add New Plugin, and activate.</p>
