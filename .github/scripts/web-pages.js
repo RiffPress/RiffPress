@@ -16,8 +16,9 @@ const SITEMAP = path.join( ROOT, 'site', 'sitemap.xml' );
 const REPO = 'https://github.com/RiffPress/RiffPress/blob/{{commit}}/';
 const shell = require( './site-shell.js' );
 const hooksReference = require( './hooks-reference.js' );
-const { esc, inline, FOOT } = shell;
-const head = ( title, description, url, depth ) => shell.head( title, description, url, depth, `${ depth === 2 ? '../' : '' }web.css` );
+const { esc, inline, FOOT, localNav, crumbs } = shell;
+const head = ( title, description, url, depth ) =>
+	shell.head( title, description, url, depth, `${ depth === 2 ? '../' : '' }web.css`, 'developers' ) + localNav( '../'.repeat( depth ), 'web' );
 
 const SHOTS = {
 	'phone-now-playing': { wide: false, alt: 'Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls' },
@@ -68,9 +69,9 @@ function page( e, i, entries ) {
 	const prev = entries[ i - 1 ];
 	const next = entries[ i + 1 ];
 	let html = head( `${ e.name }, RiffPress`, e.summary, `web/${ e.slug }/`, 2 );
+	html += crumbs( [ [ 'RiffPress', '../../' ], [ 'Developers', '../../developers/' ], [ 'Built on the open web', '../' ], [ e.name ] ] );
 	html += `<div class="wrap layout">
 <main id="main">
-<p class="crumb"><a href="../../">RiffPress</a> <span>/</span> <a href="../../developers/">Developers</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> ${ esc( e.group ) }</p>
 <h1>${ esc( e.name ) }</h1>
 <p class="lede">${ inline( e.summary ) }</p>
 <figure>${ picture( e.shot ) }<figcaption>${ inline( e.shot.caption ) }</figcaption></figure>
@@ -99,6 +100,7 @@ ${ sidebar( entries, e.slug, 2 ) }
 
 function index( entries ) {
 	let html = head( 'Built on the open web, RiffPress', 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.', 'web/', 1 );
+	html += crumbs( [ [ 'RiffPress', '../' ], [ 'Developers', '../developers/' ], [ 'Built on the open web' ] ] );
 	html += `<main id="main" class="wrap index">
 <h1>Built on the open web</h1>
 <p class="lede">Every browser API and CSS feature the player calls, and what each one is for. A music player touches a lot of them, which is part of the point.</p>

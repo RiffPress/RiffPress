@@ -15,7 +15,7 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { esc, inline, head, FOOT } = require( './site-shell.js' );
+const { esc, inline, head, FOOT, localNav, crumbs } = require( './site-shell.js' );
 
 const ROOT = path.resolve( __dirname, '..', '..' );
 const PLUGIN = path.join( ROOT, 'plugins', 'riff' );
@@ -400,25 +400,6 @@ function usage( h ) {
 	return `add_action( '${ h.name }', function (${ names.length ? ' ' + names.join( ', ' ) + ' ' : '' }) {\n}${ extra } );`;
 }
 
-/**
- * The bar under the site's header, as developer.wordpress.org has one per section.
- *
- * @param {string} up      Path back to the site root.
- * @param {string} current Which link is the page: 'hooks' or ''.
- * @return {string} HTML.
- */
-function localNav( up, current ) {
-	const link = ( href, label, key ) => `<a href="${ up }${ href }"${ key === current ? ' aria-current="page"' : '' }>${ label }</a>`;
-	return `<div class="local-nav"><div class="wrap"><a class="local-title" href="${ up }developers/">Developers</a><nav aria-label="Developers">${ link( 'developers/hooks/', 'Hooks', 'hooks' ) }${ link( 'web/', 'Built on the open web', 'web' ) }<a href="https://github.com/RiffPress/RiffPress/blob/main/docs/javascript.md">JavaScript</a></nav></div></div>
-`;
-}
-
-function crumbs( trail, search ) {
-	const parts = trail.map( ( [ label, href ] ) => ( href ? `<span><a href="${ href }">${ esc( label ) }</a></span>` : `<span class="is-current-page">${ esc( label ) }</span>` ) );
-	return `<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs">${ parts.join( '' ) }</nav>${ search }</div></div>
-`;
-}
-
 const searchForm = ( action ) => `<form class="hook-search" role="search" action="${ action }"><label class="screen-reader-text" for="hook-q">Search the hooks</label><input id="hook-q" name="q" type="search" placeholder="Search hooks" autocomplete="off"></form>`;
 
 /** A section heading with the anchor link the code reference puts beside each one. */
@@ -496,7 +477,7 @@ function hookPage( p ) {
 	body += '</tbody></table></section>\n';
 
 	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ label }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
-	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() }, RiffPress`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css' );
+	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() }, RiffPress`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', 'developers' );
 	html += localNav( '../../../', 'hooks' );
 	html += crumbs( [ [ 'RiffPress', '../../../' ], [ 'Developers', '../../' ], [ 'Hooks', '../' ], [ p.name ] ], searchForm( '../' ) );
 	html += `<main id="main" class="wrap reference">
@@ -518,7 +499,7 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 }
 
 function indexPage( list ) {
-	let html = head( 'Hooks, RiffPress', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css' );
+	let html = head( 'Hooks, RiffPress', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css', 'developers' );
 	html += localNav( '../../', 'hooks' );
 	html += crumbs( [ [ 'RiffPress', '../../' ], [ 'Developers', '../' ], [ 'Hooks' ] ], searchForm( './' ) );
 	html += `<main id="main" class="wrap reference hooks-index">

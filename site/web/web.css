@@ -284,16 +284,6 @@ main h2 {
 	color: var(--ink-2);
 }
 
-.crumb {
-	margin: 0 0 16px;
-	font-size: 0.875rem;
-	color: var(--ink-2);
-}
-
-.crumb span {
-	margin: 0 6px;
-	color: var(--charcoal-5);
-}
 
 /* the page: sidebar left, article right */
 .layout {
@@ -938,6 +928,13 @@ figcaption {
 }
 
 .reference {
+	padding-top: 20px;
+}
+
+/* under the breadcrumbs, a page starts close to them, as on wordpress.org */
+.crumbs + main,
+.crumbs + .layout,
+.crumbs + .marg + main {
 	padding-top: 20px;
 }
 
