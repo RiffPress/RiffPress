@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.9.0](https://github.com/RiffPress/RiffPress/compare/v4.8.0...v4.9.0) (2026-10-14)
+
+
+### Features
+
+* **site:** a download page with the release and its zip, and a header without Live demo ([#317](https://github.com/RiffPress/RiffPress/issues/317)) ([80bb6bf](https://github.com/RiffPress/RiffPress/commit/80bb6bf81ee147b7392da6af81f99e5188db43d7))
+* the core Playlist block is a source of tracks, one row per item, with its own player kept off ([#314](https://github.com/RiffPress/RiffPress/issues/314)) ([e95e83c](https://github.com/RiffPress/RiffPress/commit/e95e83c5543921ff2fc7f986ea5482989e2cb982))
+
 ## [4.8.0](https://github.com/RiffPress/RiffPress/compare/v4.7.0...v4.8.0) (2026-10-14)
 
 
