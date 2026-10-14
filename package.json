@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
+    "postinstall": "node .github/scripts/patch-wp-env.js",
     "env:start": "wp-env start",
     "env:stop": "wp-env stop",
     "env:clean": "wp-env clean all",
@@ -54,6 +55,7 @@
     "katex": "^0.19.0",
     "serialize-javascript": "^7.1.2",
     "qs": "^6.16.0",
-    "uuid": "^11.1.1"
+    "uuid": "^11.1.1",
+    "simple-git": "^4.0.2"
   }
 }
