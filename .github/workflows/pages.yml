@@ -110,7 +110,8 @@ jobs:
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(\.avif)( [0-9]+w)?(,|\")#\1?v=${V}\2\3#g; s#(content=\"[^\"?]+/og\.png)\"#\1?v=${V}\"#; s#(\"image\": \"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(blueprint-url=[^\"&?]+/blueprint\.json)#\1?v=${V}#g" out/index.html
           grep -c "blueprint.json?v=${V}" out/index.html
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g" out/robots.txt out/sitemap.xml
-          if grep -n '{{' out/index.html out/robots.txt out/sitemap.xml; then echo "::error::A placeholder survived"; exit 1; fi
+          find out/web -name index.html -exec sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#\{\{commit\}\}#${GITHUB_SHA}#g" {} +
+          if grep -rn '{{' out/index.html out/robots.txt out/sitemap.xml out/web; then echo "::error::A placeholder survived"; exit 1; fi
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" "$V" > out/blueprint.json
           grep -c "?v=${V}" out/index.html out/blueprint.json
           # Everything stamped by commit can be cached forever; the page and the blueprint are fetched fresh.

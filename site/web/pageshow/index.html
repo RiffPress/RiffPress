@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>pageshow, Riff</title>
+<meta name="description" content="Restarts the frame loop after a Back from the back-forward cache.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Riff">
+<meta property="og:url" content="{{pages_url}}web/pageshow/">
+<meta property="og:title" content="pageshow, Riff">
+<meta property="og:description" content="Restarts the frame loop after a Back from the back-forward cache.">
+<meta property="og:image" content="{{pages_url}}og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{{pages_url}}web/pageshow/">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../../icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1e1e1e">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="../web.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="nav"><div class="wrap"><a class="mark" href="../../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="../../#listen">The block</a><a href="../../#try">Live demo</a><a href="../../#owners">Get Riff</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="https://github.com/RiffPress/RiffPress/releases/latest">Download</a></nav></div></div>
+<div class="wrap layout">
+<main id="main">
+<p class="crumb"><a href="../../">Riff</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> Platform</p>
+<h1>pageshow</h1>
+<p class="lede">Restarts the frame loop after a Back from the back-forward cache.</p>
+<figure><span class="device"><picture><source type="image/avif" srcset="../../phone-now-playing.avif"><img src="../../phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls" loading="lazy" decoding="async"></picture></span><figcaption>After a Back from the cache the seek line here would be frozen without the restart.</figcaption></figure>
+<h2>How Riff uses it</h2>
+<p>When a page is restored from the back-forward cache, <code>pageshow</code> fires with <code>persisted</code> set. The handler repaints the seek line and, if the media element is still playing, restarts the per-frame loop the browser stopped when it froze the page.</p>
+<h2>Why</h2>
+<p>The audio element kept its state in the cache but the animation loop did not, so the music would be playing while the seek line sat still.</p>
+<h2>Without it</h2>
+<p><code>persisted</code> is checked, so a normal load does nothing.</p>
+<h2>Where</h2>
+<ul class="where"><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L1479">plugins/riff/assets/riff.js, line 1479</a><pre><code>window.addEventListener( 'pageshow', ( e ) =&gt; {</code></pre></li></ul>
+<p class="fine">Links open the source at the commit this page was published from.</p>
+<p class="fine">Reference: <a href="https://developer.mozilla.org/docs/Web/API/Window/pageshow_event">pageshow on MDN</a>.</p>
+<nav class="pager" aria-label="Previous and next"><a rel="prev" href="../pagehide/">pagehide</a><a rel="next" href="../aria-dialog/">ARIA dialog</a></nav>
+</main>
+<aside class="side" aria-label="All the features"><p class="side-title"><a href="../">Built on the open web</a></p><h2>Media</h2><ul><li><a href="../html-media-element/">HTMLMediaElement</a></li><li><a href="../time-ranges/">TimeRanges</a></li><li><a href="../screen-wake-lock/">Screen Wake Lock</a></li><li><a href="../vibration/">Vibration</a></li><li><a href="../network-information/">Network Information</a></li><li><a href="../media-session/">Media Session</a></li><li><a href="../remote-playback/">Remote Playback</a></li><li><a href="../web-audio/">Web Audio</a></li><li><a href="../analyser-node/">AnalyserNode</a></li><li><a href="../page-visibility/">Page Visibility</a></li><li><a href="../lazy-loading/">Lazy loading</a></li><li><a href="../async-decoding/">Async decoding</a></li></ul><h2>Interface</h2><ul><li><a href="../pointer-events/">Pointer Events</a></li><li><a href="../web-animations/">Web Animations</a></li><li><a href="../request-animation-frame/">requestAnimationFrame</a></li><li><a href="../web-share/">Web Share</a></li><li><a href="../clipboard/">Clipboard</a></li><li><a href="../inert/">inert</a></li><li><a href="../match-media/">matchMedia</a></li><li><a href="../scroll-into-view/">scrollIntoView</a></li></ul><h2>Platform</h2><ul><li><a href="../es-modules/">ES modules</a></li><li><a href="../dynamic-import/">Dynamic import</a></li><li><a href="../history/">History</a></li><li><a href="../web-storage/">Web Storage</a></li><li><a href="../fetch/">Fetch</a></li><li><a href="../navigation-timing/">Navigation Timing</a></li><li><a href="../pagehide/">pagehide</a></li><li><a href="../pageshow/" aria-current="page">pageshow</a></li><li><a href="../aria-dialog/">ARIA dialog</a></li></ul><h2>Styling</h2><ul><li><a href="../property/">@property</a></li><li><a href="../color-mix/">color-mix()</a></li><li><a href="../oklab/">oklab</a></li><li><a href="../container-queries/">Container queries</a></li><li><a href="../has/">:has()</a></li><li><a href="../env-safe-areas/">env() safe areas</a></li><li><a href="../text-wrap/">text-wrap</a></li><li><a href="../variable-fonts/">Variable fonts</a></li></ul><h2>Behaviour</h2><ul><li><a href="../prefers-reduced-motion/">prefers-reduced-motion</a></li><li><a href="../prefers-reduced-transparency/">prefers-reduced-transparency</a></li><li><a href="../clip-path/">clip-path</a></li><li><a href="../aspect-ratio/">aspect-ratio</a></li><li><a href="../accent-color/">accent-color</a></li><li><a href="../touch-action/">touch-action</a></li><li><a href="../overscroll-behavior/">overscroll-behavior</a></li><li><a href="../focus-visible/">:focus-visible</a></li></ul></aside>
+</div>
+<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
+</body>
+</html>
