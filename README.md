@@ -2,8 +2,8 @@
 
 <h1 align="center">Riff</h1>
 
-A music player for WordPress that works like a streaming app. Install it and the audio and video
-blocks in your posts play in a player docked at the bottom of the screen, with a full Now Playing
+A music player for WordPress that works like a streaming app. Install it and the audio, video and
+playlist blocks in your posts play in a player docked at the bottom of the screen, with a full Now Playing
 view, a queue, and a Song/Video switch for tracks that have both.
 
 This repository is the Riff monorepo. <a href="https://riffpress.com/">Landing page</a> and live demo.
@@ -27,7 +27,10 @@ No install needed: launch a scratch site with Riff and the demo post, built from
 ## How the player works
 
 The server marks each core audio and video block with its track as a data attribute on the
-figure, and leaves the block's own markup alone, so a page still plays if the script never runs.
+figure, and each item of a playlist block (WordPress 7.1) with its own, and leaves the block's
+markup alone, so a page still plays if the script never runs. A playlist's own player is not
+started, since it fetches the whole current file to draw its waveform; the page's player plays
+the playlist's tracks instead.
 The script turns those blocks into rows and plays them through one queue: the post's media is
 the queue, the row you tap is where it starts. One `<audio>` and one `<video>` element serve the
 whole page; a track with a video version plays through whichever is showing, and switching hands

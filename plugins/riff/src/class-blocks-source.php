@@ -1,6 +1,6 @@
 <?php
 /**
- * The first source: the core audio and video blocks in a post.
+ * The first source: the core audio, video and playlist blocks in a post.
  *
  * @package Riff
  * @since 0.2.0
@@ -13,7 +13,10 @@ use WP_Post;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The core source: audio and video blocks in a post's content.
+ * The core source: audio, video and playlist blocks in a post's content.
+ *
+ * A playlist block (WordPress 7.1) holds one playlist-track block per track, each naming an
+ * attachment; those are tracks the same way an audio block is, in the order they appear.
  *
  * @since 0.2.0
  */
@@ -31,7 +34,7 @@ final class Blocks_Source implements Source {
 	}
 
 	/**
-	 * Whether the post holds a core audio or video block.
+	 * Whether the post holds a core audio, video or playlist block.
 	 *
 	 * @since 0.2.0
 	 *
@@ -39,11 +42,11 @@ final class Blocks_Source implements Source {
 	 * @return bool
 	 */
 	public function supports( WP_Post $post ): bool {
-		return has_block( 'core/audio', $post ) || has_block( 'core/video', $post );
+		return has_block( 'core/audio', $post ) || has_block( 'core/video', $post ) || has_block( 'core/playlist', $post );
 	}
 
 	/**
-	 * The tracks in the post's audio and video blocks, in order.
+	 * The tracks in the post's audio, video and playlist blocks, in order.
 	 *
 	 * @since 0.2.0
 	 *
@@ -52,7 +55,7 @@ final class Blocks_Source implements Source {
 	 */
 	public function tracks( WP_Post $post ): array {
 		$tracks = array();
-		foreach ( self::media_blocks( parse_blocks( $post->post_content ) ) as $block ) {
+		foreach ( self::track_blocks( parse_blocks( $post->post_content ) ) as $block ) {
 			$track = Tracks::from_block( $block, $post->ID );
 			if ( $track ) {
 				$tracks[] = $track;
@@ -84,7 +87,7 @@ final class Blocks_Source implements Source {
 	}
 
 	/**
-	 * Posts whose content holds an audio or video block.
+	 * Posts whose content holds an audio, video or playlist block.
 	 *
 	 * @since 0.2.0
 	 *
@@ -93,14 +96,15 @@ final class Blocks_Source implements Source {
 	public function where(): string {
 		global $wpdb;
 		return $wpdb->prepare(
-			"({$wpdb->posts}.post_content LIKE %s OR {$wpdb->posts}.post_content LIKE %s)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the posts table name.
+			"({$wpdb->posts}.post_content LIKE %s OR {$wpdb->posts}.post_content LIKE %s OR {$wpdb->posts}.post_content LIKE %s)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the posts table name.
 			'%' . $wpdb->esc_like( '<!-- wp:audio' ) . '%',
-			'%' . $wpdb->esc_like( '<!-- wp:video' ) . '%'
+			'%' . $wpdb->esc_like( '<!-- wp:video' ) . '%',
+			'%' . $wpdb->esc_like( '<!-- wp:playlist' ) . '%'
 		);
 	}
 
 	/**
-	 * Core audio and video blocks, found at any depth.
+	 * Core audio, video and playlist blocks, found at any depth: what renders as figures.
 	 *
 	 * @param array $blocks Parsed blocks.
 	 * @return array[]
@@ -109,10 +113,47 @@ final class Blocks_Source implements Source {
 		$found = array();
 		foreach ( $blocks as $block ) {
 			$name = $block['blockName'] ?? '';
-			if ( 'core/audio' === $name || 'core/video' === $name ) {
+			if ( 'core/audio' === $name || 'core/video' === $name || 'core/playlist' === $name ) {
 				$found[] = $block;
 			} elseif ( ! empty( $block['innerBlocks'] ) ) {
 				$found = array_merge( $found, self::media_blocks( $block['innerBlocks'] ) );
+			}
+		}
+		return $found;
+	}
+
+	/**
+	 * The blocks that are each one track: audio and video blocks as they are, and a playlist
+	 * block's playlist-track children in its order.
+	 *
+	 * @param array $blocks Parsed blocks.
+	 * @return array[]
+	 */
+	private static function track_blocks( array $blocks ): array {
+		$found = array();
+		foreach ( self::media_blocks( $blocks ) as $block ) {
+			if ( 'core/playlist' === ( $block['blockName'] ?? '' ) ) {
+				$found = array_merge( $found, self::playlist_tracks( $block ) );
+			} else {
+				$found[] = $block;
+			}
+		}
+		return $found;
+	}
+
+	/**
+	 * A playlist block's track blocks, in order. Core renders only the ones that name a file.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array $playlist Parsed playlist block.
+	 * @return array[]
+	 */
+	public static function playlist_tracks( array $playlist ): array {
+		$found = array();
+		foreach ( (array) ( $playlist['innerBlocks'] ?? array() ) as $block ) {
+			if ( 'core/playlist-track' === ( $block['blockName'] ?? '' ) && ! empty( $block['attrs']['id'] ) ) {
+				$found[] = $block;
 			}
 		}
 		return $found;

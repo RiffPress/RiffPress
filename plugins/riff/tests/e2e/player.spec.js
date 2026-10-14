@@ -26,6 +26,7 @@ const FILES = [
 ];
 
 let postUrl;
+let playlistUrl;
 
 test.beforeAll( async ( { requestUtils } ) => {
 	const cover = await requestUtils.uploadMedia(
@@ -67,6 +68,22 @@ test.beforeAll( async ( { requestUtils } ) => {
 		featured_media: cover.id,
 	} );
 	postUrl = post.link;
+
+	// The same tracks as one playlist block (WordPress 7.1), the way the editor saves it: the
+	// track blocks are dynamic, so they save as self-closing comments inside the list.
+	const items = audio
+		.map(
+			( m ) =>
+				`<!-- wp:playlist-track {"id":${ m.id },"src":"${ m.source_url }","title":"${ m.title.raw }"} /-->`
+		)
+		.join( '' );
+	const playlist = await requestUtils.createPost( {
+		title: `Riff e2e playlist ${ Date.now() }`,
+		status: 'publish',
+		content: `<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">${ items }</ol></figure><!-- /wp:playlist -->`,
+		featured_media: cover.id,
+	} );
+	playlistUrl = playlist.link;
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
@@ -105,6 +122,43 @@ test.describe( 'Player', () => {
 		await expect(
 			page.locator( '.wp-block-audio audio' ).first()
 		).toBeHidden();
+	} );
+
+	test( 'a playlist block is rows too, played through the one player, with its own player kept off', async ( {
+		page,
+	} ) => {
+		await page.goto( playlistUrl );
+		// Before 7.1 the track blocks are unknown to WordPress and render as nothing.
+		test.skip(
+			( await page.locator( '.wp-block-playlist-track' ).count() ) === 0,
+			'The playlist block arrived in WordPress 7.1.'
+		);
+		const rows = page.locator( '.wp-block-playlist .riff-row' );
+		await expect( rows ).toHaveCount( 3 );
+		await expect( rows.nth( 2 ) ).toContainText( 'Trombone Detritus' );
+		// Core's player markup is there, but neither it nor its track buttons show, and the player
+		// never starts, so the file is not fetched to draw a waveform.
+		await expect(
+			page.locator( '.wp-block-playlist__waveform-player' )
+		).toBeAttached();
+		await expect(
+			page.locator( '.wp-block-playlist__waveform-player' )
+		).toBeHidden();
+		await expect(
+			page.locator( '.wp-block-playlist-track__button' ).first()
+		).toBeHidden();
+		await expect(
+			page.locator( '.wp-block-playlist__waveform-player canvas' )
+		).toHaveCount( 0 );
+
+		await rows.nth( 1 ).click();
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
+			'Underground'
+		);
+		await expect
+			.poll( async () => ( await audioState( page ) ).paused )
+			.toBe( false );
+		await expect( page.locator( '.riff-queue-list li' ) ).toHaveCount( 3 );
 	} );
 
 	test( 'a tap plays the track in the bar and the lock screen gets its metadata', async ( {

@@ -318,8 +318,17 @@ final class Tracks {
 	 * @return array|null
 	 */
 	public static function from_block( array $block, int $post_id ): ?array {
-		$type = 'core/video' === ( $block['blockName'] ?? '' ) ? 'video' : 'audio';
-		return self::from_markup( (string) ( $block['innerHTML'] ?? '' ), (array) ( $block['attrs'] ?? array() ), $type, $post_id );
+		$name  = (string) ( $block['blockName'] ?? '' );
+		$attrs = (array) ( $block['attrs'] ?? array() );
+		if ( 'core/playlist-track' === $name ) {
+			// A playlist's track is an attachment by id, with the file's tags copied onto the block
+			// when it was picked. The attachment is read, so later edits to its tags and artwork show;
+			// a track whose file has since gone is skipped, as core skips it.
+			$id = (int) ( $attrs['id'] ?? 0 );
+			return $id ? self::from_attachment( $id, $post_id ) : null;
+		}
+		$type = 'core/video' === $name ? 'video' : 'audio';
+		return self::from_markup( (string) ( $block['innerHTML'] ?? '' ), $attrs, $type, $post_id );
 	}
 
 	/**
