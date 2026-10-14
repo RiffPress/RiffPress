@@ -654,8 +654,13 @@ function start() {
 		advance( rms / Math.max( 0.02, ref ), dt );
 		setHeat( heat );
 		const levels = bandLevels();
+		// Three bars per place the current track is shown: the row in the post and the item in Up
+		// next. Each place's bars take the three bands in turn.
 		bars.forEach( ( bar, k ) => {
-			bar.style.transform = `scaleY(${ ( 0.3 + 0.7 * levels[ k ] ).toFixed( 2 ) })`;
+			bar.style.transform = `scaleY(${ (
+				0.3 +
+				0.7 * levels[ k % levels.length ]
+			).toFixed( 2 ) })`;
 		} );
 		meterRaf = requestAnimationFrame( tick );
 	}

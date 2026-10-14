@@ -298,6 +298,26 @@ test.describe( 'Player', () => {
 		);
 	} );
 
+	test( 'the bars on the current Up next item follow the music, like the row\'s', async ( {
+		page,
+	}, testInfo ) => {
+		test.skip( testInfo.project.name === 'iphone', 'no analyser on iOS' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.reload();
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
+		await page.locator( '.riff-bar-info' ).click();
+		if ( await page.locator( '.riff-peek' ).isVisible() ) {
+			await page.locator( '.riff-peek' ).click();
+		}
+		const bar = page.locator( '.riff-queue-list [aria-current] .riff-row-state i' ).first();
+		await expect( bar ).toBeAttached();
+		// A live reading writes a transform each frame; the keyframes are off while it runs.
+		await expect
+			.poll( () => bar.evaluate( ( b ) => b.style.transform ) )
+			.toMatch( /scaleY\(/ );
+	} );
+
 	test( 'next, previous, repeat and shuffle', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-bar-info' ).click();
