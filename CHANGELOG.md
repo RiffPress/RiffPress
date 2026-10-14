@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.11.0](https://github.com/RiffPress/RiffPress/compare/v4.10.0...v4.11.0) (2026-10-14)
+
+
+### Features
+
+* **site:** a second read for writing by rule ([#330](https://github.com/RiffPress/RiffPress/issues/330)) ([1445a1e](https://github.com/RiffPress/RiffPress/commit/1445a1e9b941140cfba6341455c4331975ee2c62))
+
 ## [4.10.0](https://github.com/RiffPress/RiffPress/compare/v4.9.0...v4.10.0) (2026-10-14)
 
 
