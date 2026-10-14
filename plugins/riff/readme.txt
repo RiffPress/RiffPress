@@ -12,7 +12,7 @@ A music player for WordPress. The audio and video in your posts, in a player tha
 
 == Description ==
 
-Riff plays the audio and video blocks WordPress already has. Install it, write a post with audio or video in it, and every track in the post plays in a player docked at the bottom of the screen that keeps going while the reader scrolls on. Tap the bar for Now Playing: the artwork, a thick seek bar, the controls, and the rest of the post queued up next.
+Riff plays the audio, video and playlist blocks WordPress already has. Install it, write a post with audio or video in it, and every track in the post plays in a player docked at the bottom of the screen that keeps going while the reader scrolls on. Tap the bar for Now Playing: the artwork, a thick seek bar, the controls, and the rest of the post queued up next.
 
 * A track with a video version switches between the song and the video without losing its place.
 * Lock-screen and headphone controls through Media Session; AirPlay and Cast when a device is in reach.
@@ -27,7 +27,7 @@ Roboto, Inter and EB Garamond are bundled under the SIL Open Font License, and t
 == Installation ==
 
 1. Upload the plugin folder to `wp-content/plugins/` and activate it.
-2. Add an audio or video block to a post.
+2. Add an audio or video block to a post, one per track, or a playlist block holding them all.
 3. To pair a video with a song, edit the audio file in the Media Library and fill in **Video version** with the address of a video in the library.
 4. For one page where everything plays, add the Riff block (or `[riff]`) to a page.
 
@@ -39,7 +39,11 @@ No. The blocks keep their own markup, and the player is added at the end of ever
 
 = Where do the tracks come from? =
 
-From the post. Every audio and video block in the post you are reading is the queue, in order, starting from the one you tapped.
+From the post. Every audio and video block in the post you are reading is the queue, in order, starting from the one you tapped. A playlist block counts as one track per item.
+
+= Which blocks does it read? =
+
+The ones WordPress ships: the [Audio block](https://wordpress.org/documentation/article/audio-block/), the [Video block](https://wordpress.org/documentation/article/video-block/), and on WordPress 7.1 or newer the [Playlist block](https://wordpress.org/documentation/article/playlist-block/), which holds several tracks picked from the Media Library at once. Nothing is added to the editor; the blocks keep their own markup and their own players underneath, and Riff draws its rows over them. A track's title, artist and album are what WordPress reads from the file on upload, and can be edited in the [Media Library](https://wordpress.org/documentation/article/media-library-screen/) along with Riff's Artwork and Video version fields.
 
 == Developers ==
 
@@ -49,7 +53,7 @@ Riff is built the way a feature plugin would be: one track shape everywhere, rea
 
 * **Hooks:** every filter and action, with its parameters and the line it fires on, is in `docs/hooks.md`, generated from the plugin's docblocks by `npm run docs:hooks` and checked in CI.
 * **JavaScript:** `window.riff` is the player's api; `riff.*` actions and filters through `wp.hooks`, and `riff:*` events on `#riff`, announce every change of state. `docs/javascript.md` has the reference.
-* **Sources:** tracks come from registered sources. The core source reads audio and video blocks in posts; a plugin adds its own post type or catalogue by implementing `Riff\Source` and calling `Riff\Sources::register()` on `init`, or through the `riff_sources` filter.
+* **Sources:** tracks come from registered sources. The core source reads audio, video and playlist blocks in posts; a plugin adds its own post type or catalogue by implementing `Riff\Source` and calling `Riff\Sources::register()` on `init`, or through the `riff_sources` filter.
 * **Track schema:** one shape, `Riff\Tracks::schema()`, version `Riff\Tracks::SCHEMA_VERSION`, shared by REST, GraphQL, the block attribute and the script, and held to after the `riff_track` filter.
 * **REST:** every audio and video item in `wp/v2/media` carries `riff_track`. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and rendered blocks. All describe themselves on OPTIONS.
 * **WPGraphQL:** when it is active, `MediaItem.riffTrack` and `Post.riffTracks`.

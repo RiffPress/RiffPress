@@ -103,6 +103,35 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertNull( Tracks::from_attachment( 999999 ) );
 	}
 
+	public function test_a_playlist_track_block_is_its_attachment_read_fresh(): void {
+		$post = self::factory()->post->create();
+		$id   = self::attach( '02 - Underground [underground].mp3', $post );
+
+		$track = Tracks::from_block(
+			array(
+				'blockName' => 'core/playlist-track',
+				'attrs'     => array(
+					'id'    => $id,
+					'title' => 'Stale title copied when picked',
+				),
+			),
+			$post
+		);
+
+		$this->assertSame( (string) $id, $track['id'] );
+		$this->assertSame( 'Underground', $track['title'], 'the attachment, not the copy on the block' );
+		$this->assertNull(
+			Tracks::from_block(
+				array(
+					'blockName' => 'core/playlist-track',
+					'attrs'     => array( 'src' => 'https://example.com/a.mp3' ),
+				),
+				$post
+			),
+			'no file, no track'
+		);
+	}
+
 	public function test_a_bare_address_is_titled_from_the_caption_then_the_file_name(): void {
 		$post = self::factory()->post->create( array( 'post_title' => 'A post' ) );
 

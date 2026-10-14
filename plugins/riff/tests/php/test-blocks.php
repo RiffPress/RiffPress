@@ -55,6 +55,68 @@ class Test_Riff_Blocks extends Riff_TestCase {
 		$this->assertStringContainsString( '<audio controls src=', $html, 'the native player stays' );
 	}
 
+	/**
+	 * The saved markup of a playlist block (WordPress 7.1): the track blocks are dynamic, so they
+	 * save as self-closing comments inside the figure's list.
+	 *
+	 * @param int[] $ids Attachment IDs, in order.
+	 * @return string
+	 */
+	private static function playlist( array $ids ): string {
+		$items = '';
+		foreach ( $ids as $id ) {
+			$items .= sprintf( '<!-- wp:playlist-track {"id":%d,"src":"%s","title":"%s"} /-->', $id, wp_get_attachment_url( $id ), get_the_title( $id ) );
+		}
+		return '<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">' . $items . '</ol></figure><!-- /wp:playlist -->';
+	}
+
+	public function test_a_playlist_block_marks_each_of_its_items_with_a_track(): void {
+		if ( ! WP_Block_Type_Registry::get_instance()->is_registered( 'core/playlist' ) ) {
+			$this->markTestSkipped( 'The playlist block arrived in WordPress 7.1.' );
+		}
+		$post   = self::factory()->post->create();
+		$first  = self::attach( '02 - Underground [underground].mp3', $post );
+		$second = self::attach( '03 - Trombone Detritus [detritus].mp3', $post );
+		wp_update_post(
+			array(
+				'ID'           => $post,
+				'post_content' => self::playlist( array( $first, $second ) ),
+			)
+		);
+
+		$html   = $this->render( $post );
+		$tracks = $this->tracks( $html );
+
+		$this->assertCount( 2, $tracks );
+		$this->assertSame( array( (string) $first, (string) $second ), array_column( $tracks, 'id' ), 'in the playlist\'s order' );
+		$this->assertSame( 'Underground', $tracks[0]['title'] );
+		$this->assertStringContainsString( 'class="wp-block-playlist riff-tracks"', $html );
+		$this->assertSame( 2, preg_match_all( '/<li [^>]*data-riff-track="[^"]+"[^>]*class="[^"]*riff-track[^"]*"/', $html ), 'each item carries its track' );
+		$this->assertStringContainsString( 'wp-block-playlist-track__button', $html, 'core\'s track buttons stay' );
+		$this->assertStringContainsString( 'wp-block-playlist__waveform-player', $html, 'core\'s player markup stays' );
+		$this->assertStringNotContainsString( 'initWaveformPlayer', $html, 'but core\'s player is not started, since it would fetch the whole file to draw its waveform' );
+	}
+
+	public function test_a_playlist_item_whose_file_is_gone_is_skipped_like_core_skips_it(): void {
+		if ( ! WP_Block_Type_Registry::get_instance()->is_registered( 'core/playlist' ) ) {
+			$this->markTestSkipped( 'The playlist block arrived in WordPress 7.1.' );
+		}
+		$post = self::factory()->post->create();
+		$id   = self::attach( '02 - Underground [underground].mp3', $post );
+		wp_update_post(
+			array(
+				'ID'           => $post,
+				'post_content' => self::playlist( array( $id ) ) . self::playlist( array( $id + 1000 ) ),
+			)
+		);
+
+		$html   = $this->render( $post );
+		$tracks = $this->tracks( $html );
+
+		$this->assertCount( 1, $tracks );
+		$this->assertSame( (string) $id, $tracks[0]['id'] );
+	}
+
 	public function test_a_video_block_is_a_video_track(): void {
 		$post = self::factory()->post->create();
 		$id   = self::attach( '01 - Intensities in Ten Cities [intensities].webm', $post );

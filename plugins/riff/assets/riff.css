@@ -43,6 +43,18 @@ html.has-riff body::after {
 	display: none !important;
 }
 
+/* A playlist block (WordPress 7.1): its own player and its track buttons step
+   aside for the rows, and its item hover gives way to the row's. */
+.riff-tracks > .wp-block-playlist__waveform-player,
+.riff-track > .wp-block-playlist-track__button {
+	display: none;
+}
+
+.riff-tracks .wp-block-playlist-track.riff-track,
+.riff-tracks .wp-block-playlist-track.riff-track:hover {
+	background: none;
+}
+
 .riff-row {
 	all: unset;
 	box-sizing: border-box;

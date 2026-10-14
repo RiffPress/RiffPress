@@ -1,6 +1,7 @@
 /* Riff: a docked player for the audio and video blocks in a post, with a Now Playing view.
  *
- * The server marks each core audio and video block with its track (data-riff-track on the figure).
+ * The server marks each core audio and video block with its track (data-riff-track on the figure),
+ * and each item of a playlist block with its own.
  * This script turns those blocks into rows, plays them through one queue, and keeps one <audio> and
  * one <video> element for the whole page. A track with a video version plays through whichever of
  * the two is showing, and switching hands the position over. No build step: this file is what ships. */
@@ -130,14 +131,15 @@ function start() {
 		m === video && isVideo( t ) && t.video ? t.video.src : t.src;
 
 	// ---- Rows in the post. Each block keeps its native player underneath, hidden, so a page where
-	// this script fails still plays. mount() reads every marked figure on the page; the app calls
-	// it again after it swaps a view in, and a figure already turned into a row keeps that row.
+	// this script fails still plays. mount() reads every marked element on the page, a block's
+	// figure or a playlist's item; the app calls it again after it swaps a view in, and an element
+	// already turned into a row keeps that row.
 	const rows = [];
 	const built = new WeakMap();
 	function mount() {
 		rows.length = 0;
 		document
-			.querySelectorAll( 'figure[data-riff-track]' )
+			.querySelectorAll( 'figure[data-riff-track], li[data-riff-track]' )
 			.forEach( ( fig ) => {
 				const t = parse( fig.dataset.riffTrack );
 				if ( ! t || ! t.src ) {

@@ -162,12 +162,17 @@ function sitemap( entries ) {
 
 /**
  * Every quoted line must still be at the line it claims, or the link would point at the wrong code.
+ * When the writer runs, a line that moved is found again (the nearest line holding the same code)
+ * and the data updated; the check only reports it, so a commit that moved code without running
+ * the writer fails. A quoted line that is gone altogether is a problem either way.
  *
- * @param {Array} entries The pages.
- * @return {string[]} Problems found.
+ * @param {Array}   entries The pages.
+ * @param {boolean} fix     Whether to move line numbers to where the code is now.
+ * @return {{problems: string[], moved: number}} Problems found, and lines moved.
  */
-function verify( entries ) {
+function verify( entries, fix ) {
 	const problems = [];
+	let moved = 0;
 	const cache = new Map();
 	for ( const e of entries ) {
 		for ( const w of e.where ) {
@@ -177,20 +182,33 @@ function verify( entries ) {
 			}
 			const lines = cache.get( w.file );
 			const actual = lines ? lines[ w.line - 1 ] : undefined;
-			if ( actual === undefined || ! actual.includes( w.code ) ) {
-				problems.push( `${ e.slug }: ${ w.file }:${ w.line } does not contain "${ w.code }"` );
+			if ( actual !== undefined && actual.includes( w.code ) ) {
+				continue;
+			}
+			const hits = lines ? lines.map( ( l, i ) => ( l.includes( w.code ) ? i + 1 : 0 ) ).filter( Boolean ) : [];
+			if ( ! hits.length ) {
+				problems.push( `${ e.slug }: ${ w.file } no longer has "${ w.code }"; update site/web/web.json` );
+			} else if ( fix ) {
+				w.line = hits.reduce( ( a, b ) => ( Math.abs( b - w.line ) < Math.abs( a - w.line ) ? b : a ) );
+				moved++;
+			} else {
+				problems.push( `${ e.slug }: ${ w.file }:${ w.line } does not contain "${ w.code }" (it moved); run npm run docs:web` );
 			}
 		}
 	}
-	return problems;
+	return { problems, moved };
 }
 
-function build() {
+function build( fix ) {
 	const entries = JSON.parse( fs.readFileSync( DATA, 'utf8' ) );
-	const problems = verify( entries );
+	const { problems, moved } = verify( entries, fix );
 	if ( problems.length ) {
 		problems.forEach( ( p ) => console.error( p ) );
 		process.exit( 1 );
+	}
+	if ( moved ) {
+		fs.writeFileSync( DATA, JSON.stringify( entries, null, '\t' ) + '\n' );
+		console.log( `site/web/web.json: ${ moved } quoted line${ moved === 1 ? '' : 's' } moved with the code` );
 	}
 	const files = new Map();
 	files.set( path.join( DIR, 'index.html' ), index( entries ) );
@@ -200,7 +218,7 @@ function build() {
 }
 
 const check = process.argv.includes( '--check' );
-const files = build();
+const files = build( ! check );
 let stale = 0;
 for ( const [ file, content ] of files ) {
 	const current = fs.existsSync( file ) ? fs.readFileSync( file, 'utf8' ) : null;
