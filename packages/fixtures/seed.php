@@ -108,7 +108,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 		if ( ! $post_id ) {
 			return 0;
 		}
-		$blocks = array();
+		$ids = array();
 		foreach ( (array) $manifest['tracks'] as $track ) {
 			$file = (string) ( $track['file'] ?? '' );
 			if ( '' === $file ) {
@@ -140,21 +140,58 @@ if ( ! function_exists( 'riff_seed' ) ) {
 					'riff_levels' => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
 				)
 			);
-			$blocks[] = sprintf(
-				'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
-				$id,
-				esc_url( $url )
-			);
+			$ids[] = $id;
 		}
 		$intro = isset( $manifest['curator'] ) ? sprintf( '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->', esc_html( (string) $manifest['curator'] ) ) : '';
 		wp_update_post(
 			array(
 				'ID'           => $post_id,
-				'post_content' => $intro . implode( '', $blocks ),
+				'post_content' => $intro . riff_seed_blocks( $ids ),
 			)
 		);
 		riff_seed_category( $post_id, (string) ( $manifest['category'] ?? '' ) );
 		return $post_id;
+	}
+
+	/**
+	 * The tracks as blocks: one Playlist block holding them all where WordPress has it (7.1), the way
+	 * the guide tells a first-timer to add an album; one Audio block per track on an older site.
+	 *
+	 * @param int[] $ids Audio attachment IDs, in order.
+	 * @return string Block markup.
+	 */
+	function riff_seed_blocks( array $ids ): string {
+		if ( ! WP_Block_Type_Registry::get_instance()->is_registered( 'core/playlist' ) ) {
+			$blocks = array();
+			foreach ( $ids as $id ) {
+				$blocks[] = sprintf(
+					'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
+					$id,
+					esc_url( wp_get_attachment_url( $id ) )
+				);
+			}
+			return implode( '', $blocks );
+		}
+		$items = '';
+		foreach ( $ids as $id ) {
+			$meta   = wp_get_attachment_metadata( $id );
+			$meta   = is_array( $meta ) ? $meta : array();
+			$art_id = (int) get_post_thumbnail_id( $id );
+			$attrs  = array_filter(
+				array(
+					'id'     => $id,
+					'src'    => wp_get_attachment_url( $id ),
+					'title'  => get_the_title( $id ),
+					'artist' => (string) ( $meta['artist'] ?? '' ),
+					'album'  => (string) ( $meta['album'] ?? '' ),
+					'image'  => $art_id ? (string) wp_get_attachment_image_url( $art_id, 'medium' ) : '',
+					'length' => (string) ( $meta['length_formatted'] ?? '' ),
+				),
+				static fn( $v ) => '' !== $v && null !== $v
+			);
+			$items .= '<!-- wp:playlist-track ' . wp_json_encode( $attrs, JSON_UNESCAPED_SLASHES ) . ' /-->';
+		}
+		return '<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">' . $items . '</ol></figure><!-- /wp:playlist -->';
 	}
 
 	/**
@@ -300,7 +337,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 		$video = array_filter( $files, static fn( $f ) => preg_match( '/\.(webm|mp4|mov)$/i', $f ) );
 		sort( $audio );
 
-		$blocks = array();
+		$ids = array();
 		foreach ( $audio as $file ) {
 			$attachment_id = $import( $file );
 			if ( $cover ) {
@@ -322,11 +359,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 					update_post_meta( $attachment_id, '_riff_video', $video_id );
 				}
 			}
-			$blocks[] = sprintf(
-				'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
-				$attachment_id,
-				esc_url( wp_get_attachment_url( $attachment_id ) )
-			);
+			$ids[] = $attachment_id;
 		}
 
 		$intro   = isset( $manifest['curator'] ) ? sprintf( '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->', esc_html( (string) $manifest['curator'] ) ) : '';
@@ -335,7 +368,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 				'post_title'   => $name,
 				'post_name'    => $slug,
 				'post_status'  => 'publish',
-				'post_content' => $intro . implode( '', $blocks ),
+				'post_content' => $intro . riff_seed_blocks( $ids ),
 			)
 		);
 		if ( $cover ) {
