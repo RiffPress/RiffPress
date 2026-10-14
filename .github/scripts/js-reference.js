@@ -120,7 +120,7 @@ const GUIDE = [
 	{
 		id: 'a-track',
 		title: 'A track',
-		text: [ 'Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP: `id`, `src`, `type`, `title`, `artist`, `album`, `duration`, `art`, `video`, `post`. The REST API and WPGraphQL return the same shape.' ],
+		text: [ 'Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP; the PHP reference lists every property. The REST API returns the same shape.' ],
 	},
 	{
 		id: 'controls',

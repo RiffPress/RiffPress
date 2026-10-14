@@ -3,7 +3,7 @@
  * The track on every audio and video file, for anything that reads the Media Library: the REST
  * API, and WPGraphQL where it is installed.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -27,7 +27,7 @@ final class Api {
 	/**
 	 * Hooks the REST field and, when WPGraphQL is active, the GraphQL types.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
@@ -37,7 +37,7 @@ final class Api {
 	/**
 	 * Adds `riff_track` to audio and video items in wp/v2/media.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function rest_field(): void {
 		register_rest_field(
@@ -56,7 +56,7 @@ final class Api {
 	/**
 	 * The schema of the REST field: the track shape, nullable, read only.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 *
 	 * @return array JSON Schema.
 	 */
@@ -74,7 +74,7 @@ final class Api {
 	 * WPGraphQL: a `RiffTrack` type, `riffTrack` on every MediaItem, and `riffTracks` on every post.
 	 * Runs only when WPGraphQL has loaded, since the action is its own.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function graphql(): void {
 		if ( ! function_exists( 'register_graphql_object_type' ) || ! function_exists( 'register_graphql_field' ) ) {

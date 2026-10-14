@@ -114,6 +114,7 @@ function collect() {
 		sourceDoc: interfaceDoc( iface ),
 		sourceMethods: functionsIn( iface ),
 		register: functionsIn( path.join( PLUGIN, 'src', 'class-sources.php' ), 'register' )[ 0 ],
+		unregister: functionsIn( path.join( PLUGIN, 'src', 'class-sources.php' ), 'unregister' )[ 0 ],
 		shortcode: functionsIn( path.join( PLUGIN, 'features', 'listen', 'class-app.php' ), 'shortcode' )[ 0 ],
 		block: JSON.parse( fs.readFileSync( path.join( PLUGIN, 'features', 'listen', 'block', 'block.json' ), 'utf8' ) ),
 		properties: customProperties(),
@@ -146,6 +147,7 @@ function problems( data ) {
 		}
 	}
 	need( 'Riff\\Sources::register()', data.register );
+	need( 'Riff\\Sources::unregister()', data.unregister );
 	need( 'The [riff] shortcode, App::shortcode()', data.shortcode );
 	if ( ! data.properties.length ) {
 		out.push( 'riff.css has no documented custom properties' );
@@ -230,8 +232,9 @@ function phpPage( data ) {
 		body += member( m );
 	}
 	body += member( data.register, 'Riff\\Sources::register( Source $source ): void' );
+	body += member( data.unregister, 'Riff\\Sources::unregister( string $id ): void' );
 
-	body += `<section>${ hooks.h2( 'track-schema', 'The track schema' ) }<p>One shape for a track everywhere: the REST field and routes, WPGraphQL, the block markup and the player script. It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
+	body += `<section>${ hooks.h2( 'track-schema', 'The track schema' ) }<p>One shape for a track: the REST field and routes, the block markup and the player script all use it, and WPGraphQL carries <a href="../rest/#graphql">most of it</a>. It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
 
 	const supports = Object.entries( data.block.supports || {} ).filter( ( [ , v ] ) => v ).map( ( [ k ] ) => k );
 	body += `<section>${ hooks.h2( 'the-listen-block', 'The Listen block' ) }<p><code>${ esc( data.block.name ) }</code>: ${ inline( data.block.description ) } One per page. It supports ${ supports.map( ( s ) => `<code>${ esc( s ) }</code>` ).join( ', ' ) }.</p>${ hooks.codeBlock( `<!-- wp:${ data.block.name } {"align":"full"} /-->` ) }<p>Anywhere blocks are not an option, the <code>[riff]</code> shortcode does the same.</p></section>\n`;
@@ -286,6 +289,11 @@ function restPage( data ) {
 	body += '</section>\n';
 
 	body += `<section>${ hooks.h2( 'graphql', 'WPGraphQL' ) }<p>When WPGraphQL is active, Riff adds these fields and types.</p>`;
+	// Said from the code, so the page stays true when either side changes.
+	const missing = Object.keys( s.track.properties ).filter( ( p ) => ! ( s.gql_types.RiffTrack?.fields || {} )[ p ] );
+	if ( missing.length ) {
+		body += `<p><code>RiffTrack</code> does not yet carry every property of <a href="../php/#track-schema">the track schema</a>: ${ missing.map( ( p ) => `<code>${ esc( p ) }</code>` ).join( ', ' ) } are only in REST.</p>`;
+	}
 	const gqlType = ( t ) => ( typeof t === 'string' ? t : `[${ t.list_of }]` );
 	body += table( [ 'Field', 'Description' ], s.gql_fields.map( ( f ) => `<tr><td><code>${ esc( f.type ) }.${ esc( f.name ) }</code><span class="type">${ esc( gqlType( f.returns ) ) }</span></td><td>${ inline( f.description ) }</td></tr>` ) );
 	for ( const [ name, t ] of Object.entries( s.gql_types ) ) {
@@ -311,7 +319,7 @@ function restPage( data ) {
 function cssPage( data ) {
 	const groups = [
 		[ 'player', 'The player', '#riff', 'Set on the player\'s root, <code>#riff</code>, so they reach the bar and Now Playing and nothing else. <code>--riff-bar-h</code> is on <code>:root</code>, since the page keeps room for the bar.' ],
-		[ 'listen-block', 'The Listen block', '.riff-app', 'Set on the block\'s root, <code>.riff-app</code>. The block\'s colour supports set these too.' ],
+		[ 'listen-block', 'The Listen block', '.riff-app', 'Set on the block\'s root, <code>.riff-app</code>. The block\'s colour settings in the editor set its background and text colour directly, on top of these.' ],
 	];
 	let body = '<section class="summary"><p>The player and the Listen block take their colours and sizes from custom properties. The ones below are public: each keeps its name within a major version. Any other <code>--riff-*</code> property is internal and may change.</p></section>\n';
 	for ( const [ id, title, selector, text ] of groups ) {
@@ -328,7 +336,8 @@ function cssPage( data ) {
 		}
 	}
 }` );
-	body += hooks.codeBlock( `#riff {
+	body += '<p>A theme or plugin can set the others in its own stylesheet, with a selector one step more specific than the player\'s <code>#riff</code> so the order the stylesheets load in does not matter.</p>';
+	body += hooks.codeBlock( `body #riff {
 	--riff-bg: #101010;
 	--riff-surface: #1c1c1c;
 }` ) + '</section>\n';

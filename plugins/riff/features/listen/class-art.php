@@ -2,7 +2,7 @@
 /**
  * Default artwork: a cover drawn for any post with tracks that has no image of its own.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -33,7 +33,7 @@ final class Art {
 	/**
 	 * The query variable that serves a cover.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public const QUERY = 'riff-art';
 
@@ -82,7 +82,7 @@ final class Art {
 	/**
 	 * Hooks the query variable and the handler.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_filter( 'query_vars', array( self::class, 'query_vars' ) );
@@ -95,7 +95,7 @@ final class Art {
 	/**
 	 * A track with no image anywhere gets its post's drawn cover.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array $track         Track.
 	 * @param int   $attachment_id Attachment ID, or 0.
 	 * @param int   $post_id       Post ID, or 0.
@@ -111,7 +111,7 @@ final class Art {
 	/**
 	 * A post with no image of its own is listed with its drawn cover.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array   $item Library item.
 	 * @param WP_Post $post Post.
 	 * @return array
@@ -126,7 +126,7 @@ final class Art {
 	/**
 	 * Tells the player where the Listen script is, for pages that hold the block.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array $data Player data.
 	 * @return array
 	 */
@@ -138,7 +138,7 @@ final class Art {
 	/**
 	 * Lets WordPress read ?riff-art.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array $vars Public query variables.
 	 * @return array
 	 */
@@ -150,7 +150,7 @@ final class Art {
 	/**
 	 * The address of a post's generated cover.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param int $post_id Post ID.
 	 * @return string
 	 */
@@ -161,7 +161,7 @@ final class Art {
 	/**
 	 * The generated cover as the artwork list the player reads.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param int $post_id Post ID.
 	 * @return array List of { src, sizes }.
 	 */
@@ -182,7 +182,7 @@ final class Art {
 	 * Serves the cover and stops, before the main query runs. `?riff-art=sheet` serves the contact
 	 * sheet to anyone who can edit posts.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP $wp The request.
 	 */
 	public static function serve( $wp ): void {
@@ -230,7 +230,7 @@ final class Art {
 		/**
 		 * Filters the palettes a drawn cover picks from: lists of background, accent and ink.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 * @param array $palettes Palettes.
 		 */
 		$palettes = (array) apply_filters( 'riff_art_palettes', self::PALETTES );
@@ -266,7 +266,7 @@ final class Art {
 	 * Draws the cover for a post: the choices come from its slug, so a post keeps its cover on
 	 * any site and through any reseed.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param WP_Post $post Post.
 	 * @return string SVG document.
 	 */
@@ -285,7 +285,7 @@ final class Art {
 		/**
 		 * Filters a drawn cover.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 * @param string  $svg  SVG document.
 		 * @param WP_Post $post Post.
 		 */

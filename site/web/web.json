@@ -740,7 +740,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 493,
+				"line": 497,
 				"code": "@property --riff-heat {"
 			},
 			{
@@ -771,7 +771,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 869,
+				"line": 873,
 				"code": "background: linear-gradient(var(--riff-tint), color-mix(in srgb, var(--riff-tint) 70%, #000));"
 			}
 		],
@@ -792,12 +792,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 507,
+				"line": 511,
 				"code": "--riff-glow: color-mix(in oklab, color-mix(in oklab, color-mix(in oklab, rgb(74 16 0), rgb(190 58 12) calc(var(--riff-heat-red) * 100%)), var(--riff-accent) calc(var(--riff-heat-amber) * 100%)), rgb(255 232 190) calc(var(--riff-heat-white) * 100%));"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 521,
+				"line": 525,
 				"code": ".riff-wire {"
 			}
 		],
@@ -818,12 +818,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 948,
+				"line": 952,
 				"code": "container-type: size;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 959,
+				"line": 963,
 				"code": "width: min(100cqw, 100cqh);"
 			}
 		],
@@ -844,17 +844,17 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 461,
+				"line": 465,
 				"code": ".riff-bar-seek:has(> .riff-seek:focus-visible),"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 553,
+				"line": 557,
 				"code": "html:has(#riff[data-live]) [data-playing=\"true\"] .riff-row-state i {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1717,
+				"line": 1722,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -880,7 +880,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 580,
+				"line": 584,
 				"code": "height: calc(var(--riff-bar-h) + var(--riff-safe-b));"
 			}
 		],
@@ -901,7 +901,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1925,
+				"line": 1930,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -948,7 +948,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1505,
+				"line": 1509,
 				"code": "@media (prefers-reduced-motion: reduce) {"
 			},
 			{
@@ -979,12 +979,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 557,
+				"line": 561,
 				"code": "@media (prefers-reduced-transparency: reduce) {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 502,
+				"line": 506,
 				"code": ".riff-np-glow {"
 			}
 		],
@@ -1005,12 +1005,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 927,
+				"line": 931,
 				"code": "clip-path: inset(50%);"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1341,
+				"line": 1345,
 				"code": "clip-path: none;"
 			}
 		],
@@ -1031,12 +1031,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 969,
+				"line": 973,
 				"code": "aspect-ratio: 16 / 9;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1724,
+				"line": 1729,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1057,7 +1057,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 816,
+				"line": 820,
 				"code": "accent-color: var(--riff-fg);"
 			}
 		],
@@ -1078,12 +1078,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 626,
+				"line": 630,
 				"code": "touch-action: pan-y;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 886,
+				"line": 890,
 				"code": "touch-action: none;"
 			},
 			{
@@ -1109,7 +1109,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1165,
+				"line": 1169,
 				"code": "overscroll-behavior: contain;"
 			}
 		],
@@ -1130,7 +1130,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 327,
+				"line": 331,
 				"code": "#riff button:focus-visible,"
 			},
 			{
@@ -1140,7 +1140,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1717,
+				"line": 1722,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],

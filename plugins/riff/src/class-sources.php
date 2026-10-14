@@ -3,7 +3,7 @@
  * Where tracks come from: the registry of sources.
  *
  * @package Riff
- * @since 0.2.0
+ * @since 4.0.0
  */
 
 namespace Riff;
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The registry.
  *
- * @since 0.2.0
+ * @since 4.0.0
  */
 final class Sources {
 
@@ -30,7 +30,7 @@ final class Sources {
 	 * Registers a source. The core blocks source registers itself at boot; a plugin registers
 	 * its own on `init`.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param Source $source Source.
 	 */
@@ -41,7 +41,7 @@ final class Sources {
 	/**
 	 * Removes a source.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param string $id Source id.
 	 */
@@ -52,7 +52,7 @@ final class Sources {
 	/**
 	 * Every registered source, after the `riff_sources` filter.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return Source[]
 	 */
@@ -60,7 +60,7 @@ final class Sources {
 		/**
 		 * Filters the sources tracks are read from, keyed by id.
 		 *
-		 * @since 0.2.0
+		 * @since 4.0.0
 		 *
 		 * @param Source[] $sources Sources.
 		 */
@@ -71,7 +71,7 @@ final class Sources {
 	/**
 	 * The first source that claims the post.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param WP_Post $post Post.
 	 * @return Source|null

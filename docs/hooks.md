@@ -2,7 +2,7 @@
 
 Every filter and action Riff fires, generated from the docblocks in the plugin by `npm run docs:hooks`. Do not edit by hand. The stability promise is in the readme: a hook listed here keeps its name and parameters within a major version, and goes through a deprecated release before it is removed.
 
-The same reference, a page per hook, is on the site under Developers, Hooks.
+The same reference, a page per hook, is on the site under Developers, PHP and JavaScript.
 
 ## Filters
 
@@ -10,7 +10,7 @@ The same reference, a page per hook, is on the site under Developers, Hooks.
 
 Filters the player's accent colour, after the theme's own setting.
 
-Since 0.2.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ Since 4.3.0. Fires in `plugins/riff/features/listen/class-art.php`.
 
 Filters the palettes a drawn cover picks from: lists of background, accent and ink.
 
-Since 0.1.0. Fires in `plugins/riff/features/listen/class-art.php`.
+Since 4.0.0. Fires in `plugins/riff/features/listen/class-art.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ Since 0.1.0. Fires in `plugins/riff/features/listen/class-art.php`.
 
 Filters a drawn cover.
 
-Since 0.1.0. Fires in `plugins/riff/features/listen/class-art.php`.
+Since 4.0.0. Fires in `plugins/riff/features/listen/class-art.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ Since 0.1.0. Fires in `plugins/riff/features/listen/class-art.php`.
 
 Filters the controls at the end of the bar on a wide screen.
 
-Since 0.2.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -61,7 +61,7 @@ Since 0.2.0. Fires in `plugins/riff/src/class-player.php`.
 
 Filters the chips under Now Playing's controls.
 
-Since 0.2.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -71,7 +71,7 @@ Since 0.2.0. Fires in `plugins/riff/src/class-player.php`.
 
 Filters whether Riff's player loads on the current front-end request.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
 
 Filters a post as the library lists it.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-library.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-library.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -92,7 +92,7 @@ Since 0.1.0. Fires in `plugins/riff/src/class-library.php`.
 
 Filters the query behind the library: which posts the app lists.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-library.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-library.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -102,7 +102,7 @@ Since 0.1.0. Fires in `plugins/riff/src/class-library.php`.
 
 Filters the data handed to the player script: strings, and the addresses of scripts a feature wants loaded, such as the Listen feature's app on the page that holds its block.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -112,7 +112,7 @@ Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
 
 Filters the sources tracks are read from, keyed by id.
 
-Since 0.2.0. Fires in `plugins/riff/src/class-sources.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-sources.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -122,7 +122,7 @@ Since 0.2.0. Fires in `plugins/riff/src/class-sources.php`.
 
 Filters the strings the player shows.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -132,7 +132,7 @@ Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
 
 Filters a track before the player reads it.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-tracks.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-tracks.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -146,13 +146,13 @@ Since 0.1.0. Fires in `plugins/riff/src/class-tracks.php`.
 
 Fires after the player's markup.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 ### `riff_before_player`
 
 Fires before the player's markup.
 
-Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 ## JavaScript
 
@@ -250,7 +250,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 #### `riff.pause`
 
-Fires when the media element pauses.
+Fires when the track pauses.
 
 Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
@@ -262,7 +262,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 #### `riff.play`
 
-Fires when the media element starts playing.
+Fires when the track starts or resumes playing.
 
 Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 

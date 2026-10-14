@@ -3,7 +3,7 @@
  * What Riff adds to the Media Library: artwork for an audio or video file, and a video version for
  * an audio file.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -21,14 +21,14 @@ final class Media {
 	/**
 	 * Post meta on an audio attachment holding the ID of its video version.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public const VIDEO_META = '_riff_video';
 
 	/**
 	 * Registers the meta and the Media Library field.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'register_meta' ) );
@@ -39,7 +39,7 @@ final class Media {
 	/**
 	 * The video link is readable and writable over REST by anyone who can edit the attachment.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register_meta(): void {
 		register_post_meta(
@@ -59,7 +59,7 @@ final class Media {
 	/**
 	 * Keeps only IDs of image attachments.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param mixed $value Submitted value.
 	 * @return int
 	 */
@@ -71,7 +71,7 @@ final class Media {
 	/**
 	 * Keeps only IDs of video attachments.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param mixed $value Submitted value.
 	 * @return int
 	 */
@@ -86,7 +86,7 @@ final class Media {
 	 * Artwork is the file's featured image, the same thing WordPress sets from a tag inside the file
 	 * on upload, so a cover set here shows in the player, the queue and on the lock screen.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array   $fields Attachment fields.
 	 * @param WP_Post $post   Attachment.
 	 * @return array
@@ -122,7 +122,7 @@ final class Media {
 	/**
 	 * Saves the field, accepting a Media Library URL or an attachment ID.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array $post       Attachment data being saved.
 	 * @param array $attachment Submitted fields.
 	 * @return array

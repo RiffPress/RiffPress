@@ -2,7 +2,7 @@
 /**
  * The app: a block, with a shortcode alias, that turns the page it sits on into the place to listen.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -31,21 +31,21 @@ final class App {
 	 * Registered on block themes (WordPress 6.7 and newer); a page picks it under Template, which
 	 * stores the slug, "listen", in its page template meta.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 */
 	public const TEMPLATE = 'riff//listen';
 
 	/**
 	 * The query argument that opens a post inside the app.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public const QUERY = 'riff';
 
 	/**
 	 * Hooks the block and the shortcode.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'init' ) );
@@ -54,7 +54,7 @@ final class App {
 	/**
 	 * Registers the block from its folder and the shortcode.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function init(): void {
 		register_block_type( RIFF_DIR . 'features/listen/block' );
@@ -77,7 +77,7 @@ final class App {
 	/**
 	 * [riff], the same as the block.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @return string
 	 */
 	public static function shortcode(): string {
@@ -87,7 +87,7 @@ final class App {
 	/**
 	 * The app's markup, with the first view rendered on the server.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param array $attributes Block attributes.
 	 * @return string
 	 */
@@ -122,7 +122,7 @@ final class App {
 	/**
 	 * The post the address opens, when there is one that can be played.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @return WP_Post|null
 	 */
 	private static function requested(): ?WP_Post {
@@ -153,7 +153,7 @@ final class App {
 	/**
 	 * The library: a grid of the posts with tracks.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param string $page The app page's address.
 	 * @return string
 	 */
@@ -196,7 +196,7 @@ final class App {
 	 * Writes the byline into a library item, so the app and the REST route carry it with the
 	 * language's own plural forms instead of composing it in JavaScript.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param array    $item Library item.
 	 * @param \WP_Post $post Its post.

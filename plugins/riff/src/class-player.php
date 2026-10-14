@@ -2,7 +2,7 @@
 /**
  * The player on the front end: one script module, one stylesheet, and the markup in the footer.
  *
- * @since 0.1.0
+ * @since 4.0.0
  * @package Riff
  */
 
@@ -21,7 +21,7 @@ final class Player {
 	/**
 	 * Hooks the assets and the markup.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
@@ -31,7 +31,7 @@ final class Player {
 	/**
 	 * Whether the player belongs on this request.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @return bool
 	 */
 	public static function enabled(): bool {
@@ -39,7 +39,7 @@ final class Player {
 		/**
 		 * Filters whether Riff's player loads on the current front-end request.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 * @param bool $enabled Whether to load the player.
 		 */
 		return (bool) apply_filters( 'riff_enabled', $enabled );
@@ -48,7 +48,7 @@ final class Player {
 	/**
 	 * Enqueues the stylesheet and the script module.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function enqueue(): void {
 		if ( ! self::enabled() ) {
@@ -65,7 +65,7 @@ final class Player {
 	 * The cache key for an asset: the plugin version and the file's own time, so an edit shows up
 	 * without waiting for a release or clearing the browser's cache. One stat per asset per page.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param string $file Path relative to the plugin folder.
 	 * @return string
 	 */
@@ -77,7 +77,7 @@ final class Player {
 	/**
 	 * Prints the player and the strings the script needs.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 */
 	public static function markup(): void {
 		if ( ! self::enabled() ) {
@@ -122,7 +122,7 @@ final class Player {
 		/**
 		 * Filters the strings the player shows.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 * @param array $strings Strings, keyed by name.
 		 */
 		$strings = (array) apply_filters( 'riff_strings', $strings );
@@ -134,7 +134,7 @@ final class Player {
 		 * Filters the data handed to the player script: strings, and the addresses of scripts a
 		 * feature wants loaded, such as the Listen feature's app on the page that holds its block.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 * @param array $data Data.
 		 */
 		$data = (array) apply_filters( 'riff_player_data', $data );
@@ -145,14 +145,14 @@ final class Player {
 		/**
 		 * Fires before the player's markup.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 */
 		do_action( 'riff_before_player' );
 		require RIFF_DIR . 'templates/player.php';
 		/**
 		 * Fires after the player's markup.
 		 *
-		 * @since 0.1.0
+		 * @since 4.0.0
 		 */
 		do_action( 'riff_after_player' );
 	}
@@ -164,7 +164,7 @@ final class Player {
 	 * announces as a `riff.action` hook and a `riff:action` event when it is not one of its own), and
 	 * either an `icon` from Player::icon() or `svg` markup of its own. An item with an `href` is a link.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return array[]
 	 */
@@ -179,7 +179,7 @@ final class Player {
 		/**
 		 * Filters the chips under Now Playing's controls.
 		 *
-		 * @since 0.2.0
+		 * @since 4.0.0
 		 *
 		 * @param array[] $chips Chips, keyed by slug: label, action, icon or svg, href.
 		 */
@@ -190,7 +190,7 @@ final class Player {
 	 * Controls at the end of the bar on a wide screen, before the caret. Empty until a plugin adds
 	 * some; the player's own controls stay where they are.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return array[]
 	 */
@@ -198,7 +198,7 @@ final class Player {
 		/**
 		 * Filters the controls at the end of the bar on a wide screen.
 		 *
-		 * @since 0.2.0
+		 * @since 4.0.0
 		 *
 		 * @param array[] $controls Controls, keyed by slug: label, action, icon or svg, href.
 		 */
@@ -225,7 +225,7 @@ final class Player {
 	/**
 	 * Renders one chip or control.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @param string $slug      Slug.
 	 * @param array  $item      Item.
@@ -286,7 +286,7 @@ final class Player {
 	 * The inline style on the player's root: the accent a theme sets in theme.json under
 	 * settings.custom.riff.accent, or nothing.
 	 *
-	 * @since 0.2.0
+	 * @since 4.0.0
 	 *
 	 * @return string A style attribute with a leading space, or an empty string.
 	 */
@@ -296,7 +296,7 @@ final class Player {
 		/**
 		 * Filters the player's accent colour, after the theme's own setting.
 		 *
-		 * @since 0.2.0
+		 * @since 4.0.0
 		 *
 		 * @param string $accent A CSS colour, or an empty string for the default amber.
 		 */
@@ -310,7 +310,7 @@ final class Player {
 	/**
 	 * Inline SVG icon, from Google's Material Icons (Apache License 2.0), the set Google's own apps are drawn in.
 	 *
-	 * @since 0.1.0
+	 * @since 4.0.0
 	 * @param string $name Icon name.
 	 * @return string
 	 */
