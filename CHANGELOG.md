@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.12.0](https://github.com/RiffPress/RiffPress/compare/v4.11.0...v4.12.0) (2026-10-14)
+
+
+### Features
+
+* a developer reference on the site, generated from the code, one section per language ([#332](https://github.com/RiffPress/RiffPress/issues/332)) ([f89b568](https://github.com/RiffPress/RiffPress/commit/f89b568c30fb4f2d61d625380be11458bd683a4d))
+
 ## [4.11.0](https://github.com/RiffPress/RiffPress/compare/v4.10.0...v4.11.0) (2026-10-14)
 
 
