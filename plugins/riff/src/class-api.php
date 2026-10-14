@@ -75,48 +75,15 @@ final class Api {
 	 * Runs only when WPGraphQL has loaded, since the action is its own.
 	 *
 	 * @since 4.0.0
+	 * @since 4.12.1 `RiffTrack` is built from the track schema, so it has every property REST has.
 	 */
 	public static function graphql(): void {
 		if ( ! function_exists( 'register_graphql_object_type' ) || ! function_exists( 'register_graphql_field' ) ) {
 			return;
 		}
-		register_graphql_object_type(
-			'RiffArt',
-			array(
-				'description' => __( 'One size of a track\'s artwork.', 'riff' ),
-				'fields'      => array(
-					'src'   => array( 'type' => 'String' ),
-					'sizes' => array( 'type' => 'String' ),
-				),
-			)
-		);
-		register_graphql_object_type(
-			'RiffVideo',
-			array(
-				'description' => __( 'The video version of an audio track.', 'riff' ),
-				'fields'      => array(
-					'src'    => array( 'type' => 'String' ),
-					'poster' => array( 'type' => 'String' ),
-				),
-			)
-		);
-		register_graphql_object_type(
-			'RiffTrack',
-			array(
-				'description' => __( 'A file as a track the Riff player reads.', 'riff' ),
-				'fields'      => array(
-					'id'       => array( 'type' => 'String' ),
-					'src'      => array( 'type' => 'String' ),
-					'type'     => array( 'type' => 'String' ),
-					'title'    => array( 'type' => 'String' ),
-					'artist'   => array( 'type' => 'String' ),
-					'album'    => array( 'type' => 'String' ),
-					'duration' => array( 'type' => 'Float' ),
-					'art'      => array( 'type' => array( 'list_of' => 'RiffArt' ) ),
-					'video'    => array( 'type' => 'RiffVideo' ),
-				),
-			)
-		);
+		foreach ( self::graphql_types() as $name => $config ) {
+			register_graphql_object_type( $name, $config );
+		}
 		register_graphql_field(
 			'MediaItem',
 			'riffTrack',
@@ -144,5 +111,66 @@ final class Api {
 				},
 			)
 		);
+	}
+
+	/**
+	 * The GraphQL object types, built from `Tracks::schema()` so `RiffTrack` has every property the
+	 * REST field has and cannot fall behind it. A nested object becomes a type of its own named
+	 * after its property, as `art` is `RiffArt`.
+	 *
+	 * @since 4.12.1
+	 *
+	 * @return array[] Type configs for register_graphql_object_type(), by name; nested types first.
+	 */
+	public static function graphql_types(): array {
+		$types              = array();
+		$fields             = self::graphql_fields( Tracks::schema()['properties'], $types );
+		$types['RiffTrack'] = array(
+			'description' => __( 'A file as a track the Riff player reads.', 'riff' ),
+			'fields'      => $fields,
+		);
+		return $types;
+	}
+
+	/**
+	 * GraphQL fields for a JSON schema's properties, adding a type to $types for each nested object.
+	 *
+	 * @param array $properties JSON schema properties.
+	 * @param array $types      Types so far, added to.
+	 * @return array[] Fields, by name.
+	 */
+	private static function graphql_fields( array $properties, array &$types ): array {
+		$descriptions = array(
+			'art'   => __( 'One size of a track\'s artwork.', 'riff' ),
+			'video' => __( 'The video version of an audio track.', 'riff' ),
+			'post'  => __( 'The post a track appears in.', 'riff' ),
+		);
+		$scalars      = array(
+			'string'  => 'String',
+			'number'  => 'Float',
+			'integer' => 'Int',
+			'boolean' => 'Boolean',
+		);
+		$fields       = array();
+		foreach ( $properties as $name => $property ) {
+			$kinds  = (array) ( $property['type'] ?? 'string' );
+			$object = $property['properties'] ?? $property['items']['properties'] ?? null;
+			if ( $object ) {
+				$type           = 'Riff' . ucfirst( $name );
+				$types[ $type ] = array(
+					'description' => $descriptions[ $name ] ?? '',
+					'fields'      => self::graphql_fields( $object, $types ),
+				);
+			} else {
+				// A list of scalars takes its items' type; a nullable scalar its first.
+				$type = $scalars[ $property['items']['type'] ?? $kinds[0] ] ?? 'String';
+			}
+			$field = array( 'type' => in_array( 'array', $kinds, true ) ? array( 'list_of' => $type ) : $type );
+			if ( ! empty( $property['description'] ) ) {
+				$field['description'] = $property['description'];
+			}
+			$fields[ $name ] = $field;
+		}
+		return $fields;
 	}
 }
