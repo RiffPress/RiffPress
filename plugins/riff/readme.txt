@@ -19,6 +19,7 @@ Riff plays the audio, video and playlist blocks WordPress already has. Install i
 * Swipe the bar to skip, drag Now Playing down to close it; Space, J, L, Shift+N and Shift+P on a keyboard.
 * A link to another page keeps playing; a reload picks up paused where it left off.
 * A Riff block, or the [riff] shortcode, turns a page into the place to listen: every post with tracks, opened and played without leaving the page.
+* Every track shows its quality as WordPress read it from the file: MP3 · 320 kbps, or FLAC · 24-bit 96 kHz.
 * The bar's amber line glows with the music and cools when you pause.
 * One script and one stylesheet, no build step, nothing to configure.
 

@@ -344,6 +344,26 @@ test.describe( 'Player', () => {
 		).toHaveText( /^MP3 · \d+ kbps$/ );
 	} );
 
+	test( 'a lossless track shows its bit depth and sample rate instead of a bit rate', async ( {
+		page,
+		requestUtils,
+	} ) => {
+		const flac = await requestUtils.uploadMedia(
+			path.join( FIXTURES, '..', 'test', 'tone-24-96.flac' )
+		);
+		const post = await requestUtils.createPost( {
+			title: `Riff e2e lossless ${ Date.now() }`,
+			status: 'publish',
+			content: `<!-- wp:audio {"id":${ flac.id }} --><figure class="wp-block-audio"><audio controls src="${ flac.source_url }"></audio></figure><!-- /wp:audio -->`,
+		} );
+		await page.goto( post.link );
+		await page.locator( '.riff-row' ).first().click();
+		await expect( page.locator( '.riff-bar' ) ).toBeVisible();
+		await expect(
+			page.locator( '.riff-np-quality .riff-quality' )
+		).toHaveText( 'FLAC · 24-bit 96 kHz' );
+	} );
+
 	test( 'the single-key shortcuts can be turned off, as WCAG 2.1.4 asks', async ( {
 		page,
 	} ) => {
