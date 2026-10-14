@@ -22,6 +22,8 @@
 			"default": "full"
 		}
 	},
+	"example": {},
 	"editorScript": "file:./index.js",
+	"editorStyle": "file:../../../assets/riff.css",
 	"render": "file:./render.php"
 }
