@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.8.0](https://github.com/RiffPress/RiffPress/compare/v4.7.0...v4.8.0) (2026-10-14)
+
+
+### Features
+
+* **site:** a guide to adding an album, and a header that reaches it and the under-the-hood pages ([#312](https://github.com/RiffPress/RiffPress/issues/312)) ([89ecafa](https://github.com/RiffPress/RiffPress/commit/89ecafa9b67f7b45425f8f8609b3fe3989b693f9))
+
 ## [4.7.0](https://github.com/RiffPress/RiffPress/compare/v4.6.0...v4.7.0) (2026-10-14)
 
 
