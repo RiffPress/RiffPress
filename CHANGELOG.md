@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.0](https://github.com/RiffPress/RiffPress/compare/v4.5.1...v4.6.0) (2026-10-14)
+
+
+### Features
+
+* **site:** say why Riff, and set the landing page in wordpress.org's conventions ([#308](https://github.com/RiffPress/RiffPress/issues/308)) ([9cbaeec](https://github.com/RiffPress/RiffPress/commit/9cbaeec0030f20d40c7aaad7ad5d653b8c150b44))
+
 ## [4.5.1](https://github.com/RiffPress/RiffPress/compare/v4.5.0...v4.5.1) (2026-10-13)
 
 
