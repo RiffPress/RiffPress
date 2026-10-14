@@ -234,7 +234,8 @@ function phpPage( data ) {
 	body += member( data.register, 'Riff\\Sources::register( Source $source ): void' );
 	body += member( data.unregister, 'Riff\\Sources::unregister( string $id ): void' );
 
-	body += `<section>${ hooks.h2( 'track-schema', 'The track schema' ) }<p>One shape for a track: the REST field and routes, the block markup and the player script all use it, and WPGraphQL carries <a href="../rest/#graphql">most of it</a>. It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
+	const gqlComplete = Object.keys( data.surface.track.properties ).every( ( p ) => ( data.surface.gql_types.RiffTrack?.fields || {} )[ p ] );
+	body += `<section>${ hooks.h2( 'track-schema', 'The track schema' ) }<p>One shape for a track: the REST field and routes, the block markup and the player script all use it, and WPGraphQL carries <a href="../rest/#graphql">${ gqlComplete ? 'all of it' : 'most of it' }</a>. It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
 
 	const supports = Object.entries( data.block.supports || {} ).filter( ( [ , v ] ) => v ).map( ( [ k ] ) => k );
 	body += `<section>${ hooks.h2( 'the-listen-block', 'The Listen block' ) }<p><code>${ esc( data.block.name ) }</code>: ${ inline( data.block.description ) } One per page. It supports ${ supports.map( ( s ) => `<code>${ esc( s ) }</code>` ).join( ', ' ) }.</p>${ hooks.codeBlock( `<!-- wp:${ data.block.name } {"align":"full"} /-->` ) }<p>Anywhere blocks are not an option, the <code>[riff]</code> shortcode does the same.</p></section>\n`;

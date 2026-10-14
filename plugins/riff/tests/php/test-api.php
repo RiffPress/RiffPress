@@ -46,4 +46,31 @@ class Test_Riff_Api extends Riff_TestCase {
 		Riff\Api::graphql(); // Without WPGraphQL loaded this is a no-op, not an error.
 		$this->assertTrue( true );
 	}
+
+	public function test_riff_track_in_graphql_has_every_property_of_the_track_schema(): void {
+		$types  = Riff\Api::graphql_types();
+		$schema = Riff\Tracks::schema()['properties'];
+
+		$this->assertSame( array_keys( $schema ), array_keys( $types['RiffTrack']['fields'] ), 'a field for each property, in the schema\'s order' );
+		foreach ( array( 'video', 'post' ) as $nested ) {
+			$type = 'Riff' . ucfirst( $nested );
+			$this->assertSame( $type, $types['RiffTrack']['fields'][ $nested ]['type'] );
+			$this->assertSame( array_keys( $schema[ $nested ]['properties'] ), array_keys( $types[ $type ]['fields'] ) );
+		}
+		$this->assertSame( array_keys( $schema['art']['items']['properties'] ), array_keys( $types['RiffArt']['fields'] ) );
+	}
+
+	public function test_graphql_types_keep_the_names_and_types_queries_already_use(): void {
+		$fields = Riff\Api::graphql_types()['RiffTrack']['fields'];
+		$this->assertSame( 'String', $fields['id']['type'] );
+		$this->assertSame( 'String', $fields['type']['type'], 'an enum in the schema stays a String' );
+		$this->assertSame( 'Float', $fields['duration']['type'] );
+		$this->assertSame( array( 'list_of' => 'RiffArt' ), $fields['art']['type'] );
+		$this->assertSame( 'RiffVideo', $fields['video']['type'] );
+		$this->assertSame( 'Int', $fields['bitrate']['type'] );
+		$this->assertSame( 'Boolean', $fields['lossless']['type'] );
+		$this->assertSame( 'RiffPost', $fields['post']['type'] );
+		$this->assertSame( 'Int', Riff\Api::graphql_types()['RiffPost']['fields']['id']['type'] );
+		$this->assertNotEmpty( $fields['duration']['description'], 'descriptions come from the schema' );
+	}
 }
