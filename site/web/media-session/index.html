@@ -32,7 +32,7 @@
 <h2>How Riff uses it</h2>
 <p>Each new track builds a <code>MediaMetadata</code> with title, artist, album and every artwork size. Eight action handlers map the system's play, pause, previous, next, seek and stop onto the player's own functions. The playing state and position are mirrored, position at most once a second.</p>
 <h2>Why</h2>
-<p>Without it the lock screen, headphones and the system media widget would show a blank page title and could not skip tracks.</p>
+<p>The lock screen, headphones and the system media widget would otherwise show a blank page title and could not skip tracks.</p>
 <h2>Without it</h2>
 <p>Guarded by feature checks and a try/catch per action, so the on-page controls are the only controls.</p>
 <h2>Where</h2>

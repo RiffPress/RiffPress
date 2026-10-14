@@ -32,7 +32,7 @@
 <h2>How Riff uses it</h2>
 <p>In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run and the filament sits at a steady glow. Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.</p>
 <h2>Why</h2>
-<p>A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is exactly what the setting asks to stop.</p>
+<p>A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is what the setting asks to stop.</p>
 <h2>Where</h2>
 <ul class="where"><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.css#L1448">plugins/riff/assets/riff.css, line 1448</a><pre><code>@media (prefers-reduced-motion: reduce) {</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.js#L67">plugins/riff/assets/riff.js, line 67</a><pre><code>const reduce = () =&gt;</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/features/listen/app.js#L128">plugins/riff/features/listen/app.js, line 128</a><pre><code>window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;</code></pre></li></ul>
 <p class="fine">Links open the source at the commit this page was published from.</p>

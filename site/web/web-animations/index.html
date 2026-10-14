@@ -32,7 +32,7 @@
 <h2>How Riff uses it</h2>
 <p>When a track is playing but there is no analyser, on iOS, for a cross-origin file, or through the video element, the wire gets an infinite 2.6 second opacity loop through <code>element.animate()</code>. The returned animation is cancelled when playback pauses or ends.</p>
 <h2>Why</h2>
-<p>Without it the filament would sit static on every iPhone, where Web Audio is deliberately not used.</p>
+<p>On every iPhone, where Web Audio is deliberately not used, the filament would otherwise sit static.</p>
 <h2>Without it</h2>
 <p>This branch is itself the fallback for a missing analyser.</p>
 <h2>Where</h2>
