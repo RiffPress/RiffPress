@@ -1,7 +1,8 @@
 name: Workflow Scripts Tests
 
 # demo-blueprint.test.js reads the blueprint, the landing page, the workflows, the demo fixtures, and
-# the files that carry the landing page's address, so a change to any of them runs it too.
+# the files that carry the landing page's address, so a change to any of them runs it too. The
+# hooks reference and the under-the-hood pages quote the plugin, so a plugin change runs their checks.
 on:
   push:
     branches: [main]
@@ -12,7 +13,8 @@ on:
       - 'site/index.html'
       - 'packages/fixtures/**'
       - 'README.md'
-      - 'plugins/riff/riff.php'
+      - 'plugins/riff/**'
+      - 'site/web/**'
       - 'composer.json'
       - 'package.json'
   pull_request:
@@ -23,7 +25,8 @@ on:
       - 'site/index.html'
       - 'packages/fixtures/**'
       - 'README.md'
-      - 'plugins/riff/riff.php'
+      - 'plugins/riff/**'
+      - 'site/web/**'
       - 'composer.json'
       - 'package.json'
 
@@ -48,3 +51,5 @@ jobs:
         run: node --test .github/scripts/*.test.js
       - name: The hooks reference is current
         run: node .github/scripts/hooks-reference.js --check
+      - name: The under-the-hood pages quote lines that are still there
+        run: node .github/scripts/web-pages.js --check
