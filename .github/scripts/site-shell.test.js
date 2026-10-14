@@ -32,3 +32,11 @@ test( 'every page under /web/ has the bar, with Built on the open web current', 
 		assert.match( html, /<div class="local-nav">.*<a class="aside-link" href="[./]*web\/" aria-current="true">Built on the open web<\/a>/, page );
 	}
 } );
+
+test( 'the current page is underlined in the global bar, but not when it is the Download button', () => {
+	for ( const file of [ 'site/site.css', 'site/web/web.css' ] ) {
+		const css = read( file );
+		assert.match( css, /\.nav nav a:not\(\.btn\)\[aria-current\]/, `${ file } underlines the current link` );
+		assert.doesNotMatch( css, /\.nav nav a\[aria-current\]/, `${ file } would underline the Download button on its own page` );
+	}
+} );
