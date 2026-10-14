@@ -88,7 +88,7 @@ function groups( entries ) {
 
 function sidebar( entries, current, depth ) {
 	const up = depth === 2 ? '../' : '';
-	let html = `<aside class="side"><p class="side-title"><a href="${ up }">Built on the open web</a></p>`;
+	let html = `<aside class="side" aria-label="All the features"><p class="side-title"><a href="${ up }">Built on the open web</a></p>`;
 	for ( const [ group, list ] of groups( entries ) ) {
 		html += `<h2>${ esc( group ) }</h2><ul>`;
 		for ( const e of list ) {
@@ -103,9 +103,8 @@ function sidebar( entries, current, depth ) {
 function page( e, i, entries ) {
 	const prev = entries[ i - 1 ];
 	const next = entries[ i + 1 ];
-	let html = head( `${ e.name }, in Riff`, e.summary, `web/${ e.slug }/`, 2 );
+	let html = head( `${ e.name }, Riff`, e.summary, `web/${ e.slug }/`, 2 );
 	html += `<div class="wrap layout">
-${ sidebar( entries, e.slug, 2 ) }
 <main id="main">
 <p class="crumb"><a href="../../">Riff</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> ${ esc( e.group ) }</p>
 <h1>${ esc( e.name ) }</h1>
@@ -128,6 +127,7 @@ ${ sidebar( entries, e.slug, 2 ) }
 <p class="fine">Reference: <a href="${ esc( e.mdn ) }">${ esc( e.name ) } on MDN</a>.</p>
 <nav class="pager" aria-label="Previous and next">${ prev ? `<a rel="prev" href="../${ prev.slug }/">${ esc( prev.name ) }</a>` : '<span></span>' }${ next ? `<a rel="next" href="../${ next.slug }/">${ esc( next.name ) }</a>` : '<span></span>' }</nav>
 </main>
+${ sidebar( entries, e.slug, 2 ) }
 </div>
 `;
 	return html + FOOT;

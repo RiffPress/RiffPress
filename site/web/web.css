@@ -37,7 +37,7 @@ main h2{font-size:clamp(26px,3vw,30px);line-height:1.3;margin:40px 0 8px}
 .layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:var(--gap);padding-top:var(--section);align-items:start}
 .layout>*{min-width:0}
 main p{max-width:40rem}
-.side{position:sticky;top:76px;font-size:.875rem;line-height:1.714;max-height:calc(100vh - 92px);overflow:auto;padding-right:8px}
+.side{order:-1;font-size:.875rem;line-height:1.714}
 .side-title{margin:0 0 20px;font-weight:600;font-size:1rem}
 .side-title a{color:var(--ink);text-decoration:none}
 .side-title a:hover{text-decoration:underline}
@@ -66,5 +66,5 @@ figcaption{font-size:.875rem;line-height:1.714;color:var(--ink-2);text-align:cen
 .groups ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .groups li{display:grid;gap:0;line-height:1.6}
 .groups li span{color:var(--ink-2);font-size:.875rem;line-height:1.714}
-@media (max-width:900px){.layout{grid-template-columns:1fr}.side{position:static;max-height:none;order:2;border-top:1px solid var(--line);padding-top:24px}.groups{grid-template-columns:1fr}}
+@media (max-width:900px){.layout{grid-template-columns:1fr}.side{order:0;border-top:1px solid var(--line);padding-top:24px}.groups{grid-template-columns:1fr}}
 @media (max-width:640px){.nav nav a:not(.btn){display:none}figure{padding:20px}}

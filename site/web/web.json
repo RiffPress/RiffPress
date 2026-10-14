@@ -6,7 +6,7 @@
 		"mdn": "https://developer.mozilla.org/docs/Web/API/HTMLMediaElement",
 		"summary": "One audio and one video element for the whole page, which every control drives.",
 		"how": "The template prints one `<audio>` and one `<video>` for the page, and the script picks which one a track plays through. Loading a track sets `src` and `currentTime` on that element and calls `play()`. Switching between Song and Video hands the current time and paused state from one element to the other. The core blocks' own players are paused and hidden underneath.",
-		"why": "The whole player is a UI over these two elements, and sharing one pair across the page is what lets a track keep playing while rows, views and Now Playing change around it.",
+		"why": "The whole player is a UI over these two elements. Sharing one pair across the page is what lets a track keep playing while rows, views and Now Playing change around it.",
 		"fallback": "Each block keeps its native player underneath, so a page where the script never runs still plays.",
 		"where": [
 			{
@@ -82,7 +82,7 @@
 		"name": "Vibration",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Vibration_API",
-		"summary": "A short tick under the thumb on play and pause, as the phone apps do.",
+		"summary": "A short tick under the thumb on play and pause.",
 		"how": "Every play or pause, from a tap, a key or a row, first checks the `(hover: none)` media query to tell a touch screen from a mouse. On a touch screen it fires an 8ms vibration.",
 		"why": "A haptic tick confirms the tap landed. Without it the only confirmation is the icon change.",
 		"fallback": "The call is optional, so a browser without it skips the tick.",
@@ -182,7 +182,7 @@
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Audio_API",
 		"summary": "Reads the signal that lights the filament.",
-		"how": "The first time something plays through the audio element on a non-iOS browser, the script creates an `AudioContext`, wraps the element in a media source, and connects it through an analyser and back to the destination so the sound still comes out. The context suspends on pause and resumes on play.",
+		"how": "The first time something plays through the audio element on a non-iOS browser, the script creates an `AudioContext`. It wraps the element in a media source and connects it through an analyser and back to the destination, so the sound still comes out. The context suspends on pause and resumes on play.",
 		"why": "This is what drives the amber filament. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
 		"fallback": "Where there is no analyser the wire breathes at working temperature on a fixed loop instead.",
 		"where": [
@@ -312,7 +312,7 @@
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Pointer_events",
 		"summary": "One gesture helper for swiping the bar and dragging the sheets.",
-		"how": "A single `drag()` helper records the pointer's start, timestamp and id on `pointerdown`, reports deltas on `pointermove` for that pointer, and calls an end handler on `pointerup` or `pointercancel` with distance and velocity. It skips mouse pointers. It drives swiping the bar to skip or dismiss, dragging Now Playing down to close, and dragging the Up next handle.",
+		"how": "A single `drag()` helper records the pointer's start, timestamp and id on `pointerdown`. It reports deltas on `pointermove` for that pointer, and calls an end handler on `pointerup` or `pointercancel` with distance and velocity. It skips mouse pointers. It drives swiping the bar to skip or dismiss, dragging Now Playing down to close, and dragging the Up next handle.",
 		"why": "Pointer events give one code path for touch and pen with a `pointerType` to exclude the mouse.",
 		"fallback": null,
 		"where": [
@@ -661,7 +661,7 @@
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/pagehide_event",
 		"summary": "Captures the exact position when the listener leaves the page.",
-		"how": "The save function that writes the queue and position to `sessionStorage` is bound to `pagehide`, so the last `currentTime` is captured when the listener follows a link, closes the tab, or the page enters the back-forward cache.",
+		"how": "The save function that writes the queue and position to `sessionStorage` is bound to `pagehide`. So the last `currentTime` is captured when the listener follows a link, closes the tab, or the page enters the back-forward cache.",
 		"why": "Without it the restored position could be up to five seconds stale. `pagehide` fires reliably where `unload` does not, including on mobile.",
 		"fallback": null,
 		"where": [
@@ -703,7 +703,7 @@
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Roles/dialog_role",
 		"summary": "Now Playing is a named modal dialog with Escape and focus return.",
-		"how": "The Now Playing container is printed as `role=\"dialog\"` with `aria-modal` and a translated label. The buttons that open it declare `aria-haspopup=\"dialog\"`. The script completes the pattern: opening remembers the focused element and moves focus to Close, Escape closes from anywhere, the rest of the page goes inert, and closing returns focus to the opener.",
+		"how": "The Now Playing container is printed as `role=\"dialog\"` with `aria-modal` and a translated label. The buttons that open it declare `aria-haspopup=\"dialog\"`. The script completes the pattern. Opening remembers the focused element and moves focus to Close. Escape closes from anywhere, the rest of the page goes inert, and closing returns focus to the opener.",
 		"why": "Screen readers announce Now Playing as a modal dialog. Without the role the full-screen view would read as part of the post.",
 		"fallback": null,
 		"where": [
@@ -760,7 +760,7 @@
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/color_value/color-mix",
 		"summary": "Tints rows, pills and the seek line from the theme's own text colour.",
-		"how": "Track rows in a post have no colours of their own. The hover and current-row tint, the artwork placeholder, the buffered band and the quality pill are all `currentcolor` mixed with transparent at a low percentage, so they sit right on a light or a dark theme. Now Playing darkens the cover's tint by mixing in black for the bottom of its gradient.",
+		"how": "Track rows in a post have no colours of their own. The hover and current-row tint, the artwork placeholder, the buffered band and the quality pill are all `currentcolor` mixed with transparent at a low percentage. They sit right on a light or a dark theme. Now Playing darkens the cover's tint by mixing in black for the bottom of its gradient.",
 		"why": "A fixed rgba() tint would vanish on one theme and look heavy on another, and the Now Playing tint is only known at runtime from the artwork.",
 		"fallback": "Rows get no hover tint, and Now Playing shows its plain background.",
 		"where": [
@@ -894,7 +894,7 @@
 		"name": "text-wrap",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/text-wrap",
-		"summary": "Balances a long post title in the Listen app so no word is left alone.",
+		"summary": "Balances a long title in the Listen app so no word is left alone.",
 		"how": "When the Listen app opens a post, its title is set large beside the Play and Shuffle pills. If it wraps, `balance` splits it into lines of roughly equal length instead of a long first line and one word on the second.",
 		"why": "A heading that size orphans a single word easily, and the wrap point moves with the viewport.",
 		"fallback": "The title wraps normally.",
@@ -916,7 +916,7 @@
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/CSS_fonts/Variable_fonts_guide",
 		"summary": "Ships each font as one file covering every weight the player asks for.",
-		"how": "Each bundled font is a single variable woff2 with a weight range in its `@font-face`: Roboto 100 to 900 for the player, Inter and EB Garamond 400 to 700 for the Listen app. The stylesheet asks for four weights, and all of them come from the one file.",
+		"how": "Each bundled font is a single variable woff2 with a weight range in its `@font-face`. Roboto covers 100 to 900 for the player, Inter and EB Garamond 400 to 700 for the Listen app. The stylesheet asks for four weights, and all of them come from the one file.",
 		"why": "The fonts ship with the plugin rather than from Google, so a listener's address never leaves the site, and one file per family keeps that to three requests.",
 		"fallback": "The stacks name the system fonts next, and `font-display: swap` shows them until the file arrives.",
 		"where": [
@@ -942,7 +942,7 @@
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-motion",
 		"summary": "Stops the equalizer, the filament and the sliding sheets when the system asks.",
-		"how": "In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run, the filament sits at a steady glow, Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.",
+		"how": "In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run and the filament sits at a steady glow. Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.",
 		"why": "A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is exactly what the setting asks to stop.",
 		"fallback": null,
 		"where": [
@@ -998,7 +998,7 @@
 		"name": "clip-path",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/clip-path",
-		"summary": "Hides the Song and Video labels on a phone while screen readers still get them.",
+		"summary": "Hides the Song and Video labels on a phone, but not from screen readers.",
 		"how": "The Song and Video switch shows two icons on a phone. Its text labels stay in the markup for screen readers but are clipped to nothing with `inset(50%)`. At 900px and up the clip is lifted, the labels show as words and the icons are hidden.",
 		"why": "Two icons on a phone and two words on a wide screen, from one set of markup, with an accessible name in both.",
 		"fallback": "The 1px size and `overflow: hidden` in the same rule hide the text anyway.",
@@ -1124,7 +1124,7 @@
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/:focus-visible",
 		"summary": "Shows a focus ring for the keyboard and not after a tap.",
-		"how": "Every button in the player is reset with `all: unset`, which removes the default outline. `:focus-visible` puts a 2px ring back only for keyboard focus. Track rows use `currentcolor` so the ring matches the theme, the controls use the player's white, and the Listen app uses the blue accent with the ring drawn around the whole record card.",
+		"how": "Every button in the player is reset with `all: unset`, which removes the default outline. `:focus-visible` puts a 2px ring back only for keyboard focus. Track rows use `currentcolor` so the ring matches the theme, and the controls use the player's white. The Listen app uses the blue accent, with the ring drawn around the whole record card.",
 		"why": "A player is driven mostly by taps, and a ring left on the play button after each one would look like a bug.",
 		"fallback": "Because buttons are reset, a browser without it shows no keyboard focus ring at all.",
 		"where": [
