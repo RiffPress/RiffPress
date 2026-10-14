@@ -2,6 +2,8 @@
 
 Every filter and action Riff fires, generated from the docblocks in the plugin by `npm run docs:hooks`. Do not edit by hand. The stability promise is in the readme: a hook listed here keeps its name and parameters within a major version, and goes through a deprecated release before it is removed.
 
+The same reference, a page per hook, is on the site under Developers, Hooks.
+
 ## Filters
 
 ### `riff_accent`
@@ -151,4 +153,149 @@ Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
 Fires before the player's markup.
 
 Since 0.1.0. Fires in `plugins/riff/src/class-player.php`.
+
+## JavaScript
+
+The player fires these through `wp.hooks` when the page has it. Each action is also dispatched as a `riff:<name>` `CustomEvent` on `#riff` with the same detail, for pages without the WordPress scripts.
+
+### JavaScript filters
+
+#### `riff.queue`
+
+Filters the tracks about to become the queue.
+
+Return a new array to add, drop or reorder tracks before any of them plays.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `tracks` | `Object[]` | The tracks, in the shape `Tracks::schema()` describes. |
+| `index` | `number` | The position in `tracks` that will play first. |
+
+#### `riff.shortcuts`
+
+Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
+
+Return `false` to turn them off, which WCAG 2.1.4 asks to be possible.
+
+Since 4.0.1. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `enabled` | `boolean` | Whether the shortcuts act. Default true. |
+| `event` | `KeyboardEvent` | The key press. |
+
+#### `riff.track`
+
+Filters one track as a queue is set, after `riff.queue`.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `track` | `Object` | The track, in the shape `Tracks::schema()` describes. |
+
+### JavaScript actions
+
+#### `riff.action`
+
+Fires when a control an extension added through `riff_chips` or `riff_bar_controls` is pressed.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What was pressed. |
+| `detail.action` | `string` | The control's `action`, as the PHP filter set it. |
+| `detail.track` | `Object` | The track playing. |
+| `detail.button` | `HTMLElement` | The button that was pressed. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.close`
+
+Fires when Now Playing closes.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.track` | `Object` | The track playing. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.ended`
+
+Fires when a track plays to its end, before the next one loads.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.track` | `Object` | The track that ended. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.open`
+
+Fires when Now Playing opens.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.track` | `Object` | The track playing. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.pause`
+
+Fires when the media element pauses.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.track` | `Object` | The track. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.play`
+
+Fires when the media element starts playing.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.track` | `Object` | The track. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.ready`
+
+Fires once the player is set up, its state restored and `window.riff` available.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | The player's state. |
+| `detail.queue` | `Object[]` | The queue in play order. |
+| `detail.track` | `Object\|null` | The track loaded, or null. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.track`
+
+Fires when a track is loaded, before it plays.
+
+Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.track` | `Object` | The track now loaded. |
+| `detail.index` | `number` | Its position in the play order. |
+| `detail.queue` | `Object[]` | The queue in play order. |
+| `api` | `Object` | `window.riff`. |
 

@@ -35,23 +35,13 @@ window.riff.on( 'play', ( detail ) => {} );
 document.getElementById( 'riff' ).addEventListener( 'riff:pause', ( e ) => e.detail );
 ```
 
-| Name | When | Detail |
-| --- | --- | --- |
-| `ready` | The player is set up, state restored, `window.riff` available. | `queue`, `track` |
-| `track` | A track is loaded. | `track`, `index`, `queue` |
-| `play`, `pause`, `ended` | The media element says so. | `track` |
-| `open`, `close` | Now Playing. | `track` |
-| `action` | A control an extension added through `riff_chips` or `riff_bar_controls` was pressed. | `action`, `track`, `button` |
+Each one, with its detail and the line it fires on, is in [the hooks reference](hooks.md#javascript), generated from the docblocks in `riff.js`.
 
 ## Filters
 
 Only through `wp.hooks`.
 
-| Name | Value | When |
-| --- | --- | --- |
-| `riff.queue` | The tracks about to become the queue, and the index that will play. | Before a queue is set. |
-| `riff.track` | One track. | For each track as a queue is set. |
-| `riff.shortcuts` | Whether the single-key shortcuts (Space, K, J, L) act on this key event; the event is the second argument. Return `false` to turn them off, which WCAG 2.1.4 asks to be possible. | On each key press. |
+`riff.queue`, `riff.track` and `riff.shortcuts`; [the hooks reference](hooks.md#javascript-filters) has their parameters.
 
 ```js
 wp.hooks.addFilter( 'riff.track', 'my-plugin', ( track ) => ( {

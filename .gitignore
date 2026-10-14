@@ -21,6 +21,9 @@ undefined/
 # Generated at build time by npm run pot; translations come from translate.wordpress.org.
 plugins/riff/languages/
 !tests/fixtures/**/*.png
+# Built by npm run docs:hooks, and by the Pages deploy from the commit it publishes: each page quotes the
+# line its hook fires on, so a committed copy would go stale with any edit above it.
+/site/developers/hooks/
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
 

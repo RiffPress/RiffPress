@@ -84,6 +84,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out/demo
+          # The hook pages quote the lines they fire on, so they are built from this commit, not committed.
+          node .github/scripts/hooks-reference.js
           cp -R site/. out/
           cp build/riff.zip out/
           cp packages/fixtures/seed.php out/demo/
