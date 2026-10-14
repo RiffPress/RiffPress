@@ -31,14 +31,24 @@ function start() {
 		return `<span class="riff-row-video" role="img" aria-label="${ label }">${ FILM }</span>`;
 	}
 
+	// The quality line, as the streaming services print it: a lossy file is its bit rate, a lossless
+	// file its bit depth and sample rate when the file says, "Lossless" when it does not.
 	function quality( t ) {
 		if ( ! t || ( ! t.bitrate && ! t.lossless ) ) {
 			return '';
 		}
 		const format = ( t.format || '' ).toUpperCase();
-		const rate = t.lossless
-			? s.lossless || 'Lossless'
-			: fmt( s.kbps || '%s kbps', t.bitrate );
+		let rate;
+		if ( ! t.lossless ) {
+			rate = fmt( s.kbps || '%s kbps', t.bitrate );
+		} else if ( t.bits && t.rate ) {
+			rate = fmt( s.bitsKhz || '%1$s-bit %2$s kHz', t.bits ).replace(
+				'%2$s',
+				String( t.rate / 1000 ).replace( /\.?0+$/, '' )
+			);
+		} else {
+			rate = s.lossless || 'Lossless';
+		}
 		return format ? `${ format } · ${ rate }` : rate;
 	}
 	const $ = ( sel ) => root.querySelector( sel );
@@ -1596,7 +1606,7 @@ function time( seconds ) {
 }
 
 function fmt( pattern, value ) {
-	return String( pattern || '%s' ).replace( '%s', value );
+	return String( pattern || '%s' ).replace( /%(1\$)?s/, value );
 }
 
 // The artist and album, or the post the track came from when the file has neither, as a video

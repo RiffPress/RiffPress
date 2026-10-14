@@ -68,10 +68,13 @@ final class Tracks {
 				'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
 				'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
 				// What WordPress read from the file on upload: the container, the bit rate, whether it is
-				// lossless. The player shows them on every track, the way the streaming services do.
+				// lossless, and for a lossless file its bit depth and sample rate. The player shows them
+				// on every track, the way the streaming services do.
 				'format'   => strtolower( (string) ( $meta['dataformat'] ?? $meta['fileformat'] ?? '' ) ),
 				'bitrate'  => isset( $meta['bitrate'] ) ? (int) round( (float) $meta['bitrate'] / 1000 ) : 0,
 				'lossless' => ! empty( $meta['lossless'] ),
+				'bits'     => (int) ( $meta['bits_per_sample'] ?? 0 ),
+				'rate'     => (int) ( $meta['sample_rate'] ?? 0 ),
 				// Level data, when something measured it on upload and stored it as riff_levels.
 				'levels'   => isset( $meta['riff_levels'] ) && is_string( $meta['riff_levels'] ) ? $meta['riff_levels'] : '',
 				'art'      => $art,
@@ -115,6 +118,8 @@ final class Tracks {
 				'format'   => '',
 				'bitrate'  => 0,
 				'lossless' => false,
+				'bits'     => 0,
+				'rate'     => 0,
 				'levels'   => '',
 				'art'      => self::post_art( $post_id ),
 				'video'    => null,
@@ -198,6 +203,14 @@ final class Tracks {
 					'type'        => 'boolean',
 					'description' => __( 'Whether the encoding is lossless.', 'riff' ),
 				),
+				'bits'     => array(
+					'type'        => 'integer',
+					'description' => __( 'Bits per sample, as WordPress read it from the file; 0 when the format does not say, as MP3 does not.', 'riff' ),
+				),
+				'rate'     => array(
+					'type'        => 'integer',
+					'description' => __( 'Samples per second, 0 when unknown.', 'riff' ),
+				),
 				'levels'   => array(
 					'type'        => 'string',
 					'description' => __( 'The track\'s loudness over time as digits 0 to 9, one per sample, when something has measured it; the drawn cover puts it in the groove. Empty otherwise.', 'riff' ),
@@ -253,6 +266,8 @@ final class Tracks {
 		$track['format']   = strtolower( (string) ( $track['format'] ?? '' ) );
 		$track['bitrate']  = max( 0, (int) ( $track['bitrate'] ?? 0 ) );
 		$track['lossless'] = ! empty( $track['lossless'] );
+		$track['bits']     = max( 0, (int) ( $track['bits'] ?? 0 ) );
+		$track['rate']     = max( 0, (int) ( $track['rate'] ?? 0 ) );
 		$track['levels']   = is_string( $track['levels'] ?? null ) ? preg_replace( '/[^0-9]/', '', $track['levels'] ) : '';
 		$track['art']      = array_values(
 			array_filter(

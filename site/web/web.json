@@ -17,12 +17,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const el = ( t = track() ) =>",
-				"line": 128
+				"line": 138
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.play().catch( paint );",
-				"line": 266
+				"line": 276
 			}
 		],
 		"shot": {
@@ -43,12 +43,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function buffered( m, duration ) {",
-				"line": 833
+				"line": 843
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ranges = m.buffered;",
-				"line": 834
+				"line": 844
 			}
 		],
 		"shot": {
@@ -69,7 +69,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );",
-				"line": 1501
+				"line": 1511
 			}
 		],
 		"shot": {
@@ -90,7 +90,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.vibrate?.( 8 );",
-				"line": 283
+				"line": 293
 			}
 		],
 		"shot": {
@@ -111,7 +111,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( navigator.connection?.saveData ) {",
-				"line": 49
+				"line": 59
 			}
 		],
 		"shot": {
@@ -132,17 +132,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {",
-				"line": 1311
+				"line": 1321
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setActionHandler( action, handler );",
-				"line": 1372
+				"line": 1382
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setPositionState( {",
-				"line": 1337
+				"line": 1347
 			}
 		],
 		"shot": {
@@ -163,12 +163,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );",
-				"line": 1393
+				"line": 1403
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.remote.prompt().catch( () => {} );",
-				"line": 1400
+				"line": 1410
 			}
 		],
 		"shot": {
@@ -189,12 +189,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ctx = new AudioContext();",
-				"line": 534
+				"line": 544
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const src = ctx.createMediaElementSource( audio );",
-				"line": 535
+				"line": 545
 			}
 		],
 		"shot": {
@@ -215,17 +215,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser = ctx.createAnalyser();",
-				"line": 536
+				"line": 546
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getFloatTimeDomainData( samples );",
-				"line": 563
+				"line": 573
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getByteFrequencyData( bins );",
-				"line": 578
+				"line": 588
 			}
 		],
 		"shot": {
@@ -246,7 +246,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "document.addEventListener( 'visibilitychange', () => {",
-				"line": 363
+				"line": 373
 			}
 		],
 		"shot": {
@@ -267,7 +267,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 178
+				"line": 188
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -298,7 +298,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "img.decoding = 'async';",
-				"line": 1417
+				"line": 1427
 			}
 		],
 		"shot": {
@@ -319,12 +319,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function drag( zone, { move, end } ) {",
-				"line": 1215
+				"line": 1225
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {",
-				"line": 1217
+				"line": 1227
 			}
 		],
 		"shot": {
@@ -345,7 +345,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "breath = wire.animate(",
-				"line": 693
+				"line": 703
 			}
 		],
 		"shot": {
@@ -366,12 +366,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function follow() {",
-				"line": 402
+				"line": 412
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "meterRaf = requestAnimationFrame( tick );",
-				"line": 650
+				"line": 640
 			}
 		],
 		"shot": {
@@ -392,7 +392,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.share( {",
-				"line": 1116
+				"line": 1126
 			}
 		],
 		"shot": {
@@ -413,7 +413,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.clipboard.writeText( url );",
-				"line": 1122
+				"line": 1132
 			}
 		],
 		"shot": {
@@ -434,12 +434,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = true;",
-				"line": 1041
+				"line": 1051
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = false;",
-				"line": 1066
+				"line": 1076
 			}
 		],
 		"shot": {
@@ -460,17 +460,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;",
-				"line": 58
+				"line": 68
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( window.matchMedia( '(hover: none)' ).matches ) {",
-				"line": 282
+				"line": 292
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches",
-				"line": 1036
+				"line": 1046
 			}
 		],
 		"shot": {
@@ -491,7 +491,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "?.scrollIntoView( { block: 'nearest' } );",
-				"line": 1106
+				"line": 1116
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -543,7 +543,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )",
-				"line": 1551
+				"line": 1561
 			}
 		],
 		"shot": {
@@ -564,12 +564,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );",
-				"line": 1048
+				"line": 1058
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'popstate', () => {",
-				"line": 1089
+				"line": 1099
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -595,12 +595,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const saved = parse( read( sessionStorage, STATE ) );",
-				"line": 1523
+				"line": 1533
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "write( localStorage, VOLUME, String( audio.volume ) );",
-				"line": 966
+				"line": 976
 			}
 		],
 		"shot": {
@@ -647,7 +647,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;",
-				"line": 1538
+				"line": 1548
 			}
 		],
 		"shot": {
@@ -668,7 +668,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pagehide', save );",
-				"line": 1479
+				"line": 1489
 			}
 		],
 		"shot": {
@@ -689,7 +689,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {",
-				"line": 1481
+				"line": 1491
 			}
 		],
 		"shot": {
@@ -715,12 +715,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "opener = document.activeElement;",
-				"line": 1030
+				"line": 1040
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {",
-				"line": 1268
+				"line": 1278
 			}
 		],
 		"shot": {
@@ -745,7 +745,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 607,
+				"line": 617,
 				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
 			}
 		],
@@ -953,7 +953,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 57,
+				"line": 67,
 				"code": "const reduce = () =>"
 			},
 			{
@@ -1088,7 +1088,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 1217,
+				"line": 1227,
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],

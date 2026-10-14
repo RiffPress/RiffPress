@@ -132,6 +132,22 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		);
 	}
 
+	public function test_a_lossless_file_carries_its_bit_depth_and_sample_rate(): void {
+		$flac  = self::attach( '../test/tone-24-96.flac' );
+		$mp3   = self::attach( '02 - Underground [underground].mp3' );
+		$track = Tracks::from_attachment( $flac );
+
+		$this->assertSame( 'flac', $track['format'] );
+		$this->assertTrue( $track['lossless'] );
+		$this->assertSame( 24, $track['bits'] );
+		$this->assertSame( 96000, $track['rate'] );
+
+		$lossy = Tracks::from_attachment( $mp3 );
+		$this->assertFalse( $lossy['lossless'] );
+		$this->assertSame( 0, $lossy['bits'], 'an MP3 has no bit depth to report' );
+		$this->assertSame( 44100, $lossy['rate'] );
+	}
+
 	public function test_a_bare_address_is_titled_from_the_caption_then_the_file_name(): void {
 		$post = self::factory()->post->create( array( 'post_title' => 'A post' ) );
 

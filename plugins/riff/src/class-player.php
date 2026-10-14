@@ -109,6 +109,8 @@ final class Player {
 			/* translators: %s: kilobits per second. */
 			'kbps'        => __( '%s kbps', 'riff' ),
 			'lossless'    => __( 'Lossless', 'riff' ),
+			/* translators: 1: bits per sample, 2: sample rate in kHz. */
+			'bitsKhz'     => __( '%1$s-bit %2$s kHz', 'riff' ),
 			'appEmpty'    => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
 			'otherTab'    => __( 'Playing in another tab', 'riff' ),
 			/* translators: 1: elapsed time, 2: total time. */
