@@ -27,7 +27,9 @@
     "plugin-zip": "npm run plugin-zip --workspace=plugins/riff",
     "pot": "wp-env run cli wp i18n make-pot wp-content/plugins/riff wp-content/plugins/riff/languages/riff.pot --domain=riff --no-location --exclude=tests,node_modules --package-name=Riff",
     "docs:hooks": "node .github/scripts/hooks-reference.js",
-    "docs:hooks:check": "node .github/scripts/hooks-reference.js --check"
+    "docs:hooks:check": "node .github/scripts/hooks-reference.js --check",
+    "docs:web": "node .github/scripts/web-pages.js",
+    "docs:web:check": "node .github/scripts/web-pages.js --check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

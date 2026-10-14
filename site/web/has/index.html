@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>:has(), in Riff</title>
+<meta name="description" content="Styles a parent from a child's state, without the script toggling classes.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Riff">
+<meta property="og:url" content="{{pages_url}}web/has/">
+<meta property="og:title" content=":has(), in Riff">
+<meta property="og:description" content="Styles a parent from a child's state, without the script toggling classes.">
+<meta property="og:image" content="{{pages_url}}og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{{pages_url}}web/has/">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../../icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1e1e1e">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="../web.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="nav"><div class="wrap"><a class="mark" href="../../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="../../#listen">The block</a><a href="../../#try">Live demo</a><a href="../../#owners">Get Riff</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="https://github.com/RiffPress/RiffPress/releases/latest">Download</a></nav></div></div>
+<div class="wrap layout">
+<aside class="side"><p class="side-title"><a href="../">Built on the open web</a></p><h2>Media</h2><ul><li><a href="../html-media-element/">HTMLMediaElement</a></li><li><a href="../time-ranges/">TimeRanges</a></li><li><a href="../screen-wake-lock/">Screen Wake Lock</a></li><li><a href="../vibration/">Vibration</a></li><li><a href="../network-information/">Network Information</a></li><li><a href="../media-session/">Media Session</a></li><li><a href="../remote-playback/">Remote Playback</a></li><li><a href="../web-audio/">Web Audio</a></li><li><a href="../analyser-node/">AnalyserNode</a></li><li><a href="../page-visibility/">Page Visibility</a></li><li><a href="../lazy-loading/">Lazy loading</a></li><li><a href="../async-decoding/">Async decoding</a></li></ul><h2>Interface</h2><ul><li><a href="../pointer-events/">Pointer Events</a></li><li><a href="../web-animations/">Web Animations</a></li><li><a href="../request-animation-frame/">requestAnimationFrame</a></li><li><a href="../web-share/">Web Share</a></li><li><a href="../clipboard/">Clipboard</a></li><li><a href="../inert/">inert</a></li><li><a href="../match-media/">matchMedia</a></li><li><a href="../scroll-into-view/">scrollIntoView</a></li></ul><h2>Platform</h2><ul><li><a href="../es-modules/">ES modules</a></li><li><a href="../dynamic-import/">Dynamic import</a></li><li><a href="../history/">History</a></li><li><a href="../web-storage/">Web Storage</a></li><li><a href="../fetch/">Fetch</a></li><li><a href="../navigation-timing/">Navigation Timing</a></li><li><a href="../pagehide/">pagehide</a></li><li><a href="../pageshow/">pageshow</a></li><li><a href="../aria-dialog/">ARIA dialog</a></li></ul><h2>Styling</h2><ul><li><a href="../property/">@property</a></li><li><a href="../color-mix/">color-mix()</a></li><li><a href="../oklab/">oklab</a></li><li><a href="../container-queries/">Container queries</a></li><li><a href="../has/" aria-current="page">:has()</a></li><li><a href="../env-safe-areas/">env() safe areas</a></li><li><a href="../text-wrap/">text-wrap</a></li><li><a href="../variable-fonts/">Variable fonts</a></li></ul><h2>Behaviour</h2><ul><li><a href="../prefers-reduced-motion/">prefers-reduced-motion</a></li><li><a href="../prefers-reduced-transparency/">prefers-reduced-transparency</a></li><li><a href="../clip-path/">clip-path</a></li><li><a href="../aspect-ratio/">aspect-ratio</a></li><li><a href="../accent-color/">accent-color</a></li><li><a href="../touch-action/">touch-action</a></li><li><a href="../overscroll-behavior/">overscroll-behavior</a></li><li><a href="../focus-visible/">:focus-visible</a></li></ul></aside>
+<main id="main">
+<p class="crumb"><a href="../../">Riff</a> <span>/</span> <a href="../">Built on the open web</a> <span>/</span> Styling</p>
+<h1>:has()</h1>
+<p class="lede">Styles a parent from a child's state, without the script toggling classes.</p>
+<figure><span class="device"><picture><source type="image/avif" srcset="../../phone-post.avif"><img src="../../phone-post.png" width="780" height="1688" alt="A post with its tracks listed, and the player bar along the bottom of the screen" loading="lazy" decoding="async"></picture></span><figcaption>The three equalizer bars on the playing row, following the live signal.</figcaption></figure>
+<h2>How Riff uses it</h2>
+<p>The seek control is an invisible range input over the seek line, so its keyboard focus ring is drawn on the parent bar instead. When the script has a live audio reading it sets <code>data-live</code> on the player, and the equalizer bars on the playing row drop their fallback keyframes so only the live movement shows. In the Listen app, a record card draws its focus ring around the whole card when the link inside it is focused.</p>
+<h2>Why</h2>
+<p>Each case would otherwise mean the script toggling classes on every focus change and every analyser start and stop.</p>
+<h2>Without it</h2>
+<p>The seek bar has no visible keyboard focus ring, and the equalizer bars run their keyframes over the live reading.</p>
+<h2>Where</h2>
+<ul class="where"><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.css#L392">plugins/riff/assets/riff.css, line 392</a><pre><code>.riff-bar-seek:has(&gt; .riff-seek:focus-visible),</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.css#L484">plugins/riff/assets/riff.css, line 484</a><pre><code>html:has(#riff[data-live]) [data-playing=&quot;true&quot;] .riff-row-state i {</code></pre></li><li><a href="https://github.com/RiffPress/RiffPress/blob/{{commit}}/plugins/riff/assets/riff.css#L1600">plugins/riff/assets/riff.css, line 1600</a><pre><code>.riff-app .riff-card:has(&gt; .riff-card-link:focus-visible) {</code></pre></li></ul>
+<p class="fine">Links open the source at the commit this page was published from.</p>
+<p class="fine">Reference: <a href="https://developer.mozilla.org/docs/Web/CSS/:has">:has() on MDN</a>.</p>
+<nav class="pager" aria-label="Previous and next"><a rel="prev" href="../container-queries/">Container queries</a><a rel="next" href="../env-safe-areas/">env() safe areas</a></nav>
+</main>
+</div>
+<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
+</body>
+</html>

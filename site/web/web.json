@@ -1,0 +1,1152 @@
+[
+	{
+		"slug": "html-media-element",
+		"name": "HTMLMediaElement",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/HTMLMediaElement",
+		"summary": "One audio and one video element for the whole page, which every control drives.",
+		"how": "The template prints one `<audio>` and one `<video>` for the page, and the script picks which one a track plays through. Loading a track sets `src` and `currentTime` on that element and calls `play()`. Switching between Song and Video hands the current time and paused state from one element to the other. The core blocks' own players are paused and hidden underneath.",
+		"why": "The whole player is a UI over these two elements, and sharing one pair across the page is what lets a track keep playing while rows, views and Now Playing change around it.",
+		"fallback": "Each block keeps its native player underneath, so a page where the script never runs still plays.",
+		"where": [
+			{
+				"file": "plugins/riff/templates/player.php",
+				"code": "<audio class=\"riff-audio\" preload=\"metadata\"></audio>",
+				"line": 136
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "const el = ( t = track() ) =>",
+				"line": 127
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "m.play().catch( paint );",
+				"line": 264
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "Everything on this screen reads from or writes to the one audio element."
+		}
+	},
+	{
+		"slug": "time-ranges",
+		"name": "TimeRanges",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/TimeRanges",
+		"summary": "Shows how much of the file is loaded past the playhead.",
+		"how": "On every time update the script reads the live element's `buffered` ranges, finds the one that contains the playhead, and turns its end into a 0 to 1 ratio. That ratio goes into a custom property on both seek bars, and the stylesheet scales a lighter band under the played part of the line to match.",
+		"why": "The lighter band tells the listener a seek into loaded territory will be instant.",
+		"fallback": "With no matching range the function returns 0 and the band is empty.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "function buffered( m, duration ) {",
+				"line": 831
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "const ranges = m.buffered;",
+				"line": 832
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "The lighter band on the seek line ahead of the amber played part is the buffered range."
+		}
+	},
+	{
+		"slug": "screen-wake-lock",
+		"name": "Screen Wake Lock",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Screen_Wake_Lock_API",
+		"summary": "Keeps the screen on while a video plays in Now Playing, and only then.",
+		"how": "One function computes a single condition: a video is playing, Now Playing is open, and the page is visible. When that becomes true it requests a screen lock. When it becomes false it releases it. It runs from the video's play, pause and ended events, the player's open and close events, and visibility changes.",
+		"why": "Without it a phone would dim and lock partway through a video.",
+		"fallback": "The call is guarded by `navigator.wakeLock` and a try/catch, so the screen follows the system timeout.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );",
+				"line": 1499
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "With Video selected at the top and the dialog open, the screen is held awake."
+		}
+	},
+	{
+		"slug": "vibration",
+		"name": "Vibration",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Vibration_API",
+		"summary": "A short tick under the thumb on play and pause, as the phone apps do.",
+		"how": "Every play or pause, from a tap, a key or a row, first checks the `(hover: none)` media query to tell a touch screen from a mouse. On a touch screen it fires an 8ms vibration.",
+		"why": "A haptic tick confirms the tap landed. Without it the only confirmation is the icon change.",
+		"fallback": "The call is optional, so a browser without it skips the tick.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "navigator.vibrate?.( 8 );",
+				"line": 281
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "Tapping the play button gives an 8ms tick on a phone."
+		}
+	},
+	{
+		"slug": "network-information",
+		"name": "Network Information",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Network_Information_API",
+		"summary": "Respects Data Saver by fetching nothing before a press.",
+		"how": "At startup the script reads `navigator.connection.saveData`. When Data Saver is on, it sets `preload` to none on both media elements, overriding the template's `metadata`.",
+		"why": "On a metered connection the player should not download even a track's metadata before the listener presses play.",
+		"fallback": "The property is optionally chained, so browsers without it keep the template's preload.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "if ( navigator.connection?.saveData ) {",
+				"line": 48
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "With Data Saver on, these rows fetch nothing until one is tapped."
+		}
+	},
+	{
+		"slug": "media-session",
+		"name": "Media Session",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Media_Session_API",
+		"summary": "Gives the lock screen and headphones the track's title, artwork and controls.",
+		"how": "Each new track builds a `MediaMetadata` with title, artist, album and every artwork size. Eight action handlers map the system's play, pause, previous, next, seek and stop onto the player's own functions. The playing state and position are mirrored, position at most once a second.",
+		"why": "Without it the lock screen, headphones and the system media widget would show a blank page title and could not skip tracks.",
+		"fallback": "Guarded by feature checks and a try/catch per action, so the on-page controls are the only controls.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {",
+				"line": 1309
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "navigator.mediaSession.setActionHandler( action, handler );",
+				"line": 1370
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "navigator.mediaSession.setPositionState( {",
+				"line": 1335
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "The cover, title and artist shown here are handed to the lock screen and headphone controls."
+		}
+	},
+	{
+		"slug": "remote-playback",
+		"name": "Remote Playback",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Remote_Playback_API",
+		"summary": "Shows the cast button only when a Chromecast or AirPlay target is in reach.",
+		"how": "The script watches availability once, and the callback shows or hides every cast button as a device comes in and out of range. Safari takes the equivalent WebKit path for AirPlay. Pressing the button prompts the browser's device picker on whichever element is live.",
+		"why": "There is no other standard way to know a device is near, so the buttons would either always show and do nothing, or never show.",
+		"fallback": "Both calls are optionally chained, so a browser with neither keeps the buttons hidden.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );",
+				"line": 1391
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "m.remote.prompt().catch( () => {} );",
+				"line": 1398
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "The cast control in the bar appears once a target is in reach."
+		}
+	},
+	{
+		"slug": "web-audio",
+		"name": "Web Audio",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Audio_API",
+		"summary": "Reads the signal that lights the filament.",
+		"how": "The first time something plays through the audio element on a non-iOS browser, the script creates an `AudioContext`, wraps the element in a media source, and connects it through an analyser and back to the destination so the sound still comes out. The context suspends on pause and resumes on play.",
+		"why": "This is what drives the amber filament. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
+		"fallback": "Where there is no analyser the wire breathes at working temperature on a fixed loop instead.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "const ctx = new AudioContext();",
+				"line": 532
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "const src = ctx.createMediaElementSource( audio );",
+				"line": 533
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The filament on the bar's seek line is lit by the signal's level read through Web Audio."
+		}
+	},
+	{
+		"slug": "analyser-node",
+		"name": "AnalyserNode",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/AnalyserNode",
+		"summary": "Turns the signal into one heat value and three band levels, every frame.",
+		"how": "The analyser uses a 1024-sample window with 0.6 smoothing. Each frame, the time-domain samples give an RMS that feeds the filament's heat model, and the frequency bins are summed into three bands, bass, voice and air. Those three values scale the three bars on the playing row.",
+		"why": "Without it there is no signal to read, so the filament could not follow the music and the bars could not move.",
+		"fallback": "Same as Web Audio: the bars stay still and the wire breathes on a loop.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "analyser = ctx.createAnalyser();",
+				"line": 534
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "analyser.getFloatTimeDomainData( samples );",
+				"line": 561
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "analyser.getByteFrequencyData( bins );",
+				"line": 576
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The three bars on the playing row and the heat of the filament come from the analyser."
+		}
+	},
+	{
+		"slug": "page-visibility",
+		"name": "Page Visibility",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Page_Visibility_API",
+		"summary": "Moves a playing video to audio when the page goes to the background.",
+		"how": "When the page is hidden while a video is playing, the handler flips the track to the audio element and remembers it did. When the page is visible again it flips back. The same event restarts the per-frame seek follower, and the loops check `document.hidden` so they stop in the background.",
+		"why": "A phone pauses video in the background but keeps audio going, so backgrounding a tab during a video would otherwise stop the music.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "document.addEventListener( 'visibilitychange', () => {",
+				"line": 361
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "Playing in Video and switching apps hands the position to audio; coming back hands it to video again."
+		}
+	},
+	{
+		"slug": "lazy-loading",
+		"name": "Lazy loading",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/HTML/Element/img#loading",
+		"summary": "Fetches list thumbnails only as they scroll into view.",
+		"how": "Every thumbnail in a list is marked `loading=\"lazy\"`: the art on each track row, each item in Up next, and each record cover in the library grid. The cover of the current track is not lazy.",
+		"why": "A post or library can have dozens of covers, and the browser should not fetch them all before the listener scrolls.",
+		"fallback": "A browser without the attribute loads the images eagerly.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
+				"line": 176
+			},
+			{
+				"file": "plugins/riff/features/listen/app.js",
+				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
+				"line": 209
+			}
+		],
+		"shot": {
+			"image": "desktop-listen",
+			"caption": "Each cover in the grid is a lazy-loaded image; those below the fold wait for a scroll."
+		}
+	},
+	{
+		"slug": "async-decoding",
+		"name": "Async decoding",
+		"group": "Media",
+		"mdn": "https://developer.mozilla.org/docs/Web/HTML/Element/img#decoding",
+		"summary": "Decodes cover art off the main thread so the seek line does not stutter.",
+		"how": "Every image the player prints carries `decoding=\"async\"`: the large cover and the two thumbnails in the template, each row and queue item, and each library card. The off-screen image loaded to sample a cover's colour sets it too.",
+		"why": "The cover swaps on every track change while the seek line is animating each frame, and a synchronous decode would drop a frame.",
+		"fallback": "Browsers without the hint decode as usual.",
+		"where": [
+			{
+				"file": "plugins/riff/templates/player.php",
+				"code": "<img class=\"riff-cover\" data-riff-art data-riff-size=\"large\" alt=\"\" decoding=\"async\" draggable=\"false\" hidden>",
+				"line": 89
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "img.decoding = 'async';",
+				"line": 1415
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "The large cover decodes off the main thread when the track changes."
+		}
+	},
+	{
+		"slug": "pointer-events",
+		"name": "Pointer Events",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Pointer_events",
+		"summary": "One gesture helper for swiping the bar and dragging the sheets.",
+		"how": "A single `drag()` helper records the pointer's start, timestamp and id on `pointerdown`, reports deltas on `pointermove` for that pointer, and calls an end handler on `pointerup` or `pointercancel` with distance and velocity. It skips mouse pointers. It drives swiping the bar to skip or dismiss, dragging Now Playing down to close, and dragging the Up next handle.",
+		"why": "Pointer events give one code path for touch and pen with a `pointerType` to exclude the mouse.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "function drag( zone, { move, end } ) {",
+				"line": 1213
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "zone.addEventListener( 'pointerdown', ( e ) => {",
+				"line": 1215
+			}
+		],
+		"shot": {
+			"image": "phone-up-next",
+			"caption": "The Up next sheet opens from a drag on the handle."
+		}
+	},
+	{
+		"slug": "web-animations",
+		"name": "Web Animations",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Animations_API",
+		"summary": "Breathes the filament where there is no signal to follow.",
+		"how": "When a track is playing but there is no analyser, on iOS, for a cross-origin file, or through the video element, the wire gets an infinite 2.6 second opacity loop through `element.animate()`. The returned animation is cancelled when playback pauses or ends.",
+		"why": "Without it the filament would sit static on every iPhone, where Web Audio is deliberately not used.",
+		"fallback": "This branch is itself the fallback for a missing analyser.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "breath = wire.animate(",
+				"line": 691
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "On an iPhone the filament under the bar breathes on a loop instead of following the signal."
+		}
+	},
+	{
+		"slug": "request-animation-frame",
+		"name": "requestAnimationFrame",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame",
+		"summary": "Moves the seek line and the filament every frame, not four times a second.",
+		"how": "Two frame loops run while music plays. One repaints the seek line and times every frame and stops when the element pauses or the page hides. The other advances the filament's heat model with the frame timestamp and reads the analyser. Opening Now Playing also waits one frame before adding its class, so the slide-up transition actually runs.",
+		"why": "`timeupdate` fires about four times a second and reads as a line that skips.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "function follow() {",
+				"line": 400
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "meterRaf = requestAnimationFrame( tick );",
+				"line": 648
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "The seek line and elapsed time advance every frame."
+		}
+	},
+	{
+		"slug": "web-share",
+		"name": "Web Share",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Share_API",
+		"summary": "Opens the system share sheet with the track's title and the post link.",
+		"how": "The Share chip in Now Playing calls `navigator.share()` with the track title and the post's URL. A rejected promise from dismissing the sheet is swallowed.",
+		"why": "On a phone the system sheet is how people send a link to Messages or another app.",
+		"fallback": "Falls through to the clipboard and a Copied toast.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "await navigator.share( {",
+				"line": 1114
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "The Share button opens the phone's share sheet."
+		}
+	},
+	{
+		"slug": "clipboard",
+		"name": "Clipboard",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Clipboard_API",
+		"summary": "Copies the link where there is no share sheet.",
+		"how": "When the browser has no share sheet, the Share chip writes the post's URL to the clipboard and shows a Copied message in the status toast for 2.5 seconds. Any error is caught and nothing is reported.",
+		"why": "Desktop browsers mostly lack `navigator.share`, so copying is the only thing the chip can do there.",
+		"fallback": "A failing write is caught and the toast does not appear.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "await navigator.clipboard.writeText( url );",
+				"line": 1120
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "On a desktop with no share sheet the Share chip copies the link."
+		}
+	},
+	{
+		"slug": "inert",
+		"name": "inert",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert",
+		"summary": "Makes Now Playing a real modal: nothing behind it can take focus.",
+		"how": "Opening Now Playing sets `inert` on every direct child of `<body>` except the player, and on a phone also on the bar and the toast, which the dialog covers. Each node touched is marked so closing restores only those. On a wide screen the bar stays live because the dialog opens above it.",
+		"why": "Without it the page behind a `role=\"dialog\"` would still take keyboard and screen reader focus.",
+		"fallback": "The page stays focusable behind the dialog.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "node.inert = true;",
+				"line": 1039
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "node.inert = false;",
+				"line": 1064
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "While this dialog is open the post, the bar and the toast underneath cannot take focus."
+		}
+	},
+	{
+		"slug": "match-media",
+		"name": "matchMedia",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/matchMedia",
+		"summary": "Reads the same breakpoint and motion preference the stylesheet uses.",
+		"how": "Three queries are read from script. `prefers-reduced-motion` skips the frame loops and the close transition. `(hover: none)` stands in for a touch screen before vibrating. `(min-width: 900px)` decides whether the bar sits beside the dialog and stays live, or under it and goes inert.",
+		"why": "The phone and desktop layouts differ in ways CSS alone cannot express, and the script has to agree with the stylesheet about where the line is.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;",
+				"line": 57
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "if ( window.matchMedia( '(hover: none)' ).matches ) {",
+				"line": 280
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches",
+				"line": 1034
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "At 900px and wider the bar stays interactive beside the open dialog."
+		}
+	},
+	{
+		"slug": "scroll-into-view",
+		"name": "scrollIntoView",
+		"group": "Interface",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Element/scrollIntoView",
+		"summary": "Brings the playing track into view when Up next opens.",
+		"how": "When the Up next sheet opens, the current track's item in the list is scrolled into view with `block: nearest`. In the Listen app, after a view swap, the app scrolls to its top only if it had scrolled off above the viewport.",
+		"why": "A long queue would otherwise open at its top with the playing track somewhere below.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "?.scrollIntoView( { block: 'nearest' } );",
+				"line": 1104
+			},
+			{
+				"file": "plugins/riff/features/listen/app.js",
+				"code": "app.scrollIntoView( { block: 'start' } );",
+				"line": 122
+			}
+		],
+		"shot": {
+			"image": "phone-up-next",
+			"caption": "The playing track in the Up next list was scrolled into view when the sheet opened."
+		}
+	},
+	{
+		"slug": "es-modules",
+		"name": "ES modules",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/JavaScript/Guide/Modules",
+		"summary": "The shipped file is the source, loaded as a module with no build step.",
+		"how": "The player is enqueued through WordPress's `wp_enqueue_script_module()`, so it loads as `<script type=\"module\">`, deferred by default. The Listen app is a separate module with a named export that the player imports on demand. There is no bundler.",
+		"why": "Modules give deferred loading, strict mode and a real import for the optional app without a build step.",
+		"fallback": "A browser without modules skips the script, and the native audio blocks still play.",
+		"where": [
+			{
+				"file": "plugins/riff/src/class-player.php",
+				"code": "wp_enqueue_script_module( 'riff', RIFF_URL . 'assets/riff.js', array(), self::version( 'assets/riff.js' ) );",
+				"line": 61
+			},
+			{
+				"file": "plugins/riff/features/listen/app.js",
+				"code": "export function start( api ) {",
+				"line": 9
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "A post with the player attached by one module script; without it the blocks still play natively."
+		}
+	},
+	{
+		"slug": "dynamic-import",
+		"name": "Dynamic import",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/import",
+		"summary": "Loads the Listen app only on the page that holds the block.",
+		"how": "After the player is ready it checks for the Listen block and a module URL the feature put into the page data. Only then does it `import()` the app and call its start function with the public API. Posts without the block never download it.",
+		"why": "A static import would load the app on every post with audio.",
+		"fallback": "A failed import leaves the server-rendered links as real links, so the library works as plain page loads.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "import( data.assets.app )",
+				"line": 1549
+			}
+		],
+		"shot": {
+			"image": "desktop-listen",
+			"caption": "This page has the Listen block, so the player imported the app that turns cover links into in-page navigation."
+		}
+	},
+	{
+		"slug": "history",
+		"name": "History",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/History_API",
+		"summary": "Back closes Now Playing, and the Listen app navigates without a page load.",
+		"how": "Opening Now Playing pushes a history entry without changing the address, so Back closes the dialog. Closing it any other way pops that entry. The Listen app pushes an entry with the new address for each view it swaps in and re-renders on `popstate`, spreading the existing state so the Interactivity API's session id survives.",
+		"why": "A lost session id would make the Interactivity runtime reload the page on Back and end the music.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );",
+				"line": 1046
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "window.addEventListener( 'popstate', () => {",
+				"line": 1087
+			},
+			{
+				"file": "plugins/riff/features/listen/app.js",
+				"code": "{ ...history.state, riffApp: id },",
+				"line": 113
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "Opening this view pushed a history entry, so the phone's Back gesture closes it instead of leaving the page."
+		}
+	},
+	{
+		"slug": "web-storage",
+		"name": "Web Storage",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Storage_API",
+		"summary": "Carries the queue and position to the next page, and remembers the volume.",
+		"how": "The queue, order, position, mode, repeat, shuffle, current time and playing flag are written to `sessionStorage` on every track load, every five seconds, and on `pagehide`. The next page in the same tab reads it back and reloads the same track at the same time. The volume goes to `localStorage` so it survives across tabs.",
+		"why": "This is what lets a link to another page keep playing and a reload pick up paused where it left off.",
+		"fallback": "Every read and write is wrapped in try/catch, so in private mode or over quota the player works without remembering.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "const saved = parse( read( sessionStorage, STATE ) );",
+				"line": 1521
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "write( localStorage, VOLUME, String( audio.volume ) );",
+				"line": 964
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The bar came with the listener from the previous page: the queue and position were read back from storage."
+		}
+	},
+	{
+		"slug": "fetch",
+		"name": "Fetch",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Fetch_API",
+		"summary": "Swaps library views in from the REST route without a page load.",
+		"how": "The Listen app fetches the library and each post from the plugin's REST route with a JSON `Accept` header, and memoises each promise so going back is instant. A non-2xx response throws and the entry is dropped from the cache.",
+		"why": "Swapping views without a page load is what keeps the music playing, and the cache is why Back feels instant.",
+		"fallback": "A failed fetch sends the browser to the real URL with a full navigation.",
+		"where": [
+			{
+				"file": "plugins/riff/features/listen/app.js",
+				"code": "fetch( key, {",
+				"line": 68
+			},
+			{
+				"file": "plugins/riff/features/listen/app.js",
+				"code": "location.assign( addressOf( id ) );",
+				"line": 92
+			}
+		],
+		"shot": {
+			"image": "desktop-listen",
+			"caption": "This grid came from the library REST route; clicking a cover fetches that post and swaps it in."
+		}
+	},
+	{
+		"slug": "navigation-timing",
+		"name": "Navigation Timing",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/PerformanceNavigationTiming",
+		"summary": "Tells a reload from a link, so a reload never autoplays.",
+		"how": "When restoring the saved state, the script reads the type of the navigation entry. After a reload the saved track loads at its position but stays paused. After a link, a track that was playing resumes.",
+		"why": "The click that follows a link is the gesture the new page needs to play with sound. A reload has no such gesture and would be blocked or surprise the listener.",
+		"fallback": "The entry is optionally chained, so without one the saved playing flag decides alone.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;",
+				"line": 1536
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "Arriving here from a link resumes the music; a reload shows the bar paused at the same spot."
+		}
+	},
+	{
+		"slug": "pagehide",
+		"name": "pagehide",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/pagehide_event",
+		"summary": "Captures the exact position when the listener leaves the page.",
+		"how": "The save function that writes the queue and position to `sessionStorage` is bound to `pagehide`, so the last `currentTime` is captured when the listener follows a link, closes the tab, or the page enters the back-forward cache.",
+		"why": "Without it the restored position could be up to five seconds stale. `pagehide` fires reliably where `unload` does not, including on mobile.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "window.addEventListener( 'pagehide', save );",
+				"line": 1477
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "Leaving this page stores the exact position, which the next page picks up."
+		}
+	},
+	{
+		"slug": "pageshow",
+		"name": "pageshow",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/pageshow_event",
+		"summary": "Restarts the frame loop after a Back from the back-forward cache.",
+		"how": "When a page is restored from the back-forward cache, `pageshow` fires with `persisted` set. The handler repaints the seek line and, if the media element is still playing, restarts the per-frame loop the browser stopped when it froze the page.",
+		"why": "The audio element kept its state in the cache but the animation loop did not, so the music would be playing while the seek line sat still.",
+		"fallback": "`persisted` is checked, so a normal load does nothing.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "window.addEventListener( 'pageshow', ( e ) => {",
+				"line": 1479
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "After a Back from the cache the seek line here would be frozen without the restart."
+		}
+	},
+	{
+		"slug": "aria-dialog",
+		"name": "ARIA dialog",
+		"group": "Platform",
+		"mdn": "https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Roles/dialog_role",
+		"summary": "Now Playing is a named modal dialog with Escape and focus return.",
+		"how": "The Now Playing container is printed as `role=\"dialog\"` with `aria-modal` and a translated label. The buttons that open it declare `aria-haspopup=\"dialog\"`. The script completes the pattern: opening remembers the focused element and moves focus to Close, Escape closes from anywhere, the rest of the page goes inert, and closing returns focus to the opener.",
+		"why": "Screen readers announce Now Playing as a modal dialog. Without the role the full-screen view would read as part of the post.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/templates/player.php",
+				"code": "<div class=\"riff-np\" role=\"dialog\" aria-modal=\"true\" aria-label=\"<?php esc_attr_e( 'Now Playing', 'riff' ); ?>\" hidden>",
+				"line": 64
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "opener = document.activeElement;",
+				"line": 1028
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "if ( e.key === 'Escape' && ! np.hidden ) {",
+				"line": 1266
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "This whole view is one dialog named Now Playing; focus lands on the close chevron when it opens."
+		}
+	},
+	{
+		"slug": "property",
+		"name": "@property",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@property",
+		"summary": "Registers the filament's heat as a real number, so it can animate.",
+		"how": "The script writes one number, `--riff-heat`, onto the seek lines and the Now Playing glow every frame. Registering it as a `<number>` lets a 160ms transition interpolate between those writes. Every colour and opacity in the filament is a `calc()` off that one number, so the script never touches a colour.",
+		"why": "An unregistered custom property is a string and cannot transition, so the wire would step from one brightness to the next each frame.",
+		"fallback": "The colours still update each frame; only the transition stops working.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 424,
+				"code": "@property --riff-heat {"
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"line": 605,
+				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The amber filament along the bar's seek line, whose brightness follows the music."
+		}
+	},
+	{
+		"slug": "color-mix",
+		"name": "color-mix()",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/color_value/color-mix",
+		"summary": "Tints rows, pills and the seek line from the theme's own text colour.",
+		"how": "Track rows in a post have no colours of their own. The hover and current-row tint, the artwork placeholder, the buffered band and the quality pill are all `currentcolor` mixed with transparent at a low percentage, so they sit right on a light or a dark theme. Now Playing darkens the cover's tint by mixing in black for the bottom of its gradient.",
+		"why": "A fixed rgba() tint would vanish on one theme and look heavy on another, and the Now Playing tint is only known at runtime from the artwork.",
+		"fallback": "Rows get no hover tint, and Now Playing shows its plain background.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 65,
+				"code": "background: color-mix(in srgb, currentcolor 8%, transparent);"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 800,
+				"code": "background: linear-gradient(var(--riff-tint), color-mix(in srgb, var(--riff-tint) 70%, #000));"
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The faint highlight on the current track row, mixed from the theme's own text colour."
+		}
+	},
+	{
+		"slug": "oklab",
+		"name": "oklab",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/color_value/oklab",
+		"summary": "Mixes the filament's colour from red through amber to white without muddy midtones.",
+		"how": "The filament's colour is a three-stop ramp: a near-black red to a lit red, then to the amber accent, then to a pale yellow-white at the peaks. Each stop is a `color-mix()` in oklab, so the in-between colours keep an even perceived lightness, the way a heated wire brightens.",
+		"why": "The same mix in sRGB passes through darker, muddier midtones instead of a smooth brightening.",
+		"fallback": "The glow colour is undefined and the wire draws in the inherited foreground colour.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 438,
+				"code": "--riff-glow: color-mix(in oklab, color-mix(in oklab, color-mix(in oklab, rgb(74 16 0), rgb(190 58 12) calc(var(--riff-heat-red) * 100%)), var(--riff-accent) calc(var(--riff-heat-amber) * 100%)), rgb(255 232 190) calc(var(--riff-heat-white) * 100%));"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 452,
+				"code": ".riff-wire {"
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The filament: red when quiet, amber at working temperature, near white on the peaks."
+		}
+	},
+	{
+		"slug": "container-queries",
+		"name": "Container queries",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/CSS_containment/Container_queries",
+		"summary": "Sizes the cover from the stage it sits in, not the viewport.",
+		"how": "The stage in Now Playing, between the header and the title, is a size container. The cover is the smaller of the stage's width and height in `cqw` and `cqh`, so it is always a square that fits whatever room is left. The video fills the stage's width and caps at its height. There is no `@container` rule, only the units.",
+		"why": "The stage's height changes with the phone, the safe areas and the Up next sheet, and the cover has to fit without the script measuring anything.",
+		"fallback": "The cover renders at the image's own size, clipped by the stage.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 879,
+				"code": "container-type: size;"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 890,
+				"code": "width: min(100cqw, 100cqh);"
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "The square cover filling the stage, sized from the stage itself."
+		}
+	},
+	{
+		"slug": "has",
+		"name": ":has()",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/:has",
+		"summary": "Styles a parent from a child's state, without the script toggling classes.",
+		"how": "The seek control is an invisible range input over the seek line, so its keyboard focus ring is drawn on the parent bar instead. When the script has a live audio reading it sets `data-live` on the player, and the equalizer bars on the playing row drop their fallback keyframes so only the live movement shows. In the Listen app, a record card draws its focus ring around the whole card when the link inside it is focused.",
+		"why": "Each case would otherwise mean the script toggling classes on every focus change and every analyser start and stop.",
+		"fallback": "The seek bar has no visible keyboard focus ring, and the equalizer bars run their keyframes over the live reading.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 392,
+				"code": ".riff-bar-seek:has(> .riff-seek:focus-visible),"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 484,
+				"code": "html:has(#riff[data-live]) [data-playing=\"true\"] .riff-row-state i {"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 1600,
+				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The three equalizer bars on the playing row, following the live signal."
+		}
+	},
+	{
+		"slug": "env-safe-areas",
+		"name": "env() safe areas",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/env",
+		"summary": "Keeps the bar and Now Playing clear of the notch and the home indicator.",
+		"how": "The two insets are read once into custom properties. The fixed bar grows by the bottom inset and pads its controls above it. Now Playing, which covers the whole screen, pads its header below the notch and its controls above the indicator. The toast and the spacer at the end of the page use the same value.",
+		"why": "A fixed bar on a phone with a home indicator would otherwise put the play button under the indicator.",
+		"fallback": "The second argument gives 0px, so the bar is exactly its base height.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 20,
+				"code": "--riff-safe-b: env(safe-area-inset-bottom, 0px);"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 511,
+				"code": "height: calc(var(--riff-bar-h) + var(--riff-safe-b));"
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The player bar, padded so its controls clear the home indicator."
+		}
+	},
+	{
+		"slug": "text-wrap",
+		"name": "text-wrap",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/text-wrap",
+		"summary": "Balances a long post title in the Listen app so no word is left alone.",
+		"how": "When the Listen app opens a post, its title is set large beside the Play and Shuffle pills. If it wraps, `balance` splits it into lines of roughly equal length instead of a long first line and one word on the second.",
+		"why": "A heading that size orphans a single word easily, and the wrap point moves with the viewport.",
+		"fallback": "The title wraps normally.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 1808,
+				"code": "text-wrap: balance;"
+			}
+		],
+		"shot": {
+			"image": "desktop-listen",
+			"caption": "The library in the Listen app; opening an album sets its title large above the tracks."
+		}
+	},
+	{
+		"slug": "variable-fonts",
+		"name": "Variable fonts",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/CSS_fonts/Variable_fonts_guide",
+		"summary": "Ships each font as one file covering every weight the player asks for.",
+		"how": "Each bundled font is a single variable woff2 with a weight range in its `@font-face`: Roboto 100 to 900 for the player, Inter and EB Garamond 400 to 700 for the Listen app. The stylesheet asks for four weights, and all of them come from the one file.",
+		"why": "The fonts ship with the plugin rather than from Google, so a listener's address never leaves the site, and one file per family keeps that to three requests.",
+		"fallback": "The stacks name the system fonts next, and `font-display: swap` shows them until the file arrives.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 9,
+				"code": "@font-face {"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 12,
+				"code": "font-weight: 100 900;"
+			}
+		],
+		"shot": {
+			"image": "desktop-listen",
+			"caption": "The EB Garamond heading and Inter labels of the library, each family one file."
+		}
+	},
+	{
+		"slug": "prefers-reduced-motion",
+		"name": "prefers-reduced-motion",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-motion",
+		"summary": "Stops the equalizer, the filament and the sliding sheets when the system asks.",
+		"how": "In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run, the filament sits at a steady glow, Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.",
+		"why": "A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is exactly what the setting asks to stop.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 1436,
+				"code": "@media (prefers-reduced-motion: reduce) {"
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"line": 56,
+				"code": "const reduce = () =>"
+			},
+			{
+				"file": "plugins/riff/features/listen/app.js",
+				"line": 128,
+				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
+			}
+		],
+		"shot": {
+			"image": "phone-post",
+			"caption": "The equalizer bars and the filament, both of which go still under reduced motion."
+		}
+	},
+	{
+		"slug": "prefers-reduced-transparency",
+		"name": "prefers-reduced-transparency",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-transparency",
+		"summary": "Removes the translucent wash and the bloom when the system asks.",
+		"how": "On a phone the top of Now Playing carries a translucent wash of the filament's colour that brightens with the music. Under reduced transparency that wash is removed, and the wire and its white heart lose their blurred bloom, leaving a solid line.",
+		"why": "The wash and the bloom are the player's only translucent layers over content, and they change opacity every frame.",
+		"fallback": null,
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 488,
+				"code": "@media (prefers-reduced-transparency: reduce) {"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 468,
+				"code": ".riff-np-glow {"
+			}
+		],
+		"shot": {
+			"image": "phone-now-playing",
+			"caption": "The warm wash across the top of the screen, the layer that disappears under reduced transparency."
+		}
+	},
+	{
+		"slug": "clip-path",
+		"name": "clip-path",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/clip-path",
+		"summary": "Hides the Song and Video labels on a phone while screen readers still get them.",
+		"how": "The Song and Video switch shows two icons on a phone. Its text labels stay in the markup for screen readers but are clipped to nothing with `inset(50%)`. At 900px and up the clip is lifted, the labels show as words and the icons are hidden.",
+		"why": "Two icons on a phone and two words on a wide screen, from one set of markup, with an accessible name in both.",
+		"fallback": "The 1px size and `overflow: hidden` in the same rule hide the text anyway.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 858,
+				"code": "clip-path: inset(50%);"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 1272,
+				"code": "clip-path: none;"
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "The Song/Video switch reading as words; on a phone the same labels are clipped and icons show."
+		}
+	},
+	{
+		"slug": "aspect-ratio",
+		"name": "aspect-ratio",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/aspect-ratio",
+		"summary": "Reserves the video's box and each record cover's square before anything loads.",
+		"how": "The single video element in Now Playing reserves a 16:9 black box at the stage's width before any frame has loaded, so switching to Video does not resize the stage. In the library each record cover is a square box with a placeholder background, so the grid lays out at its final size before the images arrive.",
+		"why": "Without a declared ratio the video would sit at the browser's 300 by 150 default until metadata loads, and the grid would reflow as each cover came in.",
+		"fallback": "The video takes its default box until it has dimensions, and the cards take the height of their image.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 900,
+				"code": "aspect-ratio: 16 / 9;"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 1607,
+				"code": "aspect-ratio: 1;"
+			}
+		],
+		"shot": {
+			"image": "desktop-listen",
+			"caption": "The nine square covers, each a box that holds its place before the image loads."
+		}
+	},
+	{
+		"slug": "accent-color",
+		"name": "accent-color",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/accent-color",
+		"summary": "Recolours the browser's own volume slider to the player's white.",
+		"how": "On a wide screen the volume control is a native range input that fades in beside the mute icon on hover or keyboard focus. `accent-color` recolours the browser's slider to the player's foreground, so it is the stock control, not a custom-drawn track.",
+		"why": "A default blue slider would be the only off-palette element in a player that is always dark, and restyling a range input across browsers takes a lot of vendor CSS.",
+		"fallback": "The browser's default accent shows.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 747,
+				"code": "accent-color: var(--riff-fg);"
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "The mute control in the bar; the slider that appears beside it on hover is the browser's own, recoloured."
+		}
+	},
+	{
+		"slug": "touch-action",
+		"name": "touch-action",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/touch-action",
+		"summary": "Claims the swipes and drags so the browser does not scroll instead.",
+		"how": "The bar's info area allows vertical page scrolling but claims horizontal movement, so the swipe-to-skip gesture gets its pointer events. Now Playing's header and stage take all touches for drag-down-to-close, and the Up next handle takes all touches for the sheet drag. On a wide screen there is no drag-to-close, so those go back to `auto`.",
+		"why": "Without it the browser would scroll or zoom during the gesture and cancel the pointer events.",
+		"fallback": "The gestures compete with page scrolling.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 557,
+				"code": "touch-action: pan-y;"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 817,
+				"code": "touch-action: none;"
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"line": 1215,
+				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
+			}
+		],
+		"shot": {
+			"image": "phone-up-next",
+			"caption": "The handle on the Up next sheet, a drag zone that takes the whole touch."
+		}
+	},
+	{
+		"slug": "overscroll-behavior",
+		"name": "overscroll-behavior",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/overscroll-behavior",
+		"summary": "Keeps the Up next list's scroll from moving the post behind it.",
+		"how": "The Up next list scrolls inside its sheet. `contain` stops the scroll chaining to the page when the list hits its end, and stops a downward pull at the top from triggering pull-to-refresh while the overlay is open.",
+		"why": "Now Playing is a fixed overlay over a post that can itself scroll. A chained scroll would move the post underneath, or reload the page mid-track.",
+		"fallback": "The scroll chains to the page behind as normal.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 1096,
+				"code": "overscroll-behavior: contain;"
+			}
+		],
+		"shot": {
+			"image": "phone-up-next",
+			"caption": "The Up next list, which scrolls on its own without pulling the post along."
+		}
+	},
+	{
+		"slug": "focus-visible",
+		"name": ":focus-visible",
+		"group": "Behaviour",
+		"mdn": "https://developer.mozilla.org/docs/Web/CSS/:focus-visible",
+		"summary": "Shows a focus ring for the keyboard and not after a tap.",
+		"how": "Every button in the player is reset with `all: unset`, which removes the default outline. `:focus-visible` puts a 2px ring back only for keyboard focus. Track rows use `currentcolor` so the ring matches the theme, the controls use the player's white, and the Listen app uses the blue accent with the ring drawn around the whole record card.",
+		"why": "A player is driven mostly by taps, and a ring left on the play button after each one would look like a bug.",
+		"fallback": "Because buttons are reset, a browser without it shows no keyboard focus ring at all.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 258,
+				"code": "#riff button:focus-visible,"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 68,
+				"code": ".riff-row:focus-visible {"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"line": 1600,
+				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
+			}
+		],
+		"shot": {
+			"image": "desktop-listen",
+			"caption": "A record card with keyboard focus gets a blue ring around the whole card."
+		}
+	}
+]
