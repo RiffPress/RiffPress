@@ -83,7 +83,7 @@ a:hover{text-decoration:none}
 .mark svg{flex:none;display:block;width:32px;height:32px}
 .nav nav{display:flex;align-items:center;gap:28px}
 .nav nav a:not(.btn){color:var(--white);text-decoration:none;font-size:.875rem;opacity:.85;transition:opacity var(--t)}
-.nav nav a:not(.btn):hover{opacity:1;text-decoration:underline;text-underline-offset:4px}
+.nav nav a:not(.btn):hover,.nav nav a[aria-current]{opacity:1;text-decoration:underline;text-underline-offset:4px}
 .nav .btn{padding:7px 12px;font-size:.875rem;line-height:1.714}
 /* type: a serif headline, a lead, and small print, centred */
 h1,h2{font-family:var(--serif);font-weight:400;margin:0;letter-spacing:0;text-wrap:balance;color:var(--ink)}
@@ -147,7 +147,7 @@ html.js .r.in{opacity:1;transform:none}
 </head>
 <body>
 <a class="skip" href="#top">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="#top"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="#listen">The block</a><a href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Live demo</a><a href="#owners">Get Riff</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="https://github.com/RiffPress/RiffPress/releases/latest">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="#top"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>Riff</a><nav><a href="#listen">The block</a><a href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Live demo</a><a href="add-music/">Add your music</a><a href="web/">Under the hood</a><a href="#owners">Get Riff</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a><a class="btn" href="https://github.com/RiffPress/RiffPress/releases/latest">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
