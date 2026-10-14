@@ -37,7 +37,7 @@
 <p><code>window.riff</code> is the player's API. Actions and filters through <code>wp.hooks</code>, and <code>riff:*</code> events on the player's root, announce every change of state: what is playing, what is queued, what a press did. <a href="https://github.com/RiffPress/RiffPress/blob/main/docs/javascript.md">The JavaScript reference</a> has every one.</p>
 
 <h2>REST and GraphQL</h2>
-<p>Every audio and video item in <code>wp/v2/media</code> carries a <code>riff_track</code>. <code>riff/v1/library</code> lists the posts with tracks and <code>riff/v1/library/{id}</code> opens one with its tracks and rendered blocks; both describe themselves on <code>OPTIONS</code>. With WPGraphQL active, <code>MediaItem.riffTrack</code> and <code>Post.riffTracks</code>. All of it shares one schema, <code>Riff\Tracks::schema()</code>, versioned and held to after the <code>riff_track</code> filter.</p>
+<p>The REST API gives each audio and video item in <code>wp/v2/media</code> a <code>riff_track</code>. <code>riff/v1/library</code> lists the posts with tracks and <code>riff/v1/library/{id}</code> opens one with its tracks and rendered blocks; both describe themselves on <code>OPTIONS</code>. With WPGraphQL active, <code>MediaItem.riffTrack</code> and <code>Post.riffTracks</code>. All of it shares one schema, <code>Riff\Tracks::schema()</code>, versioned and held to after the <code>riff_track</code> filter.</p>
 
 <h2>Your own tracks</h2>
 <p>Tracks come from registered sources. The core source reads the audio, video and playlist blocks in posts. A plugin adds its own post type or catalogue by implementing <code>Riff\Source</code> and calling <code>Riff\Sources::register()</code> on <code>init</code>, or through the <code>riff_sources</code> filter, and the library, the REST route and the player read it like any other. <a href="https://github.com/RiffPress/RiffPress/blob/main/plugins/riff/readme.txt">The readme's Developers section</a> spells out the interface and the stability promise.</p>
@@ -46,7 +46,7 @@
 <p>The player and the Listen block expose custom properties, <code>--riff-accent</code>, <code>--riff-bg</code> and the rest, listed in the readme. A theme sets the accent under <code>settings.custom.riff.accent</code> in <code>theme.json</code>; any plugin can through <code>riff_accent</code>.</p>
 
 <h2>Under the hood</h2>
-<p>Every browser API and CSS feature the player calls has <a href="../web/">a page of its own</a>: how Riff uses it, why, what happens without it, and the exact lines in the source at the commit that was published.</p>
+<p>Each browser API and CSS feature the player calls has <a href="../web/">a page of its own</a>: how Riff uses it, why, what happens without it, and the exact lines in the source at the commit that was published.</p>
 
 <h2>The code</h2>
 <p>No build step: the shipped files are the source. <a href="https://github.com/RiffPress/RiffPress">The repository</a> has the contributing guide, the test suites, and a Playground blueprint for a scratch site with the demo on it.</p>

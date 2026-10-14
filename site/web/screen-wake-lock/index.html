@@ -32,7 +32,7 @@
 <h2>How Riff uses it</h2>
 <p>One function computes a single condition: a video is playing, Now Playing is open, and the page is visible. When that becomes true it requests a screen lock. When it becomes false it releases it. It runs from the video's play, pause and ended events, the player's open and close events, and visibility changes.</p>
 <h2>Why</h2>
-<p>Without it a phone would dim and lock partway through a video.</p>
+<p>A phone would otherwise dim and lock partway through a video.</p>
 <h2>Without it</h2>
 <p>The call is guarded by <code>navigator.wakeLock</code> and a try/catch, so the screen follows the system timeout.</p>
 <h2>Where</h2>

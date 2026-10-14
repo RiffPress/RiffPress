@@ -63,7 +63,7 @@
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Screen_Wake_Lock_API",
 		"summary": "Keeps the screen on while a video plays in Now Playing, and only then.",
 		"how": "One function computes a single condition: a video is playing, Now Playing is open, and the page is visible. When that becomes true it requests a screen lock. When it becomes false it releases it. It runs from the video's play, pause and ended events, the player's open and close events, and visibility changes.",
-		"why": "Without it a phone would dim and lock partway through a video.",
+		"why": "A phone would otherwise dim and lock partway through a video.",
 		"fallback": "The call is guarded by `navigator.wakeLock` and a try/catch, so the screen follows the system timeout.",
 		"where": [
 			{
@@ -126,7 +126,7 @@
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Media_Session_API",
 		"summary": "Gives the lock screen and headphones the track's title, artwork and controls.",
 		"how": "Each new track builds a `MediaMetadata` with title, artist, album and every artwork size. Eight action handlers map the system's play, pause, previous, next, seek and stop onto the player's own functions. The playing state and position are mirrored, position at most once a second.",
-		"why": "Without it the lock screen, headphones and the system media widget would show a blank page title and could not skip tracks.",
+		"why": "The lock screen, headphones and the system media widget would otherwise show a blank page title and could not skip tracks.",
 		"fallback": "Guarded by feature checks and a try/catch per action, so the on-page controls are the only controls.",
 		"where": [
 			{
@@ -339,7 +339,7 @@
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Animations_API",
 		"summary": "Breathes the filament where there is no signal to follow.",
 		"how": "When a track is playing but there is no analyser, on iOS, for a cross-origin file, or through the video element, the wire gets an infinite 2.6 second opacity loop through `element.animate()`. The returned animation is cancelled when playback pauses or ends.",
-		"why": "Without it the filament would sit static on every iPhone, where Web Audio is deliberately not used.",
+		"why": "On every iPhone, where Web Audio is deliberately not used, the filament would otherwise sit static.",
 		"fallback": "This branch is itself the fallback for a missing analyser.",
 		"where": [
 			{
@@ -943,7 +943,7 @@
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-motion",
 		"summary": "Stops the equalizer, the filament and the sliding sheets when the system asks.",
 		"how": "In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run and the filament sits at a steady glow. Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.",
-		"why": "A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is exactly what the setting asks to stop.",
+		"why": "A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is what the setting asks to stop.",
 		"fallback": null,
 		"where": [
 			{
@@ -1073,7 +1073,7 @@
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/touch-action",
 		"summary": "Claims the swipes and drags so the browser does not scroll instead.",
 		"how": "The bar's info area allows vertical page scrolling but claims horizontal movement, so the swipe-to-skip gesture gets its pointer events. Now Playing's header and stage take all touches for drag-down-to-close, and the Up next handle takes all touches for the sheet drag. On a wide screen there is no drag-to-close, so those go back to `auto`.",
-		"why": "Without it the browser would scroll or zoom during the gesture and cancel the pointer events.",
+		"why": "The browser would otherwise scroll or zoom during the gesture and cancel the pointer events.",
 		"fallback": "The gestures compete with page scrolling.",
 		"where": [
 			{
