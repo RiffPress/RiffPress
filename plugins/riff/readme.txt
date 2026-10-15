@@ -1,5 +1,5 @@
 === RiffPlayer ===
-Contributors: josephfusco
+Contributors: joefusco
 Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
