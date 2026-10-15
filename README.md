@@ -40,8 +40,12 @@ moves to audio while hidden and back when it returns.
 The rest is what a player should do. Media Session gives the lock screen its metadata and
 controls. Space or K, J and L, and Shift+N and Shift+P work on a keyboard. AirPlay and Cast appear
 when a device is in reach. A swipe on the bar skips, and a drag on Now Playing closes it. The queue
-and position are kept for the tab's session, so a link to another page keeps playing and a reload
-picks up paused where it left off.
+and position are kept for the tab's session. A full-page navigation saves them and attempts to
+resume on the next page; a reload restores the same track paused.
+
+To make a dedicated Listen page, create a WordPress page and add the Riff block, or put `[riff]`
+in its content. The page lists posts with audio or video; opening a post keeps you on that page
+while its tracks play.
 
 The layout follows YouTube Music's current design and measurements, in Riff's own amber.
 
