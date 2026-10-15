@@ -1,6 +1,6 @@
 {
   "name": "riff",
-  "version": "4.12.1",
+  "version": "4.12.2",
   "description": "Plays the audio and video in your posts in a player that stays docked at the bottom of the screen, with a full Now Playing view.",
   "license": "GPL-2.0-or-later",
   "private": true,
