@@ -25,10 +25,11 @@ Publishers write ordinary posts with the core audio and video blocks, and pair a
 ## Capabilities and Constraints
 
 - The player is added to every front-end page of any theme; the theme's own markup is left alone.
-- Core blocks are the only source of tracks. The post is the queue.
+- Core blocks are the default source of tracks. Registered sources can provide tracks from other post types or catalogues; the post is the queue.
 - One script and one stylesheet, no build step. Every browser feature sits behind a check and degrades to the browser's native controls.
-- Playback: a docked bar, Now Playing with Up next, a Song/Video switch, Media Session, AirPlay and Cast, keyboard control, resume after reload, and the filament, an analyser-driven glow on the bar's seek line.
+- Playback: a docked bar, Now Playing with Up next, a Song/Video switch, Media Session, AirPlay and Cast, keyboard control, and the filament, an analyser-driven glow on the bar's seek line. In-app navigation on a Listen page keeps the same media element; full-page navigation saves the tab's session state and attempts to resume on the next page, while reload restores the track paused.
 - Not in scope: accounts, likes, recommendations, radio, podcast feeds, analytics, offline downloads, lyrics (planned as a feature plugin).
+- The native iOS app is not built yet.
 - Anything that works across sites uses open standards rather than anything Riff-only.
 
 ## Brand Commitments
