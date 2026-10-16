@@ -29,7 +29,7 @@ Roboto, Inter and EB Garamond are bundled under the SIL Open Font License, and t
 
 1. Upload the plugin folder to `wp-content/plugins/` and activate it.
 2. Add an audio or video block to a post, one per track, or a playlist block holding them all.
-3. To pair a video with a song, edit the audio file in the Media Library and fill in **Video version** with the address of a video in the library.
+3. To pair a video with a song, click the audio file in the Media Library and choose a video under **Video version**.
 4. To make a dedicated Listen page, add the Riff block (or `[riff]`) to a page. It lists posts with tracks and opens each post without leaving that page.
 
 == Frequently Asked Questions ==

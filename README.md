@@ -49,8 +49,8 @@ while its tracks play.
 
 The layout follows YouTube Music's current design and measurements, in Riff's own amber.
 
-A track with a video version is set in the Media Library: edit an audio file and fill in
-**Video version** with the address of a video in the library.
+A track with a video version is set in the Media Library: click an audio file and choose a video
+under **Video version**.
 
 ## Extending it
 
