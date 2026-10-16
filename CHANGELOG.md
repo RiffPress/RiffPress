@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.13.1](https://github.com/RiffPress/RiffPress/compare/v4.13.0...v4.13.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* on a wide screen the seek knob and time are not cut off by Now Playing ([#355](https://github.com/RiffPress/RiffPress/issues/355)) ([08ca68c](https://github.com/RiffPress/RiffPress/commit/08ca68c5fffe47c05190883b340509fa57d8d41a))
+
 ## [4.13.0](https://github.com/RiffPress/RiffPress/compare/v4.12.2...v4.13.0) (2026-10-16)
 
 
