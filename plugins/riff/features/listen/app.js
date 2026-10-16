@@ -44,6 +44,8 @@ export function start( api ) {
 		// pretty permalinks every post link is /?p=N on this very path and must stay a real link.
 		const others = new URLSearchParams( u.search );
 		others.delete( query );
+		// A shared track's name, which riff.js reads on arrival.
+		others.delete( 'riff_track' );
 		others.sort();
 		const own = new URLSearchParams( page.search );
 		own.sort();

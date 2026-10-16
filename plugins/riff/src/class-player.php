@@ -98,6 +98,8 @@ final class Player {
 			'video'       => __( 'Video', 'riff' ),
 			'unavailable' => __( 'This track could not be played.', 'riff' ),
 			'copied'      => __( 'Link copied', 'riff' ),
+			'shareFailed' => __( 'The link could not be shared.', 'riff' ),
+			'trackGone'   => __( 'The shared track is no longer in this post.', 'riff' ),
 			'library'     => __( 'Library', 'riff' ),
 			'shuffle'     => __( 'Shuffle', 'riff' ),
 			/* translators: %s: number of tracks. */
