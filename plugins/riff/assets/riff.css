@@ -702,6 +702,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		grid-template-columns: 328px minmax(0, 1fr) minmax(328px, auto);
 		gap: 0;
 		padding: 0 4px var(--riff-safe-b) 0;
+
+		/* Above Now Playing, which ends at the bar's top edge and comes later in
+		   the page: the knob and the time rise out of the bar into its space. */
+		z-index: 1;
 	}
 
 	.riff-bar-start,
