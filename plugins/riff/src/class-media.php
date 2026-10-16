@@ -26,6 +26,13 @@ final class Media {
 	public const VIDEO_META = '_riff_video';
 
 	/**
+	 * Field errors from this request's save, by attachment ID and then field.
+	 *
+	 * @var array<int, array<string, string>>
+	 */
+	private static array $errors = array();
+
+	/**
 	 * Registers the meta and the Media Library field.
 	 *
 	 * @since 4.0.0
@@ -34,6 +41,33 @@ final class Media {
 		add_action( 'init', array( self::class, 'register_meta' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'fields' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
+		add_action( 'wp_enqueue_media', array( self::class, 'enqueue' ) );
+		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_media' ) );
+	}
+
+	/**
+	 * Loads the Media Library on the attachment edit screen, which WordPress does itself only when
+	 * the screen has a Featured image box.
+	 *
+	 * @since 4.13.0
+	 */
+	public static function enqueue_media(): void {
+		$screen = get_current_screen();
+		$post   = get_post();
+		if ( $screen && 'post' === $screen->base && 'attachment' === $screen->post_type && $post && current_user_can( 'upload_files' ) ) {
+			wp_enqueue_media( array( 'post' => $post->ID ) );
+		}
+	}
+
+	/**
+	 * Loads the pickers wherever the Media Library can open: the attachment edit screen, the
+	 * Library's grid, and the post editors.
+	 *
+	 * @since 4.13.0
+	 */
+	public static function enqueue(): void {
+		wp_enqueue_script( 'riff-media', RIFF_URL . 'assets/media.js', array( 'media-views' ), Player::version( 'assets/media.js' ), true );
+		wp_add_inline_style( 'media-views', '.riff-pick{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.riff-pick [hidden]{display:none}.riff-pick img{width:60px;height:60px;object-fit:cover}.riff-pick-error{color:#d63638}' );
 	}
 
 	/**
@@ -99,30 +133,126 @@ final class Media {
 		if ( ! str_starts_with( $mime, 'audio/' ) && ! str_starts_with( $mime, 'video/' ) ) {
 			return $fields;
 		}
-		$art_id             = (int) get_post_thumbnail_id( $post->ID );
+		$errors             = self::errors( $post->ID );
 		$fields['riff_art'] = array(
-			'label' => __( 'Artwork', 'riff' ),
-			'input' => 'text',
-			'value' => $art_id ? (string) wp_get_attachment_url( $art_id ) : '',
-			'helps' => __( 'The address of an image in the Media Library. Without one, the post\'s featured image is used, and failing that a cover is drawn.', 'riff' ),
+			'label'        => __( 'Artwork', 'riff' ),
+			// Artwork is the featured image, and the edit screen's own Featured image box saves after
+			// this field, so there the box is the picker.
+			'show_in_edit' => ! self::has_featured_image_box( $post ),
+			'input'        => 'html',
+			'html'         => self::picker(
+				$post->ID,
+				'riff_art',
+				(int) get_post_thumbnail_id( $post->ID ),
+				$errors['riff_art'] ?? '',
+				array(
+					'type'    => 'image',
+					'choose'  => __( 'Choose artwork', 'riff' ),
+					'replace' => __( 'Replace artwork', 'riff' ),
+					'remove'  => __( 'Remove artwork', 'riff' ),
+					'button'  => __( 'Use as artwork', 'riff' ),
+				)
+			),
+			'helps'        => __( 'An image from the Media Library, chosen or entered by address or ID. Without one, the post\'s featured image is used, and failing that a cover is drawn.', 'riff' ),
 		);
 		if ( ! str_starts_with( $mime, 'audio/' ) ) {
 			return $fields;
 		}
-		$video_id             = (int) get_post_meta( $post->ID, self::VIDEO_META, true );
 		$fields['riff_video'] = array(
 			'label' => __( 'Video version', 'riff' ),
-			'input' => 'text',
-			'value' => $video_id ? (string) wp_get_attachment_url( $video_id ) : '',
-			'helps' => __( 'The address of a video in the Media Library. Listeners can switch between the song and the video while it plays.', 'riff' ),
+			'input' => 'html',
+			'html'  => self::picker(
+				$post->ID,
+				'riff_video',
+				(int) get_post_meta( $post->ID, self::VIDEO_META, true ),
+				$errors['riff_video'] ?? '',
+				array(
+					'type'    => 'video',
+					'choose'  => __( 'Choose video', 'riff' ),
+					'replace' => __( 'Replace video', 'riff' ),
+					'remove'  => __( 'Remove video version', 'riff' ),
+					'button'  => __( 'Use as video version', 'riff' ),
+				)
+			),
+			'helps' => __( 'A video from the Media Library, chosen or entered by address or ID. Listeners can switch between the song and the video while it plays.', 'riff' ),
 		);
 		return $fields;
 	}
 
 	/**
-	 * Saves the field, accepting a Media Library URL or an attachment ID.
+	 * A picker: the current selection, the address field it fills in, and buttons to choose or
+	 * remove. The address field still takes a typed address or ID, and works without the script.
+	 *
+	 * @since 4.13.0
+	 * @param int    $post_id  Attachment being edited.
+	 * @param string $field    Field key.
+	 * @param int    $selected Selected attachment ID, or 0.
+	 * @param string $error    Error from the last save, or ''.
+	 * @param array  $strings  The media type to pick and the button labels.
+	 * @return string
+	 */
+	private static function picker( int $post_id, string $field, int $selected, string $error, array $strings ): string {
+		$url  = $selected ? (string) wp_get_attachment_url( $selected ) : '';
+		$id   = "attachments-$post_id-$field";
+		$html = '<span class="riff-pick-preview">';
+		if ( $selected ) {
+			$html .= 'image' === $strings['type']
+				? wp_get_attachment_image( $selected, 'thumbnail', false, array( 'alt' => '' ) )
+				: esc_html( get_the_title( $selected ) );
+		}
+		$html .= '</span>';
+		$html .= sprintf(
+			'<input type="text" class="text" id="%1$s" name="attachments[%2$d][%3$s]" value="%4$s"%5$s />',
+			esc_attr( $id ),
+			$post_id,
+			esc_attr( $field ),
+			esc_attr( $url ),
+			$error ? ' aria-invalid="true" aria-describedby="' . esc_attr( $id ) . '-error"' : ''
+		);
+		// Someone who cannot upload cannot open the Media Library either, but can still type an ID.
+		if ( current_user_can( 'upload_files' ) ) {
+			$html .= sprintf( '<button type="button" class="button" data-riff-action="choose">%s</button>', esc_html( $selected ? $strings['replace'] : $strings['choose'] ) );
+			$html .= sprintf( '<button type="button" class="button-link button-link-delete" data-riff-action="remove"%2$s>%1$s</button>', esc_html( $strings['remove'] ), $selected ? '' : ' hidden' );
+		}
+		if ( $error ) {
+			$html .= sprintf( '<p class="riff-pick-error" id="%1$s-error" role="alert">%2$s</p>', esc_attr( $id ), esc_html( $error ) );
+		}
+		return sprintf(
+			'<div class="riff-pick" data-riff-pick="%1$s" data-riff-choose="%2$s" data-riff-replace="%3$s" data-riff-button="%4$s">%5$s</div>',
+			esc_attr( $strings['type'] ),
+			esc_attr( $strings['choose'] ),
+			esc_attr( $strings['replace'] ),
+			esc_attr( $strings['button'] ),
+			$html
+		);
+	}
+
+	/**
+	 * Whether the attachment edit screen shows WordPress's Featured image box for this file, by the
+	 * same test the screen uses.
+	 *
+	 * @since 4.13.0
+	 * @param WP_Post $post Attachment.
+	 * @return bool
+	 */
+	private static function has_featured_image_box( WP_Post $post ): bool {
+		$type = wp_attachment_is( 'audio', $post ) ? 'attachment:audio' : 'attachment:video';
+		return current_user_can( 'upload_files' ) && (
+			( current_theme_supports( 'post-thumbnails', 'attachment' ) && post_type_supports( 'attachment', 'thumbnail' ) ) ||
+			post_type_supports( $type, 'thumbnail' ) ||
+			current_theme_supports( 'post-thumbnails', $type )
+		);
+	}
+
+	/**
+	 * Saves the fields, accepting a Media Library URL or an attachment ID.
+	 *
+	 * An empty field removes the selection. Anything else that is not an image (for artwork) or a
+	 * video (for the video version) in the Media Library leaves the selection as it was and shows
+	 * an error on the field the next time it is drawn.
 	 *
 	 * @since 4.0.0
+	 * @since 4.13.0 An invalid value keeps the current selection instead of removing it.
 	 * @param array $post       Attachment data being saved.
 	 * @param array $attachment Submitted fields.
 	 * @return array
@@ -131,27 +261,77 @@ final class Media {
 		if ( ! isset( $post['ID'] ) ) {
 			return $post;
 		}
+		$post_id = (int) $post['ID'];
+		$errors  = array();
 		if ( isset( $attachment['riff_art'] ) ) {
-			$value = trim( (string) $attachment['riff_art'] );
-			$id    = ctype_digit( $value ) ? (int) $value : attachment_url_to_postid( esc_url_raw( $value ) );
-			$id    = self::sanitize_image( $id );
-			if ( $id ) {
-				set_post_thumbnail( (int) $post['ID'], $id );
+			$id = self::submitted( $attachment['riff_art'], array( self::class, 'sanitize_image' ) );
+			if ( $id > 0 ) {
+				set_post_thumbnail( $post_id, $id );
+			} elseif ( 0 === $id ) {
+				delete_post_thumbnail( $post_id );
 			} else {
-				delete_post_thumbnail( (int) $post['ID'] );
+				$errors['riff_art'] = __( 'That is not an image in the Media Library, so the artwork was not changed.', 'riff' );
 			}
 		}
-		if ( ! isset( $attachment['riff_video'] ) ) {
-			return $post;
+		if ( isset( $attachment['riff_video'] ) ) {
+			$id = self::submitted( $attachment['riff_video'], array( self::class, 'sanitize_video' ) );
+			if ( $id > 0 ) {
+				update_post_meta( $post_id, self::VIDEO_META, $id );
+			} elseif ( 0 === $id ) {
+				delete_post_meta( $post_id, self::VIDEO_META );
+			} else {
+				$errors['riff_video'] = __( 'That is not a video in the Media Library, so the video version was not changed.', 'riff' );
+			}
 		}
-		$value = trim( (string) $attachment['riff_video'] );
-		$id    = ctype_digit( $value ) ? (int) $value : attachment_url_to_postid( esc_url_raw( $value ) );
-		$id    = self::sanitize_video( $id );
-		if ( $id ) {
-			update_post_meta( (int) $post['ID'], self::VIDEO_META, $id );
+		self::$errors[ $post_id ] = $errors;
+		// The attachment edit screen redirects after saving, so the errors outlive this request.
+		if ( $errors ) {
+			set_transient( self::error_key( $post_id ), $errors, MINUTE_IN_SECONDS );
 		} else {
-			delete_post_meta( (int) $post['ID'], self::VIDEO_META );
+			delete_transient( self::error_key( $post_id ) );
 		}
 		return $post;
+	}
+
+	/**
+	 * Reads a submitted field.
+	 *
+	 * @param mixed    $value    Submitted value: a Media Library URL, an attachment ID, or empty.
+	 * @param callable $sanitize Keeps the ID if it is the right type of attachment.
+	 * @return int The attachment ID, 0 for an empty field, or -1 for anything else.
+	 */
+	private static function submitted( $value, callable $sanitize ): int {
+		$value = trim( (string) $value );
+		if ( '' === $value ) {
+			return 0;
+		}
+		$id = ctype_digit( $value ) ? (int) $value : attachment_url_to_postid( esc_url_raw( $value ) );
+		$id = $sanitize( $id );
+		return $id ? $id : -1;
+	}
+
+	/**
+	 * The errors from the last save of an attachment by the current user, shown once.
+	 *
+	 * @param int $post_id Attachment.
+	 * @return array<string, string>
+	 */
+	private static function errors( int $post_id ): array {
+		if ( ! isset( self::$errors[ $post_id ] ) ) {
+			$errors = get_transient( self::error_key( $post_id ) );
+			delete_transient( self::error_key( $post_id ) );
+			self::$errors[ $post_id ] = is_array( $errors ) ? $errors : array();
+		}
+		return self::$errors[ $post_id ];
+	}
+
+	/**
+	 * The transient holding an attachment's save errors for the current user.
+	 *
+	 * @param int $post_id Attachment.
+	 * @return string
+	 */
+	private static function error_key( int $post_id ): string {
+		return 'riff_media_errors_' . get_current_user_id() . '_' . $post_id;
 	}
 }

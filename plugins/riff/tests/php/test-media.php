@@ -1,6 +1,7 @@
 <?php
 /**
- * The one field Riff adds to the Media Library: the video version of an audio file.
+ * What Riff adds to the Media Library: artwork for an audio or video file, and a video version for
+ * an audio file.
  *
  * @package Riff
  */
@@ -37,17 +38,76 @@ class Test_Riff_Media extends Riff_TestCase {
 		$this->assertSame( 0, Media::sanitize_video( 999999 ) );
 	}
 
+	/**
+	 * The address field inside a picker's markup.
+	 *
+	 * @param int    $post_id Attachment.
+	 * @param string $field   Field key.
+	 * @return DOMElement|null
+	 */
+	private static function input( int $post_id, string $field ): ?DOMElement {
+		$html = Media::fields( array(), get_post( $post_id ) )[ $field ]['html'] ?? '';
+		$doc  = new DOMDocument();
+		$doc->loadHTML( '<html><body>' . $html . '</body></html>', LIBXML_NOERROR );
+		foreach ( $doc->getElementsByTagName( 'input' ) as $input ) {
+			if ( "attachments[$post_id][$field]" === $input->getAttribute( 'name' ) ) {
+				return $input;
+			}
+		}
+		return null;
+	}
+
 	public function test_the_field_appears_on_audio_only_and_shows_the_current_video(): void {
 		$audio = self::attach( '02 - Underground [underground].mp3' );
 		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
 
-		$fields = Media::fields( array(), get_post( $audio ) );
-		$this->assertSame( '', $fields['riff_video']['value'] );
+		$this->assertSame( '', self::input( $audio, 'riff_video' )->getAttribute( 'value' ) );
+		$this->assertStringContainsString( 'data-riff-pick="video"', Media::fields( array(), get_post( $audio ) )['riff_video']['html'] );
 
 		update_post_meta( $audio, Media::VIDEO_META, $video );
-		$this->assertSame( wp_get_attachment_url( $video ), Media::fields( array(), get_post( $audio ) )['riff_video']['value'] );
+		$this->assertSame( wp_get_attachment_url( $video ), self::input( $audio, 'riff_video' )->getAttribute( 'value' ) );
 
 		$this->assertArrayNotHasKey( 'riff_video', Media::fields( array(), get_post( $video ) ) );
+	}
+
+	public function test_the_picker_offers_remove_only_when_something_is_selected(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		$cover = self::attach( 'cover.png' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+
+		$html = Media::fields( array(), get_post( $audio ) )['riff_art']['html'];
+		$this->assertStringContainsString( 'data-riff-pick="image"', $html );
+		$this->assertMatchesRegularExpression( '/data-riff-action="remove" hidden/', $html );
+		$this->assertStringContainsString( 'Choose artwork', $html );
+
+		set_post_thumbnail( $audio, $cover );
+		$html = Media::fields( array(), get_post( $audio ) )['riff_art']['html'];
+		$this->assertDoesNotMatchRegularExpression( '/data-riff-action="remove" hidden/', $html );
+		$this->assertStringContainsString( 'Replace artwork', $html );
+		$this->assertStringContainsString( '<img', $html );
+	}
+
+	public function test_without_upload_rights_the_picker_is_only_the_address_field(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'contributor' ) ) );
+
+		$this->assertStringNotContainsString( '<button', Media::fields( array(), get_post( $audio ) )['riff_video']['html'] );
+		$this->assertNotNull( self::input( $audio, 'riff_video' ) );
+	}
+
+	public function test_artwork_leaves_the_edit_screen_to_its_featured_image_box(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$this->assertFalse( Media::fields( array(), get_post( $audio ) )['riff_art']['show_in_edit'], 'audio files support featured images by default' );
+
+		$themed = current_theme_supports( 'post-thumbnails' );
+		remove_post_type_support( 'attachment:audio', 'thumbnail' );
+		remove_theme_support( 'post-thumbnails' );
+		$this->assertTrue( Media::fields( array(), get_post( $audio ) )['riff_art']['show_in_edit'], 'no box, so the field' );
+		add_post_type_support( 'attachment:audio', 'thumbnail' );
+		if ( $themed ) {
+			add_theme_support( 'post-thumbnails' );
+		}
 	}
 
 	public function test_saving_accepts_an_address_or_an_id_and_clears_on_empty(): void {
@@ -65,7 +125,50 @@ class Test_Riff_Media extends Riff_TestCase {
 		$this->assertSame( $video, (int) get_post_meta( $audio, Media::VIDEO_META, true ) );
 
 		Media::save( $post, array( 'riff_video' => 'https://example.com/not-in-the-library.mp4' ) );
-		$this->assertFalse( metadata_exists( 'post', $audio, Media::VIDEO_META ), 'an address outside the library clears it' );
+		$this->assertSame( $video, (int) get_post_meta( $audio, Media::VIDEO_META, true ), 'an address outside the library keeps the current video' );
+	}
+
+	public function test_an_invalid_value_is_reported_on_the_field_once(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		update_post_meta( $audio, Media::VIDEO_META, $video );
+
+		Media::save( array( 'ID' => $audio ), array( 'riff_video' => 'https://example.com/not-in-the-library.mp4' ) );
+		$fields = Media::fields( array(), get_post( $audio ) );
+		$this->assertStringContainsString( 'role="alert"', $fields['riff_video']['html'] );
+		$this->assertStringNotContainsString( 'role="alert"', $fields['riff_art']['html'], 'only the field that was wrong' );
+		$input = self::input( $audio, 'riff_video' );
+		$this->assertSame( 'true', $input->getAttribute( 'aria-invalid' ) );
+		$this->assertSame( wp_get_attachment_url( $video ), $input->getAttribute( 'value' ), 'the field shows what was kept' );
+
+		Media::save( array( 'ID' => $audio ), array( 'riff_video' => (string) $video ) );
+		$this->assertStringNotContainsString( 'role="alert"', Media::fields( array(), get_post( $audio ) )['riff_video']['html'], 'a good save clears it' );
+	}
+
+	public function test_an_error_survives_the_redirect_after_the_edit_screen_saves(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		Media::save( array( 'ID' => $audio ), array( 'riff_art' => 'nonsense' ) );
+
+		// The next request starts with nothing in memory.
+		$errors = new ReflectionProperty( Media::class, 'errors' );
+		$errors->setAccessible( true );
+		$errors->setValue( null, array() );
+
+		$this->assertStringContainsString( 'role="alert"', Media::fields( array(), get_post( $audio ) )['riff_art']['html'] );
+		$errors->setValue( null, array() );
+		$this->assertStringNotContainsString( 'role="alert"', Media::fields( array(), get_post( $audio ) )['riff_art']['html'], 'shown once' );
+	}
+
+	public function test_the_rest_api_still_clears_an_invalid_video(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		update_post_meta( $audio, Media::VIDEO_META, $video );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+
+		$request = new WP_REST_Request( 'POST', "/wp/v2/media/$audio" );
+		$request->set_body_params( array( 'meta' => array( Media::VIDEO_META => 999999 ) ) );
+		rest_do_request( $request );
+		$this->assertSame( 0, (int) get_post_meta( $audio, Media::VIDEO_META, true ), 'unchanged by #345' );
 	}
 
 	public function test_artwork_is_the_files_featured_image_set_from_an_address_or_an_id(): void {
@@ -73,19 +176,37 @@ class Test_Riff_Media extends Riff_TestCase {
 		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
 		$cover = self::attach( 'cover.png' );
 
-		$this->assertSame( '', Media::fields( array(), get_post( $audio ) )['riff_art']['value'] );
+		$this->assertSame( '', self::input( $audio, 'riff_art' )->getAttribute( 'value' ) );
 		$this->assertArrayHasKey( 'riff_art', Media::fields( array(), get_post( $video ) ), 'video files take artwork too' );
 
 		Media::save( array( 'ID' => $audio ), array( 'riff_art' => wp_get_attachment_url( $cover ) ) );
 		$this->assertSame( $cover, (int) get_post_thumbnail_id( $audio ) );
-		$this->assertSame( wp_get_attachment_url( $cover ), Media::fields( array(), get_post( $audio ) )['riff_art']['value'] );
+		$this->assertSame( wp_get_attachment_url( $cover ), self::input( $audio, 'riff_art' )->getAttribute( 'value' ) );
 
 		Media::save( array( 'ID' => $audio ), array( 'riff_art' => (string) $video ) );
-		$this->assertSame( 0, (int) get_post_thumbnail_id( $audio ), 'only an image is kept' );
+		$this->assertSame( $cover, (int) get_post_thumbnail_id( $audio ), 'a file that is not an image keeps the current artwork' );
 
 		Media::save( array( 'ID' => $audio ), array( 'riff_art' => (string) $cover ) );
 		$this->assertSame( $cover, (int) get_post_thumbnail_id( $audio ) );
 		Media::save( array( 'ID' => $audio ), array( 'riff_art' => '' ) );
 		$this->assertSame( 0, (int) get_post_thumbnail_id( $audio ) );
+	}
+
+	public function test_what_a_picker_saves_reaches_the_track(): void {
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$cover = self::attach( 'cover.png' );
+
+		// A picker fills in the attachment's ID.
+		Media::save(
+			array( 'ID' => $audio ),
+			array(
+				'riff_art'   => (string) $cover,
+				'riff_video' => (string) $video,
+			)
+		);
+		$track = \Riff\Tracks::from_attachment( $audio );
+		$this->assertStringContainsString( 'cover', $track['art'][0]['src'] );
+		$this->assertSame( wp_get_attachment_url( $video ), $track['video']['src'] );
 	}
 }
