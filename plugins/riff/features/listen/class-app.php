@@ -22,7 +22,8 @@ defined( 'ABSPATH' ) || exit;
  * The page holding the block is the route, the way a shop plugin's shop page is. Inside it the
  * library and every post open without leaving the page, so the music never stops. The server
  * renders the first view, so the page reads without the script and search engines see the posts.
- * A post is addressed by ?riff={id} or ?riff={slug} on the same page.
+ * A post is addressed by ?riff={id} or ?riff={slug} on the same page, and the library through its
+ * Nth page by ?riff_page={N}.
  */
 final class App {
 
@@ -41,6 +42,13 @@ final class App {
 	 * @since 4.0.0
 	 */
 	public const QUERY = 'riff';
+
+	/**
+	 * The query argument that shows the library through a later page.
+	 *
+	 * @since 4.13.0
+	 */
+	public const PAGE_QUERY = 'riff_page';
 
 	/**
 	 * Hooks the block and the shortcode.
@@ -105,13 +113,14 @@ final class App {
 			? get_block_wrapper_attributes( array( 'class' => 'riff-app' ) )
 			: 'class="riff-app' . esc_attr( $align ) . '"';
 		return sprintf(
-			'<div %s data-riff-app data-riff-rest="%s" data-riff-page="%s" data-riff-query="%s">' .
+			'<div %s data-riff-app data-riff-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s">' .
 			'<nav class="riff-app-bar" aria-label="%s"><a class="riff-app-home" href="%s">%s</a></nav>' .
 			'<div class="riff-app-view" data-riff-app-view>%s</div></div>',
 			$wrapper,
 			esc_url( rest_url( Library::REST . '/library' ) ),
 			esc_url( $page ),
 			esc_attr( self::QUERY ),
+			esc_attr( self::PAGE_QUERY ),
 			esc_attr__( 'Riff', 'riff' ),
 			esc_url( $page ),
 			esc_html__( 'Library', 'riff' ),
@@ -140,6 +149,17 @@ final class App {
 	}
 
 	/**
+	 * How many pages of the library the address asks for: 1 unless ?riff_page says more.
+	 *
+	 * @return int
+	 */
+	private static function requested_pages(): int {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which page to show; nothing changes.
+		$raw = isset( $_GET[ self::PAGE_QUERY ] ) ? sanitize_text_field( wp_unslash( $_GET[ self::PAGE_QUERY ] ) ) : '';
+		return ctype_digit( $raw ) ? max( 1, (int) $raw ) : 1;
+	}
+
+	/**
 	 * The address of a post inside the app.
 	 *
 	 * @param int    $post_id Post ID.
@@ -151,9 +171,14 @@ final class App {
 	}
 
 	/**
-	 * The library: a grid of the posts with tracks.
+	 * The library: a grid of the posts with tracks, through the page the address asks for.
+	 *
+	 * Each page is the same page the REST route returns, one after another, so the grid holds what
+	 * pressing Load more that many times would have. Load more is a link to one page further, and
+	 * works without the script; with it, app.js adds the next page in place.
 	 *
 	 * @since 4.0.0
+	 * @since 4.13.0 Shows the pages ?riff_page asks for, with a Load more link while there are more.
 	 * @param string $page The app page's address.
 	 * @return string
 	 */
@@ -162,33 +187,55 @@ final class App {
 		if ( ! $query->posts ) {
 			return '<p class="riff-app-empty">' . esc_html__( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ) . '</p>';
 		}
+		$pages = max( 1, (int) $query->max_num_pages );
+		$upto  = min( self::requested_pages(), $pages );
 		$cards = '';
-		foreach ( $query->posts as $post ) {
-			$cards .= self::card( Library::item( $post ), $page );
+		for ( $n = 1; $n <= $upto; $n++ ) {
+			$posts = 1 === $n ? $query->posts : Library::query( array( 'paged' => $n ) )->posts;
+			foreach ( array_values( $posts ) as $i => $post ) {
+				$cards .= self::card( Library::item( $post ), $page, 0 === $i && $n > 1 ? $n : 0 );
+			}
 		}
-		return '<h2 class="riff-app-title">' . esc_html__( 'Library', 'riff' ) . '</h2><div class="riff-grid">' . $cards . '</div>';
+		$more = '';
+		if ( $upto < $pages ) {
+			$more = sprintf(
+				'<p class="riff-app-more"><a class="riff-pill" href="%s" data-riff-app-action="more">%s</a></p>',
+				esc_url( add_query_arg( self::PAGE_QUERY, $upto + 1, $page ) . '#riff-page-' . ( $upto + 1 ) ),
+				esc_html__( 'Load more', 'riff' )
+			);
+		}
+		return sprintf(
+			'<h2 class="riff-app-title">%s</h2><div class="riff-grid" data-riff-page="%d" data-riff-pages="%d">%s</div>%s',
+			esc_html__( 'Library', 'riff' ),
+			$upto,
+			$pages,
+			$cards,
+			$more
+		);
 	}
 
 	/**
 	 * One post in the grid.
 	 *
-	 * @param array  $item Library item.
-	 * @param string $page The app page's address.
+	 * @param array  $item  Library item.
+	 * @param string $page  The app page's address.
+	 * @param int    $first The page this card starts, for Load more's link to land on, or 0.
 	 * @return string
 	 */
-	private static function card( array $item, string $page ): string {
+	private static function card( array $item, string $page, int $first = 0 ): string {
 		$art = $item['art'] ? end( $item['art'] )['src'] : '';
 		// The same markup app.js writes in card(): a link and a play button side by side, never one
 		// inside the other.
 		return sprintf(
-			'<div class="riff-card" data-riff-post="%1$d"><span class="riff-card-art">%2$s<button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="%1$d" aria-label="%3$s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="%4$s"><span class="riff-card-title">%5$s</span></a><span class="riff-card-sub">%6$s</span></div>',
+			'<div class="riff-card"%7$s data-riff-post="%1$d"><span class="riff-card-art">%2$s<button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="%1$d" aria-label="%3$s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="%4$s"><span class="riff-card-title">%5$s</span></a><span class="riff-card-sub">%6$s</span></div>',
 			(int) $item['id'],
 			$art ? '<img src="' . esc_url( $art ) . '" alt="" loading="lazy" decoding="async">' : '',
 			/* translators: %s: track or post title. */
 			esc_attr( sprintf( __( 'Play %s', 'riff' ), $item['title'] ) ),
 			esc_url( self::link( (int) $item['id'], $page ) ),
 			esc_html( $item['title'] ),
-			esc_html( $item['meta'] ?? self::meta( $item ) )
+			esc_html( $item['meta'] ?? self::meta( $item ) ),
+			$first ? ' id="riff-page-' . $first . '"' : ''
 		);
 	}
 

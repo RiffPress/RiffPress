@@ -4,7 +4,8 @@
  * marked figures in a view into rows, play() starts a queue, current() is the track playing. The
  * server rendered the first view and every link in it is a real address, so this only has to make
  * the next view arrive without a page load: fetch it from the REST route, swap it in, push the
- * address. Back and forward do the same from history. */
+ * address. Back and forward do the same from history. Load more adds the next page of the library
+ * in place and changes the address to the one that renders the same cards on the server. */
 
 export function start( api ) {
 	const app = document.querySelector( '[data-riff-app]' );
@@ -12,6 +13,7 @@ export function start( api ) {
 	const rest = app.dataset.riffRest;
 	const page = new URL( app.dataset.riffPage, location.href );
 	const query = app.dataset.riffQuery || 'riff';
+	const pageQuery = app.dataset.riffPageQuery || 'riff_page';
 	const s = api.strings || {};
 	const cache = new Map();
 	let showing = 0; // A counter, so a slow fetch cannot paint over a newer view.
@@ -34,16 +36,18 @@ export function start( api ) {
 		status.textContent = '';
 	}
 
-	// ---- Addresses. A view is the page itself (the library) or the page with ?riff={id}.
+	// ---- Addresses. A view is the page itself (the library), the page with ?riff_page={n} (the
+	// library through page n), or the page with ?riff={id}.
 	const postOf = ( url ) => {
 		const u = new URL( url, location.href );
 		if ( u.origin !== page.origin || u.pathname !== page.pathname ) {
 			return null;
 		}
-		// The same page, with only the app's own argument allowed to differ: on a site without
+		// The same page, with only the app's own arguments allowed to differ: on a site without
 		// pretty permalinks every post link is /?p=N on this very path and must stay a real link.
 		const others = new URLSearchParams( u.search );
 		others.delete( query );
+		others.delete( pageQuery );
 		// A shared track's name, which riff.js reads on arrival.
 		others.delete( 'riff_track' );
 		others.sort();
@@ -53,11 +57,18 @@ export function start( api ) {
 			return null;
 		}
 		const id = Number( u.searchParams.get( query ) );
-		return { id: Number.isInteger( id ) && id > 0 ? id : 0 };
+		const pages = Number( u.searchParams.get( pageQuery ) );
+		return {
+			id: Number.isInteger( id ) && id > 0 ? id : 0,
+			pages: Number.isInteger( pages ) && pages > 1 ? pages : 1,
+		};
 	};
 	let shown = postOf( location.href )?.id ?? 0;
-	const addressOf = ( id ) => {
+	const addressOf = ( id, pages = 1 ) => {
 		const u = new URL( page );
+		if ( ! id && pages > 1 ) {
+			u.searchParams.set( pageQuery, String( pages ) );
+		}
 		if ( id ) {
 			u.searchParams.set( query, String( id ) );
 		}
@@ -100,16 +111,16 @@ export function start( api ) {
 	}
 
 	// ---- Views.
-	async function show( id, { push = true } = {} ) {
+	async function show( id, { push = true, pages = 1 } = {} ) {
 		const turn = ++showing;
 		app.setAttribute( 'aria-busy', 'true' );
 		let html;
 		try {
-			html = id ? await postView( id ) : await libraryView();
+			html = id ? await postView( id ) : await libraryView( pages );
 		} catch {
 			// The route is gone or the network is: let the address load as a page.
 			if ( turn === showing ) {
-				location.assign( addressOf( id ) );
+				location.assign( addressOf( id, pages ) );
 			}
 			return;
 		}
@@ -132,7 +143,7 @@ export function start( api ) {
 			history.pushState(
 				{ ...history.state, riffApp: id },
 				'',
-				addressOf( id )
+				addressOf( id, pages )
 			);
 		}
 		app.removeAttribute( 'aria-busy' );
@@ -147,25 +158,43 @@ export function start( api ) {
 	const reducedMotion = () =>
 		window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
 
-	async function libraryView() {
-		const { items, pages } = await get( '' );
-		if ( ! items.length ) {
+	// The library through page `upto`, as Listen\App::library_view() renders it.
+	async function libraryView( upto = 1 ) {
+		const first = await get( '' );
+		if ( ! first.items.length ) {
 			return `<p class="riff-app-empty">${ esc( s.appEmpty || '' ) }</p>`;
 		}
+		const pages = first.pages || 1;
+		const last = Math.min( upto, pages );
+		const later = await Promise.all(
+			Array.from( { length: last - 1 }, ( _, i ) => get( '', i + 2 ) )
+		);
+		const cards = [ first, ...later ]
+			.map( ( p, i ) => cardsOf( p.items, i + 1 ) )
+			.join( '' );
 		return (
 			continueListening() +
 			`<h2 class="riff-app-title" tabindex="-1">${ esc(
 				s.library || 'Library'
-			) }</h2><div class="riff-grid" data-riff-page="1" data-riff-pages="${ pages || 1 }">` +
-			items.map( card ).join( '' ) +
+			) }</h2><div class="riff-grid" data-riff-page="${ last }" data-riff-pages="${ pages }">` +
+			cards +
 			'</div>' +
-			( pages > 1
-				? `<p class="riff-app-more"><button type="button" class="riff-pill" data-riff-app-action="more">${ esc(
+			( last < pages
+				? `<p class="riff-app-more"><a class="riff-pill" href="${ esc(
+						moreAddress( last + 1 )
+				  ) }" data-riff-app-action="more">${ esc(
 						s.more || 'Load more'
-				  ) }</button></p>`
+				  ) }</a></p>`
 				: '' )
 		);
 	}
+
+	// Load more's link: one page further, landing on that page's first card.
+	const moreAddress = ( n ) => `${ addressOf( 0, n ) }#riff-page-${ n }`;
+
+	// A page of cards; the first of every page after the first is where Load more's link lands.
+	const cardsOf = ( items, n ) =>
+		items.map( ( item, i ) => card( item, i === 0 && n > 1 ? n : 0 ) ).join( '' );
 
 	// What is playing now, at the top of the library, with a way back to its post.
 	function continueListening() {
@@ -205,11 +234,20 @@ export function start( api ) {
 			if ( turn !== showing || ! grid.isConnected ) {
 				return;
 			}
-			grid.insertAdjacentHTML( 'beforeend', items.map( card ).join( '' ) );
+			grid.insertAdjacentHTML( 'beforeend', cardsOf( items, next ) );
 			grid.dataset.riffPage = String( next );
 			untell();
+			// The address that renders these same cards, so a reload or a shared link shows them.
+			history.replaceState( history.state, '', addressOf( 0, next ) );
 			if ( next >= ( pages || 1 ) ) {
+				// The button goes, so focus moves to the first of the cards it brought.
 				button.closest( '.riff-app-more' )?.remove();
+				document
+					.getElementById( `riff-page-${ next }` )
+					?.querySelector( 'a' )
+					?.focus();
+			} else {
+				button.href = moreAddress( next + 1 );
 			}
 		} catch {
 			if ( turn === showing ) {
@@ -247,11 +285,13 @@ export function start( api ) {
 		}
 	}
 
-	function card( item ) {
+	function card( item, first = 0 ) {
 		const art = item.art?.length ? item.art[ item.art.length - 1 ].src : '';
 		// The same markup the server writes in Listen\App::card().
 		return (
-			`<div class="riff-card" data-riff-post="${ item.id }">` +
+			`<div class="riff-card"${
+				first ? ` id="riff-page-${ first }"` : ''
+			} data-riff-post="${ item.id }">` +
 			`<span class="riff-card-art">${
 				art
 					? `<img src="${ esc(
@@ -328,6 +368,7 @@ export function start( api ) {
 			return;
 		}
 		if ( action?.dataset.riffAppAction === 'more' ) {
+			e.preventDefault();
 			loadMore( action );
 			return;
 		}
@@ -350,14 +391,14 @@ export function start( api ) {
 			return;
 		}
 		e.preventDefault();
-		show( to.id ).catch( () => {} );
+		show( to.id, { pages: to.pages } ).catch( () => {} );
 	} );
 
 	window.addEventListener( 'popstate', () => {
 		const to = postOf( location.href );
 		// Now Playing closes through history.back() on the same address; that is not a view change.
 		if ( to && to.id !== shown ) {
-			show( to.id, { push: false } ).catch( () => {} );
+			show( to.id, { push: false, pages: to.pages } ).catch( () => {} );
 		}
 	} );
 	history.replaceState(
