@@ -15,6 +15,24 @@ export function start( api ) {
 	const s = api.strings || {};
 	const cache = new Map();
 	let showing = 0; // A counter, so a slow fetch cannot paint over a newer view.
+	let picking = 0; // The same for a cover's Play, so an older press cannot replace the queue.
+
+	// ---- What went wrong, said where the player's own notices appear. The region is in the page
+	// before anything is said in it, so a screen reader announces each message.
+	const status = document.createElement( 'p' );
+	status.className = 'riff-app-status';
+	status.setAttribute( 'role', 'status' );
+	app.append( status );
+	let statusTimer = 0;
+	function tell( message ) {
+		status.textContent = message;
+		clearTimeout( statusTimer );
+		statusTimer = setTimeout( () => ( status.textContent = '' ), 6000 );
+	}
+	function untell() {
+		clearTimeout( statusTimer );
+		status.textContent = '';
+	}
 
 	// ---- Addresses. A view is the page itself (the library) or the page with ?riff={id}.
 	const postOf = ( url ) => {
@@ -170,30 +188,60 @@ export function start( api ) {
 		);
 	}
 
+	// The next page of the library, after the cards already there. The button is marked busy
+	// rather than disabled, so it keeps focus; the page only advances once one has arrived.
 	async function loadMore( button ) {
 		const grid = app.querySelector( '.riff-grid' );
-		if ( ! grid ) {
+		if ( ! grid || button.getAttribute( 'aria-disabled' ) === 'true' ) {
 			return;
 		}
+		const turn = showing;
 		const next = Number( grid.dataset.riffPage ) + 1;
-		button.disabled = true;
+		button.setAttribute( 'aria-disabled', 'true' );
 		try {
 			const { items, pages } = await get( '', next );
+			if ( turn !== showing || ! grid.isConnected ) {
+				return;
+			}
 			grid.insertAdjacentHTML( 'beforeend', items.map( card ).join( '' ) );
 			grid.dataset.riffPage = String( next );
+			untell();
 			if ( next >= ( pages || 1 ) ) {
 				button.closest( '.riff-app-more' )?.remove();
 			}
+		} catch {
+			if ( turn === showing ) {
+				tell( s.moreError || '' );
+			}
 		} finally {
-			button.disabled = false;
+			button.removeAttribute( 'aria-disabled' );
 		}
 	}
 
-	// Play straight from a cover, without opening the post.
-	async function playCard( id ) {
-		const post = await get( '/' + id );
-		if ( Array.isArray( post.tracks ) && post.tracks.length ) {
-			api.play( post.tracks, 0 );
+	// Play straight from a cover, without opening the post. What was playing carries on until the
+	// post's tracks have arrived, and carries on if they do not.
+	async function playCard( button ) {
+		if ( button.getAttribute( 'aria-busy' ) === 'true' ) {
+			return;
+		}
+		const turn = ++picking;
+		const shownAt = showing;
+		button.setAttribute( 'aria-busy', 'true' );
+		try {
+			const post = await get( '/' + Number( button.dataset.riffPost ) );
+			if ( turn !== picking || shownAt !== showing ) {
+				return;
+			}
+			untell();
+			if ( Array.isArray( post.tracks ) && post.tracks.length ) {
+				api.play( post.tracks, 0 );
+			}
+		} catch {
+			if ( turn === picking && shownAt === showing ) {
+				tell( s.playError || '' );
+			}
+		} finally {
+			button.removeAttribute( 'aria-busy' );
 		}
 	}
 
@@ -274,11 +322,11 @@ export function start( api ) {
 		const action = e.target.closest( '[data-riff-app-action]' );
 		if ( action?.dataset.riffAppAction === 'play-card' ) {
 			e.preventDefault();
-			playCard( Number( action.dataset.riffPost ) ).catch( () => {} );
+			playCard( action );
 			return;
 		}
 		if ( action?.dataset.riffAppAction === 'more' ) {
-			loadMore( action ).catch( () => {} );
+			loadMore( action );
 			return;
 		}
 		if ( action ) {

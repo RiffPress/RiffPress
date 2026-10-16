@@ -118,6 +118,8 @@ final class Player {
 			'nowPlaying'  => __( 'Now playing', 'riff' ),
 			'open'        => __( 'Open', 'riff' ),
 			'more'        => __( 'Load more', 'riff' ),
+			'playError'   => __( 'That post could not be loaded. Press Play to try again.', 'riff' ),
+			'moreError'   => __( 'More posts could not be loaded. Press Load more to try again.', 'riff' ),
 		);
 		/**
 		 * Filters the strings the player shows.

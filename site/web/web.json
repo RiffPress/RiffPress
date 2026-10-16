@@ -272,7 +272,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 209
+				"line": 257
 			}
 		],
 		"shot": {
@@ -496,7 +496,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 122
+				"line": 140
 			}
 		],
 		"shot": {
@@ -574,7 +574,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 113
+				"line": 131
 			}
 		],
 		"shot": {
@@ -621,12 +621,12 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "fetch( key, {",
-				"line": 68
+				"line": 86
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "location.assign( addressOf( id ) );",
-				"line": 92
+				"line": 110
 			}
 		],
 		"shot": {
@@ -901,7 +901,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1930,
+				"line": 1966,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -958,7 +958,7 @@
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 128,
+				"line": 146,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],

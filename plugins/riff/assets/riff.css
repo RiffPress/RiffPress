@@ -1894,9 +1894,45 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	text-align: center;
 }
 
-.riff-app .riff-pill:disabled {
+.riff-app .riff-pill:disabled,
+.riff-app .riff-pill[aria-disabled="true"] {
 	opacity: 0.5;
 	cursor: progress;
+}
+
+.riff-app .riff-card-play[aria-busy="true"] {
+	opacity: 1;
+	cursor: progress;
+}
+
+/* A failed request, said where the player's own notices appear. Empty, it is
+   still in the page, so a screen reader hears what is put in it. */
+.riff-app-status:not(:empty) {
+	position: fixed;
+	left: 50%;
+	bottom: calc(var(--riff-bar-h) + var(--riff-safe-b) + 16px);
+	z-index: 1;
+	max-width: calc(100vw - 32px);
+	margin: 0;
+	padding: 12px 16px;
+	border-radius: 4px;
+	background: #e6e6e6;
+	color: #030303;
+	font-size: 14px;
+	transform: translateX(-50%);
+}
+
+.riff-app-status:empty {
+	position: absolute;
+	margin: 0;
+}
+
+@media (min-width: 900px) {
+
+	.riff-app-status:not(:empty) {
+		left: 24px;
+		transform: none;
+	}
 }
 
 /* The browser's own view transition between the library and a post. */
