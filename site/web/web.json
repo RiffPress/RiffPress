@@ -272,7 +272,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 259
+				"line": 299
 			}
 		],
 		"shot": {
@@ -496,7 +496,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 142
+				"line": 153
 			}
 		],
 		"shot": {
@@ -522,7 +522,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "export function start( api ) {",
-				"line": 9
+				"line": 10
 			}
 		],
 		"shot": {
@@ -574,7 +574,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 133
+				"line": 144
 			}
 		],
 		"shot": {
@@ -621,12 +621,12 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "fetch( key, {",
-				"line": 88
+				"line": 99
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"code": "location.assign( addressOf( id ) );",
-				"line": 112
+				"code": "location.assign( addressOf( id, pages ) );",
+				"line": 123
 			}
 		],
 		"shot": {
@@ -958,7 +958,7 @@
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 148,
+				"line": 159,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],

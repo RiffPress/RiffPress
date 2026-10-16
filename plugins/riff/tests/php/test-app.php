@@ -159,4 +159,111 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertStringContainsString( 'aria-label="Play Side A"', $html );
 		$this->assertDoesNotMatchRegularExpression( '#<a[^>]*>(?:(?!</a>).)*<button#s', $html, 'no button inside a link' );
 	}
+
+	/**
+	 * Published posts with a track each, one attachment between them, newest last.
+	 *
+	 * @param int $count How many.
+	 * @return int[] Post IDs, oldest first.
+	 */
+	private function library_of( int $count ): array {
+		$id      = self::attach( '02 - Underground [underground].mp3' );
+		$content = sprintf( '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="%s"></audio></figure><!-- /wp:audio -->', $id, wp_get_attachment_url( $id ) );
+		$posts   = array();
+		for ( $i = 0; $i < $count; $i++ ) {
+			$posts[] = self::factory()->post->create(
+				array(
+					'post_status'  => 'publish',
+					'post_content' => $content,
+					'post_date'    => gmdate( 'Y-m-d H:i:s', strtotime( '2026-01-01' ) + $i * 60 ),
+				)
+			);
+		}
+		return $posts;
+	}
+
+	/**
+	 * The library as the app page renders it, at an address with ?riff_page set or not.
+	 *
+	 * @param string|null $riff_page The argument's raw value, or null for none.
+	 * @return string
+	 */
+	private function library_at( ?string $riff_page ): string {
+		if ( null !== $riff_page ) {
+			$_GET[ App::PAGE_QUERY ] = $riff_page;
+		}
+		$html = App::render();
+		unset( $_GET[ App::PAGE_QUERY ] );
+		return $html;
+	}
+
+	public function test_an_empty_library_has_no_load_more(): void {
+		$this->assertStringContainsString( 'riff-app-empty', $this->library_at( null ) );
+		$this->assertStringNotContainsString( 'data-riff-app-action="more"', $this->library_at( null ) );
+	}
+
+	public function test_a_full_first_page_alone_has_no_load_more(): void {
+		$this->library_of( 24 );
+		$html = $this->library_at( null );
+		$this->assertSame( 24, substr_count( $html, 'class="riff-card"' ) );
+		$this->assertStringNotContainsString( 'data-riff-app-action="more"', $html );
+	}
+
+	public function test_load_more_is_a_link_to_the_next_page_that_works_without_the_script(): void {
+		$posts = $this->library_of( 25 );
+		$page  = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+			)
+		);
+		$this->go_to( get_permalink( $page ) );
+
+		$html = $this->library_at( null );
+		$this->assertSame( 24, substr_count( $html, 'class="riff-card"' ) );
+		$this->assertStringNotContainsString( 'data-riff-post="' . $posts[0] . '"', $html, 'the oldest is on page 2' );
+		$this->assertStringContainsString( 'data-riff-page="1" data-riff-pages="2"', $html );
+		$more = esc_url( add_query_arg( App::PAGE_QUERY, 2, get_permalink( $page ) ) . '#riff-page-2' );
+		$this->assertStringContainsString( '<a class="riff-pill" href="' . $more . '" data-riff-app-action="more">', $html );
+
+		$html = $this->library_at( '2' );
+		$this->assertSame( 25, substr_count( $html, 'class="riff-card"' ), 'page 2 shows everything through page 2' );
+		$this->assertStringContainsString( '<div class="riff-card" id="riff-page-2" data-riff-post="' . $posts[0] . '">', $html, 'Load more lands on the first new card' );
+		$this->assertStringContainsString( 'data-riff-page="2" data-riff-pages="2"', $html );
+		$this->assertStringNotContainsString( 'data-riff-app-action="more"', $html, 'the last page' );
+	}
+
+	public function test_a_page_past_the_end_or_not_a_page_reads_as_the_nearest_one(): void {
+		$this->library_of( 25 );
+		$this->assertSame( 25, substr_count( $this->library_at( '9' ), 'class="riff-card"' ), 'past the end: everything' );
+		foreach ( array( '0', '-1', 'two', '1.5', '' ) as $raw ) {
+			$this->assertSame( 24, substr_count( $this->library_at( $raw ), 'class="riff-card"' ), "\"$raw\" is the first page" );
+		}
+	}
+
+	public function test_load_more_keeps_the_page_address_with_plain_permalinks(): void {
+		$this->set_permalink_structure( '' );
+		$this->library_of( 25 );
+		$page = self::factory()->post->create(
+			array(
+				'post_type'   => 'page',
+				'post_status' => 'publish',
+			)
+		);
+		$this->go_to( get_permalink( $page ) );
+		$this->assertStringContainsString( 'page_id=' . $page . '&#038;riff_page=2#riff-page-2', $this->library_at( null ) );
+	}
+
+	public function test_the_page_argument_follows_the_library_query_filter(): void {
+		$this->library_of( 5 );
+		$per_page = static function ( $args ) {
+			$args['posts_per_page'] = 2;
+			return $args;
+		};
+		add_filter( 'riff_library_query', $per_page );
+		$html = $this->library_at( '2' );
+		remove_filter( 'riff_library_query', $per_page );
+		$this->assertSame( 4, substr_count( $html, 'class="riff-card"' ), 'two pages of two, as the route pages them' );
+		$this->assertStringContainsString( 'data-riff-page="2" data-riff-pages="3"', $html );
+	}
 }

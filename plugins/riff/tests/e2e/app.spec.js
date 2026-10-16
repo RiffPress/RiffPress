@@ -305,7 +305,7 @@ test.describe( 'App requests', () => {
 	test( 'Load more that fails keeps the cards and the focus, and a retry adds the page once', async ( {
 		page,
 	} ) => {
-		const more = page.getByRole( 'button', { name: 'Load more' } );
+		const more = page.getByRole( 'link', { name: 'Load more' } );
 		const cards = page.locator( '.riff-grid .riff-card' );
 		await expect( cards ).toHaveCount( 24 );
 
@@ -331,5 +331,54 @@ test.describe( 'App requests', () => {
 		);
 		expect( new Set( ids ).size ).toBe( 25 );
 		expect( ( await playing( page ) ).paused ).toBe( false );
+	} );
+} );
+
+test.describe( 'App pages', () => {
+	test( 'the first visit offers Load more, which adds the page in place and keeps the music', async ( {
+		page,
+	} ) => {
+		await page.goto( pageUrl );
+		const cards = page.locator( '.riff-grid .riff-card' );
+		await expect( cards ).toHaveCount( 24 );
+		await page
+			.locator( `.riff-card[data-riff-post="${ postId }"] .riff-card-play` )
+			.click();
+		await expect
+			.poll( async () => ( await playing( page ) ).paused )
+			.toBe( false );
+
+		await page.getByRole( 'link', { name: 'Load more' } ).click();
+		await expect( cards ).toHaveCount( 25 );
+		await expect( page ).toHaveURL( /[?&]riff_page=2$/ );
+		await expect( page.locator( '#riff-page-2 a' ) ).toBeFocused();
+		expect( ( await playing( page ) ).paused ).toBe( false );
+
+		// Out to a post and back: the address still asks for both pages.
+		await page.locator( `.riff-card[data-riff-post="${ postId }"] a` ).click();
+		await expect( page.locator( '.riff-album-title' ) ).toBeVisible();
+		await page.goBack();
+		await expect( cards ).toHaveCount( 25 );
+		await expect(
+			page.getByRole( 'link', { name: 'Load more' } )
+		).toHaveCount( 0 );
+		expect( ( await playing( page ) ).paused ).toBe( false );
+
+		await page.reload();
+		await expect( cards ).toHaveCount( 25 );
+	} );
+
+	test( 'without the script, Load more is a link to everything through the next page', async ( {
+		browser,
+	} ) => {
+		const context = await browser.newContext( { javaScriptEnabled: false } );
+		const page = await context.newPage();
+		await page.goto( pageUrl );
+		await expect( page.locator( '.riff-grid .riff-card' ) ).toHaveCount( 24 );
+		await page.getByRole( 'link', { name: 'Load more' } ).click();
+		await expect( page ).toHaveURL( /[?&]riff_page=2#riff-page-2$/ );
+		await expect( page.locator( '.riff-grid .riff-card' ) ).toHaveCount( 25 );
+		await expect( page.locator( '#riff-page-2' ) ).toBeInViewport();
+		await context.close();
 	} );
 } );
