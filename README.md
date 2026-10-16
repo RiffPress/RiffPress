@@ -41,7 +41,9 @@ The rest is what a player should do. Media Session gives the lock screen its met
 controls. Space or K, J and L, and Shift+N and Shift+P work on a keyboard. AirPlay and Cast appear
 when a device is in reach. A swipe on the bar skips, and a drag on Now Playing closes it. The queue
 and position are kept for the tab's session. A full-page navigation saves them and attempts to
-resume on the next page; a reload restores the same track paused.
+resume on the next page; a reload restores the same track paused. Share links to the track: the
+post's address with `?riff_track=<id>`, which opens the post on that track, focused and not
+playing, and leaves whatever is already playing alone.
 
 To make a dedicated Listen page, create a WordPress page and add the Riff block, or put `[riff]`
 in its content. The page lists posts with audio or video; opening a post keeps you on that page

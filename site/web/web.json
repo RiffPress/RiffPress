@@ -17,12 +17,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const el = ( t = track() ) =>",
-				"line": 232
+				"line": 234
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.play().catch( paint );",
-				"line": 388
+				"line": 390
 			}
 		],
 		"shot": {
@@ -43,12 +43,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function buffered( m, duration ) {",
-				"line": 998
+				"line": 1000
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ranges = m.buffered;",
-				"line": 999
+				"line": 1001
 			}
 		],
 		"shot": {
@@ -69,7 +69,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );",
-				"line": 1705
+				"line": 1740
 			}
 		],
 		"shot": {
@@ -90,7 +90,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.vibrate?.( 8 );",
-				"line": 416
+				"line": 418
 			}
 		],
 		"shot": {
@@ -132,17 +132,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {",
-				"line": 1515
+				"line": 1550
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setActionHandler( action, handler );",
-				"line": 1576
+				"line": 1611
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setPositionState( {",
-				"line": 1541
+				"line": 1576
 			}
 		],
 		"shot": {
@@ -163,12 +163,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );",
-				"line": 1597
+				"line": 1632
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.remote.prompt().catch( () => {} );",
-				"line": 1604
+				"line": 1639
 			}
 		],
 		"shot": {
@@ -189,12 +189,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ctx = new AudioContext();",
-				"line": 694
+				"line": 696
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const src = ctx.createMediaElementSource( audio );",
-				"line": 695
+				"line": 697
 			}
 		],
 		"shot": {
@@ -215,17 +215,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser = ctx.createAnalyser();",
-				"line": 696
+				"line": 698
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getFloatTimeDomainData( samples );",
-				"line": 723
+				"line": 725
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getByteFrequencyData( bins );",
-				"line": 738
+				"line": 740
 			}
 		],
 		"shot": {
@@ -246,7 +246,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "document.addEventListener( 'visibilitychange', () => {",
-				"line": 496
+				"line": 498
 			}
 		],
 		"shot": {
@@ -267,12 +267,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 282
+				"line": 284
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 257
+				"line": 259
 			}
 		],
 		"shot": {
@@ -298,7 +298,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "img.decoding = 'async';",
-				"line": 1621
+				"line": 1656
 			}
 		],
 		"shot": {
@@ -319,12 +319,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function drag( zone, { move, end } ) {",
-				"line": 1409
+				"line": 1444
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {",
-				"line": 1411
+				"line": 1446
 			}
 		],
 		"shot": {
@@ -345,7 +345,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "breath = wire.animate(",
-				"line": 858
+				"line": 860
 			}
 		],
 		"shot": {
@@ -366,12 +366,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function follow() {",
-				"line": 535
+				"line": 537
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "meterRaf = requestAnimationFrame( tick );",
-				"line": 790
+				"line": 792
 			}
 		],
 		"shot": {
@@ -392,7 +392,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.share( {",
-				"line": 1310
+				"line": 1320
 			}
 		],
 		"shot": {
@@ -413,7 +413,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.clipboard.writeText( url );",
-				"line": 1316
+				"line": 1333
 			}
 		],
 		"shot": {
@@ -434,12 +434,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = true;",
-				"line": 1217
+				"line": 1219
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = false;",
-				"line": 1260
+				"line": 1262
 			}
 		],
 		"shot": {
@@ -460,17 +460,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;",
-				"line": 68
+				"line": 70
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( window.matchMedia( '(hover: none)' ).matches ) {",
-				"line": 415
+				"line": 417
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches",
-				"line": 1212
+				"line": 1214
 			}
 		],
 		"shot": {
@@ -491,12 +491,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "?.scrollIntoView( { block: 'nearest' } );",
-				"line": 1300
+				"line": 1302
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 140
+				"line": 142
 			}
 		],
 		"shot": {
@@ -543,7 +543,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )",
-				"line": 1765
+				"line": 1801
 			}
 		],
 		"shot": {
@@ -564,17 +564,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );",
-				"line": 1224
+				"line": 1226
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'popstate', () => {",
-				"line": 1283
+				"line": 1285
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 131
+				"line": 133
 			}
 		],
 		"shot": {
@@ -595,12 +595,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const saved = parse( read( sessionStorage, STATE ) );",
-				"line": 1727
+				"line": 1762
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "write( localStorage, VOLUME, String( audio.volume ) );",
-				"line": 1131
+				"line": 1133
 			}
 		],
 		"shot": {
@@ -621,12 +621,12 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "fetch( key, {",
-				"line": 86
+				"line": 88
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "location.assign( addressOf( id ) );",
-				"line": 110
+				"line": 112
 			}
 		],
 		"shot": {
@@ -647,7 +647,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;",
-				"line": 1742
+				"line": 1777
 			}
 		],
 		"shot": {
@@ -668,7 +668,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pagehide', save );",
-				"line": 1683
+				"line": 1718
 			}
 		],
 		"shot": {
@@ -689,7 +689,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {",
-				"line": 1685
+				"line": 1720
 			}
 		],
 		"shot": {
@@ -715,12 +715,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "opener = document.activeElement;",
-				"line": 1206
+				"line": 1208
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {",
-				"line": 1462
+				"line": 1497
 			}
 		],
 		"shot": {
@@ -740,12 +740,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 497,
+				"line": 503,
 				"code": "@property --riff-heat {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 767,
+				"line": 769,
 				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
 			}
 		],
@@ -771,7 +771,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 873,
+				"line": 879,
 				"code": "background: linear-gradient(var(--riff-tint), color-mix(in srgb, var(--riff-tint) 70%, #000));"
 			}
 		],
@@ -792,12 +792,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 511,
+				"line": 517,
 				"code": "--riff-glow: color-mix(in oklab, color-mix(in oklab, color-mix(in oklab, rgb(74 16 0), rgb(190 58 12) calc(var(--riff-heat-red) * 100%)), var(--riff-accent) calc(var(--riff-heat-amber) * 100%)), rgb(255 232 190) calc(var(--riff-heat-white) * 100%));"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 525,
+				"line": 531,
 				"code": ".riff-wire {"
 			}
 		],
@@ -818,12 +818,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 952,
+				"line": 958,
 				"code": "container-type: size;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 963,
+				"line": 969,
 				"code": "width: min(100cqw, 100cqh);"
 			}
 		],
@@ -844,17 +844,17 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 465,
+				"line": 471,
 				"code": ".riff-bar-seek:has(> .riff-seek:focus-visible),"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 557,
+				"line": 563,
 				"code": "html:has(#riff[data-live]) [data-playing=\"true\"] .riff-row-state i {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1722,
+				"line": 1728,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -880,7 +880,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 584,
+				"line": 590,
 				"code": "height: calc(var(--riff-bar-h) + var(--riff-safe-b));"
 			}
 		],
@@ -901,7 +901,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1966,
+				"line": 1972,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -948,17 +948,17 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1509,
+				"line": 1515,
 				"code": "@media (prefers-reduced-motion: reduce) {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 67,
+				"line": 69,
 				"code": "const reduce = () =>"
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 146,
+				"line": 148,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],
@@ -979,12 +979,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 561,
+				"line": 567,
 				"code": "@media (prefers-reduced-transparency: reduce) {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 506,
+				"line": 512,
 				"code": ".riff-np-glow {"
 			}
 		],
@@ -1005,12 +1005,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 931,
+				"line": 937,
 				"code": "clip-path: inset(50%);"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1345,
+				"line": 1351,
 				"code": "clip-path: none;"
 			}
 		],
@@ -1031,12 +1031,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 973,
+				"line": 979,
 				"code": "aspect-ratio: 16 / 9;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1729,
+				"line": 1735,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1057,7 +1057,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 820,
+				"line": 826,
 				"code": "accent-color: var(--riff-fg);"
 			}
 		],
@@ -1078,17 +1078,17 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 630,
+				"line": 636,
 				"code": "touch-action: pan-y;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 890,
+				"line": 896,
 				"code": "touch-action: none;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 1411,
+				"line": 1446,
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],
@@ -1109,7 +1109,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1169,
+				"line": 1175,
 				"code": "overscroll-behavior: contain;"
 			}
 		],
@@ -1130,7 +1130,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 331,
+				"line": 337,
 				"code": "#riff button:focus-visible,"
 			},
 			{
@@ -1140,7 +1140,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1722,
+				"line": 1728,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],

@@ -63,6 +63,8 @@ function start() {
 	const np = $( '.riff-np' );
 	const queueList = $( '.riff-queue-list' );
 	const STATE = 'riff:state';
+	// A shared link names its track: ?riff_track={id} on the post's own address.
+	const SHARED = 'riff_track';
 	const VOLUME = 'riff:volume';
 	const reduce = () =>
 		window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
@@ -1301,23 +1303,56 @@ function start() {
 		}
 	}
 
-	// ---- Share: the system sheet where there is one, the clipboard elsewhere.
+	// ---- Share: the system sheet where there is one, the clipboard elsewhere, the same link in
+	// both. The link is the track's post with the track named, so it opens on that track.
 	async function share() {
 		const t = track();
-		const url = t?.post?.url || location.href;
-		try {
-			if ( navigator.share ) {
+		let url = location.href;
+		if ( t?.post?.url ) {
+			const u = new URL( t.post.url, location.href );
+			if ( t.id ) {
+				u.searchParams.set( SHARED, t.id );
+			}
+			url = u.toString();
+		}
+		if ( navigator.share ) {
+			try {
 				await navigator.share( {
 					title: t?.title || document.title,
 					url,
 				} );
 				return;
+			} catch ( e ) {
+				// Dismissing the sheet is not a failure. Anything else tries the clipboard.
+				if ( e?.name === 'AbortError' ) {
+					return;
+				}
 			}
+		}
+		try {
 			await navigator.clipboard.writeText( url );
 			toast( s.copied );
 		} catch {
-			// Dismissing the share sheet rejects; nothing to report.
+			toast( s.shareFailed );
 		}
+	}
+
+	// ---- Arriving by a shared link: the track is shown and its row focused, nothing more. What
+	// was playing carries on, and nothing starts by itself. A post can hold the same file twice;
+	// the link opens the first.
+	function reveal() {
+		const id = new URLSearchParams( location.search ).get( SHARED );
+		if ( ! id ) {
+			return;
+		}
+		const hit = rows.find( ( r ) => r.t.id === id );
+		if ( ! hit ) {
+			toast( s.trackGone );
+			return;
+		}
+		hit.row.dataset.shared = '';
+		hit.row.scrollIntoView( { block: 'center' } );
+		hit.row.focus( { preventScroll: true } );
 	}
 
 	const toastEl = $( '.riff-toast' );
@@ -1747,6 +1782,7 @@ function start() {
 	} else {
 		paint();
 	}
+	reveal();
 
 	/**
 	 * Fires once the player is set up, its state restored and `window.riff` available.

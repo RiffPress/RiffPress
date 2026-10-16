@@ -89,6 +89,12 @@ html.has-riff body::after {
 	outline-offset: 2px;
 }
 
+/* The track a shared link names. */
+.riff-row[data-shared] {
+	background: color-mix(in srgb, currentcolor 8%, transparent);
+	box-shadow: inset 3px 0 0 currentcolor;
+}
+
 .riff-row-art {
 	position: relative;
 	display: block;
@@ -2033,7 +2039,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-app .riff-row:hover,
-.riff-app .riff-row[data-current] {
+.riff-app .riff-row[data-current],
+.riff-app .riff-row[data-shared] {
 	background: var(--riff-app-accent-tint);
 }
 
