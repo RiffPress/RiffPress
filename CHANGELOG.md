@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.12.2](https://github.com/RiffPress/RiffPress/compare/v4.12.1...v4.12.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* the readme's Contributors line is the wordpress.org username, joefusco ([#338](https://github.com/RiffPress/RiffPress/issues/338)) ([480c968](https://github.com/RiffPress/RiffPress/commit/480c968e90381600f71787d2bb91d7a4455ebe9d))
+
 ## [4.12.1](https://github.com/RiffPress/RiffPress/compare/v4.12.0...v4.12.1) (2026-10-14)
 
 
