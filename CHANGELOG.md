@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.13.0](https://github.com/RiffPress/RiffPress/compare/v4.12.2...v4.13.0) (2026-10-16)
+
+
+### Features
+
+* choose a track's artwork and video version from the Media Library ([#350](https://github.com/RiffPress/RiffPress/issues/350)) ([bc920c4](https://github.com/RiffPress/RiffPress/commit/bc920c4c1213329e3cc51ebfd57dae4c581038c3))
+* Share links to the track, and the link opens on it without playing ([#353](https://github.com/RiffPress/RiffPress/issues/353)) ([3e1c6eb](https://github.com/RiffPress/RiffPress/commit/3e1c6eb40d798c11859f376907ebc20c91c43544))
+
+
+### Bug Fixes
+
+* every page of the Listen library is reachable on the first visit and without JavaScript ([#352](https://github.com/RiffPress/RiffPress/issues/352)) ([b1c70ec](https://github.com/RiffPress/RiffPress/commit/b1c70ec1f48f675d38189bd3dee422e51ac9126d))
+* Listen says when a cover's Play or Load more could not load ([#351](https://github.com/RiffPress/RiffPress/issues/351)) ([df96b98](https://github.com/RiffPress/RiffPress/commit/df96b9874ba449d1e2238303cd6b980417a901e8))
+
 ## [4.12.2](https://github.com/RiffPress/RiffPress/compare/v4.12.1...v4.12.2) (2026-10-15)
 
 
