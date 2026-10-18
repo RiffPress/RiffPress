@@ -33,7 +33,7 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 
 - **Dependencies.** Dependabot opens one grouped pull request per ecosystem each month for minor and patch bumps, and `dependabot-auto-merge.yml` merges it once every required check is green. Major bumps wait for a person. Security updates arrive as soon as an advisory does.
 - **Required checks.** `main` is protected behind the single `CI status` check.
-- **Nightly against WordPress trunk.** `nightly.yml` runs the whole suite on trunk and on the current release. A test that fails only on trunk opens a `core-regression` issue, which gets a comment each night it still fails and closes itself once it passes (`.github/scripts/core-regressions.js`). The day's commits to core's and Gutenberg's media code open one `core-watch` issue to look through (`.github/scripts/core-watch.js`).
+- **Weekly against WordPress trunk.** `core-trunk.yml` runs, every Wednesday, the whole suite on trunk and on the current release. A test that fails only on trunk opens a `core-regression` issue, which gets a comment each week it still fails and closes itself once it passes (`.github/scripts/core-regressions.js`). The week's commits to core's and Gutenberg's media code open one `core-watch` issue to look through (`.github/scripts/core-watch.js`).
 - **Weekly run.** CI runs the full suite every Monday against current WordPress core. The release and Pages workflows run weekly too.
 - **Version strings.** `scripts/sync-versions.sh` writes the version everywhere WordPress reads it and sets `Tested up to` from the core version the suite just ran against.
 

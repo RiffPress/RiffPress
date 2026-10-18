@@ -1,19 +1,19 @@
-name: Nightly against WordPress trunk
+name: Weekly against WordPress trunk
 
-# Riff exercises WordPress's media handling end to end, so running it against trunk every night
+# Riff exercises WordPress's media handling end to end, so running it against trunk every week
 # catches a core change that breaks it before a release ships the change. The whole suite runs on
 # trunk and on the current release; a test that fails only on trunk gets an issue
-# (core-regressions.js), and the day's commits to core's media code get one too (core-watch.js).
+# (core-regressions.js), and the week's commits to core's media code get one too (core-watch.js).
 on:
   schedule:
-    - cron: '41 5 * * *'
+    - cron: '41 5 * * 3'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: nightly
+  group: core-trunk
   cancel-in-progress: false
 
 jobs:
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Open an issue for the day's media commits
+      - name: Open an issue for the week's media commits
         env:
           GH_TOKEN: ${{ github.token }}
         run: node .github/scripts/core-watch.js

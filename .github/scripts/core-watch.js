@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Opens one issue a day listing the commits to WordPress core and Gutenberg that touched the media
+ * Opens one issue a week listing the commits to WordPress core and Gutenberg that touched the media
  * code Riff relies on, so a change is looked at before it reaches a release, whether or not a test
- * breaks. Nothing is opened on a day with no such commits.
+ * breaks. Nothing is opened in a week with no such commits.
  *
  * Usage: node .github/scripts/core-watch.js [--since=<ISO date>] [--dry-run]
- * Defaults to the last 24 hours. Needs GH_TOKEN; opening the issue also needs GITHUB_REPOSITORY.
+ * Defaults to the last 7 days. Needs GH_TOKEN; opening the issue also needs GITHUB_REPOSITORY.
  */
 const { execFileSync } = require( 'node:child_process' );
 
@@ -94,7 +94,7 @@ function gh( args, input ) {
 function main( argv ) {
 	const dry = argv.includes( '--dry-run' );
 	const sinceArg = argv.find( ( a ) => a.startsWith( '--since=' ) );
-	const since = sinceArg ? new Date( sinceArg.slice( 8 ) ).toISOString() : new Date( Date.now() - 864e5 ).toISOString();
+	const since = sinceArg ? new Date( sinceArg.slice( 8 ) ).toISOString() : new Date( Date.now() - 7 * 864e5 ).toISOString();
 	const found = [];
 	for ( const [ repo, paths ] of Object.entries( WATCH ) ) {
 		for ( const p of paths ) {

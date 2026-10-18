@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Files an issue for each test that fails on WordPress trunk but passes on the current release:
- * the signal that a change in core broke something Riff relies on. Run by the nightly workflow
+ * the signal that a change in core broke something Riff relies on. Run weekly by core-trunk.yml
  * after both suites, with each one's results in its own folder.
  *
  * A test that fails again adds a comment to its open issue instead of opening another, and the
  * issue closes itself once the test passes on trunk. A test that fails on the release too is
- * Riff's own failure, not core's, and never opens an issue. Nothing is closed on a night when the
+ * Riff's own failure, not core's, and never opens an issue. Nothing is closed on a week when the
  * trunk suite produced no results, since that says nothing about any one test.
  *
  * Usage: node .github/scripts/core-regressions.js <trunk-dir> <release-dir> [--dry-run]
@@ -22,7 +22,7 @@ const LABEL = 'core-regression';
 const MARKER = /<!-- riff-core-regression: ([0-9a-f]{12}) -->/;
 
 /**
- * A short, stable id for a test, kept in its issue so the next night finds it.
+ * A short, stable id for a test, kept in its issue so the next run finds it.
  *
  * @param {string} name The test's full name.
  * @return {string} Twelve hex characters.
@@ -181,7 +181,7 @@ function issueBody( id, t, ctx ) {
 		t.message || '(no message)',
 		'```',
 		'',
-		'Find the core change in the commits to trunk since the last night this passed, then decide whether Riff adapts or core gets a ticket. Record the outcome in `docs/native.md` when it touches something Riff fills in for core. This issue closes itself when the test passes on trunk again.',
+		'Find the core change in the commits to trunk since the last run where this passed, then decide whether Riff adapts or core gets a ticket. Record the outcome in `docs/native.md` when it touches something Riff fills in for core. This issue closes itself when the test passes on trunk again.',
 		'',
 		`<!-- riff-core-regression: ${ id } -->`,
 	].join( '\n' );
