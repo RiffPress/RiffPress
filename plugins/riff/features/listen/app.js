@@ -193,6 +193,7 @@ export function start( api ) {
 			view.innerHTML = html;
 			if ( bar !== undefined && nav ) {
 				nav.innerHTML = bar;
+				sidebar( app.dataset.sidebar !== 'mini', false );
 			} else if ( ! to.browse ) {
 				markNav( to );
 			}
@@ -411,19 +412,26 @@ export function start( api ) {
 
 	async function postView( id ) {
 		const post = await get( '/' + id );
+		const art = post.art?.length ? post.art[ post.art.length - 1 ].src : '';
+		// The same markup the server writes in Listen\App::header().
 		return (
-			'<header class="riff-album">' +
+			`<header class="riff-album${ art ? ' riff-album-has-cover' : '' }">` +
+			( art
+				? `<span class="riff-album-cover"><img src="${ esc(
+						art
+				  ) }" alt="" decoding="async"></span>`
+				: '' ) +
 			`<div class="riff-album-text"><h2 class="riff-album-title" tabindex="-1">${ esc(
 				post.title
 			) }</h2>` +
-			`<p class="riff-album-meta">${ esc( meta( post ) ) }</p></div>` +
+			`<p class="riff-album-meta">${ esc( meta( post ) ) }</p>` +
 			`<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">${ esc(
 				s.play || 'Play'
 			) }</button>` +
 			`<button type="button" class="riff-pill" data-riff-app-action="shuffle">${ esc(
 				s.shuffle || 'Shuffle'
-			) }</button></p></header>` +
-			`<div class="riff-album-tracks" data-riff-tracks="${ esc(
+			) }</button></p></div></header>` +
+			`<div class="riff-album-tracks" data-riff-numbered data-riff-tracks="${ esc(
 				JSON.stringify( post.tracks )
 			) }">${ post.html }</div>`
 		);
@@ -475,6 +483,10 @@ export function start( api ) {
 			playAlbum( action );
 			return;
 		}
+		if ( action?.dataset.riffAppAction === 'sidebar' ) {
+			sidebar( action.getAttribute( 'aria-expanded' ) !== 'true' );
+			return;
+		}
 		if ( action?.dataset.riffAppAction === 'more' ) {
 			e.preventDefault();
 			loadMore( action );
@@ -499,7 +511,66 @@ export function start( api ) {
 			return;
 		}
 		e.preventDefault();
+		// The tab shows as chosen at once, whatever the network is doing.
+		if ( a.closest( '.riff-app-bar' ) ) {
+			for ( const tab of nav.querySelectorAll( 'a[aria-current]' ) ) {
+				tab.removeAttribute( 'aria-current' );
+			}
+			a.setAttribute( 'aria-current', 'page' );
+		}
 		show( to ).catch( () => {} );
+	} );
+
+	// ---- The sidebar, on a wide screen in standalone mode: full, or a rail of icons. The choice is
+	// this device's, so it is remembered here rather than anywhere shared.
+	function sidebar( open, remember = true ) {
+		app.dataset.sidebar = open ? 'full' : 'mini';
+		nav?.querySelector( '.riff-app-collapse' )?.setAttribute( 'aria-expanded', String( open ) );
+		if ( remember ) {
+			try {
+				localStorage.setItem( 'riff-sidebar', open ? 'full' : 'mini' );
+			} catch {}
+		}
+	}
+	try {
+		if ( localStorage.getItem( 'riff-sidebar' ) === 'mini' ) {
+			sidebar( false, false );
+		}
+	} catch {}
+
+	// ---- Prefetch. A view is fetched as soon as it is likely to be wanted: the pointer reaches its
+	// link, the link takes focus or a finger lands on it, and every tab once the page is idle. A
+	// fetch is remembered for the session, so the click itself finds the view already there.
+	function prefetch( href ) {
+		// The view showing too: the server drew it, so going back to it needs its own fetch.
+		const to = postOf( href );
+		if ( ! to ) {
+			return;
+		}
+		let ahead;
+		if ( to.browse ) {
+			ahead = pageView( to.href );
+		} else if ( to.id ) {
+			ahead = get( '/' + to.id );
+		} else {
+			ahead = get( '' );
+		}
+		ahead.catch( () => {} );
+	}
+	const warm = ( e ) => {
+		const a = e.target.closest?.( 'a[href]' );
+		if ( a && ! a.target && ! a.hasAttribute( 'download' ) ) {
+			prefetch( a.href );
+		}
+	};
+	app.addEventListener( 'pointerover', warm, { passive: true } );
+	app.addEventListener( 'focusin', warm );
+	app.addEventListener( 'touchstart', warm, { passive: true } );
+	const idle = window.requestIdleCallback || ( ( fn ) => setTimeout( fn, 1200 ) );
+	idle( () => {
+		for ( const tab of nav?.querySelectorAll( 'a[href]' ) || [] ) {
+			prefetch( tab.href );
+		}
 	} );
 
 	// Search: the form works as a plain GET without the script; with it, the results swap in.

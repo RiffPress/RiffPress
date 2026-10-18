@@ -1784,6 +1784,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	text-decoration: none;
 }
 
+/* The site's name and the icons belong to the sidebar; as tabs, only labels. */
+.riff-app .riff-app-brand,
+.riff-app .riff-app-tab svg {
+	display: none;
+}
+
 .riff-app .riff-app-tab:hover,
 .riff-app .riff-app-tab:focus-visible {
 	color: var(--riff-app-ink);
@@ -2170,10 +2176,38 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: flex;
 	max-width: 960px;
 	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px 24px;
-	margin-bottom: 24px;
+	align-items: flex-end;
+	gap: 24px 32px;
+	margin-bottom: 32px;
+}
+
+/* The cover leads, as on an album page in the apps. */
+.riff-album-cover {
+	flex: none;
+	width: clamp(160px, 22vw, 240px);
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: 6px;
+	background: var(--riff-app-surface);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.riff-app .riff-album-cover img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	object-fit: cover;
+}
+
+.riff-app .riff-album-kind {
+	margin: 0 0 8px;
+	color: var(--riff-app-ink-2);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-transform: uppercase;
 }
 
 .riff-album-text {
@@ -2196,8 +2230,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-album-actions {
 	display: flex;
 	flex: none;
-	gap: 8px;
-	margin: 0;
+	gap: 12px;
+	margin: 24px 0 0;
 }
 
 .riff-app .riff-pill {
@@ -2238,10 +2272,87 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-album-tracks {
 	max-width: 960px;
-	padding: 8px;
-	border: 1px solid var(--riff-app-line);
-	border-radius: 2px;
-	background: var(--riff-app-surface);
+	counter-reset: riff-track;
+}
+
+/* A list of tracks, not a post: no list markers of the browser's, even where
+   WordPress's own block styles are not loaded. */
+.riff-app .riff-album-tracks ol,
+.riff-app .riff-album-tracks ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.riff-app .riff-album-tracks li,
+.riff-app .riff-album-tracks figure {
+	margin: 0;
+}
+
+.riff-app .riff-album-tracks .riff-row {
+	gap: 16px;
+	padding: 6px 12px;
+	border-radius: 6px;
+	line-height: 1.4;
+}
+
+.riff-app .riff-album-tracks .riff-row-art {
+	width: 40px;
+	height: 40px;
+}
+
+.riff-app .riff-album-tracks .riff-row-title {
+	font-size: 15px;
+}
+
+.riff-app .riff-album-tracks .riff-row-sub {
+	font-size: 13px;
+}
+
+.riff-app .riff-album-tracks .riff-row-time {
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+
+/* An album numbers its tracks where the art would be; the playing one shows
+   its bars instead. Its cover and artist are already in the header. */
+.riff-album-tracks[data-riff-numbered] .riff-row {
+	counter-increment: riff-track;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art {
+	display: grid;
+	place-items: center;
+	background: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art img {
+	display: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art::before {
+	content: counter(riff-track);
+	color: var(--riff-app-ink-2);
+	font-size: 15px;
+	font-variant-numeric: tabular-nums;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row[data-current] .riff-row-art::before {
+	content: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-state {
+	padding-bottom: 0;
+	align-items: center;
+	background: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row:not([data-current]) .riff-row-state {
+	opacity: 0;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-sub {
+	display: none;
 }
 
 .riff-app .riff-track {
@@ -2249,7 +2360,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-app .riff-row {
-	border-radius: 2px;
+	border-radius: 6px;
 }
 
 .riff-app .riff-row:hover,
@@ -2262,6 +2373,19 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 2px;
 }
 
+/* While a view that was not fetched ahead is on its way, the old one dims,
+   after a beat so a quick answer never flickers. */
+.riff-app[aria-busy="true"] .riff-app-view {
+	opacity: 0.55;
+	transition: opacity 0.15s 0.12s;
+}
+
+/* A view arrives in a short cross-fade, not the browser's default. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.12s;
+}
+
 /* ---- Standalone mode: the Listen block on its own at app/, in Riff's dark
    look, with no theme around it. */
 .riff-standalone {
@@ -2271,12 +2395,182 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	color-scheme: dark;
 }
 
-.riff-standalone-main {
-	min-height: 100vh;
-}
-
 .riff-standalone .riff-app {
 	max-width: none;
-	min-height: 100vh;
-	padding-bottom: calc(var(--riff-bar-h, 72px) + 48px);
+	min-height: 100dvh;
+	padding-bottom: 48px;
+}
+
+/* Once the bar shows, the page already keeps its height free below
+   (body::after above), so the app fills only what is left: one screen in
+   all, never a scroll for a short view. */
+html.has-riff .riff-standalone .riff-app {
+	min-height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
+}
+
+/* On a wide screen standalone mode is laid out like the apps people know: a
+   column on the left with the site's name, search and the views, and the view
+   beside it. The column stays put while the view scrolls. */
+@media (min-width: 900px) {
+
+	.riff-standalone .riff-app {
+		display: grid;
+		grid-template-columns: 240px minmax(0, 1fr);
+		align-items: start;
+		padding: 0;
+	}
+
+	.riff-standalone .riff-app-bar {
+		position: sticky;
+		top: 0;
+		flex-direction: column;
+		flex-wrap: nowrap;
+		align-items: stretch;
+		gap: 2px;
+		box-sizing: border-box;
+		height: 100dvh;
+		margin: 0;
+		padding: 24px 12px;
+		overflow-y: auto;
+		border-right: 1px solid var(--riff-app-line);
+		border-bottom: 0;
+	}
+
+	html.has-riff .riff-standalone .riff-app-bar {
+		height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
+	}
+
+	.riff-standalone .riff-app-brand {
+		display: flex;
+		order: -2;
+		align-items: center;
+		gap: 12px;
+		min-width: 0;
+		margin: 0 0 16px;
+		font-size: 20px;
+		font-weight: 700;
+	}
+
+	.riff-standalone .riff-app-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app .riff-app-collapse {
+		display: grid;
+		flex: none;
+		place-items: center;
+		width: 48px;
+		height: 48px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.riff-standalone .riff-app .riff-app-collapse:hover,
+	.riff-standalone .riff-app .riff-app-collapse:focus-visible {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app-collapse svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	/* Collapsed: a rail of icons, each with a small label under it, as YouTube
+	   Music draws its narrow guide. Search waits for the sidebar to open. */
+	.riff-standalone .riff-app[data-sidebar="mini"] {
+		grid-template-columns: 72px minmax(0, 1fr);
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
+		padding: 24px 4px;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand {
+		justify-content: center;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-name,
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
+		display: none;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-tab {
+		flex-direction: column;
+		justify-content: center;
+		gap: 4px;
+		min-height: 72px;
+		padding: 0;
+		font-size: 10px;
+	}
+
+	.riff-standalone .riff-app-search {
+		flex: none;
+		order: -1;
+		margin: 0 0 16px;
+	}
+
+	.riff-standalone .riff-app .riff-app-search input {
+		max-width: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab {
+		gap: 16px;
+		padding: 0 12px;
+		border-radius: 8px;
+		font-size: 15px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab svg {
+		display: block;
+		flex: none;
+		width: 24px;
+		height: 24px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab:hover {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app .riff-app-tab[aria-current="page"] {
+		background: var(--riff-app-surface);
+		box-shadow: none;
+	}
+
+	.riff-standalone .riff-app .riff-pill {
+		min-height: 44px;
+		padding: 0 28px;
+		border-radius: 999px;
+		font-weight: 600;
+	}
+
+	.riff-standalone .riff-album-title {
+		font-weight: 700;
+		letter-spacing: -0.02em;
+	}
+
+	.riff-standalone .riff-app > *,
+	.riff-standalone .riff-album,
+	.riff-standalone .riff-album-tracks {
+		max-width: none;
+		margin-right: 0;
+		margin-left: 0;
+	}
+
+	.riff-standalone .riff-app-view {
+		grid-column: 2;
+		min-width: 0;
+		padding: clamp(32px, 4vw, 56px) clamp(24px, 4vw, 64px) 48px;
+	}
+}
+
+/* The bar already says what is playing; the app does not repeat it above the
+   library. */
+.riff-standalone .riff-now {
+	display: none;
 }

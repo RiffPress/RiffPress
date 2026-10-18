@@ -60,6 +60,16 @@ final class Browse {
 	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH );
 
 	/**
+	 * Icons for the navigation, as Material Icons draws them, beside each label in the sidebar.
+	 */
+	private const ICONS = array(
+		'library' => 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+		'albums'  => 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z',
+		'artists' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
+		'tracks'  => 'M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z',
+	);
+
+	/**
 	 * Which browse view the address asks for, or null for the library or a post.
 	 *
 	 * @since 4.16.0
@@ -109,13 +119,20 @@ final class Browse {
 			'artists' => array( __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ) ),
 			'tracks'  => array( __( 'Tracks', 'riff' ), add_query_arg( self::VIEW, 'tracks', $page ) ),
 		);
-		$html  = '';
+		// The site's name heads the sidebar; as tabs it is hidden.
+		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
+		$html = sprintf(
+			'<span class="riff-app-brand"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button><span class="riff-app-name">%s</span></span>',
+			esc_attr__( 'Sidebar', 'riff' ),
+			esc_html( '' !== $name ? $name : 'Riff' )
+		);
 		foreach ( $links as $slug => list( $label, $href ) ) {
 			$html .= sprintf(
-				'<a class="riff-app-tab%s" href="%s"%s>%s</a>',
+				'<a class="riff-app-tab%s" href="%s"%s><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="%s"/></svg><span>%s</span></a>',
 				'library' === $slug ? ' riff-app-home' : '',
 				esc_url( $href ),
 				$slug === $here ? ' aria-current="page"' : '',
+				esc_attr( self::ICONS[ $slug ] ),
 				esc_html( $label )
 			);
 		}
@@ -329,7 +346,7 @@ final class Browse {
 		}
 		$artist = (string) get_term_meta( $id, 'riff_album_artist', true );
 		$meta   = implode( ' · ', array_filter( array( $artist, self::count( (int) $data['total'] ) ) ) );
-		return self::list_view( $term->name, $meta, $data );
+		return self::list_view( $term->name, $meta, $data, __( 'Album', 'riff' ), true );
 	}
 
 	/**
@@ -352,7 +369,7 @@ final class Browse {
 		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
 			return self::artists_view( $page, 1 );
 		}
-		return self::list_view( $term->name, self::count( (int) $data['total'] ), $data ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
+		return self::list_view( $term->name, self::count( (int) $data['total'] ), $data, __( 'Artist', 'riff' ) ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
 	}
 
 	/**
@@ -390,20 +407,16 @@ final class Browse {
 	 * @param string $meta  The line under it.
 	 * @param array  $data  A /tracks response.
 	 * @return string
+	 * @param string $kind  What it is, above the title, or empty.
+	 * @param bool   $album Whether it is an album: its cover leads, and its tracks are numbered.
 	 */
-	private static function list_view( string $title, string $meta, array $data ): string {
+	private static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false ): string {
 		if ( ! $data['items'] ) {
 			return self::title( $title ) . self::empty_note();
 		}
-		return sprintf(
-			'<header class="riff-album"><div class="riff-album-text"><h2 class="riff-album-title" tabindex="-1">%s</h2><p class="riff-album-meta">%s</p></div>' .
-			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%s</button></p></header>%s',
-			esc_html( $title ),
-			esc_html( $meta ),
-			esc_html__( 'Play', 'riff' ),
-			esc_html__( 'Shuffle', 'riff' ),
-			self::rows( $data['items'] )
-		);
+		// An album leads with its cover and numbers its tracks; other lists show each track's art.
+		$art = $album && ! empty( $data['items'][0]['art'] ) ? (string) end( $data['items'][0]['art'] )['src'] : '';
+		return App::header( $title, $meta, $kind, $art ) . self::rows( $data['items'], $album );
 	}
 
 	/**
@@ -412,20 +425,31 @@ final class Browse {
 	 *
 	 * @param array $tracks Tracks from the route.
 	 * @return string
+	 * @param bool  $numbered Whether to number the tracks, as an album does.
 	 */
-	private static function rows( array $tracks ): string {
-		$blocks = '';
+	private static function rows( array $tracks, bool $numbered = false ): string {
+		// Each row is rendered as part of the post its track belongs to, so it takes that post's
+		// artwork and names it as where it plays from, as it would in the post itself.
+		global $post;
+		$listen = $post;
+		$rows   = '';
 		foreach ( $tracks as $track ) {
-			$blocks .= sprintf(
-				'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
-				(int) $track['id'],
-				esc_url( (string) $track['src'] )
+			$parent = (int) ( $track['post']['id'] ?? 0 );
+			$post   = $parent ? get_post( $parent ) : $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restored below.
+			$rows  .= do_blocks(
+				sprintf(
+					'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
+					(int) $track['id'],
+					esc_url( (string) $track['src'] )
+				)
 			);
 		}
+		$post = $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- the Listen page again.
 		return sprintf(
-			'<div class="riff-album-tracks" data-riff-tracks="%s">%s</div>',
+			'<div class="riff-album-tracks"%s data-riff-tracks="%s">%s</div>',
+			$numbered ? ' data-riff-numbered' : '',
 			esc_attr( (string) wp_json_encode( $tracks ) ),
-			do_blocks( $blocks )
+			$rows
 		);
 	}
 

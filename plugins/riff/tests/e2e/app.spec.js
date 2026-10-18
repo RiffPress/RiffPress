@@ -267,6 +267,35 @@ test.describe( 'Browse', () => {
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
+	test( 'the tabs are fetched ahead, so choosing one waits on nothing', async ( {
+		page,
+	} ) => {
+		const tabs = page.locator( '.riff-app-bar a[href*="riff_view="]' );
+		await expect( tabs ).toHaveCount( 3 );
+		// Once the page is idle every tab's view is fetched; this page's own resource timings show
+		// when all three have arrived.
+		await expect
+			.poll( () =>
+				page.evaluate(
+					() =>
+						performance
+							.getEntriesByType( 'resource' )
+							.filter( ( r ) => r.name.includes( 'riff_view=' ) ).length
+				)
+			)
+			.toBeGreaterThanOrEqual( 3 );
+		const asked = [];
+		page.on( 'request', ( r ) => {
+			if ( r.url().includes( 'riff_view=artists' ) ) {
+				asked.push( r.url() );
+			}
+		} );
+		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await expect( page.locator( '.riff-app-tab[aria-current="page"]' ) ).toHaveText( 'Artists' );
+		await expect( page.locator( '.riff-artist' ).first() ).toBeVisible();
+		expect( asked, 'the view was already here' ).toEqual( [] );
+	} );
+
 	test( 'every browse view reads without the script', async ( { browser } ) => {
 		const context = await browser.newContext( { javaScriptEnabled: false } );
 		const plain = await context.newPage();
@@ -282,6 +311,52 @@ test.describe( 'Browse', () => {
 } );
 
 test.describe( 'Standalone', () => {
+	test( 'on a wide screen the navigation is a sidebar; on a phone it stays tabs', async ( {
+		page,
+		isMobile,
+	} ) => {
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const nav = await page.locator( '.riff-app-bar' ).boundingBox();
+		const view = await page.locator( '.riff-app-view' ).boundingBox();
+		const brand = page.locator( '.riff-app-brand' );
+		if ( isMobile ) {
+			await expect( brand ).toBeHidden();
+			expect( nav.y + nav.height ).toBeLessThanOrEqual( view.y + 1 );
+		} else {
+			await expect( brand ).toBeVisible();
+			expect( nav.x + nav.width, 'the column sits left of the view' ).toBeLessThanOrEqual( view.x + 1 );
+			await expect( page.locator( '.riff-app-tab svg' ).first() ).toBeVisible();
+		}
+	} );
+
+	test( 'the sidebar collapses to a rail of icons, and stays that way across views and reloads', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'a phone has tabs, not a sidebar' );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const width = async () => ( await page.locator( '.riff-app-bar' ).boundingBox() ).width;
+		const toggle = page.locator( '.riff-app-collapse' );
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'true' );
+		expect( await width() ).toBeGreaterThan( 200 );
+
+		await toggle.click();
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'false' );
+		expect( await width() ).toBeLessThan( 100 );
+		await expect( page.locator( '.riff-app-search' ) ).toBeHidden();
+		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeVisible();
+
+		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await expect( page ).toHaveURL( /riff_view=artists/ );
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'false' );
+		await page.reload();
+		expect( await width(), 'remembered on this device' ).toBeLessThan( 100 );
+
+		await toggle.click();
+		expect( await width() ).toBeGreaterThan( 200 );
+		await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
+	} );
+
 	test( 'app/ is the player on its own: no theme, installable, and browsing stays inside it', async ( {
 		page,
 		request,
@@ -314,6 +389,16 @@ test.describe( 'Standalone', () => {
 		await expect
 			.poll( async () => ( await playing( page ) ).paused )
 			.toBe( false );
+
+		// With the bar showing, the app fills the window less the bar, not a whole window with the
+		// bar's height added below it, so a short view never scrolls.
+		const room = await page.evaluate( () => ( {
+			min: parseFloat( getComputedStyle( document.querySelector( '.riff-app' ) ).minHeight ),
+			left:
+				window.innerHeight -
+				parseFloat( getComputedStyle( document.body, '::after' ).height ),
+		} ) );
+		expect( room.min ).toBeLessThanOrEqual( room.left + 1 );
 	} );
 } );
 
