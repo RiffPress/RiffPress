@@ -329,6 +329,34 @@ test.describe( 'Standalone', () => {
 		}
 	} );
 
+	test( 'the sidebar collapses to a rail of icons, and stays that way across views and reloads', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'a phone has tabs, not a sidebar' );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const width = async () => ( await page.locator( '.riff-app-bar' ).boundingBox() ).width;
+		const toggle = page.locator( '.riff-app-collapse' );
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'true' );
+		expect( await width() ).toBeGreaterThan( 200 );
+
+		await toggle.click();
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'false' );
+		expect( await width() ).toBeLessThan( 100 );
+		await expect( page.locator( '.riff-app-search' ) ).toBeHidden();
+		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeVisible();
+
+		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await expect( page ).toHaveURL( /riff_view=artists/ );
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'false' );
+		await page.reload();
+		expect( await width(), 'remembered on this device' ).toBeLessThan( 100 );
+
+		await toggle.click();
+		expect( await width() ).toBeGreaterThan( 200 );
+		await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
+	} );
+
 	test( 'app/ is the player on its own: no theme, installable, and browsing stays inside it', async ( {
 		page,
 		request,

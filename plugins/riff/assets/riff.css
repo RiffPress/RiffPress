@@ -2336,14 +2336,72 @@ html.has-riff .riff-standalone .riff-app {
 	}
 
 	.riff-standalone .riff-app-brand {
-		display: block;
+		display: flex;
 		order: -2;
-		margin: 0 12px 20px;
-		overflow: hidden;
+		align-items: center;
+		gap: 12px;
+		min-width: 0;
+		margin: 0 0 16px;
 		font-size: 20px;
 		font-weight: 700;
+	}
+
+	.riff-standalone .riff-app-name {
+		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app .riff-app-collapse {
+		display: grid;
+		flex: none;
+		place-items: center;
+		width: 48px;
+		height: 48px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.riff-standalone .riff-app .riff-app-collapse:hover,
+	.riff-standalone .riff-app .riff-app-collapse:focus-visible {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app-collapse svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	/* Collapsed: a rail of icons, each with a small label under it, as YouTube
+	   Music draws its narrow guide. Search waits for the sidebar to open. */
+	.riff-standalone .riff-app[data-sidebar="mini"] {
+		grid-template-columns: 72px minmax(0, 1fr);
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
+		padding: 24px 4px;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand {
+		justify-content: center;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-name,
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
+		display: none;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-tab {
+		flex-direction: column;
+		justify-content: center;
+		gap: 4px;
+		min-height: 72px;
+		padding: 0;
+		font-size: 10px;
 	}
 
 	.riff-standalone .riff-app-search {

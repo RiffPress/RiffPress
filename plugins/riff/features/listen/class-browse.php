@@ -121,7 +121,11 @@ final class Browse {
 		);
 		// The site's name heads the sidebar; as tabs it is hidden.
 		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
-		$html = '<span class="riff-app-brand">' . esc_html( '' !== $name ? $name : 'Riff' ) . '</span>';
+		$html = sprintf(
+			'<span class="riff-app-brand"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button><span class="riff-app-name">%s</span></span>',
+			esc_attr__( 'Sidebar', 'riff' ),
+			esc_html( '' !== $name ? $name : 'Riff' )
+		);
 		foreach ( $links as $slug => list( $label, $href ) ) {
 			$html .= sprintf(
 				'<a class="riff-app-tab%s" href="%s"%s><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="%s"/></svg><span>%s</span></a>',

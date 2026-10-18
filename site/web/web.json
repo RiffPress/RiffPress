@@ -316,7 +316,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 402
+				"line": 403
 			}
 		],
 		"shot": {
@@ -576,7 +576,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 223
+				"line": 224
 			}
 		],
 		"shot": {
@@ -666,7 +666,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 214
+				"line": 215
 			}
 		],
 		"shot": {
@@ -1110,7 +1110,7 @@
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 229,
+				"line": 230,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],

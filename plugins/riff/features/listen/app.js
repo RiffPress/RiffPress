@@ -193,6 +193,7 @@ export function start( api ) {
 			view.innerHTML = html;
 			if ( bar !== undefined && nav ) {
 				nav.innerHTML = bar;
+				sidebar( app.dataset.sidebar !== 'mini', false );
 			} else if ( ! to.browse ) {
 				markNav( to );
 			}
@@ -475,6 +476,10 @@ export function start( api ) {
 			playAlbum( action );
 			return;
 		}
+		if ( action?.dataset.riffAppAction === 'sidebar' ) {
+			sidebar( action.getAttribute( 'aria-expanded' ) !== 'true' );
+			return;
+		}
 		if ( action?.dataset.riffAppAction === 'more' ) {
 			e.preventDefault();
 			loadMore( action );
@@ -508,6 +513,23 @@ export function start( api ) {
 		}
 		show( to ).catch( () => {} );
 	} );
+
+	// ---- The sidebar, on a wide screen in standalone mode: full, or a rail of icons. The choice is
+	// this device's, so it is remembered here rather than anywhere shared.
+	function sidebar( open, remember = true ) {
+		app.dataset.sidebar = open ? 'full' : 'mini';
+		nav?.querySelector( '.riff-app-collapse' )?.setAttribute( 'aria-expanded', String( open ) );
+		if ( remember ) {
+			try {
+				localStorage.setItem( 'riff-sidebar', open ? 'full' : 'mini' );
+			} catch {}
+		}
+	}
+	try {
+		if ( localStorage.getItem( 'riff-sidebar' ) === 'mini' ) {
+			sidebar( false, false );
+		}
+	} catch {}
 
 	// ---- Prefetch. A view is fetched as soon as it is likely to be wanted: the pointer reaches its
 	// link, the link takes focus or a finger lands on it, and every tab once the page is idle. A
