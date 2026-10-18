@@ -110,6 +110,16 @@ Since 4.0.0. Fires in `plugins/riff/src/class-library.php`.
 | --- | --- | --- |
 | `$args` | `array` | WP_Query arguments. |
 
+### `riff_now_playing_tabs`
+
+Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always comes first and cannot be removed.
+
+Since 4.17.0. Fires in `plugins/riff/src/class-player.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$tabs` | `array[]` | Tabs keyed by slug, each with a label. |
+
 ### `riff_player_data`
 
 Filters the data handed to the player script: strings, and the addresses of scripts a feature wants loaded, such as the Listen feature's app on the page that holds its block.
@@ -295,6 +305,20 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 | `detail` | `Object` | The player's state. |
 | `detail.queue` | `Object[]` | The queue in play order. |
 | `detail.track` | `Object\|null` | The track loaded, or null. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.tab`
+
+Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
+
+Since 4.17.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.id` | `string` | The tab's slug. |
+| `detail.panel` | `HTMLElement` | The tab's panel, `[data-riff-panel="<slug>"]`. |
+| `detail.track` | `Object\|null` | The track playing. |
 | `api` | `Object` | `window.riff`. |
 
 #### `riff.track`

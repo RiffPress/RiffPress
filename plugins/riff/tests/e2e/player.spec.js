@@ -227,7 +227,7 @@ test.describe( 'Player', () => {
 		expect( cover.width ).toBe( cover.height );
 		expect( cover.width ).toBe( 640 );
 		const tabs = await page.locator( '.riff-tabs' ).boundingBox();
-		const tab = await page.locator( '.riff-tab' ).boundingBox();
+		const tab = await page.locator( '.riff-tab' ).first().boundingBox();
 		expect( tab.x ).toBe( tabs.x );
 		const colors = await page.evaluate( () => ( {
 			repeat: getComputedStyle(

@@ -205,6 +205,15 @@ function start() {
 		 */
 		playing: () => !! track() && ! el().paused,
 		/**
+		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
+		 * through the `riff_now_playing_tabs` filter.
+		 *
+		 * @since 4.17.0
+		 *
+		 * @param {string} id The tab's slug.
+		 */
+		tab: ( id ) => pickTab( String( id ) ),
+		/**
 		 * Listens to one of the player's actions, without `wp-hooks`.
 		 *
 		 * @since 4.0.0
@@ -1357,6 +1366,62 @@ function start() {
 				.querySelector( '[aria-current]' )
 				?.scrollIntoView( { block: 'nearest' } );
 		}
+	}
+
+	// ---- Tabs beside Now Playing: Up next, and any a plugin adds through riff_now_playing_tabs.
+	// Picking one shows its panel and fires riff.tab, so a plugin fills its panel when it is seen.
+	// The keys follow the ARIA tabs pattern: arrows move and pick, Home and End jump.
+	const tabs = $$( '.riff-tab' );
+	function pickTab( id, focus = false ) {
+		const tab = tabs.find( ( t ) => t.dataset.riffTab === id );
+		if ( ! tab ) {
+			return;
+		}
+		for ( const t of tabs ) {
+			t.setAttribute( 'aria-selected', String( t === tab ) );
+			t.tabIndex = t === tab ? 0 : -1;
+		}
+		for ( const panel of $$( '[data-riff-panel]' ) ) {
+			panel.hidden = panel.dataset.riffPanel !== id;
+		}
+		if ( focus ) {
+			tab.focus();
+		}
+		/**
+		 * Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a
+		 * tab fills its panel here, and again on `riff.track` while its tab is showing.
+		 *
+		 * @since 4.17.0
+		 *
+		 * @param {Object}      detail       What changed.
+		 * @param {string}      detail.id    The tab's slug.
+		 * @param {HTMLElement} detail.panel The tab's panel, `[data-riff-panel="<slug>"]`.
+		 * @param {Object|null} detail.track The track playing.
+		 * @param {Object}      api          `window.riff`.
+		 */
+		emit( 'tab', {
+			id,
+			panel: $( `[data-riff-panel="${ id }"]` ),
+			track: track() || null,
+		} );
+	}
+	for ( const t of tabs ) {
+		t.addEventListener( 'click', () => pickTab( t.dataset.riffTab ) );
+		t.addEventListener( 'keydown', ( e ) => {
+			const i = tabs.indexOf( t );
+			const back = document.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+			const ahead = document.dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+			const to = {
+				[ back ]: ( i - 1 + tabs.length ) % tabs.length,
+				[ ahead ]: ( i + 1 ) % tabs.length,
+				Home: 0,
+				End: tabs.length - 1,
+			}[ e.key ];
+			if ( to !== undefined ) {
+				e.preventDefault();
+				pickTab( tabs[ to ].dataset.riffTab, true );
+			}
+		} );
 	}
 
 	// ---- Share: the system sheet where there is one, the clipboard elsewhere, the same link in

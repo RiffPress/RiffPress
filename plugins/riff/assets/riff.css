@@ -1184,6 +1184,45 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
+/* Each tab's panel. Up next's holds the queue; a plugin's is empty until its
+   script fills it. A phone shows a panel only in the open sheet. */
+.riff-panel {
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	display: none;
+}
+
+.riff-panel-queue {
+	display: flex;
+}
+
+.riff-panel[hidden] {
+	display: none;
+}
+
+.riff-panel:not(.riff-panel-queue) {
+	padding: 16px 24px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+#riff .riff-tab {
+	display: flex;
+	align-items: center;
+	height: 48px;
+	padding: 0 12px;
+	color: var(--riff-fg-2);
+	font-size: 14px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+
+#riff .riff-tab[aria-selected="true"] {
+	box-shadow: inset 0 -2px 0 var(--riff-fg);
+	color: var(--riff-fg);
+}
+
 .riff-queue-head {
 	padding: 4px 24px 16px;
 	border-bottom: 1px solid var(--riff-line);
@@ -1297,6 +1336,18 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-np[data-sheet="half"] .riff-queue-list,
 .riff-np[data-sheet="full"] .riff-queue-list {
 	display: block;
+}
+
+.riff-np[data-sheet="half"] .riff-tabs-many,
+.riff-np[data-sheet="full"] .riff-tabs-many {
+	display: flex;
+	padding: 0 12px;
+	border-bottom: 1px solid var(--riff-line);
+}
+
+.riff-np[data-sheet="half"] .riff-panel:not([hidden]),
+.riff-np[data-sheet="full"] .riff-panel:not([hidden]) {
+	display: flex;
 }
 
 /* Full: the player is one row above the sheet. */
@@ -1445,15 +1496,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		border-bottom: 1px solid var(--riff-line);
 	}
 
-	.riff-tab {
+	.riff-panel:not([hidden]) {
 		display: flex;
-		align-items: center;
-		height: 48px;
-		padding: 0 12px;
-		box-shadow: inset 0 -2px 0 var(--riff-fg);
-		font-size: 14px;
-		font-weight: 500;
-		text-transform: uppercase;
 	}
 
 	.riff-queue-head {

@@ -120,14 +120,23 @@ defined( 'ABSPATH' ) || exit;
 					<i class="riff-handle" aria-hidden="true"></i>
 					<span data-riff-text="source"></span>
 				</button>
-				<div class="riff-tabs" role="tablist">
-					<span class="riff-tab" role="tab" id="riff-queue-tab" aria-selected="true"><?php esc_html_e( 'Up next', 'riff' ); ?></span>
+				<?php $riff_tabs = Player::tabs(); ?>
+				<div class="riff-tabs<?php echo count( $riff_tabs ) > 1 ? ' riff-tabs-many' : ''; ?>" role="tablist">
+					<?php foreach ( $riff_tabs as $riff_slug => $riff_tab ) : ?>
+						<?php $riff_first = 'queue' === $riff_slug; ?>
+						<button type="button" class="riff-tab" role="tab" id="<?php echo esc_attr( $riff_first ? 'riff-queue-tab' : 'riff-tab-' . $riff_slug ); ?>" data-riff-tab="<?php echo esc_attr( $riff_slug ); ?>" aria-controls="riff-panel-<?php echo esc_attr( $riff_slug ); ?>" aria-selected="<?php echo $riff_first ? 'true' : 'false'; ?>" tabindex="<?php echo $riff_first ? '0' : '-1'; ?>"><?php echo esc_html( $riff_tab['label'] ); ?></button>
+					<?php endforeach; ?>
 				</div>
-				<header class="riff-queue-head">
-					<p><?php esc_html_e( 'Playing from', 'riff' ); ?></p>
-					<h3 data-riff-text="source"></h3>
-				</header>
-				<ol class="riff-queue-list" id="riff-queue-list"></ol>
+				<div class="riff-panel riff-panel-queue" role="tabpanel" id="riff-panel-queue" aria-labelledby="riff-queue-tab" data-riff-panel="queue">
+					<header class="riff-queue-head">
+						<p><?php esc_html_e( 'Playing from', 'riff' ); ?></p>
+						<h3 data-riff-text="source"></h3>
+					</header>
+					<ol class="riff-queue-list" id="riff-queue-list"></ol>
+				</div>
+				<?php foreach ( array_slice( $riff_tabs, 1, null, true ) as $riff_slug => $riff_tab ) : ?>
+					<div class="riff-panel" role="tabpanel" id="riff-panel-<?php echo esc_attr( $riff_slug ); ?>" aria-labelledby="riff-tab-<?php echo esc_attr( $riff_slug ); ?>" data-riff-panel="<?php echo esc_attr( $riff_slug ); ?>" tabindex="0" hidden></div>
+				<?php endforeach; ?>
 			</section>
 		</div>
 	</div>
