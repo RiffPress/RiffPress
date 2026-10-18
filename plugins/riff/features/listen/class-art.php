@@ -578,6 +578,95 @@ final class Art {
 	}
 
 	/**
+	 * Attachment meta caching an image's tint, worked out once from its pixels.
+	 *
+	 * @since 4.18.0
+	 */
+	public const TINT = '_riff_tint';
+
+	/**
+	 * The colour an album page tints its header with, from the cover the player shows: a drawn
+	 * cover's own colour, or the most colourful shade of an uploaded image, read once and kept
+	 * on the image. Empty when there is no cover, or the image cannot be read.
+	 *
+	 * @since 4.18.0
+	 *
+	 * @param array $art Artwork, as a track carries it, smallest first.
+	 * @return string Hex colour, or empty.
+	 */
+	public static function tint( array $art ): string {
+		$src = $art ? (string) ( end( $art )['src'] ?? '' ) : '';
+		if ( '' === $src ) {
+			return '';
+		}
+		parse_str( (string) wp_parse_url( $src, PHP_URL_QUERY ), $query );
+		if ( ! empty( $query[ self::QUERY ] ) && is_numeric( $query[ self::QUERY ] ) ) {
+			$post = get_post( (int) $query[ self::QUERY ] );
+			if ( ! $post instanceof WP_Post ) {
+				return '';
+			}
+			// A drawn cover's ground, unless it is the neutral charcoal or grey; then its accent.
+			$palettes = self::palettes();
+			$palette  = $palettes[ crc32( (string) $post->post_name ) % count( $palettes ) ];
+			return isset( self::DISCS[ $palette[0] ] ) && '#3858e9' !== $palette[0] ? (string) $palette[1] : (string) $palette[0];
+		}
+		$id = attachment_url_to_postid( $src );
+		if ( ! $id ) {
+			return '';
+		}
+		$kept = (string) get_post_meta( $id, self::TINT, true );
+		if ( '' !== $kept ) {
+			return 'none' === $kept ? '' : $kept;
+		}
+		$tint = self::pixels( $id );
+		update_post_meta( $id, self::TINT, '' !== $tint ? $tint : 'none' );
+		return $tint;
+	}
+
+	/**
+	 * The most colourful shade of an image: its pixels averaged, each weighted by how saturated
+	 * it is, so a grey border does not wash a red cover out.
+	 *
+	 * @param int $id Image attachment ID.
+	 * @return string Hex colour, or empty.
+	 */
+	private static function pixels( int $id ): string {
+		if ( ! function_exists( 'imagecreatefromstring' ) ) {
+			return '';
+		}
+		// The thumbnail where there is one: small, and already on disk.
+		$file  = (string) get_attached_file( $id );
+		$thumb = image_get_intermediate_size( $id, 'thumbnail' );
+		if ( is_array( $thumb ) && ! empty( $thumb['path'] ) ) {
+			$small = trailingslashit( wp_upload_dir( null, false )['basedir'] ) . $thumb['path'];
+			$file  = is_readable( $small ) ? $small : $file;
+		}
+		$data  = is_readable( $file ) ? (string) file_get_contents( $file ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- a local image.
+		$image = '' !== $data ? @imagecreatefromstring( $data ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- an unreadable image has no tint.
+		if ( ! $image ) {
+			return '';
+		}
+		$size = 16;
+		$grid = imagecreatetruecolor( $size, $size );
+		imagecopyresampled( $grid, $image, 0, 0, 0, 0, $size, $size, imagesx( $image ), imagesy( $image ) );
+		$sum = array( 0.0, 0.0, 0.0 );
+		$all = 0.0;
+		for ( $x = 0; $x < $size; $x++ ) {
+			for ( $y = 0; $y < $size; $y++ ) {
+				$c      = imagecolorat( $grid, $x, $y );
+				$rgb    = array( ( $c >> 16 ) & 255, ( $c >> 8 ) & 255, $c & 255 );
+				$weight = ( max( $rgb ) - min( $rgb ) ) / 255 + 0.02;
+				$weight = $weight * $weight;
+				for ( $i = 0; $i < 3; $i++ ) {
+					$sum[ $i ] += $rgb[ $i ] * $weight;
+				}
+				$all += $weight;
+			}
+		}
+		return vsprintf( '#%02x%02x%02x', array_map( static fn( $v ) => (int) round( $v / $all ), $sum ) );
+	}
+
+	/**
 	 * The relative luminance of a hex colour, 0 dark to 1 light.
 	 *
 	 * @param string $hex Colour.

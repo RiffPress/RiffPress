@@ -176,7 +176,11 @@ export function start( api ) {
 			if ( to.browse ) {
 				( { view: html, nav: bar } = await pageView( to.href ) );
 			} else {
-				html = id ? await postView( id ) : await libraryView( upto );
+				// A post's view comes from the server, as a browse view does, so its header, the
+				// cover's tint and anything a plugin adds are written in one place.
+				html = id
+					? ( await pageView( addressOf( id ) ) ).view
+					: await libraryView( upto );
 			}
 		} catch {
 			// The route is gone or the network is: let the address load as a page.
@@ -407,33 +411,6 @@ export function start( api ) {
 			) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span>` +
 			`<a class="riff-card-link" href="${ esc( addressOf( item.id ) ) }"><span class="riff-card-title">${ esc( item.title ) }</span></a>` +
 			`<span class="riff-card-sub">${ esc( meta( item ) ) }</span></div>`
-		);
-	}
-
-	async function postView( id ) {
-		const post = await get( '/' + id );
-		const art = post.art?.length ? post.art[ post.art.length - 1 ].src : '';
-		// The same markup the server writes in Listen\App::header().
-		return (
-			`<header class="riff-album${ art ? ' riff-album-has-cover' : '' }">` +
-			( art
-				? `<span class="riff-album-cover"><img src="${ esc(
-						art
-				  ) }" alt="" decoding="async"></span>`
-				: '' ) +
-			`<div class="riff-album-text"><h2 class="riff-album-title" tabindex="-1">${ esc(
-				post.title
-			) }</h2>` +
-			`<p class="riff-album-meta">${ esc( meta( post ) ) }</p>` +
-			`<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">${ esc(
-				s.play || 'Play'
-			) }</button>` +
-			`<button type="button" class="riff-pill" data-riff-app-action="shuffle">${ esc(
-				s.shuffle || 'Shuffle'
-			) }</button></p></div></header>` +
-			`<div class="riff-album-tracks" data-riff-numbered data-riff-tracks="${ esc(
-				JSON.stringify( post.tracks )
-			) }">${ post.html }</div>`
 		);
 	}
 

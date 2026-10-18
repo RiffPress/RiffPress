@@ -151,6 +151,24 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( array( 'Zeta', 'Alpha', 'Mid' ), wp_list_pluck( $data['items'], 'title' ), 'upload order, not the alphabet' );
 	}
 
+	public function test_albums_by_an_artist_are_those_with_a_track_of_theirs_the_visitor_can_see(): void {
+		$artist = (int) get_term_by( 'name', 'Hidden Artist', Catalog::ARTIST )->term_id;
+		$this->assertSame( array(), wp_list_pluck( $this->get( '/albums', array( 'artist' => $artist ) )['items'], 'name' ), 'their only album is on a draft' );
+
+		$someone = (int) get_terms(
+			array(
+				'taxonomy'   => Catalog::ARTIST,
+				'hide_empty' => true,
+				'exclude'    => array( $artist ),
+				'number'     => 1,
+			)
+		)[0]->term_id;
+		$albums  = $this->get( '/albums', array( 'artist' => $someone ) );
+		$this->assertNotEmpty( $albums['items'] );
+		$this->assertSame( count( $albums['items'] ), $albums['total'] );
+		$this->assertNotContains( 'Secret Sessions', wp_list_pluck( $albums['items'], 'name' ) );
+	}
+
 	public function test_an_artist_lists_their_tracks(): void {
 		$artist = $this->get( '/artists' )['items'][0];
 

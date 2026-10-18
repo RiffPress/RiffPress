@@ -121,6 +121,12 @@ final class Catalog_Rest {
 					'permission_callback' => '__return_true',
 					'args'                => array(
 						'search' => $search,
+						'artist' => array(
+							'description' => __( 'Only the albums with a track by this artist, by term ID.', 'riff' ),
+							'type'        => 'integer',
+							'default'     => 0,
+							'minimum'     => 0,
+						),
 						'page'   => $page,
 					),
 				),
@@ -258,6 +264,10 @@ final class Catalog_Rest {
 		if ( '' !== $search ) {
 			$query['name__like'] = $search;
 		}
+		if ( Catalog::ALBUM === $taxonomy && (int) $request['artist'] ) {
+			$by               = self::albums_by( (int) $request['artist'] );
+			$query['include'] = $by ? $by : array( 0 );
+		}
 		$total = (int) wp_count_terms( $query );
 		$terms = get_terms(
 			$query + array(
@@ -318,6 +328,22 @@ final class Catalog_Rest {
 				'total' => $total,
 			)
 		);
+	}
+
+	/**
+	 * The albums with at least one track by an artist that the requester can see, in one query.
+	 *
+	 * @since 4.18.0
+	 *
+	 * @param int $artist Artist term ID.
+	 * @return int[] Album term IDs.
+	 */
+	private static function albums_by( int $artist ): array {
+		global $wpdb;
+		$skip = self::hidden_tracks();
+		$not  = $skip ? ' AND a.object_id NOT IN (' . implode( ',', $skip ) . ')' : '';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- integers only.
+		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT tb.term_id FROM {$wpdb->term_relationships} a INNER JOIN {$wpdb->term_taxonomy} ta ON ta.term_taxonomy_id = a.term_taxonomy_id INNER JOIN {$wpdb->term_relationships} b ON b.object_id = a.object_id INNER JOIN {$wpdb->term_taxonomy} tb ON tb.term_taxonomy_id = b.term_taxonomy_id WHERE ta.taxonomy = %s AND ta.term_id = %d AND tb.taxonomy = %s{$not}", Catalog::ARTIST, $artist, Catalog::ALBUM ) ) );
 	}
 
 	/**

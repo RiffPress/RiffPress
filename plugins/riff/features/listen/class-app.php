@@ -417,7 +417,7 @@ final class App {
 			return self::library_view( $page );
 		}
 		$art = $detail['art'] ? end( $detail['art'] )['src'] : '';
-		return self::header( $detail['title'], self::meta( $detail ), '', (string) $art ) . sprintf(
+		return self::header( $detail['title'], self::meta( $detail ), '', (string) $art, Art::tint( (array) $detail['art'] ) ) . sprintf(
 			'<div class="riff-album-tracks" data-riff-numbered data-riff-tracks="%s">%s</div>',
 			esc_attr( wp_json_encode( $detail['tracks'] ) ),
 			$detail['html']
@@ -426,7 +426,7 @@ final class App {
 
 	/**
 	 * The header of a list of tracks: the cover, what it is, its title and details, and Play and
-	 * Shuffle under them, as the music apps draw an album. The same markup app.js writes.
+	 * Shuffle under them, as the music apps draw an album.
 	 *
 	 * @since 4.17.0
 	 *
@@ -434,19 +434,22 @@ final class App {
 	 * @param string $meta  The line under it.
 	 * @param string $kind  What it is, above the title ("Album"), or empty.
 	 * @param string $art   The cover's address, or empty for none.
+	 * @param string $tint  A hex colour from the cover to tint the header with, or empty.
 	 * @return string
 	 */
-	public static function header( string $title, string $meta, string $kind = '', string $art = '' ): string {
+	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '' ): string {
+		$tint = (string) sanitize_hex_color( $tint );
 		return sprintf(
-			'<header class="riff-album%1$s">%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>' .
+			'<header class="riff-album%1$s"%8$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>' .
 			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%6$s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%7$s</button></p></div></header>',
-			'' !== $art ? ' riff-album-has-cover' : '',
+			( '' !== $art ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ),
 			'' !== $art ? '<span class="riff-album-cover"><img src="' . esc_url( $art ) . '" alt="" decoding="async"></span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
 			esc_html( $title ),
 			esc_html( $meta ),
 			esc_html__( 'Play', 'riff' ),
-			esc_html__( 'Shuffle', 'riff' )
+			esc_html__( 'Shuffle', 'riff' ),
+			'' !== $tint ? ' style="--riff-album-tint:' . esc_attr( $tint ) . '"' : ''
 		);
 	}
 

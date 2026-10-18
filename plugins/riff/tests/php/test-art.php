@@ -143,4 +143,37 @@ class Test_Riff_Art extends Riff_TestCase {
 		[ $post ] = $this->bare_post();
 		$this->assertSame( add_query_arg( 'riff-art', $post, home_url( '/' ) ), Art::url( $post ) );
 	}
+
+	public function test_a_drawn_cover_tints_its_album_with_its_own_colour(): void {
+		list( $post, $id ) = $this->bare_post();
+		$track             = Tracks::from_attachment( $id, $post );
+
+		$tint    = Art::tint( $track['art'] );
+		$colours = array_merge( ...array_map( static fn( $p ) => array_slice( $p, 0, 2 ), Art::palettes() ) );
+
+		$this->assertMatchesRegularExpression( '/^#[0-9a-f]{6}$/', $tint );
+		$this->assertContains( $tint, $colours, 'the ground or the accent of the palette the cover was drawn in' );
+		$this->assertNotContains( $tint, array( '#1e1e1e', '#f6f6f6' ), 'never the neutral ground, which would tint nothing' );
+	}
+
+	public function test_an_uploaded_cover_is_read_once_for_its_most_colourful_shade(): void {
+		$file  = get_temp_dir() . 'riff-tint-' . wp_generate_password( 6, false ) . '.png';
+		$image = imagecreatetruecolor( 64, 64 );
+		imagefill( $image, 0, 0, imagecolorallocate( $image, 128, 128, 128 ) );
+		imagefilledrectangle( $image, 16, 16, 47, 47, imagecolorallocate( $image, 220, 30, 40 ) );
+		imagepng( $image, $file );
+		$cover = self::factory()->attachment->create_upload_object( $file );
+		wp_delete_file( $file );
+		$art = Tracks::art( $cover );
+
+		$tint = Art::tint( $art );
+		$rgb  = sscanf( $tint, '#%2x%2x%2x' );
+
+		$this->assertGreaterThan( 150, $rgb[0], 'the red, not the grey around it' );
+		$this->assertLessThan( 90, max( $rgb[1], $rgb[2] ) );
+		$this->assertSame( $tint, get_post_meta( $cover, Art::TINT, true ), 'kept on the image' );
+		update_post_meta( $cover, Art::TINT, '#123456' );
+		$this->assertSame( '#123456', Art::tint( $art ), 'and read from there after' );
+		$this->assertSame( '', Art::tint( array() ) );
+	}
 }

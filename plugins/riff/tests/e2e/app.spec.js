@@ -313,6 +313,45 @@ test.describe( 'Browse', () => {
 } );
 
 test.describe( 'Standalone', () => {
+	test( 'an album page is tinted from its cover, and its text keeps its contrast on the tint', async ( {
+		page,
+	} ) => {
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=albums' );
+		await page
+			.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } )
+			.first()
+			.locator( '.riff-card-link' )
+			.click();
+		const header = page.locator( '.riff-album-tinted' );
+		await expect( header ).toHaveAttribute( 'style', /--riff-album-tint:#[0-9a-f]{6}/ );
+		// The wash's colour, resolved by the browser, against the title's and the line under it.
+		const ratios = await header.evaluate( ( el ) => {
+			const probe = document.createElement( 'span' );
+			probe.style.background = 'var(--riff-album-wash)';
+			el.append( probe );
+			const rgb = ( css ) => {
+				const c = document.createElement( 'canvas' ).getContext( '2d' );
+				c.fillStyle = css;
+				c.fillRect( 0, 0, 1, 1 );
+				return [ ...c.getImageData( 0, 0, 1, 1 ).data ].slice( 0, 3 );
+			};
+			const lum = ( [ r, g, b ] ) =>
+				[ r, g, b ]
+					.map( ( v ) => v / 255 )
+					.map( ( v ) => ( v <= 0.03928 ? v / 12.92 : ( ( v + 0.055 ) / 1.055 ) ** 2.4 ) )
+					.reduce( ( sum, v, i ) => sum + v * [ 0.2126, 0.7152, 0.0722 ][ i ], 0 );
+			const wash = lum( rgb( getComputedStyle( probe ).backgroundColor ) );
+			probe.remove();
+			const ratio = ( sel ) => {
+				const ink = lum( rgb( getComputedStyle( el.querySelector( sel ) ).color ) );
+				return ( Math.max( ink, wash ) + 0.05 ) / ( Math.min( ink, wash ) + 0.05 );
+			};
+			return { title: ratio( '.riff-album-title' ), meta: ratio( '.riff-album-meta' ) };
+		} );
+		expect( ratios.title ).toBeGreaterThanOrEqual( 4.5 );
+		expect( ratios.meta, 'the quieter line too' ).toBeGreaterThanOrEqual( 4.5 );
+	} );
+
 	test( 'a playlist post opened directly shows each track once, though core\'s styles come after Riff\'s', async ( {
 		page,
 		requestUtils,
