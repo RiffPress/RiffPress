@@ -121,6 +121,7 @@ function sitemap( entries ) {
 	xml += '  <url><loc>{{pages_url}}download/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n';
 	xml += '  <url><loc>{{pages_url}}developers/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n';
 	xml += '  <url><loc>{{pages_url}}add-music/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n';
+	xml += '  <url><loc>{{pages_url}}built/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
 	xml += '  <url><loc>{{pages_url}}web/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
 	for ( const e of entries ) {
 		xml += `  <url><loc>{{pages_url}}web/${ e.slug }/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>\n`;
