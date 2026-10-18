@@ -161,6 +161,17 @@ class Test_Riff_Catalog extends Riff_TestCase {
 		$this->assertSame( array( 'Compositions' ), $this->names( $track, Catalog::ALBUM ) );
 	}
 
+	public function test_a_visitor_cannot_list_album_or_artist_names_through_the_core_routes(): void {
+		$GLOBALS['wp_rest_server'] = null;
+		self::attach( '02 - Underground [underground].mp3' );
+		wp_set_current_user( 0 );
+
+		foreach ( array( '/wp/v2/riff_albums', '/wp/v2/riff_artists', '/wp/v2/riff_albums/1' ) as $route ) {
+			$response = rest_do_request( new WP_REST_Request( 'GET', $route ) );
+			$this->assertSame( 401, $response->get_status(), $route );
+		}
+	}
+
 	public function test_rest_lists_albums_and_names_them_on_the_attachment(): void {
 		$id = self::attach( '02 - Underground [underground].mp3' );
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );

@@ -83,6 +83,30 @@ final class Catalog {
 		add_filter( 'wp_update_attachment_metadata', array( self::class, 'on_metadata' ), 10, 2 );
 		add_action( self::BACKFILL, array( self::class, 'backfill' ) );
 		add_action( 'admin_init', array( self::class, 'schedule' ) );
+		add_filter( 'rest_pre_dispatch', array( self::class, 'guard_rest' ), 10, 3 );
+	}
+
+	/**
+	 * Keeps WordPress's own term routes for the two taxonomies to people who can upload files.
+	 *
+	 * Core lists every term of a taxonomy in REST to anyone, and an album or artist name can be
+	 * private: a file on a draft still has its tags. The Media Library and the block editor reach
+	 * the terms through these routes as someone who can upload; everyone else reads albums and
+	 * artists through riff/v1, which shows only what is published.
+	 *
+	 * @since 4.17.0
+	 *
+	 * @param mixed            $result  A response already decided, or null.
+	 * @param \WP_REST_Server  $server  Server.
+	 * @param \WP_REST_Request $request Request.
+	 * @return mixed
+	 */
+	public static function guard_rest( $result, $server, $request ) {
+		unset( $server );
+		if ( null === $result && preg_match( '#^/wp/v2/riff_(albums|artists)(/|$)#', (string) $request->get_route() ) && ! current_user_can( 'upload_files' ) ) {
+			return new \WP_Error( 'rest_forbidden', __( 'Albums and artists are listed through riff/v1.', 'riff' ), array( 'status' => rest_authorization_required_code() ) );
+		}
+		return $result;
 	}
 
 	/**
