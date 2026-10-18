@@ -1,0 +1,15 @@
+{
+	"tracks": 5000,
+	"note": "Queries are the gate: they do not change from run to run. Time is a ceiling for a shared CI runner, well above what a site sees.",
+	"cases": {
+		"tracks": { "queries": 12, "ms": 300 },
+		"tracks page 50": { "queries": 12, "ms": 300 },
+		"tracks search": { "queries": 12, "ms": 300 },
+		"tracks by artist": { "queries": 12, "ms": 300 },
+		"tracks album": { "queries": 12, "ms": 300 },
+		"albums": { "queries": 16, "ms": 300 },
+		"albums search": { "queries": 16, "ms": 300 },
+		"artists": { "queries": 8, "ms": 300 },
+		"library": { "queries": 6, "ms": 300 }
+	}
+}
