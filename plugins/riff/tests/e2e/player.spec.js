@@ -336,6 +336,42 @@ test.describe( 'Player', () => {
 			.toMatch( /scaleY\(/ );
 	} );
 
+	test( 'each bar on the playing row swings through its own range, not a fixed staircase', async ( {
+		page,
+	}, testInfo ) => {
+		test.skip( testInfo.project.name === 'iphone', 'no analyser on iOS' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.reload();
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
+		// Three seconds of heights, read in the page every 100 ms, past the opening two seconds
+		// where every band is still learning its range.
+		const heights = await page.evaluate(
+			() =>
+				new Promise( ( resolve ) => {
+					const seen = [ [], [], [] ];
+					setTimeout( () => {
+						const every = setInterval( () => {
+							document
+								.querySelectorAll( '.riff-row[data-current] .riff-row-state i' )
+								.forEach( ( b, k ) =>
+									seen[ k ].push( parseFloat( b.style.transform.slice( 7 ) ) )
+								);
+							if ( seen[ 0 ].length === 30 ) {
+								clearInterval( every );
+								resolve( seen );
+							}
+						}, 100 );
+					}, 2000 );
+				} )
+		);
+		// One scale for all three bands pinned the bass bar near the top and kept the others in a
+		// narrow band below it.
+		for ( const bar of heights ) {
+			expect( Math.max( ...bar ) - Math.min( ...bar ) ).toBeGreaterThan( 0.3 );
+		}
+	} );
+
 	test( 'next, previous, repeat and shuffle', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-bar-info' ).click();

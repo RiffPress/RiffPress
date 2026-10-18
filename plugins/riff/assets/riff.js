@@ -736,14 +736,40 @@ function start() {
 		[ 4, 22 ],
 		[ 22, 110 ],
 	];
-	function bandLevels() {
+	// Each band is read against its own recent range, the way the wire reads against its own
+	// reference: bass carries the most energy in nearly any mix, so one scale for all three pins
+	// the bass bar and leaves the treble low, a staircase that barely moves. The range's top
+	// follows a hit at once and settles over three seconds, its floor the same way down, so each
+	// bar spends its whole height on the band's own swing. A bar then rises fast and falls slower,
+	// as a meter does, so a hit reads as a hit.
+	const bands = BANDS.map( () => ( { lo: -1, hi: 0, shown: 0 } ) );
+	const ease = ( from, to, dt, tau ) =>
+		from + ( to - from ) * ( 1 - Math.exp( -dt / tau ) );
+	function bandLevels( dt ) {
 		analyser.getByteFrequencyData( bins );
-		return BANDS.map( ( [ a, b ] ) => {
+		return BANDS.map( ( [ a, b ], k ) => {
 			let sum = 0;
 			for ( let n = a; n < b; n++ ) {
 				sum += bins[ n ];
 			}
-			return Math.min( 1, sum / ( b - a ) / 200 );
+			const v = sum / ( b - a ) / 255;
+			const band = bands[ k ];
+			if ( band.lo < 0 ) {
+				band.lo = band.hi = v;
+			}
+			band.hi = ease( band.hi, v, dt, v > band.hi ? 0.03 : 3 );
+			band.lo = ease( band.lo, v, dt, v < band.lo ? 0.03 : 3 );
+			const at = Math.min(
+				1,
+				Math.max( 0, ( v - band.lo ) / Math.max( 0.06, band.hi - band.lo ) )
+			);
+			band.shown = ease(
+				band.shown,
+				at,
+				dt,
+				at > band.shown ? 0.04 : 0.2
+			);
+			return band.shown;
 		} );
 	}
 
@@ -805,13 +831,13 @@ function start() {
 			( rms - ref ) * ( 1 - Math.exp( -dt / ( rms > ref ? 0.15 : 6 ) ) );
 		advance( rms / Math.max( 0.02, ref ), dt );
 		setHeat( heat );
-		const levels = bandLevels();
+		const levels = bandLevels( dt );
 		// Three bars per place the current track is shown: the row in the post and the item in Up
 		// next. Each place's bars take the three bands in turn.
 		bars.forEach( ( bar, k ) => {
 			bar.style.transform = `scaleY(${ (
-				0.3 +
-				0.7 * levels[ k % levels.length ]
+				0.15 +
+				0.85 * levels[ k % levels.length ]
 			).toFixed( 2 ) })`;
 		} );
 		meterRaf = requestAnimationFrame( tick );

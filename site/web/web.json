@@ -43,12 +43,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function buffered( m, duration ) {",
-				"line": 1000
+				"line": 1026
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ranges = m.buffered;",
-				"line": 1001
+				"line": 1027
 			}
 		],
 		"shot": {
@@ -69,7 +69,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );",
-				"line": 1740
+				"line": 1766
 			}
 		],
 		"shot": {
@@ -132,17 +132,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {",
-				"line": 1550
+				"line": 1576
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setActionHandler( action, handler );",
-				"line": 1611
+				"line": 1637
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setPositionState( {",
-				"line": 1576
+				"line": 1602
 			}
 		],
 		"shot": {
@@ -163,12 +163,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );",
-				"line": 1632
+				"line": 1658
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.remote.prompt().catch( () => {} );",
-				"line": 1639
+				"line": 1665
 			}
 		],
 		"shot": {
@@ -225,7 +225,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getByteFrequencyData( bins );",
-				"line": 740
+				"line": 749
 			}
 		],
 		"shot": {
@@ -298,7 +298,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "img.decoding = 'async';",
-				"line": 1656
+				"line": 1682
 			}
 		],
 		"shot": {
@@ -319,12 +319,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function drag( zone, { move, end } ) {",
-				"line": 1444
+				"line": 1470
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {",
-				"line": 1446
+				"line": 1472
 			}
 		],
 		"shot": {
@@ -345,7 +345,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "breath = wire.animate(",
-				"line": 860
+				"line": 886
 			}
 		],
 		"shot": {
@@ -371,7 +371,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "meterRaf = requestAnimationFrame( tick );",
-				"line": 792
+				"line": 818
 			}
 		],
 		"shot": {
@@ -392,7 +392,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.share( {",
-				"line": 1320
+				"line": 1346
 			}
 		],
 		"shot": {
@@ -413,7 +413,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.clipboard.writeText( url );",
-				"line": 1333
+				"line": 1359
 			}
 		],
 		"shot": {
@@ -434,12 +434,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = true;",
-				"line": 1219
+				"line": 1245
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = false;",
-				"line": 1262
+				"line": 1288
 			}
 		],
 		"shot": {
@@ -470,7 +470,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches",
-				"line": 1214
+				"line": 1240
 			}
 		],
 		"shot": {
@@ -491,7 +491,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "?.scrollIntoView( { block: 'nearest' } );",
-				"line": 1302
+				"line": 1328
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -543,7 +543,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )",
-				"line": 1801
+				"line": 1827
 			}
 		],
 		"shot": {
@@ -564,12 +564,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );",
-				"line": 1226
+				"line": 1252
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'popstate', () => {",
-				"line": 1285
+				"line": 1311
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -595,12 +595,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const saved = parse( read( sessionStorage, STATE ) );",
-				"line": 1762
+				"line": 1788
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "write( localStorage, VOLUME, String( audio.volume ) );",
-				"line": 1133
+				"line": 1159
 			}
 		],
 		"shot": {
@@ -647,7 +647,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;",
-				"line": 1777
+				"line": 1803
 			}
 		],
 		"shot": {
@@ -668,7 +668,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pagehide', save );",
-				"line": 1718
+				"line": 1744
 			}
 		],
 		"shot": {
@@ -689,7 +689,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {",
-				"line": 1720
+				"line": 1746
 			}
 		],
 		"shot": {
@@ -715,12 +715,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "opener = document.activeElement;",
-				"line": 1208
+				"line": 1234
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {",
-				"line": 1497
+				"line": 1523
 			}
 		],
 		"shot": {
@@ -745,7 +745,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 769,
+				"line": 795,
 				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
 			}
 		],
@@ -1088,7 +1088,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 1446,
+				"line": 1472,
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],
