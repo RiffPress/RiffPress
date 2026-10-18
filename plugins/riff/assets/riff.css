@@ -52,10 +52,12 @@ html.has-riff body::after {
 
 /* A playlist block (WordPress 7.1): its own player and its track buttons step
    aside for the rows, and its item hover gives way to the row's. */
+/* stylelint-disable selector-class-pattern -- core's own BEM class names. */
 .riff-tracks > .wp-block-playlist__waveform-player,
 .riff-track > .wp-block-playlist-track__button {
 	display: none;
 }
+/* stylelint-enable selector-class-pattern */
 
 .riff-tracks .wp-block-playlist-track.riff-track,
 .riff-tracks .wp-block-playlist-track.riff-track:hover {
