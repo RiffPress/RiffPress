@@ -121,6 +121,15 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-riff-app-action="shuffle"', $html );
 	}
 
+	public function test_an_album_leads_with_its_cover_and_numbers_its_tracks(): void {
+		$html = $this->render_at( array( Browse::ALBUM => $this->album( 'Compositions' ) ) );
+
+		$this->assertStringContainsString( '<header class="riff-album riff-album-has-cover"><span class="riff-album-cover"><img src="', $html );
+		$this->assertStringContainsString( '<p class="riff-album-kind">Album</p>', $html );
+		$this->assertStringContainsString( '<div class="riff-album-tracks" data-riff-numbered data-riff-tracks=', $html );
+		$this->assertStringNotContainsString( 'data-riff-numbered', $this->render_at( array( Browse::VIEW => 'tracks' ) ), 'a list of everything shows each track\'s art' );
+	}
+
 	public function test_a_private_album_cannot_be_opened_by_its_number(): void {
 		$html = $this->render_at( array( Browse::ALBUM => $this->album( 'Secret Sessions' ) ) );
 

@@ -366,16 +366,37 @@ final class App {
 		if ( ! $detail['tracks'] ) {
 			return self::library_view( $page );
 		}
-		return sprintf(
-			'<header class="riff-album"><div class="riff-album-text"><h2 class="riff-album-title">%s</h2><p class="riff-album-meta">%s</p></div>' .
-			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%s</button></p></header>' .
-			'<div class="riff-album-tracks" data-riff-tracks="%s">%s</div>',
-			esc_html( $detail['title'] ),
-			esc_html( self::meta( $detail ) ),
-			esc_html__( 'Play', 'riff' ),
-			esc_html__( 'Shuffle', 'riff' ),
+		$art = $detail['art'] ? end( $detail['art'] )['src'] : '';
+		return self::header( $detail['title'], self::meta( $detail ), '', (string) $art ) . sprintf(
+			'<div class="riff-album-tracks" data-riff-numbered data-riff-tracks="%s">%s</div>',
 			esc_attr( wp_json_encode( $detail['tracks'] ) ),
 			$detail['html']
+		);
+	}
+
+	/**
+	 * The header of a list of tracks: the cover, what it is, its title and details, and Play and
+	 * Shuffle under them, as the music apps draw an album. The same markup app.js writes.
+	 *
+	 * @since 4.17.0
+	 *
+	 * @param string $title Title.
+	 * @param string $meta  The line under it.
+	 * @param string $kind  What it is, above the title ("Album"), or empty.
+	 * @param string $art   The cover's address, or empty for none.
+	 * @return string
+	 */
+	public static function header( string $title, string $meta, string $kind = '', string $art = '' ): string {
+		return sprintf(
+			'<header class="riff-album%1$s">%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>' .
+			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%6$s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%7$s</button></p></div></header>',
+			'' !== $art ? ' riff-album-has-cover' : '',
+			'' !== $art ? '<span class="riff-album-cover"><img src="' . esc_url( $art ) . '" alt="" decoding="async"></span>' : '',
+			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
+			esc_html( $title ),
+			esc_html( $meta ),
+			esc_html__( 'Play', 'riff' ),
+			esc_html__( 'Shuffle', 'riff' )
 		);
 	}
 

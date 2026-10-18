@@ -346,7 +346,7 @@ final class Browse {
 		}
 		$artist = (string) get_term_meta( $id, 'riff_album_artist', true );
 		$meta   = implode( ' · ', array_filter( array( $artist, self::count( (int) $data['total'] ) ) ) );
-		return self::list_view( $term->name, $meta, $data );
+		return self::list_view( $term->name, $meta, $data, __( 'Album', 'riff' ), true );
 	}
 
 	/**
@@ -369,7 +369,7 @@ final class Browse {
 		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
 			return self::artists_view( $page, 1 );
 		}
-		return self::list_view( $term->name, self::count( (int) $data['total'] ), $data ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
+		return self::list_view( $term->name, self::count( (int) $data['total'] ), $data, __( 'Artist', 'riff' ) ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
 	}
 
 	/**
@@ -407,20 +407,16 @@ final class Browse {
 	 * @param string $meta  The line under it.
 	 * @param array  $data  A /tracks response.
 	 * @return string
+	 * @param string $kind  What it is, above the title, or empty.
+	 * @param bool   $album Whether it is an album: its cover leads, and its tracks are numbered.
 	 */
-	private static function list_view( string $title, string $meta, array $data ): string {
+	private static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false ): string {
 		if ( ! $data['items'] ) {
 			return self::title( $title ) . self::empty_note();
 		}
-		return sprintf(
-			'<header class="riff-album"><div class="riff-album-text"><h2 class="riff-album-title" tabindex="-1">%s</h2><p class="riff-album-meta">%s</p></div>' .
-			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%s</button></p></header>%s',
-			esc_html( $title ),
-			esc_html( $meta ),
-			esc_html__( 'Play', 'riff' ),
-			esc_html__( 'Shuffle', 'riff' ),
-			self::rows( $data['items'] )
-		);
+		// An album leads with its cover and numbers its tracks; other lists show each track's art.
+		$art = $album && ! empty( $data['items'][0]['art'] ) ? (string) end( $data['items'][0]['art'] )['src'] : '';
+		return App::header( $title, $meta, $kind, $art ) . self::rows( $data['items'], $album );
 	}
 
 	/**
@@ -429,8 +425,9 @@ final class Browse {
 	 *
 	 * @param array $tracks Tracks from the route.
 	 * @return string
+	 * @param bool  $numbered Whether to number the tracks, as an album does.
 	 */
-	private static function rows( array $tracks ): string {
+	private static function rows( array $tracks, bool $numbered = false ): string {
 		// Each row is rendered as part of the post its track belongs to, so it takes that post's
 		// artwork and names it as where it plays from, as it would in the post itself.
 		global $post;
@@ -449,7 +446,8 @@ final class Browse {
 		}
 		$post = $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- the Listen page again.
 		return sprintf(
-			'<div class="riff-album-tracks" data-riff-tracks="%s">%s</div>',
+			'<div class="riff-album-tracks"%s data-riff-tracks="%s">%s</div>',
+			$numbered ? ' data-riff-numbered' : '',
 			esc_attr( (string) wp_json_encode( $tracks ) ),
 			$rows
 		);
