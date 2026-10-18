@@ -107,6 +107,28 @@ test.describe( 'App', () => {
 		await expect( page ).toHaveURL( pageUrl );
 	} );
 
+	test( 'a cover pressed before the app has loaded still plays once it has', async ( {
+		page,
+	} ) => {
+		// The app's script held back, as a slow site serves it.
+		let release;
+		const held = new Promise( ( resolve ) => ( release = resolve ) );
+		await page.route( /features\/listen\/app\.js/, async ( route ) => {
+			await held;
+			await route.continue();
+		} );
+		await page.goto( pageUrl );
+		await page
+			.locator( `.riff-card[data-riff-post="${ postId }"] .riff-card-play` )
+			.click();
+		expect( ( await playing( page ) ).paused, 'nothing yet' ).toBe( true );
+		release();
+		await expect
+			.poll( async () => ( await playing( page ) ).paused, { timeout: 15000 } )
+			.toBe( false );
+		await expect( page ).toHaveURL( pageUrl );
+	} );
+
 	test( 'the page lists the library and opens a post without leaving', async ( {
 		page,
 	} ) => {
