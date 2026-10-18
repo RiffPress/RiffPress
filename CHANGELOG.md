@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.19.0](https://github.com/RiffPress/RiffPress/compare/v4.18.0...v4.19.0) (2026-10-18)
+
+
+### Features
+
+* a menu on every track to play it next or add it to the queue, and an Up next you can reorder and clear ([#424](https://github.com/RiffPress/RiffPress/issues/424)) ([b923f41](https://github.com/RiffPress/RiffPress/commit/b923f41e31bea06ffc742bd59a9c18950cd6b344))
+* an artist page with their picture, their latest tracks and their albums ([#419](https://github.com/RiffPress/RiffPress/issues/419)) ([e4718b9](https://github.com/RiffPress/RiffPress/commit/e4718b9c6f962ec641ba60f568feeb91ef00ceb1))
+* search answers as you type, with a top result and recent searches ([#423](https://github.com/RiffPress/RiffPress/issues/423)) ([349f9ce](https://github.com/RiffPress/RiffPress/commit/349f9cee7191e7901c33b0a465e9412ffdf8997e))
+
 ## [4.18.0](https://github.com/RiffPress/RiffPress/compare/v4.17.0...v4.18.0) (2026-10-18)
 
 
