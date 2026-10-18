@@ -38,7 +38,6 @@ function testId( name ) {
  * @return {string} One line.
  */
 function firstLine( message ) {
-	// eslint-disable-next-line no-control-regex
 	return String( message || '' ).replace( /\u001b\[[0-9;]*m/g, '' ).split( '\n' ).find( ( l ) => l.trim() ) || '';
 }
 
@@ -132,9 +131,9 @@ function readResults( dir ) {
 /**
  * What to do with the issue tracker, from both suites' results and the open issues.
  *
- * @param {{tests: Map, core: string}}                                   trunk   Trunk's results.
- * @param {{tests: Map, core: string}}                                   release The release's results.
- * @param {Array<{number: number, body: string}>}                        open    Open core-regression issues.
+ * @param {{tests: Map, core: string}}            trunk   Trunk's results.
+ * @param {{tests: Map, core: string}}            release The release's results.
+ * @param {Array<{number: number, body: string}>} open    Open core-regression issues.
  * @return {{create: Array, comment: Array, close: Array}} The actions, each with what it needs.
  */
 function plan( trunk, release, open ) {
@@ -165,9 +164,9 @@ function plan( trunk, release, open ) {
 /**
  * The issue body for a new regression.
  *
- * @param {string} id     Test id.
- * @param {Object} t      The test.
- * @param {Object} ctx    { trunkCore, releaseCore, runUrl }.
+ * @param {string} id  Test id.
+ * @param {Object} t   The test.
+ * @param {Object} ctx { trunkCore, releaseCore, runUrl }.
  * @return {string} Markdown.
  */
 function issueBody( id, t, ctx ) {
