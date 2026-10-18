@@ -224,13 +224,42 @@ function start() {
 		!! t && ( t.type === 'video' || ( mode === 'video' && !! t.video ) );
 	// Once the analyser is wired to <audio>, a file from another origin would play silent through it,
 	// so such a file plays through <video> instead, hidden. The picture still shows the cover.
-	const foreign = ( t ) => {
+	const originOf = ( src ) => {
 		try {
-			return new URL( t.src, location.href ).origin !== location.origin;
+			return new URL( src, location.href ).origin;
 		} catch {
-			return true;
+			return null;
 		}
 	};
+	// A file from another origin can be analysed only when that origin answers CORS and the file is
+	// loaded with crossorigin="anonymous"; without both, Web Audio hears silence. Each origin is
+	// asked once, with a HEAD request, when its tracks first appear; until it answers yes its files
+	// play as they always have, unanalysed.
+	const cors = new Map();
+	function askCors( src ) {
+		const origin = originOf( src );
+		if ( ! origin || origin === location.origin || cors.has( origin ) ) {
+			return;
+		}
+		cors.set( origin, false );
+		fetch( src, { method: 'HEAD', mode: 'cors', credentials: 'omit' } )
+			.then( ( r ) => r.ok && cors.set( origin, true ) )
+			.catch( () => {} );
+	}
+	const shared = ( src ) => {
+		const origin = originOf( src );
+		return origin !== location.origin && cors.get( origin ) === true;
+	};
+	const foreign = ( t ) =>
+		originOf( t.src ) !== location.origin && ! shared( t.src );
+	// Points a media element at a file, loaded for CORS when its origin shares.
+	function point( m, src ) {
+		const cross = shared( src ) ? 'anonymous' : null;
+		if ( m.getAttribute( 'src' ) !== src || m.crossOrigin !== cross ) {
+			m.crossOrigin = cross;
+			m.src = src;
+		}
+	}
 	const el = ( t = track() ) =>
 		isVideo( t ) || ( analyser && t && foreign( t ) ) ? video : audio;
 	const srcFor = ( t, m ) =>
@@ -251,6 +280,7 @@ function start() {
 				if ( ! t || ! t.src ) {
 					return;
 				}
+				askCors( t.src );
 				let row = built.get( fig );
 				if ( ! row ) {
 					row = buildRow( fig, t );
@@ -376,10 +406,7 @@ function start() {
 		const m = el( t );
 		const other = m === audio ? video : audio;
 		other.pause();
-		const src = srcFor( t, m );
-		if ( m.getAttribute( 'src' ) !== src ) {
-			m.src = src;
-		}
+		point( m, srcFor( t, m ) );
 		if ( at || m.currentTime ) {
 			m.currentTime = at;
 		}
@@ -481,10 +508,7 @@ function start() {
 		mode = to;
 		from.pause();
 		const m = el();
-		const src = srcFor( t, m );
-		if ( m.getAttribute( 'src' ) !== src ) {
-			m.src = src;
-		}
+		point( m, srcFor( t, m ) );
 		m.currentTime = at;
 		if ( playing ) {
 			m.play().catch( paint );
@@ -650,7 +674,7 @@ function start() {
 		preloader = document.createElement( 'audio' );
 		preloader.preload = 'auto';
 		preloader.dataset.id = t.id;
-		preloader.src = t.src;
+		point( preloader, t.src );
 	}
 
 	// ---- The filament. The played part of the bar's seek line is a wire with current in it. The
@@ -736,14 +760,41 @@ function start() {
 		[ 4, 22 ],
 		[ 22, 110 ],
 	];
-	function bandLevels() {
+	// Each band is read against its own recent range, the way the wire reads against its own
+	// reference: bass carries the most energy in nearly any mix, so one scale for all three pins
+	// the bass bar and leaves the treble low, a staircase that barely moves. The range's top
+	// follows a hit at once and settles over three seconds; its floor drops at once and climbs over
+	// one, so a quiet intro doesn't hold every bar at the top for long. Each bar spends its whole
+	// height on the band's own swing. A bar then rises fast and falls slower,
+	// as a meter does, so a hit reads as a hit.
+	const bands = BANDS.map( () => ( { lo: -1, hi: 0, shown: 0 } ) );
+	const ease = ( from, to, dt, tau ) =>
+		from + ( to - from ) * ( 1 - Math.exp( -dt / tau ) );
+	function bandLevels( dt ) {
 		analyser.getByteFrequencyData( bins );
-		return BANDS.map( ( [ a, b ] ) => {
+		return BANDS.map( ( [ a, b ], k ) => {
 			let sum = 0;
 			for ( let n = a; n < b; n++ ) {
 				sum += bins[ n ];
 			}
-			return Math.min( 1, sum / ( b - a ) / 200 );
+			const v = sum / ( b - a ) / 255;
+			const band = bands[ k ];
+			if ( band.lo < 0 ) {
+				band.lo = band.hi = v;
+			}
+			band.hi = ease( band.hi, v, dt, v > band.hi ? 0.03 : 3 );
+			band.lo = ease( band.lo, v, dt, v < band.lo ? 0.03 : 1 );
+			const at = Math.min(
+				1,
+				Math.max( 0, ( v - band.lo ) / Math.max( 0.06, band.hi - band.lo ) )
+			);
+			band.shown = ease(
+				band.shown,
+				at,
+				dt,
+				at > band.shown ? 0.04 : 0.2
+			);
+			return band.shown;
 		} );
 	}
 
@@ -805,13 +856,13 @@ function start() {
 			( rms - ref ) * ( 1 - Math.exp( -dt / ( rms > ref ? 0.15 : 6 ) ) );
 		advance( rms / Math.max( 0.02, ref ), dt );
 		setHeat( heat );
-		const levels = bandLevels();
+		const levels = bandLevels( dt );
 		// Three bars per place the current track is shown: the row in the post and the item in Up
 		// next. Each place's bars take the three bands in turn.
 		bars.forEach( ( bar, k ) => {
 			bar.style.transform = `scaleY(${ (
-				0.3 +
-				0.7 * levels[ k % levels.length ]
+				0.15 +
+				0.85 * levels[ k % levels.length ]
 			).toFixed( 2 ) })`;
 		} );
 		meterRaf = requestAnimationFrame( tick );
