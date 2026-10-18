@@ -12,6 +12,10 @@ The plugin is `plugins/riff/`. It ships one stylesheet and one script with no bu
 
 To play your own music, point the seed script at any folder of audio: `npm run seed -- wp-content/riff/path/inside/the/repo`. The repository root is mounted in the containers at `wp-content/riff`.
 
+## The reference extension
+
+`plugins/riff-lyrics/` is Riff Lyrics, a real plugin built only on Riff's documented public API: the hooks in `docs/hooks.md`, `window.riff` in `docs/javascript.md`, and REST. `.github/scripts/extension-surface.test.js` fails if it hooks anything undocumented or reaches into Riff's classes. When a feature needs something Riff doesn't offer, add it to Riff as a documented extension point, not as a shortcut in the plugin. wp-env loads both plugins, and PHPUnit, Plugin Check and e2e cover both.
+
 ## Running checks
 
 ```bash

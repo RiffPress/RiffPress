@@ -11,6 +11,7 @@ This repository is the Riff monorepo. <a href="https://riffpress.com/">Landing p
 | Path | What it is |
 | --- | --- |
 | `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js` and `assets/riff.css` are what ships. |
+| `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing, built only on Riff's documented API. |
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
 | `apps/ios/` | Reserved for the native app. |
 | `site/` | The landing page, published with GitHub Pages, with a live demo in WordPress Playground. |

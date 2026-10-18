@@ -17,6 +17,7 @@
 	<testsuites>
 		<testsuite name="riff">
 			<directory suffix=".php">./plugins/riff/tests/php</directory>
+			<directory suffix=".php">./plugins/riff-lyrics/tests/php</directory>
 			<exclude>./plugins/riff/tests/php/bootstrap.php</exclude>
 		</testsuite>
 	</testsuites>
