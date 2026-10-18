@@ -29,6 +29,31 @@ final class Cli {
 	}
 
 	/**
+	 * Files every audio file in the Media Library under its album and artist, from its tags.
+	 *
+	 * New uploads and imports are filed as they arrive, and a library from before Riff 4.17.0 is
+	 * filed in the background; this does the whole library now.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp riff catalog
+	 *
+	 * @since 4.17.0
+	 *
+	 * @param string[]             $args       Positional arguments.
+	 * @param array<string, mixed> $assoc_args Named arguments.
+	 */
+	public function catalog( array $args, array $assoc_args ): void {
+		unset( $args, $assoc_args );
+		$total = 0;
+		do {
+			$filed  = Catalog::backfill();
+			$total += $filed;
+		} while ( Catalog::BATCH === $filed );
+		WP_CLI::success( sprintf( 'Filed %d audio files under their albums and artists.', $total ) );
+	}
+
+	/**
 	 * Imports a folder of music into the Media Library.
 	 *
 	 * Each folder that holds audio, the one given and any inside it, becomes an album: its files are
