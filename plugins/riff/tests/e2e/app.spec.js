@@ -365,7 +365,7 @@ test.describe( 'Browse', () => {
 		const field = page.locator( '.riff-app-search input' );
 		await expect( field ).toHaveAttribute( 'role', 'combobox' );
 		await field.click();
-		await field.pressSequentially( 'Composit' );
+		await field.pressSequentially( 'Compo' );
 		const list = page.locator( '.riff-suggest' );
 		await expect( list ).toBeVisible();
 		await expect( field ).toHaveAttribute( 'aria-expanded', 'true' );
@@ -393,7 +393,7 @@ test.describe( 'Browse', () => {
 		await page.locator( '.riff-app-search input' ).fill( '' );
 		await page.locator( '.riff-app-search input' ).focus();
 		await expect( page.locator( '.riff-suggest-recent' ).first() ).toHaveText( 'Under' );
-		await expect( page.locator( '.riff-suggest-recent' ).nth( 1 ) ).toHaveText( 'Composit' );
+		await expect( page.locator( '.riff-suggest-recent' ).nth( 1 ) ).toHaveText( 'Compo' );
 	} );
 
 	test( 'every view passes an accessibility check', async ( { page } ) => {
