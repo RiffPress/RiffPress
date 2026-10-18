@@ -1,0 +1,381 @@
+<?php
+/**
+ * The catalogue over REST: tracks, albums and artists from the Media Library, each searchable.
+ *
+ * @since 4.17.0
+ * @package Riff
+ */
+
+namespace Riff;
+
+use WP_REST_Request;
+use WP_REST_Response;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * GET /riff/v1/tracks, /albums and /artists.
+ *
+ * A visitor sees a track when the post it belongs to is published without a password, the rule
+ * the library route already follows; someone who can upload files sees the whole Media Library.
+ * Albums and artists are listed, and counted, by the tracks the requester can see, so nothing
+ * private shows through a name or a count.
+ */
+final class Catalog_Rest {
+
+	/**
+	 * Tracks per page unless asked for fewer or more.
+	 *
+	 * @since 4.17.0
+	 */
+	public const PER_PAGE = 50;
+
+	/**
+	 * Albums or artists per page.
+	 *
+	 * @since 4.17.0
+	 */
+	public const TERMS_PER_PAGE = 48;
+
+	/**
+	 * Hooks the routes.
+	 *
+	 * @since 4.17.0
+	 */
+	public static function register(): void {
+		add_action( 'rest_api_init', array( self::class, 'routes' ) );
+	}
+
+	/**
+	 * Registers the three routes.
+	 *
+	 * @since 4.17.0
+	 */
+	public static function routes(): void {
+		$search = array(
+			'description' => __( 'Words to look for: a track matches on its title, artist or album; an album or artist on its name.', 'riff' ),
+			'type'        => 'string',
+			'default'     => '',
+		);
+		$page   = array(
+			'description' => __( 'Page of results.', 'riff' ),
+			'type'        => 'integer',
+			'default'     => 1,
+			'minimum'     => 1,
+		);
+		register_rest_route(
+			Library::REST,
+			'/tracks',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( self::class, 'rest_tracks' ),
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						'search'   => $search,
+						'album'    => array(
+							'description' => __( 'Only the tracks on this album, by term ID, in album order.', 'riff' ),
+							'type'        => 'integer',
+							'default'     => 0,
+							'minimum'     => 0,
+						),
+						'artist'   => array(
+							'description' => __( 'Only the tracks by this artist, by term ID.', 'riff' ),
+							'type'        => 'integer',
+							'default'     => 0,
+							'minimum'     => 0,
+						),
+						'page'     => $page,
+						'per_page' => array(
+							'description' => __( 'Tracks per page.', 'riff' ),
+							'type'        => 'integer',
+							'default'     => self::PER_PAGE,
+							'minimum'     => 1,
+							'maximum'     => 100,
+						),
+					),
+				),
+				'schema' => array( self::class, 'tracks_schema' ),
+			)
+		);
+		foreach ( array(
+			'albums'  => Catalog::ALBUM,
+			'artists' => Catalog::ARTIST,
+		) as $route => $taxonomy ) {
+			register_rest_route(
+				Library::REST,
+				'/' . $route,
+				array(
+					array(
+						'methods'             => 'GET',
+						'callback'            => static fn( WP_REST_Request $request ) => self::rest_terms( $request, $taxonomy ),
+						'permission_callback' => '__return_true',
+						'args'                => array(
+							'search' => $search,
+							'page'   => $page,
+						),
+					),
+					'schema' => static fn() => self::terms_schema( $taxonomy ),
+				)
+			);
+		}
+	}
+
+	/**
+	 * GET /tracks.
+	 *
+	 * @since 4.17.0
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response
+	 */
+	public static function rest_tracks( WP_REST_Request $request ): WP_REST_Response {
+		$page     = max( 1, (int) $request['page'] );
+		$per_page = min( 100, max( 1, (int) $request['per_page'] ) );
+		$album    = (int) $request['album'];
+		$artist   = (int) $request['artist'];
+		$search   = trim( (string) $request['search'] );
+
+		$args = array(
+			'post_type'        => 'attachment',
+			'post_mime_type'   => 'audio',
+			'post_status'      => 'inherit',
+			'posts_per_page'   => $per_page,
+			'paged'            => $page,
+			'orderby'          => array(
+				'title' => 'ASC',
+				'ID'    => 'ASC',
+			),
+			'suppress_filters' => false,
+			'riff_catalog'     => true,
+		);
+		$tax  = array();
+		if ( $album ) {
+			$tax[] = array(
+				'taxonomy' => Catalog::ALBUM,
+				'terms'    => $album,
+			);
+		}
+		if ( $artist ) {
+			$tax[] = array(
+				'taxonomy' => Catalog::ARTIST,
+				'terms'    => $artist,
+			);
+		}
+		if ( $tax ) {
+			$args['tax_query'] = $tax; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- the point of the route.
+		}
+
+		$where = self::visible_where();
+		$match = '' !== $search ? self::search_where( $search ) : '';
+		$scope = static function ( string $sql, \WP_Query $query ) use ( $where, $match ): string {
+			return $query->get( 'riff_catalog' ) ? $sql . $where . $match : $sql;
+		};
+		add_filter( 'posts_where', $scope, 10, 2 );
+		$query = new \WP_Query( $args );
+		remove_filter( 'posts_where', $scope, 10 );
+
+		$ids = wp_list_pluck( $query->posts, 'ID' );
+		if ( $album ) {
+			$ids = self::in_album_order( $ids );
+		}
+		$items = array();
+		foreach ( $ids as $id ) {
+			$track = Tracks::from_attachment( (int) $id, (int) get_post_field( 'post_parent', $id ) );
+			if ( $track ) {
+				$items[] = $track;
+			}
+		}
+		return new WP_REST_Response(
+			array(
+				'items' => $items,
+				'page'  => $page,
+				'pages' => (int) $query->max_num_pages,
+				'total' => (int) $query->found_posts,
+			)
+		);
+	}
+
+	/**
+	 * GET /albums and /artists: the terms with at least one track the requester can see, by name,
+	 * each counted by those tracks.
+	 *
+	 * @since 4.17.0
+	 *
+	 * @param WP_REST_Request $request  Request.
+	 * @param string          $taxonomy Catalog::ALBUM or Catalog::ARTIST.
+	 * @return WP_REST_Response
+	 */
+	public static function rest_terms( WP_REST_Request $request, string $taxonomy ): WP_REST_Response {
+		global $wpdb;
+		$page   = max( 1, (int) $request['page'] );
+		$search = trim( (string) $request['search'] );
+
+		$like  = '' !== $search ? $wpdb->prepare( ' AND t.name LIKE %s', '%' . $wpdb->esc_like( $search ) . '%' ) : '';
+		$where = self::visible_where();
+		$from  = $wpdb->prepare(
+			"FROM {$wpdb->terms} t
+			INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id = t.term_id AND tt.taxonomy = %s
+			INNER JOIN {$wpdb->term_relationships} tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
+			INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = tr.object_id
+			WHERE {$wpdb->posts}.post_type = 'attachment' AND {$wpdb->posts}.post_status = 'inherit' AND {$wpdb->posts}.post_mime_type LIKE %s",
+			$taxonomy,
+			'audio/%'
+		);
+		// Each part is prepared on its own above; counting by visible track has no API.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+		$rows  = $wpdb->get_results( "SELECT t.term_id, t.name, COUNT(DISTINCT {$wpdb->posts}.ID) AS tracks, MIN({$wpdb->posts}.ID) AS first {$from}{$where}{$like} GROUP BY t.term_id, t.name ORDER BY t.name ASC, t.term_id ASC" );
+		$total = count( $rows );
+		$rows  = array_slice( (array) $rows, ( $page - 1 ) * self::TERMS_PER_PAGE, self::TERMS_PER_PAGE );
+		$items = array();
+		foreach ( $rows as $row ) {
+			$item = array(
+				'id'    => (int) $row->term_id,
+				'name'  => (string) $row->name,
+				'count' => (int) $row->tracks,
+			);
+			if ( Catalog::ALBUM === $taxonomy ) {
+				$item['artist'] = (string) get_term_meta( (int) $row->term_id, Catalog::ALBUM_ARTIST, true );
+				$item['art']    = Tracks::art( (int) get_post_thumbnail_id( (int) $row->first ) );
+			}
+			$items[] = $item;
+		}
+		return new WP_REST_Response(
+			array(
+				'items' => $items,
+				'page'  => $page,
+				'pages' => (int) ceil( $total / self::TERMS_PER_PAGE ),
+				'total' => $total,
+			)
+		);
+	}
+
+	/**
+	 * SQL limiting attachments to those the requester may see, appended to a WHERE clause that
+	 * names the posts table plainly.
+	 *
+	 * @return string
+	 */
+	private static function visible_where(): string {
+		global $wpdb;
+		if ( current_user_can( 'upload_files' ) ) {
+			return '';
+		}
+		return " AND {$wpdb->posts}.post_parent IN ( SELECT pp.ID FROM {$wpdb->posts} pp WHERE pp.post_status = 'publish' AND pp.post_password = '' )";
+	}
+
+	/**
+	 * SQL matching a track's title, artist or album against the search words.
+	 *
+	 * @param string $search Words.
+	 * @return string
+	 */
+	private static function search_where( string $search ): string {
+		global $wpdb;
+		$like = '%' . $wpdb->esc_like( $search ) . '%';
+		return $wpdb->prepare(
+			" AND ( {$wpdb->posts}.post_title LIKE %s OR {$wpdb->posts}.ID IN (
+				SELECT sr.object_id FROM {$wpdb->term_relationships} sr
+				INNER JOIN {$wpdb->term_taxonomy} stt ON stt.term_taxonomy_id = sr.term_taxonomy_id AND stt.taxonomy IN ( %s, %s )
+				INNER JOIN {$wpdb->terms} st ON st.term_id = stt.term_id
+				WHERE st.name LIKE %s ) )",
+			$like,
+			Catalog::ALBUM,
+			Catalog::ARTIST,
+			$like
+		);
+	}
+
+	/**
+	 * Tracks in album order: by track number when the tags have one, then by title as queried.
+	 *
+	 * @param int[] $ids Attachment IDs.
+	 * @return int[]
+	 */
+	private static function in_album_order( array $ids ): array {
+		$order = array_flip( $ids );
+		$num   = static function ( int $id ): int {
+			$meta = wp_get_attachment_metadata( $id );
+			return is_array( $meta ) && isset( $meta['track_number'] ) ? (int) $meta['track_number'] : PHP_INT_MAX;
+		};
+		usort( $ids, static fn( $a, $b ) => array( $num( (int) $a ), $order[ $a ] ) <=> array( $num( (int) $b ), $order[ $b ] ) );
+		return $ids;
+	}
+
+	/**
+	 * The shape of GET /tracks.
+	 *
+	 * @since 4.17.0
+	 * @return array JSON Schema.
+	 */
+	public static function tracks_schema(): array {
+		return array(
+			'$schema'     => 'http://json-schema.org/draft-04/schema#',
+			'title'       => 'riff-tracks',
+			'description' => __( 'Tracks from the Media Library, by title, or one album in its order, or one artist; searchable by title, artist and album. A visitor sees the tracks on published posts; someone who can upload files sees them all.', 'riff' ),
+			'type'        => 'object',
+			'properties'  => array(
+				'items' => array(
+					'description' => __( 'Tracks, in the shape of the track schema.', 'riff' ),
+					'type'        => 'array',
+					'items'       => Tracks::schema(),
+				),
+				'page'  => array( 'type' => 'integer' ),
+				'pages' => array( 'type' => 'integer' ),
+				'total' => array( 'type' => 'integer' ),
+			),
+		);
+	}
+
+	/**
+	 * The shape of GET /albums or /artists.
+	 *
+	 * @since 4.17.0
+	 *
+	 * @param string $taxonomy Catalog::ALBUM or Catalog::ARTIST.
+	 * @return array JSON Schema.
+	 */
+	public static function terms_schema( string $taxonomy ): array {
+		$item = array(
+			'id'    => array(
+				'description' => __( 'Term ID.', 'riff' ),
+				'type'        => 'integer',
+			),
+			'name'  => array( 'type' => 'string' ),
+			'count' => array(
+				'description' => __( 'Tracks the requester can see.', 'riff' ),
+				'type'        => 'integer',
+			),
+		);
+		if ( Catalog::ALBUM === $taxonomy ) {
+			$item['artist'] = array(
+				'description' => __( 'The album\'s artist, or empty.', 'riff' ),
+				'type'        => 'string',
+			);
+			$item['art']    = array(
+				'description' => __( 'Artwork from the album\'s first track, as { src, sizes }.', 'riff' ),
+				'type'        => 'array',
+			);
+		}
+		return array(
+			'$schema'     => 'http://json-schema.org/draft-04/schema#',
+			'title'       => Catalog::ALBUM === $taxonomy ? 'riff-albums' : 'riff-artists',
+			'description' => Catalog::ALBUM === $taxonomy
+				? __( 'Albums with at least one track the requester can see, by name, each with its artist, artwork and track count.', 'riff' )
+				: __( 'Artists with at least one track the requester can see, by name, each with a track count.', 'riff' ),
+			'type'        => 'object',
+			'properties'  => array(
+				'items' => array(
+					'type'  => 'array',
+					'items' => array(
+						'type'       => 'object',
+						'properties' => $item,
+					),
+				),
+				'page'  => array( 'type' => 'integer' ),
+				'pages' => array( 'type' => 'integer' ),
+				'total' => array( 'type' => 'integer' ),
+			),
+		);
+	}
+}
