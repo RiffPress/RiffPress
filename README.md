@@ -2,7 +2,8 @@
 
 <h1 align="center">Riff</h1>
 
-A music player for WordPress that works like a streaming app. Install it and the audio, video and
+Publish your music from the WordPress Media Library, and your listeners get a player that works like
+a streaming app. Install it and the audio, video and
 playlist blocks in your posts play in a player docked at the bottom of the screen, with a full Now Playing
 view, a queue, and a Song/Video switch for tracks that have both.
 

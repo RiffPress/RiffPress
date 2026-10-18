@@ -8,7 +8,7 @@ Stable tag: 4.16.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Own every note. A music player for the audio and video in your Media Library that keeps playing while you read, with a full Now Playing screen.
+Own every note. Publish music from your Media Library, and your listeners get a streaming player that keeps playing while they read.
 
 == Description ==
 
