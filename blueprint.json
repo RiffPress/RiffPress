@@ -4,7 +4,7 @@
     "php": "8.3",
     "wp": "latest"
   },
-  "landingPage": "/listen/?riff=compositions",
+  "landingPage": "/listen/app/",
   "login": true,
   "steps": [
     {
