@@ -354,6 +354,52 @@ class Test_Riff_App extends Riff_TestCase {
 		);
 	}
 
+	public function test_one_blocks_own_colours_and_font_reach_every_view_inside_it(): void {
+		$block = do_blocks( '<!-- wp:riff/app {"backgroundColor":"contrast","textColor":"base","fontFamily":"manrope","style":{"elements":{"link":{"color":{"text":"var:preset|color|accent-1"}}}}} /-->' );
+
+		$this->assertStringContainsString( '--riff-app-bg:var(--wp--preset--color--contrast)', $block, 'a preset by its slug' );
+		$this->assertStringContainsString( '--riff-app-ink:var(--wp--preset--color--base)', $block );
+		$this->assertStringContainsString( '--riff-app-accent:var(--wp--preset--color--accent-1)', $block, 'a link colour stored as var:preset' );
+		$this->assertStringContainsString( '--riff-app-font:var(--wp--preset--font-family--manrope)', $block );
+		$this->assertStringContainsString( '--riff-app-heading-font:var(--riff-app-font)', $block, 'the block\'s font is its headings\' too' );
+		$this->assertMatchesRegularExpression( '#class="[^"]*riff-app riff-app-themed#', $block, 'the shades are mixed from the block\'s colours, on a classic theme too' );
+		$this->assertStringNotContainsString( 'has-background', $block, 'core does not paint the wrapper separately' );
+		$this->assertStringNotContainsString( 'has-manrope-font-family', $block );
+	}
+
+	public function test_a_custom_colour_on_one_block_comes_before_the_themes(): void {
+		$this->with_theme_styles(
+			array(
+				'color'  => array(
+					'background' => '#ffffff',
+					'text'       => '#111111',
+				),
+				'blocks' => array(
+					'riff/app' => array( 'color' => array( 'text' => '#222222' ) ),
+				),
+			),
+			function (): void {
+				$this->assertSame( '#222222', App::theme_tokens()['--riff-app-ink'], 'Styles > Blocks > Riff before the site\'s own' );
+				$this->assertSame( '#ffffff', App::theme_tokens()['--riff-app-bg'], 'and the site\'s where the block sets nothing' );
+
+				$block = do_blocks( '<!-- wp:riff/app {"style":{"color":{"background":"#000000"}}} /-->' );
+				$this->assertStringContainsString( '--riff-app-bg:#000000', $block, 'one block\'s setting before both' );
+				$this->assertStringContainsString( '--riff-app-ink:#222222', $block );
+			}
+		);
+	}
+
+	public function test_standalone_mode_keeps_its_one_design_whatever_the_block_says(): void {
+		add_filter( 'riff_app_theme_tokens', array( \Riff\Listen\Standalone::class, 'tokens' ), 1 );
+		try {
+			$block = do_blocks( '<!-- wp:riff/app {"backgroundColor":"contrast"} /-->' );
+			$this->assertStringContainsString( '--riff-app-bg:#030303', $block );
+			$this->assertStringNotContainsString( 'preset--color--contrast', $block );
+		} finally {
+			remove_filter( 'riff_app_theme_tokens', array( \Riff\Listen\Standalone::class, 'tokens' ), 1 );
+		}
+	}
+
 	public function test_a_link_in_the_text_colour_and_one_font_carry_through(): void {
 		// Twenty Twenty-Five's own shape: links are currentColor, and headings have no font of their own.
 		$this->with_theme_styles(

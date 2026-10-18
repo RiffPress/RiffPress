@@ -1759,9 +1759,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	-webkit-font-smoothing: antialiased;
 }
 
-/* On a theme that sets its colours (riff-app-themed, with --riff-app-bg and
-   --riff-app-ink from its global styles), the quieter shades are mixed from
-   them, so they hold on a dark theme as well as a light one. */
+/* On a theme or a block that sets its colours (riff-app-themed, with
+   --riff-app-bg or --riff-app-ink from global styles or the block's own
+   settings), the quieter shades are mixed from them, so they hold on a dark
+   background as well as a light one. */
 .riff-app.riff-app-themed {
 	--riff-app-surface: color-mix(in srgb, var(--riff-app-ink) 4%, var(--riff-app-bg));
 	--riff-app-ink-2: color-mix(in srgb, var(--riff-app-ink) 70%, var(--riff-app-bg));
