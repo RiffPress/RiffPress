@@ -316,7 +316,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": ") }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 344
+				"line": 345
 			}
 		],
 		"shot": {
@@ -576,7 +576,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 219
+				"line": 220
 			}
 		],
 		"shot": {
@@ -666,7 +666,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 209
+				"line": 210
 			}
 		],
 		"shot": {
@@ -990,7 +990,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2061,
+				"line": 2172,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -1045,7 +1045,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2375,
+				"line": 2486,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1110,7 +1110,7 @@
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 225,
+				"line": 226,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],
@@ -1200,7 +1200,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2027,
+				"line": 2138,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1320,7 +1320,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2061,
+				"line": 2172,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],

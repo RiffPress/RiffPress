@@ -1862,6 +1862,117 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	outline-offset: 1px;
 }
 
+/* Search as you type: a list under the field, the best match first, placed
+   by the script against the window. */
+.riff-app-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.riff-suggest {
+	position: fixed;
+	z-index: 20;
+	box-sizing: border-box;
+	max-height: min(70vh, 560px);
+	padding: 8px;
+	overflow-y: auto;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 12px;
+	background: var(--riff-app-bg);
+	box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
+	overscroll-behavior: contain;
+}
+
+.riff-suggest[hidden] {
+	display: none;
+}
+
+.riff-app .riff-suggest-head {
+	margin: 8px 8px 4px;
+	color: var(--riff-app-ink-2);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
+.riff-app .riff-suggest-option {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
+	gap: 12px;
+	padding: 6px 8px;
+	border-radius: 8px;
+	color: inherit;
+	line-height: 1.35;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.riff-app .riff-suggest-recent,
+.riff-app .riff-suggest-all {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.riff-app .riff-suggest-option:hover,
+.riff-app .riff-suggest-option[aria-selected="true"] {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-suggest-art {
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	overflow: hidden;
+	border-radius: 4px;
+	background: var(--riff-app-surface);
+	font-weight: 600;
+}
+
+.riff-app .riff-suggest-top .riff-suggest-art {
+	width: 64px;
+	height: 64px;
+}
+
+.riff-app .riff-suggest-round {
+	border-radius: 50%;
+}
+
+.riff-app .riff-suggest-art img {
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	object-fit: cover;
+}
+
+.riff-app .riff-suggest-text {
+	display: grid;
+	min-width: 0;
+}
+
+.riff-app .riff-suggest-title,
+.riff-app .riff-suggest-sub {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.riff-app .riff-suggest-top .riff-suggest-title {
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.riff-app .riff-suggest-sub {
+	color: var(--riff-app-ink-2);
+	font-size: 13px;
+}
+
 .riff-app .riff-app-section {
 	margin: 40px 0 16px;
 	font-family: var(--riff-app-heading-font);

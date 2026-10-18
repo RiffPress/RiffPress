@@ -84,48 +84,61 @@ final class Player {
 			return;
 		}
 		$strings = array(
-			'play'        => __( 'Play', 'riff' ),
-			'pause'       => __( 'Pause', 'riff' ),
-			'repeatOff'   => __( 'Repeat off', 'riff' ),
-			'repeatAll'   => __( 'Repeat all', 'riff' ),
-			'repeatOne'   => __( 'Repeat one', 'riff' ),
-			'shuffleOn'   => __( 'Shuffle on', 'riff' ),
-			'shuffleOff'  => __( 'Shuffle off', 'riff' ),
+			'play'              => __( 'Play', 'riff' ),
+			'pause'             => __( 'Pause', 'riff' ),
+			'repeatOff'         => __( 'Repeat off', 'riff' ),
+			'repeatAll'         => __( 'Repeat all', 'riff' ),
+			'repeatOne'         => __( 'Repeat one', 'riff' ),
+			'shuffleOn'         => __( 'Shuffle on', 'riff' ),
+			'shuffleOff'        => __( 'Shuffle off', 'riff' ),
 			/* translators: %s: post title. */
-			'playingFrom' => __( 'Playing from %s', 'riff' ),
+			'playingFrom'       => __( 'Playing from %s', 'riff' ),
 			/* translators: %s: track title. */
-			'playTrack'   => __( 'Play %s', 'riff' ),
+			'playTrack'         => __( 'Play %s', 'riff' ),
 			/* translators: %s: track title. */
-			'locked'      => __( '%s is locked', 'riff' ),
+			'locked'            => __( '%s is locked', 'riff' ),
 			/* translators: %s: track title. */
-			'unlock'      => __( 'Unlock %s', 'riff' ),
-			'video'       => __( 'Video', 'riff' ),
-			'unavailable' => __( 'This track could not be played.', 'riff' ),
-			'copied'      => __( 'Link copied', 'riff' ),
-			'shareFailed' => __( 'The link could not be shared.', 'riff' ),
-			'trackGone'   => __( 'The shared track is no longer in this post.', 'riff' ),
-			'library'     => __( 'Library', 'riff' ),
-			'shuffle'     => __( 'Shuffle', 'riff' ),
+			'unlock'            => __( 'Unlock %s', 'riff' ),
+			'video'             => __( 'Video', 'riff' ),
+			'unavailable'       => __( 'This track could not be played.', 'riff' ),
+			'copied'            => __( 'Link copied', 'riff' ),
+			'shareFailed'       => __( 'The link could not be shared.', 'riff' ),
+			'trackGone'         => __( 'The shared track is no longer in this post.', 'riff' ),
+			'library'           => __( 'Library', 'riff' ),
+			'shuffle'           => __( 'Shuffle', 'riff' ),
 			/* translators: %s: number of tracks. */
-			'oneTrack'    => __( '%s track', 'riff' ),
+			'oneTrack'          => __( '%s track', 'riff' ),
 			/* translators: %s: number of tracks. */
-			'tracks'      => __( '%s tracks', 'riff' ),
+			'tracks'            => __( '%s tracks', 'riff' ),
 			/* translators: %s: number of minutes. */
-			'minutes'     => __( '%s min', 'riff' ),
+			'minutes'           => __( '%s min', 'riff' ),
 			/* translators: %s: kilobits per second. */
-			'kbps'        => __( '%s kbps', 'riff' ),
-			'lossless'    => __( 'Lossless', 'riff' ),
+			'kbps'              => __( '%s kbps', 'riff' ),
+			'lossless'          => __( 'Lossless', 'riff' ),
 			/* translators: 1: bits per sample, 2: sample rate in kHz. */
-			'bitsKhz'     => __( '%1$s-bit %2$s kHz', 'riff' ),
-			'appEmpty'    => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
-			'otherTab'    => __( 'Playing in another tab', 'riff' ),
+			'bitsKhz'           => __( '%1$s-bit %2$s kHz', 'riff' ),
+			'appEmpty'          => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
+			'otherTab'          => __( 'Playing in another tab', 'riff' ),
 			/* translators: 1: elapsed time, 2: total time. */
-			'times'       => __( '%1$s / %2$s', 'riff' ),
-			'nowPlaying'  => __( 'Now playing', 'riff' ),
-			'open'        => __( 'Open', 'riff' ),
-			'more'        => __( 'Load more', 'riff' ),
-			'playError'   => __( 'That post could not be loaded. Press Play to try again.', 'riff' ),
-			'moreError'   => __( 'More posts could not be loaded. Press Load more to try again.', 'riff' ),
+			'times'             => __( '%1$s / %2$s', 'riff' ),
+			'nowPlaying'        => __( 'Now playing', 'riff' ),
+			'open'              => __( 'Open', 'riff' ),
+			'more'              => __( 'Load more', 'riff' ),
+			'playError'         => __( 'That post could not be loaded. Press Play to try again.', 'riff' ),
+			'moreError'         => __( 'More posts could not be loaded. Press Load more to try again.', 'riff' ),
+			'recentSearches'    => __( 'Recent searches', 'riff' ),
+			'topResult'         => __( 'Top result', 'riff' ),
+			'songs'             => __( 'Songs', 'riff' ),
+			'albums'            => __( 'Albums', 'riff' ),
+			'artists'           => __( 'Artists', 'riff' ),
+			'artist'            => __( 'Artist', 'riff' ),
+			/* translators: %s: the words searched for. */
+			'allResults'        => __( 'All results for “%s”', 'riff' ),
+			'searchSuggestions' => __( 'Suggestions', 'riff' ),
+			/* translators: %s: number of suggestions. */
+			'suggestions'       => __( '%s suggestions', 'riff' ),
+			/* translators: %s: number of suggestions, 1. */
+			'oneSuggestion'     => __( '%s suggestion', 'riff' ),
 		);
 		/**
 		 * Filters the strings the player shows.

@@ -357,6 +357,45 @@ test.describe( 'Browse', () => {
 			.toBe( false );
 	} );
 
+	test( 'search answers as you type, with the keyboard, and remembers what was searched', async ( {
+		page,
+	} ) => {
+		await page.evaluate( () => localStorage.removeItem( 'riff-searches' ) );
+		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+		const field = page.locator( '.riff-app-search input' );
+		await expect( field ).toHaveAttribute( 'role', 'combobox' );
+		await field.click();
+		await field.pressSequentially( 'Compo' );
+		const list = page.locator( '.riff-suggest' );
+		await expect( list ).toBeVisible();
+		await expect( field ).toHaveAttribute( 'aria-expanded', 'true' );
+		await expect( list.locator( '.riff-suggest-top' ) ).toContainText( 'Compositions' );
+		await expect( page.locator( '.riff-app-sr' ) ).toHaveText( /\d+ suggestions?/ );
+		const results = await new AxeBuilder( { page } ).include( '.riff-app' ).analyze();
+		expect( results.violations ).toEqual( [] );
+
+		await field.press( 'ArrowDown' );
+		await expect( field ).toHaveAttribute( 'aria-activedescendant', 'riff-suggest-o0' );
+		await field.press( 'Enter' );
+		await expect( page ).toHaveURL( /riff_album=\d+/ );
+		await expect( page.locator( '.riff-album-title' ) ).toHaveText( 'Compositions' );
+
+		// Escape closes the list; Enter with nothing chosen loads every result, as before.
+		await field.fill( 'Under' );
+		await expect( list ).toBeVisible();
+		await field.press( 'Escape' );
+		await expect( list ).toBeHidden();
+		await expect( field ).toHaveAttribute( 'aria-expanded', 'false' );
+		await field.press( 'Enter' );
+		await expect( page ).toHaveURL( /riff_search=Under/ );
+
+		await page.reload();
+		await page.locator( '.riff-app-search input' ).fill( '' );
+		await page.locator( '.riff-app-search input' ).focus();
+		await expect( page.locator( '.riff-suggest-recent' ).first() ).toHaveText( 'Under' );
+		await expect( page.locator( '.riff-suggest-recent' ).nth( 1 ) ).toHaveText( 'Compo' );
+	} );
+
 	test( 'every view passes an accessibility check', async ( { page } ) => {
 		const views = [ '', 'riff_view=albums', 'riff_view=artists', 'riff_view=tracks', 'riff_view=posts', 'riff_search=Compositions' ];
 		for ( const view of views ) {
