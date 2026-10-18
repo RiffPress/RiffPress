@@ -112,7 +112,7 @@ final class App {
 		} elseif ( $browse ) {
 			$view = Browse::view( $browse, $page );
 		} else {
-			$view = self::library_view( $page );
+			$view = Browse::home_view( $page );
 		}
 		$align = isset( $attributes['align'] ) && in_array( $attributes['align'], array( 'wide', 'full' ), true ) ? ' align' . $attributes['align'] : '';
 		// Inside a block render the wrapper carries the block's supports (colours, type); the
@@ -317,7 +317,7 @@ final class App {
 	}
 
 	/**
-	 * The library: a grid of the posts with tracks, through the page the address asks for.
+	 * Posts: a grid of the posts with tracks, through the page the address asks for.
 	 *
 	 * Each page is the same page the REST route returns, one after another, so the grid holds what
 	 * pressing Load more that many times would have. Load more is a link to one page further, and
@@ -325,10 +325,12 @@ final class App {
 	 *
 	 * @since 4.0.0
 	 * @since 4.13.0 Shows the pages ?riff_page asks for, with a Load more link while there are more.
+	 * @since 4.18.0 Its own view, at riff_view=posts, now that Home opens the page.
+	 *
 	 * @param string $page The app page's address.
 	 * @return string
 	 */
-	private static function library_view( string $page ): string {
+	public static function posts_view( string $page ): string {
 		$query = Library::query();
 		if ( ! $query->posts ) {
 			return '<p class="riff-app-empty">' . esc_html__( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ) . '</p>';
@@ -346,18 +348,42 @@ final class App {
 		if ( $upto < $pages ) {
 			$more = sprintf(
 				'<p class="riff-app-more"><a class="riff-pill" href="%s" data-riff-app-action="more">%s</a></p>',
-				esc_url( add_query_arg( self::PAGE_QUERY, $upto + 1, $page ) . '#riff-page-' . ( $upto + 1 ) ),
+				esc_url(
+					add_query_arg(
+						array(
+							Browse::VIEW     => 'posts',
+							self::PAGE_QUERY => $upto + 1,
+						),
+						$page
+					) . '#riff-page-' . ( $upto + 1 )
+				),
 				esc_html__( 'Load more', 'riff' )
 			);
 		}
 		return sprintf(
-			'<h2 class="riff-app-title">%s</h2><div class="riff-grid" data-riff-page="%d" data-riff-pages="%d">%s</div>%s',
-			esc_html__( 'Library', 'riff' ),
+			'<h2 class="riff-app-title" tabindex="-1">%s</h2><div class="riff-grid" data-riff-page="%d" data-riff-pages="%d">%s</div>%s',
+			esc_html__( 'Posts', 'riff' ),
 			$upto,
 			$pages,
 			$cards,
 			$more
 		);
+	}
+
+	/**
+	 * The newest posts with tracks as cards, for a row on Home.
+	 *
+	 * @since 4.18.0
+	 *
+	 * @param string $page The app page's address.
+	 * @return string Cards, or empty when there are none.
+	 */
+	public static function post_cards( string $page ): string {
+		$cards = '';
+		foreach ( array_slice( Library::query()->posts, 0, 12 ) as $post ) {
+			$cards .= self::card( Library::item( $post ), $page );
+		}
+		return $cards;
 	}
 
 	/**
@@ -414,7 +440,7 @@ final class App {
 	private static function post_view( WP_Post $post, string $page ): string {
 		$detail = Library::post( $post );
 		if ( ! $detail['tracks'] ) {
-			return self::library_view( $page );
+			return Browse::home_view( $page );
 		}
 		$art = $detail['art'] ? end( $detail['art'] )['src'] : '';
 		return self::header( $detail['title'], self::meta( $detail ), '', (string) $art, Art::tint( (array) $detail['art'] ) ) . sprintf(

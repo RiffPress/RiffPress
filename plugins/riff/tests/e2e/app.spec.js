@@ -7,6 +7,7 @@
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( './own' );
+const AxeBuilder = require( '@axe-core/playwright' ).default;
 
 const FIXTURES = path.join(
 	__dirname,
@@ -137,7 +138,7 @@ test.describe( 'App', () => {
 
 		await page.locator( '.riff-app-home' ).click();
 		await expect( page ).toHaveURL( pageUrl );
-		await expect( page.locator( '.riff-grid' ) ).toBeVisible();
+		await expect( page.locator( '[data-riff-shelf="added"]' ) ).toBeVisible();
 		expect( ( await playing( page ) ).paused ).toBe( false );
 		expect(
 			await page.evaluate(
@@ -157,7 +158,7 @@ test.describe( 'App', () => {
 
 		await page.goForward();
 		await expect( page ).toHaveURL( pageUrl );
-		await expect( page.locator( '.riff-grid' ) ).toBeVisible();
+		await expect( page.locator( '[data-riff-shelf="added"]' ) ).toBeVisible();
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
@@ -189,28 +190,48 @@ test.describe( 'App', () => {
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
-	test( 'the library shows what is playing and Open stays in the app', async ( {
+	test( 'Home jumps back into what was playing, and remembers what was played after a reload', async ( {
 		page,
 	} ) => {
-		await page.locator( `.riff-card[data-riff-post="${ postId }"]` ).click();
+		await page.evaluate( () => localStorage.removeItem( 'riff-history' ) );
+		await page.locator( `.riff-card[data-riff-post="${ postId }"] .riff-card-link` ).click();
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect
 			.poll( async () => ( await playing( page ) ).time )
 			.toBeGreaterThan( 0.5 );
 		await page.locator( '.riff-app-home' ).click();
-		const now = page.locator( '.riff-now' );
-		await expect( now ).toBeVisible();
-		await expect( now.locator( '.riff-now-title' ) ).toHaveText(
-			'Trombone Detritus'
-		);
-		await expect( now.locator( 'a.riff-pill' ) ).toHaveAttribute(
+
+		const jump = page.locator( '[data-riff-shelf="jump"]' );
+		await expect( jump ).toBeVisible();
+		await expect( jump.locator( '.riff-card-link' ).first() ).toHaveAttribute(
 			'href',
 			new RegExp( `[?&]riff=${ postId }$` )
 		);
-		await now.locator( 'a.riff-pill' ).click();
+		const recent = page.locator( '[data-riff-shelf="recent"]' );
+		await expect( recent.locator( '.riff-card-title' ).first() ).toHaveText( 'Trombone Detritus' );
+
+		await page.reload();
+		await expect( recent.locator( '.riff-card-title' ).first() ).toHaveText( 'Trombone Detritus' );
+		await jump.locator( '.riff-card-link' ).first().click();
 		await expect( page ).toHaveURL( new RegExp( `riff=${ postId }$` ) );
 		await expect( page.locator( '.riff-row' ) ).toHaveCount( 2 );
-		expect( ( await playing( page ) ).paused ).toBe( false );
+	} );
+
+	test( 'Home is rows that scroll sideways, each with Show all, and passes an accessibility check', async ( {
+		page,
+	} ) => {
+		const added = page.locator( '[data-riff-shelf="added"]' );
+		await expect( added.locator( '.riff-shelf-all' ) ).toHaveAttribute( 'href', /riff_view=albums/ );
+		const row = added.locator( '.riff-shelf-row' );
+		await expect( row ).toHaveCSS( 'overflow-x', 'auto' );
+		await expect( row ).toHaveAttribute( 'tabindex', '0' );
+		await page.locator( '[data-riff-shelf="posts"] .riff-shelf-all' ).click();
+		await expect( page ).toHaveURL( /riff_view=posts/ );
+		await expect( page.locator( '.riff-grid .riff-card' ).first() ).toBeVisible();
+		await page.locator( '.riff-app-home' ).click();
+		await expect( page.locator( '[data-riff-shelf="added"]' ) ).toBeVisible();
+		const results = await new AxeBuilder( { page } ).include( '.riff-app' ).analyze();
+		expect( results.violations ).toEqual( [] );
 	} );
 
 	test( 'Play and Shuffle start the post from its header', async ( {
@@ -273,9 +294,9 @@ test.describe( 'Browse', () => {
 		page,
 	} ) => {
 		const tabs = page.locator( '.riff-app-bar a[href*="riff_view="]' );
-		await expect( tabs ).toHaveCount( 3 );
+		await expect( tabs ).toHaveCount( 4 );
 		// Once the page is idle every tab's view is fetched; this page's own resource timings show
-		// when all three have arrived.
+		// when all four have arrived.
 		await expect
 			.poll( () =>
 				page.evaluate(
@@ -285,7 +306,7 @@ test.describe( 'Browse', () => {
 							.filter( ( r ) => r.name.includes( 'riff_view=' ) ).length
 				)
 			)
-			.toBeGreaterThanOrEqual( 3 );
+			.toBeGreaterThanOrEqual( 4 );
 		const asked = [];
 		page.on( 'request', ( r ) => {
 			if ( r.url().includes( 'riff_view=artists' ) ) {
@@ -296,6 +317,25 @@ test.describe( 'Browse', () => {
 		await expect( page.locator( '.riff-app-tab[aria-current="page"]' ) ).toHaveText( 'Artists' );
 		await expect( page.locator( '.riff-artist' ).first() ).toBeVisible();
 		expect( asked, 'the view was already here' ).toEqual( [] );
+	} );
+
+	test( 'every view passes an accessibility check', async ( { page } ) => {
+		const views = [ '', 'riff_view=albums', 'riff_view=artists', 'riff_view=tracks', 'riff_view=posts', 'riff_search=Compositions' ];
+		for ( const view of views ) {
+			await page.goto( pageUrl + ( view ? ( pageUrl.includes( '?' ) ? '&' : '?' ) + view : '' ) );
+			await expect( page.locator( '.riff-app-view h2' ).first() ).toBeVisible();
+			const results = await new AxeBuilder( { page } ).include( '.riff-app' ).analyze();
+			expect( results.violations, view || 'Home' ).toEqual( [] );
+		}
+		// One album and one artist, reached the way a listener reaches them.
+		await page.goto( pageUrl + ( pageUrl.includes( '?' ) ? '&' : '?' ) + 'riff_view=albums' );
+		await page.locator( '.riff-card[data-riff-album] .riff-card-link' ).first().click();
+		await expect( page.locator( '.riff-album-title' ) ).toBeVisible();
+		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'an album' ).toEqual( [] );
+		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await page.locator( '.riff-artist' ).first().click();
+		await expect( page.locator( '.riff-album-title' ) ).toBeVisible();
+		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'an artist' ).toEqual( [] );
 	} );
 
 	test( 'every browse view reads without the script', async ( { browser } ) => {
@@ -507,7 +547,7 @@ test.describe( 'App requests', () => {
 		await expect
 			.poll( async () => ( await playing( page ) ).paused )
 			.toBe( false );
-		await page.locator( '.riff-app-home' ).click();
+		await page.locator( '.riff-app-tab', { hasText: 'Posts' } ).click();
 		await expect( page.locator( '.riff-grid' ) ).toBeVisible();
 	} );
 
@@ -600,11 +640,18 @@ test.describe( 'App requests', () => {
 	} );
 } );
 
+// Every post, the view Home's New posts row leads to.
+const postsUrl = () => {
+	const u = new URL( pageUrl );
+	u.searchParams.set( 'riff_view', 'posts' );
+	return u.toString();
+};
+
 test.describe( 'App pages', () => {
 	test( 'the first visit offers Load more, which adds the page in place and keeps the music', async ( {
 		page,
 	} ) => {
-		await page.goto( pageUrl );
+		await page.goto( postsUrl() );
 		const cards = page.locator( '.riff-grid .riff-card' );
 		await expect( cards ).toHaveCount( 24 );
 		await page
@@ -639,7 +686,7 @@ test.describe( 'App pages', () => {
 	} ) => {
 		const context = await browser.newContext( { javaScriptEnabled: false } );
 		const page = await context.newPage();
-		await page.goto( pageUrl );
+		await page.goto( postsUrl() );
 		await expect( page.locator( '.riff-grid .riff-card' ) ).toHaveCount( 24 );
 		await page.getByRole( 'link', { name: 'Load more' } ).click();
 		await expect( page ).toHaveURL( /[?&]riff_page=2#riff-page-2$/ );

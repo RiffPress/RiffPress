@@ -1945,6 +1945,89 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* The library grid: square art, two lines under it. */
+
+/* Home's rows: covers that scroll sideways, as the apps open, with a Show all
+   link to the full list. The row takes focus, so arrow keys scroll it, and
+   each card in it can be tabbed to. */
+.riff-shelf {
+	margin: 0 0 40px;
+}
+
+.riff-shelf[hidden] {
+	display: none;
+}
+
+.riff-shelf-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.riff-app .riff-shelf-title {
+	margin: 0;
+	font-size: 22px;
+	line-height: 1.3;
+}
+
+.riff-app .riff-shelf-all {
+	flex: none;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.riff-app .riff-shelf-all:hover,
+.riff-app .riff-shelf-all:focus-visible {
+	color: var(--riff-app-ink);
+	text-decoration: underline;
+}
+
+.riff-app .riff-shelf-row {
+	display: grid;
+	grid-auto-columns: clamp(140px, 17vw, 200px);
+	grid-auto-flow: column;
+	gap: 20px;
+	margin: 0;
+	padding: 0 0 4px;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+	list-style: none;
+}
+
+.riff-app .riff-shelf-row::-webkit-scrollbar {
+	display: none;
+}
+
+.riff-app .riff-shelf-row:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 4px;
+}
+
+.riff-app .riff-shelf-row > * {
+	scroll-snap-align: start;
+}
+
+/* An artist in a row stands on its own: a large round mark, the name under. */
+.riff-app .riff-shelf-row .riff-artist {
+	grid-template-columns: 1fr;
+	justify-items: center;
+	row-gap: 8px;
+	text-align: center;
+}
+
+.riff-app .riff-shelf-row .riff-artist-mark {
+	grid-row: auto;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 1;
+	font-size: clamp(40px, 6vw, 64px);
+}
+
 .riff-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

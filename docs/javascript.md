@@ -99,6 +99,14 @@ Returns `Object[]`: Tracks.
 
 Since 4.0.0.
 
+### `window.riff.history()`
+
+The tracks played on this device, most recent first, each once: what Home's Recently played and Jump back in are drawn from. Kept in the browser, at most 30.
+
+Returns `Object[]`: Tracks, in the shape `Tracks::schema()` describes, each with `played`,
+
+Since 4.18.0.
+
 ### `window.riff.playing()`
 
 Whether something is playing.
