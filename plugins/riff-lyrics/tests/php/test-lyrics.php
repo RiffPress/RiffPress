@@ -83,6 +83,6 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 		do_action( 'riff_before_player' );
 
 		$this->assertTrue( wp_script_is( 'riff-lyrics', 'enqueued' ) );
-		$this->assertStringContainsString( 'wp\/v2\/media\/', (string) wp_scripts()->get_data( 'riff-lyrics', 'before' )[1] );
+		$this->assertStringContainsString( 'wp\/v2\/media\/', wp_scripts()->get_inline_script_data( 'riff-lyrics', 'before' ) );
 	}
 }
