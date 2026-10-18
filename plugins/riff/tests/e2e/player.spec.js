@@ -1,6 +1,7 @@
 /**
  * The player, end to end: a post with three tracks and a video version, played in a real browser.
- * Runs on desktop and on an iPhone viewport (see playwright.config.js).
+ * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in
+ * WebKit (see playwright.config.js).
  *
  * The post is built once per run through the REST API from the public-domain fixtures, so the
  * suite needs nothing seeded and leaves nothing behind that another run would trip over.
@@ -8,6 +9,10 @@
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( './own' );
+
+// riff.js keeps audio off Web Audio for an iPhone user agent, so the meter has no analyser there.
+const iosAgent = ( testInfo ) =>
+	/iP(hone|ad|od)/.test( testInfo.project.use.userAgent || '' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 
 const FIXTURES = path.join(
@@ -163,7 +168,7 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-queue-list li' ) ).toHaveCount( 3 );
 	} );
 
-	test( 'a tap plays the track in the bar and the lock screen gets its metadata', async ( {
+	test( 'a tap plays the track in the bar and the lock screen gets its metadata', { tag: '@smoke' }, async ( {
 		page,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
@@ -191,7 +196,7 @@ test.describe( 'Player', () => {
 		expect( session.artwork ).toBeGreaterThan( 0 );
 	} );
 
-	test( 'the bar opens Now Playing, which closes with Escape and returns focus', async ( {
+	test( 'the bar opens Now Playing, which closes with Escape and returns focus', { tag: '@smoke' }, async ( {
 		page,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
@@ -286,7 +291,7 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-modes' ) ).toBeHidden();
 	} );
 
-	test( 'up next lists the rest of the post and plays what is picked', async ( {
+	test( 'up next lists the rest of the post and plays what is picked', { tag: '@smoke' }, async ( {
 		page,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
@@ -321,7 +326,7 @@ test.describe( 'Player', () => {
 	test( 'the bars on the current Up next item follow the music, like the row\'s', async ( {
 		page,
 	}, testInfo ) => {
-		test.skip( testInfo.project.name === 'iphone', 'no analyser on iOS' );
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
@@ -342,7 +347,7 @@ test.describe( 'Player', () => {
 		page,
 		requestUtils,
 	}, testInfo ) => {
-		test.skip( testInfo.project.name === 'iphone', 'no analyser on iOS' );
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
 		const body = require( 'node:fs' ).readFileSync( path.join( FIXTURES, FILES[ 1 ] ) );
 		// Playwright answers CORS for any response it fulfils, so the origin that does not share
 		// refuses the player's CORS check outright, as a browser would see it.
@@ -390,7 +395,7 @@ test.describe( 'Player', () => {
 	test( 'each bar on the playing row swings through its own range, not a fixed staircase', async ( {
 		page,
 	}, testInfo ) => {
-		test.skip( testInfo.project.name === 'iphone', 'no analyser on iOS' );
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
@@ -569,7 +574,7 @@ test.describe( 'Player', () => {
 		).toHaveCount( 0 );
 	} );
 
-	test( 'the keyboard plays, pauses and seeks', async ( { page } ) => {
+	test( 'the keyboard plays, pauses and seeks', { tag: '@smoke' }, async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect
 			.poll( async () => ( await audioState( page ) ).time )
@@ -638,7 +643,7 @@ test.describe( 'Player', () => {
 		page,
 	}, testInfo ) => {
 		// iOS keeps the breath: routing audio through Web Audio there breaks background playback.
-		test.skip( testInfo.project.name === 'iphone', 'no analyser on iOS' );
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();

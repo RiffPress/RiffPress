@@ -1256,7 +1256,12 @@ function start() {
 		if ( ! track() || ! np.hidden ) {
 			return;
 		}
-		opener = document.activeElement;
+		// Safari doesn't focus a button on click, so after a click the active element is the body;
+		// focus then goes back to the bar's title, the control that opens Now Playing.
+		opener =
+			document.activeElement && document.activeElement !== document.body
+				? document.activeElement
+				: $( '.riff-bar-info' );
 		np.hidden = false;
 		root.classList.add( 'is-open' );
 		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own

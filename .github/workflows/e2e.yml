@@ -39,8 +39,9 @@ jobs:
           restore-keys: ${{ runner.os }}-playwright-
       # The apt packages are not covered by the cache above, so install-deps
       # runs unconditionally while the browser download is skipped on a hit.
-      - run: npx playwright install-deps chromium
-      - run: npx playwright install chromium
+      # WebKit runs the tests tagged @smoke (see playwright.config.js).
+      - run: npx playwright install-deps chromium webkit
+      - run: npx playwright install chromium webkit
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
 
       # Started here rather than by Playwright's webServer so a boot failure

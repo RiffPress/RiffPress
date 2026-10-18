@@ -16,7 +16,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 
 ```bash
 npm run lint               # PHPCS (WordPress Coding Standards), ESLint and stylelint
-npm run test:e2e           # Playwright, desktop and iPhone (wp-env must be running)
+npm run test:e2e           # Playwright: desktop Chromium, Chromium at an iPhone size, WebKit smoke (wp-env must be running)
 npm run test:php           # PHPUnit on the WordPress test suite, inside the tests container
 ```
 
