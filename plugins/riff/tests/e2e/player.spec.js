@@ -681,6 +681,33 @@ test.describe( 'Player', () => {
 			.toBeLessThan( 0.1 );
 	} );
 
+	test( 'the glow fades out before the knob instead of ending in a square edge', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		const glow = await page.evaluate( () => {
+			const line = document.querySelector( '.riff-bar-seek .riff-line' );
+			const after = getComputedStyle( line, '::after' );
+			return {
+				mask: after.maskImage || after.webkitMaskImage,
+				shadow: getComputedStyle( line.querySelector( '.riff-hot' ) ).boxShadow,
+			};
+		} );
+		// The bloom is its own layer, faded at its end; a box-shadow on the stretched hot
+		// layer is what drew the square edge.
+		expect( glow.mask ).toMatch( /rgba\( *0, *0, *0, *0 *\)\)$/ );
+		expect( glow.shadow ).toBe( 'none' );
+		// Now Playing's seek line is plain white: no bloom tints it.
+		const np = await page.evaluate(
+			() =>
+				getComputedStyle(
+					document.querySelector( '.riff-np-seek .riff-line' ),
+					'::after'
+				).content
+		);
+		expect( np ).toBe( 'none' );
+	} );
+
 	test( 'a script can listen to the player and reshape what it plays', async ( {
 		page,
 	} ) => {

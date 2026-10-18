@@ -490,6 +490,12 @@ html.has-riff body::after {
 	transform-origin: right;
 }
 
+[dir="rtl"] .riff-bar-seek .riff-line::after {
+	-webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
+	mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
+	transform: translateX(calc((1 - var(--riff-p)) * 100%));
+}
+
 [dir="rtl"] .riff-knob {
 	left: auto;
 	right: calc(var(--riff-p) * 100%);
@@ -502,9 +508,12 @@ html.has-riff body::after {
    turns the frame-by-frame writes into a flow. The colour is a filament's:
    near-black red barely lit, through the accent at working temperature, to a
    pale yellow-white at the peaks. Three layers over the played part of the
-   line, static gradients that never repaint: the wire with a tight bloom and
-   a white heart that shows only at the peaks. Where the waveform is drawn
-   the glow moves into its played bars instead. */
+   line, static gradients that never repaint: the wire, a white heart that
+   shows only at the peaks, and the bloom around them. The wire and heart
+   stretch with the played part; the bloom slides instead, so its blur keeps
+   its shape and its leading end fades out rather than stopping square at
+   the knob. Where the waveform is drawn the glow moves into its played bars
+   instead. */
 
 @property --riff-heat {
 	syntax: "<number>";
@@ -537,14 +546,33 @@ html.has-riff body::after {
 .riff-wire {
 	color: var(--riff-glow);
 	background: currentcolor;
-	box-shadow: 0 0 6px 1px currentcolor;
 	opacity: calc(0.25 + 0.75 * var(--riff-heat));
+}
+
+/* The bar's line keeps the bloom inside its own length, and lets it spill
+   above and below. Now Playing's line is plain white and has no bloom. */
+.riff-bar-seek .riff-line {
+	clip-path: inset(-12px 0);
+}
+
+.riff-bar-seek .riff-line::after {
+	content: "";
+	position: absolute;
+	inset: -7px 0;
+	color: var(--riff-glow);
+	/* stylelint-disable-next-line @stylistic/max-line-length */
+	background: linear-gradient(180deg, transparent, color-mix(in srgb, currentcolor 55%, transparent) 42% 58%, transparent);
+	-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+	mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+	opacity: calc(0.15 + 0.85 * var(--riff-heat));
+	transform: translateX(calc((var(--riff-p) - 1) * 100%));
+	will-change: transform, opacity;
+	pointer-events: none;
 }
 
 .riff-hot {
 	/* stylelint-disable-next-line @stylistic/max-line-length */
 	background: linear-gradient(90deg, transparent, #ffd2a8 30%, #fff1dc 50%, #ffd2a8 70%, transparent);
-	box-shadow: 0 0 10px 2px rgb(255 232 200 / 0.6);
 	opacity: calc(0.6 * var(--riff-heat) * var(--riff-heat) * var(--riff-heat));
 }
 
@@ -572,13 +600,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 @media (prefers-reduced-transparency: reduce) {
 
-	.riff-np-glow {
+	.riff-np-glow,
+	.riff-bar-seek .riff-line::after {
 		display: none;
-	}
-
-	.riff-wire,
-	.riff-hot {
-		box-shadow: none;
 	}
 }
 
