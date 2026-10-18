@@ -344,6 +344,20 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 | `detail.track` | `Object` | The track. |
 | `api` | `Object` | `window.riff`. |
 
+#### `riff.queue`
+
+Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
+
+Since 4.19.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.change` | `string` | `next`, `add`, `move`, `remove` or `clear`. |
+| `detail.queue` | `Object[]` | The queue in play order. |
+| `detail.index` | `number` | The playing track's place in it. |
+| `api` | `Object` | `window.riff`. |
+
 #### `riff.ready`
 
 Fires once the player is set up, its state restored and `window.riff` available.

@@ -1259,6 +1259,130 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-bottom: 1px solid var(--riff-line);
 }
 
+/* The track menu: a … beside each row and each track in Up next, and the
+   list it opens, drawn the same dark way in a post as in Now Playing. */
+.riff-track {
+	position: relative;
+}
+
+.riff-track > .riff-row,
+.riff-app .riff-album-tracks .riff-track > .riff-row {
+	padding-right: 52px;
+}
+
+.riff-more-button {
+	all: unset;
+	box-sizing: border-box;
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	color: inherit;
+	cursor: pointer;
+	opacity: 0.75;
+}
+
+.riff-track > .riff-more-button {
+	position: absolute;
+	top: 50%;
+	right: 4px;
+	transform: translateY(-50%);
+}
+
+.riff-more-button:hover,
+.riff-more-button:focus-visible,
+.riff-more-button[aria-expanded="true"] {
+	background: color-mix(in srgb, currentcolor 12%, transparent);
+	opacity: 1;
+}
+
+.riff-more-button:focus-visible {
+	outline: 2px solid var(--riff-accent, #ffb020);
+	outline-offset: 1px;
+}
+
+.riff-more-button svg {
+	width: 20px;
+	height: 20px;
+}
+
+.riff-menu {
+	position: fixed;
+	z-index: 2147483000;
+	display: grid;
+	min-width: 200px;
+	padding: 8px 0;
+	border-radius: 8px;
+	background: #282828;
+	box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
+	color: #fff;
+	font: 400 15px/1.3 "Riff Roboto", roboto, system-ui, sans-serif;
+}
+
+.riff-menu[hidden] {
+	display: none;
+}
+
+.riff-menu > *,
+#riff .riff-menu > * {
+	all: unset;
+	box-sizing: border-box;
+	padding: 10px 20px;
+	color: inherit;
+	cursor: pointer;
+}
+
+.riff-menu > :hover,
+.riff-menu > :focus-visible,
+#riff .riff-menu > :hover,
+#riff .riff-menu > :focus-visible {
+	background: rgb(255 255 255 / 0.1);
+}
+
+#riff .riff-queue-head {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+#riff .riff-queue-clear {
+	padding: 6px 14px;
+	border: 1px solid var(--riff-line);
+	border-radius: 999px;
+	color: var(--riff-fg);
+	font-size: 14px;
+}
+
+#riff .riff-queue-clear[hidden] {
+	display: none;
+}
+
+#riff .riff-queue-list li {
+	display: flex;
+	align-items: center;
+	padding-right: 12px;
+}
+
+#riff .riff-queue-list li > button:first-child {
+	flex: 1;
+	min-width: 0;
+}
+
+#riff .riff-queue-list .riff-more-button {
+	flex: none;
+	display: grid;
+	grid-template-columns: none;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+}
+
+#riff .riff-queue-list li.is-dragging {
+	opacity: 0.5;
+}
+
 #riff .riff-queue-head p {
 	color: var(--riff-fg-2);
 	font-size: 14px;
