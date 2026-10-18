@@ -15,7 +15,7 @@ test( 'watches the media code Riff reads, in both repositories', () => {
 test( 'a commit that touches several watched paths is listed once, with each path', () => {
 	const summary = summarize( [
 		{ repo: 'WordPress/gutenberg', path: 'packages/block-library/src/audio', commits: [ commit( 'aaaaaaa1', 'Audio: fix\n\nbody' ) ] },
-		{ repo: 'WordPress/gutenberg', path: 'packages/block-library/src/video', commits: [ commit( 'aaaaaaa1', 'Audio: fix' ), commit( 'bbbbbbb2', 'Video: [x] thing' ) ] },
+		{ repo: 'WordPress/gutenberg', path: 'packages/block-library/src/video', commits: [ commit( 'aaaaaaa1', 'Audio: fix' ), commit( 'bbbbbbb2', 'Video: [x] thing \\ end' ) ] },
 		{ repo: 'WordPress/wordpress-develop', path: 'src/wp-includes/media.php', commits: [] },
 	] );
 	assert.deepEqual( [ ...summary.keys() ], [ 'WordPress/gutenberg' ], 'a repository with nothing new is left out' );
@@ -26,7 +26,7 @@ test( 'a commit that touches several watched paths is listed once, with each pat
 
 	const body = issueBody( summary, '2026-10-17T00:00:00.000Z' );
 	assert.match( body, /- \[ \] \[`aaaaaaa`\]\(https:\/\/github\.com\/x\/commit\/aaaaaaa1\) Audio: fix/ );
-	assert.match( body, /Video: \\\[x\\\] thing/, 'brackets in a message cannot break the checklist' );
+	assert.ok( body.includes( 'Video: \\[x\\] thing \\\\ end' ), 'brackets and backslashes in a message cannot break the checklist' );
 } );
 
 test( 'nothing new means nothing to report', () => {

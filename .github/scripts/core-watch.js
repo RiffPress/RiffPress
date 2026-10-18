@@ -80,7 +80,7 @@ function issueBody( summary, since ) {
 	for ( const [ repo, commits ] of summary ) {
 		lines.push( `## ${ repo }`, '' );
 		for ( const c of commits ) {
-			lines.push( `- [ ] [\`${ c.sha.slice( 0, 7 ) }\`](${ c.url }) ${ c.message.replace( /([[\]])/g, '\\$1' ) } (${ c.paths.map( ( p ) => `\`${ p }\`` ).join( ', ' ) })` );
+			lines.push( `- [ ] [\`${ c.sha.slice( 0, 7 ) }\`](${ c.url }) ${ c.message.replace( /([\\[\]])/g, '\\$1' ) } (${ c.paths.map( ( p ) => `\`${ p }\`` ).join( ', ' ) })` );
 		}
 		lines.push( '' );
 	}
