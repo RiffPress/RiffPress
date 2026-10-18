@@ -2,7 +2,7 @@
  * The app, end to end: a page holding the block, a post opened inside it, the music carrying on
  * while the listener moves between the library and the post.
  *
- * Runs on desktop and on an iPhone viewport (see playwright.config.js).
+ * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -121,7 +121,7 @@ test.describe( 'App', () => {
 		).toHaveJSProperty( 'isConnected', true );
 	} );
 
-	test( 'the music carries on from the post to the library and back', async ( {
+	test( 'the music carries on from the post to the library, Back and Forward', async ( {
 		page,
 	} ) => {
 		await page.locator( `.riff-card[data-riff-post="${ postId }"]` ).click();
@@ -151,6 +151,11 @@ test.describe( 'App', () => {
 			'data-playing',
 			'true'
 		);
+		expect( ( await playing( page ) ).paused ).toBe( false );
+
+		await page.goForward();
+		await expect( page ).toHaveURL( pageUrl );
+		await expect( page.locator( '.riff-grid' ) ).toBeVisible();
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
