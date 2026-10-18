@@ -118,8 +118,8 @@ final class App {
 		// Inside a block render the wrapper carries the block's supports (colours, type); the
 		// shortcode has no block, so it gets the plain class. On a theme that sets its colours the
 		// stylesheet mixes the quieter shades from them, under riff-app-themed.
-		$tokens  = self::theme_tokens();
-		$class   = 'riff-app' . ( isset( $tokens['--riff-app-bg'], $tokens['--riff-app-ink'] ) ? ' riff-app-themed' : '' );
+		$tokens  = self::theme_tokens( \WP_Block_Supports::$block_to_render ? $attributes : array() );
+		$class   = 'riff-app' . ( isset( $tokens['--riff-app-bg'] ) || isset( $tokens['--riff-app-ink'] ) ? ' riff-app-themed' : '' );
 		$style   = self::theme_style( $tokens );
 		$wrapper = \WP_Block_Supports::$block_to_render
 			? get_block_wrapper_attributes(
@@ -152,14 +152,22 @@ final class App {
 	 * The theme's colours and fonts, as the block's custom properties.
 	 *
 	 * A theme with a theme.json has its background, text, link colour and fonts in global
-	 * styles; the block takes those, so it reads as part of the site. A theme without one keeps
-	 * the block's own WordPress.org palette.
+	 * styles; the block takes those, so it reads as part of the site. Styles > Blocks > Riff in the
+	 * Site Editor comes before the site's own, and what is set on this one block before both. A
+	 * theme without a theme.json keeps the block's own WordPress.org palette, unless the block
+	 * itself is given colours or a font.
+	 *
+	 * Every view inside the block is drawn from these properties, so the block's colour and font
+	 * settings are read here rather than printed on its wrapper (block.json skips their
+	 * serialization): the shades of its rows and cards follow the colour chosen.
 	 *
 	 * @since 4.14.0
+	 * @since 4.18.0 Styles > Blocks > Riff, and the block's own colour and font settings.
 	 *
+	 * @param array $attributes The block's attributes, when it is a block.
 	 * @return array<string, string> Custom property values, keyed by name.
 	 */
-	public static function theme_tokens(): array {
+	public static function theme_tokens( array $attributes = array() ): array {
 		$tokens = array();
 		if ( wp_theme_has_theme_json() ) {
 			$styles = array(
@@ -170,11 +178,15 @@ final class App {
 				'--riff-app-heading-font' => array( 'elements', 'heading', 'typography', 'fontFamily' ),
 			);
 			foreach ( $styles as $token => $path ) {
-				$value = wp_get_global_styles( $path );
+				$value = wp_get_global_styles( $path, array( 'block_name' => 'riff/app' ) );
+				$value = is_string( $value ) && '' !== $value ? $value : wp_get_global_styles( $path );
 				if ( is_string( $value ) && '' !== $value ) {
 					$tokens[ $token ] = $value;
 				}
 			}
+		}
+		$tokens = array_merge( $tokens, self::block_tokens( $attributes ) );
+		if ( $tokens ) {
 			// A link drawn in the text's own colour (Twenty Twenty-Five's is currentColor) is the
 			// text colour: currentColor in a custom property resolves on the element using it, and
 			// a filled button's would be its own label.
@@ -190,11 +202,13 @@ final class App {
 		 * Filters the custom properties the Riff block takes from the theme.
 		 *
 		 * Return an empty array to keep the block's own WordPress.org palette and fonts on
-		 * every theme, or set any `--riff-app-*` property to a CSS value. With both
-		 * `--riff-app-bg` and `--riff-app-ink` set, the stylesheet mixes the secondary text,
+		 * every theme, or set any `--riff-app-*` property to a CSS value. With
+		 * `--riff-app-bg` or `--riff-app-ink` set, the stylesheet mixes the secondary text,
 		 * borders, surfaces and the accent's shades from them.
 		 *
 		 * @since 4.14.0
+		 *
+		 * @since 4.18.0 Includes Styles > Blocks > Riff and the block's own colour and font settings.
 		 *
 		 * @param array $tokens Custom property values from the theme's global styles, keyed by name.
 		 */
@@ -205,6 +219,42 @@ final class App {
 			static fn( $value, $token ): bool => is_string( $value ) && preg_match( '/^--riff-app-[a-z0-9-]+$/', (string) $token ) && preg_match( '/^[#a-z0-9(),.%\s"\'_-]+$/i', $value ),
 			ARRAY_FILTER_USE_BOTH
 		);
+	}
+
+	/**
+	 * The colours and font set on one Riff block, as the block's custom properties: a preset by
+	 * its slug, or a custom value.
+	 *
+	 * @since 4.18.0
+	 *
+	 * @param array $attributes Block attributes.
+	 * @return array<string, string>
+	 */
+	private static function block_tokens( array $attributes ): array {
+		$style  = (array) ( $attributes['style'] ?? array() );
+		$preset = static fn( string $kind, $slug ): string => is_string( $slug ) && '' !== $slug ? 'var(--wp--preset--' . $kind . '--' . sanitize_key( $slug ) . ')' : '';
+		$tokens = array(
+			'--riff-app-bg'     => $preset( 'color', $attributes['backgroundColor'] ?? '' ),
+			'--riff-app-ink'    => $preset( 'color', $attributes['textColor'] ?? '' ),
+			'--riff-app-accent' => '',
+			'--riff-app-font'   => $preset( 'font-family', $attributes['fontFamily'] ?? '' ),
+		);
+		$custom = array(
+			'--riff-app-bg'     => $style['color']['background'] ?? '',
+			'--riff-app-ink'    => $style['color']['text'] ?? '',
+			'--riff-app-accent' => $style['elements']['link']['color']['text'] ?? '',
+		);
+		foreach ( $custom as $token => $value ) {
+			if ( '' === $tokens[ $token ] && is_string( $value ) && '' !== $value ) {
+				// A preset picked in the editor is stored as var:preset|color|slug.
+				$tokens[ $token ] = preg_match( '/^var:preset\|([a-z0-9-]+)\|([a-z0-9-]+)$/', $value, $m ) ? $preset( $m[1], $m[2] ) : $value;
+			}
+		}
+		// A font chosen for this block is its headings' font too.
+		if ( '' !== $tokens['--riff-app-font'] ) {
+			$tokens['--riff-app-heading-font'] = 'var(--riff-app-font)';
+		}
+		return array_filter( $tokens );
 	}
 
 	/**

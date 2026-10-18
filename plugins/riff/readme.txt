@@ -38,6 +38,12 @@ Roboto, Inter and EB Garamond are bundled under the SIL Open Font License, and t
 
 No. The blocks keep their own markup, and the player is added at the end of every page. A page where the script never runs still plays with the browser's native controls.
 
+= Does Riff follow my theme's colours and fonts? =
+
+The Riff block does. It takes the background, text, link colour and fonts from your theme's styles, and you can change them for every Riff block under Styles > Blocks > Riff in the Site Editor, or for one block in its settings. The block also has font size, line height, spacing, border and shadow settings.
+
+The player at the bottom of the screen, and the Listen page's app/ address, keep Riff's own look on every site, the way a streaming app does. A theme can set their accent colour, and developers can change more through filters.
+
 = Where do the tracks come from? =
 
 From the post. Every audio and video block in the post you are reading is the queue, in order, starting from the one you tapped. A playlist block counts as one track per item.

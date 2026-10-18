@@ -20,7 +20,7 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 Filters the custom properties the Riff block takes from the theme.
 
-Return an empty array to keep the block's own WordPress.org palette and fonts on every theme, or set any `--riff-app-*` property to a CSS value. With both `--riff-app-bg` and `--riff-app-ink` set, the stylesheet mixes the secondary text, borders, surfaces and the accent's shades from them.
+Return an empty array to keep the block's own WordPress.org palette and fonts on every theme, or set any `--riff-app-*` property to a CSS value. With `--riff-app-bg` or `--riff-app-ink` set, the stylesheet mixes the secondary text, borders, surfaces and the accent's shades from them.
 
 Since 4.14.0. Fires in `plugins/riff/features/listen/class-app.php`.
 

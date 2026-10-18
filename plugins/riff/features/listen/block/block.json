@@ -6,15 +6,50 @@
 	"category": "media",
 	"icon": "playlist-audio",
 	"description": "Your music library and the player, on this page. Every post with audio or video is listed, and the music keeps playing while you browse.",
-	"keywords": [ "music", "player", "audio", "library" ],
+	"keywords": [
+		"music",
+		"player",
+		"audio",
+		"library"
+	],
 	"textdomain": "riff",
 	"supports": {
 		"align": [ "wide", "full" ],
 		"html": false,
 		"multiple": false,
-		"color": { "background": true, "text": true, "link": true },
-		"typography": { "fontSize": true },
-		"spacing": { "padding": true }
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true,
+			"__experimentalSkipSerialization": true
+		},
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontFamily": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalSkipSerialization": [
+				"fontFamily"
+			],
+			"__experimentalDefaultControls": {
+				"fontSize": true,
+				"fontFamily": true
+			}
+		},
+		"spacing": {
+			"padding": true,
+			"margin": [
+				"top",
+				"bottom"
+			]
+		},
+		"__experimentalBorder": {
+			"color": true,
+			"radius": true,
+			"style": true,
+			"width": true
+		},
+		"shadow": true
 	},
 	"attributes": {
 		"align": {
