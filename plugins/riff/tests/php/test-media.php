@@ -209,4 +209,29 @@ class Test_Riff_Media extends Riff_TestCase {
 		$this->assertStringContainsString( 'cover', $track['art'][0]['src'] );
 		$this->assertSame( wp_get_attachment_url( $video ), $track['video']['src'] );
 	}
+
+	public function test_an_artist_takes_an_image_from_the_media_library_and_can_lose_it(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$artist = wp_insert_term( 'Someone', \Riff\Catalog::ARTIST )['term_id'];
+		$image  = self::attach( 'cover.png' );
+
+		ob_start();
+		Media::artist_field( get_term( $artist ) );
+		$field = (string) ob_get_clean();
+		$this->assertStringContainsString( 'name="' . \Riff\Catalog::ARTIST_IMAGE . '"', $field );
+		$this->assertStringContainsString( 'data-riff-pick="image"', $field, 'the same picker as Artwork' );
+
+		$_POST[ \Riff\Catalog::ARTIST_IMAGE ] = (string) $image;
+		Media::save_artist( $artist );
+		$this->assertSame( $image, (int) get_term_meta( $artist, \Riff\Catalog::ARTIST_IMAGE, true ) );
+
+		$_POST[ \Riff\Catalog::ARTIST_IMAGE ] = (string) self::attach( '02 - Underground [underground].mp3' );
+		Media::save_artist( $artist );
+		$this->assertSame( $image, (int) get_term_meta( $artist, \Riff\Catalog::ARTIST_IMAGE, true ), 'not an image, so kept as it was' );
+
+		$_POST[ \Riff\Catalog::ARTIST_IMAGE ] = '';
+		Media::save_artist( $artist );
+		$this->assertSame( '', get_term_meta( $artist, \Riff\Catalog::ARTIST_IMAGE, true ), 'emptied, so removed' );
+		unset( $_POST[ \Riff\Catalog::ARTIST_IMAGE ] );
+	}
 }

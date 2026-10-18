@@ -92,6 +92,12 @@ final class Catalog_Rest {
 							'default'     => 0,
 							'minimum'     => 0,
 						),
+						'orderby'  => array(
+							'description' => __( 'By title, or the most recently added first. An album is always in album order.', 'riff' ),
+							'type'        => 'string',
+							'enum'        => array( 'title', 'added' ),
+							'default'     => 'title',
+						),
 						'page'     => $page,
 						'per_page' => array(
 							'description' => __( 'Tracks per page.', 'riff' ),
@@ -191,7 +197,13 @@ final class Catalog_Rest {
 			'suppress_filters' => false,
 			'riff_catalog'     => true,
 		);
-		$tax  = array();
+		if ( 'added' === $request['orderby'] ) {
+			$args['orderby'] = array(
+				'date' => 'DESC',
+				'ID'   => 'DESC',
+			);
+		}
+		$tax = array();
 		if ( $album ) {
 			$tax[] = array(
 				'taxonomy' => Catalog::ALBUM,

@@ -46,6 +46,13 @@ final class Catalog {
 	public const ALBUM_ARTIST = 'riff_album_artist';
 
 	/**
+	 * Term meta on an artist: the image in the Media Library that heads their page.
+	 *
+	 * @since 4.19.0
+	 */
+	public const ARTIST_IMAGE = 'riff_artist_image';
+
+	/**
 	 * Attachment meta marking a file already filed, by catalogue version.
 	 *
 	 * @since 4.16.0
@@ -162,6 +169,17 @@ final class Catalog {
 					'back_to_items' => __( '&larr; Go to artists', 'riff' ),
 				),
 				'rest_base' => 'riff_artists',
+			)
+		);
+		register_term_meta(
+			self::ARTIST,
+			self::ARTIST_IMAGE,
+			array(
+				'type'              => 'integer',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'absint',
+				'auth_callback'     => static fn() => current_user_can( 'upload_files' ),
 			)
 		);
 		register_term_meta(

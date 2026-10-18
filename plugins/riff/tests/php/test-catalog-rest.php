@@ -176,6 +176,23 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( 3, $this->get( '/tracks', array( 'artist' => $artist['id'] ) )['total'] );
 	}
 
+	public function test_tracks_can_come_newest_first(): void {
+		$items = $this->get( '/tracks' )['items'];
+		$last  = end( $items );
+		wp_update_post(
+			array(
+				'ID'            => (int) $last['id'],
+				'post_date'     => '2030-01-01 00:00:00',
+				'post_date_gmt' => '2030-01-01 00:00:00',
+			)
+		);
+
+		$newest = $this->get( '/tracks', array( 'orderby' => 'added' ) )['items'];
+
+		$this->assertSame( $last['id'], $newest[0]['id'], 'the most recently added first' );
+		$this->assertNotSame( $last['id'], $this->get( '/tracks' )['items'][0]['id'], 'by title otherwise' );
+	}
+
 	public function test_paging_and_its_limits(): void {
 		$first = $this->get( '/tracks', array( 'per_page' => 1 ) );
 		$this->assertSame( 3, $first['pages'] );

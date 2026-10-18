@@ -11,6 +11,7 @@ namespace Riff\Listen;
 use WP_REST_Request;
 
 use Riff\Library;
+use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -466,7 +467,12 @@ final class Browse {
 	}
 
 	/**
-	 * One artist: their name beside Play and Shuffle, then their tracks.
+	 * One artist, as the apps draw them: their picture and name with Play and Shuffle, their tracks
+	 * newest first (until plays are counted, the newest stand in for the most played), ten at a
+	 * time, then their albums.
+	 *
+	 * @since 4.16.0
+	 * @since 4.19.0 Their picture, their latest tracks, and their albums.
 	 *
 	 * @param string $page   Listen page.
 	 * @param int    $id     Artist term ID.
@@ -477,15 +483,38 @@ final class Browse {
 		$data = self::get(
 			'/tracks',
 			array(
-				'artist' => $id,
-				'page'   => $number,
+				'artist'   => $id,
+				'orderby'  => 'added',
+				'per_page' => 10,
+				'page'     => $number,
 			)
 		);
 		$term = get_term( $id );
 		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
 			return self::artists_view( $page, 1 );
 		}
-		return self::list_view( $term->name, self::count( (int) $data['total'] ), $data, __( 'Artist', 'riff' ) ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
+		$albums = self::get(
+			'/albums',
+			array(
+				'artist'  => $id,
+				'orderby' => 'added',
+			)
+		);
+		// Their own picture, else their newest album's cover.
+		$image = (int) get_term_meta( $id, 'riff_artist_image', true );
+		$art   = $image ? Tracks::art( $image ) : (array) ( $albums['items'][0]['art'] ?? array() );
+		$cover = $art ? (string) end( $art )['src'] : '';
+		$meta  = array( self::count( (int) $data['total'] ) );
+		if ( $albums['total'] ) {
+			/* translators: %s: number of albums. */
+			$meta[] = sprintf( _n( '%s album', '%s albums', (int) $albums['total'], 'riff' ), number_format_i18n( (int) $albums['total'] ) );
+		}
+		$html  = App::header( $term->name, implode( ' · ', $meta ), __( 'Artist', 'riff' ), $cover, Art::tint( $art ), true );
+		$html .= '<h3 class="riff-app-section">' . esc_html__( 'Latest', 'riff' ) . '</h3>' . self::rows( $data['items'] ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
+		if ( $albums['items'] ) {
+			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Albums', 'riff' ) . '</h3>' . self::album_grid( $albums['items'], $page );
+		}
+		return $html;
 	}
 
 	/**

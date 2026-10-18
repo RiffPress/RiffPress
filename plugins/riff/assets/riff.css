@@ -2310,6 +2310,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-image: linear-gradient(var(--riff-album-fade)) fill 0 / 0 / 240px 100vmax 160px;
 }
 
+/* An artist's picture is round, as the apps draw one. */
+.riff-album-round .riff-album-cover {
+	border-radius: 50%;
+}
+
 /* More by this artist, under an album's tracks. */
 .riff-more {
 	margin-top: 56px;
