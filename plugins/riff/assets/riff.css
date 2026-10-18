@@ -36,6 +36,13 @@
 	}
 }
 
+/* While Now Playing is open the page under it stays still, as in the apps:
+   it does not scroll behind the dialog, and its scrollbar does not show
+   beside Up next's. */
+html:has(#riff.is-open) {
+	overflow: hidden;
+}
+
 /* Room at the end of the page, so the bar never covers a post's last line. */
 html.has-riff body::after {
 	content: "";
@@ -2384,6 +2391,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 ::view-transition-old(root),
 ::view-transition-new(root) {
 	animation-duration: 0.12s;
+}
+
+/* The page's own scrollbar matches the dark app. */
+html:has(body.riff-standalone) {
+	background: #030303;
+	color-scheme: dark;
 }
 
 /* ---- Standalone mode: the Listen block on its own at app/, in Riff's dark
