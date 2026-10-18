@@ -123,7 +123,9 @@ html.has-riff body::after {
 	justify-content: center;
 	gap: 2px;
 	padding-bottom: 30%;
-	background: rgb(0 0 0 / 0.5);
+
+	/* Dark enough that white bars read on a pale cover, too. */
+	background: rgb(0 0 0 / 0.6);
 	opacity: 0;
 	transition: opacity 0.15s;
 }
@@ -133,6 +135,7 @@ html.has-riff body::after {
 	height: 40%;
 	background: #fff;
 	border-radius: 1px;
+	box-shadow: 0 0 2px rgb(0 0 0 / 0.4);
 	transform-origin: bottom;
 	transform: scaleY(0.35);
 }

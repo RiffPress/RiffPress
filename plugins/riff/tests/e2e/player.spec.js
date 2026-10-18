@@ -336,6 +336,55 @@ test.describe( 'Player', () => {
 			.toMatch( /scaleY\(/ );
 	} );
 
+	test( 'a file from another origin that shares over CORS is analysed; one that does not still plays', async ( {
+		page,
+		requestUtils,
+	}, testInfo ) => {
+		test.skip( testInfo.project.name === 'iphone', 'no analyser on iOS' );
+		const body = require( 'node:fs' ).readFileSync( path.join( FIXTURES, FILES[ 1 ] ) );
+		// Playwright answers CORS for any response it fulfils, so the origin that does not share
+		// refuses the player's CORS check outright, as a browser would see it.
+		const serve = ( cors ) => ( route ) =>
+			! cors && route.request().method() === 'HEAD'
+				? route.abort()
+				: route.fulfill( {
+						status: 200,
+						contentType: 'audio/mpeg',
+						headers: { 'Access-Control-Allow-Origin': '*' },
+						body: route.request().method() === 'HEAD' ? '' : body,
+				  } );
+		await page.route( 'https://shares.riff.test/**', serve( true ) );
+		await page.route( 'https://private.riff.test/**', serve( false ) );
+		const block = ( src ) =>
+			`<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="${ src }"></audio></figure><!-- /wp:audio -->`;
+		const post = await requestUtils.createPost( {
+			title: 'Streamed',
+			status: 'publish',
+			content:
+				block( 'https://shares.riff.test/underground.mp3' ) +
+				block( 'https://private.riff.test/underground.mp3' ),
+		} );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.goto( post.link );
+		const rows = page.locator( '.riff-row' );
+		await rows.nth( 0 ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
+		await expect
+			.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).crossOrigin ) )
+			.toBe( 'anonymous' );
+		// Without CORS the file plays as it always has, out of Web Audio's reach, never silenced.
+		await rows.nth( 1 ).click();
+		await expect
+			.poll( () =>
+				page.evaluate( () =>
+					[ ...document.querySelectorAll( '.riff-audio, .riff-video' ) ].some(
+						( m ) => m.src.includes( 'private.riff.test' ) && ! m.paused && m.currentTime > 0.5 && m.crossOrigin === null
+					)
+				)
+			)
+			.toBe( true );
+	} );
+
 	test( 'each bar on the playing row swings through its own range, not a fixed staircase', async ( {
 		page,
 	}, testInfo ) => {
@@ -344,7 +393,7 @@ test.describe( 'Player', () => {
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
-		// Three seconds of heights, read in the page every 100 ms, past the opening two seconds
+		// Three seconds of heights, read in the page every 100 ms, past the opening four seconds
 		// where every band is still learning its range.
 		const heights = await page.evaluate(
 			() =>
@@ -353,7 +402,8 @@ test.describe( 'Player', () => {
 					setTimeout( () => {
 						const every = setInterval( () => {
 							document
-								.querySelectorAll( '.riff-row[data-current] .riff-row-state i' )
+								.querySelector( '.riff-row[data-current]' )
+								.querySelectorAll( '.riff-row-state i' )
 								.forEach( ( b, k ) =>
 									seen[ k ].push( parseFloat( b.style.transform.slice( 7 ) ) )
 								);
@@ -362,7 +412,7 @@ test.describe( 'Player', () => {
 								resolve( seen );
 							}
 						}, 100 );
-					}, 2000 );
+					}, 4000 );
 				} )
 		);
 		// One scale for all three bands pinned the bass bar near the top and kept the others in a
