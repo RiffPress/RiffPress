@@ -499,7 +499,49 @@ export function start( api ) {
 			return;
 		}
 		e.preventDefault();
+		// The tab shows as chosen at once, whatever the network is doing.
+		if ( a.closest( '.riff-app-bar' ) ) {
+			for ( const tab of nav.querySelectorAll( 'a[aria-current]' ) ) {
+				tab.removeAttribute( 'aria-current' );
+			}
+			a.setAttribute( 'aria-current', 'page' );
+		}
 		show( to ).catch( () => {} );
+	} );
+
+	// ---- Prefetch. A view is fetched as soon as it is likely to be wanted: the pointer reaches its
+	// link, the link takes focus or a finger lands on it, and every tab once the page is idle. A
+	// fetch is remembered for the session, so the click itself finds the view already there.
+	function prefetch( href ) {
+		// The view showing too: the server drew it, so going back to it needs its own fetch.
+		const to = postOf( href );
+		if ( ! to ) {
+			return;
+		}
+		let ahead;
+		if ( to.browse ) {
+			ahead = pageView( to.href );
+		} else if ( to.id ) {
+			ahead = get( '/' + to.id );
+		} else {
+			ahead = get( '' );
+		}
+		ahead.catch( () => {} );
+	}
+	const warm = ( e ) => {
+		const a = e.target.closest?.( 'a[href]' );
+		if ( a && ! a.target && ! a.hasAttribute( 'download' ) ) {
+			prefetch( a.href );
+		}
+	};
+	app.addEventListener( 'pointerover', warm, { passive: true } );
+	app.addEventListener( 'focusin', warm );
+	app.addEventListener( 'touchstart', warm, { passive: true } );
+	const idle = window.requestIdleCallback || ( ( fn ) => setTimeout( fn, 1200 ) );
+	idle( () => {
+		for ( const tab of nav?.querySelectorAll( 'a[href]' ) || [] ) {
+			prefetch( tab.href );
+		}
 	} );
 
 	// Search: the form works as a plain GET without the script; with it, the results swap in.
