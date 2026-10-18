@@ -53,6 +53,7 @@
 
 <h2>Titles, artists and covers come from the files</h2>
 <p>When a file is uploaded, WordPress reads the tags inside it: the title, the artist, the album, and the cover art if there is one. Riff shows them in the player, on the lock screen and in the library. If a file has no tags, or the wrong ones, go to <kbd>Media</kbd>, then <kbd>Library</kbd>, click the file and edit them there.</p>
+<p>Riff files each track under its album and artist from those same tags, so the Listen page can browse and search them. It also shows each track's quality, such as MP3 · 320 kbps or FLAC · 24-bit 96 kHz, as WordPress read it from the file.</p>
 <p>The same screen has two fields Riff adds. <strong>Artwork</strong> is a cover for that one track, if it differs from the album's. <strong>Video version</strong> is a video in the library, for a song that has one; listeners can switch between the song and the video while it plays.</p>
 <figure><picture><source type="image/avif" srcset="../guide-artwork.avif 2880w, ../guide-artwork-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-artwork.png" width="2880" height="1800" alt="The attachment details for an audio file: Title, Artist and Album fields filled in from the file, then Riff's Artwork and Video version fields" loading="lazy" decoding="async"></picture><figcaption>A file's details. WordPress filled in the title, artist and album from the file. Artwork and Video version are Riff's.</figcaption></figure>
 <div class="with-cover"><img src="../covers/shades-of-blue.svg" alt="A drawn cover: a charcoal record with a pomegranate label, the title Shades of Blue in serif type, and the band's name beneath" width="1024" height="1024" loading="lazy" decoding="async"><p>The album's cover is the post's <em>featured image</em>. In the editor, press <kbd>Set featured image</kbd> in the sidebar and upload it. If you skip this, Riff draws one: a record with one groove per track, each groove as long as the track, in wordpress.org's colours. The demo's albums wear them.</p></div>
@@ -61,7 +62,7 @@
 <p>Press <kbd>Publish</kbd>, then <kbd>View Post</kbd>. Tap a track. The player bar appears along the bottom and keeps playing while you scroll, open another post, or lock your phone. Tap the bar for Now Playing.</p>
 
 <h2>One page where everything plays</h2>
-<p>Riff can also give the site a library: one page that lists every album and plays any of them without leaving the page.</p>
+<p>Riff can also give the site a library: one page that lists every album, browses the Media Library by album, artist and track, searches it, and plays any of it without leaving the page.</p>
 <ol>
 <li>Go to <kbd>Pages</kbd>, then <kbd>Add Page</kbd>, and title it <em>Listen</em>, or whatever you like.</li>
 <li>Click the empty line, type <code>/riff</code> and choose the <em>Riff</em> block.</li>
@@ -69,9 +70,10 @@
 </ol>
 <figure><picture><source type="image/avif" srcset="../guide-riff-block.avif 2880w, ../guide-riff-block-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-riff-block.png" width="2880" height="1800" alt="The editor with a page titled Listen holding the Riff block, which shows the library: a Library heading and a grid of album covers" loading="lazy" decoding="async"></picture><figcaption>The Riff block on a page, showing the library as it will be on the site: every album as a cover.</figcaption></figure>
 <p>To make it the front page of the site, go to <kbd>Settings</kbd>, then <kbd>Reading</kbd>, choose <em>A static page</em>, and pick it as the homepage.</p>
+<p>Add <code>app/</code> to the page's address, for example <code>/listen/app/</code>, and the same page opens as a player on its own, in Riff's dark look and without your theme. A browser can install that address as an app.</p>
 
 <h2>Many albums at once</h2>
-<p>If you have a folder of files per album, the repository includes a script that turns a folder of audio into a post, with the tracks in order and the tags read from the files. It is how the demo's nine albums were made. See <a href="https://github.com/RiffPress/RiffPress/blob/main/packages/fixtures/seed.php">seed.php</a> on GitHub.</p>
+<p>If you have a folder of files per album and can use <a href="https://wp-cli.org/">WP-CLI</a>, run <code>wp riff import</code> with the path to the folder. It uploads the files to the Media Library the same way the dashboard does and makes one album post for each folder that holds audio. A cover image in the folder becomes the artwork, and a video named like a track becomes its video version. Run it again and it skips what it already imported; add <code>--dry-run</code> to see what it would do first.</p>
 
 <div class="aside">Stuck? <a href="https://github.com/RiffPress/RiffPress/issues">Open an issue</a> and say what you tried. If something here is wrong or unclear, that is a bug in this page too.</div>
 </main>

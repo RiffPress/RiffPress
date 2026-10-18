@@ -378,6 +378,15 @@ picture {
 	padding-top: 32px;
 }
 
+.specs.pair {
+	grid-template-columns: repeat(2, 1fr);
+}
+
+.specs + .fine,
+.shot + .fine {
+	margin-top: 32px;
+}
+
 .specs h3 {
 	margin: 0 0 10px;
 	font-size: 1rem;
@@ -616,7 +625,8 @@ html.js .r.in {
 		gap: 20px;
 	}
 
-	.specs {
+	.specs,
+	.specs.pair {
 		grid-template-columns: 1fr;
 		gap: 28px;
 	}
