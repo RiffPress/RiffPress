@@ -229,6 +229,58 @@ test.describe( 'App', () => {
 	} );
 } );
 
+test.describe( 'Browse', () => {
+	test.beforeEach( async ( { page } ) => {
+		await page.goto( pageUrl );
+	} );
+
+	test( 'albums, an album, search and Back, with the music carrying on throughout', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-app-tab', { hasText: 'Albums' } ).click();
+		await expect( page ).toHaveURL( /riff_view=albums/ );
+		await page
+			.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } )
+			.first()
+			.locator( '.riff-card-link' )
+			.click();
+		await expect( page ).toHaveURL( /riff_album=\d+/ );
+		await expect( page.locator( '.riff-row' ).first() ).toBeVisible();
+		await page.locator( '[data-riff-app-action="play"]' ).click();
+		await expect
+			.poll( async () => ( await playing( page ) ).paused )
+			.toBe( false );
+
+		const search = page.locator( '.riff-app-search input' );
+		await search.fill( 'Trombone' );
+		await search.press( 'Enter' );
+		await expect( page ).toHaveURL( /riff_search=Trombone/ );
+		await expect( page.locator( '.riff-app-title' ) ).toContainText( 'Trombone' );
+		await expect(
+			page.locator( '.riff-row', { hasText: 'Trombone Detritus' } ).first()
+		).toBeVisible();
+		expect( ( await playing( page ) ).paused ).toBe( false );
+
+		await page.goBack();
+		await expect( page ).toHaveURL( /riff_album=\d+/ );
+		await expect( page.locator( '.riff-row' ).first() ).toBeVisible();
+		expect( ( await playing( page ) ).paused ).toBe( false );
+	} );
+
+	test( 'every browse view reads without the script', async ( { browser } ) => {
+		const context = await browser.newContext( { javaScriptEnabled: false } );
+		const plain = await context.newPage();
+		await plain.goto( pageUrl );
+		await plain.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await expect( plain.locator( '.riff-artist' ).first() ).toBeVisible();
+		await plain.locator( '.riff-app-search input' ).fill( 'Compositions' );
+		await plain.locator( '.riff-app-search input' ).press( 'Enter' );
+		await expect( plain.locator( '.riff-app-title' ) ).toContainText( 'Compositions' );
+		await expect( plain.locator( 'figure[data-riff-track]' ).first() ).toBeAttached();
+		await context.close();
+	} );
+} );
+
 test.describe( 'App requests', () => {
 	// A post's own route, or the library's second page, whichever permalinks the site uses.
 	const postRoute = ( id ) => ( url ) =>

@@ -103,9 +103,16 @@ final class App {
 		if ( ! Player::enabled() ) {
 			return '';
 		}
-		$page  = (string) get_permalink();
-		$post  = self::requested();
-		$view  = $post ? self::post_view( $post, $page ) : self::library_view( $page );
+		$page   = (string) get_permalink();
+		$post   = self::requested();
+		$browse = $post ? null : Browse::requested();
+		if ( $post ) {
+			$view = self::post_view( $post, $page );
+		} elseif ( $browse ) {
+			$view = Browse::view( $browse, $page );
+		} else {
+			$view = self::library_view( $page );
+		}
 		$align = isset( $attributes['align'] ) && in_array( $attributes['align'], array( 'wide', 'full' ), true ) ? ' align' . $attributes['align'] : '';
 		// Inside a block render the wrapper carries the block's supports (colours, type); the
 		// shortcode has no block, so it gets the plain class. On a theme that sets its colours the
@@ -124,17 +131,18 @@ final class App {
 			)
 			: 'class="' . esc_attr( $class . $align ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' );
 		return sprintf(
-			'<div %s data-riff-app data-riff-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s">' .
-			'<nav class="riff-app-bar" aria-label="%s"><a class="riff-app-home" href="%s">%s</a></nav>' .
+			'<div %s data-riff-app data-riff-rest="%s" data-riff-tracks-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s" data-riff-browse="%s">' .
+			'<nav class="riff-app-bar" aria-label="%s">%s</nav>' .
 			'<div class="riff-app-view" data-riff-app-view>%s</div></div>',
 			$wrapper,
 			esc_url( rest_url( Library::REST . '/library' ) ),
+			esc_url( rest_url( Library::REST . '/tracks' ) ),
 			esc_url( $page ),
 			esc_attr( self::QUERY ),
 			esc_attr( self::PAGE_QUERY ),
+			esc_attr( implode( ',', Browse::ARGS ) ),
 			esc_attr__( 'Riff', 'riff' ),
-			esc_url( $page ),
-			esc_html__( 'Library', 'riff' ),
+			Browse::nav( $page, $browse ),
 			$view
 		);
 	}
