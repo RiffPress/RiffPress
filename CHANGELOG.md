@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.18.0](https://github.com/RiffPress/RiffPress/compare/v4.17.0...v4.18.0) (2026-10-18)
+
+
+### Features
+
+* an album page tinted from its cover, with more by its artist ([#415](https://github.com/RiffPress/RiffPress/issues/415)) ([bcbf90a](https://github.com/RiffPress/RiffPress/commit/bcbf90a0014aff48951351ef36d7b96b8bd9e20b))
+* Home opens the Listen page, with rows of what was played, recently added albums, artists and new posts ([#417](https://github.com/RiffPress/RiffPress/issues/417)) ([c84643b](https://github.com/RiffPress/RiffPress/commit/c84643b1b16a7faf533bd1286c4235467e0c8678))
+* protected files, served through WordPress to whoever may play them ([#411](https://github.com/RiffPress/RiffPress/issues/411)) ([9cf19f8](https://github.com/RiffPress/RiffPress/commit/9cf19f8357ea1fd2e4fc125c962f4d24002ecc19))
+* the Riff block takes the Site Editor's colour, type, spacing and border settings through to every view inside it ([#413](https://github.com/RiffPress/RiffPress/issues/413)) ([49ad4f9](https://github.com/RiffPress/RiffPress/commit/49ad4f9b1dfc94dffcfd916efd8c93ce52fceff9))
+
+
+### Bug Fixes
+
+* a playlist post shows each track once when core's block styles print after Riff's ([#408](https://github.com/RiffPress/RiffPress/issues/408)) ([ee36a93](https://github.com/RiffPress/RiffPress/commit/ee36a9354e75c9b3dcd3d9e0629628840835b80a))
+* a press on the app's buttons before its script has loaded is held and made once it has ([#416](https://github.com/RiffPress/RiffPress/issues/416)) ([21fbaac](https://github.com/RiffPress/RiffPress/commit/21fbaacb59302163c5435c2cf049c9552b1f272f))
+* the sidebar's toggle shows once the script that runs it has loaded ([#409](https://github.com/RiffPress/RiffPress/issues/409)) ([a7d8831](https://github.com/RiffPress/RiffPress/commit/a7d88314fc911f56c8e53d7042759f933ed1e4a0))
+
 ## [4.17.0](https://github.com/RiffPress/RiffPress/compare/v4.16.0...v4.17.0) (2026-10-18)
 
 
