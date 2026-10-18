@@ -7,6 +7,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { own } = require( './own' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 
 const FIXTURES = path.join(
@@ -28,11 +29,13 @@ const FILES = [
 let postUrl;
 let playlistUrl;
 
+const made = own();
+
 test.beforeAll( async ( { requestUtils } ) => {
-	const cover = await requestUtils.uploadMedia(
+	const cover = await made.media( requestUtils,
 		path.join( FIXTURES, 'cover.png' )
 	);
-	const video = await requestUtils.uploadMedia(
+	const video = await made.media( requestUtils,
 		path.join(
 			FIXTURES,
 			'01 - Intensities in Ten Cities [intensities].webm'
@@ -40,7 +43,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 	);
 	const audio = [];
 	for ( const file of FILES ) {
-		const media = await requestUtils.uploadMedia(
+		const media = await made.media( requestUtils,
 			path.join( FIXTURES, file )
 		);
 		await requestUtils.rest( {
@@ -61,7 +64,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 				`<!-- wp:audio {"id":${ m.id }} --><figure class="wp-block-audio"><audio controls src="${ m.source_url }"></audio></figure><!-- /wp:audio -->`
 		)
 		.join( '' );
-	const post = await requestUtils.createPost( {
+	const post = await made.post( requestUtils, {
 		title: `Riff e2e ${ Date.now() }`,
 		status: 'publish',
 		content,
@@ -77,7 +80,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 				`<!-- wp:playlist-track {"id":${ m.id },"src":"${ m.source_url }","title":"${ m.title.raw }"} /-->`
 		)
 		.join( '' );
-	const playlist = await requestUtils.createPost( {
+	const playlist = await made.post( requestUtils, {
 		title: `Riff e2e playlist ${ Date.now() }`,
 		status: 'publish',
 		content: `<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">${ items }</ol></figure><!-- /wp:playlist -->`,
@@ -87,8 +90,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
-	await requestUtils.deleteAllPosts();
-	await requestUtils.deleteAllMedia();
+	await made.cleanUp( requestUtils );
 } );
 
 const audioState = ( page ) =>
@@ -386,10 +388,10 @@ test.describe( 'Player', () => {
 		page,
 		requestUtils,
 	} ) => {
-		const flac = await requestUtils.uploadMedia(
+		const flac = await made.media( requestUtils,
 			path.join( FIXTURES, '..', 'test', 'tone-24-96.flac' )
 		);
-		const post = await requestUtils.createPost( {
+		const post = await made.post( requestUtils, {
 			title: `Riff e2e lossless ${ Date.now() }`,
 			status: 'publish',
 			content: `<!-- wp:audio {"id":${ flac.id }} --><figure class="wp-block-audio"><audio controls src="${ flac.source_url }"></audio></figure><!-- /wp:audio -->`,
