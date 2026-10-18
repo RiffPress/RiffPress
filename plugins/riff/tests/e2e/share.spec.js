@@ -4,6 +4,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { own } = require( './own' );
 
 const FIXTURES = path.join(
 	__dirname,
@@ -28,6 +29,8 @@ const block = ( m, withId = true ) =>
 		m.source_url
 	}"></audio></figure><!-- /wp:audio -->`;
 
+const made = own();
+
 test.beforeAll( async ( { requestUtils } ) => {
 	const media = [];
 	for ( const file of [
@@ -36,24 +39,24 @@ test.beforeAll( async ( { requestUtils } ) => {
 		'04 - It\'s a Brand New Day [new-day].mp3',
 	] ) {
 		media.push(
-			await requestUtils.uploadMedia( path.join( FIXTURES, file ) )
+			await made.media( requestUtils, path.join( FIXTURES, file ) )
 		);
 	}
 	// An attachment, a bare address, and the first file again.
-	const post = await requestUtils.createPost( {
+	const post = await made.post( requestUtils, {
 		title: `Riff share e2e ${ Date.now() }`,
 		status: 'publish',
 		content: block( media[ 0 ] ) + block( media[ 1 ], false ) + block( media[ 0 ] ),
 	} );
 	postUrl = post.link;
 	postId = post.id;
-	const other = await requestUtils.createPost( {
+	const other = await made.post( requestUtils, {
 		title: 'Riff share elsewhere',
 		status: 'publish',
 		content: block( media[ 2 ] ),
 	} );
 	otherUrl = other.link;
-	const listen = await requestUtils.createPage( {
+	const listen = await made.page( requestUtils, {
 		title: 'Listen share e2e',
 		status: 'publish',
 		content: '<!-- wp:riff/app {"align":"full"} /-->',
@@ -62,9 +65,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
-	await requestUtils.deleteAllPages();
-	await requestUtils.deleteAllPosts();
-	await requestUtils.deleteAllMedia();
+	await made.cleanUp( requestUtils );
 } );
 
 // The track IDs of the post's rows, in order.

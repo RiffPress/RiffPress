@@ -6,6 +6,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { own } = require( './own' );
 
 const FIXTURES = path.join(
 	__dirname,
@@ -26,13 +27,15 @@ let pageUrl;
 let postId;
 let extraId;
 
+const made = own();
+
 test.beforeAll( async ( { requestUtils } ) => {
-	const cover = await requestUtils.uploadMedia(
+	const cover = await made.media( requestUtils,
 		path.join( FIXTURES, 'cover.png' )
 	);
 	const audio = [];
 	for ( const file of FILES ) {
-		const media = await requestUtils.uploadMedia(
+		const media = await made.media( requestUtils,
 			path.join( FIXTURES, file )
 		);
 		await requestUtils.rest( {
@@ -45,7 +48,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 	// Enough older posts for a second page of the library, made first so the post above is newest.
 	const block = `<!-- wp:audio {"id":${ audio[ 0 ].id }} --><figure class="wp-block-audio"><audio controls src="${ audio[ 0 ].source_url }"></audio></figure><!-- /wp:audio -->`;
 	for ( let i = 1; i <= 24; i++ ) {
-		const extra = await requestUtils.createPost( {
+		const extra = await made.post( requestUtils, {
 			title: `Riff app extra ${ i }`,
 			status: 'publish',
 			content: block,
@@ -53,7 +56,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 		} );
 		extraId = extra.id;
 	}
-	const post = await requestUtils.createPost( {
+	const post = await made.post( requestUtils, {
 		title: `Riff app e2e ${ Date.now() }`,
 		status: 'publish',
 		content: audio
@@ -65,7 +68,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 		featured_media: cover.id,
 	} );
 	postId = post.id;
-	const page = await requestUtils.createPage( {
+	const page = await made.page( requestUtils, {
 		title: 'Listen e2e',
 		status: 'publish',
 		content: '<!-- wp:riff/app {"align":"full"} /-->',
@@ -74,9 +77,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
-	await requestUtils.deleteAllPages();
-	await requestUtils.deleteAllPosts();
-	await requestUtils.deleteAllMedia();
+	await made.cleanUp( requestUtils );
 } );
 
 const playing = ( page ) =>

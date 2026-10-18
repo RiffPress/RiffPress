@@ -4,6 +4,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { own } = require( './own' );
 
 const FIXTURES = path.join(
 	__dirname,
@@ -20,20 +21,22 @@ let audio;
 let video;
 let cover;
 
+const made = own();
+
 test.beforeAll( async ( { requestUtils } ) => {
-	audio = await requestUtils.uploadMedia(
+	audio = await made.media( requestUtils,
 		path.join( FIXTURES, '02 - Underground [underground].mp3' )
 	);
-	video = await requestUtils.uploadMedia(
+	video = await made.media( requestUtils,
 		path.join( FIXTURES, '01 - Intensities in Ten Cities [intensities].webm' )
 	);
-	cover = await requestUtils.uploadMedia(
+	cover = await made.media( requestUtils,
 		path.join( FIXTURES, 'cover.png' )
 	);
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
-	await requestUtils.deleteAllMedia();
+	await made.cleanUp( requestUtils );
 } );
 
 /**
