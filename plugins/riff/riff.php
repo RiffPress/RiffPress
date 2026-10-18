@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Riff Music Player
  * Description: Plays the audio and video in your posts in a player that stays docked at the bottom of the screen, with a full Now Playing view.
- * Version: 4.15.0
+ * Version: 4.16.0
  * Requires at least: 7.0
  * Requires PHP: 8.1
  * Plugin URI: https://riffpress.com/
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'RIFF_VERSION', '4.15.0' );
+define( 'RIFF_VERSION', '4.16.0' );
 define( 'RIFF_FILE', __FILE__ );
 define( 'RIFF_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RIFF_URL', plugin_dir_url( __FILE__ ) );
