@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Riff is built</title>
+<meta name="description" content="What Riff is built on, how every change is tested, how its documentation stays true to the code, and what RiffPress commits to: supported versions, security fixes, and notice before anything is removed.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RiffPress">
+<meta property="og:url" content="{{pages_url}}built/">
+<meta property="og:title" content="How Riff is built">
+<meta property="og:description" content="What Riff is built on, how every change is tested, and what RiffPress commits to.">
+<meta property="og:image" content="{{pages_url}}og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{{pages_url}}built/">
+<link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1e1e1e">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="../web/web.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="nav"><div class="wrap"><a class="mark" href="../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="../#listen">The block</a><a href="../add-music/">Add your music</a><a href="../developers/">Developers</a><a class="btn" href="../download/">Download</a></nav></div></div>
+
+<div class="marg" aria-hidden="true"><img src="../brand/record-ghost.svg" alt="" width="1024" height="1024" decoding="async"></div>
+<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../">RiffPress</a></span><span class="is-current-page">How Riff is built</span></nav></div></div>
+<main id="main" class="wrap dl">
+<h1>How Riff is built</h1>
+<p class="lede">Your music should outlast the software that plays it. Riff is built on what WordPress already has, is tested on every change, and comes with written commitments about how it will be maintained.</p>
+
+<h2>Built on WordPress</h2>
+<p>Riff plays the Audio, Video and Playlist blocks that ship with WordPress, and reads track details from the Media Library. It adds no post types, no settings screen and no database tables. The only things it stores are a few fields on media items, such as a track's artwork and its video version. If you turn it off, your posts still play in the browser's own player.</p>
+<p>It calls no outside services. There is no account, no tracking and no CDN, and the fonts ship inside the plugin. Your music and your listeners' visits stay on your server.</p>
+
+<h2>Tested on every change</h2>
+<p>Every pull request that changes code runs the full suite, and it can't merge until the suite passes. A scheduled run every Monday repeats it against the current WordPress release, so a change in core is caught even when Riff hasn't changed.</p>
+<ul class="req">
+	<li><span>PHP and WordPress</span><span>The WordPress test suite on PHP 8.1 with WordPress 7.0 (the oldest supported), PHP 8.4 with the current release, a multisite network on PHP 8.3, and WordPress trunk.</span></li>
+	<li><span>In a browser</span><span>Playwright plays real tracks at desktop width and on an iPhone viewport.</span></li>
+	<li><span>Accessibility</span><span>axe checks Now Playing for accessibility problems, and the tests play, pause and seek from the keyboard.</span></li>
+	<li><span>Standards</span><span>WordPress Coding Standards, ESLint, stylelint, a spell check, and Plugin Check, the tool the WordPress.org plugin team uses to review plugins.</span></li>
+	<li><span>Try any change</span><span>Each pull request gets its own WordPress Playground link, so anyone can try the change before it merges.</span></li>
+</ul>
+
+<h2>Documentation that matches the code</h2>
+<p>The <a href="../developers/">developer reference</a> is generated from the plugin's source. That covers every hook with the line it fires on, the JavaScript API, the REST routes, the CSS custom properties, and the browser features the player uses. A commit that changes the code without updating the reference is rejected, both before the commit and again in CI, so the reference always matches the release you download.</p>
+
+<h2>What we commit to</h2>
+<ul class="req">
+	<li><span>WordPress</span><span>The current release and the one before it. Today that is 7.1 and 7.0.</span></li>
+	<li><span>PHP</span><span>8.1 or newer, tested up to the newest release.</span></li>
+	<li><span>Raising the minimum</span><span>Only in a new minor or major version, named in the release notes, and only once the test suite runs on the new minimum.</span></li>
+	<li><span>Public API</span><span>Every public hook, REST field and route, the track schema and the public CSS custom properties keep their names and shapes within a major version. Anything that has to go is deprecated with a notice for at least one release first, and removed only in the next major version.</span></li>
+	<li><span>Security</span><span>Reports are acknowledged within 72 hours and fixed in a release within 14 days, sooner if the issue is being exploited. See the <a href="https://github.com/RiffPress/RiffPress/security/policy">security policy</a>.</span></li>
+	<li><span>Dependencies</span><span>Development dependencies are updated monthly, and security updates are applied as soon as an advisory is published. The plugin itself has no runtime dependencies.</span></li>
+	<li><span>License</span><span>GPL, version 2 or later, like WordPress. The code stays free to use, change and pass on.</span></li>
+</ul>
+
+<h2>Every release</h2>
+<p>Releases are cut from the pull request titles, so every change appears in the <a href="https://github.com/RiffPress/RiffPress/blob/main/CHANGELOG.md">changelog</a> in the words it was merged with. Each version is a <a href="https://github.com/RiffPress/RiffPress/releases">tagged release on GitHub</a> with its zip attached.</p>
+
+<h2>Get help</h2>
+<p>Ask a question or report a bug in <a href="https://github.com/RiffPress/RiffPress/issues">GitHub issues</a>. Report a security problem privately, through the <a href="https://github.com/RiffPress/RiffPress/security/advisories/new">security advisory form</a>.</p>
+</main>
+
+<div class="dots" aria-hidden="true"></div>
+<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
+</body>
+</html>
