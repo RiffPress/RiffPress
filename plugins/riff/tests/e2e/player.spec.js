@@ -364,7 +364,7 @@ test.describe( 'Player', () => {
 		await page.route( 'https://private.riff.test/**', serve( false ) );
 		const block = ( src ) =>
 			`<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="${ src }"></audio></figure><!-- /wp:audio -->`;
-		const post = await requestUtils.createPost( {
+		const post = await made.post( requestUtils, {
 			title: 'Streamed',
 			status: 'publish',
 			content:
