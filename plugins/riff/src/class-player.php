@@ -139,6 +139,18 @@ final class Player {
 			'suggestions'       => __( '%s suggestions', 'riff' ),
 			/* translators: %s: number of suggestions, 1. */
 			'oneSuggestion'     => __( '%s suggestion', 'riff' ),
+			'playNext'          => __( 'Play next', 'riff' ),
+			'addToQueue'        => __( 'Add to queue', 'riff' ),
+			'removeFromQueue'   => __( 'Remove from queue', 'riff' ),
+			'moveUp'            => __( 'Move up', 'riff' ),
+			'moveDown'          => __( 'Move down', 'riff' ),
+			'goToPost'          => __( 'Go to post', 'riff' ),
+			/* translators: %s: track title. */
+			'trackMenu'         => __( 'More options for %s', 'riff' ),
+			/* translators: %s: track title. */
+			'playingNext'       => __( '%s plays next', 'riff' ),
+			/* translators: %s: track title. */
+			'addedToQueue'      => __( '%s added to the queue', 'riff' ),
 		);
 		/**
 		 * Filters the strings the player shows.

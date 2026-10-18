@@ -223,6 +223,91 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-queue-list li' ) ).toHaveCount( 3 );
 	} );
 
+	test( 'the menu on a row plays a track next or adds it to the queue, and a plugin can add to the menu', async ( {
+		page,
+	} ) => {
+		await page.evaluate( () => {
+			window.riffQueueChanges = [];
+			window.wp.hooks.addAction( 'riff.queue', 'e2e', ( d ) => window.riffQueueChanges.push( d.change ) );
+			window.wp.hooks.addFilter( 'riff.trackMenu', 'e2e', ( items, t ) => [
+				...items,
+				{ id: 'e2e', label: 'Say hello', run: () => ( window.riffHello = t.title ) },
+			] );
+		} );
+		const titles = () => page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect.poll( titles ).toHaveLength( 3 );
+
+		const third = page.locator( '.riff-track' ).nth( 2 ).locator( '.riff-more-button' );
+		await third.click();
+		await expect( third ).toHaveAttribute( 'aria-expanded', 'true' );
+		const menu = page.locator( '.riff-menu' );
+		await expect( menu.getByRole( 'menuitem' ).first() ).toBeFocused();
+		await page.keyboard.press( 'Enter' ); // Play next.
+		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Trombone Detritus', 'Underground', 'Trombone Detritus' ] );
+		await expect( third ).toBeFocused();
+
+		await page.locator( '.riff-track' ).nth( 1 ).locator( '.riff-more-button' ).click();
+		await menu.getByRole( 'menuitem', { name: 'Add to queue' } ).click();
+		await expect.poll( async () => ( await titles() ).at( -1 ) ).toBe( 'Underground' );
+
+		await page.locator( '.riff-track' ).nth( 0 ).locator( '.riff-more-button' ).click();
+		await page.keyboard.press( 'End' );
+		await expect( menu.getByRole( 'menuitem', { name: 'Say hello' } ) ).toBeFocused();
+		await page.keyboard.press( 'Enter' );
+		expect( await page.evaluate( () => window.riffHello ) ).toBe( 'Intensities in Ten Cities' );
+		await page.locator( '.riff-track' ).nth( 0 ).locator( '.riff-more-button' ).click();
+		await page.keyboard.press( 'Escape' );
+		await expect( menu ).toBeHidden();
+		expect( await page.evaluate( () => window.riffQueueChanges ) ).toEqual( [ 'next', 'add' ] );
+	} );
+
+	test( 'Up next reorders by keyboard and its menu, removes a track, and clears', async ( {
+		page,
+		isMobile,
+	} ) => {
+		const titles = () => page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect.poll( titles ).toHaveLength( 3 );
+		await page.evaluate( () => window.riff.open() );
+		// On a phone, Up next is a sheet pulled up from its handle.
+		if ( await page.locator( '.riff-peek' ).isVisible() ) {
+			await page.locator( '.riff-peek' ).click();
+		}
+		const list = page.locator( '.riff-queue-list' );
+		await expect( list.locator( 'li' ) ).toHaveCount( 3 );
+
+		// Alt and Up moves the last track above the one before it, and keeps the focus on it. A
+		// phone has no keyboard; its menu's Move up does the same.
+		if ( isMobile ) {
+			await list.locator( 'li' ).nth( 2 ).locator( '.riff-more-button' ).click();
+			await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Move up' } ).click();
+		} else {
+			await list.locator( 'li' ).nth( 2 ).locator( 'button' ).first().focus();
+			await page.keyboard.press( 'Alt+ArrowUp' );
+			await expect( list.locator( 'li' ).nth( 1 ).locator( 'button' ).first() ).toBeFocused();
+		}
+		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Trombone Detritus', 'Underground' ] );
+
+		await list.locator( 'li' ).nth( 1 ).locator( '.riff-more-button' ).click();
+		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Move down' } ).click();
+		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Underground', 'Trombone Detritus' ] );
+
+		await list.locator( 'li' ).nth( 2 ).locator( '.riff-more-button' ).click();
+		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Remove from queue' } ).click();
+		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Underground' ] );
+
+		const clear = page.locator( '[data-riff-action="clear-queue"]' );
+		await expect( clear ).toBeVisible();
+		await clear.click();
+		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities' ] );
+		await expect( clear ).toBeHidden();
+		expect(
+			await page.evaluate( () => window.riff.playing() ),
+			'the track playing plays on'
+		).toBe( true );
+	} );
+
 	test( 'a tap plays the track in the bar and the lock screen gets its metadata', { tag: '@smoke' }, async ( {
 		page,
 	} ) => {
@@ -364,7 +449,7 @@ test.describe( 'Player', () => {
 		await expect( list.locator( '[aria-current]' ) ).toContainText(
 			'Intensities in Ten Cities'
 		);
-		await list.locator( 'li' ).nth( 2 ).locator( 'button' ).click();
+		await list.locator( 'li' ).nth( 2 ).locator( 'button' ).first().click();
 		await expect( list.locator( '[aria-current]' ) ).toContainText(
 			'Trombone Detritus'
 		);

@@ -129,8 +129,11 @@ defined( 'ABSPATH' ) || exit;
 				</div>
 				<div class="riff-panel riff-panel-queue" role="tabpanel" id="riff-panel-queue" aria-labelledby="riff-queue-tab" data-riff-panel="queue">
 					<header class="riff-queue-head">
-						<p><?php esc_html_e( 'Playing from', 'riff' ); ?></p>
-						<h3 data-riff-text="source"></h3>
+						<div>
+							<p><?php esc_html_e( 'Playing from', 'riff' ); ?></p>
+							<h3 data-riff-text="source"></h3>
+						</div>
+						<button type="button" class="riff-queue-clear" data-riff-action="clear-queue" aria-label="<?php esc_attr_e( 'Clear the queue', 'riff' ); ?>" hidden><?php esc_html_e( 'Clear', 'riff' ); ?></button>
 					</header>
 					<ol class="riff-queue-list" id="riff-queue-list"></ol>
 				</div>

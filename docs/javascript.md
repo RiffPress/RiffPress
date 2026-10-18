@@ -37,6 +37,55 @@ The tracks go through the `riff.queue` and `riff.track` filters first.
 
 Since 4.0.0.
 
+### `window.riff.playNext( tracks )`
+
+Puts tracks right after the one playing, or starts them when nothing is.
+
+Each track goes through the `riff.track` filter first; one without a file is left out.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `tracks` | `Object\|Object[]` | Tracks, in the shape `Tracks::schema()` describes. |
+
+Since 4.19.0.
+
+### `window.riff.addToQueue( tracks )`
+
+Adds tracks to the end of the queue, or starts them when nothing is playing.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `tracks` | `Object\|Object[]` | Tracks, in the shape `Tracks::schema()` describes. |
+
+Since 4.19.0.
+
+### `window.riff.moveInQueue( from, to )`
+
+Moves a track in the queue, by its place in the play order.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `from` | `number` | Where it is. |
+| `to` | `number` | Where it goes. |
+
+Since 4.19.0.
+
+### `window.riff.removeFromQueue( at )`
+
+Takes a track out of the queue, by its place in the play order. The one playing stays.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `at` | `number` | Its place. |
+
+Since 4.19.0.
+
+### `window.riff.clearQueue()`
+
+Empties the queue but for the track playing.
+
+Since 4.19.0.
+
 ### `window.riff.toggle()`
 
 Plays or pauses.
@@ -151,6 +200,7 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.open`](hooks.md#riffopen), action: Fires when Now Playing opens.
 - [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.
 - [`riff.play`](hooks.md#riffplay), action: Fires when the track starts or resumes playing.
+- [`riff.queue`](hooks.md#riffqueue), action: Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
 - [`riff.ready`](hooks.md#riffready), action: Fires once the player is set up, its state restored and `window.riff` available.
 - [`riff.tab`](hooks.md#rifftab), action: Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
 - [`riff.track`](hooks.md#rifftrack), action: Fires when a track is loaded, before it plays.

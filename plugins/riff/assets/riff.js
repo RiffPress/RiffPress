@@ -133,6 +133,47 @@ function start() {
 			setQueue( tracks, index );
 		},
 		/**
+		 * Puts tracks right after the one playing, or starts them when nothing is.
+		 *
+		 * Each track goes through the `riff.track` filter first; one without a file is left out.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {Object|Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
+		 */
+		playNext: ( tracks ) => insert( tracks, pos + 1, 'next' ),
+		/**
+		 * Adds tracks to the end of the queue, or starts them when nothing is playing.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {Object|Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
+		 */
+		addToQueue: ( tracks ) => insert( tracks, order.length, 'add' ),
+		/**
+		 * Moves a track in the queue, by its place in the play order.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {number} from Where it is.
+		 * @param {number} to   Where it goes.
+		 */
+		moveInQueue: ( from, to ) => reorder( from, to ),
+		/**
+		 * Takes a track out of the queue, by its place in the play order. The one playing stays.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {number} at Its place.
+		 */
+		removeFromQueue: ( at ) => remove( at ),
+		/**
+		 * Empties the queue but for the track playing.
+		 *
+		 * @since 4.19.0
+		 */
+		clearQueue: () => clear(),
+		/**
 		 * Plays or pauses.
 		 *
 		 * @since 4.0.0
@@ -330,6 +371,7 @@ function start() {
 		);
 		row.innerHTML = rowInner( t );
 		fig.insertBefore( row, fig.firstChild );
+		row.after( moreButton( t ) );
 		row.addEventListener( 'click', () => {
 			if ( track()?.id === t.id && sameQueue() ) {
 				toggle();
@@ -436,6 +478,83 @@ function start() {
 		}
 		mode = 'song';
 		load( { play, at } );
+	}
+
+	// ---- Changing the queue while it plays. The play order changes; the track playing keeps its
+	// place, so nothing restarts.
+	function insert( tracks, at, change ) {
+		const list = ( Array.isArray( tracks ) ? tracks : [ tracks ] )
+			.map( ( t ) =>
+				/**
+				 * Filters one track as it joins the queue, the same as when a queue is set.
+				 *
+				 * @since 4.0.0
+				 *
+				 * @param {Object} track The track, in the shape `Tracks::schema()` describes.
+				 */
+				filter( 'track', t )
+			)
+			.filter( ( t ) => t?.src );
+		if ( ! list.length ) {
+			return;
+		}
+		if ( pos < 0 || ! track() ) {
+			setQueue( list, 0 );
+			return;
+		}
+		const first = queue.length;
+		queue.push( ...list );
+		order.splice(
+			Math.max( 0, Math.min( at, order.length ) ),
+			0,
+			...list.map( ( _, i ) => first + i )
+		);
+		changed( change );
+	}
+	function reorder( from, to ) {
+		if ( from === to || from < 0 || to < 0 || from >= order.length || to >= order.length ) {
+			return;
+		}
+		const current = order[ pos ];
+		const [ index ] = order.splice( from, 1 );
+		order.splice( to, 0, index );
+		pos = order.indexOf( current );
+		changed( 'move' );
+	}
+	function remove( at ) {
+		if ( at === pos || at < 0 || at >= order.length ) {
+			return;
+		}
+		order.splice( at, 1 );
+		if ( at < pos ) {
+			pos--;
+		}
+		changed( 'remove' );
+	}
+	function clear() {
+		if ( pos < 0 ) {
+			return;
+		}
+		order = [ order[ pos ] ];
+		pos = 0;
+		changed( 'clear' );
+	}
+	function changed( change ) {
+		renderQueue();
+		save();
+		/**
+		 * Fires when the queue changes while it plays: tracks added to play next or at the end, one
+		 * moved or removed, or the queue cleared.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {Object}   detail        What changed.
+		 * @param {string}   detail.change `next`, `add`, `move`, `remove` or `clear`.
+		 * @param {Object[]} detail.queue  The queue in play order.
+		 * @param {number}   detail.index  The playing track's place in it.
+		 * @param {Object}   api           `window.riff`.
+		 */
+		emit( 'queue', { change, queue: api.queue(), index: pos } );
 	}
 
 	function reshuffle() {
@@ -1179,8 +1298,184 @@ function start() {
 		}
 	}
 
+	// ---- The track menu: … beside every row and every track in Up next. Its items go through the
+	// riff.trackMenu filter, so a plugin adds its own the way Riff Lyrics adds a tab.
+	const menu = document.createElement( 'div' );
+	menu.className = 'riff-menu';
+	menu.setAttribute( 'role', 'menu' );
+	menu.hidden = true;
+	root.append( menu );
+	let menuFor = null;
+	const DOTS =
+		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>';
+
+	function menuItems( t, at ) {
+		const items = [
+			{
+				id: 'next',
+				label: s.playNext || 'Play next',
+				run: () => {
+					api.playNext( [ t ] );
+					toast( fmt( s.playingNext || '%s plays next', t.title ) );
+				},
+			},
+			{
+				id: 'add',
+				label: s.addToQueue || 'Add to queue',
+				run: () => {
+					api.addToQueue( [ t ] );
+					toast( fmt( s.addedToQueue || '%s added to the queue', t.title ) );
+				},
+			},
+		];
+		if ( at !== undefined ) {
+			if ( at > 0 ) {
+				items.push( { id: 'up', label: s.moveUp || 'Move up', run: () => moveAndFocus( at, at - 1 ) } );
+			}
+			if ( at < order.length - 1 ) {
+				items.push( { id: 'down', label: s.moveDown || 'Move down', run: () => moveAndFocus( at, at + 1 ) } );
+			}
+			if ( at !== pos ) {
+				items.push( { id: 'remove', label: s.removeFromQueue || 'Remove from queue', run: () => remove( at ) } );
+			}
+		}
+		if ( t.post?.url ) {
+			items.push( { id: 'post', label: s.goToPost || 'Go to post', href: t.post.url } );
+		}
+		/**
+		 * Filters the items of a track's menu: the … beside a row in a post or the Listen block, and
+		 * beside each track in Up next.
+		 *
+		 * Each item is `{ id, label, run }`, where `run` is called when it is chosen, or
+		 * `{ id, label, href }` for a link. Riff's own are `next`, `add`, `up`, `down`, `remove` and
+		 * `post`.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {Object[]} items   The items, in order.
+		 * @param {Object}   track   The track, in the shape `Tracks::schema()` describes.
+		 * @param {Object}   context Where the menu opened: `{ where: 'row' }`, or
+		 *                           `{ where: 'queue', index }` with its place in the play order.
+		 */
+		return filter(
+			'trackMenu',
+			items,
+			t,
+			at === undefined ? { where: 'row' } : { where: 'queue', index: at }
+		);
+	}
+
+	function openMenu( button, t, at ) {
+		closeMenu( false );
+		const items = ( menuItems( t, at ) || [] ).filter(
+			( i ) => i && i.label && ( typeof i.run === 'function' || i.href )
+		);
+		menu.replaceChildren(
+			...items.map( ( i ) => {
+				const item = document.createElement( i.href ? 'a' : 'button' );
+				if ( i.href ) {
+					item.href = i.href;
+				} else {
+					item.type = 'button';
+				}
+				item.setAttribute( 'role', 'menuitem' );
+				item.tabIndex = -1;
+				item.textContent = i.label;
+				item.addEventListener( 'click', ( e ) => {
+					if ( i.run ) {
+						e.preventDefault();
+						closeMenu();
+						i.run();
+					} else {
+						closeMenu( false );
+					}
+				} );
+				return item;
+			} )
+		);
+		menu.hidden = false;
+		const r = button.getBoundingClientRect();
+		const w = menu.offsetWidth;
+		const h = menu.offsetHeight;
+		menu.style.left = `${ Math.max( 8, Math.min( r.right - w, window.innerWidth - w - 8 ) ) }px`;
+		menu.style.top = `${ r.bottom + h + 8 > window.innerHeight ? Math.max( 8, r.top - h - 4 ) : r.bottom + 4 }px`;
+		button.setAttribute( 'aria-expanded', 'true' );
+		menuFor = button;
+		menu.firstElementChild?.focus();
+	}
+
+	function closeMenu( refocus = true ) {
+		if ( menu.hidden ) {
+			return;
+		}
+		menu.hidden = true;
+		menuFor?.setAttribute( 'aria-expanded', 'false' );
+		if ( refocus && menuFor?.isConnected ) {
+			menuFor.focus();
+		}
+		menuFor = null;
+	}
+
+	menu.addEventListener( 'keydown', ( e ) => {
+		const items = [ ...menu.children ];
+		const i = items.indexOf( document.activeElement );
+		const to = {
+			ArrowDown: ( i + 1 ) % items.length,
+			ArrowUp: ( i - 1 + items.length ) % items.length,
+			Home: 0,
+			End: items.length - 1,
+		}[ e.key ];
+		if ( to !== undefined ) {
+			e.preventDefault();
+			items[ to ]?.focus();
+		} else if ( e.key === 'Escape' ) {
+			e.preventDefault();
+			e.stopPropagation();
+			closeMenu();
+		} else if ( e.key === 'Tab' ) {
+			closeMenu( false );
+		}
+	} );
+	document.addEventListener( 'pointerdown', ( e ) => {
+		if ( ! menu.hidden && ! menu.contains( e.target ) && ! menuFor?.contains( e.target ) ) {
+			closeMenu( false );
+		}
+	} );
+	window.addEventListener( 'resize', () => closeMenu( false ) );
+
+	function moreButton( t, at ) {
+		const b = document.createElement( 'button' );
+		b.type = 'button';
+		b.className = 'riff-more-button';
+		b.setAttribute( 'aria-haspopup', 'menu' );
+		b.setAttribute( 'aria-expanded', 'false' );
+		b.setAttribute( 'aria-label', fmt( s.trackMenu || 'More options for %s', t.title ) );
+		b.innerHTML = DOTS;
+		b.addEventListener( 'click', ( e ) => {
+			e.stopPropagation();
+			if ( menuFor === b ) {
+				closeMenu();
+			} else {
+				openMenu( b, t, at );
+			}
+		} );
+		return b;
+	}
+
+	// A track moved by its menu or the keyboard keeps the focus on its new place.
+	function moveAndFocus( from, to ) {
+		reorder( from, to );
+		queueList.children[ to ]?.querySelector( 'button' )?.focus();
+	}
+
+	const clearButton = $( '[data-riff-action="clear-queue"]' );
+	clearButton?.addEventListener( 'click', () => clear() );
+
 	function renderQueue() {
 		queueList.textContent = '';
+		if ( clearButton ) {
+			clearButton.hidden = order.length < 2;
+		}
 		order.forEach( ( index, p ) => {
 			const t = queue[ index ];
 			const li = document.createElement( 'li' );
@@ -1214,6 +1509,36 @@ function start() {
 			li.firstElementChild.addEventListener( 'click', () =>
 				p === pos ? toggle() : go( p )
 			);
+			// Alt and an arrow moves the track; dragging does too, with a mouse.
+			li.firstElementChild.addEventListener( 'keydown', ( e ) => {
+				if ( e.altKey && ( e.key === 'ArrowUp' || e.key === 'ArrowDown' ) ) {
+					e.preventDefault();
+					const to = p + ( e.key === 'ArrowUp' ? -1 : 1 );
+					if ( to >= 0 && to < order.length ) {
+						moveAndFocus( p, to );
+					}
+				}
+			} );
+			li.draggable = true;
+			li.addEventListener( 'dragstart', ( e ) => {
+				e.dataTransfer.effectAllowed = 'move';
+				e.dataTransfer.setData( 'text/x-riff-queue', String( p ) );
+				li.classList.add( 'is-dragging' );
+			} );
+			li.addEventListener( 'dragend', () => li.classList.remove( 'is-dragging' ) );
+			li.addEventListener( 'dragover', ( e ) => {
+				if ( e.dataTransfer.types.includes( 'text/x-riff-queue' ) ) {
+					e.preventDefault();
+				}
+			} );
+			li.addEventListener( 'drop', ( e ) => {
+				const from = Number( e.dataTransfer.getData( 'text/x-riff-queue' ) );
+				if ( Number.isInteger( from ) ) {
+					e.preventDefault();
+					reorder( from, p );
+				}
+			} );
+			li.append( moreButton( t, p ) );
 			queueList.append( li );
 		} );
 	}
