@@ -1,0 +1,36 @@
+# What WordPress has, and what Riff adds
+
+The Media Library is where Riff's music lives. Riff uses what WordPress already has, and adds something only where WordPress has no equivalent. Each addition below says why it exists, and links the core ticket when there is one. An addition that lands in core is deprecated in Riff and then removed, following the stability rule in the plugin readme.
+
+When you add storage, a field, a relation or a query to Riff, add a row here in the same pull request.
+
+## Used as WordPress has it
+
+| What | Where it lives in WordPress |
+| --- | --- |
+| A track | An audio attachment. |
+| Title, artist, album, year, genre, track number, length | Read from the file's tags by getID3 on upload (`wp_read_audio_metadata()`), kept in `_wp_attachment_metadata`. |
+| Bit rate, sample rate, bit depth, codec, lossless | The same upload metadata. |
+| Artwork | The attachment's featured image. WordPress saves artwork embedded in the file as an image and sets it on upload; Riff's Artwork field in the Media Library sets the same featured image. |
+| Where a track appears | The audio, video and playlist blocks in posts. |
+| A shared playlist | A post with the Playlist block (WordPress 7.1). |
+| Who can play what | The status and visibility of the post a track appears in. |
+| People and app sign-in | WordPress users and application passwords. |
+| Per-site upload limits on a network | Multisite's `blog_upload_space`. |
+
+## Added by Riff, and why
+
+| Gap | What Riff adds | Why | Upstream | Status |
+| --- | --- | --- | --- | --- |
+| No link between a song and its video | `_riff_video` post meta on the audio attachment, set from the Media Library's Video version field | Core has no relation between two attachments. | None filed | In Riff |
+| No waveform for an upload | Levels from the demo seed only; uploads have none yet | Drawing a waveform otherwise means fetching the whole file in the browser, as the Playlist block does. | [Gutenberg #84712](https://github.com/WordPress/gutenberg/issues/84712): measure peaks once at upload | Proposed upstream |
+| Albums and artists can't be browsed or queried; they sit in serialized `_wp_attachment_metadata` | Planned: `riff_album` and `riff_artist` taxonomies on attachments, filled from the file's tags | Taxonomies on attachments are native: the Media Library shows them as columns and filters, and REST and `WP_Query` can query them. Search and browsing need something queryable ([#343](https://github.com/RiffPress/RiffPress/issues/343), [#366](https://github.com/RiffPress/RiffPress/issues/366)). | Not yet | Planned |
+| No artwork for an album | Planned: term meta on `riff_album` pointing to an image attachment | The cover stays an image in the Media Library. | Not yet | Planned |
+| No favorites | Planned: user meta holding attachment IDs | It belongs to a user, and needs no table. | Not yet | Planned |
+| No bulk import from a folder | Planned: `wp riff import`, a thin layer over `media_handle_sideload()` ([#367](https://github.com/RiffPress/RiffPress/issues/367)) | Every file goes through core's own upload path, so its tags and artwork are read the way an upload's are. | Not yet | Planned |
+
+## Development tooling
+
+| Gap | What Riff adds | Upstream | Status |
+| --- | --- | --- | --- |
+| `@wordpress/env` 11.17 breaks with simple-git 4, which Riff pins for its security fixes | `.github/scripts/patch-wp-env.js`, run on install | [Gutenberg #84137](https://github.com/WordPress/gutenberg/pull/84137) | Merged upstream; remove the patch once a released `@wordpress/env` includes it |

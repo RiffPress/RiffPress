@@ -2,13 +2,17 @@
 
 ## Product Character
 
-Riff is a music player that sits inside someone else's site. The player is always dark and always the same; the page around it belongs to the theme. Administration uses WordPress conventions without a separate branded shell: one field on audio files in the Media Library.
+Riff is a music player that sits inside someone else's site. The player is always dark and always the same; the page around it belongs to the theme. Administration uses WordPress conventions without a separate branded shell: two fields on audio files in the Media Library, Artwork (the attachment's own featured image) and Video version.
 
 ## Visual System
 
 ### The player
 
-YouTube Music's current layout and measurements are the authority: the 72px bar on a wide screen, the 2025 Now Playing on a phone, Roboto, Material Icons, `#212121` surfaces on `#030303`. Riff's own marks are the amber accent (`#ffb020`) in place of red, and the filament: the played part of the bar's seek line glows with the music, in heat colours from near-black red through amber to yellow-white, and cools when playback stops. The bloom spreads down into the bar, never up into the page.
+YouTube Music's current layout and measurements are the authority: the 72px bar on a wide screen, the 2025 Now Playing on a phone, Roboto, Material Icons, `#212121` surfaces on `#030303`. Riff's own marks are the amber accent (`#ffb020`) in place of red, and the filament: the played part of the bar's seek line glows with the music, in heat colours from near-black red through amber to yellow-white, and cools when playback stops. The bloom is a soft band either side of the line that fades out before the knob, and stays on the bar's line; Now Playing's own seek line is plain white.
+
+### The Listen block
+
+The library page follows the theme. On a block theme it takes the theme's background, text and link colours and its fonts from global styles, and mixes the quieter shades from them. On a classic theme it uses WordPress.org's design system: its palette, Inter for text, EB Garamond for headings, and 2px corners.
 
 ### Rows in the post
 
