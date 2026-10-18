@@ -46,6 +46,15 @@ From the post. Every audio and video block in the post you are reading is the qu
 
 The ones WordPress ships: the [Audio block](https://wordpress.org/documentation/article/audio-block/), the [Video block](https://wordpress.org/documentation/article/video-block/), and on WordPress 7.1 or newer the [Playlist block](https://wordpress.org/documentation/article/playlist-block/), which holds several tracks picked from the Media Library at once. Nothing is added to the editor; the blocks keep their own markup and their own players underneath, and Riff draws its rows over them. A track's title, artist and album are what WordPress reads from the file on upload, and can be edited in the [Media Library](https://wordpress.org/documentation/article/media-library-screen/) along with Riff's Artwork and Video version fields.
 
+= Can I make tracks members-only? =
+
+Yes, with a membership or store plugin deciding who may listen. Riff asks the `riff_can_play` filter about every track; a track it refuses is still listed, with a lock, but has no file to play, and `riff_unlock_url` says where the lock leads. For example, with a plugin that gives a function to check membership:
+
+`add_filter( 'riff_can_play', fn( $allowed, $track, $id, $post_id ) => $allowed && my_member_can_read( $post_id ), 10, 4 );`
+`add_filter( 'riff_unlock_url', fn() => home_url( '/join/' ) );`
+
+The file itself is still a plain upload, so anyone who already has its address can play it. Protected files are planned.
+
 == Developers ==
 
 Riff is built the way a feature plugin would be: one track shape everywhere, read through WordPress's own APIs. Inside the plugin there is a seam: `src/` is the foundation (tracks, sources, the Media Library fields, the block markup, REST and GraphQL, the player), and `features/listen/` is the Listen block and the drawn covers, which build on the foundation only through the surface below.

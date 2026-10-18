@@ -286,6 +286,10 @@ function start() {
 			.querySelectorAll( 'figure[data-riff-track], li[data-riff-track]' )
 			.forEach( ( fig ) => {
 				const t = parse( fig.dataset.riffTrack );
+				// A locked track is shown, with a lock and where to unlock it, and never queued.
+				if ( t?.locked && ! built.get( fig ) ) {
+					built.set( fig, buildLocked( fig, t ) );
+				}
 				if ( ! t || ! t.src ) {
 					return;
 				}
@@ -314,24 +318,7 @@ function start() {
 			'aria-label',
 			fmt( s.playTrack || 'Play %s', t.title )
 		);
-		const art = smallest( t.art ) || t.video?.poster || '';
-		row.innerHTML =
-			'<span class="riff-row-art">' +
-			( art
-				? `<img src="${ esc(
-						art
-					) }" alt="" loading="lazy" decoding="async">`
-				: '' ) +
-			'<span class="riff-row-state" aria-hidden="true"><i></i><i></i><i></i></span></span>' +
-			`<span class="riff-row-text"><span class="riff-row-title">${ esc(
-				t.title
-			) }${ videoMark( t ) }</span>` +
-			`<span class="riff-row-sub">${ esc(
-				subtitle( t )
-			) }</span></span>` +
-			`<span class="riff-row-time">${
-				t.duration ? time( t.duration ) : ''
-			}</span>`;
+		row.innerHTML = rowInner( t );
 		fig.insertBefore( row, fig.firstChild );
 		row.addEventListener( 'click', () => {
 			if ( track()?.id === t.id && sameQueue() ) {
@@ -347,6 +334,50 @@ function start() {
 			}
 		} );
 		return row;
+	}
+
+	// A row for a track the visitor may not play: a link to unlock it when the site names one.
+	function buildLocked( fig, t ) {
+		fig.querySelector( 'audio, video' )?.setAttribute( 'hidden', '' );
+		const row = document.createElement( t.unlock ? 'a' : 'div' );
+		row.className = 'riff-row riff-row-locked';
+		if ( t.unlock ) {
+			row.href = t.unlock;
+		}
+		row.setAttribute(
+			'aria-label',
+			fmt(
+				t.unlock ? s.unlock || 'Unlock %s' : s.locked || '%s is locked',
+				t.title
+			)
+		);
+		row.innerHTML = rowInner( t, true );
+		fig.insertBefore( row, fig.firstChild );
+		return row;
+	}
+
+	function rowInner( t, locked = false ) {
+		const art = smallest( t.art ) || t.video?.poster || '';
+		return (
+			'<span class="riff-row-art">' +
+			( art
+				? `<img src="${ esc(
+						art
+					) }" alt="" loading="lazy" decoding="async">`
+				: '' ) +
+			'<span class="riff-row-state" aria-hidden="true"><i></i><i></i><i></i></span></span>' +
+			`<span class="riff-row-text"><span class="riff-row-title">${ esc(
+				t.title
+			) }${ videoMark( t ) }</span>` +
+			`<span class="riff-row-sub">${ esc(
+				subtitle( t )
+			) }</span></span>` +
+			`<span class="riff-row-time">${
+				locked
+					? '<svg class="riff-row-lock" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>'
+					: ''
+			}${ t.duration ? time( t.duration ) : '' }</span>`
+		);
 	}
 
 	// The page's rows are the queue that is playing, so a row tap toggles instead of restarting.
@@ -378,6 +409,15 @@ function start() {
 			 */
 			filter( 'track', t )
 		);
+		// A track with no file, a locked one among them, has nothing to play: it is left out, and
+		// the one chosen to play first is the next that can.
+		const first = tracks.findIndex( ( t, i ) => i >= index && t?.src );
+		const playable = tracks.filter( ( t ) => t?.src );
+		if ( ! playable.length ) {
+			return;
+		}
+		index = first < 0 ? 0 : playable.indexOf( tracks[ first ] );
+		tracks = playable;
 		queue = tracks;
 		order = tracks.map( ( _, i ) => i );
 		pos = index;
