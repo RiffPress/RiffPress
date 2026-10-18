@@ -382,7 +382,8 @@ picture {
 	grid-template-columns: repeat(2, 1fr);
 }
 
-.specs + .fine {
+.specs + .fine,
+.shot + .fine {
 	margin-top: 32px;
 }
 
