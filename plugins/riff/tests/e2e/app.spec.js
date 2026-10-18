@@ -26,6 +26,7 @@ const FILES = [
 let pageUrl;
 let postId;
 let extraId;
+let audioMedia;
 
 const made = own();
 
@@ -45,6 +46,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 		} );
 		audio.push( media );
 	}
+	audioMedia = audio;
 	// Enough older posts for a second page of the library, made first so the post above is newest.
 	const block = `<!-- wp:audio {"id":${ audio[ 0 ].id }} --><figure class="wp-block-audio"><audio controls src="${ audio[ 0 ].source_url }"></audio></figure><!-- /wp:audio -->`;
 	for ( let i = 1; i <= 24; i++ ) {
@@ -311,6 +313,47 @@ test.describe( 'Browse', () => {
 } );
 
 test.describe( 'Standalone', () => {
+	test( 'a playlist post opened directly shows each track once, though core\'s styles come after Riff\'s', async ( {
+		page,
+		requestUtils,
+	} ) => {
+		const items = audioMedia
+			.map(
+				( m ) =>
+					`<!-- wp:playlist-track {"id":${ m.id },"src":"${ m.source_url }","title":"${ m.title.raw }"} /-->`
+			)
+			.join( '' );
+		const post = await requestUtils.createPost( {
+			title: 'Riff app playlist',
+			status: 'publish',
+			content: `<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">${ items }</ol></figure><!-- /wp:playlist -->`,
+		} );
+		try {
+			await page.goto(
+				pageUrl.replace( /\/?$/, '/' ) + 'app/?riff=' + post.id
+			);
+			const playlist = page.locator( '.wp-block-playlist' );
+			test.skip(
+				! ( await playlist.count() ),
+				'The playlist block arrived in WordPress 7.1.'
+			);
+			await expect( page.locator( '.riff-row' ) ).toHaveCount( 2 );
+			await expect(
+				page.locator( '.wp-block-playlist-track__button' ).first(),
+				'core\'s own track button stays out of sight'
+			).toBeHidden();
+			await expect(
+				page.locator( '.wp-block-playlist__waveform-player' )
+			).toBeHidden();
+		} finally {
+			await requestUtils.rest( {
+				method: 'DELETE',
+				path: `/wp/v2/posts/${ post.id }`,
+				params: { force: true },
+			} );
+		}
+	} );
+
 	test( 'on a wide screen the navigation is a sidebar; on a phone it stays tabs', async ( {
 		page,
 		isMobile,
