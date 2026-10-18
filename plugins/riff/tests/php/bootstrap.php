@@ -50,6 +50,11 @@ tests_add_filter(
 			}
 		);
 		require dirname( __DIR__, 2 ) . '/riff.php';
+		// The reference extension next to it, tested in the same suite against the same Riff. Only
+		// its class loads here; its own tests hook it in, so Riff's tests see Riff alone.
+		define( 'RIFF_LYRICS_VERSION', 'test' );
+		define( 'RIFF_LYRICS_URL', 'http://example.org/wp-content/plugins/riff-lyrics/' );
+		require dirname( __DIR__, 3 ) . '/riff-lyrics/src/class-lyrics.php';
 	}
 );
 

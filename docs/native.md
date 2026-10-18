@@ -11,6 +11,7 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | A track | An audio attachment. |
 | Title, artist, album, year, genre, track number, length | Read from the file's tags by getID3 on upload (`wp_read_audio_metadata()`), kept in `_wp_attachment_metadata`. |
 | Bit rate, sample rate, bit depth, codec, lossless | The same upload metadata. |
+| Lyrics | The file's lyrics tag (ID3 USLT), which WordPress reads on upload into the same metadata as `unsynchronised_lyric`, and the media REST route returns in `media_details`. Riff Lyrics shows it, and its Media Library field edits that same key. |
 | Artwork | The attachment's featured image. WordPress saves artwork embedded in the file as an image and sets it on upload; Riff's Artwork field in the Media Library sets the same featured image. |
 | Where a track appears | The audio, video and playlist blocks in posts. |
 | A shared playlist | A post with the Playlist block (WordPress 7.1). |

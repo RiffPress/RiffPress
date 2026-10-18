@@ -2,8 +2,8 @@
  * Playwright config: WordPress defaults, in three projects.
  *
  * - chromium: desktop Chromium, every spec.
- * - mobile-chromium: Chromium with an iPhone 14's viewport, touch and user agent, for the player
- *   and Listen specs. It is a phone-sized layout, not Safari: the player sees an iPhone user
+ * - mobile-chromium: Chromium with an iPhone 14's viewport, touch and user agent, for the player,
+ *   Listen and Riff Lyrics specs. It is a phone-sized layout, not Safari: the player sees an iPhone user
  *   agent and keeps audio off Web Audio, as it does on a real iPhone, but the engine is Chromium.
  * - webkit: desktop WebKit, the engine under Safari, for the tests tagged `@smoke`. It shows that
  *   playback and Now Playing work in WebKit; it says nothing about iOS background playback, lock
@@ -59,7 +59,7 @@ module.exports = defineConfig( {
 				...devices[ 'iPhone 14' ],
 				defaultBrowserType: 'chromium',
 			},
-			testMatch: /tests\/e2e\/(player|app)\.spec\.js$/,
+			testMatch: /tests\/e2e\/(player|app|lyrics)\.spec\.js$/,
 		},
 		{
 			name: 'webkit',

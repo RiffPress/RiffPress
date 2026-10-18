@@ -2,7 +2,8 @@
   "core": null,
   "phpVersion": "8.2",
   "plugins": [
-    "./plugins/riff"
+    "./plugins/riff",
+    "./plugins/riff-lyrics"
   ],
   "port": 8890,
   "testsPort": 8891,

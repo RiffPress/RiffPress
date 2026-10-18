@@ -13,8 +13,16 @@ permissions:
 
 jobs:
   plugin-check:
+    name: Plugin Check (${{ matrix.plugin }})
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # Riff, and the reference extension beside it, each checked as the directory would.
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: [riff, riff-lyrics]
+    env:
+      PLUGIN: ${{ matrix.plugin }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -29,16 +37,19 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Build the plugin the way a release does
+      # Riff Lyrics requires Riff, so both are built and mounted for either check.
+      - name: Build the plugins the way a release does
         run: |
           set -euo pipefail
-          mkdir -p build/riff
-          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          for p in riff riff-lyrics; do
+            mkdir -p "build/$p"
+            rsync -a --exclude-from='.distignore' "./plugins/$p/" "build/$p/"
+          done
 
       - name: Mount the built plugin instead of the checkout
         run: |
           cat > .wp-env.override.json <<'JSON'
-          { "plugins": [ "./build/riff" ], "mappings": {} }
+          { "plugins": [ "./build/riff", "./build/riff-lyrics" ], "mappings": {} }
           JSON
 
       - run: npx wp-env start
@@ -46,11 +57,12 @@ jobs:
       - name: Install Plugin Check
         run: |
           npx wp-env run cli wp plugin install plugin-check --activate
-          npx wp-env run cli wp plugin activate riff
+          npx wp-env run cli wp plugin activate riff riff-lyrics
 
       # The translation template is generated, not committed: translations come from
       # translate.wordpress.org, and a release carries the template for everyone else.
       - name: Generate the translation template into the built plugin
+        if: matrix.plugin == 'riff'
         run: npm run -s pot
 
       # "Tested up to" is written by scripts/sync-versions.sh at release time
@@ -59,7 +71,7 @@ jobs:
       - name: Run Plugin Check
         run: |
           set -euo pipefail
-          npx wp-env run cli wp plugin check riff \
+          npx wp-env run cli wp plugin check "$PLUGIN" \
             --format=strict-json \
             --ignore-codes=outdated_tested_upto_header \
             --fields=file,line,column,type,code,message > plugin-check.json
