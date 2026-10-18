@@ -2261,3 +2261,22 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-row-art {
 	border-radius: 2px;
 }
+
+/* ---- Standalone mode: the Listen block on its own at app/, in Riff's dark
+   look, with no theme around it. */
+.riff-standalone {
+	margin: 0;
+	background: #030303;
+	color: #fff;
+	color-scheme: dark;
+}
+
+.riff-standalone-main {
+	min-height: 100vh;
+}
+
+.riff-standalone .riff-app {
+	max-width: none;
+	min-height: 100vh;
+	padding-bottom: calc(var(--riff-bar-h, 72px) + 48px);
+}

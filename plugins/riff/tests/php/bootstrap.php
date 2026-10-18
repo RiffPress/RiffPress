@@ -33,6 +33,20 @@ require_once $riff_tests_dir . '/includes/functions.php';
 // created between tests, files included, and the tests site's uploads are not ours to delete.
 $riff_uploads = sys_get_temp_dir() . '/riff-phpunit-uploads';
 
+// Every upload a test makes lands in the suite's own folder, and the suite does not delete the
+// files, so the folder is emptied when a run starts and again when it ends: a run leaves nothing.
+$riff_empty = static function ( string $dir ): void {
+	if ( ! is_dir( $dir ) ) {
+		return;
+	}
+	$items = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );
+	foreach ( $items as $item ) {
+		$item->isDir() ? rmdir( $item->getPathname() ) : unlink( $item->getPathname() ); // phpcs:ignore WordPress.WP.AlternativeFunctions -- test scratch, before and after WordPress.
+	}
+};
+$riff_empty( $riff_uploads );
+register_shutdown_function( $riff_empty, $riff_uploads );
+
 tests_add_filter(
 	'muplugins_loaded',
 	static function () use ( $riff_uploads ) {

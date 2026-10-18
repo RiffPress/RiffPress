@@ -140,6 +140,16 @@ Since 4.0.0. Fires in `plugins/riff/src/class-sources.php`.
 | --- | --- | --- |
 | `$sources` | `Source[]` | Sources. |
 
+### `riff_standalone_manifest`
+
+Filters the web app manifest of standalone mode.
+
+Since 4.17.0. Fires in `plugins/riff/features/listen/class-standalone.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$manifest` | `array` | The manifest's members, as https://www.w3.org/TR/appmanifest/ names them. |
+
 ### `riff_strings`
 
 Filters the strings the player shows.

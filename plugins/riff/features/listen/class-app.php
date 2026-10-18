@@ -103,7 +103,8 @@ final class App {
 		if ( ! Player::enabled() ) {
 			return '';
 		}
-		$page   = (string) get_permalink();
+		// In standalone mode every link stays under app/, so the player never drops back into the theme.
+		$page   = Standalone::active() ? Standalone::url() : (string) get_permalink();
 		$post   = self::requested();
 		$browse = $post ? null : Browse::requested();
 		if ( $post ) {
