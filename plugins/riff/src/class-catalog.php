@@ -261,17 +261,16 @@ final class Catalog {
 	public static function backfill( int $limit = self::BATCH ): int {
 		$ids = get_posts(
 			array(
-				'post_type'        => 'attachment',
-				'post_mime_type'   => 'audio',
-				'post_status'      => 'any',
-				'fields'           => 'ids',
-				'posts_per_page'   => $limit,
-				'no_found_rows'    => true,
-				'orderby'          => 'ID',
-				'order'            => 'ASC',
-				'suppress_filters' => true,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'audio',
+				'post_status'    => 'any',
+				'fields'         => 'ids',
+				'posts_per_page' => $limit,
+				'no_found_rows'  => true,
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
 				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- a background job over files not filed yet.
-				'meta_query'       => array(
+				'meta_query'     => array(
 					'relation' => 'OR',
 					array(
 						'key'     => self::FILED,
