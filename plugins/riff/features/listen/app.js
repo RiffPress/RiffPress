@@ -601,6 +601,8 @@ export function start( api ) {
 		{ ...history.state, riffApp: postOf( location.href )?.id || 0 },
 		''
 	);
+	// Everything is listening: what needs the script, the sidebar's toggle, can show.
+	app.dataset.riffAppReady = '';
 }
 
 // ---- Helpers.
