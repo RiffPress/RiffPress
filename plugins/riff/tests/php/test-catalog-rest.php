@@ -92,6 +92,17 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertNotContains( 'Sunk in Dars', wp_list_pluck( $this->get( '/tracks' )['items'], 'title' ) );
 	}
 
+	public function test_an_album_without_artwork_of_its_own_shows_its_posts_cover(): void {
+		foreach ( $this->published as $id ) {
+			delete_post_thumbnail( $id );
+		}
+
+		$album = $this->get( '/albums' )['items'][0];
+
+		$this->assertNotEmpty( $album['art'], 'not a blank square' );
+		$this->assertStringContainsString( 'riff-art=', $album['art'][0]['src'], 'the cover Riff draws for the post' );
+	}
+
 	public function test_someone_who_can_upload_sees_the_whole_library(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
 

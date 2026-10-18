@@ -266,7 +266,10 @@ final class Catalog_Rest {
 			);
 			if ( Catalog::ALBUM === $taxonomy ) {
 				$item['artist'] = (string) get_term_meta( (int) $row->term_id, Catalog::ALBUM_ARTIST, true );
-				$item['art']    = Tracks::art( (int) get_post_thumbnail_id( (int) $row->first ) );
+				// The first track's artwork as the player shows it: its own, else its post's, else the
+				// cover Riff draws for the post.
+				$first       = Tracks::from_attachment( (int) $row->first, (int) get_post_field( 'post_parent', (int) $row->first ) );
+				$item['art'] = $first['art'] ?? array();
 			}
 			$items[] = $item;
 		}
@@ -386,7 +389,7 @@ final class Catalog_Rest {
 				'type'        => 'string',
 			);
 			$item['art']    = array(
-				'description' => __( 'Artwork from the album\'s first track, as { src, sizes }.', 'riff' ),
+				'description' => __( 'The album\'s first track\'s artwork as the player shows it, as { src, sizes }.', 'riff' ),
 				'type'        => 'array',
 			);
 		}
