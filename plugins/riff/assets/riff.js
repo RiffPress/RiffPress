@@ -197,6 +197,16 @@ function start() {
 		 */
 		queue: () => order.map( ( i ) => queue[ i ] ),
 		/**
+		 * The tracks played on this device, most recent first, each once: what Home's Recently
+		 * played and Jump back in are drawn from. Kept in the browser, at most 30.
+		 *
+		 * @since 4.18.0
+		 *
+		 * @return {Object[]} Tracks, in the shape `Tracks::schema()` describes, each with `played`,
+		 *                    when it was, in milliseconds since the epoch.
+		 */
+		history: () => played(),
+		/**
 		 * Whether something is playing.
 		 *
 		 * @since 4.0.0
@@ -447,6 +457,28 @@ function start() {
 		}
 	}
 
+	// ---- What was played, on this device.
+	const HISTORY = 'riff-history';
+	function played() {
+		try {
+			const list = JSON.parse( localStorage.getItem( HISTORY ) || '[]' );
+			return Array.isArray( list ) ? list : [];
+		} catch {
+			return [];
+		}
+	}
+	function remember( t ) {
+		// Without the level envelope, which can be long and only the cover drawn on the server reads.
+		const { levels, ...kept } = t;
+		const list = [
+			{ ...kept, played: Date.now() },
+			...played().filter( ( p ) => p.id !== t.id ),
+		].slice( 0, 30 );
+		try {
+			localStorage.setItem( HISTORY, JSON.stringify( list ) );
+		} catch {}
+	}
+
 	function load( { play = true, at = 0 } = {} ) {
 		const t = track();
 		if ( ! t ) {
@@ -464,6 +496,7 @@ function start() {
 		document.documentElement.classList.add( 'has-riff' );
 		if ( play ) {
 			m.play().catch( paint );
+			remember( t );
 		}
 		metadata( t );
 		paint();

@@ -233,7 +233,7 @@ test.describe( 'Arriving by a shared link', () => {
 		await expect( page.locator( '.riff-row' ).nth( 1 ) ).toBeFocused();
 
 		await page.locator( '.riff-app-home' ).click();
-		await expect( page.locator( '.riff-grid' ) ).toBeVisible();
+		await expect( page.locator( '[data-riff-shelf="added"]' ) ).toBeVisible();
 		await expect( page ).toHaveURL( listenUrl );
 	} );
 } );

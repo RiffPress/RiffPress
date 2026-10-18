@@ -3,9 +3,10 @@
  * riff.js loads this on the page that holds the block and hands over an api: mount() turns the
  * marked figures in a view into rows, play() starts a queue, current() is the track playing. The
  * server rendered the first view and every link in it is a real address, so this only has to make
- * the next view arrive without a page load: fetch it from the REST route, swap it in, push the
- * address. Back and forward do the same from history. Load more adds the next page of the library
- * in place and changes the address to the one that renders the same cards on the server. */
+ * the next view arrive without a page load: fetch what the server renders at that address, swap it
+ * in, push the address. Back and forward do the same from history. Load more adds the next page of
+ * posts in place and changes the address to the one that renders the same cards on the server.
+ * Home's rows of what was played come from this device, so they are filled here. */
 
 export function start( api ) {
 	const app = document.querySelector( '[data-riff-app]' );
@@ -40,8 +41,8 @@ export function start( api ) {
 		status.textContent = '';
 	}
 
-	// ---- Addresses. A view is the page itself (the library), the page with ?riff_page={n} (the
-	// library through page n), the page with ?riff={id}, or a browse view: ?riff_view=albums,
+	// ---- Addresses. A view is the page itself (Home), the page with ?riff={id}, or a browse view:
+	// ?riff_view=albums, artists, tracks or posts (with ?riff_page={n}, posts through page n),
 	// ?riff_album={id}, ?riff_artist={id}, ?riff_search={words}.
 	const postOf = ( url ) => {
 		const u = new URL( url, location.href );
@@ -82,6 +83,15 @@ export function start( api ) {
 		}
 		if ( id ) {
 			u.searchParams.set( query, String( id ) );
+		}
+		return u.toString();
+	};
+	// Posts through page n, as the server renders it.
+	const postsAddress = ( n = 1 ) => {
+		const u = new URL( page );
+		u.searchParams.set( browseArgs[ 0 ] || 'riff_view', 'posts' );
+		if ( n > 1 ) {
+			u.searchParams.set( pageQuery, String( n ) );
 		}
 		return u.toString();
 	};
@@ -151,20 +161,6 @@ export function start( api ) {
 		return rendered.get( href );
 	}
 
-	// The navigation's current link, for the views the script draws itself.
-	function markNav( to ) {
-		for ( const a of nav?.querySelectorAll( 'a[aria-current]' ) || [] ) {
-			a.removeAttribute( 'aria-current' );
-		}
-		if ( ! to.id ) {
-			nav?.querySelector( '.riff-app-home' )?.setAttribute( 'aria-current', 'page' );
-		}
-		const field = nav?.querySelector( 'input[type="search"]' );
-		if ( field ) {
-			field.value = '';
-		}
-	}
-
 	// ---- Views.
 	async function show( to, { push = true } = {} ) {
 		const { id, pages: upto } = to;
@@ -173,15 +169,11 @@ export function start( api ) {
 		let html;
 		let bar;
 		try {
-			if ( to.browse ) {
-				( { view: html, nav: bar } = await pageView( to.href ) );
-			} else {
-				// A post's view comes from the server, as a browse view does, so its header, the
-				// cover's tint and anything a plugin adds are written in one place.
-				html = id
-					? ( await pageView( addressOf( id ) ) ).view
-					: await libraryView( upto );
-			}
+			// Every view, Home and a post's too, is what the server renders at its address, so it
+			// is written in one place.
+			( { view: html, nav: bar } = await pageView(
+				to.browse ? to.href : addressOf( id, upto )
+			) );
 		} catch {
 			// The route is gone or the network is: let the address load as a page.
 			if ( turn === showing ) {
@@ -198,8 +190,6 @@ export function start( api ) {
 			if ( bar !== undefined && nav ) {
 				nav.innerHTML = bar;
 				sidebar( app.dataset.sidebar !== 'mini', false );
-			} else if ( ! to.browse ) {
-				markNav( to );
 			}
 		};
 		if ( document.startViewTransition && ! reducedMotion() ) {
@@ -223,6 +213,7 @@ export function start( api ) {
 		}
 		app.removeAttribute( 'aria-busy' );
 		api.mount();
+		home();
 		const top = app.getBoundingClientRect().top;
 		if ( top < 0 ) {
 			app.scrollIntoView( { block: 'start' } );
@@ -233,66 +224,12 @@ export function start( api ) {
 	const reducedMotion = () =>
 		window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
 
-	// The library through page `upto`, as Listen\App::library_view() renders it.
-	async function libraryView( upto = 1 ) {
-		const first = await get( '' );
-		if ( ! first.items.length ) {
-			return `<p class="riff-app-empty">${ esc( s.appEmpty || '' ) }</p>`;
-		}
-		const pages = first.pages || 1;
-		const last = Math.min( upto, pages );
-		const later = await Promise.all(
-			Array.from( { length: last - 1 }, ( _, i ) => get( '', i + 2 ) )
-		);
-		const cards = [ first, ...later ]
-			.map( ( p, i ) => cardsOf( p.items, i + 1 ) )
-			.join( '' );
-		return (
-			continueListening() +
-			`<h2 class="riff-app-title" tabindex="-1">${ esc(
-				s.library || 'Library'
-			) }</h2><div class="riff-grid" data-riff-page="${ last }" data-riff-pages="${ pages }">` +
-			cards +
-			'</div>' +
-			( last < pages
-				? `<p class="riff-app-more"><a class="riff-pill" href="${ esc(
-						moreAddress( last + 1 )
-				  ) }" data-riff-app-action="more">${ esc(
-						s.more || 'Load more'
-				  ) }</a></p>`
-				: '' )
-		);
-	}
-
 	// Load more's link: one page further, landing on that page's first card.
-	const moreAddress = ( n ) => `${ addressOf( 0, n ) }#riff-page-${ n }`;
+	const moreAddress = ( n ) => `${ postsAddress( n ) }#riff-page-${ n }`;
 
 	// A page of cards; the first of every page after the first is where Load more's link lands.
 	const cardsOf = ( items, n ) =>
 		items.map( ( item, i ) => card( item, i === 0 && n > 1 ? n : 0 ) ).join( '' );
-
-	// What is playing now, at the top of the library, with a way back to its post.
-	function continueListening() {
-		const t = api.current();
-		if ( ! t || ! t.post ) {
-			return '';
-		}
-		const art = t.art?.length ? t.art[ 0 ].src : '';
-		const href = t.post.id ? addressOf( t.post.id ) : t.post.url;
-		return (
-			'<aside class="riff-now">' +
-			`<span class="riff-now-art">${
-				art ? `<img src="${ esc( art ) }" alt="" decoding="async">` : ''
-			}</span>` +
-			`<span class="riff-now-text"><span class="riff-now-label">${ esc(
-				s.nowPlaying || 'Now playing'
-			) }</span><span class="riff-now-title">${ esc( t.title ) }</span><span class="riff-now-sub">${ esc(
-				t.artist || t.post.title
-			) }</span></span>` +
-			`<a class="riff-pill" href="${ esc( href ) }">${ esc( s.open || 'Open' ) }</a>` +
-			'</aside>'
-		);
-	}
 
 	// The next page of the library, after the cards already there. The button is marked busy
 	// rather than disabled, so it keeps focus; the page only advances once one has arrived.
@@ -313,7 +250,7 @@ export function start( api ) {
 			grid.dataset.riffPage = String( next );
 			untell();
 			// The address that renders these same cards, so a reload or a shared link shows them.
-			history.replaceState( history.state, '', addressOf( 0, next ) );
+			history.replaceState( history.state, '', postsAddress( next ) );
 			if ( next >= ( pages || 1 ) ) {
 				// The button goes, so focus moves to the first of the cards it brought.
 				button.closest( '.riff-app-more' )?.remove();
@@ -460,6 +397,12 @@ export function start( api ) {
 			playAlbum( action );
 			return;
 		}
+		if ( action?.dataset.riffAppAction === 'play-history' ) {
+			e.preventDefault();
+			const played = api.history();
+			api.play( played, Number( action.dataset.riffIndex ) || 0 );
+			return;
+		}
 		if ( action?.dataset.riffAppAction === 'sidebar' ) {
 			sidebar( action.getAttribute( 'aria-expanded' ) !== 'true' );
 			return;
@@ -497,6 +440,82 @@ export function start( api ) {
 		}
 		show( to ).catch( () => {} );
 	} );
+
+	// ---- Home's rows of what was played, from this device: the posts last played from, to jump
+	// back into, and the tracks themselves. Each stays hidden while there is nothing in it.
+	function home() {
+		const played = api.history();
+		const fill = ( slug, cards ) => {
+			const shelf = view.querySelector( `[data-riff-shelf="${ slug }"]` );
+			if ( ! shelf || ! cards ) {
+				return;
+			}
+			shelf.querySelector( '.riff-shelf-row' ).innerHTML = cards;
+			shelf.hidden = false;
+		};
+		const posts = [];
+		for ( const t of played ) {
+			if ( t.post?.id && ! posts.some( ( p ) => p.post.id === t.post.id ) ) {
+				posts.push( t );
+			}
+		}
+		fill(
+			'jump',
+			posts
+				.slice( 0, 12 )
+				.map( ( t ) =>
+					shelfCard( {
+						art: t.art,
+						title: t.post.title,
+						sub: t.artist,
+						href: addressOf( t.post.id ),
+						play: `data-riff-app-action="play-card" data-riff-post="${ Number(
+							t.post.id
+						) }"`,
+						label: t.post.title,
+					} )
+				)
+				.join( '' )
+		);
+		fill(
+			'recent',
+			played
+				.slice( 0, 20 )
+				.map( ( t, i ) =>
+					shelfCard( {
+						art: t.art,
+						title: t.title,
+						sub: t.artist,
+						href: t.post?.id ? addressOf( t.post.id ) : '',
+						play: `data-riff-app-action="play-history" data-riff-index="${ i }"`,
+						label: t.title,
+					} )
+				)
+				.join( '' )
+		);
+	}
+
+	// A card in one of Home's rows, in the markup the server's cards use.
+	function shelfCard( { art, title, sub, href, play, label } ) {
+		const src = art?.length ? art[ art.length - 1 ].src : '';
+		const name = href
+			? `<a class="riff-card-link" href="${ esc( href ) }"><span class="riff-card-title">${ esc(
+					title
+			  ) }</span></a>`
+			: `<span class="riff-card-title">${ esc( title ) }</span>`;
+		return (
+			'<div class="riff-card"><span class="riff-card-art">' +
+			( src
+				? `<img src="${ esc( src ) }" alt="" loading="lazy" decoding="async">`
+				: '' ) +
+			`<button type="button" class="riff-card-play" ${ play } aria-label="${ esc(
+				fmt( s.playTrack || 'Play %s', label )
+			) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span>` +
+			name +
+			`<span class="riff-card-sub">${ esc( sub || '' ) }</span></div>`
+		);
+	}
+	home();
 
 	// ---- The sidebar, on a wide screen in standalone mode: full, or a rail of icons. The choice is
 	// this device's, so it is remembered here rather than anywhere shared.

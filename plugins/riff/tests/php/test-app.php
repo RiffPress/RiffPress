@@ -6,6 +6,7 @@
  */
 
 use Riff\Listen\App;
+use Riff\Listen\Browse;
 
 /**
  * @covers \Riff\Listen\App
@@ -77,8 +78,8 @@ class Test_Riff_App extends Riff_TestCase {
 		$html = App::render();
 		unset( $_GET['riff'] );
 
-		$this->assertStringContainsString( 'riff-grid', $html );
-		$this->assertStringNotContainsString( 'riff-album', $html );
+		$this->assertStringContainsString( 'riff-shelf', $html, 'Home' );
+		$this->assertStringNotContainsString( '<header class="riff-album', $html );
 	}
 
 	public function test_meta_reads_like_a_byline(): void {
@@ -183,18 +184,40 @@ class Test_Riff_App extends Riff_TestCase {
 	}
 
 	/**
-	 * The library as the app page renders it, at an address with ?riff_page set or not.
+	 * The posts view as the app page renders it, at an address with ?riff_page set or not.
 	 *
 	 * @param string|null $riff_page The argument's raw value, or null for none.
 	 * @return string
 	 */
 	private function library_at( ?string $riff_page ): string {
+		$_GET[ Browse::VIEW ] = 'posts';
 		if ( null !== $riff_page ) {
 			$_GET[ App::PAGE_QUERY ] = $riff_page;
 		}
 		$html = App::render();
-		unset( $_GET[ App::PAGE_QUERY ] );
+		unset( $_GET[ App::PAGE_QUERY ], $_GET[ Browse::VIEW ] );
 		return $html;
+	}
+
+	public function test_home_opens_the_page_with_rows_and_leaves_what_was_played_to_the_device(): void {
+		$this->library_of( 3 );
+		$html = App::render();
+
+		$this->assertStringContainsString( '<h2 class="riff-app-title" tabindex="-1">Home</h2>', $html );
+		$this->assertStringContainsString( 'data-riff-shelf="posts"', $html, 'the newest posts as a row' );
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="recent"[^>]*hidden#', $html, 'filled by the script from this device' );
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="jump"[^>]*hidden#', $html );
+		$this->assertStringContainsString( 'riff_view=posts', $html, 'Show all leads to every post' );
+		$this->assertStringNotContainsString( 'data-riff-app-action="more"', $html );
+	}
+
+	public function test_an_old_link_to_a_later_page_of_posts_still_opens_them(): void {
+		$this->library_of( 25 );
+		$_GET[ App::PAGE_QUERY ] = '2';
+		$html                    = App::render();
+		unset( $_GET[ App::PAGE_QUERY ] );
+
+		$this->assertSame( 25, substr_count( $html, 'class="riff-card"' ), 'the posts grid through page 2, as before Home' );
 	}
 
 	public function test_an_empty_library_has_no_load_more(): void {
@@ -223,7 +246,15 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertSame( 24, substr_count( $html, 'class="riff-card"' ) );
 		$this->assertStringNotContainsString( 'data-riff-post="' . $posts[0] . '"', $html, 'the oldest is on page 2' );
 		$this->assertStringContainsString( 'data-riff-page="1" data-riff-pages="2"', $html );
-		$more = esc_url( add_query_arg( App::PAGE_QUERY, 2, get_permalink( $page ) ) . '#riff-page-2' );
+		$more = esc_url(
+			add_query_arg(
+				array(
+					Browse::VIEW    => 'posts',
+					App::PAGE_QUERY => 2,
+				),
+				get_permalink( $page )
+			) . '#riff-page-2'
+		);
 		$this->assertStringContainsString( '<a class="riff-pill" href="' . $more . '" data-riff-app-action="more">', $html );
 
 		$html = $this->library_at( '2' );
@@ -251,7 +282,7 @@ class Test_Riff_App extends Riff_TestCase {
 			)
 		);
 		$this->go_to( get_permalink( $page ) );
-		$this->assertStringContainsString( 'page_id=' . $page . '&#038;riff_page=2#riff-page-2', $this->library_at( null ) );
+		$this->assertStringContainsString( 'page_id=' . $page . '&#038;riff_view=posts&#038;riff_page=2#riff-page-2', $this->library_at( null ) );
 	}
 
 	public function test_the_page_argument_follows_the_library_query_filter(): void {

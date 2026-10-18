@@ -120,14 +120,20 @@ final class Catalog_Rest {
 					'callback'            => static fn( WP_REST_Request $request ) => self::rest_terms( $request, Catalog::ALBUM ),
 					'permission_callback' => '__return_true',
 					'args'                => array(
-						'search' => $search,
-						'artist' => array(
+						'search'  => $search,
+						'artist'  => array(
 							'description' => __( 'Only the albums with a track by this artist, by term ID.', 'riff' ),
 							'type'        => 'integer',
 							'default'     => 0,
 							'minimum'     => 0,
 						),
-						'page'   => $page,
+						'orderby' => array(
+							'description' => __( 'By name, or the most recently added first.', 'riff' ),
+							'type'        => 'string',
+							'enum'        => array( 'name', 'added' ),
+							'default'     => 'name',
+						),
+						'page'    => $page,
 					),
 				),
 				'schema' => static fn() => self::terms_schema( Catalog::ALBUM ),
@@ -261,6 +267,12 @@ final class Catalog_Rest {
 			'order'      => 'ASC',
 			'exclude'    => $gone,
 		);
+		// An album's term is made when its first file is filed, so the newest terms are the albums
+		// added most recently.
+		if ( Catalog::ALBUM === $taxonomy && 'added' === $request['orderby'] ) {
+			$query['orderby'] = 'term_id';
+			$query['order']   = 'DESC';
+		}
 		if ( '' !== $search ) {
 			$query['name__like'] = $search;
 		}

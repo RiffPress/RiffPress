@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) || exit;
 final class Browse {
 
 	/**
-	 * The query argument naming a list: albums, artists or tracks.
+	 * The query argument naming a list: albums, artists, tracks or posts.
 	 *
 	 * @since 4.16.0
 	 */
@@ -63,14 +63,15 @@ final class Browse {
 	 * Icons for the navigation, as Material Icons draws them, beside each label in the sidebar.
 	 */
 	private const ICONS = array(
-		'library' => 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+		'home'    => 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
 		'albums'  => 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z',
 		'artists' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
 		'tracks'  => 'M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z',
+		'posts'   => 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z',
 	);
 
 	/**
-	 * Which browse view the address asks for, or null for the library or a post.
+	 * Which browse view the address asks for, or null for Home or a post.
 	 *
 	 * @since 4.16.0
 	 *
@@ -95,14 +96,19 @@ final class Browse {
 		if ( '' !== $search ) {
 			return array( 'view' => 'search', 'id' => 0, 'search' => $search, 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
-		if ( in_array( $view, array( 'albums', 'artists', 'tracks' ), true ) ) {
+		if ( in_array( $view, array( 'albums', 'artists', 'tracks', 'posts' ), true ) ) {
 			return array( 'view' => $view, 'id' => 0, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		}
+		// The posts grid lived at the page's own address before Home did; a link to one of its
+		// later pages still opens it.
+		if ( $page > 1 ) {
+			return array( 'view' => 'posts', 'id' => 0, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		return null;
 	}
 
 	/**
-	 * The navigation above every view: the library, the three lists, and search.
+	 * The navigation above every view: Home, the lists, and search.
 	 *
 	 * @since 4.16.0
 	 *
@@ -111,13 +117,14 @@ final class Browse {
 	 * @return string
 	 */
 	public static function nav( string $page, ?array $current ): string {
-		$here  = $current['view'] ?? 'library';
+		$here  = $current['view'] ?? 'home';
 		$here  = array( 'album' => 'albums', 'artist' => 'artists' )[ $here ] ?? $here; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		$links = array(
-			'library' => array( __( 'Library', 'riff' ), $page ),
+			'home'    => array( __( 'Home', 'riff' ), $page ),
 			'albums'  => array( __( 'Albums', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ) ),
 			'artists' => array( __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ) ),
 			'tracks'  => array( __( 'Tracks', 'riff' ), add_query_arg( self::VIEW, 'tracks', $page ) ),
+			'posts'   => array( __( 'Posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ) ),
 		);
 		// The site's name heads the sidebar; as tabs it is hidden.
 		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
@@ -129,7 +136,7 @@ final class Browse {
 		foreach ( $links as $slug => list( $label, $href ) ) {
 			$html .= sprintf(
 				'<a class="riff-app-tab%s" href="%s"%s><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="%s"/></svg><span>%s</span></a>',
-				'library' === $slug ? ' riff-app-home' : '',
+				'home' === $slug ? ' riff-app-home' : '',
 				esc_url( $href ),
 				$slug === $here ? ' aria-current="page"' : '',
 				esc_attr( self::ICONS[ $slug ] ),
@@ -175,6 +182,8 @@ final class Browse {
 				return self::artists_view( $page, $current['page'] );
 			case 'tracks':
 				return self::tracks_view( $page, $current['page'] );
+			case 'posts':
+				return App::posts_view( $page );
 			case 'album':
 				return self::album_view( $page, $current['id'] );
 			case 'artist':
@@ -259,6 +268,17 @@ final class Browse {
 	 * @return string
 	 */
 	private static function album_grid( array $albums, string $page ): string {
+		return '<div class="riff-grid">' . self::album_cards( $albums, $page ) . '</div>';
+	}
+
+	/**
+	 * Album cards, without the grid around them.
+	 *
+	 * @param array  $albums Albums from the route.
+	 * @param string $page   Listen page.
+	 * @return string
+	 */
+	private static function album_cards( array $albums, string $page ): string {
 		$cards = '';
 		foreach ( $albums as $album ) {
 			$art    = $album['art'] ? end( $album['art'] )['src'] : '';
@@ -274,7 +294,7 @@ final class Browse {
 				esc_html( implode( ' · ', $sub ) )
 			);
 		}
-		return '<div class="riff-grid">' . $cards . '</div>';
+		return $cards;
 	}
 
 	/**
@@ -300,6 +320,17 @@ final class Browse {
 	 * @return string
 	 */
 	private static function artist_list( array $artists, string $page ): string {
+		return '<ul class="riff-artists">' . self::artist_items( $artists, $page ) . '</ul>';
+	}
+
+	/**
+	 * Artists as list items, without the list around them.
+	 *
+	 * @param array  $artists Artists from the route.
+	 * @param string $page    Listen page.
+	 * @return string
+	 */
+	private static function artist_items( array $artists, string $page ): string {
 		$items = '';
 		foreach ( $artists as $artist ) {
 			$items .= sprintf(
@@ -310,7 +341,63 @@ final class Browse {
 				esc_html( self::count( (int) $artist['count'] ) )
 			);
 		}
-		return '<ul class="riff-artists">' . $items . '</ul>';
+		return $items;
+	}
+
+	/**
+	 * Home: rows that scroll sideways, as the apps open. What was played comes from this device,
+	 * so those two rows are left for the script to fill; the rest renders here.
+	 *
+	 * @since 4.18.0
+	 *
+	 * @param string $page Listen page.
+	 * @return string
+	 */
+	public static function home_view( string $page ): string {
+		$albums  = self::get( '/albums', array( 'orderby' => 'added' ) );
+		$artists = self::get( '/artists' );
+		$posts   = App::post_cards( $page );
+		if ( ! $albums['items'] && ! $artists['items'] && '' === $posts ) {
+			return self::title( __( 'Home', 'riff' ) ) . self::empty_note();
+		}
+		$html  = self::title( __( 'Home', 'riff' ) );
+		$html .= self::shelf( 'jump', __( 'Jump back in', 'riff' ), '', '', true );
+		$html .= self::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
+		if ( $albums['items'] ) {
+			$html .= self::shelf( 'added', __( 'Recently added', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ), self::album_cards( $albums['items'], $page ) );
+		}
+		if ( $artists['items'] ) {
+			$html .= self::shelf( 'artists', __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ), self::artist_items( $artists['items'], $page ), false, 'ul' );
+		}
+		if ( '' !== $posts ) {
+			$html .= self::shelf( 'posts', __( 'New posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ), $posts );
+		}
+		return $html;
+	}
+
+	/**
+	 * One row of Home: a heading, a Show all link, and items that scroll sideways.
+	 *
+	 * @param string $slug   The row's name, for the script and the styles.
+	 * @param string $title  Heading.
+	 * @param string $all    Show all's address, or empty for none.
+	 * @param string $items  The row's items.
+	 * @param bool   $device Whether the script fills it from this device; hidden until it does.
+	 * @param string $tag    The row's element: div for cards, ul for list items.
+	 * @return string
+	 */
+	private static function shelf( string $slug, string $title, string $all, string $items, bool $device = false, string $tag = 'div' ): string {
+		$id = 'riff-shelf-' . $slug;
+		return sprintf(
+			'<section class="riff-shelf" data-riff-shelf="%1$s" aria-labelledby="%2$s"%3$s><div class="riff-shelf-head"><h3 class="riff-shelf-title" id="%2$s">%4$s</h3>%5$s</div><%6$s class="riff-shelf-row" tabindex="0" aria-labelledby="%2$s">%7$s</%6$s></section>',
+			esc_attr( $slug ),
+			esc_attr( $id ),
+			$device ? ' hidden' : '',
+			esc_html( $title ),
+			'' !== $all ? '<a class="riff-shelf-all" href="' . esc_url( $all ) . '">' . esc_html__( 'Show all', 'riff' ) . '</a>' : '',
+			'ul' === $tag ? 'ul' : 'div',
+			$items
+		);
 	}
 
 	/**
