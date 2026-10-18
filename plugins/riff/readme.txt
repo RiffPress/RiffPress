@@ -30,7 +30,7 @@ Roboto, Inter and EB Garamond are bundled under the SIL Open Font License, and t
 1. Upload the plugin folder to `wp-content/plugins/` and activate it.
 2. Add an audio or video block to a post, one per track, or a playlist block holding them all.
 3. To pair a video with a song, click the audio file in the Media Library and choose a video under **Video version**.
-4. To make a dedicated Listen page, add the Riff block (or `[riff]`) to a page. It lists posts with tracks, and browses and searches your music by album, artist and track, without leaving that page.
+4. To make a dedicated Listen page, add the Riff block (or `[riff]`) to a page. It lists posts with tracks, and browses and searches your music by album, artist and track, without leaving that page. Add `app/` to the page's address (for example `/listen/app/`) for the player on its own, in Riff's dark look and outside your theme; a browser can install it as an app.
 
 == Frequently Asked Questions ==
 

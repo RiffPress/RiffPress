@@ -206,6 +206,7 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$copy = get_temp_dir() . 'песня-' . wp_generate_password( 6, false ) . '.mp3';
 		copy( self::fixture( '02 - Underground [underground].mp3' ), $copy );
 		$id = self::factory()->attachment->create_upload_object( $copy );
+		unlink( $copy ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- the test's own temporary copy.
 		wp_update_post(
 			array(
 				'ID'         => $id,

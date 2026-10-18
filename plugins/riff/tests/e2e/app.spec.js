@@ -281,6 +281,42 @@ test.describe( 'Browse', () => {
 	} );
 } );
 
+test.describe( 'Standalone', () => {
+	test( 'app/ is the player on its own: no theme, installable, and browsing stays inside it', async ( {
+		page,
+		request,
+	} ) => {
+		const app = pageUrl.replace( /\/?$/, '/' ) + 'app/';
+		await page.goto( app );
+		await expect( page.locator( 'body.riff-standalone .riff-app' ) ).toBeVisible();
+		await expect(
+			page.locator( 'link[rel="stylesheet"][href*="/themes/"]' ),
+			'none of the theme\'s styles'
+		).toHaveCount( 0 );
+		await expect( page.locator( '#wpadminbar' ) ).toHaveCount( 0 );
+
+		const manifest = await page.locator( 'link[rel="manifest"]' ).getAttribute( 'href' );
+		const answer = await request.get( manifest );
+		expect( answer.headers()[ 'content-type' ] ).toContain( 'application/manifest+json' );
+		const json = await answer.json();
+		expect( json.display ).toBe( 'standalone' );
+		expect( json.start_url ).toBe( app );
+
+		await page.locator( '.riff-app-tab', { hasText: 'Albums' } ).click();
+		await expect( page ).toHaveURL( /\/app\/\?riff_view=albums/ );
+		await page
+			.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } )
+			.first()
+			.locator( '.riff-card-link' )
+			.click();
+		await expect( page ).toHaveURL( /\/app\/\?riff_album=\d+/ );
+		await page.locator( '[data-riff-app-action="play"]' ).click();
+		await expect
+			.poll( async () => ( await playing( page ) ).paused )
+			.toBe( false );
+	} );
+} );
+
 test.describe( 'App requests', () => {
 	// A post's own route, or the library's second page, whichever permalinks the site uses.
 	const postRoute = ( id ) => ( url ) =>
