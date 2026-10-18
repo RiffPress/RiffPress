@@ -209,9 +209,13 @@ test.describe( 'Player', () => {
 		await expect(
 			page.locator( 'body > :not(#riff):not(script)' ).first()
 		).toHaveAttribute( 'inert', '' );
+		// The page under it stays still: no scrolling behind it, no second scrollbar beside Up next.
+		const scrolls = () => page.evaluate( () => getComputedStyle( document.documentElement ).overflowY );
+		expect( await scrolls() ).toBe( 'hidden' );
 		await page.keyboard.press( 'Escape' );
 		await expect( np ).toBeHidden();
 		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
+		expect( await scrolls(), 'and scrolls again once it closes' ).not.toBe( 'hidden' );
 	} );
 
 	test( 'on a wide screen the art stays square and the bar keeps its measurements', async ( {
