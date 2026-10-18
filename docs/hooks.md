@@ -16,6 +16,18 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$accent` | `string` | A CSS colour, or an empty string for the default amber. |
 
+### `riff_app_theme_tokens`
+
+Filters the custom properties the Riff block takes from the theme.
+
+Return an empty array to keep the block's own WordPress.org palette and fonts on every theme, or set any `--riff-app-*` property to a CSS value. With both `--riff-app-bg` and `--riff-app-ink` set, the stylesheet mixes the secondary text, borders, surfaces and the accent's shades from them.
+
+Since 4.14.0. Fires in `plugins/riff/features/listen/class-app.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$tokens` | `array` | Custom property values from the theme's global styles, keyed by name. |
+
 ### `riff_art_layouts`
 
 Filters the layouts a drawn cover picks from: where the record sits. The plugin knows `corner`, `centre` and `horizon`; a layout it does not know draws as `corner`.
