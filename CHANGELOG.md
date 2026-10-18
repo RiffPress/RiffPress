@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.15.0](https://github.com/RiffPress/RiffPress/compare/v4.14.0...v4.15.0) (2026-10-18)
+
+
+### Features
+
+* the plugin is Riff Music Player, and its tagline is Own every note ([#377](https://github.com/RiffPress/RiffPress/issues/377)) ([828de07](https://github.com/RiffPress/RiffPress/commit/828de07e80ddbf7329c5b1e8747558de2bab2b10))
+
+
+### Bug Fixes
+
+* closing Now Playing in Safari returns focus to the bar; WebKit smoke tests and phone-size Listen tests ([#363](https://github.com/RiffPress/RiffPress/issues/363)) ([e9e2443](https://github.com/RiffPress/RiffPress/commit/e9e24439cd54531ad23674c5f5c3e347c6ebe693))
+
 ## [4.14.0](https://github.com/RiffPress/RiffPress/compare/v4.13.0...v4.14.0) (2026-10-18)
 
 
