@@ -113,6 +113,10 @@ final class Catalog {
 					'all_items'     => __( 'All albums', 'riff' ),
 					'edit_item'     => __( 'Edit album', 'riff' ),
 					'not_found'     => __( 'No albums found.', 'riff' ),
+					'add_new_item'  => __( 'Add album', 'riff' ),
+					'new_item_name' => __( 'New album name', 'riff' ),
+					'update_item'   => __( 'Update album', 'riff' ),
+					'back_to_items' => __( '&larr; Go to albums', 'riff' ),
 				),
 				'rest_base' => 'riff_albums',
 			)
@@ -128,6 +132,10 @@ final class Catalog {
 					'all_items'     => __( 'All artists', 'riff' ),
 					'edit_item'     => __( 'Edit artist', 'riff' ),
 					'not_found'     => __( 'No artists found.', 'riff' ),
+					'add_new_item'  => __( 'Add artist', 'riff' ),
+					'new_item_name' => __( 'New artist name', 'riff' ),
+					'update_item'   => __( 'Update artist', 'riff' ),
+					'back_to_items' => __( '&larr; Go to artists', 'riff' ),
 				),
 				'rest_base' => 'riff_artists',
 			)
