@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.14.0](https://github.com/RiffPress/RiffPress/compare/v4.13.0...v4.14.0) (2026-10-18)
+
+
+### Features
+
+* the Riff block takes the theme's colours and fonts ([#357](https://github.com/RiffPress/RiffPress/issues/357)) ([3da8b92](https://github.com/RiffPress/RiffPress/commit/3da8b923c2253a67baa12c1a1feb1f8f9d6b3ae3))
+
+
+### Bug Fixes
+
+* on a wide screen the seek knob and time are not cut off by Now Playing ([#355](https://github.com/RiffPress/RiffPress/issues/355)) ([08ca68c](https://github.com/RiffPress/RiffPress/commit/08ca68c5fffe47c05190883b340509fa57d8d41a))
+* the playing row's bars move with the music on every album, and read on a pale cover ([#359](https://github.com/RiffPress/RiffPress/issues/359)) ([0b75ab1](https://github.com/RiffPress/RiffPress/commit/0b75ab19be57f0178d75351dbc57571afd30de10))
+* the seek glow fades out before the knob instead of ending in a square edge ([#358](https://github.com/RiffPress/RiffPress/issues/358)) ([45d6091](https://github.com/RiffPress/RiffPress/commit/45d6091c647b652c07f69bd75f23e848bd0f3226))
+* Up next scrolls with a thin dark scrollbar, not the page's light one ([#360](https://github.com/RiffPress/RiffPress/issues/360)) ([28a4804](https://github.com/RiffPress/RiffPress/commit/28a480432d12eebd089c294a87b6f8c2d59d4ecd))
+
 ## [4.13.0](https://github.com/RiffPress/RiffPress/compare/v4.12.2...v4.13.0) (2026-10-16)
 
 
