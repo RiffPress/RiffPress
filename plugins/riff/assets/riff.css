@@ -310,6 +310,9 @@ html.has-riff body::after {
 	position: relative;
 	z-index: 100000;
 	color: var(--riff-fg);
+
+	/* Dark on any page, so the browser draws scrollbars dark too. */
+	color-scheme: dark;
 	font: 400 16px/1.2 "Riff Roboto", Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
 	-webkit-font-smoothing: antialiased;
 }
@@ -1178,6 +1181,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	list-style: none;
+
+	/* A thin thumb on no track, the way the platform draws it in a dark app. */
+	scrollbar-width: thin;
+	scrollbar-color: rgb(255 255 255 / 0.2) transparent;
 }
 
 .riff-queue-list li {

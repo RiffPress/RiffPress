@@ -307,6 +307,15 @@ test.describe( 'Player', () => {
 		);
 	} );
 
+	test( 'up next scrolls with a thin dark scrollbar, not the page\'s light one', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		const list = page.locator( '.riff-queue-list' );
+		await expect( list ).toHaveCSS( 'scrollbar-width', 'thin' );
+		await expect( list ).toHaveCSS( 'color-scheme', 'dark' );
+	} );
+
 	test( 'the bars on the current Up next item follow the music, like the row\'s', async ( {
 		page,
 	}, testInfo ) => {
