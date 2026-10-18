@@ -114,6 +114,45 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertStringContainsString( 'class="riff-btn riff-desk" href="https://example.org/eq" aria-label="Equaliser"', $html );
 	}
 
+	public function test_up_next_is_the_only_tab_until_a_plugin_adds_one(): void {
+		$this->go_to( home_url( '/' ) );
+		ob_start();
+		Player::markup();
+		$html = ob_get_clean();
+
+		$this->assertSame( array( 'queue' ), array_keys( Player::tabs() ) );
+		$this->assertStringContainsString( 'class="riff-tabs" role="tablist"', $html, 'one tab is not "many", so a phone shows no tab row' );
+		$this->assertStringContainsString( 'id="riff-queue-tab" data-riff-tab="queue" aria-controls="riff-panel-queue" aria-selected="true" tabindex="0"', $html );
+		$this->assertSame( 1, substr_count( $html, 'role="tabpanel"' ) );
+	}
+
+	public function test_a_plugin_adds_a_tab_with_an_empty_panel_after_up_next(): void {
+		$this->go_to( home_url( '/' ) );
+		$tabs = static function ( array $tabs ): array {
+			unset( $tabs['queue'] );
+			return array(
+				'lyrics'  => array( 'label' => 'Lyrics <b>' ),
+				'Related' => array( 'label' => 'Related' ),
+				'queue'   => array( 'label' => 'Renamed' ),
+				'nolabel' => array(),
+				'notarr'  => 'Nope',
+			) + $tabs;
+		};
+		add_filter( 'riff_now_playing_tabs', $tabs );
+		ob_start();
+		Player::markup();
+		$html = ob_get_clean();
+		$keys = array_keys( Player::tabs() );
+		remove_filter( 'riff_now_playing_tabs', $tabs );
+
+		$this->assertSame( array( 'queue', 'lyrics', 'related' ), $keys, 'Up next stays first and cannot be removed; slugs are keys; a tab without a label is dropped' );
+		$this->assertStringContainsString( 'class="riff-tabs riff-tabs-many"', $html );
+		$this->assertStringContainsString( '>Up next</button>', $html, 'a plugin cannot rename Up next' );
+		$this->assertStringContainsString( 'id="riff-tab-lyrics" data-riff-tab="lyrics" aria-controls="riff-panel-lyrics" aria-selected="false" tabindex="-1">Lyrics &lt;b&gt;</button>', $html, 'labels are escaped' );
+		$this->assertStringContainsString( '<div class="riff-panel" role="tabpanel" id="riff-panel-lyrics" aria-labelledby="riff-tab-lyrics" data-riff-panel="lyrics" tabindex="0" hidden></div>', $html );
+		$this->assertSame( 3, substr_count( $html, 'role="tabpanel"' ) );
+	}
+
 	public function test_the_accent_comes_from_the_theme_or_a_filter(): void {
 		$this->go_to( home_url( '/' ) );
 		$this->assertSame( '', Player::root_style(), 'nothing set: the default amber' );

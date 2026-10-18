@@ -210,6 +210,40 @@ final class Player {
 	}
 
 	/**
+	 * The tabs beside Now Playing: Up next first, then any a plugin adds. Each tab has a panel the
+	 * player shows when the tab is picked; a plugin fills its own panel when the `riff.tab` action
+	 * fires in JavaScript. On a phone the tabs show in the open Up next sheet once there is more
+	 * than one.
+	 *
+	 * @since 4.17.0
+	 *
+	 * @return array[] Tabs keyed by slug, each with a label.
+	 */
+	public static function tabs(): array {
+		$tabs = array(
+			'queue' => array( 'label' => __( 'Up next', 'riff' ) ),
+		);
+		/**
+		 * Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is
+		 * `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always
+		 * comes first and cannot be removed.
+		 *
+		 * @since 4.17.0
+		 *
+		 * @param array[] $tabs Tabs keyed by slug, each with a label.
+		 */
+		$filtered = (array) apply_filters( 'riff_now_playing_tabs', $tabs );
+		foreach ( $filtered as $slug => $tab ) {
+			$slug = sanitize_key( (string) $slug );
+			if ( '' === $slug || 'queue' === $slug || ! is_array( $tab ) || empty( $tab['label'] ) || ! is_string( $tab['label'] ) ) {
+				continue;
+			}
+			$tabs[ $slug ] = array( 'label' => $tab['label'] );
+		}
+		return $tabs;
+	}
+
+	/**
 	 * Keeps only well-formed items: a string label and either an action or an href.
 	 *
 	 * @param array $items Items.
