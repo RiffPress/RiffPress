@@ -14,6 +14,15 @@ const DATA = path.join( DIR, 'web.json' );
 const SITEMAP = path.join( ROOT, 'site', 'sitemap.xml' );
 // The deploy fills {{commit}} with the SHA it publishes, so every link opens the code as deployed.
 const REPO = 'https://github.com/RiffPress/RiffPress/blob/{{commit}}/';
+// Where a page's specification may live: WHATWG, W3C (and its CSS and community groups), and TC39.
+const SPEC_HOSTS = [
+	'https://html.spec.whatwg.org/',
+	'https://fetch.spec.whatwg.org/',
+	'https://www.w3.org/TR/',
+	'https://drafts.csswg.org/',
+	'https://wicg.github.io/',
+	'https://tc39.es/',
+];
 const shell = require( './site-shell.js' );
 const hooksReference = require( './hooks-reference.js' );
 const { esc, inline, FOOT, localNav, crumbs } = shell;
@@ -89,7 +98,7 @@ function page( e, i, entries ) {
 	}
 	html += `</ul>
 <p class="fine">Links open the source at the commit this page was published from.</p>
-<p class="fine">Reference: <a href="${ esc( e.mdn ) }">${ esc( e.name ) } on MDN</a>.</p>
+<p class="fine">Specification: <a href="${ esc( e.spec.url ) }">${ esc( e.spec.name ) }</a>. Reference: <a href="${ esc( e.mdn ) }">${ esc( e.name ) } on MDN</a>.</p>
 <nav class="pager" aria-label="Previous and next">${ prev ? `<a rel="prev" href="../${ prev.slug }/">${ esc( prev.name ) }</a>` : '<span></span>' }${ next ? `<a rel="next" href="../${ next.slug }/">${ esc( next.name ) }</a>` : '<span></span>' }</nav>
 </main>
 ${ sidebar( entries, e.slug, 2 ) }
@@ -151,6 +160,11 @@ function verify( entries, fix ) {
 	let moved = 0;
 	const cache = new Map();
 	for ( const e of entries ) {
+		// Every page cites the standard that defines its feature, published by a standards body, so
+		// the reference is the spec itself and not only a description of it.
+		if ( ! e.spec?.name || ! SPEC_HOSTS.some( ( h ) => ( e.spec.url || '' ).startsWith( h ) ) ) {
+			problems.push( `${ e.slug }: needs a spec in site/web/web.json, a { name, url } on ${ SPEC_HOSTS.join( ', ' ) }` );
+		}
 		for ( const w of e.where ) {
 			if ( ! cache.has( w.file ) ) {
 				const file = path.join( ROOT, w.file );
