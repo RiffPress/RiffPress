@@ -4,6 +4,10 @@
 		"name": "HTMLMediaElement",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/HTMLMediaElement",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/media.html#htmlmediaelement"
+		},
 		"summary": "One audio and one video element for the whole page, which every control drives.",
 		"how": "The template prints one `<audio>` and one `<video>` for the page, and the script picks which one a track plays through. Loading a track sets `src` and `currentTime` on that element and calls `play()`. Switching between Song and Video hands the current time and paused state from one element to the other. The core blocks' own players are paused and hidden underneath.",
 		"why": "The whole player is a UI over these two elements. Sharing one pair across the page is what lets a track keep playing while rows, views and Now Playing change around it.",
@@ -35,6 +39,10 @@
 		"name": "TimeRanges",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/TimeRanges",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/media.html#time-ranges"
+		},
 		"summary": "Shows how much of the file is loaded past the playhead.",
 		"how": "On every time update the script reads the live element's `buffered` ranges, finds the one that contains the playhead, and turns its end into a 0 to 1 ratio. That ratio goes into a custom property on both seek bars, and the stylesheet scales a lighter band under the played part of the line to match.",
 		"why": "The lighter band tells the listener a seek into loaded territory will be instant.",
@@ -61,6 +69,10 @@
 		"name": "Screen Wake Lock",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Screen_Wake_Lock_API",
+		"spec": {
+			"name": "Screen Wake Lock API",
+			"url": "https://www.w3.org/TR/screen-wake-lock/"
+		},
 		"summary": "Keeps the screen on while a video plays in Now Playing, and only then.",
 		"how": "One function computes a single condition: a video is playing, Now Playing is open, and the page is visible. When that becomes true it requests a screen lock. When it becomes false it releases it. It runs from the video's play, pause and ended events, the player's open and close events, and visibility changes.",
 		"why": "A phone would otherwise dim and lock partway through a video.",
@@ -82,6 +94,10 @@
 		"name": "Vibration",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Vibration_API",
+		"spec": {
+			"name": "Vibration API",
+			"url": "https://www.w3.org/TR/vibration/"
+		},
 		"summary": "A short tick under the thumb on play and pause.",
 		"how": "Every play or pause, from a tap, a key or a row, first checks the `(hover: none)` media query to tell a touch screen from a mouse. On a touch screen it fires an 8ms vibration.",
 		"why": "A haptic tick confirms the tap landed. Without it the only confirmation is the icon change.",
@@ -103,6 +119,10 @@
 		"name": "Network Information",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Network_Information_API",
+		"spec": {
+			"name": "Network Information API (WICG draft)",
+			"url": "https://wicg.github.io/netinfo/"
+		},
 		"summary": "Respects Data Saver by fetching nothing before a press.",
 		"how": "At startup the script reads `navigator.connection.saveData`. When Data Saver is on, it sets `preload` to none on both media elements, overriding the template's `metadata`.",
 		"why": "On a metered connection the player should not download even a track's metadata before the listener presses play.",
@@ -124,6 +144,10 @@
 		"name": "Media Session",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Media_Session_API",
+		"spec": {
+			"name": "Media Session",
+			"url": "https://www.w3.org/TR/mediasession/"
+		},
 		"summary": "Gives the lock screen and headphones the track's title, artwork and controls.",
 		"how": "Each new track builds a `MediaMetadata` with title, artist, album and every artwork size. Eight action handlers map the system's play, pause, previous, next, seek and stop onto the player's own functions. The playing state and position are mirrored, position at most once a second.",
 		"why": "The lock screen, headphones and the system media widget would otherwise show a blank page title and could not skip tracks.",
@@ -155,6 +179,10 @@
 		"name": "Remote Playback",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Remote_Playback_API",
+		"spec": {
+			"name": "Remote Playback API",
+			"url": "https://www.w3.org/TR/remote-playback/"
+		},
 		"summary": "Shows the cast button only when a Chromecast or AirPlay target is in reach.",
 		"how": "The script watches availability once, and the callback shows or hides every cast button as a device comes in and out of range. Safari takes the equivalent WebKit path for AirPlay. Pressing the button prompts the browser's device picker on whichever element is live.",
 		"why": "There is no other standard way to know a device is near, so the buttons would either always show and do nothing, or never show.",
@@ -181,6 +209,10 @@
 		"name": "Web Audio",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Audio_API",
+		"spec": {
+			"name": "Web Audio API",
+			"url": "https://www.w3.org/TR/webaudio/"
+		},
 		"summary": "Reads the signal that lights the filament.",
 		"how": "The first time something plays through the audio element on a non-iOS browser, the script creates an `AudioContext`. It wraps the element in a media source and connects it through an analyser and back to the destination, so the sound still comes out. The context suspends on pause and resumes on play.",
 		"why": "This is what drives the amber filament. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
@@ -207,6 +239,10 @@
 		"name": "AnalyserNode",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/AnalyserNode",
+		"spec": {
+			"name": "Web Audio API",
+			"url": "https://www.w3.org/TR/webaudio/#AnalyserNode"
+		},
 		"summary": "Turns the signal into one heat value and three band levels, every frame.",
 		"how": "The analyser uses a 1024-sample window with 0.6 smoothing. Each frame, the time-domain samples give an RMS that feeds the filament's heat model, and the frequency bins are summed into three bands, bass, voice and air. Those three values scale the three bars on the playing row.",
 		"why": "Without it there is no signal to read, so the filament could not follow the music and the bars could not move.",
@@ -238,6 +274,10 @@
 		"name": "Page Visibility",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Page_Visibility_API",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/interaction.html#page-visibility"
+		},
 		"summary": "Moves a playing video to audio when the page goes to the background.",
 		"how": "When the page is hidden while a video is playing, the handler flips the track to the audio element and remembers it did. When the page is visible again it flips back. The same event restarts the per-frame seek follower, and the loops check `document.hidden` so they stop in the background.",
 		"why": "A phone pauses video in the background but keeps audio going, so backgrounding a tab during a video would otherwise stop the music.",
@@ -259,6 +299,10 @@
 		"name": "Lazy loading",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/HTML/Element/img#loading",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes"
+		},
 		"summary": "Fetches list thumbnails only as they scroll into view.",
 		"how": "Every thumbnail in a list is marked `loading=\"lazy\"`: the art on each track row, each item in Up next, and each record cover in the library grid. The cover of the current track is not lazy.",
 		"why": "A post or library can have dozens of covers, and the browser should not fetch them all before the listener scrolls.",
@@ -285,6 +329,10 @@
 		"name": "Async decoding",
 		"group": "Media",
 		"mdn": "https://developer.mozilla.org/docs/Web/HTML/Element/img#decoding",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/images.html#decoding-images"
+		},
 		"summary": "Decodes cover art off the main thread so the seek line does not stutter.",
 		"how": "Every image the player prints carries `decoding=\"async\"`: the large cover and the two thumbnails in the template, each row and queue item, and each library card. The off-screen image loaded to sample a cover's colour sets it too.",
 		"why": "The cover swaps on every track change while the seek line is animating each frame, and a synchronous decode would drop a frame.",
@@ -311,6 +359,10 @@
 		"name": "Pointer Events",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Pointer_events",
+		"spec": {
+			"name": "Pointer Events",
+			"url": "https://www.w3.org/TR/pointerevents3/"
+		},
 		"summary": "One gesture helper for swiping the bar and dragging the sheets.",
 		"how": "A single `drag()` helper records the pointer's start, timestamp and id on `pointerdown`. It reports deltas on `pointermove` for that pointer, and calls an end handler on `pointerup` or `pointercancel` with distance and velocity. It skips mouse pointers. It drives swiping the bar to skip or dismiss, dragging Now Playing down to close, and dragging the Up next handle.",
 		"why": "Pointer events give one code path for touch and pen with a `pointerType` to exclude the mouse.",
@@ -337,6 +389,10 @@
 		"name": "Web Animations",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Animations_API",
+		"spec": {
+			"name": "Web Animations",
+			"url": "https://www.w3.org/TR/web-animations-1/"
+		},
 		"summary": "Breathes the filament where there is no signal to follow.",
 		"how": "When a track is playing but there is no analyser, on iOS, for a cross-origin file, or through the video element, the wire gets an infinite 2.6 second opacity loop through `element.animate()`. The returned animation is cancelled when playback pauses or ends.",
 		"why": "On every iPhone, where Web Audio is deliberately not used, the filament would otherwise sit static.",
@@ -358,6 +414,10 @@
 		"name": "requestAnimationFrame",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animation-frames"
+		},
 		"summary": "Moves the seek line and the filament every frame, not four times a second.",
 		"how": "Two frame loops run while music plays. One repaints the seek line and times every frame and stops when the element pauses or the page hides. The other advances the filament's heat model with the frame timestamp and reads the analyser. Opening Now Playing also waits one frame before adding its class, so the slide-up transition actually runs.",
 		"why": "`timeupdate` fires about four times a second and reads as a line that skips.",
@@ -384,6 +444,10 @@
 		"name": "Web Share",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Share_API",
+		"spec": {
+			"name": "Web Share API",
+			"url": "https://www.w3.org/TR/web-share/"
+		},
 		"summary": "Opens the system share sheet with the track's title and the post link.",
 		"how": "The Share chip in Now Playing calls `navigator.share()` with the track title and the post's URL. A rejected promise from dismissing the sheet is swallowed.",
 		"why": "On a phone the system sheet is how people send a link to Messages or another app.",
@@ -405,6 +469,10 @@
 		"name": "Clipboard",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Clipboard_API",
+		"spec": {
+			"name": "Clipboard API and events",
+			"url": "https://www.w3.org/TR/clipboard-apis/"
+		},
 		"summary": "Copies the link where there is no share sheet.",
 		"how": "When the browser has no share sheet, the Share chip writes the post's URL to the clipboard and shows a Copied message in the status toast for 2.5 seconds. Any error is caught and nothing is reported.",
 		"why": "Desktop browsers mostly lack `navigator.share`, so copying is the only thing the chip can do there.",
@@ -426,6 +494,10 @@
 		"name": "inert",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/interaction.html#the-inert-attribute"
+		},
 		"summary": "Makes Now Playing a real modal: nothing behind it can take focus.",
 		"how": "Opening Now Playing sets `inert` on every direct child of `<body>` except the player, and on a phone also on the bar and the toast, which the dialog covers. Each node touched is marked so closing restores only those. On a wide screen the bar stays live because the dialog opens above it.",
 		"why": "Without it the page behind a `role=\"dialog\"` would still take keyboard and screen reader focus.",
@@ -452,6 +524,10 @@
 		"name": "matchMedia",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/matchMedia",
+		"spec": {
+			"name": "CSSOM View Module",
+			"url": "https://www.w3.org/TR/cssom-view-1/#dom-window-matchmedia"
+		},
 		"summary": "Reads the same breakpoint and motion preference the stylesheet uses.",
 		"how": "Three queries are read from script. `prefers-reduced-motion` skips the frame loops and the close transition. `(hover: none)` stands in for a touch screen before vibrating. `(min-width: 900px)` decides whether the bar sits beside the dialog and stays live, or under it and goes inert.",
 		"why": "The phone and desktop layouts differ in ways CSS alone cannot express, and the script has to agree with the stylesheet about where the line is.",
@@ -483,6 +559,10 @@
 		"name": "scrollIntoView",
 		"group": "Interface",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Element/scrollIntoView",
+		"spec": {
+			"name": "CSSOM View Module",
+			"url": "https://www.w3.org/TR/cssom-view-1/#dom-element-scrollintoview"
+		},
 		"summary": "Brings the playing track into view when Up next opens.",
 		"how": "When the Up next sheet opens, the current track's item in the list is scrolled into view with `block: nearest`. In the Listen app, after a view swap, the app scrolls to its top only if it had scrolled off above the viewport.",
 		"why": "A long queue would otherwise open at its top with the playing track somewhere below.",
@@ -509,6 +589,10 @@
 		"name": "ES modules",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/JavaScript/Guide/Modules",
+		"spec": {
+			"name": "ECMAScript Language Specification",
+			"url": "https://tc39.es/ecma262/#sec-modules"
+		},
 		"summary": "The shipped file is the source, loaded as a module with no build step.",
 		"how": "The player is enqueued through WordPress's `wp_enqueue_script_module()`, so it loads as `<script type=\"module\">`, deferred by default. The Listen app is a separate module with a named export that the player imports on demand. There is no bundler.",
 		"why": "Modules give deferred loading, strict mode and a real import for the optional app without a build step.",
@@ -535,6 +619,10 @@
 		"name": "Dynamic import",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/import",
+		"spec": {
+			"name": "ECMAScript Language Specification",
+			"url": "https://tc39.es/ecma262/#sec-import-calls"
+		},
 		"summary": "Loads the Listen app only on the page that holds the block.",
 		"how": "After the player is ready it checks for the Listen block and a module URL the feature put into the page data. Only then does it `import()` the app and call its start function with the public API. Posts without the block never download it.",
 		"why": "A static import would load the app on every post with audio.",
@@ -556,6 +644,10 @@
 		"name": "History",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/History_API",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-history-interface"
+		},
 		"summary": "Back closes Now Playing, and the Listen app navigates without a page load.",
 		"how": "Opening Now Playing pushes a history entry without changing the address, so Back closes the dialog. Closing it any other way pops that entry. The Listen app pushes an entry with the new address for each view it swaps in and re-renders on `popstate`, spreading the existing state so the Interactivity API's session id survives.",
 		"why": "A lost session id would make the Interactivity runtime reload the page on Back and end the music.",
@@ -587,6 +679,10 @@
 		"name": "Web Storage",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Web_Storage_API",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/webstorage.html#storage"
+		},
 		"summary": "Carries the queue and position to the next page, and remembers the volume.",
 		"how": "The queue, order, position, mode, repeat, shuffle, current time and playing flag are written to `sessionStorage` on every track load, every five seconds, and on `pagehide`. The next page in the same tab reads it back and reloads the same track at the same time. The volume goes to `localStorage` so it survives across tabs.",
 		"why": "This is what lets a link to another page keep playing and a reload pick up paused where it left off.",
@@ -613,6 +709,10 @@
 		"name": "Fetch",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Fetch_API",
+		"spec": {
+			"name": "Fetch Standard",
+			"url": "https://fetch.spec.whatwg.org/#fetch-method"
+		},
 		"summary": "Swaps library views in from the REST route without a page load.",
 		"how": "The Listen app fetches the library and each post from the plugin's REST route with a JSON `Accept` header, and memoises each promise so going back is instant. A non-2xx response throws and the entry is dropped from the cache.",
 		"why": "Swapping views without a page load is what keeps the music playing, and the cache is why Back feels instant.",
@@ -639,6 +739,10 @@
 		"name": "Navigation Timing",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/PerformanceNavigationTiming",
+		"spec": {
+			"name": "Navigation Timing Level 2",
+			"url": "https://www.w3.org/TR/navigation-timing-2/"
+		},
 		"summary": "Tells a reload from a link, so a reload never autoplays.",
 		"how": "When restoring the saved state, the script reads the type of the navigation entry. After a reload the saved track loads at its position but stays paused. After a link, a track that was playing resumes.",
 		"why": "The click that follows a link is the gesture the new page needs to play with sound. A reload has no such gesture and would be blocked or surprise the listener.",
@@ -660,6 +764,10 @@
 		"name": "pagehide",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/pagehide_event",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/indices.html#event-pagehide"
+		},
 		"summary": "Captures the exact position when the listener leaves the page.",
 		"how": "The save function that writes the queue and position to `sessionStorage` is bound to `pagehide`. So the last `currentTime` is captured when the listener follows a link, closes the tab, or the page enters the back-forward cache.",
 		"why": "Without it the restored position could be up to five seconds stale. `pagehide` fires reliably where `unload` does not, including on mobile.",
@@ -681,6 +789,10 @@
 		"name": "pageshow",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/API/Window/pageshow_event",
+		"spec": {
+			"name": "HTML Standard",
+			"url": "https://html.spec.whatwg.org/multipage/indices.html#event-pageshow"
+		},
 		"summary": "Restarts the frame loop after a Back from the back-forward cache.",
 		"how": "When a page is restored from the back-forward cache, `pageshow` fires with `persisted` set. The handler repaints the seek line and, if the media element is still playing, restarts the per-frame loop the browser stopped when it froze the page.",
 		"why": "The audio element kept its state in the cache but the animation loop did not, so the music would be playing while the seek line sat still.",
@@ -702,6 +814,10 @@
 		"name": "ARIA dialog",
 		"group": "Platform",
 		"mdn": "https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Roles/dialog_role",
+		"spec": {
+			"name": "WAI-ARIA 1.2",
+			"url": "https://www.w3.org/TR/wai-aria-1.2/#dialog"
+		},
 		"summary": "Now Playing is a named modal dialog with Escape and focus return.",
 		"how": "The Now Playing container is printed as `role=\"dialog\"` with `aria-modal` and a translated label. The buttons that open it declare `aria-haspopup=\"dialog\"`. The script completes the pattern. Opening remembers the focused element and moves focus to Close. Escape closes from anywhere, the rest of the page goes inert, and closing returns focus to the opener.",
 		"why": "Screen readers announce Now Playing as a modal dialog. Without the role the full-screen view would read as part of the post.",
@@ -733,6 +849,10 @@
 		"name": "@property",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@property",
+		"spec": {
+			"name": "CSS Properties and Values API Level 1",
+			"url": "https://www.w3.org/TR/css-properties-values-api-1/#at-property-rule"
+		},
 		"summary": "Registers the filament's heat as a real number, so it can animate.",
 		"how": "The script writes one number, `--riff-heat`, onto the seek lines and the Now Playing glow every frame. Registering it as a `<number>` lets a 160ms transition interpolate between those writes. Every colour and opacity in the filament is a `calc()` off that one number, so the script never touches a colour.",
 		"why": "An unregistered custom property is a string and cannot transition, so the wire would step from one brightness to the next each frame.",
@@ -759,6 +879,10 @@
 		"name": "color-mix()",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/color_value/color-mix",
+		"spec": {
+			"name": "CSS Color Module Level 5",
+			"url": "https://www.w3.org/TR/css-color-5/#color-mix"
+		},
 		"summary": "Tints rows, pills and the seek line from the theme's own text colour.",
 		"how": "Track rows in a post have no colours of their own. The hover and current-row tint, the artwork placeholder, the buffered band and the quality pill are all `currentcolor` mixed with transparent at a low percentage. They sit right on a light or a dark theme. Now Playing darkens the cover's tint by mixing in black for the bottom of its gradient.",
 		"why": "A fixed rgba() tint would vanish on one theme and look heavy on another, and the Now Playing tint is only known at runtime from the artwork.",
@@ -785,6 +909,10 @@
 		"name": "oklab",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/color_value/oklab",
+		"spec": {
+			"name": "CSS Color Module Level 4",
+			"url": "https://www.w3.org/TR/css-color-4/#specifying-oklab-oklch"
+		},
 		"summary": "Mixes the filament's colour from red through amber to white without muddy midtones.",
 		"how": "The filament's colour is a three-stop ramp: a near-black red to a lit red, then to the amber accent, then to a pale yellow-white at the peaks. Each stop is a `color-mix()` in oklab, so the in-between colours keep an even perceived lightness, the way a heated wire brightens.",
 		"why": "The same mix in sRGB passes through darker, muddier midtones instead of a smooth brightening.",
@@ -811,6 +939,10 @@
 		"name": "Container queries",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/CSS_containment/Container_queries",
+		"spec": {
+			"name": "CSS Conditional Rules Module Level 5",
+			"url": "https://www.w3.org/TR/css-conditional-5/#container-queries"
+		},
 		"summary": "Sizes the cover from the stage it sits in, not the viewport.",
 		"how": "The stage in Now Playing, between the header and the title, is a size container. The cover is the smaller of the stage's width and height in `cqw` and `cqh`, so it is always a square that fits whatever room is left. The video fills the stage's width and caps at its height. There is no `@container` rule, only the units.",
 		"why": "The stage's height changes with the phone, the safe areas and the Up next sheet, and the cover has to fit without the script measuring anything.",
@@ -837,6 +969,10 @@
 		"name": ":has()",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/:has",
+		"spec": {
+			"name": "Selectors Level 4",
+			"url": "https://www.w3.org/TR/selectors-4/#relational"
+		},
 		"summary": "Styles a parent from a child's state, without the script toggling classes.",
 		"how": "The seek control is an invisible range input over the seek line, so its keyboard focus ring is drawn on the parent bar instead. When the script has a live audio reading it sets `data-live` on the player, and the equalizer bars on the playing row drop their fallback keyframes so only the live movement shows. In the Listen app, a record card draws its focus ring around the whole card when the link inside it is focused.",
 		"why": "Each case would otherwise mean the script toggling classes on every focus change and every analyser start and stop.",
@@ -868,6 +1004,10 @@
 		"name": "env() safe areas",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/env",
+		"spec": {
+			"name": "CSS Environment Variables Module Level 1",
+			"url": "https://drafts.csswg.org/css-env-1/#safe-area-insets"
+		},
 		"summary": "Keeps the bar and Now Playing clear of the notch and the home indicator.",
 		"how": "The two insets are read once into custom properties. The fixed bar grows by the bottom inset and pads its controls above it. Now Playing, which covers the whole screen, pads its header below the notch and its controls above the indicator. The toast and the spacer at the end of the page use the same value.",
 		"why": "A fixed bar on a phone with a home indicator would otherwise put the play button under the indicator.",
@@ -894,6 +1034,10 @@
 		"name": "text-wrap",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/text-wrap",
+		"spec": {
+			"name": "CSS Text Module Level 4",
+			"url": "https://www.w3.org/TR/css-text-4/#text-wrap"
+		},
 		"summary": "Balances a long title in the Listen app so no word is left alone.",
 		"how": "When the Listen app opens a post, its title is set large beside the Play and Shuffle pills. If it wraps, `balance` splits it into lines of roughly equal length instead of a long first line and one word on the second.",
 		"why": "A heading that size orphans a single word easily, and the wrap point moves with the viewport.",
@@ -915,6 +1059,10 @@
 		"name": "Variable fonts",
 		"group": "Styling",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/CSS_fonts/Variable_fonts_guide",
+		"spec": {
+			"name": "CSS Fonts Module Level 4",
+			"url": "https://www.w3.org/TR/css-fonts-4/#font-variation-settings-def"
+		},
 		"summary": "Ships each font as one file covering every weight the player asks for.",
 		"how": "Each bundled font is a single variable woff2 with a weight range in its `@font-face`. Roboto covers 100 to 900 for the player, Inter and EB Garamond 400 to 700 for the Listen app. The stylesheet asks for four weights, and all of them come from the one file.",
 		"why": "The fonts ship with the plugin rather than from Google, so a listener's address never leaves the site, and one file per family keeps that to three requests.",
@@ -941,6 +1089,10 @@
 		"name": "prefers-reduced-motion",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-motion",
+		"spec": {
+			"name": "Media Queries Level 5",
+			"url": "https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion"
+		},
 		"summary": "Stops the equalizer, the filament and the sliding sheets when the system asks.",
 		"how": "In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run and the filament sits at a steady glow. Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.",
 		"why": "A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is what the setting asks to stop.",
@@ -972,6 +1124,10 @@
 		"name": "prefers-reduced-transparency",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-transparency",
+		"spec": {
+			"name": "Media Queries Level 5",
+			"url": "https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-transparency"
+		},
 		"summary": "Removes the translucent wash and the bloom when the system asks.",
 		"how": "On a phone the top of Now Playing carries a translucent wash of the filament's colour that brightens with the music. Under reduced transparency that wash is removed, and the wire and its white heart lose their blurred bloom, leaving a solid line.",
 		"why": "The wash and the bloom are the player's only translucent layers over content, and they change opacity every frame.",
@@ -998,6 +1154,10 @@
 		"name": "clip-path",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/clip-path",
+		"spec": {
+			"name": "CSS Masking Module Level 1",
+			"url": "https://www.w3.org/TR/css-masking-1/#the-clip-path"
+		},
 		"summary": "Hides the Song and Video labels on a phone, but not from screen readers.",
 		"how": "The Song and Video switch shows two icons on a phone. Its text labels stay in the markup for screen readers but are clipped to nothing with `inset(50%)`. At 900px and up the clip is lifted, the labels show as words and the icons are hidden.",
 		"why": "Two icons on a phone and two words on a wide screen, from one set of markup, with an accessible name in both.",
@@ -1024,6 +1184,10 @@
 		"name": "aspect-ratio",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/aspect-ratio",
+		"spec": {
+			"name": "CSS Box Sizing Module Level 4",
+			"url": "https://www.w3.org/TR/css-sizing-4/#aspect-ratio"
+		},
 		"summary": "Reserves the video's box and each record cover's square before anything loads.",
 		"how": "The single video element in Now Playing reserves a 16:9 black box at the stage's width before any frame has loaded, so switching to Video does not resize the stage. In the library each record cover is a square box with a placeholder background, so the grid lays out at its final size before the images arrive.",
 		"why": "Without a declared ratio the video would sit at the browser's 300 by 150 default until metadata loads, and the grid would reflow as each cover came in.",
@@ -1050,6 +1214,10 @@
 		"name": "accent-color",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/accent-color",
+		"spec": {
+			"name": "CSS Basic User Interface Module Level 4",
+			"url": "https://www.w3.org/TR/css-ui-4/#widget-accent"
+		},
 		"summary": "Recolours the browser's own volume slider to the player's white.",
 		"how": "On a wide screen the volume control is a native range input that fades in beside the mute icon on hover or keyboard focus. `accent-color` recolours the browser's slider to the player's foreground, so it is the stock control, not a custom-drawn track.",
 		"why": "A default blue slider would be the only off-palette element in a player that is always dark, and restyling a range input across browsers takes a lot of vendor CSS.",
@@ -1071,6 +1239,10 @@
 		"name": "touch-action",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/touch-action",
+		"spec": {
+			"name": "Pointer Events",
+			"url": "https://www.w3.org/TR/pointerevents3/#the-touch-action-css-property"
+		},
 		"summary": "Claims the swipes and drags so the browser does not scroll instead.",
 		"how": "The bar's info area allows vertical page scrolling but claims horizontal movement, so the swipe-to-skip gesture gets its pointer events. Now Playing's header and stage take all touches for drag-down-to-close, and the Up next handle takes all touches for the sheet drag. On a wide screen there is no drag-to-close, so those go back to `auto`.",
 		"why": "The browser would otherwise scroll or zoom during the gesture and cancel the pointer events.",
@@ -1102,6 +1274,10 @@
 		"name": "overscroll-behavior",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/overscroll-behavior",
+		"spec": {
+			"name": "CSS Overscroll Behavior Module Level 1",
+			"url": "https://www.w3.org/TR/css-overscroll-1/#overscroll-behavior-properties"
+		},
 		"summary": "Keeps the Up next list's scroll from moving the post behind it.",
 		"how": "The Up next list scrolls inside its sheet. `contain` stops the scroll chaining to the page when the list hits its end, and stops a downward pull at the top from triggering pull-to-refresh while the overlay is open.",
 		"why": "Now Playing is a fixed overlay over a post that can itself scroll. A chained scroll would move the post underneath, or reload the page mid-track.",
@@ -1123,6 +1299,10 @@
 		"name": ":focus-visible",
 		"group": "Behaviour",
 		"mdn": "https://developer.mozilla.org/docs/Web/CSS/:focus-visible",
+		"spec": {
+			"name": "Selectors Level 4",
+			"url": "https://www.w3.org/TR/selectors-4/#the-focus-visible-pseudo"
+		},
 		"summary": "Shows a focus ring for the keyboard and not after a tap.",
 		"how": "Every button in the player is reset with `all: unset`, which removes the default outline. `:focus-visible` puts a 2px ring back only for keyboard focus. Track rows use `currentcolor` so the ring matches the theme, and the controls use the player's white. The Listen app uses the blue accent, with the ring drawn around the whole record card.",
 		"why": "A player is driven mostly by taps, and a ring left on the play button after each one would look like a bug.",
