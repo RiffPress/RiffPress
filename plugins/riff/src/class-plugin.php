@@ -24,6 +24,7 @@ final class Plugin {
 		Sources::register( new Blocks_Source() );
 		Media::register();
 		Catalog::register();
+		Catalog_Rest::register();
 		Blocks::register();
 		Player::register();
 		Library::register();
