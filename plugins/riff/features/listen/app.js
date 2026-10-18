@@ -412,19 +412,26 @@ export function start( api ) {
 
 	async function postView( id ) {
 		const post = await get( '/' + id );
+		const art = post.art?.length ? post.art[ post.art.length - 1 ].src : '';
+		// The same markup the server writes in Listen\App::header().
 		return (
-			'<header class="riff-album">' +
+			`<header class="riff-album${ art ? ' riff-album-has-cover' : '' }">` +
+			( art
+				? `<span class="riff-album-cover"><img src="${ esc(
+						art
+				  ) }" alt="" decoding="async"></span>`
+				: '' ) +
 			`<div class="riff-album-text"><h2 class="riff-album-title" tabindex="-1">${ esc(
 				post.title
 			) }</h2>` +
-			`<p class="riff-album-meta">${ esc( meta( post ) ) }</p></div>` +
+			`<p class="riff-album-meta">${ esc( meta( post ) ) }</p>` +
 			`<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">${ esc(
 				s.play || 'Play'
 			) }</button>` +
 			`<button type="button" class="riff-pill" data-riff-app-action="shuffle">${ esc(
 				s.shuffle || 'Shuffle'
-			) }</button></p></header>` +
-			`<div class="riff-album-tracks" data-riff-tracks="${ esc(
+			) }</button></p></div></header>` +
+			`<div class="riff-album-tracks" data-riff-numbered data-riff-tracks="${ esc(
 				JSON.stringify( post.tracks )
 			) }">${ post.html }</div>`
 		);

@@ -126,6 +126,31 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( array( 'Underground', 'Trombone Detritus', 'Stole Back My Soul' ), wp_list_pluck( $data['items'], 'title' ), 'tracks 2, 3, 5' );
 	}
 
+	public function test_an_album_without_track_numbers_keeps_the_order_it_was_added_in(): void {
+		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		foreach ( array( 'Zeta', 'Alpha', 'Mid' ) as $title ) {
+			$id = self::attach( '02 - Underground [underground].mp3', $post );
+			wp_update_post(
+				array(
+					'ID'         => $id,
+					'post_title' => $title,
+				)
+			);
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'album'  => 'Untagged Order',
+					'artist' => 'Someone',
+				)
+			);
+		}
+		$album = (int) get_term_by( 'name', 'Untagged Order', Catalog::ALBUM )->term_id;
+
+		$data = $this->get( '/tracks', array( 'album' => $album ) );
+
+		$this->assertSame( array( 'Zeta', 'Alpha', 'Mid' ), wp_list_pluck( $data['items'], 'title' ), 'upload order, not the alphabet' );
+	}
+
 	public function test_an_artist_lists_their_tracks(): void {
 		$artist = $this->get( '/artists' )['items'][0];
 

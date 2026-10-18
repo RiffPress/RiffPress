@@ -2176,10 +2176,38 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: flex;
 	max-width: 960px;
 	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px 24px;
-	margin-bottom: 24px;
+	align-items: flex-end;
+	gap: 24px 32px;
+	margin-bottom: 32px;
+}
+
+/* The cover leads, as on an album page in the apps. */
+.riff-album-cover {
+	flex: none;
+	width: clamp(160px, 22vw, 240px);
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: 6px;
+	background: var(--riff-app-surface);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.riff-app .riff-album-cover img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	object-fit: cover;
+}
+
+.riff-app .riff-album-kind {
+	margin: 0 0 8px;
+	color: var(--riff-app-ink-2);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-transform: uppercase;
 }
 
 .riff-album-text {
@@ -2202,8 +2230,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-album-actions {
 	display: flex;
 	flex: none;
-	gap: 8px;
-	margin: 0;
+	gap: 12px;
+	margin: 24px 0 0;
 }
 
 .riff-app .riff-pill {
@@ -2244,10 +2272,87 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-album-tracks {
 	max-width: 960px;
-	padding: 8px;
-	border: 1px solid var(--riff-app-line);
-	border-radius: 2px;
-	background: var(--riff-app-surface);
+	counter-reset: riff-track;
+}
+
+/* A list of tracks, not a post: no list markers of the browser's, even where
+   WordPress's own block styles are not loaded. */
+.riff-app .riff-album-tracks ol,
+.riff-app .riff-album-tracks ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.riff-app .riff-album-tracks li,
+.riff-app .riff-album-tracks figure {
+	margin: 0;
+}
+
+.riff-app .riff-album-tracks .riff-row {
+	gap: 16px;
+	padding: 6px 12px;
+	border-radius: 6px;
+	line-height: 1.4;
+}
+
+.riff-app .riff-album-tracks .riff-row-art {
+	width: 40px;
+	height: 40px;
+}
+
+.riff-app .riff-album-tracks .riff-row-title {
+	font-size: 15px;
+}
+
+.riff-app .riff-album-tracks .riff-row-sub {
+	font-size: 13px;
+}
+
+.riff-app .riff-album-tracks .riff-row-time {
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+
+/* An album numbers its tracks where the art would be; the playing one shows
+   its bars instead. Its cover and artist are already in the header. */
+.riff-album-tracks[data-riff-numbered] .riff-row {
+	counter-increment: riff-track;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art {
+	display: grid;
+	place-items: center;
+	background: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art img {
+	display: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art::before {
+	content: counter(riff-track);
+	color: var(--riff-app-ink-2);
+	font-size: 15px;
+	font-variant-numeric: tabular-nums;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row[data-current] .riff-row-art::before {
+	content: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-state {
+	padding-bottom: 0;
+	align-items: center;
+	background: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row:not([data-current]) .riff-row-state {
+	opacity: 0;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-sub {
+	display: none;
 }
 
 .riff-app .riff-track {
@@ -2255,7 +2360,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-app .riff-row {
-	border-radius: 2px;
+	border-radius: 6px;
 }
 
 .riff-app .riff-row:hover,
@@ -2437,6 +2542,18 @@ html.has-riff .riff-standalone .riff-app {
 		box-shadow: none;
 	}
 
+	.riff-standalone .riff-app .riff-pill {
+		min-height: 44px;
+		padding: 0 28px;
+		border-radius: 999px;
+		font-weight: 600;
+	}
+
+	.riff-standalone .riff-album-title {
+		font-weight: 700;
+		letter-spacing: -0.02em;
+	}
+
 	.riff-standalone .riff-app > *,
 	.riff-standalone .riff-album,
 	.riff-standalone .riff-album-tracks {
@@ -2450,4 +2567,10 @@ html.has-riff .riff-standalone .riff-app {
 		min-width: 0;
 		padding: clamp(32px, 4vw, 56px) clamp(24px, 4vw, 64px) 48px;
 	}
+}
+
+/* The bar already says what is playing; the app does not repeat it above the
+   library. */
+.riff-standalone .riff-now {
+	display: none;
 }

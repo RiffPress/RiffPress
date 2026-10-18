@@ -207,6 +207,9 @@ final class Catalog_Rest {
 
 		$ids = wp_list_pluck( $query->posts, 'ID' );
 		if ( $album ) {
+			// Upload order before title order: a file without a track number keeps its place in
+			// the album as it was added, as an album's files usually are.
+			sort( $ids );
 			$ids = self::in_album_order( $ids );
 		}
 		$items = array();

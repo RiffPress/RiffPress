@@ -62,7 +62,7 @@ class Test_Riff_App extends Riff_TestCase {
 		$html = do_shortcode( '[riff]' );
 		unset( $_GET['riff'] );
 
-		$this->assertStringContainsString( 'class="riff-album"', $html );
+		$this->assertStringContainsString( '<header class="riff-album', $html );
 		$this->assertStringContainsString( get_the_title( $post ), $html );
 		$this->assertStringContainsString( 'data-riff-track=', $html, 'the post renders as rows the player takes over' );
 		$this->assertStringContainsString( 'data-riff-app-action="shuffle"', $html );
@@ -118,7 +118,7 @@ class Test_Riff_App extends Riff_TestCase {
 		$_GET['riff'] = get_post( $post )->post_name;
 		$html         = App::render();
 		unset( $_GET['riff'] );
-		$this->assertStringContainsString( 'class="riff-album"', $html, 'a slug opens the post the way an id does' );
+		$this->assertStringContainsString( '<header class="riff-album', $html, 'a slug opens the post the way an id does' );
 	}
 
 	/**
