@@ -362,7 +362,7 @@ test.describe( 'Standalone', () => {
 					`<!-- wp:playlist-track {"id":${ m.id },"src":"${ m.source_url }","title":"${ m.title.raw }"} /-->`
 			)
 			.join( '' );
-		const post = await requestUtils.createPost( {
+		const post = await made.post( requestUtils, {
 			title: 'Riff app playlist',
 			status: 'publish',
 			content: `<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">${ items }</ol></figure><!-- /wp:playlist -->`,
