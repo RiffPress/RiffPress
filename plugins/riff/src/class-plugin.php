@@ -23,6 +23,7 @@ final class Plugin {
 	public static function boot(): void {
 		Sources::register( new Blocks_Source() );
 		Media::register();
+		Protect::register();
 		Catalog::register();
 		Catalog_Rest::register();
 		Blocks::register();

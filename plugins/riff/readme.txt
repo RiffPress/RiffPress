@@ -53,7 +53,15 @@ Yes, with a membership or store plugin deciding who may listen. Riff asks the `r
 `add_filter( 'riff_can_play', fn( $allowed, $track, $id, $post_id ) => $allowed && my_member_can_read( $post_id ), 10, 4 );`
 `add_filter( 'riff_unlock_url', fn() => home_url( '/join/' ) );`
 
-The file itself is still a plain upload, so anyone who already has its address can play it. Protected files are planned.
+A locked track's file is still a plain upload, so anyone who already has its address can play it, unless the file is protected: see the next question.
+
+= Can I keep the files themselves private? =
+
+Yes. Tick **Protected** on an audio or video file in the Media Library. Riff moves the file into a folder of its own under uploads and serves it from the site's address with `?riff-file=` and the file's ID. The file is then sent only to visitors who can read its post and whom `riff_can_play` allows, and seeking still works. Posts that linked to the file are updated, and unticking the box moves it back.
+
+Apache is told to refuse that folder automatically. On Nginx, add a rule for it; **Tools > Site Health** checks the folder and shows the rule if it is needed. To have the web server send the file instead of PHP, return `x-sendfile` (Apache with mod_xsendfile, or LiteSpeed) or `x-accel-redirect` (Nginx, with the folder marked `internal`) from the `riff_protected_send` filter.
+
+The player gets an address signed for the visitor that works for a few hours, so AirPlay, Chromecast and the lock screen can fetch the file without a login. Deactivating Riff leaves protected files unreachable until it is active again; deleting Riff moves them back first.
 
 == Developers ==
 
