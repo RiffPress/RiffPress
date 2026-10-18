@@ -86,6 +86,9 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		$this->assertSame( '#030303', $manifest['theme_color'] );
 		$this->assertSame( array( '192x192', '512x512' ), wp_list_pluck( $manifest['icons'], 'sizes' ) );
 		$this->assertStringContainsString( 'features/listen/icons/icon-192.png', $manifest['icons'][0]['src'], 'Riff\'s icon when the site has none' );
+		foreach ( array( 192, 512 ) as $size ) {
+			$this->assertFileExists( RIFF_DIR . "features/listen/icons/icon-$size.png", 'the icon ships with the plugin' );
+		}
 	}
 
 	public function test_the_document_is_riffs_own_with_links_that_stay_in_the_app(): void {
