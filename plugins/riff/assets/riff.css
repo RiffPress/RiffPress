@@ -490,7 +490,7 @@ html.has-riff body::after {
 	transform-origin: right;
 }
 
-[dir="rtl"] .riff-line::after {
+[dir="rtl"] .riff-bar-seek .riff-line::after {
 	-webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
 	mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
 	transform: translateX(calc((1 - var(--riff-p)) * 100%));
@@ -549,13 +549,13 @@ html.has-riff body::after {
 	opacity: calc(0.25 + 0.75 * var(--riff-heat));
 }
 
-/* The line keeps the bloom inside its own length, and lets it spill above
-   and below. */
-.riff-line {
+/* The bar's line keeps the bloom inside its own length, and lets it spill
+   above and below. Now Playing's line is plain white and has no bloom. */
+.riff-bar-seek .riff-line {
 	clip-path: inset(-12px 0);
 }
 
-.riff-line::after {
+.riff-bar-seek .riff-line::after {
 	content: "";
 	position: absolute;
 	inset: -7px 0;
@@ -601,7 +601,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 @media (prefers-reduced-transparency: reduce) {
 
 	.riff-np-glow,
-	.riff-line::after {
+	.riff-bar-seek .riff-line::after {
 		display: none;
 	}
 }

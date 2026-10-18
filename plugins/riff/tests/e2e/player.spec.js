@@ -697,6 +697,15 @@ test.describe( 'Player', () => {
 		// layer is what drew the square edge.
 		expect( glow.mask ).toMatch( /rgba\( *0, *0, *0, *0 *\)\)$/ );
 		expect( glow.shadow ).toBe( 'none' );
+		// Now Playing's seek line is plain white: no bloom tints it.
+		const np = await page.evaluate(
+			() =>
+				getComputedStyle(
+					document.querySelector( '.riff-np-seek .riff-line' ),
+					'::after'
+				).content
+		);
+		expect( np ).toBe( 'none' );
 	} );
 
 	test( 'a script can listen to the player and reshape what it plays', async ( {
