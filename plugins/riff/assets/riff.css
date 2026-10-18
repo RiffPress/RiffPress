@@ -1784,6 +1784,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	text-decoration: none;
 }
 
+/* The site's name and the icons belong to the sidebar; as tabs, only labels. */
+.riff-app .riff-app-brand,
+.riff-app .riff-app-tab svg {
+	display: none;
+}
+
 .riff-app .riff-app-tab:hover,
 .riff-app .riff-app-tab:focus-visible {
 	color: var(--riff-app-ink);
@@ -2279,4 +2285,95 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	max-width: none;
 	min-height: 100vh;
 	padding-bottom: calc(var(--riff-bar-h, 72px) + 48px);
+}
+
+/* On a wide screen standalone mode is laid out like the apps people know: a
+   column on the left with the site's name, search and the views, and the view
+   beside it. The column stays put while the view scrolls. */
+@media (min-width: 900px) {
+
+	.riff-standalone .riff-app {
+		display: grid;
+		grid-template-columns: 240px minmax(0, 1fr);
+		align-items: start;
+		padding: 0;
+	}
+
+	.riff-standalone .riff-app-bar {
+		position: sticky;
+		top: 0;
+		flex-direction: column;
+		flex-wrap: nowrap;
+		align-items: stretch;
+		gap: 2px;
+		box-sizing: border-box;
+		height: 100dvh;
+		margin: 0;
+		padding: 24px 12px;
+		overflow-y: auto;
+		border-right: 1px solid var(--riff-app-line);
+		border-bottom: 0;
+	}
+
+	html.has-riff .riff-standalone .riff-app-bar {
+		height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
+	}
+
+	.riff-standalone .riff-app-brand {
+		display: block;
+		order: -2;
+		margin: 0 12px 20px;
+		overflow: hidden;
+		font-size: 20px;
+		font-weight: 700;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app-search {
+		flex: none;
+		order: -1;
+		margin: 0 0 16px;
+	}
+
+	.riff-standalone .riff-app .riff-app-search input {
+		max-width: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab {
+		gap: 16px;
+		padding: 0 12px;
+		border-radius: 8px;
+		font-size: 15px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab svg {
+		display: block;
+		flex: none;
+		width: 24px;
+		height: 24px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab:hover {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app .riff-app-tab[aria-current="page"] {
+		background: var(--riff-app-surface);
+		box-shadow: none;
+	}
+
+	.riff-standalone .riff-app > *,
+	.riff-standalone .riff-album,
+	.riff-standalone .riff-album-tracks {
+		max-width: none;
+		margin-right: 0;
+		margin-left: 0;
+	}
+
+	.riff-standalone .riff-app-view {
+		grid-column: 2;
+		min-width: 0;
+		padding: clamp(32px, 4vw, 56px) clamp(24px, 4vw, 64px) 48px;
+	}
 }

@@ -282,6 +282,24 @@ test.describe( 'Browse', () => {
 } );
 
 test.describe( 'Standalone', () => {
+	test( 'on a wide screen the navigation is a sidebar; on a phone it stays tabs', async ( {
+		page,
+		isMobile,
+	} ) => {
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const nav = await page.locator( '.riff-app-bar' ).boundingBox();
+		const view = await page.locator( '.riff-app-view' ).boundingBox();
+		const brand = page.locator( '.riff-app-brand' );
+		if ( isMobile ) {
+			await expect( brand ).toBeHidden();
+			expect( nav.y + nav.height ).toBeLessThanOrEqual( view.y + 1 );
+		} else {
+			await expect( brand ).toBeVisible();
+			expect( nav.x + nav.width, 'the column sits left of the view' ).toBeLessThanOrEqual( view.x + 1 );
+			await expect( page.locator( '.riff-app-tab svg' ).first() ).toBeVisible();
+		}
+	} );
+
 	test( 'app/ is the player on its own: no theme, installable, and browsing stays inside it', async ( {
 		page,
 		request,

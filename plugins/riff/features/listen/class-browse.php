@@ -60,6 +60,16 @@ final class Browse {
 	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH );
 
 	/**
+	 * Icons for the navigation, as Material Icons draws them, beside each label in the sidebar.
+	 */
+	private const ICONS = array(
+		'library' => 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+		'albums'  => 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z',
+		'artists' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
+		'tracks'  => 'M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z',
+	);
+
+	/**
 	 * Which browse view the address asks for, or null for the library or a post.
 	 *
 	 * @since 4.16.0
@@ -109,13 +119,16 @@ final class Browse {
 			'artists' => array( __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ) ),
 			'tracks'  => array( __( 'Tracks', 'riff' ), add_query_arg( self::VIEW, 'tracks', $page ) ),
 		);
-		$html  = '';
+		// The site's name heads the sidebar; as tabs it is hidden.
+		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
+		$html = '<span class="riff-app-brand">' . esc_html( '' !== $name ? $name : 'Riff' ) . '</span>';
 		foreach ( $links as $slug => list( $label, $href ) ) {
 			$html .= sprintf(
-				'<a class="riff-app-tab%s" href="%s"%s>%s</a>',
+				'<a class="riff-app-tab%s" href="%s"%s><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="%s"/></svg><span>%s</span></a>',
 				'library' === $slug ? ' riff-app-home' : '',
 				esc_url( $href ),
 				$slug === $here ? ' aria-current="page"' : '',
+				esc_attr( self::ICONS[ $slug ] ),
 				esc_html( $label )
 			);
 		}
@@ -414,18 +427,27 @@ final class Browse {
 	 * @return string
 	 */
 	private static function rows( array $tracks ): string {
-		$blocks = '';
+		// Each row is rendered as part of the post its track belongs to, so it takes that post's
+		// artwork and names it as where it plays from, as it would in the post itself.
+		global $post;
+		$listen = $post;
+		$rows   = '';
 		foreach ( $tracks as $track ) {
-			$blocks .= sprintf(
-				'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
-				(int) $track['id'],
-				esc_url( (string) $track['src'] )
+			$parent = (int) ( $track['post']['id'] ?? 0 );
+			$post   = $parent ? get_post( $parent ) : $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restored below.
+			$rows  .= do_blocks(
+				sprintf(
+					'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
+					(int) $track['id'],
+					esc_url( (string) $track['src'] )
+				)
 			);
 		}
+		$post = $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- the Listen page again.
 		return sprintf(
 			'<div class="riff-album-tracks" data-riff-tracks="%s">%s</div>',
 			esc_attr( (string) wp_json_encode( $tracks ) ),
-			do_blocks( $blocks )
+			$rows
 		);
 	}
 

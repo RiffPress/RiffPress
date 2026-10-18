@@ -95,8 +95,9 @@ class Test_Riff_Browse extends Riff_TestCase {
 	public function test_the_navigation_marks_where_you_are_and_search_works_without_the_script(): void {
 		$html = $this->render_at( array( Browse::VIEW => 'albums' ) );
 
-		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab" href="[^"]*riff_view=albums" aria-current="page">Albums</a>#', $html );
-		$this->assertStringContainsString( '<a class="riff-app-tab riff-app-home" href="' . esc_url( get_permalink( $this->page ) ) . '">Library</a>', $html, 'the library link the script and the tests know' );
+		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab" href="[^"]*riff_view=albums" aria-current="page"><svg[^>]*><path d="[^"]+"/></svg><span>Albums</span></a>#', $html );
+		$this->assertStringContainsString( '<a class="riff-app-tab riff-app-home" href="' . esc_url( get_permalink( $this->page ) ) . '"><svg', $html, 'the library link the script and the tests know' );
+		$this->assertStringContainsString( '<span class="riff-app-brand">', $html, 'the site\'s name, for the sidebar' );
 		$this->assertStringContainsString( 'role="search" action="' . esc_url( strtok( get_permalink( $this->page ), '?' ) ) . '" method="get"', $html );
 		$this->assertStringContainsString( 'name="riff_search"', $html );
 		$this->assertStringContainsString( 'data-riff-browse="riff_view,riff_album,riff_artist,riff_search"', $html );
