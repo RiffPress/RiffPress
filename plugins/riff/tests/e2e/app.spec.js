@@ -337,6 +337,11 @@ test.describe( 'Standalone', () => {
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
 		const width = async () => ( await page.locator( '.riff-app-bar' ).boundingBox() ).width;
 		const toggle = page.locator( '.riff-app-collapse' );
+		await toggle.waitFor( { state: 'visible' } );
+		expect(
+			await page.evaluate( () => !! document.querySelector( '[data-riff-app-ready]' ) ),
+			'the toggle is unseen until the script that runs it has loaded'
+		).toBe( true );
 		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'true' );
 		expect( await width() ).toBeGreaterThan( 200 );
 

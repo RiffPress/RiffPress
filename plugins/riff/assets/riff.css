@@ -2490,6 +2490,12 @@ html.has-riff .riff-standalone .riff-app {
 		white-space: nowrap;
 	}
 
+	/* The toggle needs app.js, which loads after the page: until then it would
+	   be a button that does nothing, so it keeps its place but stays unseen. */
+	.riff-standalone .riff-app:not([data-riff-app-ready]) .riff-app-collapse {
+		visibility: hidden;
+	}
+
 	.riff-standalone .riff-app .riff-app-collapse {
 		display: grid;
 		flex: none;
