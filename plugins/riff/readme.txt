@@ -18,7 +18,7 @@ Riff plays the audio, video and playlist blocks WordPress already has. Install i
 * Lock-screen and headphone controls through Media Session; AirPlay and Cast when a device is in reach.
 * Swipe the bar to skip, drag Now Playing down to close it; Space, J, L, Shift+N and Shift+P on a keyboard.
 * A full-page navigation saves the queue and position and attempts to resume on the next page; a reload restores the track paused.
-* Add the Riff block or [riff] shortcode to make a Listen page: it lists posts with tracks, and opening one keeps the same media element playing without leaving the page.
+* Add the Riff block or [riff] shortcode to make a Listen page: it lists posts with tracks, browses the Media Library by album, artist and track, and searches it, all without the music stopping.
 * Every track shows its quality as WordPress read it from the file: MP3 · 320 kbps, or FLAC · 24-bit 96 kHz.
 * The bar's amber line glows with the music and cools when you pause.
 * One script and one stylesheet, no build step, nothing to configure.
@@ -30,7 +30,7 @@ Roboto, Inter and EB Garamond are bundled under the SIL Open Font License, and t
 1. Upload the plugin folder to `wp-content/plugins/` and activate it.
 2. Add an audio or video block to a post, one per track, or a playlist block holding them all.
 3. To pair a video with a song, click the audio file in the Media Library and choose a video under **Video version**.
-4. To make a dedicated Listen page, add the Riff block (or `[riff]`) to a page. It lists posts with tracks and opens each post without leaving that page.
+4. To make a dedicated Listen page, add the Riff block (or `[riff]`) to a page. It lists posts with tracks, and browses and searches your music by album, artist and track, without leaving that page.
 
 == Frequently Asked Questions ==
 

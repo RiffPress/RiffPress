@@ -14,6 +14,10 @@ export function start( api ) {
 	const page = new URL( app.dataset.riffPage, location.href );
 	const query = app.dataset.riffQuery || 'riff';
 	const pageQuery = app.dataset.riffPageQuery || 'riff_page';
+	// The arguments of the browse views (albums, artists, tracks, search), which the server renders.
+	const browseArgs = ( app.dataset.riffBrowse || '' ).split( ',' ).filter( Boolean );
+	const tracksRest = app.dataset.riffTracksRest || '';
+	const nav = app.querySelector( '.riff-app-bar' );
 	const s = api.strings || {};
 	const cache = new Map();
 	let showing = 0; // A counter, so a slow fetch cannot paint over a newer view.
@@ -37,7 +41,8 @@ export function start( api ) {
 	}
 
 	// ---- Addresses. A view is the page itself (the library), the page with ?riff_page={n} (the
-	// library through page n), or the page with ?riff={id}.
+	// library through page n), the page with ?riff={id}, or a browse view: ?riff_view=albums,
+	// ?riff_album={id}, ?riff_artist={id}, ?riff_search={words}.
 	const postOf = ( url ) => {
 		const u = new URL( url, location.href );
 		if ( u.origin !== page.origin || u.pathname !== page.pathname ) {
@@ -48,6 +53,7 @@ export function start( api ) {
 		const others = new URLSearchParams( u.search );
 		others.delete( query );
 		others.delete( pageQuery );
+		browseArgs.forEach( ( key ) => others.delete( key ) );
 		// A shared track's name, which riff.js reads on arrival.
 		others.delete( 'riff_track' );
 		others.sort();
@@ -58,12 +64,17 @@ export function start( api ) {
 		}
 		const id = Number( u.searchParams.get( query ) );
 		const pages = Number( u.searchParams.get( pageQuery ) );
+		u.hash = '';
 		return {
 			id: Number.isInteger( id ) && id > 0 ? id : 0,
 			pages: Number.isInteger( pages ) && pages > 1 ? pages : 1,
+			browse: browseArgs.some( ( key ) => u.searchParams.get( key ) ),
+			href: u.toString(),
 		};
 	};
-	let shown = postOf( location.href )?.id ?? 0;
+	// Which view an address is, to tell a real change from Now Playing's own history entry.
+	const keyOf = ( to ) => ( to.browse ? to.href : String( to.id ) );
+	let shown = keyOf( postOf( location.href ) || { id: 0 } );
 	const addressOf = ( id, pages = 1 ) => {
 		const u = new URL( page );
 		if ( ! id && pages > 1 ) {
@@ -110,17 +121,67 @@ export function start( api ) {
 		return cache.get( key );
 	}
 
+	// A browse view, as the server rendered it at its address: its view and its navigation.
+	const rendered = new Map();
+	function pageView( href ) {
+		if ( ! rendered.has( href ) ) {
+			rendered.set(
+				href,
+				fetch( href, { headers: { Accept: 'text/html' } } )
+					.then( ( r ) => {
+						if ( ! r.ok ) {
+							throw new Error( String( r.status ) );
+						}
+						return r.text();
+					} )
+					.then( ( text ) => {
+						const doc = new DOMParser().parseFromString( text, 'text/html' );
+						const body = doc.querySelector( '[data-riff-app-view]' );
+						if ( ! body ) {
+							throw new Error( 'no view' );
+						}
+						return {
+							view: body.innerHTML,
+							nav: doc.querySelector( '.riff-app-bar' )?.innerHTML,
+						};
+					} )
+			);
+			rendered.get( href ).catch( () => rendered.delete( href ) );
+		}
+		return rendered.get( href );
+	}
+
+	// The navigation's current link, for the views the script draws itself.
+	function markNav( to ) {
+		for ( const a of nav?.querySelectorAll( 'a[aria-current]' ) || [] ) {
+			a.removeAttribute( 'aria-current' );
+		}
+		if ( ! to.id ) {
+			nav?.querySelector( '.riff-app-home' )?.setAttribute( 'aria-current', 'page' );
+		}
+		const field = nav?.querySelector( 'input[type="search"]' );
+		if ( field ) {
+			field.value = '';
+		}
+	}
+
 	// ---- Views.
-	async function show( id, { push = true, pages = 1 } = {} ) {
+	async function show( to, { push = true } = {} ) {
+		const { id, pages: upto } = to;
 		const turn = ++showing;
 		app.setAttribute( 'aria-busy', 'true' );
 		let html;
+		let bar;
 		try {
-			html = id ? await postView( id ) : await libraryView( pages );
+			if ( to.browse ) {
+				( { view: html, nav: bar } = await pageView( to.href ) );
+			} else {
+				html = id ? await postView( id ) : await libraryView( upto );
+			}
 		} catch {
 			// The route is gone or the network is: let the address load as a page.
 			if ( turn === showing ) {
-				location.assign( addressOf( id, pages ) );
+				location.assign( to.browse ? to.href : addressOf( id, upto ) );
 			}
 			return;
 		}
@@ -130,20 +191,29 @@ export function start( api ) {
 		// The browser animates the swap where it can; the page's own colours do the rest.
 		const swap = () => {
 			view.innerHTML = html;
+			if ( bar !== undefined && nav ) {
+				nav.innerHTML = bar;
+			} else if ( ! to.browse ) {
+				markNav( to );
+			}
 		};
 		if ( document.startViewTransition && ! reducedMotion() ) {
-			await document.startViewTransition( swap ).updateCallbackDone;
+			const transition = document.startViewTransition( swap );
+			// A newer view skips this one's animation; that is not an error.
+			transition.ready.catch( () => {} );
+			transition.finished.catch( () => {} );
+			await transition.updateCallbackDone;
 		} else {
 			swap();
 		}
-		shown = id;
+		shown = keyOf( to );
 		if ( push ) {
 			// The rest of the state stays: WordPress's Interactivity runtime reloads the page on any
 			// history entry that lost its session id, which would end the music on Back.
 			history.pushState(
 				{ ...history.state, riffApp: id },
 				'',
-				addressOf( id, pages )
+				to.browse ? to.href : addressOf( id, upto )
 			);
 		}
 		app.removeAttribute( 'aria-busy' );
@@ -285,6 +355,39 @@ export function start( api ) {
 		}
 	}
 
+	// Play an album from its cover, from the tracks route, in album order.
+	async function playAlbum( button ) {
+		if ( button.getAttribute( 'aria-busy' ) === 'true' || ! tracksRest ) {
+			return;
+		}
+		const turn = ++picking;
+		const shownAt = showing;
+		button.setAttribute( 'aria-busy', 'true' );
+		try {
+			const u = new URL( tracksRest, location.href );
+			u.searchParams.set( 'album', String( Number( button.dataset.riffAlbum ) ) );
+			u.searchParams.set( 'per_page', '100' );
+			const r = await fetch( u, { headers: { Accept: 'application/json' } } );
+			if ( ! r.ok ) {
+				throw new Error( String( r.status ) );
+			}
+			const { items } = await r.json();
+			if ( turn !== picking || shownAt !== showing ) {
+				return;
+			}
+			untell();
+			if ( Array.isArray( items ) && items.length ) {
+				api.play( items, 0 );
+			}
+		} catch {
+			if ( turn === picking && shownAt === showing ) {
+				tell( s.playError || '' );
+			}
+		} finally {
+			button.removeAttribute( 'aria-busy' );
+		}
+	}
+
 	function card( item, first = 0 ) {
 		const art = item.art?.length ? item.art[ item.art.length - 1 ].src : '';
 		// The same markup the server writes in Listen\App::card().
@@ -367,6 +470,11 @@ export function start( api ) {
 			playCard( action );
 			return;
 		}
+		if ( action?.dataset.riffAppAction === 'play-album' ) {
+			e.preventDefault();
+			playAlbum( action );
+			return;
+		}
 		if ( action?.dataset.riffAppAction === 'more' ) {
 			e.preventDefault();
 			loadMore( action );
@@ -391,14 +499,31 @@ export function start( api ) {
 			return;
 		}
 		e.preventDefault();
-		show( to.id, { pages: to.pages } ).catch( () => {} );
+		show( to ).catch( () => {} );
+	} );
+
+	// Search: the form works as a plain GET without the script; with it, the results swap in.
+	app.addEventListener( 'submit', ( e ) => {
+		const form = e.target.closest( '.riff-app-search' );
+		if ( ! form ) {
+			return;
+		}
+		const u = new URL( form.action, location.href );
+		new FormData( form ).forEach( ( value, key ) =>
+			u.searchParams.set( key, String( value ) )
+		);
+		const to = postOf( u.toString() );
+		if ( to?.browse ) {
+			e.preventDefault();
+			show( to ).catch( () => {} );
+		}
 	} );
 
 	window.addEventListener( 'popstate', () => {
 		const to = postOf( location.href );
 		// Now Playing closes through history.back() on the same address; that is not a view change.
-		if ( to && to.id !== shown ) {
-			show( to.id, { push: false, pages: to.pages } ).catch( () => {} );
+		if ( to && keyOf( to ) !== shown ) {
+			show( to, { push: false } ).catch( () => {} );
 		}
 	} );
 	history.replaceState(
