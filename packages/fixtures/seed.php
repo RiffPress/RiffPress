@@ -195,10 +195,15 @@ if ( ! function_exists( 'riff_seed' ) ) {
 	}
 
 	/**
-	 * Seeds one folder. Returns the post ID, or 0 when the post already exists.
+	 * Seeds one folder through Riff's own import, the code behind `wp riff import`, then adds
+	 * what only a demo folder's manifest.json knows: the post's name and slug, its intro and
+	 * category, and the titles, artists, lengths and level envelopes of tracks whose tags say
+	 * nothing, as on a PHP that cannot read them (Playground's cannot). Returns the post ID, or 0
+	 * when the post already exists.
 	 *
 	 * @param string $dir Folder of audio files.
 	 * @return int
+	 * @throws RuntimeException When the folder cannot be read or nothing in it imports.
 	 */
 	function riff_seed( string $dir ): int {
 		$dir      = rtrim( $dir, '/' ) . '/';
@@ -211,173 +216,93 @@ if ( ! function_exists( 'riff_seed' ) ) {
 			return 0;
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/media.php';
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/image.php';
-
-		/*
-		 * Core registers m4a as audio/mpeg and then refuses the file because it really is audio/mp4;
-		 * opus is not registered at all. This folder was chosen by whoever ran the script, so its
-		 * audio and video are trusted by extension for the length of the import.
-		 */
-		$mimes = static fn( array $types ): array => array_merge(
-			$types,
-			array(
-				'm4a'  => 'audio/mp4',
-				'opus' => 'audio/ogg',
-			)
-		);
-		$trust = static function ( array $data, string $file, string $filename, $allowed ) {
-			$type = wp_check_filetype( $filename, is_array( $allowed ) ? $allowed : null );
-			if ( $type['ext'] && preg_match( '#^(audio|video)/#', (string) $type['type'] ) ) {
-				return array(
-					'ext'             => $type['ext'],
-					'type'            => $type['type'],
-					'proper_filename' => false,
-				);
+		$result = \Riff\Import::folder( $dir );
+		if ( is_wp_error( $result ) ) {
+			throw new RuntimeException( esc_html( $result->get_error_message() ) );
+		}
+		$album = null;
+		foreach ( $result['albums'] as $report ) {
+			if ( realpath( $report['folder'] ) === realpath( $dir ) ) {
+				$album = $report;
 			}
-			return $data;
-		};
-		add_filter( 'upload_mimes', $mimes );
-		add_filter( 'wp_check_filetype_and_ext', $trust, 10, 4 );
+		}
+		if ( ! $album || ! $album['post'] ) {
+			$failed = $album ? implode( '; ', array_map( static fn( $f, $e ) => "$f: $e", array_keys( $album['failed'] ), $album['failed'] ) ) : '';
+			throw new RuntimeException( esc_html( 'Nothing was imported from ' . $dir . ( $failed ? " ($failed)" : '' ) ) );
+		}
 
-		// The manifest's own titles, by file name, for a file whose tags carry none.
-		// The manifest's own titles, artists and lengths, by file name, for a file whose tags carry
-		// none, or a PHP that cannot read them (Playground's cannot).
-		$titles = array();
-		$known  = array();
 		$levels = is_readable( $dir . 'levels.json' ) ? json_decode( (string) file_get_contents( $dir . 'levels.json' ), true ) : array();
 		$levels = is_array( $levels ) ? $levels : array();
 		foreach ( (array) ( $manifest['tracks'] ?? array() ) as $track ) {
-			if ( empty( $track['file'] ) ) {
+			$file = (string) ( $track['file'] ?? '' );
+			$id   = '' !== $file && is_readable( $dir . $file ) ? riff_seed_imported( $dir . $file ) : 0;
+			if ( ! $id ) {
 				continue;
 			}
-			$file = (string) $track['file'];
-			if ( ! empty( $track['title'] ) ) {
-				$titles[ $file ] = (string) $track['title'];
+			$tags = wp_read_audio_metadata( $dir . $file );
+			if ( empty( $tags['title'] ) && ! empty( $track['title'] ) ) {
+				wp_update_post(
+					array(
+						'ID'         => $id,
+						'post_title' => (string) $track['title'],
+					)
+				);
 			}
-			$known[ $file ] = array(
-				'artist'   => (string) ( $track['artist'] ?? $track['uploader'] ?? '' ),
-				'album'    => $name,
-				'duration' => (float) ( $track['duration'] ?? 0 ),
-				'levels'   => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
-			);
-		}
-
-		$import = static function ( string $file ) use ( $dir, $titles, $known ): int {
-			$tmp = wp_tempnam( $file );
-			copy( $dir . $file, $tmp );
-			$attachment_id = media_handle_sideload(
-				array(
-					'name'     => $file,
-					'tmp_name' => $tmp,
-				),
-				0
-			);
-			if ( is_wp_error( $attachment_id ) ) {
-				throw new RuntimeException( esc_html( $file . ': ' . $attachment_id->get_error_message() ) );
-			}
-			$attachment_id = (int) $attachment_id;
-			// An upload through the Media Library titles audio from its tags; a sideload does not.
-			$tags  = wp_read_audio_metadata( $dir . $file );
-			$title = (string) ( $tags['title'] ?? '' );
-			if ( '' === $title && isset( $titles[ $file ] ) ) {
-				$title = $titles[ $file ];
-			}
-			if ( '' === $title ) {
-				// "03 - Artist - Title [id].m4a" becomes "Title".
-				$title = preg_replace( '/^\d+\s*-\s*|\s*\[[^\]]*\]$/', '', pathinfo( $file, PATHINFO_FILENAME ) );
-				$title = trim( (string) preg_replace( '/^.+?\s-\s/', '', (string) $title ) );
-			}
-			wp_update_post(
-				array(
-					'ID'         => $attachment_id,
-					'post_title' => $title,
-				)
-			);
-			// What the tags did not give, the manifest does: the player reads artist, album and
-			// length from the attachment's metadata, where an upload through the Media Library puts them.
-			if ( isset( $known[ $file ] ) ) {
-				$meta    = wp_get_attachment_metadata( $attachment_id );
-				$meta    = is_array( $meta ) ? $meta : array();
-				$changed = false;
-				foreach ( array( 'artist', 'album' ) as $key ) {
-					if ( empty( $meta[ $key ] ) && '' !== $known[ $file ][ $key ] ) {
-						$meta[ $key ] = $known[ $file ][ $key ];
-						$changed      = true;
-					}
-				}
-				if ( empty( $meta['length'] ) && $known[ $file ]['duration'] > 0 ) {
-					$meta['length'] = $known[ $file ]['duration'];
-					$changed        = true;
-				}
+			// The player reads artist, album and length from the attachment's metadata, where an
+			// upload through the Media Library puts them; the manifest fills what the tags did not.
+			$meta    = wp_get_attachment_metadata( $id );
+			$meta    = is_array( $meta ) ? $meta : array();
+			$known   = array(
+				'artist'      => (string) ( $track['artist'] ?? $track['uploader'] ?? '' ),
+				'album'       => $name,
+				'length'      => (float) ( $track['duration'] ?? 0 ),
 				// The level envelope, measured when the album was built: the drawn cover's groove.
-				if ( empty( $meta['riff_levels'] ) && '' !== $known[ $file ]['levels'] ) {
-					$meta['riff_levels'] = $known[ $file ]['levels'];
-					$changed             = true;
-				}
-				if ( $changed ) {
-					wp_update_attachment_metadata( $attachment_id, $meta );
+				'riff_levels' => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
+			);
+			$changed = false;
+			foreach ( $known as $key => $value ) {
+				if ( empty( $meta[ $key ] ) && ! empty( $value ) ) {
+					$meta[ $key ] = $value;
+					$changed      = true;
 				}
 			}
-			return $attachment_id;
-		};
-
-		$cover = 0;
-		foreach ( array( 'cover.png', 'cover.jpg', 'folder.jpg' ) as $file ) {
-			if ( is_readable( $dir . $file ) ) {
-				$cover = $import( $file );
-				break;
+			if ( $changed ) {
+				wp_update_attachment_metadata( $id, $meta );
 			}
 		}
 
-		$files = scandir( $dir );
-		$files = is_array( $files ) ? $files : array();
-		$audio = array_filter( $files, static fn( $f ) => preg_match( '/\.(mp3|m4a|flac|ogg|wav|opus)$/i', $f ) );
-		$video = array_filter( $files, static fn( $f ) => preg_match( '/\.(webm|mp4|mov)$/i', $f ) );
-		sort( $audio );
-
-		$ids = array();
-		foreach ( $audio as $file ) {
-			$attachment_id = $import( $file );
-			if ( $cover ) {
-				set_post_thumbnail( $attachment_id, $cover );
-			}
-			$stem = pathinfo( $file, PATHINFO_FILENAME );
-			foreach ( $video as $clip ) {
-				if ( pathinfo( $clip, PATHINFO_FILENAME ) === $stem ) {
-					$video_id = $import( $clip );
-					wp_update_post(
-						array(
-							'ID'         => $video_id,
-							'post_title' => get_the_title( $attachment_id ),
-						)
-					);
-					if ( $cover ) {
-						set_post_thumbnail( $video_id, $cover );
-					}
-					update_post_meta( $attachment_id, '_riff_video', $video_id );
-				}
-			}
-			$ids[] = $attachment_id;
-		}
-
+		$post_id = (int) $album['post'];
 		$intro   = isset( $manifest['curator'] ) ? sprintf( '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->', esc_html( (string) $manifest['curator'] ) ) : '';
-		$demo_id = (int) wp_insert_post(
+		wp_update_post(
 			array(
+				'ID'           => $post_id,
 				'post_title'   => $name,
 				'post_name'    => $slug,
-				'post_status'  => 'publish',
-				'post_content' => $intro . riff_seed_blocks( $ids ),
+				'post_content' => $intro . get_post_field( 'post_content', $post_id, 'raw' ),
 			)
 		);
-		if ( $cover ) {
-			set_post_thumbnail( $demo_id, $cover );
-		}
-		riff_seed_category( $demo_id, (string) ( $manifest['category'] ?? '' ) );
-		remove_filter( 'upload_mimes', $mimes );
-		remove_filter( 'wp_check_filetype_and_ext', $trust );
-		return $demo_id;
+		riff_seed_category( $post_id, (string) ( $manifest['category'] ?? '' ) );
+		return $post_id;
+	}
+
+	/**
+	 * The attachment the import made from a file, found by its contents as the import finds it.
+	 *
+	 * @param string $path File.
+	 * @return int Attachment ID, or 0.
+	 */
+	function riff_seed_imported( string $path ): int {
+		$found = get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_status'    => 'any',
+				'fields'         => 'ids',
+				'posts_per_page' => 1,
+				'meta_key'       => \Riff\Import::HASH, // phpcs:ignore WordPress.DB.SlowDBQuery -- a seed script.
+				'meta_value'     => (string) sha1_file( $path ), // phpcs:ignore WordPress.DB.SlowDBQuery
+			)
+		);
+		return $found ? (int) $found[0] : 0;
 	}
 }
 
