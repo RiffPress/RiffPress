@@ -6,8 +6,8 @@
  * Requires at least: 7.0
  * Requires PHP: 8.1
  * Plugin URI: https://riffpress.com/
- * Author: RiffPress
- * Author URI: https://github.com/RiffPress
+ * Author: RiffPress Core Team
+ * Author URI: https://riffpress.com/
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: riff
