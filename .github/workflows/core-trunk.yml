@@ -1,0 +1,118 @@
+name: Weekly against WordPress trunk
+
+# Riff exercises WordPress's media handling end to end, so running it against trunk every week
+# catches a core change that breaks it before a release ships the change. The whole suite runs on
+# trunk and on the current release; a test that fails only on trunk gets an issue
+# (core-regressions.js), and the week's commits to core's media code get one too (core-watch.js).
+on:
+  schedule:
+    - cron: '41 5 * * 3'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: core-trunk
+  cancel-in-progress: false
+
+jobs:
+  suite:
+    name: Suite on ${{ matrix.core }}
+    if: github.repository == 'RiffPress/RiffPress'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        core: [trunk, release]
+    env:
+      WP_ENV_PHP_VERSION: '8.4'
+      # The mirror's nightly branch is master; empty means the current release.
+      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer
+      - run: composer install --no-interaction --prefer-dist
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install-deps chromium webkit
+      - run: npx playwright install chromium webkit
+
+      - run: npm run env:start
+      - name: WordPress version
+        run: |
+          mkdir -p results
+          npx wp-env run tests-cli wp core version 2>/dev/null | tail -n 1 > results/core.txt
+          cat results/core.txt
+
+      # Both suites run to the end whatever they find; the next job reads the results.
+      - name: Playwright
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results/e2e.json
+        run: npm run test:e2e -- --reporter=json
+      - name: PHPUnit
+        continue-on-error: true
+        # The repository is mounted in the container at wp-content/riff, so the report lands here.
+        run: npm run test:php -- --log-junit results/phpunit.xml
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: results-${{ matrix.core }}
+          path: results/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Stop the testing environment
+        if: ${{ always() }}
+        run: npx wp-env stop || true
+
+  regressions:
+    name: File core regressions
+    needs: suite
+    if: ${{ !cancelled() && github.repository == 'RiffPress/RiffPress' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: results-*
+          path: results
+      - name: File, update and close issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/core-regressions.js results/results-trunk results/results-release
+
+  watch:
+    name: Watch core's media code
+    if: github.repository == 'RiffPress/RiffPress'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Open an issue for the week's media commits
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/core-watch.js
