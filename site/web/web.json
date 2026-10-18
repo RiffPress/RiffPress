@@ -631,7 +631,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )",
-				"line": 1995
+				"line": 2007
 			}
 		],
 		"shot": {

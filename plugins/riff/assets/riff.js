@@ -1992,10 +1992,33 @@ function start() {
 
 	// ---- The app, on the page that holds it. Loaded only there, through the same public api.
 	if ( document.querySelector( '[data-riff-app]' ) && data.assets?.app ) {
+		// Until the module has started, a press on one of the app's own buttons (a cover's Play,
+		// Load more) has nothing to answer it; on a slow site that can be a few seconds. The last
+		// press is held, and made again once the app is listening.
+		let held = null;
+		const hold = ( e ) => {
+			const button = e.target.closest?.( '[data-riff-app] [data-riff-app-action]' );
+			if ( button ) {
+				held = button;
+				e.preventDefault();
+			}
+		};
+		document.addEventListener( 'click', hold, true );
 		import( data.assets.app )
-			.then( ( m ) => m.start( api ) )
+			.then( ( m ) => {
+				document.removeEventListener( 'click', hold, true );
+				m.start( api );
+				if ( held?.isConnected ) {
+					held.click();
+				}
+			} )
 			.catch( () => {
 				// Without the module the links are real links; the page still works.
+				document.removeEventListener( 'click', hold, true );
+				const link = held?.closest( 'a[href]' );
+				if ( link ) {
+					location.assign( link.href );
+				}
 			} );
 	}
 }
