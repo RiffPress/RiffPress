@@ -144,6 +144,32 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( 400, rest_do_request( $request )->get_status() );
 	}
 
+	public function test_a_page_of_albums_costs_the_same_queries_however_many_albums_it_holds(): void {
+		global $wpdb;
+		$count = function (): int {
+			global $wpdb;
+			wp_cache_flush();
+			$before = $wpdb->num_queries;
+			$this->get( '/albums' );
+			return $wpdb->num_queries - $before;
+		};
+		$few   = $count();
+		for ( $i = 0; $i < 20; $i++ ) {
+			$id = self::attach( '02 - Underground [underground].mp3' );
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'album'  => 'Album ' . $i,
+					'artist' => 'Artist ' . $i,
+				)
+			);
+		}
+		$many = $count();
+
+		$this->assertCount( 21, $this->get( '/albums' )['items'] );
+		$this->assertLessThanOrEqual( $few + 4, $many, 'no queries per album' );
+	}
+
 	public function test_the_routes_describe_themselves(): void {
 		foreach ( array( '/tracks', '/albums', '/artists' ) as $route ) {
 			$data = rest_do_request( new WP_REST_Request( 'OPTIONS', '/riff/v1' . $route ) )->get_data();

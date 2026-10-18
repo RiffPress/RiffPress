@@ -241,22 +241,56 @@ final class Catalog_Rest {
 		$page   = max( 1, (int) $request['page'] );
 		$search = trim( (string) $request['search'] );
 
-		$like  = '' !== $search ? $wpdb->prepare( ' AND t.name LIKE %s', '%' . $wpdb->esc_like( $search ) . '%' ) : '';
-		$where = self::visible_where();
-		$from  = $wpdb->prepare(
-			"FROM {$wpdb->terms} t
-			INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id = t.term_id AND tt.taxonomy = %s
-			INNER JOIN {$wpdb->term_relationships} tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
-			INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = tr.object_id
-			WHERE {$wpdb->posts}.post_type = 'attachment' AND {$wpdb->posts}.post_status = 'inherit' AND {$wpdb->posts}.post_mime_type LIKE %s",
-			$taxonomy,
-			'audio/%'
+		// WordPress keeps each term's count of files; only the few tracks a visitor may not see are
+		// subtracted, so a page of albums never has to group the whole library.
+		$hidden = self::hidden_by_term( $taxonomy );
+		$gone   = array_keys( array_filter( $hidden, static fn( $h ) => $h['hidden'] >= $h['count'] ) );
+		$query  = array(
+			'taxonomy'   => $taxonomy,
+			'hide_empty' => true,
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+			'exclude'    => $gone,
 		);
-		// Each part is prepared on its own above; counting by visible track has no API.
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
-		$rows  = $wpdb->get_results( "SELECT t.term_id, t.name, COUNT(DISTINCT {$wpdb->posts}.ID) AS tracks, MIN({$wpdb->posts}.ID) AS first {$from}{$where}{$like} GROUP BY t.term_id, t.name ORDER BY t.name ASC, t.term_id ASC" );
-		$total = count( $rows );
-		$rows  = array_slice( (array) $rows, ( $page - 1 ) * self::TERMS_PER_PAGE, self::TERMS_PER_PAGE );
+		if ( '' !== $search ) {
+			$query['name__like'] = $search;
+		}
+		$total = (int) wp_count_terms( $query );
+		$terms = get_terms(
+			$query + array(
+				'number' => self::TERMS_PER_PAGE,
+				'offset' => ( $page - 1 ) * self::TERMS_PER_PAGE,
+			)
+		);
+		$terms = is_array( $terms ) ? $terms : array();
+		$rows  = array();
+		foreach ( $terms as $term ) {
+			$rows[] = (object) array(
+				'term_id' => $term->term_id,
+				'name'    => $term->name,
+				'tracks'  => (int) $term->count - ( $hidden[ $term->term_id ]['hidden'] ?? 0 ),
+				'first'   => 0,
+			);
+		}
+		if ( Catalog::ALBUM === $taxonomy && $rows ) {
+			// Each cover on the page comes from the album's first visible track, found in one query.
+			$ids  = implode( ',', array_map( static fn( $row ) => (int) $row->term_id, $rows ) );
+			$skip = self::hidden_tracks();
+			$not  = $skip ? ' AND tr.object_id NOT IN (' . implode( ',', $skip ) . ')' : '';
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- integers only.
+			$first = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, MIN(tr.object_id) AS first FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tt.term_id IN ({$ids}){$not} GROUP BY tt.term_id", $taxonomy ), OBJECT_K );
+			foreach ( $rows as $row ) {
+				$row->first = isset( $first[ $row->term_id ] ) ? (int) $first[ $row->term_id ]->first : 0;
+			}
+			// Load those tracks, their posts and their meta in a few queries rather than a few per album.
+			$firsts = array_filter( array_map( static fn( $row ) => (int) $row->first, $rows ) );
+			_prime_post_caches( $firsts, false, true );
+			$parents = array_filter( array_map( static fn( $id ) => (int) get_post_field( 'post_parent', $id ), $firsts ) );
+			_prime_post_caches( $parents, false, true );
+			$thumbs = array_filter( array_map( static fn( $id ) => (int) get_post_thumbnail_id( $id ), array_merge( $firsts, $parents ) ) );
+			_prime_post_caches( $thumbs, false, true );
+			update_termmeta_cache( array_map( static fn( $row ) => (int) $row->term_id, $rows ) );
+		}
 		$items = array();
 		foreach ( $rows as $row ) {
 			$item = array(
@@ -281,6 +315,46 @@ final class Catalog_Rest {
 				'total' => $total,
 			)
 		);
+	}
+
+	/**
+	 * The audio files the requester may not see: those uploaded to a post that is unpublished or
+	 * behind a password. Usually a handful; none for someone who can upload files.
+	 *
+	 * @return int[]
+	 */
+	private static function hidden_tracks(): array {
+		global $wpdb;
+		if ( current_user_can( 'upload_files' ) ) {
+			return array();
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a narrow lookup with no API.
+		return array_map( 'intval', $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a INNER JOIN {$wpdb->posts} par ON par.ID = a.post_parent WHERE a.post_type = 'attachment' AND a.post_mime_type LIKE 'audio/%' AND ( par.post_status <> 'publish' OR par.post_password <> '' )" ) );
+	}
+
+	/**
+	 * How many hidden tracks each term holds, and its count of all its files, by term ID.
+	 *
+	 * @param string $taxonomy Taxonomy.
+	 * @return array<int, array{hidden: int, count: int}>
+	 */
+	private static function hidden_by_term( string $taxonomy ): array {
+		global $wpdb;
+		$hidden = self::hidden_tracks();
+		if ( ! $hidden ) {
+			return array();
+		}
+		$ids = implode( ',', $hidden );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- integers only.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, tt.count, COUNT(*) AS n FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tr.object_id IN ({$ids}) GROUP BY tt.term_id, tt.count", $taxonomy ) );
+		$out  = array();
+		foreach ( (array) $rows as $row ) {
+			$out[ (int) $row->term_id ] = array(
+				'hidden' => (int) $row->n,
+				'count'  => (int) $row->count,
+			);
+		}
+		return $out;
 	}
 
 	/**
