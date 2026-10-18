@@ -108,10 +108,21 @@ final class App {
 		$view  = $post ? self::post_view( $post, $page ) : self::library_view( $page );
 		$align = isset( $attributes['align'] ) && in_array( $attributes['align'], array( 'wide', 'full' ), true ) ? ' align' . $attributes['align'] : '';
 		// Inside a block render the wrapper carries the block's supports (colours, type); the
-		// shortcode has no block, so it gets the plain class.
+		// shortcode has no block, so it gets the plain class. On a theme that sets its colours the
+		// stylesheet mixes the quieter shades from them, under riff-app-themed.
+		$tokens  = self::theme_tokens();
+		$class   = 'riff-app' . ( isset( $tokens['--riff-app-bg'], $tokens['--riff-app-ink'] ) ? ' riff-app-themed' : '' );
+		$style   = self::theme_style( $tokens );
 		$wrapper = \WP_Block_Supports::$block_to_render
-			? get_block_wrapper_attributes( array( 'class' => 'riff-app' ) )
-			: 'class="riff-app' . esc_attr( $align ) . '"';
+			? get_block_wrapper_attributes(
+				array_filter(
+					array(
+						'class' => $class,
+						'style' => $style,
+					)
+				)
+			)
+			: 'class="' . esc_attr( $class . $align ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' );
 		return sprintf(
 			'<div %s data-riff-app data-riff-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s">' .
 			'<nav class="riff-app-bar" aria-label="%s"><a class="riff-app-home" href="%s">%s</a></nav>' .
@@ -126,6 +137,82 @@ final class App {
 			esc_html__( 'Library', 'riff' ),
 			$view
 		);
+	}
+
+	/**
+	 * The theme's colours and fonts, as the block's custom properties.
+	 *
+	 * A theme with a theme.json has its background, text, link colour and fonts in global
+	 * styles; the block takes those, so it reads as part of the site. A theme without one keeps
+	 * the block's own WordPress.org palette.
+	 *
+	 * @since 4.14.0
+	 *
+	 * @return array<string, string> Custom property values, keyed by name.
+	 */
+	public static function theme_tokens(): array {
+		$tokens = array();
+		if ( wp_theme_has_theme_json() ) {
+			$styles = array(
+				'--riff-app-bg'           => array( 'color', 'background' ),
+				'--riff-app-ink'          => array( 'color', 'text' ),
+				'--riff-app-accent'       => array( 'elements', 'link', 'color', 'text' ),
+				'--riff-app-font'         => array( 'typography', 'fontFamily' ),
+				'--riff-app-heading-font' => array( 'elements', 'heading', 'typography', 'fontFamily' ),
+			);
+			foreach ( $styles as $token => $path ) {
+				$value = wp_get_global_styles( $path );
+				if ( is_string( $value ) && '' !== $value ) {
+					$tokens[ $token ] = $value;
+				}
+			}
+			// A link drawn in the text's own colour (Twenty Twenty-Five's is currentColor) is the
+			// text colour: currentColor in a custom property resolves on the element using it, and
+			// a filled button's would be its own label.
+			if ( isset( $tokens['--riff-app-accent'], $tokens['--riff-app-ink'] ) && in_array( strtolower( $tokens['--riff-app-accent'] ), array( 'currentcolor', 'inherit' ), true ) ) {
+				$tokens['--riff-app-accent'] = 'var(--riff-app-ink)';
+			}
+			// A theme that sets one font sets it for its headings too.
+			if ( isset( $tokens['--riff-app-font'] ) && ! isset( $tokens['--riff-app-heading-font'] ) ) {
+				$tokens['--riff-app-heading-font'] = 'var(--riff-app-font)';
+			}
+		}
+		/**
+		 * Filters the custom properties the Riff block takes from the theme.
+		 *
+		 * Return an empty array to keep the block's own WordPress.org palette and fonts on
+		 * every theme, or set any `--riff-app-*` property to a CSS value. With both
+		 * `--riff-app-bg` and `--riff-app-ink` set, the stylesheet mixes the secondary text,
+		 * borders, surfaces and the accent's shades from them.
+		 *
+		 * @since 4.14.0
+		 *
+		 * @param array $tokens Custom property values from the theme's global styles, keyed by name.
+		 */
+		$tokens = (array) apply_filters( 'riff_app_theme_tokens', $tokens );
+		return array_filter(
+			$tokens,
+			// A custom property name, and a value that cannot close the declaration or the attribute.
+			static fn( $value, $token ): bool => is_string( $value ) && preg_match( '/^--riff-app-[a-z0-9-]+$/', (string) $token ) && preg_match( '/^[#a-z0-9(),.%\s"\'_-]+$/i', $value ),
+			ARRAY_FILTER_USE_BOTH
+		);
+	}
+
+	/**
+	 * The block's custom properties as a style attribute's declarations, kept to what WordPress
+	 * lets through a block's style attribute, so the block and the shortcode agree.
+	 *
+	 * @since 4.14.0
+	 *
+	 * @param array|null $tokens Custom property values keyed by name; the theme's when null.
+	 * @return string CSS declarations, or an empty string.
+	 */
+	public static function theme_style( ?array $tokens = null ): string {
+		$css = '';
+		foreach ( $tokens ?? self::theme_tokens() as $token => $value ) {
+			$css .= $token . ':' . $value . ';';
+		}
+		return '' === $css ? '' : (string) safecss_filter_attr( $css );
 	}
 
 	/**

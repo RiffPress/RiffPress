@@ -266,4 +266,133 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertSame( 4, substr_count( $html, 'class="riff-card"' ), 'two pages of two, as the route pages them' );
 		$this->assertStringContainsString( 'data-riff-page="2" data-riff-pages="3"', $html );
 	}
+
+	/**
+	 * Runs a test on a block theme whose global styles are these, as its theme.json would set them.
+	 *
+	 * @param array    $styles theme.json styles.
+	 * @param callable $test   The test.
+	 */
+	private function with_theme_styles( array $styles, callable $test ): void {
+		$theme = get_stylesheet();
+		$data  = static fn( WP_Theme_JSON_Data $json ): WP_Theme_JSON_Data => $json->update_with(
+			array(
+				'version' => 3,
+				'styles'  => $styles,
+			)
+		);
+		switch_theme( 'twentytwentyfive' );
+		add_filter( 'wp_theme_json_data_theme', $data );
+		wp_clean_theme_json_cache();
+		try {
+			$this->assertTrue( wp_theme_has_theme_json() );
+			$test();
+		} finally {
+			remove_filter( 'wp_theme_json_data_theme', $data );
+			switch_theme( $theme );
+			wp_clean_theme_json_cache();
+		}
+	}
+
+	public function test_a_classic_theme_keeps_the_wordpress_org_look(): void {
+		$this->assertFalse( wp_theme_has_theme_json(), 'the tests site runs a classic theme' );
+		// Global styles still answer on a classic theme, from core and from filters; the block
+		// follows a theme only when the theme has said how it looks.
+		$data = static fn( WP_Theme_JSON_Data $json ): WP_Theme_JSON_Data => $json->update_with(
+			array(
+				'version' => 3,
+				'styles'  => array(
+					'color' => array(
+						'text'       => '#111111',
+						'background' => '#ffffff',
+					),
+				),
+			)
+		);
+		add_filter( 'wp_theme_json_data_theme', $data );
+		wp_clean_theme_json_cache();
+		$this->assertSame( '#111111', wp_get_global_styles( array( 'color', 'text' ) ) );
+		$this->assertSame( '', App::theme_style() );
+		remove_filter( 'wp_theme_json_data_theme', $data );
+		wp_clean_theme_json_cache();
+	}
+
+	public function test_the_block_takes_the_themes_colours_and_fonts(): void {
+		$this->with_theme_styles(
+			array(
+				'color'      => array(
+					'background' => 'var:preset|color|base',
+					'text'       => '#111111',
+				),
+				'typography' => array( 'fontFamily' => 'var:preset|font-family|manrope' ),
+				'elements'   => array(
+					'link'    => array( 'color' => array( 'text' => '#c0ffee' ) ),
+					'heading' => array( 'typography' => array( 'fontFamily' => '"Fraunces", serif' ) ),
+				),
+			),
+			function (): void {
+				$this->assertSame(
+					array(
+						'--riff-app-bg'           => 'var(--wp--preset--color--base)',
+						'--riff-app-ink'          => '#111111',
+						'--riff-app-accent'       => '#c0ffee',
+						'--riff-app-font'         => 'var(--wp--preset--font-family--manrope)',
+						'--riff-app-heading-font' => '"Fraunces", serif',
+					),
+					App::theme_tokens(),
+					'a preset is its custom property, the accent is the link colour'
+				);
+				$style = App::theme_style();
+				$this->assertStringContainsString( 'class="riff-app riff-app-themed"', App::render(), 'the stylesheet mixes the quieter shades under this class' );
+				$this->assertStringContainsString( 'style="' . esc_attr( $style ) . '"', App::render(), 'the shortcode carries it' );
+				// The block's own wrapper runs its style through safecss_filter_attr(); what is set
+				// has to survive that, the way color-mix() would not.
+				$block = do_blocks( '<!-- wp:riff/app /-->' );
+				$this->assertMatchesRegularExpression( '#<div [^>]*class="[^"]*riff-app riff-app-themed#', $block );
+				$this->assertStringContainsString( esc_attr( $style ), $block, 'the block carries every property' );
+			}
+		);
+	}
+
+	public function test_a_link_in_the_text_colour_and_one_font_carry_through(): void {
+		// Twenty Twenty-Five's own shape: links are currentColor, and headings have no font of their own.
+		$this->with_theme_styles(
+			array(
+				'color'      => array(
+					'background' => '#ffffff',
+					'text'       => '#111111',
+				),
+				'typography' => array( 'fontFamily' => '"Manrope", sans-serif' ),
+				'elements'   => array( 'link' => array( 'color' => array( 'text' => 'currentColor' ) ) ),
+			),
+			function (): void {
+				$tokens = App::theme_tokens();
+				$this->assertSame( 'var(--riff-app-ink)', $tokens['--riff-app-accent'], 'currentColor would resolve to a filled button\'s own label' );
+				$this->assertSame( 'var(--riff-app-font)', $tokens['--riff-app-heading-font'], 'headings follow the one font, not Garamond' );
+			}
+		);
+	}
+
+	public function test_a_filter_keeps_the_wordpress_org_look_or_sets_its_own(): void {
+		$this->with_theme_styles(
+			array( 'color' => array( 'text' => '#111111' ) ),
+			function (): void {
+				$none = static fn(): array => array();
+				add_filter( 'riff_app_theme_tokens', $none );
+				$this->assertSame( '', App::theme_style(), 'an empty array keeps the block\'s own palette' );
+				$this->assertStringNotContainsString( 'style=', App::render() );
+				remove_filter( 'riff_app_theme_tokens', $none );
+
+				$bad = static fn(): array => array(
+					'--riff-app-bg'   => 'red;} body { display: none',
+					'color'           => 'red',
+					'--riff-app-ink'  => '"><script>',
+					'--riff-app-line' => '#d9d9d9',
+				);
+				add_filter( 'riff_app_theme_tokens', $bad );
+				$this->assertSame( array( '--riff-app-line' => '#d9d9d9' ), App::theme_tokens(), 'only a --riff-app-* property and a value that cannot close it' );
+				remove_filter( 'riff_app_theme_tokens', $bad );
+			}
+		);
+	}
 }

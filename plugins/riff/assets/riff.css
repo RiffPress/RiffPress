@@ -1544,11 +1544,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* ---- The app: the library and a post inside it, on the page that holds the
-   block. Drawn in WordPress.org's own design system, a natural extension of
-   it for a music player: its palette, Inter for text, EB Garamond for the
-   headings, 2px corners. The two fonts are bundled (SIL Open Font License,
-   see fonts/) and fetched only where the block renders. The bar and Now
-   Playing keep their own dark look below. */
+   block. On a theme with a theme.json it takes the theme's colours and fonts
+   (Riff\Listen\App::theme_style() sets the --riff-app-* properties on the
+   block). Otherwise it is drawn in WordPress.org's own design system: its
+   palette, Inter for text, EB Garamond for the headings, 2px corners. The two
+   fonts are bundled (SIL Open Font License, see fonts/) and fetched only where
+   they are used. The bar and Now Playing keep their own dark look below. */
 
 @font-face {
 	font-family: "Riff Inter";
@@ -1627,14 +1628,48 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	 */
 	--riff-app-accent-tint: #eff2ff;
 
+	/**
+	 * Text and icons on a filled button: the accent, or the text colour under
+	 * the pointer.
+	 *
+	 * @since 4.14.0
+	 */
+	--riff-app-on-accent: #fff;
+
+	/**
+	 * The Listen block's text font.
+	 *
+	 * @since 4.14.0
+	 */
+	--riff-app-font: "Riff Inter", inter, -apple-system, blinkmacsystemfont, sans-serif;
+
+	/**
+	 * The Listen block's headings: the library's title and each album's.
+	 *
+	 * @since 4.14.0
+	 */
+	--riff-app-heading-font: "Riff Garamond", "EB Garamond", garamond, georgia, serif;
+
 	box-sizing: border-box;
 	padding: clamp(40px, 5vw, 60px) clamp(20px, 5vw, 80px) clamp(60px, 6vw, 100px);
 	background: var(--riff-app-bg);
 	color: var(--riff-app-ink);
-	font-family: "Riff Inter", Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+	font-family: var(--riff-app-font);
 	font-size: 16px;
 	line-height: 1.875;
 	-webkit-font-smoothing: antialiased;
+}
+
+/* On a theme that sets its colours (riff-app-themed, with --riff-app-bg and
+   --riff-app-ink from its global styles), the quieter shades are mixed from
+   them, so they hold on a dark theme as well as a light one. */
+.riff-app.riff-app-themed {
+	--riff-app-surface: color-mix(in srgb, var(--riff-app-ink) 4%, var(--riff-app-bg));
+	--riff-app-ink-2: color-mix(in srgb, var(--riff-app-ink) 70%, var(--riff-app-bg));
+	--riff-app-line: color-mix(in srgb, var(--riff-app-ink) 18%, var(--riff-app-bg));
+	--riff-app-accent-deep: color-mix(in srgb, var(--riff-app-accent) 75%, var(--riff-app-bg));
+	--riff-app-accent-tint: color-mix(in srgb, var(--riff-app-accent) 10%, var(--riff-app-bg));
+	--riff-app-on-accent: var(--riff-app-bg);
 }
 
 .riff-app *,
@@ -1688,7 +1723,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app h2 {
 	margin: 0;
 	color: inherit;
-	font-family: "Riff Garamond", "EB Garamond", Garamond, Georgia, serif;
+	font-family: var(--riff-app-heading-font);
 	font-weight: 400;
 	letter-spacing: 0;
 }
@@ -1810,7 +1845,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	height: 44px;
 	border-radius: 50%;
 	background: var(--riff-app-accent);
-	color: #fff;
+	color: var(--riff-app-on-accent);
 	box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
 	opacity: 0;
 	transform: translateY(6px);
@@ -2017,7 +2052,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-app .riff-pill:hover {
 	background: var(--riff-app-ink);
-	color: #fff;
+	color: var(--riff-app-on-accent);
 }
 
 .riff-app .riff-pill:focus-visible {
@@ -2028,7 +2063,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-pill-solid {
 	border-color: var(--riff-app-accent);
 	background: var(--riff-app-accent);
-	color: #fff;
+	color: var(--riff-app-on-accent);
 }
 
 .riff-app .riff-pill-solid:hover {
