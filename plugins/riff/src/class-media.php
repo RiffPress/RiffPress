@@ -43,6 +43,66 @@ final class Media {
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
 		add_action( 'wp_enqueue_media', array( self::class, 'enqueue' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_media' ) );
+		add_action( Catalog::ARTIST . '_edit_form_fields', array( self::class, 'artist_field' ) );
+		add_action( 'edited_' . Catalog::ARTIST, array( self::class, 'save_artist' ) );
+	}
+
+	/**
+	 * The Image field on an artist's edit screen in the Media Library: the picture that heads
+	 * their page in the Listen block.
+	 *
+	 * @since 4.19.0
+	 *
+	 * @param \WP_Term $term Artist.
+	 */
+	public static function artist_field( $term ): void {
+		if ( ! $term instanceof \WP_Term ) {
+			return;
+		}
+		$image  = (int) get_term_meta( $term->term_id, Catalog::ARTIST_IMAGE, true );
+		$picker = self::picker(
+			$term->term_id,
+			'riff_artist_image',
+			$image,
+			'',
+			array(
+				'type'    => 'image',
+				'choose'  => __( 'Choose image', 'riff' ),
+				'replace' => __( 'Replace image', 'riff' ),
+				'remove'  => __( 'Remove image', 'riff' ),
+				'button'  => __( 'Use as artist image', 'riff' ),
+			),
+			Catalog::ARTIST_IMAGE,
+			'riff-artist-image'
+		);
+		printf(
+			'<tr class="form-field"><th scope="row"><label for="riff-artist-image">%1$s</label></th><td>%2$s<p class="description">%3$s</p></td></tr>',
+			esc_html__( 'Image', 'riff' ),
+			$picker, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where it is built.
+			esc_html__( 'An image from the Media Library for the top of this artist\'s page. Without one, their newest album\'s cover is used.', 'riff' )
+		);
+	}
+
+	/**
+	 * Saves the Image field. WordPress has checked the form's nonce and the right to edit the term
+	 * before this runs.
+	 *
+	 * @since 4.19.0
+	 *
+	 * @param int $term_id Artist.
+	 */
+	public static function save_artist( $term_id ): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- the term edit form's own nonce, checked by core.
+		if ( ! isset( $_POST[ Catalog::ARTIST_IMAGE ] ) || ! current_user_can( 'edit_term', (int) $term_id ) ) {
+			return;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- read through submitted().
+		$id = self::submitted( wp_unslash( $_POST[ Catalog::ARTIST_IMAGE ] ), array( self::class, 'sanitize_image' ) );
+		if ( $id > 0 ) {
+			update_term_meta( (int) $term_id, Catalog::ARTIST_IMAGE, $id );
+		} elseif ( 0 === $id ) {
+			delete_term_meta( (int) $term_id, Catalog::ARTIST_IMAGE );
+		}
 	}
 
 	/**
@@ -56,6 +116,10 @@ final class Media {
 		$post   = get_post();
 		if ( $screen && 'post' === $screen->base && 'attachment' === $screen->post_type && $post && current_user_can( 'upload_files' ) ) {
 			wp_enqueue_media( array( 'post' => $post->ID ) );
+		}
+		// An artist's edit screen, for its Image field.
+		if ( $screen && 'term' === $screen->base && Catalog::ARTIST === $screen->taxonomy && current_user_can( 'upload_files' ) ) {
+			wp_enqueue_media();
 		}
 	}
 
@@ -190,10 +254,13 @@ final class Media {
 	 * @param string $error    Error from the last save, or ''.
 	 * @param array  $strings  The media type to pick and the button labels.
 	 * @return string
+	 * @param string $name     The field's name; the attachment form's by default.
+	 * @param string $id       The field's ID; the attachment form's by default.
 	 */
-	private static function picker( int $post_id, string $field, int $selected, string $error, array $strings ): string {
+	private static function picker( int $post_id, string $field, int $selected, string $error, array $strings, string $name = '', string $id = '' ): string {
 		$url  = $selected ? (string) wp_get_attachment_url( $selected ) : '';
-		$id   = "attachments-$post_id-$field";
+		$id   = '' !== $id ? $id : "attachments-$post_id-$field";
+		$name = '' !== $name ? $name : "attachments[$post_id][$field]";
 		$html = '<span class="riff-pick-preview">';
 		if ( $selected ) {
 			$html .= 'image' === $strings['type']
@@ -202,10 +269,9 @@ final class Media {
 		}
 		$html .= '</span>';
 		$html .= sprintf(
-			'<input type="text" class="text" id="%1$s" name="attachments[%2$d][%3$s]" value="%4$s"%5$s />',
+			'<input type="text" class="text" id="%1$s" name="%2$s" value="%3$s"%4$s />',
 			esc_attr( $id ),
-			$post_id,
-			esc_attr( $field ),
+			esc_attr( $name ),
 			esc_attr( $url ),
 			$error ? ' aria-invalid="true" aria-describedby="' . esc_attr( $id ) . '-error"' : ''
 		);

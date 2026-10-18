@@ -461,14 +461,15 @@ final class App {
 	 * @param string $kind  What it is, above the title ("Album"), or empty.
 	 * @param string $art   The cover's address, or empty for none.
 	 * @param string $tint  A hex colour from the cover to tint the header with, or empty.
+	 * @param bool   $round Whether the picture is round, as an artist's is.
 	 * @return string
 	 */
-	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '' ): string {
+	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false ): string {
 		$tint = (string) sanitize_hex_color( $tint );
 		return sprintf(
 			'<header class="riff-album%1$s"%8$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>' .
 			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%6$s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%7$s</button></p></div></header>',
-			( '' !== $art ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ),
+			( '' !== $art ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),
 			'' !== $art ? '<span class="riff-album-cover"><img src="' . esc_url( $art ) . '" alt="" decoding="async"></span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
 			esc_html( $title ),

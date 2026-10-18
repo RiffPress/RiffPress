@@ -157,3 +157,28 @@ test( 'the Media Library window saves each change and shows what the server kept
 	expect( media.featured_media ).toBe( 0 );
 	expect( media.meta._riff_video ).toBe( 0 );
 } );
+
+test( 'an artist takes an image from the Media Library on their edit screen', async ( {
+	admin,
+	page,
+	requestUtils,
+} ) => {
+	const [ artist ] = await requestUtils.rest( {
+		path: '/wp/v2/riff_artists',
+		params: { search: 'Airmen of Note' },
+	} );
+	await admin.visitAdminPage(
+		'term.php',
+		`taxonomy=riff_artist&tag_ID=${ artist.id }&post_type=attachment`
+	);
+	await page.getByRole( 'button', { name: 'Choose image' } ).click();
+	await pick( page, cover, 'Use as artist image' );
+	await page.getByRole( 'button', { name: 'Update' } ).click();
+	await expect( page.getByRole( 'button', { name: 'Replace image' } ) ).toBeVisible();
+	const saved = await requestUtils.rest( { path: `/wp/v2/riff_artists/${ artist.id }` } );
+	expect( saved.meta.riff_artist_image ).toBe( cover.id );
+
+	await page.getByRole( 'button', { name: 'Remove image' } ).click();
+	await page.getByRole( 'button', { name: 'Update' } ).click();
+	await expect( page.getByRole( 'button', { name: 'Choose image' } ) ).toBeVisible();
+} );

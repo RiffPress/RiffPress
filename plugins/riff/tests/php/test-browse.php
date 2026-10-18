@@ -121,6 +121,41 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-riff-app-action="shuffle"', $html );
 	}
 
+	public function test_an_artist_page_has_their_picture_their_latest_tracks_and_their_albums(): void {
+		$artist = (int) get_term_by( 'name', 'Airmen of Note, United States Air Force Band', Catalog::ARTIST )->term_id;
+
+		$html = $this->render_at( array( Browse::ARTIST => $artist ) );
+
+		$this->assertStringContainsString( 'riff-album-round', $html, 'a round picture, as the apps draw an artist' );
+		$this->assertStringContainsString( '<p class="riff-album-kind">Artist</p>', $html );
+		$this->assertStringContainsString( '>Latest</h3>', $html );
+		$this->assertStringContainsString( '>Albums</h3>', $html );
+		$this->assertStringContainsString( 'data-riff-album="' . $this->album( 'Compositions' ) . '"', $html, 'their albums' );
+		$this->assertStringContainsString( '1 album', $html );
+
+		// Their own picture, once they have one, before any album's cover.
+		$file  = get_temp_dir() . 'riff-artist-' . wp_generate_password( 6, false ) . '.png';
+		$image = imagecreatetruecolor( 32, 32 );
+		imagepng( $image, $file );
+		$picture = self::factory()->attachment->create_upload_object( $file );
+		wp_delete_file( $file );
+		update_term_meta( $artist, Catalog::ARTIST_IMAGE, $picture );
+		$this->assertStringContainsString( (string) wp_get_attachment_url( $picture ), $this->render_at( array( Browse::ARTIST => $artist ) ) );
+	}
+
+	public function test_an_artist_page_shows_ten_tracks_at_a_time(): void {
+		$artist = (int) get_term_by( 'name', 'Airmen of Note, United States Air Force Band', Catalog::ARTIST )->term_id;
+		$post   = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		for ( $i = 0; $i < 10; $i++ ) {
+			self::attach( '05 - Stole Back My Soul [stole-back].mp3', $post );
+		}
+
+		$html = $this->render_at( array( Browse::ARTIST => $artist ) );
+
+		$this->assertSame( 10, substr_count( $html, '<figure data-riff-track=' ) );
+		$this->assertStringContainsString( 'riff_page=2', $html, 'and a link to the rest' );
+	}
+
 	public function test_an_album_offers_more_by_its_artist_that_the_visitor_can_see(): void {
 		$compositions = $this->album( 'Compositions' );
 		$artist       = (string) get_term_meta( $compositions, 'riff_album_artist', true );

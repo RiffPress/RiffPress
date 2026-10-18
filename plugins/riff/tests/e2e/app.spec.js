@@ -341,6 +341,22 @@ test.describe( 'Browse', () => {
 		expect( asked, 'the view was already here' ).toEqual( [] );
 	} );
 
+	test( 'an artist page has their picture, their latest tracks and their albums', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await page.locator( '.riff-artists .riff-artist', { hasText: 'Airmen of Note' } ).first().click();
+		await expect( page.locator( '.riff-album-kind' ) ).toHaveText( /Artist/i );
+		await expect( page.locator( '.riff-album-round .riff-album-cover img' ) ).toBeVisible();
+		await expect( page.locator( '.riff-app-section', { hasText: 'Latest' } ) ).toBeVisible();
+		await expect( page.locator( '.riff-app-section', { hasText: 'Albums' } ) ).toBeVisible();
+		await expect( page.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } ) ).toBeVisible();
+		await page.locator( '[data-riff-app-action="play"]' ).click();
+		await expect
+			.poll( async () => ( await playing( page ) ).paused )
+			.toBe( false );
+	} );
+
 	test( 'every view passes an accessibility check', async ( { page } ) => {
 		const views = [ '', 'riff_view=albums', 'riff_view=artists', 'riff_view=tracks', 'riff_view=posts', 'riff_search=Compositions' ];
 		for ( const view of views ) {
