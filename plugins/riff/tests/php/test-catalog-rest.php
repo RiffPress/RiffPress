@@ -61,11 +61,11 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		return rest_do_request( $request )->get_data();
 	}
 
-	public function test_a_visitor_sees_only_tracks_on_published_posts(): void {
+	public function test_a_visitor_sees_every_track_but_those_on_unpublished_posts(): void {
 		$data = $this->get( '/tracks' );
 
-		$this->assertSame( 2, $data['total'] );
-		$this->assertSame( array( 'Trombone Detritus', 'Underground' ), wp_list_pluck( $data['items'], 'title' ), 'by title' );
+		$this->assertSame( 3, $data['total'], 'the two on the published post and the unattached one, as /wp/v2/media shows them' );
+		$this->assertSame( array( 'Stole Back My Soul', 'Trombone Detritus', 'Underground' ), wp_list_pluck( $data['items'], 'title' ), 'by title' );
 		$this->assertSame( 'Compositions', $data['items'][0]['album'] );
 	}
 
@@ -74,10 +74,22 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$artists = $this->get( '/artists' );
 
 		$this->assertSame( array( 'Compositions' ), wp_list_pluck( $albums['items'], 'name' ) );
-		$this->assertSame( 2, $albums['items'][0]['count'], 'counted by the tracks a visitor can see' );
+		$this->assertSame( 3, $albums['items'][0]['count'], 'counted by the tracks a visitor can see' );
 		$this->assertSame( 'The Airmen of Note', $albums['items'][0]['artist'] );
 		$this->assertNotContains( 'Hidden Artist', wp_list_pluck( $artists['items'], 'name' ) );
 		$this->assertSame( array(), $this->get( '/tracks', array( 'search' => 'Secret' ) )['items'] );
+	}
+
+	public function test_a_track_on_a_password_protected_post_is_hidden_from_visitors(): void {
+		$locked = self::factory()->post->create(
+			array(
+				'post_status'   => 'publish',
+				'post_password' => 'secret',
+			)
+		);
+		self::attach( '06 - Sunk in Dars [sunk-in-dars].mp3', $locked );
+
+		$this->assertNotContains( 'Sunk in Dars', wp_list_pluck( $this->get( '/tracks' )['items'], 'title' ) );
 	}
 
 	public function test_someone_who_can_upload_sees_the_whole_library(): void {
@@ -89,8 +101,8 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 
 	public function test_search_matches_a_title_an_album_or_an_artist(): void {
 		$this->assertSame( array( 'Trombone Detritus' ), wp_list_pluck( $this->get( '/tracks', array( 'search' => 'tromb' ) )['items'], 'title' ) );
-		$this->assertSame( 2, $this->get( '/tracks', array( 'search' => 'Compos' ) )['total'], 'by album' );
-		$this->assertSame( 2, $this->get( '/tracks', array( 'search' => 'Airmen' ) )['total'], 'by artist' );
+		$this->assertSame( 3, $this->get( '/tracks', array( 'search' => 'Compos' ) )['total'], 'by album' );
+		$this->assertSame( 3, $this->get( '/tracks', array( 'search' => 'Airmen' ) )['total'], 'by artist' );
 		$this->assertSame( array( 'Compositions' ), wp_list_pluck( $this->get( '/albums', array( 'search' => 'comp' ) )['items'], 'name' ) );
 		$this->assertSame( array(), $this->get( '/albums', array( 'search' => '%' ) )['items'], 'a wildcard is a character, not a pattern' );
 	}
@@ -100,21 +112,21 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 
 		$data = $this->get( '/tracks', array( 'album' => $album ) );
 
-		$this->assertSame( array( 'Underground', 'Trombone Detritus' ), wp_list_pluck( $data['items'], 'title' ), 'track 2 before track 3' );
+		$this->assertSame( array( 'Underground', 'Trombone Detritus', 'Stole Back My Soul' ), wp_list_pluck( $data['items'], 'title' ), 'tracks 2, 3, 5' );
 	}
 
 	public function test_an_artist_lists_their_tracks(): void {
 		$artist = $this->get( '/artists' )['items'][0];
 
 		$this->assertSame( 'Airmen of Note, United States Air Force Band', $artist['name'] );
-		$this->assertSame( 2, $this->get( '/tracks', array( 'artist' => $artist['id'] ) )['total'] );
+		$this->assertSame( 3, $this->get( '/tracks', array( 'artist' => $artist['id'] ) )['total'] );
 	}
 
 	public function test_paging_and_its_limits(): void {
 		$first = $this->get( '/tracks', array( 'per_page' => 1 ) );
-		$this->assertSame( 2, $first['pages'] );
-		$this->assertSame( array( 'Trombone Detritus' ), wp_list_pluck( $first['items'], 'title' ) );
-		$this->assertSame( array( 'Underground' ), wp_list_pluck( $this->get( '/tracks', array( 'per_page' => 1, 'page' => 2 ) )['items'], 'title' ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		$this->assertSame( 3, $first['pages'] );
+		$this->assertSame( array( 'Stole Back My Soul' ), wp_list_pluck( $first['items'], 'title' ) );
+		$this->assertSame( array( 'Trombone Detritus' ), wp_list_pluck( $this->get( '/tracks', array( 'per_page' => 1, 'page' => 2 ) )['items'], 'title' ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 
 		$request = new WP_REST_Request( 'GET', '/riff/v1/tracks' );
 		$request->set_query_params( array( 'per_page' => 101 ) );

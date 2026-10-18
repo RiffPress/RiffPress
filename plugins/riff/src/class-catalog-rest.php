@@ -16,8 +16,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * GET /riff/v1/tracks, /albums and /artists.
  *
- * A visitor sees a track when the post it belongs to is published without a password, the rule
- * the library route already follows; someone who can upload files sees the whole Media Library.
+ * A visitor sees a track unless the post it was uploaded to is unpublished or behind a password,
+ * the rule WordPress's own media route follows; someone who can upload files sees the whole Media
+ * Library.
  * Albums and artists are listed, and counted, by the tracks the requester can see, so nothing
  * private shows through a name or a count.
  */
@@ -63,6 +64,12 @@ final class Catalog_Rest {
 			'default'     => 1,
 			'minimum'     => 1,
 		);
+		/**
+		 * GET /riff/v1/tracks: tracks from the Media Library by title, one album in its order, or
+		 * one artist, searchable by title, artist and album, a page at a time.
+		 *
+		 * @since 4.17.0
+		 */
 		register_rest_route(
 			Library::REST,
 			'/tracks',
@@ -98,27 +105,50 @@ final class Catalog_Rest {
 				'schema' => array( self::class, 'tracks_schema' ),
 			)
 		);
-		foreach ( array(
-			'albums'  => Catalog::ALBUM,
-			'artists' => Catalog::ARTIST,
-		) as $route => $taxonomy ) {
-			register_rest_route(
-				Library::REST,
-				'/' . $route,
+		/**
+		 * GET /riff/v1/albums: albums with at least one track the requester can see, by name, each
+		 * with its artist, artwork and track count, searchable by name.
+		 *
+		 * @since 4.17.0
+		 */
+		register_rest_route(
+			Library::REST,
+			'/albums',
+			array(
 				array(
-					array(
-						'methods'             => 'GET',
-						'callback'            => static fn( WP_REST_Request $request ) => self::rest_terms( $request, $taxonomy ),
-						'permission_callback' => '__return_true',
-						'args'                => array(
-							'search' => $search,
-							'page'   => $page,
-						),
+					'methods'             => 'GET',
+					'callback'            => static fn( WP_REST_Request $request ) => self::rest_terms( $request, Catalog::ALBUM ),
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						'search' => $search,
+						'page'   => $page,
 					),
-					'schema' => static fn() => self::terms_schema( $taxonomy ),
-				)
-			);
-		}
+				),
+				'schema' => static fn() => self::terms_schema( Catalog::ALBUM ),
+			)
+		);
+		/**
+		 * GET /riff/v1/artists: artists with at least one track the requester can see, by name,
+		 * each with a track count, searchable by name.
+		 *
+		 * @since 4.17.0
+		 */
+		register_rest_route(
+			Library::REST,
+			'/artists',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => static fn( WP_REST_Request $request ) => self::rest_terms( $request, Catalog::ARTIST ),
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						'search' => $search,
+						'page'   => $page,
+					),
+				),
+				'schema' => static fn() => self::terms_schema( Catalog::ARTIST ),
+			)
+		);
 	}
 
 	/**
@@ -261,7 +291,10 @@ final class Catalog_Rest {
 		if ( current_user_can( 'upload_files' ) ) {
 			return '';
 		}
-		return " AND {$wpdb->posts}.post_parent IN ( SELECT pp.ID FROM {$wpdb->posts} pp WHERE pp.post_status = 'publish' AND pp.post_password = '' )";
+		// WordPress's own rule for media (WP_REST_Attachments_Controller): a file is public unless the
+		// post it was uploaded to is not, so an unattached file is public. Riff also hides a file on a
+		// post behind a password.
+		return " AND ( {$wpdb->posts}.post_parent = 0 OR {$wpdb->posts}.post_parent IN ( SELECT pp.ID FROM {$wpdb->posts} pp WHERE pp.post_status = 'publish' AND pp.post_password = '' ) )";
 	}
 
 	/**
@@ -312,7 +345,7 @@ final class Catalog_Rest {
 		return array(
 			'$schema'     => 'http://json-schema.org/draft-04/schema#',
 			'title'       => 'riff-tracks',
-			'description' => __( 'Tracks from the Media Library, by title, or one album in its order, or one artist; searchable by title, artist and album. A visitor sees the tracks on published posts; someone who can upload files sees them all.', 'riff' ),
+			'description' => __( 'Tracks from the Media Library, by title, or one album in its order, or one artist; searchable by title, artist and album. A visitor sees every track except those uploaded to an unpublished or password-protected post; someone who can upload files sees them all.', 'riff' ),
 			'type'        => 'object',
 			'properties'  => array(
 				'items' => array(
