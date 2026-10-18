@@ -2268,6 +2268,19 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 2px;
 }
 
+/* While a view that was not fetched ahead is on its way, the old one dims,
+   after a beat so a quick answer never flickers. */
+.riff-app[aria-busy="true"] .riff-app-view {
+	opacity: 0.55;
+	transition: opacity 0.15s 0.12s;
+}
+
+/* A view arrives in a short cross-fade, not the browser's default. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.12s;
+}
+
 /* ---- Standalone mode: the Listen block on its own at app/, in Riff's dark
    look, with no theme around it. */
 .riff-standalone {
@@ -2277,14 +2290,17 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	color-scheme: dark;
 }
 
-.riff-standalone-main {
-	min-height: 100vh;
-}
-
 .riff-standalone .riff-app {
 	max-width: none;
-	min-height: 100vh;
-	padding-bottom: calc(var(--riff-bar-h, 72px) + 48px);
+	min-height: 100dvh;
+	padding-bottom: 48px;
+}
+
+/* Once the bar shows, the page already keeps its height free below
+   (body::after above), so the app fills only what is left: one screen in
+   all, never a scroll for a short view. */
+html.has-riff .riff-standalone .riff-app {
+	min-height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
 }
 
 /* On a wide screen standalone mode is laid out like the apps people know: a

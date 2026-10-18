@@ -267,6 +267,35 @@ test.describe( 'Browse', () => {
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
+	test( 'the tabs are fetched ahead, so choosing one waits on nothing', async ( {
+		page,
+	} ) => {
+		const tabs = page.locator( '.riff-app-bar a[href*="riff_view="]' );
+		await expect( tabs ).toHaveCount( 3 );
+		// Once the page is idle every tab's view is fetched; this page's own resource timings show
+		// when all three have arrived.
+		await expect
+			.poll( () =>
+				page.evaluate(
+					() =>
+						performance
+							.getEntriesByType( 'resource' )
+							.filter( ( r ) => r.name.includes( 'riff_view=' ) ).length
+				)
+			)
+			.toBeGreaterThanOrEqual( 3 );
+		const asked = [];
+		page.on( 'request', ( r ) => {
+			if ( r.url().includes( 'riff_view=artists' ) ) {
+				asked.push( r.url() );
+			}
+		} );
+		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await expect( page.locator( '.riff-app-tab[aria-current="page"]' ) ).toHaveText( 'Artists' );
+		await expect( page.locator( '.riff-artist' ).first() ).toBeVisible();
+		expect( asked, 'the view was already here' ).toEqual( [] );
+	} );
+
 	test( 'every browse view reads without the script', async ( { browser } ) => {
 		const context = await browser.newContext( { javaScriptEnabled: false } );
 		const plain = await context.newPage();
@@ -332,6 +361,16 @@ test.describe( 'Standalone', () => {
 		await expect
 			.poll( async () => ( await playing( page ) ).paused )
 			.toBe( false );
+
+		// With the bar showing, the app fills the window less the bar, not a whole window with the
+		// bar's height added below it, so a short view never scrolls.
+		const room = await page.evaluate( () => ( {
+			min: parseFloat( getComputedStyle( document.querySelector( '.riff-app' ) ).minHeight ),
+			left:
+				window.innerHeight -
+				parseFloat( getComputedStyle( document.body, '::after' ).height ),
+		} ) );
+		expect( room.min ).toBeLessThanOrEqual( room.left + 1 );
 	} );
 } );
 
