@@ -114,7 +114,7 @@ Since 4.0.0. Fires in `plugins/riff/src/class-library.php`.
 
 Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always comes first and cannot be removed.
 
-Since 4.17.0. Fires in `plugins/riff/src/class-player.php`.
+Since 4.16.0. Fires in `plugins/riff/src/class-player.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -311,7 +311,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
 
-Since 4.17.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.16.0. Fires in `plugins/riff/assets/riff.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |

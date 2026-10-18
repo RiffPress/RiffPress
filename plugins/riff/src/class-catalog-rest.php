@@ -2,7 +2,7 @@
 /**
  * The catalogue over REST: tracks, albums and artists from the Media Library, each searchable.
  *
- * @since 4.17.0
+ * @since 4.16.0
  * @package Riff
  */
 
@@ -27,21 +27,21 @@ final class Catalog_Rest {
 	/**
 	 * Tracks per page unless asked for fewer or more.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const PER_PAGE = 50;
 
 	/**
 	 * Albums or artists per page.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const TERMS_PER_PAGE = 48;
 
 	/**
 	 * Hooks the routes.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
@@ -50,7 +50,7 @@ final class Catalog_Rest {
 	/**
 	 * Registers the three routes.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public static function routes(): void {
 		$search = array(
@@ -68,7 +68,7 @@ final class Catalog_Rest {
 		 * GET /riff/v1/tracks: tracks from the Media Library by title, one album in its order, or
 		 * one artist, searchable by title, artist and album, a page at a time.
 		 *
-		 * @since 4.17.0
+		 * @since 4.16.0
 		 */
 		register_rest_route(
 			Library::REST,
@@ -109,7 +109,7 @@ final class Catalog_Rest {
 		 * GET /riff/v1/albums: albums with at least one track the requester can see, by name, each
 		 * with its artist, artwork and track count, searchable by name.
 		 *
-		 * @since 4.17.0
+		 * @since 4.16.0
 		 */
 		register_rest_route(
 			Library::REST,
@@ -131,7 +131,7 @@ final class Catalog_Rest {
 		 * GET /riff/v1/artists: artists with at least one track the requester can see, by name,
 		 * each with a track count, searchable by name.
 		 *
-		 * @since 4.17.0
+		 * @since 4.16.0
 		 */
 		register_rest_route(
 			Library::REST,
@@ -154,7 +154,7 @@ final class Catalog_Rest {
 	/**
 	 * GET /tracks.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
@@ -230,7 +230,7 @@ final class Catalog_Rest {
 	 * GET /albums and /artists: the terms with at least one track the requester can see, by name,
 	 * each counted by those tracks.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param WP_REST_Request $request  Request.
 	 * @param string          $taxonomy Catalog::ALBUM or Catalog::ARTIST.
@@ -415,7 +415,7 @@ final class Catalog_Rest {
 	/**
 	 * The shape of GET /tracks.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 * @return array JSON Schema.
 	 */
 	public static function tracks_schema(): array {
@@ -440,7 +440,7 @@ final class Catalog_Rest {
 	/**
 	 * The shape of GET /albums or /artists.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param string $taxonomy Catalog::ALBUM or Catalog::ARTIST.
 	 * @return array JSON Schema.

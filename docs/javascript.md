@@ -115,7 +115,7 @@ Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugi
 | --- | --- | --- |
 | `id` | `string` | The tab's slug. |
 
-Since 4.17.0.
+Since 4.16.0.
 
 ### `window.riff.on( name, fn )`
 
