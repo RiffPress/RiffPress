@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.17.0](https://github.com/RiffPress/RiffPress/compare/v4.16.0...v4.17.0) (2026-10-18)
+
+
+### Features
+
+* riff_can_play locks a track for a visitor, so membership and store plugins can gate music ([#407](https://github.com/RiffPress/RiffPress/issues/407)) ([dce0e18](https://github.com/RiffPress/RiffPress/commit/dce0e18dc2c8efccf0d5285fddee8d2c68f32d97))
+* standalone mode has a sidebar on a wide screen, and each row shows its own album's cover ([#393](https://github.com/RiffPress/RiffPress/issues/393)) ([6a4862a](https://github.com/RiffPress/RiffPress/commit/6a4862ab32669ad858bf8a0ecbeee3f63a29a54e))
+* standalone mode, the Listen page as an installable player of its own at app/ ([#391](https://github.com/RiffPress/RiffPress/issues/391)) ([08fa295](https://github.com/RiffPress/RiffPress/commit/08fa295d21e6876ba92b2399e2e327f6b46ded58))
+
+
+### Bug Fixes
+
+* the page stays still behind Now Playing, so only Up next's scrollbar shows ([#402](https://github.com/RiffPress/RiffPress/issues/402)) ([b8d313e](https://github.com/RiffPress/RiffPress/commit/b8d313e2af45af449847d45b7a546f88bd776779))
+
 ## [4.16.0](https://github.com/RiffPress/RiffPress/compare/v4.15.0...v4.16.0) (2026-10-18)
 
 
