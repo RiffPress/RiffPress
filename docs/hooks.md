@@ -145,6 +145,18 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$data` | `array` | Data. |
 
+### `riff_protected_send`
+
+Filters how a protected file is handed over: 'php' sends it from PHP; 'x-sendfile' asks Apache's mod_xsendfile or LiteSpeed to send it; 'x-accel-redirect' asks Nginx, which then needs an internal location for the protected folder (see the readme).
+
+Since 4.18.0. Fires in `plugins/riff/src/class-protect.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$how` | `string` | 'php', 'x-sendfile' or 'x-accel-redirect'. Default 'php'. |
+| `$file` | `string` | Absolute path. |
+| `$id` | `int` | Attachment ID. |
+
 ### `riff_sources`
 
 Filters the sources tracks are read from, keyed by id.

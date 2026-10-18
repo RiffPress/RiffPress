@@ -64,7 +64,8 @@ module.exports = defineConfig( {
 		{
 			name: 'webkit',
 			use: { ...base.use, ...devices[ 'Desktop Safari' ] },
-			testMatch: /tests\/e2e\/player\.spec\.js$/,
+			// Protected files too: Safari asks for byte ranges its own way.
+			testMatch: /tests\/e2e\/(player|protect)\.spec\.js$/,
 			grep: /@smoke/,
 		},
 	],
