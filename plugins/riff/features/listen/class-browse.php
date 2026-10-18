@@ -346,7 +346,36 @@ final class Browse {
 		}
 		$artist = (string) get_term_meta( $id, 'riff_album_artist', true );
 		$meta   = implode( ' · ', array_filter( array( $artist, self::count( (int) $data['total'] ) ) ) );
-		return self::list_view( $term->name, $meta, $data, __( 'Album', 'riff' ), true );
+		return self::list_view( $term->name, $meta, $data, __( 'Album', 'riff' ), true ) . self::more_by( $artist, $id, $page );
+	}
+
+	/**
+	 * More by this artist: their other albums, under one album's tracks.
+	 *
+	 * @since 4.18.0
+	 *
+	 * @param string $artist The album's artist, as its term meta has it.
+	 * @param int    $album  The album showing, left out.
+	 * @param string $page   Listen page.
+	 * @return string
+	 */
+	private static function more_by( string $artist, int $album, string $page ): string {
+		$term = '' !== $artist ? get_term_by( 'name', $artist, 'riff_artist' ) : false;
+		if ( ! $term instanceof \WP_Term ) {
+			return '';
+		}
+		$data   = self::get( '/albums', array( 'artist' => (int) $term->term_id ) );
+		$others = array_values( array_filter( $data['items'], static fn( $a ) => (int) $a['id'] !== $album ) );
+		if ( ! $others ) {
+			return '';
+		}
+		return sprintf(
+			'<section class="riff-more" aria-labelledby="riff-more-title"><h3 class="riff-more-title" id="riff-more-title"><a href="%s">%s</a></h3>%s</section>',
+			esc_url( add_query_arg( self::ARTIST, (int) $term->term_id, $page ) ),
+			/* translators: %s: artist name. */
+			esc_html( sprintf( __( 'More by %s', 'riff' ), $artist ) ),
+			self::album_grid( $others, $page )
+		);
 	}
 
 	/**
@@ -415,8 +444,9 @@ final class Browse {
 			return self::title( $title ) . self::empty_note();
 		}
 		// An album leads with its cover and numbers its tracks; other lists show each track's art.
-		$art = $album && ! empty( $data['items'][0]['art'] ) ? (string) end( $data['items'][0]['art'] )['src'] : '';
-		return App::header( $title, $meta, $kind, $art ) . self::rows( $data['items'], $album );
+		$art  = $album && ! empty( $data['items'][0]['art'] ) ? (string) end( $data['items'][0]['art'] )['src'] : '';
+		$tint = $album ? Art::tint( (array) ( $data['items'][0]['art'] ?? array() ) ) : '';
+		return App::header( $title, $meta, $kind, $art, $tint ) . self::rows( $data['items'], $album );
 	}
 
 	/**

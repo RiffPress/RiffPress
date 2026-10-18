@@ -121,10 +121,41 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-riff-app-action="shuffle"', $html );
 	}
 
+	public function test_an_album_offers_more_by_its_artist_that_the_visitor_can_see(): void {
+		$compositions = $this->album( 'Compositions' );
+		$artist       = (string) get_term_meta( $compositions, 'riff_album_artist', true );
+		$post         = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$encore       = self::attach( '05 - Stole Back My Soul [stole-back].mp3', $post );
+		wp_update_attachment_metadata(
+			$encore,
+			array(
+				'album'  => 'Encore',
+				'artist' => $artist,
+			)
+		);
+		$draft  = self::factory()->post->create( array( 'post_status' => 'draft' ) );
+		$hidden = self::attach( '06 - Sunk in Dars [sunk-in-dars].mp3', $draft );
+		wp_update_attachment_metadata(
+			$hidden,
+			array(
+				'album'  => 'Unreleased',
+				'artist' => $artist,
+			)
+		);
+
+		$html = $this->render_at( array( Browse::ALBUM => $compositions ) );
+
+		$this->assertStringContainsString( 'More by ' . esc_html( $artist ), $html );
+		$this->assertStringContainsString( 'data-riff-album="' . $this->album( 'Encore' ) . '"', $html );
+		$this->assertStringNotContainsString( 'Unreleased', $html, 'an album only on a draft is not offered' );
+		$this->assertStringNotContainsString( 'data-riff-album="' . $compositions . '"', $html, 'the album showing is not offered again' );
+		$this->assertStringContainsString( 'riff-album-tinted', $html, 'its header is tinted from its cover' );
+	}
+
 	public function test_an_album_leads_with_its_cover_and_numbers_its_tracks(): void {
 		$html = $this->render_at( array( Browse::ALBUM => $this->album( 'Compositions' ) ) );
 
-		$this->assertStringContainsString( '<header class="riff-album riff-album-has-cover"><span class="riff-album-cover"><img src="', $html );
+		$this->assertStringContainsString( '<header class="riff-album riff-album-has-cover riff-album-tinted" style="--riff-album-tint:#', $html );
 		$this->assertStringContainsString( '<p class="riff-album-kind">Album</p>', $html );
 		$this->assertStringContainsString( '<div class="riff-album-tracks" data-riff-numbered data-riff-tracks=', $html );
 		$this->assertStringNotContainsString( 'data-riff-numbered', $this->render_at( array( Browse::VIEW => 'tracks' ) ), 'a list of everything shows each track\'s art' );
