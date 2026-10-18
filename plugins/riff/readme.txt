@@ -1,4 +1,4 @@
-=== RiffPlayer ===
+=== Riff Music Player ===
 Contributors: joefusco
 Tags: music, audio, video, player, media
 Requires at least: 7.0
@@ -8,7 +8,7 @@ Stable tag: 4.14.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A music player for WordPress. The audio and video in your posts, in a player that keeps going while you read, with a full Now Playing screen.
+Own every note. A music player for the audio and video in your Media Library that keeps playing while you read, with a full Now Playing screen.
 
 == Description ==
 
