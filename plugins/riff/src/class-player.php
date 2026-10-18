@@ -95,6 +95,10 @@ final class Player {
 			'playingFrom' => __( 'Playing from %s', 'riff' ),
 			/* translators: %s: track title. */
 			'playTrack'   => __( 'Play %s', 'riff' ),
+			/* translators: %s: track title. */
+			'locked'      => __( '%s is locked', 'riff' ),
+			/* translators: %s: track title. */
+			'unlock'      => __( 'Unlock %s', 'riff' ),
 			'video'       => __( 'Video', 'riff' ),
 			'unavailable' => __( 'This track could not be played.', 'riff' ),
 			'copied'      => __( 'Link copied', 'riff' ),

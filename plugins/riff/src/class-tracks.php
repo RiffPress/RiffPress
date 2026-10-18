@@ -148,7 +148,58 @@ final class Tracks {
 		 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
 		 * @param int   $post_id       The post the track appears in, or 0.
 		 */
-		return self::normalize( (array) apply_filters( 'riff_track', $track, $attachment_id, $post_id ) );
+		$track = self::normalize( (array) apply_filters( 'riff_track', $track, $attachment_id, $post_id ) );
+		return self::gate( $track, $attachment_id, $post_id );
+	}
+
+	/**
+	 * Locks a track the current visitor may not play: it keeps its title, artist and artwork, so
+	 * lists and their counts stay the same, and loses its file and its video, so nothing plays it.
+	 *
+	 * The address of a locked file still works for anyone who has it, as every upload's does; this
+	 * keeps it out of what Riff writes on the page and returns over REST.
+	 *
+	 * @since 4.17.0
+	 *
+	 * @param array $track         Track.
+	 * @param int   $attachment_id Attachment ID, or 0 for a bare address.
+	 * @param int   $post_id       Post ID, or 0.
+	 * @return array
+	 */
+	private static function gate( array $track, int $attachment_id, int $post_id ): array {
+		/**
+		 * Filters whether the current visitor may play a track.
+		 *
+		 * A membership or store plugin returns false for a track its rules keep from this visitor.
+		 * The track is then listed as locked rather than hidden, with no file to play.
+		 *
+		 * @since 4.17.0
+		 *
+		 * @param bool  $allowed       Whether the track plays. Default true.
+		 * @param array $track         Track, after riff_track.
+		 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
+		 * @param int   $post_id       The post the track appears in, or 0.
+		 */
+		if ( (bool) apply_filters( 'riff_can_play', true, $track, $attachment_id, $post_id ) ) {
+			return $track;
+		}
+		/**
+		 * Filters where a locked track sends the visitor to unlock it: a sign-up, membership or
+		 * checkout page.
+		 *
+		 * @since 4.17.0
+		 *
+		 * @param string $url           Address, or empty for none. Default empty.
+		 * @param array  $track         Track.
+		 * @param int    $attachment_id Attachment ID, or 0.
+		 * @param int    $post_id       The post the track appears in, or 0.
+		 */
+		$unlock          = (string) apply_filters( 'riff_unlock_url', '', $track, $attachment_id, $post_id );
+		$track['src']    = '';
+		$track['video']  = null;
+		$track['locked'] = true;
+		$track['unlock'] = esc_url_raw( $unlock );
+		return $track;
 	}
 
 	/**
@@ -241,6 +292,14 @@ final class Tracks {
 						'url'   => array( 'type' => 'string' ),
 					),
 				),
+				'locked'   => array(
+					'type'        => 'boolean',
+					'description' => __( 'Whether the current visitor may not play the track, as riff_can_play decided. A locked track has no src.', 'riff' ),
+				),
+				'unlock'   => array(
+					'type'        => 'string',
+					'description' => __( 'Where a locked track sends the visitor to unlock it, from riff_unlock_url. Empty otherwise.', 'riff' ),
+				),
 			),
 		);
 	}
@@ -277,6 +336,8 @@ final class Tracks {
 		);
 		$track['video']    = is_array( $track['video'] ?? null ) && ! empty( $track['video']['src'] ) ? $track['video'] : null;
 		$track['post']     = is_array( $track['post'] ?? null ) && ! empty( $track['post']['url'] ) ? $track['post'] : null;
+		$track['locked']   = ! empty( $track['locked'] );
+		$track['unlock']   = is_string( $track['unlock'] ?? null ) ? $track['unlock'] : '';
 		return $track;
 	}
 

@@ -131,6 +131,61 @@ test.describe( 'Player', () => {
 		).toBeHidden();
 	} );
 
+	test( 'a locked track is listed with a lock that leads to unlocking it, and never queued or played', async ( {
+		page,
+	} ) => {
+		// What the server writes for a track riff_can_play refused: its details, no file, and where
+		// riff_unlock_url sends the visitor.
+		await page.evaluate( () => {
+			const open = JSON.parse(
+				document.querySelector( 'figure[data-riff-track]' ).dataset.riffTrack
+			);
+			const fig = document.createElement( 'figure' );
+			fig.className = 'wp-block-audio riff-track';
+			fig.dataset.riffTrack = JSON.stringify( {
+				...open,
+				id: 'locked-1',
+				title: 'Members Only',
+				src: '',
+				video: null,
+				locked: true,
+				unlock: 'https://example.org/join/',
+			} );
+			fig.innerHTML = '<audio controls></audio>';
+			document
+				.querySelector( 'figure[data-riff-track]' )
+				.insertAdjacentElement( 'afterend', fig );
+			window.riff.mount();
+		} );
+
+		const locked = page.locator( '.riff-row-locked' );
+		await expect( locked ).toHaveCount( 1 );
+		await expect( locked ).toContainText( 'Members Only' );
+		await expect( locked ).toHaveAttribute( 'href', 'https://example.org/join/' );
+		await expect( locked ).toHaveAttribute( 'aria-label', 'Unlock Members Only' );
+		await expect( locked.locator( '.riff-row-lock' ) ).toBeVisible();
+
+		await page.locator( 'button.riff-row' ).first().click();
+		await expect
+			.poll( () => page.evaluate( () => window.riff.queue().map( ( t ) => t.id ) ) )
+			.toHaveLength( 3 );
+		expect(
+			await page.evaluate( () => window.riff.queue().some( ( t ) => t.locked ) ),
+			'the locked track is not in the queue'
+		).toBe( false );
+
+		// The player's own API leaves it out too, and starts at the next track that plays.
+		const first = await page.evaluate( () => {
+			const tracks = [ ...document.querySelectorAll( 'figure[data-riff-track]' ) ].map(
+				( f ) => JSON.parse( f.dataset.riffTrack )
+			);
+			const at = tracks.findIndex( ( t ) => t.locked );
+			window.riff.play( tracks, at );
+			return tracks[ at + 1 ].id;
+		} );
+		await expect.poll( () => page.evaluate( () => window.riff.current()?.id ) ).toBe( first );
+	} );
+
 	test( 'a playlist block is rows too, played through the one player, with its own player kept off', async ( {
 		page,
 	} ) => {

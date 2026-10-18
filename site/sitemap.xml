@@ -62,6 +62,7 @@
   <url><loc>{{pages_url}}developers/hooks/riff_art_palettes/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_art_svg/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_bar_controls/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/riff_can_play/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_chips/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_enabled/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_library_item/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
@@ -72,6 +73,7 @@
   <url><loc>{{pages_url}}developers/hooks/riff_standalone_manifest/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_strings/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_track/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/riff_unlock_url/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_after_player/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_before_player/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.queue/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>

@@ -31,6 +31,50 @@ final class Blocks {
 		add_filter( 'render_block_core/audio', array( self::class, 'render' ), 10, 3 );
 		add_filter( 'render_block_core/video', array( self::class, 'render' ), 10, 3 );
 		add_filter( 'render_block_core/playlist', array( self::class, 'render_playlist' ), 10, 3 );
+		add_filter( 'render_block_data', array( self::class, 'lock_playlist' ), 10, 3 );
+	}
+
+	/**
+	 * Takes a locked track's file out of a playlist block before core renders it, since core
+	 * writes each track's address into the page's interactivity state as it renders.
+	 *
+	 * @since 4.17.0
+	 * @param array      $block  Parsed block.
+	 * @param array      $source The block as parsed, before any filter.
+	 * @param array|null $outer  The parent block, if any.
+	 * @return array
+	 */
+	public static function lock_playlist( $block, $source = array(), $outer = null ) {
+		unset( $source, $outer );
+		if ( 'core/playlist' !== ( $block['blockName'] ?? '' ) || empty( $block['innerBlocks'] ) || is_admin() || ! has_filter( 'riff_can_play' ) ) {
+			return $block;
+		}
+		$post_id = (int) get_the_ID();
+		foreach ( $block['innerBlocks'] as $i => $inner ) {
+			if ( 'core/playlist-track' !== ( $inner['blockName'] ?? '' ) ) {
+				continue;
+			}
+			$track = Tracks::from_block( $inner, $post_id );
+			if ( $track && $track['locked'] ) {
+				$block['innerBlocks'][ $i ]['attrs']['src'] = '';
+			}
+		}
+		return $block;
+	}
+
+	/**
+	 * Takes the file out of a locked track's own markup, so the block's native player has nothing
+	 * to play either.
+	 *
+	 * @since 4.17.0
+	 * @param WP_HTML_Tag_Processor $tags Markup, at its start.
+	 */
+	private static function unplayable( WP_HTML_Tag_Processor $tags ): void {
+		while ( $tags->next_tag() ) {
+			if ( in_array( $tags->get_tag(), array( 'AUDIO', 'VIDEO', 'SOURCE' ), true ) ) {
+				$tags->remove_attribute( 'src' );
+			}
+		}
 	}
 
 	/**
@@ -59,6 +103,9 @@ final class Blocks {
 		}
 		$tags->add_class( 'riff-track' );
 		$tags->set_attribute( 'data-riff-track', wp_json_encode( $track ) );
+		if ( $track['locked'] ) {
+			self::unplayable( $tags );
+		}
 		return $tags->get_updated_html();
 	}
 

@@ -199,6 +199,26 @@ html.has-riff body::after {
 	font-variant-numeric: tabular-nums;
 }
 
+/* A track this visitor may not play: dimmed, with a lock by its length. */
+.riff-row-locked {
+	text-decoration: none;
+}
+
+.riff-row-locked .riff-row-text {
+	opacity: 0.55;
+}
+
+div.riff-row-locked {
+	cursor: default;
+}
+
+.riff-row-lock {
+	width: 16px;
+	height: 16px;
+	margin-right: 8px;
+	vertical-align: -3px;
+}
+
 /* The quality pill: format and bit rate for the playing track, as Tidal
    sets its tier at the right end of the bar. Centred with the controls. */
 .riff-quality {

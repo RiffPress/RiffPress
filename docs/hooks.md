@@ -69,6 +69,21 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$controls` | `array[]` | Controls, keyed by slug: label, action, icon or svg, href. |
 
+### `riff_can_play`
+
+Filters whether the current visitor may play a track.
+
+A membership or store plugin returns false for a track its rules keep from this visitor. The track is then listed as locked rather than hidden, with no file to play.
+
+Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$allowed` | `bool` | Whether the track plays. Default true. |
+| `$track` | `array` | Track, after riff_track. |
+| `$attachment_id` | `int` | Attachment ID, or 0 for a file outside the Media Library. |
+| `$post_id` | `int` | The post the track appears in, or 0. |
+
 ### `riff_chips`
 
 Filters the chips under Now Playing's controls.
@@ -170,6 +185,19 @@ Since 4.0.0. Fires in `plugins/riff/src/class-tracks.php`.
 | --- | --- | --- |
 | `$track` | `array` | Track: id, src, type, title, artist, album, duration, art, video, post. |
 | `$attachment_id` | `int` | Attachment ID, or 0 for a file outside the Media Library. |
+| `$post_id` | `int` | The post the track appears in, or 0. |
+
+### `riff_unlock_url`
+
+Filters where a locked track sends the visitor to unlock it: a sign-up, membership or checkout page.
+
+Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | Address, or empty for none. Default empty. |
+| `$track` | `array` | Track. |
+| `$attachment_id` | `int` | Attachment ID, or 0. |
 | `$post_id` | `int` | The post the track appears in, or 0. |
 
 ## Actions
