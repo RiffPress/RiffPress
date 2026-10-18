@@ -20,7 +20,7 @@ npm run test:e2e           # Playwright: desktop Chromium, Chromium at an iPhone
 npm run test:php           # PHPUnit on the WordPress test suite, inside the tests container
 ```
 
-Playwright smoke tests run **before every commit**, from the hook in `.githooks` that `npm install` wires up, against your running wp-env, and the full suite runs in GitHub Actions on every pull request. Skip the suite for one commit with `RIFF_SKIP_E2E=1 git commit ...`, or every hook with `--no-verify`. CI also runs PHPCS, ESLint, the spell check, the workflow script tests, and a lint of the workflow files. Plugin Check runs by hand from its workflow page.
+Playwright smoke tests run **before every commit**, from the hook in `.githooks` that `npm install` wires up, against your running wp-env, and the full suite runs in GitHub Actions on every pull request. Skip the suite for one commit with `RIFF_SKIP_E2E=1 git commit ...`, or every hook with `--no-verify`. CI also runs PHPCS, ESLint, the spell check, the workflow script tests, a lint of the workflow files, and Plugin Check against the built zip whenever the code changes.
 
 ## Pull requests
 
@@ -36,9 +36,11 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 - **Weekly run.** CI runs the full suite every Monday against current WordPress core. The release and Pages workflows run weekly too.
 - **Version strings.** `scripts/sync-versions.sh` writes the version everywhere WordPress reads it and sets `Tested up to` from the core version the suite just ran against.
 
-## Translations
+## The demo library
 
 The demo library is one uploaded album, `packages/fixtures/compositions`, and a folder per streamed album beside it, each with a `source.json` naming its recordings on Wikimedia Commons. `node packages/fixtures/album.js <slug> --out <dir>` downloads and encodes one, measures each track, and writes its `manifest.json` and `levels.json`, which are committed; the audio is not, since the Pages deploy builds it the same way and publishes it under `demo/<slug>/`. `npm run seed:tests` seeds the uploaded album and every streamed one, pointed at the live demo set (or `RIFF_DEMO_BASE`).
+
+## Translations
 
 `npm run pot` writes the translation template to `plugins/riff/languages/riff.pot` (wp-env must be running). It is generated, not committed: the Plugin Check job builds it into the zip, and translations come from translate.wordpress.org.
 

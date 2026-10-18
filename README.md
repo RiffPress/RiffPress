@@ -59,6 +59,19 @@ under **Video version**.
 
 The developer reference is at [riffpress.com/developers](https://riffpress.com/developers/), one section per language: [PHP](https://riffpress.com/developers/php/), [JavaScript](https://riffpress.com/developers/javascript/), [REST API](https://riffpress.com/developers/rest/) and [CSS](https://riffpress.com/developers/css/). Every page is generated from the plugin's own docblocks and registration code. CI fails a change that adds a hook, a `window.riff` member, a `Riff\Source` method or a REST argument without documenting it; a custom property is public only once it has a docblock. [docs/hooks.md](docs/hooks.md) and [docs/javascript.md](docs/javascript.md) are the same hooks and `window.riff` reference for reading on GitHub. The plugin readme's Developers section has the stability promise.
 
+## Docs in this repository
+
+| File | What it covers |
+| --- | --- |
+| [PRODUCT.md](PRODUCT.md) | Who Riff is for, what it does, and what is out of scope. |
+| [DESIGN.md](DESIGN.md) | How the player and the Listen block look and behave. |
+| [docs/native.md](docs/native.md) | What Riff uses from WordPress as is, what it adds, why, and the core ticket for each. |
+| [docs/hooks.md](docs/hooks.md), [docs/javascript.md](docs/javascript.md) | The hooks and `window.riff`, generated from the code. |
+| [docs/iphone-checklist.md](docs/iphone-checklist.md) | What to check on a real iPhone before a release. |
+| [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | Setup, checks, pull requests and releases. |
+| [.github/SUPPORT.md](.github/SUPPORT.md), [SECURITY.md](SECURITY.md) | Supported versions, the public API promise, and reporting a vulnerability. |
+| [AGENTS.md](AGENTS.md) | Notes for coding agents. |
+
 ## Development
 
 ```
