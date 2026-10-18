@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.16.0](https://github.com/RiffPress/RiffPress/compare/v4.15.0...v4.16.0) (2026-10-18)
+
+
+### Features
+
+* albums and artists are taxonomies on the Media Library's audio, filed from each file's tags ([#384](https://github.com/RiffPress/RiffPress/issues/384)) ([03773fb](https://github.com/RiffPress/RiffPress/commit/03773fbf15c23c7e683f3b503273ff7b2c0be0d4))
+* plugins can add tabs beside Up next in Now Playing ([#383](https://github.com/RiffPress/RiffPress/issues/383)) ([ffabb7b](https://github.com/RiffPress/RiffPress/commit/ffabb7b62a8b82e842af15c54d6fe997a5bc46ca))
+* REST routes for tracks, albums and artists from the Media Library, searchable, showing visitors only what is published ([#386](https://github.com/RiffPress/RiffPress/issues/386)) ([8e47d3b](https://github.com/RiffPress/RiffPress/commit/8e47d3b977f5dfb00ea4e4b35d1f21bf53d6036f))
+* Riff Lyrics, a Lyrics tab beside Up next, as a plugin built only on Riff's public API ([#388](https://github.com/RiffPress/RiffPress/issues/388)) ([0811809](https://github.com/RiffPress/RiffPress/commit/0811809862fceb70ef058f010959edc964cbfb67))
+* the Listen block browses the Media Library by album, artist and track, and searches it ([#387](https://github.com/RiffPress/RiffPress/issues/387)) ([b1f83e8](https://github.com/RiffPress/RiffPress/commit/b1f83e815a11cd938ae068d322b27980b821dd79))
+* wp riff import adds a folder of music to the Media Library, one album post per folder ([#378](https://github.com/RiffPress/RiffPress/issues/378)) ([6099ba7](https://github.com/RiffPress/RiffPress/commit/6099ba76a483889e941bb2625369de62179bfef8))
+
 ## [4.15.0](https://github.com/RiffPress/RiffPress/compare/v4.14.0...v4.15.0) (2026-10-18)
 
 
