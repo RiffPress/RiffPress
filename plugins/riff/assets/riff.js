@@ -208,7 +208,7 @@ function start() {
 		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
 		 * through the `riff_now_playing_tabs` filter.
 		 *
-		 * @since 4.17.0
+		 * @since 4.16.0
 		 *
 		 * @param {string} id The tab's slug.
 		 */
@@ -1391,7 +1391,7 @@ function start() {
 		 * Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a
 		 * tab fills its panel here, and again on `riff.track` while its tab is showing.
 		 *
-		 * @since 4.17.0
+		 * @since 4.16.0
 		 *
 		 * @param {Object}      detail       What changed.
 		 * @param {string}      detail.id    The tab's slug.

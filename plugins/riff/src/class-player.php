@@ -215,7 +215,7 @@ final class Player {
 	 * fires in JavaScript. On a phone the tabs show in the open Up next sheet once there is more
 	 * than one.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @return array[] Tabs keyed by slug, each with a label.
 	 */
@@ -228,7 +228,7 @@ final class Player {
 		 * `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always
 		 * comes first and cannot be removed.
 		 *
-		 * @since 4.17.0
+		 * @since 4.16.0
 		 *
 		 * @param array[] $tabs Tabs keyed by slug, each with a label.
 		 */

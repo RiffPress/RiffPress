@@ -2,7 +2,7 @@
 /**
  * Browsing the Media Library inside the Listen block: albums, artists, tracks and search.
  *
- * @since 4.17.0
+ * @since 4.16.0
  * @package Riff
  */
 
@@ -27,42 +27,42 @@ final class Browse {
 	/**
 	 * The query argument naming a list: albums, artists or tracks.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const VIEW = 'riff_view';
 
 	/**
 	 * The query argument opening one album, by term ID.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const ALBUM = 'riff_album';
 
 	/**
 	 * The query argument opening one artist, by term ID.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const ARTIST = 'riff_artist';
 
 	/**
 	 * The query argument holding search words.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const SEARCH = 'riff_search';
 
 	/**
 	 * Every query argument a browse view uses, for the script to recognise its own addresses.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH );
 
 	/**
 	 * Which browse view the address asks for, or null for the library or a post.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @return array{view: string, id: int, search: string, page: int}|null
 	 */
@@ -94,7 +94,7 @@ final class Browse {
 	/**
 	 * The navigation above every view: the library, the three lists, and search.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param string     $page    The Listen page's address.
 	 * @param array|null $current The browse view showing, or null.
@@ -144,7 +144,7 @@ final class Browse {
 	/**
 	 * Renders the view the address asks for.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param array  $current From requested().
 	 * @param string $page    The Listen page's address.

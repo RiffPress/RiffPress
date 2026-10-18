@@ -2,7 +2,7 @@
 /**
  * Albums and artists as taxonomies on the Media Library's audio, filled from each file's tags.
  *
- * @since 4.17.0
+ * @since 4.16.0
  * @package Riff
  */
 
@@ -27,56 +27,56 @@ final class Catalog {
 	/**
 	 * The album taxonomy.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const ALBUM = 'riff_album';
 
 	/**
 	 * The artist taxonomy.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const ARTIST = 'riff_artist';
 
 	/**
 	 * Album term meta: the album's artist, which tells two albums of the same name apart.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const ALBUM_ARTIST = 'riff_album_artist';
 
 	/**
 	 * Attachment meta marking a file already filed, by catalogue version.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const FILED = '_riff_catalog';
 
 	/**
 	 * The version of how files are filed; raising it files every library again.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const VERSION = 1;
 
 	/**
 	 * The background job that files a library from before the catalogue.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const BACKFILL = 'riff_catalog_backfill';
 
 	/**
 	 * Files filed per background run.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public const BATCH = 200;
 
 	/**
 	 * Hooks the taxonomies, the filing and the backfill.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'taxonomies' ) );
@@ -94,7 +94,7 @@ final class Catalog {
 	 * the terms through these routes as someone who can upload; everyone else reads albums and
 	 * artists through riff/v1, which shows only what is published.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param mixed            $result  A response already decided, or null.
 	 * @param \WP_REST_Server  $server  Server.
@@ -112,7 +112,7 @@ final class Catalog {
 	/**
 	 * Registers the two taxonomies on attachments.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public static function taxonomies(): void {
 		$shared = array(
@@ -178,7 +178,7 @@ final class Catalog {
 	/**
 	 * Files an audio attachment whenever WordPress saves its metadata, on upload, import or edit.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param mixed $data          Attachment metadata.
 	 * @param int   $attachment_id Attachment ID.
@@ -194,7 +194,7 @@ final class Catalog {
 	/**
 	 * Files one audio attachment under its album and artist, from its tags.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param int        $attachment_id Attachment ID.
 	 * @param array|null $meta          Its metadata, when the caller has it; read otherwise.
@@ -266,7 +266,7 @@ final class Catalog {
 	/**
 	 * Schedules the background filing while any audio is not filed at this version.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 */
 	public static function schedule(): void {
 		if ( (int) get_option( self::BACKFILL ) < self::VERSION && ! wp_next_scheduled( self::BACKFILL ) ) {
@@ -277,7 +277,7 @@ final class Catalog {
 	/**
 	 * Files a batch of audio not yet filed at this version, and runs again until none are left.
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param int $limit How many to file; the batch size by default.
 	 * @return int How many were filed.

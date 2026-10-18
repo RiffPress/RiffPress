@@ -31,14 +31,14 @@ final class Cli {
 	/**
 	 * Files every audio file in the Media Library under its album and artist, from its tags.
 	 *
-	 * New uploads and imports are filed as they arrive, and a library from before Riff 4.17.0 is
+	 * New uploads and imports are filed as they arrive, and a library from before Riff 4.16.0 is
 	 * filed in the background; this does the whole library now.
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp riff catalog
 	 *
-	 * @since 4.17.0
+	 * @since 4.16.0
 	 *
 	 * @param string[]             $args       Positional arguments.
 	 * @param array<string, mixed> $assoc_args Named arguments.
