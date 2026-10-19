@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.20.0](https://github.com/RiffPress/RiffPress/compare/v4.19.0...v4.20.0) (2026-10-19)
+
+
+### Features
+
+* likes and Your Library ([#426](https://github.com/RiffPress/RiffPress/issues/426)) ([68fc952](https://github.com/RiffPress/RiffPress/commit/68fc952076a7f815b8cf3a60d7d173fe849d05c4))
+* playlists listeners make ([#437](https://github.com/RiffPress/RiffPress/issues/437)) ([1a4fc2c](https://github.com/RiffPress/RiffPress/commit/1a4fc2c95dbe521fb84c331f3c8c07d94464cc16))
+* wp-api-coverage, a report of the WordPress APIs a plugin uses and the ones it doesn't yet ([#433](https://github.com/RiffPress/RiffPress/issues/433)) ([b5bc7cb](https://github.com/RiffPress/RiffPress/commit/b5bc7cbd96626ad13d65f16e361e61f3a539832a))
+
+
+### Bug Fixes
+
+* one heart icon, tidy rows of cards, and a Library that never looks empty ([#434](https://github.com/RiffPress/RiffPress/issues/434)) ([9c41e5a](https://github.com/RiffPress/RiffPress/commit/9c41e5a2c71bf15d9c53740db511ec12cd0f25a9))
+
 ## [4.19.0](https://github.com/RiffPress/RiffPress/compare/v4.18.0...v4.19.0) (2026-10-18)
 
 
