@@ -6,7 +6,8 @@
  * the next view arrive without a page load: fetch what the server renders at that address, swap it
  * in, push the address. Back and forward do the same from history. Load more adds the next page of
  * posts in place and changes the address to the one that renders the same cards on the server.
- * Home's rows of what was played come from this device, so they are filled here. */
+ * Home's rows of what was played come from the player's history, so they are filled here, and Your
+ * Library is fetched with a visitor's likes, which only their browser has. */
 
 export function start( api ) {
 	const app = document.querySelector( '[data-riff-app]' );
@@ -131,9 +132,33 @@ export function start( api ) {
 		return cache.get( key );
 	}
 
+	// Your Library is drawn on the server from the listener's likes. A signed-in listener's are in
+	// their account; a visitor's are in this browser, so the fetch carries them, newest first, as
+	// t, a or r and an ID. The server reads them only when nobody is signed in.
+	const viewKey = browseArgs[ 0 ] || 'riff_view';
+	const isLibrary = ( href ) =>
+		new URL( href, location.href ).searchParams.get( viewKey ) === 'library';
+	const LETTERS = { track: 't', album: 'a', artist: 'r' };
+	function fetchable( href ) {
+		if ( ! isLibrary( href ) || typeof api.likes !== 'function' ) {
+			return href;
+		}
+		const u = new URL( href, location.href );
+		const liked = api
+			.likes()
+			.slice( 0, 400 )
+			.map( ( l ) => LETTERS[ l.kind ] + l.id )
+			.join( ',' );
+		if ( liked ) {
+			u.searchParams.set( 'riff_liked', liked );
+		}
+		return u.toString();
+	}
+
 	// A browse view, as the server rendered it at its address: its view and its navigation.
 	const rendered = new Map();
 	function pageView( href ) {
+		href = fetchable( href );
 		if ( ! rendered.has( href ) ) {
 			rendered.set(
 				href,
@@ -161,8 +186,10 @@ export function start( api ) {
 		return rendered.get( href );
 	}
 
-	// ---- Views.
-	async function show( to, { push = true } = {} ) {
+	// ---- Views. A quiet show redraws the view in place, as Your Library does when a like changes
+	// elsewhere: no history entry, and the focus and scroll stay where they are.
+	async function show( to, { push = true, quiet = false } = {} ) {
+		push = push && ! quiet;
 		const { id, pages: upto } = to;
 		const turn = ++showing;
 		app.setAttribute( 'aria-busy', 'true' );
@@ -215,6 +242,10 @@ export function start( api ) {
 		app.removeAttribute( 'aria-busy' );
 		api.mount();
 		home();
+		paintLikes();
+		if ( quiet ) {
+			return;
+		}
 		const top = app.getBoundingClientRect().top;
 		if ( top < 0 ) {
 			app.scrollIntoView( { block: 'start' } );
@@ -413,6 +444,10 @@ export function start( api ) {
 			loadMore( action );
 			return;
 		}
+		if ( action?.dataset.riffAppAction === 'like' ) {
+			likeFrom( action );
+			return;
+		}
 		if ( action ) {
 			const holder = app.querySelector( '[data-riff-tracks]' );
 			const tracks = holder ? parse( holder.dataset.riffTracks ) : null;
@@ -441,6 +476,99 @@ export function start( api ) {
 		}
 		show( to ).catch( () => {} );
 	} );
+
+	// ---- Hearts on an album's or artist's page, pressed from the listener's likes through the
+	// player's api, which keeps them in the account or in this browser.
+	function paintLikes() {
+		if ( typeof api.liked !== 'function' ) {
+			return;
+		}
+		for ( const b of app.querySelectorAll( '[data-riff-like-kind]' ) ) {
+			b.setAttribute(
+				'aria-pressed',
+				String( api.liked( b.dataset.riffLikeId, b.dataset.riffLikeKind ) )
+			);
+		}
+	}
+	function likeFrom( button ) {
+		const { riffLikeKind: kind, riffLikeId: id } = button.dataset;
+		const on = ! api.liked( id, kind );
+		if ( on ) {
+			api.like( id, kind );
+		} else {
+			api.unlike( id, kind );
+		}
+		const name =
+			app.querySelector( '.riff-album-title' )?.textContent || '';
+		tell(
+			fmt(
+				on
+					? s.savedToLibrary || '%s added to your library'
+					: s.removedFromLibrary || '%s removed from your library',
+				name
+			)
+		);
+	}
+
+	// A like changed. Your Library drawn before it is out of date, so it is drawn again next time;
+	// while it shows, what was unliked leaves it at once, and the focus moves to what came next.
+	function likeChanged( { change, kind, id } ) {
+		paintLikes();
+		for ( const key of rendered.keys() ) {
+			if ( isLibrary( key ) ) {
+				rendered.delete( key );
+			}
+		}
+		const library = view.querySelector( '[data-riff-library]' );
+		if ( ! library ) {
+			return;
+		}
+		if ( change === 'unlike' ) {
+			unshow( library, kind, Number( id ) );
+		} else if ( ! view.contains( document.activeElement ) ) {
+			const here = postOf( location.href );
+			if ( here ) {
+				show( here, { quiet: true } ).catch( () => {} );
+			}
+		}
+	}
+	function unshow( library, kind, id ) {
+		let gone = [];
+		if ( kind === 'track' ) {
+			gone = [ ...library.querySelectorAll( 'figure[data-riff-track], li[data-riff-track]' ) ].filter(
+				( fig ) => Number( parse( fig.dataset.riffTrack )?.id ) === id
+			);
+			const holder = library.querySelector( '[data-riff-tracks]' );
+			const tracks = holder ? parse( holder.dataset.riffTracks ) : null;
+			if ( Array.isArray( tracks ) ) {
+				holder.dataset.riffTracks = JSON.stringify(
+					tracks.filter( ( t ) => Number( t.id ) !== id )
+				);
+			}
+		} else {
+			gone = [ ...library.querySelectorAll( `[data-riff-${ kind }="${ id }"]` ) ];
+			if ( kind === 'artist' ) {
+				gone.push(
+					...[ ...library.querySelectorAll( '.riff-artists li' ) ].filter(
+						( li ) =>
+							Number( new URL( li.querySelector( 'a' ).href ).searchParams.get( browseArgs[ 2 ] || 'riff_artist' ) ) === id
+					)
+				);
+			}
+		}
+		for ( const el of gone ) {
+			const had = el.contains( document.activeElement );
+			const after = el.nextElementSibling || el.previousElementSibling;
+			el.remove();
+			if ( had ) {
+				( after?.querySelector( 'button, a' ) || view.querySelector( 'h2' ) )?.focus();
+			}
+		}
+		if ( gone.length ) {
+			api.mount();
+		}
+	}
+	api.on?.( 'like', likeChanged );
 
 	// ---- Home's rows of what was played, from this device: the posts last played from, to jump
 	// back into, and the tracks themselves. Each stays hidden while there is nothing in it.
@@ -546,6 +674,7 @@ export function start( api ) {
 		}
 		let ahead;
 		if ( to.browse ) {
+			// pageView() adds a visitor's likes to Your Library's address.
 			ahead = pageView( to.href );
 		} else if ( to.id ) {
 			ahead = get( '/' + to.id );
@@ -885,7 +1014,19 @@ export function start( api ) {
 		{ ...history.state, riffApp: postOf( location.href )?.id || 0 },
 		''
 	);
-	// Everything is listening: what needs the script, the sidebar's toggle, can show.
+	// A visitor who opened Your Library by its address got it drawn without their likes, which only
+	// this browser has: it is drawn again with them.
+	paintLikes();
+	if (
+		view.querySelector( '[data-riff-library="device"]' ) &&
+		api.likes?.().length
+	) {
+		const here = postOf( location.href );
+		if ( here ) {
+			show( here, { quiet: true } ).catch( () => {} );
+		}
+	}
+	// Everything is listening: what needs the script, the sidebar's toggle and the hearts, can show.
 	app.dataset.riffAppReady = '';
 }
 

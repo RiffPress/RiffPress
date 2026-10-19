@@ -455,6 +455,7 @@ final class App {
 	 * Shuffle under them, as the music apps draw an album.
 	 *
 	 * @since 4.17.0
+	 * @since 4.20.0 A heart beside Play and Shuffle, for an album or artist.
 	 *
 	 * @param string $title Title.
 	 * @param string $meta  The line under it.
@@ -462,13 +463,27 @@ final class App {
 	 * @param string $art   The cover's address, or empty for none.
 	 * @param string $tint  A hex colour from the cover to tint the header with, or empty.
 	 * @param bool   $round Whether the picture is round, as an artist's is.
+	 * @param string $like  What the heart likes, "album" or "artist", or empty for no heart.
+	 * @param int    $id    The album's or artist's term ID, for the heart.
 	 * @return string
 	 */
-	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false ): string {
-		$tint = (string) sanitize_hex_color( $tint );
+	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0 ): string {
+		$tint  = (string) sanitize_hex_color( $tint );
+		$heart = '';
+		if ( in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ) {
+			// app.js presses it from the listener's likes, and shows it once it can.
+			$heart = sprintf(
+				'<button type="button" class="riff-app-like" data-riff-app-action="like" data-riff-like-kind="%1$s" data-riff-like-id="%2$d" aria-pressed="false" aria-label="%3$s">%4$s</button>',
+				esc_attr( $like ),
+				$id,
+				/* translators: %s: an album or artist. */
+				esc_attr( sprintf( __( 'Like %s', 'riff' ), $title ) ),
+				Player::icon( 'heart' ) . Player::icon( 'hearted' )
+			);
+		}
 		return sprintf(
 			'<header class="riff-album%1$s"%8$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>' .
-			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%6$s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%7$s</button></p></div></header>',
+			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%6$s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%7$s</button>%9$s</p></div></header>',
 			( '' !== $art ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),
 			'' !== $art ? '<span class="riff-album-cover"><img src="' . esc_url( $art ) . '" alt="" decoding="async"></span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
@@ -476,7 +491,8 @@ final class App {
 			esc_html( $meta ),
 			esc_html__( 'Play', 'riff' ),
 			esc_html__( 'Shuffle', 'riff' ),
-			'' !== $tint ? ' style="--riff-album-tint:' . esc_attr( $tint ) . '"' : ''
+			'' !== $tint ? ' style="--riff-album-tint:' . esc_attr( $tint ) . '"' : '',
+			$heart // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above; the icons are static SVG.
 		);
 	}
 

@@ -54,11 +54,26 @@ final class Browse {
 	public const SEARCH = 'riff_search';
 
 	/**
+	 * The query argument narrowing Your Library to songs, albums or artists.
+	 *
+	 * @since 4.20.0
+	 */
+	public const FILTER = 'riff_filter';
+
+	/**
+	 * The query argument sorting Your Library: recent, or name.
+	 *
+	 * @since 4.20.0
+	 */
+	public const SORT = 'riff_sort';
+
+	/**
 	 * Every query argument a browse view uses, for the script to recognise its own addresses.
 	 *
 	 * @since 4.16.0
+	 * @since 4.20.0 Your Library's filter and sort.
 	 */
-	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH );
+	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH, self::FILTER, self::SORT );
 
 	/**
 	 * Icons for the navigation, as Material Icons draws them, beside each label in the sidebar.
@@ -69,6 +84,7 @@ final class Browse {
 		'artists' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
 		'tracks'  => 'M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z',
 		'posts'   => 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z',
+		'library' => 'M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 5h-3v5.5c0 1.38-1.12 2.5-2.5 2.5S10 13.88 10 12.5s1.12-2.5 2.5-2.5c.57 0 1.08.19 1.5.51V5h4v2zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z',
 	);
 
 	/**
@@ -97,7 +113,7 @@ final class Browse {
 		if ( '' !== $search ) {
 			return array( 'view' => 'search', 'id' => 0, 'search' => $search, 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
-		if ( in_array( $view, array( 'albums', 'artists', 'tracks', 'posts' ), true ) ) {
+		if ( in_array( $view, array( 'albums', 'artists', 'tracks', 'posts', 'library' ), true ) ) {
 			return array( 'view' => $view, 'id' => 0, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		// The posts grid lived at the page's own address before Home did; a link to one of its
@@ -126,6 +142,8 @@ final class Browse {
 			'artists' => array( __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ) ),
 			'tracks'  => array( __( 'Tracks', 'riff' ), add_query_arg( self::VIEW, 'tracks', $page ) ),
 			'posts'   => array( __( 'Posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ) ),
+			// Last, as Spotify's and YouTube Music's: what is the listener's own, under what is the site's.
+			'library' => array( __( 'Library', 'riff' ), add_query_arg( self::VIEW, 'library', $page ) ),
 		);
 		// The site's name heads the sidebar; as tabs it is hidden.
 		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
@@ -185,6 +203,8 @@ final class Browse {
 				return self::tracks_view( $page, $current['page'] );
 			case 'posts':
 				return App::posts_view( $page );
+			case 'library':
+				return Collection::view( $page );
 			case 'album':
 				return self::album_view( $page, $current['id'] );
 			case 'artist':
@@ -201,7 +221,7 @@ final class Browse {
 	 * @param array  $args  Query arguments.
 	 * @return array The response data, or an empty list on an error.
 	 */
-	private static function get( string $route, array $args = array() ): array {
+	public static function get( string $route, array $args = array() ): array {
 		$request = new WP_REST_Request( 'GET', '/' . Library::REST . $route );
 		$request->set_query_params( $args );
 		$response = rest_do_request( $request );
@@ -224,7 +244,7 @@ final class Browse {
 	 * @param string $text Heading.
 	 * @return string
 	 */
-	private static function title( string $text ): string {
+	public static function title( string $text ): string {
 		return '<h2 class="riff-app-title" tabindex="-1">' . esc_html( $text ) . '</h2>';
 	}
 
@@ -235,7 +255,7 @@ final class Browse {
 	 * @param array  $data  A route's response.
 	 * @return string
 	 */
-	private static function next( string $href, array $data ): string {
+	public static function next( string $href, array $data ): string {
 		if ( (int) $data['page'] >= (int) $data['pages'] ) {
 			return '';
 		}
@@ -279,7 +299,7 @@ final class Browse {
 	 * @param string $page   Listen page.
 	 * @return string
 	 */
-	private static function album_cards( array $albums, string $page ): string {
+	public static function album_cards( array $albums, string $page ): string {
 		$cards = '';
 		foreach ( $albums as $album ) {
 			$art    = $album['art'] ? end( $album['art'] )['src'] : '';
@@ -331,7 +351,7 @@ final class Browse {
 	 * @param string $page    Listen page.
 	 * @return string
 	 */
-	private static function artist_items( array $artists, string $page ): string {
+	public static function artist_items( array $artists, string $page ): string {
 		$items = '';
 		foreach ( $artists as $artist ) {
 			$items .= sprintf(
@@ -434,7 +454,7 @@ final class Browse {
 		}
 		$artist = (string) get_term_meta( $id, 'riff_album_artist', true );
 		$meta   = implode( ' · ', array_filter( array( $artist, self::count( (int) $data['total'] ) ) ) );
-		return self::list_view( $term->name, $meta, $data, __( 'Album', 'riff' ), true ) . self::more_by( $artist, $id, $page );
+		return self::list_view( $term->name, $meta, $data, __( 'Album', 'riff' ), true, $id ) . self::more_by( $artist, $id, $page );
 	}
 
 	/**
@@ -509,7 +529,7 @@ final class Browse {
 			/* translators: %s: number of albums. */
 			$meta[] = sprintf( _n( '%s album', '%s albums', (int) $albums['total'], 'riff' ), number_format_i18n( (int) $albums['total'] ) );
 		}
-		$html  = App::header( $term->name, implode( ' · ', $meta ), __( 'Artist', 'riff' ), $cover, Art::tint( $art ), true );
+		$html  = App::header( $term->name, implode( ' · ', $meta ), __( 'Artist', 'riff' ), $cover, Art::tint( $art ), true, 'artist', $id );
 		$html .= '<h3 class="riff-app-section">' . esc_html__( 'Latest', 'riff' ) . '</h3>' . self::rows( $data['items'] ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
 		if ( $albums['items'] ) {
 			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Albums', 'riff' ) . '</h3>' . self::album_grid( $albums['items'], $page );
@@ -554,15 +574,16 @@ final class Browse {
 	 * @return string
 	 * @param string $kind  What it is, above the title, or empty.
 	 * @param bool   $album Whether it is an album: its cover leads, and its tracks are numbered.
+	 * @param int    $id    The album's term ID, for its heart, or 0.
 	 */
-	private static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false ): string {
+	private static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false, int $id = 0 ): string {
 		if ( ! $data['items'] ) {
 			return self::title( $title ) . self::empty_note();
 		}
 		// An album leads with its cover and numbers its tracks; other lists show each track's art.
 		$art  = $album && ! empty( $data['items'][0]['art'] ) ? (string) end( $data['items'][0]['art'] )['src'] : '';
 		$tint = $album ? Art::tint( (array) ( $data['items'][0]['art'] ?? array() ) ) : '';
-		return App::header( $title, $meta, $kind, $art, $tint ) . self::rows( $data['items'], $album );
+		return App::header( $title, $meta, $kind, $art, $tint, false, $id ? 'album' : '', $id ) . self::rows( $data['items'], $album );
 	}
 
 	/**
@@ -573,7 +594,7 @@ final class Browse {
 	 * @return string
 	 * @param bool  $numbered Whether to number the tracks, as an album does.
 	 */
-	private static function rows( array $tracks, bool $numbered = false ): string {
+	public static function rows( array $tracks, bool $numbered = false ): string {
 		// Each row is rendered as part of the post its track belongs to, so it takes that post's
 		// artwork and names it as where it plays from, as it would in the post itself.
 		global $post;
@@ -605,7 +626,7 @@ final class Browse {
 	 * @param int $count Tracks.
 	 * @return string
 	 */
-	private static function count( int $count ): string {
+	public static function count( int $count ): string {
 		/* translators: %s: number of tracks. */
 		return sprintf( _n( '%s track', '%s tracks', $count, 'riff' ), number_format_i18n( $count ) );
 	}

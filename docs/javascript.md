@@ -150,11 +150,60 @@ Since 4.0.0.
 
 ### `window.riff.history()`
 
-The tracks played on this device, most recent first, each once: what Home's Recently played and Jump back in are drawn from. Kept in the browser, at most 30.
+The tracks played, most recent first, each once: what Home's Recently played and Jump back in are drawn from. At most 30. A signed-in listener's come from their account; a visitor's are kept in the browser.
 
 Returns `Object[]`: Tracks, in the shape `Tracks::schema()` describes, each with `played`,
 
 Since 4.18.0.
+
+### `window.riff.like( id, kind )`
+
+Likes a track, an album or an artist. A signed-in listener's likes are saved to their account; a visitor's are kept in the browser, and join their account when they sign in.
+
+Only a track in the Media Library can be liked, since its ID is the same on every page.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number\|string` | A track's ID (its audio attachment's), or an album's or artist's term ID. |
+| `kind` | `string` | `track`, `album` or `artist`. Default `track`. |
+
+Since 4.20.0.
+
+### `window.riff.unlike( id, kind )`
+
+Takes a like away.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number\|string` | A track's, album's or artist's ID. |
+| `kind` | `string` | `track`, `album` or `artist`. Default `track`. |
+
+Since 4.20.0.
+
+### `window.riff.liked( id, kind )`
+
+Whether a track, album or artist is liked.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number\|string` | A track's, album's or artist's ID. |
+| `kind` | `string` | `track`, `album` or `artist`. Default `track`. |
+
+Returns `boolean`: True when it is liked.
+
+Since 4.20.0.
+
+### `window.riff.likes( kind )`
+
+Every like, newest first.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `kind` | `string` | Only `track`, `album` or `artist` likes. Default all. milliseconds since the epoch. |
+
+Returns `Object[]`: Likes, each `{ kind, id, at }`, with `at` when it was liked in
+
+Since 4.20.0.
 
 ### `window.riff.playing()`
 
@@ -197,6 +246,7 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.action`](hooks.md#riffaction), action: Fires when a control an extension added through `riff_chips` or `riff_bar_controls` is pressed.
 - [`riff.close`](hooks.md#riffclose), action: Fires when Now Playing closes.
 - [`riff.ended`](hooks.md#riffended), action: Fires when a track plays to its end, before the next one loads.
+- [`riff.like`](hooks.md#rifflike), action: Fires when a like is added or taken away, and once the likes a visitor kept in this browser have joined their account after they signed in.
 - [`riff.open`](hooks.md#riffopen), action: Fires when Now Playing opens.
 - [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.
 - [`riff.play`](hooks.md#riffplay), action: Fires when the track starts or resumes playing.

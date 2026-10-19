@@ -89,7 +89,7 @@
 		</div>
 		<div>
 			<h3>Listeners get a streaming player</h3>
-			<p>They can browse albums and artists, search, and line up a queue. Now Playing works from the lock screen, with AirPlay and Cast, and the music keeps going while they read the rest of your site. The Listen page can also be installed as an app.</p>
+			<p>They can browse albums and artists, search, line up a queue, and like songs, albums and artists into Your Library, which follows their account when they sign in. Now Playing works from the lock screen, with AirPlay and Cast, and the music keeps going while they read the rest of your site. The Listen page can also be installed as an app.</p>
 		</div>
 	</div>
 	<p class="fine r">Riff publishes and plays your music. It doesn't sell music or take payments. Bandcamp and Spotify are trademarks of their owners, and Riff isn't connected to either.</p>
@@ -151,7 +151,7 @@
 		<div><h3>What it needs</h3><ul><li>WordPress 7.0 or newer</li><li>PHP 8.1 or newer</li><li>Any theme; the Listen page template needs a block theme</li><li>Nothing to configure</li></ul></div>
 		<div><h3>What it adds</h3><ul><li>One script, one stylesheet, no build step</li><li><em>Artwork</em> and <em>Video version</em> fields on media</li><li>Albums and artists, filed from each file's tags</li><li>The Riff block, or <code>[riff]</code></li><li><code>wp riff import</code>, to add a folder of albums at once</li></ul></div>
 		<div><h3>Open</h3><ul><li><a href="https://github.com/RiffPress/RiffPress">Source on GitHub</a></li><li><a href="https://github.com/RiffPress/RiffPress#readme">How it works, in the readme</a></li><li>GPLv2 or later, like WordPress</li><li><a href="https://github.com/RiffPress/RiffPress/releases">Release notes</a></li><li><a href="https://github.com/RiffPress/RiffPress/issues">Report a problem</a></li></ul></div>
-		<div><h3>For developers</h3><ul><li><code>riff_track</code> on every media item in REST</li><li><code>riff/v1/library</code>, plus <code>tracks</code>, <code>albums</code> and <code>artists</code> with search</li><li>WPGraphQL fields, when it is installed</li><li><a href="developers/">A developer reference</a> for every hook, the JavaScript API, REST and CSS, generated from the code</li><li>Your own tabs beside Up next, the way <a href="https://github.com/RiffPress/RiffPress/tree/main/plugins/riff-lyrics">Riff Lyrics</a> adds one</li><li>Your own source of tracks, through the <code>Riff\Source</code> interface</li></ul></div>
+		<div><h3>For developers</h3><ul><li><code>riff_track</code> on every media item in REST</li><li><code>riff/v1/library</code>, plus <code>tracks</code>, <code>albums</code> and <code>artists</code> with search, and <code>users/me/likes</code> and <code>users/me/history</code> for the signed-in listener</li><li>WPGraphQL fields, when it is installed</li><li><a href="developers/">A developer reference</a> for every hook, the JavaScript API, REST and CSS, generated from the code</li><li>Your own tabs beside Up next, the way <a href="https://github.com/RiffPress/RiffPress/tree/main/plugins/riff-lyrics">Riff Lyrics</a> adds one</li><li>Your own source of tracks, through the <code>Riff\Source</code> interface</li></ul></div>
 	</div>
 </div></section>
 </main>

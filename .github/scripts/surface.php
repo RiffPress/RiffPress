@@ -47,6 +47,7 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 
 \Riff\Library::routes();
 \Riff\Catalog_Rest::routes();
+\Riff\Likes::routes();
 \Riff\Api::rest_field();
 \Riff\Api::graphql();
 
@@ -57,7 +58,7 @@ foreach ( $out['routes'] as &$route ) {
 	foreach ( $route['args'] as $key => $endpoint ) {
 		if ( is_int( $key ) ) {
 			$methods[] = $endpoint['methods'];
-			$args      = $endpoint['args'] ?? array();
+			$args      = array_merge( $args, $endpoint['args'] ?? array() );
 		}
 	}
 	$schema = $route['args']['schema'] ?? null;

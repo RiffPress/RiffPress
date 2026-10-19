@@ -100,7 +100,7 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( '<span class="riff-app-brand">', $html, 'the site\'s name, for the sidebar' );
 		$this->assertStringContainsString( 'role="search" action="' . esc_url( strtok( get_permalink( $this->page ), '?' ) ) . '" method="get"', $html );
 		$this->assertStringContainsString( 'name="riff_search"', $html );
-		$this->assertStringContainsString( 'data-riff-browse="riff_view,riff_album,riff_artist,riff_search"', $html );
+		$this->assertStringContainsString( 'data-riff-browse="riff_view,riff_album,riff_artist,riff_search,riff_filter,riff_sort"', $html );
 	}
 
 	public function test_albums_show_only_what_a_visitor_may_see(): void {

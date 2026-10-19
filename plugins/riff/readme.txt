@@ -19,6 +19,7 @@ Riff plays the audio, video and playlist blocks WordPress already has. Install i
 * Swipe the bar to skip, drag Now Playing down to close it; Space, J, L, Shift+N and Shift+P on a keyboard.
 * A full-page navigation saves the queue and position and attempts to resume on the next page; a reload restores the track paused.
 * Add the Riff block or [riff] shortcode to make a Listen page: it lists posts with tracks, browses the Media Library by album, artist and track, and searches it, all without the music stopping.
+* A heart on every track, album and artist fills Your Library on the Listen page. A signed-in listener's likes and recently played are kept in their account; a visitor's stay in their browser and join their account when they sign in.
 * Every track shows its quality as WordPress read it from the file: MP3 · 320 kbps, or FLAC · 24-bit 96 kHz.
 * The bar's amber line glows with the music and cools when you pause.
 * One script and one stylesheet, no build step, nothing to configure.
@@ -81,7 +82,7 @@ Riff is built the way a feature plugin would be: one track shape everywhere, rea
 * **Import:** `wp riff import <folder>` adds a folder of music to the Media Library through core's own upload path, one album post per folder that holds audio, with the folder's cover as artwork and a video named like a track as its video version. A second run skips what it already imported. `--dry-run` lists what it would do.
 * **Sources:** tracks come from registered sources. The core source reads audio, video and playlist blocks in posts; a plugin adds its own post type or catalogue by implementing `Riff\Source` and calling `Riff\Sources::register()` on `init`, or through the `riff_sources` filter.
 * **Track schema:** one shape, `Riff\Tracks::schema()`, version `Riff\Tracks::SCHEMA_VERSION`, shared by REST, WPGraphQL, the block markup and the script, and held to after the `riff_track` filter. WPGraphQL's `RiffTrack` is built from it.
-* **REST:** every audio and video item in `wp/v2/media` carries `riff_track`. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and rendered blocks. `riff/v1/tracks`, `riff/v1/albums` and `riff/v1/artists` browse and search the Media Library by album and artist; a visitor sees what WordPress's own media route shows them. All describe themselves on OPTIONS.
+* **REST:** every audio and video item in `wp/v2/media` carries `riff_track`. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and rendered blocks. `riff/v1/tracks`, `riff/v1/albums` and `riff/v1/artists` browse and search the Media Library by album and artist; a visitor sees what WordPress's own media route shows them. `riff/v1/users/me/likes` and `riff/v1/users/me/history` read and change the signed-in user's likes and recently played, kept as the `riff_likes` and `riff_history` user options. All describe themselves on OPTIONS.
 * **WPGraphQL:** when it is active, `MediaItem.riffTrack` and `Post.riffTracks`.
 * **Controls:** `riff_chips` adds chips under Now Playing's controls; `riff_bar_controls` adds controls to the end of the bar on a wide screen. The player announces a press as `riff.action`.
 * **Block and shortcode:** `riff/app` (with colour, typography and padding supports) and `[riff]` turn a page into the place to listen.

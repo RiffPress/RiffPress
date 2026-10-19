@@ -84,73 +84,87 @@ final class Player {
 			return;
 		}
 		$strings = array(
-			'play'              => __( 'Play', 'riff' ),
-			'pause'             => __( 'Pause', 'riff' ),
-			'repeatOff'         => __( 'Repeat off', 'riff' ),
-			'repeatAll'         => __( 'Repeat all', 'riff' ),
-			'repeatOne'         => __( 'Repeat one', 'riff' ),
-			'shuffleOn'         => __( 'Shuffle on', 'riff' ),
-			'shuffleOff'        => __( 'Shuffle off', 'riff' ),
+			'play'               => __( 'Play', 'riff' ),
+			'pause'              => __( 'Pause', 'riff' ),
+			'repeatOff'          => __( 'Repeat off', 'riff' ),
+			'repeatAll'          => __( 'Repeat all', 'riff' ),
+			'repeatOne'          => __( 'Repeat one', 'riff' ),
+			'shuffleOn'          => __( 'Shuffle on', 'riff' ),
+			'shuffleOff'         => __( 'Shuffle off', 'riff' ),
 			/* translators: %s: post title. */
-			'playingFrom'       => __( 'Playing from %s', 'riff' ),
+			'playingFrom'        => __( 'Playing from %s', 'riff' ),
 			/* translators: %s: track title. */
-			'playTrack'         => __( 'Play %s', 'riff' ),
+			'playTrack'          => __( 'Play %s', 'riff' ),
 			/* translators: %s: track title. */
-			'locked'            => __( '%s is locked', 'riff' ),
+			'locked'             => __( '%s is locked', 'riff' ),
 			/* translators: %s: track title. */
-			'unlock'            => __( 'Unlock %s', 'riff' ),
-			'video'             => __( 'Video', 'riff' ),
-			'unavailable'       => __( 'This track could not be played.', 'riff' ),
-			'copied'            => __( 'Link copied', 'riff' ),
-			'shareFailed'       => __( 'The link could not be shared.', 'riff' ),
-			'trackGone'         => __( 'The shared track is no longer in this post.', 'riff' ),
-			'library'           => __( 'Library', 'riff' ),
-			'shuffle'           => __( 'Shuffle', 'riff' ),
+			'unlock'             => __( 'Unlock %s', 'riff' ),
+			'video'              => __( 'Video', 'riff' ),
+			'unavailable'        => __( 'This track could not be played.', 'riff' ),
+			'copied'             => __( 'Link copied', 'riff' ),
+			'shareFailed'        => __( 'The link could not be shared.', 'riff' ),
+			'trackGone'          => __( 'The shared track is no longer in this post.', 'riff' ),
+			'library'            => __( 'Library', 'riff' ),
+			'shuffle'            => __( 'Shuffle', 'riff' ),
 			/* translators: %s: number of tracks. */
-			'oneTrack'          => __( '%s track', 'riff' ),
+			'oneTrack'           => __( '%s track', 'riff' ),
 			/* translators: %s: number of tracks. */
-			'tracks'            => __( '%s tracks', 'riff' ),
+			'tracks'             => __( '%s tracks', 'riff' ),
 			/* translators: %s: number of minutes. */
-			'minutes'           => __( '%s min', 'riff' ),
+			'minutes'            => __( '%s min', 'riff' ),
 			/* translators: %s: kilobits per second. */
-			'kbps'              => __( '%s kbps', 'riff' ),
-			'lossless'          => __( 'Lossless', 'riff' ),
+			'kbps'               => __( '%s kbps', 'riff' ),
+			'lossless'           => __( 'Lossless', 'riff' ),
 			/* translators: 1: bits per sample, 2: sample rate in kHz. */
-			'bitsKhz'           => __( '%1$s-bit %2$s kHz', 'riff' ),
-			'appEmpty'          => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
-			'otherTab'          => __( 'Playing in another tab', 'riff' ),
+			'bitsKhz'            => __( '%1$s-bit %2$s kHz', 'riff' ),
+			'appEmpty'           => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
+			'otherTab'           => __( 'Playing in another tab', 'riff' ),
 			/* translators: 1: elapsed time, 2: total time. */
-			'times'             => __( '%1$s / %2$s', 'riff' ),
-			'nowPlaying'        => __( 'Now playing', 'riff' ),
-			'open'              => __( 'Open', 'riff' ),
-			'more'              => __( 'Load more', 'riff' ),
-			'playError'         => __( 'That post could not be loaded. Press Play to try again.', 'riff' ),
-			'moreError'         => __( 'More posts could not be loaded. Press Load more to try again.', 'riff' ),
-			'recentSearches'    => __( 'Recent searches', 'riff' ),
-			'topResult'         => __( 'Top result', 'riff' ),
-			'songs'             => __( 'Songs', 'riff' ),
-			'albums'            => __( 'Albums', 'riff' ),
-			'artists'           => __( 'Artists', 'riff' ),
-			'artist'            => __( 'Artist', 'riff' ),
+			'times'              => __( '%1$s / %2$s', 'riff' ),
+			'nowPlaying'         => __( 'Now playing', 'riff' ),
+			'open'               => __( 'Open', 'riff' ),
+			'more'               => __( 'Load more', 'riff' ),
+			'playError'          => __( 'That post could not be loaded. Press Play to try again.', 'riff' ),
+			'moreError'          => __( 'More posts could not be loaded. Press Load more to try again.', 'riff' ),
+			'recentSearches'     => __( 'Recent searches', 'riff' ),
+			'topResult'          => __( 'Top result', 'riff' ),
+			'songs'              => __( 'Songs', 'riff' ),
+			'albums'             => __( 'Albums', 'riff' ),
+			'artists'            => __( 'Artists', 'riff' ),
+			'artist'             => __( 'Artist', 'riff' ),
 			/* translators: %s: the words searched for. */
-			'allResults'        => __( 'All results for “%s”', 'riff' ),
-			'searchSuggestions' => __( 'Suggestions', 'riff' ),
+			'allResults'         => __( 'All results for “%s”', 'riff' ),
+			'searchSuggestions'  => __( 'Suggestions', 'riff' ),
 			/* translators: %s: number of suggestions. */
-			'suggestions'       => __( '%s suggestions', 'riff' ),
+			'suggestions'        => __( '%s suggestions', 'riff' ),
 			/* translators: %s: number of suggestions, 1. */
-			'oneSuggestion'     => __( '%s suggestion', 'riff' ),
-			'playNext'          => __( 'Play next', 'riff' ),
-			'addToQueue'        => __( 'Add to queue', 'riff' ),
-			'removeFromQueue'   => __( 'Remove from queue', 'riff' ),
-			'moveUp'            => __( 'Move up', 'riff' ),
-			'moveDown'          => __( 'Move down', 'riff' ),
-			'goToPost'          => __( 'Go to post', 'riff' ),
+			'oneSuggestion'      => __( '%s suggestion', 'riff' ),
+			'playNext'           => __( 'Play next', 'riff' ),
+			'addToQueue'         => __( 'Add to queue', 'riff' ),
+			'removeFromQueue'    => __( 'Remove from queue', 'riff' ),
+			'moveUp'             => __( 'Move up', 'riff' ),
+			'moveDown'           => __( 'Move down', 'riff' ),
+			'goToPost'           => __( 'Go to post', 'riff' ),
 			/* translators: %s: track title. */
-			'trackMenu'         => __( 'More options for %s', 'riff' ),
+			'trackMenu'          => __( 'More options for %s', 'riff' ),
 			/* translators: %s: track title. */
-			'playingNext'       => __( '%s plays next', 'riff' ),
+			'playingNext'        => __( '%s plays next', 'riff' ),
 			/* translators: %s: track title. */
-			'addedToQueue'      => __( '%s added to the queue', 'riff' ),
+			'addedToQueue'       => __( '%s added to the queue', 'riff' ),
+			'like'               => __( 'Like', 'riff' ),
+			/* translators: %s: a track, album or artist. */
+			'likeItem'           => __( 'Like %s', 'riff' ),
+			'addToLiked'         => __( 'Add to Liked songs', 'riff' ),
+			'removeFromLiked'    => __( 'Remove from Liked songs', 'riff' ),
+			/* translators: %s: track title. */
+			'likedTrack'         => __( '%s added to Liked songs', 'riff' ),
+			/* translators: %s: track title. */
+			'unlikedTrack'       => __( '%s removed from Liked songs', 'riff' ),
+			/* translators: %s: an album or artist. */
+			'savedToLibrary'     => __( '%s added to your library', 'riff' ),
+			/* translators: %s: an album or artist. */
+			'removedFromLibrary' => __( '%s removed from your library', 'riff' ),
+			'likeFailed'         => __( 'That could not be saved. Try again.', 'riff' ),
 		);
 		/**
 		 * Filters the strings the player shows.
@@ -397,6 +411,8 @@ final class Player {
 			'video'     => '<path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.5 16.5v-9l7 4.5-7 4.5z"/>',
 			'volume'    => '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
 			'share'     => '<path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+			'heart'     => '<path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/>',
+			'hearted'   => '<path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>',
 		);
 
 		return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">' . ( $paths[ $name ] ?? '' ) . '</svg>';
