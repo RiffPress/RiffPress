@@ -21,7 +21,8 @@
 	],
 	"packages": {
 		".": {
-			"package-name": "riff"
+			"package-name": "riff",
+			"component": "riff"
 		}
 	}
 }
