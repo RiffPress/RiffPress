@@ -461,15 +461,8 @@ function start() {
 	}
 
 	function rowInner( t, locked = false ) {
-		const art = smallest( t.art ) || t.video?.poster || '';
 		return (
-			'<span class="riff-row-art">' +
-			( art
-				? `<img src="${ esc(
-						art
-					) }" alt="" loading="lazy" decoding="async">`
-				: '' ) +
-			'<span class="riff-row-state" aria-hidden="true"><i></i><i></i><i></i></span></span>' +
+			rowArt( t ) +
 			`<span class="riff-row-text"><span class="riff-row-title">${ esc(
 				t.title
 			) }${ videoMark( t ) }</span>` +
@@ -738,20 +731,27 @@ function start() {
 		}
 		return u.toString();
 	}
+	// One at a time: the server reads the list, changes it and writes it back, so two requests at
+	// once would each write over the other's change.
+	let sending = Promise.resolve();
 	function send( url, method, body, keepalive = false ) {
-		return fetch( url, {
-			method,
-			credentials: 'same-origin',
-			keepalive,
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': me.nonce,
-			},
-			body: body ? JSON.stringify( body ) : undefined,
-		} ).then( ( r ) =>
-			r.ok ? r.json() : Promise.reject( new Error( String( r.status ) ) )
-		);
+		const run = () =>
+			fetch( url, {
+				method,
+				credentials: 'same-origin',
+				keepalive,
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': me.nonce,
+				},
+				body: body ? JSON.stringify( body ) : undefined,
+			} ).then( ( r ) =>
+				r.ok ? r.json() : Promise.reject( new Error( String( r.status ) ) )
+			);
+		const sent = sending.then( run, run );
+		sending = sent.catch( () => {} );
+		return sent;
 	}
 
 	function setLike( id, kind, on ) {
@@ -1583,9 +1583,8 @@ function start() {
 
 	// ---- Hearts: in the bar, in Now Playing and on each row of a track in the Media Library. A
 	// heart is a toggle button, pressed while the track is liked.
-	const HEARTS =
-		'<svg class="riff-heart-off" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>' +
-		'<svg class="riff-heart-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+	// The heart's two icons, as the server draws the bar's (Player::hearts()).
+	const HEARTS = data.icons?.hearts || '';
 	function likeButton( t ) {
 		const b = document.createElement( 'button' );
 		b.type = 'button';
@@ -1822,16 +1821,9 @@ function start() {
 			const t = queue[ index ];
 			const li = document.createElement( 'li' );
 			li.dataset.pos = String( p );
-			const art = smallest( t.art ) || t.video?.poster || '';
 			li.innerHTML =
 				'<button type="button">' +
-				'<span class="riff-row-art">' +
-				( art
-					? `<img src="${ esc(
-							art
-						) }" alt="" loading="lazy" decoding="async">`
-					: '' ) +
-				'<span class="riff-row-state" aria-hidden="true"><i></i><i></i><i></i></span></span>' +
+				rowArt( t ) +
 				`<span class="riff-row-text"><span class="riff-row-title">${ esc(
 					t.title
 				) }</span>` +
@@ -2760,6 +2752,18 @@ function subtitle( t ) {
 		[ t.artist, t.album ].filter( Boolean ).join( ' • ' ) ||
 		t.post?.title ||
 		''
+	);
+}
+
+// A track's cover and the bars that move on it while it plays, for a row and for Up next.
+function rowArt( t ) {
+	const art = smallest( t.art ) || t.video?.poster || '';
+	return (
+		'<span class="riff-row-art">' +
+		( art
+			? `<img src="${ esc( art ) }" alt="" loading="lazy" decoding="async">`
+			: '' ) +
+		'<span class="riff-row-state" aria-hidden="true"><i></i><i></i><i></i></span></span>'
 	);
 }
 

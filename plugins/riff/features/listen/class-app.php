@@ -134,7 +134,7 @@ final class App {
 		return sprintf(
 			'<div %s data-riff-app data-riff-rest="%s" data-riff-tracks-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s" data-riff-browse="%s">' .
 			'<nav class="riff-app-bar" aria-label="%s">%s</nav>' .
-			'<div class="riff-app-view" data-riff-app-view>%s</div></div>',
+			'<div class="riff-app-view" data-riff-app-view>%s</div>%s</div>',
 			$wrapper,
 			esc_url( rest_url( Library::REST . '/library' ) ),
 			esc_url( rest_url( Library::REST . '/tracks' ) ),
@@ -144,7 +144,8 @@ final class App {
 			esc_attr( implode( ',', Browse::ARGS ) ),
 			esc_attr__( 'Riff', 'riff' ),
 			Browse::nav( $page, $browse ),
-			$view
+			$view,
+			Ui::card_template()
 		);
 	}
 
@@ -333,7 +334,7 @@ final class App {
 	public static function posts_view( string $page ): string {
 		$query = Library::query();
 		if ( ! $query->posts ) {
-			return '<p class="riff-app-empty">' . esc_html__( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ) . '</p>';
+			return Ui::empty_note( __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ) );
 		}
 		$pages = max( 1, (int) $query->max_num_pages );
 		$upto  = min( self::requested_pages(), $pages );
@@ -361,8 +362,8 @@ final class App {
 			);
 		}
 		return sprintf(
-			'<h2 class="riff-app-title" tabindex="-1">%s</h2><div class="riff-grid" data-riff-page="%d" data-riff-pages="%d">%s</div>%s',
-			esc_html__( 'Posts', 'riff' ),
+			'%s<div class="riff-grid" data-riff-page="%d" data-riff-pages="%d">%s</div>%s',
+			Ui::title( __( 'Posts', 'riff' ) ),
 			$upto,
 			$pages,
 			$cards,
@@ -395,19 +396,21 @@ final class App {
 	 * @return string
 	 */
 	private static function card( array $item, string $page, int $first = 0 ): string {
-		$art = $item['art'] ? end( $item['art'] )['src'] : '';
-		// The same markup app.js writes in card(): a link and a play button side by side, never one
-		// inside the other.
-		return sprintf(
-			'<div class="riff-card"%7$s data-riff-post="%1$d"><span class="riff-card-art">%2$s<button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="%1$d" aria-label="%3$s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="%4$s"><span class="riff-card-title">%5$s</span></a><span class="riff-card-sub">%6$s</span></div>',
-			(int) $item['id'],
-			$art ? '<img src="' . esc_url( $art ) . '" alt="" loading="lazy" decoding="async">' : '',
-			/* translators: %s: track or post title. */
-			esc_attr( sprintf( __( 'Play %s', 'riff' ), $item['title'] ) ),
-			esc_url( self::link( (int) $item['id'], $page ) ),
-			esc_html( $item['title'] ),
-			esc_html( $item['meta'] ?? self::meta( $item ) ),
-			$first ? ' id="riff-page-' . $first . '"' : ''
+		return Ui::card(
+			array(
+				'title' => (string) $item['title'],
+				'href'  => self::link( (int) $item['id'], $page ),
+				'sub'   => (string) ( $item['meta'] ?? self::meta( $item ) ),
+				'art'   => $item['art'] ? (string) end( $item['art'] )['src'] : '',
+				'id'    => $first ? 'riff-page-' . $first : '',
+				'data'  => array( 'post' => (int) $item['id'] ),
+				'play'  => array(
+					'action' => 'play-card',
+					'data'   => array( 'post' => (int) $item['id'] ),
+					/* translators: %s: track or post title. */
+					'label'  => sprintf( __( 'Play %s', 'riff' ), $item['title'] ),
+				),
+			)
 		);
 	}
 
@@ -469,30 +472,16 @@ final class App {
 	 */
 	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0 ): string {
 		$tint  = (string) sanitize_hex_color( $tint );
-		$heart = '';
-		if ( in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ) {
-			// app.js presses it from the listener's likes, and shows it once it can.
-			$heart = sprintf(
-				'<button type="button" class="riff-app-like" data-riff-app-action="like" data-riff-like-kind="%1$s" data-riff-like-id="%2$d" aria-pressed="false" aria-label="%3$s">%4$s</button>',
-				esc_attr( $like ),
-				$id,
-				/* translators: %s: an album or artist. */
-				esc_attr( sprintf( __( 'Like %s', 'riff' ), $title ) ),
-				Player::hearts()
-			);
-		}
+		$heart = in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ? Ui::heart( $like, $id, $title ) : '';
 		return sprintf(
-			'<header class="riff-album%1$s"%8$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>' .
-			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%6$s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%7$s</button>%9$s</p></div></header>',
+			'<header class="riff-album%1$s"%6$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>%7$s</div></header>',
 			( '' !== $art ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),
 			'' !== $art ? '<span class="riff-album-cover"><img src="' . esc_url( $art ) . '" alt="" decoding="async"></span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
 			esc_html( $title ),
 			esc_html( $meta ),
-			esc_html__( 'Play', 'riff' ),
-			esc_html__( 'Shuffle', 'riff' ),
 			'' !== $tint ? ' style="--riff-album-tint:' . esc_attr( $tint ) . '"' : '',
-			$heart // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above; the icons are static SVG.
+			Ui::actions( $heart )
 		);
 	}
 

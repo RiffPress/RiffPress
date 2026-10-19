@@ -71,7 +71,7 @@ final class Collection {
 			$ids[ $like['kind'] ][] = (int) $like['id'];
 		}
 
-		$html = Browse::title( __( 'Your Library', 'riff' ) ) . self::bar( $page, $filter, $sort );
+		$html = Ui::title( __( 'Your Library', 'riff' ) ) . self::bar( $page, $filter, $sort );
 		if ( ! $account && ! $likes ) {
 			$html .= self::sign_in( $page );
 		}
@@ -81,11 +81,11 @@ final class Collection {
 				break;
 			case 'albums':
 				$albums = self::terms( '/albums', $ids['album'], $sort );
-				$html  .= $albums ? '<div class="riff-grid">' . Browse::album_cards( $albums, $page ) . '</div>' : self::empty_note( __( 'Albums you like show up here. Press the heart on an album’s page.', 'riff' ) );
+				$html  .= $albums ? '<div class="riff-grid">' . Browse::album_cards( $albums, $page ) . '</div>' : Ui::empty_note( __( 'Albums you like show up here. Press the heart on an album’s page.', 'riff' ) );
 				break;
 			case 'artists':
 				$artists = self::terms( '/artists', $ids['artist'], $sort );
-				$html   .= $artists ? '<ul class="riff-artists">' . Browse::artist_items( $artists, $page ) . '</ul>' : self::empty_note( __( 'Artists you like show up here. Press the heart on an artist’s page.', 'riff' ) );
+				$html   .= $artists ? '<ul class="riff-artists">' . Browse::artist_items( $artists, $page ) . '</ul>' : Ui::empty_note( __( 'Artists you like show up here. Press the heart on an artist’s page.', 'riff' ) );
 				break;
 			default:
 				$html .= self::everything( $page, $ids, $likes, $sort );
@@ -135,41 +135,30 @@ final class Collection {
 	 */
 	private static function bar( string $page, string $filter, string $sort ): string {
 		// Playlists (#401) join these as a chip of their own.
-		$chips = array(
+		$chips  = array(
 			'all'     => __( 'All', 'riff' ),
 			'songs'   => __( 'Songs', 'riff' ),
 			'albums'  => __( 'Albums', 'riff' ),
 			'artists' => __( 'Artists', 'riff' ),
 		);
-		$sorts = array(
+		$sorts  = array(
 			'recent' => __( 'Recently added', 'riff' ),
 			'name'   => __( 'Alphabetical', 'riff' ),
 		);
-		$links = '';
-		foreach ( $chips as $slug => $label ) {
-			$links .= sprintf(
-				'<a class="riff-chip-link" href="%s"%s>%s</a>',
-				esc_url( self::link( $page, $slug, $sort ) ),
-				$slug === $filter ? ' aria-current="true"' : '',
-				esc_html( $label )
-			);
-		}
-		$order = '';
-		foreach ( $sorts as $slug => $label ) {
-			$order .= sprintf(
-				'<a class="riff-sort-link" href="%s"%s>%s</a>',
-				esc_url( self::link( $page, $filter, $slug ) ),
-				$slug === $sort ? ' aria-current="true"' : '',
-				esc_html( $label )
-			);
-		}
-		return sprintf(
-			'<div class="riff-library-bar"><div class="riff-chip-row" role="group" aria-label="%s">%s</div><div class="riff-library-sort" role="group" aria-labelledby="riff-library-sort"><span id="riff-library-sort">%s</span>%s</div></div>',
-			esc_attr__( 'Show', 'riff' ),
-			$links,
-			esc_html__( 'Sort by', 'riff' ),
-			$order
+		$choice = static fn( string $label, string $href, bool $current ): array => array(
+			'label'   => $label,
+			'href'    => $href,
+			'current' => $current,
 		);
+		$links  = array();
+		foreach ( $chips as $slug => $label ) {
+			$links[] = $choice( $label, self::link( $page, $slug, $sort ), $slug === $filter );
+		}
+		$order = array();
+		foreach ( $sorts as $slug => $label ) {
+			$order[] = $choice( $label, self::link( $page, $filter, $slug ), $slug === $sort );
+		}
+		return '<div class="riff-library-bar">' . Ui::choices( __( 'Show', 'riff' ), $links ) . Ui::choices( __( 'Sort by', 'riff' ), $order, 'sort' ) . '</div>';
 	}
 
 	/**
@@ -246,31 +235,27 @@ final class Collection {
 			'total' => 0,
 		);
 		$count = (int) $songs['total'];
-		$play  = '';
-		if ( $songs['items'] ) {
-			$play = sprintf(
-				'<button type="button" class="riff-card-play" data-riff-app-action="play-liked" data-riff-tracks="%s" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>',
-				esc_attr( (string) wp_json_encode( $songs['items'] ) ),
-				esc_attr__( 'Play Liked songs', 'riff' )
-			);
-		}
-		$liked = sprintf(
-			'<div class="riff-card riff-card-liked"><span class="riff-card-art"><span class="riff-card-heart">%s</span>%s</span><a class="riff-card-link" href="%s"><span class="riff-card-title">%s</span></a><span class="riff-card-sub">%s</span></div>',
-			Player::icon( 'hearted' ),
-			$play,
-			esc_url( self::link( $page, 'songs', $sort ) ),
-			esc_html__( 'Liked songs', 'riff' ),
-			$count
+		$liked = Ui::card(
+			array(
+				'title' => __( 'Liked songs', 'riff' ),
+				'href'  => self::link( $page, 'songs', $sort ),
 				/* translators: %s: number of songs. */
-				? esc_html( sprintf( _n( '%s song', '%s songs', $count, 'riff' ), number_format_i18n( $count ) ) )
-				: esc_html__( 'Press the heart on a song to keep it here', 'riff' )
+				'sub'   => $count ? sprintf( _n( '%s song', '%s songs', $count, 'riff' ), number_format_i18n( $count ) ) : __( 'Press the heart on a song to keep it here', 'riff' ),
+				'heart' => true,
+				'class' => 'riff-card-liked',
+				'play'  => $songs['items'] ? array(
+					'action' => 'play-liked',
+					'data'   => array( 'tracks' => (string) wp_json_encode( $songs['items'] ) ),
+					'label'  => __( 'Play Liked songs', 'riff' ),
+				) : array(),
+			)
 		);
 		$html  = '<div class="riff-grid riff-library-grid">' . $liked . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';
-		$html .= Browse::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
+		$html .= Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
 		if ( ! $likes ) {
 			$albums = Browse::get( '/albums', array( 'orderby' => 'added' ) );
 			if ( $albums['items'] ) {
-				$html .= Browse::shelf( 'start', __( 'Start with', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( array_slice( $albums['items'], 0, 12 ), $page ) );
+				$html .= Ui::shelf( 'start', __( 'Start with', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( array_slice( $albums['items'], 0, 12 ), $page ) );
 			}
 		}
 		return $html;
@@ -296,16 +281,14 @@ final class Collection {
 			)
 		) : array( 'items' => array() );
 		if ( ! $data['items'] ) {
-			return self::empty_note( __( 'Songs you like show up here. Press the heart beside any track.', 'riff' ) );
+			return Ui::empty_note( __( 'Songs you like show up here. Press the heart beside any track.', 'riff' ) );
 		}
 		return sprintf(
-			'<section class="riff-library-songs" aria-labelledby="riff-library-songs"><h3 class="riff-app-section" id="riff-library-songs">%s</h3><p class="riff-album-meta">%s</p>' .
-			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%s</button></p>%s%s</section>',
+			'<section class="riff-library-songs" aria-labelledby="riff-library-songs"><h3 class="riff-app-section" id="riff-library-songs">%s</h3><p class="riff-album-meta">%s</p>%s%s%s</section>',
 			esc_html__( 'Liked songs', 'riff' ),
 			/* translators: %s: number of songs. */
 			esc_html( sprintf( _n( '%s song', '%s songs', (int) $data['total'], 'riff' ), number_format_i18n( (int) $data['total'] ) ) ),
-			esc_html__( 'Play', 'riff' ),
-			esc_html__( 'Shuffle', 'riff' ),
+			Ui::actions(),
 			Browse::rows( $data['items'] ),
 			Browse::next( self::link( $page, 'songs', $sort ), $data )
 		);
@@ -350,14 +333,16 @@ final class Collection {
 	private static function artist_card( array $artist, string $page ): string {
 		$image = (int) get_term_meta( (int) $artist['id'], 'riff_artist_image', true );
 		$art   = $image ? Tracks::art( $image ) : array();
-		$src   = $art ? (string) end( $art )['src'] : '';
-		return sprintf(
-			'<div class="riff-card riff-card-artist" data-riff-artist="%1$d"><span class="riff-card-art">%2$s</span><a class="riff-card-link" href="%3$s"><span class="riff-card-title">%4$s</span></a><span class="riff-card-sub">%5$s</span></div>',
-			(int) $artist['id'],
-			'' !== $src ? '<img src="' . esc_url( $src ) . '" alt="" loading="lazy" decoding="async">' : '<span class="riff-card-mark" aria-hidden="true">' . esc_html( mb_strtoupper( mb_substr( (string) $artist['name'], 0, 1 ) ) ) . '</span>',
-			esc_url( add_query_arg( Browse::ARTIST, (int) $artist['id'], $page ) ),
-			esc_html( (string) $artist['name'] ),
-			esc_html__( 'Artist', 'riff' )
+		return Ui::card(
+			array(
+				'title' => (string) $artist['name'],
+				'href'  => add_query_arg( Browse::ARTIST, (int) $artist['id'], $page ),
+				'sub'   => __( 'Artist', 'riff' ),
+				'art'   => $art ? (string) end( $art )['src'] : '',
+				'mark'  => mb_strtoupper( mb_substr( (string) $artist['name'], 0, 1 ) ),
+				'class' => 'riff-card-artist',
+				'data'  => array( 'artist' => (int) $artist['id'] ),
+			)
 		);
 	}
 
@@ -373,16 +358,6 @@ final class Collection {
 			$text .= sprintf( ' <a href="%s">%s</a>', esc_url( wp_login_url( self::link( $page, 'all', 'recent' ) ) ), esc_html__( 'Sign in to keep them in your account.', 'riff' ) );
 		}
 		return '<p class="riff-library-note">' . $text . '</p>';
-	}
-
-	/**
-	 * What an empty list says.
-	 *
-	 * @param string $text The note.
-	 * @return string
-	 */
-	private static function empty_note( string $text ): string {
-		return '<p class="riff-app-empty">' . esc_html( $text ) . '</p>';
 	}
 
 	/**
