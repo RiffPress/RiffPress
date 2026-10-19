@@ -2363,7 +2363,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-card {
 	position: relative;
 	display: grid;
+
+	/* One column the card's own width: an implicit column would grow to its
+	   widest child's min-content, which for a title that doesn't wrap is the
+	   whole title, and the card would spill over the next one. */
+	grid-template-columns: minmax(0, 1fr);
 	gap: 2px;
+	min-width: 0;
 }
 
 .riff-app .riff-card-link {

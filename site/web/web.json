@@ -990,7 +990,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2384,
+				"line": 2390,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -1045,7 +1045,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2698,
+				"line": 2704,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1320,7 +1320,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2384,
+				"line": 2390,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
