@@ -28,6 +28,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
       pr: ${{ steps.release.outputs.pr }}
     steps:
       # GITHUB_TOKEN can open the release pull request because "Allow GitHub
@@ -165,3 +166,34 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: gh release edit "$TAG_NAME" --draft=false --latest
+
+  # After the GitHub release is published, the same build goes to the plugin's
+  # WordPress.org SVN repository, with the banner, icon and screenshots from
+  # .wordpress-org/. It stays off until the repository variable WPORG_DEPLOY is
+  # "true", which is set once WordPress.org has approved the plugin and the
+  # SVN_USERNAME and SVN_PASSWORD secrets exist.
+  deploy-wordpress-org:
+    needs: [release-please, build-release-asset]
+    if: ${{ needs.release-please.outputs.release_created && vars.WPORG_DEPLOY == 'true' }}
+    runs-on: ubuntu-24.04
+    environment: wordpress-org
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the plugin folder
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff
+          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: riff
+          BUILD_DIR: build/riff
+          ASSETS_DIR: .wordpress-org
+          VERSION: ${{ needs.release-please.outputs.version }}
