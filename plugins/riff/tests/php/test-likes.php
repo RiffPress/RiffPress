@@ -460,4 +460,23 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$this->assertTrue( $erased['items_removed'] );
 		$this->assertSame( array(), Likes::get( $this->user ) );
 	}
+
+	public function test_the_export_names_a_track_the_user_cannot_see_by_its_id_only(): void {
+		// Liked while its post was published; the post is a draft now.
+		update_user_option(
+			$this->user,
+			Likes::OPTION,
+			array(
+				array(
+					'kind' => 'track',
+					'id'   => $this->secret,
+					'at'   => 1000,
+				),
+			)
+		);
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+
+		$export = Likes::export( get_userdata( $this->user )->user_email );
+		$this->assertSame( '#' . $this->secret, $export['data'][0]['data'][0]['value'], 'not the title of a track on a post they cannot read' );
+	}
 }

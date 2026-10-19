@@ -34,7 +34,16 @@ foreach ( get_posts(
 		$riff_from = add_query_arg( 'riff-file', $riff_id, home_url( '/' ) );
 		$riff_url  = (string) wp_get_attachment_url( $riff_id );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall, once.
-		$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} SET post_content = REPLACE( post_content, %s, %s ) WHERE post_content LIKE %s", $riff_from, $riff_url, '%' . $wpdb->esc_like( $riff_from ) . '%' ) );
+		$riff_posts = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_content LIKE %s", '%' . $wpdb->esc_like( $riff_from ) . '%' ) );
+		foreach ( $riff_posts as $riff_post ) {
+			$riff_content = (string) get_post_field( 'post_content', (int) $riff_post, 'raw' );
+			// The whole address only, so ?riff-file=12 is not found inside ?riff-file=123.
+			$riff_updated = (string) preg_replace( '/' . preg_quote( $riff_from, '/' ) . '(?![0-9])/', addcslashes( $riff_url, '\\$' ), $riff_content );
+			if ( $riff_updated !== $riff_content ) {
+				$wpdb->update( $wpdb->posts, array( 'post_content' => $riff_updated ), array( 'ID' => (int) $riff_post ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall, once.
+				clean_post_cache( (int) $riff_post );
+			}
+		}
 	}
 }
 delete_option( 'riff_protected_dir' );

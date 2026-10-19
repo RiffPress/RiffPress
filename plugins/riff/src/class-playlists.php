@@ -440,6 +440,10 @@ final class Playlists {
 		$ids    = self::ids( $post );
 		$covers = array();
 		foreach ( array_unique( $ids ) as $track ) {
+			// Covers come from the tracks the requester can see, as the tracks themselves do.
+			if ( ! Catalog_Rest::visible( $track ) ) {
+				continue;
+			}
 			$art = Tracks::from_attachment( $track, (int) get_post_field( 'post_parent', $track ) )['art'] ?? array();
 			$src = $art ? (string) end( $art )['src'] : '';
 			if ( '' !== $src && ! in_array( $src, $covers, true ) ) {

@@ -214,14 +214,35 @@ final class Protect {
 			return 0;
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a search no WP_Query offers, once per change.
-		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'attachment' ) AND post_content LIKE %s", '%' . $wpdb->esc_like( $from ) . '%' ) );
+		$ids     = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'attachment' ) AND post_content LIKE %s", '%' . $wpdb->esc_like( $from ) . '%' ) );
+		$changed = 0;
 		foreach ( $ids as $post_id ) {
 			$content = (string) get_post_field( 'post_content', (int) $post_id, 'raw' );
+			$updated = self::replace( $from, $to, $content );
+			if ( $updated === $content ) {
+				continue;
+			}
 			// Straight to the row: an address changing is not an edit, so no revision and no kses.
-			$wpdb->update( $wpdb->posts, array( 'post_content' => str_replace( $from, $to, $content ) ), array( 'ID' => (int) $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->update( $wpdb->posts, array( 'post_content' => $updated ), array( 'ID' => (int) $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			clean_post_cache( (int) $post_id );
+			++$changed;
 		}
-		return count( $ids );
+		return $changed;
+	}
+
+	/**
+	 * Replaces an address in text where it is the whole address, so ?riff-file=12 is not found
+	 * inside ?riff-file=123.
+	 *
+	 * @since 4.20.1
+	 *
+	 * @param string $from Old address.
+	 * @param string $to   New address.
+	 * @param string $text Text.
+	 * @return string
+	 */
+	public static function replace( string $from, string $to, string $text ): string {
+		return (string) preg_replace( '/' . preg_quote( $from, '/' ) . '(?![0-9])/', addcslashes( $to, '\\$' ), $text );
 	}
 
 	/**
@@ -350,9 +371,8 @@ final class Protect {
 		}
 		$id = absint( $_GET[ self::QUERY ] );
 		if ( ! self::is( $id ) ) {
-			$url = $id ? (string) wp_get_attachment_url( $id ) : '';
-			// A file that was protected and no longer is: send the old address on.
-			if ( '' !== $url && in_array( strtok( (string) get_post_mime_type( $id ), '/' ), array( 'audio', 'video' ), true ) ) {
+			$url = self::moved( $id );
+			if ( '' !== $url ) {
 				wp_safe_redirect( $url, 302 );
 				exit;
 			}
@@ -365,6 +385,23 @@ final class Protect {
 			self::refuse( 403 );
 		}
 		self::send( $id );
+	}
+
+	/**
+	 * Where the address of a file that was protected and no longer is sends the visitor: the file's
+	 * own address, for an audio or video file they may have. Empty otherwise, so the address tells
+	 * nobody where a file on an unpublished post lives.
+	 *
+	 * @since 4.20.1
+	 *
+	 * @param int $id Attachment ID.
+	 * @return string
+	 */
+	public static function moved( int $id ): string {
+		if ( ! $id || ! in_array( strtok( (string) get_post_mime_type( $id ), '/' ), array( 'audio', 'video' ), true ) || ! self::can( $id ) ) {
+			return '';
+		}
+		return (string) wp_get_attachment_url( $id );
 	}
 
 	/**
@@ -581,7 +618,8 @@ final class Protect {
 			$url,
 			array(
 				'timeout'   => 5,
-				'sslverify' => false,
+				/** This filter is documented in wp-includes/cron.php */
+				'sslverify' => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's own filter, applied as core applies it.
 			)
 		);
 		wp_delete_file( $probe );

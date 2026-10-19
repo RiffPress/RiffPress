@@ -672,13 +672,13 @@ final class Likes {
 						'album'  => __( 'Liked album', 'riff' ),
 						'artist' => __( 'Liked artist', 'riff' ),
 					)[ $like['kind'] ],
-					'value' => self::name( $like['kind'], $like['id'] ),
+					'value' => self::name( $like['kind'], $like['id'], $user->ID ),
 				);
 			}
 			foreach ( self::history( $user->ID ) as $play ) {
 				$data[] = array(
 					'name'  => __( 'Played', 'riff' ),
-					'value' => self::name( 'track', $play['id'] ) . ' (' . wp_date( 'Y-m-d H:i', (int) floor( $play['played'] / 1000 ) ) . ')',
+					'value' => self::name( 'track', $play['id'], $user->ID ) . ' (' . wp_date( 'Y-m-d H:i', (int) floor( $play['played'] / 1000 ) ) . ')',
 				);
 			}
 		}
@@ -721,15 +721,17 @@ final class Likes {
 
 	/**
 	 * A like's name for the export: a track's title, an album's or artist's name, or its ID once
-	 * it is gone.
+	 * it is gone. A track the user cannot see, by the rule GET /tracks follows, is named by its ID
+	 * too, since the export is sent to them.
 	 *
-	 * @param string $kind track, album or artist.
-	 * @param int    $id   ID.
+	 * @param string $kind    track, album or artist.
+	 * @param int    $id      ID.
+	 * @param int    $user_id Whose export it is.
 	 * @return string
 	 */
-	private static function name( string $kind, int $id ): string {
+	private static function name( string $kind, int $id, int $user_id ): string {
 		if ( 'track' === $kind ) {
-			$title = get_the_title( $id );
+			$title = Catalog_Rest::visible( $id, $user_id ) ? get_the_title( $id ) : '';
 			return '' !== $title ? $title : '#' . $id;
 		}
 		$term = get_term( $id );
