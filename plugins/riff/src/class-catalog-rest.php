@@ -299,7 +299,7 @@ final class Catalog_Rest {
 			'hide_empty' => true,
 			'orderby'    => 'name',
 			'order'      => 'ASC',
-			'exclude'    => $gone,
+			'exclude'    => $gone, // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- the few terms whose every track is hidden, from a list already in hand.
 		);
 		// An album's term is made when its first file is filed, so the newest terms are the albums
 		// added most recently.
@@ -338,11 +338,12 @@ final class Catalog_Rest {
 		}
 		if ( Catalog::ALBUM === $taxonomy && $rows ) {
 			// Each cover on the page comes from the album's first visible track, found in one query.
-			$ids  = implode( ',', array_map( static fn( $row ) => (int) $row->term_id, $rows ) );
+			$ids  = array_map( static fn( $row ) => (int) $row->term_id, $rows );
 			$skip = self::hidden_tracks();
-			$not  = $skip ? ' AND tr.object_id NOT IN (' . implode( ',', $skip ) . ')' : '';
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- integers only.
-			$first = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, MIN(tr.object_id) AS first FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tt.term_id IN ({$ids}){$not} GROUP BY tt.term_id", $taxonomy ), OBJECT_K );
+			$in   = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			$not  = count( $skip ) ? ' AND tr.object_id NOT IN (' . implode( ',', array_fill( 0, count( $skip ), '%d' ) ) . ')' : '';
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID.
+			$first = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, MIN(tr.object_id) AS first FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tt.term_id IN ({$in}){$not} GROUP BY tt.term_id", array_merge( array( $taxonomy ), $ids, $skip ) ), OBJECT_K );
 			foreach ( $rows as $row ) {
 				$row->first = isset( $first[ $row->term_id ] ) ? (int) $first[ $row->term_id ]->first : 0;
 			}
@@ -392,9 +393,9 @@ final class Catalog_Rest {
 	private static function albums_by( int $artist ): array {
 		global $wpdb;
 		$skip = self::hidden_tracks();
-		$not  = $skip ? ' AND a.object_id NOT IN (' . implode( ',', $skip ) . ')' : '';
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- integers only.
-		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT tb.term_id FROM {$wpdb->term_relationships} a INNER JOIN {$wpdb->term_taxonomy} ta ON ta.term_taxonomy_id = a.term_taxonomy_id INNER JOIN {$wpdb->term_relationships} b ON b.object_id = a.object_id INNER JOIN {$wpdb->term_taxonomy} tb ON tb.term_taxonomy_id = b.term_taxonomy_id WHERE ta.taxonomy = %s AND ta.term_id = %d AND tb.taxonomy = %s{$not}", Catalog::ARTIST, $artist, Catalog::ALBUM ) ) );
+		$not  = count( $skip ) ? ' AND a.object_id NOT IN (' . implode( ',', array_fill( 0, count( $skip ), '%d' ) ) . ')' : '';
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID.
+		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT tb.term_id FROM {$wpdb->term_relationships} a INNER JOIN {$wpdb->term_taxonomy} ta ON ta.term_taxonomy_id = a.term_taxonomy_id INNER JOIN {$wpdb->term_relationships} b ON b.object_id = a.object_id INNER JOIN {$wpdb->term_taxonomy} tb ON tb.term_taxonomy_id = b.term_taxonomy_id WHERE ta.taxonomy = %s AND ta.term_id = %d AND tb.taxonomy = %s{$not}", Catalog::ARTIST, $artist, Catalog::ALBUM, ...$skip ) ) );
 	}
 
 	/**
@@ -424,9 +425,9 @@ final class Catalog_Rest {
 		if ( ! $hidden ) {
 			return array();
 		}
-		$ids = implode( ',', $hidden );
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- integers only.
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, tt.count, COUNT(*) AS n FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tr.object_id IN ({$ids}) GROUP BY tt.term_id, tt.count", $taxonomy ) );
+		$in = implode( ',', array_fill( 0, count( $hidden ), '%d' ) );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, tt.count, COUNT(*) AS n FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tr.object_id IN ({$in}) GROUP BY tt.term_id, tt.count", array_merge( array( $taxonomy ), $hidden ) ) );
 		$out  = array();
 		foreach ( (array) $rows as $row ) {
 			$out[ (int) $row->term_id ] = array(

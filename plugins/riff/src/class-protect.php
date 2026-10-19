@@ -619,7 +619,7 @@ final class Protect {
 			array(
 				'timeout'   => 5,
 				/** This filter is documented in wp-includes/cron.php */
-				'sslverify' => apply_filters( 'https_local_ssl_verify', false ),
+				'sslverify' => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's own filter, applied as core applies it.
 			)
 		);
 		wp_delete_file( $probe );
