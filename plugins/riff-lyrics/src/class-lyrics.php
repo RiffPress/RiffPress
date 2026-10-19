@@ -9,6 +9,9 @@ namespace Riff\Lyrics;
 
 use WP_Post;
 
+// Riff Lyrics is its own plugin with its own text domain; phpcs.xml.dist holds Riff's to `riff`.
+// phpcs:set WordPress.WP.I18n text_domain[] riff-lyrics
+
 defined( 'ABSPATH' ) || exit;
 
 /**
