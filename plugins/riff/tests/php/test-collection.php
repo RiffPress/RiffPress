@@ -150,7 +150,15 @@ class Test_Riff_Collection extends Riff_TestCase {
 	public function test_a_signed_in_listener_sees_their_account_and_not_what_the_address_says(): void {
 		$user = self::factory()->user->create( array( 'role' => 'subscriber' ) );
 		wp_set_current_user( $user );
-		Likes::add( $user, array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) );
+		Likes::add(
+			$user,
+			array(
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[0],
+				),
+			)
+		);
 		$html = $this->library(
 			array(
 				Collection::LIKED => 't' . $this->tracks[1],

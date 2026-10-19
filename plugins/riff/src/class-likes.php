@@ -340,6 +340,7 @@ final class Likes {
 	public static function add( int $user_id, array $items ): array {
 		$now   = self::now();
 		$likes = self::get( $user_id );
+		$added = array();
 		$have  = array();
 		foreach ( $likes as $like ) {
 			$have[ $like['kind'] . ':' . $like['id'] ] = true;
@@ -351,15 +352,16 @@ final class Likes {
 			if ( isset( $have[ $key ] ) || ! self::exists( $kind, $id ) ) {
 				continue;
 			}
-			$at      = (int) ( $item['at'] ?? 0 );
-			$likes[] = array(
+			$at           = (int) ( $item['at'] ?? 0 );
+			$added[]      = array(
 				'kind' => $kind,
 				'id'   => $id,
 				'at'   => $at > 0 && $at <= $now ? $at : $now,
 			);
 			$have[ $key ] = true;
 		}
-		$likes = self::clean( $likes );
+		// New likes first, so one made in the same millisecond as an older one still leads.
+		$likes = self::clean( array_merge( array_reverse( $added ), $likes ) );
 		update_user_option( $user_id, self::OPTION, $likes );
 		return $likes;
 	}
@@ -546,13 +548,13 @@ final class Likes {
 	/**
 	 * History as stored: well formed, each track once at its latest play, no more than HISTORY_MAX.
 	 *
-	 * @param mixed $list What was stored.
+	 * @param mixed $stored What was stored.
 	 * @return array[]
 	 */
-	private static function clean_history( $list ): array {
+	private static function clean_history( $stored ): array {
 		$out  = array();
 		$seen = array();
-		foreach ( is_array( $list ) ? $list : array() as $play ) {
+		foreach ( is_array( $stored ) ? $stored : array() as $play ) {
 			$id = is_array( $play ) ? (int) ( $play['id'] ?? 0 ) : 0;
 			if ( $id <= 0 || isset( $seen[ $id ] ) ) {
 				continue;
@@ -585,7 +587,7 @@ final class Likes {
 	 * @return array
 	 */
 	public static function exporters( $exporters ) {
-		$exporters        = (array) $exporters;
+		$exporters         = (array) $exporters;
 		$exporters['riff'] = array(
 			'exporter_friendly_name' => __( 'Riff likes and listening', 'riff' ),
 			'callback'               => array( self::class, 'export' ),

@@ -99,7 +99,21 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$this->assertFalse( current_user_can( 'read' ), 'no role on this site' );
 
 		$this->assertSame( 403, $this->call( 'GET', '/me/likes' )->get_status() );
-		$this->assertSame( 403, $this->call( 'POST', '/me/likes', array( 'items' => array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) ) )->get_status() );
+		$this->assertSame(
+			403,
+			$this->call(
+				'POST',
+				'/me/likes',
+				array(
+					'items' => array(
+						array(
+							'kind' => 'track',
+							'id'   => $this->tracks[0],
+						),
+					),
+				)
+			)->get_status()
+		);
 		$this->assertSame( '', (string) get_user_option( Likes::OPTION, $nobody ), 'nothing was saved' );
 	}
 
@@ -111,13 +125,49 @@ class Test_Riff_Likes extends Riff_TestCase {
 		rest_cookie_check_errors( null );
 
 		$this->assertSame( 0, get_current_user_id() );
-		$this->assertSame( 401, $this->call( 'POST', '/me/likes', array( 'items' => array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) ) )->get_status() );
+		$this->assertSame(
+			401,
+			$this->call(
+				'POST',
+				'/me/likes',
+				array(
+					'items' => array(
+						array(
+							'kind' => 'track',
+							'id'   => $this->tracks[0],
+						),
+					),
+				)
+			)->get_status()
+		);
 	}
 
 	public function test_likes_are_added_newest_first_and_taken_away(): void {
 		wp_set_current_user( $this->user );
-		$this->call( 'POST', '/me/likes', array( 'items' => array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) ) );
-		$this->call( 'POST', '/me/likes', array( 'items' => array( array( 'kind' => 'album', 'id' => $this->album() ) ) ) );
+		$this->call(
+			'POST',
+			'/me/likes',
+			array(
+				'items' => array(
+					array(
+						'kind' => 'track',
+						'id'   => $this->tracks[0],
+					),
+				),
+			)
+		);
+		$this->call(
+			'POST',
+			'/me/likes',
+			array(
+				'items' => array(
+					array(
+						'kind' => 'album',
+						'id'   => $this->album(),
+					),
+				),
+			)
+		);
 		$items = $this->call( 'GET', '/me/likes' )->get_data()['items'];
 
 		$this->assertSame( array( 'album', 'track' ), wp_list_pluck( $items, 'kind' ), 'newest first' );
@@ -126,6 +176,31 @@ class Test_Riff_Likes extends Riff_TestCase {
 
 		$after = $this->call( 'DELETE', '/me/likes/album/' . $this->album() )->get_data()['items'];
 		$this->assertSame( array( $this->tracks[0] ), wp_list_pluck( $after, 'id' ) );
+	}
+
+	public function test_a_like_made_in_the_same_millisecond_as_another_still_leads(): void {
+		Likes::add(
+			$this->user,
+			array(
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[0],
+					'at'   => 5000,
+				),
+			)
+		);
+		$likes = Likes::add(
+			$this->user,
+			array(
+				array(
+					'kind' => 'album',
+					'id'   => $this->album(),
+					'at'   => 5000,
+				),
+			)
+		);
+
+		$this->assertSame( array( 'album', 'track' ), wp_list_pluck( $likes, 'kind' ) );
 	}
 
 	public function test_a_like_that_names_nothing_here_is_left_out(): void {
@@ -153,7 +228,22 @@ class Test_Riff_Likes extends Riff_TestCase {
 		)->get_data()['items'];
 
 		$this->assertSame( array( 'album' ), wp_list_pluck( $items, 'kind' ), 'an image is not a track, and a missing artist is nothing' );
-		$this->assertSame( 400, $this->call( 'POST', '/me/likes', array( 'items' => array( array( 'kind' => 'playlist', 'id' => 1 ) ) ) )->get_status(), 'an unknown kind' );
+		$this->assertSame(
+			400,
+			$this->call(
+				'POST',
+				'/me/likes',
+				array(
+					'items' => array(
+						array(
+							'kind' => 'playlist',
+							'id'   => 1,
+						),
+					),
+				)
+			)->get_status(),
+			'an unknown kind'
+		);
 	}
 
 	public function test_the_likes_from_a_device_join_the_account_and_what_it_had_keeps_its_place(): void {
@@ -206,7 +296,18 @@ class Test_Riff_Likes extends Riff_TestCase {
 	public function test_likes_are_a_user_option_so_each_site_keeps_its_own(): void {
 		global $wpdb;
 		wp_set_current_user( $this->user );
-		$this->call( 'POST', '/me/likes', array( 'items' => array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) ) );
+		$this->call(
+			'POST',
+			'/me/likes',
+			array(
+				'items' => array(
+					array(
+						'kind' => 'track',
+						'id'   => $this->tracks[0],
+					),
+				),
+			)
+		);
 
 		$stored = get_user_meta( $this->user, $wpdb->get_blog_prefix() . 'riff_likes', true );
 		$this->assertSame( $this->tracks[0], $stored[0]['id'], 'under the site\'s table prefix' );
@@ -285,7 +386,15 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'me', Likes::player_data( array() ) );
 
 		wp_set_current_user( $this->user );
-		Likes::add( $this->user, array( array( 'kind' => 'track', 'id' => $this->tracks[1] ) ) );
+		Likes::add(
+			$this->user,
+			array(
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[1],
+				),
+			)
+		);
 		Likes::played( $this->user, array( array( 'id' => $this->tracks[0] ) ) );
 		$me = Likes::player_data( array() )['me'];
 
@@ -309,7 +418,15 @@ class Test_Riff_Likes extends Riff_TestCase {
 	}
 
 	public function test_a_users_likes_go_in_their_personal_data_export_and_erasure(): void {
-		Likes::add( $this->user, array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) );
+		Likes::add(
+			$this->user,
+			array(
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[0],
+				),
+			)
+		);
 		$email = get_userdata( $this->user )->user_email;
 
 		$export = Likes::export( $email );
