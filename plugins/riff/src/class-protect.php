@@ -371,9 +371,8 @@ final class Protect {
 		}
 		$id = absint( $_GET[ self::QUERY ] );
 		if ( ! self::is( $id ) ) {
-			$url = $id ? (string) wp_get_attachment_url( $id ) : '';
-			// A file that was protected and no longer is: send the old address on.
-			if ( '' !== $url && in_array( strtok( (string) get_post_mime_type( $id ), '/' ), array( 'audio', 'video' ), true ) ) {
+			$url = self::moved( $id );
+			if ( '' !== $url ) {
 				wp_safe_redirect( $url, 302 );
 				exit;
 			}
@@ -386,6 +385,23 @@ final class Protect {
 			self::refuse( 403 );
 		}
 		self::send( $id );
+	}
+
+	/**
+	 * Where the address of a file that was protected and no longer is sends the visitor: the file's
+	 * own address, for an audio or video file they may have. Empty otherwise, so the address tells
+	 * nobody where a file on an unpublished post lives.
+	 *
+	 * @since 4.20.1
+	 *
+	 * @param int $id Attachment ID.
+	 * @return string
+	 */
+	public static function moved( int $id ): string {
+		if ( ! $id || ! in_array( strtok( (string) get_post_mime_type( $id ), '/' ), array( 'audio', 'video' ), true ) || ! self::can( $id ) ) {
+			return '';
+		}
+		return (string) wp_get_attachment_url( $id );
 	}
 
 	/**

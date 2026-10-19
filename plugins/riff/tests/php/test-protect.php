@@ -222,4 +222,20 @@ class Test_Riff_Protect extends Riff_TestCase {
 		$this->assertStringContainsString( 'src="' . wp_get_attachment_url( $this->track ) . '"', $content );
 		$this->assertStringContainsString( 'src="' . $longer . '"', $content, 'another file\'s address is left alone' );
 	}
+
+	public function test_a_file_that_is_no_longer_protected_sends_on_only_a_visitor_who_may_have_it(): void {
+		$this->assertSame( (string) wp_get_attachment_url( $this->track ), Protect::moved( $this->track ), 'a published post\'s file' );
+
+		wp_update_post(
+			array(
+				'ID'          => $this->post,
+				'post_status' => 'draft',
+			)
+		);
+		$this->assertSame( '', Protect::moved( $this->track ), 'not a draft\'s, to a visitor' );
+		$this->assertSame( '', Protect::moved( self::attach( 'cover.png' ) ), 'nor an image' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertSame( (string) wp_get_attachment_url( $this->track ), Protect::moved( $this->track ), 'someone who can read the post is sent on' );
+	}
 }
