@@ -374,5 +374,15 @@ test.describe( 'The components page', () => {
 			).rejects.toThrow( check );
 			await style.evaluate( ( el ) => el.remove() );
 		}
+		// An album whose line says more than its artist, as Compositions' did (#452).
+		await page.evaluate( () => {
+			document.querySelector(
+				'#component-card .riff-card[data-riff-album] .riff-card-sub'
+			).textContent = 'The Airmen of Note · 10 tracks';
+		} );
+		await expect(
+			expectTidy( page, '.riff-app-view', 'an album line with a count' ),
+			'an album line with a count'
+		).rejects.toThrow( /album line/ );
 	} );
 } );

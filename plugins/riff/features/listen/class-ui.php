@@ -96,6 +96,49 @@ final class Ui {
 	}
 
 	/**
+	 * An album's card. Its line is the album's artist and nothing else, as Spotify, YouTube Music
+	 * and Tidal show an album in a grid; the track count is on the album's own page. An album with
+	 * no artist says "Album", so every card has a line of the same height.
+	 *
+	 * @since 4.21.0
+	 *
+	 * @param array  $album An album from the albums route: id, name, artist and art.
+	 * @param string $href  Where its title links.
+	 * @return string
+	 */
+	public static function album( array $album, string $href ): string {
+		$id = (int) $album['id'];
+		return self::card(
+			array(
+				'title' => (string) $album['name'],
+				'href'  => $href,
+				'sub'   => self::album_line( $album ),
+				'art'   => ! empty( $album['art'] ) ? (string) end( $album['art'] )['src'] : '',
+				'data'  => array( 'album' => $id ),
+				'play'  => array(
+					'action' => 'play-album',
+					'data'   => array( 'album' => $id ),
+					/* translators: %s: album name. */
+					'label'  => sprintf( __( 'Play %s', 'riff' ), $album['name'] ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * The line under an album's title: its artist, or "Album" when it has none.
+	 *
+	 * @since 4.21.0
+	 *
+	 * @param array $album An album from the albums route.
+	 * @return string
+	 */
+	public static function album_line( array $album ): string {
+		$artist = trim( (string) ( $album['artist'] ?? '' ) );
+		return '' !== $artist ? $artist : __( 'Album', 'riff' );
+	}
+
+	/**
 	 * A playlist's cover, as the apps draw one: the first four covers in a square of four, or the
 	 * first one alone when there are fewer.
 	 *
