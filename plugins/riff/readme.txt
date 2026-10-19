@@ -12,85 +12,118 @@ Own every note. Publish music from your Media Library, and your listeners get a 
 
 == Description ==
 
-Riff plays the audio, video and playlist blocks WordPress already has. Install it, write a post with audio or video in it, and every track in the post plays in a player docked at the bottom of the screen that keeps going while the reader scrolls on. Tap the bar for Now Playing: the artwork, a thick seek bar, the controls, and the rest of the post queued up next.
+Riff turns the music in your WordPress Media Library into a streaming player on a site you own. You publish the way you already do, with the Audio, Video and Playlist blocks WordPress ships. Your listeners get a player that works like the music apps they already use.
 
-* A track with a video version switches between the song and the video without losing its place.
-* Lock-screen and headphone controls through Media Session; AirPlay and Cast when a device is in reach.
-* Swipe the bar to skip, drag Now Playing down to close it; Space, J, L, Shift+N and Shift+P on a keyboard.
-* A full-page navigation saves the queue and position and attempts to resume on the next page; a reload restores the track paused.
-* Add the Riff block or [riff] shortcode to make a Listen page: it lists posts with tracks, browses the Media Library by album, artist and track, and searches it, all without the music stopping.
-* Signed-in listeners make playlists from any track's menu or from Your Library, and reorder, rename and delete them. Each playlist is a private post holding WordPress's Playlist block.
-* A heart on every track, album and artist fills Your Library on the Listen page. A signed-in listener's likes and recently played are kept in their account; a visitor's stay in their browser and join their account when they sign in.
-* Every track shows its quality as WordPress read it from the file: MP3 · 320 kbps, or FLAC · 24-bit 96 kHz.
-* The bar's amber line glows with the music and cools when you pause.
-* One script and one stylesheet, no build step, nothing to configure.
+There's no other account to sign up for, nobody takes a cut, and your files stay on your server at the quality you uploaded. Riff publishes and plays your music. It doesn't sell music or take payments.
 
-Roboto, Inter and EB Garamond are bundled under the SIL Open Font License, and the icons are Google's Material Icons under the Apache License 2.0.
+= For your listeners =
+
+* A player docked at the bottom of the screen that keeps playing while they scroll, open another post, or lock their phone.
+* Now Playing, with the artwork, the controls and the rest of the album lined up next.
+* Controls on the phone's lock screen and on headphones, plus AirPlay and Chromecast when a speaker or TV is in reach.
+* A song with a video, such as a live take, switches between the two without losing its place.
+* Swipe the bar to skip, and use Space, J, L, Shift+N and Shift+P on a keyboard.
+* Follow a link to another page and the music carries on; reload and it's paused where it was.
+* Each track shows its quality as WordPress read it from the file, such as MP3 · 320 kbps or FLAC · 24-bit 96 kHz.
+
+= One page where everything plays =
+
+Add the Riff block to a page, and it becomes your Listen page: every album as a cover, plus browsing by album, artist and track, and one search box. The music keeps playing while listeners move around it.
+
+* A heart on every track, album and artist fills Your Library.
+* Signed-in listeners make their own playlists, and their likes and recently played follow their account.
+* Add `app/` to the page's address, for example `/listen/app/`, for the player on its own without your theme, which a browser can install as an app.
+
+= You publish from WordPress =
+
+Upload your tracks to the Media Library and put them in a post. WordPress reads the titles, artists, albums and artwork from the files, and Riff files every track under its album and artist from those same tags. If an album has no cover, Riff draws one: a record with one groove per track.
+
+There's nothing to configure and no settings screen. Riff adds one script, one stylesheet, two fields on media (Artwork and Video version), and the Riff block.
+
+[RiffPress.com](https://riffpress.com/) has a live demo with nine albums that runs in your browser, with nothing to install. [Add your music](https://riffpress.com/add-music/) walks through putting your first album online, starting from nothing.
+
+= For developers =
+
+Riff has documented hooks, a JavaScript API, REST routes, WPGraphQL fields and CSS custom properties, and lets other plugins add their own source of tracks. The [developer reference](https://riffpress.com/developers/) covers all of it, generated from the plugin's own code, and says what stays stable between versions.
+
+== External services ==
+
+Riff doesn't connect to any external service. It sends no data to RiffPress or to anyone else, it loads no scripts, fonts or styles from another server, and it has no tracking or analytics. Its fonts and icons are bundled in the plugin.
+
+AirPlay and Chromecast use the casting your listener's browser already has built in, so Riff loads no Google Cast or Apple code. The browser talks to the speaker or TV on the listener's own network.
+
+Your posts can still point at audio or video hosted somewhere else, and Riff will play it from there, the same way WordPress's own Audio and Video blocks do.
 
 == Installation ==
 
-1. Upload the plugin folder to `wp-content/plugins/` and activate it.
-2. Add an audio or video block to a post, one per track, or a playlist block holding them all.
-3. To pair a video with a song, click the audio file in the Media Library and choose a video under **Video version**.
-4. To make a dedicated Listen page, add the Riff block (or `[riff]`) to a page. It lists posts with tracks, and browses and searches your music by album, artist and track, without leaving that page. Add `app/` to the page's address (for example `/listen/app/`) for the player on its own, in Riff's dark look and outside your theme; a browser can install it as an app.
+1. In your dashboard, go to Plugins > Add New Plugin, search for Riff, and press Install Now, then Activate.
+2. Add an Audio block for each track to a post, or one Playlist block holding them all, and publish it.
+3. To make a Listen page, add a page, type `/riff` on an empty line to add the Riff block, and publish it.
+4. To pair a song with its video, click the audio file in the Media Library and choose a video under Video version.
 
 == Frequently Asked Questions ==
 
-= Does it change my theme? =
+= Which file formats can I use? =
 
-No. The blocks keep their own markup, and the player is added at the end of every page. A page where the script never runs still plays with the browser's native controls.
+Any audio or video file WordPress accepts and your listener's browser can play. For music, MP3, M4A, FLAC, WAV and OGG all work. For video, use MP4 or WebM. Riff plays the file you uploaded at its own quality; it doesn't convert anything.
 
-= Does Riff follow my theme's colours and fonts? =
+= Can I keep an album private? =
 
-The Riff block does. It takes the background, text, link colour and fonts from your theme's styles, and you can change them for every Riff block under Styles > Blocks > Riff in the Site Editor, or for one block in its settings. The block also has font size, line height, spacing, border and shadow settings.
+Yes. Make the post private, a draft, or password protected, and its tracks stay out of the Listen page's browsing and search for visitors.
 
-The player at the bottom of the screen, and the Listen page's app/ address, keep Riff's own look on every site, the way a streaming app does. A theme can set their accent colour, and developers can change more through filters.
+To keep the files themselves private, tick Protected on an audio or video file in the Media Library. Riff moves it into a folder of its own and only sends it to visitors who can read its post. Tools > Site Health tells you if your web server needs a rule to keep that folder closed, and shows the rule. Deleting Riff moves protected files back first.
 
-= Where do the tracks come from? =
+Membership and store plugins can decide who may play each track. A locked track stays listed with a lock that leads to your sign-up page. The [developer reference](https://riffpress.com/developers/php/) shows how.
 
-From the post. Every audio and video block in the post you are reading is the queue, in order, starting from the one you tapped. A playlist block counts as one track per item.
+= Does it work with my theme? =
 
-= Which blocks does it read? =
+Yes, with any theme. The player at the bottom of the screen keeps Riff's own look on every site, the way a streaming app does. The Riff block takes its colours and fonts from your theme, and you can change them under Styles > Blocks > Riff in the Site Editor, or on one block in its settings. The Listen page template, which shows the block with no header or footer, needs a block theme.
 
-The ones WordPress ships: the [Audio block](https://wordpress.org/documentation/article/audio-block/), the [Video block](https://wordpress.org/documentation/article/video-block/), and on WordPress 7.1 or newer the [Playlist block](https://wordpress.org/documentation/article/playlist-block/), which holds several tracks picked from the Media Library at once. Nothing is added to the editor; the blocks keep their own markup and their own players underneath, and Riff draws its rows over them. A track's title, artist and album are what WordPress reads from the file on upload, and can be edited in the [Media Library](https://wordpress.org/documentation/article/media-library-screen/) along with Riff's Artwork and Video version fields.
+Riff doesn't change your posts. The blocks keep their own markup and their own players underneath, so a page still plays if Riff's script doesn't load.
 
-= Can I make tracks members-only? =
+= Where are my files stored? =
 
-Yes, with a membership or store plugin deciding who may listen. Riff asks the `riff_can_play` filter about every track; a track it refuses is still listed, with a lock, but has no file to play, and `riff_unlock_url` says where the lock leads. For example, with a plugin that gives a function to check membership:
+In your Media Library, in your site's uploads folder on your own server, exactly as WordPress stores them. Riff doesn't copy them anywhere else. Protected files move to a folder of their own inside uploads.
 
-`add_filter( 'riff_can_play', fn( $allowed, $track, $id, $post_id ) => $allowed && my_member_can_read( $post_id ), 10, 4 );`
-`add_filter( 'riff_unlock_url', fn() => home_url( '/join/' ) );`
+Riff keeps very little of its own: the link between a song and its video, the album and artist it files each track under, and each listener's likes, recently played and playlists. Deleting Riff from the Plugins screen removes its links, albums, artists, likes and recently played, and leaves your files, their tags and their images alone.
 
-A locked track's file is still a plain upload, so anyone who already has its address can play it, unless the file is protected: see the next question.
+= Can I add video? =
 
-= Can I keep the files themselves private? =
+Yes, in two ways. A Video block in a post plays in the same player as the songs around it. Or, for a song that has a video, such as a live take or a music video, click the audio file in the Media Library and choose the video under Video version. Listeners then get a switch in Now Playing that flips between the song and the video without losing their place.
 
-Yes. Tick **Protected** on an audio or video file in the Media Library. Riff moves the file into a folder of its own under uploads and serves it from the site's address with `?riff-file=` and the file's ID. The file is then sent only to visitors who can read its post and whom `riff_can_play` allows, and seeking still works. Posts that linked to the file are updated, and unticking the box moves it back.
+= Where does the queue come from? =
 
-Apache is told to refuse that folder automatically. On Nginx, add a rule for it; **Tools > Site Health** checks the folder and shows the rule if it is needed. To have the web server send the file instead of PHP, return `x-sendfile` (Apache with mod_xsendfile, or LiteSpeed) or `x-accel-redirect` (Nginx, with the folder marked `internal`) from the `riff_protected_send` filter.
+From the post. Every audio and video block in the post is the queue, in order, starting from the track you tapped. On the Listen page, an album, an artist or a playlist is the queue.
 
-The player gets an address signed for the visitor that works for a few hours, so AirPlay, Chromecast and the lock screen can fetch the file without a login. Deactivating Riff leaves protected files unreachable until it is active again; deleting Riff moves them back first.
+= Can I add a whole folder of albums at once? =
 
-== Developers ==
+Yes, if you can use WP-CLI. `wp riff import` with the path to a folder uploads the files to the Media Library and makes one album post for each folder that holds audio. Run it again and it skips what it already imported.
 
-Riff is built the way a feature plugin would be: one track shape everywhere, read through WordPress's own APIs. Inside the plugin there is a seam: `src/` is the foundation (tracks, sources, the Media Library fields, the block markup, REST and GraphQL, the player), and `features/listen/` is the Listen block and the drawn covers, which build on the foundation only through the surface below.
+== Screenshots ==
 
-**Stability.** Everything listed here is public and carries an `@since`. Within a major version a hook keeps its name and parameters, a REST field or route keeps its shape, the track schema keeps its version, and a public CSS custom property keeps its name. Anything that has to go is first deprecated for a release (`apply_filters_deprecated`, a notice in the changelog) and removed in the next major. Anything not listed, such as a class method, a CSS class or an internal custom property like `--riff-heat`, may change at any time.
-
-* **Reference:** everything below has a page in the developer reference at https://riffpress.com/developers/, by language (PHP, JavaScript, REST API, CSS), generated from the plugin's docblocks and checked in CI.
-* **Hooks:** every filter and action, with its parameters and the line it fires on, has a page under https://riffpress.com/developers/php/ and https://riffpress.com/developers/javascript/.
-* **JavaScript:** `window.riff` is the player's api; `riff.*` actions and filters through `wp.hooks`, and `riff:*` events on `#riff`, announce every change of state. https://riffpress.com/developers/javascript/ has the reference.
-* **Import:** `wp riff import <folder>` adds a folder of music to the Media Library through core's own upload path, one album post per folder that holds audio, with the folder's cover as artwork and a video named like a track as its video version. A second run skips what it already imported. `--dry-run` lists what it would do.
-* **Sources:** tracks come from registered sources. The core source reads audio, video and playlist blocks in posts; a plugin adds its own post type or catalogue by implementing `Riff\Source` and calling `Riff\Sources::register()` on `init`, or through the `riff_sources` filter.
-* **Track schema:** one shape, `Riff\Tracks::schema()`, version `Riff\Tracks::SCHEMA_VERSION`, shared by REST, WPGraphQL, the block markup and the script, and held to after the `riff_track` filter. WPGraphQL's `RiffTrack` is built from it.
-* **REST:** every audio and video item in `wp/v2/media` carries `riff_track`. `riff/v1/library` lists the posts with tracks; `riff/v1/library/{id}` opens one with its tracks and rendered blocks. `riff/v1/tracks`, `riff/v1/albums` and `riff/v1/artists` browse and search the Media Library by album and artist; a visitor sees what WordPress's own media route shows them. `riff/v1/users/me/likes` and `riff/v1/users/me/history` read and change the signed-in user's likes and recently played, kept as the `riff_likes` and `riff_history` user options. `riff/v1/users/me/playlists` makes, reorders, renames and deletes their playlists, which are private `riff_playlist` posts holding a Playlist block. All describe themselves on OPTIONS.
-* **WPGraphQL:** when it is active, `MediaItem.riffTrack` and `Post.riffTracks`.
-* **Controls:** `riff_chips` adds chips under Now Playing's controls; `riff_bar_controls` adds controls to the end of the bar on a wide screen. The player announces a press as `riff.action`.
-* **Block and shortcode:** `riff/app` (with colour, typography and padding supports) and `[riff]` turn a page into the place to listen.
-* **Markup:** every core audio and video block carries its track as `data-riff-track` on the figure; `riff_before_player` and `riff_after_player` wrap the player's markup.
-* **Theming:** the public custom properties on `#riff` are `--riff-accent`, `--riff-bg`, `--riff-surface`, `--riff-fg`, `--riff-fg-2`, `--riff-fg-3`, `--riff-line`, `--riff-hover` and `--riff-bar-h`; on the Listen block, `--riff-app-bg`, `--riff-app-surface`, `--riff-app-ink`, `--riff-app-ink-2`, `--riff-app-line`, `--riff-app-accent`, `--riff-app-accent-deep` and `--riff-app-accent-tint`. A theme sets the accent in `theme.json` under `settings.custom.riff.accent`, or any plugin through `riff_accent`.
-* **Covers:** a post with no image of its own gets a drawn cover, a record with one groove per track in wordpress.org's palette, from `?riff-art={post}` as SVG with the fonts embedded; `riff_art_palettes` and `riff_art_layouts` shape it, `riff_art_svg` can replace it, and `?riff-art=sheet` shows every palette and layout to anyone who can edit posts.
+1. The player bar, docked at the bottom of the screen while a post scrolls on.
+2. Now Playing, with the artwork, the controls and the album lined up next.
+3. The Listen page, with recently added albums, artists and new posts.
+4. An album page, tinted from its cover, ready to play or shuffle.
+5. Your Library, with the songs, albums and artists a listener liked and their playlists.
+6. An audio file in the Media Library, with Riff's Artwork, Video version and Protected fields.
 
 == Changelog ==
 
-See CHANGELOG.md in the repository.
+= 4.20.0 =
+* Listeners can heart any track, album or artist, and find them again in Your Library.
+* Signed-in listeners can make playlists, reorder them, rename them and delete them.
+* Fixed: one heart icon everywhere, and tidier rows of covers.
+
+= 4.19.0 =
+* A menu on every track plays it next or adds it to the queue, and Up next can be reordered and cleared.
+* Each artist has a page with their picture, their latest tracks and their albums.
+* Search shows results as you type, with a top result and your recent searches.
+
+= 4.18.0 =
+* The Listen page opens on Home, with what you played, recently added albums, artists and new posts.
+* Album pages are tinted from their cover and show more by the same artist.
+* Files can be marked Protected, so only listeners who may play them can download them.
+* The Riff block takes the colour, type, spacing and border settings from the Site Editor.
+
+Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

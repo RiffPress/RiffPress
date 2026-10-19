@@ -14,6 +14,6 @@ The minimum versions are raised only in a new minor or major version, named in t
 
 ## Public API
 
-The readme's Developers section lists what is public. Within a major version, public hooks, REST fields and routes, the track schema and public CSS custom properties keep their names and shapes. Anything that has to go is deprecated for at least one release first (`apply_filters_deprecated`, plus a notice in the changelog) and removed only in the next major version.
+The [developer reference](https://riffpress.com/developers/) lists what is public. Within a major version, public hooks, REST fields and routes, the track schema and public CSS custom properties keep their names and shapes. Anything that has to go is deprecated for at least one release first (`apply_filters_deprecated`, plus a notice in the changelog) and removed only in the next major version.
 
 [How Riff is built](https://riffpress.com/built/) has the same commitments for site owners.

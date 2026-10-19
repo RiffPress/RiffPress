@@ -60,7 +60,7 @@ under **Video version**.
 
 ## Extending it
 
-The developer reference is at [riffpress.com/developers](https://riffpress.com/developers/), one section per language: [PHP](https://riffpress.com/developers/php/), [JavaScript](https://riffpress.com/developers/javascript/), [REST API](https://riffpress.com/developers/rest/) and [CSS](https://riffpress.com/developers/css/). Every page is generated from the plugin's own docblocks and registration code. CI fails a change that adds a hook, a `window.riff` member, a `Riff\Source` method or a REST argument without documenting it; a custom property is public only once it has a docblock. [docs/hooks.md](docs/hooks.md) and [docs/javascript.md](docs/javascript.md) are the same hooks and `window.riff` reference for reading on GitHub. The plugin readme's Developers section has the stability promise.
+The developer reference is at [riffpress.com/developers](https://riffpress.com/developers/), one section per language: [PHP](https://riffpress.com/developers/php/), [JavaScript](https://riffpress.com/developers/javascript/), [REST API](https://riffpress.com/developers/rest/) and [CSS](https://riffpress.com/developers/css/). Every page is generated from the plugin's own docblocks and registration code. CI fails a change that adds a hook, a `window.riff` member, a `Riff\Source` method or a REST argument without documenting it; a custom property is public only once it has a docblock. [docs/hooks.md](docs/hooks.md) and [docs/javascript.md](docs/javascript.md) are the same hooks and `window.riff` reference for reading on GitHub. [.github/SUPPORT.md](.github/SUPPORT.md) has the stability promise.
 
 ## Docs in this repository
 

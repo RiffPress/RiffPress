@@ -1,6 +1,6 @@
 # Hooks
 
-Every filter and action Riff fires, generated from the docblocks in the plugin by `npm run docs:hooks`. Do not edit by hand. The stability promise is in the readme: a hook listed here keeps its name and parameters within a major version, and goes through a deprecated release before it is removed.
+Every filter and action Riff fires, generated from the docblocks in the plugin by `npm run docs:hooks`. Do not edit by hand. The stability promise is in .github/SUPPORT.md: a hook listed here keeps its name and parameters within a major version, and goes through a deprecated release before it is removed.
 
 The same reference, a page per hook, is on the site under Developers, PHP and JavaScript.
 
