@@ -1,6 +1,6 @@
 const { test } = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
-const { tokenize, hookName, docTags } = require( '../lib/php.js' );
+const { tokenize, hookName, hookShape, docTags } = require( '../lib/php.js' );
 
 const ids = ( src ) => tokenize( src ).filter( ( t ) => t.t === 'id' ).map( ( t ) => t.v );
 
@@ -49,4 +49,12 @@ test( 'doc tags give the first @since, and flag deprecated and private', () => {
 	assert.equal( docTags( '/** @deprecated 6.2.0 Use WP_Query. */' ).deprecated, true );
 	assert.equal( docTags( '/** @access private */' ).private, true );
 	assert.deepEqual( docTags( null ), { since: null, deprecated: false, private: false } );
+} );
+
+test( 'a hook name full of unclosed braces is normalized in linear time', () => {
+	const braces = '{'.repeat( 50000 );
+	const start = process.hrtime.bigint();
+	assert.equal( hookShape( braces ), braces );
+	const ms = Number( process.hrtime.bigint() - start ) / 1e6;
+	assert.ok( ms < 500, `took ${ ms } ms` );
 } );

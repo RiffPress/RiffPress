@@ -45,7 +45,7 @@ const release = ( since ) => {
  * @return {RegExp|null} The pattern.
  */
 function hookPattern( name ) {
-	const parts = name.split( /\{[^}]*\}/ );
+	const parts = name.split( /\{[^{}]*\}/ );
 	if ( parts.join( '' ).replace( /[_-]/g, '' ).length < 3 ) {
 		return null;
 	}
@@ -62,7 +62,7 @@ function hookIndex( hooks ) {
 			shapes.set( hookShape( hook.name ), hook );
 			const re = hookPattern( hook.name );
 			if ( re ) {
-				patterns.push( [ re, hook, hook.name.replace( /\{[^}]*\}/g, '' ).length ] );
+				patterns.push( [ re, hook, hook.name.replace( /\{[^{}]*\}/g, '' ).length ] );
 			}
 		}
 	}

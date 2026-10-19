@@ -220,7 +220,7 @@ function hookName( tokens, k ) {
  * @param {string} name A hook name.
  * @return {string} The name with every placeholder as `*`.
  */
-const hookShape = ( name ) => name.replace( /\{[^}]*\}/g, '*' );
+const hookShape = ( name ) => name.replace( /\{[^{}]*\}/g, '*' );
 
 /**
  * Reads the tags of a doc comment.
