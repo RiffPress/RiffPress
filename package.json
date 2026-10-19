@@ -27,6 +27,7 @@
     "test:php:multisite": "wp-env run tests-wordpress --env-cwd=wp-content/riff env WP_TESTS_MULTISITE=1 ./vendor/bin/phpunit",
     "plugin-zip": "npm run plugin-zip --workspace=plugins/riff",
     "pot": "wp-env run cli wp i18n make-pot wp-content/plugins/riff wp-content/plugins/riff/languages/riff.pot --domain=riff --no-location --exclude=tests,node_modules --package-name=Riff",
+    "api-coverage": "node packages/wp-api-coverage/bin/wp-api-coverage.js plugins/riff",
     "docs": "npm run -s docs:hooks && npm run -s docs:js && npm run -s docs:reference && npm run -s docs:web",
     "docs:hooks": "node .github/scripts/hooks-reference.js",
     "docs:hooks:check": "node .github/scripts/hooks-reference.js --check",

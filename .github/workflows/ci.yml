@@ -116,6 +116,26 @@ jobs:
       - name: The web pages are current
         run: node .github/scripts/web-pages.js --check
 
+  # packages/wp-api-coverage: its unit tests, then Riff's own report in the run summary. Node only,
+  # so it runs on every change.
+  api-coverage:
+    needs: gate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Unit tests
+        run: node --test packages/wp-api-coverage/test/*.test.js
+      - name: Riff's WordPress API coverage
+        run: |
+          node packages/wp-api-coverage/bin/wp-api-coverage.js plugins/riff > api-coverage.txt
+          cat api-coverage.txt
+          { echo '```'; cat api-coverage.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
   # Spell-checks docs too, so it stays outside the code gate.
   typos:
     needs: gate
@@ -129,7 +149,7 @@ jobs:
   # counts as a failure.
   status:
     name: CI status
-    needs: [gate, changes, phpcs, phpunit, lint-js, typos, docs, e2e, plugin-check]
+    needs: [gate, changes, phpcs, phpunit, lint-js, typos, docs, api-coverage, e2e, plugin-check]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

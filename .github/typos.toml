@@ -15,4 +15,6 @@ extend-exclude = [
   "packages/fixtures/",
   # Drawn covers: artwork whose long lines end in an ellipsis, not prose.
   "site/covers/",
+  # WordPress's own function and hook names, spelled the way core spells them.
+  "packages/wp-api-coverage/catalog/",
 ]
