@@ -1314,7 +1314,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 #riff [aria-pressed="false"] > .riff-heart-on,
 #riff [aria-pressed="true"] > .riff-heart-off,
 .riff-like-button[aria-pressed="false"] > .riff-heart-on,
-.riff-like-button[aria-pressed="true"] > .riff-heart-off {
+.riff-like-button[aria-pressed="true"] > .riff-heart-off,
+.riff-app .riff-app-like[aria-pressed="false"] > .riff-heart-on,
+.riff-app .riff-app-like[aria-pressed="true"] > .riff-heart-off {
 	display: none;
 }
 
@@ -2361,7 +2363,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-card {
 	position: relative;
 	display: grid;
+
+	/* One column the card's own width: an implicit column would grow to its
+	   widest child's min-content, which for a title that doesn't wrap is the
+	   whole title, and the card would spill over the next one. */
+	grid-template-columns: minmax(0, 1fr);
 	gap: 2px;
+	min-width: 0;
 }
 
 .riff-app .riff-card-link {
@@ -2784,11 +2792,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	color: var(--riff-app-accent);
 }
 
-.riff-app-like[aria-pressed="false"] > svg:last-child,
-.riff-app-like[aria-pressed="true"] > svg:first-child {
-	display: none;
-}
-
 /* Your Library: chips to narrow it, a sort, then one grid with Liked songs
    pinned first, as the apps lay theirs out. */
 .riff-library-bar {
@@ -2861,9 +2864,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	color: var(--riff-app-on-accent);
 }
 
-.riff-app .riff-card-liked .riff-card-art svg {
+.riff-app .riff-card-heart {
+	display: grid;
+	place-items: center;
 	width: 40%;
 	height: 40%;
+}
+
+.riff-app .riff-card-heart svg {
+	width: 100%;
+	height: 100%;
+}
+
+.riff-library .riff-shelf {
+	margin-top: 48px;
 }
 
 .riff-app .riff-card-artist .riff-card-art {

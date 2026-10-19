@@ -194,7 +194,11 @@ final class Collection {
 	}
 
 	/**
-	 * All: Liked songs first, then the albums and artists, together.
+	 * All: Liked songs first, then the albums and artists, together, then what was played lately.
+	 * It never looks empty, as the apps' libraries never do: Liked songs is always there and says
+	 * how to fill it, and with nothing liked a row of the site's albums offers somewhere to start.
+	 * Recently played comes from the player's history, so the script fills it, and hides the row
+	 * of albums once there is one.
 	 *
 	 * @param string  $page  Listen page.
 	 * @param array[] $ids   Liked IDs by kind, newest first.
@@ -203,9 +207,6 @@ final class Collection {
 	 * @return string
 	 */
 	private static function everything( string $page, array $ids, array $likes, string $sort ): string {
-		if ( ! $likes ) {
-			return self::empty_note( __( 'Nothing here yet. Press the heart on a song, an album or an artist, and it is kept here.', 'riff' ) );
-		}
 		// Albums and artists in one list: newest first by where each sits in the likes, or by name.
 		$place = array();
 		foreach ( $likes as $i => $like ) {
@@ -232,22 +233,47 @@ final class Collection {
 				? static fn( $a, $b ) => strnatcasecmp( $a['name'], $b['name'] )
 				: static fn( $a, $b ) => $a['at'] <=> $b['at']
 		);
-		$songs = $ids['track'] ? (int) Browse::get(
+		// Liked songs, playable from its cover with the first hundred, newest first.
+		$songs = $ids['track'] ? Browse::get(
 			'/tracks',
 			array(
 				'include'  => $ids['track'],
-				'per_page' => 1,
+				'orderby'  => 'include',
+				'per_page' => 100,
 			)
-		)['total'] : 0;
+		) : array(
+			'items' => array(),
+			'total' => 0,
+		);
+		$count = (int) $songs['total'];
+		$play  = '';
+		if ( $songs['items'] ) {
+			$play = sprintf(
+				'<button type="button" class="riff-card-play" data-riff-app-action="play-liked" data-riff-tracks="%s" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>',
+				esc_attr( (string) wp_json_encode( $songs['items'] ) ),
+				esc_attr__( 'Play Liked songs', 'riff' )
+			);
+		}
 		$liked = sprintf(
-			'<div class="riff-card riff-card-liked"><span class="riff-card-art">%s</span><a class="riff-card-link" href="%s"><span class="riff-card-title">%s</span></a><span class="riff-card-sub">%s</span></div>',
+			'<div class="riff-card riff-card-liked"><span class="riff-card-art"><span class="riff-card-heart">%s</span>%s</span><a class="riff-card-link" href="%s"><span class="riff-card-title">%s</span></a><span class="riff-card-sub">%s</span></div>',
 			Player::icon( 'hearted' ),
+			$play,
 			esc_url( self::link( $page, 'songs', $sort ) ),
 			esc_html__( 'Liked songs', 'riff' ),
-			/* translators: %s: number of songs. */
-			esc_html( sprintf( _n( '%s song', '%s songs', $songs, 'riff' ), number_format_i18n( $songs ) ) )
+			$count
+				/* translators: %s: number of songs. */
+				? esc_html( sprintf( _n( '%s song', '%s songs', $count, 'riff' ), number_format_i18n( $count ) ) )
+				: esc_html__( 'Press the heart on a song to keep it here', 'riff' )
 		);
-		return '<div class="riff-grid riff-library-grid">' . $liked . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';
+		$html  = '<div class="riff-grid riff-library-grid">' . $liked . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';
+		$html .= Browse::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
+		if ( ! $likes ) {
+			$albums = Browse::get( '/albums', array( 'orderby' => 'added' ) );
+			if ( $albums['items'] ) {
+				$html .= Browse::shelf( 'start', __( 'Start with', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( array_slice( $albums['items'], 0, 12 ), $page ) );
+			}
+		}
+		return $html;
 	}
 
 	/**

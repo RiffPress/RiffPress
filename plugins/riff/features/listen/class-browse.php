@@ -407,7 +407,7 @@ final class Browse {
 	 * @param string $tag    The row's element: div for cards, ul for list items.
 	 * @return string
 	 */
-	private static function shelf( string $slug, string $title, string $all, string $items, bool $device = false, string $tag = 'div' ): string {
+	public static function shelf( string $slug, string $title, string $all, string $items, bool $device = false, string $tag = 'div' ): string {
 		$id = 'riff-shelf-' . $slug;
 		return sprintf(
 			'<section class="riff-shelf" data-riff-shelf="%1$s" aria-labelledby="%2$s"%3$s><div class="riff-shelf-head"><h3 class="riff-shelf-title" id="%2$s">%4$s</h3>%5$s</div><%6$s class="riff-shelf-row" tabindex="0" aria-labelledby="%2$s">%7$s</%6$s></section>',
