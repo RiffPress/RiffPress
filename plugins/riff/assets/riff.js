@@ -635,7 +635,7 @@ function start() {
 	}
 
 	// ---- Likes and what was played. A signed-in listener's live in their account: the page hands
-	// them over in data.me, and each change is sent to riff/v1/me. A visitor's stay in this browser.
+	// them over in data.me, and each change is sent to riff/v1/users/me/likes or /users/me/history. A visitor's stay in this browser.
 	// The first page a listener opens after signing in sends what this browser kept to the account
 	// and forgets it here, so a shared computer keeps nothing of theirs once they sign out.
 	const HISTORY = 'riff-history';

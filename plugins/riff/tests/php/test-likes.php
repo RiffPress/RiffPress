@@ -82,12 +82,12 @@ class Test_Riff_Likes extends Riff_TestCase {
 	public function test_a_visitor_is_told_to_sign_in_on_every_route(): void {
 		wp_set_current_user( 0 );
 		foreach ( array(
-			array( 'GET', '/me/likes' ),
-			array( 'POST', '/me/likes' ),
-			array( 'DELETE', '/me/likes/track/' . $this->tracks[0] ),
-			array( 'GET', '/me/history' ),
-			array( 'POST', '/me/history' ),
-			array( 'DELETE', '/me/history' ),
+			array( 'GET', '/users/me/likes' ),
+			array( 'POST', '/users/me/likes' ),
+			array( 'DELETE', '/users/me/likes/track/' . $this->tracks[0] ),
+			array( 'GET', '/users/me/history' ),
+			array( 'POST', '/users/me/history' ),
+			array( 'DELETE', '/users/me/history' ),
 		) as list( $method, $route ) ) {
 			$this->assertSame( 401, $this->call( $method, $route, array( 'items' => array() ) )->get_status(), "$method $route" );
 		}
@@ -98,12 +98,12 @@ class Test_Riff_Likes extends Riff_TestCase {
 		wp_set_current_user( $nobody );
 		$this->assertFalse( current_user_can( 'read' ), 'no role on this site' );
 
-		$this->assertSame( 403, $this->call( 'GET', '/me/likes' )->get_status() );
+		$this->assertSame( 403, $this->call( 'GET', '/users/me/likes' )->get_status() );
 		$this->assertSame(
 			403,
 			$this->call(
 				'POST',
-				'/me/likes',
+				'/users/me/likes',
 				array(
 					'items' => array(
 						array(
@@ -115,6 +115,30 @@ class Test_Riff_Likes extends Riff_TestCase {
 			)->get_status()
 		);
 		$this->assertSame( '', (string) get_user_option( Likes::OPTION, $nobody ), 'nothing was saved' );
+	}
+
+	public function test_a_user_id_in_place_of_me_needs_permission_to_edit_that_user(): void {
+		Likes::add( $this->user, array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		$other = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+
+		wp_set_current_user( $this->user );
+		$own = $this->call( 'GET', '/users/' . $this->user . '/likes' );
+		$this->assertSame( 200, $own->get_status(), 'their own ID is the same as me' );
+		$this->assertSame( array( $this->tracks[0] ), wp_list_pluck( $own->get_data()['items'], 'id' ) );
+
+		wp_set_current_user( $other );
+		$this->assertSame( 403, $this->call( 'GET', '/users/' . $this->user . '/likes' )->get_status(), 'another subscriber cannot' );
+		$this->assertSame( 403, $this->call( 'DELETE', '/users/' . $this->user . '/likes/track/' . $this->tracks[0] )->get_status() );
+		$this->assertCount( 1, Likes::get( $this->user ), 'and changed nothing' );
+
+		$admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		if ( is_multisite() ) {
+			grant_super_admin( $admin ); // On a network only a super admin edits other users.
+		}
+		wp_set_current_user( $admin );
+		$this->assertSame( array( $this->tracks[0] ), wp_list_pluck( $this->call( 'GET', '/users/' . $this->user . '/likes' )->get_data()['items'], 'id' ), 'someone who can edit them can' );
+		$this->assertSame( 404, $this->call( 'GET', '/users/999999/history' )->get_status() );
+		$this->assertSame( 404, $this->call( 'GET', '/users/someone/likes' )->get_status(), 'only me or a number' );
 	}
 
 	public function test_a_signed_in_request_without_the_rest_nonce_counts_as_a_visitor(): void {
@@ -129,7 +153,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 			401,
 			$this->call(
 				'POST',
-				'/me/likes',
+				'/users/me/likes',
 				array(
 					'items' => array(
 						array(
@@ -146,7 +170,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		wp_set_current_user( $this->user );
 		$this->call(
 			'POST',
-			'/me/likes',
+			'/users/me/likes',
 			array(
 				'items' => array(
 					array(
@@ -158,7 +182,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		);
 		$this->call(
 			'POST',
-			'/me/likes',
+			'/users/me/likes',
 			array(
 				'items' => array(
 					array(
@@ -168,13 +192,13 @@ class Test_Riff_Likes extends Riff_TestCase {
 				),
 			)
 		);
-		$items = $this->call( 'GET', '/me/likes' )->get_data()['items'];
+		$items = $this->call( 'GET', '/users/me/likes' )->get_data()['items'];
 
 		$this->assertSame( array( 'album', 'track' ), wp_list_pluck( $items, 'kind' ), 'newest first' );
 		$this->assertSame( array( $this->album(), $this->tracks[0] ), wp_list_pluck( $items, 'id' ) );
 		$this->assertGreaterThan( 1600000000000, $items[0]['at'], 'in milliseconds, as the browser counts' );
 
-		$after = $this->call( 'DELETE', '/me/likes/album/' . $this->album() )->get_data()['items'];
+		$after = $this->call( 'DELETE', '/users/me/likes/album/' . $this->album() )->get_data()['items'];
 		$this->assertSame( array( $this->tracks[0] ), wp_list_pluck( $after, 'id' ) );
 	}
 
@@ -208,7 +232,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$image = self::factory()->attachment->create_upload_object( self::fixture( 'cover.png' ) );
 		$items = $this->call(
 			'POST',
-			'/me/likes',
+			'/users/me/likes',
 			array(
 				'items' => array(
 					array(
@@ -232,7 +256,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 			400,
 			$this->call(
 				'POST',
-				'/me/likes',
+				'/users/me/likes',
 				array(
 					'items' => array(
 						array(
@@ -262,7 +286,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		// What a visitor liked before they signed in: one the account has too, liked later on the device.
 		$items = $this->call(
 			'POST',
-			'/me/likes',
+			'/users/me/likes',
 			array(
 				'items' => array(
 					array(
@@ -298,7 +322,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		wp_set_current_user( $this->user );
 		$this->call(
 			'POST',
-			'/me/likes',
+			'/users/me/likes',
 			array(
 				'items' => array(
 					array(
@@ -318,7 +342,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		wp_set_current_user( $this->user );
 		$this->call(
 			'POST',
-			'/me/history',
+			'/users/me/history',
 			array(
 				'items' => array(
 					array(
@@ -336,7 +360,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 				),
 			)
 		);
-		$items = $this->call( 'POST', '/me/history', array( 'items' => array( array( 'id' => $this->tracks[0] ) ) ) )->get_data()['items'];
+		$items = $this->call( 'POST', '/users/me/history', array( 'items' => array( array( 'id' => $this->tracks[0] ) ) ) )->get_data()['items'];
 
 		$this->assertSame( array( (string) $this->tracks[0], (string) $this->tracks[1] ), wp_list_pluck( $items, 'id' ), 'played again, it leads; the draft\'s track is not shown to a subscriber' );
 		$this->assertSame( 'Underground', $items[0]['title'], 'in the track shape' );
@@ -344,7 +368,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'levels', $items[0] );
 		$this->assertCount( 3, Likes::history( $this->user ), 'the private one is kept, in case its post comes back' );
 
-		$this->assertSame( array(), $this->call( 'DELETE', '/me/history' )->get_data()['items'] );
+		$this->assertSame( array(), $this->call( 'DELETE', '/users/me/history' )->get_data()['items'] );
 		$this->assertSame( array(), Likes::history( $this->user ) );
 	}
 
@@ -356,7 +380,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 				'post_title'  => 'A mixtape',
 			)
 		);
-		$items     = $this->call( 'POST', '/me/history', array( 'items' => array( array( 'id' => $this->tracks[0], 'post' => $elsewhere ) ) ) )->get_data()['items']; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		$items     = $this->call( 'POST', '/users/me/history', array( 'items' => array( array( 'id' => $this->tracks[0], 'post' => $elsewhere ) ) ) )->get_data()['items']; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 
 		$this->assertSame( 'A mixtape', $items[0]['post']['title'], 'where it played from, for Jump back in, not the post it was uploaded to' );
 	}
@@ -401,7 +425,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$this->assertSame( array( $this->tracks[1] ), wp_list_pluck( $me['likes'], 'id' ) );
 		$this->assertSame( array( (string) $this->tracks[0] ), wp_list_pluck( $me['history'], 'id' ) );
 		$this->assertSame( 1, wp_verify_nonce( $me['nonce'], 'wp_rest' ) );
-		$this->assertStringContainsString( 'riff/v1/me/likes', $me['rest']['likes'] );
+		$this->assertStringContainsString( 'riff/v1/users/me/likes', $me['rest']['likes'] );
 	}
 
 	public function test_the_tracks_route_lists_tracks_by_id_in_the_order_given(): void {

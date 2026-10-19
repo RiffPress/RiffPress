@@ -35,18 +35,18 @@ const made = own();
 
 // The admin's likes and plays, emptied, so each test starts from nothing.
 async function forgetAll( requestUtils ) {
-	const { items } = await requestUtils.rest( { path: '/riff/v1/me/likes' } );
+	const { items } = await requestUtils.rest( { path: '/riff/v1/users/me/likes' } );
 	for ( const l of items ) {
 		await requestUtils.rest( {
 			method: 'DELETE',
-			path: `/riff/v1/me/likes/${ l.kind }/${ l.id }`,
+			path: `/riff/v1/users/me/likes/${ l.kind }/${ l.id }`,
 		} );
 	}
-	await requestUtils.rest( { method: 'DELETE', path: '/riff/v1/me/history' } );
+	await requestUtils.rest( { method: 'DELETE', path: '/riff/v1/users/me/history' } );
 }
 
 const likesOf = async ( requestUtils ) =>
-	( await requestUtils.rest( { path: '/riff/v1/me/likes' } ) ).items.map(
+	( await requestUtils.rest( { path: '/riff/v1/users/me/likes' } ) ).items.map(
 		( l ) => `${ l.kind }:${ l.id }`
 	);
 
@@ -155,7 +155,7 @@ test( 'signed in, a heart on a row and in the bar saves to the account, and stay
 
 test( 'a like the account refuses goes back, and says so', async ( { page } ) => {
 	await page.goto( postUrl );
-	await page.route( /me\/likes/, ( route ) => route.fulfill( { status: 403, body: '{}' } ) );
+	await page.route( /riff\/v1\/users\/me\/likes/, ( route ) => route.fulfill( { status: 403, body: '{}' } ) );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	const bar = page.locator( '.riff-bar [data-riff-action="like"]' );
 	await bar.click();
@@ -179,7 +179,7 @@ test( 'a visitor\'s likes are kept in the browser, and Your Library shows them',
 	const kept = JSON.parse( await page.evaluate( () => localStorage.getItem( 'riff-likes' ) ) );
 	expect( kept.map( ( l ) => `${ l.kind }:${ l.id }` ) ).toEqual( [ `track:${ audio[ 1 ].id }` ] );
 	expect(
-		( await context.request.get( '/?rest_route=/riff/v1/me/likes' ) ).status(),
+		( await context.request.get( '/?rest_route=/riff/v1/users/me/likes' ) ).status(),
 		'the account route is for someone signed in'
 	).toBe( 401 );
 
@@ -239,7 +239,7 @@ test( 'signing in brings a visitor\'s likes and plays into the account, and the 
 		.toBeNull();
 	await expect
 		.poll( async () =>
-			( await requestUtils.rest( { path: '/riff/v1/me/history' } ) ).items.map( ( t ) => t.title )
+			( await requestUtils.rest( { path: '/riff/v1/users/me/history' } ) ).items.map( ( t ) => t.title )
 		)
 		.toEqual( [ 'Underground' ] );
 	await expect
@@ -255,7 +255,7 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 } ) => {
 	await requestUtils.rest( {
 		method: 'POST',
-		path: '/riff/v1/me/likes',
+		path: '/riff/v1/users/me/likes',
 		data: {
 			items: [
 				{ kind: 'artist', id: artist, at: 1000 },

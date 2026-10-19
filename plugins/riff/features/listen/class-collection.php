@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Laid out as the streaming apps lay theirs out: filter chips for songs, albums and artists, a
  * sort, and everything liked in one grid with Liked songs pinned first. A signed-in listener's
- * likes come from riff/v1/me/likes. A visitor's are in their browser, so app.js sends them along
+ * likes come from riff/v1/users/me/likes. A visitor's are in their browser, so app.js sends them along
  * as ?riff_liked when it fetches this view; without the script a visitor sees how to start. Every
  * like is shown through the catalogue routes, so a track whose post went private drops out.
  */
@@ -102,7 +102,7 @@ final class Collection {
 	 * @return array{0: array[], 1: bool}
 	 */
 	private static function likes(): array {
-		$response = rest_do_request( new WP_REST_Request( 'GET', '/' . Library::REST . '/me/likes' ) );
+		$response = rest_do_request( new WP_REST_Request( 'GET', '/' . Library::REST . '/users/me/likes' ) );
 		if ( ! $response->is_error() ) {
 			return array( (array) ( $response->get_data()['items'] ?? array() ), true );
 		}

@@ -77,7 +77,7 @@ final class Likes {
 	}
 
 	/**
-	 * Registers /me/likes and /me/history.
+	 * Registers /users/{user}/likes and /users/{user}/history.
 	 *
 	 * @since 4.20.0
 	 */
@@ -105,27 +105,36 @@ final class Likes {
 				),
 			),
 		);
+		$user = array(
+			'description' => __( 'Whose: me for the signed-in user, or a user ID, for someone who may edit that user.', 'riff' ),
+			'type'        => 'string',
+			'pattern'     => '^(me|\\d+)$',
+		);
 		/**
-		 * GET and POST /riff/v1/me/likes: the signed-in user's likes, newest first, and adding to
-		 * them. POST takes a list, so a visitor's likes from their device join the account in one
-		 * request; one already liked keeps its place.
+		 * GET and POST /riff/v1/users/me/likes: the signed-in user's likes, newest first, and
+		 * adding to them, in the shape core's /wp/v2/users/me/application-passwords takes. A user
+		 * ID in place of me reads or changes that user's, for someone who may edit them. POST takes
+		 * a list, so a visitor's likes from their device join the account in one request; one
+		 * already liked keeps its place.
 		 *
 		 * @since 4.20.0
 		 */
 		register_rest_route(
 			Library::REST,
-			'/me/likes',
+			'/users/(?P<user>me|\d+)/likes',
 			array(
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( self::class, 'rest_likes' ),
 					'permission_callback' => array( self::class, 'allowed' ),
+					'args'                => array( 'user' => $user ),
 				),
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_like' ),
 					'permission_callback' => array( self::class, 'allowed' ),
 					'args'                => array(
+						'user'  => $user,
 						'items' => array(
 							'description' => __( 'Likes to add: a kind and an ID each, and when it was liked.', 'riff' ),
 							'type'        => 'array',
@@ -139,19 +148,20 @@ final class Likes {
 			)
 		);
 		/**
-		 * DELETE /riff/v1/me/likes/{kind}/{id}: takes one like away.
+		 * DELETE /riff/v1/users/me/likes/{kind}/{id}: takes one like away.
 		 *
 		 * @since 4.20.0
 		 */
 		register_rest_route(
 			Library::REST,
-			'/me/likes/(?P<kind>track|album|artist)/(?P<id>\d+)',
+			'/users/(?P<user>me|\d+)/likes/(?P<kind>track|album|artist)/(?P<id>\d+)',
 			array(
 				array(
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_unlike' ),
 					'permission_callback' => array( self::class, 'allowed' ),
 					'args'                => array(
+						'user' => $user,
 						'kind' => array(
 							'description' => __( 'What was liked: track, album or artist.', 'riff' ),
 							'type'        => 'string',
@@ -168,7 +178,7 @@ final class Likes {
 			)
 		);
 		/**
-		 * GET, POST and DELETE /riff/v1/me/history: the tracks the signed-in user played, newest
+		 * GET, POST and DELETE /riff/v1/users/me/history: the tracks the signed-in user played, newest
 		 * first, each in the track shape with `played`; adding plays, which a visitor's device
 		 * history joins on sign-in; and clearing it.
 		 *
@@ -176,18 +186,20 @@ final class Likes {
 		 */
 		register_rest_route(
 			Library::REST,
-			'/me/history',
+			'/users/(?P<user>me|\d+)/history',
 			array(
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( self::class, 'rest_history' ),
 					'permission_callback' => array( self::class, 'allowed' ),
+					'args'                => array( 'user' => $user ),
 				),
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_played' ),
 					'permission_callback' => array( self::class, 'allowed' ),
 					'args'                => array(
+						'user'  => $user,
 						'items' => array(
 							'description' => __( 'Plays to add: a track\'s ID each, and when it was played.', 'riff' ),
 							'type'        => 'array',
@@ -222,6 +234,7 @@ final class Likes {
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_forget' ),
 					'permission_callback' => array( self::class, 'allowed' ),
+					'args'                => array( 'user' => $user ),
 				),
 				'schema' => array( self::class, 'history_schema' ),
 			)
@@ -229,36 +242,60 @@ final class Likes {
 	}
 
 	/**
-	 * Whether the request may read and change its own likes: a signed-in user who can read this
-	 * site. Over cookies that means a valid REST nonce too, since without one WordPress treats the
-	 * request as a visitor's.
+	 * Whether the request may read and change these likes: a signed-in user who can read this site,
+	 * for their own (me, or their own ID); for anyone else's, a user who can edit that user, as
+	 * core's application passwords route asks. Over cookies that means a valid REST nonce too,
+	 * since without one WordPress treats the request as a visitor's.
 	 *
 	 * @since 4.20.0
 	 *
+	 * @param WP_REST_Request|null $request Request.
 	 * @return true|WP_Error
 	 */
-	public static function allowed() {
+	public static function allowed( $request = null ) {
 		if ( ! is_user_logged_in() ) {
 			return new WP_Error( 'rest_not_logged_in', __( 'Sign in to keep likes in your account.', 'riff' ), array( 'status' => 401 ) );
 		}
 		if ( ! current_user_can( 'read' ) ) {
 			return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to keep likes on this site.', 'riff' ), array( 'status' => 403 ) );
 		}
+		$user = $request instanceof WP_REST_Request ? self::user( $request ) : get_current_user_id();
+		if ( get_current_user_id() !== $user ) {
+			if ( ! $user || ! get_userdata( $user ) ) {
+				return new WP_Error( 'rest_user_invalid_id', __( 'Invalid user ID.', 'riff' ), array( 'status' => 404 ) );
+			}
+			if ( ! current_user_can( 'edit_user', $user ) ) {
+				return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to see that user\'s likes.', 'riff' ), array( 'status' => 403 ) );
+			}
+		}
 		return true;
 	}
 
 	/**
-	 * GET /me/likes.
+	 * The user a request names: the signed-in user for me, or the ID given.
 	 *
-	 * @since 4.20.0
-	 * @return WP_REST_Response
+	 * @param WP_REST_Request $request Request.
+	 * @return int User ID.
 	 */
-	public static function rest_likes(): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => self::get( get_current_user_id() ) ) );
+	private static function user( WP_REST_Request $request ): int {
+		$user = (string) $request['user'];
+		return 'me' === $user || '' === $user ? get_current_user_id() : (int) $user;
 	}
 
 	/**
-	 * POST /me/likes.
+	 * GET /users/{user}/likes.
+	 *
+	 * @since 4.20.0
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response
+	 */
+	public static function rest_likes( WP_REST_Request $request ): WP_REST_Response {
+		return new WP_REST_Response( array( 'items' => self::get( self::user( $request ) ) ) );
+	}
+
+	/**
+	 * POST /users/{user}/likes.
 	 *
 	 * @since 4.20.0
 	 *
@@ -266,11 +303,11 @@ final class Likes {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_like( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => self::add( get_current_user_id(), (array) $request['items'] ) ) );
+		return new WP_REST_Response( array( 'items' => self::add( self::user( $request ), (array) $request['items'] ) ) );
 	}
 
 	/**
-	 * DELETE /me/likes/{kind}/{id}.
+	 * DELETE /users/{user}/likes/{kind}/{id}.
 	 *
 	 * @since 4.20.0
 	 *
@@ -278,21 +315,23 @@ final class Likes {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_unlike( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => self::remove( get_current_user_id(), (string) $request['kind'], (int) $request['id'] ) ) );
+		return new WP_REST_Response( array( 'items' => self::remove( self::user( $request ), (string) $request['kind'], (int) $request['id'] ) ) );
 	}
 
 	/**
-	 * GET /me/history.
+	 * GET /users/{user}/history.
 	 *
 	 * @since 4.20.0
+	 *
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
-	public static function rest_history(): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => self::history_tracks( get_current_user_id() ) ) );
+	public static function rest_history( WP_REST_Request $request ): WP_REST_Response {
+		return new WP_REST_Response( array( 'items' => self::history_tracks( self::user( $request ) ) ) );
 	}
 
 	/**
-	 * POST /me/history.
+	 * POST /users/{user}/history.
 	 *
 	 * @since 4.20.0
 	 *
@@ -300,18 +339,20 @@ final class Likes {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_played( WP_REST_Request $request ): WP_REST_Response {
-		self::played( get_current_user_id(), (array) $request['items'] );
-		return self::rest_history();
+		self::played( self::user( $request ), (array) $request['items'] );
+		return self::rest_history( $request );
 	}
 
 	/**
-	 * DELETE /me/history.
+	 * DELETE /users/{user}/history.
 	 *
 	 * @since 4.20.0
+	 *
+	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
 	 */
-	public static function rest_forget(): WP_REST_Response {
-		delete_user_option( get_current_user_id(), self::HISTORY_OPTION );
+	public static function rest_forget( WP_REST_Request $request ): WP_REST_Response {
+		delete_user_option( self::user( $request ), self::HISTORY_OPTION );
 		return new WP_REST_Response( array( 'items' => array() ) );
 	}
 
@@ -487,8 +528,8 @@ final class Likes {
 			'likes'   => self::get( $user ),
 			'history' => self::history_tracks( $user ),
 			'rest'    => array(
-				'likes'   => rest_url( Library::REST . '/me/likes' ),
-				'history' => rest_url( Library::REST . '/me/history' ),
+				'likes'   => rest_url( Library::REST . '/users/me/likes' ),
+				'history' => rest_url( Library::REST . '/users/me/history' ),
 			),
 			'nonce'   => wp_create_nonce( 'wp_rest' ),
 		);
@@ -696,7 +737,7 @@ final class Likes {
 	}
 
 	/**
-	 * The shape of /me/likes.
+	 * The shape of /users/{user}/likes.
 	 *
 	 * @since 4.20.0
 	 * @return array JSON Schema.
@@ -730,7 +771,7 @@ final class Likes {
 	}
 
 	/**
-	 * The shape of /me/history.
+	 * The shape of /users/{user}/history.
 	 *
 	 * @since 4.20.0
 	 * @return array JSON Schema.
