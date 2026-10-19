@@ -102,8 +102,7 @@ code {
 
 /* the global bar and footer: dark, as wordpress.org's are */
 .nav {
-	position: sticky;
-	top: 0;
+	position: relative;
 	z-index: 10;
 	background: var(--charcoal-1);
 	color: var(--white);
@@ -817,7 +816,7 @@ figcaption {
 /* the section bar under the global one */
 .local-nav {
 	position: sticky;
-	top: 60px;
+	top: 0;
 	z-index: 9;
 	background: var(--charcoal-2);
 	color: var(--white);
@@ -859,6 +858,10 @@ figcaption {
 	gap: 10px;
 	overflow-x: auto;
 	white-space: nowrap;
+}
+
+main h2[id] {
+	scroll-margin-top: 80px;
 }
 
 /* background reading, set apart from the languages by a dot, as wporg's
@@ -1017,7 +1020,7 @@ figcaption {
 }
 
 .is-toc-heading {
-	scroll-margin-top: 140px;
+	scroll-margin-top: 80px;
 }
 
 .is-toc-heading a {
@@ -1399,20 +1402,15 @@ figcaption {
 		gap: 4px 20px;
 	}
 
-	.local-nav {
-		position: static;
-	}
-
 	.local-nav nav {
-		flex-wrap: wrap;
-		overflow: visible;
-		white-space: normal;
-		gap: 4px 10px;
+		width: 100%;
+		margin-left: -5px;
+		scrollbar-width: none;
 	}
 
 	.member,
 	.is-toc-heading {
-		scroll-margin-top: 80px;
+		scroll-margin-top: 110px;
 	}
 
 	.code-table th,
@@ -1436,7 +1434,7 @@ figcaption {
 
 /* the JavaScript reference: one section per member of window.riff */
 .member {
-	scroll-margin-top: 140px;
+	scroll-margin-top: 80px;
 	padding-top: 30px;
 	border-top: 1px solid var(--grey-1);
 }
