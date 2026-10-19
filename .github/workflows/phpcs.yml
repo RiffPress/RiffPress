@@ -26,3 +26,7 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
       - run: composer install --no-interaction --prefer-dist
       - run: ./vendor/bin/phpcs --standard=phpcs.xml.dist
+      # The text domain rule above passes on a wrong domain if its setting is ever lost, so this
+      # shows it still fails on one: a wrong domain, a missing one, and Riff Lyrics using Riff's.
+      - name: The text domain check catches a wrong domain
+        run: .github/scripts/text-domain-check.sh
