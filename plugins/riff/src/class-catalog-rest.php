@@ -455,6 +455,24 @@ final class Catalog_Rest {
 	}
 
 	/**
+	 * Whether a user may see a track, by the rule GET /tracks follows: someone who can upload files
+	 * sees every one, and anyone else those not uploaded to an unpublished or password-protected post.
+	 *
+	 * @since 4.20.1
+	 *
+	 * @param int      $id      Attachment ID.
+	 * @param int|null $user_id User ID, or null for the current user.
+	 * @return bool
+	 */
+	public static function visible( int $id, ?int $user_id = null ): bool {
+		if ( user_can( $user_id ?? get_current_user_id(), 'upload_files' ) ) {
+			return true;
+		}
+		$parent = (int) get_post_field( 'post_parent', $id );
+		return ! $parent || ( 'publish' === get_post_status( $parent ) && '' === (string) get_post_field( 'post_password', $parent ) );
+	}
+
+	/**
 	 * SQL matching a track's title, artist or album against the search words.
 	 *
 	 * @param string $search Words.
