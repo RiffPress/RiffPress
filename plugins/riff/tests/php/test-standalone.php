@@ -110,6 +110,26 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		);
 	}
 
+	public function test_the_app_fetches_its_font_with_the_page_and_has_a_fallback_of_its_size(): void {
+		$this->go_to( Standalone::url( $this->listen ) );
+		Standalone::template( '/theme/page.php' );
+
+		$resources = apply_filters( 'wp_preload_resources', array() );
+		$this->assertContains(
+			array(
+				'href'        => RIFF_URL . 'assets/fonts/roboto/roboto.woff2',
+				'as'          => 'font',
+				'type'        => 'font/woff2',
+				'crossorigin' => 'anonymous',
+			),
+			$resources,
+			'the file riff.css names, so the browser uses what it preloaded'
+		);
+		$this->assertStringContainsString( 'url(fonts/roboto/roboto.woff2)', (string) file_get_contents( RIFF_DIR . 'assets/riff.css' ) );
+		$this->assertStringContainsString( '"Riff Roboto Fallback"', Standalone::tokens()['--riff-app-font'], 'text drawn before Roboto arrives takes its room' );
+		remove_filter( 'wp_preload_resources', array( Standalone::class, 'preload' ) );
+	}
+
 	public function test_the_themes_assets_and_the_block_styles_stay_out(): void {
 		$this->go_to( Standalone::url( $this->listen ) );
 		wp_enqueue_style( 'a-theme', get_theme_root_uri() . '/any/style.css', array(), '1' );

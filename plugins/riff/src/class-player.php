@@ -188,10 +188,12 @@ final class Player {
 		 */
 		$strings = (array) apply_filters( 'riff_strings', $strings );
 		$data    = array(
-			'strings' => $strings,
-			'assets'  => array(),
+			'strings'    => $strings,
+			'assets'     => array(),
 			// The heart's icons, for the hearts the script draws on rows.
-			'icons'   => array( 'hearts' => self::hearts() ),
+			'icons'      => array( 'hearts' => self::hearts() ),
+			// Where the player's cookie applies: the site's own path, as WordPress's cookies use.
+			'cookiePath' => COOKIEPATH,
 		);
 		/**
 		 * Filters the data handed to the player script: strings, and the addresses of scripts a

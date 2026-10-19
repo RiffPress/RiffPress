@@ -211,6 +211,57 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'data-riff-app-action="more"', $html );
 	}
 
+	public function test_home_draws_a_signed_in_listeners_history_where_it_will_stay(): void {
+		list( $post ) = $this->library_and_page();
+		$track        = (int) get_posts(
+			array(
+				'post_type'   => 'attachment',
+				'post_parent' => $post,
+				'fields'      => 'ids',
+			)
+		)[0];
+		$user         = self::factory()->user->create();
+		wp_set_current_user( $user );
+		\Riff\Likes::played(
+			$user,
+			array(
+				array(
+					'id'     => $track,
+					'played' => 1760000000000,
+					'post'   => $post,
+				),
+			)
+		);
+		$html = App::render();
+		wp_set_current_user( 0 );
+
+		$this->assertMatchesRegularExpression( '#<section class="riff-shelf" data-riff-shelf="jump" data-riff-played="1:' . $track . ':1760000000000" aria-labelledby="riff-shelf-jump">#', $html, 'drawn, not hidden, with the history it came from for app.js to compare' );
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="recent" data-riff-played="1:' . $track . ':1760000000000" aria-labelledby="riff-shelf-recent">#', $html );
+		$this->assertMatchesRegularExpression( '#href="[^"]*riff=' . $post . '"#', $html, 'Jump back in opens the post it was played from' );
+		$this->assertStringContainsString( 'data-riff-app-action="play-history" data-riff-index="0"', $html, 'Recently played plays from the history, as app.js draws it' );
+		$this->assertStringNotContainsString( 'data-riff-skeleton', $html );
+	}
+
+	public function test_home_holds_room_for_a_visitors_history_only_when_the_player_says_there_is_one(): void {
+		$this->library_of( 1 );
+		wp_set_current_user( 0 );
+
+		$_COOKIE[ Browse::HISTORY_HINT ] = '2';
+		$both                            = App::render();
+		$_COOKIE[ Browse::HISTORY_HINT ] = '1';
+		$recent                          = App::render();
+		unset( $_COOKIE[ Browse::HISTORY_HINT ] );
+		$none = App::render();
+
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="jump" data-riff-skeleton="" aria-labelledby="riff-shelf-jump">#', $both, 'held, not hidden, for app.js to fill in place' );
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="recent" data-riff-skeleton="" aria-labelledby="riff-shelf-recent">#', $both );
+		$this->assertSame( 16, substr_count( $both, 'riff-card riff-card-skeleton' ), 'each row full of empty cards' );
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="jump"[^>]*hidden#', $recent, 'no post played from, so no Jump back in' );
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="recent" data-riff-skeleton=""#', $recent );
+		$this->assertStringNotContainsString( 'data-riff-skeleton', $none, 'without the cookie nothing is held' );
+		$this->assertMatchesRegularExpression( '#data-riff-shelf="recent"[^>]*hidden#', $none );
+	}
+
 	public function test_an_old_link_to_a_later_page_of_posts_still_opens_them(): void {
 		$this->library_of( 25 );
 		$_GET[ App::PAGE_QUERY ] = '2';

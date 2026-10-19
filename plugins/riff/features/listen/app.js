@@ -224,8 +224,11 @@ export function start( api ) {
 			return;
 		}
 		// The browser animates the swap where it can; the page's own colours do the rest.
+		// Home's rows of what was played are filled here, before the new view is painted.
 		const swap = () => {
 			view.innerHTML = html;
+			home();
+			fade( view );
 			if ( bar !== undefined && nav ) {
 				nav.innerHTML = bar;
 				sidebar( app.dataset.sidebar !== 'mini', false );
@@ -253,7 +256,6 @@ export function start( api ) {
 		}
 		app.removeAttribute( 'aria-busy' );
 		api.mount();
-		home();
 		paintLikes();
 		if ( quiet ) {
 			return;
@@ -263,6 +265,20 @@ export function start( api ) {
 			app.scrollIntoView( { block: 'start' } );
 		}
 		view.querySelector( 'h2' )?.focus?.();
+	}
+
+	// Covers fade in as they arrive, into room the layout already keeps for them; one that has
+	// loaded already shows as it is. Without the script there is no fade, and nothing is hidden.
+	function fade( root ) {
+		for ( const img of root.querySelectorAll( 'img' ) ) {
+			if ( img.complete ) {
+				continue;
+			}
+			img.dataset.riffFade = '';
+			const done = () => img.removeAttribute( 'data-riff-fade' );
+			img.addEventListener( 'load', done, { once: true } );
+			img.addEventListener( 'error', done, { once: true } );
+		}
 	}
 
 	const reducedMotion = () =>
@@ -866,16 +882,40 @@ export function start( api ) {
 	// A change to a playlist leaves every view drawn before it out of date, its sidebar included.
 	api.on?.( 'playlist', () => rendered.clear() );
 
-	// ---- Home's rows of what was played, from this device: the posts last played from, to jump
-	// back into, and the tracks themselves. Each stays hidden while there is nothing in it.
-	function home() {
+	// ---- Home's rows of what was played: the posts last played from, to jump back into, and the
+	// tracks themselves. The server draws a signed-in listener's from their account, and holds the
+	// place of a visitor's when the player's cookie says this browser has a history; this fills
+	// those in place. A row the server drew from the same history is left alone, and on the page
+	// as first shown a hidden row stays hidden, so nothing appears above what is already there. A
+	// view drawn here (show()) fills every row before it is painted.
+	function home( first = false ) {
 		const played = api.history();
+		const key = played.length
+			? `${ played.length }:${ played[ 0 ].id }:${
+					Number( played[ 0 ].played ) || 0
+			  }`
+			: '0';
 		const fill = ( slug, cards ) => {
 			const shelf = view.querySelector( `[data-riff-shelf="${ slug }"]` );
-			if ( ! shelf || ! cards ) {
+			if ( ! shelf || shelf.dataset.riffPlayed === key ) {
 				return;
 			}
-			shelf.querySelector( '.riff-shelf-row' ).innerHTML = cards;
+			const held = shelf.hasAttribute( 'data-riff-skeleton' );
+			if ( first && shelf.hidden ) {
+				return;
+			}
+			shelf.removeAttribute( 'data-riff-skeleton' );
+			shelf.dataset.riffPlayed = key;
+			if ( ! cards ) {
+				// Held for a history that is gone after all: the one case a row has to go.
+				if ( held ) {
+					shelf.hidden = true;
+				}
+				return;
+			}
+			const row = shelf.querySelector( '.riff-shelf-row' );
+			row.innerHTML = cards;
+			fade( row );
 			shelf.hidden = false;
 		};
 		const posts = [];
@@ -929,7 +969,8 @@ export function start( api ) {
 		}
 	}
 
-	home();
+	home( true );
+	fade( app );
 
 	// ---- The sidebar, on a wide screen in standalone mode: full, or a rail of icons. The choice is
 	// this device's, so it is remembered here rather than anywhere shared.
