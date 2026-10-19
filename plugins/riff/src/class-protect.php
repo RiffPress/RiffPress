@@ -618,7 +618,8 @@ final class Protect {
 			$url,
 			array(
 				'timeout'   => 5,
-				'sslverify' => false,
+				/** This filter is documented in wp-includes/cron.php */
+				'sslverify' => apply_filters( 'https_local_ssl_verify', false ),
 			)
 		);
 		wp_delete_file( $probe );

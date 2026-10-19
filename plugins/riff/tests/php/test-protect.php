@@ -238,4 +238,25 @@ class Test_Riff_Protect extends Riff_TestCase {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$this->assertSame( (string) wp_get_attachment_url( $this->track ), Protect::moved( $this->track ), 'someone who can read the post is sent on' );
 	}
+
+	public function test_the_site_health_check_asks_its_loopback_like_core_does(): void {
+		Protect::dir();
+		$seen = null;
+		$hook = static function ( $pre, $args ) use ( &$seen ) {
+			$seen = $args['sslverify'];
+			return array(
+				'headers'  => array(),
+				'body'     => '',
+				'response' => array( 'code' => 403 ),
+				'cookies'  => array(),
+			);
+		};
+		add_filter( 'pre_http_request', $hook, 10, 2 );
+		add_filter( 'https_local_ssl_verify', '__return_true' );
+		Protect::health();
+		remove_filter( 'https_local_ssl_verify', '__return_true' );
+		remove_filter( 'pre_http_request', $hook, 10 );
+
+		$this->assertTrue( $seen, 'https_local_ssl_verify decides, as for core\'s own loopback requests' );
+	}
 }
