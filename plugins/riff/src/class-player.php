@@ -176,6 +176,8 @@ final class Player {
 		$data    = array(
 			'strings' => $strings,
 			'assets'  => array(),
+			// The heart's icons, for the hearts the script draws on rows.
+			'icons'   => array( 'hearts' => self::hearts() ),
 		);
 		/**
 		 * Filters the data handed to the player script: strings, and the addresses of scripts a

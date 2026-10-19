@@ -239,16 +239,6 @@ final class Browse {
 	}
 
 	/**
-	 * A heading, focusable so the script can move focus to a new view.
-	 *
-	 * @param string $text Heading.
-	 * @return string
-	 */
-	public static function title( string $text ): string {
-		return '<h2 class="riff-app-title" tabindex="-1">' . esc_html( $text ) . '</h2>';
-	}
-
-	/**
 	 * A "Next page" link while there are more pages.
 	 *
 	 * @param string $href  The view's address.
@@ -276,9 +266,9 @@ final class Browse {
 	private static function albums_view( string $page, int $number ): string {
 		$data = self::get( '/albums', array( 'page' => $number ) );
 		if ( ! $data['items'] ) {
-			return self::title( __( 'Albums', 'riff' ) ) . self::empty_note();
+			return Ui::title( __( 'Albums', 'riff' ) ) . self::empty_note();
 		}
-		return self::title( __( 'Albums', 'riff' ) ) . self::album_grid( $data['items'], $page ) . self::next( add_query_arg( self::VIEW, 'albums', $page ), $data );
+		return Ui::title( __( 'Albums', 'riff' ) ) . self::album_grid( $data['items'], $page ) . self::next( add_query_arg( self::VIEW, 'albums', $page ), $data );
 	}
 
 	/**
@@ -302,17 +292,20 @@ final class Browse {
 	public static function album_cards( array $albums, string $page ): string {
 		$cards = '';
 		foreach ( $albums as $album ) {
-			$art    = $album['art'] ? end( $album['art'] )['src'] : '';
-			$sub    = array_filter( array( $album['artist'] ?? '', self::count( (int) $album['count'] ) ) );
-			$cards .= sprintf(
-				'<div class="riff-card" data-riff-album="%1$d"><span class="riff-card-art">%2$s<button type="button" class="riff-card-play" data-riff-app-action="play-album" data-riff-album="%1$d" aria-label="%3$s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="%4$s"><span class="riff-card-title">%5$s</span></a><span class="riff-card-sub">%6$s</span></div>',
-				(int) $album['id'],
-				$art ? '<img src="' . esc_url( $art ) . '" alt="" loading="lazy" decoding="async">' : '',
-				/* translators: %s: album name. */
-				esc_attr( sprintf( __( 'Play %s', 'riff' ), $album['name'] ) ),
-				esc_url( add_query_arg( self::ALBUM, (int) $album['id'], $page ) ),
-				esc_html( $album['name'] ),
-				esc_html( implode( ' · ', $sub ) )
+			$cards .= Ui::card(
+				array(
+					'title' => (string) $album['name'],
+					'href'  => add_query_arg( self::ALBUM, (int) $album['id'], $page ),
+					'sub'   => implode( ' · ', array_filter( array( $album['artist'] ?? '', self::count( (int) $album['count'] ) ) ) ),
+					'art'   => $album['art'] ? (string) end( $album['art'] )['src'] : '',
+					'data'  => array( 'album' => (int) $album['id'] ),
+					'play'  => array(
+						'action' => 'play-album',
+						'data'   => array( 'album' => (int) $album['id'] ),
+						/* translators: %s: album name. */
+						'label'  => sprintf( __( 'Play %s', 'riff' ), $album['name'] ),
+					),
+				)
 			);
 		}
 		return $cards;
@@ -328,9 +321,9 @@ final class Browse {
 	private static function artists_view( string $page, int $number ): string {
 		$data = self::get( '/artists', array( 'page' => $number ) );
 		if ( ! $data['items'] ) {
-			return self::title( __( 'Artists', 'riff' ) ) . self::empty_note();
+			return Ui::title( __( 'Artists', 'riff' ) ) . self::empty_note();
 		}
-		return self::title( __( 'Artists', 'riff' ) ) . self::artist_list( $data['items'], $page ) . self::next( add_query_arg( self::VIEW, 'artists', $page ), $data );
+		return Ui::title( __( 'Artists', 'riff' ) ) . self::artist_list( $data['items'], $page ) . self::next( add_query_arg( self::VIEW, 'artists', $page ), $data );
 	}
 
 	/**
@@ -379,46 +372,21 @@ final class Browse {
 		$artists = self::get( '/artists' );
 		$posts   = App::post_cards( $page );
 		if ( ! $albums['items'] && ! $artists['items'] && '' === $posts ) {
-			return self::title( __( 'Home', 'riff' ) ) . self::empty_note();
+			return Ui::title( __( 'Home', 'riff' ) ) . self::empty_note();
 		}
-		$html  = self::title( __( 'Home', 'riff' ) );
-		$html .= self::shelf( 'jump', __( 'Jump back in', 'riff' ), '', '', true );
-		$html .= self::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
+		$html  = Ui::title( __( 'Home', 'riff' ) );
+		$html .= Ui::shelf( 'jump', __( 'Jump back in', 'riff' ), '', '', true );
+		$html .= Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
 		if ( $albums['items'] ) {
-			$html .= self::shelf( 'added', __( 'Recently added', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ), self::album_cards( $albums['items'], $page ) );
+			$html .= Ui::shelf( 'added', __( 'Recently added', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ), self::album_cards( $albums['items'], $page ) );
 		}
 		if ( $artists['items'] ) {
-			$html .= self::shelf( 'artists', __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ), self::artist_items( $artists['items'], $page ), false, 'ul' );
+			$html .= Ui::shelf( 'artists', __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ), self::artist_items( $artists['items'], $page ), false, 'ul' );
 		}
 		if ( '' !== $posts ) {
-			$html .= self::shelf( 'posts', __( 'New posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ), $posts );
+			$html .= Ui::shelf( 'posts', __( 'New posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ), $posts );
 		}
 		return $html;
-	}
-
-	/**
-	 * One row of Home: a heading, a Show all link, and items that scroll sideways.
-	 *
-	 * @param string $slug   The row's name, for the script and the styles.
-	 * @param string $title  Heading.
-	 * @param string $all    Show all's address, or empty for none.
-	 * @param string $items  The row's items.
-	 * @param bool   $device Whether the script fills it from this device; hidden until it does.
-	 * @param string $tag    The row's element: div for cards, ul for list items.
-	 * @return string
-	 */
-	public static function shelf( string $slug, string $title, string $all, string $items, bool $device = false, string $tag = 'div' ): string {
-		$id = 'riff-shelf-' . $slug;
-		return sprintf(
-			'<section class="riff-shelf" data-riff-shelf="%1$s" aria-labelledby="%2$s"%3$s><div class="riff-shelf-head"><h3 class="riff-shelf-title" id="%2$s">%4$s</h3>%5$s</div><%6$s class="riff-shelf-row" tabindex="0" aria-labelledby="%2$s">%7$s</%6$s></section>',
-			esc_attr( $slug ),
-			esc_attr( $id ),
-			$device ? ' hidden' : '',
-			esc_html( $title ),
-			'' !== $all ? '<a class="riff-shelf-all" href="' . esc_url( $all ) . '">' . esc_html__( 'Show all', 'riff' ) . '</a>' : '',
-			'ul' === $tag ? 'ul' : 'div',
-			$items
-		);
 	}
 
 	/**
@@ -549,7 +517,7 @@ final class Browse {
 		$artists = self::get( '/artists', array( 'search' => $search ) );
 		$tracks  = self::get( '/tracks', array( 'search' => $search ) );
 		/* translators: %s: the words searched for. */
-		$html = self::title( sprintf( __( 'Results for “%s”', 'riff' ), $search ) );
+		$html = Ui::title( sprintf( __( 'Results for “%s”', 'riff' ), $search ) );
 		if ( ! $albums['items'] && ! $artists['items'] && ! $tracks['items'] ) {
 			return $html . '<p class="riff-app-empty">' . esc_html__( 'Nothing matches that. Try fewer words, or part of a name.', 'riff' ) . '</p>';
 		}
@@ -578,7 +546,7 @@ final class Browse {
 	 */
 	private static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false, int $id = 0 ): string {
 		if ( ! $data['items'] ) {
-			return self::title( $title ) . self::empty_note();
+			return Ui::title( $title ) . self::empty_note();
 		}
 		// An album leads with its cover and numbers its tracks; other lists show each track's art.
 		$art  = $album && ! empty( $data['items'][0]['art'] ) ? (string) end( $data['items'][0]['art'] )['src'] : '';
@@ -637,6 +605,6 @@ final class Browse {
 	 * @return string
 	 */
 	private static function empty_note(): string {
-		return '<p class="riff-app-empty">' . esc_html__( 'Nothing here yet. Upload music to the Media Library, or import a folder with wp riff import.', 'riff' ) . '</p>';
+		return Ui::empty_note( __( 'Nothing here yet. Upload music to the Media Library, or import a folder with wp riff import.', 'riff' ) );
 	}
 }

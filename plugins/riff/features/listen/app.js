@@ -381,26 +381,66 @@ export function start( api ) {
 		}
 	}
 
-	function card( item, first = 0 ) {
-		const art = item.art?.length ? item.art[ item.art.length - 1 ].src : '';
-		// The same markup the server writes in Listen\App::card().
-		return (
-			`<div class="riff-card"${
-				first ? ` id="riff-page-${ first }"` : ''
-			} data-riff-post="${ item.id }">` +
-			`<span class="riff-card-art">${
-				art
-					? `<img src="${ esc(
-							art
-						) }" alt="" loading="lazy" decoding="async">`
-					: ''
-			}<button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="${ item.id }" aria-label="${ esc(
-				fmt( s.playTrack || 'Play %s', item.title )
-			) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span>` +
-			`<a class="riff-card-link" href="${ esc( addressOf( item.id ) ) }"><span class="riff-card-title">${ esc( item.title ) }</span></a>` +
-			`<span class="riff-card-sub">${ esc( meta( item ) ) }</span></div>`
+	// A card, from the one template the server prints in the block (Listen\Ui::card()), so a card
+	// the script adds is the same markup as one the server drew. Each part is filled or removed.
+	const template = app.querySelector( 'template[data-riff-card-template]' );
+	function makeCard( {
+		art,
+		title,
+		sub,
+		href,
+		play,
+		label,
+		data = {},
+		id = '',
+	} ) {
+		const card = template.content.firstElementChild.cloneNode( true );
+		card.classList.remove( 'riff-card-template' );
+		for ( const [ name, value ] of Object.entries( data ) ) {
+			card.setAttribute( `data-riff-${ name }`, String( value ) );
+		}
+		if ( id ) {
+			card.id = id;
+		}
+		const src = art?.length ? art[ art.length - 1 ].src : '';
+		const img = card.querySelector( '.riff-card-art img' );
+		if ( src ) {
+			img.src = src;
+		} else {
+			img.remove();
+		}
+		const button = card.querySelector( '.riff-card-play' );
+		button.dataset.riffAppAction = play.action;
+		for ( const [ name, value ] of Object.entries( play.data || {} ) ) {
+			button.setAttribute( `data-riff-${ name }`, String( value ) );
+		}
+		button.setAttribute(
+			'aria-label',
+			fmt( s.playTrack || 'Play %s', label )
 		);
+		const link = card.querySelector( '.riff-card-link' );
+		link.querySelector( '.riff-card-title' ).textContent = title;
+		if ( href ) {
+			link.href = href;
+		} else {
+			link.replaceWith( link.firstElementChild );
+		}
+		card.querySelector( '.riff-card-sub' ).textContent = sub || '';
+		return card.outerHTML;
 	}
+
+	// A post in the grid, as Listen\App::card() draws one.
+	const card = ( item, first = 0 ) =>
+		makeCard( {
+			art: item.art,
+			title: item.title,
+			sub: meta( item ),
+			href: addressOf( item.id ),
+			play: { action: 'play-card', data: { post: item.id } },
+			label: item.title,
+			data: { post: item.id },
+			id: first ? `riff-page-${ first }` : '',
+		} );
 
 	// "Artist · 10 tracks · 7 min". The server writes it into the item, with the language's own
 	// plural forms; the rest is for a source that does not.
@@ -646,14 +686,15 @@ export function start( api ) {
 			posts
 				.slice( 0, 12 )
 				.map( ( t ) =>
-					shelfCard( {
+					makeCard( {
 						art: t.art,
 						title: t.post.title,
 						sub: t.artist,
 						href: addressOf( t.post.id ),
-						play: `data-riff-app-action="play-card" data-riff-post="${ Number(
-							t.post.id
-						) }"`,
+						play: {
+							action: 'play-card',
+							data: { post: Number( t.post.id ) },
+						},
 						label: t.post.title,
 					} )
 				)
@@ -664,12 +705,12 @@ export function start( api ) {
 			played
 				.slice( 0, 20 )
 				.map( ( t, i ) =>
-					shelfCard( {
+					makeCard( {
 						art: t.art,
 						title: t.title,
 						sub: t.artist,
 						href: t.post?.id ? addressOf( t.post.id ) : '',
-						play: `data-riff-app-action="play-history" data-riff-index="${ i }"`,
+						play: { action: 'play-history', data: { index: i } },
 						label: t.title,
 					} )
 				)
@@ -682,26 +723,6 @@ export function start( api ) {
 		}
 	}
 
-	// A card in one of Home's rows, in the markup the server's cards use.
-	function shelfCard( { art, title, sub, href, play, label } ) {
-		const src = art?.length ? art[ art.length - 1 ].src : '';
-		const name = href
-			? `<a class="riff-card-link" href="${ esc( href ) }"><span class="riff-card-title">${ esc(
-					title
-				) }</span></a>`
-			: `<span class="riff-card-title">${ esc( title ) }</span>`;
-		return (
-			'<div class="riff-card"><span class="riff-card-art">' +
-			( src
-				? `<img src="${ esc( src ) }" alt="" loading="lazy" decoding="async">`
-				: '' ) +
-			`<button type="button" class="riff-card-play" ${ play } aria-label="${ esc(
-				fmt( s.playTrack || 'Play %s', label )
-			) }"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span>` +
-			name +
-			`<span class="riff-card-sub">${ esc( sub || '' ) }</span></div>`
-		);
-	}
 	home();
 
 	// ---- The sidebar, on a wide screen in standalone mode: full, or a rail of icons. The choice is

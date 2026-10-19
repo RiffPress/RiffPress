@@ -17,5 +17,14 @@
   },
   "lifecycleScripts": {
     "afterStart": "npx wp-env run cli wp rewrite structure '/%postname%/' --hard >/dev/null && npx wp-env run tests-cli wp rewrite structure '/%postname%/' --hard >/dev/null"
+  },
+  "env": {
+    "tests": {
+      "plugins": [
+        "./plugins/riff",
+        "./plugins/riff-lyrics",
+        "./plugins/riff/tests/components"
+      ]
+    }
   }
 }
