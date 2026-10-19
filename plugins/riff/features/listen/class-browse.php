@@ -68,12 +68,19 @@ final class Browse {
 	public const SORT = 'riff_sort';
 
 	/**
+	 * The query argument opening one of the signed-in listener's playlists, by post ID.
+	 *
+	 * @since 4.20.0
+	 */
+	public const PLAYLIST = 'riff_playlist';
+
+	/**
 	 * Every query argument a browse view uses, for the script to recognise its own addresses.
 	 *
 	 * @since 4.16.0
-	 * @since 4.20.0 Your Library's filter and sort.
+	 * @since 4.20.0 Your Library's filter and sort, and a playlist.
 	 */
-	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH, self::FILTER, self::SORT );
+	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH, self::FILTER, self::SORT, self::PLAYLIST );
 
 	/**
 	 * Icons for the navigation, as Material Icons draws them, beside each label in the sidebar.
@@ -103,7 +110,11 @@ final class Browse {
 		$artist = $read( self::ARTIST );
 		$search = trim( $read( self::SEARCH ) );
 		$view   = $read( self::VIEW );
+		$list   = $read( self::PLAYLIST );
 		// phpcs:enable
+		if ( ctype_digit( $list ) && (int) $list > 0 ) {
+			return array( 'view' => 'playlist', 'id' => (int) $list, 'search' => '', 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		}
 		if ( ctype_digit( $album ) && (int) $album > 0 ) {
 			return array( 'view' => 'album', 'id' => (int) $album, 'search' => '', 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
@@ -135,7 +146,7 @@ final class Browse {
 	 */
 	public static function nav( string $page, ?array $current ): string {
 		$here  = $current['view'] ?? 'home';
-		$here  = array( 'album' => 'albums', 'artist' => 'artists' )[ $here ] ?? $here; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		$here  = array( 'album' => 'albums', 'artist' => 'artists', 'playlist' => 'library' )[ $here ] ?? $here; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		$links = array(
 			'home'    => array( __( 'Home', 'riff' ), $page ),
 			'albums'  => array( __( 'Albums', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ) ),
@@ -161,6 +172,21 @@ final class Browse {
 				esc_attr( self::ICONS[ $slug ] ),
 				esc_html( $label )
 			);
+		}
+		// The signed-in listener's playlists under the views, as in Spotify's sidebar. Only the
+		// standalone sidebar shows them; as tabs there is no room.
+		$lists = Playlist_View::mine();
+		if ( $lists ) {
+			$links = '';
+			foreach ( $lists as $list ) {
+				$links .= sprintf(
+					'<li><a class="riff-app-playlist" href="%s"%s>%s</a></li>',
+					esc_url( add_query_arg( self::PLAYLIST, (int) $list['id'], $page ) ),
+					'playlist' === ( $current['view'] ?? '' ) && (int) $current['id'] === (int) $list['id'] ? ' aria-current="page"' : '',
+					esc_html( (string) $list['title'] )
+				);
+			}
+			$html .= sprintf( '<div class="riff-app-playlists"><p class="riff-app-playlists-title" id="riff-app-playlists">%s</p><ul aria-labelledby="riff-app-playlists">%s</ul></div>', esc_html__( 'Playlists', 'riff' ), $links );
 		}
 		// A plain GET form, so search works without the script; the page's own arguments ride along
 		// for a site without pretty permalinks.
@@ -205,6 +231,8 @@ final class Browse {
 				return App::posts_view( $page );
 			case 'library':
 				return Collection::view( $page );
+			case 'playlist':
+				return Playlist_View::view( $page, $current['id'] );
 			case 'album':
 				return self::album_view( $page, $current['id'] );
 			case 'artist':

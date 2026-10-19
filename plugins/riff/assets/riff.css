@@ -2416,6 +2416,24 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	box-shadow: 0 8px 24px -8px rgb(30 30 30 / 0.35);
 }
 
+/* A playlist's cover: its first four covers, two by two, on a card or a
+   header alike. */
+.riff-app .riff-mosaic {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	width: 100%;
+	height: 100%;
+}
+
+.riff-app .riff-mosaic img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	object-fit: cover;
+}
+
 /* A card's variants: Liked songs, with a heart for its cover, and an artist,
    round, with a letter when there is no picture. */
 .riff-app .riff-card-liked .riff-card-art {
@@ -2744,6 +2762,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-album-actions {
 	display: flex;
 	flex: none;
+
+	/* A playlist's Rename and Delete beside Play and Shuffle go to a second
+	   line on a phone rather than past the window's edge. */
+	flex-wrap: wrap;
 	gap: 12px;
 	margin: 24px 0 0;
 }
@@ -2898,6 +2920,45 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-app .riff-library-songs .riff-album-actions {
 	margin-bottom: 24px;
+}
+
+/* Your Library's New playlist, at the end of its bar. */
+.riff-app .riff-library-create {
+	height: 36px;
+	padding: 0 18px;
+	font-size: 14px;
+}
+
+/* Renaming a playlist: its name becomes a field, with Save and Cancel. */
+.riff-app .riff-rename {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 4px;
+}
+
+.riff-app .riff-rename input {
+	flex: 1 1 240px;
+	min-width: 0;
+	height: 44px;
+	padding: 0 12px;
+	border: 1px solid var(--riff-app-ink);
+	border-radius: 2px;
+	background: var(--riff-app-surface);
+	color: var(--riff-app-ink);
+	font: inherit;
+	font-size: 20px;
+}
+
+.riff-app .riff-rename input:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+/* The playlists under the views, only in the standalone sidebar. */
+.riff-app-playlists {
+	display: none;
 }
 
 .riff-app .riff-library-note {
@@ -3169,6 +3230,55 @@ html.has-riff .riff-standalone .riff-app {
 
 	.riff-standalone .riff-app .riff-app-search input {
 		max-width: none;
+	}
+
+	.riff-standalone .riff-app-playlists {
+		display: block;
+		order: 1;
+		min-width: 0;
+		margin: 16px 0 0;
+		padding: 16px 0 0;
+		border-top: 1px solid var(--riff-app-line);
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-playlists {
+		display: none;
+	}
+
+	.riff-standalone .riff-app-playlists-title {
+		margin: 0 12px 8px;
+		color: var(--riff-app-ink-2);
+		font-size: 13px;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.riff-standalone .riff-app-playlists ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-playlist {
+		display: block;
+		overflow: hidden;
+		padding: 8px 12px;
+		border-radius: 8px;
+		color: inherit;
+		font-size: 15px;
+		text-decoration: none;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.riff-standalone .riff-app .riff-app-playlist:hover,
+	.riff-standalone .riff-app .riff-app-playlist[aria-current="page"] {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app .riff-app-playlist:focus-visible {
+		outline: 2px solid var(--riff-app-accent);
+		outline-offset: -2px;
 	}
 
 	.riff-standalone .riff-app .riff-app-tab {

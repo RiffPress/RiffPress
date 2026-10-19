@@ -513,6 +513,10 @@ export function start( api ) {
 			loadMore( action );
 			return;
 		}
+		if ( playlistAction( action ) ) {
+			e.preventDefault();
+			return;
+		}
 		if ( action?.dataset.riffAppAction === 'like' ) {
 			likeFrom( action );
 			return;
@@ -659,6 +663,208 @@ export function start( api ) {
 		}
 	}
 	api.on?.( 'like', likeChanged );
+
+	// ---- Playlists. Made, renamed and deleted from Your Library and a playlist's page; tracks moved
+	// and taken out from each row's … menu, which this adds to through riff.trackMenu as any plugin
+	// would. Every change goes through the player's api.
+	const listAddress = ( id ) => {
+		const u = new URL( page );
+		u.searchParams.set( browseArgs[ 6 ] || 'riff_playlist', String( id ) );
+		return u.toString();
+	};
+	const libraryAddress = ( filter = '' ) => {
+		const u = new URL( page );
+		u.searchParams.set( viewKey, 'library' );
+		if ( filter ) {
+			u.searchParams.set( browseArgs[ 4 ] || 'riff_filter', filter );
+		}
+		return u.toString();
+	};
+	const failed = () =>
+		tell(
+			s.playlistFailed || 'The playlist could not be changed. Try again.'
+		);
+	// The view showing, drawn again in place, then the focus put where it belongs.
+	async function redraw( focus ) {
+		const here = postOf( location.href );
+		if ( here ) {
+			await show( here, { quiet: true } ).catch( () => {} );
+		}
+		focus?.()?.focus();
+	}
+	function playlistAction( action ) {
+		const kind = action?.dataset.riffAppAction;
+		const id = Number( action?.dataset.riffPlaylist );
+		if ( kind === 'new-playlist' ) {
+			api.createPlaylist( s.newPlaylist || 'New playlist' ).then(
+				( p ) => {
+					const to = postOf( listAddress( p.id ) );
+					if ( to ) {
+						show( to ).catch( () => {} );
+					}
+				},
+				failed
+			);
+			return true;
+		}
+		if ( kind === 'play-playlist' ) {
+			api.playlist( id ).then(
+				( p ) => {
+					if ( p.tracks?.length ) {
+						api.play( p.tracks, 0 );
+					}
+				},
+				() => tell( s.playError || '' )
+			);
+			return true;
+		}
+		if ( kind === 'rename-playlist' ) {
+			rename( action, id );
+			return true;
+		}
+		if ( kind === 'delete-playlist' ) {
+			const name =
+				view.querySelector( '.riff-album-title' )?.textContent || '';
+			// The browser's own confirmation, as core's list tables ask before deleting.
+			// eslint-disable-next-line no-alert
+			const sure = window.confirm(
+				fmt( s.confirmDelete || 'Delete %s?', name )
+			);
+			if ( sure ) {
+				api.deletePlaylist( id ).then( () => {
+					const to = postOf( libraryAddress( 'playlists' ) );
+					if ( to ) {
+						show( to ).catch( () => {} );
+					}
+				}, failed );
+			}
+			return true;
+		}
+		return false;
+	}
+
+	// Renaming: the name becomes a field, Enter or Save keeps it, Escape or Cancel puts it back.
+	function rename( button, id ) {
+		const title = view.querySelector( '.riff-album-title' );
+		if ( ! title || view.querySelector( '.riff-rename' ) ) {
+			return;
+		}
+		const form = document.createElement( 'form' );
+		form.className = 'riff-rename';
+		form.innerHTML =
+			`<label class="riff-app-sr" for="riff-rename">${ esc( s.playlistName || 'Playlist name' ) }</label>` +
+			`<input id="riff-rename" type="text" maxlength="200" required value="${ esc( title.textContent ) }">` +
+			`<button type="submit" class="riff-pill riff-pill-solid">${ esc( s.save || 'Save' ) }</button>` +
+			`<button type="button" class="riff-pill" data-riff-cancel>${ esc( s.cancel || 'Cancel' ) }</button>`;
+		title.hidden = true;
+		title.after( form );
+		const field = form.querySelector( 'input' );
+		field.focus();
+		field.select();
+		const done = () => {
+			form.remove();
+			title.hidden = false;
+			button.focus();
+		};
+		form.querySelector( '[data-riff-cancel]' ).addEventListener(
+			'click',
+			done
+		);
+		form.addEventListener( 'keydown', ( e ) => {
+			if ( e.key === 'Escape' ) {
+				e.preventDefault();
+				e.stopPropagation();
+				done();
+			}
+		} );
+		form.addEventListener( 'submit', ( e ) => {
+			e.preventDefault();
+			e.stopPropagation();
+			api.renamePlaylist( id, field.value ).then(
+				() =>
+					redraw( () =>
+						view.querySelector(
+							'[data-riff-app-action="rename-playlist"]'
+						)
+					),
+				failed
+			);
+		} );
+	}
+
+	// A row in a playlist's page gets Move up, Move down and Remove from this playlist.
+	window.wp?.hooks?.addFilter(
+		'riff.trackMenu',
+		'riff/listen/playlist',
+		( items, track, context ) => {
+			const holder = context?.element?.closest?.(
+				'[data-riff-playlist]'
+			);
+			if ( ! holder || ! view.contains( holder ) ) {
+				return items;
+			}
+			const id = Number( holder.dataset.riffPlaylist );
+			const ids = parse( holder.dataset.riffIds ) || [];
+			const places = parse( holder.dataset.riffPlaces ) || [];
+			const rows = [ ...holder.querySelectorAll( '[data-riff-track]' ) ];
+			const at = rows.indexOf( context.element );
+			const spot = places[ at ];
+			if ( spot === undefined ) {
+				return items;
+			}
+			// Found once the view is drawn again, in the new rows, not these.
+			const rowMenu = ( n ) => () =>
+				view
+					.querySelectorAll( '[data-riff-playlist] [data-riff-track]' )
+					[ n ]?.querySelector( '.riff-more-button' );
+			const move = ( to ) => () => {
+				const next = [ ...ids ];
+				const [ moved ] = next.splice( spot, 1 );
+				next.splice( places[ to ], 0, moved );
+				api.setPlaylistTracks( id, next ).then(
+					() => redraw( rowMenu( to ) ),
+					failed
+				);
+			};
+			const extra = [];
+			if ( at > 0 ) {
+				extra.push( {
+					id: 'playlist-up',
+					label: s.moveUp || 'Move up',
+					run: move( at - 1 ),
+				} );
+			}
+			if ( at < rows.length - 1 ) {
+				extra.push( {
+					id: 'playlist-down',
+					label: s.moveDown || 'Move down',
+					run: move( at + 1 ),
+				} );
+			}
+			extra.push( {
+				id: 'playlist-remove',
+				label: s.removeFromPlaylist || 'Remove from this playlist',
+				run: () =>
+					api.removeFromPlaylist( id, spot ).then( ( p ) => {
+						tell(
+							fmt(
+								s.removedFromPlaylist || 'Removed from %s',
+								p.title
+							)
+						);
+						redraw(
+							() =>
+								rowMenu( Math.min( at, rows.length - 2 ) )() ||
+								view.querySelector( 'h2' )
+						);
+					}, failed ),
+			} );
+			return [ ...items, ...extra ];
+		}
+	);
+
+	// A change to a playlist leaves every view drawn before it out of date, its sidebar included.
+	api.on?.( 'playlist', () => rendered.clear() );
 
 	// ---- Home's rows of what was played, from this device: the posts last played from, to jump
 	// back into, and the tracks themselves. Each stays hidden while there is nothing in it.

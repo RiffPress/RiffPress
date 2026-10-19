@@ -359,6 +359,20 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 | `detail.track` | `Object` | The track. |
 | `api` | `Object` | `window.riff`. |
 
+#### `riff.playlist`
+
+Fires when one of the signed-in listener's playlists is made, changed or deleted.
+
+Since 4.20.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.change` | `string` | `create`, `add`, `rename`, `reorder`, `remove` or `delete`. |
+| `detail.playlist` | `Object` | The playlist, `{ id, title, count }`. |
+| `detail.playlists` | `Object[]` | Every playlist, the most recently changed first. |
+| `api` | `Object` | `window.riff`. |
+
 #### `riff.queue`
 
 Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
