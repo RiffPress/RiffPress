@@ -153,6 +153,46 @@ test( 'signed in, a heart on a row and in the bar saves to the account, and stay
 	expect( await page.evaluate( () => window.riffLikes ) ).toEqual( [ 'like track', 'unlike track' ] );
 } );
 
+// How many of a heart's two icons can be seen: one, the outline or the filled heart.
+const shown = ( heart ) =>
+	heart.evaluate( ( b ) =>
+		[ ...b.querySelectorAll( 'svg' ) ]
+			.filter( ( svg ) => getComputedStyle( svg ).display !== 'none' && svg.getBoundingClientRect().width > 0 )
+			.map( ( svg ) => svg.matches( ':last-child' ) )
+	);
+
+test( 'every heart shows one icon, the outline or the filled one, liked or not', async ( {
+	page,
+} ) => {
+	const check = async ( heart, where ) => {
+		await expect( heart, where ).toBeVisible();
+		const before = await heart.getAttribute( 'aria-pressed' );
+		expect( await shown( heart ), `${ where }, ${ before }` ).toEqual( [ before === 'true' ] );
+		await heart.click();
+		await expect( heart ).toHaveAttribute( 'aria-pressed', before === 'true' ? 'false' : 'true' );
+		expect( await shown( heart ), `${ where }, after a press` ).toEqual( [ before !== 'true' ] );
+	};
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( 0 ).click();
+	const row = page.locator( '.riff-track' ).nth( 1 ).locator( '.riff-like-button' );
+	await page.locator( '.riff-track' ).nth( 1 ).hover();
+	await check( row, 'a row' );
+	await check( page.locator( '.riff-bar [data-riff-action="like"]' ), 'the bar' );
+
+	// Now Playing's own heart shows at a phone's width, where the bar is covered.
+	await page.setViewportSize( { width: 390, height: 844 } );
+	await page.locator( '.riff-bar-info' ).click();
+	await check( page.locator( '.riff-np-meta [data-riff-action="like"]' ), 'Now Playing' );
+	await page.keyboard.press( 'Escape' );
+	await page.setViewportSize( { width: 1280, height: 720 } );
+
+	for ( const app of [ listenUrl, listenUrl.replace( /\/?$/, '/' ) + 'app/' ] ) {
+		await page.goto( withArg( app, `riff_album=${ album }` ) );
+		await check( page.locator( '.riff-app-like' ), `an album page at ${ app }` );
+		await check( page.locator( '.riff-bar [data-riff-action="like"]' ), `the bar at ${ app }` );
+	}
+} );
+
 test( 'a like the account refuses goes back, and says so', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.route( /riff\/v1\/users\/me\/likes/, ( route ) => route.fulfill( { status: 403, body: '{}' } ) );

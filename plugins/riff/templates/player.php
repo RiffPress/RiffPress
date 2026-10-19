@@ -46,7 +46,7 @@ defined( 'ABSPATH' ) || exit;
 		</button>
 		<div class="riff-bar-end">
 			<?php // The heart, on a phone beside Play as Spotify's mini player has it. Shown for a track in the Media Library. ?>
-			<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::icon( 'heart' ) . Player::icon( 'hearted' ); ?></button>
+			<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
 			<?php // The format and bit rate, a pill at the bar's right end, as Tidal sets its tier. ?>
 			<span class="riff-quality riff-desk" data-riff-text="quality"></span>
 			<button type="button" class="riff-btn riff-mobile" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
@@ -93,7 +93,7 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 			<div class="riff-np-panel">
 				<div class="riff-np-meta">
-					<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::icon( 'heart' ) . Player::icon( 'hearted' ); ?></button>
+					<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
 					<h2 class="riff-np-title" data-riff-text="title"></h2>
 					<p class="riff-np-sub" data-riff-text="artist"></p>
 					<p class="riff-np-quality"><span class="riff-quality" data-riff-text="quality"></span></p>
