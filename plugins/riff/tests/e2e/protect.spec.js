@@ -95,16 +95,18 @@ test( 'a protected file plays and seeks through WordPress, and its post links to
 		'src',
 		new RegExp( `riff-file=${ open.id }` )
 	);
-	const ranged = page.waitForResponse(
-		( r ) => r.url().includes( 'riff-file=' ) && r.status() === 206
-	);
+	// Wait for playback, not for a 206: WebKit on Linux (GStreamer) fetches the file whole first and
+	// only sometimes follows with a ranged request, so a browser's 206 is not something to wait for.
+	// The direct request at the end checks Range support.
 	await page.locator( '.riff-row' ).first().click();
-	await ranged;
 	await expect
 		.poll( () => page.evaluate( () => window.riff.playing() ), {
 			timeout: 15000,
 		} )
 		.toBe( true );
+	expect(
+		await page.evaluate( () => document.querySelector( '.riff-audio' ).currentSrc )
+	).toContain( `riff-file=${ open.id }` );
 	await page.evaluate( () => window.riff.seek( 120 ) );
 	await expect
 		.poll( () =>
