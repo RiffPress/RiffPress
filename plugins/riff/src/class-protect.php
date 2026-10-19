@@ -215,13 +215,34 @@ final class Protect {
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a search no WP_Query offers, once per change.
 		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'attachment' ) AND post_content LIKE %s", '%' . $wpdb->esc_like( $from ) . '%' ) );
+		$changed = 0;
 		foreach ( $ids as $post_id ) {
 			$content = (string) get_post_field( 'post_content', (int) $post_id, 'raw' );
+			$updated = self::replace( $from, $to, $content );
+			if ( $updated === $content ) {
+				continue;
+			}
 			// Straight to the row: an address changing is not an edit, so no revision and no kses.
-			$wpdb->update( $wpdb->posts, array( 'post_content' => str_replace( $from, $to, $content ) ), array( 'ID' => (int) $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->update( $wpdb->posts, array( 'post_content' => $updated ), array( 'ID' => (int) $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			clean_post_cache( (int) $post_id );
+			++$changed;
 		}
-		return count( $ids );
+		return $changed;
+	}
+
+	/**
+	 * Replaces an address in text where it is the whole address, so ?riff-file=12 is not found
+	 * inside ?riff-file=123.
+	 *
+	 * @since 4.20.1
+	 *
+	 * @param string $from Old address.
+	 * @param string $to   New address.
+	 * @param string $text Text.
+	 * @return string
+	 */
+	public static function replace( string $from, string $to, string $text ): string {
+		return (string) preg_replace( '/' . preg_quote( $from, '/' ) . '(?![0-9])/', addcslashes( $to, '\\$' ), $text );
 	}
 
 	/**

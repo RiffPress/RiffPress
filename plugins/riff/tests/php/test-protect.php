@@ -5,6 +5,7 @@
  * @package Riff
  */
 
+use Riff\Catalog;
 use Riff\Protect;
 use Riff\Tracks;
 
@@ -169,5 +170,56 @@ class Test_Riff_Protect extends Riff_TestCase {
 		Protect::save( array( 'ID' => $this->track ), array( 'riff_protected' => '0' ) );
 		$this->assertFalse( Protect::is( $this->track ) );
 		$this->assertArrayNotHasKey( 'riff_protected', Protect::field( array(), get_post( self::attach( 'cover.png' ) ) ), 'not on an image' );
+	}
+
+	public function test_an_address_is_relinked_only_where_it_is_the_whole_address(): void {
+		$from = Protect::address( 5 );
+		$text = sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><a href="%1$s&amp;x=1">', $from, Protect::address( 55 ) );
+
+		$this->assertSame(
+			sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><a href="%1$s&amp;x=1">', 'https://cdn.example/$1.mp3', Protect::address( 55 ) ),
+			Protect::replace( $from, 'https://cdn.example/$1.mp3', $text ),
+			'file 55\'s address is left alone, and the new address is taken literally'
+		);
+	}
+
+	public function test_relinking_one_file_leaves_a_file_whose_id_starts_the_same_alone(): void {
+		$longer = Protect::address( $this->track ) . '7';
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => '<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="' . $longer . '"></audio></figure><!-- /wp:audio -->',
+			)
+		);
+
+		Protect::protect( $this->track );
+		Protect::unprotect( $this->track );
+
+		$this->assertStringContainsString( 'src="' . $longer . '"', (string) get_post_field( 'post_content', $this->post ) );
+	}
+
+	public function test_uninstalling_relinks_only_the_whole_address(): void {
+		Protect::protect( $this->track );
+		$longer = Protect::address( $this->track ) . '7';
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => sprintf( '<audio src="%s"></audio><audio src="%s"></audio>', Protect::address( $this->track ), $longer ),
+			)
+		);
+
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', 'riff/riff.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- core's own constant.
+		}
+		// Uninstalling runs with the plugin not loaded, so without its filter on file addresses.
+		remove_filter( 'wp_get_attachment_url', array( Protect::class, 'url' ), 99 );
+		include dirname( __DIR__, 2 ) . '/uninstall.php';
+		add_filter( 'wp_get_attachment_url', array( Protect::class, 'url' ), 99, 2 );
+		Catalog::taxonomies();
+
+		$content = (string) get_post_field( 'post_content', $this->post );
+		$this->assertFalse( Protect::is( $this->track ), 'the file is back where it was' );
+		$this->assertStringContainsString( 'src="' . wp_get_attachment_url( $this->track ) . '"', $content );
+		$this->assertStringContainsString( 'src="' . $longer . '"', $content, 'another file\'s address is left alone' );
 	}
 }
