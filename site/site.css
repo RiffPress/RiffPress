@@ -413,115 +413,36 @@ picture {
 	line-height: 1.7;
 }
 
-/* the two sides: the admin on a light card, the listener on the player's
-   dark */
+/* the two sides, side by side in plain prose */
 .sides {
 	margin: var(--gap) auto 0;
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
-	gap: 24px;
-	max-width: 1040px;
+	gap: 40px var(--gap);
+	max-width: 960px;
 	text-align: left;
+	border-top: 1px solid var(--line);
+	padding-top: 40px;
 }
 
-.side {
-	padding: clamp(28px, 4vw, 44px);
-	border-radius: 16px;
-	background: var(--white);
-	border: 1px solid var(--line);
-	box-shadow: 0 1px 2px rgb(0 0 0 / 4%), 0 12px 32px -16px rgb(0 0 0 / 12%);
-}
-
-.side-them {
-	background: #030303;
-	border-color: #030303;
-	color: var(--white);
-}
-
-.side-tag {
-	margin: 0 0 8px;
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--accent);
-}
-
-.side-them .side-tag {
-	color: #ffb020;
-}
-
-.side h3 {
-	margin: 0 0 24px;
+.sides h3 {
+	margin: 0 0 12px;
 	font-family: var(--serif);
-	font-size: clamp(1.75rem, 3vw, 2.25rem);
+	font-size: clamp(1.5rem, 2.5vw, 1.875rem);
 	font-weight: 400;
-	line-height: 1.2;
+	line-height: 1.25;
 }
 
-.side ul {
-	list-style: none;
+.sides p {
 	margin: 0;
-	padding: 0;
-	display: grid;
-	gap: 18px;
-}
-
-.side li {
-	position: relative;
-	padding-left: 32px;
-	font-size: 0.9375rem;
-	line-height: 1.6;
+	font-size: 1rem;
+	line-height: 1.75;
 	color: var(--ink-2);
-}
-
-.side li::before {
-	content: "";
-	position: absolute;
-	left: 0;
-	top: 3px;
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: var(--blueberry-4);
-}
-
-.side li::after {
-	content: "";
-	position: absolute;
-	left: 7px;
-	top: 7px;
-	width: 6px;
-	height: 10px;
-	border: solid var(--blueberry);
-	border-width: 0 2px 2px 0;
-	transform: rotate(45deg);
-}
-
-.side li strong {
-	display: block;
-	font-weight: 600;
-	color: var(--ink);
-}
-
-.side-them li {
-	color: #aaa;
-}
-
-.side-them li strong {
-	color: var(--white);
-}
-
-.side-them li::before {
-	background: rgb(255 176 32 / 14%);
-}
-
-.side-them li::after {
-	border-color: #ffb020;
+	text-wrap: pretty;
 }
 
 .sides + .fine {
-	margin: 32px auto 0;
+	margin: 40px auto 0;
 	max-width: 40rem;
 	font-size: 0.8125rem;
 	color: var(--ink-3);
