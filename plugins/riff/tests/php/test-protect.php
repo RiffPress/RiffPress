@@ -5,6 +5,7 @@
  * @package Riff
  */
 
+use Riff\Catalog;
 use Riff\Protect;
 use Riff\Tracks;
 
@@ -169,5 +170,93 @@ class Test_Riff_Protect extends Riff_TestCase {
 		Protect::save( array( 'ID' => $this->track ), array( 'riff_protected' => '0' ) );
 		$this->assertFalse( Protect::is( $this->track ) );
 		$this->assertArrayNotHasKey( 'riff_protected', Protect::field( array(), get_post( self::attach( 'cover.png' ) ) ), 'not on an image' );
+	}
+
+	public function test_an_address_is_relinked_only_where_it_is_the_whole_address(): void {
+		$from = Protect::address( 5 );
+		$text = sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><a href="%1$s&amp;x=1">', $from, Protect::address( 55 ) );
+
+		$this->assertSame(
+			sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><a href="%1$s&amp;x=1">', 'https://cdn.example/$1.mp3', Protect::address( 55 ) ),
+			Protect::replace( $from, 'https://cdn.example/$1.mp3', $text ),
+			'file 55\'s address is left alone, and the new address is taken literally'
+		);
+	}
+
+	public function test_relinking_one_file_leaves_a_file_whose_id_starts_the_same_alone(): void {
+		$longer = Protect::address( $this->track ) . '7';
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => '<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="' . $longer . '"></audio></figure><!-- /wp:audio -->',
+			)
+		);
+
+		Protect::protect( $this->track );
+		Protect::unprotect( $this->track );
+
+		$this->assertStringContainsString( 'src="' . $longer . '"', (string) get_post_field( 'post_content', $this->post ) );
+	}
+
+	public function test_uninstalling_relinks_only_the_whole_address(): void {
+		Protect::protect( $this->track );
+		$longer = Protect::address( $this->track ) . '7';
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => sprintf( '<audio src="%s"></audio><audio src="%s"></audio>', Protect::address( $this->track ), $longer ),
+			)
+		);
+
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', 'riff/riff.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- core's own constant.
+		}
+		// Uninstalling runs with the plugin not loaded, so without its filter on file addresses.
+		remove_filter( 'wp_get_attachment_url', array( Protect::class, 'url' ), 99 );
+		include dirname( __DIR__, 2 ) . '/uninstall.php';
+		add_filter( 'wp_get_attachment_url', array( Protect::class, 'url' ), 99, 2 );
+		Catalog::taxonomies();
+
+		$content = (string) get_post_field( 'post_content', $this->post );
+		$this->assertFalse( Protect::is( $this->track ), 'the file is back where it was' );
+		$this->assertStringContainsString( 'src="' . wp_get_attachment_url( $this->track ) . '"', $content );
+		$this->assertStringContainsString( 'src="' . $longer . '"', $content, 'another file\'s address is left alone' );
+	}
+
+	public function test_a_file_that_is_no_longer_protected_sends_on_only_a_visitor_who_may_have_it(): void {
+		$this->assertSame( (string) wp_get_attachment_url( $this->track ), Protect::moved( $this->track ), 'a published post\'s file' );
+
+		wp_update_post(
+			array(
+				'ID'          => $this->post,
+				'post_status' => 'draft',
+			)
+		);
+		$this->assertSame( '', Protect::moved( $this->track ), 'not a draft\'s, to a visitor' );
+		$this->assertSame( '', Protect::moved( self::attach( 'cover.png' ) ), 'nor an image' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertSame( (string) wp_get_attachment_url( $this->track ), Protect::moved( $this->track ), 'someone who can read the post is sent on' );
+	}
+
+	public function test_the_site_health_check_asks_its_loopback_like_core_does(): void {
+		Protect::dir();
+		$seen = null;
+		$hook = static function ( $pre, $args ) use ( &$seen ) {
+			$seen = $args['sslverify'];
+			return array(
+				'headers'  => array(),
+				'body'     => '',
+				'response' => array( 'code' => 403 ),
+				'cookies'  => array(),
+			);
+		};
+		add_filter( 'pre_http_request', $hook, 10, 2 );
+		add_filter( 'https_local_ssl_verify', '__return_true' );
+		Protect::health();
+		remove_filter( 'https_local_ssl_verify', '__return_true' );
+		remove_filter( 'pre_http_request', $hook, 10 );
+
+		$this->assertTrue( $seen, 'https_local_ssl_verify decides, as for core\'s own loopback requests' );
 	}
 }

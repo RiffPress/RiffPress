@@ -45,6 +45,15 @@ test( 'an action without a docblock is still listed, marked undocumented', () =>
 	assert.equal( hook.since, '' );
 } );
 
+test( 'a WordPress hook applied the way core applies it is left to core to document', () => {
+	const file = tmp( `<?php
+		/** This filter is documented in wp-includes/cron.php */
+		$verify = apply_filters( 'https_local_ssl_verify', false );
+		do_action( 'riff_before_player' );
+` );
+	assert.deepEqual( hooksIn( file ).map( ( h ) => h.name ), [ 'riff_before_player' ] );
+} );
+
 test( 'a deprecated hook is flagged', () => {
 	const file = tmp( `<?php
 		/**

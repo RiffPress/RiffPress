@@ -311,4 +311,33 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'me', $data );
 		$this->assertStringContainsString( 'wp-login.php', $data['signIn'] );
 	}
+
+	public function test_a_playlists_covers_come_only_from_tracks_the_listener_can_see(): void {
+		$image = self::factory()->attachment->create_upload_object( self::fixture( 'cover.png' ) );
+		set_post_thumbnail( $this->secret, $image );
+		$cover = (string) wp_get_attachment_image_src( $image, 'large' )[0];
+		$draft = (int) get_post_field( 'post_parent', $this->secret );
+		// Added while its post was published; the post is a draft again now.
+		wp_update_post(
+			array(
+				'ID'          => $draft,
+				'post_status' => 'publish',
+			)
+		);
+		$id = Playlists::create( $this->user, 'Road trip', array( $this->secret, $this->tracks[0] ) );
+		wp_update_post(
+			array(
+				'ID'          => $draft,
+				'post_status' => 'draft',
+			)
+		);
+
+		wp_set_current_user( $this->user );
+		$summary = Playlists::summary( get_post( $id ) );
+		$this->assertNotEmpty( $summary['covers'] );
+		$this->assertNotContains( $cover, $summary['covers'], 'no cover from a track on a post they cannot read' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertContains( $cover, Playlists::summary( get_post( $id ) )['covers'], 'someone who can see it does get it' );
+	}
 }

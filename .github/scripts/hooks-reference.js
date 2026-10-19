@@ -152,6 +152,10 @@ function hooksIn( file ) {
 	const found = [];
 	const claimed = new Map();
 	for ( const m of src.matchAll( re ) ) {
+		// A WordPress hook Riff applies the way core does, such as https_local_ssl_verify, is core's to document.
+		if ( ! js && ! m[ 2 ].startsWith( 'riff' ) ) {
+			continue;
+		}
 		const line = src.slice( 0, m.index ).split( '\n' ).length - 1;
 		const open = m.index + m[ 1 ].length;
 		const { args, end } = callArgs( src, open );

@@ -389,15 +389,16 @@ test.describe( 'Player', () => {
 		await page.mouse.move( seek.x + 300, seek.y + seek.height / 2 );
 		const knob = await page.locator( '.riff-knob' ).boundingBox();
 		expect( knob.width ).toBe( 14 );
-		// The knob rises above the bar into Now Playing's space and is drawn over it, whole.
-		await expect( page.locator( '.riff-np' ) ).toBeVisible();
 		await expect( page.locator( '.riff-knob' ) ).toHaveCSS( 'opacity', '1' );
-		const onTop = await page.evaluate(
-			( { x, y } ) =>
-				!! document.elementFromPoint( x, y )?.closest( '.riff-bar' ),
-			{ x: knob.x + knob.width / 2, y: knob.y + 2 }
-		);
-		expect( onTop ).toBe( true );
+		// The seek line sits under the transport, inside the bar, with a time at each end.
+		const bar = await page.locator( '.riff-bar' ).boundingBox();
+		const play = await page.locator( '.riff-bar .riff-play' ).boundingBox();
+		expect( seek.y ).toBeGreaterThanOrEqual( play.y + play.height );
+		expect( knob.y ).toBeGreaterThanOrEqual( bar.y );
+		expect( seek.y + seek.height ).toBeLessThanOrEqual( bar.y + bar.height );
+		const times = page.locator( '.riff-bar .riff-time' );
+		expect( ( await times.nth( 0 ).boundingBox() ).x ).toBeLessThan( seek.x );
+		expect( ( await times.nth( 1 ).boundingBox() ).x ).toBeGreaterThan( seek.x + seek.width - 1 );
 	} );
 
 	test( 'a track with a video switches to it without losing its place', async ( {

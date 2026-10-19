@@ -4,8 +4,9 @@
  *
  * The layout follows YouTube Music: on a phone, Now Playing is a full screen with the queue in a
  * sheet that peeks from the bottom; on a wide screen, the bar stays and Now Playing shows the art
- * beside an Up next panel. Controls that appear in more than one place are separate buttons with the
- * same data-riff-action, and riff.js keeps every copy in step, so no control owns any state.
+ * beside an Up next panel. The wide bar is arranged as Tidal's, with the seek line under the
+ * transport. Controls that appear in more than one place are separate buttons with the same
+ * data-riff-action, and riff.js keeps every copy in step, so no control owns any state.
  *
  * @package Riff
  */
@@ -18,25 +19,6 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div id="riff" class="riff" hidden<?php echo Player::root_style(); ?>>
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
-		<div class="riff-bar-seek">
-			<?php // The filament: the played part of the line is a wire that glows with the music (riff.js). ?>
-			<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i></span>
-			<b class="riff-knob" aria-hidden="true"></b>
-			<span class="riff-tip" aria-hidden="true" hidden></span>
-			<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Seek', 'riff' ); ?>">
-		</div>
-		<div class="riff-bar-start">
-			<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="prev" aria-label="<?php esc_attr_e( 'Previous', 'riff' ); ?>"><?php echo Player::icon( 'prev' ); ?></button>
-			<button type="button" class="riff-btn riff-play" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><?php echo Player::icon( 'play' ) . Player::icon( 'pause' ); ?></button>
-			<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="next" aria-label="<?php esc_attr_e( 'Next', 'riff' ); ?>"><?php echo Player::icon( 'next' ); ?></button>
-			<?php // Times read left to right in every language; the separator is the translator's. ?>
-			<span class="riff-time riff-desk" dir="ltr">
-				<?php
-				/* translators: 1: elapsed time, 2: total time. */
-				printf( esc_html__( '%1$s / %2$s', 'riff' ), '<span data-riff-text="current">0:00</span>', '<span data-riff-text="duration">0:00</span>' );
-				?>
-			</span>
-		</div>
 		<button type="button" class="riff-bar-info" data-riff-action="open" aria-label="<?php esc_attr_e( 'Open Now Playing', 'riff' ); ?>" aria-haspopup="dialog">
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
@@ -44,6 +26,28 @@ defined( 'ABSPATH' ) || exit;
 				<span class="riff-sub" data-riff-text="subtitle"></span>
 			</span>
 		</button>
+		<?php // On a wide screen the transport sits in the middle with the seek line under it, as Tidal has it. ?>
+		<div class="riff-bar-center">
+			<div class="riff-bar-transport">
+				<button type="button" class="riff-btn riff-desk riff-mode" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
+				<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="prev" aria-label="<?php esc_attr_e( 'Previous', 'riff' ); ?>"><?php echo Player::icon( 'prev' ); ?></button>
+				<button type="button" class="riff-btn riff-play" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><?php echo Player::icon( 'play' ) . Player::icon( 'pause' ); ?></button>
+				<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="next" aria-label="<?php esc_attr_e( 'Next', 'riff' ); ?>"><?php echo Player::icon( 'next' ); ?></button>
+				<button type="button" class="riff-btn riff-desk riff-mode" data-riff-action="repeat" aria-label="<?php esc_attr_e( 'Repeat off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
+			</div>
+			<div class="riff-bar-progress">
+				<?php // Times read left to right in every language. ?>
+				<span class="riff-time riff-desk" dir="ltr" data-riff-text="current">0:00</span>
+				<div class="riff-bar-seek">
+					<?php // The filament: the played part of the line is a wire that glows with the music (riff.js). ?>
+					<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i></span>
+					<b class="riff-knob" aria-hidden="true"></b>
+					<span class="riff-tip" aria-hidden="true" hidden></span>
+					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Seek', 'riff' ); ?>">
+				</div>
+				<span class="riff-time riff-desk" dir="ltr" data-riff-text="duration">0:00</span>
+			</div>
+		</div>
 		<div class="riff-bar-end">
 			<?php // The heart, on a phone beside Play as Spotify's mini player has it. Shown for a track in the Media Library. ?>
 			<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
@@ -54,8 +58,6 @@ defined( 'ABSPATH' ) || exit;
 				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>">
 				<?php echo Player::icon( 'volume' ); ?>
 			</label>
-			<button type="button" class="riff-btn riff-desk" data-riff-action="repeat" aria-label="<?php esc_attr_e( 'Repeat off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
-			<button type="button" class="riff-btn riff-desk" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
 			<?php foreach ( Player::bar_controls() as $riff_slug => $riff_control ) : ?>
 				<?php echo Player::control( (string) $riff_slug, $riff_control, 'riff-btn riff-desk', false ); ?>
 			<?php endforeach; ?>
