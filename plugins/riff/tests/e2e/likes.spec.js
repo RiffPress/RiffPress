@@ -348,6 +348,50 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 	await expect.poll( () => likesOf( requestUtils ) ).not.toContain( `track:${ audio[ 1 ].id }` );
 } );
 
+test( 'Your Library never looks empty: Liked songs, somewhere to start, then what was played', async ( {
+	browser,
+	baseURL,
+} ) => {
+	const context = await browser.newContext( {
+		baseURL,
+		storageState: { cookies: [], origins: [] },
+	} );
+	const page = await context.newPage();
+	const library = withArg( listenUrl, 'riff_view=library' );
+	await page.goto( library );
+	const liked = page.locator( '.riff-card-liked' );
+	await expect( liked ).toContainText( 'Press the heart on a song to keep it here' );
+	await expect( liked.locator( '.riff-card-play' ), 'nothing to play yet' ).toHaveCount( 0 );
+	const start = page.locator( '[data-riff-shelf="start"]' );
+	const recent = page.locator( '.riff-library [data-riff-shelf="recent"]' );
+	await expect( start ).toBeVisible();
+	await expect( recent ).toBeHidden();
+	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'empty' ).toEqual( [] );
+
+	// The row is Home's: an album plays from its cover.
+	await start.locator( `.riff-card-play[data-riff-album="${ album }"]` ).click();
+	await expect( page.locator( '.riff-bar .riff-title' ) ).not.toBeEmpty();
+	const first = await page.locator( '.riff-bar .riff-title' ).textContent();
+
+	// Played once, the library shows it, and the albums give way.
+	await page.goto( library );
+	await expect( recent ).toBeVisible();
+	await expect( recent.locator( '.riff-card-title' ).first() ).toHaveText( first );
+	await expect( start ).toBeHidden();
+
+	// Liked, the songs play from their card.
+	await page.locator( '.riff-bar [data-riff-action="like"]' ).click();
+	await page.goto( library );
+	await expect( liked ).toContainText( '1 song' );
+	await page.locator( '.riff-bar [data-riff-action="toggle"]' ).first().click(); // Pause.
+	await liked.locator( '[data-riff-app-action="play-liked"]' ).click();
+	await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( first );
+	await expect.poll( () => page.evaluate( () => ! document.querySelector( '.riff-audio' ).paused ) ).toBe( true );
+	await expect( start ).toHaveCount( 0 );
+	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'filled' ).toEqual( [] );
+	await context.close();
+} );
+
 test( 'an album\'s and an artist\'s heart save them, and say so', async ( { page, requestUtils } ) => {
 	await page.goto( withArg( listenUrl, `riff_album=${ album }` ) );
 	const save = page.locator( '.riff-app-like' );

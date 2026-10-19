@@ -17,7 +17,9 @@ export function start( api ) {
 	const query = app.dataset.riffQuery || 'riff';
 	const pageQuery = app.dataset.riffPageQuery || 'riff_page';
 	// The arguments of the browse views (albums, artists, tracks, search), which the server renders.
-	const browseArgs = ( app.dataset.riffBrowse || '' ).split( ',' ).filter( Boolean );
+	const browseArgs = ( app.dataset.riffBrowse || '' )
+		.split( ',' )
+		.filter( Boolean );
 	const tracksRest = app.dataset.riffTracksRest || '';
 	const nav = app.querySelector( '.riff-app-bar' );
 	const s = api.strings || {};
@@ -103,7 +105,10 @@ export function start( api ) {
 	function route( path = '', pageNumber = 0 ) {
 		const u = new URL( rest );
 		if ( u.searchParams.has( 'rest_route' ) ) {
-			u.searchParams.set( 'rest_route', u.searchParams.get( 'rest_route' ) + path );
+			u.searchParams.set(
+				'rest_route',
+				u.searchParams.get( 'rest_route' ) + path
+			);
 		} else {
 			u.pathname += path;
 		}
@@ -137,7 +142,8 @@ export function start( api ) {
 	// t, a or r and an ID. The server reads them only when nobody is signed in.
 	const viewKey = browseArgs[ 0 ] || 'riff_view';
 	const isLibrary = ( href ) =>
-		new URL( href, location.href ).searchParams.get( viewKey ) === 'library';
+		new URL( href, location.href ).searchParams.get( viewKey ) ===
+		'library';
 	const LETTERS = { track: 't', album: 'a', artist: 'r' };
 	function fetchable( href ) {
 		if ( ! isLibrary( href ) || typeof api.likes !== 'function' ) {
@@ -170,14 +176,20 @@ export function start( api ) {
 						return r.text();
 					} )
 					.then( ( text ) => {
-						const doc = new DOMParser().parseFromString( text, 'text/html' );
-						const body = doc.querySelector( '[data-riff-app-view]' );
+						const doc = new DOMParser().parseFromString(
+							text,
+							'text/html'
+						);
+						const body = doc.querySelector(
+							'[data-riff-app-view]'
+						);
 						if ( ! body ) {
 							throw new Error( 'no view' );
 						}
 						return {
 							view: body.innerHTML,
-							nav: doc.querySelector( '.riff-app-bar' )?.innerHTML,
+							nav: doc.querySelector( '.riff-app-bar' )
+								?.innerHTML,
 						};
 					} )
 			);
@@ -261,7 +273,9 @@ export function start( api ) {
 
 	// A page of cards; the first of every page after the first is where Load more's link lands.
 	const cardsOf = ( items, n ) =>
-		items.map( ( item, i ) => card( item, i === 0 && n > 1 ? n : 0 ) ).join( '' );
+		items
+			.map( ( item, i ) => card( item, i === 0 && n > 1 ? n : 0 ) )
+			.join( '' );
 
 	// The next page of the library, after the cards already there. The button is marked busy
 	// rather than disabled, so it keeps focus; the page only advances once one has arrived.
@@ -339,9 +353,14 @@ export function start( api ) {
 		button.setAttribute( 'aria-busy', 'true' );
 		try {
 			const u = new URL( tracksRest, location.href );
-			u.searchParams.set( 'album', String( Number( button.dataset.riffAlbum ) ) );
+			u.searchParams.set(
+				'album',
+				String( Number( button.dataset.riffAlbum ) )
+			);
 			u.searchParams.set( 'per_page', '100' );
-			const r = await fetch( u, { headers: { Accept: 'application/json' } } );
+			const r = await fetch( u, {
+				headers: { Accept: 'application/json' },
+			} );
 			if ( ! r.ok ) {
 				throw new Error( String( r.status ) );
 			}
@@ -373,7 +392,7 @@ export function start( api ) {
 				art
 					? `<img src="${ esc(
 							art
-					  ) }" alt="" loading="lazy" decoding="async">`
+						) }" alt="" loading="lazy" decoding="async">`
 					: ''
 			}<button type="button" class="riff-card-play" data-riff-app-action="play-card" data-riff-post="${ item.id }" aria-label="${ esc(
 				fmt( s.playTrack || 'Play %s', item.title )
@@ -395,7 +414,9 @@ export function start( api ) {
 		}
 		parts.push(
 			fmt(
-				item.count === 1 ? s.oneTrack || '%s track' : s.tracks || '%s tracks',
+				item.count === 1
+					? s.oneTrack || '%s track'
+					: s.tracks || '%s tracks',
 				item.count
 			)
 		);
@@ -427,6 +448,14 @@ export function start( api ) {
 		if ( action?.dataset.riffAppAction === 'play-album' ) {
 			e.preventDefault();
 			playAlbum( action );
+			return;
+		}
+		if ( action?.dataset.riffAppAction === 'play-liked' ) {
+			e.preventDefault();
+			const tracks = parse( action.dataset.riffTracks );
+			if ( Array.isArray( tracks ) && tracks.length ) {
+				api.play( tracks, 0 );
+			}
 			return;
 		}
 		if ( action?.dataset.riffAppAction === 'play-history' ) {
@@ -486,7 +515,9 @@ export function start( api ) {
 		for ( const b of app.querySelectorAll( '[data-riff-like-kind]' ) ) {
 			b.setAttribute(
 				'aria-pressed',
-				String( api.liked( b.dataset.riffLikeId, b.dataset.riffLikeKind ) )
+				String(
+					api.liked( b.dataset.riffLikeId, b.dataset.riffLikeKind )
+				)
 			);
 		}
 	}
@@ -535,7 +566,11 @@ export function start( api ) {
 	function unshow( library, kind, id ) {
 		let gone = [];
 		if ( kind === 'track' ) {
-			gone = [ ...library.querySelectorAll( 'figure[data-riff-track], li[data-riff-track]' ) ].filter(
+			gone = [
+				...library.querySelectorAll(
+					'figure[data-riff-track], li[data-riff-track]'
+				),
+			].filter(
 				( fig ) => Number( parse( fig.dataset.riffTrack )?.id ) === id
 			);
 			const holder = library.querySelector( '[data-riff-tracks]' );
@@ -546,12 +581,24 @@ export function start( api ) {
 				);
 			}
 		} else {
-			gone = [ ...library.querySelectorAll( `[data-riff-${ kind }="${ id }"]` ) ];
+			gone = [
+				...library.querySelectorAll(
+					`[data-riff-${ kind }="${ id }"]`
+				),
+			];
 			if ( kind === 'artist' ) {
 				gone.push(
-					...[ ...library.querySelectorAll( '.riff-artists li' ) ].filter(
+					...[
+						...library.querySelectorAll( '.riff-artists li' ),
+					].filter(
 						( li ) =>
-							Number( new URL( li.querySelector( 'a' ).href ).searchParams.get( browseArgs[ 2 ] || 'riff_artist' ) ) === id
+							Number(
+								new URL(
+									li.querySelector( 'a' ).href
+								).searchParams.get(
+									browseArgs[ 2 ] || 'riff_artist'
+								)
+							) === id
 					)
 				);
 			}
@@ -561,7 +608,10 @@ export function start( api ) {
 			const after = el.nextElementSibling || el.previousElementSibling;
 			el.remove();
 			if ( had ) {
-				( after?.querySelector( 'button, a' ) || view.querySelector( 'h2' ) )?.focus();
+				(
+					after?.querySelector( 'button, a' ) ||
+					view.querySelector( 'h2' )
+				)?.focus();
 			}
 		}
 		if ( gone.length ) {
@@ -584,7 +634,10 @@ export function start( api ) {
 		};
 		const posts = [];
 		for ( const t of played ) {
-			if ( t.post?.id && ! posts.some( ( p ) => p.post.id === t.post.id ) ) {
+			if (
+				t.post?.id &&
+				! posts.some( ( p ) => p.post.id === t.post.id )
+			) {
 				posts.push( t );
 			}
 		}
@@ -622,6 +675,11 @@ export function start( api ) {
 				)
 				.join( '' )
 		);
+		// Your Library offers somewhere to start until there is something played to show instead.
+		const offer = view.querySelector( '[data-riff-shelf="start"]' );
+		if ( offer && played.length ) {
+			offer.hidden = true;
+		}
 	}
 
 	// A card in one of Home's rows, in the markup the server's cards use.
@@ -630,7 +688,7 @@ export function start( api ) {
 		const name = href
 			? `<a class="riff-card-link" href="${ esc( href ) }"><span class="riff-card-title">${ esc(
 					title
-			  ) }</span></a>`
+				) }</span></a>`
 			: `<span class="riff-card-title">${ esc( title ) }</span>`;
 		return (
 			'<div class="riff-card"><span class="riff-card-art">' +
@@ -650,7 +708,10 @@ export function start( api ) {
 	// this device's, so it is remembered here rather than anywhere shared.
 	function sidebar( open, remember = true ) {
 		app.dataset.sidebar = open ? 'full' : 'mini';
-		nav?.querySelector( '.riff-app-collapse' )?.setAttribute( 'aria-expanded', String( open ) );
+		nav?.querySelector( '.riff-app-collapse' )?.setAttribute(
+			'aria-expanded',
+			String( open )
+		);
 		if ( remember ) {
 			try {
 				localStorage.setItem( 'riff-sidebar', open ? 'full' : 'mini' );
@@ -692,7 +753,8 @@ export function start( api ) {
 	app.addEventListener( 'pointerover', warm, { passive: true } );
 	app.addEventListener( 'focusin', warm );
 	app.addEventListener( 'touchstart', warm, { passive: true } );
-	const idle = window.requestIdleCallback || ( ( fn ) => setTimeout( fn, 1200 ) );
+	const idle =
+		window.requestIdleCallback || ( ( fn ) => setTimeout( fn, 1200 ) );
 	idle( () => {
 		for ( const tab of nav?.querySelectorAll( 'a[href]' ) || [] ) {
 			prefetch( tab.href );
@@ -725,7 +787,9 @@ export function start( api ) {
 	const recentSearches = () => {
 		try {
 			const list = JSON.parse( localStorage.getItem( SEARCHES ) || '[]' );
-			return Array.isArray( list ) ? list.filter( ( q ) => typeof q === 'string' ) : [];
+			return Array.isArray( list )
+				? list.filter( ( q ) => typeof q === 'string' )
+				: [];
 		} catch {
 			return [];
 		}
@@ -738,7 +802,12 @@ export function start( api ) {
 		try {
 			localStorage.setItem(
 				SEARCHES,
-				JSON.stringify( [ words, ...recentSearches().filter( ( x ) => x !== words ) ].slice( 0, 6 ) )
+				JSON.stringify(
+					[
+						words,
+						...recentSearches().filter( ( x ) => x !== words ),
+					].slice( 0, 6 )
+				)
 			);
 		} catch {}
 	};
@@ -746,11 +815,18 @@ export function start( api ) {
 	const catalog = ( name, params ) => {
 		const u = new URL( tracksRest, location.href );
 		if ( u.searchParams.has( 'rest_route' ) ) {
-			u.searchParams.set( 'rest_route', u.searchParams.get( 'rest_route' ).replace( /\/tracks$/, '/' + name ) );
+			u.searchParams.set(
+				'rest_route',
+				u.searchParams
+					.get( 'rest_route' )
+					.replace( /\/tracks$/, '/' + name )
+			);
 		} else {
 			u.pathname = u.pathname.replace( /\/tracks\/?$/, '/' + name );
 		}
-		Object.entries( params ).forEach( ( [ k, v ] ) => u.searchParams.set( k, String( v ) ) );
+		Object.entries( params ).forEach( ( [ k, v ] ) =>
+			u.searchParams.set( k, String( v ) )
+		);
 		return u.toString();
 	};
 	const browseHref = ( key, id ) => {
@@ -768,7 +844,9 @@ export function start( api ) {
 		if ( n.startsWith( w ) ) {
 			return 3;
 		}
-		if ( n.split( /[\s,.\-–]+/ ).some( ( part ) => part.startsWith( w ) ) ) {
+		if (
+			n.split( /[\s,.\-–]+/ ).some( ( part ) => part.startsWith( w ) )
+		) {
 			return 2;
 		}
 		return n.includes( w ) ? 1 : 0;
@@ -807,11 +885,13 @@ export function start( api ) {
 		} );
 		field.addEventListener( 'focus', () => suggest( field ) );
 		field.addEventListener( 'keydown', ( e ) => keys( e, field ) );
-		field.addEventListener( 'blur', () => setTimeout( () => {
-			if ( ! form.contains( document.activeElement ) ) {
-				closeSuggest( field );
-			}
-		}, 150 ) );
+		field.addEventListener( 'blur', () =>
+			setTimeout( () => {
+				if ( ! form.contains( document.activeElement ) ) {
+					closeSuggest( field );
+				}
+			}, 150 )
+		);
 		form.addEventListener( 'submit', () => rememberSearch( field.value ) );
 	}
 
@@ -833,18 +913,34 @@ export function start( api ) {
 				closeSuggest( field );
 				return;
 			}
-			draw( field, [ {
-				label: s.recentSearches || 'Recent searches',
-				items: recent.map( ( words ) => ( { kind: 'recent', title: words, run: () => runSearch( field, words ) } ) ),
-			} ], '' );
+			draw(
+				field,
+				[
+					{
+						label: s.recentSearches || 'Recent searches',
+						items: recent.map( ( words ) => ( {
+							kind: 'recent',
+							title: words,
+							run: () => runSearch( field, words ),
+						} ) ),
+					},
+				],
+				''
+			);
 			return;
 		}
 		let answers;
 		try {
 			answers = await Promise.all( [
-				fetch( catalog( 'tracks', { search: q, per_page: 5 } ) ).then( ( r ) => r.json() ),
-				fetch( catalog( 'albums', { search: q } ) ).then( ( r ) => r.json() ),
-				fetch( catalog( 'artists', { search: q } ) ).then( ( r ) => r.json() ),
+				fetch( catalog( 'tracks', { search: q, per_page: 5 } ) ).then(
+					( r ) => r.json()
+				),
+				fetch( catalog( 'albums', { search: q } ) ).then( ( r ) =>
+					r.json()
+				),
+				fetch( catalog( 'artists', { search: q } ) ).then( ( r ) =>
+					r.json()
+				),
 			] );
 		} catch {
 			return;
@@ -852,7 +948,9 @@ export function start( api ) {
 		if ( turn !== suggestTurn || field.value.trim() !== q ) {
 			return;
 		}
-		const [ tracks, albums, artists ] = answers.map( ( a ) => ( Array.isArray( a?.items ) ? a.items : [] ) );
+		const [ tracks, albums, artists ] = answers.map( ( a ) =>
+			Array.isArray( a?.items ) ? a.items : []
+		);
 		const played = tracks.slice( 0, 4 );
 		const songs = played.map( ( t, i ) => ( {
 			kind: 'track',
@@ -866,11 +964,16 @@ export function start( api ) {
 			},
 		} ) );
 		const albumItems = albums.slice( 0, 3 ).map( ( a ) => ( {
-			kind: 'album', title: a.name, sub: a.artist || '', art: a.art,
+			kind: 'album',
+			title: a.name,
+			sub: a.artist || '',
+			art: a.art,
 			href: browseHref( browseArgs[ 1 ] || 'riff_album', a.id ),
 		} ) );
 		const artistItems = artists.slice( 0, 3 ).map( ( a ) => ( {
-			kind: 'artist', title: a.name, sub: s.artist || 'Artist',
+			kind: 'artist',
+			title: a.name,
+			sub: s.artist || 'Artist',
 			href: browseHref( browseArgs[ 2 ] || 'riff_artist', a.id ),
 		} ) );
 		// The best match across all three; on a tie an artist, then an album, then a song.
@@ -879,19 +982,40 @@ export function start( api ) {
 			.sort( ( x, y ) => y.n - x.n )[ 0 ];
 		const groups = [];
 		if ( top?.n ) {
-			groups.push( { label: s.topResult || 'Top result', items: [ { ...top.o, top: true } ] } );
+			groups.push( {
+				label: s.topResult || 'Top result',
+				items: [ { ...top.o, top: true } ],
+			} );
 		}
 		const besides = ( list ) => list.filter( ( o ) => o !== top?.o );
 		if ( besides( songs ).length ) {
-			groups.push( { label: s.songs || 'Songs', items: besides( songs ) } );
+			groups.push( {
+				label: s.songs || 'Songs',
+				items: besides( songs ),
+			} );
 		}
 		if ( besides( albumItems ).length ) {
-			groups.push( { label: s.albums || 'Albums', items: besides( albumItems ) } );
+			groups.push( {
+				label: s.albums || 'Albums',
+				items: besides( albumItems ),
+			} );
 		}
 		if ( besides( artistItems ).length ) {
-			groups.push( { label: s.artists || 'Artists', items: besides( artistItems ) } );
+			groups.push( {
+				label: s.artists || 'Artists',
+				items: besides( artistItems ),
+			} );
 		}
-		groups.push( { label: '', items: [ { kind: 'all', title: fmt( s.allResults || 'All results for “%s”', q ), run: () => runSearch( field, q ) } ] } );
+		groups.push( {
+			label: '',
+			items: [
+				{
+					kind: 'all',
+					title: fmt( s.allResults || 'All results for “%s”', q ),
+					run: () => runSearch( field, q ),
+				},
+			],
+		} );
 		draw( field, groups, q );
 	}
 
@@ -918,7 +1042,10 @@ export function start( api ) {
 			}
 			g.items.forEach( ( o ) => {
 				const el = document.createElement( o.href ? 'a' : 'div' );
-				el.className = 'riff-suggest-option' + ( o.top ? ' riff-suggest-top' : '' ) + ` riff-suggest-${ o.kind }`;
+				el.className =
+					'riff-suggest-option' +
+					( o.top ? ' riff-suggest-top' : '' ) +
+					` riff-suggest-${ o.kind }`;
 				el.id = `riff-suggest-o${ options.length }`;
 				el.setAttribute( 'role', 'option' );
 				el.setAttribute( 'aria-selected', 'false' );
@@ -931,10 +1058,18 @@ export function start( api ) {
 					( o.kind === 'recent' || o.kind === 'all'
 						? ''
 						: `<span class="riff-suggest-art${ o.kind === 'artist' ? ' riff-suggest-round' : '' }" aria-hidden="true">${
-							src ? `<img src="${ esc( src ) }" alt="" decoding="async">` : esc( String( o.title || '' ).slice( 0, 1 ).toUpperCase() )
-						}</span>` ) +
+								src
+									? `<img src="${ esc( src ) }" alt="" decoding="async">`
+									: esc(
+											String( o.title || '' )
+												.slice( 0, 1 )
+												.toUpperCase()
+										)
+							}</span>` ) +
 					`<span class="riff-suggest-text"><span class="riff-suggest-title">${ esc( o.title ) }</span>${
-						o.sub ? `<span class="riff-suggest-sub">${ esc( o.sub ) }</span>` : ''
+						o.sub
+							? `<span class="riff-suggest-sub">${ esc( o.sub ) }</span>`
+							: ''
 					}</span>`;
 				el.addEventListener( 'mousedown', ( e ) => e.preventDefault() );
 				el.addEventListener( 'click', ( e ) => {
@@ -953,12 +1088,22 @@ export function start( api ) {
 		} );
 		place( field );
 		panel.setAttribute( 'role', 'listbox' );
-		panel.setAttribute( 'aria-label', s.searchSuggestions || 'Suggestions' );
+		panel.setAttribute(
+			'aria-label',
+			s.searchSuggestions || 'Suggestions'
+		);
 		panel.hidden = false;
 		field.setAttribute( 'aria-expanded', 'true' );
-		const found = options.filter( ( x ) => x.o.kind !== 'all' && x.o.kind !== 'recent' ).length;
+		const found = options.filter(
+			( x ) => x.o.kind !== 'all' && x.o.kind !== 'recent'
+		).length;
 		said.textContent = q
-			? fmt( found === 1 ? s.oneSuggestion || '%s suggestion' : s.suggestions || '%s suggestions', found )
+			? fmt(
+					found === 1
+						? s.oneSuggestion || '%s suggestion'
+						: s.suggestions || '%s suggestions',
+					found
+				)
 			: '';
 	}
 
@@ -977,7 +1122,10 @@ export function start( api ) {
 		}
 	};
 	window.addEventListener( 'resize', follow );
-	window.addEventListener( 'scroll', follow, { passive: true, capture: true } );
+	window.addEventListener( 'scroll', follow, {
+		passive: true,
+		capture: true,
+	} );
 
 	function keys( e, field ) {
 		if ( panel.hidden ) {
@@ -989,9 +1137,17 @@ export function start( api ) {
 		if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
 			e.preventDefault();
 			const n = options.length;
-			active = e.key === 'ArrowDown' ? ( active + 1 ) % n : ( active - 1 + n ) % n;
-			options.forEach( ( x, i ) => x.el.setAttribute( 'aria-selected', String( i === active ) ) );
-			field.setAttribute( 'aria-activedescendant', options[ active ].el.id );
+			active =
+				e.key === 'ArrowDown'
+					? ( active + 1 ) % n
+					: ( active - 1 + n ) % n;
+			options.forEach( ( x, i ) =>
+				x.el.setAttribute( 'aria-selected', String( i === active ) )
+			);
+			field.setAttribute(
+				'aria-activedescendant',
+				options[ active ].el.id
+			);
 			options[ active ].el.scrollIntoView( { block: 'nearest' } );
 		} else if ( e.key === 'Enter' && active >= 0 ) {
 			e.preventDefault();

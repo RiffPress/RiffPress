@@ -172,9 +172,30 @@ class Test_Riff_Collection extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'kept in this browser', $html );
 	}
 
+	public function test_with_nothing_liked_the_library_still_has_liked_songs_and_somewhere_to_start(): void {
+		wp_set_current_user( 0 );
+		$html = $this->library();
+
+		$this->assertMatchesRegularExpression( '/<div class="riff-grid riff-library-grid"><div class="riff-card riff-card-liked">/', $html, 'Liked songs leads, with nothing liked' );
+		$this->assertStringContainsString( 'Press the heart on a song to keep it here', $html );
+		$this->assertStringNotContainsString( 'data-riff-app-action="play-liked"', $html, 'nothing to play yet' );
+		$this->assertMatchesRegularExpression( '/<section class="riff-shelf" data-riff-shelf="recent"[^>]* hidden>/', $html, 'Recently played, for the script to fill from the player\'s history' );
+		$this->assertMatchesRegularExpression( '/data-riff-shelf="start".*Start with.*data-riff-app-action="play-album" data-riff-album="' . $this->album() . '"/s', $html, 'the site\'s albums, playable from the cover' );
+	}
+
+	public function test_liked_songs_play_from_their_card_and_the_start_row_goes(): void {
+		wp_set_current_user( 0 );
+		$html = $this->library( array( Collection::LIKED => 't' . $this->tracks[1] . ',t' . $this->tracks[0] ) );
+
+		$this->assertSame( 1, preg_match( '/data-riff-app-action="play-liked" data-riff-tracks="([^"]+)"/', $html, $m ) );
+		$this->assertSame( array( 'Trombone Detritus', 'Underground' ), wp_list_pluck( json_decode( html_entity_decode( $m[1] ), true ), 'title' ), 'newest first' );
+		$this->assertStringContainsString( '2 songs', $html );
+		$this->assertStringNotContainsString( 'data-riff-shelf="start"', $html );
+		$this->assertStringContainsString( 'data-riff-shelf="recent"', $html );
+	}
+
 	public function test_each_list_says_how_to_fill_it_while_it_is_empty(): void {
 		wp_set_current_user( 0 );
-		$this->assertStringContainsString( 'Press the heart on a song, an album or an artist', $this->library() );
 		$this->assertStringContainsString( 'Songs you like show up here', $this->library( array( Browse::FILTER => 'songs' ) ) );
 		$this->assertStringContainsString( 'Albums you like show up here', $this->library( array( Browse::FILTER => 'albums' ) ) );
 		$this->assertStringContainsString( 'Artists you like show up here', $this->library( array( Browse::FILTER => 'artists' ) ) );

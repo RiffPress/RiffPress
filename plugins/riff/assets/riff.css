@@ -2858,9 +2858,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	color: var(--riff-app-on-accent);
 }
 
-.riff-app .riff-card-liked .riff-card-art svg {
+.riff-app .riff-card-heart {
+	display: grid;
+	place-items: center;
 	width: 40%;
 	height: 40%;
+}
+
+.riff-app .riff-card-heart svg {
+	width: 100%;
+	height: 100%;
+}
+
+.riff-library .riff-shelf {
+	margin-top: 48px;
 }
 
 .riff-app .riff-card-artist .riff-card-art {
