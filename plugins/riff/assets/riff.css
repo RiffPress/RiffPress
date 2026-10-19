@@ -671,13 +671,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	pointer-events: none;
 }
 
-.riff-bar-start,
+.riff-bar-center,
 .riff-bar-end {
 	display: flex;
 	align-items: center;
 }
 
-.riff-bar-start {
+/* On a phone the transport and the times are only Play: their wrappers
+   step out of the row. */
+.riff-bar-transport,
+.riff-bar-progress {
+	display: contents;
+}
+
+.riff-bar-center {
 	order: 3;
 }
 
@@ -752,26 +759,43 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		display: none !important;
 	}
 
-	/* Three columns: transport and time, the track, then volume, repeat,
-	   shuffle and the caret. */
+	/* Three columns, as Tidal has them: the track, the transport with the
+	   seek line under it, then volume, the quality pill and the caret. */
 	.riff-bar {
 		display: grid;
 
-		/* The end column grows for the quality pill; the middle gives way and
-		   its text trims, instead of running under the controls. */
-		grid-template-columns: 328px minmax(0, 1fr) minmax(328px, auto);
-		gap: 0;
-		padding: 0 4px var(--riff-safe-b) 0;
-
-		/* Above Now Playing, which ends at the bar's top edge and comes later in
-		   the page: the knob and the time rise out of the bar into its space. */
-		z-index: 1;
+		/* The end column keeps room for its controls; the track's column gives
+		   way and its text trims, instead of running under the transport. */
+		grid-template-columns: minmax(0, 1fr) clamp(320px, 40%, 640px) minmax(max-content, 1fr);
+		gap: 16px;
+		padding: 0 4px var(--riff-safe-b) 16px;
 	}
 
-	.riff-bar-start,
+	.riff-bar-center,
 	.riff-bar-end,
 	#riff .riff-bar-info {
 		order: 0;
+	}
+
+	.riff-bar-center {
+		flex-direction: column;
+		justify-content: center;
+		align-items: stretch;
+		gap: 2px;
+		height: 100%;
+	}
+
+	.riff-bar-transport {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.riff-bar-progress {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 
 	.riff-bar-end {
@@ -781,7 +805,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 
 	#riff .riff-bar-info {
-		justify-content: center;
+		justify-content: flex-start;
 		gap: 16px;
 		cursor: pointer;
 	}
@@ -799,23 +823,17 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	#riff .riff-skip-sm {
 		width: 36px;
 		height: 36px;
-		margin: 4px 4px 4px 8px;
-	}
-
-	#riff .riff-bar .riff-play {
-		width: 52px;
-		height: 52px;
-		margin: 4px 4px 4px 8px;
 	}
 
 	#riff .riff-bar .riff-play svg {
-		width: 40px;
-		height: 40px;
+		width: 32px;
+		height: 32px;
 	}
 
+	/* Each time beside its end of the line, wide enough for an hour. */
 	.riff-time {
 		display: inline-block !important;
-		margin: 0 16px 0 8px;
+		min-width: 4ch;
 		color: #aaa;
 		font-size: 12px;
 		line-height: 14.4px;
@@ -823,15 +841,21 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		white-space: nowrap;
 	}
 
-	/* The seek line straddles the top edge: 2px, 4px with a knob and the time
-	   while pointed at. */
+	.riff-time[data-riff-text="current"] {
+		text-align: right;
+	}
+
+	/* The seek line under the transport: 2px, 4px with a knob and the time
+	   while pointed at, in a taller strip that is easy to hit. */
 	.riff-bar-seek {
-		top: -15px;
-		height: 32px;
+		position: relative;
+		flex: 1;
+		top: auto;
+		height: 16px;
 	}
 
 	.riff-bar-seek .riff-line {
-		top: 15px;
+		top: 7px;
 	}
 
 	.riff-bar-seek .riff-seek {
@@ -845,7 +869,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	.riff-knob {
 		position: absolute;
-		top: 16px;
+		top: 8px;
 		left: calc(var(--riff-p) * 100%);
 		display: block;
 		width: 14px;
@@ -862,13 +886,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		opacity: 1;
 	}
 
+	/* Over the transport, so lighter than the bar, as a tooltip. */
 	.riff-tip {
 		position: absolute;
-		bottom: 28px;
+		bottom: 18px;
 		display: block;
 		padding: 4px 8px;
-		border-radius: 2px;
-		background: var(--riff-surface);
+		border-radius: 4px;
+		background: #424242;
 		color: var(--riff-fg);
 		font-size: 12px;
 		transform: translateX(-50%);
@@ -899,11 +924,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	/* Volume, repeat and shuffle sit back in #909090; the caret is white. */
 	#riff .riff-bar-end .riff-btn,
+	#riff .riff-bar .riff-mode,
 	.riff-volume {
 		color: #909090;
 	}
 
 	#riff .riff-bar-end .riff-btn[aria-pressed="true"],
+	#riff .riff-bar .riff-mode[aria-pressed="true"],
 	#riff .riff-bar-end .riff-chevron {
 		color: var(--riff-fg);
 	}
