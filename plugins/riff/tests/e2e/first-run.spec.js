@@ -2,9 +2,15 @@
  * First run, end to end: activate Riff, create the Listen page from the notice, add the first album,
  * and play it on the new page.
  *
- * The tests site is shared with the other specs and with people, so this one makes it look fresh
- * and puts it back: Listen pages that already exist go to draft while it runs, and Riff Lyrics,
- * which requires Riff and so keeps it from being deactivated, is switched off and on again.
+ * The pre-commit hook runs this against the maintainer's own tests site, so it must leave that site
+ * as it found it, pass or fail. beforeAll records what it is about to change: whether Riff and Riff
+ * Lyrics are active (Lyrics requires Riff, so it has to be off for Riff to be deactivated), and the
+ * status of every Listen page already there, which go to draft so the notice offers a new one.
+ * restore() puts each of those back and deletes only what the test made; it runs after each test,
+ * failed or not, and again after all of them, and is safe to run twice.
+ *
+ * "No music yet" is the riff_test_no_music cookie, which the tests-only components plugin reads to
+ * hide the site's music from that browser, so nobody's media is touched.
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -24,82 +30,139 @@ const FILES = [
 	'02 - Underground [underground].mp3',
 	'03 - Trombone Detritus [detritus].mp3',
 ];
+const RIFF = 'riff/riff';
 const LYRICS = 'riff-lyrics/riff-lyrics';
+const NO_MUSIC = 'riff_test_no_music';
 
 const made = own();
-let drafted = [];
-let created = 0;
-let lyricsWasActive = false;
+// What the site looked like before: plugin statuses by id, and Listen pages by id with their status.
+const before = { plugins: {}, listen: new Map() };
 
 const isListenPage = ( page ) =>
 	page.content.raw.includes( '<!-- wp:riff/app' ) ||
 	'listen' === page.template;
 
+const listenPages = async ( requestUtils ) =>
+	(
+		await requestUtils.rest( {
+			path: '/wp/v2/pages',
+			params: {
+				per_page: 100,
+				status: 'publish,future,draft,pending,private',
+				context: 'edit',
+			},
+		} )
+	).filter( isListenPage );
+
+const pluginStatus = ( requestUtils, plugin ) =>
+	requestUtils
+		.rest( { path: `/wp/v2/plugins/${ plugin }` } )
+		.then( ( p ) => p.status )
+		.catch( () => null );
+
+const setPlugin = ( requestUtils, plugin, status ) =>
+	requestUtils.rest( {
+		method: 'PUT',
+		path: `/wp/v2/plugins/${ plugin }`,
+		data: { status },
+	} );
+
+/**
+ * Puts the site back the way beforeAll found it. Each step runs even if an earlier one throws.
+ *
+ * @param {Object} requestUtils The REST helper.
+ */
+async function restore( requestUtils ) {
+	const steps = [
+		// Riff first: the REST routes below are core's, but Lyrics can't be activated without it.
+		async () => {
+			if (
+				before.plugins[ RIFF ] === 'active' &&
+				( await pluginStatus( requestUtils, RIFF ) ) !== 'active'
+			) {
+				await setPlugin( requestUtils, RIFF, 'active' );
+			}
+		},
+		async () => {
+			if (
+				before.plugins[ LYRICS ] === 'active' &&
+				( await pluginStatus( requestUtils, LYRICS ) ) !== 'active'
+			) {
+				await setPlugin( requestUtils, LYRICS, 'active' );
+			}
+		},
+		// A Listen page that wasn't there before is the one the button made.
+		async () => {
+			for ( const page of await listenPages( requestUtils ) ) {
+				if ( ! before.listen.has( page.id ) ) {
+					await requestUtils.rest( {
+						method: 'DELETE',
+						path: `/wp/v2/pages/${ page.id }`,
+						params: { force: true },
+					} );
+				}
+			}
+		},
+		async () => {
+			for ( const [ id, status ] of before.listen ) {
+				await requestUtils.rest( {
+					method: 'POST',
+					path: `/wp/v2/pages/${ id }`,
+					data: { status },
+				} );
+			}
+		},
+		() => made.cleanUp( requestUtils ),
+	];
+	const errors = [];
+	for ( const step of steps ) {
+		await step().catch( ( error ) => errors.push( error ) );
+	}
+	if ( errors.length ) {
+		throw errors[ 0 ];
+	}
+}
+
 test.describe( 'First run', () => {
 	test.beforeAll( async ( { requestUtils } ) => {
-		const pages = await requestUtils.rest( {
-			path: '/wp/v2/pages',
-			params: { per_page: 100, status: 'publish', context: 'edit' },
-		} );
-		drafted = pages.filter( isListenPage ).map( ( p ) => p.id );
-		for ( const id of drafted ) {
-			await requestUtils.rest( {
-				method: 'POST',
-				path: `/wp/v2/pages/${ id }`,
-				data: { status: 'draft' },
-			} );
+		for ( const plugin of [ RIFF, LYRICS ] ) {
+			before.plugins[ plugin ] = await pluginStatus( requestUtils, plugin );
 		}
-		const lyrics = await requestUtils
-			.rest( { path: `/wp/v2/plugins/${ LYRICS }` } )
-			.catch( () => null );
-		lyricsWasActive = lyrics?.status === 'active';
-		if ( lyricsWasActive ) {
-			await requestUtils.rest( {
-				method: 'PUT',
-				path: `/wp/v2/plugins/${ LYRICS }`,
-				data: { status: 'inactive' },
-			} );
+		for ( const page of await listenPages( requestUtils ) ) {
+			before.listen.set( page.id, page.status );
+		}
+		// Published Listen pages go to draft, so the site has none a visitor can reach.
+		for ( const [ id, status ] of before.listen ) {
+			if ( status === 'publish' ) {
+				await requestUtils.rest( {
+					method: 'POST',
+					path: `/wp/v2/pages/${ id }`,
+					data: { status: 'draft' },
+				} );
+			}
+		}
+		if ( before.plugins[ LYRICS ] === 'active' ) {
+			await setPlugin( requestUtils, LYRICS, 'inactive' );
 		}
 	} );
 
+	test.afterEach( async ( { requestUtils } ) => {
+		await restore( requestUtils );
+	} );
+
 	test.afterAll( async ( { requestUtils } ) => {
-		if ( created ) {
-			await requestUtils
-				.rest( {
-					method: 'DELETE',
-					path: `/wp/v2/pages/${ created }`,
-					params: { force: true },
-				} )
-				.catch( () => {} );
-		}
-		await made.cleanUp( requestUtils );
-		for ( const id of drafted ) {
-			await requestUtils.rest( {
-				method: 'POST',
-				path: `/wp/v2/pages/${ id }`,
-				data: { status: 'publish' },
-			} );
-		}
-		if ( lyricsWasActive ) {
-			await requestUtils.rest( {
-				method: 'PUT',
-				path: `/wp/v2/plugins/${ LYRICS }`,
-				data: { status: 'active' },
-			} );
-		}
+		await restore( requestUtils );
 	} );
 
 	test( 'from activation to a playing album', async ( {
 		page,
 		admin,
 		requestUtils,
+		baseURL,
 	} ) => {
-		const audio = await requestUtils.rest( {
-			path: '/wp/v2/media',
-			params: { media_type: 'audio', per_page: 1 },
-		} );
-		// A first run is a site with no music; a tests site seeded with some has nothing to show here.
-		test.skip( audio.length > 0, 'the site already has music' );
+		await page
+			.context()
+			.addCookies( [ { name: NO_MUSIC, value: '1', url: baseURL } ] );
 
 		// Activation, from the Plugins screen.
 		await admin.visitAdminPage( 'plugins.php' );
@@ -120,15 +183,12 @@ test.describe( 'First run', () => {
 			.click();
 		await expect( page ).toHaveURL( /plugins\.php/ );
 
-		const pages = await requestUtils.rest( {
-			path: '/wp/v2/pages',
-			params: { per_page: 100, status: 'publish', context: 'edit' },
-		} );
-		const listen = pages.find( isListenPage );
+		const listen = ( await listenPages( requestUtils ) ).find(
+			( p ) => p.status === 'publish'
+		);
 		expect( listen, 'the button made a Listen page' ).toBeTruthy();
-		created = listen.id;
 
-		// With no music yet the notice now points at the page and the first album, and so does the page.
+		// With no music yet the notice points at the page and the first album, and so does the page.
 		await expect( notice ).toContainText( 'Add your first album' );
 		await expect(
 			notice.getByRole( 'link', { name: listen.title.raw } )
@@ -144,6 +204,7 @@ test.describe( 'First run', () => {
 		for ( const file of FILES ) {
 			await made.media( requestUtils, path.join( FIXTURES, file ) );
 		}
+		await page.context().clearCookies( { name: NO_MUSIC } );
 
 		// Both done: the notice is gone.
 		await admin.visitAdminPage( 'index.php' );
