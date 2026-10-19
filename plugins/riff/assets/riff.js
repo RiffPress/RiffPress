@@ -738,20 +738,27 @@ function start() {
 		}
 		return u.toString();
 	}
+	// One at a time: the server reads the list, changes it and writes it back, so two requests at
+	// once would each write over the other's change.
+	let sending = Promise.resolve();
 	function send( url, method, body, keepalive = false ) {
-		return fetch( url, {
-			method,
-			credentials: 'same-origin',
-			keepalive,
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': me.nonce,
-			},
-			body: body ? JSON.stringify( body ) : undefined,
-		} ).then( ( r ) =>
-			r.ok ? r.json() : Promise.reject( new Error( String( r.status ) ) )
-		);
+		const run = () =>
+			fetch( url, {
+				method,
+				credentials: 'same-origin',
+				keepalive,
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': me.nonce,
+				},
+				body: body ? JSON.stringify( body ) : undefined,
+			} ).then( ( r ) =>
+				r.ok ? r.json() : Promise.reject( new Error( String( r.status ) ) )
+			);
+		const sent = sending.then( run, run );
+		sending = sent.catch( () => {} );
+		return sent;
 	}
 
 	function setLike( id, kind, on ) {

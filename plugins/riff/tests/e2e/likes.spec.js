@@ -193,6 +193,24 @@ test( 'every heart shows one icon, the outline or the filled one, liked or not',
 	}
 } );
 
+test( 'likes made one after another, signed in, are all kept', async ( { page, requestUtils } ) => {
+	await page.goto( postUrl );
+	await page.waitForFunction( () => typeof window.riff?.like === 'function' );
+	await page.evaluate(
+		( ids ) => {
+			window.riff.like( ids[ 0 ] );
+			window.riff.like( ids[ 1 ] );
+			window.riff.like( ids[ 2 ], 'album' );
+			window.riff.unlike( ids[ 1 ] );
+			window.riff.like( ids[ 3 ], 'artist' );
+		},
+		[ audio[ 0 ].id, audio[ 1 ].id, album, artist ]
+	);
+	await expect
+		.poll( () => likesOf( requestUtils ) )
+		.toEqual( [ `artist:${ artist }`, `album:${ album }`, `track:${ audio[ 0 ].id }` ] );
+} );
+
 test( 'a like the account refuses goes back, and says so', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.route( /riff\/v1\/users\/me\/likes/, ( route ) => route.fulfill( { status: 403, body: '{}' } ) );
