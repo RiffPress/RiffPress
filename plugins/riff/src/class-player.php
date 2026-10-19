@@ -389,6 +389,18 @@ final class Player {
 	}
 
 	/**
+	 * A heart's two icons, the outline and the filled one. The stylesheet shows one by the
+	 * button's aria-pressed, the same way the player's script draws a row's heart.
+	 *
+	 * @since 4.20.0
+	 *
+	 * @return string
+	 */
+	public static function hearts(): string {
+		return str_replace( '<svg ', '<svg class="riff-heart-off" ', self::icon( 'heart' ) ) . str_replace( '<svg ', '<svg class="riff-heart-on" ', self::icon( 'hearted' ) );
+	}
+
+	/**
 	 * Inline SVG icon, from Google's Material Icons (Apache License 2.0), the set Google's own apps are drawn in.
 	 *
 	 * @since 4.0.0

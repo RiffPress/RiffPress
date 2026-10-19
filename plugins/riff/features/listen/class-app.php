@@ -478,7 +478,7 @@ final class App {
 				$id,
 				/* translators: %s: an album or artist. */
 				esc_attr( sprintf( __( 'Like %s', 'riff' ), $title ) ),
-				Player::icon( 'heart' ) . Player::icon( 'hearted' )
+				Player::hearts()
 			);
 		}
 		return sprintf(
