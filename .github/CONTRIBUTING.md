@@ -49,6 +49,8 @@ The demo library is one uploaded album, `packages/fixtures/compositions`, and a 
 
 `npm run pot` writes the translation template to `plugins/riff/languages/riff.pot` (wp-env must be running). It is generated, not committed: the Plugin Check job builds it into the zip, and translations come from translate.wordpress.org.
 
+Every string uses the `riff` text domain, and Riff Lyrics uses `riff-lyrics`. PHPCS fails a string with a missing or wrong domain, and `.github/scripts/text-domain-check.sh` runs in the same job to show that check still catches one. The JavaScript gets its strings from PHP, already translated, through the `riff_strings` data, so a new string the script shows goes there. `plugins/riff/tests/php/test-i18n.php` checks that every view of the Listen app and every string handed to the script comes out translated.
+
 ## Releases
 
 Releases are automated by [release-please](https://github.com/googleapis/release-please). It reads the merged pull request titles on `main` to decide the next version and write `CHANGELOG.md`:

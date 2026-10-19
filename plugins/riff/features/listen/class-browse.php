@@ -320,21 +320,7 @@ final class Browse {
 	public static function album_cards( array $albums, string $page ): string {
 		$cards = '';
 		foreach ( $albums as $album ) {
-			$cards .= Ui::card(
-				array(
-					'title' => (string) $album['name'],
-					'href'  => add_query_arg( self::ALBUM, (int) $album['id'], $page ),
-					'sub'   => implode( ' · ', array_filter( array( $album['artist'] ?? '', self::count( (int) $album['count'] ) ) ) ),
-					'art'   => $album['art'] ? (string) end( $album['art'] )['src'] : '',
-					'data'  => array( 'album' => (int) $album['id'] ),
-					'play'  => array(
-						'action' => 'play-album',
-						'data'   => array( 'album' => (int) $album['id'] ),
-						/* translators: %s: album name. */
-						'label'  => sprintf( __( 'Play %s', 'riff' ), $album['name'] ),
-					),
-				)
-			);
+			$cards .= Ui::album( $album, add_query_arg( self::ALBUM, (int) $album['id'], $page ) );
 		}
 		return $cards;
 	}

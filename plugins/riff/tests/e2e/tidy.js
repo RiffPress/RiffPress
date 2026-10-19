@@ -1,8 +1,9 @@
 /**
  * Layout checks for any region of the Listen block: nothing laid over its neighbour, every card in
- * a row or grid the same width with a square cover of one height, nothing wider than the window,
- * and no text cut off. Each check names what it found, so a failure says where to look. And a
- * check that a page settles without moving: its layout shift, as Core Web Vitals counts it.
+ * a row or grid the same width with a square cover of one height, every album's line its artist
+ * alone, nothing wider than the window, and no text cut off. Each check names what it found, so a
+ * failure says where to look. And a check that a page settles without moving: its layout shift, as
+ * Core Web Vitals counts it.
  */
 const { expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
@@ -45,6 +46,8 @@ function measure( page, region ) {
 					.filter( ( c ) => c.matches( '.riff-card' ) && seen( c ) )
 					.map( ( c ) => ( {
 						title: c.querySelector( '.riff-card-title' )?.textContent || '',
+						album: c.hasAttribute( 'data-riff-album' ),
+						line: c.querySelector( '.riff-card-sub' )?.textContent || '',
 						card: box( c ),
 						art: box( c.querySelector( '.riff-card-art' ) ),
 					} ) ),
@@ -132,6 +135,12 @@ async function expectTidy( page, region, where ) {
 			expect( Math.abs( c.art.h - cover ), `${ at }: “${ c.title }” has a cover as tall as the first (cover heights)` ).toBeLessThan( 1.5 );
 			expect( Math.abs( c.art.w - c.art.h ), `${ at }: “${ c.title }” has a square cover (square)` ).toBeLessThan( 1.5 );
 			expect( c.art.w, `${ at }: “${ c.title }” has its cover inside the card (widths)` ).toBeLessThanOrEqual( c.card.w + 0.5 );
+			if ( c.album ) {
+				// An album's line is its artist alone, as the music apps show one, so a long name
+				// cannot push the rest of the line out of sight on some cards and not others.
+				expect( c.line.trim(), `${ at }: “${ c.title }” has a line under it (album line)` ).not.toBe( '' );
+				expect( c.line, `${ at }: “${ c.title }” has only its artist under it (album line)` ).not.toContain( '·' );
+			}
 		}
 	}
 }

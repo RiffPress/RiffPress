@@ -16,9 +16,14 @@
 	<rule ref="WordPress">
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
 	</rule>
+	<!--
+		Every string Riff shows is in the riff text domain, so translate.wordpress.org picks it up. Riff
+		Lyrics is a separate plugin and sets its own domain at the top of its file with phpcs:set.
+		.github/scripts/text-domain-check.sh shows this catches a wrong or missing domain.
+	-->
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array"><element value="riff"/><element value="riff-lyrics"/></property>
+			<property name="text_domain" type="array"><element value="riff"/></property>
 		</properties>
 	</rule>
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
