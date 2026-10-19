@@ -90,4 +90,20 @@ class Test_Riff_Ui extends Riff_TestCase {
 		$this->assertStringContainsString( 'class="riff-heart-off"', $html );
 		$this->assertStringContainsString( 'class="riff-heart-on"', $html );
 	}
+
+	public function test_an_album_card_says_its_artist_and_nothing_more(): void {
+		$album = array(
+			'id'     => 3,
+			'name'   => 'Compositions',
+			'artist' => 'The Airmen of Note',
+			'count'  => 10,
+			'art'    => array( array( 'src' => 'https://example.org/cover.jpg' ) ),
+		);
+		$html  = Ui::album( $album, 'https://example.org/?riff_album=3' );
+
+		$this->assertStringContainsString( '<span class="riff-card-sub">The Airmen of Note</span>', $html );
+		$this->assertStringContainsString( 'data-riff-app-action="play-album" data-riff-album="3" aria-label="Play Compositions"', $html );
+		$this->assertStringContainsString( '<img src="https://example.org/cover.jpg"', $html );
+		$this->assertSame( 'Album', Ui::album_line( array( 'artist' => '  ' ) ), 'a line of the same height when there is no artist' );
+	}
 }

@@ -107,8 +107,41 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$html = $this->render_at( array( Browse::VIEW => 'albums' ) );
 
 		$this->assertStringContainsString( 'data-riff-app-action="play-album" data-riff-album="' . $this->album( 'Compositions' ) . '"', $html );
-		$this->assertStringContainsString( 'The Airmen of Note · 2 tracks', $html );
+		$this->assertStringContainsString( '<span class="riff-card-sub">The Airmen of Note</span>', $html );
 		$this->assertStringNotContainsString( 'Secret Sessions', $html );
+	}
+
+	public function test_every_album_card_has_the_same_line_its_artist(): void {
+		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		foreach (
+			array(
+				'Celtic Aire'  => 'Celtic Aire, United States Air Force Band',
+				'No One Wrote' => '',
+			) as $album => $artist
+		) {
+			$id = self::attach( '04 - It\'s a Brand New Day [new-day].mp3', $post );
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'album'  => $album,
+					'artist' => $artist,
+				)
+			);
+		}
+
+		$html = $this->render_at( array( Browse::VIEW => 'albums' ) );
+		preg_match_all( '#<span class="riff-card-title">([^<]+)</span></a><span class="riff-card-sub">([^<]*)</span>#', $html, $cards );
+		$lines = array_combine( $cards[1], $cards[2] );
+
+		$this->assertSame(
+			array(
+				'Celtic Aire'  => 'Celtic Aire, United States Air Force Band',
+				'Compositions' => 'The Airmen of Note',
+				'No One Wrote' => 'Album',
+			),
+			$lines,
+			'the artist and nothing more, whatever album it is, and Album when there is no artist'
+		);
 	}
 
 	public function test_an_album_opens_as_rows_in_its_order_with_play_and_shuffle(): void {

@@ -35,20 +35,32 @@ add_action(
 			)
 		);
 		$cards  = array(
-			// A post or album with a cover, one with no cover, one with a long title, one with no link.
-			Ui::card(
+			// An album with a cover, one by a long-named artist, one with no artist, then a post with
+			// no cover, one with a long title, and one with no link.
+			Ui::album(
 				array(
-					'title' => 'Compositions',
-					'href'  => '#album',
-					'sub'   => 'The Airmen of Note · 10 tracks',
-					'art'   => $art,
-					'data'  => array( 'album' => 1 ),
-					'play'  => array(
-						'action' => 'play-album',
-						'label'  => 'Play Compositions',
-						'data'   => array( 'album' => 1 ),
-					),
-				)
+					'id'     => 1,
+					'name'   => 'Compositions',
+					'artist' => 'The Airmen of Note',
+					'art'    => array( array( 'src' => $art ) ),
+				),
+				'#album'
+			),
+			Ui::album(
+				array(
+					'id'     => 2,
+					'name'   => 'Celtic Aire',
+					'artist' => 'Celtic Aire, United States Air Force Band',
+					'art'    => array( array( 'src' => $art ) ),
+				),
+				'#album2'
+			),
+			Ui::album(
+				array(
+					'id'   => 3,
+					'name' => 'No artist',
+				),
+				'#album3'
 			),
 			Ui::card(
 				array(
