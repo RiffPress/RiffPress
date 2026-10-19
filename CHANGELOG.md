@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.21.0](https://github.com/RiffPress/RiffPress/compare/v4.20.0...v4.21.0) (2026-10-19)
+
+
+### Features
+
+* first run creates the Listen page and points to the first album ([#457](https://github.com/RiffPress/RiffPress/issues/457)) ([cf401c4](https://github.com/RiffPress/RiffPress/commit/cf401c4270fcd4afd1ca6a3e8375221295977fd8))
+
+
+### Bug Fixes
+
+* every album card's line is its artist, from one shared card ([#461](https://github.com/RiffPress/RiffPress/issues/461)) ([93a1418](https://github.com/RiffPress/RiffPress/commit/93a14184f2516e5c82edf97f830902372f30c63c))
+* on a wide screen the seek line sits under the controls, where it is easy to reach ([#466](https://github.com/RiffPress/RiffPress/issues/466)) ([2850ec3](https://github.com/RiffPress/RiffPress/commit/2850ec361a7c26c20ee1208914ffc73d2cb81838))
+* security review fixes before the plugin directory ([#463](https://github.com/RiffPress/RiffPress/issues/463)) ([abd37fb](https://github.com/RiffPress/RiffPress/commit/abd37fbb938e5ebf27831fe2c0a34a053412dac2))
+
 ## [4.20.0](https://github.com/RiffPress/RiffPress/compare/v4.19.0...v4.20.0) (2026-10-19)
 
 
