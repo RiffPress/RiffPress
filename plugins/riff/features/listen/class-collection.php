@@ -57,7 +57,7 @@ final class Collection {
 	 */
 	public static function view( string $page ): string {
 		$filter = self::arg( Browse::FILTER );
-		$filter = in_array( $filter, array( 'songs', 'albums', 'artists' ), true ) ? $filter : 'all';
+		$filter = in_array( $filter, array( 'playlists', 'songs', 'albums', 'artists' ), true ) ? $filter : 'all';
 		$sort   = 'name' === self::arg( Browse::SORT ) ? 'name' : 'recent';
 		$number = ctype_digit( self::arg( App::PAGE_QUERY ) ) ? max( 1, (int) self::arg( App::PAGE_QUERY ) ) : 1;
 
@@ -71,11 +71,24 @@ final class Collection {
 			$ids[ $like['kind'] ][] = (int) $like['id'];
 		}
 
-		$html = Ui::title( __( 'Your Library', 'riff' ) ) . self::bar( $page, $filter, $sort );
+		$lists = $account ? Playlist_View::mine() : array();
+		if ( 'name' === $sort ) {
+			usort( $lists, static fn( $a, $b ) => strnatcasecmp( (string) $a['title'], (string) $b['title'] ) );
+		}
+		$html = Ui::title( __( 'Your Library', 'riff' ) ) . self::bar( $page, $filter, $sort, $account );
 		if ( ! $account && ! $likes ) {
 			$html .= self::sign_in( $page );
 		}
 		switch ( $filter ) {
+			case 'playlists':
+				if ( ! $account ) {
+					$html .= Ui::empty_note( __( 'Sign in to make playlists. They are kept in your account.', 'riff' ) );
+				} elseif ( ! $lists ) {
+					$html .= Ui::empty_note( __( 'Playlists you make show up here. Press New playlist, or choose Add to playlist in the … menu beside any track.', 'riff' ) );
+				} else {
+					$html .= '<div class="riff-grid">' . implode( '', array_map( static fn( $l ) => Playlist_View::card( $l, $page ), $lists ) ) . '</div>';
+				}
+				break;
 			case 'songs':
 				$html .= self::songs( $page, $ids['track'], $sort, $number );
 				break;
@@ -88,7 +101,7 @@ final class Collection {
 				$html   .= $artists ? '<ul class="riff-artists">' . Browse::artist_items( $artists, $page ) . '</ul>' : Ui::empty_note( __( 'Artists you like show up here. Press the heart on an artist’s page.', 'riff' ) );
 				break;
 			default:
-				$html .= self::everything( $page, $ids, $likes, $sort );
+				$html .= self::everything( $page, $ids, $likes, $sort, $lists );
 		}
 		if ( ! $account && $likes ) {
 			$html .= self::sign_in( $page );
@@ -131,15 +144,16 @@ final class Collection {
 	 * @param string $page   Listen page.
 	 * @param string $filter The filter showing.
 	 * @param string $sort   The sort in use.
+	 * @param bool   $account Whether the listener is signed in, for New playlist.
 	 * @return string
 	 */
-	private static function bar( string $page, string $filter, string $sort ): string {
-		// Playlists (#401) join these as a chip of their own.
+	private static function bar( string $page, string $filter, string $sort, bool $account = false ): string {
 		$chips  = array(
-			'all'     => __( 'All', 'riff' ),
-			'songs'   => __( 'Songs', 'riff' ),
-			'albums'  => __( 'Albums', 'riff' ),
-			'artists' => __( 'Artists', 'riff' ),
+			'all'       => __( 'All', 'riff' ),
+			'playlists' => __( 'Playlists', 'riff' ),
+			'songs'     => __( 'Songs', 'riff' ),
+			'albums'    => __( 'Albums', 'riff' ),
+			'artists'   => __( 'Artists', 'riff' ),
 		);
 		$sorts  = array(
 			'recent' => __( 'Recently added', 'riff' ),
@@ -158,7 +172,9 @@ final class Collection {
 		foreach ( $sorts as $slug => $label ) {
 			$order[] = $choice( $label, self::link( $page, $filter, $slug ), $slug === $sort );
 		}
-		return '<div class="riff-library-bar">' . Ui::choices( __( 'Show', 'riff' ), $links ) . Ui::choices( __( 'Sort by', 'riff' ), $order, 'sort' ) . '</div>';
+		// Spotify's Create: a new playlist, for someone signed in. app.js makes it and opens it.
+		$create = $account ? '<button type="button" class="riff-pill riff-pill-solid riff-library-create" data-riff-app-action="new-playlist">' . esc_html__( 'New playlist', 'riff' ) . '</button>' : '';
+		return '<div class="riff-library-bar">' . Ui::choices( __( 'Show', 'riff' ), $links ) . Ui::choices( __( 'Sort by', 'riff' ), $order, 'sort' ) . $create . '</div>';
 	}
 
 	/**
@@ -193,9 +209,10 @@ final class Collection {
 	 * @param array[] $ids   Liked IDs by kind, newest first.
 	 * @param array[] $likes Every like, newest first.
 	 * @param string  $sort  recent or name.
+	 * @param array[] $lists The listener's playlists.
 	 * @return string
 	 */
-	private static function everything( string $page, array $ids, array $likes, string $sort ): string {
+	private static function everything( string $page, array $ids, array $likes, string $sort, array $lists = array() ): string {
 		// Albums and artists in one list: newest first by where each sits in the likes, or by name.
 		$place = array();
 		foreach ( $likes as $i => $like ) {
@@ -250,9 +267,11 @@ final class Collection {
 				) : array(),
 			)
 		);
-		$html  = '<div class="riff-grid riff-library-grid">' . $liked . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';
-		$html .= Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
-		if ( ! $likes ) {
+		// The listener's playlists come right after Liked songs, as the apps pin them.
+		$playlists = implode( '', array_map( static fn( $l ) => Playlist_View::card( $l, $page ), $lists ) );
+		$html      = '<div class="riff-grid riff-library-grid">' . $liked . $playlists . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';
+		$html     .= Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
+		if ( ! $likes && ! $lists ) {
 			$albums = Browse::get( '/albums', array( 'orderby' => 'added' ) );
 			if ( $albums['items'] ) {
 				$html .= Ui::shelf( 'start', __( 'Start with', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( array_slice( $albums['items'], 0, 12 ), $page ) );

@@ -458,7 +458,8 @@ final class App {
 	 * Shuffle under them, as the music apps draw an album.
 	 *
 	 * @since 4.17.0
-	 * @since 4.20.0 A heart beside Play and Shuffle, for an album or artist.
+	 * @since 4.20.0 A heart beside Play and Shuffle, for an album or artist; a playlist's mosaic,
+	 *               and more buttons beside Play and Shuffle.
 	 *
 	 * @param string $title Title.
 	 * @param string $meta  The line under it.
@@ -467,21 +468,24 @@ final class App {
 	 * @param string $tint  A hex colour from the cover to tint the header with, or empty.
 	 * @param bool   $round Whether the picture is round, as an artist's is.
 	 * @param string $like  What the heart likes, "album" or "artist", or empty for no heart.
-	 * @param int    $id    The album's or artist's term ID, for the heart.
+	 * @param int    $id     The album's or artist's term ID, for the heart.
+	 * @param array  $covers Up to four covers for a playlist's mosaic, when there is no art.
+	 * @param string $extra  More buttons after Play and Shuffle, or empty.
 	 * @return string
 	 */
-	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0 ): string {
+	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '' ): string {
 		$tint  = (string) sanitize_hex_color( $tint );
 		$heart = in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ? Ui::heart( $like, $id, $title ) : '';
+		$cover = '' !== $art ? '<img src="' . esc_url( $art ) . '" alt="" decoding="async">' : Ui::mosaic( $covers );
 		return sprintf(
 			'<header class="riff-album%1$s"%6$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>%7$s</div></header>',
-			( '' !== $art ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),
-			'' !== $art ? '<span class="riff-album-cover"><img src="' . esc_url( $art ) . '" alt="" decoding="async"></span>' : '',
+			( '' !== $cover ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),
+			'' !== $cover ? '<span class="riff-album-cover">' . $cover . '</span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
 			esc_html( $title ),
 			esc_html( $meta ),
 			'' !== $tint ? ' style="--riff-album-tint:' . esc_attr( $tint ) . '"' : '',
-			Ui::actions( $heart )
+			Ui::actions( $heart . $extra )
 		);
 	}
 

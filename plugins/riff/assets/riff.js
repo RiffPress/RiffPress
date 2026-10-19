@@ -294,6 +294,105 @@ function start() {
 				.filter( ( l ) => ! kind || l.kind === kind )
 				.map( ( l ) => ( { ...l } ) ),
 		/**
+		 * The signed-in listener's playlists, the most recently changed first. Empty for a visitor:
+		 * a playlist is a post, so it needs an account.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @return {Object[]} Playlists, each `{ id, title, count }`.
+		 */
+		playlists: () => playlists.map( ( p ) => ( { ...p } ) ),
+		/**
+		 * One of the signed-in listener's playlists, with its tracks.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number} id The playlist's ID.
+		 * @return {Promise<Object>} The playlist, as `riff/v1/users/me/playlists/{id}` returns it.
+		 */
+		playlist: ( id ) =>
+			me?.rest?.playlists
+				? send( under( me.rest.playlists, `/${ Number( id ) }` ), 'GET' )
+				: Promise.reject( new Error( 'signed out' ) ),
+		/**
+		 * Makes a playlist, empty or with tracks.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {string}               title    Its name.
+		 * @param {Array<number|Object>} [tracks] Tracks, or their IDs, in order.
+		 * @return {Promise<Object>} The playlist, as `riff/v1/users/me/playlists/{id}` returns it.
+		 */
+		createPlaylist: ( title, tracks = [] ) =>
+			playlistCall( 'create', 'POST', '', {
+				title: String( title || '' ),
+				tracks: trackIds( tracks ),
+			} ),
+		/**
+		 * Adds tracks to the end of a playlist.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number}                      id     The playlist's ID.
+		 * @param {Array<number|Object>|Object} tracks Tracks, or their IDs.
+		 * @return {Promise<Object>} The playlist.
+		 */
+		addToPlaylist: ( id, tracks ) =>
+			playlistCall( 'add', 'POST', `/${ Number( id ) }/tracks`, {
+				tracks: trackIds( tracks ),
+			} ),
+		/**
+		 * Renames a playlist.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number} id    The playlist's ID.
+		 * @param {string} title Its new name.
+		 * @return {Promise<Object>} The playlist.
+		 */
+		renamePlaylist: ( id, title ) =>
+			playlistCall( 'rename', 'POST', `/${ Number( id ) }`, {
+				title: String( title || '' ),
+			} ),
+		/**
+		 * Sets a playlist's tracks, in a new order or with some left out.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number}               id     The playlist's ID.
+		 * @param {Array<number|Object>} tracks Every track, or its ID, in the new order.
+		 * @return {Promise<Object>} The playlist.
+		 */
+		setPlaylistTracks: ( id, tracks ) =>
+			playlistCall( 'reorder', 'POST', `/${ Number( id ) }`, {
+				tracks: trackIds( tracks ),
+			} ),
+		/**
+		 * Takes the track at a place out of a playlist.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number} id    The playlist's ID.
+		 * @param {number} index The track's place, from 0.
+		 * @return {Promise<Object>} The playlist.
+		 */
+		removeFromPlaylist: ( id, index ) =>
+			playlistCall(
+				'remove',
+				'DELETE',
+				`/${ Number( id ) }/tracks/${ Number( index ) }`
+			),
+		/**
+		 * Deletes a playlist. It goes to the trash, where someone who can edit it may restore it.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number} id The playlist's ID.
+		 * @return {Promise<Object>} `{ deleted, previous }`.
+		 */
+		deletePlaylist: ( id ) =>
+			playlistCall( 'delete', 'DELETE', `/${ Number( id ) }` ),
+		/**
 		 * Whether something is playing.
 		 *
 		 * @since 4.0.0
@@ -747,7 +846,9 @@ function start() {
 				},
 				body: body ? JSON.stringify( body ) : undefined,
 			} ).then( ( r ) =>
-				r.ok ? r.json() : Promise.reject( new Error( String( r.status ) ) )
+				r.ok
+					? r.json()
+					: Promise.reject( new Error( String( r.status ) ) )
 			);
 		const sent = sending.then( run, run );
 		sending = sent.catch( () => {} );
@@ -815,6 +916,75 @@ function start() {
 				t.title
 			)
 		);
+	}
+
+	// ---- Playlists. A playlist is a post, so it belongs to an account: the page hands the
+	// signed-in listener's over in data.me, and each change goes to riff/v1/users/me/playlists.
+	let playlists = Array.isArray( me?.playlists ) ? me.playlists : [];
+	const trackIds = ( tracks ) =>
+		( Array.isArray( tracks ) ? tracks : [ tracks ] )
+			.map( ( t ) => Number( t && typeof t === 'object' ? t.id : t ) )
+			.filter( ( n ) => Number.isInteger( n ) && n > 0 );
+	function playlistCall( change, method, path, body ) {
+		if ( ! me?.rest?.playlists ) {
+			return Promise.reject( new Error( 'signed out' ) );
+		}
+		return send( under( me.rest.playlists, path ), method, body ).then(
+			( r ) => {
+				const p = r.previous || r;
+				const brief = { id: p.id, title: p.title, count: p.count };
+				playlists =
+					change === 'delete'
+						? playlists.filter( ( x ) => x.id !== brief.id )
+						: [
+								brief,
+								...playlists.filter(
+									( x ) => x.id !== brief.id
+								),
+							];
+				/**
+				 * Fires when one of the signed-in listener's playlists is made, changed or deleted.
+				 *
+				 * @since 4.20.0
+				 *
+				 * @param {Object}   detail           What changed.
+				 * @param {string}   detail.change    `create`, `add`, `rename`, `reorder`, `remove` or `delete`.
+				 * @param {Object}   detail.playlist  The playlist, `{ id, title, count }`.
+				 * @param {Object[]} detail.playlists Every playlist, the most recently changed first.
+				 * @param {Object}   api              `window.riff`.
+				 */
+				emit( 'playlist', {
+					change,
+					playlist: brief,
+					playlists: api.playlists(),
+				} );
+				return r;
+			}
+		);
+	}
+	// The list Add to playlist opens: a new playlist named after the track, then each one.
+	function playlistItems( t ) {
+		const said = ( p ) =>
+			toast( fmt( s.addedToPlaylist || 'Added to %s', p.title ) );
+		const failed = () =>
+			toast(
+				s.playlistFailed ||
+					'The playlist could not be changed. Try again.'
+			);
+		return [
+			{
+				id: 'new-playlist',
+				label: s.newPlaylist || 'New playlist',
+				run: () =>
+					api.createPlaylist( t.title, [ t ] ).then( said, failed ),
+			},
+			...playlists.map( ( p ) => ( {
+				id: `playlist-${ p.id }`,
+				label: p.title,
+				run: () =>
+					api.addToPlaylist( p.id, [ t ] ).then( said, failed ),
+			} ) ),
+		];
 	}
 
 	// Signed in, with likes or plays this browser kept from before: they join the account. What
@@ -1612,7 +1782,7 @@ function start() {
 		}
 	}
 
-	function menuItems( t, at ) {
+	function menuItems( t, at, button ) {
 		const items = [
 			{
 				id: 'next',
@@ -1644,6 +1814,20 @@ function start() {
 					: s.addToLiked || 'Add to Liked songs',
 				run: () => toggleLike( t ),
 			} );
+			if ( me ) {
+				items.push( {
+					id: 'playlist',
+					label: s.addToPlaylist || 'Add to playlist',
+					run: () => openMenu( button, t, at, playlistItems( t ) ),
+				} );
+			} else if ( data.signIn ) {
+				items.push( {
+					id: 'playlist',
+					label:
+						s.signInForPlaylists || 'Sign in to add to a playlist',
+					href: data.signIn,
+				} );
+			}
 		}
 		if ( at !== undefined ) {
 			if ( at > 0 ) {
@@ -1680,28 +1864,35 @@ function start() {
 		 * beside each track in Up next.
 		 *
 		 * Each item is `{ id, label, run }`, where `run` is called when it is chosen, or
-		 * `{ id, label, href }` for a link. Riff's own are `next`, `add`, `like`, `up`, `down`,
-		 * `remove` and `post`.
+		 * `{ id, label, href }` for a link. Riff's own are `next`, `add`, `like`, `playlist`,
+		 * `up`, `down`, `remove` and `post`.
 		 *
 		 * @since 4.19.0
-		 * @since 4.20.0 Has `like` for a track in the Media Library.
+		 * @since 4.20.0 Has `like` and `playlist` for a track in the Media Library, and the
+		 *               context names the row's element.
 		 *
 		 * @param {Object[]} items   The items, in order.
 		 * @param {Object}   track   The track, in the shape `Tracks::schema()` describes.
-		 * @param {Object}   context Where the menu opened: `{ where: 'row' }`, or
-		 *                           `{ where: 'queue', index }` with its place in the play order.
+		 * @param {Object}   context Where the menu opened: `{ where: 'row', element }` with the
+		 *                           row's block element, or `{ where: 'queue', index }` with its
+		 *                           place in the play order.
 		 */
 		return filter(
 			'trackMenu',
 			items,
 			t,
-			at === undefined ? { where: 'row' } : { where: 'queue', index: at }
+			at === undefined
+				? {
+						where: 'row',
+						element: button?.closest( '[data-riff-track]' ) || null,
+					}
+				: { where: 'queue', index: at }
 		);
 	}
 
-	function openMenu( button, t, at ) {
+	function openMenu( button, t, at, list = null ) {
 		closeMenu( false );
-		const items = ( menuItems( t, at ) || [] ).filter(
+		const items = ( list || menuItems( t, at, button ) || [] ).filter(
 			( i ) => i && i.label && ( typeof i.run === 'function' || i.href )
 		);
 		menu.replaceChildren(

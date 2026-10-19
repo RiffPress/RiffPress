@@ -1,0 +1,314 @@
+<?php
+/**
+ * Playlists people make, over REST.
+ *
+ * @package Riff
+ */
+
+use Riff\Blocks_Source;
+use Riff\Catalog;
+use Riff\Playlists;
+
+/**
+ * Riff\Playlists.
+ */
+class Test_Riff_Playlists extends Riff_TestCase {
+
+	/**
+	 * Three tracks on a published post.
+	 *
+	 * @var int[]
+	 */
+	private array $tracks = array();
+
+	/**
+	 * A track on a draft.
+	 *
+	 * @var int
+	 */
+	private int $secret = 0;
+
+	/**
+	 * A subscriber.
+	 *
+	 * @var int
+	 */
+	private int $user = 0;
+
+	public function set_up(): void {
+		parent::set_up();
+		$GLOBALS['wp_rest_server'] = null;
+		Catalog::taxonomies();
+		Playlists::post_type();
+		$post         = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$this->tracks = array(
+			self::attach( '02 - Underground [underground].mp3', $post ),
+			self::attach( '03 - Trombone Detritus [detritus].mp3', $post ),
+			self::attach( '05 - Stole Back My Soul [stole-back].mp3', $post ),
+		);
+		$draft        = self::factory()->post->create( array( 'post_status' => 'draft' ) );
+		$this->secret = self::attach( '04 - It\'s a Brand New Day [new-day].mp3', $draft );
+		$this->user   = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+	}
+
+	/**
+	 * A request's response.
+	 *
+	 * @param string $method Method.
+	 * @param string $route  Route under /riff/v1/users/me/playlists.
+	 * @param array  $body   JSON body.
+	 * @return WP_REST_Response
+	 */
+	private function call( string $method, string $route = '', array $body = array() ): WP_REST_Response {
+		$request = new WP_REST_Request( $method, '/riff/v1/users/me/playlists' . $route );
+		if ( $body ) {
+			$request->set_header( 'Content-Type', 'application/json' );
+			$request->set_body( wp_json_encode( $body ) );
+		}
+		return rest_do_request( $request );
+	}
+
+	/**
+	 * A playlist the subscriber made.
+	 *
+	 * @param int[] $tracks Track IDs.
+	 * @return int
+	 */
+	private function made( array $tracks ): int {
+		wp_set_current_user( $this->user );
+		return (int) $this->call(
+			'POST',
+			'',
+			array(
+				'title'  => 'Road trip',
+				'tracks' => $tracks,
+			)
+		)->get_data()['id'];
+	}
+
+	public function test_a_visitor_cannot_make_or_see_playlists(): void {
+		wp_set_current_user( 0 );
+		$this->assertSame( 401, $this->call( 'GET' )->get_status() );
+		$this->assertSame( 401, $this->call( 'POST', '', array( 'title' => 'Mine' ) )->get_status() );
+	}
+
+	public function test_a_playlist_is_a_private_post_of_its_user_holding_a_playlist_block(): void {
+		$id   = $this->made( array( $this->tracks[1], $this->tracks[0] ) );
+		$post = get_post( $id );
+
+		$this->assertSame( Playlists::TYPE, $post->post_type );
+		$this->assertSame( 'private', $post->post_status, 'private by default' );
+		$this->assertSame( $this->user, (int) $post->post_author );
+		$this->assertTrue( has_block( 'core/playlist', $post ), 'core\'s own block, so it opens in the editor' );
+		$block = parse_blocks( $post->post_content )[0];
+		$this->assertSame( array( $this->tracks[1], $this->tracks[0] ), array_map( static fn( $b ) => $b['attrs']['id'], Blocks_Source::playlist_tracks( $block ) ), 'read the way Riff reads any Playlist block' );
+	}
+
+	public function test_making_one_answers_with_its_tracks_and_a_mosaic_of_covers(): void {
+		wp_set_current_user( $this->user );
+		$response = $this->call(
+			'POST',
+			'',
+			array(
+				'title'  => '  Road <b>trip</b>  ',
+				'tracks' => array( $this->tracks[0], $this->tracks[1] ),
+			)
+		);
+		$data     = $response->get_data();
+
+		$this->assertSame( 201, $response->get_status() );
+		$this->assertSame( 'Road trip', $data['title'], 'plain text' );
+		$this->assertSame( 2, $data['count'] );
+		$this->assertSame( array( 'Underground', 'Trombone Detritus' ), wp_list_pluck( $data['tracks'], 'title' ) );
+		$this->assertNotEmpty( $data['covers'] );
+		$this->assertLessThanOrEqual( 4, count( $data['covers'] ) );
+	}
+
+	public function test_tracks_are_added_reordered_and_removed_by_place_and_it_is_renamed(): void {
+		$id = $this->made( array( $this->tracks[0] ) );
+
+		$data = $this->call( 'POST', "/$id/tracks", array( 'tracks' => array( $this->tracks[1], $this->tracks[0] ) ) )->get_data();
+		$this->assertSame( array( $this->tracks[0], $this->tracks[1], $this->tracks[0] ), $data['ids'], 'added at the end, a track twice if asked' );
+
+		$data = $this->call( 'DELETE', "/$id/tracks/2" )->get_data();
+		$this->assertSame( array( $this->tracks[0], $this->tracks[1] ), $data['ids'], 'the second copy goes, not the first' );
+
+		$data = $this->call(
+			'POST',
+			"/$id",
+			array(
+				'title'  => 'Night drive',
+				'tracks' => array( $this->tracks[2], $this->tracks[1], $this->tracks[0] ),
+			)
+		)->get_data();
+		$this->assertSame( 'Night drive', $data['title'] );
+		$this->assertSame( array( $this->tracks[2], $this->tracks[1], $this->tracks[0] ), $data['ids'] );
+		$this->assertSame( array( 0, 1, 2 ), wp_list_pluck( $data['tracks'], 'index' ) );
+		$this->assertSame( 400, $this->call( 'DELETE', "/$id/tracks/9" )->get_status(), 'no track there' );
+	}
+
+	public function test_only_audio_in_the_media_library_joins_and_a_hidden_track_keeps_its_place(): void {
+		$image = self::factory()->attachment->create_upload_object( self::fixture( 'cover.png' ) );
+		$id    = $this->made( array( $this->tracks[0], $image, $this->secret, $this->tracks[1] ) );
+		$data  = $this->call( 'GET', "/$id" )->get_data();
+
+		$this->assertSame( array( $this->tracks[0], $this->secret, $this->tracks[1] ), $data['ids'], 'an image is not a track' );
+		$this->assertSame( array( 'Underground', 'Trombone Detritus' ), wp_list_pluck( $data['tracks'], 'title' ), 'the draft\'s track is not shown to a subscriber' );
+		$this->assertSame( array( 0, 2 ), wp_list_pluck( $data['tracks'], 'index' ), 'and the others keep their places' );
+	}
+
+	public function test_a_list_is_the_users_own_most_recently_changed_first(): void {
+		global $wpdb;
+		$first  = $this->made( array( $this->tracks[0] ) );
+		$second = $this->made( array() );
+		// The first was changed last.
+		$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a test setting a time WordPress would set itself.
+			$wpdb->posts,
+			array(
+				'post_modified'     => '2030-01-01 00:00:00',
+				'post_modified_gmt' => '2030-01-01 00:00:00',
+			),
+			array( 'ID' => $first )
+		);
+		clean_post_cache( $first );
+		Playlists::create( self::factory()->user->create( array( 'role' => 'subscriber' ) ), 'Not mine' );
+
+		wp_set_current_user( $this->user );
+		$items = $this->call( 'GET' )->get_data()['items'];
+		$this->assertSame( array( $first, $second ), wp_list_pluck( $items, 'id' ) );
+		$this->assertNotContains( 'Not mine', wp_list_pluck( $items, 'title' ) );
+	}
+
+	public function test_someone_elses_playlist_is_not_found_and_an_editor_of_users_may_reach_it(): void {
+		$id    = $this->made( array( $this->tracks[0] ) );
+		$other = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+
+		wp_set_current_user( $other );
+		$this->assertSame( 404, $this->call( 'GET', "/$id" )->get_status(), 'not theirs' );
+		$this->assertSame( 404, $this->call( 'DELETE', "/$id" )->get_status() );
+		$request = new WP_REST_Request( 'GET', '/riff/v1/users/' . $this->user . '/playlists' );
+		$this->assertSame( 403, rest_do_request( $request )->get_status(), 'nor by its owner\'s ID' );
+
+		$admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		if ( is_multisite() ) {
+			grant_super_admin( $admin );
+		}
+		wp_set_current_user( $admin );
+		$request = new WP_REST_Request( 'GET', '/riff/v1/users/' . $this->user . '/playlists/' . $id );
+		$this->assertSame( 'Road trip', rest_do_request( $request )->get_data()['title'] );
+		$this->assertSame( 404, $this->call( 'GET', "/$id" )->get_status(), 'as me, it is not the admin\'s own' );
+	}
+
+	public function test_deleting_moves_it_to_the_trash(): void {
+		$id = $this->made( array( $this->tracks[0] ) );
+
+		$data = $this->call( 'DELETE', "/$id" )->get_data();
+		$this->assertTrue( $data['deleted'] );
+		$this->assertSame( 'trash', get_post_status( $id ) );
+		$this->assertSame( 404, $this->call( 'GET', "/$id" )->get_status() );
+		$this->assertSame( array(), $this->call( 'GET' )->get_data()['items'] );
+	}
+
+	/**
+	 * The Listen block at an address, as whoever is signed in.
+	 *
+	 * @param array $args Query arguments.
+	 * @return string
+	 */
+	private function render_at( array $args ): string {
+		$page = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_content' => '<!-- wp:riff/app /-->',
+			)
+		);
+		$this->go_to( add_query_arg( $args, get_permalink( $page ) ) );
+		foreach ( $args as $key => $value ) {
+			$_GET[ $key ] = (string) $value; // go_to() does not fill $_GET; the block reads it.
+		}
+		$html = \Riff\Listen\App::render();
+		foreach ( array_keys( $args ) as $key ) {
+			unset( $_GET[ $key ] );
+		}
+		return $html;
+	}
+
+	public function test_a_playlist_opens_with_its_mosaic_rows_places_rename_and_delete(): void {
+		$id   = $this->made( array( $this->tracks[0], $this->secret, $this->tracks[1] ) );
+		$html = $this->render_at( array( 'riff_playlist' => $id ) );
+
+		$this->assertStringContainsString( '<h2 class="riff-album-title" tabindex="-1">Road trip</h2>', $html );
+		$this->assertStringContainsString( '<p class="riff-album-kind">Playlist</p>', $html );
+		$this->assertStringContainsString( '3 songs', $html );
+		$this->assertStringContainsString( 'data-riff-app-action="rename-playlist" data-riff-playlist="' . $id . '"', $html );
+		$this->assertStringContainsString( 'data-riff-app-action="delete-playlist"', $html );
+		$this->assertSame( 2, substr_count( $html, 'data-riff-track="' ), 'a row for each of the two the listener can see' );
+		$this->assertStringContainsString( 'data-riff-places="[0,2]"', $html, 'their places, the hidden one skipped' );
+		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html, 'under Your Library' );
+		$this->assertMatchesRegularExpression( '/<a class="riff-app-playlist" href="[^"]*riff_playlist=' . $id . '" aria-current="page">Road trip<\/a>/', $html, 'and in the sidebar\'s list' );
+	}
+
+	public function test_someone_elses_playlist_does_not_open(): void {
+		$id = $this->made( array( $this->tracks[0] ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$html = $this->render_at( array( 'riff_playlist' => $id ) );
+
+		$this->assertStringContainsString( 'This playlist isn’t here', $html );
+		$this->assertStringNotContainsString( 'Road trip', $html );
+	}
+
+	public function test_your_library_has_playlists_behind_their_chip_after_liked_songs_and_a_new_playlist_button(): void {
+		$empty = $this->made( array() );
+		$full  = $this->made( array( $this->tracks[0] ) );
+		$all   = $this->render_at( array( 'riff_view' => 'library' ) );
+
+		$this->assertMatchesRegularExpression( '/riff-card-liked.*data-riff-playlist="' . $full . '".*data-riff-playlist="' . $empty . '"/s', $all, 'right after Liked songs, the most recently changed first' );
+		$this->assertStringContainsString( 'data-riff-app-action="new-playlist"', $all );
+		$this->assertStringContainsString( 'Playlist · 1 song', $all );
+		$this->assertStringNotContainsString( 'data-riff-shelf="start"', $all, 'something of the listener\'s is here, so no albums to start with' );
+
+		$chip = $this->render_at(
+			array(
+				'riff_view'   => 'library',
+				'riff_filter' => 'playlists',
+			)
+		);
+		$this->assertMatchesRegularExpression( '/<a class="riff-chip-link" href="[^"]*riff_filter=playlists"[^>]*aria-current="true">Playlists/', $chip );
+		$this->assertSame( 2, substr_count( $chip, 'class="riff-card riff-card-playlist"' ) );
+		$this->assertStringContainsString( 'data-riff-app-action="play-playlist" data-riff-playlist="' . $full . '"', $chip, 'a playlist with songs plays from its cover' );
+
+		wp_set_current_user( 0 );
+		$visitor = $this->render_at(
+			array(
+				'riff_view'   => 'library',
+				'riff_filter' => 'playlists',
+			)
+		);
+		$this->assertStringContainsString( 'Sign in to make playlists', $visitor );
+		$this->assertStringNotContainsString( 'new-playlist', $visitor );
+	}
+
+	public function test_the_player_gets_the_users_playlists_and_a_visitor_a_way_to_sign_in(): void {
+		$id = $this->made( array( $this->tracks[0] ) );
+		wp_set_current_user( $this->user );
+		$data = apply_filters( 'riff_player_data', array( 'strings' => array() ) );
+
+		$this->assertSame(
+			array(
+				array(
+					'id'    => $id,
+					'title' => 'Road trip',
+					'count' => 1,
+				),
+			),
+			$data['me']['playlists']
+		);
+		$this->assertStringContainsString( 'riff/v1/users/me/playlists', $data['me']['rest']['playlists'] );
+
+		wp_set_current_user( 0 );
+		$data = apply_filters( 'riff_player_data', array( 'strings' => array() ) );
+		$this->assertArrayNotHasKey( 'me', $data );
+		$this->assertStringContainsString( 'wp-login.php', $data['signIn'] );
+	}
+}

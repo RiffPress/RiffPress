@@ -48,6 +48,7 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 \Riff\Library::routes();
 \Riff\Catalog_Rest::routes();
 \Riff\Likes::routes();
+\Riff\Playlists::routes();
 \Riff\Api::rest_field();
 \Riff\Api::graphql();
 

@@ -39,7 +39,8 @@ final class Ui {
 	 *     @type string $title Title.
 	 *     @type string $href  Where the title links, or empty for plain text.
 	 *     @type string $sub   The line under the title.
-	 *     @type string $art   The cover's address, or empty.
+	 *     @type string $art    The cover's address, or empty.
+	 *     @type array  $covers Up to four covers for a playlist's mosaic, used when there is no art.
 	 *     @type string $mark  A letter to show in place of a cover, or empty.
 	 *     @type bool   $heart Whether the cover is Liked songs' heart.
 	 *     @type string $class More classes: riff-card-artist for a round cover, riff-card-liked.
@@ -51,20 +52,23 @@ final class Ui {
 	 */
 	public static function card( array $card ): string {
 		$card += array(
-			'title' => '',
-			'href'  => '',
-			'sub'   => '',
-			'art'   => '',
-			'mark'  => '',
-			'heart' => false,
-			'class' => '',
-			'data'  => array(),
-			'id'    => '',
-			'play'  => array(),
+			'title'  => '',
+			'href'   => '',
+			'sub'    => '',
+			'art'    => '',
+			'covers' => array(),
+			'mark'   => '',
+			'heart'  => false,
+			'class'  => '',
+			'data'   => array(),
+			'id'     => '',
+			'play'   => array(),
 		);
 		$cover = '';
 		if ( '' !== $card['art'] ) {
 			$cover = '<img src="' . esc_url( $card['art'] ) . '" alt="" loading="lazy" decoding="async">';
+		} elseif ( $card['covers'] ) {
+			$cover = self::mosaic( (array) $card['covers'] );
 		} elseif ( $card['heart'] ) {
 			$cover = '<span class="riff-card-heart">' . Player::icon( 'hearted' ) . '</span>';
 		} elseif ( '' !== $card['mark'] ) {
@@ -89,6 +93,27 @@ final class Ui {
 			'' !== $card['href'] ? '<a class="riff-card-link" href="' . esc_url( $card['href'] ) . '">' . $title . '</a>' : $title,
 			esc_html( $card['sub'] )
 		);
+	}
+
+	/**
+	 * A playlist's cover, as the apps draw one: the first four covers in a square of four, or the
+	 * first one alone when there are fewer.
+	 *
+	 * @since 4.20.0
+	 *
+	 * @param string[] $covers Cover addresses, in the playlist's order.
+	 * @return string
+	 */
+	public static function mosaic( array $covers ): string {
+		$covers = array_values( array_filter( array_map( 'strval', $covers ) ) );
+		if ( ! $covers ) {
+			return '';
+		}
+		$img = static fn( string $src ): string => '<img src="' . esc_url( $src ) . '" alt="" loading="lazy" decoding="async">';
+		if ( count( $covers ) < 4 ) {
+			return $img( $covers[0] );
+		}
+		return '<span class="riff-mosaic">' . implode( '', array_map( $img, array_slice( $covers, 0, 4 ) ) ) . '</span>';
 	}
 
 	/**

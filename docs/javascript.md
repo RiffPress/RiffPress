@@ -205,6 +205,103 @@ Returns `Object[]`: Likes, each `{ kind, id, at }`, with `at` when it was liked 
 
 Since 4.20.0.
 
+### `window.riff.playlists()`
+
+The signed-in listener's playlists, the most recently changed first. Empty for a visitor: a playlist is a post, so it needs an account.
+
+Returns `Object[]`: Playlists, each `{ id, title, count }`.
+
+Since 4.20.0.
+
+### `window.riff.playlist( id )`
+
+One of the signed-in listener's playlists, with its tracks.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number` | The playlist's ID. |
+
+Returns `Promise<Object>`: The playlist, as `riff/v1/users/me/playlists/{id}` returns it.
+
+Since 4.20.0.
+
+### `window.riff.createPlaylist( title, tracks )`
+
+Makes a playlist, empty or with tracks.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | Its name. |
+| `tracks` | `Array<number\|Object>` | Tracks, or their IDs, in order. |
+
+Returns `Promise<Object>`: The playlist, as `riff/v1/users/me/playlists/{id}` returns it.
+
+Since 4.20.0.
+
+### `window.riff.addToPlaylist( id, tracks )`
+
+Adds tracks to the end of a playlist.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number` | The playlist's ID. |
+| `tracks` | `Array<number\|Object>\|Object` | Tracks, or their IDs. |
+
+Returns `Promise<Object>`: The playlist.
+
+Since 4.20.0.
+
+### `window.riff.renamePlaylist( id, title )`
+
+Renames a playlist.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number` | The playlist's ID. |
+| `title` | `string` | Its new name. |
+
+Returns `Promise<Object>`: The playlist.
+
+Since 4.20.0.
+
+### `window.riff.setPlaylistTracks( id, tracks )`
+
+Sets a playlist's tracks, in a new order or with some left out.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number` | The playlist's ID. |
+| `tracks` | `Array<number\|Object>` | Every track, or its ID, in the new order. |
+
+Returns `Promise<Object>`: The playlist.
+
+Since 4.20.0.
+
+### `window.riff.removeFromPlaylist( id, index )`
+
+Takes the track at a place out of a playlist.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number` | The playlist's ID. |
+| `index` | `number` | The track's place, from 0. |
+
+Returns `Promise<Object>`: The playlist.
+
+Since 4.20.0.
+
+### `window.riff.deletePlaylist( id )`
+
+Deletes a playlist. It goes to the trash, where someone who can edit it may restore it.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `number` | The playlist's ID. |
+
+Returns `Promise<Object>`: `{ deleted, previous }`.
+
+Since 4.20.0.
+
 ### `window.riff.playing()`
 
 Whether something is playing.
@@ -250,6 +347,7 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.open`](hooks.md#riffopen), action: Fires when Now Playing opens.
 - [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.
 - [`riff.play`](hooks.md#riffplay), action: Fires when the track starts or resumes playing.
+- [`riff.playlist`](hooks.md#riffplaylist), action: Fires when one of the signed-in listener's playlists is made, changed or deleted.
 - [`riff.queue`](hooks.md#riffqueue), action: Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
 - [`riff.ready`](hooks.md#riffready), action: Fires once the player is set up, its state restored and `window.riff` available.
 - [`riff.tab`](hooks.md#rifftab), action: Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
