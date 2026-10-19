@@ -37,5 +37,6 @@ final class Plugin {
 		Listen\App::register();
 		Listen\Standalone::register();
 		Listen\Art::register();
+		Listen\First_Run::register();
 	}
 }
