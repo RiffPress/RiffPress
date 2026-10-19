@@ -53,3 +53,8 @@ foreach ( array( 'riff_album', 'riff_artist' ) as $riff_taxonomy ) {
 }
 delete_option( 'riff_catalog_backfill' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );
+
+// Each listener's likes and recently played: user options, so one key per site's table prefix.
+foreach ( array( 'riff_likes', 'riff_history' ) as $riff_key ) {
+	delete_metadata( 'user', 0, $wpdb->get_blog_prefix() . $riff_key, '', true );
+}

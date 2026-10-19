@@ -1307,6 +1307,92 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	height: 20px;
 }
 
+/* ---- Hearts: in the bar, in Now Playing, and beside a row's … for a track
+   in the Media Library. Outlined, and filled while liked. A row's shows on
+   hover and focus, as Spotify's does, and always once the track is liked; on
+   a touch screen only once it is, and the … menu likes it. */
+#riff [aria-pressed="false"] > .riff-heart-on,
+#riff [aria-pressed="true"] > .riff-heart-off,
+.riff-like-button[aria-pressed="false"] > .riff-heart-on,
+.riff-like-button[aria-pressed="true"] > .riff-heart-off {
+	display: none;
+}
+
+#riff .riff-btn.riff-like[aria-pressed="true"],
+#riff .riff-bar-end .riff-btn.riff-like[aria-pressed="true"] {
+	color: var(--riff-accent);
+}
+
+.riff-np-meta {
+	position: relative;
+	padding-right: 48px;
+}
+
+#riff .riff-np-meta .riff-like {
+	position: absolute;
+	top: 0;
+	right: -8px;
+}
+
+.riff-like-button {
+	all: unset;
+	box-sizing: border-box;
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	color: inherit;
+	cursor: pointer;
+	opacity: 0;
+}
+
+.riff-track > .riff-like-button {
+	position: absolute;
+	top: 50%;
+	right: 44px;
+	transform: translateY(-50%);
+}
+
+.riff-track:has(> .riff-like-button) > .riff-row,
+.riff-app .riff-album-tracks .riff-track:has(> .riff-like-button) > .riff-row {
+	padding-right: 92px;
+}
+
+.riff-track:hover > .riff-like-button,
+.riff-like-button:focus-visible,
+.riff-like-button[aria-pressed="true"] {
+	opacity: 0.75;
+}
+
+.riff-like-button:hover,
+.riff-like-button:focus-visible {
+	background: color-mix(in srgb, currentcolor 12%, transparent);
+	opacity: 1;
+}
+
+.riff-like-button:focus-visible {
+	outline: 2px solid var(--riff-accent, #ffb020);
+	outline-offset: 1px;
+}
+
+.riff-like-button svg {
+	width: 20px;
+	height: 20px;
+}
+
+@media (hover: none) {
+
+	.riff-like-button[aria-pressed="false"] {
+		display: none;
+	}
+
+	.riff-track:has(> .riff-like-button[aria-pressed="false"]) > .riff-row,
+	.riff-app .riff-album-tracks .riff-track:has(> .riff-like-button[aria-pressed="false"]) > .riff-row {
+		padding-right: 52px;
+	}
+}
+
 .riff-menu {
 	position: fixed;
 	z-index: 2147483000;
@@ -2658,6 +2744,158 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-pill-solid:hover {
 	border-color: var(--riff-app-accent-deep);
 	background: var(--riff-app-accent-deep);
+}
+
+/* The heart beside an album's or artist's Play and Shuffle: outlined, filled
+   in the accent while liked. It needs the script, so it shows once the app
+   is listening. */
+.riff-app .riff-app-like {
+	all: unset;
+	display: inline-grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	color: var(--riff-app-ink);
+	cursor: pointer;
+	transition: background-color 0.15s;
+}
+
+.riff-app:not([data-riff-app-ready]) .riff-app-like {
+	display: none;
+}
+
+.riff-app .riff-app-like:hover {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-app-like:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-app-like svg {
+	width: 24px;
+	height: 24px;
+}
+
+.riff-app .riff-app-like[aria-pressed="true"],
+.riff-app .riff-like-button[aria-pressed="true"] {
+	color: var(--riff-app-accent);
+}
+
+.riff-app-like[aria-pressed="false"] > svg:last-child,
+.riff-app-like[aria-pressed="true"] > svg:first-child {
+	display: none;
+}
+
+/* Your Library: chips to narrow it, a sort, then one grid with Liked songs
+   pinned first, as the apps lay theirs out. */
+.riff-library-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin: -12px 0 32px;
+}
+
+.riff-chip-row,
+.riff-library-sort {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.riff-library-sort {
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
+.riff-app .riff-chip-link,
+.riff-app .riff-sort-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 32px;
+	padding: 0 14px;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 16px;
+	color: var(--riff-app-ink);
+	font-size: 14px;
+	text-decoration: none;
+	transition: background-color 0.15s, border-color 0.15s;
+}
+
+.riff-app .riff-sort-link {
+	border-color: transparent;
+	padding: 0 10px;
+}
+
+.riff-app .riff-chip-link:hover,
+.riff-app .riff-sort-link:hover {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-chip-link:focus-visible,
+.riff-app .riff-sort-link:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-chip-link[aria-current="true"] {
+	border-color: var(--riff-app-ink);
+	background: var(--riff-app-ink);
+	color: var(--riff-app-bg);
+}
+
+.riff-app .riff-sort-link[aria-current="true"] {
+	color: var(--riff-app-ink);
+	font-weight: 600;
+}
+
+.riff-app .riff-card-liked .riff-card-art {
+	display: grid;
+	place-items: center;
+	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
+	color: var(--riff-app-on-accent);
+}
+
+.riff-app .riff-card-liked .riff-card-art svg {
+	width: 40%;
+	height: 40%;
+}
+
+.riff-app .riff-card-artist .riff-card-art {
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-card-mark {
+	color: var(--riff-app-accent);
+	font-family: var(--riff-app-heading-font);
+	font-size: 64px;
+}
+
+.riff-app .riff-library-songs .riff-app-section {
+	margin-top: 0;
+	margin-bottom: 4px;
+}
+
+.riff-app .riff-library-songs .riff-album-actions {
+	margin-bottom: 24px;
+}
+
+.riff-app .riff-library-note {
+	margin: 32px 0 0;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
+.riff-app .riff-library-note a {
+	color: var(--riff-app-accent);
 }
 
 .riff-album-tracks {

@@ -26,6 +26,7 @@ final class Plugin {
 		Protect::register();
 		Catalog::register();
 		Catalog_Rest::register();
+		Likes::register();
 		Blocks::register();
 		Player::register();
 		Library::register();

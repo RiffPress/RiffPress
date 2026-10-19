@@ -238,15 +238,61 @@ function start() {
 		 */
 		queue: () => order.map( ( i ) => queue[ i ] ),
 		/**
-		 * The tracks played on this device, most recent first, each once: what Home's Recently
-		 * played and Jump back in are drawn from. Kept in the browser, at most 30.
+		 * The tracks played, most recent first, each once: what Home's Recently played and Jump back
+		 * in are drawn from. At most 30. A signed-in listener's come from their account; a visitor's
+		 * are kept in the browser.
 		 *
 		 * @since 4.18.0
+		 * @since 4.20.0 A signed-in listener's come from their account.
 		 *
 		 * @return {Object[]} Tracks, in the shape `Tracks::schema()` describes, each with `played`,
 		 *                    when it was, in milliseconds since the epoch.
 		 */
 		history: () => played(),
+		/**
+		 * Likes a track, an album or an artist. A signed-in listener's likes are saved to their
+		 * account; a visitor's are kept in the browser, and join their account when they sign in.
+		 *
+		 * Only a track in the Media Library can be liked, since its ID is the same on every page.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number|string} id     A track's ID (its audio attachment's), or an album's or artist's term ID.
+		 * @param {string}        [kind] `track`, `album` or `artist`. Default `track`.
+		 */
+		like: ( id, kind = 'track' ) => setLike( id, kind, true ),
+		/**
+		 * Takes a like away.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number|string} id     A track's, album's or artist's ID.
+		 * @param {string}        [kind] `track`, `album` or `artist`. Default `track`.
+		 */
+		unlike: ( id, kind = 'track' ) => setLike( id, kind, false ),
+		/**
+		 * Whether a track, album or artist is liked.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {number|string} id     A track's, album's or artist's ID.
+		 * @param {string}        [kind] `track`, `album` or `artist`. Default `track`.
+		 * @return {boolean} True when it is liked.
+		 */
+		liked: ( id, kind = 'track' ) => isLiked( id, kind ),
+		/**
+		 * Every like, newest first.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {string} [kind] Only `track`, `album` or `artist` likes. Default all.
+		 * @return {Object[]} Likes, each `{ kind, id, at }`, with `at` when it was liked in
+		 *                    milliseconds since the epoch.
+		 */
+		likes: ( kind ) =>
+			likes
+				.filter( ( l ) => ! kind || l.kind === kind )
+				.map( ( l ) => ( { ...l } ) ),
 		/**
 		 * Whether something is playing.
 		 *
@@ -331,6 +377,7 @@ function start() {
 	// already turned into a row keeps that row.
 	const rows = [];
 	const built = new WeakMap();
+	const hearts = new WeakMap(); // A row's heart, beside its … menu.
 	function mount() {
 		rows.length = 0;
 		document
@@ -372,6 +419,11 @@ function start() {
 		row.innerHTML = rowInner( t );
 		fig.insertBefore( row, fig.firstChild );
 		row.after( moreButton( t ) );
+		if ( inLibrary( t ) ) {
+			const heart = likeButton( t );
+			hearts.set( row, heart );
+			row.after( heart );
+		}
 		row.addEventListener( 'click', () => {
 			if ( track()?.id === t.id && sameQueue() ) {
 				toggle();
@@ -512,7 +564,13 @@ function start() {
 		changed( change );
 	}
 	function reorder( from, to ) {
-		if ( from === to || from < 0 || to < 0 || from >= order.length || to >= order.length ) {
+		if (
+			from === to ||
+			from < 0 ||
+			to < 0 ||
+			from >= order.length ||
+			to >= order.length
+		) {
 			return;
 		}
 		const current = order[ pos ];
@@ -576,26 +634,236 @@ function start() {
 		}
 	}
 
-	// ---- What was played, on this device.
+	// ---- Likes and what was played. A signed-in listener's live in their account: the page hands
+	// them over in data.me, and each change is sent to riff/v1/me. A visitor's stay in this browser.
+	// The first page a listener opens after signing in sends what this browser kept to the account
+	// and forgets it here, so a shared computer keeps nothing of theirs once they sign out.
 	const HISTORY = 'riff-history';
+	const LIKES = 'riff-likes';
+	const KINDS = [ 'track', 'album', 'artist' ];
+	const me = data.me?.rest && data.me.nonce ? data.me : null;
+	const keyOf = ( kind, id ) => `${ kind }:${ Number( id ) }`;
+	function cleanLikes( list ) {
+		const seen = new Set();
+		return ( Array.isArray( list ) ? list : [] )
+			.map( ( l ) => ( {
+				kind: l?.kind,
+				id: Number( l?.id ),
+				at: Number( l?.at ) || 0,
+			} ) )
+			.filter( ( l ) => {
+				const key = keyOf( l.kind, l.id );
+				if (
+					! KINDS.includes( l.kind ) ||
+					! Number.isInteger( l.id ) ||
+					l.id <= 0 ||
+					seen.has( key )
+				) {
+					return false;
+				}
+				seen.add( key );
+				return true;
+			} )
+			.sort( ( a, b ) => b.at - a.at );
+	}
+	const deviceLikes = () =>
+		cleanLikes( parse( read( localStorage, LIKES ) ) );
+	let likes = me ? cleanLikes( me.likes ) : deviceLikes();
+	let likeSet = new Set();
+	const indexLikes = () =>
+		( likeSet = new Set( likes.map( ( l ) => keyOf( l.kind, l.id ) ) ) );
+	indexLikes();
+	const isLiked = ( id, kind = 'track' ) => likeSet.has( keyOf( kind, id ) );
+	// What can be liked, or kept in an account's history: an audio file in the Media Library, whose
+	// ID is the same wherever it plays.
+	const inLibrary = ( t ) =>
+		!! t &&
+		t.type === 'audio' &&
+		! t.locked &&
+		/^\d+$/.test( String( t.id ) );
+
+	function deviceHistory() {
+		const list = parse( read( localStorage, HISTORY ) );
+		return Array.isArray( list ) ? list : [];
+	}
+	let accountHistory = null;
+	if ( me ) {
+		accountHistory = Array.isArray( me.history ) ? me.history : [];
+	}
 	function played() {
-		try {
-			const list = JSON.parse( localStorage.getItem( HISTORY ) || '[]' );
-			return Array.isArray( list ) ? list : [];
-		} catch {
-			return [];
-		}
+		return accountHistory || deviceHistory();
 	}
 	function remember( t ) {
 		// Without the level envelope, which can be long and only the cover drawn on the server reads.
 		const { levels, ...kept } = t;
+		const entry = { ...kept, played: Date.now() };
 		const list = [
-			{ ...kept, played: Date.now() },
+			entry,
 			...played().filter( ( p ) => p.id !== t.id ),
 		].slice( 0, 30 );
-		try {
-			localStorage.setItem( HISTORY, JSON.stringify( list ) );
-		} catch {}
+		if ( ! accountHistory ) {
+			write( localStorage, HISTORY, JSON.stringify( list ) );
+			return;
+		}
+		accountHistory = list;
+		if ( inLibrary( t ) ) {
+			send(
+				me.rest.history,
+				'POST',
+				{
+					items: [
+						{
+							id: Number( t.id ),
+							played: entry.played,
+							post: Number( t.post?.id ) || 0,
+						},
+					],
+				},
+				true
+			).catch( () => {} );
+		}
+	}
+
+	// A request to the account's routes, with the nonce that tells WordPress the cookie is the
+	// listener's. A route's address takes a path whether or not the site has pretty permalinks.
+	function under( base, path ) {
+		const u = new URL( base, location.href );
+		if ( u.searchParams.has( 'rest_route' ) ) {
+			u.searchParams.set(
+				'rest_route',
+				u.searchParams.get( 'rest_route' ) + path
+			);
+		} else {
+			u.pathname = u.pathname.replace( /\/?$/, path );
+		}
+		return u.toString();
+	}
+	function send( url, method, body, keepalive = false ) {
+		return fetch( url, {
+			method,
+			credentials: 'same-origin',
+			keepalive,
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': me.nonce,
+			},
+			body: body ? JSON.stringify( body ) : undefined,
+		} ).then( ( r ) =>
+			r.ok ? r.json() : Promise.reject( new Error( String( r.status ) ) )
+		);
+	}
+
+	function setLike( id, kind, on ) {
+		id = Number( id );
+		if (
+			! KINDS.includes( kind ) ||
+			! Number.isInteger( id ) ||
+			id <= 0 ||
+			isLiked( id, kind ) === on
+		) {
+			return;
+		}
+		const flip = ( yes ) => {
+			likes = yes
+				? [ { kind, id, at: Date.now() }, ...likes ]
+				: likes.filter( ( l ) => ! ( l.kind === kind && l.id === id ) );
+			likesChanged( yes ? 'like' : 'unlike', kind, id );
+		};
+		flip( on );
+		if ( ! me ) {
+			write( localStorage, LIKES, JSON.stringify( likes ) );
+			return;
+		}
+		const sent = on
+			? send( me.rest.likes, 'POST', { items: [ { kind, id } ] } )
+			: send( under( me.rest.likes, `/${ kind }/${ id }` ), 'DELETE' );
+		sent.catch( () => {
+			// Only this like goes back; anything changed since stays as it is.
+			if ( isLiked( id, kind ) === on ) {
+				flip( ! on );
+			}
+			toast( s.likeFailed || 'That could not be saved. Try again.' );
+		} );
+	}
+	function likesChanged( change, kind = null, id = null ) {
+		indexLikes();
+		paintHearts();
+		/**
+		 * Fires when a like is added or taken away, and once the likes a visitor kept in this browser
+		 * have joined their account after they signed in.
+		 *
+		 * @since 4.20.0
+		 *
+		 * @param {Object}      detail        What changed.
+		 * @param {string}      detail.change `like`, `unlike` or `sync`.
+		 * @param {string|null} detail.kind   `track`, `album` or `artist`; null for `sync`.
+		 * @param {number|null} detail.id     Its ID; null for `sync`.
+		 * @param {Object[]}    detail.likes  Every like, newest first, each `{ kind, id, at }`.
+		 * @param {Object}      api           `window.riff`.
+		 */
+		emit( 'like', { change, kind, id, likes: api.likes() } );
+	}
+	function toggleLike( t ) {
+		const on = ! isLiked( t.id );
+		setLike( t.id, 'track', on );
+		toast(
+			fmt(
+				on
+					? s.likedTrack || '%s added to Liked songs'
+					: s.unlikedTrack || '%s removed from Liked songs',
+				t.title
+			)
+		);
+	}
+
+	// Signed in, with likes or plays this browser kept from before: they join the account. What
+	// they add shows at once; the browser forgets its copy once the account has it.
+	function join() {
+		if ( ! me ) {
+			return;
+		}
+		const device = deviceLikes();
+		if ( device.length ) {
+			const had = new Set( likeSet );
+			likes = cleanLikes( [
+				...likes,
+				...device.filter( ( l ) => ! had.has( keyOf( l.kind, l.id ) ) ),
+			] );
+			indexLikes();
+			send( me.rest.likes, 'POST', { items: device } )
+				.then( () => {
+					drop( localStorage, LIKES );
+					likesChanged( 'sync' );
+				} )
+				.catch( () => {} );
+		}
+		const plays = deviceHistory().filter( ( t ) => t?.id !== undefined );
+		if ( ! plays.length ) {
+			return;
+		}
+		const seen = new Set();
+		accountHistory = [ ...plays, ...accountHistory ]
+			.sort(
+				( a, b ) =>
+					( Number( b.played ) || 0 ) - ( Number( a.played ) || 0 )
+			)
+			.filter( ( t ) => ! seen.has( t.id ) && seen.add( t.id ) )
+			.slice( 0, 30 );
+		const items = plays
+			.filter( inLibrary )
+			.slice( 0, 30 )
+			.map( ( t ) => ( {
+				id: Number( t.id ),
+				played: Number( t.played ) || 0,
+				post: Number( t.post?.id ) || 0,
+			} ) );
+		( items.length
+			? send( me.rest.history, 'POST', { items } )
+			: Promise.resolve()
+		)
+			.then( () => drop( localStorage, HISTORY ) )
+			.catch( () => {} );
 	}
 
 	function load( { play = true, at = 0 } = {} ) {
@@ -987,7 +1255,10 @@ function start() {
 			band.lo = ease( band.lo, v, dt, v < band.lo ? 0.03 : 1 );
 			const at = Math.min(
 				1,
-				Math.max( 0, ( v - band.lo ) / Math.max( 0.06, band.hi - band.lo ) )
+				Math.max(
+					0,
+					( v - band.lo ) / Math.max( 0.06, band.hi - band.lo )
+				)
 			);
 			band.shown = ease(
 				band.shown,
@@ -1205,6 +1476,7 @@ function start() {
 			li.firstElementChild.toggleAttribute( 'aria-current', current );
 			li.dataset.playing = current && playing ? 'true' : 'false';
 		}
+		paintHearts();
 		progress();
 		meterSync();
 		if ( 'mediaSession' in navigator ) {
@@ -1309,6 +1581,38 @@ function start() {
 	const DOTS =
 		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>';
 
+	// ---- Hearts: in the bar, in Now Playing and on each row of a track in the Media Library. A
+	// heart is a toggle button, pressed while the track is liked.
+	const HEARTS =
+		'<svg class="riff-heart-off" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>' +
+		'<svg class="riff-heart-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+	function likeButton( t ) {
+		const b = document.createElement( 'button' );
+		b.type = 'button';
+		b.className = 'riff-like-button';
+		b.setAttribute( 'aria-label', fmt( s.likeItem || 'Like %s', t.title ) );
+		b.setAttribute( 'aria-pressed', String( isLiked( t.id ) ) );
+		b.innerHTML = HEARTS;
+		b.addEventListener( 'click', ( e ) => {
+			e.stopPropagation();
+			toggleLike( t );
+		} );
+		return b;
+	}
+	function paintHearts() {
+		const t = track();
+		const can = inLibrary( t );
+		for ( const b of $$( '[data-riff-action="like"]' ) ) {
+			b.hidden = ! can;
+			b.setAttribute( 'aria-pressed', String( can && isLiked( t.id ) ) );
+		}
+		for ( const { t: rt, row } of rows ) {
+			hearts
+				.get( row )
+				?.setAttribute( 'aria-pressed', String( isLiked( rt.id ) ) );
+		}
+	}
+
 	function menuItems( t, at ) {
 		const items = [
 			{
@@ -1324,33 +1628,64 @@ function start() {
 				label: s.addToQueue || 'Add to queue',
 				run: () => {
 					api.addToQueue( [ t ] );
-					toast( fmt( s.addedToQueue || '%s added to the queue', t.title ) );
+					toast(
+						fmt(
+							s.addedToQueue || '%s added to the queue',
+							t.title
+						)
+					);
 				},
 			},
 		];
+		if ( inLibrary( t ) ) {
+			items.push( {
+				id: 'like',
+				label: isLiked( t.id )
+					? s.removeFromLiked || 'Remove from Liked songs'
+					: s.addToLiked || 'Add to Liked songs',
+				run: () => toggleLike( t ),
+			} );
+		}
 		if ( at !== undefined ) {
 			if ( at > 0 ) {
-				items.push( { id: 'up', label: s.moveUp || 'Move up', run: () => moveAndFocus( at, at - 1 ) } );
+				items.push( {
+					id: 'up',
+					label: s.moveUp || 'Move up',
+					run: () => moveAndFocus( at, at - 1 ),
+				} );
 			}
 			if ( at < order.length - 1 ) {
-				items.push( { id: 'down', label: s.moveDown || 'Move down', run: () => moveAndFocus( at, at + 1 ) } );
+				items.push( {
+					id: 'down',
+					label: s.moveDown || 'Move down',
+					run: () => moveAndFocus( at, at + 1 ),
+				} );
 			}
 			if ( at !== pos ) {
-				items.push( { id: 'remove', label: s.removeFromQueue || 'Remove from queue', run: () => remove( at ) } );
+				items.push( {
+					id: 'remove',
+					label: s.removeFromQueue || 'Remove from queue',
+					run: () => remove( at ),
+				} );
 			}
 		}
 		if ( t.post?.url ) {
-			items.push( { id: 'post', label: s.goToPost || 'Go to post', href: t.post.url } );
+			items.push( {
+				id: 'post',
+				label: s.goToPost || 'Go to post',
+				href: t.post.url,
+			} );
 		}
 		/**
 		 * Filters the items of a track's menu: the … beside a row in a post or the Listen block, and
 		 * beside each track in Up next.
 		 *
 		 * Each item is `{ id, label, run }`, where `run` is called when it is chosen, or
-		 * `{ id, label, href }` for a link. Riff's own are `next`, `add`, `up`, `down`, `remove` and
-		 * `post`.
+		 * `{ id, label, href }` for a link. Riff's own are `next`, `add`, `like`, `up`, `down`,
+		 * `remove` and `post`.
 		 *
 		 * @since 4.19.0
+		 * @since 4.20.0 Has `like` for a track in the Media Library.
 		 *
 		 * @param {Object[]} items   The items, in order.
 		 * @param {Object}   track   The track, in the shape `Tracks::schema()` describes.
@@ -1437,7 +1772,11 @@ function start() {
 		}
 	} );
 	document.addEventListener( 'pointerdown', ( e ) => {
-		if ( ! menu.hidden && ! menu.contains( e.target ) && ! menuFor?.contains( e.target ) ) {
+		if (
+			! menu.hidden &&
+			! menu.contains( e.target ) &&
+			! menuFor?.contains( e.target )
+		) {
 			closeMenu( false );
 		}
 	} );
@@ -1449,7 +1788,10 @@ function start() {
 		b.className = 'riff-more-button';
 		b.setAttribute( 'aria-haspopup', 'menu' );
 		b.setAttribute( 'aria-expanded', 'false' );
-		b.setAttribute( 'aria-label', fmt( s.trackMenu || 'More options for %s', t.title ) );
+		b.setAttribute(
+			'aria-label',
+			fmt( s.trackMenu || 'More options for %s', t.title )
+		);
 		b.innerHTML = DOTS;
 		b.addEventListener( 'click', ( e ) => {
 			e.stopPropagation();
@@ -1511,7 +1853,10 @@ function start() {
 			);
 			// Alt and an arrow moves the track; dragging does too, with a mouse.
 			li.firstElementChild.addEventListener( 'keydown', ( e ) => {
-				if ( e.altKey && ( e.key === 'ArrowUp' || e.key === 'ArrowDown' ) ) {
+				if (
+					e.altKey &&
+					( e.key === 'ArrowUp' || e.key === 'ArrowDown' )
+				) {
 					e.preventDefault();
 					const to = p + ( e.key === 'ArrowUp' ? -1 : 1 );
 					if ( to >= 0 && to < order.length ) {
@@ -1525,14 +1870,18 @@ function start() {
 				e.dataTransfer.setData( 'text/x-riff-queue', String( p ) );
 				li.classList.add( 'is-dragging' );
 			} );
-			li.addEventListener( 'dragend', () => li.classList.remove( 'is-dragging' ) );
+			li.addEventListener( 'dragend', () =>
+				li.classList.remove( 'is-dragging' )
+			);
 			li.addEventListener( 'dragover', ( e ) => {
 				if ( e.dataTransfer.types.includes( 'text/x-riff-queue' ) ) {
 					e.preventDefault();
 				}
 			} );
 			li.addEventListener( 'drop', ( e ) => {
-				const from = Number( e.dataTransfer.getData( 'text/x-riff-queue' ) );
+				const from = Number(
+					e.dataTransfer.getData( 'text/x-riff-queue' )
+				);
 				if ( Number.isInteger( from ) ) {
 					e.preventDefault();
 					reorder( from, p );
@@ -1639,6 +1988,10 @@ function start() {
 			save();
 		} else if ( action === 'cast' ) {
 			cast();
+		} else if ( action === 'like' ) {
+			if ( inLibrary( track() ) ) {
+				toggleLike( track() );
+			}
 		} else {
 			/**
 			 * Fires when a control an extension added through `riff_chips` or `riff_bar_controls`
@@ -2276,6 +2629,7 @@ function start() {
 	}
 	document.addEventListener( 'visibilitychange', syncWakeLock );
 
+	join();
 	mount();
 
 	const saved = parse( read( sessionStorage, STATE ) );
@@ -2322,7 +2676,9 @@ function start() {
 		// press is held, and made again once the app is listening.
 		let held = null;
 		const hold = ( e ) => {
-			const button = e.target.closest?.( '[data-riff-app] [data-riff-app-action]' );
+			const button = e.target.closest?.(
+				'[data-riff-app] [data-riff-app-action]'
+			);
 			if ( button ) {
 				held = button;
 				e.preventDefault();
@@ -2372,6 +2728,12 @@ function write( store, key, value ) {
 	} catch {
 		// Private mode or a full quota: the player works without remembering.
 	}
+}
+
+function drop( store, key ) {
+	try {
+		store.removeItem( key );
+	} catch {}
 }
 
 function time( seconds ) {

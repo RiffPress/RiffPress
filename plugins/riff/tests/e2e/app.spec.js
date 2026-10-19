@@ -316,9 +316,9 @@ test.describe( 'Browse', () => {
 		page,
 	} ) => {
 		const tabs = page.locator( '.riff-app-bar a[href*="riff_view="]' );
-		await expect( tabs ).toHaveCount( 4 );
+		await expect( tabs ).toHaveCount( 5 );
 		// Once the page is idle every tab's view is fetched; this page's own resource timings show
-		// when all four have arrived.
+		// when all five have arrived.
 		await expect
 			.poll( () =>
 				page.evaluate(
@@ -328,7 +328,7 @@ test.describe( 'Browse', () => {
 							.filter( ( r ) => r.name.includes( 'riff_view=' ) ).length
 				)
 			)
-			.toBeGreaterThanOrEqual( 4 );
+			.toBeGreaterThanOrEqual( 5 );
 		const asked = [];
 		page.on( 'request', ( r ) => {
 			if ( r.url().includes( 'riff_view=artists' ) ) {
@@ -397,7 +397,7 @@ test.describe( 'Browse', () => {
 	} );
 
 	test( 'every view passes an accessibility check', async ( { page } ) => {
-		const views = [ '', 'riff_view=albums', 'riff_view=artists', 'riff_view=tracks', 'riff_view=posts', 'riff_search=Compositions' ];
+		const views = [ '', 'riff_view=albums', 'riff_view=artists', 'riff_view=tracks', 'riff_view=posts', 'riff_view=library', 'riff_search=Compositions' ];
 		for ( const view of views ) {
 			await page.goto( pageUrl + ( view ? ( pageUrl.includes( '?' ) ? '&' : '?' ) + view : '' ) );
 			await expect( page.locator( '.riff-app-view h2' ).first() ).toBeVisible();

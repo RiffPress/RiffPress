@@ -308,6 +308,21 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 | `detail.track` | `Object` | The track that ended. |
 | `api` | `Object` | `window.riff`. |
 
+#### `riff.like`
+
+Fires when a like is added or taken away, and once the likes a visitor kept in this browser have joined their account after they signed in.
+
+Since 4.20.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.change` | `string` | `like`, `unlike` or `sync`. |
+| `detail.kind` | `string\|null` | `track`, `album` or `artist`; null for `sync`. |
+| `detail.id` | `number\|null` | Its ID; null for `sync`. |
+| `detail.likes` | `Object[]` | Every like, newest first, each `{ kind, id, at }`. |
+| `api` | `Object` | `window.riff`. |
+
 #### `riff.open`
 
 Fires when Now Playing opens.

@@ -53,22 +53,32 @@ final class Catalog_Rest {
 	 * @since 4.16.0
 	 */
 	public static function routes(): void {
-		$search = array(
+		$search  = array(
 			'description' => __( 'Words to look for: a track matches on its title, artist or album; an album or artist on its name.', 'riff' ),
 			'type'        => 'string',
 			'default'     => '',
 		);
-		$page   = array(
+		$page    = array(
 			'description' => __( 'Page of results.', 'riff' ),
 			'type'        => 'integer',
 			'default'     => 1,
 			'minimum'     => 1,
+		);
+		$include = array(
+			'description' => __( 'Only these, by ID; what the requester cannot see is still left out.', 'riff' ),
+			'type'        => 'array',
+			'items'       => array(
+				'type'    => 'integer',
+				'minimum' => 1,
+			),
+			'default'     => array(),
 		);
 		/**
 		 * GET /riff/v1/tracks: tracks from the Media Library by title, one album in its order, or
 		 * one artist, searchable by title, artist and album, a page at a time.
 		 *
 		 * @since 4.16.0
+		 * @since 4.20.0 Takes include, for a list of tracks by ID such as a listener's likes.
 		 */
 		register_rest_route(
 			Library::REST,
@@ -92,10 +102,11 @@ final class Catalog_Rest {
 							'default'     => 0,
 							'minimum'     => 0,
 						),
+						'include'  => $include,
 						'orderby'  => array(
-							'description' => __( 'By title, or the most recently added first. An album is always in album order.', 'riff' ),
+							'description' => __( 'By title, the most recently added first, or in the order include names them. An album is always in album order.', 'riff' ),
 							'type'        => 'string',
-							'enum'        => array( 'title', 'added' ),
+							'enum'        => array( 'title', 'added', 'include' ),
 							'default'     => 'title',
 						),
 						'page'     => $page,
@@ -116,6 +127,7 @@ final class Catalog_Rest {
 		 * with its artist, artwork and track count, searchable by name.
 		 *
 		 * @since 4.16.0
+		 * @since 4.20.0 Takes include.
 		 */
 		register_rest_route(
 			Library::REST,
@@ -133,6 +145,7 @@ final class Catalog_Rest {
 							'default'     => 0,
 							'minimum'     => 0,
 						),
+						'include' => $include,
 						'orderby' => array(
 							'description' => __( 'By name, or the most recently added first.', 'riff' ),
 							'type'        => 'string',
@@ -150,6 +163,7 @@ final class Catalog_Rest {
 		 * each with a track count, searchable by name.
 		 *
 		 * @since 4.16.0
+		 * @since 4.20.0 Takes include.
 		 */
 		register_rest_route(
 			Library::REST,
@@ -160,8 +174,9 @@ final class Catalog_Rest {
 					'callback'            => static fn( WP_REST_Request $request ) => self::rest_terms( $request, Catalog::ARTIST ),
 					'permission_callback' => '__return_true',
 					'args'                => array(
-						'search' => $search,
-						'page'   => $page,
+						'search'  => $search,
+						'include' => $include,
+						'page'    => $page,
 					),
 				),
 				'schema' => static fn() => self::terms_schema( Catalog::ARTIST ),
@@ -202,6 +217,13 @@ final class Catalog_Rest {
 				'date' => 'DESC',
 				'ID'   => 'DESC',
 			);
+		}
+		$include = array_values( array_filter( array_map( 'intval', (array) $request['include'] ) ) );
+		if ( $include ) {
+			$args['post__in'] = $include;
+			if ( 'include' === $request['orderby'] ) {
+				$args['orderby'] = 'post__in';
+			}
 		}
 		$tax = array();
 		if ( $album ) {
@@ -288,9 +310,14 @@ final class Catalog_Rest {
 		if ( '' !== $search ) {
 			$query['name__like'] = $search;
 		}
+		$include = array_values( array_filter( array_map( 'intval', (array) $request['include'] ) ) );
 		if ( Catalog::ALBUM === $taxonomy && (int) $request['artist'] ) {
-			$by               = self::albums_by( (int) $request['artist'] );
-			$query['include'] = $by ? $by : array( 0 );
+			$by      = self::albums_by( (int) $request['artist'] );
+			$include = $include ? array_values( array_intersect( $include, $by ) ) : $by;
+			$include = $include ? $include : array( 0 );
+		}
+		if ( $include ) {
+			$query['include'] = $include;
 		}
 		$total = (int) wp_count_terms( $query );
 		$terms = get_terms(
