@@ -6,6 +6,8 @@
 	<exclude-pattern>/vendor/*</exclude-pattern>
 	<exclude-pattern>/node_modules/*</exclude-pattern>
 	<exclude-pattern>/.claude/*</exclude-pattern>
+	<!-- Fixture plugins the API coverage scanner reads in its tests; they exist to be scanned, not run. -->
+	<exclude-pattern>/packages/wp-api-coverage/test/fixtures/*</exclude-pattern>
 	<arg name="extensions" value="php"/>
 	<arg name="colors"/>
 	<arg value="sp"/>

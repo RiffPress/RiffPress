@@ -12,6 +12,8 @@ module.exports = [
 			'**/node_modules/**',
 			'**/vendor/**',
 			'**/artifacts/**',
+			// Fixture plugins for the API coverage tests: input to a scanner, written to exercise it, not project code.
+			'packages/wp-api-coverage/test/fixtures/**',
 		],
 	},
 	...wpPlugin.configs[ 'recommended-with-formatting' ],

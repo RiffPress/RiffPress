@@ -1,0 +1,20 @@
+{
+	"apiVersion": 3,
+	"name": "sample/block",
+	"title": "Sample",
+	"supports": {
+		"html": false,
+		"interactivity": true,
+		"color": {
+			"background": true,
+			"__experimentalDefaultControls": {
+				"background": true
+			}
+		},
+		"__experimentalBorder": {
+			"radius": true
+		}
+	},
+	"editorScript": "file:./editor.js",
+	"viewScriptModule": "file:./view.js"
+}

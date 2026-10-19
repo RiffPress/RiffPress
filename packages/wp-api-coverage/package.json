@@ -1,0 +1,44 @@
+{
+	"name": "@riffpress/wp-api-coverage",
+	"version": "0.1.0",
+	"description": "Reports which WordPress APIs a plugin uses, and which ones it does not use yet.",
+	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"wordpress",
+		"plugin",
+		"api",
+		"coverage",
+		"static-analysis"
+	],
+	"homepage": "https://github.com/RiffPress/RiffPress/tree/main/packages/wp-api-coverage#readme",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RiffPress/RiffPress.git",
+		"directory": "packages/wp-api-coverage"
+	},
+	"bugs": {
+		"url": "https://github.com/RiffPress/RiffPress/issues"
+	},
+	"main": "lib/index.js",
+	"bin": {
+		"wp-api-coverage": "bin/wp-api-coverage.js"
+	},
+	"files": [
+		"bin",
+		"lib",
+		"catalog",
+		"scripts",
+		"README.md",
+		"LICENSE"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"scripts": {
+		"test": "node --test test/*.test.js",
+		"catalog": "node scripts/build-catalog.js"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
