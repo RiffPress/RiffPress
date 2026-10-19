@@ -214,7 +214,7 @@ final class Protect {
 			return 0;
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a search no WP_Query offers, once per change.
-		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'attachment' ) AND post_content LIKE %s", '%' . $wpdb->esc_like( $from ) . '%' ) );
+		$ids     = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'attachment' ) AND post_content LIKE %s", '%' . $wpdb->esc_like( $from ) . '%' ) );
 		$changed = 0;
 		foreach ( $ids as $post_id ) {
 			$content = (string) get_post_field( 'post_content', (int) $post_id, 'raw' );

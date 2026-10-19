@@ -394,7 +394,7 @@ final class Catalog_Rest {
 		global $wpdb;
 		$skip = self::hidden_tracks();
 		$not  = count( $skip ) ? ' AND a.object_id NOT IN (' . implode( ',', array_fill( 0, count( $skip ), '%d' ) ) . ')' : '';
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID, the hidden ones spread in.
 		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT tb.term_id FROM {$wpdb->term_relationships} a INNER JOIN {$wpdb->term_taxonomy} ta ON ta.term_taxonomy_id = a.term_taxonomy_id INNER JOIN {$wpdb->term_relationships} b ON b.object_id = a.object_id INNER JOIN {$wpdb->term_taxonomy} tb ON tb.term_taxonomy_id = b.term_taxonomy_id WHERE ta.taxonomy = %s AND ta.term_id = %d AND tb.taxonomy = %s{$not}", Catalog::ARTIST, $artist, Catalog::ALBUM, ...$skip ) ) );
 	}
 
