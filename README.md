@@ -48,8 +48,8 @@ resume on the next page; a reload restores the same track paused. Share links to
 post's address with `?riff_track=<id>`, which opens the post on that track, focused and not
 playing, and leaves whatever is already playing alone.
 
-To make a dedicated Listen page, create a WordPress page and add the Riff block, or put `[riff]`
-in its content. The page lists posts with audio or video; opening a post keeps you on that page
+To make a dedicated Listen page, press Create Listen page in the notice Riff shows on the Dashboard
+after activation, or create a WordPress page and add the Riff block, or put `[riff]` in its content. The page lists posts with audio or video; opening a post keeps you on that page
 while its tracks play. Load more adds the next page of posts in place; its address, `?riff_page=2`, shows
 the same posts when reloaded or shared, and works without JavaScript.
 

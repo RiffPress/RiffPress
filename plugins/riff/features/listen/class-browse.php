@@ -628,11 +628,16 @@ final class Browse {
 	}
 
 	/**
-	 * What an empty list says.
+	 * What an empty list says. On a site with no music yet, someone who can upload gets a link to
+	 * add the first album.
 	 *
 	 * @return string
 	 */
 	private static function empty_note(): string {
-		return Ui::empty_note( __( 'Nothing here yet. Upload music to the Media Library, or import a folder with wp riff import.', 'riff' ) );
+		$text = __( 'Nothing here yet. Upload music to the Media Library, or import a folder with wp riff import.', 'riff' );
+		if ( current_user_can( 'upload_files' ) && ! First_Run::has_music() ) {
+			return Ui::empty_note( $text, admin_url( 'media-new.php' ), __( 'Add your first album', 'riff' ) );
+		}
+		return Ui::empty_note( $text );
 	}
 }

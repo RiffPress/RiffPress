@@ -247,12 +247,16 @@ final class Ui {
 	 * What an empty list says.
 	 *
 	 * @since 4.20.0
+	 * @since 4.21.0 A link after the note.
 	 *
-	 * @param string $text The note.
+	 * @param string $text  The note.
+	 * @param string $href  Where the link after it goes, or empty for no link.
+	 * @param string $label The link's text.
 	 * @return string
 	 */
-	public static function empty_note( string $text ): string {
-		return '<p class="riff-app-empty">' . esc_html( $text ) . '</p>';
+	public static function empty_note( string $text, string $href = '', string $label = '' ): string {
+		$link = '' !== $href && '' !== $label ? ' <a href="' . esc_url( $href ) . '">' . esc_html( $label ) . '</a>' : '';
+		return '<p class="riff-app-empty">' . esc_html( $text ) . $link . '</p>';
 	}
 
 	/**
