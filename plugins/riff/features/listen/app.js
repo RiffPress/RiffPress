@@ -24,25 +24,25 @@ export function start( api ) {
 	const nav = app.querySelector( '.riff-app-bar' );
 	// The account menu is a details element, so it opens without the script; with it, it closes
 	// as a menu does: on Escape, on a click outside it, and once one of its links is followed,
-	// since a view arrives in place rather than with a new page.
-	const account = app.querySelector( '.riff-app-account' );
-	if ( account ) {
-		document.addEventListener( 'click', ( e ) => {
-			if (
-				account.open &&
-				( ! account.contains( e.target ) || e.target.closest( 'a' ) )
-			) {
-				account.open = false;
-			}
-		} );
-		account.addEventListener( 'keydown', ( e ) => {
-			if ( e.key === 'Escape' && account.open ) {
-				e.stopPropagation();
-				account.open = false;
-				account.querySelector( 'summary' ).focus();
-			}
-		} );
-	}
+	// since a view arrives in place rather than with a new page. Looked up at each event: every
+	// view brings its own bar, and the menu with it.
+	document.addEventListener( 'click', ( e ) => {
+		const account = app.querySelector( '.riff-app-account[open]' );
+		if (
+			account &&
+			( ! account.contains( e.target ) || e.target.closest( 'a' ) )
+		) {
+			account.open = false;
+		}
+	} );
+	app.addEventListener( 'keydown', ( e ) => {
+		const account = e.target.closest?.( '.riff-app-account[open]' );
+		if ( e.key === 'Escape' && account ) {
+			e.stopPropagation();
+			account.open = false;
+			account.querySelector( 'summary' ).focus();
+		}
+	} );
 	const s = api.strings || {};
 	const cache = new Map();
 	let showing = 0; // A counter, so a slow fetch cannot paint over a newer view.
@@ -588,7 +588,11 @@ export function start( api ) {
 		}
 		e.preventDefault();
 		// The tab shows as chosen at once, whatever the network is doing.
-		if ( a.closest( '.riff-app-bar' ) ) {
+		// The account menu's links are in the bar too, but are not tabs.
+		if (
+			a.closest( '.riff-app-bar' ) &&
+			! a.closest( '.riff-app-account' )
+		) {
 			for ( const tab of nav.querySelectorAll( 'a[aria-current]' ) ) {
 				tab.removeAttribute( 'aria-current' );
 			}

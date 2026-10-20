@@ -110,13 +110,12 @@ class Test_Riff_Browse extends Riff_TestCase {
 	}
 
 	public function test_the_bar_shows_who_is_listening(): void {
+		// A visitor gets Sign in whether or not anyone may register: a site's own people sign in too.
 		update_option( 'users_can_register', 0 );
-		$closed = $this->render_at( array() );
-		$this->assertStringNotContainsString( 'riff-app-account', $closed );
-		$this->assertStringNotContainsString( 'riff-app-signin', $closed, 'no Sign in where only the site\'s own people have accounts' );
-
-		update_option( 'users_can_register', 1 );
-		$this->assertMatchesRegularExpression( '#<a class="riff-pill riff-app-signin" href="[^"]*wp-login\.php[^"]*redirect_to=#', $this->render_at( array() ), 'Sign in, back to the Listen page' );
+		$this->assertMatchesRegularExpression( '#<a class="riff-pill riff-app-signin" href="[^"]*wp-login\.php[^"]*redirect_to=#', $this->render_at( array() ) );
+		// And it comes back to the view it was pressed on.
+		$album = $this->album( 'Compositions' );
+		$this->assertMatchesRegularExpression( '#riff-app-signin" href="[^"]*redirect_to=[^"]*riff_album%3D' . $album . '#', $this->render_at( array( Browse::ALBUM => $album ) ) );
 
 		wp_set_current_user(
 			self::factory()->user->create(

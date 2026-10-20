@@ -3335,6 +3335,11 @@ html.has-riff .riff-standalone .riff-app {
 		overflow-y: auto;
 		border-right: 1px solid var(--riff-app-line);
 		border-bottom: 0;
+
+		/* Sticky, so it stacks on its own: above the view, or the account menu
+		   it holds would open under the covers. The search panel, at the app's
+		   root, is above both. */
+		z-index: 2;
 	}
 
 	html.has-riff .riff-standalone .riff-app-bar {
