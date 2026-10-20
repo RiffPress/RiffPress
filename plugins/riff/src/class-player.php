@@ -123,8 +123,9 @@ final class Player {
 			'cookiePath' => COOKIEPATH,
 		);
 		/**
-		 * Filters the data handed to the player script: strings, and the addresses of scripts a
-		 * feature wants loaded, such as the Listen feature's app on the page that holds its block.
+		 * Filters the data handed to the player script: the strings a site replaces (see
+		 * riff_strings), and the addresses of scripts a feature wants loaded, such as the Listen
+		 * feature's app on the page that holds its block.
 		 *
 		 * @since 4.0.0
 		 * @param array $data Data.

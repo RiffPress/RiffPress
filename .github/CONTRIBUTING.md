@@ -39,7 +39,7 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 - **Required checks.** `main` is protected behind the single `CI status` check.
 - **Weekly against WordPress trunk.** `core-trunk.yml` runs, every Wednesday, the whole suite on trunk and on the current release. A test that fails only on trunk opens a `core-regression` issue, which gets a comment each week it still fails and closes itself once it passes (`.github/scripts/core-regressions.js`). The week's commits to core's and Gutenberg's media code open one `core-watch` issue to look through (`.github/scripts/core-watch.js`).
 - **Weekly run.** CI runs the full suite every Monday against current WordPress core. The release and Pages workflows run weekly too.
-- **Version strings.** `scripts/sync-versions.sh` writes the version everywhere WordPress reads it and sets `Tested up to` from the core version the suite just ran against.
+- **Version strings.** `scripts/sync-versions.sh` writes each package's version everywhere it is read, sets `Tested up to` from the core version the suite just ran against, and writes each plugin's `readme.txt` changelog from its `CHANGELOG.md`.
 
 ## The demo library
 
@@ -49,7 +49,7 @@ The demo library is one uploaded album, `packages/fixtures/compositions`, and a 
 
 `npm run pot` writes the translation template to `plugins/riff/languages/riff.pot` (wp-env must be running). It is generated, not committed: the Plugin Check job builds it into the zip, and translations come from translate.wordpress.org.
 
-Every string uses the `riff` text domain, and Riff Lyrics uses `riff-lyrics`. PHPCS fails a string with a missing or wrong domain, and `.github/scripts/text-domain-check.sh` runs in the same job to show that check still catches one. The JavaScript gets its strings from PHP, already translated, through the `riff_strings` data, so a new string the script shows goes there. `plugins/riff/tests/php/test-i18n.php` checks that every view of the Listen app and every string handed to the script comes out translated.
+Every string uses the `riff` text domain, and Riff Lyrics uses `riff-lyrics`. PHPCS fails a string with a missing or wrong domain, and `.github/scripts/text-domain-check.sh` runs in the same job to show that check still catches one. The player's JavaScript translates its own strings with `__()` and `_n()` from `wp.i18n`, from WordPress's script module translations, so a new string the script shows is a literal `__( '…', 'riff' )` call in the module. `plugins/riff/tests/php/test-i18n.php` checks that every view of the Listen app comes out translated and that each module's translations reach the page.
 
 ## Releases
 

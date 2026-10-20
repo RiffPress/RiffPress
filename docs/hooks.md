@@ -137,7 +137,7 @@ Since 4.16.0. Fires in `plugins/riff/src/class-player.php`.
 
 ### `riff_player_data`
 
-Filters the data handed to the player script: strings, and the addresses of scripts a feature wants loaded, such as the Listen feature's app on the page that holds its block.
+Filters the data handed to the player script: the strings a site replaces (see riff_strings), and the addresses of scripts a feature wants loaded, such as the Listen feature's app on the page that holds its block.
 
 Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
