@@ -62,7 +62,7 @@ Releases are automated by [release-please](https://github.com/googleapis/release
 
 release-please keeps one release pull request open per package with unreleased changes. Merging Riff's tags the release, publishes a GitHub Release with `riff.zip` built from `plugins/riff/` with `.distignore`, and deploys to WordPress.org once that is switched on. Merging Riff Lyrics' attaches `riff-lyrics.zip` the same way. Merging wp-api-coverage's publishes it to npm as `@riffpress/wp-api-coverage` once the repository variable `NPM_PUBLISH` is `true` and the `NPM_TOKEN` secret is stored. Riff's release is the one GitHub marks as latest.
 
-Riff Lyrics and wp-api-coverage have `"initial-version": "0.1.0"` in `release-please-config.json`, so their first release is the version they already carry; it applies only while a package has no release.
+Riff Lyrics and wp-api-coverage have `"initial-version": "0.1.0"` in `release-please-config.json`, so their first release is the version they already carry. They aren't in `.release-please-manifest.json` until that first release pull request adds them; that absence is what makes release-please use `initial-version`.
 
 Two things a package's folder doesn't cover:
 

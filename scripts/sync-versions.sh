@@ -45,14 +45,11 @@ case "$ONLY" in
 	*) echo "Unknown package '$ONLY': use riff, riff-lyrics or wp-api-coverage" >&2; exit 1 ;;
 esac
 
+# A package's version, or nothing for one that has never been released: it is
+# missing from the manifest until its first release pull request adds it, and
+# its files already carry the version that release will be.
 manifest_version() {
-	local version
-	version=$(jq -r --arg path "$1" '.[$path]' .release-please-manifest.json)
-	if [[ -z "$version" || "$version" == "null" ]]; then
-		echo "Could not read the version of $1 from .release-please-manifest.json" >&2
-		exit 1
-	fi
-	echo "$version"
+	jq -r --arg path "$1" '.[$path] // empty' .release-please-manifest.json
 }
 
 # BSD and GNU sed disagree on -i, so write through a temp file.
@@ -96,6 +93,7 @@ sync_plugin() {
 
 if [[ "$ONLY" == all || "$ONLY" == riff ]]; then
 	VERSION=$(manifest_version plugins/riff)
+	[[ -n "$VERSION" ]] || { echo "Riff has no version in .release-please-manifest.json" >&2; exit 1; }
 	sync_plugin plugins/riff/riff.php RIFF_VERSION plugins/riff/readme.txt "$VERSION"
 	npm version "$VERSION" --no-git-tag-version --allow-same-version >/dev/null
 	npm version "$VERSION" --no-git-tag-version --allow-same-version --workspace=plugins/riff >/dev/null
@@ -108,16 +106,24 @@ fi
 
 if [[ "$ONLY" == all || "$ONLY" == riff-lyrics ]]; then
 	LYRICS_VERSION=$(manifest_version plugins/riff-lyrics)
-	sync_plugin plugins/riff-lyrics/riff-lyrics.php RIFF_LYRICS_VERSION plugins/riff-lyrics/readme.txt "$LYRICS_VERSION"
-	echo "Synced Riff Lyrics to ${LYRICS_VERSION}"
+	if [[ -n "$LYRICS_VERSION" ]]; then
+		sync_plugin plugins/riff-lyrics/riff-lyrics.php RIFF_LYRICS_VERSION plugins/riff-lyrics/readme.txt "$LYRICS_VERSION"
+		echo "Synced Riff Lyrics to ${LYRICS_VERSION}"
+	else
+		echo "Riff Lyrics has not been released yet; nothing to sync"
+	fi
 fi
 
 if [[ "$ONLY" == all || "$ONLY" == wp-api-coverage ]]; then
 	COVERAGE_VERSION=$(manifest_version packages/wp-api-coverage)
-	npm version "$COVERAGE_VERSION" --no-git-tag-version --allow-same-version --workspace=packages/wp-api-coverage >/dev/null
-	[[ "$(jq -r .version packages/wp-api-coverage/package.json)" == "$COVERAGE_VERSION" ]] \
-		|| { echo "Failed to update version in packages/wp-api-coverage/package.json" >&2; exit 1; }
-	echo "Synced wp-api-coverage to ${COVERAGE_VERSION}"
+	if [[ -n "$COVERAGE_VERSION" ]]; then
+		npm version "$COVERAGE_VERSION" --no-git-tag-version --allow-same-version --workspace=packages/wp-api-coverage >/dev/null
+		[[ "$(jq -r .version packages/wp-api-coverage/package.json)" == "$COVERAGE_VERSION" ]] \
+			|| { echo "Failed to update version in packages/wp-api-coverage/package.json" >&2; exit 1; }
+		echo "Synced wp-api-coverage to ${COVERAGE_VERSION}"
+	else
+		echo "wp-api-coverage has not been released yet; nothing to sync"
+	fi
 fi
 
 [[ -z "$TESTED" ]] || echo "Tested up to: ${TESTED}"
