@@ -14,7 +14,7 @@
 /phpcs.xml.dist export-ignore
 /composer.json export-ignore
 /composer.lock export-ignore
-/CHANGELOG.md export-ignore
+CHANGELOG.md export-ignore
 /SECURITY.md export-ignore
 *.mp3 binary
 *.png binary
