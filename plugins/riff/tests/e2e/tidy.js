@@ -77,14 +77,24 @@ function measure( page, region ) {
 			}
 		}
 
-		// Pieces of a card or a row's item that spill past its sides: a long name can widen what
+		// Pieces of a card or a list's item that spill past its sides: a long name can widen what
 		// holds it inside a row that scrolls, where the page itself stays as wide as the window.
+		// Pieces placed over the card on purpose (a cover's play button) are left out, as above.
 		const spills = [];
-		for ( const row of root.querySelectorAll( '.riff-shelf-row, .riff-grid' ) ) {
+		const placed = ( el, item ) => {
+			for ( let at = el; at && at !== item; at = at.parentElement ) {
+				const pos = getComputedStyle( at ).position;
+				if ( pos === 'absolute' || pos === 'fixed' ) {
+					return true;
+				}
+			}
+			return false;
+		};
+		for ( const row of root.querySelectorAll( '.riff-shelf-row, .riff-grid, .riff-artists' ) ) {
 			for ( const item of [ ...row.children ].filter( seen ) ) {
 				const edge = item.getBoundingClientRect();
 				const out = [ ...item.querySelectorAll( '*' ) ].find( ( el ) => {
-					if ( el.closest( 'svg' ) || ! seen( el ) || getComputedStyle( el ).position === 'absolute' ) {
+					if ( el.closest( 'svg' ) || ! seen( el ) || placed( el, item ) ) {
 						return false;
 					}
 					const r = el.getBoundingClientRect();

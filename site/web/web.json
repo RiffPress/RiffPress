@@ -990,7 +990,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2436,
+				"line": 2441,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -1045,7 +1045,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2835,
+				"line": 2840,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1200,7 +1200,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2396,
+				"line": 2401,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1320,7 +1320,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2436,
+				"line": 2441,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],

@@ -1920,6 +1920,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	font-weight: 400;
 	letter-spacing: 0;
 
+	/* Any text, a translated note too, breaks a word that would run past its
+	   line rather than widening the block. */
+	overflow-wrap: break-word;
+
 	/**
 	 * The Listen block's background.
 	 *
@@ -2009,11 +2013,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	-webkit-font-smoothing: antialiased;
 }
 
-/* Names and titles come from tags, and a tag can be one long word. It breaks
-   where it would run past its box, and the box can be narrower than the
-   word, so a card, a row or a heading keeps its size instead of growing to
-   fit it. */
-.riff-app :is(.riff-app-title, .riff-app-playlists-title, .riff-shelf-title, .riff-album-title, .riff-album-meta, .riff-artist-name, .riff-artist-sub, .riff-card-title, .riff-card-sub, .riff-more-title) {
+/* Names and titles come from tags, and a tag can be one long word. Where
+   they wrap rather than trim, the word breaks anywhere, so its box can be
+   narrower than it and a row or a heading keeps its size. */
+.riff-app :is(.riff-app-title, .riff-shelf-title, .riff-album-title, .riff-album-meta, .riff-artist-name, .riff-artist-sub, .riff-more-title) {
 	overflow-wrap: anywhere;
 }
 
@@ -2250,7 +2253,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-app .riff-artist {
 	display: grid;
-	grid-template-columns: 48px 1fr;
+
+	/* The name's column can be narrower than its longest word. */
+	grid-template-columns: 48px minmax(0, 1fr);
 	grid-template-rows: auto auto;
 	align-items: center;
 	column-gap: 16px;
@@ -2383,7 +2388,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 /* An artist in a row stands on its own: a large round mark, the name under. */
 .riff-app .riff-shelf-row .riff-artist {
-	grid-template-columns: 1fr;
+	grid-template-columns: minmax(0, 1fr);
 	justify-items: center;
 	row-gap: 8px;
 	text-align: center;
