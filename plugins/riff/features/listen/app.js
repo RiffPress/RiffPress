@@ -368,24 +368,34 @@ export function start( api ) {
 		const shownAt = showing;
 		button.setAttribute( 'aria-busy', 'true' );
 		try {
-			const u = new URL( tracksRest, location.href );
-			u.searchParams.set(
-				'album',
-				String( Number( button.dataset.riffAlbum ) )
-			);
-			u.searchParams.set( 'per_page', '100' );
-			const r = await fetch( u, {
-				headers: { Accept: 'application/json' },
-			} );
-			if ( ! r.ok ) {
-				throw new Error( String( r.status ) );
+			// The whole album, page by page, as the album view lists it: a box set runs past one
+			// page of the route. Twenty pages is 2,000 tracks.
+			const items = [];
+			for ( let n = 1, pages = 1; n <= Math.min( pages, 20 ); n++ ) {
+				const u = new URL( tracksRest, location.href );
+				u.searchParams.set(
+					'album',
+					String( Number( button.dataset.riffAlbum ) )
+				);
+				u.searchParams.set( 'per_page', '100' );
+				u.searchParams.set( 'page', String( n ) );
+				const r = await fetch( u, {
+					headers: { Accept: 'application/json' },
+				} );
+				if ( ! r.ok ) {
+					throw new Error( String( r.status ) );
+				}
+				const data = await r.json();
+				items.push(
+					...( Array.isArray( data.items ) ? data.items : [] )
+				);
+				pages = Number( data.pages ) || 1;
 			}
-			const { items } = await r.json();
 			if ( turn !== picking || shownAt !== showing ) {
 				return;
 			}
 			untell();
-			if ( Array.isArray( items ) && items.length ) {
+			if ( items.length ) {
 				api.play( items, 0 );
 			}
 		} catch {
@@ -831,7 +841,9 @@ export function start( api ) {
 			// Found once the view is drawn again, in the new rows, not these.
 			const rowMenu = ( n ) => () =>
 				view
-					.querySelectorAll( '[data-riff-playlist] [data-riff-track]' )
+					.querySelectorAll(
+						'[data-riff-playlist] [data-riff-track]'
+					)
 					[ n ]?.querySelector( '.riff-more-button' );
 			const move = ( to ) => () => {
 				const next = [ ...ids ];
@@ -893,7 +905,7 @@ export function start( api ) {
 		const key = played.length
 			? `${ played.length }:${ played[ 0 ].id }:${
 					Number( played[ 0 ].played ) || 0
-			  }`
+				}`
 			: '0';
 		const fill = ( slug, cards ) => {
 			const shelf = view.querySelector( `[data-riff-shelf="${ slug }"]` );

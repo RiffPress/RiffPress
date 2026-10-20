@@ -229,8 +229,15 @@ final class Catalog_Rest {
 			// An album's order is its track numbers', which live in each file's metadata, not in a
 			// column SQL can sort by. So the whole album is read and sorted, and the page cut from
 			// that: paging first would sort each page alone, and a box set of more than one page
-			// would run 1, 10, 100.
-			$args['posts_per_page'] = -1;
+			// would run 1, 10, 100. Only the IDs are read for that, in upload order, and the posts
+			// only for the page that is returned.
+			$args['posts_per_page']         = -1;
+			$args['fields']                 = 'ids';
+			$args['orderby']                = 'ID';
+			$args['order']                  = 'ASC';
+			$args['no_found_rows']          = true;
+			$args['update_post_meta_cache'] = false;
+			$args['update_post_term_cache'] = false;
 			unset( $args['paged'] );
 		}
 		$tax = array();
@@ -259,16 +266,31 @@ final class Catalog_Rest {
 		$query = new \WP_Query( $args );
 		remove_filter( 'posts_where', $scope, 10 );
 
-		$ids   = wp_list_pluck( $query->posts, 'ID' );
 		$total = (int) $query->found_posts;
 		$pages = (int) $query->max_num_pages;
 		if ( $album ) {
 			// Upload order before title order: a file without a track number keeps its place in
 			// the album as it was added, as an album's files usually are.
-			sort( $ids );
+			$ids   = array_map( 'intval', $query->posts );
 			$total = count( $ids );
 			$pages = (int) ceil( $total / $per_page );
-			$ids   = array_slice( self::in_album_order( $ids ), ( $page - 1 ) * $per_page, $per_page );
+			update_meta_cache( 'post', $ids );
+			$ids = array_slice( self::in_album_order( $ids ), ( $page - 1 ) * $per_page, $per_page );
+			if ( $ids ) {
+				// The page's posts in one query, as the paged query would have loaded them.
+				get_posts(
+					array(
+						'post_type'        => 'attachment',
+						'post_status'      => 'inherit',
+						'post__in'         => $ids,
+						'posts_per_page'   => count( $ids ),
+						'no_found_rows'    => true,
+						'suppress_filters' => false,
+					)
+				);
+			}
+		} else {
+			$ids = wp_list_pluck( $query->posts, 'ID' );
 		}
 		$items = array();
 		foreach ( $ids as $id ) {
@@ -515,11 +537,12 @@ final class Catalog_Rest {
 	 */
 	private static function in_album_order( array $ids ): array {
 		$order = array_flip( $ids );
-		$num   = static function ( int $id ): int {
-			$meta = wp_get_attachment_metadata( $id );
-			return is_array( $meta ) && isset( $meta['track_number'] ) ? (int) $meta['track_number'] : PHP_INT_MAX;
-		};
-		usort( $ids, static fn( $a, $b ) => array( $num( (int) $a ), $order[ $a ] ) <=> array( $num( (int) $b ), $order[ $b ] ) );
+		$num   = array();
+		foreach ( $ids as $id ) {
+			$meta       = wp_get_attachment_metadata( (int) $id );
+			$num[ $id ] = is_array( $meta ) && isset( $meta['track_number'] ) ? (int) $meta['track_number'] : PHP_INT_MAX;
+		}
+		usort( $ids, static fn( $a, $b ) => array( $num[ $a ], $order[ $a ] ) <=> array( $num[ $b ], $order[ $b ] ) );
 		return $ids;
 	}
 

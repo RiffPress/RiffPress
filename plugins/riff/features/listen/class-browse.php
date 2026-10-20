@@ -75,6 +75,11 @@ final class Browse {
 	public const PLAYLIST = 'riff_playlist';
 
 	/**
+	 * The most pages of 100 an album view reads: an album of up to 2,000 tracks shows whole.
+	 */
+	private const ALBUM_PAGES = 20;
+
+	/**
 	 * Every query argument a browse view uses, for the script to recognise its own addresses.
 	 *
 	 * @since 4.16.0
@@ -565,6 +570,7 @@ final class Browse {
 	 * @return string
 	 */
 	private static function album_view( string $page, int $id ): string {
+		// The whole album, page by page: a box set runs past one page of the route.
 		$data = self::get(
 			'/tracks',
 			array(
@@ -572,6 +578,18 @@ final class Browse {
 				'per_page' => 100,
 			)
 		);
+		$last = min( (int) $data['pages'], self::ALBUM_PAGES );
+		for ( $number = 2; $number <= $last; $number++ ) {
+			$more          = self::get(
+				'/tracks',
+				array(
+					'album'    => $id,
+					'per_page' => 100,
+					'page'     => $number,
+				)
+			);
+			$data['items'] = array_merge( $data['items'], $more['items'] );
+		}
 		$term = get_term( $id );
 		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
 			return self::albums_view( $page, 1 );

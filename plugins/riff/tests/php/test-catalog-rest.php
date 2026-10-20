@@ -153,9 +153,13 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 
 	public function test_an_album_longer_than_a_page_runs_in_order_across_its_pages(): void {
 		// A box set: more tracks than a page holds, titled so that the alphabet puts "10" and "100"
-		// before "2". The order is the album's across both pages, not the alphabet's within each.
-		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
-		for ( $n = 1; $n <= 120; $n++ ) {
+		// before "2", and uploaded out of order, so neither the alphabet nor the upload order is
+		// the album's. The order is the track numbers', across both pages.
+		$post    = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$numbers = range( 1, 120 );
+		mt_srand( 446 );
+		shuffle( $numbers );
+		foreach ( $numbers as $n ) {
 			$id = wp_insert_attachment(
 				array(
 					'post_title'     => "Box track $n",
