@@ -100,7 +100,7 @@ function start() {
 	// riff.<name> action, and as a riff:<name> CustomEvent on #riff for pages without the WordPress
 	// scripts, both with the same detail. Two filters let a plugin reshape what plays: riff.queue
 	// (the tracks about to become the queue) and riff.track (each track as it is queued). The api
-	// object is window.riff, handed to riff.ready, and the only door the Listen feature uses. Each
+	// object is window.riff, handed to riff.ready; the Listen feature gets it with more, as internal. Each
 	// hook is documented where it fires and each api member where it is defined; the hooks and
 	// JavaScript references are generated from those docblocks. Stable within a major version.
 	const hooks = window.wp?.hooks;
@@ -2380,6 +2380,7 @@ function start() {
 				: $( '.riff-bar-info' );
 		np.hidden = false;
 		root.classList.add( 'is-open' );
+		syncWakeLock();
 		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own
 		// bar and toast, which the dialog covers there and which would otherwise still take focus.
 		// On a wide screen the dialog opens above the bar and the bar stays the control surface.
@@ -2419,6 +2420,7 @@ function start() {
 		}
 		const done = () => {
 			np.hidden = true;
+			syncWakeLock();
 		};
 		if ( reduce() ) {
 			done();
@@ -2957,9 +2959,8 @@ function start() {
 	for ( const ev of [ 'play', 'pause', 'ended' ] ) {
 		video.addEventListener( ev, syncWakeLock );
 	}
-	for ( const ev of [ 'riff:open', 'riff:close', 'riff:track' ] ) {
-		root.addEventListener( ev, syncWakeLock );
-	}
+	// Opening and closing Now Playing call it themselves.
+	root.addEventListener( 'riff:track', syncWakeLock );
 	document.addEventListener( 'visibilitychange', syncWakeLock );
 
 	join();
@@ -3002,7 +3003,7 @@ function start() {
 	 */
 	emit( 'ready', { queue: api.queue(), track: track() || null } );
 
-	// ---- The app, on the page that holds it. Loaded only there, through the same public api.
+	// ---- The app, on the page that holds it. Loaded only there, and handed internal.
 	if ( document.querySelector( '[data-riff-app]' ) && data.assets?.app ) {
 		// Until the module has started, a press on one of the app's own buttons (a cover's Play,
 		// Load more) has nothing to answer it; on a slow site that can be a few seconds. The last

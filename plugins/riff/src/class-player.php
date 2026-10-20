@@ -125,27 +125,22 @@ final class Player {
 	}
 
 	/**
-	 * The chips under Now Playing's controls.
-	 *
-	 * Each item is keyed by a slug and has a `label`, an `action` (the data-riff-action the player
-	 * handles), and either an `icon` from Player::icon() or `svg` markup of its own. An item with an
-	 * `href` is a link.
+	 * The chips under Now Playing's controls, each keyed by a slug with a `label`, an `action` (the
+	 * data-riff-action the player handles) and an `icon` from Player::icon().
 	 *
 	 * @since 4.0.0
 	 *
 	 * @return array[]
 	 */
 	public static function chips(): array {
-		$chips = array(
+		return array(
 			'share' => array(
 				'label'  => __( 'Share', 'riff' ),
 				'icon'   => 'share',
 				'action' => 'share',
 			),
 		);
-		return self::items( $chips );
 	}
-
 
 	/**
 	 * The tabs beside Now Playing: Up next first, then any a plugin adds. Each tab has a panel the
@@ -182,79 +177,23 @@ final class Player {
 	}
 
 	/**
-	 * Keeps only well-formed items: a string label and either an action or an href.
-	 *
-	 * @param array $items Items.
-	 * @return array[]
-	 */
-	private static function items( array $items ): array {
-		$kept = array();
-		foreach ( $items as $slug => $item ) {
-			if ( ! is_array( $item ) || empty( $item['label'] ) || ( empty( $item['action'] ) && empty( $item['href'] ) ) ) {
-				continue;
-			}
-			$kept[ sanitize_key( (string) $slug ) ] = $item;
-		}
-		return $kept;
-	}
-
-	/**
-	 * Renders one chip or control.
+	 * Renders one chip.
 	 *
 	 * @since 4.0.0
 	 *
 	 * @param string $slug      Slug.
-	 * @param array  $item      Item.
+	 * @param array  $item      Item, as chips() gives it.
 	 * @param string $css_class Class for the element.
-	 * @param bool   $labelled  Whether the label shows (a chip) or is the accessible name (a control).
 	 * @return string
 	 */
-	public static function control( string $slug, array $item, string $css_class, bool $labelled = true ): string {
-		$icon = '';
-		if ( ! empty( $item['icon'] ) ) {
-			$icon = self::icon( (string) $item['icon'] );
-		} elseif ( ! empty( $item['svg'] ) ) {
-			$icon = wp_kses( (string) $item['svg'], self::svg_tags() );
-		}
-		$label  = $labelled ? '<span>' . esc_html( (string) $item['label'] ) . '</span>' : '';
-		$attrs  = $labelled ? '' : ' aria-label="' . esc_attr( (string) $item['label'] ) . '"';
-		$attrs .= ' data-riff-chip="' . esc_attr( $slug ) . '"';
-		if ( ! empty( $item['href'] ) ) {
-			return '<a class="' . esc_attr( $css_class ) . '" href="' . esc_url( (string) $item['href'] ) . '"' . $attrs . '>' . $icon . $label . '</a>';
-		}
-		return '<button type="button" class="' . esc_attr( $css_class ) . '" data-riff-action="' . esc_attr( (string) $item['action'] ) . '"' . $attrs . '>' . $icon . $label . '</button>';
-	}
-
-	/**
-	 * The SVG a control may carry.
-	 *
-	 * @return array
-	 */
-	private static function svg_tags(): array {
-		$attrs = array(
-			'viewbox'      => true,
-			'fill'         => true,
-			'stroke'       => true,
-			'stroke-width' => true,
-			'd'            => true,
-			'cx'           => true,
-			'cy'           => true,
-			'r'            => true,
-			'x'            => true,
-			'y'            => true,
-			'width'        => true,
-			'height'       => true,
-			'aria-hidden'  => true,
-			'focusable'    => true,
-			'class'        => true,
-		);
-		return array(
-			'svg'     => $attrs,
-			'path'    => $attrs,
-			'circle'  => $attrs,
-			'rect'    => $attrs,
-			'g'       => $attrs,
-			'polygon' => array_merge( $attrs, array( 'points' => true ) ),
+	public static function control( string $slug, array $item, string $css_class ): string {
+		return sprintf(
+			'<button type="button" class="%s" data-riff-action="%s" data-riff-chip="%s">%s<span>%s</span></button>',
+			esc_attr( $css_class ),
+			esc_attr( (string) $item['action'] ),
+			esc_attr( $slug ),
+			self::icon( (string) $item['icon'] ),
+			esc_html( (string) $item['label'] )
 		);
 	}
 

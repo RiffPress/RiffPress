@@ -509,4 +509,22 @@ class Test_Riff_App extends Riff_TestCase {
 			}
 		);
 	}
+
+	public function test_a_theme_value_that_could_close_the_style_is_left_out(): void {
+		$this->with_theme_styles(
+			array(
+				'color'      => array(
+					'background' => 'red;} body { display: none',
+					'text'       => '"><script>',
+				),
+				'typography' => array( 'fontFamily' => 'Georgia, serif' ),
+			),
+			function (): void {
+				$tokens = App::theme_tokens();
+				$this->assertArrayNotHasKey( '--riff-app-bg', $tokens );
+				$this->assertArrayNotHasKey( '--riff-app-ink', $tokens );
+				$this->assertSame( 'Georgia, serif', $tokens['--riff-app-font'] ?? null, 'a safe value still goes in' );
+			}
+		);
+	}
 }

@@ -205,4 +205,14 @@ class Test_Riff_I18n extends Riff_TestCase {
 		$this->assertStringContainsString( 'id="wp-script-module-translation-data-riff-app"', $html );
 		$this->assertStringContainsString( 'Spiele %s', $html, 'the translated string reaches the page' );
 	}
+
+	public function test_the_player_around_the_script_is_translated_in_php(): void {
+		$this->go_to( get_permalink( $this->post ) );
+		ob_start();
+		Player::markup();
+		$html = (string) ob_get_clean();
+
+		$this->assertStringContainsString( '⟪Up next⟫', $html );
+		$this->assertStringContainsString( '⟪Share⟫', $html );
+	}
 }

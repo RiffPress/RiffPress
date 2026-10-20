@@ -152,7 +152,7 @@ const views = () => [
 // Likes and plays, so the full views have something in every row.
 async function fill( page ) {
 	await page.goto( withArg( listenUrl, `riff=${ postId }` ) );
-	// Until the player starts, window.riff is the #riff element, by its id.
+	// Until the player starts, window.riff is the #riff element, by its id; wait for its whole door.
 	await page.waitForFunction( () => typeof window.riffInternal?.like === 'function' );
 	await page.evaluate(
 		( ids ) => {
