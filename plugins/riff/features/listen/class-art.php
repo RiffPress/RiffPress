@@ -88,8 +88,6 @@ final class Art {
 		add_filter( 'query_vars', array( self::class, 'query_vars' ) );
 		add_action( 'parse_request', array( self::class, 'serve' ) );
 		add_filter( 'riff_track', array( self::class, 'track_art' ), 10, 3 );
-		add_filter( 'riff_library_item', array( self::class, 'item_art' ), 10, 2 );
-		add_filter( 'riff_player_data', array( self::class, 'player_data' ) );
 	}
 
 	/**
@@ -220,46 +218,25 @@ final class Art {
 	}
 
 	/**
-	 * The palettes after the filter, each a list of background, accent and ink.
+	 * The palettes, each a list of background, accent and ink.
 	 *
 	 * @since 4.3.0
 	 *
 	 * @return array
 	 */
 	public static function palettes(): array {
-		/**
-		 * Filters the palettes a drawn cover picks from: lists of background, accent and ink.
-		 *
-		 * @since 4.0.0
-		 * @param array $palettes Palettes.
-		 */
-		$palettes = (array) apply_filters( 'riff_art_palettes', self::PALETTES );
-		$palettes = array_values(
-			array_filter(
-				$palettes,
-				static fn( $p ) => is_array( $p ) && count( $p ) >= 3
-			)
-		);
-		return $palettes ? $palettes : self::PALETTES;
+		return self::PALETTES;
 	}
 
 	/**
-	 * The layouts after the filter.
+	 * The layouts.
 	 *
 	 * @since 4.3.0
 	 *
 	 * @return string[]
 	 */
 	public static function layouts(): array {
-		/**
-		 * Filters the layouts a drawn cover picks from: where the record sits. The plugin knows
-		 * `corner`, `centre` and `horizon`; a layout it does not know draws as `corner`.
-		 *
-		 * @since 4.3.0
-		 * @param string[] $layouts Layout slugs.
-		 */
-		$layouts = array_values( array_filter( (array) apply_filters( 'riff_art_layouts', self::LAYOUTS ), 'is_string' ) );
-		return $layouts ? $layouts : self::LAYOUTS;
+		return self::LAYOUTS;
 	}
 
 	/**
@@ -282,14 +259,7 @@ final class Art {
 			$palettes[ $seed % count( $palettes ) ],
 			$layouts[ intdiv( $seed, count( $palettes ) ) % count( $layouts ) ]
 		);
-		/**
-		 * Filters a drawn cover.
-		 *
-		 * @since 4.0.0
-		 * @param string  $svg  SVG document.
-		 * @param WP_Post $post Post.
-		 */
-		return (string) apply_filters( 'riff_art_svg', $svg, $post );
+		return $svg;
 	}
 
 	/**

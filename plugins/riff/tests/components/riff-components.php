@@ -219,11 +219,14 @@ if ( ! empty( $_COOKIE['riff_test_no_music'] ) ) {
 		10,
 		2
 	);
-	add_filter(
-		'riff_library_query',
-		static function ( $args ) {
-			$args['post__in'] = array( 0 );
-			return $args;
+	// The library asks for Library::PER_PAGE posts; with no music, it finds none. The first-run
+	// test deactivates Riff, so the class may not be there.
+	add_action(
+		'pre_get_posts',
+		static function ( WP_Query $query ): void {
+			if ( class_exists( Riff\Library::class ) && Riff\Library::PER_PAGE === (int) $query->get( 'posts_per_page' ) ) {
+				$query->set( 'post__in', array( 0 ) );
+			}
 		}
 	);
 	add_filter(
@@ -246,3 +249,13 @@ if ( ! empty( $_COOKIE['riff_test_no_music'] ) ) {
 		3
 	);
 }
+
+// Marks the page as the tests site's, so riff.js hands the e2e suite its whole door as
+// window.riffInternal: likes, playlists and history, which window.riff leaves out.
+add_action(
+	'wp_head',
+	static function (): void {
+		wp_print_inline_script_tag( "document.documentElement.setAttribute( 'data-riff-test', '' );" );
+	},
+	1
+);

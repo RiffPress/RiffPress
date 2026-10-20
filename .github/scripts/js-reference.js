@@ -123,21 +123,17 @@ const GUIDE = [
 		text: [ 'Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP; the PHP reference lists every property. The REST API returns the same shape.' ],
 	},
 	{
-		id: 'controls',
-		title: 'Controls',
-		text: [ 'Add a chip under Now Playing or a control at the end of the bar from PHP, with the `riff_chips` or `riff_bar_controls` filter, then handle the press with the `riff.action` action.' ],
+		id: 'a-tab',
+		title: 'A tab in Now Playing',
+		text: [ 'Add a tab beside Up next from PHP with the `riff_now_playing_tabs` filter, then fill its panel when the `riff.tab` action says it is showing, and again on `riff.track` while it is. Riff Lyrics is built this way, on nothing but the public API.' ],
 		code: [
-			[ 'php', `add_filter( 'riff_chips', function ( array $chips ): array {
-	$chips['lyrics'] = array(
-		'label'  => __( 'Lyrics', 'my-plugin' ),
-		'action' => 'my-plugin-lyrics',
-		'svg'    => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="…"/></svg>',
-	);
-	return $chips;
+			[ 'php', `add_filter( 'riff_now_playing_tabs', function ( array $tabs ): array {
+	$tabs['lyrics'] = array( 'label' => __( 'Lyrics', 'my-plugin' ) );
+	return $tabs;
 } );` ],
-			[ 'js', `wp.hooks.addAction( 'riff.action', 'my-plugin', ( { action, track } ) => {
-	if ( action === 'my-plugin-lyrics' ) {
-		showLyrics( track );
+			[ 'js', `document.addEventListener( 'riff:tab', ( { detail } ) => {
+	if ( detail.id === 'lyrics' ) {
+		showLyrics( detail.panel, detail.track );
 	}
 } );` ],
 		],

@@ -43,17 +43,15 @@ export function start( api ) {
 			account.querySelector( 'summary' ).focus();
 		}
 	} );
-	// Strings are WordPress translations of this module (wp_set_script_module_translations()); a
-	// site's riff_strings filter can still replace one by its old key. Core prints wp.i18n only
-	// when there are translations, so without it the strings are the English they are written in.
-	const s = api.strings || {};
+	// Strings are WordPress translations of this module (wp_set_script_module_translations()).
+	// Core prints wp.i18n only when there are translations, so without it the strings are the
+	// English they are written in.
 	const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 	const _n =
 		window.wp?.i18n?._n ||
 		( ( one, many, count ) => ( count === 1 ? one : many ) );
 	// Said when a post or a page of posts could not be fetched, from several places.
 	const playError = () =>
-		s.playError ||
 		__( 'That post could not be loaded. Press Play to try again.', 'riff' );
 	const cache = new Map();
 	let showing = 0; // A counter, so a slow fetch cannot paint over a newer view.
@@ -358,11 +356,10 @@ export function start( api ) {
 		} catch {
 			if ( turn === showing ) {
 				tell(
-					s.moreError ||
-						__(
-							'More posts could not be loaded. Press Load more to try again.',
-							'riff'
-						)
+					__(
+						'More posts could not be loaded. Press Load more to try again.',
+						'riff'
+					)
 				);
 			}
 		} finally {
@@ -481,8 +478,7 @@ export function start( api ) {
 		button.setAttribute(
 			'aria-label',
 			fmt(
-				s.playTrack ||
-					/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
+				/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
 				label
 			)
 		);
@@ -522,9 +518,8 @@ export function start( api ) {
 		}
 		parts.push(
 			fmt(
-				( item.count === 1 ? s.oneTrack : s.tracks ) ||
-					/* translators: %s: number of tracks. */
-					_n( '%s track', '%s tracks', item.count, 'riff' ),
+				/* translators: %s: number of tracks. */
+				_n( '%s track', '%s tracks', item.count, 'riff' ),
 				item.count
 			)
 		);
@@ -532,11 +527,10 @@ export function start( api ) {
 		if ( minutes ) {
 			parts.push(
 				fmt(
-					s.minutes ||
-						/* translators: %s: number of minutes. */ __(
-							'%s min',
-							'riff'
-						),
+					/* translators: %s: number of minutes. */ __(
+						'%s min',
+						'riff'
+					),
 					minutes
 				)
 			);
@@ -659,16 +653,14 @@ export function start( api ) {
 		tell(
 			fmt(
 				on
-					? s.savedToLibrary ||
-							/* translators: %s: an album or artist. */ __(
-								'%s added to your library',
-								'riff'
-							)
-					: s.removedFromLibrary ||
-							/* translators: %s: an album or artist. */ __(
-								'%s removed from your library',
-								'riff'
-							),
+					? /* translators: %s: an album or artist. */ __(
+							'%s added to your library',
+							'riff'
+						)
+					: /* translators: %s: an album or artist. */ __(
+							'%s removed from your library',
+							'riff'
+						),
 				name
 			)
 		);
@@ -751,11 +743,11 @@ export function start( api ) {
 			api.mount();
 		}
 	}
-	api.on?.( 'like', likeChanged );
+	api.listen?.( 'like', likeChanged );
 
 	// ---- Playlists. Made, renamed and deleted from Your Library and a playlist's page; tracks moved
-	// and taken out from each row's … menu, which this adds to through riff.trackMenu as any plugin
-	// would. Every change goes through the player's api.
+	// and taken out from each row's … menu, which this adds to through api.listen( 'menu' ). Every
+	// change goes through the player's api.
 	const listAddress = ( id ) => {
 		const u = new URL( page );
 		u.searchParams.set( browseArgs[ 6 ] || 'riff_playlist', String( id ) );
@@ -770,10 +762,7 @@ export function start( api ) {
 		return u.toString();
 	};
 	const failed = () =>
-		tell(
-			s.playlistFailed ||
-				__( 'The playlist could not be changed. Try again.', 'riff' )
-		);
+		tell( __( 'The playlist could not be changed. Try again.', 'riff' ) );
 	// The view showing, drawn again in place, then the focus put where it belongs.
 	async function redraw( focus ) {
 		const here = postOf( location.href );
@@ -786,9 +775,7 @@ export function start( api ) {
 		const kind = action?.dataset.riffAppAction;
 		const id = Number( action?.dataset.riffPlaylist );
 		if ( kind === 'new-playlist' ) {
-			api.createPlaylist(
-				s.newPlaylist || __( 'New playlist', 'riff' )
-			).then( ( p ) => {
+			api.createPlaylist( __( 'New playlist', 'riff' ) ).then( ( p ) => {
 				const to = postOf( listAddress( p.id ) );
 				if ( to ) {
 					show( to ).catch( () => {} );
@@ -818,11 +805,10 @@ export function start( api ) {
 			// eslint-disable-next-line no-alert
 			const sure = window.confirm(
 				fmt(
-					s.confirmDelete ||
-						/* translators: %s: playlist name. */ __(
-							'Delete %s? It goes to the trash, where a site admin can restore it.',
-							'riff'
-						),
+					/* translators: %s: playlist name. */ __(
+						'Delete %s? It goes to the trash, where a site admin can restore it.',
+						'riff'
+					),
 					name
 				)
 			);
@@ -848,10 +834,10 @@ export function start( api ) {
 		const form = document.createElement( 'form' );
 		form.className = 'riff-rename';
 		form.innerHTML =
-			`<label class="riff-app-sr" for="riff-rename">${ esc( s.playlistName || __( 'Playlist name', 'riff' ) ) }</label>` +
+			`<label class="riff-app-sr" for="riff-rename">${ esc( __( 'Playlist name', 'riff' ) ) }</label>` +
 			`<input id="riff-rename" type="text" maxlength="200" required value="${ esc( title.textContent ) }">` +
-			`<button type="submit" class="riff-pill riff-pill-solid">${ esc( s.save || __( 'Save', 'riff' ) ) }</button>` +
-			`<button type="button" class="riff-pill" data-riff-cancel>${ esc( s.cancel || __( 'Cancel', 'riff' ) ) }</button>`;
+			`<button type="submit" class="riff-pill riff-pill-solid">${ esc( __( 'Save', 'riff' ) ) }</button>` +
+			`<button type="button" class="riff-pill" data-riff-cancel>${ esc( __( 'Cancel', 'riff' ) ) }</button>`;
 		title.hidden = true;
 		title.after( form );
 		const field = form.querySelector( 'input' );
@@ -889,9 +875,8 @@ export function start( api ) {
 	}
 
 	// A row in a playlist's page gets Move up, Move down and Remove from this playlist.
-	window.wp?.hooks?.addFilter(
-		'riff.trackMenu',
-		'riff/listen/playlist',
+	api.listen?.(
+		'menu',
 		( items, track, context ) => {
 			const holder = context?.element?.closest?.(
 				'[data-riff-playlist]'
@@ -928,31 +913,28 @@ export function start( api ) {
 			if ( at > 0 ) {
 				extra.push( {
 					id: 'playlist-up',
-					label: s.moveUp || __( 'Move up', 'riff' ),
+					label: __( 'Move up', 'riff' ),
 					run: move( at - 1 ),
 				} );
 			}
 			if ( at < rows.length - 1 ) {
 				extra.push( {
 					id: 'playlist-down',
-					label: s.moveDown || __( 'Move down', 'riff' ),
+					label: __( 'Move down', 'riff' ),
 					run: move( at + 1 ),
 				} );
 			}
 			extra.push( {
 				id: 'playlist-remove',
-				label:
-					s.removeFromPlaylist ||
-					__( 'Remove from this playlist', 'riff' ),
+				label: __( 'Remove from this playlist', 'riff' ),
 				run: () =>
 					api.removeFromPlaylist( id, spot ).then( ( p ) => {
 						tell(
 							fmt(
-								s.removedFromPlaylist ||
-									/* translators: %s: playlist name. */ __(
-										'Removed from %s',
-										'riff'
-									),
+								/* translators: %s: playlist name. */ __(
+									'Removed from %s',
+									'riff'
+								),
 								p.title
 							)
 						);
@@ -968,7 +950,7 @@ export function start( api ) {
 	);
 
 	// A change to a playlist leaves every view drawn before it out of date, its sidebar included.
-	api.on?.( 'playlist', () => rendered.clear() );
+	api.listen?.( 'playlist', () => rendered.clear() );
 
 	// ---- Home's rows of what was played: the posts last played from, to jump back into, and the
 	// tracks themselves. The server draws a signed-in listener's from their account, and holds the
@@ -1273,8 +1255,7 @@ export function start( api ) {
 				field,
 				[
 					{
-						label:
-							s.recentSearches || __( 'Recent searches', 'riff' ),
+						label: __( 'Recent searches', 'riff' ),
 						items: recent.map( ( words ) => ( {
 							kind: 'recent',
 							title: words,
@@ -1330,7 +1311,7 @@ export function start( api ) {
 		const artistItems = artists.slice( 0, 3 ).map( ( a ) => ( {
 			kind: 'artist',
 			title: a.name,
-			sub: s.artist || __( 'Artist', 'riff' ),
+			sub: __( 'Artist', 'riff' ),
 			href: browseHref( browseArgs[ 2 ] || 'riff_artist', a.id ),
 		} ) );
 		// The best match across all three; on a tie an artist, then an album, then a song.
@@ -1340,26 +1321,26 @@ export function start( api ) {
 		const groups = [];
 		if ( top?.n ) {
 			groups.push( {
-				label: s.topResult || __( 'Top result', 'riff' ),
+				label: __( 'Top result', 'riff' ),
 				items: [ { ...top.o, top: true } ],
 			} );
 		}
 		const besides = ( list ) => list.filter( ( o ) => o !== top?.o );
 		if ( besides( songs ).length ) {
 			groups.push( {
-				label: s.songs || __( 'Songs', 'riff' ),
+				label: __( 'Songs', 'riff' ),
 				items: besides( songs ),
 			} );
 		}
 		if ( besides( albumItems ).length ) {
 			groups.push( {
-				label: s.albums || __( 'Albums', 'riff' ),
+				label: __( 'Albums', 'riff' ),
 				items: besides( albumItems ),
 			} );
 		}
 		if ( besides( artistItems ).length ) {
 			groups.push( {
-				label: s.artists || __( 'Artists', 'riff' ),
+				label: __( 'Artists', 'riff' ),
 				items: besides( artistItems ),
 			} );
 		}
@@ -1369,11 +1350,10 @@ export function start( api ) {
 				{
 					kind: 'all',
 					title: fmt(
-						s.allResults ||
-							/* translators: %s: the words searched for. */ __(
-								'All results for “%s”',
-								'riff'
-							),
+						/* translators: %s: the words searched for. */ __(
+							'All results for “%s”',
+							'riff'
+						),
 						q
 					),
 					run: () => runSearch( field, q ),
@@ -1452,10 +1432,7 @@ export function start( api ) {
 		} );
 		place( field );
 		panel.setAttribute( 'role', 'listbox' );
-		panel.setAttribute(
-			'aria-label',
-			s.searchSuggestions || __( 'Suggestions', 'riff' )
-		);
+		panel.setAttribute( 'aria-label', __( 'Suggestions', 'riff' ) );
 		panel.hidden = false;
 		field.setAttribute( 'aria-expanded', 'true' );
 		const found = options.filter(
@@ -1463,9 +1440,8 @@ export function start( api ) {
 		).length;
 		said.textContent = q
 			? fmt(
-					( found === 1 ? s.oneSuggestion : s.suggestions ) ||
-						/* translators: %s: number of suggestions. */
-						_n( '%s suggestion', '%s suggestions', found, 'riff' ),
+					/* translators: %s: number of suggestions. */
+					_n( '%s suggestion', '%s suggestions', found, 'riff' ),
 					found
 				)
 			: '';
