@@ -1693,11 +1693,13 @@ function start() {
 		const duration =
 			( Number.isFinite( m.duration ) && m.duration ) || t?.duration || 0;
 		const ratio = duration ? Math.min( m.currentTime / duration, 1 ) : 0;
-		setProgress( ratio );
 		setBuffered( duration ? buffered( m, duration ) : 0 );
 		text( 'current', time( m.currentTime ) );
 		text( 'duration', time( duration ) );
+		// While the line is dragged it is where the pointer put it: drawing the time playing every
+		// frame as well would swap the two back and forth.
 		if ( ! seeking ) {
+			setProgress( ratio );
 			// A range's value is written only when it moves a step: each write lays the thumb out again.
 			const value = String( Math.round( ratio * 1000 ) );
 			for ( const input of $$( '[data-riff-seek]' ) ) {
