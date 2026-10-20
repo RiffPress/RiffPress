@@ -283,6 +283,7 @@ test.describe( 'The components page', () => {
 				'shelf',
 				'header',
 				'title',
+				'artists',
 				'actions',
 				'heart',
 				'chips',
