@@ -8,7 +8,7 @@ Riff is a music player that sits inside someone else's site. The player is alway
 
 ### The player
 
-YouTube Music's current layout and measurements are the authority, except the wide bar's arrangement, which follows Tidal: the 72px bar on a wide screen, the 2025 Now Playing on a phone, Roboto, Material Icons, `#212121` surfaces on `#030303`. Riff's own marks are the amber accent (`#ffb020`) in place of red, and the filament: the played part of the bar's seek line glows with the music, in heat colours from near-black red through amber to yellow-white, and cools when playback stops. The bloom is a soft band either side of the line that fades out before the knob, and stays on the bar's line; Now Playing's own seek line is plain white.
+YouTube Music's current layout and measurements are the authority, except the wide bar's arrangement, which follows Tidal: the 72px bar on a wide screen, the 2025 Now Playing on a phone, Roboto, Material Icons, `#212121` surfaces on `#030303`. Riff's own marks are the amber accent (`#ffb020`) in place of red, and the filament: the played part of the bar's seek line glows with the music, a dim ember when it is quiet, amber at working level and a pale white heart at the peaks, and cools when playback stops. Each layer has one colour and only fades, and the line moves on the compositor. The bloom is a soft band either side of the line that fades out before the knob, and stays on the bar's line; Now Playing's own seek line is plain white.
 
 ### The Listen block
 

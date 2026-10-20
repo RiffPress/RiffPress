@@ -38,13 +38,13 @@
 <p class="lede">Your music should outlast the software that plays it. Riff is built on what WordPress already has, is tested on every change, and comes with written commitments about how it will be maintained.</p>
 
 <h2 id="wordpress">Built on WordPress</h2>
-<p>Riff plays the Audio, Video and Playlist blocks that ship with WordPress, and reads track details from the Media Library. It adds no post types, no settings screen and no database tables. The only things it stores are a few fields on media items, such as a track's artwork and its video version. If you turn it off, your posts still play in the browser's own player.</p>
-<p>It calls no outside services. There is no account, no tracking and no CDN, and the fonts ship inside the plugin. Your music and your listeners' visits stay on your server.</p>
+<p>Riff plays the Audio, Video and Playlist blocks that ship with WordPress, and reads track details from the Media Library. It adds no settings screen and no database tables. It stores albums and artists as terms filed from your tags, listeners' playlists, likes and what they played, and a few fields on media items, such as a track's artwork and its video version. If you turn it off, your posts still play in the browser's own player.</p>
+<p>It calls no outside services of its own. There is no account, no tracking and no CDN, and the fonts ship inside the plugin. Signed-in listeners' pictures come from WordPress's own avatars, which use Gravatar unless the site turns avatars off. Your music and your listeners' visits stay on your server.</p>
 
 <h2 id="testing">Tested on every change</h2>
 <p>Every pull request that changes code runs the full suite, and it can't merge until the suite passes. A scheduled run every Monday repeats it against the current WordPress release, so a change in core is caught even when Riff hasn't changed.</p>
 <ul class="req">
-	<li><span>PHP and WordPress</span><span>The WordPress test suite on PHP 8.1 with WordPress 7.0 (the oldest supported), PHP 8.4 with the current release, a multisite network on PHP 8.3, and WordPress trunk.</span></li>
+	<li><span>PHP and WordPress</span><span>The WordPress test suite on PHP 8.1 with WordPress 7.0 (the oldest supported), PHP 8.5 with the current release, a multisite network on PHP 8.3, and WordPress trunk.</span></li>
 	<li><span>In a browser</span><span>Playwright plays real tracks in Chromium at desktop width and at an iPhone's size, and runs a smoke pass in WebKit, the engine under Safari. Lock-screen and background playback are checked by hand on a real iPhone.</span></li>
 	<li><span>Accessibility</span><span>axe checks Now Playing for accessibility problems, and the tests play, pause and seek from the keyboard.</span></li>
 	<li><span>Standards</span><span>WordPress Coding Standards, ESLint, stylelint, a spell check, and Plugin Check, the tool the WordPress.org plugin team uses to review plugins.</span></li>
