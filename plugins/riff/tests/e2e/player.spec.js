@@ -387,8 +387,13 @@ test.describe( 'Player', () => {
 		expect( colors.chevron ).toBe( 'rgb(255, 255, 255)' );
 		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();
 		await page.mouse.move( seek.x + 300, seek.y + seek.height / 2 );
+		// The knob is a rail as wide as the line, slid by transform, with a 14px dot at its end.
 		const knob = await page.locator( '.riff-knob' ).boundingBox();
-		expect( knob.width ).toBe( 14 );
+		const dot = await page.locator( '.riff-knob' ).evaluate( ( el ) => {
+			const after = getComputedStyle( el, '::after' );
+			return { width: after.width, height: after.height };
+		} );
+		expect( dot ).toEqual( { width: '14px', height: '14px' } );
 		await expect( page.locator( '.riff-knob' ) ).toHaveCSS( 'opacity', '1' );
 		// The seek line sits under the transport, inside the bar, with a time at each end.
 		const bar = await page.locator( '.riff-bar' ).boundingBox();

@@ -312,7 +312,10 @@ function start() {
 		 */
 		playlist: ( id ) =>
 			me?.rest?.playlists
-				? send( under( me.rest.playlists, `/${ Number( id ) }` ), 'GET' )
+				? send(
+						under( me.rest.playlists, `/${ Number( id ) }` ),
+						'GET'
+					)
 				: Promise.reject( new Error( 'signed out' ) ),
 		/**
 		 * Makes a playlist, empty or with tracks.
@@ -1188,8 +1191,8 @@ function start() {
 	// A phone pauses video when the page goes to the background, and audio keeps going. So the
 	// track moves to audio while hidden and back to video when the page returns.
 	document.addEventListener( 'visibilitychange', () => {
-		if ( ! document.hidden && ! el().paused && ! reduce() ) {
-			follow();
+		if ( ! document.hidden && ! el().paused ) {
+			glide();
 		}
 		const t = track();
 		if ( ! t || ! t.video ) {
@@ -1223,19 +1226,94 @@ function start() {
 		channel?.postMessage( { type: 'playing', from: tabId } );
 
 	// ---- Media events. Both elements report through the same handlers; only the one in use counts.
-	// While something plays the line follows the time every frame; timeupdate alone comes four
-	// times a second and reads as a line that skips.
-	let followRaf = 0;
-	function follow() {
-		cancelAnimationFrame( followRaf );
-		const step = () => {
-			progress();
-			followRaf =
-				el().paused || document.hidden
-					? 0
-					: requestAnimationFrame( step );
+	// While something plays the line glides on the compositor: one linear animation per moving
+	// layer (the played part, the wire, its heart, the bloom and the knob), from where the time is
+	// to the end of the track, at the playback rate. The page's own work cannot make it stutter and
+	// nothing is written each frame; it is aimed again only when the time jumps: a seek, a pause or
+	// a stall, a new rate or track, or drift past 150 ms. --riff-p is still written on timeupdate,
+	// for the times, the input, and where the line rests when the animations stop.
+	let glides = [];
+	let aimed = null;
+	function stopGlide() {
+		for ( const a of glides ) {
+			a.cancel();
+		}
+		glides = [];
+		aimed = null;
+	}
+	function glide() {
+		stopGlide();
+		const m = el();
+		const duration =
+			( Number.isFinite( m.duration ) && m.duration ) ||
+			track()?.duration ||
+			0;
+		const rate = m.playbackRate || 1;
+		const ms = ( ( duration - m.currentTime ) * 1000 ) / rate;
+		if (
+			! duration ||
+			ms <= 0 ||
+			m.paused ||
+			seeking ||
+			reduce() ||
+			document.hidden ||
+			typeof root.animate !== 'function'
+		) {
+			return;
+		}
+		const from = Math.min( m.currentTime / duration, 1 );
+		setProgress( from );
+		const timing = { duration: ms, easing: 'linear', fill: 'forwards' };
+		const run = ( node, frames, extra ) => {
+			try {
+				glides.push( node.animate( frames, { ...timing, ...extra } ) );
+			} catch {
+				// A browser without pseudo-element animations keeps the line's resting place.
+			}
 		};
-		followRaf = requestAnimationFrame( step );
+		for ( const seeker of seekers ) {
+			const rtl = getComputedStyle( seeker ).direction === 'rtl';
+			const slide = ( p ) =>
+				`translateX(${ ( rtl ? 1 - p : p - 1 ) * 100 }%)`;
+			const stretch = [
+				{ transform: `scaleX(${ from })` },
+				{ transform: 'scaleX(1)' },
+			];
+			for ( const layer of seeker.querySelectorAll( '.riff-line i' ) ) {
+				run( layer, stretch );
+			}
+			const along = [
+				{ transform: slide( from ) },
+				{ transform: slide( 1 ) },
+			];
+			if ( seeker.matches( '.riff-bar-seek' ) ) {
+				run( seeker.querySelector( '.riff-line' ), along, {
+					pseudoElement: '::after',
+				} );
+			}
+			const knob = seeker.querySelector( '.riff-knob' );
+			if ( knob ) {
+				run( knob, along );
+			}
+		}
+		aimed = { from: m.currentTime, at: performance.now(), rate };
+	}
+	// On timeupdate: aims again when the time has strayed from where the glide has it.
+	function keepAimed() {
+		if ( ! aimed ) {
+			return;
+		}
+		const expected =
+			aimed.from +
+			( ( performance.now() - aimed.at ) / 1000 ) * aimed.rate;
+		if ( Math.abs( expected - el().currentTime ) > 0.15 ) {
+			glide();
+		}
+	}
+	// Stops the glide and rests the line where the time is.
+	function settle() {
+		stopGlide();
+		progress();
 	}
 	for ( const m of [ audio, video ] ) {
 		const live = () => m === el();
@@ -1253,13 +1331,12 @@ function start() {
 				 * @param {Object} api          `window.riff`.
 				 */
 				emit( 'play', { track: track() } );
-				if ( ! reduce() ) {
-					follow();
-				}
+				glide();
 			}
 		} );
 		m.addEventListener( 'pause', () => {
 			if ( live() ) {
+				settle();
 				paint();
 				/**
 				 * Fires when the track pauses.
@@ -1277,19 +1354,26 @@ function start() {
 			if ( live() ) {
 				root.removeAttribute( 'data-waiting' );
 				paint();
+				glide();
 			}
 		} );
 		m.addEventListener( 'waiting', () => {
 			if ( live() ) {
 				root.dataset.waiting = '';
+				settle();
 			}
 		} );
 		m.addEventListener( 'loadedmetadata', () => live() && progress() );
+		m.addEventListener( 'seeking', () => live() && settle() );
+		for ( const ev of [ 'seeked', 'ratechange', 'durationchange' ] ) {
+			m.addEventListener( ev, () => live() && glide() );
+		}
 		m.addEventListener( 'timeupdate', () => {
 			if ( ! live() ) {
 				return;
 			}
 			progress();
+			keepAimed();
 			position();
 			if ( m.currentTime > 5 && Math.floor( m.currentTime ) % 5 === 0 ) {
 				save();
@@ -1302,6 +1386,7 @@ function start() {
 			if ( ! live() ) {
 				return;
 			}
+			settle();
 			/**
 			 * Fires when a track plays to its end, before the next one loads.
 			 *
@@ -1346,15 +1431,16 @@ function start() {
 	}
 
 	// ---- The filament. The played part of the bar's seek line is a wire with current in it. The
-	// script keeps one number, its heat, and writes it to --riff-heat on the root once a frame; the
-	// stylesheet turns that into the wire's colour and every layer of its light, and a short
-	// transition on the property lets the browser interpolate between frames. The heat follows a
+	// script keeps one number, its heat, and writes it to --riff-heat on the lines once a frame; the
+	// stylesheet turns that into the opacity of each fixed-colour layer of its light, which the GPU
+	// composites without painting anything again. The heat follows a
 	// filament's physics: the signal's power drives it up in about 80 ms, and with the current cut
 	// it cools the way a hot thing does, fast while it is bright, then slowly through a long red
 	// tail. What counts as full power is whatever the track has been reaching lately, so a quiet
 	// recording and a loud mix each light the whole wire. Where there is no analyser (iOS, a file
 	// from another origin) the wire breathes at working temperature instead.
 	const wire = $( '[data-riff-wire]' );
+	const heart = $( '[data-riff-hot]' );
 	const isIOS =
 		/iP(hone|ad|od)/.test( navigator.userAgent ) ||
 		( navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 );
@@ -1579,8 +1665,8 @@ function start() {
 			meterRaf = 0;
 			heat = 0.5;
 			setHeat( heat );
-			breath = wire.animate(
-				[ { opacity: 0.35 }, { opacity: 0.8 }, { opacity: 0.35 } ],
+			breath = heart.animate(
+				[ { opacity: 0 }, { opacity: 0.45 }, { opacity: 0 } ],
 				{
 					duration: 2600,
 					iterations: Infinity,
@@ -1693,11 +1779,12 @@ function start() {
 		const duration =
 			( Number.isFinite( m.duration ) && m.duration ) || t?.duration || 0;
 		const ratio = duration ? Math.min( m.currentTime / duration, 1 ) : 0;
-		setProgress( ratio );
 		setBuffered( duration ? buffered( m, duration ) : 0 );
 		text( 'current', time( m.currentTime ) );
 		text( 'duration', time( duration ) );
+		// While the line is dragged it is where the pointer put it.
 		if ( ! seeking ) {
+			setProgress( ratio );
 			// A range's value is written only when it moves a step: each write lays the thumb out again.
 			const value = String( Math.round( ratio * 1000 ) );
 			for ( const input of $$( '[data-riff-seek]' ) ) {
@@ -2119,6 +2206,7 @@ function start() {
 		input.addEventListener( 'pointerdown', () => {
 			seeking = true;
 			root.dataset.seeking = '';
+			stopGlide();
 		} );
 		input.addEventListener( 'input', () => {
 			setProgress( Number( input.value ) / 1000 );
@@ -2804,9 +2892,7 @@ function start() {
 	window.addEventListener( 'pageshow', ( e ) => {
 		if ( e.persisted ) {
 			progress();
-			if ( ! el().paused ) {
-				follow();
-			}
+			glide();
 		}
 	} );
 

@@ -483,6 +483,7 @@ div.riff-row-locked {
 	background: var(--riff-accent);
 	transform-origin: left;
 	transform: scaleX(var(--riff-p));
+	will-change: transform;
 }
 
 /* How far the file has loaded, a lighter band under the played part. */
@@ -493,6 +494,7 @@ div.riff-row-locked {
 	background: color-mix(in srgb, currentcolor 22%, transparent);
 	transform-origin: left;
 	transform: scaleX(var(--riff-buffered, 0));
+	will-change: transform;
 }
 
 .riff-seek {
@@ -539,23 +541,25 @@ div.riff-row-locked {
 }
 
 [dir="rtl"] .riff-knob {
-	left: auto;
-	right: calc(var(--riff-p) * 100%);
-	margin: -7px -7px 0 0;
+	transform: translateX(calc((1 - var(--riff-p)) * 100%));
+}
+
+[dir="rtl"] .riff-knob::after {
+	right: auto;
+	left: -7px;
 }
 
 /* ---- The filament. riff.js writes one number a frame, --riff-heat, 0 cold
-   to 1 white-hot; everything below derives from it. Registered, so it is a
-   real number the browser can interpolate: the short transition on #riff
-   turns the frame-by-frame writes into a flow. The colour is a filament's:
-   near-black red barely lit, through the accent at working temperature, to a
-   pale yellow-white at the peaks. Three layers over the played part of the
-   line, static gradients that never repaint: the wire, a white heart that
-   shows only at the peaks, and the bloom around them. The wire and heart
-   stretch with the played part; the bloom slides instead, so its blur keeps
-   its shape and its leading end fades out rather than stopping square at
-   the knob. Where the waveform is drawn the glow moves into its played bars
-   instead. */
+   to 1 white-hot, and it changes nothing but opacity: every layer has one
+   fixed colour and fades, so the GPU composites the light and nothing is
+   painted again while the music plays. Over the played part of the line: the
+   wire, an ember that darkens the line when the music is quiet and fades as
+   it heats; the heart, a pale centre that shows at the peaks; and the bloom
+   around them. The played part, wire and heart stretch with the played part,
+   and the bloom slides, so its blur keeps its shape and its leading end fades
+   out rather than stopping square at the knob. While a track plays, riff.js
+   moves all of them with animations the compositor runs (see glide()), so the
+   page's own work cannot make the line stutter. */
 
 @property --riff-heat {
 	syntax: "<number>";
@@ -568,11 +572,6 @@ div.riff-row-locked {
 .riff-line,
 .riff-np-glow {
 	--riff-heat: 0;
-	--riff-heat-red: calc(min(1, var(--riff-heat) / 0.35));
-	--riff-heat-amber: calc(clamp(0, (var(--riff-heat) - 0.35) / 0.35, 1));
-	--riff-heat-white: calc(clamp(0, (var(--riff-heat) - 0.7) / 0.3, 1));
-	--riff-glow: color-mix(in oklab, color-mix(in oklab, color-mix(in oklab, rgb(74 16 0), rgb(190 58 12) calc(var(--riff-heat-red) * 100%)), var(--riff-accent) calc(var(--riff-heat-amber) * 100%)), rgb(255 232 190) calc(var(--riff-heat-white) * 100%));
-	transition: --riff-heat 160ms linear;
 }
 
 .riff-wire,
@@ -581,29 +580,29 @@ div.riff-row-locked {
 	inset: 0;
 	transform-origin: left;
 	transform: scaleX(var(--riff-p));
-	will-change: opacity;
+	will-change: transform, opacity;
 	pointer-events: none;
 }
 
 .riff-wire {
-	color: var(--riff-glow);
-	background: currentcolor;
-	opacity: calc(0.25 + 0.75 * var(--riff-heat));
+	background: rgb(74 16 0);
+	opacity: calc(0.6 * (1 - min(1, var(--riff-heat) / 0.5)));
 }
 
 /* The bar's line keeps the bloom inside its own length, and lets it spill
-   above and below. Now Playing's line is plain white and has no bloom. */
+   above and below; a clip in one direction, which costs no painting. Now
+   Playing's line is plain white and has no bloom. */
 .riff-bar-seek .riff-line {
-	clip-path: inset(-12px 0);
+	overflow-x: clip;
+	overflow-y: visible;
 }
 
 .riff-bar-seek .riff-line::after {
 	content: "";
 	position: absolute;
 	inset: -7px 0;
-	color: var(--riff-glow);
 	/* stylelint-disable-next-line @stylistic/max-line-length */
-	background: linear-gradient(180deg, transparent, color-mix(in srgb, currentcolor 55%, transparent) 42% 58%, transparent);
+	background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--riff-accent) 55%, transparent) 42% 58%, transparent);
 	-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
 	mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
 	opacity: calc(0.15 + 0.85 * var(--riff-heat));
@@ -626,9 +625,8 @@ div.riff-row-locked {
 	right: 0;
 	top: 0;
 	height: 220px;
-	color: var(--riff-glow);
 	/* stylelint-disable-next-line @stylistic/max-line-length */
-	background: linear-gradient(180deg, color-mix(in srgb, currentcolor 40%, transparent), color-mix(in srgb, currentcolor 12%, transparent) 45%, transparent);
+	background: linear-gradient(180deg, color-mix(in srgb, var(--riff-accent) 40%, transparent), color-mix(in srgb, var(--riff-accent) 12%, transparent) 45%, transparent);
 	opacity: calc(0.5 * var(--riff-heat) * var(--riff-heat));
 	will-change: opacity;
 	pointer-events: none;
@@ -879,19 +877,33 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		transform: scaleY(2);
 	}
 
+	/* The knob is a rail as wide as the line, slid by transform as the bloom
+	   is, with the dot at its end: it moves on the compositor with the line it
+	   sits on, never by a layout. */
 	.riff-knob {
 		position: absolute;
 		top: 8px;
-		left: calc(var(--riff-p) * 100%);
+		left: 0;
+		right: 0;
 		display: block;
+		height: 14px;
+		margin-top: -7px;
+		pointer-events: none;
+		opacity: 0;
+		transform: translateX(calc((var(--riff-p) - 1) * 100%));
+		transition: opacity 0.1s;
+		will-change: transform, opacity;
+	}
+
+	.riff-knob::after {
+		content: "";
+		position: absolute;
+		top: 0;
+		right: -7px;
 		width: 14px;
 		height: 14px;
-		margin: -7px 0 0 -7px;
-		pointer-events: none;
 		border-radius: 50%;
 		background: var(--riff-accent);
-		opacity: 0;
-		transition: opacity 0.1s;
 	}
 
 	.riff-bar-seek:hover .riff-knob {
