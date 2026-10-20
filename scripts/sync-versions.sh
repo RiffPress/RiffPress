@@ -5,13 +5,13 @@
 #
 # riff (plugins/riff):
 #   - plugins/riff/riff.php plugin header `* Version:` and `RIFF_VERSION`
-#   - plugins/riff/readme.txt `Stable tag:` and `Tested up to:`
+#   - plugins/riff/readme.txt `Stable tag:`, `Tested up to:` and its changelog
 #   - package.json, package-lock.json and plugins/riff/package.json `version`
 #     (the repository's own version follows Riff's)
 #
 # riff-lyrics (plugins/riff-lyrics):
 #   - plugins/riff-lyrics/riff-lyrics.php plugin header and `RIFF_LYRICS_VERSION`
-#   - plugins/riff-lyrics/readme.txt `Stable tag:` and `Tested up to:`
+#   - plugins/riff-lyrics/readme.txt `Stable tag:`, `Tested up to:` and its changelog
 #
 # wp-api-coverage (packages/wp-api-coverage):
 #   - packages/wp-api-coverage/package.json and its package-lock.json entry
@@ -101,6 +101,7 @@ if [[ "$ONLY" == all || "$ONLY" == riff ]]; then
 		|| { echo "Failed to update version in package.json" >&2; exit 1; }
 	[[ "$(jq -r .version plugins/riff/package.json)" == "$VERSION" ]] \
 		|| { echo "Failed to update version in plugins/riff/package.json" >&2; exit 1; }
+	node .github/scripts/readme-changelog.js riff
 	echo "Synced Riff to ${VERSION}"
 fi
 
@@ -108,6 +109,7 @@ if [[ "$ONLY" == all || "$ONLY" == riff-lyrics ]]; then
 	LYRICS_VERSION=$(manifest_version plugins/riff-lyrics)
 	if [[ -n "$LYRICS_VERSION" ]]; then
 		sync_plugin plugins/riff-lyrics/riff-lyrics.php RIFF_LYRICS_VERSION plugins/riff-lyrics/readme.txt "$LYRICS_VERSION"
+		node .github/scripts/readme-changelog.js riff-lyrics
 		echo "Synced Riff Lyrics to ${LYRICS_VERSION}"
 	else
 		echo "Riff Lyrics has not been released yet; nothing to sync"
