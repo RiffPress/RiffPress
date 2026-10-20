@@ -1930,8 +1930,9 @@ function start() {
 
 	// ---- Hearts: in the bar, in Now Playing and on each row of a track in the Media Library. A
 	// heart is a toggle button, pressed while the track is liked.
-	// The heart's two icons, as the server draws the bar's (Player::hearts()).
-	const HEARTS = data.icons?.hearts || '';
+	// The heart's two icons, copied from the bar's, which the server drew (Player::hearts()). Cloned
+	// as nodes, so no markup is parsed here.
+	const HEARTS = [ ...( $( '[data-riff-action="like"]' )?.children || [] ) ];
 	function likeButton( t ) {
 		const b = document.createElement( 'button' );
 		b.type = 'button';
@@ -1947,7 +1948,7 @@ function start() {
 			)
 		);
 		b.setAttribute( 'aria-pressed', String( isLiked( t.id ) ) );
-		b.innerHTML = HEARTS;
+		b.append( ...HEARTS.map( ( icon ) => icon.cloneNode( true ) ) );
 		b.addEventListener( 'click', ( e ) => {
 			e.stopPropagation();
 			toggleLike( t );
