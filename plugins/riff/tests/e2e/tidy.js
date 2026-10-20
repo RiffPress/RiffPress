@@ -77,6 +77,25 @@ function measure( page, region ) {
 			}
 		}
 
+		// Pieces of a card or a row's item that spill past its sides: a long name can widen what
+		// holds it inside a row that scrolls, where the page itself stays as wide as the window.
+		const spills = [];
+		for ( const row of root.querySelectorAll( '.riff-shelf-row, .riff-grid' ) ) {
+			for ( const item of [ ...row.children ].filter( seen ) ) {
+				const edge = item.getBoundingClientRect();
+				const out = [ ...item.querySelectorAll( '*' ) ].find( ( el ) => {
+					if ( el.closest( 'svg' ) || ! seen( el ) || getComputedStyle( el ).position === 'absolute' ) {
+						return false;
+					}
+					const r = el.getBoundingClientRect();
+					return r.left < edge.left - 1 || r.right > edge.right + 1;
+				} );
+				if ( out ) {
+					spills.push( `${ name( out ) } spills out of ${ name( item ) }` );
+				}
+			}
+		}
+
 		// Text that is cut off: past its box's bottom, or past its side without an ellipsis.
 		const clipped = [];
 		for ( const el of [ root, ...root.querySelectorAll( '*' ) ] ) {
@@ -102,6 +121,7 @@ function measure( page, region ) {
 		return {
 			rows,
 			overlaps,
+			spills,
 			clipped,
 			page: { scroll: document.documentElement.scrollWidth, width: document.documentElement.clientWidth },
 			region: { scroll: root.scrollWidth, width: root.clientWidth },
@@ -122,6 +142,7 @@ async function expectTidy( page, region, where ) {
 	expect( m.page.scroll, `${ where }: the page is no wider than the window (overflow)` ).toBeLessThanOrEqual( m.page.width + 1 );
 	expect( m.region.scroll, `${ where }: ${ region } is no wider than itself (overflow)` ).toBeLessThanOrEqual( m.region.width + 1 );
 	expect( m.overlaps, `${ where }: nothing overlaps` ).toEqual( [] );
+	expect( m.spills, `${ where }: nothing spills out of its card` ).toEqual( [] );
 	expect( m.clipped, `${ where }: no text is clipped` ).toEqual( [] );
 	for ( const { name, cards } of m.rows ) {
 		if ( ! cards.length ) {
