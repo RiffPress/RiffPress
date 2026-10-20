@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.21.2
+Stable tag: 4.22.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,15 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.22.0 =
+* The Listen app shows who is listening, with their picture and a menu, or Sign in.
+* The player's strings are translated in its script modules, from WordPress's script module translations.
+* Fixed: the order in use in Your Library is underlined, not bolder, so choosing one moves nothing.
+* Fixed: the player's notices are dark on light with room around them, not white on white.
+* Fixed: the seek bar moves on the compositor, so it glides without shaking whatever the page is doing.
+* Fixed: the seek line stays under the pointer while it is dragged, instead of shaking back to the time playing.
+* Fixed: under a block theme, standalone mode has one title and keeps the iPhone safe areas.
+
 = 4.21.2 =
 * Fixed: a name that is one long word wraps instead of widening the Listen page.
 * Fixed: a one-word name wraps inside its card in every row, not only on album pages.
@@ -138,10 +147,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Playlists listeners make.
 * Wp-api-coverage, a report of the WordPress APIs a plugin uses and the ones it doesn't yet.
 * Fixed: one heart icon, tidy rows of cards, and a Library that never looks empty.
-
-= 4.19.0 =
-* A menu on every track to play it next or add it to the queue, and an Up next you can reorder and clear.
-* An artist page with their picture, their latest tracks and their albums.
-* Search answers as you type, with a top result and recent searches.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

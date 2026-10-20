@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.22.0](https://github.com/RiffPress/RiffPress/compare/v4.21.2...v4.22.0) (2026-10-20)
+
+
+### Features
+
+* the Listen app shows who is listening, with their picture and a menu, or Sign in ([#488](https://github.com/RiffPress/RiffPress/issues/488)) ([7b98740](https://github.com/RiffPress/RiffPress/commit/7b9874068ae56e05e53a22a3e7851f18d1813928))
+* the player's strings are translated in its script modules, from WordPress's script module translations ([#482](https://github.com/RiffPress/RiffPress/issues/482)) ([6bf09e8](https://github.com/RiffPress/RiffPress/commit/6bf09e88859301510575cbb4294e243e954bf13a))
+
+
+### Bug Fixes
+
+* the order in use in Your Library is underlined, not bolder, so choosing one moves nothing ([#487](https://github.com/RiffPress/RiffPress/issues/487)) ([f20c471](https://github.com/RiffPress/RiffPress/commit/f20c4711bc789c377bf861abc70f57910dbaf13d))
+* the player's notices are dark on light with room around them, not white on white ([#486](https://github.com/RiffPress/RiffPress/issues/486)) ([ee41064](https://github.com/RiffPress/RiffPress/commit/ee410641aa522b79b5d01365c1c5050253fc6bf3))
+* the seek bar moves on the compositor, so it glides without shaking whatever the page is doing ([#489](https://github.com/RiffPress/RiffPress/issues/489)) ([0f67307](https://github.com/RiffPress/RiffPress/commit/0f67307f02d653157de5bf4d5974c36be64a24c0))
+* the seek line stays under the pointer while it is dragged, instead of shaking back to the time playing ([#485](https://github.com/RiffPress/RiffPress/issues/485)) ([d2ebb8f](https://github.com/RiffPress/RiffPress/commit/d2ebb8fbc643b91ff7cb40e53c69bd22d76ab8c0))
+* under a block theme, standalone mode has one title and keeps the iPhone safe areas ([#476](https://github.com/RiffPress/RiffPress/issues/476)) ([428da35](https://github.com/RiffPress/RiffPress/commit/428da3569e1d161f70e08bb5d5b5d279a8d654c7))
+
 ## [4.21.2](https://github.com/RiffPress/RiffPress/compare/v4.21.1...v4.21.2) (2026-10-20)
 
 
