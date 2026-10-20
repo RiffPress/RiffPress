@@ -78,6 +78,32 @@ class Test_Riff_Browse extends Riff_TestCase {
 		return (int) get_term_by( 'name', $name, Catalog::ALBUM )->term_id;
 	}
 
+	public function test_an_empty_library_tells_only_someone_who_can_upload_how_to_fill_it(): void {
+		// A Listen page made before any music, as the first-run button makes it: published, and on a
+		// block theme already in the menu, so visitors reach it before the first upload.
+		foreach ( get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'audio',
+				'post_status'    => 'any',
+				'fields'         => 'ids',
+				'posts_per_page' => -1,
+			)
+		) as $id ) {
+			wp_delete_attachment( $id, true );
+		}
+
+		$visitor = $this->render_at( array() );
+		$this->assertStringContainsString( 'Nothing here yet.', $visitor );
+		$this->assertStringNotContainsString( 'Media Library', $visitor, 'a visitor cannot upload' );
+		$this->assertStringNotContainsString( 'wp riff import', $visitor, 'nor run WP-CLI' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$author = $this->render_at( array() );
+		$this->assertStringContainsString( 'wp riff import', $author );
+		$this->assertStringContainsString( 'Add your first album', $author );
+	}
+
 	public function test_the_address_names_a_view_and_anything_else_is_not_one(): void {
 		$this->go_to( get_permalink( $this->page ) );
 		$this->assertNull( Browse::requested() );
