@@ -110,6 +110,23 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		);
 	}
 
+	public function test_under_a_block_theme_the_document_has_one_title_and_one_viewport(): void {
+		$this->go_to( Standalone::url( $this->listen ) );
+		// What core does when a block theme supplies the template (locate_block_template()), before
+		// template_include gets to Riff: its own title and viewport tags, in wp_head.
+		remove_action( 'wp_head', '_wp_render_title_tag', 1 );
+		add_action( 'wp_head', '_block_template_render_title_tag', 1 );
+		add_action( 'wp_head', '_block_template_viewport_meta_tag', 0 );
+
+		ob_start();
+		require Standalone::template( '/theme/page.php' );
+		$html = (string) ob_get_clean();
+
+		$this->assertSame( 1, substr_count( $html, '<title>' ), 'one title' );
+		$this->assertSame( 1, substr_count( $html, '<meta name="viewport"' ), 'one viewport' );
+		$this->assertStringContainsString( 'viewport-fit=cover', $html, 'Riff\'s, so the bar clears the home indicator' );
+	}
+
 	public function test_the_app_fetches_its_font_with_the_page_and_has_a_fallback_of_its_size(): void {
 		$this->go_to( Standalone::url( $this->listen ) );
 		Standalone::template( '/theme/page.php' );

@@ -212,7 +212,12 @@ final class Standalone {
 		add_filter( 'riff_app_theme_tokens', array( self::class, 'tokens' ), 1 );
 		add_filter( 'wp_preload_resources', array( self::class, 'preload' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'strip' ), PHP_INT_MAX );
+		// The document prints its own title and viewport. A block theme's template has core add
+		// its own of each (locate_block_template()) before this runs, so those go too; a second
+		// viewport, later in the head, would drop viewport-fit=cover and the safe-area insets.
 		remove_action( 'wp_head', '_wp_render_title_tag', 1 );
+		remove_action( 'wp_head', '_block_template_render_title_tag', 1 );
+		remove_action( 'wp_head', '_block_template_viewport_meta_tag', 0 );
 		return RIFF_DIR . 'templates/standalone.php';
 	}
 
