@@ -16,7 +16,7 @@ Since 4.0.0.
 
 ### `window.riff.strings`
 
-The player's strings, after the `riff_strings` filter.
+Strings a site replaces with the `riff_strings` filter, by key. The rest are translated in the modules themselves, from WordPress's script module translations.
 
 Type: `Object<string, string>`.
 
