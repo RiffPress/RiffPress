@@ -180,6 +180,36 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-riff-app-action="shuffle"', $html );
 	}
 
+	public function test_an_album_longer_than_a_page_shows_every_track_in_order(): void {
+		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		foreach ( array_reverse( range( 1, 120 ) ) as $n ) {
+			$id = wp_insert_attachment(
+				array(
+					'post_title'     => "Box track $n",
+					'post_mime_type' => 'audio/mpeg',
+					'post_status'    => 'inherit',
+				),
+				sprintf( 'box/%03d.mp3', $n ),
+				$post
+			);
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'title'        => "Box track $n",
+					'album'        => 'Box Set',
+					'artist'       => 'Someone',
+					'track_number' => (string) $n,
+				)
+			);
+		}
+
+		$html = $this->render_at( array( Browse::ALBUM => $this->album( 'Box Set' ) ) );
+
+		preg_match( '/data-riff-tracks="([^"]*)"/', $html, $found );
+		$tracks = json_decode( html_entity_decode( $found[1] ?? '' ), true );
+		$this->assertSame( array_map( static fn( $n ) => "Box track $n", range( 1, 120 ) ), wp_list_pluck( (array) $tracks, 'title' ), 'all 120, in order, not the first page alone' );
+	}
+
 	public function test_an_artist_page_has_their_picture_their_latest_tracks_and_their_albums(): void {
 		$artist = (int) get_term_by( 'name', 'Airmen of Note, United States Air Force Band', Catalog::ARTIST )->term_id;
 
