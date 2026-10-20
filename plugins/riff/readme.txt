@@ -116,20 +116,32 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.21.2 =
+* Fixed: a name that is one long word wraps instead of widening the Listen page.
+* Fixed: a one-word name wraps inside its card in every row, not only on album pages.
+* Fixed: an album of more than 100 tracks lists and plays every track.
+* Fixed: an album of more than 100 tracks plays in track order across its pages.
+* Fixed: an empty Posts view tells visitors only that there is nothing to play yet.
+* Fixed: before the first upload, visitors to the Listen page are not told how to add music.
+
+= 4.21.1 =
+* Fixed: the Listen app loads without moving.
+
+= 4.21.0 =
+* First run creates the Listen page and points to the first album.
+* Fixed: every album card's line is its artist, from one shared card.
+* Fixed: on a wide screen the seek line sits under the controls, where it is easy to reach.
+* Fixed: security review fixes before the plugin directory.
+
 = 4.20.0 =
-* Listeners can heart any track, album or artist, and find them again in Your Library.
-* Signed-in listeners can make playlists, reorder them, rename them and delete them.
-* Fixed: one heart icon everywhere, and tidier rows of covers.
+* Likes and Your Library.
+* Playlists listeners make.
+* Wp-api-coverage, a report of the WordPress APIs a plugin uses and the ones it doesn't yet.
+* Fixed: one heart icon, tidy rows of cards, and a Library that never looks empty.
 
 = 4.19.0 =
-* A menu on every track plays it next or adds it to the queue, and Up next can be reordered and cleared.
-* Each artist has a page with their picture, their latest tracks and their albums.
-* Search shows results as you type, with a top result and your recent searches.
-
-= 4.18.0 =
-* The Listen page opens on Home, with what you played, recently added albums, artists and new posts.
-* Album pages are tinted from their cover and show more by the same artist.
-* Files can be marked Protected, so only listeners who may play them can download them.
-* The Riff block takes the colour, type, spacing and border settings from the Site Editor.
+* A menu on every track to play it next or add it to the queue, and an Up next you can reorder and clear.
+* An artist page with their picture, their latest tracks and their albums.
+* Search answers as you type, with a top result and recent searches.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
