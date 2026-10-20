@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.21.2](https://github.com/RiffPress/RiffPress/compare/v4.21.1...v4.21.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* a name that is one long word wraps instead of widening the Listen page ([#469](https://github.com/RiffPress/RiffPress/issues/469)) ([b9f0e39](https://github.com/RiffPress/RiffPress/commit/b9f0e39436114d82dc8e3b7490453bd3a6ab6d54))
+* a one-word name wraps inside its card in every row, not only on album pages ([#473](https://github.com/RiffPress/RiffPress/issues/473)) ([ff2e6a7](https://github.com/RiffPress/RiffPress/commit/ff2e6a7f1777ccf18fca0e75eb426d2ea064a365))
+* an album of more than 100 tracks lists and plays every track ([#472](https://github.com/RiffPress/RiffPress/issues/472)) ([f74b6b8](https://github.com/RiffPress/RiffPress/commit/f74b6b85ab2ca660f15137154152f811a29e45c7))
+* an album of more than 100 tracks plays in track order across its pages ([#468](https://github.com/RiffPress/RiffPress/issues/468)) ([fc0d61c](https://github.com/RiffPress/RiffPress/commit/fc0d61c0f14f44c6df74ae43013fb2548065df3b))
+* an empty Posts view tells visitors only that there is nothing to play yet ([#474](https://github.com/RiffPress/RiffPress/issues/474)) ([f345e42](https://github.com/RiffPress/RiffPress/commit/f345e42ee8deea97d17245c27dac6e173f72205a))
+* before the first upload, visitors to the Listen page are not told how to add music ([#470](https://github.com/RiffPress/RiffPress/issues/470)) ([62aa776](https://github.com/RiffPress/RiffPress/commit/62aa776cbe25a05feee60986426e4ba5e4876e9d))
+
 ## [4.21.1](https://github.com/RiffPress/RiffPress/compare/v4.21.0...v4.21.1) (2026-10-20)
 
 
