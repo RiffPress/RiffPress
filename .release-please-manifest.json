@@ -1,3 +1,4 @@
 {
-	"plugins/riff": "4.21.2"
+	"plugins/riff": "4.21.2",
+	"plugins/riff-lyrics": "0.1.0"
 }
