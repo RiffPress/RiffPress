@@ -576,7 +576,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 276
+				"line": 297
 			}
 		],
 		"shot": {
@@ -666,7 +666,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 263
+				"line": 284
 			}
 		],
 		"shot": {
@@ -721,12 +721,12 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "fetch( key, {",
-				"line": 137
+				"line": 158
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "location.assign( to.browse ? to.href : addressOf( id, upto ) );",
-				"line": 230
+				"line": 251
 			}
 		],
 		"shot": {
@@ -990,7 +990,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2438,
+				"line": 2522,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -1045,7 +1045,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2837,
+				"line": 2921,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1110,7 +1110,7 @@
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 296,
+				"line": 317,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],
@@ -1200,7 +1200,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2398,
+				"line": 2482,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1320,7 +1320,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2438,
+				"line": 2522,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],

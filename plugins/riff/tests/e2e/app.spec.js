@@ -315,7 +315,7 @@ test.describe( 'Browse', () => {
 	test( 'the tabs are fetched ahead, so choosing one waits on nothing', async ( {
 		page,
 	} ) => {
-		const tabs = page.locator( '.riff-app-bar a[href*="riff_view="]' );
+		const tabs = page.locator( '.riff-app-tab[href*="riff_view="]' );
 		await expect( tabs ).toHaveCount( 5 );
 		// Once the page is idle every tab's view is fetched; this page's own resource timings show
 		// when all five have arrived.
@@ -559,6 +559,40 @@ test.describe( 'Standalone', () => {
 		await toggle.click();
 		expect( await width() ).toBeGreaterThan( 200 );
 		await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
+	} );
+
+	test( 'the account menu opens over the view, and still closes as a menu after the view changes', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'the wide layout, where the menu is pinned over the view' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=albums' );
+		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+		const account = page.locator( '.riff-app-account' );
+		await account.locator( 'summary' ).click();
+		const signOut = account.getByRole( 'link', { name: 'Sign out' } );
+		await expect( signOut ).toBeVisible();
+		// The sticky sidebar stacks on its own; the menu inside it must still be on top of the view.
+		const box = await signOut.boundingBox();
+		expect(
+			await page.evaluate(
+				( { x, y } ) => !! document.elementFromPoint( x, y )?.closest( '.riff-app-account-menu' ),
+				{ x: box.x + box.width / 2, y: box.y + box.height / 2 }
+			),
+			'Sign out is the thing under the pointer'
+		).toBe( true );
+		await page.keyboard.press( 'Escape' );
+		await expect( account ).not.toHaveAttribute( 'open' );
+
+		// A view arrives in place with its own bar, and the menu in it closes as the first did.
+		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		await expect( page.locator( '.riff-app-tab[aria-current="page"]' ) ).toHaveText( 'Artists' );
+		await page.locator( '.riff-app-account summary' ).click();
+		await expect( page.locator( '.riff-app-account' ) ).toHaveAttribute( 'open', '' );
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-app-account' ) ).not.toHaveAttribute( 'open' );
+		await expect( page.locator( '.riff-app-account summary' ) ).toBeFocused();
 	} );
 
 	test( 'app/ is the player on its own: no theme, installable, and browsing stays inside it', async ( {

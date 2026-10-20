@@ -22,6 +22,27 @@ export function start( api ) {
 		.filter( Boolean );
 	const tracksRest = app.dataset.riffTracksRest || '';
 	const nav = app.querySelector( '.riff-app-bar' );
+	// The account menu is a details element, so it opens without the script; with it, it closes
+	// as a menu does: on Escape, on a click outside it, and once one of its links is followed,
+	// since a view arrives in place rather than with a new page. Looked up at each event: every
+	// view brings its own bar, and the menu with it.
+	document.addEventListener( 'click', ( e ) => {
+		const account = app.querySelector( '.riff-app-account[open]' );
+		if (
+			account &&
+			( ! account.contains( e.target ) || e.target.closest( 'a' ) )
+		) {
+			account.open = false;
+		}
+	} );
+	app.addEventListener( 'keydown', ( e ) => {
+		const account = e.target.closest?.( '.riff-app-account[open]' );
+		if ( e.key === 'Escape' && account ) {
+			e.stopPropagation();
+			account.open = false;
+			account.querySelector( 'summary' ).focus();
+		}
+	} );
 	// Strings are WordPress translations of this module (wp_set_script_module_translations()); a
 	// site's riff_strings filter can still replace one by its old key. Core prints wp.i18n only
 	// when there are translations, so without it the strings are the English they are written in.
@@ -597,7 +618,11 @@ export function start( api ) {
 		}
 		e.preventDefault();
 		// The tab shows as chosen at once, whatever the network is doing.
-		if ( a.closest( '.riff-app-bar' ) ) {
+		// The account menu's links are in the bar too, but are not tabs.
+		if (
+			a.closest( '.riff-app-bar' ) &&
+			! a.closest( '.riff-app-account' )
+		) {
 			for ( const tab of nav.querySelectorAll( 'a[aria-current]' ) ) {
 				tab.removeAttribute( 'aria-current' );
 			}
