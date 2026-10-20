@@ -77,6 +77,9 @@ test( 'a track\'s menu makes a playlist named after it, and adds another track t
 	await expect( menu.getByRole( 'menuitem' ).first() ).toBeFocused();
 	await page.keyboard.press( 'Enter' );
 	await expect( page.locator( '.riff-toast' ) ).toHaveText( 'Added to Underground' );
+	// Dark on light with room around it, not the player's paragraph reset (white, no padding).
+	await expect( page.locator( '.riff-toast' ) ).toHaveCSS( 'color', 'rgb(3, 3, 3)' );
+	await expect( page.locator( '.riff-toast' ) ).toHaveCSS( 'padding', '12px 16px' );
 	await expect.poll( async () => ( await mine( requestUtils ) ).map( ( p ) => `${ p.title }:${ p.count }` ) ).toEqual( [ 'Underground:1' ] );
 
 	await page.locator( '.riff-track' ).nth( 1 ).locator( '.riff-more-button' ).click();
