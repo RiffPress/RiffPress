@@ -49,14 +49,13 @@ final class Playlists {
 	private const PRIVACY_PAGE = 50;
 
 	/**
-	 * Hooks the post type, the routes, the player's data and the privacy tools.
+	 * Hooks the post type, the routes and the privacy tools.
 	 *
 	 * @since 4.20.0
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'post_type' ) );
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
-		add_filter( 'riff_player_data', array( self::class, 'player_data' ) );
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporters' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'erasers' ) );
 	}

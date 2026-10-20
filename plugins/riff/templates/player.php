@@ -58,9 +58,6 @@ defined( 'ABSPATH' ) || exit;
 				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>">
 				<?php echo Player::icon( 'volume' ); ?>
 			</label>
-			<?php foreach ( Player::bar_controls() as $riff_slug => $riff_control ) : ?>
-				<?php echo Player::control( (string) $riff_slug, $riff_control, 'riff-btn riff-desk', false ); ?>
-			<?php endforeach; ?>
 			<button type="button" class="riff-btn riff-desk riff-chevron" data-riff-action="open" aria-label="<?php esc_attr_e( 'Open Now Playing', 'riff' ); ?>" aria-haspopup="dialog" aria-expanded="false"><?php echo Player::icon( 'caret' ); ?></button>
 		</div>
 	</section>

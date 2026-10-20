@@ -201,13 +201,13 @@ test( 'each hook gets a code-reference page with its signature, source at the pu
 	const hooks = collect();
 	const out = site( hooks );
 	const pageFor = ( slug ) => [ ...out ].find( ( [ file ] ) => file.endsWith( path.join( 'hooks', slug, 'index.html' ) ) )?.[ 1 ];
-	const accent = pageFor( 'riff_accent' );
-	assert.match( accent, /<span class="hook-func">apply_filters<\/span>\( 'riff_accent', <nobr><span class="arg-type">string<\/span> <span class="arg-name">\$accent<\/span><\/nobr> \)/ );
-	assert.match( accent, /blob\/\{\{commit\}\}\/plugins\/riff\/src\/class-player\.php#L\d+-L\d+">View on GitHub/ );
-	assert.match( accent, /<span class="n" aria-hidden="true">\d+<\/span>\$accent = \(string\) apply_filters/, 'the source quotes the line, numbered as in the file' );
-	assert.match( accent, />Player::root_style\(\)<\/a><code>plugins\/riff\/src\/class-player\.php<\/code><\/td><td>The inline style/, 'used by names the caller with its own summary' );
-	assert.match( accent, /<td>4\.0\.0<\/td><td>Introduced\.<\/td>/ );
-	assert.match( accent, /<a href="#parameters">Parameters<\/a>/, 'in this article lists the sections' );
+	const enabled = pageFor( 'riff_enabled' );
+	assert.match( enabled, /<span class="hook-func">apply_filters<\/span>\( 'riff_enabled', <nobr><span class="arg-type">bool<\/span> <span class="arg-name">\$enabled<\/span><\/nobr> \)/ );
+	assert.match( enabled, /blob\/\{\{commit\}\}\/plugins\/riff\/src\/class-player\.php#L\d+-L\d+">View on GitHub/ );
+	assert.match( enabled, /<span class="n" aria-hidden="true">\d+<\/span>return \(bool\) apply_filters/, 'the source quotes the line, numbered as in the file' );
+	assert.match( enabled, />Player::enabled\(\)<\/a><code>plugins\/riff\/src\/class-player\.php<\/code><\/td><td>Whether the player belongs/, 'used by names the caller with its own summary' );
+	assert.match( enabled, /<td>4\.0\.0<\/td><td>Introduced\.<\/td>/ );
+	assert.match( enabled, /<a href="#parameters">Parameters<\/a>/, 'in this article lists the sections' );
 	// riff.track is both an action and a filter, so each gets its own page.
 	assert.ok( pageFor( 'riff.track-action' ) && pageFor( 'riff.track-filter' ) );
 	assert.match( pageFor( 'riff.track-action' ), /riff:track<\/code> event on <code>#riff/ );

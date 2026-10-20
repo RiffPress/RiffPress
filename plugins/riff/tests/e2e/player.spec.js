@@ -155,7 +155,7 @@ test.describe( 'Player', () => {
 			document
 				.querySelector( 'figure[data-riff-track]' )
 				.insertAdjacentElement( 'afterend', fig );
-			window.riff.mount();
+			window.riffInternal.mount();
 		} );
 
 		const locked = page.locator( '.riff-row-locked' );
@@ -223,13 +223,13 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-queue-list li' ) ).toHaveCount( 3 );
 	} );
 
-	test( 'the menu on a row plays a track next or adds it to the queue, and a plugin can add to the menu', async ( {
+	test( 'the menu on a row plays a track next or adds it to the queue, and Riff\'s own features add to it', async ( {
 		page,
 	} ) => {
 		await page.evaluate( () => {
 			window.riffQueueChanges = [];
 			window.wp.hooks.addAction( 'riff.queue', 'e2e', ( d ) => window.riffQueueChanges.push( d.change ) );
-			window.wp.hooks.addFilter( 'riff.trackMenu', 'e2e', ( items, t ) => [
+			window.riffInternal.listen( 'menu', ( items, t ) => [
 				...items,
 				{ id: 'e2e', label: 'Say hello', run: () => ( window.riffHello = t.title ) },
 			] );
@@ -987,12 +987,15 @@ test.describe( 'Player', () => {
 			current: window.riff.current().title,
 			queue: window.riff.queue().length,
 			playing: window.riff.playing(),
+			members: Object.keys( window.riff ).sort(),
 		} ) );
 		expect( api ).toEqual( {
 			version: 1,
 			current: 'Underground (remix)',
 			queue: 3,
 			playing: true,
+			// What docs/javascript.md promises, and nothing more: a member is not taken back once added.
+			members: [ 'close', 'current', 'next', 'on', 'open', 'play', 'playing', 'prev', 'queue', 'seek', 'tab', 'toggle', 'version' ],
 		} );
 		await page.evaluate( () => window.riff.next() );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(

@@ -28,7 +28,7 @@ spl_autoload_register(
 			return;
 		}
 		// Riff\Foo is the foundation, in src/. Riff\Listen\Foo is the Listen feature, in features/listen/,
-		// which builds on the foundation through its filters, actions and REST routes and nothing else.
+		// which builds on the foundation; the foundation calls into it where the library and player data need it.
 		$parts = explode( '\\', substr( $class_name, 5 ) );
 		$dir   = 'src/';
 		if ( count( $parts ) > 1 && 'Listen' === $parts[0] ) {

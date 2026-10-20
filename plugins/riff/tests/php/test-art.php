@@ -97,7 +97,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertNotSame( Art::svg( $a ), Art::svg( $c ), 'a different slug draws a different cover' );
 	}
 
-	public function test_every_colour_is_a_wordpress_org_token_and_the_filters_still_shape_it(): void {
+	public function test_every_colour_is_a_wordpress_org_token(): void {
 		$tokens = array( '#1e1e1e', '#3858e9', '#f6f6f6', '#ffffff', '#e26f56', '#33f078', '#fff972', '#d7a7ff', '#ffb7a7', '#c7ffdb', '#7a00df', '#40464d', '#1d35b4' );
 		foreach ( Art::palettes() as $palette ) {
 			foreach ( $palette as $colour ) {
@@ -105,17 +105,6 @@ class Test_Riff_Art extends Riff_TestCase {
 			}
 		}
 		$this->assertSame( array( 'corner', 'centre', 'horizon' ), Art::layouts() );
-
-		$one      = static fn(): array => array( array( '#101010', '#ff00ff', '#ffffff' ) );
-		add_filter( 'riff_art_palettes', $one );
-		$only     = static fn(): array => array( 'horizon' );
-		add_filter( 'riff_art_layouts', $only );
-		[ $post ] = $this->bare_post();
-		$svg      = Art::svg( get_post( $post ) );
-		remove_filter( 'riff_art_palettes', $one );
-		remove_filter( 'riff_art_layouts', $only );
-		$this->assertStringContainsString( 'fill="#ff00ff"', $svg, 'the filtered accent is the label' );
-		$this->assertStringContainsString( 'cy="1180"', $svg, 'the filtered layout is the horizon' );
 	}
 
 	public function test_a_track_with_level_data_puts_the_music_in_the_groove(): void {

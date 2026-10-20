@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
  * Drawn as the apps draw a playlist: the mosaic of its first covers, its name and how many songs,
  * Play and Shuffle, Rename and Delete, then its tracks as rows. The data comes from
  * riff/v1/users/me/playlists/{id}, so only the playlist's own listener sees it. Moving and taking
- * out a track is in each row's … menu, which app.js adds to through the riff.trackMenu filter.
+ * out a track is in each row's … menu, which app.js adds to.
  */
 final class Playlist_View {
 

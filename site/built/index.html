@@ -39,7 +39,7 @@
 
 <h2 id="wordpress">Built on WordPress</h2>
 <p>Riff plays the Audio, Video and Playlist blocks that ship with WordPress, and reads track details from the Media Library. It adds no settings screen and no database tables. It stores albums and artists as terms filed from your tags, listeners' playlists, likes and what they played, and a few fields on media items, such as a track's artwork and its video version. If you turn it off, your posts still play in the browser's own player.</p>
-<p>It calls no outside services of its own. There is no account, no tracking and no CDN, and the fonts ship inside the plugin. Signed-in listeners' pictures come from WordPress's own avatars, which use Gravatar unless the site turns avatars off. Your music and your listeners' visits stay on your server.</p>
+<p>There is no account, no tracking and no CDN, and the fonts ship inside the plugin. The one outside service is Gravatar, for signed-in listeners' pictures through WordPress's own avatars: the site asks once a day whether a listener has one, so it can show their initial instead. Turning avatars off turns that off. Your music and your listeners' visits stay on your server.</p>
 
 <h2 id="testing">Tested on every change</h2>
 <p>Every pull request that changes code runs the full suite, and it can't merge until the suite passes. A scheduled run every Monday repeats it against the current WordPress release, so a change in core is caught even when Riff hasn't changed.</p>

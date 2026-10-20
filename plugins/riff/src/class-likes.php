@@ -71,7 +71,6 @@ final class Likes {
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
-		add_filter( 'riff_player_data', array( self::class, 'player_data' ) );
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporters' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'erasers' ) );
 		add_action( 'admin_init', array( self::class, 'privacy_policy' ) );

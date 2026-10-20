@@ -63,10 +63,10 @@ test( 'a track\'s menu makes a playlist named after it, and adds another track t
 	requestUtils,
 } ) => {
 	await page.goto( postUrl );
-	await page.waitForFunction( () => typeof window.riff?.createPlaylist === 'function' );
+	await page.waitForFunction( () => typeof window.riffInternal?.createPlaylist === 'function' );
 	await page.evaluate( () => {
 		window.riffPlaylistChanges = [];
-		window.riff.on( 'playlist', ( d ) => window.riffPlaylistChanges.push( d.change ) );
+		window.riffInternal.listen( 'playlist', ( d ) => window.riffPlaylistChanges.push( d.change ) );
 	} );
 	const menu = page.locator( '.riff-menu' );
 	await page.locator( '.riff-row' ).nth( 0 ).click(); // The player shows, and with it its notices.
@@ -88,7 +88,7 @@ test( 'a track\'s menu makes a playlist named after it, and adds another track t
 	await expect( page.locator( '.riff-toast' ) ).toHaveText( 'Added to Underground' );
 	await expect.poll( async () => ( await mine( requestUtils ) )[ 0 ].count ).toBe( 2 );
 	expect( await page.evaluate( () => window.riffPlaylistChanges ) ).toEqual( [ 'create', 'add' ] );
-	expect( await page.evaluate( () => window.riff.playlists().map( ( p ) => p.title ) ) ).toEqual( [ 'Underground' ] );
+	expect( await page.evaluate( () => window.riffInternal.playlists().map( ( p ) => p.title ) ) ).toEqual( [ 'Underground' ] );
 } );
 
 test( 'a playlist opens from Your Library, plays, reorders, loses a track, is renamed and deleted', async ( {
@@ -170,7 +170,7 @@ test( 'a visitor is offered a way to sign in instead', async ( { browser, baseUR
 	await page.locator( '.riff-track' ).nth( 0 ).locator( '.riff-more-button' ).click();
 	const item = page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Sign in to add to a playlist' } );
 	await expect( item ).toHaveAttribute( 'href', /wp-login\.php/ );
-	expect( await page.evaluate( () => window.riff.playlists() ) ).toEqual( [] );
+	expect( await page.evaluate( () => window.riffInternal.playlists() ) ).toEqual( [] );
 
 	await page.goto( withArg( listenUrl, 'riff_view=library&riff_filter=playlists' ) );
 	await expect( page.locator( '.riff-app-empty' ) ).toContainText( 'Sign in to make playlists' );
