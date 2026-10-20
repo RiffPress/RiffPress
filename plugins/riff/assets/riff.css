@@ -1656,7 +1656,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	height: 48px;
 }
 
-.riff-toast {
+/* Under #riff, as the reset above for the player's paragraphs is, so the
+   toast keeps its own colours, padding and size. */
+#riff .riff-toast {
 	position: fixed;
 	left: 50%;
 	bottom: calc(var(--riff-bar-h) + var(--riff-safe-b) + 16px);
@@ -1854,7 +1856,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		opacity: 1;
 	}
 
-	.riff-toast {
+	#riff .riff-toast {
 		left: 24px;
 		transform: none;
 	}
@@ -3063,6 +3065,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-sort-link {
 	border-color: transparent;
 	padding: 0 10px;
+	color: var(--riff-app-ink-2);
 }
 
 .riff-app .riff-chip-link:hover,
@@ -3082,9 +3085,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	color: var(--riff-app-bg);
 }
 
+/* The order in use, in full ink and underlined. Never in a heavier weight: a
+   change of weight lays the words out again and moves what is beside them. */
 .riff-app .riff-sort-link[aria-current="true"] {
 	color: var(--riff-app-ink);
-	font-weight: 600;
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 6px;
 }
 
 .riff-library .riff-shelf {

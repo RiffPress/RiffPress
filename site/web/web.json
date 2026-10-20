@@ -51,12 +51,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function buffered( m, duration ) {",
-				"line": 1804
+				"line": 1806
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ranges = m.buffered;",
-				"line": 1805
+				"line": 1807
 			}
 		],
 		"shot": {
@@ -81,7 +81,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );",
-				"line": 2943
+				"line": 2945
 			}
 		],
 		"shot": {
@@ -156,17 +156,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {",
-				"line": 2753
+				"line": 2755
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setActionHandler( action, handler );",
-				"line": 2814
+				"line": 2816
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setPositionState( {",
-				"line": 2779
+				"line": 2781
 			}
 		],
 		"shot": {
@@ -191,12 +191,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );",
-				"line": 2835
+				"line": 2837
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.remote.prompt().catch( () => {} );",
-				"line": 2842
+				"line": 2844
 			}
 		],
 		"shot": {
@@ -311,7 +311,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "? `<img src=\"${ esc( art ) }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 3103
+				"line": 3105
 			},
 			{
 				"file": "plugins/riff/features/listen/class-ui.php",
@@ -346,7 +346,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "img.decoding = 'async';",
-				"line": 2859
+				"line": 2861
 			}
 		],
 		"shot": {
@@ -371,12 +371,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function drag( zone, { move, end } ) {",
-				"line": 2647
+				"line": 2649
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {",
-				"line": 2649
+				"line": 2651
 			}
 		],
 		"shot": {
@@ -456,7 +456,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.share( {",
-				"line": 2518
+				"line": 2520
 			}
 		],
 		"shot": {
@@ -481,7 +481,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.clipboard.writeText( url );",
-				"line": 2531
+				"line": 2533
 			}
 		],
 		"shot": {
@@ -506,12 +506,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = true;",
-				"line": 2361
+				"line": 2363
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = false;",
-				"line": 2404
+				"line": 2406
 			}
 		],
 		"shot": {
@@ -546,7 +546,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches",
-				"line": 2356
+				"line": 2358
 			}
 		],
 		"shot": {
@@ -571,7 +571,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "?.scrollIntoView( { block: 'nearest' } );",
-				"line": 2444
+				"line": 2446
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -631,7 +631,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )",
-				"line": 3019
+				"line": 3021
 			}
 		],
 		"shot": {
@@ -656,12 +656,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );",
-				"line": 2368
+				"line": 2370
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'popstate', () => {",
-				"line": 2427
+				"line": 2429
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -691,12 +691,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const saved = parse( read( sessionStorage, STATE ) );",
-				"line": 2966
+				"line": 2968
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "write( localStorage, VOLUME, String( audio.volume ) );",
-				"line": 2266
+				"line": 2268
 			}
 		],
 		"shot": {
@@ -751,7 +751,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;",
-				"line": 2981
+				"line": 2983
 			}
 		],
 		"shot": {
@@ -776,7 +776,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pagehide', save );",
-				"line": 2921
+				"line": 2923
 			}
 		],
 		"shot": {
@@ -801,7 +801,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {",
-				"line": 2923
+				"line": 2925
 			}
 		],
 		"shot": {
@@ -831,12 +831,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "document.activeElement && document.activeElement !== document.body",
-				"line": 2348
+				"line": 2350
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {",
-				"line": 2700
+				"line": 2702
 			}
 		],
 		"shot": {
@@ -990,7 +990,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2520,
+				"line": 2522,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -1045,7 +1045,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2919,
+				"line": 2921,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1100,7 +1100,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1878,
+				"line": 1880,
 				"code": "@media (prefers-reduced-motion: reduce) {"
 			},
 			{
@@ -1170,7 +1170,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1721,
+				"line": 1723,
 				"code": "clip-path: none;"
 			}
 		],
@@ -1200,7 +1200,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2480,
+				"line": 2482,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1260,7 +1260,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 2649,
+				"line": 2651,
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],
@@ -1320,7 +1320,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2520,
+				"line": 2522,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
