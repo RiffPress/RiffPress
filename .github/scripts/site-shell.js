@@ -45,7 +45,7 @@ function head( title, description, url, depth, css, section = '' ) {
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="${ up }#listen">The block</a><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
 `;
 }
 
