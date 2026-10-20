@@ -225,6 +225,14 @@ final class Catalog_Rest {
 				$args['orderby'] = 'post__in';
 			}
 		}
+		if ( $album ) {
+			// An album's order is its track numbers', which live in each file's metadata, not in a
+			// column SQL can sort by. So the whole album is read and sorted, and the page cut from
+			// that: paging first would sort each page alone, and a box set of more than one page
+			// would run 1, 10, 100.
+			$args['posts_per_page'] = -1;
+			unset( $args['paged'] );
+		}
 		$tax = array();
 		if ( $album ) {
 			$tax[] = array(
@@ -251,12 +259,16 @@ final class Catalog_Rest {
 		$query = new \WP_Query( $args );
 		remove_filter( 'posts_where', $scope, 10 );
 
-		$ids = wp_list_pluck( $query->posts, 'ID' );
+		$ids   = wp_list_pluck( $query->posts, 'ID' );
+		$total = (int) $query->found_posts;
+		$pages = (int) $query->max_num_pages;
 		if ( $album ) {
 			// Upload order before title order: a file without a track number keeps its place in
 			// the album as it was added, as an album's files usually are.
 			sort( $ids );
-			$ids = self::in_album_order( $ids );
+			$total = count( $ids );
+			$pages = (int) ceil( $total / $per_page );
+			$ids   = array_slice( self::in_album_order( $ids ), ( $page - 1 ) * $per_page, $per_page );
 		}
 		$items = array();
 		foreach ( $ids as $id ) {
@@ -269,8 +281,8 @@ final class Catalog_Rest {
 			array(
 				'items' => $items,
 				'page'  => $page,
-				'pages' => (int) $query->max_num_pages,
-				'total' => (int) $query->found_posts,
+				'pages' => $pages,
+				'total' => $total,
 			)
 		);
 	}
