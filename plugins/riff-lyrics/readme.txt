@@ -24,4 +24,6 @@ It is also the reference extension for Riff: it is built only on Riff's document
 == Changelog ==
 
 = 0.1.0 =
-* The Lyrics tab, lyrics read from the file's tags, and the Lyrics field in the Media Library.
+* Riff Lyrics, a Lyrics tab beside Up next, as a plugin built only on Riff's public API.
+
+Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

@@ -58,7 +58,25 @@ final class Player {
 		// wp.hooks is how a plugin's script listens to the player (see docs/javascript.md); the
 		// module reads it from the window when it is there.
 		wp_enqueue_script( 'wp-hooks' );
-		wp_enqueue_script_module( 'riff', RIFF_URL . 'assets/riff.js', array(), self::version( 'assets/riff.js' ) );
+		// The modules' strings are translated with wp.i18n, from the translations WordPress prints
+		// for each module before it runs (wp_set_script_module_translations()). Core prints wp-i18n
+		// itself when there are any; without them the modules show the English they are written in.
+		// The Listen app is imported by riff.js on the page that holds the block. Registering it as
+		// a dynamic dependency puts it on the page's map of modules, so its translations print too.
+		wp_register_script_module( 'riff-app', RIFF_URL . 'features/listen/app.js', array(), self::version( 'features/listen/app.js' ) );
+		wp_enqueue_script_module(
+			'riff',
+			RIFF_URL . 'assets/riff.js',
+			array(
+				array(
+					'id'     => 'riff-app',
+					'import' => 'dynamic',
+				),
+			),
+			self::version( 'assets/riff.js' )
+		);
+		wp_set_script_module_translations( 'riff', 'riff' );
+		wp_set_script_module_translations( 'riff-app', 'riff' );
 	}
 
 	/**
@@ -83,112 +101,21 @@ final class Player {
 		if ( ! self::enabled() ) {
 			return;
 		}
-		$strings = array(
-			'play'                => __( 'Play', 'riff' ),
-			'pause'               => __( 'Pause', 'riff' ),
-			'repeatOff'           => __( 'Repeat off', 'riff' ),
-			'repeatAll'           => __( 'Repeat all', 'riff' ),
-			'repeatOne'           => __( 'Repeat one', 'riff' ),
-			'shuffleOn'           => __( 'Shuffle on', 'riff' ),
-			'shuffleOff'          => __( 'Shuffle off', 'riff' ),
-			/* translators: %s: post title. */
-			'playingFrom'         => __( 'Playing from %s', 'riff' ),
-			/* translators: %s: track title. */
-			'playTrack'           => __( 'Play %s', 'riff' ),
-			/* translators: %s: track title. */
-			'locked'              => __( '%s is locked', 'riff' ),
-			/* translators: %s: track title. */
-			'unlock'              => __( 'Unlock %s', 'riff' ),
-			'video'               => __( 'Video', 'riff' ),
-			'unavailable'         => __( 'This track could not be played.', 'riff' ),
-			'copied'              => __( 'Link copied', 'riff' ),
-			'shareFailed'         => __( 'The link could not be shared.', 'riff' ),
-			'trackGone'           => __( 'The shared track is no longer in this post.', 'riff' ),
-			'library'             => __( 'Library', 'riff' ),
-			'shuffle'             => __( 'Shuffle', 'riff' ),
-			/* translators: %s: number of tracks. */
-			'oneTrack'            => __( '%s track', 'riff' ),
-			/* translators: %s: number of tracks. */
-			'tracks'              => __( '%s tracks', 'riff' ),
-			/* translators: %s: number of minutes. */
-			'minutes'             => __( '%s min', 'riff' ),
-			/* translators: %s: kilobits per second. */
-			'kbps'                => __( '%s kbps', 'riff' ),
-			'lossless'            => __( 'Lossless', 'riff' ),
-			/* translators: 1: bits per sample, 2: sample rate in kHz. */
-			'bitsKhz'             => __( '%1$s-bit %2$s kHz', 'riff' ),
-			'appEmpty'            => __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ),
-			'otherTab'            => __( 'Playing in another tab', 'riff' ),
-			/* translators: 1: elapsed time, 2: total time. */
-			'times'               => __( '%1$s / %2$s', 'riff' ),
-			'nowPlaying'          => __( 'Now playing', 'riff' ),
-			'open'                => __( 'Open', 'riff' ),
-			'more'                => __( 'Load more', 'riff' ),
-			'playError'           => __( 'That post could not be loaded. Press Play to try again.', 'riff' ),
-			'moreError'           => __( 'More posts could not be loaded. Press Load more to try again.', 'riff' ),
-			'recentSearches'      => __( 'Recent searches', 'riff' ),
-			'topResult'           => __( 'Top result', 'riff' ),
-			'songs'               => __( 'Songs', 'riff' ),
-			'albums'              => __( 'Albums', 'riff' ),
-			'artists'             => __( 'Artists', 'riff' ),
-			'artist'              => __( 'Artist', 'riff' ),
-			/* translators: %s: the words searched for. */
-			'allResults'          => __( 'All results for “%s”', 'riff' ),
-			'searchSuggestions'   => __( 'Suggestions', 'riff' ),
-			/* translators: %s: number of suggestions. */
-			'suggestions'         => __( '%s suggestions', 'riff' ),
-			/* translators: %s: number of suggestions, 1. */
-			'oneSuggestion'       => __( '%s suggestion', 'riff' ),
-			'playNext'            => __( 'Play next', 'riff' ),
-			'addToQueue'          => __( 'Add to queue', 'riff' ),
-			'removeFromQueue'     => __( 'Remove from queue', 'riff' ),
-			'moveUp'              => __( 'Move up', 'riff' ),
-			'moveDown'            => __( 'Move down', 'riff' ),
-			'goToPost'            => __( 'Go to post', 'riff' ),
-			/* translators: %s: track title. */
-			'trackMenu'           => __( 'More options for %s', 'riff' ),
-			/* translators: %s: track title. */
-			'playingNext'         => __( '%s plays next', 'riff' ),
-			/* translators: %s: track title. */
-			'addedToQueue'        => __( '%s added to the queue', 'riff' ),
-			'like'                => __( 'Like', 'riff' ),
-			/* translators: %s: a track, album or artist. */
-			'likeItem'            => __( 'Like %s', 'riff' ),
-			'addToLiked'          => __( 'Add to Liked songs', 'riff' ),
-			'removeFromLiked'     => __( 'Remove from Liked songs', 'riff' ),
-			/* translators: %s: track title. */
-			'likedTrack'          => __( '%s added to Liked songs', 'riff' ),
-			/* translators: %s: track title. */
-			'unlikedTrack'        => __( '%s removed from Liked songs', 'riff' ),
-			/* translators: %s: an album or artist. */
-			'savedToLibrary'      => __( '%s added to your library', 'riff' ),
-			/* translators: %s: an album or artist. */
-			'removedFromLibrary'  => __( '%s removed from your library', 'riff' ),
-			'likeFailed'          => __( 'That could not be saved. Try again.', 'riff' ),
-			'addToPlaylist'       => __( 'Add to playlist', 'riff' ),
-			'newPlaylist'         => __( 'New playlist', 'riff' ),
-			/* translators: %s: playlist name. */
-			'addedToPlaylist'     => __( 'Added to %s', 'riff' ),
-			'signInForPlaylists'  => __( 'Sign in to add to a playlist', 'riff' ),
-			'playlistFailed'      => __( 'The playlist could not be changed. Try again.', 'riff' ),
-			'removeFromPlaylist'  => __( 'Remove from this playlist', 'riff' ),
-			/* translators: %s: playlist name. */
-			'removedFromPlaylist' => __( 'Removed from %s', 'riff' ),
-			/* translators: %s: playlist name. */
-			'confirmDelete'       => __( 'Delete %s? It goes to the trash, where a site admin can restore it.', 'riff' ),
-			'playlistName'        => __( 'Playlist name', 'riff' ),
-			'save'                => __( 'Save', 'riff' ),
-			'cancel'              => __( 'Cancel', 'riff' ),
-		);
 		/**
-		 * Filters the strings the player shows.
+		 * Filters the player's strings, keyed by name.
+		 *
+		 * The strings are translated in the script modules themselves since 4.22.0, from WordPress's
+		 * script module translations, so the array starts empty: a string a callback sets here, by
+		 * its key, replaces the module's. Kept so sites that relabel the player keep their words.
 		 *
 		 * @since 4.0.0
+		 * @since 4.22.0 Starts empty; set a key to replace that string.
 		 * @param array $strings Strings, keyed by name.
 		 */
-		$strings = (array) apply_filters( 'riff_strings', $strings );
+		$strings = (array) apply_filters( 'riff_strings', array() );
 		$data    = array(
-			'strings'    => $strings,
+			// An object even when empty, as window.riff.strings is documented.
+			'strings'    => (object) $strings,
 			'assets'     => array(),
 			// The heart's icons, for the hearts the script draws on rows.
 			'icons'      => array( 'hearts' => self::hearts() ),
