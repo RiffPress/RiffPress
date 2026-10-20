@@ -756,14 +756,18 @@ final class Browse {
 	}
 
 	/**
-	 * What an empty list says. On a site with no music yet, someone who can upload gets a link to
-	 * add the first album.
+	 * What an empty list says. How to fill it is for someone who can upload, with a link to add the
+	 * first album while the site has no music; a visitor, who can do neither, is told only that
+	 * there is nothing yet.
 	 *
 	 * @return string
 	 */
 	private static function empty_note(): string {
+		if ( ! current_user_can( 'upload_files' ) ) {
+			return Ui::empty_note( __( 'Nothing here yet.', 'riff' ) );
+		}
 		$text = __( 'Nothing here yet. Upload music to the Media Library, or import a folder with wp riff import.', 'riff' );
-		if ( current_user_can( 'upload_files' ) && ! First_Run::has_music() ) {
+		if ( ! First_Run::has_music() ) {
 			return Ui::empty_note( $text, admin_url( 'media-new.php' ), __( 'Add your first album', 'riff' ) );
 		}
 		return Ui::empty_note( $text );
