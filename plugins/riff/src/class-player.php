@@ -59,8 +59,8 @@ final class Player {
 		// module reads it from the window when it is there.
 		wp_enqueue_script( 'wp-hooks' );
 		// The modules' strings are translated with wp.i18n, from the translations WordPress prints
-		// for each module before it runs (wp_set_script_module_translations()).
-		wp_enqueue_script( 'wp-i18n' );
+		// for each module before it runs (wp_set_script_module_translations()). Core prints wp-i18n
+		// itself when there are any; without them the modules show the English they are written in.
 		// The Listen app is imported by riff.js on the page that holds the block. Registering it as
 		// a dynamic dependency puts it on the page's map of modules, so its translations print too.
 		wp_register_script_module( 'riff-app', RIFF_URL . 'features/listen/app.js', array(), self::version( 'features/listen/app.js' ) );
@@ -114,7 +114,8 @@ final class Player {
 		 */
 		$strings = (array) apply_filters( 'riff_strings', array() );
 		$data    = array(
-			'strings'    => $strings,
+			// An object even when empty, as window.riff.strings is documented.
+			'strings'    => (object) $strings,
 			'assets'     => array(),
 			// The heart's icons, for the hearts the script draws on rows.
 			'icons'      => array( 'hearts' => self::hearts() ),

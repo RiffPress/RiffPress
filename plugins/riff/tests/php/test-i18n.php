@@ -190,6 +190,9 @@ class Test_Riff_I18n extends Riff_TestCase {
 		wp_script_modules()->print_script_module_translations();
 		$html = (string) ob_get_clean();
 		remove_filter( 'load_script_translation_file', $answer, 10 );
+		foreach ( glob( "$dir/*.json" ) as $fixture ) {
+			wp_delete_file( $fixture );
+		}
 
 		// The file is named as a language pack names it: domain, locale, and the hash of the script's
 		// path in the plugin. The hash itself is core's to compute, and the suite loads the plugin
