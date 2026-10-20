@@ -22,7 +22,10 @@ export function start( api ) {
 		.filter( Boolean );
 	const tracksRest = app.dataset.riffTracksRest || '';
 	const nav = app.querySelector( '.riff-app-bar' );
+	// Strings are WordPress translations of this module (wp_set_script_module_translations()); a
+	// site's riff_strings filter can still replace one by its old key.
 	const s = api.strings || {};
+	const { __, _n } = window.wp.i18n;
 	const cache = new Map();
 	let showing = 0; // A counter, so a slow fetch cannot paint over a newer view.
 	let picking = 0; // The same for a cover's Play, so an older press cannot replace the queue.
@@ -325,7 +328,13 @@ export function start( api ) {
 			}
 		} catch {
 			if ( turn === showing ) {
-				tell( s.moreError || '' );
+				tell(
+					s.moreError ??
+						__(
+							'More posts could not be loaded. Press Load more to try again.',
+							'riff'
+						)
+				);
 			}
 		} finally {
 			button.removeAttribute( 'aria-disabled' );
@@ -352,7 +361,13 @@ export function start( api ) {
 			}
 		} catch {
 			if ( turn === picking && shownAt === showing ) {
-				tell( s.playError || '' );
+				tell(
+					s.playError ??
+						__(
+							'That post could not be loaded. Press Play to try again.',
+							'riff'
+						)
+				);
 			}
 		} finally {
 			button.removeAttribute( 'aria-busy' );
@@ -400,7 +415,13 @@ export function start( api ) {
 			}
 		} catch {
 			if ( turn === picking && shownAt === showing ) {
-				tell( s.playError || '' );
+				tell(
+					s.playError ??
+						__(
+							'That post could not be loaded. Press Play to try again.',
+							'riff'
+						)
+				);
 			}
 		} finally {
 			button.removeAttribute( 'aria-busy' );
@@ -442,7 +463,11 @@ export function start( api ) {
 		}
 		button.setAttribute(
 			'aria-label',
-			fmt( s.playTrack || 'Play %s', label )
+			fmt(
+				s.playTrack ??
+					/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
+				label
+			)
 		);
 		const link = card.querySelector( '.riff-card-link' );
 		link.querySelector( '.riff-card-title' ).textContent = title;
@@ -480,15 +505,24 @@ export function start( api ) {
 		}
 		parts.push(
 			fmt(
-				item.count === 1
-					? s.oneTrack || '%s track'
-					: s.tracks || '%s tracks',
+				( item.count === 1 ? s.oneTrack : s.tracks ) ??
+					/* translators: %s: number of tracks. */
+					_n( '%s track', '%s tracks', item.count, 'riff' ),
 				item.count
 			)
 		);
 		const minutes = Math.round( ( item.duration || 0 ) / 60 );
 		if ( minutes ) {
-			parts.push( fmt( s.minutes || '%s min', minutes ) );
+			parts.push(
+				fmt(
+					s.minutes ??
+						/* translators: %s: number of minutes. */ __(
+							'%s min',
+							'riff'
+						),
+					minutes
+				)
+			);
 		}
 		return parts.join( ' · ' );
 	}
@@ -604,8 +638,16 @@ export function start( api ) {
 		tell(
 			fmt(
 				on
-					? s.savedToLibrary || '%s added to your library'
-					: s.removedFromLibrary || '%s removed from your library',
+					? ( s.savedToLibrary ??
+							/* translators: %s: an album or artist. */ __(
+								'%s added to your library',
+								'riff'
+							) )
+					: ( s.removedFromLibrary ??
+							/* translators: %s: an album or artist. */ __(
+								'%s removed from your library',
+								'riff'
+							) ),
 				name
 			)
 		);
@@ -708,7 +750,8 @@ export function start( api ) {
 	};
 	const failed = () =>
 		tell(
-			s.playlistFailed || 'The playlist could not be changed. Try again.'
+			s.playlistFailed ??
+				__( 'The playlist could not be changed. Try again.', 'riff' )
 		);
 	// The view showing, drawn again in place, then the focus put where it belongs.
 	async function redraw( focus ) {
@@ -722,15 +765,14 @@ export function start( api ) {
 		const kind = action?.dataset.riffAppAction;
 		const id = Number( action?.dataset.riffPlaylist );
 		if ( kind === 'new-playlist' ) {
-			api.createPlaylist( s.newPlaylist || 'New playlist' ).then(
-				( p ) => {
-					const to = postOf( listAddress( p.id ) );
-					if ( to ) {
-						show( to ).catch( () => {} );
-					}
-				},
-				failed
-			);
+			api.createPlaylist(
+				s.newPlaylist ?? __( 'New playlist', 'riff' )
+			).then( ( p ) => {
+				const to = postOf( listAddress( p.id ) );
+				if ( to ) {
+					show( to ).catch( () => {} );
+				}
+			}, failed );
 			return true;
 		}
 		if ( kind === 'play-playlist' ) {
@@ -740,7 +782,14 @@ export function start( api ) {
 						api.play( p.tracks, 0 );
 					}
 				},
-				() => tell( s.playError || '' )
+				() =>
+					tell(
+						s.playError ??
+							__(
+								'That post could not be loaded. Press Play to try again.',
+								'riff'
+							)
+					)
 			);
 			return true;
 		}
@@ -754,7 +803,14 @@ export function start( api ) {
 			// The browser's own confirmation, as core's list tables ask before deleting.
 			// eslint-disable-next-line no-alert
 			const sure = window.confirm(
-				fmt( s.confirmDelete || 'Delete %s?', name )
+				fmt(
+					s.confirmDelete ??
+						/* translators: %s: playlist name. */ __(
+							'Delete %s? It goes to the trash, where a site admin can restore it.',
+							'riff'
+						),
+					name
+				)
 			);
 			if ( sure ) {
 				api.deletePlaylist( id ).then( () => {
@@ -778,10 +834,10 @@ export function start( api ) {
 		const form = document.createElement( 'form' );
 		form.className = 'riff-rename';
 		form.innerHTML =
-			`<label class="riff-app-sr" for="riff-rename">${ esc( s.playlistName || 'Playlist name' ) }</label>` +
+			`<label class="riff-app-sr" for="riff-rename">${ esc( s.playlistName ?? __( 'Playlist name', 'riff' ) ) }</label>` +
 			`<input id="riff-rename" type="text" maxlength="200" required value="${ esc( title.textContent ) }">` +
-			`<button type="submit" class="riff-pill riff-pill-solid">${ esc( s.save || 'Save' ) }</button>` +
-			`<button type="button" class="riff-pill" data-riff-cancel>${ esc( s.cancel || 'Cancel' ) }</button>`;
+			`<button type="submit" class="riff-pill riff-pill-solid">${ esc( s.save ?? __( 'Save', 'riff' ) ) }</button>` +
+			`<button type="button" class="riff-pill" data-riff-cancel>${ esc( s.cancel ?? __( 'Cancel', 'riff' ) ) }</button>`;
 		title.hidden = true;
 		title.after( form );
 		const field = form.querySelector( 'input' );
@@ -858,25 +914,31 @@ export function start( api ) {
 			if ( at > 0 ) {
 				extra.push( {
 					id: 'playlist-up',
-					label: s.moveUp || 'Move up',
+					label: s.moveUp ?? __( 'Move up', 'riff' ),
 					run: move( at - 1 ),
 				} );
 			}
 			if ( at < rows.length - 1 ) {
 				extra.push( {
 					id: 'playlist-down',
-					label: s.moveDown || 'Move down',
+					label: s.moveDown ?? __( 'Move down', 'riff' ),
 					run: move( at + 1 ),
 				} );
 			}
 			extra.push( {
 				id: 'playlist-remove',
-				label: s.removeFromPlaylist || 'Remove from this playlist',
+				label:
+					s.removeFromPlaylist ??
+					__( 'Remove from this playlist', 'riff' ),
 				run: () =>
 					api.removeFromPlaylist( id, spot ).then( ( p ) => {
 						tell(
 							fmt(
-								s.removedFromPlaylist || 'Removed from %s',
+								s.removedFromPlaylist ??
+									/* translators: %s: playlist name. */ __(
+										'Removed from %s',
+										'riff'
+									),
 								p.title
 							)
 						);
@@ -1197,7 +1259,8 @@ export function start( api ) {
 				field,
 				[
 					{
-						label: s.recentSearches || 'Recent searches',
+						label:
+							s.recentSearches ?? __( 'Recent searches', 'riff' ),
 						items: recent.map( ( words ) => ( {
 							kind: 'recent',
 							title: words,
@@ -1253,7 +1316,7 @@ export function start( api ) {
 		const artistItems = artists.slice( 0, 3 ).map( ( a ) => ( {
 			kind: 'artist',
 			title: a.name,
-			sub: s.artist || 'Artist',
+			sub: s.artist ?? __( 'Artist', 'riff' ),
 			href: browseHref( browseArgs[ 2 ] || 'riff_artist', a.id ),
 		} ) );
 		// The best match across all three; on a tie an artist, then an album, then a song.
@@ -1263,26 +1326,26 @@ export function start( api ) {
 		const groups = [];
 		if ( top?.n ) {
 			groups.push( {
-				label: s.topResult || 'Top result',
+				label: s.topResult ?? __( 'Top result', 'riff' ),
 				items: [ { ...top.o, top: true } ],
 			} );
 		}
 		const besides = ( list ) => list.filter( ( o ) => o !== top?.o );
 		if ( besides( songs ).length ) {
 			groups.push( {
-				label: s.songs || 'Songs',
+				label: s.songs ?? __( 'Songs', 'riff' ),
 				items: besides( songs ),
 			} );
 		}
 		if ( besides( albumItems ).length ) {
 			groups.push( {
-				label: s.albums || 'Albums',
+				label: s.albums ?? __( 'Albums', 'riff' ),
 				items: besides( albumItems ),
 			} );
 		}
 		if ( besides( artistItems ).length ) {
 			groups.push( {
-				label: s.artists || 'Artists',
+				label: s.artists ?? __( 'Artists', 'riff' ),
 				items: besides( artistItems ),
 			} );
 		}
@@ -1291,7 +1354,14 @@ export function start( api ) {
 			items: [
 				{
 					kind: 'all',
-					title: fmt( s.allResults || 'All results for “%s”', q ),
+					title: fmt(
+						s.allResults ??
+							/* translators: %s: the words searched for. */ __(
+								'All results for “%s”',
+								'riff'
+							),
+						q
+					),
 					run: () => runSearch( field, q ),
 				},
 			],
@@ -1370,7 +1440,7 @@ export function start( api ) {
 		panel.setAttribute( 'role', 'listbox' );
 		panel.setAttribute(
 			'aria-label',
-			s.searchSuggestions || 'Suggestions'
+			s.searchSuggestions ?? __( 'Suggestions', 'riff' )
 		);
 		panel.hidden = false;
 		field.setAttribute( 'aria-expanded', 'true' );
@@ -1379,9 +1449,9 @@ export function start( api ) {
 		).length;
 		said.textContent = q
 			? fmt(
-					found === 1
-						? s.oneSuggestion || '%s suggestion'
-						: s.suggestions || '%s suggestions',
+					( found === 1 ? s.oneSuggestion : s.suggestions ) ??
+						/* translators: %s: number of suggestions. */
+						_n( '%s suggestion', '%s suggestions', found, 'riff' ),
 					found
 				)
 			: '';
