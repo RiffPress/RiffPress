@@ -151,6 +151,54 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( array( 'Zeta', 'Alpha', 'Mid' ), wp_list_pluck( $data['items'], 'title' ), 'upload order, not the alphabet' );
 	}
 
+	public function test_an_album_longer_than_a_page_runs_in_order_across_its_pages(): void {
+		// A box set: more tracks than a page holds, titled so that the alphabet puts "10" and "100"
+		// before "2". The order is the album's across both pages, not the alphabet's within each.
+		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		for ( $n = 1; $n <= 120; $n++ ) {
+			$id = wp_insert_attachment(
+				array(
+					'post_title'     => "Box track $n",
+					'post_mime_type' => 'audio/mpeg',
+					'post_status'    => 'inherit',
+				),
+				sprintf( 'box/%03d.mp3', $n ),
+				$post
+			);
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'title'        => "Box track $n",
+					'album'        => 'Box Set',
+					'artist'       => 'Someone',
+					'track_number' => (string) $n,
+				)
+			);
+		}
+		$album = (int) get_term_by( 'name', 'Box Set', Catalog::ALBUM )->term_id;
+
+		$first  = $this->get(
+			'/tracks',
+			array(
+				'album'    => $album,
+				'per_page' => 100,
+			)
+		);
+		$second = $this->get(
+			'/tracks',
+			array(
+				'album'    => $album,
+				'per_page' => 100,
+				'page'     => 2,
+			)
+		);
+
+		$this->assertSame( array_map( static fn( $n ) => "Box track $n", range( 1, 100 ) ), wp_list_pluck( $first['items'], 'title' ) );
+		$this->assertSame( array_map( static fn( $n ) => "Box track $n", range( 101, 120 ) ), wp_list_pluck( $second['items'], 'title' ) );
+		$this->assertSame( 120, $first['total'] );
+		$this->assertSame( 2, $first['pages'] );
+	}
+
 	public function test_albums_by_an_artist_are_those_with_a_track_of_theirs_the_visitor_can_see(): void {
 		$artist = (int) get_term_by( 'name', 'Hidden Artist', Catalog::ARTIST )->term_id;
 		$this->assertSame( array(), wp_list_pluck( $this->get( '/albums', array( 'artist' => $artist ) )['items'], 'name' ), 'their only album is on a draft' );
