@@ -1,8 +1,10 @@
 <?php
 /**
- * Removes what Riff stored: the video-version link on audio files, what the import and the
- * catalogue noted on them, and the album and artist terms. The files, their tags and their
- * featured images are WordPress's own and stay.
+ * Removes what Riff stored about the library: the video-version link on audio files, what the
+ * import and the catalogue noted on them, and the album and artist terms. The files, their tags
+ * and their featured images are WordPress's own and stay. So does what listeners made, their
+ * playlists, likes and recently played, which would be cumbersome to make again after a reinstall;
+ * Tools > Erase Personal Data deletes one listener's.
  *
  * @package Riff
  */
@@ -63,7 +65,5 @@ foreach ( array( 'riff_album', 'riff_artist' ) as $riff_taxonomy ) {
 delete_option( 'riff_catalog_backfill' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );
 
-// Each listener's likes and recently played, and who dismissed the first-run notice: user options, so one key per site's table prefix.
-foreach ( array( 'riff_likes', 'riff_history', 'riff_first_run_dismissed' ) as $riff_key ) {
-	delete_metadata( 'user', 0, $wpdb->get_blog_prefix() . $riff_key, '', true );
-}
+// Who dismissed the first-run notice: a user option, so its key carries the site's table prefix.
+delete_metadata( 'user', 0, $wpdb->get_blog_prefix() . 'riff_first_run_dismissed', '', true );

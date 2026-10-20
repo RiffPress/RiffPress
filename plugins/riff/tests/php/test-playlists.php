@@ -340,4 +340,51 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$this->assertContains( $cover, Playlists::summary( get_post( $id ) )['covers'], 'someone who can see it does get it' );
 	}
+
+	public function test_a_users_playlists_go_in_their_personal_data_export_and_erasure(): void {
+		$id = $this->made( array( $this->tracks[0], $this->secret, $this->tracks[1] ) );
+		wp_trash_post( $this->made( array( $this->tracks[2] ) ) );
+		$email = get_userdata( $this->user )->user_email;
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+
+		$export = Playlists::export( $email );
+		$this->assertTrue( $export['done'] );
+		$this->assertCount( 2, $export['data'], 'the trashed one too' );
+		$this->assertSame( 'riff-playlist-' . $id, $export['data'][0]['item_id'] );
+		$this->assertSame( 'Road trip', $export['data'][0]['data'][0]['value'] );
+		$this->assertSame( "Underground\n#{$this->secret}\nTrombone Detritus", $export['data'][0]['data'][1]['value'], 'in order, and a track on a draft by its ID only' );
+
+		$erased = Playlists::erase( $email );
+		$this->assertTrue( $erased['items_removed'] );
+		$this->assertTrue( $erased['done'] );
+		$this->assertNull( get_post( $id ) );
+		$this->assertSame( array(), Playlists::export( $email )['data'] );
+		$this->assertFalse( Playlists::erase( $email )['items_removed'] );
+	}
+
+	public function test_uninstalling_riff_keeps_what_listeners_made(): void {
+		$id = $this->made( array( $this->tracks[0] ) );
+		\Riff\Likes::add(
+			$this->user,
+			array(
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[1],
+				),
+			)
+		);
+		\Riff\Likes::played( $this->user, array( array( 'id' => $this->tracks[2] ) ) );
+		update_user_option( $this->user, 'riff_first_run_dismissed', 1 );
+
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', 'riff/riff.php' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- core's own constant.
+		}
+		include dirname( __DIR__, 2 ) . '/uninstall.php';
+		Catalog::taxonomies();
+
+		$this->assertInstanceOf( WP_Post::class, get_post( $id ), 'the playlist' );
+		$this->assertCount( 1, \Riff\Likes::get( $this->user ), 'the like' );
+		$this->assertCount( 1, \Riff\Likes::history( $this->user ), 'recently played' );
+		$this->assertFalse( get_user_option( 'riff_first_run_dismissed', $this->user ), 'only the notice\'s note goes' );
+	}
 }
