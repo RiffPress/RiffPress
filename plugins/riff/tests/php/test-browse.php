@@ -47,6 +47,7 @@ class Test_Riff_Browse extends Riff_TestCase {
 	}
 
 	public function tear_down(): void {
+		wp_set_current_user( 0 );
 		foreach ( Browse::ARGS as $key ) {
 			unset( $_GET[ $key ] );
 		}
@@ -93,10 +94,14 @@ class Test_Riff_Browse extends Riff_TestCase {
 			wp_delete_attachment( $id, true );
 		}
 
-		$visitor = $this->render_at( array() );
-		$this->assertStringContainsString( 'Nothing here yet.', $visitor );
-		$this->assertStringNotContainsString( 'Media Library', $visitor, 'a visitor cannot upload' );
-		$this->assertStringNotContainsString( 'wp riff import', $visitor, 'nor run WP-CLI' );
+		foreach ( array( array(), array( Browse::VIEW => 'albums' ), array( Browse::VIEW => 'posts' ) ) as $args ) {
+			$visitor = $this->render_at( $args );
+			$where   = $args ? $args[ Browse::VIEW ] : 'home';
+			$this->assertMatchesRegularExpression( '/Nothing (here|to play) yet\./', $visitor, $where );
+			$this->assertStringNotContainsString( 'Media Library', $visitor, "$where: a visitor cannot upload" );
+			$this->assertStringNotContainsString( 'wp riff import', $visitor, "$where: nor run WP-CLI" );
+			$this->assertStringNotContainsString( 'audio or video block', $visitor, "$where: nor write a post" );
+		}
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
 		$author = $this->render_at( array() );

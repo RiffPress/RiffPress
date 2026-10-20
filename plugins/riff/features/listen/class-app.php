@@ -334,7 +334,8 @@ final class App {
 	public static function posts_view( string $page ): string {
 		$query = Library::query();
 		if ( ! $query->posts ) {
-			return Ui::empty_note( __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ) );
+			// How to fill it is for someone who can write a post.
+			return Ui::empty_note( current_user_can( 'edit_posts' ) ? __( 'Nothing to play yet. Add an audio or video block to a post.', 'riff' ) : __( 'Nothing to play yet.', 'riff' ) );
 		}
 		$pages = max( 1, (int) $query->max_num_pages );
 		$upto  = min( self::requested_pages(), $pages );
