@@ -990,7 +990,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2436,
+				"line": 2438,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -1045,7 +1045,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2835,
+				"line": 2837,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1100,7 +1100,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1878,
+				"line": 1880,
 				"code": "@media (prefers-reduced-motion: reduce) {"
 			},
 			{
@@ -1170,7 +1170,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1721,
+				"line": 1723,
 				"code": "clip-path: none;"
 			}
 		],
@@ -1200,7 +1200,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2396,
+				"line": 2398,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1320,7 +1320,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2436,
+				"line": 2438,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
