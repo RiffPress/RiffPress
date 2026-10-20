@@ -179,7 +179,9 @@ Since 4.17.0. Fires in `plugins/riff/features/listen/class-standalone.php`.
 
 ### `riff_strings`
 
-Filters the strings the player shows.
+Filters the player's strings, keyed by name.
+
+The strings are translated in the script modules themselves since 4.22.0, from WordPress's script module translations, so the array starts empty: a string a callback sets here, by its key, replaces the module's. Kept so sites that relabel the player keep their words.
 
 Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 

@@ -15,7 +15,11 @@ if ( root ) {
 function start() {
 	const data =
 		parse( document.getElementById( 'riff-data' )?.textContent ) || {};
+	// Strings are WordPress translations of this module (wp_set_script_module_translations()); a
+	// site's riff_strings filter can still replace one by its old key. Core prints wp.i18n only
+	// when there are translations, so without it the strings are the English they are written in.
 	const s = data.strings || {};
+	const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 	// "MP3 · 128 kbps", "FLAC · Lossless", or nothing when the file was never read. Shown on every
 	// track, the way the streaming services show their tier, from what WordPress read on upload.
@@ -27,7 +31,7 @@ function start() {
 		if ( t.type !== 'video' && ! t.video ) {
 			return '';
 		}
-		const label = esc( s.video || 'Video' );
+		const label = esc( s.video || __( 'Video', 'riff' ) );
 		return `<span class="riff-row-video" role="img" aria-label="${ label }">${ FILM }</span>`;
 	}
 
@@ -40,14 +44,28 @@ function start() {
 		const format = ( t.format || '' ).toUpperCase();
 		let rate;
 		if ( ! t.lossless ) {
-			rate = fmt( s.kbps || '%s kbps', t.bitrate );
+			rate = fmt(
+				s.kbps ||
+					/* translators: %s: kilobits per second. */ __(
+						'%s kbps',
+						'riff'
+					),
+				t.bitrate
+			);
 		} else if ( t.bits && t.rate ) {
-			rate = fmt( s.bitsKhz || '%1$s-bit %2$s kHz', t.bits ).replace(
+			rate = fmt(
+				s.bitsKhz ||
+					/* translators: 1: bits per sample, 2: sample rate in kHz. */ __(
+						'%1$s-bit %2$s kHz',
+						'riff'
+					),
+				t.bits
+			).replace(
 				'%2$s',
 				String( t.rate / 1000 ).replace( /\.?0+$/, '' )
 			);
 		} else {
-			rate = s.lossless || 'Lossless';
+			rate = s.lossless || __( 'Lossless', 'riff' );
 		}
 		return format ? `${ format } · ${ rate }` : rate;
 	}
@@ -107,7 +125,8 @@ function start() {
 		 */
 		version: 1,
 		/**
-		 * The player's strings, after the `riff_strings` filter.
+		 * Strings a site replaces with the `riff_strings` filter, by key. The rest are translated in the
+		 * modules themselves, from WordPress's script module translations.
 		 *
 		 * @since 4.0.0
 		 *
@@ -312,7 +331,10 @@ function start() {
 		 */
 		playlist: ( id ) =>
 			me?.rest?.playlists
-				? send( under( me.rest.playlists, `/${ Number( id ) }` ), 'GET' )
+				? send(
+						under( me.rest.playlists, `/${ Number( id ) }` ),
+						'GET'
+					)
 				: Promise.reject( new Error( 'signed out' ) ),
 		/**
 		 * Makes a playlist, empty or with tracks.
@@ -513,7 +535,11 @@ function start() {
 		row.className = 'riff-row';
 		row.setAttribute(
 			'aria-label',
-			fmt( s.playTrack || 'Play %s', t.title )
+			fmt(
+				s.playTrack ||
+					/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
+				t.title
+			)
 		);
 		row.innerHTML = rowInner( t );
 		fig.insertBefore( row, fig.firstChild );
@@ -550,7 +576,17 @@ function start() {
 		row.setAttribute(
 			'aria-label',
 			fmt(
-				t.unlock ? s.unlock || 'Unlock %s' : s.locked || '%s is locked',
+				t.unlock
+					? s.unlock ||
+							/* translators: %s: track title. */ __(
+								'Unlock %s',
+								'riff'
+							)
+					: s.locked ||
+							/* translators: %s: track title. */ __(
+								'%s is locked',
+								'riff'
+							),
 				t.title
 			)
 		);
@@ -913,7 +949,10 @@ function start() {
 			if ( isLiked( id, kind ) === on ) {
 				flip( ! on );
 			}
-			toast( s.likeFailed || 'That could not be saved. Try again.' );
+			toast(
+				s.likeFailed ||
+					__( 'That could not be saved. Try again.', 'riff' )
+			);
 		} );
 	}
 	function likesChanged( change, kind = null, id = null ) {
@@ -940,8 +979,16 @@ function start() {
 		toast(
 			fmt(
 				on
-					? s.likedTrack || '%s added to Liked songs'
-					: s.unlikedTrack || '%s removed from Liked songs',
+					? s.likedTrack ||
+							/* translators: %s: track title. */ __(
+								'%s added to Liked songs',
+								'riff'
+							)
+					: s.unlikedTrack ||
+							/* translators: %s: track title. */ __(
+								'%s removed from Liked songs',
+								'riff'
+							),
 				t.title
 			)
 		);
@@ -994,16 +1041,28 @@ function start() {
 	// The list Add to playlist opens: a new playlist named after the track, then each one.
 	function playlistItems( t ) {
 		const said = ( p ) =>
-			toast( fmt( s.addedToPlaylist || 'Added to %s', p.title ) );
+			toast(
+				fmt(
+					s.addedToPlaylist ||
+						/* translators: %s: playlist name. */ __(
+							'Added to %s',
+							'riff'
+						),
+					p.title
+				)
+			);
 		const failed = () =>
 			toast(
 				s.playlistFailed ||
-					'The playlist could not be changed. Try again.'
+					__(
+						'The playlist could not be changed. Try again.',
+						'riff'
+					)
 			);
 		return [
 			{
 				id: 'new-playlist',
-				label: s.newPlaylist || 'New playlist',
+				label: s.newPlaylist || __( 'New playlist', 'riff' ),
 				run: () =>
 					api.createPlaylist( t.title, [ t ] ).then( said, failed ),
 			},
@@ -1216,7 +1275,7 @@ function start() {
 			! el().paused
 		) {
 			el().pause();
-			toast( s.otherTab );
+			toast( s.otherTab || __( 'Playing in another tab', 'riff' ) );
 		}
 	} );
 	const announce = () =>
@@ -1619,7 +1678,12 @@ function start() {
 		root.dataset.playing = playing ? 'true' : 'false';
 		root.dataset.mode = isVideo( t ) ? 'video' : 'song';
 		for ( const b of $$( '[data-riff-action="toggle"]' ) ) {
-			b.setAttribute( 'aria-label', playing ? s.pause : s.play );
+			b.setAttribute(
+				'aria-label',
+				playing
+					? s.pause || __( 'Pause', 'riff' )
+					: s.play || __( 'Play', 'riff' )
+			);
 		}
 		text( 'title', t?.title || '' );
 		text( 'subtitle', t ? subtitle( t ) : '' );
@@ -1645,9 +1709,9 @@ function start() {
 			);
 		}
 		const repeatLabel = {
-			off: s.repeatOff,
-			all: s.repeatAll,
-			one: s.repeatOne,
+			off: s.repeatOff || __( 'Repeat off', 'riff' ),
+			all: s.repeatAll || __( 'Repeat all', 'riff' ),
+			one: s.repeatOne || __( 'Repeat one', 'riff' ),
 		}[ repeat ];
 		for ( const b of $$( '[data-riff-action="repeat"]' ) ) {
 			b.dataset.repeat = repeat;
@@ -1658,7 +1722,9 @@ function start() {
 			b.setAttribute( 'aria-pressed', String( shuffle ) );
 			b.setAttribute(
 				'aria-label',
-				shuffle ? s.shuffleOn : s.shuffleOff
+				shuffle
+					? s.shuffleOn || __( 'Shuffle on', 'riff' )
+					: s.shuffleOff || __( 'Shuffle off', 'riff' )
 			);
 		}
 		for ( const { t: rt, row } of rows ) {
@@ -1667,7 +1733,16 @@ function start() {
 			row.dataset.playing = current && playing ? 'true' : 'false';
 			row.setAttribute(
 				'aria-label',
-				current && playing ? s.pause : fmt( s.playTrack, rt.title )
+				current && playing
+					? s.pause || __( 'Pause', 'riff' )
+					: fmt(
+							s.playTrack ||
+								/* translators: %s: track title. */ __(
+									'Play %s',
+									'riff'
+								),
+							rt.title
+						)
 			);
 		}
 		for ( const li of queueList.children ) {
@@ -1705,7 +1780,13 @@ function start() {
 					input.value = value;
 					input.setAttribute(
 						'aria-valuetext',
-						( s.times || '%1$s / %2$s' )
+						(
+							s.times ||
+							/* translators: 1: elapsed time, 2: total time. */ __(
+								'%1$s / %2$s',
+								'riff'
+							)
+						)
 							.replace( '%1$s', time( m.currentTime ) )
 							.replace( '%2$s', time( duration ) )
 					);
@@ -1788,7 +1869,17 @@ function start() {
 		const b = document.createElement( 'button' );
 		b.type = 'button';
 		b.className = 'riff-like-button';
-		b.setAttribute( 'aria-label', fmt( s.likeItem || 'Like %s', t.title ) );
+		b.setAttribute(
+			'aria-label',
+			fmt(
+				s.likeItem ||
+					/* translators: %s: a track, album or artist. */ __(
+						'Like %s',
+						'riff'
+					),
+				t.title
+			)
+		);
 		b.setAttribute( 'aria-pressed', String( isLiked( t.id ) ) );
 		b.innerHTML = HEARTS;
 		b.addEventListener( 'click', ( e ) => {
@@ -1815,20 +1906,33 @@ function start() {
 		const items = [
 			{
 				id: 'next',
-				label: s.playNext || 'Play next',
+				label: s.playNext || __( 'Play next', 'riff' ),
 				run: () => {
 					api.playNext( [ t ] );
-					toast( fmt( s.playingNext || '%s plays next', t.title ) );
+					toast(
+						fmt(
+							s.playingNext ||
+								/* translators: %s: track title. */ __(
+									'%s plays next',
+									'riff'
+								),
+							t.title
+						)
+					);
 				},
 			},
 			{
 				id: 'add',
-				label: s.addToQueue || 'Add to queue',
+				label: s.addToQueue || __( 'Add to queue', 'riff' ),
 				run: () => {
 					api.addToQueue( [ t ] );
 					toast(
 						fmt(
-							s.addedToQueue || '%s added to the queue',
+							s.addedToQueue ||
+								/* translators: %s: track title. */ __(
+									'%s added to the queue',
+									'riff'
+								),
 							t.title
 						)
 					);
@@ -1839,21 +1943,23 @@ function start() {
 			items.push( {
 				id: 'like',
 				label: isLiked( t.id )
-					? s.removeFromLiked || 'Remove from Liked songs'
-					: s.addToLiked || 'Add to Liked songs',
+					? s.removeFromLiked ||
+						__( 'Remove from Liked songs', 'riff' )
+					: s.addToLiked || __( 'Add to Liked songs', 'riff' ),
 				run: () => toggleLike( t ),
 			} );
 			if ( me ) {
 				items.push( {
 					id: 'playlist',
-					label: s.addToPlaylist || 'Add to playlist',
+					label: s.addToPlaylist || __( 'Add to playlist', 'riff' ),
 					run: () => openMenu( button, t, at, playlistItems( t ) ),
 				} );
 			} else if ( data.signIn ) {
 				items.push( {
 					id: 'playlist',
 					label:
-						s.signInForPlaylists || 'Sign in to add to a playlist',
+						s.signInForPlaylists ||
+						__( 'Sign in to add to a playlist', 'riff' ),
 					href: data.signIn,
 				} );
 			}
@@ -1862,21 +1968,22 @@ function start() {
 			if ( at > 0 ) {
 				items.push( {
 					id: 'up',
-					label: s.moveUp || 'Move up',
+					label: s.moveUp || __( 'Move up', 'riff' ),
 					run: () => moveAndFocus( at, at - 1 ),
 				} );
 			}
 			if ( at < order.length - 1 ) {
 				items.push( {
 					id: 'down',
-					label: s.moveDown || 'Move down',
+					label: s.moveDown || __( 'Move down', 'riff' ),
 					run: () => moveAndFocus( at, at + 1 ),
 				} );
 			}
 			if ( at !== pos ) {
 				items.push( {
 					id: 'remove',
-					label: s.removeFromQueue || 'Remove from queue',
+					label:
+						s.removeFromQueue || __( 'Remove from queue', 'riff' ),
 					run: () => remove( at ),
 				} );
 			}
@@ -1884,7 +1991,7 @@ function start() {
 		if ( t.post?.url ) {
 			items.push( {
 				id: 'post',
-				label: s.goToPost || 'Go to post',
+				label: s.goToPost || __( 'Go to post', 'riff' ),
 				href: t.post.url,
 			} );
 		}
@@ -2009,7 +2116,14 @@ function start() {
 		b.setAttribute( 'aria-expanded', 'false' );
 		b.setAttribute(
 			'aria-label',
-			fmt( s.trackMenu || 'More options for %s', t.title )
+			fmt(
+				s.trackMenu ||
+					/* translators: %s: track title. */ __(
+						'More options for %s',
+						'riff'
+					),
+				t.title
+			)
 		);
 		b.innerHTML = DOTS;
 		b.addEventListener( 'click', ( e ) => {
@@ -2415,9 +2529,11 @@ function start() {
 		}
 		try {
 			await navigator.clipboard.writeText( url );
-			toast( s.copied );
+			toast( s.copied || __( 'Link copied', 'riff' ) );
 		} catch {
-			toast( s.shareFailed );
+			toast(
+				s.shareFailed || __( 'The link could not be shared.', 'riff' )
+			);
 		}
 	}
 
@@ -2431,7 +2547,10 @@ function start() {
 		}
 		const hit = rows.find( ( r ) => r.t.id === id );
 		if ( ! hit ) {
-			toast( s.trackGone );
+			toast(
+				s.trackGone ||
+					__( 'The shared track is no longer in this post.', 'riff' )
+			);
 			return;
 		}
 		hit.row.dataset.shared = '';
