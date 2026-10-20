@@ -126,15 +126,55 @@ class Test_Riff_Browse extends Riff_TestCase {
 			)
 		);
 		update_option( 'show_avatars', 1 );
+		$asked = array();
+		$reply = 200;
+		$http  = static function ( $pre, $args, $url ) use ( &$asked, &$reply ) {
+			unset( $pre, $args );
+			$asked[] = $url;
+			return array(
+				'headers'  => array(),
+				'body'     => '',
+				'response' => array(
+					'code'    => $reply,
+					'message' => '',
+				),
+				'cookies'  => array(),
+			);
+		};
+		add_filter( 'pre_http_request', $http, 10, 3 );
 		$signed_in = $this->render_at( array() );
 		$this->assertStringContainsString( '<details class="riff-app-account"><summary aria-label="Account: Ada Lovelace"><img class="riff-app-avatar"', $signed_in );
+		$this->assertCount( 1, $asked, 'Gravatar is asked whether there is a face' );
+		$this->assertStringContainsString( 'd=404', $asked[0] );
+		$this->render_at( array() );
+		$this->assertCount( 1, $asked, 'and the answer is kept' );
 		$this->assertStringContainsString( '<p class="riff-app-account-name">Ada Lovelace</p>', $signed_in );
 		$this->assertStringContainsString( 'profile.php', $signed_in, 'Edit profile' );
 		$this->assertStringContainsString( 'action=logout', $signed_in, 'Sign out' );
 		$this->assertStringNotContainsString( 'riff-app-signin', $signed_in );
 
+		// Someone with no Gravatar gets their initial, not the grey silhouette.
+		$reply = 404;
+		wp_update_user(
+			array(
+				'ID'         => get_current_user_id(),
+				'user_email' => 'no-face@example.org',
+			)
+		);
+		$initial = '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">A</span>';
+		$this->assertStringContainsString( $initial, $this->render_at( array() ), 'the initial, where Gravatar has no face' );
+		$this->assertCount( 2, $asked, 'a new email is asked about afresh' );
+
+		// An avatar plugin's own picture is used as it is, and Gravatar is not asked.
+		$local = static fn( array $args ): array => array_merge( $args, array( 'url' => 'https://example.org/ada.jpg' ) );
+		add_filter( 'pre_get_avatar_data', $local );
+		$this->assertStringContainsString( 'src="https://example.org/ada.jpg"', $this->render_at( array() ) );
+		remove_filter( 'pre_get_avatar_data', $local );
+		$this->assertCount( 2, $asked );
+		remove_filter( 'pre_http_request', $http, 10 );
+
 		update_option( 'show_avatars', 0 );
-		$this->assertStringContainsString( '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">A</span>', $this->render_at( array() ), 'the initial, where the site shows no avatars' );
+		$this->assertStringContainsString( $initial, $this->render_at( array() ), 'the initial, where the site shows no avatars' );
 	}
 
 	public function test_the_address_names_a_view_and_anything_else_is_not_one(): void {

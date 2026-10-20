@@ -9,6 +9,7 @@
 namespace Riff\Listen;
 
 use WP_REST_Request;
+use WP_User;
 
 use Riff\Library;
 use Riff\Tracks;
@@ -270,9 +271,9 @@ final class Browse {
 			);
 		}
 		$name = '' !== trim( (string) $user->display_name ) ? (string) $user->display_name : (string) $user->user_login;
-		// The site's avatars, when it shows them and one comes back; otherwise the name's first
-		// letter, as an artist's.
-		$src  = get_option( 'show_avatars' ) ? get_avatar_url( $user->ID, array( 'size' => 64 ) ) : false;
+		// The listener's face, when the site shows avatars and they have one; otherwise the name's
+		// first letter, as an artist's, rather than Gravatar's grey silhouette.
+		$src  = get_option( 'show_avatars' ) ? self::face( $user ) : '';
 		$face = $src
 			? sprintf( '<img class="riff-app-avatar" src="%s" alt="" width="32" height="32" decoding="async">', esc_url( (string) $src ) )
 			: sprintf( '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">%s</span>', esc_html( mb_strtoupper( mb_substr( $name, 0, 1 ) ) ) );
@@ -289,6 +290,40 @@ final class Browse {
 			esc_url( wp_logout_url( $back ) ),
 			esc_html__( 'Sign out', 'riff' )
 		);
+	}
+
+	/**
+	 * The listener's own avatar, or '' when they have none. An avatar plugin's answer is taken as
+	 * it is; a Gravatar address is asked once, with d=404, whether a face is there, and the answer
+	 * kept for a day. Keyed by the address, so a new email asks again.
+	 *
+	 * @since 4.23.0
+	 *
+	 * @param WP_User $user The signed-in listener.
+	 * @return string
+	 */
+	private static function face( WP_User $user ): string {
+		$data = get_avatar_data(
+			$user->ID,
+			array(
+				'size'    => 64,
+				'default' => '404',
+			)
+		);
+		$url  = (string) ( $data['url'] ?? '' );
+		if ( '' === $url || ! preg_match( '#^https?://([a-z0-9-]+\.)*gravatar\.com/#i', $url ) ) {
+			return $url;
+		}
+		$key = 'riff_gravatar_' . md5( $url );
+		$has = get_transient( $key );
+		if ( false === $has ) {
+			$response = wp_safe_remote_head( $url, array( 'timeout' => 2 ) );
+			$code     = wp_remote_retrieve_response_code( $response );
+			$has      = 200 === $code ? 'yes' : 'no';
+			// A failed request is asked again within the hour, not taken as no face for a day.
+			set_transient( $key, $has, is_wp_error( $response ) || ( 404 !== $code && 200 !== $code ) ? HOUR_IN_SECONDS : DAY_IN_SECONDS );
+		}
+		return 'yes' === $has ? $url : '';
 	}
 
 	/**
