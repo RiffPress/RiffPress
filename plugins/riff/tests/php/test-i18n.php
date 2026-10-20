@@ -1,7 +1,7 @@
 <?php
 /**
- * Translation: every view of the Listen block, and the strings handed to the script, come out of
- * the riff text domain.
+ * Translation: every view of the Listen block comes out of the riff text domain, and each script
+ * module's translations reach the page from the file a language pack installs.
  *
  * @package Riff
  */
@@ -150,19 +150,73 @@ class Test_Riff_I18n extends Riff_TestCase {
 		$this->assertStringContainsString( '<p class="riff-album-kind">⟪Playlist⟫</p>', $this->view_at( array( Browse::PLAYLIST => $playlist ) ) );
 	}
 
-	public function test_every_string_handed_to_the_script_is_translated(): void {
+	public function test_each_modules_translations_reach_the_page_from_its_language_pack_file(): void {
+		$this->go_to( get_permalink( $this->post ) );
+		add_filter( 'locale', static fn() => 'de_DE' );
+		$dir = get_temp_dir() . 'riff-i18n';
+		wp_mkdir_p( $dir );
+		$looked = array();
+		// Note where core looks for each module's translations, and answer from a fixture: a
+		// language pack from translate.wordpress.org would sit at the file it names.
+		$answer = static function ( $file, $handle, $domain ) use ( &$looked, $dir ) {
+			if ( ! in_array( $handle, array( 'riff', 'riff-app' ), true ) ) {
+				return $file;
+			}
+			$looked[ $handle ] = array( $domain, basename( (string) $file ) );
+			$json              = "$dir/$handle.json";
+			file_put_contents( // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a test fixture.
+				$json,
+				(string) wp_json_encode(
+					array(
+						'locale_data' => array(
+							'riff' => array(
+								''           => array(
+									'domain' => 'riff',
+									'lang'   => 'de_DE',
+								),
+								'Play %s'    => array( 'Spiele %s' ),
+								'Top result' => array( 'Bester Treffer' ),
+							),
+						),
+					)
+				)
+			);
+			return $json;
+		};
+		add_filter( 'load_script_translation_file', $answer, 10, 3 );
+
+		Player::enqueue();
+		ob_start();
+		wp_script_modules()->print_script_module_translations();
+		$html = (string) ob_get_clean();
+		remove_filter( 'load_script_translation_file', $answer, 10 );
+		foreach ( glob( "$dir/*.json" ) as $fixture ) {
+			wp_delete_file( $fixture );
+		}
+
+		// The file is named as a language pack names it: domain, locale, and the hash of the script's
+		// path in the plugin. The hash itself is core's to compute, and the suite loads the plugin
+		// from outside the plugins folder, so its path here is not the one a site has.
+		$this->assertSame( 'riff', $looked['riff'][0] ?? null, 'riff.js, in the riff domain' );
+		$this->assertMatchesRegularExpression( '/^riff-de_DE-[0-9a-f]{32}\.json$/', $looked['riff'][1] ?? '' );
+		$this->assertSame( 'riff', $looked['riff-app'][0] ?? null, 'and the Listen app, which riff.js imports' );
+		$this->assertMatchesRegularExpression( '/^riff-de_DE-[0-9a-f]{32}\.json$/', $looked['riff-app'][1] ?? '' );
+		$this->assertStringContainsString( 'id="wp-script-module-translation-data-riff"', $html );
+		$this->assertStringContainsString( 'id="wp-script-module-translation-data-riff-app"', $html );
+		$this->assertStringContainsString( 'Spiele %s', $html, 'the translated string reaches the page' );
+	}
+
+	public function test_the_script_gets_only_the_strings_a_site_replaces(): void {
+		$replace = static fn( $strings ) => array_merge( $strings, array( 'playTrack' => 'Listen to %s' ) );
+		add_filter( 'riff_strings', $replace );
 		$this->go_to( get_permalink( $this->post ) );
 		ob_start();
 		Player::markup();
 		$html = (string) ob_get_clean();
+		remove_filter( 'riff_strings', $replace );
 
-		$this->assertMatchesRegularExpression( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html );
 		preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html, $data );
-		$strings = json_decode( $data[1], true )['strings'];
-		$this->assertNotEmpty( $strings );
-		foreach ( $strings as $key => $text ) {
-			$this->assertMatchesRegularExpression( '/^⟪.*⟫$/s', (string) $text, "$key reaches the script translated" );
-		}
-		$this->assertStringContainsString( '⟪', substr( $html, strpos( $html, '</script>' ) ), 'and the player around it' );
+		$this->assertSame( array( 'playTrack' => 'Listen to %s' ), json_decode( $data[1] ?? '', true )['strings'] ?? null, 'the module translates the rest itself' );
+		$this->assertStringContainsString( '⟪', substr( $html, strpos( $html, '</script>' ) ), 'and the player around it is translated in PHP' );
 	}
 }
