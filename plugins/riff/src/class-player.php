@@ -103,8 +103,6 @@ final class Player {
 		}
 		$data = array(
 			'assets'     => array(),
-			// The heart's icons, for the hearts the script draws on rows.
-			'icons'      => array( 'hearts' => self::hearts() ),
 			// Where the player's cookie applies: the site's own path, as WordPress's cookies use.
 			'cookiePath' => COOKIEPATH,
 		);
