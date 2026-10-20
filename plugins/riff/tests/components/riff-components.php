@@ -21,7 +21,9 @@ add_action(
 		if ( ! isset( $_GET['riff-components'] ) || ! class_exists( Ui::class ) ) {
 			return;
 		}
-		$long   = 'Vedi! Le fosche notturne spoglie, from Il Trovatore, Act Two, as arranged for the band';
+		$long = 'Vedi! Le fosche notturne spoglie, from Il Trovatore, Act Two, as arranged for the band';
+		// A name that is one long word, as a library's tags sometimes are: it has to break, not widen the page.
+		$word   = 'Supercalifragilisticexpialidociousandthensomemorewithoutanyspacesatall';
 		$art    = includes_url( 'images/media/audio.svg' );
 		$tracks = Browse::get( '/tracks', array( 'per_page' => 3 ) )['items'];
 		$liked  = static fn( array $play ): string => Ui::card(
@@ -123,8 +125,24 @@ add_action(
 			'shelf'   => Ui::shelf( 'mixed', 'A row of every card', '#all', implode( '', $cards ) ) . Ui::shelf( 'device', 'A row the script fills, hidden until then', '', '', true ),
 			'header'  => App::header( 'An album', 'The Airmen of Note · 10 tracks · 42 min', 'Album', $art, '#3b4a6b', false, 'album', 1 )
 				. App::header( 'An artist', '12 tracks · 2 albums', 'Artist', $art, '', true, 'artist', 2 )
-				. App::header( $long, '2 tracks' ),
-			'title'   => Ui::title( 'A view' ) . Ui::title( $long ),
+				. App::header( $long, '2 tracks' )
+				. App::header( $word, $word . ' · 1 track' ),
+			'title'   => Ui::title( 'A view' ) . Ui::title( $long ) . Ui::title( $word ),
+			'artists' => '<ul class="riff-artists">' . Browse::artist_items(
+				array(
+					array(
+						'id'    => 1,
+						'name'  => 'The Airmen of Note',
+						'count' => 10,
+					),
+					array(
+						'id'    => 2,
+						'name'  => $word,
+						'count' => 1,
+					),
+				),
+				'#'
+			) . '</ul>',
 			'actions' => Ui::actions() . Ui::actions( Ui::heart( 'album', 1, 'An album' ) ),
 			'heart'   => str_replace( 'aria-pressed="false"', 'aria-pressed="true"', Ui::heart( 'album', 3, 'Liked' ) ) . Ui::heart( 'artist', 4, 'Not liked' ),
 			'chips'   => '<div class="riff-library-bar">' . Ui::choices( 'Show', array( $choice( 'All', true ), $choice( 'Songs', false ), $choice( 'Albums', false ), $choice( 'Artists', false ) ) )
