@@ -315,7 +315,7 @@ test.describe( 'Browse', () => {
 	test( 'the tabs are fetched ahead, so choosing one waits on nothing', async ( {
 		page,
 	} ) => {
-		const tabs = page.locator( '.riff-app-bar a[href*="riff_view="]' );
+		const tabs = page.locator( '.riff-app-tab[href*="riff_view="]' );
 		await expect( tabs ).toHaveCount( 5 );
 		// Once the page is idle every tab's view is fetched; this page's own resource timings show
 		// when all five have arrived.

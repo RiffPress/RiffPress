@@ -22,6 +22,27 @@ export function start( api ) {
 		.filter( Boolean );
 	const tracksRest = app.dataset.riffTracksRest || '';
 	const nav = app.querySelector( '.riff-app-bar' );
+	// The account menu is a details element, so it opens without the script; with it, it closes
+	// as a menu does: on Escape, on a click outside it, and once one of its links is followed,
+	// since a view arrives in place rather than with a new page.
+	const account = app.querySelector( '.riff-app-account' );
+	if ( account ) {
+		document.addEventListener( 'click', ( e ) => {
+			if (
+				account.open &&
+				( ! account.contains( e.target ) || e.target.closest( 'a' ) )
+			) {
+				account.open = false;
+			}
+		} );
+		account.addEventListener( 'keydown', ( e ) => {
+			if ( e.key === 'Escape' && account.open ) {
+				e.stopPropagation();
+				account.open = false;
+				account.querySelector( 'summary' ).focus();
+			}
+		} );
+	}
 	const s = api.strings || {};
 	const cache = new Map();
 	let showing = 0; // A counter, so a slow fetch cannot paint over a newer view.

@@ -109,6 +109,35 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'Add your first album', $author );
 	}
 
+	public function test_the_bar_shows_who_is_listening(): void {
+		update_option( 'users_can_register', 0 );
+		$closed = $this->render_at( array() );
+		$this->assertStringNotContainsString( 'riff-app-account', $closed );
+		$this->assertStringNotContainsString( 'riff-app-signin', $closed, 'no Sign in where only the site\'s own people have accounts' );
+
+		update_option( 'users_can_register', 1 );
+		$this->assertMatchesRegularExpression( '#<a class="riff-pill riff-app-signin" href="[^"]*wp-login\.php[^"]*redirect_to=#', $this->render_at( array() ), 'Sign in, back to the Listen page' );
+
+		wp_set_current_user(
+			self::factory()->user->create(
+				array(
+					'role'         => 'subscriber',
+					'display_name' => 'Ada Lovelace',
+				)
+			)
+		);
+		update_option( 'show_avatars', 1 );
+		$signed_in = $this->render_at( array() );
+		$this->assertStringContainsString( '<details class="riff-app-account"><summary aria-label="Account: Ada Lovelace"><img class="riff-app-avatar"', $signed_in );
+		$this->assertStringContainsString( '<p class="riff-app-account-name">Ada Lovelace</p>', $signed_in );
+		$this->assertStringContainsString( 'profile.php', $signed_in, 'Edit profile' );
+		$this->assertStringContainsString( 'action=logout', $signed_in, 'Sign out' );
+		$this->assertStringNotContainsString( 'riff-app-signin', $signed_in );
+
+		update_option( 'show_avatars', 0 );
+		$this->assertStringContainsString( '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">A</span>', $this->render_at( array() ), 'the initial, where the site shows no avatars' );
+	}
+
 	public function test_the_address_names_a_view_and_anything_else_is_not_one(): void {
 		$this->go_to( get_permalink( $this->page ) );
 		$this->assertNull( Browse::requested() );

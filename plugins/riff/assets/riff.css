@@ -2115,6 +2115,90 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
+/* Who is listening, at the end of the bar: a picture that opens a short menu,
+   or Sign in. */
+.riff-app .riff-app-account,
+.riff-app .riff-app-signin {
+	position: relative;
+	flex: none;
+	margin: 6px 0;
+}
+
+.riff-app .riff-app-account summary {
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	cursor: pointer;
+	list-style: none;
+}
+
+.riff-app .riff-app-account summary::-webkit-details-marker {
+	display: none;
+}
+
+.riff-app .riff-app-account summary:hover,
+.riff-app .riff-app-account[open] summary {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-app-account summary:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-app-avatar {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.riff-app .riff-app-initial {
+	background: var(--riff-app-accent-tint);
+	color: var(--riff-app-accent);
+	font-size: 15px;
+}
+
+.riff-app .riff-app-account-menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 10;
+	display: grid;
+	min-width: 200px;
+	padding: 8px 0;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 8px;
+	background: var(--riff-app-surface);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.24);
+}
+
+.riff-app .riff-app-account-name {
+	margin: 0 0 8px;
+	padding: 8px 16px 12px;
+	border-bottom: 1px solid var(--riff-app-line);
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.riff-app .riff-app-account-menu a {
+	padding: 10px 16px;
+	color: var(--riff-app-ink);
+	font-size: 15px;
+	text-decoration: none;
+}
+
+.riff-app .riff-app-account-menu a:hover,
+.riff-app .riff-app-account-menu a:focus-visible {
+	background: var(--riff-app-accent-tint);
+	outline: none;
+}
+
 .riff-app .riff-app-search input:focus-visible {
 	outline: 2px solid var(--riff-app-accent);
 	outline-offset: 1px;
@@ -3342,6 +3426,17 @@ html.has-riff .riff-standalone .riff-app {
 
 	.riff-standalone .riff-app .riff-app-search input {
 		max-width: none;
+	}
+
+	/* Who is listening sits at the window's top right, over the view, as the
+	   music apps place it; the column keeps the views. */
+	.riff-standalone .riff-app .riff-app-account,
+	.riff-standalone .riff-app .riff-app-signin {
+		position: fixed;
+		top: 16px;
+		right: 24px;
+		z-index: 5;
+		margin: 0;
 	}
 
 	.riff-standalone .riff-app-playlists {

@@ -212,7 +212,48 @@ final class Browse {
 			esc_attr__( 'Search', 'riff' ),
 			esc_attr__( 'Search music', 'riff' )
 		);
-		return $html;
+		return $html . self::account( $page );
+	}
+
+	/**
+	 * Who is listening, at the end of the bar as the music apps have it: the signed-in listener's
+	 * picture, which opens their name, Your Library, their profile and Sign out. A visitor gets
+	 * Sign in, where anyone may register; where only the site's own people have accounts, nothing.
+	 * A details element, so it opens without the script.
+	 *
+	 * @param string $page Listen page.
+	 * @return string
+	 */
+	private static function account( string $page ): string {
+		$user = wp_get_current_user();
+		if ( ! $user->exists() ) {
+			if ( ! get_option( 'users_can_register' ) ) {
+				return '';
+			}
+			return sprintf(
+				'<a class="riff-pill riff-app-signin" href="%s">%s</a>',
+				esc_url( wp_login_url( $page ) ),
+				esc_html__( 'Sign in', 'riff' )
+			);
+		}
+		$name = (string) $user->display_name;
+		// The site's avatars, when it shows them; otherwise the name's first letter, as an artist's.
+		$face = get_option( 'show_avatars' )
+			? sprintf( '<img class="riff-app-avatar" src="%s" alt="" width="32" height="32" decoding="async">', esc_url( (string) get_avatar_url( $user->ID, array( 'size' => 64 ) ) ) )
+			: sprintf( '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">%s</span>', esc_html( mb_strtoupper( mb_substr( $name, 0, 1 ) ) ) );
+		return sprintf(
+			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a><a href="%6$s">%7$s</a><a href="%8$s">%9$s</a></div></details>',
+			/* translators: %s: the signed-in listener's name. */
+			esc_attr( sprintf( __( 'Account: %s', 'riff' ), $name ) ),
+			$face,
+			esc_html( $name ),
+			esc_url( add_query_arg( self::VIEW, 'library', $page ) ),
+			esc_html__( 'Your Library', 'riff' ),
+			esc_url( get_edit_profile_url( $user->ID ) ),
+			esc_html__( 'Edit profile', 'riff' ),
+			esc_url( wp_logout_url( $page ) ),
+			esc_html__( 'Sign out', 'riff' )
+		);
 	}
 
 	/**
