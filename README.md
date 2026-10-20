@@ -3,11 +3,27 @@
 <h1 align="center">Riff</h1>
 
 Publish your music from the WordPress Media Library, and your listeners get a player that works like
-a streaming app. Install it and the audio, video and
-playlist blocks in your posts play in a player docked at the bottom of the screen, with a full Now Playing
-view, a queue, and a Song/Video switch for tracks that have both.
+a streaming app.
+
+Install it and the audio, video and playlist blocks in your posts play in a player docked at the
+bottom of the screen, with a full Now Playing view, a queue, and a Song/Video switch for tracks that
+have both.
 
 This repository is the Riff monorepo. <a href="https://riffpress.com/">Landing page</a> and live demo.
+
+## WordPress Playground
+
+No install needed: launch a scratch site with Riff and the demo post, built from `main`.
+
+[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://riffpress.com/demo)
+
+- `riffpress.com/demo` always opens the demo built from the latest release of the site.
+- For what is on `main` right now, use the `preview-main` branch. It holds `riff.zip`, the demo media
+  and a blueprint that names them, rebuilt by the Playground Main Build workflow on every push to
+  `main`:
+  `https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json`
+
+## What is in this repository
 
 | Path | What it is |
 | --- | --- |
@@ -19,48 +35,82 @@ This repository is the Riff monorepo. <a href="https://riffpress.com/">Landing p
 | `site/` | The landing page, published with GitHub Pages, with a live demo in WordPress Playground. |
 | `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |
 
-## WordPress Playground
-
-No install needed: launch a scratch site with Riff and the demo post, built from `main`.
-
-[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://riffpress.com/demo)
-
-`riffpress.com/demo` always opens the demo built from the latest release of the site. The `preview-main` branch holds `riff.zip`, the demo media and a blueprint that names them, rebuilt by the Playground Main Build workflow on every push to `main`, for a demo of what is on `main` right now: `https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json`.
-
 ## How the player works
 
-The server marks each core audio and video block with its track as a data attribute on the
-figure, and each item of a playlist block (WordPress 7.1) with its own, and leaves the block's
-markup alone, so a page still plays if the script never runs. A playlist's own player is not
-started, since it fetches the whole current file to draw its waveform; the page's player plays
-the playlist's tracks instead.
-The script turns those blocks into rows and plays them through one queue: the post's media is
-the queue, the row you tap is where it starts. One `<audio>` and one `<video>` element serve the
-whole page; a track with a video version plays through whichever is showing, and switching hands
-the position across. A phone pauses video when the page goes to the background, so the track
-moves to audio while hidden and back when it returns.
+### Blocks become one queue
 
-The rest is what a player should do. Media Session gives the lock screen its metadata and
-controls. Space or K, J and L, and Shift+N and Shift+P work on a keyboard. AirPlay and Cast appear
-when a device is in reach. A swipe on the bar skips, and a drag on Now Playing closes it. The queue
-and position are kept for the tab's session. A full-page navigation saves them and attempts to
-resume on the next page; a reload restores the same track paused. Share links to the track: the
-post's address with `?riff_track=<id>`, which opens the post on that track, focused and not
-playing, and leaves whatever is already playing alone.
+- The server marks each core audio and video block with its track, as a data attribute on the
+  figure, and each item of a playlist block (WordPress 7.1) with its own. It leaves the block's
+  markup alone, so a page still plays if the script never runs.
+- A playlist's own player is not started, since it fetches the whole current file to draw its
+  waveform. The page's player plays the playlist's tracks instead.
+- The script turns those blocks into rows and plays them through one queue: the post's media is
+  the queue, and the row you tap is where it starts.
+- One `<audio>` and one `<video>` element serve the whole page. A track with a video version plays
+  through whichever is showing, and switching hands the position across.
+- A phone pauses video when the page goes to the background, so the track moves to audio while
+  hidden and back when it returns.
 
-To make a dedicated Listen page, press Create Listen page in the notice Riff shows on the Dashboard
-after activation, or create a WordPress page and add the Riff block, or put `[riff]` in its content. The page lists posts with audio or video; opening a post keeps you on that page
-while its tracks play. Load more adds the next page of posts in place; its address, `?riff_page=2`, shows
-the same posts when reloaded or shared, and works without JavaScript.
+### What else it does
 
-The layout follows YouTube Music's current design and measurements, in Riff's own amber.
+The rest is what a player should do:
+
+- Media Session gives the lock screen its metadata and controls.
+- AirPlay and Cast appear when a device is in reach.
+- A swipe on the bar skips, and a drag on Now Playing closes it.
+- The queue and position are kept for the tab's session. A full-page navigation saves them and
+  attempts to resume on the next page; a reload restores the same track paused.
+
+On a keyboard:
+
+| Keys | Action |
+| --- | --- |
+| Space or K | Play and pause |
+| J and L | Back and forward ten seconds |
+| Shift+N and Shift+P | Next and previous track |
+| Escape | Close Now Playing |
+
+Nothing fires while you type in a field. A site can turn the single-key shortcuts off with the
+`riff.shortcuts` filter, as WCAG 2.1.4 asks.
+
+### Addresses
+
+| Address | What it opens |
+| --- | --- |
+| A post's address with `?riff_track=<id>` | The post on that track, focused and not playing. Whatever is already playing is left alone. This is what Share links to. |
+| A Listen page with `?riff_page=2` | The same posts Load more showed, when reloaded or shared. It works without JavaScript. |
+
+### A Listen page
+
+A dedicated Listen page lists posts with audio or video. Opening a post keeps you on that page
+while its tracks play, and Load more adds the next page of posts in place. To make one, do any of
+these:
+
+- Press **Create Listen page** in the notice Riff shows on the Dashboard after activation.
+- Create a WordPress page and add the Riff block.
+- Put `[riff]` in a page's content.
+
+### Video versions
 
 A track with a video version is set in the Media Library: click an audio file and choose a video
 under **Video version**.
 
+### Design
+
+The layout follows YouTube Music's current design and measurements, in Riff's own amber. On a wide screen the bar is arranged as Tidal's, with the seek line under the controls. [DESIGN.md](DESIGN.md) has the rest.
+
 ## Extending it
 
-The developer reference is at [riffpress.com/developers](https://riffpress.com/developers/), one section per language: [PHP](https://riffpress.com/developers/php/), [JavaScript](https://riffpress.com/developers/javascript/), [REST API](https://riffpress.com/developers/rest/) and [CSS](https://riffpress.com/developers/css/). Every page is generated from the plugin's own docblocks and registration code. CI fails a change that adds a hook, a `window.riff` member, a `Riff\Source` method or a REST argument without documenting it; a custom property is public only once it has a docblock. [docs/hooks.md](docs/hooks.md) and [docs/javascript.md](docs/javascript.md) are the same hooks and `window.riff` reference for reading on GitHub. [.github/SUPPORT.md](.github/SUPPORT.md) has the stability promise.
+- The developer reference is at [riffpress.com/developers](https://riffpress.com/developers/), one
+  section per language: [PHP](https://riffpress.com/developers/php/),
+  [JavaScript](https://riffpress.com/developers/javascript/),
+  [REST API](https://riffpress.com/developers/rest/) and [CSS](https://riffpress.com/developers/css/).
+  Every page is generated from the plugin's own docblocks and registration code.
+- CI fails a change that adds a hook, a `window.riff` member, a `Riff\Source` method or a REST
+  argument without documenting it. A custom property is public only once it has a docblock.
+- [docs/hooks.md](docs/hooks.md) and [docs/javascript.md](docs/javascript.md) are the same hooks and
+  `window.riff` reference, for reading on GitHub.
+- [.github/SUPPORT.md](.github/SUPPORT.md) has the stability promise.
 
 ## Docs in this repository
 
@@ -87,11 +137,14 @@ npm run test:e2e
 npm run test:php
 ```
 
-The repository root is mounted in the containers at `wp-content/riff`, which is why seed paths
-start there. `.wp-env.override.json` moves the ports when another wp-env on the machine holds them.
+- The repository root is mounted in the containers at `wp-content/riff`, which is why seed paths
+  start there.
+- `.wp-env.override.json` moves the ports when another wp-env on the machine holds them.
 
 ## Licence
 
-GPL-2.0-or-later. Roboto, Inter and EB Garamond are bundled under the SIL Open Font License; the
-icons are Google's Material Icons under the Apache License 2.0. The demo recordings are by the Airmen of Note, United
-States Air Force Band, and are public domain as U.S. Government works.
+- Riff is GPL-2.0-or-later.
+- Roboto, Inter and EB Garamond are bundled under the SIL Open Font License.
+- The icons are Google's Material Icons, under the Apache License 2.0.
+- The demo recordings are by the Airmen of Note, United States Air Force Band, and are public domain
+  as U.S. Government works.

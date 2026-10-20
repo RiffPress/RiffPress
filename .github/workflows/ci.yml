@@ -115,6 +115,8 @@ jobs:
         run: node .github/scripts/reference-pages.js --check
       - name: The web pages are current
         run: node .github/scripts/web-pages.js --check
+      - name: Each readme.txt changelog matches its CHANGELOG.md
+        run: node .github/scripts/readme-changelog.js --check
 
   # packages/wp-api-coverage: its unit tests, then Riff's own report in the run summary. Node only,
   # so it runs on every change.

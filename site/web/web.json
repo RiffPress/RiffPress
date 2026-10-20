@@ -21,12 +21,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const el = ( t = track() ) =>",
-				"line": 468
+				"line": 490
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.play().catch( paint );",
-				"line": 1084
+				"line": 1143
 			}
 		],
 		"shot": {
@@ -51,12 +51,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function buffered( m, duration ) {",
-				"line": 1723
+				"line": 1804
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ranges = m.buffered;",
-				"line": 1724
+				"line": 1805
 			}
 		],
 		"shot": {
@@ -81,7 +81,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );",
-				"line": 2824
+				"line": 2943
 			}
 		],
 		"shot": {
@@ -106,7 +106,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.vibrate?.( 8 );",
-				"line": 1113
+				"line": 1172
 			}
 		],
 		"shot": {
@@ -131,7 +131,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( navigator.connection?.saveData ) {",
-				"line": 59
+				"line": 77
 			}
 		],
 		"shot": {
@@ -156,17 +156,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {",
-				"line": 2634
+				"line": 2753
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setActionHandler( action, handler );",
-				"line": 2695
+				"line": 2814
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setPositionState( {",
-				"line": 2660
+				"line": 2779
 			}
 		],
 		"shot": {
@@ -191,12 +191,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );",
-				"line": 2716
+				"line": 2835
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.remote.prompt().catch( () => {} );",
-				"line": 2723
+				"line": 2842
 			}
 		],
 		"shot": {
@@ -221,12 +221,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ctx = new AudioContext();",
-				"line": 1388
+				"line": 1447
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const src = ctx.createMediaElementSource( audio );",
-				"line": 1389
+				"line": 1448
 			}
 		],
 		"shot": {
@@ -251,17 +251,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser = ctx.createAnalyser();",
-				"line": 1390
+				"line": 1449
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getFloatTimeDomainData( samples );",
-				"line": 1417
+				"line": 1476
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getByteFrequencyData( bins );",
-				"line": 1442
+				"line": 1501
 			}
 		],
 		"shot": {
@@ -286,7 +286,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "document.addEventListener( 'visibilitychange', () => {",
-				"line": 1190
+				"line": 1249
 			}
 		],
 		"shot": {
@@ -311,7 +311,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "? `<img src=\"${ esc( art ) }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 2984
+				"line": 3103
 			},
 			{
 				"file": "plugins/riff/features/listen/class-ui.php",
@@ -346,7 +346,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "img.decoding = 'async';",
-				"line": 2740
+				"line": 2859
 			}
 		],
 		"shot": {
@@ -371,12 +371,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function drag( zone, { move, end } ) {",
-				"line": 2528
+				"line": 2647
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {",
-				"line": 2530
+				"line": 2649
 			}
 		],
 		"shot": {
@@ -401,7 +401,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "breath = wire.animate(",
-				"line": 1582
+				"line": 1641
 			}
 		],
 		"shot": {
@@ -426,12 +426,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function follow() {",
-				"line": 1229
+				"line": 1288
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "meterRaf = requestAnimationFrame( tick );",
-				"line": 1514
+				"line": 1573
 			}
 		],
 		"shot": {
@@ -456,7 +456,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.share( {",
-				"line": 2404
+				"line": 2518
 			}
 		],
 		"shot": {
@@ -481,7 +481,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.clipboard.writeText( url );",
-				"line": 2417
+				"line": 2531
 			}
 		],
 		"shot": {
@@ -506,12 +506,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = true;",
-				"line": 2247
+				"line": 2361
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = false;",
-				"line": 2290
+				"line": 2404
 			}
 		],
 		"shot": {
@@ -536,17 +536,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;",
-				"line": 70
+				"line": 88
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( window.matchMedia( '(hover: none)' ).matches ) {",
-				"line": 1112
+				"line": 1171
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches",
-				"line": 2242
+				"line": 2356
 			}
 		],
 		"shot": {
@@ -571,12 +571,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "?.scrollIntoView( { block: 'nearest' } );",
-				"line": 2330
+				"line": 2444
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 286
+				"line": 297
 			}
 		],
 		"shot": {
@@ -600,8 +600,8 @@
 		"where": [
 			{
 				"file": "plugins/riff/src/class-player.php",
-				"code": "wp_enqueue_script_module( 'riff', RIFF_URL . 'assets/riff.js', array(), self::version( 'assets/riff.js' ) );",
-				"line": 61
+				"code": "wp_enqueue_script_module(",
+				"line": 67
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -631,7 +631,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )",
-				"line": 2900
+				"line": 3019
 			}
 		],
 		"shot": {
@@ -656,17 +656,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );",
-				"line": 2254
+				"line": 2368
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'popstate', () => {",
-				"line": 2313
+				"line": 2427
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 273
+				"line": 284
 			}
 		],
 		"shot": {
@@ -691,12 +691,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const saved = parse( read( sessionStorage, STATE ) );",
-				"line": 2847
+				"line": 2966
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "write( localStorage, VOLUME, String( audio.volume ) );",
-				"line": 2152
+				"line": 2266
 			}
 		],
 		"shot": {
@@ -721,12 +721,12 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "fetch( key, {",
-				"line": 147
+				"line": 158
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "location.assign( to.browse ? to.href : addressOf( id, upto ) );",
-				"line": 240
+				"line": 251
 			}
 		],
 		"shot": {
@@ -751,7 +751,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;",
-				"line": 2862
+				"line": 2981
 			}
 		],
 		"shot": {
@@ -776,7 +776,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pagehide', save );",
-				"line": 2802
+				"line": 2921
 			}
 		],
 		"shot": {
@@ -801,7 +801,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {",
-				"line": 2804
+				"line": 2923
 			}
 		],
 		"shot": {
@@ -831,12 +831,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "document.activeElement && document.activeElement !== document.body",
-				"line": 2234
+				"line": 2348
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {",
-				"line": 2581
+				"line": 2700
 			}
 		],
 		"shot": {
@@ -865,7 +865,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 1491,
+				"line": 1550,
 				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
 			}
 		],
@@ -1105,12 +1105,12 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 69,
+				"line": 87,
 				"code": "const reduce = () =>"
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 306,
+				"line": 317,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],
@@ -1260,7 +1260,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 2530,
+				"line": 2649,
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],
