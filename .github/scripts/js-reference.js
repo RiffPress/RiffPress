@@ -249,7 +249,7 @@ function page( list, jsHooks ) {
 	}
 
 	return referencePage( {
-		title: 'JavaScript, RiffPress',
+		title: 'JavaScript | RiffPress',
 		description: 'window.riff and the player\'s actions and filters: how a script talks to the Riff player.',
 		url: 'developers/javascript/',
 		current: 'javascript',

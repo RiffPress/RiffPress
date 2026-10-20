@@ -502,7 +502,7 @@ function hookPage( p ) {
 	body += '</tbody></table></section>\n';
 
 	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ label }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
-	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() }, RiffPress`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', 'developers' );
+	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() } | RiffPress`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', 'developers' );
 	// A hook sits under its language: PHP / Hooks / riff_accent, or JavaScript / Hooks / riff.track.
 	const lang = p.lang === 'js' ? [ 'javascript', 'JavaScript', '#actions-and-filters' ] : [ 'php', 'PHP', '#hooks' ];
 	html += localNav( '../../../', lang[ 0 ] );
@@ -526,7 +526,7 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 }
 
 function indexPage( list ) {
-	let html = head( 'Hooks, RiffPress', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css', 'developers' );
+	let html = head( 'Hooks | RiffPress', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css', 'developers' );
 	html += localNav( '../../', '' );
 	html += crumbs( [ [ 'RiffPress', '../../' ], [ 'Developers', '../' ], [ 'Hooks' ] ], searchForm( './' ) );
 	html += `<main id="main" class="wrap reference hooks-index">

@@ -242,7 +242,7 @@ function phpPage( data ) {
 	body += member( data.shortcode, '[riff]' );
 
 	return referencePage( {
-		title: 'PHP, RiffPress',
+		title: 'PHP | RiffPress',
 		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema and the Listen block.',
 		url: 'developers/php/',
 		current: 'php',
@@ -304,7 +304,7 @@ function restPage( data ) {
 	body += '</section>\n';
 
 	return referencePage( {
-		title: 'REST API, RiffPress',
+		title: 'REST API | RiffPress',
 		description: 'Riff over HTTP: the track on every media item, the library routes, and the WPGraphQL fields.',
 		url: 'developers/rest/',
 		current: 'rest',
@@ -344,7 +344,7 @@ function cssPage( data ) {
 }` ) + '</section>\n';
 
 	return referencePage( {
-		title: 'CSS, RiffPress',
+		title: 'CSS | RiffPress',
 		description: 'The public custom properties of the Riff player and the Listen block, and how a theme sets the accent.',
 		url: 'developers/css/',
 		current: 'css',
