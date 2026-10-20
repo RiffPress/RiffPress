@@ -51,12 +51,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function buffered( m, duration ) {",
-				"line": 1806
+				"line": 1898
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ranges = m.buffered;",
-				"line": 1807
+				"line": 1899
 			}
 		],
 		"shot": {
@@ -81,7 +81,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );",
-				"line": 2945
+				"line": 3035
 			}
 		],
 		"shot": {
@@ -156,17 +156,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {",
-				"line": 2755
+				"line": 2847
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setActionHandler( action, handler );",
-				"line": 2816
+				"line": 2908
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "navigator.mediaSession.setPositionState( {",
-				"line": 2781
+				"line": 2873
 			}
 		],
 		"shot": {
@@ -191,12 +191,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );",
-				"line": 2837
+				"line": 2929
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "m.remote.prompt().catch( () => {} );",
-				"line": 2844
+				"line": 2936
 			}
 		],
 		"shot": {
@@ -221,12 +221,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const ctx = new AudioContext();",
-				"line": 1447
+				"line": 1541
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const src = ctx.createMediaElementSource( audio );",
-				"line": 1448
+				"line": 1542
 			}
 		],
 		"shot": {
@@ -251,17 +251,17 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser = ctx.createAnalyser();",
-				"line": 1449
+				"line": 1543
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getFloatTimeDomainData( samples );",
-				"line": 1476
+				"line": 1570
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "analyser.getByteFrequencyData( bins );",
-				"line": 1501
+				"line": 1595
 			}
 		],
 		"shot": {
@@ -311,7 +311,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "? `<img src=\"${ esc( art ) }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`",
-				"line": 3105
+				"line": 3195
 			},
 			{
 				"file": "plugins/riff/features/listen/class-ui.php",
@@ -346,7 +346,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "img.decoding = 'async';",
-				"line": 2861
+				"line": 2953
 			}
 		],
 		"shot": {
@@ -371,12 +371,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "function drag( zone, { move, end } ) {",
-				"line": 2649
+				"line": 2741
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {",
-				"line": 2651
+				"line": 2743
 			}
 		],
 		"shot": {
@@ -393,20 +393,25 @@
 			"name": "Web Animations",
 			"url": "https://www.w3.org/TR/web-animations-1/"
 		},
-		"summary": "Breathes the filament where there is no signal to follow.",
-		"how": "When a track is playing but there is no analyser, on iOS, for a cross-origin file, or through the video element, the wire gets an infinite 2.6 second opacity loop through `element.animate()`. The returned animation is cancelled when playback pauses or ends.",
-		"why": "On every iPhone, where Web Audio is deliberately not used, the filament would otherwise sit static.",
-		"fallback": "This branch is itself the fallback for a missing analyser.",
+		"summary": "Glides the seek line on the GPU, and breathes the filament where there is no signal.",
+		"how": "While a track plays, each moving layer of the seek line (the played part, the wire, its heart, the bloom and the knob) runs one linear `element.animate()` from where the time is to the end of the track, at the playback rate. They are aimed again when the time jumps (a seek, a pause, a stall, a new rate or track, or drift past 150 ms), and the bloom is animated through `pseudoElement: '::after'`. Where there is no analyser (on iOS, for a cross-origin file, or through the video element) the filament's heart also breathes on an infinite 2.6 second opacity loop.",
+		"why": "Transform animations run on the compositor, so the line glides even while the page's own script is busy, and nothing is written each frame.",
+		"fallback": "Without the API the line rests where `timeupdate` puts it, four times a second.",
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"code": "breath = wire.animate(",
-				"line": 1641
+				"code": "glides.push( node.animate( frames, { ...timing, ...extra } ) );",
+				"line": 1329
+			},
+			{
+				"file": "plugins/riff/assets/riff.js",
+				"code": "breath = heart.animate(",
+				"line": 1735
 			}
 		],
 		"shot": {
 			"image": "phone-post",
-			"caption": "On an iPhone the filament under the bar breathes on a loop instead of following the signal."
+			"caption": "The seek line glides under the bar, and on an iPhone its filament breathes on a loop."
 		}
 	},
 	{
@@ -418,25 +423,20 @@
 			"name": "HTML Standard",
 			"url": "https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animation-frames"
 		},
-		"summary": "Moves the seek line and the filament every frame, not four times a second.",
-		"how": "Two frame loops run while music plays. One repaints the seek line and times every frame and stops when the element pauses or the page hides. The other advances the filament's heat model with the frame timestamp and reads the analyser. Opening Now Playing also waits one frame before adding its class, so the slide-up transition actually runs.",
-		"why": "`timeupdate` fires about four times a second and reads as a line that skips.",
+		"summary": "Advances the filament's heat with the music every frame.",
+		"how": "While music plays, one frame loop reads the analyser and advances the filament's heat model with the frame timestamp, writing the heat once a frame; the stylesheet turns it into opacity only. Opening Now Playing also waits one frame before adding its class, so the slide-up transition actually runs.",
+		"why": "The light has to follow the music as it happens; the seek line itself moves by Web Animations instead.",
 		"fallback": null,
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"code": "function follow() {",
-				"line": 1288
-			},
-			{
-				"file": "plugins/riff/assets/riff.js",
 				"code": "meterRaf = requestAnimationFrame( tick );",
-				"line": 1573
+				"line": 1667
 			}
 		],
 		"shot": {
 			"image": "phone-now-playing",
-			"caption": "The seek line and elapsed time advance every frame."
+			"caption": "The filament under the seek line brightens with the music."
 		}
 	},
 	{
@@ -456,7 +456,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.share( {",
-				"line": 2520
+				"line": 2615
 			}
 		],
 		"shot": {
@@ -481,7 +481,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "await navigator.clipboard.writeText( url );",
-				"line": 2533
+				"line": 2628
 			}
 		],
 		"shot": {
@@ -506,12 +506,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = true;",
-				"line": 2363
+				"line": 2458
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "node.inert = false;",
-				"line": 2406
+				"line": 2501
 			}
 		],
 		"shot": {
@@ -546,7 +546,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches",
-				"line": 2358
+				"line": 2453
 			}
 		],
 		"shot": {
@@ -571,7 +571,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "?.scrollIntoView( { block: 'nearest' } );",
-				"line": 2446
+				"line": 2541
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -631,7 +631,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )",
-				"line": 3021
+				"line": 3111
 			}
 		],
 		"shot": {
@@ -656,12 +656,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );",
-				"line": 2370
+				"line": 2465
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'popstate', () => {",
-				"line": 2429
+				"line": 2524
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
@@ -691,12 +691,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const saved = parse( read( sessionStorage, STATE ) );",
-				"line": 2968
+				"line": 3058
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "write( localStorage, VOLUME, String( audio.volume ) );",
-				"line": 2268
+				"line": 2363
 			}
 		],
 		"shot": {
@@ -751,7 +751,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;",
-				"line": 2983
+				"line": 3073
 			}
 		],
 		"shot": {
@@ -776,7 +776,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pagehide', save );",
-				"line": 2923
+				"line": 3015
 			}
 		],
 		"shot": {
@@ -801,7 +801,7 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {",
-				"line": 2925
+				"line": 3017
 			}
 		],
 		"shot": {
@@ -831,12 +831,12 @@
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "document.activeElement && document.activeElement !== document.body",
-				"line": 2350
+				"line": 2445
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {",
-				"line": 2702
+				"line": 2794
 			}
 		],
 		"shot": {
@@ -853,19 +853,19 @@
 			"name": "CSS Properties and Values API Level 1",
 			"url": "https://www.w3.org/TR/css-properties-values-api-1/#at-property-rule"
 		},
-		"summary": "Registers the filament's heat as a real number, so it can animate.",
-		"how": "The script writes one number, `--riff-heat`, onto the seek lines and the Now Playing glow every frame. Registering it as a `<number>` lets a 160ms transition interpolate between those writes. Every colour and opacity in the filament is a `calc()` off that one number, so the script never touches a colour.",
-		"why": "An unregistered custom property is a string and cannot transition, so the wire would step from one brightness to the next each frame.",
-		"fallback": "The colours still update each frame; only the transition stops working.",
+		"summary": "Registers the filament's heat as a real number, so every layer's opacity can be worked out from it.",
+		"how": "The script writes one number, `--riff-heat`, onto the seek lines and the Now Playing glow every frame. Every opacity in the filament is a `calc()` off that one number, and each layer keeps one fixed colour, so the GPU composites the light without painting anything again. Registering it as a `<number>` with an initial value of 0 makes it a typed value the `calc()`s can multiply.",
+		"why": "A registered property given a bad value falls back to 0, so the light goes dark. An unregistered one would invalidate every `calc()` built on it, and each layer would show at full opacity.",
+		"fallback": "Unregistered, a bad value would invalidate every opacity worked out from the heat, and the light would show at full strength.",
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 560,
+				"line": 562,
 				"code": "@property --riff-heat {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 1550,
+				"line": 1644,
 				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
 			}
 		],
@@ -895,43 +895,13 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 982,
+				"line": 1001,
 				"code": "background: linear-gradient(var(--riff-tint), color-mix(in srgb, var(--riff-tint) 70%, #000));"
 			}
 		],
 		"shot": {
 			"image": "phone-post",
 			"caption": "The faint highlight on the current track row, mixed from the theme's own text colour."
-		}
-	},
-	{
-		"slug": "oklab",
-		"name": "oklab",
-		"group": "Styling",
-		"mdn": "https://developer.mozilla.org/docs/Web/CSS/color_value/oklab",
-		"spec": {
-			"name": "CSS Color Module Level 4",
-			"url": "https://www.w3.org/TR/css-color-4/#specifying-oklab-oklch"
-		},
-		"summary": "Mixes the filament's colour from red through amber to white without muddy midtones.",
-		"how": "The filament's colour is a three-stop ramp: a near-black red to a lit red, then to the amber accent, then to a pale yellow-white at the peaks. Each stop is a `color-mix()` in oklab, so the in-between colours keep an even perceived lightness, the way a heated wire brightens.",
-		"why": "The same mix in sRGB passes through darker, muddier midtones instead of a smooth brightening.",
-		"fallback": "The glow colour is undefined and the wire draws in the inherited foreground colour.",
-		"where": [
-			{
-				"file": "plugins/riff/assets/riff.css",
-				"line": 574,
-				"code": "--riff-glow: color-mix(in oklab, color-mix(in oklab, color-mix(in oklab, rgb(74 16 0), rgb(190 58 12) calc(var(--riff-heat-red) * 100%)), var(--riff-accent) calc(var(--riff-heat-amber) * 100%)), rgb(255 232 190) calc(var(--riff-heat-white) * 100%));"
-			},
-			{
-				"file": "plugins/riff/assets/riff.css",
-				"line": 588,
-				"code": ".riff-wire {"
-			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The filament: red when quiet, amber at working temperature, near white on the peaks."
 		}
 	},
 	{
@@ -950,12 +920,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1061,
+				"line": 1080,
 				"code": "container-type: size;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1072,
+				"line": 1091,
 				"code": "width: min(100cqw, 100cqh);"
 			}
 		],
@@ -985,12 +955,12 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 639,
+				"line": 644,
 				"code": "html:has(#riff[data-live]) [data-playing=\"true\"] .riff-row-state i {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2522,
+				"line": 2541,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -1020,7 +990,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 662,
+				"line": 667,
 				"code": "height: calc(var(--riff-bar-h) + var(--riff-safe-b));"
 			}
 		],
@@ -1045,7 +1015,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2921,
+				"line": 2940,
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1100,7 +1070,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1880,
+				"line": 1899,
 				"code": "@media (prefers-reduced-motion: reduce) {"
 			},
 			{
@@ -1135,12 +1105,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 643,
+				"line": 648,
 				"code": "@media (prefers-reduced-transparency: reduce) {"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 569,
+				"line": 571,
 				"code": ".riff-np-glow {"
 			}
 		],
@@ -1165,12 +1135,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1040,
+				"line": 1059,
 				"code": "clip-path: inset(50%);"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1723,
+				"line": 1742,
 				"code": "clip-path: none;"
 			}
 		],
@@ -1195,12 +1165,12 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1082,
+				"line": 1101,
 				"code": "aspect-ratio: 16 / 9;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2482,
+				"line": 2501,
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1225,7 +1195,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 927,
+				"line": 946,
 				"code": "accent-color: var(--riff-fg);"
 			}
 		],
@@ -1250,17 +1220,17 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 715,
+				"line": 720,
 				"code": "touch-action: pan-y;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 999,
+				"line": 1018,
 				"code": "touch-action: none;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"line": 2651,
+				"line": 2743,
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],
@@ -1285,7 +1255,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 1276,
+				"line": 1295,
 				"code": "overscroll-behavior: contain;"
 			}
 		],
@@ -1320,7 +1290,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2522,
+				"line": 2541,
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],

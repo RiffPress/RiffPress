@@ -51,7 +51,6 @@ const USES = {
 	'ARIA dialog': [ PHP, /role="dialog"/ ],
 	'@property': [ CSS, /@property/ ],
 	'color-mix()': [ CSS, /color-mix\(/ ],
-	oklab: [ CSS, /oklab/ ],
 	'Container queries': [ CSS, /container-type|@container/ ],
 	':has()': [ CSS, /:has\(/ ],
 	'env() safe areas': [ CSS, /env\(safe-area/ ],

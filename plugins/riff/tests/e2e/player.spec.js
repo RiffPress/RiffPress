@@ -387,8 +387,13 @@ test.describe( 'Player', () => {
 		expect( colors.chevron ).toBe( 'rgb(255, 255, 255)' );
 		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();
 		await page.mouse.move( seek.x + 300, seek.y + seek.height / 2 );
+		// The knob is a rail as wide as the line, slid by transform, with a 14px dot at its end.
 		const knob = await page.locator( '.riff-knob' ).boundingBox();
-		expect( knob.width ).toBe( 14 );
+		const dot = await page.locator( '.riff-knob' ).evaluate( ( el ) => {
+			const after = getComputedStyle( el, '::after' );
+			return { width: after.width, height: after.height };
+		} );
+		expect( dot ).toEqual( { width: '14px', height: '14px' } );
 		await expect( page.locator( '.riff-knob' ) ).toHaveCSS( 'opacity', '1' );
 		// The seek line sits under the transport, inside the bar, with a time at each end.
 		const bar = await page.locator( '.riff-bar' ).boundingBox();
@@ -751,6 +756,47 @@ test.describe( 'Player', () => {
 				return time / duration;
 			} )
 			.toBeGreaterThan( 0.7 );
+	} );
+
+	test( 'while a track plays the seek line glides on the compositor, and a press that moves nothing keeps it gliding', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'the bar\'s line, on a wide screen' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( 0.5 );
+		// Animations on the line's layers, transforms only, running: the compositor moves them.
+		const gliding = () =>
+			page.evaluate( () =>
+				document
+					.getAnimations()
+					.filter(
+						( a ) =>
+							a.playState === 'running' &&
+							a.effect?.target?.closest?.( '.riff-bar-seek' )
+					)
+					.map( ( a ) =>
+						Object.keys( a.effect.getKeyframes()[ 0 ] ).filter(
+							( k ) => ! [ 'offset', 'easing', 'composite', 'computedOffset' ].includes( k )
+						)
+					)
+			);
+		await expect.poll( async () => ( await gliding() ).length ).toBeGreaterThan( 3 );
+		expect( new Set( ( await gliding() ).flat() ) ).toEqual( new Set( [ 'transform' ] ) );
+		// A press and release where the line already is changes no value, so no seek follows.
+		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();
+		const at = await page.evaluate( () => {
+			const m = document.querySelector( '#riff audio' );
+			return m.currentTime / m.duration;
+		} );
+		await page.mouse.move( seek.x + seek.width * at, seek.y + seek.height / 2 );
+		await page.mouse.down();
+		await page.mouse.up();
+		await expect.poll( async () => ( await gliding() ).length ).toBeGreaterThan( 3 );
 	} );
 
 	test( 'a track with a video carries a film mark by its title, nothing on the right', async ( {
