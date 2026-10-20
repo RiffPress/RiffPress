@@ -706,6 +706,53 @@ test.describe( 'Player', () => {
 			.toBeGreaterThan( 0 );
 	} );
 
+	test( 'while the seek line is dragged it stays under the pointer, and lets go where it was left', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'the bar\'s line is a readout on a phone; Now Playing has its own' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( 0.5 );
+		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();
+		const y = seek.y + seek.height / 2;
+		await page.mouse.move( seek.x + seek.width * 0.6, y );
+		await page.mouse.down();
+		await page.mouse.move( seek.x + seek.width * 0.75, y, { steps: 5 } );
+		// Held still while the track plays on: every frame the line must stay where the pointer
+		// put it, not swap back to the time playing, which is what shook.
+		const held = await page.evaluate(
+			() =>
+				new Promise( ( done ) => {
+					const node = document.querySelector( '.riff-bar-seek' );
+					const seen = [];
+					const tick = () => {
+						seen.push( parseFloat( node.style.getPropertyValue( '--riff-p' ) ) );
+						if ( seen.length < 30 ) {
+							requestAnimationFrame( tick );
+						} else {
+							done( seen );
+						}
+					};
+					requestAnimationFrame( tick );
+				} )
+		);
+		expect( Math.min( ...held ) ).toBeGreaterThan( 0.7 );
+		expect( Math.max( ...held ) - Math.min( ...held ) ).toBeLessThan( 0.01 );
+		await page.mouse.up();
+		await expect
+			.poll( async () => {
+				const { time, duration } = await page.evaluate( () => {
+					const m = document.querySelector( '#riff audio' );
+					return { time: m.currentTime, duration: m.duration };
+				} );
+				return time / duration;
+			} )
+			.toBeGreaterThan( 0.7 );
+	} );
+
 	test( 'a track with a video carries a film mark by its title, nothing on the right', async ( {
 		page,
 	} ) => {
