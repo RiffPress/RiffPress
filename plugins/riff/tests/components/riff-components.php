@@ -126,9 +126,31 @@ add_action(
 			'header'  => App::header( 'An album', 'The Airmen of Note · 10 tracks · 42 min', 'Album', $art, '#3b4a6b', false, 'album', 1 )
 				. App::header( 'An artist', '12 tracks · 2 albums', 'Artist', $art, '', true, 'artist', 2 )
 				. App::header( $long, '2 tracks' )
-				. App::header( $word, $word . ' · 1 track' ),
+				. App::header( $word, $word . ' · 1 track' )
+				. App::header( $word, $word . ' · 1 track', 'Album', $art, '#3b4a6b', false, 'album', 5 ),
 			'title'   => Ui::title( 'A view' ) . Ui::title( $long ) . Ui::title( $word ),
-			'artists' => '<ul class="riff-artists">' . Browse::artist_items(
+			'artists' => Ui::shelf(
+				'artists',
+				$word,
+				'#artists',
+				Browse::artist_items(
+					array(
+						array(
+							'id'    => 2,
+							'name'  => $word,
+							'count' => 1,
+						),
+						array(
+							'id'    => 1,
+							'name'  => 'The Airmen of Note',
+							'count' => 10,
+						),
+					),
+					'#'
+				),
+				false,
+				'ul'
+			) . '<ul class="riff-artists">' . Browse::artist_items(
 				array(
 					array(
 						'id'    => 1,

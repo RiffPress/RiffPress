@@ -1920,10 +1920,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	font-weight: 400;
 	letter-spacing: 0;
 
-	/* A name that is one long word, as tags sometimes are, breaks where it
-	   would run past its box instead of widening the page. */
-	overflow-wrap: break-word;
-
 	/**
 	 * The Listen block's background.
 	 *
@@ -2011,6 +2007,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	font-size: 16px;
 	line-height: 1.875;
 	-webkit-font-smoothing: antialiased;
+}
+
+/* Names and titles come from tags, and a tag can be one long word. It breaks
+   where it would run past its box, and the box can be narrower than the
+   word, so a card, a row or a heading keeps its size instead of growing to
+   fit it. */
+.riff-app :is(.riff-app-title, .riff-app-playlists-title, .riff-shelf-title, .riff-album-title, .riff-album-meta, .riff-artist-name, .riff-artist-sub, .riff-card-title, .riff-card-sub, .riff-more-title) {
+	overflow-wrap: anywhere;
 }
 
 /* On a theme or a block that sets its colours (riff-app-themed, with
@@ -2246,10 +2250,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-app .riff-artist {
 	display: grid;
-
-	/* The name's column can be narrower than its longest word, so a long one
-	   wraps instead of widening the row. */
-	grid-template-columns: 48px minmax(0, 1fr);
+	grid-template-columns: 48px 1fr;
 	grid-template-rows: auto auto;
 	align-items: center;
 	column-gap: 16px;
