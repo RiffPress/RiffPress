@@ -24,7 +24,8 @@
 	"packages": {
 		"plugins/riff": {
 			"package-name": "riff",
-			"component": "riff"
+			"component": "riff",
+			"pull-request-title-pattern": "chore${scope}: release riff ${version}"
 		},
 		"plugins/riff-lyrics": {
 			"package-name": "riff-lyrics",
