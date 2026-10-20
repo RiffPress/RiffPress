@@ -103,7 +103,7 @@ Yes, if you can use WP-CLI. `wp riff import` with the path to a folder uploads t
 
 = Does Riff set cookies or keep personal data? =
 
-A signed-in listener's likes and recently played are saved to their account, and Tools > Export Personal Data and Erase Personal Data include them. A visitor's stay in their own browser's storage and are never sent to the site.
+A signed-in listener's likes, recently played and playlists are saved to their account, and Tools > Export Personal Data and Erase Personal Data include them. Deleting Riff keeps them, so installing it again brings them back; Erase Personal Data is how to remove one listener's. A visitor's stay in their own browser's storage and are never sent to the site.
 
 While a visitor's browser keeps a listening history, the player sets one cookie, `riff_history`, whose value is 1 or 2, so the Listen page can make room for that history before the page appears. It holds nothing about what was played, is first-party and strictly functional, and is removed when the history is gone. Riff suggests this text for your privacy policy under Settings > Privacy.
 

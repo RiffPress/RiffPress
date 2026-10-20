@@ -42,7 +42,14 @@ final class Playlists {
 	public const MAX_TRACKS = 500;
 
 	/**
-	 * Hooks the post type, the routes and the player's data.
+	 * Playlists exported or erased per request of the privacy tools.
+	 *
+	 * @since 4.23.0
+	 */
+	private const PRIVACY_PAGE = 50;
+
+	/**
+	 * Hooks the post type, the routes, the player's data and the privacy tools.
 	 *
 	 * @since 4.20.0
 	 */
@@ -50,6 +57,130 @@ final class Playlists {
 		add_action( 'init', array( self::class, 'post_type' ) );
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
 		add_filter( 'riff_player_data', array( self::class, 'player_data' ) );
+		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporters' ) );
+		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'erasers' ) );
+	}
+
+	/**
+	 * Adds the playlists to Tools > Export Personal Data.
+	 *
+	 * @since 4.23.0
+	 *
+	 * @param array $exporters Exporters.
+	 * @return array
+	 */
+	public static function exporters( $exporters ) {
+		$exporters                   = (array) $exporters;
+		$exporters['riff-playlists'] = array(
+			'exporter_friendly_name' => __( 'Riff playlists', 'riff' ),
+			'callback'               => array( self::class, 'export' ),
+		);
+		return $exporters;
+	}
+
+	/**
+	 * Adds the playlists to Tools > Erase Personal Data, the one place a listener's playlists are
+	 * deleted: uninstalling Riff keeps them, so installing it again brings them back.
+	 *
+	 * @since 4.23.0
+	 *
+	 * @param array $erasers Erasers.
+	 * @return array
+	 */
+	public static function erasers( $erasers ) {
+		$erasers                   = (array) $erasers;
+		$erasers['riff-playlists'] = array(
+			'eraser_friendly_name' => __( 'Riff playlists', 'riff' ),
+			'callback'             => array( self::class, 'erase' ),
+		);
+		return $erasers;
+	}
+
+	/**
+	 * A user's playlists for their personal data export, a page at a time: each playlist's name
+	 * and its tracks in order. A track they can no longer see is named by its ID, as a like is.
+	 *
+	 * @since 4.23.0
+	 *
+	 * @param string $email The user's email.
+	 * @param int    $page  The page, from 1.
+	 * @return array
+	 */
+	public static function export( $email, $page = 1 ): array {
+		$user  = get_user_by( 'email', (string) $email );
+		$posts = $user ? self::owned_by( $user->ID, (int) $page ) : array();
+		$items = array();
+		foreach ( $posts as $post ) {
+			$tracks = array();
+			foreach ( self::ids( $post ) as $id ) {
+				$title    = Catalog_Rest::visible( $id, $user->ID ) ? get_the_title( $id ) : '';
+				$tracks[] = '' !== $title ? $title : '#' . $id;
+			}
+			$items[] = array(
+				'group_id'    => 'riff-playlists',
+				'group_label' => __( 'Riff playlists', 'riff' ),
+				'item_id'     => 'riff-playlist-' . (int) $post->ID,
+				'data'        => array(
+					array(
+						'name'  => __( 'Name', 'riff' ),
+						'value' => (string) $post->post_title,
+					),
+					array(
+						'name'  => __( 'Tracks', 'riff' ),
+						'value' => implode( "\n", $tracks ),
+					),
+				),
+			);
+		}
+		return array(
+			'data' => $items,
+			'done' => count( $posts ) < self::PRIVACY_PAGE,
+		);
+	}
+
+	/**
+	 * Deletes a user's playlists for Tools > Erase Personal Data, a page at a time, trash and all.
+	 *
+	 * @since 4.23.0
+	 *
+	 * @param string $email The user's email.
+	 * @param int    $page  The page, from 1; each page deletes what it found, so the next is the first again.
+	 * @return array
+	 */
+	public static function erase( $email, $page = 1 ): array {
+		unset( $page );
+		$user  = get_user_by( 'email', (string) $email );
+		$posts = $user ? self::owned_by( $user->ID, 1 ) : array();
+		foreach ( $posts as $post ) {
+			wp_delete_post( $post->ID, true );
+		}
+		return array(
+			'items_removed'  => (bool) $posts,
+			'items_retained' => false,
+			'messages'       => array(),
+			'done'           => count( $posts ) < self::PRIVACY_PAGE,
+		);
+	}
+
+	/**
+	 * One page of a user's playlists in any status, the trash included, oldest first.
+	 *
+	 * @param int $user_id User ID.
+	 * @param int $page    The page, from 1.
+	 * @return WP_Post[]
+	 */
+	private static function owned_by( int $user_id, int $page ): array {
+		return get_posts(
+			array(
+				'post_type'      => self::TYPE,
+				'post_status'    => array( 'private', 'publish', 'draft', 'pending', 'future', 'trash' ),
+				'author'         => $user_id,
+				'posts_per_page' => self::PRIVACY_PAGE,
+				'paged'          => max( 1, $page ),
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
+			)
+		);
 	}
 
 	/**
