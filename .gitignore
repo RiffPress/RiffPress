@@ -18,6 +18,7 @@ undefined/
 !site/brand/*.png
 !site/icons/*.png
 !site/covers/*.png
+!site/og/*.png
 !plugins/riff/features/listen/icons/*.png
 # Generated at build time by npm run pot; translations come from translate.wordpress.org.
 plugins/riff/languages/

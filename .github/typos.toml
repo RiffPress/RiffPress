@@ -4,6 +4,8 @@
 seeked = "seeked"
 # The ID3v2 artist frame is TPE1, and the checker reads the digit separately.
 TPE = "TPE"
+# The company that runs Gravatar, named in the readme's external services.
+Automattic = "Automattic"
 
 [files]
 extend-exclude = [

@@ -40,3 +40,21 @@ test( 'the current page is underlined in the global bar, but not when it is the 
 		assert.doesNotMatch( css, /\.nav nav a\[aria-current\]/, `${ file } would underline the Download button on its own page` );
 	}
 } );
+
+test( 'every share image a page names is a committed file, so a link never previews blank', () => {
+	const { execFileSync } = require( 'node:child_process' );
+	const root = path.join( __dirname, '..', '..' );
+	const tracked = new Set( execFileSync( 'git', [ 'ls-files', 'site' ], { cwd: root, encoding: 'utf8' } ).split( '\n' ) );
+	const missing = [];
+	for ( const file of tracked ) {
+		if ( ! file.endsWith( '.html' ) ) {
+			continue;
+		}
+		for ( const m of read( file ).matchAll( /<meta (?:property="og:image"|name="twitter:image") content="\{\{pages_url\}\}([^"]+)">/g ) ) {
+			if ( ! tracked.has( `site/${ m[ 1 ] }` ) ) {
+				missing.push( `${ file }: ${ m[ 1 ] }` );
+			}
+		}
+	}
+	assert.deepEqual( missing, [], 'commit the card (site/og/ is listed in .gitignore\'s exceptions)' );
+} );
