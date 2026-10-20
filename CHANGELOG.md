@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.21.1](https://github.com/RiffPress/RiffPress/compare/v4.21.0...v4.21.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* the Listen app loads without moving ([#465](https://github.com/RiffPress/RiffPress/issues/465)) ([efeef53](https://github.com/RiffPress/RiffPress/commit/efeef530783adb2b13d37a5f384e3ddeb43d90ae))
+
 ## [4.21.0](https://github.com/RiffPress/RiffPress/compare/v4.20.0...v4.21.0) (2026-10-19)
 
 
