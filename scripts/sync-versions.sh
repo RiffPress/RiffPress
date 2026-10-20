@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 #
-# Reads the canonical version from .release-please-manifest.json and syncs it
-# into every place WordPress reads it verbatim:
+# Reads each package's version from .release-please-manifest.json and syncs it
+# into every place it is read verbatim. Each package is released on its own,
+# and each release pull request changes only its own manifest entry, so the
+# others sync to what they already say.
 #
+# Riff (plugins/riff):
 #   - plugins/riff/riff.php plugin header `* Version:`
 #   - plugins/riff/riff.php `RIFF_VERSION` define
 #   - plugins/riff/readme.txt `Stable tag:`
 #   - package.json, package-lock.json and plugins/riff/package.json `version`
+#     (the repository's own version follows Riff's)
+#
+# Riff Lyrics (plugins/riff-lyrics):
+#   - plugins/riff-lyrics/riff-lyrics.php plugin header and `RIFF_LYRICS_VERSION`
+#   - plugins/riff-lyrics/readme.txt `Stable tag:`
+#
+# wp-api-coverage (packages/wp-api-coverage):
+#   - packages/wp-api-coverage/package.json and its package-lock.json entry
 #
 # It also writes readme.txt's `Tested up to:` from the current WordPress
 # release. wp-env runs the suite against current core, so at release time that
@@ -27,12 +38,19 @@ cd "$(dirname "$0")/.."
 
 command -v jq  >/dev/null 2>&1 || { echo "jq is required to run scripts/sync-versions.sh" >&2; exit 1; }
 command -v npm >/dev/null 2>&1 || { echo "npm is required to run scripts/sync-versions.sh" >&2; exit 1; }
-VERSION=$(jq -r '."."' .release-please-manifest.json)
+manifest_version() {
+	local version
+	version=$(jq -r --arg path "$1" '.[$path]' .release-please-manifest.json)
+	if [[ -z "$version" || "$version" == "null" ]]; then
+		echo "Could not read the version of $1 from .release-please-manifest.json" >&2
+		exit 1
+	fi
+	echo "$version"
+}
 
-if [[ -z "$VERSION" || "$VERSION" == "null" ]]; then
-	echo "Could not read version from .release-please-manifest.json" >&2
-	exit 1
-fi
+VERSION=$(manifest_version plugins/riff)
+LYRICS_VERSION=$(manifest_version plugins/riff-lyrics)
+COVERAGE_VERSION=$(manifest_version packages/wp-api-coverage)
 
 PLUGIN=plugins/riff/riff.php
 README=plugins/riff/readme.txt
@@ -78,4 +96,30 @@ fi
 [[ "$(jq -r .version plugins/riff/package.json)" == "$VERSION" ]] \
 	|| { echo "Failed to update version in plugins/riff/package.json" >&2; exit 1; }
 
-echo "Synced all version references to ${VERSION}"
+echo "Synced Riff to ${VERSION}"
+
+# Riff Lyrics.
+LYRICS=plugins/riff-lyrics/riff-lyrics.php
+LYRICS_README=plugins/riff-lyrics/readme.txt
+grep -q '^ \* Version: ' "$LYRICS" \
+	|| { echo "Plugin header 'Version:' line not found in $LYRICS" >&2; exit 1; }
+grep -q "^define( 'RIFF_LYRICS_VERSION'" "$LYRICS" \
+	|| { echo "RIFF_LYRICS_VERSION define not found in $LYRICS" >&2; exit 1; }
+grep -q '^Stable tag: ' "$LYRICS_README" \
+	|| { echo "'Stable tag:' line not found in $LYRICS_README" >&2; exit 1; }
+sed_inplace "s/^( \* Version: ).*/\1${LYRICS_VERSION}/" "$LYRICS"
+sed_inplace "s/^(define\( 'RIFF_LYRICS_VERSION', ')[^']*(' \);)/\1${LYRICS_VERSION}\2/" "$LYRICS"
+sed_inplace "s/^(Stable tag: ).*/\1${LYRICS_VERSION}/" "$LYRICS_README"
+grep -q "^ \* Version: ${LYRICS_VERSION}\$" "$LYRICS" \
+	|| { echo "Failed to update plugin header Version in $LYRICS" >&2; exit 1; }
+grep -q "^define( 'RIFF_LYRICS_VERSION', '${LYRICS_VERSION}' );" "$LYRICS" \
+	|| { echo "Failed to update RIFF_LYRICS_VERSION in $LYRICS" >&2; exit 1; }
+grep -q "^Stable tag: ${LYRICS_VERSION}\$" "$LYRICS_README" \
+	|| { echo "Failed to update Stable tag in $LYRICS_README" >&2; exit 1; }
+echo "Synced Riff Lyrics to ${LYRICS_VERSION}"
+
+# wp-api-coverage.
+npm version "$COVERAGE_VERSION" --no-git-tag-version --allow-same-version --workspace=packages/wp-api-coverage >/dev/null
+[[ "$(jq -r .version packages/wp-api-coverage/package.json)" == "$COVERAGE_VERSION" ]] \
+	|| { echo "Failed to update version in packages/wp-api-coverage/package.json" >&2; exit 1; }
+echo "Synced wp-api-coverage to ${COVERAGE_VERSION}"

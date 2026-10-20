@@ -53,14 +53,16 @@ Every string uses the `riff` text domain, and Riff Lyrics uses `riff-lyrics`. PH
 
 ## Releases
 
-Releases are automated by [release-please](https://github.com/googleapis/release-please). It reads the merged pull request titles on `main` to decide the next version and write `CHANGELOG.md`:
+Releases are automated by [release-please](https://github.com/googleapis/release-please). Three things ship from this repository, and each is released on its own: Riff (`plugins/riff/`, tagged `v4.x.y`), Riff Lyrics (`plugins/riff-lyrics/`, tagged `riff-lyrics-v0.x.y`) and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
 
 - `feat: ...` → minor bump (before 1.0, a patch bump)
 - `fix: ...` → patch bump
 - `feat!: ...` or a `BREAKING CHANGE:` footer → major bump (before 1.0, a minor bump)
 - `chore:`, `docs:`, `refactor:`, `test:`, `ci:`, `build:`, `style:` → no version bump
 
-release-please keeps a release pull request open on `main`. Merging it tags the release, publishes a GitHub Release, and attaches `riff.zip` built from `plugins/riff/` with `.distignore`.
+release-please keeps one release pull request open per package with unreleased changes. Merging Riff's tags the release, publishes a GitHub Release with `riff.zip` built from `plugins/riff/` with `.distignore`, and deploys to WordPress.org once that is switched on. Merging Riff Lyrics' attaches `riff-lyrics.zip` the same way. Merging wp-api-coverage's publishes it to npm as `@riffpress/wp-api-coverage` once the repository variable `NPM_PUBLISH` is `true` and the `NPM_TOKEN` secret is stored. Riff's release is the one GitHub marks as latest.
+
+Riff Lyrics and wp-api-coverage have `"release-as": "0.1.0"` in `release-please-config.json` so their first release is the version they already carry. Remove both lines once those releases are out, or every later release would be 0.1.0 again.
 
 <details>
 <summary>How the release pull request gets its checks</summary>

@@ -25,11 +25,16 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    # Three packages release on their own (release-please-config.json), so
+    # each output is read under its package's path.
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-      version: ${{ steps.release.outputs.version }}
-      pr: ${{ steps.release.outputs.pr }}
+      riff_release: ${{ steps.release.outputs['plugins/riff--release_created'] }}
+      riff_tag: ${{ steps.release.outputs['plugins/riff--tag_name'] }}
+      riff_version: ${{ steps.release.outputs['plugins/riff--version'] }}
+      lyrics_release: ${{ steps.release.outputs['plugins/riff-lyrics--release_created'] }}
+      lyrics_tag: ${{ steps.release.outputs['plugins/riff-lyrics--tag_name'] }}
+      coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
+      coverage_tag: ${{ steps.release.outputs['packages/wp-api-coverage--tag_name'] }}
     steps:
       # GITHUB_TOKEN can open the release pull request because "Allow GitHub
       # Actions to create and approve pull requests" is on for the repository.
@@ -41,57 +46,67 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
-  # release-please only updates the manifest and CHANGELOG.md. The plugin
-  # header, the RIFF_VERSION define, readme.txt's Stable tag and
-  # the package.json files are synced by scripts/sync-versions.sh, the same script a
-  # maintainer runs locally, so the CI behavior is grep-able.
+  # release-please only updates the manifest and each package's CHANGELOG.md.
+  # The plugin headers, version defines, readme.txt Stable tags and the
+  # package.json files are synced by scripts/sync-versions.sh, the same script
+  # a maintainer runs locally, so the CI behavior is grep-able.
   #
   # This runs on every push to main, not only when release-please reports a
   # pull request: it reports one only on runs where it touched it, and a push
-  # of chore commits leaves the release pull request untouched but still
-  # needing its checks. The job finds the open release pull request itself.
-  sync-versions:
+  # of chore commits leaves a release pull request untouched but still needing
+  # its checks. Each package has its own release pull request, so this finds
+  # every open one and syncs each.
+  release-prs:
     needs: release-please
     runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      branches: ${{ steps.find.outputs.branches }}
+    steps:
+      - name: Find the open release pull requests
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          BRANCHES=$(gh pr list --state open --search 'head:release-please--' --json headRefName --jq '[.[] | select(.headRefName | startswith("release-please--")) | .headRefName]')
+          echo "Open release branches: $BRANCHES"
+          echo "branches=$BRANCHES" >> "$GITHUB_OUTPUT"
+
+  sync-versions:
+    needs: release-prs
+    if: ${{ needs.release-prs.outputs.branches != '[]' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJSON(needs.release-prs.outputs.branches) }}
     permissions:
       contents: write
       pull-requests: read
       # Approving held workflow runs needs actions: write.
       actions: write
     steps:
-      - name: Find the open release pull request
-        id: release-pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          BRANCH=$(gh pr list --state open --search 'head:release-please--' --json headRefName --jq 'first(.[] | select(.headRefName | startswith("release-please--")) | .headRefName) // empty')
-          if [[ -z "$BRANCH" ]]; then
-            echo "No open release pull request."
-            exit 0
-          fi
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: steps.release-pr.outputs.branch
         with:
           persist-credentials: false
-          ref: ${{ steps.release-pr.outputs.branch }}
+          ref: ${{ matrix.branch }}
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        if: steps.release-pr.outputs.branch
         with:
           node-version: 22
       - run: bash scripts/sync-versions.sh
-        if: steps.release-pr.outputs.branch
       - name: Commit synced versions back to the release pull request
-        if: steps.release-pr.outputs.branch
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add plugins/riff/riff.php plugins/riff/readme.txt plugins/riff/package.json package.json package-lock.json
+            git add plugins/riff/riff.php plugins/riff/readme.txt plugins/riff/package.json \
+              plugins/riff-lyrics/riff-lyrics.php plugins/riff-lyrics/readme.txt \
+              packages/wp-api-coverage/package.json package.json package-lock.json
             git commit -m "chore: sync version strings"
             gh auth setup-git
             git push
@@ -103,7 +118,6 @@ jobs:
       # (A workflow_dispatch run on the same commit is not; its check runs
       # never reach the pull request's status rollup.)
       - name: Approve the held CI runs on the release branch
-        if: steps.release-pr.outputs.branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -125,13 +139,13 @@ jobs:
             echo "Approved run ${RUN}."
           done
 
-  # When the release pull request merges, release-please tags the commit and
+  # When Riff's release pull request merges, release-please tags the commit and
   # creates the GitHub release as a draft. Releases here are immutable once
   # published, so the zip is attached to the draft and the release is published
   # after that.
   build-release-asset:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ needs.release-please.outputs.riff_release }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -158,13 +172,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          TAG_NAME: ${{ needs.release-please.outputs.riff_tag }}
         run: gh release upload --clobber "$TAG_NAME" build/riff.zip
       - name: Publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          TAG_NAME: ${{ needs.release-please.outputs.riff_tag }}
         run: gh release edit "$TAG_NAME" --draft=false --latest
 
   # After the GitHub release is published, the same build goes to the plugin's
@@ -174,7 +188,7 @@ jobs:
   # SVN_USERNAME and SVN_PASSWORD secrets exist.
   deploy-wordpress-org:
     needs: [release-please, build-release-asset]
-    if: ${{ needs.release-please.outputs.release_created && vars.WPORG_DEPLOY == 'true' }}
+    if: ${{ needs.release-please.outputs.riff_release && vars.WPORG_DEPLOY == 'true' }}
     runs-on: ubuntu-24.04
     environment: wordpress-org
     permissions:
@@ -196,4 +210,75 @@ jobs:
           SLUG: riff
           BUILD_DIR: build/riff
           ASSETS_DIR: .wordpress-org
-          VERSION: ${{ needs.release-please.outputs.version }}
+          VERSION: ${{ needs.release-please.outputs.riff_version }}
+
+  # Riff Lyrics' release: its own zip on its own GitHub release, built the way
+  # Riff's is. It is never marked the latest release; that stays Riff's.
+  release-riff-lyrics:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.lyrics_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Build riff-lyrics.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff-lyrics
+          rsync -a --exclude-from='.distignore' ./plugins/riff-lyrics/ build/riff-lyrics/
+          (cd build && zip -qr riff-lyrics.zip riff-lyrics/)
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/riff-lyrics/riff-lyrics.php
+          find build/riff-lyrics -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Attach the zip and publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.lyrics_tag }}
+        run: |
+          set -euo pipefail
+          gh release upload --clobber "$TAG_NAME" build/riff-lyrics.zip
+          gh release edit "$TAG_NAME" --draft=false --latest=false
+
+  # wp-api-coverage's release: the GitHub release is published, and the
+  # package goes to npm as @riffpress/wp-api-coverage. Publishing stays off
+  # until the repository variable NPM_PUBLISH is "true", which is set once the
+  # @riffpress scope exists on npm and the NPM_TOKEN secret is stored.
+  release-wp-api-coverage:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.coverage_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      # npm provenance signs the package with the workflow's identity.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Test the package
+        run: npm test --prefix packages/wp-api-coverage
+      - name: Publish to npm
+        if: ${{ vars.NPM_PUBLISH == 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public ./packages/wp-api-coverage
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.coverage_tag }}
+        run: gh release edit "$TAG_NAME" --draft=false --latest=false
