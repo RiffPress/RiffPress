@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.23.0](https://github.com/RiffPress/RiffPress/compare/v4.22.0...v4.23.0) (2026-10-20)
+
+
+### Features
+
+* a listener without a Gravatar sees their initial, not the grey silhouette ([#496](https://github.com/RiffPress/RiffPress/issues/496)) ([b386903](https://github.com/RiffPress/RiffPress/commit/b3869032ef8a04bb5963ca1f12dc832f2ff9e1ea))
+* deleting Riff keeps listeners' playlists, likes and history, and Erase Personal Data removes them ([#497](https://github.com/RiffPress/RiffPress/issues/497)) ([e877c11](https://github.com/RiffPress/RiffPress/commit/e877c1141286ff98f5669bf543a8275970acbba8))
+
+
+### Bug Fixes
+
+* a row's heart is copied from the bar's icons, not parsed from the page's data ([#499](https://github.com/RiffPress/RiffPress/issues/499)) ([cf3218f](https://github.com/RiffPress/RiffPress/commit/cf3218ff11f689d91c621c8b5ae960cf0b2b2af9))
+
 ## [4.22.0](https://github.com/RiffPress/RiffPress/compare/v4.21.2...v4.22.0) (2026-10-20)
 
 
