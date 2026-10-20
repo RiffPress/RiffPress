@@ -360,10 +360,13 @@ section {
 	margin-top: 16px;
 }
 
-/* screenshots: flat, 2px corners, a hairline, as wordpress.org shows them */
+/* screenshots: flat, 2px corners, a hairline, as wordpress.org shows them.
+   A phone is never taller than most of the window: the width follows the
+   height, so the whole screen shows, smaller, rather than running past the
+   fold. */
 .device {
 	display: inline-block;
-	width: min(360px, 78vw);
+	width: min(360px, 78vw, calc(72vh * 780 / 1688));
 	border-radius: 2px;
 	border: 1px solid var(--line);
 	overflow: hidden;
@@ -413,7 +416,7 @@ picture {
 	line-height: 1.7;
 }
 
-/* the two sides, side by side in plain prose */
+/* the two sides, side by side, each a short list */
 .sides {
 	margin: var(--gap) auto 0;
 	display: grid;
@@ -433,10 +436,24 @@ picture {
 	line-height: 1.25;
 }
 
-.sides p {
+.sides ul {
+	list-style: none;
 	margin: 0;
-	font-size: 1rem;
-	line-height: 1.75;
+	padding: 0;
+	display: grid;
+	gap: 20px;
+}
+
+.sides strong {
+	display: block;
+	font-weight: 600;
+	line-height: 1.5;
+}
+
+.sides span {
+	display: block;
+	font-size: 0.9375rem;
+	line-height: 1.7;
 	color: var(--ink-2);
 	text-wrap: pretty;
 }
@@ -444,8 +461,12 @@ picture {
 .sides + .fine {
 	margin: 40px auto 0;
 	max-width: 40rem;
-	font-size: 0.8125rem;
-	color: var(--ink-3);
+	color: var(--ink-2);
+}
+
+/* Right after the hero, whose own padding already makes the break. */
+#sides {
+	padding-top: calc(var(--section) / 2);
 }
 
 @media (max-width: 760px) {
