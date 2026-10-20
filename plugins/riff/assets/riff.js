@@ -1288,6 +1288,11 @@ function start() {
 	// nothing is written each frame; it is aimed again only when the time jumps: a seek, a pause or
 	// a stall, a new rate or track, or drift past 150 ms. --riff-p is still written on timeupdate,
 	// for the times, the input, and where the line rests when the animations stop.
+	// How long the playing track is: the element's own reading, or the length its tags gave.
+	const durationOf = ( m ) =>
+		( Number.isFinite( m.duration ) && m.duration ) ||
+		track()?.duration ||
+		0;
 	let glides = [];
 	let aimed = null;
 	function stopGlide() {
@@ -1300,16 +1305,15 @@ function start() {
 	function glide() {
 		stopGlide();
 		const m = el();
-		const duration =
-			( Number.isFinite( m.duration ) && m.duration ) ||
-			track()?.duration ||
-			0;
+		const duration = durationOf( m );
 		const rate = m.playbackRate || 1;
 		const ms = ( ( duration - m.currentTime ) * 1000 ) / rate;
 		if (
 			! duration ||
 			ms <= 0 ||
 			m.paused ||
+			// Not while it waits for data: the line would run ahead of silence.
+			m.readyState < 3 ||
 			seeking ||
 			reduce() ||
 			document.hidden ||
@@ -1327,8 +1331,12 @@ function start() {
 				// A browser without pseudo-element animations keeps the line's resting place.
 			}
 		};
+		// Each animation starts on the same frame of the document's clock, the one keepAimed() reads,
+		// so a late start on a busy page is caught as drift rather than carried for the whole track.
+		const now = document.timeline.currentTime;
 		for ( const seeker of seekers ) {
-			const rtl = getComputedStyle( seeker ).direction === 'rtl';
+			// The direction as the stylesheet reads it, from the dir attribute; no style flush.
+			const rtl = seeker.closest( '[dir]' )?.dir === 'rtl';
 			const slide = ( p ) =>
 				`translateX(${ ( rtl ? 1 - p : p - 1 ) * 100 }%)`;
 			const stretch = [
@@ -1352,7 +1360,10 @@ function start() {
 				run( knob, along );
 			}
 		}
-		aimed = { from: m.currentTime, at: performance.now(), rate };
+		for ( const a of glides ) {
+			a.startTime = now;
+		}
+		aimed = { from: m.currentTime, at: now, rate };
 	}
 	// On timeupdate: aims again when the time has strayed from where the glide has it.
 	function keepAimed() {
@@ -1361,7 +1372,8 @@ function start() {
 		}
 		const expected =
 			aimed.from +
-			( ( performance.now() - aimed.at ) / 1000 ) * aimed.rate;
+			( ( document.timeline.currentTime - aimed.at ) / 1000 ) *
+				aimed.rate;
 		if ( Math.abs( expected - el().currentTime ) > 0.15 ) {
 			glide();
 		}
@@ -1387,7 +1399,6 @@ function start() {
 				 * @param {Object} api          `window.riff`.
 				 */
 				emit( 'play', { track: track() } );
-				glide();
 			}
 		} );
 		m.addEventListener( 'pause', () => {
@@ -1847,9 +1858,7 @@ function start() {
 
 	function progress() {
 		const m = el();
-		const t = track();
-		const duration =
-			( Number.isFinite( m.duration ) && m.duration ) || t?.duration || 0;
+		const duration = durationOf( m );
 		const ratio = duration ? Math.min( m.currentTime / duration, 1 ) : 0;
 		setBuffered( duration ? buffered( m, duration ) : 0 );
 		text( 'current', time( m.currentTime ) );
@@ -2307,10 +2316,7 @@ function start() {
 	for ( const input of $$( '[data-riff-seek]' ) ) {
 		const commit = () => {
 			const m = el();
-			const duration =
-				( Number.isFinite( m.duration ) && m.duration ) ||
-				track()?.duration ||
-				0;
+			const duration = durationOf( m );
 			if ( duration ) {
 				m.currentTime = ( Number( input.value ) / 1000 ) * duration;
 			}
@@ -2332,12 +2338,17 @@ function start() {
 			root.removeAttribute( 'data-seeking' );
 		} );
 	}
-	window.addEventListener( 'pointerup', () => {
-		if ( seeking ) {
-			seeking = false;
-			root.removeAttribute( 'data-seeking' );
-		}
-	} );
+	// A press that ends without a change (a tap on the place playing, a drag back to where it
+	// began) or a touch the browser takes for a scroll lets go of the line too, and it glides on.
+	for ( const ev of [ 'pointerup', 'pointercancel' ] ) {
+		window.addEventListener( ev, () => {
+			if ( seeking ) {
+				seeking = false;
+				root.removeAttribute( 'data-seeking' );
+				glide();
+			}
+		} );
+	}
 
 	// ---- Volume, remembered on this device. Phones ignore it, so it only shows on desktop.
 	const volume = $( '[data-riff-volume]' );
@@ -2666,10 +2677,7 @@ function start() {
 			1
 		);
 		const m = el();
-		const duration =
-			( Number.isFinite( m.duration ) && m.duration ) ||
-			track()?.duration ||
-			0;
+		const duration = durationOf( m );
 		tip.textContent = time( ratio * duration );
 		tip.style.left = `${ ratio * 100 }%`;
 		tip.hidden = ! duration;
