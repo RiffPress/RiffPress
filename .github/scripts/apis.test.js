@@ -1,6 +1,6 @@
 /**
- * The landing page lists every browser API and CSS feature the player uses. This holds the page
- * to the code: each listed API must still be used somewhere in the plugin, and each must have a
+ * The Built on the open web page lists every browser API and CSS feature the player uses. This
+ * holds the list to the code: each listed API must still be used somewhere in the plugin, and each must have a
  * pattern here that says what "used" means, so a listing cannot outlive its code and a new entry
  * cannot be added without saying where it lives. Run by `node --test .github/scripts/*.test.js`.
  */
@@ -67,14 +67,13 @@ const USES = {
 };
 
 function listed() {
-	const html = read( 'site/index.html' );
-	const start = html.indexOf( 'class="apis"' );
-	const end = html.indexOf( '</section>', start );
-	assert.ok( start > 0 && end > start, 'the landing page has an APIs section' );
-	return [ ...html.slice( start, end ).matchAll( /<li><a [^>]*>([^<]+)<\/a><\/li>/g ) ].map( ( m ) => m[ 1 ].trim() );
+	// The list lives on the Built on the open web page, generated from site/web/web.json; the
+	// landing page links to it.
+	const html = read( 'site/web/index.html' );
+	return [ ...html.matchAll( /<li><a href="[a-z-]+\/">([^<]+)<\/a>/g ) ].map( ( m ) => m[ 1 ].trim() );
 }
 
-test( 'every API the landing page lists is used by the plugin', () => {
+test( 'every API the open web page lists is used by the plugin', () => {
 	const names = listed();
 	assert.ok( names.length >= 40, `the list is complete (${ names.length })` );
 	const unknown = names.filter( ( n ) => ! USES[ n ] );

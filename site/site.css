@@ -416,177 +416,14 @@ picture {
 	line-height: 1.7;
 }
 
-/* the two sides, side by side, each a short list */
-.sides {
-	margin: var(--gap) auto 0;
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 40px var(--gap);
-	max-width: 960px;
-	text-align: left;
-	border-top: 1px solid var(--line);
-	padding-top: 40px;
-}
-
-.sides h3 {
-	margin: 0 0 12px;
-	font-family: var(--serif);
-	font-size: clamp(1.5rem, 2.5vw, 1.875rem);
-	font-weight: 400;
-	line-height: 1.25;
-}
-
-.sides ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	gap: 20px;
-}
-
-.sides strong {
-	display: block;
-	font-weight: 600;
-	line-height: 1.5;
-}
-
-.sides span {
-	display: block;
-	font-size: 0.9375rem;
-	line-height: 1.7;
-	color: var(--ink-2);
-	text-wrap: pretty;
-}
-
-.sides + .fine {
-	margin: 40px auto 0;
-	max-width: 40rem;
-	color: var(--ink-2);
-}
-
 /* Right after the hero, whose own padding already makes the break. */
 #sides {
 	padding-top: calc(var(--section) / 2);
 }
 
-@media (max-width: 760px) {
-
-	.sides {
-		grid-template-columns: 1fr;
-	}
-}
-
-/* for site owners: grouped, small */
-.specs {
-	margin: var(--gap) 0 0;
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 40px var(--gap);
-	text-align: left;
-	border-top: 1px solid var(--line);
-	padding-top: 32px;
-}
-
-.specs.pair {
-	grid-template-columns: repeat(2, 1fr);
-}
-
-.specs + .fine,
+.facts + .fine,
 .shot + .fine {
 	margin-top: 32px;
-}
-
-.specs h3 {
-	margin: 0 0 10px;
-	font-size: 1rem;
-	font-weight: 600;
-	line-height: 1.5;
-}
-
-.specs ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	gap: 4px;
-	font-size: 0.9375rem;
-	line-height: 1.7;
-}
-
-.specs li {
-	color: var(--ink-2);
-}
-
-.specs code {
-	font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-	font-size: 0.8125rem;
-	background: var(--grey-2);
-	border: 1px solid var(--line);
-	padding: 1px 5px;
-	border-radius: 2px;
-}
-
-/* the web it runs on: every browser API and CSS feature the player calls, by
-   name */
-.apis {
-	border-top: 1px solid var(--line);
-	padding: var(--section) 0 var(--gap);
-	text-align: left;
-	background: var(--surface);
-}
-
-.apis h2 {
-	font-size: clamp(26px, 3vw, 36px);
-	line-height: 1.28;
-	margin: 0 0 8px;
-}
-
-.apis h2 a {
-	color: inherit;
-	text-decoration: none;
-}
-
-.apis h2 a:hover {
-	text-decoration: underline;
-}
-
-.apis .fine {
-	margin-bottom: 32px;
-	max-width: 40rem;
-}
-
-.apis-grid {
-	display: grid;
-	grid-template-columns: repeat(5, 1fr);
-	gap: 28px 24px;
-}
-
-.apis h3 {
-	margin: 0 0 10px;
-	font-size: 1rem;
-	font-weight: 600;
-	line-height: 1.5;
-}
-
-.apis ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	gap: 4px;
-	font-size: 0.875rem;
-	line-height: 1.714;
-}
-
-.apis a {
-	color: var(--ink);
-	text-decoration: none;
-	transition: color var(--t);
-}
-
-.apis a:hover {
-	color: var(--accent);
-	text-decoration: underline;
 }
 
 /* marginalia, as wordpress.org sets it: a band of dots between sections, and
@@ -708,14 +545,6 @@ html.js .r.in {
 
 @media (max-width: 900px) {
 
-	.specs,
-	.apis-grid {
-		grid-template-columns: repeat(2, 1fr);
-	}
-}
-
-@media (max-width: 900px) {
-
 	.shelf {
 		grid-template-columns: repeat(3, 1fr);
 		gap: 10px;
@@ -732,11 +561,5 @@ html.js .r.in {
 	.facts {
 		grid-template-columns: 1fr;
 		gap: 20px;
-	}
-
-	.specs,
-	.specs.pair {
-		grid-template-columns: 1fr;
-		gap: 28px;
 	}
 }
