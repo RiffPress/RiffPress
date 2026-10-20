@@ -230,7 +230,7 @@ test( 'the landing page takes its own address from the Pages build', () => {
 	assert.match( html, /<link rel="canonical" href="\{\{pages_url\}\}">/ );
 	assert.match(
 		html,
-		/property="og:image" content="\{\{pages_url\}\}og\.png"/
+		/property="og:image" content="\{\{pages_url\}\}og\/home\.png"/
 	);
 	assert.match( html, /blueprint-url=\{\{pages_url\}\}blueprint\.json/ );
 } );

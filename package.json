@@ -38,6 +38,7 @@
     "docs:web": "node .github/scripts/web-pages.js",
     "docs:web:check": "node .github/scripts/web-pages.js --check",
     "docs:changelog": "node .github/scripts/readme-changelog.js",
+    "docs:og": "node .github/scripts/og-images.js",
     "docs:changelog:check": "node .github/scripts/readme-changelog.js --check"
   },
   "devDependencies": {

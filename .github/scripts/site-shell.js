@@ -20,6 +20,8 @@ const inline = ( s ) => esc( s ).replace( /`([^`]+)`/g, '<code>$1</code>' );
  */
 function head( title, description, url, depth, css, section = '' ) {
 	const up = '../'.repeat( depth );
+	// The share card: a page below a section shows its section's (og-images.js draws them).
+	const card = url.startsWith( 'web/' ) ? 'web' : url.startsWith( 'developers/' ) ? 'developers' : 'home';
 	const dev = section === 'developers' ? ' aria-current="true"' : '';
 	return `<!doctype html>
 <html lang="en">
@@ -33,8 +35,14 @@ function head( title, description, url, depth, css, section = '' ) {
 <meta property="og:url" content="{{pages_url}}${ url }">
 <meta property="og:title" content="${ esc( title ) }">
 <meta property="og:description" content="${ esc( description ) }">
-<meta property="og:image" content="{{pages_url}}og.png">
+<meta property="og:image" content="{{pages_url}}og/${ card }.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${ esc( title ) }">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${ esc( title ) }">
+<meta name="twitter:description" content="${ esc( description ) }">
+<meta name="twitter:image" content="{{pages_url}}og/${ card }.png">
 <link rel="canonical" href="{{pages_url}}${ url }">
 <link rel="icon" href="${ up }icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="${ up }icons/icon-192.png" type="image/png" sizes="192x192">
