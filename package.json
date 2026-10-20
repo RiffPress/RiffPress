@@ -36,7 +36,9 @@
     "docs:reference": "node .github/scripts/reference-pages.js",
     "docs:reference:check": "node .github/scripts/reference-pages.js --check",
     "docs:web": "node .github/scripts/web-pages.js",
-    "docs:web:check": "node .github/scripts/web-pages.js --check"
+    "docs:web:check": "node .github/scripts/web-pages.js --check",
+    "docs:changelog": "node .github/scripts/readme-changelog.js",
+    "docs:changelog:check": "node .github/scripts/readme-changelog.js --check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
