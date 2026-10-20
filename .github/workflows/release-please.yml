@@ -35,6 +35,7 @@ jobs:
       lyrics_tag: ${{ steps.release.outputs['plugins/riff-lyrics--tag_name'] }}
       coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
       coverage_tag: ${{ steps.release.outputs['packages/wp-api-coverage--tag_name'] }}
+      release_branches: ${{ steps.release-prs.outputs.branches }}
     steps:
       # GITHUB_TOKEN can open the release pull request because "Allow GitHub
       # Actions to create and approve pull requests" is on for the repository.
@@ -45,27 +46,12 @@ jobs:
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-
-  # release-please only updates the manifest and each package's CHANGELOG.md.
-  # The plugin headers, version defines, readme.txt Stable tags and the
-  # package.json files are synced by scripts/sync-versions.sh, the same script
-  # a maintainer runs locally, so the CI behavior is grep-able.
-  #
-  # This runs on every push to main, not only when release-please reports a
-  # pull request: it reports one only on runs where it touched it, and a push
-  # of chore commits leaves a release pull request untouched but still needing
-  # its checks. Each package has its own release pull request, so this finds
-  # every open one and syncs each.
-  release-prs:
-    needs: release-please
-    runs-on: ubuntu-24.04
-    permissions:
-      pull-requests: read
-    outputs:
-      branches: ${{ steps.find.outputs.branches }}
-    steps:
+      # Every open release pull request, for sync-versions below. It looks for
+      # them itself rather than reading release-please's outputs: those name a
+      # pull request only on runs that touched it, and a push of chore commits
+      # leaves a release pull request untouched but still needing its checks.
       - name: Find the open release pull requests
-        id: find
+        id: release-prs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -75,14 +61,20 @@ jobs:
           echo "Open release branches: $BRANCHES"
           echo "branches=$BRANCHES" >> "$GITHUB_OUTPUT"
 
+  # release-please only updates the manifest and each package's CHANGELOG.md.
+  # The plugin headers, version defines, readme.txt Stable tags and the
+  # package.json files are synced by scripts/sync-versions.sh, the same script
+  # a maintainer runs locally, so the CI behavior is grep-able. Each package
+  # has its own release pull request, and each is synced for its own package
+  # only, so nothing of another package lands with it.
   sync-versions:
-    needs: release-prs
-    if: ${{ needs.release-prs.outputs.branches != '[]' }}
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_branches != '[]' && needs.release-please.outputs.release_branches != '' }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        branch: ${{ fromJSON(needs.release-prs.outputs.branches) }}
+        branch: ${{ fromJSON(needs.release-please.outputs.release_branches) }}
     permissions:
       contents: write
       pull-requests: read
@@ -96,7 +88,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-      - run: bash scripts/sync-versions.sh
+      # The branch names its package: release-please--branches--main--components--riff-lyrics.
+      - name: Sync this package's version strings
+        env:
+          BRANCH: ${{ matrix.branch }}
+        run: bash scripts/sync-versions.sh "${BRANCH##*--components--}"
       - name: Commit synced versions back to the release pull request
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
@@ -104,9 +100,7 @@ jobs:
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add plugins/riff/riff.php plugins/riff/readme.txt plugins/riff/package.json \
-              plugins/riff-lyrics/riff-lyrics.php plugins/riff-lyrics/readme.txt \
-              packages/wp-api-coverage/package.json package.json package-lock.json
+            git add -u
             git commit -m "chore: sync version strings"
             gh auth setup-git
             git push

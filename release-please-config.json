@@ -30,13 +30,13 @@
 			"package-name": "riff-lyrics",
 			"component": "riff-lyrics",
 			"include-component-in-tag": true,
-			"release-as": "0.1.0"
+			"initial-version": "0.1.0"
 		},
 		"packages/wp-api-coverage": {
 			"package-name": "wp-api-coverage",
 			"component": "wp-api-coverage",
 			"include-component-in-tag": true,
-			"release-as": "0.1.0"
+			"initial-version": "0.1.0"
 		}
 	}
 }

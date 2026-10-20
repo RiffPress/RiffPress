@@ -62,7 +62,12 @@ Releases are automated by [release-please](https://github.com/googleapis/release
 
 release-please keeps one release pull request open per package with unreleased changes. Merging Riff's tags the release, publishes a GitHub Release with `riff.zip` built from `plugins/riff/` with `.distignore`, and deploys to WordPress.org once that is switched on. Merging Riff Lyrics' attaches `riff-lyrics.zip` the same way. Merging wp-api-coverage's publishes it to npm as `@riffpress/wp-api-coverage` once the repository variable `NPM_PUBLISH` is `true` and the `NPM_TOKEN` secret is stored. Riff's release is the one GitHub marks as latest.
 
-Riff Lyrics and wp-api-coverage have `"release-as": "0.1.0"` in `release-please-config.json` so their first release is the version they already carry. Remove both lines once those releases are out, or every later release would be 0.1.0 again.
+Riff Lyrics and wp-api-coverage have `"initial-version": "0.1.0"` in `release-please-config.json`, so their first release is the version they already carry; it applies only while a package has no release.
+
+Two things a package's folder doesn't cover:
+
+- A change outside `plugins/riff/` that changes what `riff.zip` or the WordPress.org listing holds (`.distignore`, `.wordpress-org/`) doesn't open a Riff release by itself. It goes out with Riff's next one; if it can't wait, add a `Release-As: x.y.z` footer to a commit that touches `plugins/riff/`.
+- A wp-api-coverage version released while `NPM_PUBLISH` is off isn't published to npm later on its own. When turning publishing on, run `npm publish --access public ./packages/wp-api-coverage` once for the current version.
 
 <details>
 <summary>How the release pull request gets its checks</summary>
