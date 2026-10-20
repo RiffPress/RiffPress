@@ -151,7 +151,6 @@ class Test_Riff_Media extends Riff_TestCase {
 
 		// The next request starts with nothing in memory.
 		$errors = new ReflectionProperty( Media::class, 'errors' );
-		$errors->setAccessible( true );
 		$errors->setValue( null, array() );
 
 		$this->assertStringContainsString( 'role="alert"', Media::fields( array(), get_post( $audio ) )['riff_art']['html'] );

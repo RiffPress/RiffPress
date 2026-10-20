@@ -23,8 +23,8 @@ jobs:
         include:
           - { php: '8.1', core: '7.0',    multisite: false }
           - { php: '8.3', core: 'latest', multisite: true }
-          - { php: '8.4', core: 'latest', multisite: false }
-          - { php: '8.4', core: 'trunk',  multisite: false }
+          - { php: '8.5', core: 'latest', multisite: false }
+          - { php: '8.5', core: 'trunk',  multisite: false }
     env:
       WP_ENV_PHP_VERSION: ${{ matrix.php }}
       # The mirror's nightly branch is master; trunk is what WordPress calls it. A release line is
