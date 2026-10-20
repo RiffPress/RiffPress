@@ -44,10 +44,6 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertStringContainsString( 'class="riff-video"', $html );
 		$this->assertStringContainsString( 'data-riff-wire', $html );
 		$this->assertMatchesRegularExpression( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html );
-		preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html, $m );
-		$data = json_decode( $m[1], true );
-		$this->assertSame( array(), $data['strings'], 'the modules translate their own; only a site\'s replacements come this way' );
-		$this->assertStringContainsString( '"strings":{}', $m[1], 'an object, as window.riff.strings is documented' );
 	}
 
 	public function test_assets_are_enqueued_with_a_cache_key_that_follows_the_file(): void {
@@ -64,54 +60,16 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertStringNotContainsString( '<path', Player::icon( 'nope' ) );
 	}
 
-	public function test_a_feature_can_add_to_the_player_data(): void {
+	public function test_the_player_data_names_the_listen_app_and_no_strings(): void {
 		$this->go_to( home_url( '/' ) );
-		$add = static function ( array $data ): array {
-			$data['assets']['probe'] = 'https://example.org/probe.js';
-			return $data;
-		};
-		add_filter( 'riff_player_data', $add );
 		ob_start();
 		Player::markup();
-		$html = ob_get_clean();
-		remove_filter( 'riff_player_data', $add );
+		$html = (string) ob_get_clean();
 
-		$this->assertStringContainsString( 'probe.js', $html );
-		$this->assertStringContainsString( trim( (string) wp_json_encode( 'features/listen/app.js' ), '"' ), $html, 'the Listen feature announces its script through the same filter' );
-	}
-
-	public function test_a_plugin_adds_a_chip_and_a_bar_control(): void {
-		$this->go_to( home_url( '/' ) );
-		$chips = static function ( array $chips ): array {
-			$chips['lyrics'] = array(
-				'label'  => 'Lyrics',
-				'action' => 'my-lyrics',
-				'svg'    => '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/><script>alert(1)</script></svg>',
-			);
-			$chips['bad']    = array( 'action' => 'no-label' );
-			return $chips;
-		};
-		$bar   = static fn( array $controls ): array => $controls + array(
-			'eq' => array(
-				'label' => 'Equaliser',
-				'href'  => 'https://example.org/eq',
-				'icon'  => 'volume',
-			),
-		);
-		add_filter( 'riff_chips', $chips );
-		add_filter( 'riff_bar_controls', $bar );
-		ob_start();
-		Player::markup();
-		$html = ob_get_clean();
-		remove_filter( 'riff_chips', $chips );
-		remove_filter( 'riff_bar_controls', $bar );
-
-		$this->assertStringContainsString( 'data-riff-action="share"', $html, 'the player\'s own chip stays' );
-		$this->assertStringContainsString( 'data-riff-action="my-lyrics" data-riff-chip="lyrics"', $html );
-		$this->assertStringContainsString( '<span>Lyrics</span>', $html );
-		$this->assertStringNotContainsString( '<script>alert', $html, 'a script tag in an svg is stripped' );
-		$this->assertStringNotContainsString( 'no-label', $html, 'an item without a label is dropped' );
-		$this->assertStringContainsString( 'class="riff-btn riff-desk" href="https://example.org/eq" aria-label="Equaliser"', $html );
+		preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html, $data );
+		$data = json_decode( $data[1] ?? '', true );
+		$this->assertStringEndsWith( 'features/listen/app.js', strtok( (string) ( $data['assets']['app'] ?? '' ), '?' ) );
+		$this->assertArrayNotHasKey( 'strings', $data, 'the modules translate their own strings' );
 	}
 
 	public function test_up_next_is_the_only_tab_until_a_plugin_adds_one(): void {
@@ -153,16 +111,8 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertSame( 3, substr_count( $html, 'role="tabpanel"' ) );
 	}
 
-	public function test_the_accent_comes_from_the_theme_or_a_filter(): void {
+	public function test_the_accent_comes_from_the_theme(): void {
 		$this->go_to( home_url( '/' ) );
 		$this->assertSame( '', Player::root_style(), 'nothing set: the default amber' );
-		$accent = static fn(): string => '#3858e9';
-		add_filter( 'riff_accent', $accent );
-		$this->assertSame( ' style="--riff-accent: #3858e9"', Player::root_style() );
-		remove_filter( 'riff_accent', $accent );
-		$bad = static fn(): string => 'red; background: url(x)';
-		add_filter( 'riff_accent', $bad );
-		$this->assertSame( '', Player::root_style(), 'only a colour goes in' );
-		remove_filter( 'riff_accent', $bad );
 	}
 }

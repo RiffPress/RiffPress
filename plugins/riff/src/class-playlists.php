@@ -49,7 +49,6 @@ final class Playlists {
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'post_type' ) );
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
-		add_filter( 'riff_player_data', array( self::class, 'player_data' ) );
 	}
 
 	/**

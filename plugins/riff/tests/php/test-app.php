@@ -336,15 +336,16 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertStringContainsString( 'page_id=' . $page . '&#038;riff_view=posts&#038;riff_page=2#riff-page-2', $this->library_at( null ) );
 	}
 
-	public function test_the_page_argument_follows_the_library_query_filter(): void {
+	public function test_the_page_argument_follows_the_library_s_page_size(): void {
 		$this->library_of( 5 );
-		$per_page = static function ( $args ) {
-			$args['posts_per_page'] = 2;
-			return $args;
+		$per_page = static function ( \WP_Query $query ): void {
+			if ( \Riff\Library::PER_PAGE === (int) $query->get( 'posts_per_page' ) ) {
+				$query->set( 'posts_per_page', 2 );
+			}
 		};
-		add_filter( 'riff_library_query', $per_page );
+		add_action( 'pre_get_posts', $per_page );
 		$html = $this->library_at( '2' );
-		remove_filter( 'riff_library_query', $per_page );
+		remove_action( 'pre_get_posts', $per_page );
 		$this->assertSame( 4, substr_count( $html, 'class="riff-card"' ), 'two pages of two, as the route pages them' );
 		$this->assertStringContainsString( 'data-riff-page="2" data-riff-pages="3"', $html );
 	}
@@ -472,14 +473,22 @@ class Test_Riff_App extends Riff_TestCase {
 	}
 
 	public function test_standalone_mode_keeps_its_one_design_whatever_the_block_says(): void {
-		add_filter( 'riff_app_theme_tokens', array( \Riff\Listen\Standalone::class, 'tokens' ), 1 );
-		try {
-			$block = do_blocks( '<!-- wp:riff/app {"backgroundColor":"contrast"} /-->' );
-			$this->assertStringContainsString( '--riff-app-bg:#030303', $block );
-			$this->assertStringNotContainsString( 'preset--color--contrast', $block );
-		} finally {
-			remove_filter( 'riff_app_theme_tokens', array( \Riff\Listen\Standalone::class, 'tokens' ), 1 );
-		}
+		$this->set_permalink_structure( '/%postname%/' );
+		\Riff\Listen\Standalone::endpoint();
+		flush_rewrite_rules( false );
+		$listen = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_name'    => 'listen',
+				'post_content' => '<!-- wp:riff/app /-->',
+			)
+		);
+		$this->go_to( \Riff\Listen\Standalone::url( $listen ) );
+
+		$block = do_blocks( '<!-- wp:riff/app {"backgroundColor":"contrast"} /-->' );
+		$this->assertStringContainsString( '--riff-app-bg:#030303', $block );
+		$this->assertStringNotContainsString( 'preset--color--contrast', $block );
 	}
 
 	public function test_a_link_in_the_text_colour_and_one_font_carry_through(): void {
@@ -497,29 +506,6 @@ class Test_Riff_App extends Riff_TestCase {
 				$tokens = App::theme_tokens();
 				$this->assertSame( 'var(--riff-app-ink)', $tokens['--riff-app-accent'], 'currentColor would resolve to a filled button\'s own label' );
 				$this->assertSame( 'var(--riff-app-font)', $tokens['--riff-app-heading-font'], 'headings follow the one font, not Garamond' );
-			}
-		);
-	}
-
-	public function test_a_filter_keeps_the_wordpress_org_look_or_sets_its_own(): void {
-		$this->with_theme_styles(
-			array( 'color' => array( 'text' => '#111111' ) ),
-			function (): void {
-				$none = static fn(): array => array();
-				add_filter( 'riff_app_theme_tokens', $none );
-				$this->assertSame( '', App::theme_style(), 'an empty array keeps the block\'s own palette' );
-				$this->assertStringNotContainsString( 'style=', App::render() );
-				remove_filter( 'riff_app_theme_tokens', $none );
-
-				$bad = static fn(): array => array(
-					'--riff-app-bg'   => 'red;} body { display: none',
-					'color'           => 'red',
-					'--riff-app-ink'  => '"><script>',
-					'--riff-app-line' => '#d9d9d9',
-				);
-				add_filter( 'riff_app_theme_tokens', $bad );
-				$this->assertSame( array( '--riff-app-line' => '#d9d9d9' ), App::theme_tokens(), 'only a --riff-app-* property and a value that cannot close it' );
-				remove_filter( 'riff_app_theme_tokens', $bad );
 			}
 		);
 	}

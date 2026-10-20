@@ -187,14 +187,7 @@ final class Standalone {
 			'theme_color'      => self::BACKGROUND,
 			'icons'            => $icons,
 		);
-		/**
-		 * Filters the web app manifest of standalone mode.
-		 *
-		 * @since 4.17.0
-		 *
-		 * @param array $manifest The manifest's members, as https://www.w3.org/TR/appmanifest/ names them.
-		 */
-		return (array) apply_filters( 'riff_standalone_manifest', $manifest );
+		return $manifest;
 	}
 
 	/**
@@ -209,7 +202,6 @@ final class Standalone {
 		if ( ! self::active() ) {
 			return $template;
 		}
-		add_filter( 'riff_app_theme_tokens', array( self::class, 'tokens' ), 1 );
 		add_filter( 'wp_preload_resources', array( self::class, 'preload' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'strip' ), PHP_INT_MAX );
 		// The document prints its own title and viewport. A block theme's template has core add

@@ -15,10 +15,9 @@ if ( root ) {
 function start() {
 	const data =
 		parse( document.getElementById( 'riff-data' )?.textContent ) || {};
-	// Strings are WordPress translations of this module (wp_set_script_module_translations()); a
-	// site's riff_strings filter can still replace one by its old key. Core prints wp.i18n only
-	// when there are translations, so without it the strings are the English they are written in.
-	const s = data.strings || {};
+	// Strings are WordPress translations of this module (wp_set_script_module_translations()).
+	// Core prints wp.i18n only when there are translations, so without it the strings are the
+	// English they are written in.
 	const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 	// "MP3 · 128 kbps", "FLAC · Lossless", or nothing when the file was never read. Shown on every
@@ -31,7 +30,7 @@ function start() {
 		if ( t.type !== 'video' && ! t.video ) {
 			return '';
 		}
-		const label = esc( s.video || __( 'Video', 'riff' ) );
+		const label = esc( __( 'Video', 'riff' ) );
 		return `<span class="riff-row-video" role="img" aria-label="${ label }">${ FILM }</span>`;
 	}
 
@@ -45,27 +44,25 @@ function start() {
 		let rate;
 		if ( ! t.lossless ) {
 			rate = fmt(
-				s.kbps ||
-					/* translators: %s: kilobits per second. */ __(
-						'%s kbps',
-						'riff'
-					),
+				/* translators: %s: kilobits per second. */ __(
+					'%s kbps',
+					'riff'
+				),
 				t.bitrate
 			);
 		} else if ( t.bits && t.rate ) {
 			rate = fmt(
-				s.bitsKhz ||
-					/* translators: 1: bits per sample, 2: sample rate in kHz. */ __(
-						'%1$s-bit %2$s kHz',
-						'riff'
-					),
+				/* translators: 1: bits per sample, 2: sample rate in kHz. */ __(
+					'%1$s-bit %2$s kHz',
+					'riff'
+				),
 				t.bits
 			).replace(
 				'%2$s',
 				String( t.rate / 1000 ).replace( /\.?0+$/, '' )
 			);
 		} else {
-			rate = s.lossless || __( 'Lossless', 'riff' );
+			rate = __( 'Lossless', 'riff' );
 		}
 		return format ? `${ format } · ${ rate }` : rate;
 	}
@@ -115,6 +112,10 @@ function start() {
 	}
 	const filter = ( name, value, ...args ) =>
 		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
+	// Riff's own features hear of likes and playlists, and add to the track menu, here rather
+	// than through wp.hooks, so none of it is a promise to other plugins.
+	const own = { like: new Set(), playlist: new Set(), menu: new Set() };
+	const tell = ( name, detail ) => own[ name ].forEach( ( fn ) => fn( detail ) );
 	const api = {
 		/**
 		 * The version of this api: 1.
@@ -124,15 +125,6 @@ function start() {
 		 * @type {number}
 		 */
 		version: 1,
-		/**
-		 * Strings a site replaces with the `riff_strings` filter, by key. The rest are translated in the
-		 * modules themselves, from WordPress's script module translations.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @type {Object<string, string>}
-		 */
-		strings: s,
 		/**
 		 * Makes `tracks` the queue and plays the one at `index`.
 		 *
@@ -151,47 +143,6 @@ function start() {
 			}
 			setQueue( tracks, index );
 		},
-		/**
-		 * Puts tracks right after the one playing, or starts them when nothing is.
-		 *
-		 * Each track goes through the `riff.track` filter first; one without a file is left out.
-		 *
-		 * @since 4.19.0
-		 *
-		 * @param {Object|Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
-		 */
-		playNext: ( tracks ) => insert( tracks, pos + 1, 'next' ),
-		/**
-		 * Adds tracks to the end of the queue, or starts them when nothing is playing.
-		 *
-		 * @since 4.19.0
-		 *
-		 * @param {Object|Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
-		 */
-		addToQueue: ( tracks ) => insert( tracks, order.length, 'add' ),
-		/**
-		 * Moves a track in the queue, by its place in the play order.
-		 *
-		 * @since 4.19.0
-		 *
-		 * @param {number} from Where it is.
-		 * @param {number} to   Where it goes.
-		 */
-		moveInQueue: ( from, to ) => reorder( from, to ),
-		/**
-		 * Takes a track out of the queue, by its place in the play order. The one playing stays.
-		 *
-		 * @since 4.19.0
-		 *
-		 * @param {number} at Its place.
-		 */
-		removeFromQueue: ( at ) => remove( at ),
-		/**
-		 * Empties the queue but for the track playing.
-		 *
-		 * @since 4.19.0
-		 */
-		clearQueue: () => clear(),
 		/**
 		 * Plays or pauses.
 		 *
@@ -235,12 +186,6 @@ function start() {
 		 */
 		close: () => close(),
 		/**
-		 * Reads every `figure[data-riff-track]` on the page again, after content was swapped in.
-		 *
-		 * @since 4.0.0
-		 */
-		mount: () => mount(),
-		/**
 		 * The track playing.
 		 *
 		 * @since 4.0.0
@@ -256,6 +201,106 @@ function start() {
 		 * @return {Object[]} Tracks.
 		 */
 		queue: () => order.map( ( i ) => queue[ i ] ),
+		/**
+		 * Whether something is playing.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @return {boolean} True while a track plays.
+		 */
+		playing: () => !! track() && ! el().paused,
+		/**
+		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
+		 * through the `riff_now_playing_tabs` filter.
+		 *
+		 * @since 4.16.0
+		 *
+		 * @param {string} id The tab's slug.
+		 */
+		tab: ( id ) => pickTab( String( id ) ),
+		/**
+		 * Listens to one of the player's actions, without `wp-hooks`.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param {string}                                name The action without its prefix: `track`, `play`, `pause` and the rest.
+		 * @param {(detail: Object, api: Object) => void} fn   Called with the detail and the api.
+		 * @return {() => void} Stops listening.
+		 */
+		on( name, fn ) {
+			const handler = ( e ) => fn( e.detail, api );
+			root.addEventListener( `riff:${ name }`, handler );
+			return () => root.removeEventListener( `riff:${ name }`, handler );
+		},
+	};
+	window.riff = api;
+	// The rest of the player's door, for Riff's own features (the Listen app gets it when it loads)
+	// and its tests: the queue's editing, history, likes and playlists. Not window.riff, so not a
+	// promise to other plugins; the public api above is what they get.
+	const internal = {
+		...api,
+		/**
+		 * Calls `fn` on a change: `like` with `{ change, kind, id }`, `playlist` with
+		 * `{ change, playlist }`, or `menu` with a track menu's items, track and context, for
+		 * `fn` to return the items.
+		 *
+		 * @since 4.23.0
+		 *
+		 * @param {string}                                 name `like`, `playlist` or `menu`.
+		 * @param {(...args: Object[]) => (Object[]|void)} fn   The listener.
+		 * @return {() => void} Stops listening.
+		 */
+		listen( name, fn ) {
+			own[ name ]?.add( fn );
+			return () => own[ name ]?.delete( fn );
+		},
+		/**
+		 * Puts tracks right after the one playing, or starts them when nothing is.
+		 *
+		 * Each track goes through the `riff.track` filter first; one without a file is left out.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {Object|Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
+		 */
+		playNext: ( tracks ) => insert( tracks, pos + 1, 'next' ),
+		/**
+		 * Adds tracks to the end of the queue, or starts them when nothing is playing.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {Object|Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
+		 */
+		addToQueue: ( tracks ) => insert( tracks, order.length, 'add' ),
+		/**
+		 * Moves a track in the queue, by its place in the play order.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {number} from Where it is.
+		 * @param {number} to   Where it goes.
+		 */
+		moveInQueue: ( from, to ) => reorder( from, to ),
+		/**
+		 * Takes a track out of the queue, by its place in the play order. The one playing stays.
+		 *
+		 * @since 4.19.0
+		 *
+		 * @param {number} at Its place.
+		 */
+		removeFromQueue: ( at ) => remove( at ),
+		/**
+		 * Empties the queue but for the track playing.
+		 *
+		 * @since 4.19.0
+		 */
+		clearQueue: () => clear(),
+		/**
+		 * Reads every `figure[data-riff-track]` on the page again, after content was swapped in.
+		 *
+		 * @since 4.0.0
+		 */
+		mount: () => mount(),
 		/**
 		 * The tracks played, most recent first, each once: what Home's Recently played and Jump back
 		 * in are drawn from. At most 30. A signed-in listener's come from their account; a visitor's
@@ -414,39 +459,12 @@ function start() {
 		 */
 		deletePlaylist: ( id ) =>
 			playlistCall( 'delete', 'DELETE', `/${ Number( id ) }` ),
-		/**
-		 * Whether something is playing.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @return {boolean} True while a track plays.
-		 */
-		playing: () => !! track() && ! el().paused,
-		/**
-		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
-		 * through the `riff_now_playing_tabs` filter.
-		 *
-		 * @since 4.16.0
-		 *
-		 * @param {string} id The tab's slug.
-		 */
-		tab: ( id ) => pickTab( String( id ) ),
-		/**
-		 * Listens to one of the player's actions, without `wp-hooks`.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @param {string}                                name The action without its prefix: `track`, `play`, `pause` and the rest.
-		 * @param {(detail: Object, api: Object) => void} fn   Called with the detail and the api.
-		 * @return {() => void} Stops listening.
-		 */
-		on( name, fn ) {
-			const handler = ( e ) => fn( e.detail, api );
-			root.addEventListener( `riff:${ name }`, handler );
-			return () => root.removeEventListener( `riff:${ name }`, handler );
-		},
 	};
-	window.riff = api;
+	// The tests site sets data-riff-test on the root (tests/components), and only there does the
+	// whole door show, for the e2e suite to drive likes and playlists directly.
+	if ( document.documentElement.hasAttribute( 'data-riff-test' ) ) {
+		window.riffInternal = internal;
+	}
 	const isVideo = ( t = track() ) =>
 		!! t && ( t.type === 'video' || ( mode === 'video' && !! t.video ) );
 	// Once the analyser is wired to <audio>, a file from another origin would play silent through it,
@@ -536,8 +554,7 @@ function start() {
 		row.setAttribute(
 			'aria-label',
 			fmt(
-				s.playTrack ||
-					/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
+				/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
 				t.title
 			)
 		);
@@ -577,16 +594,14 @@ function start() {
 			'aria-label',
 			fmt(
 				t.unlock
-					? s.unlock ||
-							/* translators: %s: track title. */ __(
-								'Unlock %s',
-								'riff'
-							)
-					: s.locked ||
-							/* translators: %s: track title. */ __(
-								'%s is locked',
-								'riff'
-							),
+					? /* translators: %s: track title. */ __(
+							'Unlock %s',
+							'riff'
+						)
+					: /* translators: %s: track title. */ __(
+							'%s is locked',
+							'riff'
+						),
 				t.title
 			)
 		);
@@ -949,29 +964,13 @@ function start() {
 			if ( isLiked( id, kind ) === on ) {
 				flip( ! on );
 			}
-			toast(
-				s.likeFailed ||
-					__( 'That could not be saved. Try again.', 'riff' )
-			);
+			toast( __( 'That could not be saved. Try again.', 'riff' ) );
 		} );
 	}
 	function likesChanged( change, kind = null, id = null ) {
 		indexLikes();
 		paintHearts();
-		/**
-		 * Fires when a like is added or taken away, and once the likes a visitor kept in this browser
-		 * have joined their account after they signed in.
-		 *
-		 * @since 4.20.0
-		 *
-		 * @param {Object}      detail        What changed.
-		 * @param {string}      detail.change `like`, `unlike` or `sync`.
-		 * @param {string|null} detail.kind   `track`, `album` or `artist`; null for `sync`.
-		 * @param {number|null} detail.id     Its ID; null for `sync`.
-		 * @param {Object[]}    detail.likes  Every like, newest first, each `{ kind, id, at }`.
-		 * @param {Object}      api           `window.riff`.
-		 */
-		emit( 'like', { change, kind, id, likes: api.likes() } );
+		tell( 'like', { change, kind, id } );
 	}
 	function toggleLike( t ) {
 		const on = ! isLiked( t.id );
@@ -979,16 +978,14 @@ function start() {
 		toast(
 			fmt(
 				on
-					? s.likedTrack ||
-							/* translators: %s: track title. */ __(
-								'%s added to Liked songs',
-								'riff'
-							)
-					: s.unlikedTrack ||
-							/* translators: %s: track title. */ __(
-								'%s removed from Liked songs',
-								'riff'
-							),
+					? /* translators: %s: track title. */ __(
+							'%s added to Liked songs',
+							'riff'
+						)
+					: /* translators: %s: track title. */ __(
+							'%s removed from Liked songs',
+							'riff'
+						),
 				t.title
 			)
 		);
@@ -1018,22 +1015,7 @@ function start() {
 									( x ) => x.id !== brief.id
 								),
 							];
-				/**
-				 * Fires when one of the signed-in listener's playlists is made, changed or deleted.
-				 *
-				 * @since 4.20.0
-				 *
-				 * @param {Object}   detail           What changed.
-				 * @param {string}   detail.change    `create`, `add`, `rename`, `reorder`, `remove` or `delete`.
-				 * @param {Object}   detail.playlist  The playlist, `{ id, title, count }`.
-				 * @param {Object[]} detail.playlists Every playlist, the most recently changed first.
-				 * @param {Object}   api              `window.riff`.
-				 */
-				emit( 'playlist', {
-					change,
-					playlist: brief,
-					playlists: api.playlists(),
-				} );
+				tell( 'playlist', { change, playlist: brief } );
 				return r;
 			}
 		);
@@ -1043,34 +1025,31 @@ function start() {
 		const said = ( p ) =>
 			toast(
 				fmt(
-					s.addedToPlaylist ||
-						/* translators: %s: playlist name. */ __(
-							'Added to %s',
-							'riff'
-						),
+					/* translators: %s: playlist name. */ __(
+						'Added to %s',
+						'riff'
+					),
 					p.title
 				)
 			);
 		const failed = () =>
 			toast(
-				s.playlistFailed ||
-					__(
-						'The playlist could not be changed. Try again.',
-						'riff'
-					)
+				__( 'The playlist could not be changed. Try again.', 'riff' )
 			);
 		return [
 			{
 				id: 'new-playlist',
-				label: s.newPlaylist || __( 'New playlist', 'riff' ),
+				label: __( 'New playlist', 'riff' ),
 				run: () =>
-					api.createPlaylist( t.title, [ t ] ).then( said, failed ),
+					internal
+						.createPlaylist( t.title, [ t ] )
+						.then( said, failed ),
 			},
 			...playlists.map( ( p ) => ( {
 				id: `playlist-${ p.id }`,
 				label: p.title,
 				run: () =>
-					api.addToPlaylist( p.id, [ t ] ).then( said, failed ),
+					internal.addToPlaylist( p.id, [ t ] ).then( said, failed ),
 			} ) ),
 		];
 	}
@@ -1275,7 +1254,7 @@ function start() {
 			! el().paused
 		) {
 			el().pause();
-			toast( s.otherTab || __( 'Playing in another tab', 'riff' ) );
+			toast( __( 'Playing in another tab', 'riff' ) );
 		}
 	} );
 	const announce = () =>
@@ -1774,9 +1753,7 @@ function start() {
 		for ( const b of $$( '[data-riff-action="toggle"]' ) ) {
 			b.setAttribute(
 				'aria-label',
-				playing
-					? s.pause || __( 'Pause', 'riff' )
-					: s.play || __( 'Play', 'riff' )
+				playing ? __( 'Pause', 'riff' ) : __( 'Play', 'riff' )
 			);
 		}
 		text( 'title', t?.title || '' );
@@ -1803,9 +1780,9 @@ function start() {
 			);
 		}
 		const repeatLabel = {
-			off: s.repeatOff || __( 'Repeat off', 'riff' ),
-			all: s.repeatAll || __( 'Repeat all', 'riff' ),
-			one: s.repeatOne || __( 'Repeat one', 'riff' ),
+			off: __( 'Repeat off', 'riff' ),
+			all: __( 'Repeat all', 'riff' ),
+			one: __( 'Repeat one', 'riff' ),
 		}[ repeat ];
 		for ( const b of $$( '[data-riff-action="repeat"]' ) ) {
 			b.dataset.repeat = repeat;
@@ -1817,8 +1794,8 @@ function start() {
 			b.setAttribute(
 				'aria-label',
 				shuffle
-					? s.shuffleOn || __( 'Shuffle on', 'riff' )
-					: s.shuffleOff || __( 'Shuffle off', 'riff' )
+					? __( 'Shuffle on', 'riff' )
+					: __( 'Shuffle off', 'riff' )
 			);
 		}
 		for ( const { t: rt, row } of rows ) {
@@ -1828,13 +1805,12 @@ function start() {
 			row.setAttribute(
 				'aria-label',
 				current && playing
-					? s.pause || __( 'Pause', 'riff' )
+					? __( 'Pause', 'riff' )
 					: fmt(
-							s.playTrack ||
-								/* translators: %s: track title. */ __(
-									'Play %s',
-									'riff'
-								),
+							/* translators: %s: track title. */ __(
+								'Play %s',
+								'riff'
+							),
 							rt.title
 						)
 			);
@@ -1874,12 +1850,9 @@ function start() {
 					input.value = value;
 					input.setAttribute(
 						'aria-valuetext',
-						(
-							s.times ||
-							/* translators: 1: elapsed time, 2: total time. */ __(
-								'%1$s / %2$s',
-								'riff'
-							)
+						/* translators: 1: elapsed time, 2: total time. */ __(
+							'%1$s / %2$s',
+							'riff'
 						)
 							.replace( '%1$s', time( m.currentTime ) )
 							.replace( '%2$s', time( duration ) )
@@ -1944,8 +1917,8 @@ function start() {
 		}
 	}
 
-	// ---- The track menu: … beside every row and every track in Up next. Its items go through the
-	// riff.trackMenu filter, so a plugin adds its own the way Riff Lyrics adds a tab.
+	// ---- The track menu: … beside every row and every track in Up next. The Listen app adds a
+	// playlist's own items through internal.listen( 'menu' ).
 	const menu = document.createElement( 'div' );
 	menu.className = 'riff-menu';
 	menu.setAttribute( 'role', 'menu' );
@@ -1966,11 +1939,10 @@ function start() {
 		b.setAttribute(
 			'aria-label',
 			fmt(
-				s.likeItem ||
-					/* translators: %s: a track, album or artist. */ __(
-						'Like %s',
-						'riff'
-					),
+				/* translators: %s: a track, album or artist. */ __(
+					'Like %s',
+					'riff'
+				),
 				t.title
 			)
 		);
@@ -2000,16 +1972,15 @@ function start() {
 		const items = [
 			{
 				id: 'next',
-				label: s.playNext || __( 'Play next', 'riff' ),
+				label: __( 'Play next', 'riff' ),
 				run: () => {
-					api.playNext( [ t ] );
+					internal.playNext( [ t ] );
 					toast(
 						fmt(
-							s.playingNext ||
-								/* translators: %s: track title. */ __(
-									'%s plays next',
-									'riff'
-								),
+							/* translators: %s: track title. */ __(
+								'%s plays next',
+								'riff'
+							),
 							t.title
 						)
 					);
@@ -2017,16 +1988,15 @@ function start() {
 			},
 			{
 				id: 'add',
-				label: s.addToQueue || __( 'Add to queue', 'riff' ),
+				label: __( 'Add to queue', 'riff' ),
 				run: () => {
-					api.addToQueue( [ t ] );
+					internal.addToQueue( [ t ] );
 					toast(
 						fmt(
-							s.addedToQueue ||
-								/* translators: %s: track title. */ __(
-									'%s added to the queue',
-									'riff'
-								),
+							/* translators: %s: track title. */ __(
+								'%s added to the queue',
+								'riff'
+							),
 							t.title
 						)
 					);
@@ -2037,23 +2007,20 @@ function start() {
 			items.push( {
 				id: 'like',
 				label: isLiked( t.id )
-					? s.removeFromLiked ||
-						__( 'Remove from Liked songs', 'riff' )
-					: s.addToLiked || __( 'Add to Liked songs', 'riff' ),
+					? __( 'Remove from Liked songs', 'riff' )
+					: __( 'Add to Liked songs', 'riff' ),
 				run: () => toggleLike( t ),
 			} );
 			if ( me ) {
 				items.push( {
 					id: 'playlist',
-					label: s.addToPlaylist || __( 'Add to playlist', 'riff' ),
+					label: __( 'Add to playlist', 'riff' ),
 					run: () => openMenu( button, t, at, playlistItems( t ) ),
 				} );
 			} else if ( data.signIn ) {
 				items.push( {
 					id: 'playlist',
-					label:
-						s.signInForPlaylists ||
-						__( 'Sign in to add to a playlist', 'riff' ),
+					label: __( 'Sign in to add to a playlist', 'riff' ),
 					href: data.signIn,
 				} );
 			}
@@ -2062,22 +2029,21 @@ function start() {
 			if ( at > 0 ) {
 				items.push( {
 					id: 'up',
-					label: s.moveUp || __( 'Move up', 'riff' ),
+					label: __( 'Move up', 'riff' ),
 					run: () => moveAndFocus( at, at - 1 ),
 				} );
 			}
 			if ( at < order.length - 1 ) {
 				items.push( {
 					id: 'down',
-					label: s.moveDown || __( 'Move down', 'riff' ),
+					label: __( 'Move down', 'riff' ),
 					run: () => moveAndFocus( at, at + 1 ),
 				} );
 			}
 			if ( at !== pos ) {
 				items.push( {
 					id: 'remove',
-					label:
-						s.removeFromQueue || __( 'Remove from queue', 'riff' ),
+					label: __( 'Remove from queue', 'riff' ),
 					run: () => remove( at ),
 				} );
 			}
@@ -2085,38 +2051,20 @@ function start() {
 		if ( t.post?.url ) {
 			items.push( {
 				id: 'post',
-				label: s.goToPost || __( 'Go to post', 'riff' ),
+				label: __( 'Go to post', 'riff' ),
 				href: t.post.url,
 			} );
 		}
-		/**
-		 * Filters the items of a track's menu: the … beside a row in a post or the Listen block, and
-		 * beside each track in Up next.
-		 *
-		 * Each item is `{ id, label, run }`, where `run` is called when it is chosen, or
-		 * `{ id, label, href }` for a link. Riff's own are `next`, `add`, `like`, `playlist`,
-		 * `up`, `down`, `remove` and `post`.
-		 *
-		 * @since 4.19.0
-		 * @since 4.20.0 Has `like` and `playlist` for a track in the Media Library, and the
-		 *               context names the row's element.
-		 *
-		 * @param {Object[]} items   The items, in order.
-		 * @param {Object}   track   The track, in the shape `Tracks::schema()` describes.
-		 * @param {Object}   context Where the menu opened: `{ where: 'row', element }` with the
-		 *                           row's block element, or `{ where: 'queue', index }` with its
-		 *                           place in the play order.
-		 */
-		return filter(
-			'trackMenu',
-			items,
-			t,
+		const context =
 			at === undefined
 				? {
 						where: 'row',
 						element: button?.closest( '[data-riff-track]' ) || null,
 					}
-				: { where: 'queue', index: at }
+				: { where: 'queue', index: at };
+		return [ ...own.menu ].reduce(
+			( list, fn ) => fn( list, t, context ),
+			items
 		);
 	}
 
@@ -2211,11 +2159,10 @@ function start() {
 		b.setAttribute(
 			'aria-label',
 			fmt(
-				s.trackMenu ||
-					/* translators: %s: track title. */ __(
-						'More options for %s',
-						'riff'
-					),
+				/* translators: %s: track title. */ __(
+					'More options for %s',
+					'riff'
+				),
 				t.title
 			)
 		);
@@ -2415,20 +2362,6 @@ function start() {
 			if ( inLibrary( track() ) ) {
 				toggleLike( track() );
 			}
-		} else {
-			/**
-			 * Fires when a control an extension added through `riff_chips` or `riff_bar_controls`
-			 * is pressed.
-			 *
-			 * @since 4.0.0
-			 *
-			 * @param {Object}      detail        What was pressed.
-			 * @param {string}      detail.action The control's `action`, as the PHP filter set it.
-			 * @param {Object}      detail.track  The track playing.
-			 * @param {HTMLElement} detail.button The button that was pressed.
-			 * @param {Object}      api           `window.riff`.
-			 */
-			emit( 'action', { action, track: track(), button } );
 		}
 	} );
 
@@ -2463,16 +2396,6 @@ function start() {
 			b.setAttribute( 'aria-expanded', 'true' );
 		}
 		history.pushState( { ...history.state, riff: 'open' }, '' );
-		/**
-		 * Fires when Now Playing opens.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @param {Object} detail       What changed.
-		 * @param {Object} detail.track The track playing.
-		 * @param {Object} api          `window.riff`.
-		 */
-		emit( 'open', { track: track() } );
 		requestAnimationFrame( () => {
 			np.classList.add( 'is-in' );
 			$( '[data-riff-action="close"]' ).focus( { preventScroll: true } );
@@ -2484,16 +2407,6 @@ function start() {
 			return;
 		}
 		np.classList.remove( 'is-in' );
-		/**
-		 * Fires when Now Playing closes.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @param {Object} detail       What changed.
-		 * @param {Object} detail.track The track playing.
-		 * @param {Object} api          `window.riff`.
-		 */
-		emit( 'close', { track: track() } );
 		sheet( 'none' );
 		np.style.removeProperty( 'transform' );
 		root.classList.remove( 'is-open' );
@@ -2626,11 +2539,9 @@ function start() {
 		}
 		try {
 			await navigator.clipboard.writeText( url );
-			toast( s.copied || __( 'Link copied', 'riff' ) );
+			toast( __( 'Link copied', 'riff' ) );
 		} catch {
-			toast(
-				s.shareFailed || __( 'The link could not be shared.', 'riff' )
-			);
+			toast( __( 'The link could not be shared.', 'riff' ) );
 		}
 	}
 
@@ -2645,8 +2556,7 @@ function start() {
 		const hit = rows.find( ( r ) => r.t.id === id );
 		if ( ! hit ) {
 			toast(
-				s.trackGone ||
-					__( 'The shared track is no longer in this post.', 'riff' )
+				__( 'The shared track is no longer in this post.', 'riff' )
 			);
 			return;
 		}
@@ -3111,7 +3021,7 @@ function start() {
 		import( data.assets.app )
 			.then( ( m ) => {
 				document.removeEventListener( 'click', hold, true );
-				m.start( api );
+				m.start( internal );
 				if ( held?.isConnected ) {
 					held.click();
 				}

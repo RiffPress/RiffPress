@@ -127,7 +127,7 @@ test( 'signed in, a heart on a row and in the bar saves to the account, and stay
 
 	await page.evaluate( () => {
 		window.riffLikes = [];
-		window.riff.on( 'like', ( d ) => window.riffLikes.push( `${ d.change } ${ d.kind }` ) );
+		window.riffInternal.listen( 'like', ( d ) => window.riffLikes.push( `${ d.change } ${ d.kind }` ) );
 	} );
 
 	// The bar's heart follows the track playing.
@@ -195,14 +195,14 @@ test( 'every heart shows one icon, the outline or the filled one, liked or not',
 
 test( 'likes made one after another, signed in, are all kept', async ( { page, requestUtils } ) => {
 	await page.goto( postUrl );
-	await page.waitForFunction( () => typeof window.riff?.like === 'function' );
+	await page.waitForFunction( () => typeof window.riffInternal?.like === 'function' );
 	await page.evaluate(
 		( ids ) => {
-			window.riff.like( ids[ 0 ] );
-			window.riff.like( ids[ 1 ] );
-			window.riff.like( ids[ 2 ], 'album' );
-			window.riff.unlike( ids[ 1 ] );
-			window.riff.like( ids[ 3 ], 'artist' );
+			window.riffInternal.like( ids[ 0 ] );
+			window.riffInternal.like( ids[ 1 ] );
+			window.riffInternal.like( ids[ 2 ], 'album' );
+			window.riffInternal.unlike( ids[ 1 ] );
+			window.riffInternal.like( ids[ 3 ], 'artist' );
 		},
 		[ audio[ 0 ].id, audio[ 1 ].id, album, artist ]
 	);
@@ -271,7 +271,7 @@ test( 'signing in brings a visitor\'s likes and plays into the account, and the 
 	await page.goto( postUrl );
 	await page.locator( '.riff-track' ).nth( 0 ).locator( '.riff-like-button' ).click();
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await expect.poll( () => page.evaluate( () => window.riff.history().length ) ).toBe( 1 );
+	await expect.poll( () => page.evaluate( () => window.riffInternal.history().length ) ).toBe( 1 );
 	// An album liked from its page.
 	await page.goto( withArg( listenUrl, `riff_album=${ album }` ) );
 	const save = page.locator( '.riff-app-like' );
@@ -303,7 +303,7 @@ test( 'signing in brings a visitor\'s likes and plays into the account, and the 
 	await expect
 		.poll( () => page.evaluate( () => localStorage.getItem( 'riff-history' ) ) )
 		.toBeNull();
-	expect( await page.evaluate( () => window.riff.history().map( ( t ) => t.title ) ) ).toEqual( [ 'Underground' ] );
+	expect( await page.evaluate( () => window.riffInternal.history().map( ( t ) => t.title ) ) ).toEqual( [ 'Underground' ] );
 	await context.close();
 } );
 

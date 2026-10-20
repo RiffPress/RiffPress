@@ -68,7 +68,6 @@ final class App {
 		register_block_type( RIFF_DIR . 'features/listen/block' );
 		wp_set_script_translations( 'riff-app-editor-script', 'riff' );
 		add_shortcode( 'riff', array( self::class, 'shortcode' ) );
-		add_filter( 'riff_library_item', array( self::class, 'item_meta' ), 10, 2 );
 		if ( function_exists( 'register_block_template' ) ) {
 			register_block_template(
 				self::TEMPLATE,
@@ -199,21 +198,7 @@ final class App {
 				$tokens['--riff-app-heading-font'] = 'var(--riff-app-font)';
 			}
 		}
-		/**
-		 * Filters the custom properties the Riff block takes from the theme.
-		 *
-		 * Return an empty array to keep the block's own WordPress.org palette and fonts on
-		 * every theme, or set any `--riff-app-*` property to a CSS value. With
-		 * `--riff-app-bg` or `--riff-app-ink` set, the stylesheet mixes the secondary text,
-		 * borders, surfaces and the accent's shades from them.
-		 *
-		 * @since 4.14.0
-		 *
-		 * @since 4.18.0 Includes Styles > Blocks > Riff and the block's own colour and font settings.
-		 *
-		 * @param array $tokens Custom property values from the theme's global styles, keyed by name.
-		 */
-		$tokens = (array) apply_filters( 'riff_app_theme_tokens', $tokens );
+		$tokens = Standalone::active() ? Standalone::tokens() : $tokens;
 		return array_filter(
 			$tokens,
 			// A custom property name, and a value that cannot close the declaration or the attribute.

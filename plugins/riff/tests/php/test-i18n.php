@@ -205,18 +205,4 @@ class Test_Riff_I18n extends Riff_TestCase {
 		$this->assertStringContainsString( 'id="wp-script-module-translation-data-riff-app"', $html );
 		$this->assertStringContainsString( 'Spiele %s', $html, 'the translated string reaches the page' );
 	}
-
-	public function test_the_script_gets_only_the_strings_a_site_replaces(): void {
-		$replace = static fn( $strings ) => array_merge( $strings, array( 'playTrack' => 'Listen to %s' ) );
-		add_filter( 'riff_strings', $replace );
-		$this->go_to( get_permalink( $this->post ) );
-		ob_start();
-		Player::markup();
-		$html = (string) ob_get_clean();
-		remove_filter( 'riff_strings', $replace );
-
-		preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html, $data );
-		$this->assertSame( array( 'playTrack' => 'Listen to %s' ), json_decode( $data[1] ?? '', true )['strings'] ?? null, 'the module translates the rest itself' );
-		$this->assertStringContainsString( '⟪', substr( $html, strpos( $html, '</script>' ) ), 'and the player around it is translated in PHP' );
-	}
 }

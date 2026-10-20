@@ -503,7 +503,7 @@ function hookPage( p ) {
 
 	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ label }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
 	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() } | RiffPress`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', 'developers' );
-	// A hook sits under its language: PHP / Hooks / riff_accent, or JavaScript / Hooks / riff.track.
+	// A hook sits under its language: PHP / Hooks / riff_enabled, or JavaScript / Hooks / riff.track.
 	const lang = p.lang === 'js' ? [ 'javascript', 'JavaScript', '#actions-and-filters' ] : [ 'php', 'PHP', '#hooks' ];
 	html += localNav( '../../../', lang[ 0 ] );
 	html += crumbs( [ [ 'RiffPress', '../../../' ], [ 'Developers', '../../' ], [ lang[ 1 ], `../../${ lang[ 0 ] }/` ], [ 'Hooks', `../../${ lang[ 0 ] }/${ lang[ 2 ] }` ], [ p.name ] ], searchForm( '../' ) );

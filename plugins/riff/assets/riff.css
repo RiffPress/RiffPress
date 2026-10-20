@@ -344,8 +344,7 @@ div.riff-row-locked {
 	/**
 	 * The played part of the seek bar in the bar, its knob, the format label,
 	 * and the glow behind the cover. A theme sets it in theme.json under
-	 * `settings.custom.riff.accent`, and the `riff_accent` filter has the last
-	 * word.
+	 * `settings.custom.riff.accent`, or in its own CSS.
 	 *
 	 * @since 4.0.0
 	 */

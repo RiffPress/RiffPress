@@ -256,13 +256,6 @@ final class Library {
 				'no_found_rows'       => false,
 			)
 		);
-		/**
-		 * Filters the query behind the library: which posts the app lists.
-		 *
-		 * @since 4.0.0
-		 * @param array $args WP_Query arguments.
-		 */
-		$args = (array) apply_filters( 'riff_library_query', $args );
 
 		// Each source says in SQL which posts it can read; a source that cannot say contributes nothing
 		// here and is asked post by post instead.
@@ -297,14 +290,7 @@ final class Library {
 			'count'    => count( $tracks ),
 			'duration' => $duration,
 		);
-		/**
-		 * Filters a post as the library lists it.
-		 *
-		 * @since 4.0.0
-		 * @param array   $item Item: id, title, url, artist, art, count, duration.
-		 * @param WP_Post $post Post.
-		 */
-		return (array) apply_filters( 'riff_library_item', $item, $post );
+		return Listen\App::item_meta( Listen\Art::item_art( $item, $post ), $post );
 	}
 
 	/**

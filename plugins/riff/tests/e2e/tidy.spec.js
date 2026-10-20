@@ -153,20 +153,20 @@ const views = () => [
 async function fill( page ) {
 	await page.goto( withArg( listenUrl, `riff=${ postId }` ) );
 	// Until the player starts, window.riff is the #riff element, by its id.
-	await page.waitForFunction( () => typeof window.riff?.like === 'function' );
+	await page.waitForFunction( () => typeof window.riffInternal?.like === 'function' );
 	await page.evaluate(
 		( ids ) => {
-			window.riff.like( ids.track );
-			window.riff.like( ids.album, 'album' );
-			window.riff.like( ids.artist, 'artist' );
+			window.riffInternal.like( ids.track );
+			window.riffInternal.like( ids.album, 'album' );
+			window.riffInternal.like( ids.artist, 'artist' );
 		},
 		{ track: tracks[ 0 ].id, album, artist }
 	);
 	// Signed in, a playlist too, with a long name; a visitor cannot make one.
 	playlistId = await page.evaluate(
 		( ids ) =>
-			window.riff.playlists && window.riff.createPlaylist
-				? window.riff.createPlaylist( ids.name, ids.tracks ).then(
+			window.riffInternal.playlists && window.riffInternal.createPlaylist
+				? window.riffInternal.createPlaylist( ids.name, ids.tracks ).then(
 						( p ) => p.id,
 						() => 0
 					)
@@ -176,14 +176,14 @@ async function fill( page ) {
 	for ( const n of [ 1, 0 ] ) {
 		await page.locator( '.riff-row' ).nth( n ).click();
 		await expect
-			.poll( () => page.evaluate( () => window.riff.history().length ) )
+			.poll( () => page.evaluate( () => window.riffInternal.history().length ) )
 			.toBeGreaterThan( n === 1 ? 0 : 1 );
 	}
 	// An account's likes are sent as they are made: they are kept once a fresh page has all three.
 	await expect
 		.poll( async () => {
 			await page.reload();
-			return page.evaluate( () => window.riff.likes().length );
+			return page.evaluate( () => window.riffInternal.likes().length );
 		} )
 		.toBe( 3 );
 }

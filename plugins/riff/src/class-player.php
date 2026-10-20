@@ -93,7 +93,7 @@ final class Player {
 	}
 
 	/**
-	 * Prints the player and the strings the script needs.
+	 * Prints the player and the data the script needs.
 	 *
 	 * @since 4.0.0
 	 */
@@ -101,36 +101,16 @@ final class Player {
 		if ( ! self::enabled() ) {
 			return;
 		}
-		/**
-		 * Filters the player's strings, keyed by name.
-		 *
-		 * The strings are translated in the script modules themselves since 4.22.0, from WordPress's
-		 * script module translations, so the array starts empty: a string a callback sets here, by
-		 * its key, replaces the module's. Kept so sites that relabel the player keep their words.
-		 *
-		 * @since 4.0.0
-		 * @since 4.22.0 Starts empty; set a key to replace that string.
-		 * @param array $strings Strings, keyed by name.
-		 */
-		$strings = (array) apply_filters( 'riff_strings', array() );
-		$data    = array(
-			// An object even when empty, as window.riff.strings is documented.
-			'strings'    => (object) $strings,
+		$data = array(
 			'assets'     => array(),
 			// The heart's icons, for the hearts the script draws on rows.
 			'icons'      => array( 'hearts' => self::hearts() ),
 			// Where the player's cookie applies: the site's own path, as WordPress's cookies use.
 			'cookiePath' => COOKIEPATH,
 		);
-		/**
-		 * Filters the data handed to the player script: the strings a site replaces (see
-		 * riff_strings), and the addresses of scripts a feature wants loaded, such as the Listen
-		 * feature's app on the page that holds its block.
-		 *
-		 * @since 4.0.0
-		 * @param array $data Data.
-		 */
-		$data = (array) apply_filters( 'riff_player_data', $data );
+		// What Riff's own features add for the script: the Listen app's address, and the listener's
+		// likes and playlists.
+		$data = Playlists::player_data( Likes::player_data( Listen\Art::player_data( $data ) ) );
 		printf(
 			'<script type="application/json" id="riff-data">%s</script>',
 			wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )
@@ -142,20 +122,14 @@ final class Player {
 		 */
 		do_action( 'riff_before_player' );
 		require RIFF_DIR . 'templates/player.php';
-		/**
-		 * Fires after the player's markup.
-		 *
-		 * @since 4.0.0
-		 */
-		do_action( 'riff_after_player' );
 	}
 
 	/**
-	 * The chips under Now Playing's controls, as extensions can add to them.
+	 * The chips under Now Playing's controls.
 	 *
 	 * Each item is keyed by a slug and has a `label`, an `action` (the data-riff-action the player
-	 * announces as a `riff.action` hook and a `riff:action` event when it is not one of its own), and
-	 * either an `icon` from Player::icon() or `svg` markup of its own. An item with an `href` is a link.
+	 * handles), and either an `icon` from Player::icon() or `svg` markup of its own. An item with an
+	 * `href` is a link.
 	 *
 	 * @since 4.0.0
 	 *
@@ -169,34 +143,9 @@ final class Player {
 				'action' => 'share',
 			),
 		);
-		/**
-		 * Filters the chips under Now Playing's controls.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @param array[] $chips Chips, keyed by slug: label, action, icon or svg, href.
-		 */
-		return self::items( (array) apply_filters( 'riff_chips', $chips ) );
+		return self::items( $chips );
 	}
 
-	/**
-	 * Controls at the end of the bar on a wide screen, before the caret. Empty until a plugin adds
-	 * some; the player's own controls stay where they are.
-	 *
-	 * @since 4.0.0
-	 *
-	 * @return array[]
-	 */
-	public static function bar_controls(): array {
-		/**
-		 * Filters the controls at the end of the bar on a wide screen.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @param array[] $controls Controls, keyed by slug: label, action, icon or svg, href.
-		 */
-		return self::items( (array) apply_filters( 'riff_bar_controls', array() ) );
-	}
 
 	/**
 	 * The tabs beside Now Playing: Up next first, then any a plugin adds. Each tab has a panel the
@@ -320,14 +269,6 @@ final class Player {
 	public static function root_style(): string {
 		$custom = wp_get_global_settings( array( 'custom', 'riff' ) );
 		$accent = is_array( $custom ) && ! empty( $custom['accent'] ) ? sanitize_text_field( (string) $custom['accent'] ) : '';
-		/**
-		 * Filters the player's accent colour, after the theme's own setting.
-		 *
-		 * @since 4.0.0
-		 *
-		 * @param string $accent A CSS colour, or an empty string for the default amber.
-		 */
-		$accent = (string) apply_filters( 'riff_accent', $accent );
 		if ( '' === $accent || ! preg_match( '/^[#a-z0-9(),.% -]+$/i', $accent ) ) {
 			return '';
 		}

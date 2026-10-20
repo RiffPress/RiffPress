@@ -262,7 +262,7 @@ function phpPage( data ) {
 
 function restPage( data ) {
 	const s = data.surface;
-	let body = '<section class="summary"><p>Everything here describes itself: send <code>OPTIONS</code> to a route for its arguments and schema. The tables below come from the same registration code.</p></section>\n';
+	let body = '<section class="summary"><p>Everything here describes itself: send <code>OPTIONS</code> to a route for its arguments and schema. The tables below come from the same registration code.</p><p>The track on media is public and keeps its shape within a major version. The <code>riff/v1</code> routes are the player\'s own, there for the player and the Listen block to call, and may change in any release.</p></section>\n';
 
 	body += `<section>${ hooks.h2( 'media', 'The track on media' ) }`;
 	for ( const f of s.fields ) {
@@ -329,7 +329,7 @@ function cssPage( data ) {
 		body += table( [ 'Property', 'Description' ], list.map( ( p ) => `<tr><td><a href="${ REPO }${ rel( p.file ) }#L${ p.line }">${ esc( p.name ) }</a><code>${ esc( p.value ) }</code></td><td>${ inline( p.summary ) }${ p.description ? ' ' + inline( p.description ) : '' }</td></tr>` ) );
 		body += '</section>\n';
 	}
-	body += `<section>${ hooks.h2( 'the-accent', 'The accent' ) }<p>A theme sets the player's accent in <code>theme.json</code>; any plugin can through the <a href="../hooks/riff_accent/"><code>riff_accent</code></a> filter, which has the last word.</p>`;
+	body += `<section>${ hooks.h2( 'the-accent', 'The accent' ) }<p>A theme sets the player's accent in <code>theme.json</code>.</p>`;
 	body += hooks.codeBlock( `{
 	"settings": {
 		"custom": {
