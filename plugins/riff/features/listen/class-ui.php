@@ -185,6 +185,7 @@ final class Ui {
 	 *
 	 * @since 4.18.0
 	 * @since 4.20.0 Shared by Home, Your Library and an artist's page.
+	 * @since 4.21.0 The $data parameter.
 	 *
 	 * @param string $slug   The row's name, for the script and the styles.
 	 * @param string $title  Heading.
@@ -192,12 +193,13 @@ final class Ui {
 	 * @param string $items  The row's items.
 	 * @param bool   $device Whether the script fills it from the player; hidden until it does.
 	 * @param string $tag    The row's element: div for cards, ul for list items.
+	 * @param array  $data   More data-riff-* attributes for the row, by name without the prefix.
 	 * @return string
 	 */
-	public static function shelf( string $slug, string $title, string $all, string $items, bool $device = false, string $tag = 'div' ): string {
+	public static function shelf( string $slug, string $title, string $all, string $items, bool $device = false, string $tag = 'div', array $data = array() ): string {
 		$id = 'riff-shelf-' . $slug;
 		return sprintf(
-			'<section class="riff-shelf" data-riff-shelf="%1$s" aria-labelledby="%2$s"%3$s><div class="riff-shelf-head"><h3 class="riff-shelf-title" id="%2$s">%4$s</h3>%5$s</div><%6$s class="riff-shelf-row" tabindex="0" aria-labelledby="%2$s">%7$s</%6$s></section>',
+			'<section class="riff-shelf" data-riff-shelf="%1$s"' . self::data( $data ) . ' aria-labelledby="%2$s"%3$s><div class="riff-shelf-head"><h3 class="riff-shelf-title" id="%2$s">%4$s</h3>%5$s</div><%6$s class="riff-shelf-row" tabindex="0" aria-labelledby="%2$s">%7$s</%6$s></section>',
 			esc_attr( $slug ),
 			esc_attr( $id ),
 			$device ? ' hidden' : '',

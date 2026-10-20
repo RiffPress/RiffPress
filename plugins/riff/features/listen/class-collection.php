@@ -202,8 +202,8 @@ final class Collection {
 	 * All: Liked songs first, then the albums and artists, together, then what was played lately.
 	 * It never looks empty, as the apps' libraries never do: Liked songs is always there and says
 	 * how to fill it, and with nothing liked a row of the site's albums offers somewhere to start.
-	 * Recently played comes from the player's history, so the script fills it, and hides the row
-	 * of albums once there is one.
+	 * Recently played is drawn, or held, as on Home, and the row of albums gives way to it; where
+	 * the server could not know, the script fills it and hides the row of albums.
 	 *
 	 * @param string  $page  Listen page.
 	 * @param array[] $ids   Liked IDs by kind, newest first.
@@ -270,8 +270,10 @@ final class Collection {
 		// The listener's playlists come right after Liked songs, as the apps pin them.
 		$playlists = implode( '', array_map( static fn( $l ) => Playlist_View::card( $l, $page ), $lists ) );
 		$html      = '<div class="riff-grid riff-library-grid">' . $liked . $playlists . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';
-		$html     .= Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
-		if ( ! $likes && ! $lists ) {
+		$recent    = Browse::played_shelves( $page, false );
+		$html     .= $recent;
+		// Somewhere to start, unless what was played is already there to show instead.
+		if ( ! $likes && ! $lists && str_contains( $recent, 'aria-labelledby="riff-shelf-recent" hidden>' ) ) {
 			$albums = Browse::get( '/albums', array( 'orderby' => 'added' ) );
 			if ( $albums['items'] ) {
 				$html .= Ui::shelf( 'start', __( 'Start with', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( array_slice( $albums['items'], 0, 12 ), $page ) );

@@ -74,6 +74,23 @@ final class Likes {
 		add_filter( 'riff_player_data', array( self::class, 'player_data' ) );
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporters' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'erasers' ) );
+		add_action( 'admin_init', array( self::class, 'privacy_policy' ) );
+	}
+
+	/**
+	 * Suggests text for the site's privacy policy, under Settings > Privacy: what Riff keeps about
+	 * a listener, and where.
+	 *
+	 * @since 4.21.0
+	 */
+	public static function privacy_policy(): void {
+		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
+			return;
+		}
+		$text = '<p>' . __( 'When you are signed in, the tracks, albums and artists you like and the tracks you recently played are saved to your account on this site, so they follow you between devices. You can ask for them to be exported or erased like the rest of your personal data.', 'riff' ) . '</p>'
+			. '<p>' . __( 'When you are not signed in, your likes, recently played tracks and the queue are kept in your own browser&#8217;s storage, and are never sent to this site.', 'riff' ) . '</p>'
+			. '<p>' . __( 'While your browser keeps a listening history, the player also sets a cookie named riff_history. Its value is only 1 or 2, saying whether there is a history to show, so the Listen page can make room for it before the page appears. It holds nothing about what you played, is used only by this site, and is strictly necessary for the page to work as designed. It lasts a year, and is removed when the history is gone or you sign in.', 'riff' ) . '</p>';
+		wp_add_privacy_policy_content( 'Riff', wp_kses_post( $text ) );
 	}
 
 	/**

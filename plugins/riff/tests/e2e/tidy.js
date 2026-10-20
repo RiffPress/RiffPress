@@ -2,7 +2,8 @@
  * Layout checks for any region of the Listen block: nothing laid over its neighbour, every card in
  * a row or grid the same width with a square cover of one height, every album's line its artist
  * alone, nothing wider than the window, and no text cut off. Each check names what it found, so a
- * failure says where to look.
+ * failure says where to look. And a check that a page settles without moving: its layout shift, as
+ * Core Web Vitals counts it.
  */
 const { expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
@@ -144,4 +145,94 @@ async function expectTidy( page, region, where ) {
 	}
 }
 
-module.exports = { expectTidy };
+/**
+ * Starts recording layout shifts from the first paint of every page the tab opens. Shifts within
+ * half a second of a click or a key are left out, as Core Web Vitals leaves them out.
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ */
+async function watchShifts( page ) {
+	await page.addInitScript( () => {
+		window.riffShifts = [];
+		const name = ( el ) =>
+			el?.tagName
+				? `${ el.tagName.toLowerCase() }${ el.classList.length ? '.' + [ ...el.classList ].join( '.' ) : '' }`
+				: 'text';
+		try {
+			new PerformanceObserver( ( list ) => {
+				for ( const e of list.getEntries() ) {
+					if ( ! e.hadRecentInput ) {
+						window.riffShifts.push( {
+							value: e.value,
+							at: Math.round( e.startTime ),
+							moved: ( e.sources || [] ).map( ( s ) => name( s.node ) ),
+						} );
+					}
+				}
+			} ).observe( { type: 'layout-shift', buffered: true } );
+		} catch {
+			// WebKit has no layout-shift entries; the check is for Chromium.
+		}
+	} );
+}
+
+/**
+ * The layout shift since the page opened (or since `since`), once it has settled: the app is
+ * ready, its fonts are in, and every cover in the window has loaded or failed.
+ *
+ * @param {import('@playwright/test').Page} page    Page.
+ * @param {number}                          [since] Count shifts from this many milliseconds on.
+ * @return {Promise<{value: number, shifts: Object[]}>} The sum, and each shift with what moved.
+ */
+async function layoutShift( page, since = 0 ) {
+	await page.waitForFunction(
+		() =>
+			!! document.querySelector( '[data-riff-app-ready]' ) &&
+			! document.querySelector( '[data-riff-app][aria-busy="true"]' )
+	);
+	await page.evaluate( async () => {
+		await document.fonts.ready;
+		const inView = [ ...document.images ].filter( ( img ) => {
+			const r = img.getBoundingClientRect();
+			return ! img.complete && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
+		} );
+		await Promise.race( [
+			Promise.all(
+				inView.map(
+					( img ) =>
+						new Promise( ( done ) => {
+							img.addEventListener( 'load', done, { once: true } );
+							img.addEventListener( 'error', done, { once: true } );
+						} )
+				)
+			),
+			new Promise( ( done ) => setTimeout( done, 5000 ) ),
+		] );
+		// Two frames and a beat, for anything the last image or font set off.
+		await new Promise( ( done ) => setTimeout( done, 400 ) );
+	} );
+	return page.evaluate( ( from ) => {
+		const shifts = ( window.riffShifts || [] ).filter( ( s ) => s.at >= from );
+		return { value: shifts.reduce( ( sum, s ) => sum + s.value, 0 ), shifts };
+	}, since );
+}
+
+/**
+ * Expects a page to have settled without moving: a layout shift under 0.01, where Core Web Vitals
+ * calls 0.1 good. The message lists each shift and what moved in it.
+ *
+ * @param {import('@playwright/test').Page} page    Page.
+ * @param {string}                          where   What is being checked, for the message.
+ * @param {number}                          [since] Count shifts from this many milliseconds on.
+ * @return {Promise<number>} The layout shift.
+ */
+async function expectCalm( page, where, since = 0 ) {
+	const { value, shifts } = await layoutShift( page, since );
+	const list = shifts
+		.map( ( s ) => `${ s.value.toFixed( 4 ) } at ${ s.at } ms: ${ s.moved.join( ', ' ) }` )
+		.join( '; ' );
+	expect( value, `${ where }: layout shift ${ value.toFixed( 4 ) } (${ list || 'none' })` ).toBeLessThan( 0.01 );
+	return value;
+}
+
+module.exports = { expectTidy, watchShifts, layoutShift, expectCalm };

@@ -14,6 +14,18 @@
 	src: url(fonts/roboto/roboto.woff2) format("woff2");
 }
 
+/* Arial, or the Liberation Sans that stands in for it on Linux, sized and
+   spaced to Roboto's measurements, so the text does not move when Roboto
+   arrives and takes its place. */
+@font-face {
+	font-family: "Riff Roboto Fallback";
+	src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo");
+	size-adjust: 100.53%;
+	ascent-override: 92.28%;
+	descent-override: 24.28%;
+	line-gap-override: 0%;
+}
+
 :root {
 
 	/**
@@ -346,7 +358,7 @@ div.riff-row-locked {
 
 	/* Dark on any page, so the browser draws scrollbars dark too. */
 	color-scheme: dark;
-	font: 400 16px/1.2 "Riff Roboto", Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+	font: 400 16px/1.2 "Riff Roboto", Roboto, "Riff Roboto Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
 	-webkit-font-smoothing: antialiased;
 }
 
@@ -1431,7 +1443,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	background: #282828;
 	box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
 	color: #fff;
-	font: 400 15px/1.3 "Riff Roboto", roboto, system-ui, sans-serif;
+	font: 400 15px/1.3 "Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif;
 }
 
 .riff-menu[hidden] {
@@ -2439,6 +2451,42 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	object-fit: cover;
 }
 
+/* A cover fades in as it arrives, into the square kept for it. The script
+   marks the ones still on their way; without it, nothing is hidden. */
+.riff-app img[data-riff-fade] {
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+	.riff-app img {
+		transition: opacity 0.2s ease-out;
+	}
+}
+
+/* A row held for what was played, until the script fills it: the cards'
+   shape, title and line included, so the filled row is the same size. */
+.riff-app .riff-card-skeleton {
+	pointer-events: none;
+}
+
+.riff-app .riff-card-skeleton .riff-card-title,
+.riff-app .riff-card-skeleton .riff-card-sub {
+	width: 70%;
+	background: linear-gradient(var(--riff-app-line), var(--riff-app-line)) 0 50% / 100% 60% no-repeat;
+}
+
+.riff-app .riff-card-skeleton .riff-card-sub {
+	width: 45%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+	.riff-app [data-riff-skeleton] .riff-card {
+		animation: riff-pulse 1.2s ease-in-out infinite alternate;
+	}
+}
+
 .riff-card:hover .riff-card-art {
 	box-shadow: 0 8px 24px -8px rgb(30 30 30 / 0.35);
 }
@@ -2848,8 +2896,19 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	transition: background-color 0.15s;
 }
 
+/* A heart needs the script; until it runs, it keeps its place unseen, and
+   fades in when it works. */
 .riff-app:not([data-riff-app-ready]) .riff-app-like {
-	display: none;
+	visibility: hidden;
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+	.riff-app .riff-app-like,
+	.riff-standalone .riff-app .riff-app-collapse {
+		transition: opacity 0.2s ease-out, background-color 0.15s;
+	}
 }
 
 .riff-app .riff-app-like:hover {
@@ -3083,6 +3142,22 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
+/* Until the player turns a track into its row, the track holds the row's
+   height (its 40px art and 6px above and below) and the browser's own
+   controls wait unseen, so the list does not move when the rows arrive.
+   Without the script the controls show as they are. */
+@media (scripting: enabled) {
+
+	.riff-app .riff-album-tracks .riff-track:not(:has(> .riff-row)) {
+		height: 52px;
+		overflow: hidden;
+	}
+
+	.riff-app .riff-album-tracks .riff-track:not(:has(> .riff-row)) > :is(audio, video) {
+		visibility: hidden;
+	}
+}
+
 .riff-app .riff-track {
 	margin: 0;
 }
@@ -3192,9 +3267,11 @@ html.has-riff .riff-standalone .riff-app {
 	}
 
 	/* The toggle needs app.js, which loads after the page: until then it would
-	   be a button that does nothing, so it keeps its place but stays unseen. */
+	   be a button that does nothing, so it keeps its place but stays unseen,
+	   and fades in when it works. */
 	.riff-standalone .riff-app:not([data-riff-app-ready]) .riff-app-collapse {
 		visibility: hidden;
+		opacity: 0;
 	}
 
 	.riff-standalone .riff-app .riff-app-collapse {

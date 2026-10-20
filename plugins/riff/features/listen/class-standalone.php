@@ -210,6 +210,7 @@ final class Standalone {
 			return $template;
 		}
 		add_filter( 'riff_app_theme_tokens', array( self::class, 'tokens' ), 1 );
+		add_filter( 'wp_preload_resources', array( self::class, 'preload' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'strip' ), PHP_INT_MAX );
 		remove_action( 'wp_head', '_wp_render_title_tag', 1 );
 		return RIFF_DIR . 'templates/standalone.php';
@@ -227,9 +228,29 @@ final class Standalone {
 			'--riff-app-bg'           => self::BACKGROUND,
 			'--riff-app-ink'          => '#ffffff',
 			'--riff-app-accent'       => '#ffb020',
-			'--riff-app-font'         => '"Riff Roboto", roboto, system-ui, sans-serif',
-			'--riff-app-heading-font' => '"Riff Roboto", roboto, system-ui, sans-serif',
+			'--riff-app-font'         => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',
+			'--riff-app-heading-font' => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',
 		);
+	}
+
+	/**
+	 * Fetches Roboto with the page rather than after the stylesheet asks for it, so the text is
+	 * drawn in it from the start more often than not. The address is the one riff.css names.
+	 *
+	 * @since 4.21.0
+	 *
+	 * @param array $resources Resources WordPress preloads.
+	 * @return array
+	 */
+	public static function preload( $resources ): array {
+		$resources   = is_array( $resources ) ? $resources : array();
+		$resources[] = array(
+			'href'        => RIFF_URL . 'assets/fonts/roboto/roboto.woff2',
+			'as'          => 'font',
+			'type'        => 'font/woff2',
+			'crossorigin' => 'anonymous',
+		);
+		return $resources;
 	}
 
 	/**

@@ -26,6 +26,11 @@ defined( 'ABSPATH' ) || exit;
 <?php wp_body_open(); ?>
 <main class="riff-standalone-main">
 <?php echo App::render( array( 'align' => 'full' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the block's own markup, escaped where it is built. ?>
+<?php
+// A sidebar this device collapsed is drawn collapsed from the start, before the page is painted,
+// rather than folding once app.js runs.
+wp_print_inline_script_tag( 'try{if(localStorage.getItem("riff-sidebar")==="mini"){document.querySelector("[data-riff-app]").dataset.sidebar="mini";}}catch(e){}' );
+?>
 </main>
 <?php wp_footer(); ?>
 </body>

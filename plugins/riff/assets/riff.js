@@ -785,6 +785,34 @@ function start() {
 	function played() {
 		return accountHistory || deviceHistory();
 	}
+	// The riff_history cookie tells the server that this browser keeps a history, so the Listen
+	// page's Home can hold room for it before this script runs: 2 when a track was played from a
+	// post, for Jump back in too, 1 when not. It says nothing about what was played, and is there
+	// only while there is something to say. A signed-in listener's history is their account's.
+	function hint() {
+		const list = me ? [] : deviceHistory();
+		let value = '';
+		if ( list.length ) {
+			value = list.some( ( t ) => t?.post?.id ) ? '2' : '1';
+		}
+		try {
+			const now =
+				( document.cookie.match( /(?:^|;\s*)riff_history=(\d)/ ) ||
+					[] )[ 1 ] || '';
+			if ( value === now ) {
+				return;
+			}
+			const scope = `path=${ data.cookiePath || '/' }; SameSite=Lax${
+				location.protocol === 'https:' ? '; Secure' : ''
+			}`;
+			document.cookie = value
+				? `riff_history=${ value }; max-age=31536000; ${ scope }`
+				: `riff_history=; max-age=0; ${ scope }`;
+		} catch {
+			// A sandboxed frame has no cookies; Home then fills its rows without held room.
+		}
+	}
+	hint();
 	function remember( t ) {
 		// Without the level envelope, which can be long and only the cover drawn on the server reads.
 		const { levels, ...kept } = t;
@@ -795,6 +823,7 @@ function start() {
 		].slice( 0, 30 );
 		if ( ! accountHistory ) {
 			write( localStorage, HISTORY, JSON.stringify( list ) );
+			hint();
 			return;
 		}
 		accountHistory = list;
