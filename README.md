@@ -97,7 +97,7 @@ under **Video version**.
 
 ### Design
 
-The layout follows YouTube Music's current design and measurements, in Riff's own amber.
+The layout follows YouTube Music's current design and measurements, in Riff's own amber. On a wide screen the bar is arranged as Tidal's, with the seek line under the controls. [DESIGN.md](DESIGN.md) has the rest.
 
 ## Extending it
 
