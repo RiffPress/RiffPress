@@ -22,6 +22,8 @@ export function start( api ) {
 		.filter( Boolean );
 	const tracksRest = app.dataset.riffTracksRest || '';
 	const nav = app.querySelector( '.riff-app-bar' );
+	const desktop =
+		document.documentElement.classList.contains( 'riff-desktop' );
 	// The account menu is a details element, so it opens without the script; with it, it closes
 	// as a menu does: on Escape, on a click outside it, and once one of its links is followed,
 	// since a view arrives in place rather than with a new page. Looked up at each event: every
@@ -579,6 +581,14 @@ export function start( api ) {
 			sidebar( action.getAttribute( 'aria-expanded' ) !== 'true' );
 			return;
 		}
+		if ( action?.dataset.riffAppAction === 'back' ) {
+			history.back();
+			return;
+		}
+		if ( action?.dataset.riffAppAction === 'forward' ) {
+			history.forward();
+			return;
+		}
 		if ( action?.dataset.riffAppAction === 'more' ) {
 			e.preventDefault();
 			loadMore( action );
@@ -1046,15 +1056,55 @@ export function start( api ) {
 	// this device's, so it is remembered here rather than anywhere shared.
 	function sidebar( open, remember = true ) {
 		app.dataset.sidebar = open ? 'full' : 'mini';
-		nav?.querySelector( '.riff-app-collapse' )?.setAttribute(
-			'aria-expanded',
-			String( open )
-		);
+		const toggle = nav?.querySelector( '.riff-app-collapse' );
+		toggle?.setAttribute( 'aria-expanded', String( open ) );
+		// The desktop app's toggle is an arrow to the sidebar's edge, turned by riff.css as it opens.
+		if ( desktop && toggle && ! toggle.dataset.riffDesktop ) {
+			toggle.dataset.riffDesktop = '';
+			toggle.querySelector( 'path' )?.setAttribute( 'd', TAB_ICON );
+		}
 		if ( remember ) {
 			try {
 				localStorage.setItem( 'riff-sidebar', open ? 'full' : 'mini' );
 			} catch {}
 		}
+	}
+	// ---- Riff's desktop app marks the document riff-desktop. There is no browser around its window,
+	// so the top of the view gets a back and forward pair over the app's own history, and the
+	// sidebar's toggle sits in the strip across the top (riff.css). Internal to the app, not an
+	// extension point.
+	function desktopBar() {
+		const icon = ( d ) =>
+			`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="${ d }"/></svg>`;
+		const bar = document.createElement( 'div' );
+		bar.className = 'riff-app-titlebar';
+		bar.innerHTML = `<div class="riff-app-history" role="group" aria-label="${ esc(
+			__( 'History', 'riff' )
+		) }"><button type="button" data-riff-app-action="back" aria-label="${ esc(
+			__( 'Back', 'riff' )
+		) }">${ icon(
+			'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z'
+		) }</button><button type="button" data-riff-app-action="forward" aria-label="${ esc(
+			__( 'Forward', 'riff' )
+		) }">${ icon(
+			'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'
+		) }</button></div>`;
+		// First in the app, so the buttons and the sidebar after it are holes in its drag region.
+		app.prepend( bar );
+		const [ back, forward ] = bar.querySelectorAll( 'button' );
+		// The Navigation API knows whether there is anywhere to go; without it both stay enabled.
+		const moved = () => {
+			back.disabled = ! window.navigation.canGoBack;
+			forward.disabled = ! window.navigation.canGoForward;
+		};
+		if ( window.navigation && 'canGoBack' in window.navigation ) {
+			window.navigation.addEventListener( 'currententrychange', moved );
+			moved();
+		}
+	}
+	if ( desktop ) {
+		desktopBar();
+		sidebar( app.dataset.sidebar !== 'mini', false );
 	}
 	try {
 		if ( localStorage.getItem( 'riff-sidebar' ) === 'mini' ) {
@@ -1525,6 +1575,10 @@ export function start( api ) {
 	// Everything is listening: what needs the script, the sidebar's toggle and the hearts, can show.
 	app.dataset.riffAppReady = '';
 }
+
+// Material Icons' keyboard_tab: an arrow to a bar, the desktop app's sidebar toggle.
+const TAB_ICON =
+	'M11.59 7.41 15.17 11H1v2h14.17l-3.59 3.59L13 18l6-6-6-6-1.41 1.41zM20 6v12h2V6h-2z';
 
 // ---- Helpers.
 

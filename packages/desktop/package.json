@@ -1,0 +1,30 @@
+{
+	"name": "riff-desktop",
+	"productName": "Riff",
+	"version": "0.1.0",
+	"description": "Riff for the desktop: a Riff site's Listen page in a window of its own, with media keys and Now Playing.",
+	"license": "GPL-2.0-or-later",
+	"private": true,
+	"author": "RiffPress",
+	"homepage": "https://riffpress.com/",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RiffPress/RiffPress.git",
+		"directory": "packages/desktop"
+	},
+	"main": "src/main.js",
+	"scripts": {
+		"start": "electron .",
+		"build": "electron-builder --config electron-builder.config.js --publish never",
+		"build:dir": "electron-builder --config electron-builder.config.js --dir --publish never",
+		"test": "node --test test/*.test.js",
+		"test:e2e": "playwright test --config playwright.config.js"
+	},
+	"dependencies": {
+		"electron-updater": "^6.8.9"
+	},
+	"devDependencies": {
+		"electron": "45.0.0",
+		"electron-builder": "^26.15.3"
+	}
+}

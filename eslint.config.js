@@ -55,4 +55,19 @@ module.exports = [
 			'no-unused-expressions': [ 'error', { allowTernary: true } ],
 		},
 	},
+	// The desktop app runs in Node and Electron, with its own package.json.
+	{
+		files: [ 'packages/desktop/**/*.js' ],
+		languageOptions: { globals: globals.node },
+		rules: {
+			'import/no-extraneous-dependencies': [
+				'error',
+				{ packageDir: [ __dirname, `${ __dirname }/packages/desktop` ] },
+			],
+		},
+	},
+	{
+		files: [ 'packages/desktop/scripts/**/*.js' ],
+		rules: { 'no-console': 'off' },
+	},
 ];

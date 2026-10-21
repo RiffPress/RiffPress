@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'">
+<meta name="color-scheme" content="dark">
+<title>Connect to a site</title>
+<link rel="stylesheet" href="connect.css">
+<script src="connect.js" defer></script>
+</head>
+<body>
+<main>
+	<h1>Connect to a site</h1>
+	<p>The address of a WordPress site with Riff, or of its Listen page.</p>
+	<form>
+		<label for="address">Site address</label>
+		<input id="address" name="address" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="example.com" required autofocus>
+		<p id="error" role="alert"></p>
+		<button type="submit">Connect</button>
+	</form>
+</main>
+</body>
+</html>

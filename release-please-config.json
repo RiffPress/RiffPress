@@ -38,6 +38,12 @@
 			"component": "wp-api-coverage",
 			"include-component-in-tag": true,
 			"initial-version": "0.1.0"
+		},
+		"packages/desktop": {
+			"package-name": "riff-desktop",
+			"component": "riff-desktop",
+			"include-component-in-tag": true,
+			"initial-version": "0.1.0"
 		}
 	}
 }

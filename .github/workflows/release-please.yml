@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    # Three packages release on their own (release-please-config.json), so
+    # Four packages release on their own (release-please-config.json), so
     # each output is read under its package's path.
     outputs:
       riff_release: ${{ steps.release.outputs['plugins/riff--release_created'] }}
@@ -35,6 +35,8 @@ jobs:
       lyrics_tag: ${{ steps.release.outputs['plugins/riff-lyrics--tag_name'] }}
       coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
       coverage_tag: ${{ steps.release.outputs['packages/wp-api-coverage--tag_name'] }}
+      desktop_release: ${{ steps.release.outputs['packages/desktop--release_created'] }}
+      desktop_tag: ${{ steps.release.outputs['packages/desktop--tag_name'] }}
       release_branches: ${{ steps.release-prs.outputs.branches }}
     steps:
       # GITHUB_TOKEN can open the release pull request because "Allow GitHub
@@ -275,4 +277,85 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ needs.release-please.outputs.coverage_tag }}
+        run: gh release edit "$TAG_NAME" --draft=false --latest=false
+
+  # The desktop app's release: built on macOS, Windows and Linux, each build
+  # and its latest*.yml attached to the draft, which is published once all
+  # three are there. The app finds its updates by listing the releases for the
+  # newest riff-desktop-v* tag (packages/desktop/src/updates.js), and a draft
+  # is invisible to it, so no copy sees a release half uploaded. It is never
+  # marked the latest release; that stays Riff's.
+  #
+  # Unsigned until the secrets exist. With CSC_LINK and CSC_KEY_PASSWORD (a
+  # Developer ID Application certificate as a base64 .p12) the Mac build is
+  # signed, and with APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID
+  # also notarised. WIN_CSC_LINK and WIN_CSC_KEY_PASSWORD sign the Windows
+  # installer. A secret that isn't stored arrives empty and is unset below, so
+  # electron-builder skips that signing instead of failing on it.
+  build-desktop:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.desktop_release }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # No dependency cache: what ships is installed fresh from the lockfile.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      # Only the app's own dependencies, without the root's wp-env tooling and
+      # its install scripts.
+      - run: npm ci --workspace=packages/desktop --ignore-scripts
+      - name: Build
+        shell: bash
+        env:
+          CSC_LINK: ${{ runner.os == 'macOS' && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ runner.os == 'macOS' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ runner.os == 'macOS' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ runner.os == 'macOS' && secrets.APPLE_TEAM_ID || '' }}
+          WIN_CSC_LINK: ${{ runner.os == 'Windows' && secrets.WIN_CSC_LINK || '' }}
+          WIN_CSC_KEY_PASSWORD: ${{ runner.os == 'Windows' && secrets.WIN_CSC_KEY_PASSWORD || '' }}
+        run: |
+          set -euo pipefail
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID WIN_CSC_LINK WIN_CSC_KEY_PASSWORD; do
+            [[ -n "${!name}" ]] || unset "$name"
+          done
+          # Without a certificate, nothing from the runner's keychain either.
+          [[ -n "${CSC_LINK:-}" ]] || export CSC_IDENTITY_AUTO_DISCOVERY=false
+          npm run build --workspace=packages/desktop
+      - name: Attach the builds and their update metadata to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.desktop_tag }}
+        run: |
+          set -euo pipefail
+          cd packages/desktop/dist
+          shopt -s nullglob
+          FILES=( *.dmg *.zip *.exe *.AppImage *.blockmap latest*.yml )
+          ls -l "${FILES[@]}"
+          gh release upload --clobber "$TAG_NAME" "${FILES[@]}"
+
+  publish-desktop:
+    needs: [release-please, build-desktop]
+    if: ${{ needs.release-please.outputs.desktop_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.desktop_tag }}
         run: gh release edit "$TAG_NAME" --draft=false --latest=false

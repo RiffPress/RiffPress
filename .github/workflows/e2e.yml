@@ -64,3 +64,50 @@ jobs:
       - name: Stop the testing environment
         if: ${{ always() }}
         run: npx wp-env stop || true
+
+  # The desktop app, unpacked, driven by Playwright's _electron against the same
+  # wp-env tests site (packages/desktop/playwright.config.js). Linux only, under
+  # xvfb: the window is the same Chromium on every platform.
+  desktop:
+    name: Desktop app
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+      - run: composer install --no-dev --no-interaction --prefer-dist
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Chromium's system libraries, which Electron needs too, and xvfb.
+      - run: npx playwright install-deps chromium && sudo apt-get install -y xvfb
+      # Ubuntu 24.04 keeps unprivileged user namespaces from AppArmor-confined
+      # programs, and Chromium's sandbox needs one.
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # RIFF_DESKTOP_E2E keeps the fuse that lets Playwright attach.
+      - name: Build the app unpacked
+        env:
+          RIFF_DESKTOP_E2E: '1'
+        run: npm run build:dir --workspace=packages/desktop
+      - run: npm run env:start
+      - run: xvfb-run --auto-servernum npx playwright test --config packages/desktop/playwright.config.js
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: desktop-e2e-artifacts
+          path: artifacts/desktop/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Stop the testing environment
+        if: ${{ always() }}
+        run: npx wp-env stop || true

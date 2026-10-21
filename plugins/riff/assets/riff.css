@@ -3573,3 +3573,175 @@ html.has-riff .riff-standalone .riff-app {
 .riff-standalone .riff-now {
 	display: none;
 }
+
+/* ---- Riff's desktop app marks the document riff-desktop: no browser around
+   the window, so a strip across the top holds a back and forward pair over
+   the app's history and the sidebar's toggle. On a Mac it is riff-desktop-inset
+   too: the window has no title bar, the strip drags the window, and its left
+   end is the traffic lights'. Internal to the app; not for themes. */
+.riff-app-titlebar {
+	display: none;
+}
+
+html.riff-desktop .riff-standalone .riff-app-titlebar {
+	position: fixed;
+	top: 0;
+	right: 0;
+	left: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	height: 52px;
+	padding-left: 16px;
+
+	/* The view scrolls under it. */
+	background: var(--riff-app-bg);
+}
+
+html.riff-desktop-inset .riff-standalone .riff-app-titlebar {
+	padding-left: 84px;
+	-webkit-app-region: drag;
+	app-region: drag;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history {
+	display: flex;
+	padding: 2px;
+	border-radius: 999px;
+	background: var(--riff-app-surface);
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button,
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	color: var(--riff-app-ink);
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button:hover:not(:disabled),
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:hover {
+	background: color-mix(in srgb, var(--riff-app-ink) 12%, transparent);
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button:focus-visible,
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 0;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button:disabled {
+	color: var(--riff-app-ink-2);
+	opacity: 0.5;
+	cursor: default;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history svg,
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* A narrow window: the tabs start under the strip. */
+html.riff-desktop .riff-standalone .riff-app {
+	padding-top: 52px;
+}
+
+@media (min-width: 900px) {
+
+	html.riff-desktop .riff-standalone .riff-app {
+		padding-top: 0;
+	}
+
+	/* Open, the pair lines up with the view's own left edge, and the toggle
+	   sits at the sidebar's right edge; collapsed, the toggle follows the
+	   traffic lights and the pair follows the toggle, as Tidal's do. */
+	html.riff-desktop .riff-standalone .riff-app-titlebar {
+		padding-left: calc(240px + clamp(24px, 4vw, 64px));
+	}
+
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-titlebar {
+		padding-left: calc(72px + clamp(24px, 4vw, 64px));
+	}
+
+	html.riff-desktop-inset .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-titlebar {
+		padding-left: 124px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app-bar,
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
+		padding-top: 52px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app-brand {
+		margin: 0;
+	}
+
+	/* The strip runs across the top unbroken: the sidebar's edge starts under
+	   it, clear of the traffic lights when the sidebar is a rail. */
+	html.riff-desktop-inset .riff-standalone .riff-app-bar {
+		border-right: 0;
+		background: linear-gradient(var(--riff-app-line), var(--riff-app-line)) right bottom / 1px calc(100% - 52px) no-repeat;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app-name {
+		display: none;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
+		position: fixed;
+		top: 10px;
+		left: 196px;
+		z-index: 3;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-collapse {
+		left: 20px;
+	}
+
+	html.riff-desktop-inset .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-collapse {
+		left: 84px;
+	}
+
+	/* The arrow points to the edge the sidebar folds to. */
+	html.riff-desktop .riff-standalone .riff-app-collapse[aria-expanded="true"] svg {
+		transform: scaleX(-1);
+	}
+
+	html.riff-desktop .riff-standalone .riff-app-view {
+		padding-top: 60px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-account,
+	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
+		top: 6px;
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+}
+
+/* Trying the layout in a browser (templates/standalone.php, with SCRIPT_DEBUG
+   or WP_DEBUG on): where the traffic lights would be. */
+html.riff-desktop-preview .riff-standalone .riff-app-titlebar::before {
+	content: "";
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	width: 52px;
+	height: 12px;
+	background:
+		radial-gradient(circle 6px at 6px 6px, #ff5f57 98%, transparent) no-repeat,
+		radial-gradient(circle 6px at 26px 6px, #febc2e 98%, transparent) no-repeat,
+		radial-gradient(circle 6px at 46px 6px, #28c840 98%, transparent) no-repeat;
+}

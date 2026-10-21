@@ -14,6 +14,7 @@
     "env:start": "wp-env start",
     "env:stop": "wp-env stop",
     "env:clean": "wp-env clean all",
+    "desktop": "node packages/desktop/scripts/dev.js",
     "seed": "wp-env run cli wp eval-file wp-content/riff/packages/fixtures/seed.php",
     "seed:tests": "wp-env run tests-cli wp eval-file wp-content/riff/packages/fixtures/seed.php",
     "lint": "npm run lint:php && npm run lint:js && npm run lint:css",
