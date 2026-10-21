@@ -96,9 +96,10 @@ final class App {
 	 *
 	 * @since 4.0.0
 	 * @param array $attributes Block attributes.
+	 * @param bool  $block      Whether the block's render.php asks, so the block's supports apply.
 	 * @return string
 	 */
-	public static function render( array $attributes = array() ): string {
+	public static function render( array $attributes = array(), bool $block = false ): string {
 		if ( ! Player::enabled() ) {
 			return '';
 		}
@@ -117,10 +118,10 @@ final class App {
 		// Inside a block render the wrapper carries the block's supports (colours, type); the
 		// shortcode has no block, so it gets the plain class. On a theme that sets its colours the
 		// stylesheet mixes the quieter shades from them, under riff-app-themed.
-		$tokens  = self::theme_tokens( \WP_Block_Supports::$block_to_render ? $attributes : array() );
+		$tokens  = self::theme_tokens( $block ? $attributes : array() );
 		$class   = 'riff-app' . ( isset( $tokens['--riff-app-bg'] ) || isset( $tokens['--riff-app-ink'] ) ? ' riff-app-themed' : '' );
 		$style   = self::theme_style( $tokens );
-		$wrapper = \WP_Block_Supports::$block_to_render
+		$wrapper = $block
 			? get_block_wrapper_attributes(
 				array_filter(
 					array(

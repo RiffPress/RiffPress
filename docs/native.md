@@ -38,6 +38,15 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | No way to tell a file was already uploaded | `_riff_import_hash` attachment meta (the file's SHA-1), and `_riff_import_folder` post meta on an album post | Running an import again must not duplicate the library, and new tracks must join their album. Core has no content hash on attachments. | Not yet | In Riff |
 | A real AAC `.m4a` is refused: core lists `m4a` as `audio/mpeg`, then the file's sniffed type, `audio/mp4`, doesn't match; `.opus` isn't listed at all | During `wp riff import` only, `m4a` is allowed as `audio/mp4` and `opus` as `audio/ogg` | Both are common in music libraries, and the person running the command chose the folder. Uploads through the Media Library are unchanged. | Not yet | In Riff |
 
+## Private core APIs Riff still uses
+
+Core can change these without notice. Each has no public equivalent yet; the API coverage report (`npm run api-coverage`) lists them under "Private APIs in use".
+
+| What | Where | Why | Upstream |
+| --- | --- | --- | --- |
+| `_wp_render_title_tag`, `_block_template_render_title_tag` and `_block_template_viewport_meta_tag`, unhooked from `wp_head` | `Standalone::template()` | Standalone mode's document prints its own title and viewport, and a second viewport later in the head would drop `viewport-fit=cover`. Core has no public way to stop printing either tag; its filters change the title's text, not whether the tag is printed. | None filed; [Core #61900](https://core.trac.wordpress.org/ticket/61900) asked for the title and was pointed at `pre_get_document_title` |
+| `__experimentalBorder`, `__experimentalSkipSerialization`, `__experimentalFontFamily`, `__experimentalLetterSpacing` and `__experimentalDefaultControls` in the Listen block's `block.json` | `features/listen/block/block.json` | The block's border and font controls, and its colours and font family applied to the views inside it rather than to the wrapper. WordPress 7.1 has no stable key for any of them; switch when it does. | [Core #61728](https://core.trac.wordpress.org/ticket/61728), closed after Gutenberg reverted the stable keys; [Gutenberg #63001](https://github.com/WordPress/gutenberg/issues/63001) and [#64312](https://github.com/WordPress/gutenberg/issues/64312) are open |
+
 ## Development tooling
 
 | Gap | What Riff adds | Upstream | Status |

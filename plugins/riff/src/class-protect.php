@@ -139,7 +139,7 @@ final class Protect {
 			return new WP_Error( 'riff_protect_file', __( 'Only an audio or video file in the Media Library can be protected.', 'riff' ) );
 		}
 		$from = (string) wp_get_attachment_url( $id );
-		$rel  = _wp_relative_upload_path( $file );
+		$rel  = self::relative( $file );
 		$to   = self::free( self::dir() . '/' . ltrim( $rel, '/' ) );
 		if ( ! self::move( $file, $to ) ) {
 			return new WP_Error( 'riff_protect_move', __( 'The file could not be moved into the protected folder.', 'riff' ) );
@@ -173,6 +173,17 @@ final class Protect {
 		delete_post_meta( $id, self::META );
 		self::relink( $from, (string) wp_get_attachment_url( $id ) );
 		return true;
+	}
+
+	/**
+	 * A path under the uploads folder, as WordPress stores an attached file's; any other path as it is.
+	 *
+	 * @param string $path Absolute path.
+	 * @return string
+	 */
+	private static function relative( string $path ): string {
+		$base = wp_upload_dir( null, false )['basedir'] . '/';
+		return str_starts_with( $path, $base ) ? substr( $path, strlen( $base ) ) : $path;
 	}
 
 	/**
@@ -480,7 +491,7 @@ final class Protect {
 		}
 		if ( 'x-accel-redirect' === $how ) {
 			$base = (string) wp_parse_url( wp_upload_dir( null, false )['baseurl'], PHP_URL_PATH );
-			header( 'X-Accel-Redirect: ' . $base . '/' . ltrim( _wp_relative_upload_path( $file ), '/' ) );
+			header( 'X-Accel-Redirect: ' . $base . '/' . self::relative( $file ) );
 			exit;
 		}
 
