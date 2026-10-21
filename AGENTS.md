@@ -4,7 +4,7 @@ Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup
 
 ## Pull request descriptions
 
-`gh pr create --body` bypasses the template. Its one question: what would we miss by only reading the diff? Answer that in a sentence at the top. Leave out what the diff already shows. Include why this approach, what you could not test, and what is most likely wrong. Show the maintainer what you cut.
+`gh pr create --body` bypasses the template. Its one question: what would we miss by only reading the diff? Answer that in a sentence at the top. Leave out what the diff already shows. Then, only if it matters for this change, a line on what you could not test or what is most likely wrong. Keep the whole description to a few sentences: no headed sections or bullet lists, and no How to test unless it isn't obvious.
 
 ## AI disclosure
 
