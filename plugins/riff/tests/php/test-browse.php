@@ -105,7 +105,8 @@ class Test_Riff_Browse extends Riff_TestCase {
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
 		$author = $this->render_at( array() );
-		$this->assertStringContainsString( 'wp riff import', $author );
+		$this->assertStringContainsString( 'Media Library', $author );
+		$this->assertStringNotContainsString( 'wp riff import', $author, 'WP-CLI is for the guide, not the page' );
 		$this->assertStringContainsString( 'Add your first album', $author );
 	}
 

@@ -895,7 +895,7 @@ final class Browse {
 		if ( ! current_user_can( 'upload_files' ) ) {
 			return Ui::empty_note( __( 'Nothing here yet.', 'riff' ) );
 		}
-		$text = __( 'Nothing here yet. Upload music to the Media Library, or import a folder with wp riff import.', 'riff' );
+		$text = __( 'Nothing here yet. Upload music to the Media Library and it shows here.', 'riff' );
 		if ( ! First_Run::has_music() ) {
 			return Ui::empty_note( $text, admin_url( 'media-new.php' ), __( 'Add your first album', 'riff' ) );
 		}
