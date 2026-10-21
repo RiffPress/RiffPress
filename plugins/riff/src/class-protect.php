@@ -327,11 +327,12 @@ final class Protect {
 		if ( ! is_array( $track ) || ! $id ) {
 			return $track;
 		}
-		if ( self::is( $id ) && ! empty( $track['src'] ) ) {
+		// Only for a visitor who may read the file's post: the signature skips that check.
+		if ( self::is( $id ) && ! empty( $track['src'] ) && self::readable( $id ) ) {
 			$track['src'] = self::signed( $id );
 		}
 		$video = (int) get_post_meta( $id, Media::VIDEO_META, true );
-		if ( $video && self::is( $video ) && ! empty( $track['video']['src'] ) ) {
+		if ( $video && self::is( $video ) && ! empty( $track['video']['src'] ) && self::readable( $video ) ) {
 			$track['video']['src'] = self::signed( $video );
 		}
 		return $track;
@@ -347,13 +348,32 @@ final class Protect {
 	 * @return bool
 	 */
 	public static function can( int $id ): bool {
-		$parent = (int) get_post_field( 'post_parent', $id );
-		$post   = $parent ? get_post( $parent ) : null;
-		if ( $post instanceof WP_Post && ( ! is_post_publicly_viewable( $post ) || post_password_required( $post ) ) && ! current_user_can( 'read_post', $parent ) ) {
+		if ( ! self::readable( $id ) ) {
 			return false;
 		}
-		$track = Tracks::from_attachment( $id, $parent );
+		$track = Tracks::from_attachment( $id, (int) get_post_field( 'post_parent', $id ) );
 		return null !== $track && ! $track['locked'];
+	}
+
+	/**
+	 * Whether the current visitor may read the post a file was uploaded to: one that is public or
+	 * that they may read, and behind a password only once they have given it, as its content is.
+	 * Someone who may edit the post needs no password, as in the REST API. A file uploaded to no
+	 * post may be read.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return bool
+	 */
+	private static function readable( int $id ): bool {
+		$parent = (int) get_post_field( 'post_parent', $id );
+		$post   = $parent ? get_post( $parent ) : null;
+		if ( ! $post instanceof WP_Post ) {
+			return true;
+		}
+		if ( post_password_required( $post ) && ! current_user_can( 'edit_post', $parent ) ) {
+			return false;
+		}
+		return is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $parent );
 	}
 
 	/**

@@ -1,7 +1,8 @@
 <?php
 /**
  * Removes what Riff stored about the library: the video-version link on audio files, what the
- * import and the catalogue noted on them, and the album and artist terms. The files, their tags
+ * import and the catalogue noted on them, the tint taken from each post's cover, and the album
+ * and artist terms. The files, their tags
  * and their featured images are WordPress's own and stay. So does what listeners made, their
  * playlists, likes and recently played, which would be cumbersome to make again after a reinstall;
  * Tools > Erase Personal Data deletes one listener's.
@@ -50,7 +51,7 @@ foreach ( get_posts(
 }
 delete_option( 'riff_protected_dir' );
 
-foreach ( array( '_riff_protected', '_riff_video', '_riff_import_hash', '_riff_import_folder', '_riff_catalog' ) as $riff_key ) {
+foreach ( array( '_riff_protected', '_riff_video', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
 	delete_post_meta_by_key( $riff_key );
 }
 
@@ -63,6 +64,7 @@ foreach ( array( 'riff_album', 'riff_artist' ) as $riff_taxonomy ) {
 	}
 }
 delete_option( 'riff_catalog_backfill' );
+delete_option( 'riff_rewrite' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );
 
 // Who dismissed the first-run notice: a user option, so its key carries the site's table prefix.

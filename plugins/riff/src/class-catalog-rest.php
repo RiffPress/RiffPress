@@ -372,12 +372,14 @@ final class Catalog_Rest {
 		}
 		if ( Catalog::ALBUM === $taxonomy && $rows ) {
 			// Each cover on the page comes from the album's first visible track, found in one query.
-			$ids  = array_map( static fn( $row ) => (int) $row->term_id, $rows );
+			$ids = array_map( static fn( $row ) => (int) $row->term_id, $rows );
+			// No post has ID 0, so with nothing hidden NOT IN (0) leaves every track in.
 			$skip = self::hidden_tracks();
+			$skip = $skip ? $skip : array( 0 );
 			$in   = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-			$not  = count( $skip ) ? ' AND tr.object_id NOT IN (' . implode( ',', array_fill( 0, count( $skip ), '%d' ) ) . ')' : '';
+			$not  = implode( ',', array_fill( 0, count( $skip ), '%d' ) );
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID.
-			$first = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, MIN(tr.object_id) AS first FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tt.term_id IN ({$in}){$not} GROUP BY tt.term_id", array_merge( array( $taxonomy ), $ids, $skip ) ), OBJECT_K );
+			$first = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, MIN(tr.object_id) AS first FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tt.term_id IN ({$in}) AND tr.object_id NOT IN ({$not}) GROUP BY tt.term_id", array_merge( array( $taxonomy ), $ids, $skip ) ), OBJECT_K );
 			foreach ( $rows as $row ) {
 				$row->first = isset( $first[ $row->term_id ] ) ? (int) $first[ $row->term_id ]->first : 0;
 			}
