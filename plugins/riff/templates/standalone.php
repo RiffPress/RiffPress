@@ -20,7 +20,15 @@ defined( 'ABSPATH' ) || exit;
 <title><?php echo esc_html( wp_get_document_title() ); ?></title>
 <link rel="manifest" href="<?php echo esc_url( Standalone::url( 0, true ) ); ?>">
 <link rel="apple-touch-icon" href="<?php echo esc_url( get_site_icon_url( 180 ) ? get_site_icon_url( 180 ) : RIFF_URL . 'features/listen/icons/icon-192.png' ); ?>">
-<?php wp_head(); ?>
+<?php
+// Riff's desktop app marks the document itself. On a development site (SCRIPT_DEBUG or WP_DEBUG),
+// ?riff_desktop=1 lays the page out as the app does, traffic lights drawn in, to work on with a
+// browser's tools; the choice is kept in this browser until ?riff_desktop=0.
+if ( ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) || ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ) {
+	wp_print_inline_script_tag( 'try{var d=new URLSearchParams(location.search).get("riff_desktop");if(d!==null){d==="0"?localStorage.removeItem("riff-desktop"):localStorage.setItem("riff-desktop","1");}if(localStorage.getItem("riff-desktop")){document.documentElement.classList.add("riff-desktop","riff-desktop-inset","riff-desktop-preview");}}catch(e){}' );
+}
+wp_head();
+?>
 </head>
 <body class="riff-standalone">
 <?php wp_body_open(); ?>

@@ -16,6 +16,10 @@
 # wp-api-coverage (packages/wp-api-coverage):
 #   - packages/wp-api-coverage/package.json and its package-lock.json entry
 #
+# riff-desktop (packages/desktop):
+#   - packages/desktop/package.json and its package-lock.json entry, which
+#     electron-builder stamps into the app and its update metadata
+#
 # `Tested up to:` comes from the current WordPress release. wp-env runs the
 # suite against current core, so at release time that is the version the
 # plugin was in fact tested on. Skipped quietly when api.wordpress.org cannot
@@ -27,7 +31,7 @@
 #
 #   bash scripts/sync-versions.sh riff-lyrics
 #
-# With no argument it syncs all three, as a maintainer would locally.
+# With no argument it syncs all four, as a maintainer would locally.
 #
 # Each target line is grep-checked before the edit and verified afterwards so a
 # miss fails loudly instead of shipping a half-bumped plugin.
@@ -41,8 +45,8 @@ command -v npm >/dev/null 2>&1 || { echo "npm is required to run scripts/sync-ve
 
 ONLY=${1:-all}
 case "$ONLY" in
-	all | riff | riff-lyrics | wp-api-coverage) ;;
-	*) echo "Unknown package '$ONLY': use riff, riff-lyrics or wp-api-coverage" >&2; exit 1 ;;
+	all | riff | riff-lyrics | wp-api-coverage | riff-desktop) ;;
+	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, wp-api-coverage or riff-desktop" >&2; exit 1 ;;
 esac
 
 # A package's version, or nothing for one that has never been released: it is
@@ -125,6 +129,18 @@ if [[ "$ONLY" == all || "$ONLY" == wp-api-coverage ]]; then
 		echo "Synced wp-api-coverage to ${COVERAGE_VERSION}"
 	else
 		echo "wp-api-coverage has not been released yet; nothing to sync"
+	fi
+fi
+
+if [[ "$ONLY" == all || "$ONLY" == riff-desktop ]]; then
+	DESKTOP_VERSION=$(manifest_version packages/desktop)
+	if [[ -n "$DESKTOP_VERSION" ]]; then
+		npm version "$DESKTOP_VERSION" --no-git-tag-version --allow-same-version --workspace=packages/desktop >/dev/null
+		[[ "$(jq -r .version packages/desktop/package.json)" == "$DESKTOP_VERSION" ]] \
+			|| { echo "Failed to update version in packages/desktop/package.json" >&2; exit 1; }
+		echo "Synced riff-desktop to ${DESKTOP_VERSION}"
+	else
+		echo "riff-desktop has not been released yet; nothing to sync"
 	fi
 fi
 

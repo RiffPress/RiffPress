@@ -41,6 +41,10 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 - **Weekly run.** CI runs the full suite every Monday against current WordPress core. The release and Pages workflows run weekly too.
 - **Version strings.** `scripts/sync-versions.sh` writes each package's version everywhere it is read, sets `Tested up to` from the core version the suite just ran against, and writes each plugin's `readme.txt` changelog from its `CHANGELOG.md`.
 
+## The desktop app
+
+`packages/desktop/` is Riff for the desktop: the standalone Listen page in an Electron window. `npm run desktop` runs it from source on your wp-env site, with the developer tools in its View menu and a reload when anything under `plugins/` changes. To use a browser's tools on the same layout instead, add `?riff_desktop=1` to the Listen page's `app/` address; it works only with `SCRIPT_DEBUG` or `WP_DEBUG` on, and `?riff_desktop=0` turns it off. Its [README](../packages/desktop/README.md) has the tests, the builds and how it updates.
+
 ## The demo library
 
 The demo library is one uploaded album, `packages/fixtures/compositions`, and a folder per streamed album beside it, each with a `source.json` naming its recordings on Wikimedia Commons. `node packages/fixtures/album.js <slug> --out <dir>` downloads and encodes one, measures each track, and writes its `manifest.json` and `levels.json`, which are committed; the audio is not, since the Pages deploy builds it the same way and publishes it under `demo/<slug>/`. `npm run seed:tests` seeds the uploaded album and every streamed one, pointed at the live demo set (or `RIFF_DEMO_BASE`).
@@ -53,16 +57,16 @@ Every string uses the `riff` text domain, and Riff Lyrics uses `riff-lyrics`. PH
 
 ## Releases
 
-Releases are automated by [release-please](https://github.com/googleapis/release-please). Three things ship from this repository, and each is released on its own: Riff (`plugins/riff/`, tagged `v4.x.y`), Riff Lyrics (`plugins/riff-lyrics/`, tagged `riff-lyrics-v0.x.y`) and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
+Releases are automated by [release-please](https://github.com/googleapis/release-please). Four things ship from this repository, and each is released on its own: Riff (`plugins/riff/`, tagged `v4.x.y`), Riff Lyrics (`plugins/riff-lyrics/`, tagged `riff-lyrics-v0.x.y`), wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`) and the desktop app (`packages/desktop/`, tagged `riff-desktop-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
 
 - `feat: ...` → minor bump (before 1.0, a patch bump)
 - `fix: ...` → patch bump
 - `feat!: ...` or a `BREAKING CHANGE:` footer → major bump (before 1.0, a minor bump)
 - `chore:`, `docs:`, `refactor:`, `test:`, `ci:`, `build:`, `style:` → no version bump
 
-release-please keeps one release pull request open per package with unreleased changes. Merging Riff's tags the release, publishes a GitHub Release with `riff.zip` built from `plugins/riff/` with `.distignore`, and deploys to WordPress.org once that is switched on. Merging Riff Lyrics' attaches `riff-lyrics.zip` the same way. Merging wp-api-coverage's publishes it to npm as `@riffpress/wp-api-coverage` once the repository variable `NPM_PUBLISH` is `true` and the `NPM_TOKEN` secret is stored. Riff's release is the one GitHub marks as latest.
+release-please keeps one release pull request open per package with unreleased changes. Merging Riff's tags the release, publishes a GitHub Release with `riff.zip` built from `plugins/riff/` with `.distignore`, and deploys to WordPress.org once that is switched on. Merging Riff Lyrics' attaches `riff-lyrics.zip` the same way. Merging wp-api-coverage's publishes it to npm as `@riffpress/wp-api-coverage` once the repository variable `NPM_PUBLISH` is `true` and the `NPM_TOKEN` secret is stored. Merging the desktop app's builds it on macOS, Windows and Linux and attaches each build with its update metadata, unsigned until the signing secrets are stored. Riff's release is the one GitHub marks as latest.
 
-Riff Lyrics and wp-api-coverage have `"initial-version": "0.1.0"` in `release-please-config.json`, so their first release is the version they already carry. They aren't in `.release-please-manifest.json` until that first release pull request adds them; that absence is what makes release-please use `initial-version`.
+Riff Lyrics, wp-api-coverage and the desktop app have `"initial-version": "0.1.0"` in `release-please-config.json`, so their first release is the version they already carry. They aren't in `.release-please-manifest.json` until that first release pull request adds them; that absence is what makes release-please use `initial-version`.
 
 Two things a package's folder doesn't cover:
 

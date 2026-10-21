@@ -138,6 +138,21 @@ jobs:
           cat api-coverage.txt
           { echo '```'; cat api-coverage.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
+  # packages/desktop: the address handling and the updater's choices. Node only, so it runs on every
+  # change; the app itself is driven in e2e.yml.
+  desktop:
+    needs: gate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Unit tests
+        run: node --test packages/desktop/test/*.test.js
+
   # Spell-checks docs too, so it stays outside the code gate.
   typos:
     needs: gate
@@ -151,7 +166,7 @@ jobs:
   # counts as a failure.
   status:
     name: CI status
-    needs: [gate, changes, phpcs, phpunit, lint-js, typos, docs, api-coverage, e2e, plugin-check]
+    needs: [gate, changes, phpcs, phpunit, lint-js, typos, docs, api-coverage, desktop, e2e, plugin-check]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

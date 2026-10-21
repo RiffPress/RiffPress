@@ -31,6 +31,7 @@ No install needed: launch a scratch site with Riff and the demo post, built from
 | `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing, built only on Riff's documented API. |
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | A command-line tool that lists the WordPress APIs a plugin uses and the ones it doesn't use yet. `npm run api-coverage` runs it on Riff. |
+| `packages/desktop/` | Riff for the desktop: a site's Listen library in an Electron window of its own, with media keys and Now Playing. |
 | `apps/ios/` | Reserved for the native app. |
 | `site/` | The landing page, published with GitHub Pages, with a live demo in WordPress Playground. |
 | `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |

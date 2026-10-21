@@ -2,6 +2,9 @@ vendor/
 node_modules/
 build/
 artifacts/
+# The desktop app's build and the profile npm run desktop keeps.
+packages/desktop/dist/
+packages/desktop/.profile/
 test-results/
 playwright-report/
 .phpcs.cache
