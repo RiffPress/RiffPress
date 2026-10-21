@@ -389,6 +389,60 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringNotContainsString( '<script>x', $hostile, 'the words are escaped' );
 	}
 
+	public function test_every_view_escapes_names_from_the_library(): void {
+		$hostile = '"><img src=x onerror=riffxss>';
+		$post    = self::factory()->post->create(
+			array(
+				'post_status' => 'publish',
+				'post_title'  => 'Post ' . $hostile,
+			)
+		);
+		$track   = self::attach( '05 - Stole Back My Soul [stole-back].mp3', $post );
+		wp_update_post(
+			array(
+				'ID'         => $track,
+				'post_title' => 'Track ' . $hostile,
+			)
+		);
+		wp_update_post(
+			array(
+				'ID'           => $post,
+				'post_content' => sprintf( '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="%s"></audio></figure><!-- /wp:audio -->', $track, esc_url( (string) wp_get_attachment_url( $track ) ) ),
+			)
+		);
+		wp_update_attachment_metadata(
+			$track,
+			array(
+				'album'  => 'Album ' . $hostile,
+				'artist' => 'Artist ' . $hostile,
+			)
+		);
+		$artist = (int) get_term_by( 'name', 'Artist ' . $hostile, Catalog::ARTIST )->term_id;
+		$views  = array(
+			'home'    => array(),
+			'albums'  => array( Browse::VIEW => 'albums' ),
+			'artists' => array( Browse::VIEW => 'artists' ),
+			'tracks'  => array( Browse::VIEW => 'tracks' ),
+			'posts'   => array( Browse::VIEW => 'posts' ),
+			'album'   => array( Browse::ALBUM => $this->album( 'Album ' . $hostile ) ),
+			'artist'  => array( Browse::ARTIST => $artist ),
+			'search'  => array( Browse::SEARCH => 'Track' ),
+			'post'    => array( App::QUERY => $post ),
+		);
+		foreach ( $views as $name => $args ) {
+			$html = $this->render_at( $args );
+			if ( 'artists' !== $name ) {
+				// WordPress strips tags from a term's name itself, so the artists list has nothing to escape.
+				$this->assertStringContainsString( 'riffxss', $html, "$name shows the names" );
+			}
+			$this->assertStringNotContainsString( '<img src=x', $html, "$name escapes them" );
+			foreach ( Browse::ARGS as $key ) {
+				unset( $_GET[ $key ] );
+			}
+			unset( $_GET[ App::QUERY ] );
+		}
+	}
+
 	public function test_tracks_list_every_visible_track(): void {
 		$html = $this->render_at( array( Browse::VIEW => 'tracks' ) );
 

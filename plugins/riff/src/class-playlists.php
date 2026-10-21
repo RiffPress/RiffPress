@@ -662,7 +662,7 @@ final class Playlists {
 	 * @param int[] $tracks Track IDs.
 	 */
 	public static function set_tracks( int $id, array $tracks ): void {
-		self::save( $id, array( 'post_content' => self::content( self::valid( $tracks ) ) ) );
+		self::save( $id, array( 'post_content' => self::content( self::valid( $tracks, self::ids( get_post( $id ) ) ) ) ) );
 	}
 
 	/**
@@ -724,16 +724,19 @@ final class Playlists {
 	}
 
 	/**
-	 * Track IDs that name audio in the Media Library, no more than MAX_TRACKS.
+	 * Track IDs that name audio in the Media Library, no more than MAX_TRACKS. A track joins only
+	 * if the requester can see it, since the block keeps its title and address, and the playlist's
+	 * own post is one its author can read; a track already in the playlist keeps its place.
 	 *
 	 * @param array $tracks IDs.
+	 * @param int[] $kept   IDs already in the playlist.
 	 * @return int[]
 	 */
-	private static function valid( array $tracks ): array {
+	private static function valid( array $tracks, array $kept = array() ): array {
 		$ok = array();
 		foreach ( $tracks as $track ) {
 			$track = (int) $track;
-			if ( $track > 0 && 'attachment' === get_post_type( $track ) && str_starts_with( (string) get_post_mime_type( $track ), 'audio/' ) ) {
+			if ( $track > 0 && 'attachment' === get_post_type( $track ) && str_starts_with( (string) get_post_mime_type( $track ), 'audio/' ) && ( in_array( $track, $kept, true ) || Catalog_Rest::visible( $track ) ) ) {
 				$ok[] = $track;
 			}
 		}

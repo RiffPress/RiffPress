@@ -128,6 +128,48 @@ class Test_Riff_Protect extends Riff_TestCase {
 		remove_filter( 'riff_can_play', '__return_false' );
 	}
 
+	public function test_a_password_protected_posts_file_waits_for_the_password_even_for_a_signed_in_reader(): void {
+		Protect::protect( $this->track );
+		wp_update_post(
+			array(
+				'ID'            => $this->post,
+				'post_password' => 'secret',
+			)
+		);
+
+		$this->assertFalse( Protect::can( $this->track ), 'a visitor' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$this->assertFalse( Protect::can( $this->track ), 'a subscriber, who may read the post but has not given its password' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$this->assertTrue( Protect::can( $this->track ), 'someone who may edit the post' );
+	}
+
+	public function test_a_track_is_signed_only_for_a_visitor_who_may_read_its_post(): void {
+		Protect::protect( $this->track );
+		wp_update_post(
+			array(
+				'ID'            => $this->post,
+				'post_password' => 'secret',
+			)
+		);
+
+		// WordPress lists a password-protected post's files in wp/v2/media to anyone.
+		$GLOBALS['wp_rest_server'] = null;
+		$response                  = rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/media/' . $this->track ) );
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertStringNotContainsString( 'riff-sig=', (string) $response->get_data()['riff_track']['src'], 'no address that skips the password' );
+
+		wp_update_post(
+			array(
+				'ID'            => $this->post,
+				'post_password' => '',
+				'post_status'   => 'private',
+			)
+		);
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$this->assertStringNotContainsString( 'riff-sig=', (string) Tracks::from_attachment( $this->track, $this->post )['src'], 'nor for someone else\'s private post' );
+	}
+
 	/**
 	 * Range headers and what they ask for, from a 1,000-byte file.
 	 *
