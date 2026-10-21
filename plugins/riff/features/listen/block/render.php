@@ -9,4 +9,4 @@
 
 defined( 'ABSPATH' ) || exit;
 
-echo Riff\Listen\App::render( $attributes ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where it is built.
+echo Riff\Listen\App::render( $attributes, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where it is built.

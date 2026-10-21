@@ -41,13 +41,15 @@ class Test_Riff_Protect extends Riff_TestCase {
 
 	public function test_protecting_moves_the_file_and_gives_it_an_address_that_checks(): void {
 		$public = (string) get_attached_file( $this->track );
+		$under  = (string) get_post_meta( $this->track, '_wp_attached_file', true );
 
 		$this->assertTrue( Protect::protect( $this->track ) );
 
 		$file = (string) get_attached_file( $this->track );
 		$this->assertFileDoesNotExist( $public, 'no longer at its public address' );
 		$this->assertFileExists( $file );
-		$this->assertStringStartsWith( Protect::dir() . '/', $file );
+		$this->assertSame( Protect::dir() . '/' . $under, $file, 'in the same folders under the protected one as under uploads' );
+		$this->assertSame( $under, get_post_meta( $this->track, Protect::META, true ), 'its place under uploads, to go back to' );
 		$this->assertFileExists( Protect::dir() . '/.htaccess', 'Apache is told to refuse the folder' );
 		$this->assertSame( Protect::address( $this->track ), wp_get_attachment_url( $this->track ) );
 		$this->assertStringContainsString( '?riff-file=' . $this->track, wp_get_attachment_url( $this->track ) );
