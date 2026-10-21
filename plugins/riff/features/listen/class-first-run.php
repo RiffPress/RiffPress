@@ -233,7 +233,7 @@ final class First_Run {
 		} else {
 			$message .= sprintf(
 				/* translators: 1: link to the Listen page, 2: "Add your first album" link, 3: "How to add music" link. */
-				__( 'Your Listen page is %1$s. Next, %2$s: upload the tracks to the Media Library, and Riff sorts them into albums and artists from their tags. %3$s', 'riff' ),
+				__( 'Your Listen page is %1$s. Next, %2$s: upload the tracks to the Media Library and they appear there, sorted into albums and artists. %3$s', 'riff' ),
 				self::page_link( $page ),
 				$album,
 				$guide

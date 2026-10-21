@@ -36,7 +36,7 @@ Add the Riff block to a page, and it becomes your Listen page: every album as a 
 
 = You publish from WordPress =
 
-Upload your tracks to the Media Library and put them in a post. WordPress reads the titles, artists, albums and artwork from the files, and Riff files every track under its album and artist from those same tags. If an album has no cover, Riff draws one: a record with one groove per track.
+Upload your tracks to the Media Library and they're on your Listen page, filed under their album and artist from the tags in the files, with their titles and artwork. Put an album in a post when you want to write about it. If an album has no cover, Riff draws one: a record with one groove per track.
 
 There's nothing to configure and no settings screen. Riff adds one script, one stylesheet, two fields on media (Artwork and Video version), and the Riff block.
 
@@ -59,9 +59,10 @@ Your posts can still point at audio or video hosted somewhere else, and Riff wil
 == Installation ==
 
 1. In your dashboard, go to Plugins > Add New Plugin, search for Riff, and press Install Now, then Activate.
-2. Add an Audio block for each track to a post, or one Playlist block holding them all, and publish it.
-3. To make a Listen page, add a page, type `/riff` on an empty line to add the Riff block, and publish it.
-4. To pair a song with its video, click the audio file in the Media Library and choose a video under Video version.
+2. Press Create Listen page in the notice on the Dashboard. Or add a page, type `/riff` on an empty line to add the Riff block, and publish it.
+3. Upload your tracks under Media > Add New Media File. They appear on the Listen page, sorted into albums and artists.
+4. To give an album a post of its own, add a Playlist block with its tracks and publish it.
+5. To pair a song with its video, click the audio file in the Media Library and choose a video under Video version.
 
 == Frequently Asked Questions ==
 

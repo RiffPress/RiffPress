@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Add your music | RiffPress</title>
-<meta name="description" content="How an album goes onto a site you own, starting from nothing. A post is the album, a Playlist block holds the tracks, and the cover is the featured image.">
+<meta name="description" content="How an album goes onto a site you own, starting from nothing. Make a Listen page, upload the tracks, and they play.">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="RiffPress">
 <meta property="og:url" content="{{pages_url}}add-music/">
@@ -29,7 +29,7 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <div class="nav"><div class="wrap"><a class="mark" href="../"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</a><nav><a href="./" aria-current="page">Add your music</a><a href="../developers/">Developers</a><a class="btn" href="../download/">Download</a></nav></div></div>
-<div class="local-nav"><div class="wrap"><a class="local-title" href="./" aria-current="page">Add your music</a><nav aria-label="Add your music"><a href="#start">Before you start</a><a href="#album">Album posts</a><a href="#tracks">Tracks</a><a href="#details">Details</a><a href="#publish">Publish</a><a href="#listen">Listen page</a><a href="#many">Many albums</a></nav></div></div>
+<div class="local-nav"><div class="wrap"><a class="local-title" href="./" aria-current="page">Add your music</a><nav aria-label="Add your music"><a href="#start">Before you start</a><a href="#listen">Listen page</a><a href="#upload">Upload</a><a href="#details">Details</a><a href="#post">Album posts</a><a href="#many">Many albums</a></nav></div></div>
 
 <div class="marg" aria-hidden="true"><img src="../brand/record-ghost.svg" alt="" width="1024" height="1024" decoding="async"></div>
 <div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../">RiffPress</a></span><span class="is-current-page">Add your music</span></nav></div></div>
@@ -43,34 +43,9 @@
 <div class="cta"><a class="btn" href="../download/">Get Riff</a><a class="btn outline" href="https://riffpress.com/demo" target="_blank" rel="noopener">Try it first in the demo</a></div>
 <p class="fine">The demo is a WordPress site running in your browser with Riff already installed. Its dashboard is at <code>/wp-admin</code> too, so you can follow every step here without a site of your own.</p>
 
-<h2 id="album">An album is a post</h2>
-<p>In WordPress, a post is a page of writing made of blocks: a paragraph is a block, and so is a playlist. Riff plays any post with audio in it. The tracks are the files in its Playlist block, in the order they appear, and each one is filed under the album and artist in its tags.</p>
-<figure><picture><source type="image/avif" srcset="../guide-post.avif 2880w, ../guide-post-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-post.png" width="2880" height="1800" alt="The WordPress editor with a post titled Compositions: a line of text and a Playlist block listing ten numbered tracks, with the cover shown as the featured image in the sidebar" loading="lazy" decoding="async"></picture><figcaption>An album in the editor: the title, a line about the band, and one Playlist block holding the tracks. The featured image on the right is the cover.</figcaption></figure>
-
-<h2 id="tracks">Add the tracks</h2>
-<ol>
-<li>Go to <kbd>Posts</kbd>, then <kbd>Add Post</kbd>.</li>
-<li>Type the album's name where it says <em>Add title</em>.</li>
-<li>Click the empty line below it, type <code>/playlist</code> and press Enter. A Playlist block appears.</li>
-<li>Press <kbd>Upload</kbd> and choose all the tracks at once. MP3, M4A, FLAC, WAV and OGG all work.</li>
-<li>Drag a track up or down in the list to change the order.</li>
-</ol>
-<p>The Playlist block arrived in WordPress 7.1. On an older site, or if you prefer one block per track, type <code>/audio</code> instead and add an Audio block for each file; Riff reads them the same way.</p>
-<figure><picture><source type="image/avif" srcset="../guide-playlist-block.avif 2880w, ../guide-playlist-block-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-playlist-block.png" width="2880" height="1800" alt="A new post titled Shades of Blue with an empty Playlist block offering Upload and Media Library" loading="lazy" decoding="async"></picture><figcaption>A new post with its Playlist block, ready for the files.</figcaption></figure>
-
-<h2 id="details">Titles, artists and covers come from the files</h2>
-<p>When a file is uploaded, WordPress reads the tags inside it: the title, the artist, the album, and the cover art if there is one. Riff shows them in the player, on the lock screen and in the library. If a file has no tags, or the wrong ones, go to <kbd>Media</kbd>, then <kbd>Library</kbd>, click the file and edit them there.</p>
-<p>Riff files each track under its album and artist from those same tags, so the Listen page can browse and search them. It also shows each track's quality, such as MP3 · 320 kbps or FLAC · 24-bit 96 kHz, as WordPress read it from the file.</p>
-<p>The same screen has two fields Riff adds. <strong>Artwork</strong> is a cover for that one track, if it differs from the album's. <strong>Video version</strong> is a video in the library, for a song that has one; listeners can switch between the song and the video while it plays.</p>
-<figure><picture><source type="image/avif" srcset="../guide-artwork.avif 2880w, ../guide-artwork-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-artwork.png" width="2880" height="1800" alt="The attachment details for an audio file: Title, Artist and Album fields filled in from the file, then Riff's Artwork and Video version fields" loading="lazy" decoding="async"></picture><figcaption>A file's details. WordPress filled in the title, artist and album from the file. Artwork and Video version are Riff's.</figcaption></figure>
-<div class="with-cover"><img src="../covers/shades-of-blue.svg" alt="A drawn cover: a charcoal record with a pomegranate label, the title Shades of Blue in serif type, and the band's name beneath" width="1024" height="1024" loading="lazy" decoding="async"><p>The album's cover is the post's <em>featured image</em>. In the editor, press <kbd>Set featured image</kbd> in the sidebar and upload it. If you skip this, Riff draws one: a record with one groove per track, each groove as long as the track, in wordpress.org's colours. The demo's albums wear them.</p></div>
-
-<h2 id="publish">Publish</h2>
-<p>Press <kbd>Publish</kbd>, then <kbd>View Post</kbd>. Tap a track. The player bar appears along the bottom and keeps playing while you scroll, open another post, or lock your phone. Tap the bar for Now Playing.</p>
-
-<h2 id="listen">One page where everything plays</h2>
-<p>Riff can also give the site a library: one page that lists every album, browses the Media Library by album, artist and track, searches it, and plays any of it without leaving the page.</p>
-<p>Riff offers to make this page for you: press <kbd>Create Listen page</kbd> in the notice on the Dashboard. To make it yourself:</p>
+<h2 id="listen">Make your Listen page</h2>
+<p>The Listen page is where your music lives: every album as a cover, browsing by album, artist and track, and one search box. The music keeps playing while visitors move around it.</p>
+<p>After you activate Riff, the Dashboard shows a notice. Press <kbd>Create Listen page</kbd> and it's done. To make it yourself:</p>
 <ol>
 <li>Go to <kbd>Pages</kbd>, then <kbd>Add Page</kbd>, and title it <em>Listen</em>, or whatever you like.</li>
 <li>Click the empty line, type <code>/riff</code> and choose the <em>Riff</em> block.</li>
@@ -80,8 +55,34 @@
 <p>To make it the front page of the site, go to <kbd>Settings</kbd>, then <kbd>Reading</kbd>, choose <em>A static page</em>, and pick it as the homepage.</p>
 <p>Add <code>app/</code> to the page's address, for example <code>/listen/app/</code>, and the same page opens as a player on its own, in Riff's dark look and without your theme. A browser can install that address as an app.</p>
 
+<h2 id="upload">Upload your music</h2>
+<ol>
+<li>Go to <kbd>Media</kbd>, then <kbd>Add New Media File</kbd>.</li>
+<li>Drag in an album's tracks, all at once. MP3, M4A, FLAC, WAV and OGG all work.</li>
+</ol>
+<p>That's it. Open your Listen page and the album is there, with its cover, ready to play. Tap a track and the player bar appears along the bottom. It keeps playing while you scroll, open another page, or lock your phone. Tap the bar for Now Playing.</p>
+
+<h2 id="details">Titles, artists and covers come from the files</h2>
+<p>Riff reads the title, artist, album and cover art from the tags inside each file, the same tags your music app uses. It also shows each track's quality, such as MP3 · 320 kbps or FLAC · 24-bit 96 kHz.</p>
+<p>If a file has no tags, or the wrong ones, go to <kbd>Media</kbd>, then <kbd>Library</kbd>, click the file and fix them there. The same screen has two fields Riff adds. <strong>Artwork</strong> is a cover for that track. <strong>Video version</strong> is a video in the library, for a song that has one; listeners can switch between the song and the video while it plays.</p>
+<figure><picture><source type="image/avif" srcset="../guide-artwork.avif 2880w, ../guide-artwork-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-artwork.png" width="2880" height="1800" alt="The attachment details for an audio file: Title, Artist and Album fields filled in from the file, then Riff's Artwork and Video version fields" loading="lazy" decoding="async"></picture><figcaption>A file's details. WordPress filled in the title, artist and album from the file. Artwork and Video version are Riff's.</figcaption></figure>
+<div class="with-cover"><img src="../covers/shades-of-blue.svg" alt="A drawn cover: a charcoal record with a pomegranate label, the title Shades of Blue in serif type, and the band's name beneath" width="1024" height="1024" loading="lazy" decoding="async"><p>If an album has no cover at all, Riff draws one: a record with one groove per track, each groove as long as the track. The demo's albums wear them.</p></div>
+
+<h2 id="post">Give an album its own post</h2>
+<p>To write about an album, or to play it on its own page with the rest of your site around it, put it in a post:</p>
+<ol>
+<li>Go to <kbd>Posts</kbd>, then <kbd>Add Post</kbd>, and type the album's name as the title.</li>
+<li>Click the empty line below it, type <code>/playlist</code> and press Enter.</li>
+<li>Choose the tracks from the <kbd>Media Library</kbd>, or upload them here. Drag them into order.</li>
+<li>Press <kbd>Set featured image</kbd> in the sidebar to give it a cover, then <kbd>Publish</kbd>.</li>
+</ol>
+<figure><picture><source type="image/avif" srcset="../guide-playlist-block.avif 2880w, ../guide-playlist-block-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-playlist-block.png" width="2880" height="1800" alt="A new post titled Shades of Blue with an empty Playlist block offering Upload and Media Library" loading="lazy" decoding="async"></picture><figcaption>A new post with its Playlist block, ready for the files.</figcaption></figure>
+<figure><picture><source type="image/avif" srcset="../guide-post.avif 2880w, ../guide-post-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-post.png" width="2880" height="1800" alt="The WordPress editor with a post titled Compositions: a line of text and a Playlist block listing ten numbered tracks, with the cover shown as the featured image in the sidebar" loading="lazy" decoding="async"></picture><figcaption>An album in the editor: the title, a line about the band, and one Playlist block holding the tracks. The featured image on the right is the cover.</figcaption></figure>
+<p>The Playlist block arrived in WordPress 7.1. On an older site, type <code>/audio</code> and add an Audio block for each track instead.</p>
+<p>Make the post private, a draft, or password protected, and its tracks stay off the Listen page for visitors until you publish it.</p>
+
 <h2 id="many">Many albums at once</h2>
-<p>If you have a folder of files per album and can use <a href="https://wp-cli.org/">WP-CLI</a>, run <code>wp riff import</code> with the path to the folder. It uploads the files to the Media Library the same way the dashboard does and makes one album post for each folder that holds audio. A cover image in the folder becomes the artwork, and a video named like a track becomes its video version. Run it again and it skips what it already imported; add <code>--dry-run</code> to see what it would do first.</p>
+<p>If you have a folder per album and your host gives you <a href="https://wp-cli.org/">WP-CLI</a>, <code>wp riff import</code> with the path to the folder uploads everything and gives each album a post. A cover image in the folder becomes the artwork. Run it again and it skips what it already imported; add <code>--dry-run</code> to see what it would do first.</p>
 
 <div class="aside">Stuck? <a href="https://github.com/RiffPress/RiffPress/issues">Open an issue</a> and say what you tried. If something here is wrong or unclear, that is a bug in this page too.</div>
 </main>
