@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.22.0
+Stable tag: 4.23.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,6 +118,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.23.0 =
+* A listener without a Gravatar sees their initial, not the grey silhouette.
+* Deleting Riff keeps listeners' playlists, likes and history, and Erase Personal Data removes them.
+* Fixed: a row's heart is copied from the bar's icons, not parsed from the page's data.
+
 = 4.22.0 =
 * The Listen app shows who is listening, with their picture and a menu, or Sign in.
 * The player's strings are translated in its script modules, from WordPress's script module translations.
@@ -143,11 +148,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: every album card's line is its artist, from one shared card.
 * Fixed: on a wide screen the seek line sits under the controls, where it is easy to reach.
 * Fixed: security review fixes before the plugin directory.
-
-= 4.20.0 =
-* Likes and Your Library.
-* Playlists listeners make.
-* Wp-api-coverage, a report of the WordPress APIs a plugin uses and the ones it doesn't yet.
-* Fixed: one heart icon, tidy rows of cards, and a Library that never looks empty.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
