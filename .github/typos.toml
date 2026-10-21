@@ -6,6 +6,8 @@ seeked = "seeked"
 TPE = "TPE"
 # The company that runs Gravatar, named in the readme's external services.
 Automattic = "Automattic"
+# Core's get_post_stati(), the plural it uses for post statuses.
+stati = "stati"
 
 [files]
 extend-exclude = [
