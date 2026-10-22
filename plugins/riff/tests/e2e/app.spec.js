@@ -528,6 +528,23 @@ test.describe( 'Standalone', () => {
 		}
 	} );
 
+	test( 'the app\'s buttons are pills on a phone as on a wide screen', async ( {
+		page,
+	} ) => {
+		await page.goto(
+			pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`
+		);
+		const pills = page.locator( '.riff-app .riff-pill' );
+		await expect( pills.first() ).toBeVisible();
+		const radii = await pills.evaluateAll( ( els ) =>
+			els
+				.filter( ( el ) => el.getClientRects().length )
+				.map( ( el ) => getComputedStyle( el ).borderRadius )
+		);
+		expect( radii.length ).toBeGreaterThan( 0 );
+		expect( new Set( radii ) ).toEqual( new Set( [ '999px' ] ) );
+	} );
+
 	test( 'the sidebar collapses to a rail of icons, and stays that way across views and reloads', async ( {
 		page,
 		isMobile,

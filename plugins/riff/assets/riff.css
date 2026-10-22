@@ -3334,6 +3334,13 @@ html.has-riff .riff-standalone .riff-app {
 	min-height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
 }
 
+/* Standalone mode's buttons are pills at every width, as the player's own are;
+   the Listen block in a theme keeps the site's corners. */
+.riff-standalone .riff-app .riff-pill {
+	border-radius: 999px;
+	font-weight: 600;
+}
+
 /* On a wide screen standalone mode is laid out like the apps people know: a
    column on the left with the site's name, search and the views, and the view
    beside it. The column stays put while the view scrolls. */
@@ -3544,8 +3551,6 @@ html.has-riff .riff-standalone .riff-app {
 	.riff-standalone .riff-app .riff-pill {
 		min-height: 44px;
 		padding: 0 28px;
-		border-radius: 999px;
-		font-weight: 600;
 	}
 
 	.riff-standalone .riff-album-title {
