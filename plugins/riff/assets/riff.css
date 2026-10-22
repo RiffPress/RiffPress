@@ -3702,6 +3702,11 @@ html.has-riff .riff-standalone .riff-app {
 		white-space: nowrap;
 	}
 
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item-title,
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item-sub {
+		overflow: visible;
+	}
+
 	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item {
 		justify-content: center;
 	}

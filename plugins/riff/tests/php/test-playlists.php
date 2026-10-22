@@ -306,7 +306,7 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		);
 		$this->go_to( add_query_arg( 'riff_playlist', $id, \Riff\Listen\Standalone::url( $listen ) ) );
 		$_GET['riff_playlist'] = (string) $id; // go_to() does not fill $_GET; the block reads it.
-		$html = do_blocks( '<!-- wp:riff/app /-->' );
+		$html                  = do_blocks( '<!-- wp:riff/app /-->' );
 		unset( $_GET['riff_playlist'] );
 
 		$this->assertStringContainsString( '<a class="riff-app-library-title" id="riff-app-library"', $html );
