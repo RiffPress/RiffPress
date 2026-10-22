@@ -110,6 +110,146 @@ final class Collection {
 	}
 
 	/**
+	 * Your Library in standalone mode's sidebar, as Spotify's is: a head with New playlist, chips,
+	 * and a row each for Liked songs, the listener's playlists and the albums and artists they
+	 * liked, newest first, with their artwork.
+	 *
+	 * A visitor's likes are in their browser, where the server cannot read them, so a visitor's
+	 * sidebar has Liked songs only, which opens the library with the rest. The chips are links to
+	 * the library's own filters; app.js filters the rows in place instead.
+	 *
+	 * @since 4.24.0
+	 *
+	 * @param string     $page    The Listen page's address.
+	 * @param array|null $current The browse view showing, or null.
+	 * @return string
+	 */
+	public static function sidebar( string $page, ?array $current ): string {
+		list( $likes, $account ) = self::likes();
+		$ids                     = array(
+			'track'  => array(),
+			'album'  => array(),
+			'artist' => array(),
+		);
+		foreach ( $likes as $like ) {
+			$ids[ $like['kind'] ][] = (int) $like['id'];
+		}
+		$view  = $current['view'] ?? '';
+		$id    = (int) ( $current['id'] ?? 0 );
+		$songs = count( $ids['track'] );
+		$rows  = self::row(
+			'playlists',
+			self::link( $page, 'songs', 'recent' ),
+			__( 'Liked songs', 'riff' ),
+			/* translators: %s: number of songs. */
+			$songs ? sprintf( _n( 'Playlist · %s song', 'Playlist · %s songs', $songs, 'riff' ), number_format_i18n( $songs ) ) : __( 'Playlist', 'riff' ),
+			'<span class="riff-app-item-heart">' . Player::icon( 'hearted' ) . '</span>',
+			'library' === $view && 'songs' === self::arg( Browse::FILTER )
+		);
+		foreach ( $account ? Playlist_View::mine() : array() as $list ) {
+			$count = (int) $list['count'];
+			$art   = Ui::mosaic( (array) ( $list['covers'] ?? array() ) );
+			$rows .= self::row(
+				'playlists',
+				add_query_arg( Browse::PLAYLIST, (int) $list['id'], $page ),
+				(string) $list['title'],
+				/* translators: %s: number of songs. */
+				sprintf( _n( 'Playlist · %s song', 'Playlist · %s songs', $count, 'riff' ), number_format_i18n( $count ) ),
+				'' !== $art ? $art : '<span class="riff-app-item-note">' . Player::icon( 'song' ) . '</span>',
+				'playlist' === $view && (int) $list['id'] === $id
+			);
+		}
+		// Albums and artists together, in the order they were liked.
+		$place = array();
+		foreach ( $likes as $i => $like ) {
+			$place[ $like['kind'] . ':' . $like['id'] ] = $i;
+		}
+		$items = array();
+		foreach ( self::terms( '/albums', $ids['album'], 'recent' ) as $album ) {
+			$art     = ! empty( $album['art'] ) ? (string) reset( $album['art'] )['src'] : '';
+			$items[] = array(
+				'at'  => $place[ 'album:' . (int) $album['id'] ] ?? PHP_INT_MAX,
+				'row' => self::row(
+					'albums',
+					add_query_arg( Browse::ALBUM, (int) $album['id'], $page ),
+					(string) $album['name'],
+					/* translators: %s: the album's artist, or "Album". */
+					sprintf( __( 'Album · %s', 'riff' ), Ui::album_line( $album ) ),
+					$art ? '<img src="' . esc_url( $art ) . '" alt="" loading="lazy" decoding="async">' : '',
+					'album' === $view && (int) $album['id'] === $id
+				),
+			);
+		}
+		foreach ( self::terms( '/artists', $ids['artist'], 'recent' ) as $artist ) {
+			$image   = (int) get_term_meta( (int) $artist['id'], 'riff_artist_image', true );
+			$art     = $image ? Tracks::art( $image ) : array();
+			$items[] = array(
+				'at'  => $place[ 'artist:' . (int) $artist['id'] ] ?? PHP_INT_MAX,
+				'row' => self::row(
+					'artists',
+					add_query_arg( Browse::ARTIST, (int) $artist['id'], $page ),
+					(string) $artist['name'],
+					__( 'Artist', 'riff' ),
+					$art ? '<img src="' . esc_url( (string) reset( $art )['src'] ) . '" alt="" loading="lazy" decoding="async">' : '<span class="riff-app-item-mark">' . esc_html( mb_strtoupper( mb_substr( (string) $artist['name'], 0, 1 ) ) ) . '</span>',
+					'artist' === $view && (int) $artist['id'] === $id,
+					true
+				),
+			);
+		}
+		usort( $items, static fn( $a, $b ) => $a['at'] <=> $b['at'] );
+		$rows .= implode( '', wp_list_pluck( $items, 'row' ) );
+
+		$chips = '';
+		foreach (
+			array(
+				'playlists' => __( 'Playlists', 'riff' ),
+				'albums'    => __( 'Albums', 'riff' ),
+				'artists'   => __( 'Artists', 'riff' ),
+			) as $slug => $label
+		) {
+			$chips .= sprintf( '<a class="riff-app-library-chip" href="%s" data-riff-library-show="%s">%s</a>', esc_url( self::link( $page, $slug, 'recent' ) ), esc_attr( $slug ), esc_html( $label ) );
+		}
+		$create = $account ? sprintf(
+			'<button type="button" class="riff-app-library-create" data-riff-app-action="new-playlist" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>',
+			esc_attr__( 'New playlist', 'riff' )
+		) : '';
+		return sprintf(
+			'<div class="riff-app-library"><div class="riff-app-library-head"><a class="riff-app-library-title" id="riff-app-library" href="%1$s"%2$s>%3$s</a>%4$s</div><div class="riff-app-library-chips">%5$s</div><ul aria-labelledby="riff-app-library">%6$s</ul></div>',
+			esc_url( add_query_arg( Browse::VIEW, 'library', $page ) ),
+			'library' === $view && '' === self::arg( Browse::FILTER ) ? ' aria-current="page"' : '',
+			esc_html__( 'Your Library', 'riff' ),
+			$create,
+			$chips,
+			$rows
+		);
+	}
+
+	/**
+	 * One row of the sidebar's library: the artwork, the name, and what it is.
+	 *
+	 * @param string $kind    playlists, albums or artists, for the chips.
+	 * @param string $href    Where it opens.
+	 * @param string $title   Its name.
+	 * @param string $sub     What it is.
+	 * @param string $art     The artwork's markup, already escaped.
+	 * @param bool   $current Whether it is the view showing.
+	 * @param bool   $round   Whether the artwork is round, as an artist's is.
+	 * @return string
+	 */
+	private static function row( string $kind, string $href, string $title, string $sub, string $art, bool $current, bool $round = false ): string {
+		return sprintf(
+			'<li data-riff-library-kind="%1$s"><a class="riff-app-item" href="%2$s"%3$s><span class="riff-app-item-art%4$s">%5$s</span><span class="riff-app-item-text"><span class="riff-app-item-title">%6$s</span><span class="riff-app-item-sub">%7$s</span></span></a></li>',
+			esc_attr( $kind ),
+			esc_url( $href ),
+			$current ? ' aria-current="page"' : '',
+			$round ? ' riff-app-item-round' : '',
+			$art,
+			esc_html( $title ),
+			esc_html( $sub )
+		);
+	}
+
+	/**
 	 * The listener's likes, newest first, and whether they are an account's.
 	 *
 	 * @return array{0: array[], 1: bool}

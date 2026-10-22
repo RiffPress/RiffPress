@@ -172,27 +172,17 @@ final class Browse {
 		foreach ( $links as $slug => list( $label, $href ) ) {
 			$html .= sprintf(
 				'<a class="riff-app-tab%s" href="%s"%s><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="%s"/></svg><span>%s</span></a>',
-				'home' === $slug ? ' riff-app-home' : '',
+				'home' === $slug ? ' riff-app-home' : ( 'library' === $slug ? ' riff-app-tab-library' : '' ),
 				esc_url( $href ),
 				$slug === $here ? ' aria-current="page"' : '',
 				esc_attr( self::ICONS[ $slug ] ),
 				esc_html( $label )
 			);
 		}
-		// The signed-in listener's playlists under the views, as in Spotify's sidebar. Only the
-		// standalone sidebar shows them; as tabs there is no room.
-		$lists = Playlist_View::mine();
-		if ( $lists ) {
-			$links = '';
-			foreach ( $lists as $list ) {
-				$links .= sprintf(
-					'<li><a class="riff-app-playlist" href="%s"%s>%s</a></li>',
-					esc_url( add_query_arg( self::PLAYLIST, (int) $list['id'], $page ) ),
-					'playlist' === ( $current['view'] ?? '' ) && (int) $current['id'] === (int) $list['id'] ? ' aria-current="page"' : '',
-					esc_html( (string) $list['title'] )
-				);
-			}
-			$html .= sprintf( '<div class="riff-app-playlists"><p class="riff-app-playlists-title" id="riff-app-playlists">%s</p><ul aria-labelledby="riff-app-playlists">%s</ul></div>', esc_html__( 'Playlists', 'riff' ), $links );
+		// Your Library under the views, as Spotify's sidebar has it. Only standalone mode's sidebar
+		// shows it; as tabs there is no room.
+		if ( Standalone::active() ) {
+			$html .= Collection::sidebar( $page, $current );
 		}
 		// A plain GET form, so search works without the script; the page's own arguments ride along
 		// for a site without pretty permalinks.
