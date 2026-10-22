@@ -576,7 +576,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "app.scrollIntoView( { block: 'start' } );",
-				"line": 297
+				"line": 298
 			}
 		],
 		"shot": {
@@ -666,7 +666,7 @@
 			{
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "{ ...history.state, riffApp: id },",
-				"line": 284
+				"line": 285
 			}
 		],
 		"shot": {
@@ -1080,7 +1080,7 @@
 			},
 			{
 				"file": "plugins/riff/features/listen/app.js",
-				"line": 317,
+				"line": 318,
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],
