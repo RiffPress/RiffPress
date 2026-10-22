@@ -380,7 +380,8 @@ test( 'the window is laid out as Spotify’s: panels in a black frame, home and 
 			'::after'
 		);
 		return {
-			width: window.innerWidth,
+			// The page's own width, without a scrollbar where the system draws one.
+			width: document.documentElement.clientWidth,
 			strip: box( '.riff-app-titlebar' ),
 			side: box( '.riff-app-bar' ),
 			view: box( '.riff-app-view' ),
