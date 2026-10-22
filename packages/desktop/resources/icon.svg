@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Riff's Mac icon, on Apple's icon grid: an 824px rounded square on a 1024px canvas, so the Dock sizes it as it does
+     the apps beside it. As Apple's guidelines draw one: a coloured ground lit from above, one bold shape with depth,
+     a soft shadow under it and a fine highlight at the edges. Riff's blue, the record from site/icons/favicon.svg,
+     and the player's filament: one groove glows amber, as the played part of the seek line does.
+     resources/icon.png is this, rendered. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+	<defs>
+		<linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#6a86ff"/>
+			<stop offset="0.55" stop-color="#3a55e6"/>
+			<stop offset="1" stop-color="#1c2aa6"/>
+		</linearGradient>
+		<radialGradient id="light" cx="0.5" cy="0" r="0.75">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.28"/>
+			<stop offset="1" stop-color="#fff" stop-opacity="0"/>
+		</radialGradient>
+		<linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.55"/>
+			<stop offset="0.4" stop-color="#fff" stop-opacity="0.06"/>
+			<stop offset="1" stop-color="#fff" stop-opacity="0.18"/>
+		</linearGradient>
+		<radialGradient id="disc" cx="0.5" cy="0.38" r="0.65">
+			<stop offset="0" stop-color="#34343b"/>
+			<stop offset="0.7" stop-color="#121216"/>
+			<stop offset="1" stop-color="#050507"/>
+		</radialGradient>
+		<!-- Light caught across the grooves, at eleven and five o'clock. -->
+		<linearGradient id="sheen" x1="0.2" y1="0" x2="0.8" y2="1">
+			<stop offset="0.16" stop-color="#fff" stop-opacity="0"/>
+			<stop offset="0.3" stop-color="#fff" stop-opacity="0.26"/>
+			<stop offset="0.42" stop-color="#fff" stop-opacity="0"/>
+			<stop offset="0.62" stop-color="#fff" stop-opacity="0"/>
+			<stop offset="0.74" stop-color="#fff" stop-opacity="0.14"/>
+			<stop offset="0.86" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fff" stop-opacity="0.4"/>
+			<stop offset="0.4" stop-color="#fff" stop-opacity="0"/>
+		</linearGradient>
+		<radialGradient id="label" cx="0.38" cy="0.28" r="0.85">
+			<stop offset="0" stop-color="#ffd780"/>
+			<stop offset="0.6" stop-color="#ffb020"/>
+			<stop offset="1" stop-color="#e48a00"/>
+		</radialGradient>
+		<linearGradient id="filament" x1="1" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#ff8a00" stop-opacity="0.2"/>
+			<stop offset="0.6" stop-color="#ffb020"/>
+			<stop offset="1" stop-color="#fff4d6"/>
+		</linearGradient>
+		<filter id="shadow" x="-25%" y="-20%" width="150%" height="155%">
+			<feDropShadow dx="0" dy="28" stdDeviation="30" flood-color="#000848" flood-opacity="0.6"/>
+		</filter>
+		<filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+			<feGaussianBlur stdDeviation="9" result="blur"/>
+			<feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+		</filter>
+		<mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="13" fill="#000"/></mask>
+	</defs>
+	<rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+	<rect x="100" y="100" width="824" height="824" rx="185" fill="url(#light)"/>
+	<rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="url(#rim)" stroke-width="3"/>
+	<g mask="url(#hole)">
+		<circle cx="512" cy="512" r="326" fill="url(#disc)" filter="url(#shadow)"/>
+		<g fill="none" stroke="#fff" stroke-opacity="0.055" stroke-width="2.5">
+			<circle cx="512" cy="512" r="304"/>
+			<circle cx="512" cy="512" r="282"/>
+			<circle cx="512" cy="512" r="238"/>
+			<circle cx="512" cy="512" r="216"/>
+			<circle cx="512" cy="512" r="194"/>
+			<circle cx="512" cy="512" r="172"/>
+		</g>
+		<circle cx="512" cy="512" r="326" fill="url(#sheen)"/>
+		<circle cx="512" cy="512" r="324.5" fill="none" stroke="url(#edge)" stroke-width="3"/>
+		<!-- The filament: from nine o'clock round to one, brightest at its head. -->
+		<circle cx="512" cy="512" r="260" fill="none" stroke="url(#filament)" stroke-width="9" stroke-linecap="round"
+			stroke-dasharray="545 1200" transform="rotate(180 512 512)" filter="url(#glow)"/>
+		<circle cx="512" cy="512" r="122" fill="url(#label)"/>
+		<circle cx="512" cy="512" r="122" fill="none" stroke="#000" stroke-opacity="0.22" stroke-width="4"/>
+		<circle cx="512" cy="512" r="42" fill="none" stroke="#8a5200" stroke-opacity="0.28" stroke-width="3"/>
+	</g>
+</svg>

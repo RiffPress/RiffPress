@@ -22,6 +22,8 @@ Tracks are rows inside the post's own content and take the theme's colours throu
 
 Phone: the bar along the bottom with its progress line on the top edge; Now Playing full-screen with the Song/Video switch at the top, square art, title and artist, a thick thumbless seek bar, the controls, action pills, and a handle for Up next that opens to a split view and then a full list. Wide screen: the bar is laid out as Tidal's, the track on the left, shuffle, previous, play, next and repeat in the middle with the seek line and both times under them, where they are easy to reach, and volume, the quality pill and the caret on the right; Now Playing fills the space above it with the art on the left and Up next on the right.
 
+The desktop app: Spotify's frame. A 64px black strip with back and forward beside the traffic lights and home and search in the middle; under it the library and the view as `#121212` panels, 8px apart with 8px corners, on black; the bar black below them. Its Mac icon is the record on Apple's icon grid, on Riff's blue, with one groove lit amber as the filament.
+
 ## Interaction
 
 Tap a row to play, tap the bar for Now Playing, swipe the bar to skip, drag Now Playing down to close. Motion is transform and opacity only. Reduced motion removes the transitions and holds the filament at half; reduced transparency removes the halo.

@@ -128,7 +128,7 @@ function openSite( url ) {
 		...( process.platform === 'darwin'
 			? {
 					titleBarStyle: 'hidden',
-					trafficLightPosition: { x: 20, y: 19 },
+					trafficLightPosition: { x: 20, y: 26 },
 				}
 			: {} ),
 		webPreferences: {
@@ -456,6 +456,11 @@ if ( ! app.requestSingleInstanceLock() ) {
 		serveConnect();
 		permissions();
 		menu();
+		// A packaged build has its icon from electron-builder; from source the Dock would show
+		// Electron's.
+		if ( DEV && process.platform === 'darwin' ) {
+			app.dock.setIcon( path.join( __dirname, '..', 'resources', 'icon.png' ) );
+		}
 		if ( DEV && process.env.RIFF_DESKTOP_SITE ) {
 			develop( process.env.RIFF_DESKTOP_SITE );
 		} else if ( currentSite() ) {

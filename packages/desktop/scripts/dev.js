@@ -9,7 +9,7 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { spawn } = require( 'node:child_process' );
+const { spawn, execFileSync } = require( 'node:child_process' );
 
 const ROOT = path.resolve( __dirname, '..', '..', '..' );
 const APP = path.resolve( __dirname, '..' );
@@ -30,8 +30,79 @@ for ( const name of [ '.wp-env.json', '.wp-env.override.json' ] ) {
 const site = process.env.RIFF_DESKTOP_SITE || `http://localhost:${ port }/`;
 console.log( `Riff for the desktop, on ${ site }` );
 
+/**
+ * On a Mac, Electron.app cloned as Riff.app with Riff's name and icon, so the Dock and the app
+ * switcher say Riff, as an installed copy does; elsewhere, Electron itself. The clone is
+ * copy-on-write and made again only when Electron's version or the icon changes.
+ *
+ * @return {string} The executable to run.
+ */
+function electronBinary() {
+	const stock = require( 'electron' );
+	if ( process.platform !== 'darwin' ) {
+		return stock;
+	}
+	const source = path.resolve( stock, '..', '..', '..' );
+	const bundle = path.join( APP, '.dev', 'Riff.app' );
+	const binary = path.join( bundle, 'Contents', 'MacOS', 'Electron' );
+	const icon = path.join( APP, 'resources', 'icon.png' );
+	const version = `${ require( 'electron/package.json' ).version } ${
+		fs.statSync( icon ).mtimeMs
+	}`;
+	const stamp = path.join( APP, '.dev', 'version' );
+	try {
+		if ( fs.readFileSync( stamp, 'utf8' ) === version ) {
+			return binary;
+		}
+	} catch {
+		// Not made yet.
+	}
+	try {
+		fs.rmSync( path.join( APP, '.dev' ), { recursive: true, force: true } );
+		fs.mkdirSync( path.join( APP, '.dev' ) );
+		execFileSync( 'cp', [ '-Rc', source, bundle ] );
+		const plist = path.join( bundle, 'Contents', 'Info.plist' );
+		for ( const key of [ 'CFBundleName', 'CFBundleDisplayName' ] ) {
+			execFileSync( 'plutil', [ '-replace', key, '-string', 'Riff', plist ] );
+		}
+		const iconset = path.join( APP, '.dev', 'icon.iconset' );
+		fs.mkdirSync( iconset );
+		for ( const size of [ 16, 32, 128, 256, 512 ] ) {
+			for ( const scale of [ 1, 2 ] ) {
+				execFileSync( 'sips', [
+					'-z',
+					String( size * scale ),
+					String( size * scale ),
+					icon,
+					'--out',
+					path.join(
+						iconset,
+						`icon_${ size }x${ size }${ scale > 1 ? '@2x' : '' }.png`
+					),
+				], { stdio: 'ignore' } );
+			}
+		}
+		execFileSync( 'iconutil', [
+			'-c',
+			'icns',
+			iconset,
+			'-o',
+			path.join( bundle, 'Contents', 'Resources', 'electron.icns' ),
+		] );
+		// The edits break Electron's signature, and an arm64 Mac runs nothing unsigned.
+		execFileSync( 'codesign', [ '--force', '--deep', '--sign', '-', bundle ], {
+			stdio: 'ignore',
+		} );
+		fs.writeFileSync( stamp, version );
+		return binary;
+	} catch ( error ) {
+		console.warn( `Running Electron as it is: ${ error.message }` );
+		return stock;
+	}
+}
+
 const child = spawn(
-	require( 'electron' ),
+	electronBinary(),
 	[ APP, `--user-data-dir=${ path.join( APP, '.profile' ) }` ],
 	{
 		stdio: 'inherit',
