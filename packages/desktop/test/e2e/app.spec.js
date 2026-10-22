@@ -423,3 +423,61 @@ test( 'the window is laid out as Spotify’s: panels in a black frame, home and 
 		'Home'
 	);
 } );
+
+test( 'the rest of the site gets a strip of its own for the traffic lights, and the login the app’s colours', async () => {
+	const electronApp = await launch();
+	const page = await siteWindow( electronApp );
+	const site = new URL( BASE ).origin + '/';
+	// What a Mac window's lights would cover on a page with the 40px strip.
+	const covered = () =>
+		page.evaluate( () =>
+			[ ...document.querySelectorAll( 'a, button, input, summary' ) ]
+				.filter( ( el ) => {
+					const r = el.getBoundingClientRect();
+					return (
+						r.width > 0 &&
+						getComputedStyle( el ).visibility !== 'hidden' &&
+						r.left < 84 &&
+						r.top < 40 &&
+						r.bottom > 0
+					);
+				} )
+				.map( ( el ) => el.outerHTML.slice( 0, 80 ) )
+		);
+	const strip = () =>
+		page.evaluate( () => {
+			const el = document.querySelector( '.riff-desktop-strip' );
+			return el
+				? {
+						height: el.getBoundingClientRect().height,
+						drag: getComputedStyle( el ).webkitAppRegion,
+				  }
+				: null;
+		} );
+
+	for ( const url of [ site, `${ site }wp-login.php` ] ) {
+		await page.goto( url );
+		// Linux and Windows keep their frame; the Mac's strip is checked on every platform.
+		if ( process.platform !== 'darwin' ) {
+			await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
+			continue;
+		}
+		expect( await strip(), url ).toEqual( { height: 40, drag: 'drag' } );
+		expect( await covered(), url ).toEqual( [] );
+	}
+
+	// The login: WordPress's layout, on the app's black, the form one of its panels.
+	await page.goto( `${ site }wp-login.php` );
+	expect(
+		await page.evaluate( () => ( {
+			body: getComputedStyle( document.body ).backgroundColor,
+			form: getComputedStyle( document.querySelector( '#loginform' ) )
+				.backgroundColor,
+		} ) )
+	).toEqual( { body: 'rgb(0, 0, 0)', form: 'rgb(18, 18, 18)' } );
+
+	// The Listen app keeps its own strip, not a second one.
+	await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+	await expect( page.locator( '.riff-app-titlebar' ) ).toBeVisible();
+	await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
+} );
