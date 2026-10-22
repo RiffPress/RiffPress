@@ -855,7 +855,13 @@ final class Browse {
 			);
 		}
 		$post = $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- the Listen page again.
-		return sprintf(
+		// Over an album's tracks, the column heads Spotify draws: #, Title and a clock. They only
+		// label what each row already says, so a screen reader is not told them again.
+		$head = $numbered ? sprintf(
+			'<div class="riff-tracks-head" aria-hidden="true"><span>#</span><span>%s</span><svg viewBox="0 0 24 24" focusable="false" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></div>',
+			esc_html__( 'Title', 'riff' )
+		) : '';
+		return $head . sprintf(
 			'<div class="riff-album-tracks"%s data-riff-tracks="%s">%s</div>',
 			$numbered ? ' data-riff-numbered' : '',
 			esc_attr( (string) wp_json_encode( $tracks ) ),

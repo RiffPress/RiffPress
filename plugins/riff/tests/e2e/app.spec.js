@@ -8,6 +8,7 @@ const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( './own' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
+const { expectTidy } = require( './tidy' );
 
 const FIXTURES = path.join(
 	__dirname,
@@ -530,19 +531,68 @@ test.describe( 'Standalone', () => {
 
 	test( 'the app\'s buttons are pills on a phone as on a wide screen', async ( {
 		page,
+		isMobile,
 	} ) => {
 		await page.goto(
 			pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`
 		);
 		const pills = page.locator( '.riff-app .riff-pill' );
 		await expect( pills.first() ).toBeVisible();
+		// Play and Shuffle under a wide header are Spotify's round buttons, not pills; the rest
+		// are pills.
 		const radii = await pills.evaluateAll( ( els ) =>
 			els
 				.filter( ( el ) => el.getClientRects().length )
+				.filter( ( el ) => getComputedStyle( el ).borderRadius !== '50%' || ! el.closest( '.riff-album-actions' ) )
 				.map( ( el ) => getComputedStyle( el ).borderRadius )
 		);
-		expect( radii.length ).toBeGreaterThan( 0 );
-		expect( new Set( radii ) ).toEqual( new Set( [ '999px' ] ) );
+		// On a phone, Play and Shuffle are among them.
+		expect( radii.length >= ( isMobile ? 2 : 0 ) ).toBe( true );
+		expect( radii.filter( ( r ) => r !== '999px' ) ).toEqual( [] );
+	} );
+
+	test( 'an album\'s header is Spotify\'s on a wide screen: a round Play under a large title, and column heads that line up', async ( {
+		page,
+		isMobile,
+	} ) => {
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=albums' );
+		await page.locator( '.riff-grid .riff-card a' ).first().click();
+		await expect( page ).toHaveURL( /riff_album=\d+/ );
+		const play = page.locator( '.riff-album-actions [data-riff-app-action="play"]' );
+		const shuffle = page.locator( '.riff-album-actions [data-riff-app-action="shuffle"]' );
+		await expect( play ).toHaveAccessibleName( 'Play' );
+		await expect( shuffle ).toHaveAccessibleName( 'Shuffle' );
+		if ( isMobile ) {
+			// On a phone they stay words, and there are no column heads.
+			await expect( play.locator( '.riff-pill-label' ) ).toBeVisible();
+			await expect( play.locator( 'svg' ) ).toBeHidden();
+			await expect( page.locator( '.riff-tracks-head' ) ).toBeHidden();
+			return;
+		}
+		const box = await play.boundingBox();
+		expect( [ Math.round( box.width ), Math.round( box.height ) ] ).toEqual( [ 56, 56 ] );
+		expect( await play.evaluate( ( el ) => getComputedStyle( el ).borderRadius ) ).toBe( '50%' );
+		// The actions are a row of their own, under the cover and the title.
+		const cover = await page.locator( '.riff-album-cover' ).boundingBox();
+		expect( box.y ).toBeGreaterThan( cover.y + cover.height );
+		// The heads sit over what they name.
+		const at = await page.evaluate( () => {
+			const mid = ( el ) => {
+				const r = el.getBoundingClientRect();
+				return { left: r.left, centre: r.left + ( r.width / 2 ) };
+			};
+			const head = document.querySelector( '.riff-tracks-head' );
+			return {
+				title: mid( head.children[ 1 ] ).left,
+				rowTitle: mid( document.querySelector( '.riff-album-tracks .riff-row-title' ) ).left,
+				clock: mid( head.children[ 2 ] ).centre,
+				time: mid( document.querySelector( '.riff-album-tracks .riff-row-time' ) ).centre,
+			};
+		} );
+		expect( Math.abs( at.title - at.rowTitle ) ).toBeLessThanOrEqual( 2 );
+		expect( Math.abs( at.clock - at.time ) ).toBeLessThanOrEqual( 4 );
+		await expectTidy( page, '.riff-app', 'an album, standalone' );
+		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 	} );
 
 	test( 'the sidebar collapses to a rail of icons, and stays that way across views and reloads', async ( {
