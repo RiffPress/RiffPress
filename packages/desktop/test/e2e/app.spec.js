@@ -482,3 +482,62 @@ test( 'the rest of the site gets a strip of its own for the traffic lights, and 
 	await expect( page.locator( '.riff-app-titlebar' ) ).toBeVisible();
 	await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
 } );
+
+test( 'Import Music… adds a folder’s audio to the Media Library as the signed-in listener, and skips it the second time', async () => {
+	const electronApp = await launch();
+	await siteWindow( electronApp );
+	// Two tracks under names the site has not seen, in a folder with a file that is not audio.
+	const dir = fs.mkdtempSync( path.join( os.tmpdir(), 'riff-import-e2e-' ) );
+	const tag = `riff-import-e2e-${ Date.now() }`;
+	const names = [ `${ tag } 1.mp3`, `${ tag } 2.mp3` ];
+	for ( const name of names ) {
+		fs.copyFileSync( path.join( FIXTURES, TRACK ), path.join( dir, name ) );
+	}
+	fs.writeFileSync( path.join( dir, 'notes.txt' ), 'not music' );
+
+	// The open dialog answers with the folder, and the summary is read instead of shown.
+	const run = () =>
+		electronApp.evaluate( async ( { dialog, Menu }, folder ) => {
+			dialog.showOpenDialog = async () => ( {
+				canceled: false,
+				filePaths: [ folder ],
+			} );
+			return new Promise( ( resolve ) => {
+				dialog.showMessageBox = async ( win, box ) => {
+					resolve( box );
+					return { response: 1 };
+				};
+				Menu.getApplicationMenu()
+					.getMenuItemById( 'import-music' )
+					.click();
+			} );
+		}, dir );
+
+	const found = async () =>
+		(
+			await requestUtils.rest( {
+				path: '/wp/v2/media',
+				params: { search: tag, media_type: 'audio', per_page: 100 },
+			} )
+		).map( ( m ) => m.id );
+
+	try {
+		const first = await run();
+		expect( first.message, first.detail ).toBe( 'Imported 2 of 2 tracks.' );
+		expect( await found() ).toHaveLength( 2 );
+
+		const again = await run();
+		expect( again.message ).toBe( 'Imported 0 of 2 tracks.' );
+		expect( again.detail ).toBe( '2 already in your library' );
+		expect( await found() ).toHaveLength( 2 );
+	} finally {
+		for ( const id of await found() ) {
+			await requestUtils.rest( {
+				method: 'DELETE',
+				path: `/wp/v2/media/${ id }`,
+				params: { force: true },
+			} );
+		}
+		fs.rmSync( dir, { recursive: true, force: true } );
+	}
+} );
