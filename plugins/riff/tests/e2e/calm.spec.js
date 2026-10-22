@@ -249,10 +249,12 @@ test.describe( 'Every view loads without moving', () => {
 			'riff_view=library',
 			'',
 		] ) {
+			// Your Library is reached from its own heading in the sidebar, where its tab is hidden.
 			const link = page.locator(
-				tab
-					? `.riff-app-bar a.riff-app-tab[href*="${ tab }"]`
-					: '.riff-app-bar a.riff-app-home'
+				{
+					'riff_view=library': '.riff-app-library-title',
+					'': '.riff-app-bar a.riff-app-home',
+				}[ tab ] || `.riff-app-bar a.riff-app-tab[href*="${ tab }"]`
 			);
 			const from = await page.evaluate( () =>
 				Math.round( performance.now() )
