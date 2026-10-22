@@ -31,7 +31,12 @@ const {
 const PARTITION = 'persist:riff';
 const SCHEME = 'riff';
 const CONNECT = `${ SCHEME }://app/index.html`;
-const CONNECT_FILES = new Set( [ 'index.html', 'connect.css', 'connect.js' ] );
+const CONNECT_FILES = new Set( [
+	'index.html',
+	'connect.css',
+	'connect.js',
+	'icon.png',
+] );
 // Permissions the Listen app asks for: full screen for video, and the clipboard for Share.
 const PERMISSIONS = new Set( [ 'fullscreen', 'clipboard-sanitized-write' ] );
 const BACKGROUND = '#030303';
@@ -215,13 +220,20 @@ function openConnect() {
 		return;
 	}
 	connectWindow = new BrowserWindow( {
-		width: 460,
-		height: 400,
+		width: 440,
+		height: 560,
 		resizable: false,
 		maximizable: false,
 		fullscreenable: false,
-		title: 'Connect to a site',
+		title: 'Riff',
 		backgroundColor: BACKGROUND,
+		// On a Mac, no title bar, as the site's window has none; the page drags the window.
+		...( process.platform === 'darwin'
+			? {
+					titleBarStyle: 'hidden',
+					trafficLightPosition: { x: 16, y: 16 },
+				}
+			: {} ),
 		webPreferences: {
 			preload: path.join( __dirname, 'connect', 'preload.js' ),
 			contextIsolation: true,
