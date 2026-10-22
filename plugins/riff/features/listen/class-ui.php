@@ -232,8 +232,10 @@ final class Ui {
 	 */
 	public static function actions( string $heart = '' ): string {
 		return sprintf(
-			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%s</button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%s</button>%s</p>',
+			'<p class="riff-album-actions"><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="play">%1$s<span class="riff-pill-label">%2$s</span></button><button type="button" class="riff-pill" data-riff-app-action="shuffle">%3$s<span class="riff-pill-label">%4$s</span></button>%5$s</p>',
+			Player::icon( 'play' ),
 			esc_html__( 'Play', 'riff' ),
+			Player::icon( 'shuffle' ),
 			esc_html__( 'Shuffle', 'riff' ),
 			$heart
 		);
