@@ -2946,6 +2946,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	line-height: 1.714;
 }
 
+/* Play and Shuffle carry their icons for standalone mode, which draws them as
+   Spotify does; elsewhere they are words. */
+.riff-app .riff-album-actions .riff-pill svg,
+.riff-tracks-head {
+	display: none;
+}
+
 .riff-app .riff-album-actions {
 	display: flex;
 	flex: none;
@@ -3730,6 +3737,130 @@ html.has-riff .riff-standalone .riff-app {
 	.riff-standalone .riff-album-title {
 		font-weight: 700;
 		letter-spacing: -0.02em;
+	}
+
+	/* An album's, artist's or playlist's header, as Spotify's: the cover
+	   beside a large title, then a row of actions under both, led by a round
+	   Play in the accent. The text block gives its parts to the grid. */
+	.riff-standalone .riff-album {
+		display: grid;
+		grid-template-areas:
+			"cover ."
+			"cover kind"
+			"cover title"
+			"cover meta"
+			"actions actions";
+		grid-template-rows: 1fr auto auto auto auto;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: end;
+		gap: 0 24px;
+	}
+
+	.riff-standalone .riff-album-text {
+		display: contents;
+	}
+
+	.riff-standalone .riff-album-cover {
+		grid-area: cover;
+	}
+
+	.riff-standalone .riff-album-kind {
+		grid-area: kind;
+	}
+
+	.riff-standalone .riff-album-meta {
+		grid-area: meta;
+	}
+
+	.riff-standalone .riff-app .riff-album-title {
+		grid-area: title;
+		margin: 4px 0 8px;
+		font-size: clamp(40px, 5.5vw, 88px);
+		font-weight: 800;
+		line-height: 1.05;
+		letter-spacing: -0.04em;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions {
+		grid-area: actions;
+		align-items: center;
+		gap: 16px;
+		margin: 32px 0 0;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions .riff-pill svg {
+		display: block;
+		width: 28px;
+		height: 28px;
+	}
+
+	/* The words stay as the buttons' names; the clip hides them. */
+	.riff-standalone .riff-album-actions .riff-pill-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="play"] {
+		justify-content: center;
+		width: 56px;
+		height: 56px;
+		min-height: 56px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: var(--riff-app-accent);
+		color: #000;
+		transition: transform 0.15s, background-color 0.15s;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="play"]:hover {
+		transform: scale(1.04);
+		background: color-mix(in srgb, var(--riff-app-accent) 85%, #fff);
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"] {
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		min-height: 40px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: var(--riff-app-ink-2);
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"]:hover {
+		color: var(--riff-app-ink);
+	}
+
+	/* Over an album's tracks: #, Title and a clock, over a rule. */
+	.riff-standalone .riff-tracks-head {
+		display: flex;
+		align-items: center;
+		gap: 24px;
+		margin: 0 0 8px;
+		padding: 0 112px 8px 12px;
+		border-bottom: 1px solid var(--riff-app-line);
+		color: var(--riff-app-ink-2);
+		font-size: 14px;
+	}
+
+	.riff-standalone .riff-tracks-head span:first-child {
+		width: 40px;
+		text-align: center;
+	}
+
+	.riff-standalone .riff-tracks-head span:nth-child(2) {
+		flex: 1;
+	}
+
+	.riff-standalone .riff-tracks-head svg {
+		width: 18px;
+		height: 18px;
 	}
 
 	.riff-standalone .riff-app > *,
