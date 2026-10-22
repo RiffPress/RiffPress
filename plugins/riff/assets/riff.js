@@ -2495,8 +2495,32 @@ function start() {
 			track: track() || null,
 		} );
 	}
+	// In Riff's desktop app Now Playing is Tidal's: the art on its own, and a tab opens its panel
+	// beside it. Pressed again while its panel is open, the tab closes it.
+	function drawer( tab ) {
+		if ( ! document.documentElement.classList.contains( 'riff-desktop' ) ) {
+			return true;
+		}
+		if (
+			np.dataset.riffDrawer === 'open' &&
+			tab.getAttribute( 'aria-selected' ) === 'true'
+		) {
+			delete np.dataset.riffDrawer;
+			tab.setAttribute( 'aria-expanded', 'false' );
+			return false;
+		}
+		np.dataset.riffDrawer = 'open';
+		for ( const t of tabs ) {
+			t.setAttribute( 'aria-expanded', String( t === tab ) );
+		}
+		return true;
+	}
 	for ( const t of tabs ) {
-		t.addEventListener( 'click', () => pickTab( t.dataset.riffTab ) );
+		t.addEventListener( 'click', () => {
+			if ( drawer( t ) ) {
+				pickTab( t.dataset.riffTab );
+			}
+		} );
 		t.addEventListener( 'keydown', ( e ) => {
 			const i = tabs.indexOf( t );
 			const back = document.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
