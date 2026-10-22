@@ -265,6 +265,7 @@ export function start( api ) {
 				nav.innerHTML = bar;
 				sidebar( app.dataset.sidebar !== 'mini', false );
 				wireSearch();
+				libraryShow( shelfKind );
 			}
 		};
 		if ( document.startViewTransition && ! reducedMotion() ) {
@@ -577,6 +578,14 @@ export function start( api ) {
 			api.play( played, Number( action.dataset.riffIndex ) || 0 );
 			return;
 		}
+		// The sidebar library's chips filter its rows in place; pressed again, all of them show.
+		const chip = e.target.closest( '[data-riff-library-show]' );
+		if ( chip ) {
+			e.preventDefault();
+			const kind = chip.dataset.riffLibraryShow;
+			libraryShow( kind === shelfKind ? '' : kind );
+			return;
+		}
 		if ( action?.dataset.riffAppAction === 'sidebar' ) {
 			sidebar( action.getAttribute( 'aria-expanded' ) !== 'true' );
 			return;
@@ -781,6 +790,25 @@ export function start( api ) {
 		}
 		focus?.()?.focus();
 	}
+	// ---- The sidebar library's chips: which rows show, kept while the sidebar is drawn again.
+	let shelfKind = '';
+	function libraryShow( kind ) {
+		shelfKind = kind;
+		for ( const chip of nav?.querySelectorAll( '[data-riff-library-show]' ) ||
+			[] ) {
+			chip.setAttribute(
+				'aria-pressed',
+				String( chip.dataset.riffLibraryShow === kind )
+			);
+			chip.setAttribute( 'role', 'button' );
+		}
+		for ( const row of nav?.querySelectorAll( '[data-riff-library-kind]' ) ||
+			[] ) {
+			row.hidden = !! kind && row.dataset.riffLibraryKind !== kind;
+		}
+	}
+	libraryShow( '' );
+
 	function playlistAction( action ) {
 		const kind = action?.dataset.riffAppAction;
 		const id = Number( action?.dataset.riffPlaylist );
