@@ -140,7 +140,7 @@ class Test_Riff_I18n extends Riff_TestCase {
 
 		$this->assertStringContainsString( '<p class="riff-album-kind">⟪Album⟫</p>', $this->view_at( array( Browse::ALBUM => $album ) ) );
 		$this->assertStringContainsString( '<p class="riff-album-kind">⟪Artist⟫</p>', $this->view_at( array( Browse::ARTIST => $artist ) ) );
-		$this->assertStringContainsString( '>⟪Play⟫</button>', $this->view_at( array( App::QUERY => $this->post ) ) );
+		$this->assertStringContainsString( '>⟪Play⟫</span></button>', $this->view_at( array( App::QUERY => $this->post ) ) );
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 		$request = new WP_REST_Request( 'POST', '/riff/v1/users/me/playlists' );
