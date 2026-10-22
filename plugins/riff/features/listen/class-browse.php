@@ -182,7 +182,7 @@ final class Browse {
 		// Your Library under the views, as Spotify's sidebar has it. Only standalone mode's sidebar
 		// shows it; as tabs there is no room.
 		if ( Standalone::active() ) {
-			$html .= Collection::sidebar( $page, $current );
+			$html .= Collection::sidebar( $page, $current ) . Standalone::install_card();
 		}
 		// A plain GET form, so search works without the script; the page's own arguments ride along
 		// for a site without pretty permalinks.

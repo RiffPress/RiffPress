@@ -91,6 +91,8 @@ these:
 - Create a WordPress page and add the Riff block.
 - Put `[riff]` in a page's content.
 
+Listeners can install the Listen page's `app/` address as an app of its own. From their second visit Riff offers it, with the browser's own Install where there is one (Chrome and Edge) and the steps where there is not (Safari's Add to Dock and Add to Home Screen). Installed from Chrome or Edge on a computer it has no title bar and is laid out as the desktop app is. Its name and icon are the site's, so set a site icon under **Settings › General**.
+
 ### Video versions
 
 A track with a video version is set in the Media Library: click an audio file and choose a video

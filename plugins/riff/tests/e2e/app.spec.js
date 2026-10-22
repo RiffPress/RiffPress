@@ -537,7 +537,7 @@ test.describe( 'Standalone', () => {
 			pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`
 		);
 		const pills = page.locator( '.riff-app .riff-pill' );
-		await expect( pills.first() ).toBeVisible();
+		await expect( page.locator( '.riff-app .riff-pill:visible' ).first() ).toBeVisible();
 		// Play and Shuffle under a wide header are Spotify's round buttons, not pills; the rest
 		// are pills.
 		const radii = await pills.evaluateAll( ( els ) =>
@@ -593,6 +593,75 @@ test.describe( 'Standalone', () => {
 		expect( Math.abs( at.clock - at.time ) ).toBeLessThanOrEqual( 4 );
 		await expectTidy( page, '.riff-app', 'an album, standalone' );
 		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
+	} );
+
+	test( 'the app offers to install itself from the second visit, with the browser\'s prompt, and stays away once dismissed', async ( {
+		page,
+	} ) => {
+		const app = pageUrl.replace( /\/?$/, '/' ) + 'app/';
+		// Headless Chromium never fires its install event, so the test stands in for it, with a
+		// prompt() that counts.
+		const offer = () =>
+			page.evaluate( () => {
+				const e = new Event( 'beforeinstallprompt' );
+				e.prompt = () => ( window.prompted = ( window.prompted || 0 ) + 1 );
+				e.userChoice = Promise.resolve( { outcome: 'accepted' } );
+				window.dispatchEvent( e );
+			} );
+		const card = page.locator( '[data-riff-install]' );
+
+		await page.goto( app );
+		await page.evaluate( () => {
+			localStorage.removeItem( 'riff-visits' );
+			localStorage.removeItem( 'riff-install-dismissed' );
+			sessionStorage.removeItem( 'riff-visit' );
+		} );
+		await page.reload();
+		await offer();
+		await expect( card, 'not on a first visit' ).toBeHidden();
+
+		// A second visit: a new session.
+		await page.evaluate( () => sessionStorage.removeItem( 'riff-visit' ) );
+		await page.reload();
+		await offer();
+		await expect( card ).toBeVisible();
+		await expect( card.locator( '.riff-app-install-title' ) ).toHaveText( /^Get the .+ app$/ );
+		expect( ( await new AxeBuilder( { page } ).include( '[data-riff-install]' ).analyze() ).violations ).toEqual( [] );
+		await card.getByRole( 'button', { name: 'Install' } ).click();
+		expect( await page.evaluate( () => window.prompted ) ).toBe( 1 );
+
+		// Offered again, then dismissed: gone, and still gone after a reload.
+		await offer();
+		await expect( card ).toBeVisible();
+		await card.getByRole( 'button', { name: 'Not now' } ).click();
+		await expect( card ).toBeHidden();
+		await page.reload();
+		await offer();
+		await expect( card ).toBeHidden();
+		await page.evaluate( () => localStorage.removeItem( 'riff-install-dismissed' ) );
+	} );
+
+	test( 'in Safari, which has no install prompt, Install shows how to add the app to the Dock', async ( {
+		browser,
+		baseURL,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'The Mac\'s steps; a phone is told about the Home Screen.' );
+		const context = await browser.newContext( {
+			baseURL,
+			userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+		} );
+		const page = await context.newPage();
+		await page.addInitScript( () => {
+			localStorage.setItem( 'riff-visits', '1' );
+		} );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const card = page.locator( '[data-riff-install]' );
+		await expect( card ).toBeVisible();
+		await card.getByRole( 'button', { name: 'Install' } ).click();
+		await expect( card.locator( '[data-riff-install-how="mac"]' ) ).toHaveText( 'In Safari, choose File, then Add to Dock.' );
+		await expect( card.getByRole( 'button', { name: 'Install' } ) ).toBeHidden();
+		await context.close();
 	} );
 
 	test( 'the sidebar collapses to a rail of icons, and stays that way across views and reloads', async ( {

@@ -182,12 +182,42 @@ final class Standalone {
 			'description'      => wp_strip_all_tags( (string) get_bloginfo( 'description' ) ),
 			'start_url'        => $start,
 			'scope'            => $start,
+			// Installed from Chrome or Edge on a computer, the window has no title bar and the app's
+			// own strip runs around the window's controls, as the desktop app's does.
+			'display_override' => array( 'window-controls-overlay' ),
 			'display'          => 'standalone',
 			'background_color' => self::BACKGROUND,
 			'theme_color'      => self::BACKGROUND,
 			'icons'            => $icons,
 		);
 		return $manifest;
+	}
+
+	/**
+	 * The card that offers to install the app, under the sidebar's library: the site's own icon and
+	 * name, one line on why, and Install. It starts hidden; app.js shows it from a listener's second
+	 * visit where the browser can install the page, and keeps it away once it is installed or
+	 * dismissed. Where the browser has no prompt of its own (Safari), Install shows its steps.
+	 *
+	 * @since 4.25.0
+	 *
+	 * @return string
+	 */
+	public static function install_card(): string {
+		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
+		$name = '' !== $name ? $name : 'Riff';
+		$icon = get_site_icon_url( 192 );
+		return sprintf(
+			'<div class="riff-app-install" data-riff-install hidden><img class="riff-app-install-icon" src="%1$s" alt="" width="48" height="48" loading="lazy" decoding="async"><div class="riff-app-install-text"><p class="riff-app-install-title">%2$s</p><p>%3$s</p><p data-riff-install-how="mac" hidden>%4$s</p><p data-riff-install-how="ios" hidden>%5$s</p></div><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="install">%6$s</button><button type="button" class="riff-app-install-close" data-riff-app-action="install-dismiss" aria-label="%7$s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>',
+			esc_url( $icon ? $icon : RIFF_URL . 'features/listen/icons/icon-192.png' ),
+			/* translators: %s: the site's name. */
+			esc_html( sprintf( __( 'Get the %s app', 'riff' ), $name ) ),
+			esc_html__( 'Listen in its own window, with your media keys.', 'riff' ),
+			esc_html__( 'In Safari, choose File, then Add to Dock.', 'riff' ),
+			esc_html__( 'Tap Share, then Add to Home Screen.', 'riff' ),
+			esc_html__( 'Install', 'riff' ),
+			esc_attr__( 'Not now', 'riff' )
+		);
 	}
 
 	/**

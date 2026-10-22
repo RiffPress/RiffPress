@@ -3171,6 +3171,99 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
+/* The offer to install the app, in standalone mode only, on Riff's blue as
+   its icon is. On a phone it runs across under the tabs; on a wide screen it
+   is a card under the library, as Spotify's offers are. */
+.riff-app-install {
+	position: relative;
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr);
+	align-items: center;
+	gap: 12px 12px;
+	flex: 1 1 100%;
+	order: 3;
+	box-sizing: border-box;
+	margin: 12px 0 0;
+	padding: 16px 44px 16px 16px;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #5d7cff, #2236c2);
+	color: #fff;
+}
+
+.riff-app-install[hidden],
+.riff-app .riff-app-install [hidden] {
+	display: none;
+}
+
+.riff-app .riff-app-install-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 10px;
+}
+
+.riff-app .riff-app-install-text p {
+	margin: 0;
+	color: rgb(255 255 255 / 0.85);
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.riff-app .riff-app-install-text .riff-app-install-title {
+	color: #fff;
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.riff-app .riff-app-install .riff-pill {
+	grid-column: 1 / -1;
+	justify-self: start;
+	min-height: 36px;
+	height: 36px;
+	padding: 0 20px;
+	border-color: #fff;
+	border-radius: 999px;
+	background: #fff;
+	color: #000;
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.riff-app .riff-app-install .riff-pill:hover {
+	background: rgb(255 255 255 / 0.85);
+}
+
+.riff-app .riff-app-install-close {
+	all: unset;
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	color: #fff;
+	cursor: pointer;
+}
+
+.riff-app .riff-app-install-close:hover {
+	background: rgb(255 255 255 / 0.15);
+}
+
+.riff-app .riff-app-install-close svg {
+	width: 18px;
+	height: 18px;
+}
+
+.riff-app .riff-app-install :focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+
+.riff-app[data-sidebar="mini"] .riff-app-install {
+	display: none;
+}
+
 .riff-app .riff-library-note {
 	margin: 32px 0 0;
 	color: var(--riff-app-ink-2);
@@ -3481,6 +3574,12 @@ html.has-riff .riff-standalone .riff-app {
 		right: 24px;
 		z-index: 5;
 		margin: 0;
+	}
+
+	/* In the sidebar's column the offer is a card at its own height. */
+	.riff-standalone .riff-app-install {
+		flex: none;
+		margin-top: 16px;
 	}
 
 	/* Your Library, as Spotify's sidebar has it: a head with New playlist,
@@ -3919,6 +4018,24 @@ html.riff-desktop .riff-standalone .riff-app-titlebar {
 	height: var(--riff-desktop-strip);
 	padding-left: 16px;
 	background: #000;
+}
+
+/* Installed from Chrome or Edge with no title bar: the strip drags the
+   window and keeps clear of its controls, wherever the system puts them, the
+   traffic lights at the left or the buttons at the right. */
+html.riff-desktop-overlay .riff-standalone {
+	--riff-desktop-controls: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+}
+
+html.riff-desktop-overlay .riff-standalone .riff-app-titlebar {
+	padding-left: max(16px, calc(env(titlebar-area-x, 0px) + 8px));
+	-webkit-app-region: drag;
+	app-region: drag;
+}
+
+html.riff-desktop.riff-desktop-overlay .riff-standalone .riff-app .riff-app-account,
+html.riff-desktop.riff-desktop-overlay .riff-standalone .riff-app .riff-app-signin {
+	right: calc(16px + var(--riff-desktop-controls));
 }
 
 html.riff-desktop-inset .riff-standalone .riff-app-titlebar {
