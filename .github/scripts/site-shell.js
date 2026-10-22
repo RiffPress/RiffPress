@@ -47,7 +47,7 @@ function head( title, description, url, depth, css, section = '' ) {
 <link rel="icon" href="${ up }icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="${ up }icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="${ up }icons/apple-touch-icon.png">
-<meta name="theme-color" content="#1e1e1e">
+<meta name="theme-color" content="#000">
 <meta name="color-scheme" content="light">
 <link rel="stylesheet" href="${ css }">
 </head>

@@ -26,9 +26,11 @@
 	--white: #fff;
 	--blueberry: #3858e9;
 	--blueberry-deep: #213fd4;
-	--pomegranate: #e26f56;
-	--pomegranate-3: #ffe9de;
-	--surface: color-mix(in srgb, var(--pomegranate-3) 55%, var(--white));
+	--black: #000;
+	--panel: #121212;
+	--amber: #ffb020;
+	--amber-deep: #f29a00;
+	--surface: var(--grey-2);
 	--ink: var(--charcoal-1);
 	--ink-2: var(--charcoal-4);
 	--line: var(--grey-1);
@@ -104,7 +106,7 @@ code {
 .nav {
 	position: relative;
 	z-index: 10;
-	background: var(--charcoal-1);
+	background: var(--black);
 	color: var(--white);
 }
 
@@ -183,6 +185,24 @@ code {
 	outline-offset: -1.5px;
 }
 
+/* Download, in the player's amber, as its Play is */
+.nav .btn {
+	border-color: var(--amber);
+	background: var(--amber);
+	color: var(--black);
+}
+
+.nav .btn:hover {
+	border-color: var(--amber-deep);
+	background: var(--amber-deep);
+	color: var(--black);
+}
+
+.nav .btn:focus-visible {
+	box-shadow: inset 0 0 0 3px var(--black);
+	outline-color: var(--amber);
+}
+
 /* marginalia, as wordpress.org sets it: a band of dots before the footer, a
    record cropped into the margin on a wide screen */
 .dots {
@@ -224,7 +244,7 @@ main,
 }
 
 footer {
-	background: var(--charcoal-1);
+	background: var(--black);
 	color: var(--charcoal-5);
 	padding: 40px 0 56px;
 	font-size: 0.875rem;
@@ -818,7 +838,7 @@ figcaption {
 	position: sticky;
 	top: 0;
 	z-index: 9;
-	background: var(--charcoal-2);
+	background: var(--panel);
 	color: var(--white);
 	font-size: 0.875rem;
 }
