@@ -52,6 +52,9 @@ module.exports = {
 	},
 	mac: {
 		category: 'public.app-category.music',
+		// The record on Apple's icon grid (resources/icon.svg), so the Dock sizes it as it does
+		// the apps beside it; the full-bleed record would sit larger.
+		icon: 'resources/icon.png',
 		target: [
 			{ target: 'dmg', arch: [ 'arm64', 'x64' ] },
 			{ target: 'zip', arch: [ 'arm64', 'x64' ] },

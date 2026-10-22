@@ -248,7 +248,7 @@ const underLights = ( page ) =>
 					r.width > 0 &&
 					style.visibility !== 'hidden' &&
 					r.left < 84 &&
-					r.top < 52 &&
+					r.top < 64 &&
 					r.bottom > 0
 				);
 			} )
@@ -304,14 +304,14 @@ test( 'the window’s top: the sidebar toggle, back and forward, and room for th
 	expect(
 		await page.evaluate( () => localStorage.getItem( 'riff-sidebar' ) )
 	).toBe( 'mini' );
+	// Collapsed, the toggle stays at the head of the sidebar's panel, under the strip, and back
+	// and forward stay beside the traffic lights.
 	const collapsed = {
 		toggle: await toggle.boundingBox(),
 		pill: await page.locator( '.riff-app-history' ).boundingBox(),
 	};
-	expect( collapsed.toggle.x ).toBeGreaterThanOrEqual( 84 );
-	expect( collapsed.pill.x ).toBeGreaterThan(
-		collapsed.toggle.x + collapsed.toggle.width
-	);
+	expect( collapsed.toggle.y ).toBeGreaterThanOrEqual( 64 );
+	expect( collapsed.pill.x ).toBeGreaterThanOrEqual( 84 );
 	expect( await underLights( page ) ).toEqual( [] );
 	await toggle.click();
 	await expect( page.locator( '.riff-app' ) ).toHaveAttribute(
@@ -345,4 +345,139 @@ test( 'the window’s top: the sidebar toggle, back and forward, and room for th
 		}
 	}
 	await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
+} );
+
+test( 'the window is laid out as Spotify’s: panels in a black frame, home and search in the strip', async () => {
+	const electronApp = await launch();
+	const page = await siteWindow( electronApp );
+	await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+	await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+	await page.evaluate( () =>
+		document.documentElement.classList.add( 'riff-desktop-inset' )
+	);
+	await electronApp.evaluate( ( { BrowserWindow } ) =>
+		BrowserWindow.getAllWindows()[ 0 ].setContentSize( 1440, 900 )
+	);
+	await expect( page.locator( '.riff-app-titlebar' ) ).toBeVisible();
+
+	const frame = await page.evaluate( () => {
+		const box = ( selector ) => {
+			const el = document.querySelector( selector );
+			const r = el.getBoundingClientRect();
+			const style = getComputedStyle( el );
+			return {
+				x: r.x,
+				y: r.y,
+				right: r.right,
+				bottom: r.bottom,
+				width: r.width,
+				background: style.backgroundColor,
+				radius: style.borderTopLeftRadius,
+			};
+		};
+		const cut = getComputedStyle(
+			document.querySelector( '.riff-app' ),
+			'::after'
+		);
+		return {
+			width: window.innerWidth,
+			strip: box( '.riff-app-titlebar' ),
+			side: box( '.riff-app-bar' ),
+			view: box( '.riff-app-view' ),
+			home: box( '.riff-app-home' ),
+			search: box( '.riff-app-search' ),
+			cut: { radius: cut.borderTopLeftRadius, position: cut.position },
+		};
+	} );
+
+	// A black strip 64px tall, and under it two #121212 panels 8px apart and 8px from the edges.
+	expect( frame.strip.bottom ).toBe( 64 );
+	expect( frame.strip.background ).toBe( 'rgb(0, 0, 0)' );
+	expect( frame.side ).toMatchObject( {
+		x: 8,
+		y: 64,
+		width: 280,
+		background: 'rgb(18, 18, 18)',
+		radius: '8px',
+	} );
+	expect( frame.view.x ).toBe( frame.side.right + 8 );
+	expect( frame.view.right ).toBe( frame.width - 8 );
+	expect( frame.view.background ).toBe( 'rgb(18, 18, 18)' );
+	// The view's panel is a rounded window in a fixed frame, the page scrolling behind it.
+	expect( frame.cut ).toEqual( { radius: '8px', position: 'fixed' } );
+
+	// Home, then search, in the middle of the strip.
+	expect( frame.home.bottom ).toBeLessThanOrEqual( 64 );
+	expect( frame.search.bottom ).toBeLessThanOrEqual( 64 );
+	expect( frame.home.right ).toBeLessThan( frame.search.x );
+	expect(
+		Math.abs( frame.search.x + frame.search.width / 2 - frame.width / 2 )
+	).toBeLessThanOrEqual( 1 );
+
+	// Home is a button in the strip that still goes home; search still searches.
+	await page.locator( '.riff-app-tab', { hasText: 'Albums' } ).click();
+	await expect( page ).toHaveURL( /riff_view=albums/ );
+	await page.locator( '.riff-app-home' ).click();
+	await expect( page ).not.toHaveURL( /riff_view=/ );
+	await expect( page.locator( '.riff-app-home' ) ).toHaveAccessibleName(
+		'Home'
+	);
+} );
+
+test( 'the rest of the site gets a strip of its own for the traffic lights, and the login the app’s colours', async () => {
+	const electronApp = await launch();
+	const page = await siteWindow( electronApp );
+	const site = new URL( BASE ).origin + '/';
+	// What a Mac window's lights would cover on a page with the 40px strip.
+	const covered = () =>
+		page.evaluate( () =>
+			[ ...document.querySelectorAll( 'a, button, input, summary' ) ]
+				.filter( ( el ) => {
+					const r = el.getBoundingClientRect();
+					return (
+						r.width > 0 &&
+						getComputedStyle( el ).visibility !== 'hidden' &&
+						r.left < 84 &&
+						r.top < 40 &&
+						r.bottom > 0
+					);
+				} )
+				.map( ( el ) => el.outerHTML.slice( 0, 80 ) )
+		);
+	const strip = () =>
+		page.evaluate( () => {
+			const el = document.querySelector( '.riff-desktop-strip' );
+			return el
+				? {
+						height: el.getBoundingClientRect().height,
+						drag: getComputedStyle( el ).webkitAppRegion,
+				  }
+				: null;
+		} );
+
+	for ( const url of [ site, `${ site }wp-login.php` ] ) {
+		await page.goto( url );
+		// Linux and Windows keep their frame; the Mac's strip is checked on every platform.
+		if ( process.platform !== 'darwin' ) {
+			await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
+			continue;
+		}
+		expect( await strip(), url ).toEqual( { height: 40, drag: 'drag' } );
+		expect( await covered(), url ).toEqual( [] );
+	}
+
+	// The login: WordPress's layout, on the app's black, the form one of its panels.
+	await page.goto( `${ site }wp-login.php` );
+	expect(
+		await page.evaluate( () => ( {
+			body: getComputedStyle( document.body ).backgroundColor,
+			form: getComputedStyle( document.querySelector( '#loginform' ) )
+				.backgroundColor,
+		} ) )
+	).toEqual( { body: 'rgb(0, 0, 0)', form: 'rgb(18, 18, 18)' } );
+
+	// The Listen app keeps its own strip, not a second one.
+	await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+	await expect( page.locator( '.riff-app-titlebar' ) ).toBeVisible();
+	await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
 } );

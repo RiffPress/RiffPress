@@ -2,9 +2,10 @@ vendor/
 node_modules/
 build/
 artifacts/
-# The desktop app's build and the profile npm run desktop keeps.
+# The desktop app's build, and the profile and renamed Electron npm run desktop keeps.
 packages/desktop/dist/
 packages/desktop/.profile/
+packages/desktop/.dev/
 test-results/
 playwright-report/
 .phpcs.cache
@@ -23,6 +24,7 @@ undefined/
 !site/covers/*.png
 !site/og/*.png
 !plugins/riff/features/listen/icons/*.png
+!packages/desktop/resources/*.png
 # Generated at build time by npm run pot; translations come from translate.wordpress.org.
 plugins/riff/languages/
 !tests/fixtures/**/*.png

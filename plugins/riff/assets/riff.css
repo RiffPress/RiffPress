@@ -3334,6 +3334,13 @@ html.has-riff .riff-standalone .riff-app {
 	min-height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
 }
 
+/* Standalone mode's buttons are pills at every width, as the player's own are;
+   the Listen block in a theme keeps the site's corners. */
+.riff-standalone .riff-app .riff-pill {
+	border-radius: 999px;
+	font-weight: 600;
+}
+
 /* On a wide screen standalone mode is laid out like the apps people know: a
    column on the left with the site's name, search and the views, and the view
    beside it. The column stays put while the view scrolls. */
@@ -3544,8 +3551,6 @@ html.has-riff .riff-standalone .riff-app {
 	.riff-standalone .riff-app .riff-pill {
 		min-height: 44px;
 		padding: 0 28px;
-		border-radius: 999px;
-		font-weight: 600;
 	}
 
 	.riff-standalone .riff-album-title {
@@ -3583,20 +3588,32 @@ html.has-riff .riff-standalone .riff-app {
 	display: none;
 }
 
+html.riff-desktop {
+
+	/* Spotify's frame: a strip across the top, and panels 8px apart, with 8px
+	   corners, on black. */
+	--riff-desktop-strip: 64px;
+	--riff-desktop-side: 280px;
+	--riff-desktop-gap: 8px;
+}
+
+html.riff-desktop .riff-standalone,
+html.riff-desktop:has(body.riff-standalone) {
+	background: #000;
+}
+
 html.riff-desktop .riff-standalone .riff-app-titlebar {
 	position: fixed;
 	top: 0;
 	right: 0;
 	left: 0;
-	z-index: 1;
+	z-index: 2;
 	display: flex;
 	align-items: center;
 	box-sizing: border-box;
-	height: 52px;
+	height: var(--riff-desktop-strip);
 	padding-left: 16px;
-
-	/* The view scrolls under it. */
-	background: var(--riff-app-bg);
+	background: #000;
 }
 
 html.riff-desktop-inset .riff-standalone .riff-app-titlebar {
@@ -3607,9 +3624,7 @@ html.riff-desktop-inset .riff-standalone .riff-app-titlebar {
 
 html.riff-desktop .riff-standalone .riff-app-history {
 	display: flex;
-	padding: 2px;
-	border-radius: 999px;
-	background: var(--riff-app-surface);
+	gap: 4px;
 	-webkit-app-region: no-drag;
 	app-region: no-drag;
 }
@@ -3624,7 +3639,7 @@ html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
 	border: 0;
 	border-radius: 50%;
 	background: none;
-	color: var(--riff-app-ink);
+	color: var(--riff-app-ink-2);
 	cursor: pointer;
 	-webkit-app-region: no-drag;
 	app-region: no-drag;
@@ -3632,7 +3647,7 @@ html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
 
 html.riff-desktop .riff-standalone .riff-app-history button:hover:not(:disabled),
 html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:hover {
-	background: color-mix(in srgb, var(--riff-app-ink) 12%, transparent);
+	color: var(--riff-app-ink);
 }
 
 html.riff-desktop .riff-standalone .riff-app-history button:focus-visible,
@@ -3642,12 +3657,15 @@ html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:focus-visible {
 }
 
 html.riff-desktop .riff-standalone .riff-app-history button:disabled {
-	color: var(--riff-app-ink-2);
-	opacity: 0.5;
+	opacity: 0.4;
 	cursor: default;
 }
 
-html.riff-desktop .riff-standalone .riff-app-history svg,
+html.riff-desktop .riff-standalone .riff-app-history svg {
+	width: 24px;
+	height: 24px;
+}
+
 html.riff-desktop .riff-standalone .riff-app .riff-app-collapse svg {
 	width: 20px;
 	height: 20px;
@@ -3655,79 +3673,198 @@ html.riff-desktop .riff-standalone .riff-app .riff-app-collapse svg {
 
 /* A narrow window: the tabs start under the strip. */
 html.riff-desktop .riff-standalone .riff-app {
-	padding-top: 52px;
+	padding-top: var(--riff-desktop-strip);
 }
 
 @media (min-width: 900px) {
 
+	/* The library and the view are panels in a black frame. The page still
+	   scrolls as a whole, so the view's panel is a window cut in a fixed black
+	   frame (the ::after below), and the view scrolls behind it. */
 	html.riff-desktop .riff-standalone .riff-app {
-		padding-top: 0;
+
+		/* The panels' colour, over the one the page sets inline, so the
+		   surfaces and lines are mixed from it. */
+		--riff-app-bg: #121212 !important;
+		--riff-desktop-bottom: var(--riff-desktop-gap);
+		grid-template-columns: var(--riff-desktop-side) minmax(0, 1fr);
+		column-gap: var(--riff-desktop-gap);
+		padding: 0 var(--riff-desktop-gap);
+		background: #000;
 	}
 
-	/* Open, the pair lines up with the view's own left edge, and the toggle
-	   sits at the sidebar's right edge; collapsed, the toggle follows the
-	   traffic lights and the pair follows the toggle, as Tidal's do. */
-	html.riff-desktop .riff-standalone .riff-app-titlebar {
-		padding-left: calc(240px + clamp(24px, 4vw, 64px));
+	/* Over the bar, the panels end at its edge; the bar is black too. */
+	html.riff-desktop.has-riff .riff-standalone .riff-app {
+		--riff-desktop-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
 	}
 
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-titlebar {
-		padding-left: calc(72px + clamp(24px, 4vw, 64px));
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] {
+		--riff-desktop-side: 72px;
 	}
 
-	html.riff-desktop-inset .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-titlebar {
-		padding-left: 124px;
+	html.riff-desktop .riff-standalone .riff-app::after {
+		content: "";
+		position: fixed;
+		top: var(--riff-desktop-strip);
+		right: var(--riff-desktop-gap);
+		bottom: var(--riff-desktop-bottom);
+		left: calc(var(--riff-desktop-side) + 2 * var(--riff-desktop-gap));
+		z-index: 1;
+		border-radius: 8px;
+		box-shadow: 0 0 0 100vmax #000;
+		pointer-events: none;
 	}
 
 	html.riff-desktop .riff-standalone .riff-app-bar,
+	html.riff-desktop.has-riff .riff-standalone .riff-app-bar {
+		top: var(--riff-desktop-strip);
+		height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
+		margin-top: var(--riff-desktop-strip);
+		padding: 12px 8px;
+		border: 0;
+		border-radius: 8px;
+		background: var(--riff-app-bg);
+	}
+
 	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
-		padding-top: 52px;
+		padding: 12px 4px;
 	}
 
+	/* The panel's head, as Spotify's library has it: the toggle, then the
+	   site's name. */
 	html.riff-desktop .riff-standalone .riff-app-brand {
-		margin: 0;
+		gap: 8px;
+		margin: 0 0 8px;
+		padding: 0 4px;
+		min-height: 40px;
+		font-size: 16px;
 	}
 
-	/* The strip runs across the top unbroken: the sidebar's edge starts under
-	   it, clear of the traffic lights when the sidebar is a rail. */
-	html.riff-desktop-inset .riff-standalone .riff-app-bar {
-		border-right: 0;
-		background: linear-gradient(var(--riff-app-line), var(--riff-app-line)) right bottom / 1px calc(100% - 52px) no-repeat;
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand {
+		padding: 0;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab {
+		min-height: 40px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-tab svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	/* Home and search leave the panel for the middle of the strip, as
+	   Spotify's do: a round button, then the pill. */
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search,
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
+		--riff-desktop-search: min(480px, 100vw - 640px);
+		position: fixed;
+		top: 8px;
+		left: 50%;
+		z-index: 3;
+		display: block;
+		width: var(--riff-desktop-search);
+		margin: 0;
+		transform: translateX(-50%);
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search input {
+		min-height: 48px;
+		padding: 0 16px 0 48px;
+		border: 0;
+		border-radius: 999px;
+		background: #1f1f1f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b3b3b3'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") 14px center / 24px no-repeat;
+		font-size: 16px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search input:hover {
+		background-color: #2a2a2a;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search input:focus-visible {
+		outline: 2px solid var(--riff-app-ink);
+		outline-offset: 0;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home,
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-home {
+		position: fixed;
+		top: 8px;
+		right: calc(50% + min(480px, 100vw - 640px) / 2 + 8px);
+		z-index: 3;
+		justify-content: center;
+		width: 48px;
+		min-height: 48px;
+		height: 48px;
+		padding: 0;
+		border-radius: 50%;
+		background: #1f1f1f;
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home:hover {
+		background: #2a2a2a;
+		color: var(--riff-app-ink);
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home[aria-current="page"] {
+		background: #1f1f1f;
+		color: var(--riff-app-ink);
+	}
+
+	/* Its label stays for a screen reader; the clip hides it. */
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home span {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 
 	html.riff-desktop .riff-standalone .riff-app-name {
+		display: block;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-name {
 		display: none;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
-		position: fixed;
-		top: 10px;
-		left: 196px;
-		z-index: 3;
-	}
-
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-collapse {
-		left: 20px;
-	}
-
-	html.riff-desktop-inset .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-collapse {
-		left: 84px;
-	}
-
-	/* The arrow points to the edge the sidebar folds to. */
-	html.riff-desktop .riff-standalone .riff-app-collapse[aria-expanded="true"] svg {
-		transform: scaleX(-1);
-	}
-
 	html.riff-desktop .riff-standalone .riff-app-view {
-		padding-top: 60px;
+		align-self: stretch;
+		min-height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
+		box-sizing: border-box;
+		margin-top: var(--riff-desktop-strip);
+		padding: 24px clamp(16px, 2.5vw, 32px) 48px;
+		background: var(--riff-app-bg);
 	}
 
 	html.riff-desktop .riff-standalone .riff-app .riff-app-account,
 	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
-		top: 6px;
+		top: 12px;
+		right: 16px;
 		-webkit-app-region: no-drag;
 		app-region: no-drag;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
+		top: 12px;
+		min-height: 40px;
+		height: 40px;
+		padding: 0 20px;
+		font-size: 15px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-account summary {
+		width: 40px;
+		height: 40px;
+	}
+
+	html.riff-desktop #riff .riff-bar {
+		border-top: 0;
+		background: #000;
 	}
 }
 
@@ -3736,7 +3873,7 @@ html.riff-desktop .riff-standalone .riff-app {
 html.riff-desktop-preview .riff-standalone .riff-app-titlebar::before {
 	content: "";
 	position: absolute;
-	top: 20px;
+	top: 26px;
 	left: 20px;
 	width: 52px;
 	height: 12px;

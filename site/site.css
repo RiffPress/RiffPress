@@ -1,7 +1,8 @@
 /* WordPress.org's design system, extended to a music player: its palette,
    Inter for text, EB Garamond for headings, 2px corners, its spacing. The
-   bands between sections are warmed with the system's pomegranate. The
-   player in the pictures keeps its own dark look. */
+   bars and the bands between sections take the desktop app's frame: black,
+   #121212 panels, the pictures of the player in 8px corners, and the
+   player's amber beside blueberry. */
 @font-face {
 	font-family: Inter;
 	font-style: normal;
@@ -30,11 +31,14 @@
 	--blueberry: #3858e9;
 	--blueberry-deep: #213fd4;
 	--blueberry-4: #eff2ff;
-	--pomegranate: #e26f56;
-	--pomegranate-2: #ffb7a7;
-	--pomegranate-3: #ffe9de;
+	--black: #000;
+	--panel: #121212;
+	--panel-2: #1f1f1f;
+	--amber: #ffb020;
+	--amber-deep: #f29a00;
+	--blueberry-light: #9fb1ff;
 	--bg: var(--white);
-	--surface: color-mix(in srgb, var(--pomegranate-3) 55%, var(--white));
+	--surface: var(--panel);
 	--line: var(--grey-1);
 	--ink: var(--charcoal-1);
 	--ink-2: var(--charcoal-4);
@@ -104,7 +108,7 @@ a:hover {
 .nav {
 	position: relative;
 	z-index: 10;
-	background: var(--charcoal-1);
+	background: var(--black);
 	color: var(--white);
 }
 
@@ -155,10 +159,25 @@ a:hover {
 	text-underline-offset: 4px;
 }
 
+/* Download, in the player's amber, as its Play is */
 .nav .btn {
 	padding: 7px 12px;
+	border-color: var(--amber);
+	background: var(--amber);
+	color: var(--black);
 	font-size: 0.875rem;
 	line-height: 1.714;
+}
+
+.nav .btn:hover {
+	border-color: var(--amber-deep);
+	background: var(--amber-deep);
+	color: var(--black);
+}
+
+.nav .btn:focus-visible {
+	box-shadow: inset 0 0 0 3px var(--black);
+	outline-color: var(--amber);
 }
 
 /* the section bar: under the global one, then on top once that has scrolled
@@ -167,7 +186,7 @@ a:hover {
 	position: sticky;
 	top: 0;
 	z-index: 9;
-	background: var(--charcoal-2);
+	background: var(--panel);
 	color: var(--white);
 	font-size: 0.875rem;
 }
@@ -266,8 +285,36 @@ section {
 	z-index: 1;
 }
 
+/* a band: one of the app's panels, the text on it light */
 .alt {
+	--ink: var(--white);
+	--ink-2: #b3b3b3;
+	--ink-3: #8a8a8a;
+	--line: #2a2a2a;
+	--accent: var(--blueberry-light);
 	background: var(--surface);
+	color: var(--ink);
+}
+
+.alt .lede {
+	color: #cfcfcf;
+}
+
+.alt .btn.outline {
+	color: var(--white);
+	border-color: var(--white);
+}
+
+.alt .btn:focus-visible {
+	box-shadow: inset 0 0 0 3px var(--panel);
+	outline-color: var(--white);
+}
+
+/* the pictures of the player: in 8px corners, as its panels are */
+.shot img,
+.shot video,
+.shot picture {
+	border-radius: 8px;
 }
 
 .wire {
@@ -489,7 +536,7 @@ section {
 	aspect-ratio: 1;
 	border-radius: 2px;
 	overflow: hidden;
-	background: var(--surface);
+	background: var(--grey-2);
 	box-shadow: 0 1px 0 rgba(30, 30, 30, 0.06);
 }
 
@@ -502,7 +549,7 @@ section {
 
 /* the global footer: dark, as wordpress.org's is */
 footer {
-	background: var(--charcoal-1);
+	background: var(--black);
 	color: var(--charcoal-5);
 	padding: 40px 0 56px;
 	font-size: 0.875rem;
