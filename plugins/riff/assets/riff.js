@@ -2097,6 +2097,9 @@ function start() {
 				return item;
 			} )
 		);
+		// The player is hidden until something plays, and the menu would be too; before then it
+		// opens from the page itself.
+		( root.hidden ? document.body : root ).append( menu );
 		menu.hidden = false;
 		const r = button.getBoundingClientRect();
 		const w = menu.offsetWidth;
