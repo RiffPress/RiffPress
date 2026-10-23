@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.26.0](https://github.com/RiffPress/RiffPress/compare/v4.25.0...v4.26.0) (2026-10-23)
+
+
+### Features
+
+* Riff's own mark, a tuning fork drawn from EB Garamond's f, in amber, with no blue anywhere ([#529](https://github.com/RiffPress/RiffPress/issues/529)) ([8adb08d](https://github.com/RiffPress/RiffPress/commit/8adb08d7edeee4e7e6c618f996720ef2b023c326))
+
 ## [4.25.0](https://github.com/RiffPress/RiffPress/compare/v4.24.0...v4.25.0) (2026-10-23)
 
 
