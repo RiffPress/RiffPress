@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.2.0...riff-desktop-v0.3.0) (2026-10-23)
+
+
+### Features
+
+* Riff's own mark, a tuning fork drawn from EB Garamond's f, in amber, with no blue anywhere ([#529](https://github.com/RiffPress/RiffPress/issues/529)) ([8adb08d](https://github.com/RiffPress/RiffPress/commit/8adb08d7edeee4e7e6c618f996720ef2b023c326))
+* the desktop app's Playback and Dock menus, track notifications, and drop to import ([#526](https://github.com/RiffPress/RiffPress/issues/526)) ([91586bb](https://github.com/RiffPress/RiffPress/commit/91586bb0d0f9c3d753c301b70b2ea883a855feb3))
+
 ## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.1.0...riff-desktop-v0.2.0) (2026-10-23)
 
 
