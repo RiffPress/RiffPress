@@ -3127,9 +3127,55 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	gap: 8px;
 }
 
+/* The sort: the order in use on a button, the choices in a menu under it,
+   as Spotify's library has it. A details element, so it opens without the
+   script. */
 .riff-library-sort {
+	position: relative;
 	color: var(--riff-app-ink-2);
 	font-size: 14px;
+}
+
+.riff-library-sort summary {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 32px;
+	padding: 0 4px 0 10px;
+	border-radius: 16px;
+	list-style: none;
+	cursor: pointer;
+}
+
+.riff-library-sort summary::-webkit-details-marker {
+	display: none;
+}
+
+.riff-library-sort summary:hover {
+	color: var(--riff-app-ink);
+}
+
+.riff-library-sort summary:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-library-sort summary svg {
+	width: 20px;
+	height: 20px;
+}
+
+.riff-library-sort-menu {
+	position: absolute;
+	z-index: 5;
+	top: calc(100% + 4px);
+	right: 0;
+	display: grid;
+	min-width: 180px;
+	padding: 4px;
+	border-radius: 6px;
+	background: var(--riff-app-surface);
+	box-shadow: 0 12px 32px rgb(0 0 0 / 0.4);
 }
 
 .riff-app .riff-chip-link,
@@ -3148,8 +3194,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-app .riff-sort-link {
 	border-color: transparent;
-	padding: 0 10px;
-	color: var(--riff-app-ink-2);
+	border-radius: 4px;
+	padding: 0 12px;
+	color: var(--riff-app-ink);
 }
 
 .riff-app .riff-chip-link:hover,
@@ -3169,33 +3216,45 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	color: var(--riff-app-bg);
 }
 
-/* The order in use, in full ink and underlined. Never in a heavier weight: a
-   change of weight lays the words out again and moves what is beside them. */
+/* The order in use, in the accent. Never in a heavier weight: a change of
+   weight lays the words out again and moves what is beside them. */
 .riff-app .riff-sort-link[aria-current="true"] {
-	color: var(--riff-app-ink);
-	text-decoration: underline;
-	text-decoration-thickness: 2px;
-	text-underline-offset: 6px;
+	color: var(--riff-app-accent);
 }
 
 .riff-library .riff-shelf {
 	margin-top: 48px;
 }
 
-.riff-app .riff-library-songs .riff-app-section {
-	margin-top: 0;
-	margin-bottom: 4px;
+/* Liked songs' cover, drawn: the heart on Riff's amber, as its card has it. */
+.riff-app .riff-album-liked {
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
+	color: var(--riff-app-on-accent);
 }
 
-.riff-app .riff-library-songs .riff-album-actions {
-	margin-bottom: 24px;
+.riff-app .riff-album-liked .riff-card-heart {
+	width: 38%;
+	height: 38%;
 }
 
-/* Your Library's New playlist, at the end of its bar. */
+/* Your Library's New playlist, at the end of its bar. In Spotify's frame on a
+   wide screen the sidebar's + makes one, as Spotify's Create does, so the bar
+   leaves it out. */
 .riff-app .riff-library-create {
 	height: 36px;
 	padding: 0 18px;
 	font-size: 14px;
+}
+
+@media (min-width: 900px) {
+
+	html.riff-desktop .riff-standalone .riff-app .riff-library-create {
+		display: none;
+	}
 }
 
 /* Renaming a playlist: its name becomes a field, with Save and Cancel. */

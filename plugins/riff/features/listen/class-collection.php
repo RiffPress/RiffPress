@@ -75,8 +75,10 @@ final class Collection {
 		if ( 'name' === $sort ) {
 			usort( $lists, static fn( $a, $b ) => strnatcasecmp( (string) $a['title'], (string) $b['title'] ) );
 		}
-		$html = Ui::title( __( 'Your Library', 'riff' ) ) . self::bar( $page, $filter, $sort, $account );
-		if ( ! $account && ! $likes ) {
+		// Liked songs opens as a playlist does, under its own header; the rest under Your Library.
+		$html = 'songs' === $filter ? '' : Ui::title( __( 'Your Library', 'riff' ) ) . self::bar( $page, $filter, $sort, $account );
+		// The note on keeping likes leads an empty library; on Liked songs it follows the header.
+		if ( ! $account && ! $likes && 'songs' !== $filter ) {
 			$html .= self::sign_in( $page );
 		}
 		switch ( $filter ) {
@@ -90,7 +92,7 @@ final class Collection {
 				}
 				break;
 			case 'songs':
-				$html .= self::songs( $page, $ids['track'], $sort, $number );
+				$html .= self::songs( $page, $ids['track'], $sort, $number, $account );
 				break;
 			case 'albums':
 				$albums = self::terms( '/albums', $ids['album'], $sort );
@@ -103,7 +105,7 @@ final class Collection {
 			default:
 				$html .= self::everything( $page, $ids, $likes, $sort, $lists );
 		}
-		if ( ! $account && $likes ) {
+		if ( ! $account && ( $likes || 'songs' === $filter ) ) {
 			$html .= self::sign_in( $page );
 		}
 		return sprintf( '<div class="riff-library" data-riff-library="%s">%s</div>', $account ? 'account' : 'device', $html );
@@ -423,16 +425,18 @@ final class Collection {
 	}
 
 	/**
-	 * Liked songs, a page at a time, with Play and Shuffle.
+	 * Liked songs, a page at a time, as a playlist is drawn: the heart for its cover, whose it is
+	 * and how many, Play and Shuffle, then the songs, each with its cover, under Spotify's column heads.
 	 *
-	 * @param string $page   Listen page.
-	 * @param int[]  $ids    Liked track IDs, newest first.
-	 * @param string $sort   recent or name.
-	 * @param int    $number Page.
+	 * @param string $page    Listen page.
+	 * @param int[]  $ids     Liked track IDs, newest first.
+	 * @param string $sort    recent or name.
+	 * @param int    $number  Page.
+	 * @param bool   $account Whether the listener is signed in, whose name the header then gives.
 	 * @return string
 	 */
-	private static function songs( string $page, array $ids, string $sort, int $number ): string {
-		$data = $ids ? Browse::get(
+	private static function songs( string $page, array $ids, string $sort, int $number, bool $account = false ): string {
+		$data  = $ids ? Browse::get(
 			'/tracks',
 			array(
 				'include'  => $ids,
@@ -440,17 +444,35 @@ final class Collection {
 				'per_page' => self::PER_PAGE,
 				'page'     => $number,
 			)
-		) : array( 'items' => array() );
+		) : array(
+			'items' => array(),
+			'total' => 0,
+		);
+		$total = (int) ( $data['total'] ?? 0 );
+		/* translators: %s: number of songs. */
+		$count  = sprintf( _n( '%s song', '%s songs', $total, 'riff' ), number_format_i18n( $total ) );
+		$name   = $account ? wp_strip_all_tags( (string) wp_get_current_user()->display_name ) : '';
+		$header = App::header(
+			__( 'Liked songs', 'riff' ),
+			'' !== $name ? $name . ' · ' . $count : $count,
+			__( 'Playlist', 'riff' ),
+			'',
+			'#ffb020',
+			false,
+			'',
+			0,
+			array(),
+			'',
+			'<span class="riff-album-liked"><span class="riff-card-heart">' . Player::icon( 'hearted' ) . '</span></span>'
+		);
 		if ( ! $data['items'] ) {
-			return Ui::empty_note( __( 'Songs you like show up here. Press the heart beside any track.', 'riff' ) );
+			return $header . Ui::empty_note( __( 'Songs you like show up here. Press the heart beside any track.', 'riff' ) );
 		}
 		return sprintf(
-			'<section class="riff-library-songs" aria-labelledby="riff-library-songs"><h3 class="riff-app-section" id="riff-library-songs">%s</h3><p class="riff-album-meta">%s</p>%s%s%s</section>',
-			esc_html__( 'Liked songs', 'riff' ),
-			/* translators: %s: number of songs. */
-			esc_html( sprintf( _n( '%s song', '%s songs', (int) $data['total'], 'riff' ), number_format_i18n( (int) $data['total'] ) ) ),
-			Ui::actions(),
-			Browse::rows( $data['items'] ),
+			'<section class="riff-library-songs" aria-label="%s">%s%s%s</section>',
+			esc_attr__( 'Liked songs', 'riff' ),
+			$header,
+			Browse::rows( $data['items'], false, true ),
 			Browse::next( self::link( $page, 'songs', $sort ), $data )
 		);
 	}

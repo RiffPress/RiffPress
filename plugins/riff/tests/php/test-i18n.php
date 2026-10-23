@@ -116,7 +116,7 @@ class Test_Riff_I18n extends Riff_TestCase {
 					Browse::VIEW   => 'library',
 					Browse::FILTER => 'songs',
 				),
-				'⟪Your Library⟫',
+				'⟪Liked songs⟫',
 			),
 			'Search'      => array( array( Browse::SEARCH => 'Underground' ), '⟪Results for “%s”⟫' ),
 		);

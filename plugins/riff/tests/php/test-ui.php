@@ -80,7 +80,9 @@ class Test_Riff_Ui extends Riff_TestCase {
 		);
 
 		$this->assertSame( '<div class="riff-chip-row" role="group" aria-label="Show"><a class="riff-chip-link" href="#all" aria-current="true">All</a><a class="riff-chip-link" href="#songs">Songs</a></div>', Ui::choices( 'Show', $items ) );
-		$this->assertStringContainsString( '<span id="riff-library-sort">Sort by</span><a class="riff-sort-link" href="#all" aria-current="true">', Ui::choices( 'Sort by', $items, 'sort' ) );
+		$sort = Ui::choices( 'Sort by', $items, 'sort' );
+		$this->assertStringContainsString( '<details class="riff-library-sort"><summary aria-label="Sort by: All">All<svg', $sort, 'the sort in use on its button, named with what it sorts' );
+		$this->assertStringContainsString( '<a class="riff-sort-link" href="#all" aria-current="true">All</a><a class="riff-sort-link" href="#songs">Songs</a>', $sort );
 	}
 
 	public function test_a_heart_starts_unpressed_with_both_icons_and_a_label(): void {
