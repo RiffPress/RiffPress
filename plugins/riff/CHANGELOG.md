@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.25.0](https://github.com/RiffPress/RiffPress/compare/v4.24.0...v4.25.0) (2026-10-23)
+
+
+### Features
+
+* listeners can install the app, offered from their second visit ([#518](https://github.com/RiffPress/RiffPress/issues/518)) ([6967427](https://github.com/RiffPress/RiffPress/commit/6967427ba0e86ff569e9deb1ec5b0a6a2bead2db))
+* Now Playing in the desktop app, full screen as Tidal's ([#515](https://github.com/RiffPress/RiffPress/issues/515)) ([2bfdc19](https://github.com/RiffPress/RiffPress/commit/2bfdc19a632db94d4bcef91397ccf96b6177f9ff))
+
 ## [4.24.0](https://github.com/RiffPress/RiffPress/compare/v4.23.0...v4.24.0) (2026-10-23)
 
 
