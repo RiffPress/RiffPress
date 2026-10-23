@@ -1452,8 +1452,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* The … menu, drawn as WordPress's toolbar draws its menus: square, on the
-   toolbar's #2c3338, light grey words that turn the toolbar's blue under the
-   pointer or the keyboard. Its rows keep 44px on a touch screen. */
+   toolbar's #2c3338, light grey words that turn Riff's amber under the pointer
+   or the keyboard. Its rows keep 44px on a touch screen. */
 .riff-menu {
 	position: fixed;
 	z-index: 2147483000;
@@ -1484,12 +1484,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-menu > :focus-visible,
 #riff .riff-menu > :hover,
 #riff .riff-menu > :focus-visible {
-	color: #72aee6;
+	color: #ffb020;
 }
 
 .riff-menu > :focus-visible,
 #riff .riff-menu > :focus-visible {
-	box-shadow: inset 0 0 0 2px #72aee6;
+	box-shadow: inset 0 0 0 2px #ffb020;
 }
 
 @media (pointer: coarse) {
@@ -1999,21 +1999,21 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-app-accent: #3858e9;
+	--riff-app-accent: #9a5b00;
 
 	/**
 	 * The accent under the pointer or in focus.
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-app-accent-deep: #213fd4;
+	--riff-app-accent-deep: #7a4700;
 
 	/**
 	 * The background of the row playing.
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-app-accent-tint: #eff2ff;
+	--riff-app-accent-tint: #fff4dd;
 
 	/**
 	 * Text and icons on a filled button: the accent, or the text colour under
@@ -2264,11 +2264,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-standalone .riff-app .riff-app-account-menu a:hover,
 .riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
 	background: none;
-	color: #72aee6;
+	color: #ffb020;
 }
 
 .riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
-	box-shadow: inset 0 0 0 2px #72aee6;
+	box-shadow: inset 0 0 0 2px #ffb020;
 }
 
 .riff-app .riff-app-search input:focus-visible {
@@ -2731,7 +2731,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	text-overflow: ellipsis;
 }
 
-/* Play from a cover: a blueberry button that appears when the cover is
+/* Play from a cover: a button in the accent that appears when the cover is
    pointed at or focused, as every streaming app has. */
 .riff-app .riff-card-play {
 	all: unset;

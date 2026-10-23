@@ -45,32 +45,33 @@ final class Art {
 	public const SHEET = 'sheet';
 
 	/**
-	 * Palettes: background, accent, ink. Every colour is a wordpress.org design system token.
-	 * Charcoal grounds take the system's full-strength accents; blueberry grounds its tints and
-	 * white; the light ground the deep colours, with the charcoal record of the mark itself.
+	 * Palettes: background, accent, ink. Riff's amber, and wordpress.org design system tokens for
+	 * the rest. Charcoal grounds take full-strength accents; amber grounds charcoal, white and the
+	 * lighter accents, with charcoal ink; the light ground the deep colours, with the charcoal
+	 * record of Riff's own amber label.
 	 */
 	private const PALETTES = array(
-		array( '#1e1e1e', '#3858e9', '#ffffff' ), // charcoal-1, blueberry-1, white.
+		array( '#1e1e1e', '#ffb020', '#ffffff' ), // charcoal-1, Riff's amber, white.
 		array( '#1e1e1e', '#e26f56', '#ffffff' ), // charcoal-1, pomegrade-1.
 		array( '#1e1e1e', '#33f078', '#ffffff' ), // charcoal-1, acid-green-1.
 		array( '#1e1e1e', '#fff972', '#ffffff' ), // charcoal-1, lemon-1.
 		array( '#1e1e1e', '#d7a7ff', '#ffffff' ), // charcoal-1, purple-3.
-		array( '#3858e9', '#fff972', '#ffffff' ), // blueberry-1, lemon-1.
-		array( '#3858e9', '#ffb7a7', '#ffffff' ), // blueberry-1, pomegrade-2.
-		array( '#3858e9', '#c7ffdb', '#ffffff' ), // blueberry-1, acid-green-2.
-		array( '#3858e9', '#ffffff', '#ffffff' ), // blueberry-1, white.
-		array( '#f6f6f6', '#3858e9', '#1e1e1e' ), // light-grey-2, blueberry-1, charcoal-1: the mark.
+		array( '#ffb020', '#1e1e1e', '#1e1e1e' ), // amber, charcoal-1.
+		array( '#ffb020', '#ffffff', '#1e1e1e' ), // amber, white.
+		array( '#ffb020', '#e26f56', '#1e1e1e' ), // amber, pomegrade-1.
+		array( '#ffb020', '#fff972', '#1e1e1e' ), // amber, lemon-1.
+		array( '#f6f6f6', '#ffb020', '#1e1e1e' ), // light-grey-2, amber, charcoal-1.
 		array( '#f6f6f6', '#e26f56', '#1e1e1e' ), // light-grey-2, pomegrade-1.
 		array( '#f6f6f6', '#7a00df', '#1e1e1e' ), // light-grey-2, purple-2.
 	);
 
 	/**
-	 * The record's own colour on each ground: a step lighter than charcoal, a step darker than
-	 * blueberry, and charcoal on the light ground, as the mark is drawn.
+	 * The record's own colour on each ground: a step lighter than charcoal, a step deeper than
+	 * amber, and charcoal on the light ground.
 	 */
 	private const DISCS = array(
 		'#1e1e1e' => '#40464d', // charcoal-3.
-		'#3858e9' => '#1d35b4', // dark-blueberry.
+		'#ffb020' => '#d98a00', // deep amber.
 		'#f6f6f6' => '#1e1e1e', // charcoal-1.
 	);
 
@@ -578,7 +579,7 @@ final class Art {
 			// A drawn cover's ground, unless it is the neutral charcoal or grey; then its accent.
 			$palettes = self::palettes();
 			$palette  = $palettes[ crc32( (string) $post->post_name ) % count( $palettes ) ];
-			return isset( self::DISCS[ $palette[0] ] ) && '#3858e9' !== $palette[0] ? (string) $palette[1] : (string) $palette[0];
+			return isset( self::DISCS[ $palette[0] ] ) && '#ffb020' !== $palette[0] ? (string) $palette[1] : (string) $palette[0];
 		}
 		$id = attachment_url_to_postid( $src );
 		if ( ! $id ) {

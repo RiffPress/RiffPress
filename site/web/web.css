@@ -24,8 +24,7 @@
 	--grey-1: #d9d9d9;
 	--grey-2: #f6f6f6;
 	--white: #fff;
-	--blueberry: #3858e9;
-	--blueberry-deep: #213fd4;
+	--amber-ink: #9a5b00;
 	--black: #000;
 	--panel: #121212;
 	--amber: #ffb020;
@@ -34,7 +33,7 @@
 	--ink: var(--charcoal-1);
 	--ink-2: var(--charcoal-4);
 	--line: var(--grey-1);
-	--accent: var(--blueberry);
+	--accent: var(--amber-ink);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
 	--t: 0.2s;
@@ -91,8 +90,8 @@ code {
 	left: 16px;
 	top: -200px;
 	z-index: 20;
-	background: var(--blueberry);
-	color: var(--white);
+	background: var(--amber);
+	color: var(--charcoal-1);
 	padding: 10px 16px;
 	border-radius: 2px;
 	text-decoration: none;
@@ -159,9 +158,9 @@ code {
 
 .btn {
 	appearance: none;
-	border: 1px solid var(--blueberry);
-	background: var(--blueberry);
-	color: var(--white);
+	border: 1px solid var(--amber);
+	background: var(--amber);
+	color: var(--charcoal-1);
 	border-radius: 2px;
 	padding: 7px 12px;
 	display: inline-flex;
@@ -174,14 +173,14 @@ code {
 }
 
 .btn:hover {
-	background: var(--blueberry-deep);
-	border-color: var(--blueberry-deep);
-	color: var(--white);
+	background: var(--amber-deep);
+	border-color: var(--amber-deep);
+	color: var(--charcoal-1);
 }
 
 .btn:focus-visible {
 	box-shadow: inset 0 0 0 3px var(--white);
-	outline: 1.5px solid var(--blueberry);
+	outline: 1.5px solid var(--charcoal-1);
 	outline-offset: -1.5px;
 }
 
@@ -653,14 +652,14 @@ figcaption {
 
 .btn.outline {
 	background: transparent;
-	color: var(--blueberry);
+	color: var(--accent);
 	border-color: currentcolor;
 }
 
 .btn.outline:hover {
-	background: var(--blueberry-deep);
-	border-color: var(--blueberry-deep);
-	color: var(--white);
+	background: var(--amber);
+	border-color: var(--amber);
+	color: var(--charcoal-1);
 }
 
 /* ---- the download page */
@@ -820,7 +819,7 @@ figcaption {
 	--charcoal-2: #23282d;
 	--syntax-grey: #646970;
 	--syntax-red: #d63638;
-	--syntax-blue: #135e96;
+	--syntax-amber: #9a5b00;
 	--code-bg: #f7f7f7;
 }
 
@@ -864,7 +863,7 @@ figcaption {
 
 .local-nav a:focus-visible {
 	outline: none;
-	box-shadow: inset 0 0 0 1.5px #9fb1ff;
+	box-shadow: inset 0 0 0 1.5px var(--amber);
 }
 
 .local-nav .local-title {
@@ -959,9 +958,9 @@ main h2[id] {
 }
 
 .hook-search input:focus-visible {
-	outline: 1.5px solid var(--blueberry);
+	outline: 1.5px solid var(--amber-ink);
 	outline-offset: -1.5px;
-	border-color: var(--blueberry);
+	border-color: var(--amber-ink);
 }
 
 .reference {
@@ -1036,7 +1035,7 @@ main h2[id] {
 }
 
 .code-title .arg-name {
-	color: var(--syntax-blue);
+	color: var(--syntax-amber);
 }
 
 .is-toc-heading {
@@ -1053,7 +1052,7 @@ main h2[id] {
 
 .is-toc-heading a::after {
 	content: "#";
-	color: var(--blueberry);
+	color: var(--accent);
 	font-weight: 400;
 	opacity: 0;
 	transition: opacity var(--t);
@@ -1065,7 +1064,7 @@ main h2[id] {
 }
 
 .is-toc-heading:target {
-	border-left: 2px solid var(--blueberry);
+	border-left: 2px solid var(--amber);
 	padding-left: 8px;
 }
 
@@ -1144,7 +1143,7 @@ main h2[id] {
 }
 
 .toc .to-top a {
-	color: var(--blueberry);
+	color: var(--accent);
 }
 
 /* parameters */

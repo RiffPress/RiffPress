@@ -53,7 +53,7 @@ function head( title, description, url, depth, css, section = '' ) {
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><svg aria-hidden="true" viewBox="0 0 1024 1024" width="32" height="32"><rect width="1024" height="1024" rx="230" fill="#3858e9"/><mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="16" fill="#000"/></mask><g mask="url(#hole)"><circle cx="512" cy="512" r="380" fill="#121216"/><circle cx="512" cy="512" r="142" fill="#ffb020"/></g></svg>RiffPress</a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><img src="${ up }icons/favicon.svg" alt="" width="32" height="32">RiffPress</a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
 `;
 }
 
