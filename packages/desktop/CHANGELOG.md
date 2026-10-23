@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.3.0...riff-desktop-v0.4.0) (2026-10-23)
+
+
+### Features
+
+* Riff's logo is its own name, with its ff as a score writes fortissimo ([#531](https://github.com/RiffPress/RiffPress/issues/531)) ([793eba8](https://github.com/RiffPress/RiffPress/commit/793eba8722e9c847c40e23026a3f8cef60ffe77a))
+
 ## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.2.0...riff-desktop-v0.3.0) (2026-10-23)
 
 
