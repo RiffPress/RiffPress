@@ -545,3 +545,80 @@ test( 'Import Music… adds a folder’s audio to the Media Library as the signe
 		fs.rmSync( dir, { recursive: true, force: true } );
 	}
 } );
+
+test( 'Playback in the menu bar presses the player’s own buttons, and the window says which track is on', async () => {
+	const electronApp = await launch();
+	const page = await siteWindow( electronApp );
+	// What the preload tells the main process, heard beside the app's own listener.
+	await electronApp.evaluate( ( { ipcMain } ) => {
+		global.tracks = [];
+		ipcMain.on( 'riff:track', ( event, track ) => global.tracks.push( track ) );
+	} );
+	const playing = () =>
+		page.evaluate( () => ! document.querySelector( '.riff-audio' ).paused );
+	const press = ( label ) =>
+		electronApp.evaluate( ( { Menu }, name ) => {
+			Menu.getApplicationMenu()
+				.items.find( ( item ) => item.label === 'Playback' )
+				.submenu.items.find( ( item ) => item.label === name )
+				.click();
+		}, label );
+
+	await page.locator( `.riff-card-play[data-riff-post="${ postId }"]` ).first().click();
+	await expect.poll( playing ).toBe( true );
+	await expect
+		.poll( () => electronApp.evaluate( () => global.tracks.at( -1 )?.title ) )
+		.toBe( 'Underground' );
+
+	await press( 'Play/Pause' );
+	await expect.poll( playing ).toBe( false );
+	await press( 'Play/Pause' );
+	await expect.poll( playing ).toBe( true );
+} );
+
+test( 'files dragged over the window say where they go, and dropped ones are imported', async () => {
+	const electronApp = await launch();
+	const page = await siteWindow( electronApp );
+
+	// A drag with files in it dims the window under a line; leaving takes it away.
+	const drag = ( type ) =>
+		page.evaluate( ( name ) => {
+			const data = new DataTransfer();
+			data.items.add( new File( [ 'ID3' ], 'song.mp3', { type: 'audio/mpeg' } ) );
+			document.body.dispatchEvent( new DragEvent( name, { dataTransfer: data, bubbles: true } ) );
+		}, type );
+	await drag( 'dragenter' );
+	await expect( page.locator( 'html' ) ).toHaveClass( /riff-desktop-dropping/ );
+	await drag( 'dragleave' );
+	await expect( page.locator( 'html' ) ).not.toHaveClass( /riff-desktop-dropping/ );
+
+	// A drop's paths, as the preload sends them from the site window, go through Import Music….
+	const dir = fs.mkdtempSync( path.join( os.tmpdir(), 'riff-drop-e2e-' ) );
+	const tag = `riff-drop-e2e-${ Date.now() }`;
+	fs.copyFileSync( path.join( FIXTURES, TRACK ), path.join( dir, `${ tag }.mp3` ) );
+	try {
+		const box = await electronApp.evaluate( ( { BrowserWindow, dialog, ipcMain }, folder ) =>
+			new Promise( ( resolve ) => {
+				dialog.showMessageBox = async ( win, summary ) => {
+					resolve( summary );
+					return { response: 1 };
+				};
+				const win = BrowserWindow.getAllWindows().find( ( w ) => w.webContents.getURL().includes( '/app/' ) );
+				ipcMain.emit( 'riff:drop', { sender: win.webContents, senderFrame: win.webContents.mainFrame }, [ folder ] );
+			} ), dir );
+		expect( box.message, box.detail ).toBe( 'Imported 1 of 1 tracks.' );
+	} finally {
+		const found = await requestUtils.rest( {
+			path: '/wp/v2/media',
+			params: { search: tag, media_type: 'audio' },
+		} );
+		for ( const media of found ) {
+			await requestUtils.rest( {
+				method: 'DELETE',
+				path: `/wp/v2/media/${ media.id }`,
+				params: { force: true },
+			} );
+		}
+		fs.rmSync( dir, { recursive: true, force: true } );
+	}
+} );

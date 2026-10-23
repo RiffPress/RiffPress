@@ -20,6 +20,7 @@ const {
 	app,
 	BrowserWindow,
 	Menu,
+	Notification,
 	dialog,
 	ipcMain,
 	net,
@@ -409,8 +410,120 @@ ipcMain.handle( 'riff:connect', async ( event, address ) => {
 	}
 } );
 
+// The player's own buttons, by their data-riff-action, that the menus press.
+const PLAYER = { toggle: 'Play/Pause', next: 'Next', prev: 'Previous' };
+
 /**
- * The menu bar: the platform's usual menus, with Change Site and Check for Updates.
+ * Presses one of the player's buttons in the site window, as a click would: the page is given
+ * nothing new to listen to.
+ *
+ * @param {string} action A key of PLAYER.
+ */
+function press( action ) {
+	if ( ! siteWindow || ! Object.hasOwn( PLAYER, action ) ) {
+		return;
+	}
+	siteWindow.webContents
+		.executeJavaScript(
+			`document.querySelector( '#riff [data-riff-action="${ action }"]' )?.click();`
+		)
+		.catch( () => {} );
+}
+
+/**
+ * The player's controls, as menu items.
+ *
+ * @return {Object[]} Items.
+ */
+const playerItems = () =>
+	Object.entries( PLAYER ).map( ( [ action, label ] ) => ( {
+		label,
+		click: () => press( action ),
+	} ) );
+
+/**
+ * The Dock's menu on a Mac, as Music's: what is playing, then the controls.
+ *
+ * @param {{title: string, artist: string}} [track] What is playing.
+ */
+function dockMenu( track ) {
+	if ( process.platform !== 'darwin' ) {
+		return;
+	}
+	app.dock.setMenu(
+		Menu.buildFromTemplate( [
+			...( track
+				? [
+						{ label: track.title, enabled: false },
+						...( track.artist
+							? [ { label: track.artist, enabled: false } ]
+							: [] ),
+						{ type: 'separator' },
+				  ]
+				: [] ),
+			...playerItems(),
+		] )
+	);
+}
+
+/**
+ * Whether an IPC message comes from the Listen app in the site window, and nowhere else.
+ *
+ * @param {Object} event Event.
+ * @return {boolean} Whether to answer it.
+ */
+function fromSite( event ) {
+	return Boolean(
+		siteWindow &&
+		event.sender === siteWindow.webContents &&
+		event.senderFrame === siteWindow.webContents.mainFrame &&
+		site.inWindow( event.senderFrame.url, currentSite() )
+	);
+}
+
+// A new track: the Dock menu shows it, and a notification says it when the window is not in front.
+ipcMain.on( 'riff:track', ( event, track ) => {
+	if (
+		! fromSite( event ) ||
+		typeof track?.title !== 'string' ||
+		typeof track?.artist !== 'string'
+	) {
+		return;
+	}
+	const now = {
+		title: track.title.slice( 0, 200 ),
+		artist: track.artist.slice( 0, 200 ),
+	};
+	dockMenu( now );
+	if (
+		store.get( 'notify' ) !== false &&
+		! siteWindow.isFocused() &&
+		Notification.isSupported()
+	) {
+		new Notification( {
+			title: now.title,
+			body: now.artist,
+			silent: true,
+		} ).show();
+	}
+} );
+
+// Files or folders dropped on the window, imported as if chosen in Import Music….
+ipcMain.on( 'riff:drop', ( event, paths ) => {
+	if (
+		! fromSite( event ) ||
+		! Array.isArray( paths ) ||
+		! paths.length ||
+		! paths.every( ( p ) => typeof p === 'string' && path.isAbsolute( p ) )
+	) {
+		return;
+	}
+	chooseMusic( paths );
+} );
+
+/**
+ * The menu bar: the platform's usual menus, with Change Site, Check for Updates, and Playback for the
+ * player's controls.
  */
 function menu() {
 	const mac = process.platform === 'darwin';
@@ -464,6 +577,20 @@ function menu() {
 					},
 				] ),
 		{ role: 'editMenu' },
+		{
+			label: 'Playback',
+			submenu: [
+				...playerItems(),
+				{ type: 'separator' },
+				{
+					id: 'notify',
+					label: 'Notify When the Track Changes',
+					type: 'checkbox',
+					checked: store.get( 'notify' ) !== false,
+					click: ( item ) => store.set( 'notify', item.checked ),
+				},
+			],
+		},
 		{
 			label: 'View',
 			submenu: [
@@ -590,6 +717,7 @@ if ( ! app.requestSingleInstanceLock() ) {
 		serveConnect();
 		permissions();
 		menu();
+		dockMenu();
 		// A packaged build has its icon from electron-builder; from source the Dock would show
 		// Electron's.
 		if ( DEV && process.platform === 'darwin' ) {

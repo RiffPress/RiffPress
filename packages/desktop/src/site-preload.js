@@ -7,7 +7,13 @@
  * riff.css is not on those. On a Mac each gets a strip of its own across the top, which drags the
  * window and keeps the traffic lights off the page; the login is drawn in the app's colours, in
  * WordPress's own layout.
+ *
+ * On the Listen app it also tells the main process two things the page already shows: the track
+ * that is playing, for the Dock menu and a notification, and files dropped on the window, for
+ * Import Music…. Neither is visible to the page.
  */
+const { ipcRenderer, webUtils } = require( 'electron' );
+
 const mac = process.platform === 'darwin';
 const classes = [ 'riff-desktop' ];
 if ( mac ) {
@@ -320,6 +326,90 @@ function loginHead() {
 	}
 }
 
+// While files are dragged over the window: the view dims under a line saying where they go.
+const DROP = `
+html.riff-desktop-dropping::after {
+	content: "Drop to import into your site\\2019s library";
+	position: fixed;
+	inset: 0;
+	z-index: 2147483647;
+	display: grid;
+	place-items: center;
+	border: 2px dashed #ffb020;
+	border-radius: 12px;
+	background: rgb(0 0 0 / 0.72);
+	color: #fff;
+	font: 700 24px/1.3 system-ui, sans-serif;
+	pointer-events: none;
+}
+`;
+
+/**
+ * Tells the main process each time the player's track changes, from the bar's own title and the
+ * artist Now Playing shows.
+ */
+function watchTrack() {
+	const title = document.querySelector( '#riff [data-riff-text="title"]' );
+	if ( ! title ) {
+		return;
+	}
+	let last = '';
+	new MutationObserver( () => {
+		const name = title.textContent.trim();
+		if ( ! name || name === last ) {
+			return;
+		}
+		last = name;
+		const artist = document.querySelector( '#riff [data-riff-text="artist"]' );
+		ipcRenderer.send( 'riff:track', {
+			title: name,
+			artist: artist ? artist.textContent.trim() : '',
+		} );
+	} ).observe( title, { childList: true, characterData: true, subtree: true } );
+}
+
+/**
+ * Files and folders dropped on the window go to Import Music…, as if chosen in its dialog.
+ */
+function dropToImport() {
+	const files = ( e ) => e.dataTransfer?.types?.includes( 'Files' );
+	const dropping = ( on ) =>
+		document.documentElement.classList.toggle( 'riff-desktop-dropping', on );
+	let depth = 0;
+	document.addEventListener( 'dragenter', ( e ) => {
+		if ( files( e ) ) {
+			depth++;
+			dropping( true );
+		}
+	} );
+	document.addEventListener( 'dragleave', ( e ) => {
+		if ( files( e ) && --depth <= 0 ) {
+			depth = 0;
+			dropping( false );
+		}
+	} );
+	document.addEventListener( 'dragover', ( e ) => {
+		if ( files( e ) ) {
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'copy';
+		}
+	} );
+	document.addEventListener( 'drop', ( e ) => {
+		if ( ! files( e ) ) {
+			return;
+		}
+		e.preventDefault();
+		depth = 0;
+		dropping( false );
+		const paths = [ ...e.dataTransfer.files ]
+			.map( ( file ) => webUtils.getPathForFile( file ) )
+			.filter( Boolean );
+		if ( paths.length ) {
+			ipcRenderer.send( 'riff:drop', paths );
+		}
+	} );
+}
+
 const mark = () => document.documentElement.classList.add( ...classes );
 
 // A preload can run before the parser has made <html>.
@@ -347,6 +437,11 @@ window.addEventListener( 'DOMContentLoaded', () => {
 		strip.className = 'riff-desktop-strip';
 		strip.setAttribute( 'aria-hidden', 'true' );
 		document.body.append( strip );
+	}
+	if ( document.body.classList.contains( 'riff-standalone' ) ) {
+		css.push( DROP );
+		watchTrack();
+		dropToImport();
 	}
 	if ( css.length ) {
 		const style = document.createElement( 'style' );
