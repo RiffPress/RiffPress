@@ -286,7 +286,7 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-riff-app-action="delete-playlist"', $html );
 		$this->assertSame( 2, substr_count( $html, 'data-riff-track="' ), 'a row for each of the two the listener can see' );
 		$this->assertStringContainsString( 'data-riff-places="[0,2]"', $html, 'their places, the hidden one skipped' );
-		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab riff-app-tab-library" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html, 'under Your Library' );
+		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab[^"]*" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html, 'under Your Library' );
 		// Your Library's list is standalone mode's sidebar; a theme's Listen block has tabs.
 		$this->assertStringNotContainsString( 'riff-app-library', $html );
 	}

@@ -196,15 +196,18 @@ test( 'the site and a WordPress login survive a relaunch', async () => {
 	await page.locator( '#user_pass' ).fill( 'password' );
 	await page.locator( '#rememberme' ).check();
 	await page.locator( '#wp-submit' ).click();
-	await expect( page ).toHaveURL( /wp-admin/ );
+	// WordPress sends an administrator to the dashboard; the window comes back to the app.
+	const listen = pageUrl.replace( /\/?$/, '/' ) + 'app/';
+	await expect( page ).toHaveURL( listen );
+	await expect( page.locator( '.riff-app-account' ) ).toBeVisible();
 	await electronApp.close();
 
 	electronApp = running = await launch();
 	page = await siteWindow( electronApp );
 	expect( electronApp.windows() ).toHaveLength( 1 );
-	expect( page.url() ).toBe( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
-	await page.goto( `${ BASE }/wp-admin/` );
-	await expect( page ).toHaveURL( /wp-admin\/$/ );
+	expect( page.url() ).toBe( listen );
+	await expect( page.locator( '.riff-app-account' ) ).toBeVisible();
+	await expect( page.locator( '.riff-app-signin' ) ).toHaveCount( 0 );
 } );
 
 test( 'Change Site finds a Listen page from the site’s bare address', async () => {
@@ -425,10 +428,11 @@ test( 'the window is laid out as Spotify’s: panels in a black frame, home and 
 	);
 } );
 
-test( 'the rest of the site gets a strip of its own for the traffic lights, and the login the app’s colours', async () => {
+test( 'the login gets a strip of its own for the traffic lights, in Spotify’s layout, and the theme’s pages stay out of the window', async () => {
 	const electronApp = await launch();
 	const page = await siteWindow( electronApp );
-	const site = new URL( BASE ).origin + '/';
+	const listen = page.url();
+	const login = new URL( BASE ).origin + '/wp-login.php';
 	// What a Mac window's lights would cover on a page with the 40px strip.
 	const covered = () =>
 		page.evaluate( () =>
@@ -445,40 +449,99 @@ test( 'the rest of the site gets a strip of its own for the traffic lights, and 
 				} )
 				.map( ( el ) => el.outerHTML.slice( 0, 80 ) )
 		);
-	const strip = () =>
-		page.evaluate( () => {
-			const el = document.querySelector( '.riff-desktop-strip' );
-			return el
-				? {
-						height: el.getBoundingClientRect().height,
-						drag: getComputedStyle( el ).webkitAppRegion,
-				  }
-				: null;
-		} );
 
-	for ( const url of [ site, `${ site }wp-login.php` ] ) {
-		await page.goto( url );
-		// Linux and Windows keep their frame; the Mac's strip is checked on every platform.
-		if ( process.platform !== 'darwin' ) {
-			await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
-			continue;
-		}
-		expect( await strip(), url ).toEqual( { height: 40, drag: 'drag' } );
-		expect( await covered(), url ).toEqual( [] );
+	await page.goto( login );
+	// Linux and Windows keep their frame; the Mac's strip is checked on every platform.
+	if ( process.platform === 'darwin' ) {
+		expect(
+			await page.evaluate( () => {
+				const el = document.querySelector( '.riff-desktop-strip' );
+				return el
+					? {
+							height: el.getBoundingClientRect().height,
+							drag: getComputedStyle( el ).webkitAppRegion,
+					  }
+					: null;
+			} )
+		).toEqual( { height: 40, drag: 'drag' } );
+		expect( await covered() ).toEqual( [] );
+	} else {
+		await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
 	}
 
-	// The login: WordPress's layout, on the app's black, the form one of its panels.
-	await page.goto( `${ site }wp-login.php` );
+	// Spotify's login: a #121212 card, "Sign in to" the site, and the amber button.
 	expect(
 		await page.evaluate( () => ( {
-			body: getComputedStyle( document.body ).backgroundColor,
-			form: getComputedStyle( document.querySelector( '#loginform' ) )
+			card: getComputedStyle( document.querySelector( '#login' ) )
+				.backgroundColor,
+			button: getComputedStyle( document.querySelector( '#wp-submit' ) )
 				.backgroundColor,
 		} ) )
-	).toEqual( { body: 'rgb(0, 0, 0)', form: 'rgb(18, 18, 18)' } );
+	).toEqual( { card: 'rgb(18, 18, 18)', button: 'rgb(255, 176, 32)' } );
+	await expect( page.locator( '.riff-login-title' ) ).toHaveText( /^Sign in to / );
 
-	// The Listen app keeps its own strip, not a second one.
-	await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+	// Its link back to the site's home lands on the Listen app, not the theme.
+	await page.locator( '#backtoblog a' ).click();
+	await page.waitForURL( listen );
 	await expect( page.locator( '.riff-app-titlebar' ) ).toBeVisible();
 	await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
+} );
+
+test( 'Import Music… adds a folder’s audio to the Media Library as the signed-in listener, and skips it the second time', async () => {
+	const electronApp = await launch();
+	await siteWindow( electronApp );
+	// Two tracks under names the site has not seen, in a folder with a file that is not audio.
+	const dir = fs.mkdtempSync( path.join( os.tmpdir(), 'riff-import-e2e-' ) );
+	const tag = `riff-import-e2e-${ Date.now() }`;
+	const names = [ `${ tag } 1.mp3`, `${ tag } 2.mp3` ];
+	for ( const name of names ) {
+		fs.copyFileSync( path.join( FIXTURES, TRACK ), path.join( dir, name ) );
+	}
+	fs.writeFileSync( path.join( dir, 'notes.txt' ), 'not music' );
+
+	// The open dialog answers with the folder, and the summary is read instead of shown.
+	const run = () =>
+		electronApp.evaluate( async ( { dialog, Menu }, folder ) => {
+			dialog.showOpenDialog = async () => ( {
+				canceled: false,
+				filePaths: [ folder ],
+			} );
+			return new Promise( ( resolve ) => {
+				dialog.showMessageBox = async ( win, box ) => {
+					resolve( box );
+					return { response: 1 };
+				};
+				Menu.getApplicationMenu()
+					.getMenuItemById( 'import-music' )
+					.click();
+			} );
+		}, dir );
+
+	const found = async () =>
+		(
+			await requestUtils.rest( {
+				path: '/wp/v2/media',
+				params: { search: tag, media_type: 'audio', per_page: 100 },
+			} )
+		).map( ( m ) => m.id );
+
+	try {
+		const first = await run();
+		expect( first.message, first.detail ).toBe( 'Imported 2 of 2 tracks.' );
+		expect( await found() ).toHaveLength( 2 );
+
+		const again = await run();
+		expect( again.message ).toBe( 'Imported 0 of 2 tracks.' );
+		expect( again.detail ).toBe( '2 already in your library' );
+		expect( await found() ).toHaveLength( 2 );
+	} finally {
+		for ( const id of await found() ) {
+			await requestUtils.rest( {
+				method: 'DELETE',
+				path: `/wp/v2/media/${ id }`,
+				params: { force: true },
+			} );
+		}
+		fs.rmSync( dir, { recursive: true, force: true } );
+	}
 } );
