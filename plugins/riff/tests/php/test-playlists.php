@@ -287,15 +287,32 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertSame( 2, substr_count( $html, 'data-riff-track="' ), 'a row for each of the two the listener can see' );
 		$this->assertStringContainsString( 'data-riff-places="[0,2]"', $html, 'their places, the hidden one skipped' );
 		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab[^"]*" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html, 'under Your Library' );
-		// The sidebar's library is drawn in standalone mode only, so it is asked for directly.
-		$side = \Riff\Listen\Collection::sidebar(
-			home_url( '/' ),
+		// Your Library's list is standalone mode's sidebar; a theme's Listen block has tabs.
+		$this->assertStringNotContainsString( 'riff-app-library', $html );
+	}
+
+	public function test_standalone_mode_lists_the_playlist_in_your_library_and_marks_it_open(): void {
+		$id = $this->made( $this->tracks );
+		$this->set_permalink_structure( '/%postname%/' );
+		\Riff\Listen\Standalone::endpoint();
+		flush_rewrite_rules( false );
+		$listen = self::factory()->post->create(
 			array(
-				'view' => 'playlist',
-				'id'   => $id,
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_name'    => 'listen',
+				'post_content' => '<!-- wp:riff/app /-->',
 			)
 		);
-		$this->assertMatchesRegularExpression( '/<a class="riff-app-item" href="[^"]*riff_playlist=' . $id . '" aria-current="page">.*?<span class="riff-app-item-title">Road trip<\/span>/', $side, 'and in the sidebar\'s library' );
+		$this->go_to( add_query_arg( 'riff_playlist', $id, \Riff\Listen\Standalone::url( $listen ) ) );
+		$_GET['riff_playlist'] = (string) $id; // go_to() does not fill $_GET; the block reads it.
+		$html                  = do_blocks( '<!-- wp:riff/app /-->' );
+		unset( $_GET['riff_playlist'] );
+
+		$this->assertStringContainsString( '<a class="riff-app-library-title" id="riff-app-library"', $html );
+		$this->assertStringContainsString( 'data-riff-app-action="new-playlist" aria-label="New playlist"', $html, 'New playlist, for someone signed in' );
+		$this->assertMatchesRegularExpression( '/<li data-riff-library-kind="playlists"><a class="riff-app-item" href="[^"]*riff_playlist=' . $id . '" aria-current="page">.*?<span class="riff-app-item-title">Road trip<\/span><span class="riff-app-item-sub">Playlist · 3 songs<\/span>/', $html );
+		$this->assertMatchesRegularExpression( '/<span class="riff-app-item-title">Liked songs<\/span>/', $html, 'Liked songs is always first' );
 	}
 
 	public function test_someone_elses_playlist_does_not_open(): void {
