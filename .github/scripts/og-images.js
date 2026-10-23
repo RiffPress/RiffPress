@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * The share cards: the 1200×630 picture a link to each page of the site shows on social sites
- * and in chat. One per main page, in wordpress.org's tokens as the site is: the RiffPress mark, the
- * page's title in EB Garamond, one line under it in Inter, on charcoal with the record cropped into
- * the corner. Pages below a section (the developer reference, the web platform pages) use their
+ * and in chat. One per main page, as the site is drawn: the RiffPress mark, the page's title in EB
+ * Garamond, one line under it in Inter, on the app's #121212 with the tuning fork and its rings
+ * cropped into the corner. Pages below a section (the developer reference, the web platform pages) use their
  * section's card; site-shell.js picks it from the page's address.
  *
  * Rendered with Playwright's Chromium from the site's own fonts and artwork, and committed as
@@ -35,20 +35,15 @@ function html( card ) {
 @font-face { font-family: Inter; font-weight: 400 700; src: url(${ file( 'fonts/inter.woff2' ) }) format("woff2"); }
 @font-face { font-family: "EB Garamond"; font-weight: 400 700; src: url(${ file( 'fonts/eb-garamond.woff2' ) }) format("woff2"); }
 html, body { margin: 0; }
-body { width: 1200px; height: 630px; overflow: hidden; position: relative; background: #1e1e1e; color: #fff; font-family: Inter, sans-serif; }
+body { width: 1200px; height: 630px; overflow: hidden; position: relative; background: #121212; color: #fff; font-family: Inter, sans-serif; }
 .mark { position: absolute; left: 80px; top: 72px; display: flex; align-items: center; gap: 16px; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; }
-.mark svg { width: 52px; height: 52px; }
-.record { position: absolute; right: -170px; bottom: -230px; width: 640px; height: 640px; }
+.mark img { width: 52px; height: 52px; }
+.fork { position: absolute; right: -150px; bottom: -190px; width: 680px; height: 680px; }
 h1 { position: absolute; left: 80px; top: 230px; width: 720px; margin: 0; font-family: "EB Garamond", serif; font-weight: 400; font-size: 92px; line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
 p { position: absolute; left: 80px; bottom: 80px; width: 640px; margin: 0; font-size: 28px; line-height: 1.45; color: #979aa1; text-wrap: pretty; }
 </style></head><body>
-<div class="mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="230" fill="#3858e9"/><mask id="m"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="16" fill="#000"/></mask><g mask="url(#m)"><circle cx="512" cy="512" r="380" fill="#121216"/><circle cx="512" cy="512" r="142" fill="#ffb020"/></g></svg>RiffPress</div>
-<svg class="record" viewBox="0 0 1024 1024" aria-hidden="true">
-	<circle cx="512" cy="512" r="510" fill="#23282d"/>
-	${ Array.from( { length: 9 }, ( _, i ) => `<circle cx="512" cy="512" r="${ 470 - i * 34 }" fill="none" stroke="#40464d" stroke-width="3"/>` ).join( '' ) }
-	<circle cx="512" cy="512" r="170" fill="#3858e9"/>
-	<circle cx="512" cy="512" r="14" fill="#1e1e1e"/>
-</svg>
+<div class="mark"><img src="${ file( 'icons/favicon.svg' ) }" alt="">RiffPress</div>
+<img class="fork" src="${ file( 'brand/fork-ghost-dark.svg' ) }" alt="">
 <h1>${ esc( card.title ) }</h1>
 <p>${ esc( card.line ) }</p>
 </body></html>`;

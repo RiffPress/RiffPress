@@ -119,7 +119,7 @@ jobs:
             const marker = '<!-- riff:playground-preview -->';
             const sha = process.env.HEAD_SHA;
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
-            const badge = 'https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white';
+            const badge = 'https://img.shields.io/badge/Launch-FFB020?style=for-the-badge&logo=wordpress&logoColor=1E1E1E';
             const body = [
               marker,
               '### 🛝 WordPress Playground',

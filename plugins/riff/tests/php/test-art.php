@@ -97,8 +97,8 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertNotSame( Art::svg( $a ), Art::svg( $c ), 'a different slug draws a different cover' );
 	}
 
-	public function test_every_colour_is_a_wordpress_org_token(): void {
-		$tokens = array( '#1e1e1e', '#3858e9', '#f6f6f6', '#ffffff', '#e26f56', '#33f078', '#fff972', '#d7a7ff', '#ffb7a7', '#c7ffdb', '#7a00df', '#40464d', '#1d35b4' );
+	public function test_every_colour_is_riffs_amber_or_a_wordpress_org_token(): void {
+		$tokens = array( '#1e1e1e', '#ffb020', '#f6f6f6', '#ffffff', '#e26f56', '#33f078', '#fff972', '#d7a7ff', '#7a00df', '#40464d', '#d98a00' );
 		foreach ( Art::palettes() as $palette ) {
 			foreach ( $palette as $colour ) {
 				$this->assertContains( strtolower( $colour ), $tokens, "$colour is a design system token" );
