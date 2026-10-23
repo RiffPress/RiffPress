@@ -13,6 +13,7 @@ const { pathToFileURL } = require( 'node:url' );
 const electron = require( 'electron' );
 const site = require( './site' );
 const updates = require( './updates' );
+const { importMusic, AUDIO } = require( './import' );
 const { settings } = require( './settings' );
 
 const {
@@ -261,6 +262,113 @@ function openConnect() {
 	connectWindow.loadURL( CONNECT );
 }
 
+// What Import Music… says when it cannot start, or stops: a message and its detail.
+const IMPORT_SAYS = {
+	nothing: [
+		'No music in what you chose.',
+		'Riff imports MP3, M4A, FLAC, Ogg, Opus and WAV files.',
+	],
+	site: [
+		'Couldn’t reach your site.',
+		'Check your connection, then try again.',
+	],
+	signin: [
+		'Sign in to your site first.',
+		'Importing adds music to its Media Library, which needs someone who can upload files.',
+	],
+	upload: [
+		'Your account can’t add music to this site.',
+		'Ask the site’s administrator for an account that can upload files.',
+	],
+};
+
+/**
+ * Import Music…: the files or folders to import, then the import, with its progress on the Dock
+ * icon or the taskbar, a summary at the end, and the page drawn again to show what came in.
+ *
+ * @param {string[]} [chosen] Paths, for a test; otherwise the open dialog asks.
+ * @return {Promise<Object|undefined>} What was imported, for a test.
+ */
+async function chooseMusic( chosen ) {
+	if ( ! siteWindow || ! currentSite() ) {
+		openConnect();
+		return;
+	}
+	if ( ! chosen ) {
+		const picked = await dialog.showOpenDialog( siteWindow, {
+			title: 'Import Music',
+			buttonLabel: 'Import',
+			message:
+				'Choose music files or folders to add to your site’s Media Library.',
+			properties: [ 'openFile', 'openDirectory', 'multiSelections' ],
+			filters: [
+				{
+					name: 'Audio',
+					extensions: AUDIO.source
+						.replace( /^.*\((.*)\).*$/, '$1' )
+						.split( '|' ),
+				},
+			],
+		} );
+		if ( picked.canceled ) {
+			return;
+		}
+		chosen = picked.filePaths;
+	}
+	const ses = session.fromPartition( PARTITION );
+	const result = await importMusic( {
+		fetch: ( url, init ) => ses.fetch( url, init ),
+		site: currentSite(),
+		chosen,
+		progress: ( done ) => siteWindow?.setProgressBar( done ),
+	} ).catch( () => ( { error: 'site' } ) );
+	siteWindow?.setProgressBar( -1 );
+
+	if ( result.error === 'signin' ) {
+		const { response } = await dialog.showMessageBox( siteWindow, {
+			type: 'info',
+			message: IMPORT_SAYS.signin[ 0 ],
+			detail: IMPORT_SAYS.signin[ 1 ],
+			buttons: [ 'Sign In', 'Cancel' ],
+			defaultId: 0,
+		} );
+		if ( response === 0 ) {
+			siteWindow.loadURL(
+				`${ new URL( currentSite() ).origin }/wp-login.php?redirect_to=${ encodeURIComponent(
+					currentSite()
+				) }`
+			);
+		}
+		return result;
+	}
+	const { imported = [], skipped = [], failed = [] } = result;
+	const counts = [
+		imported.length && `${ imported.length } added`,
+		skipped.length && `${ skipped.length } already in your library`,
+		failed.length && `${ failed.length } couldn’t be added`,
+	].filter( Boolean );
+	const said = IMPORT_SAYS[ result.error ];
+	await dialog.showMessageBox( siteWindow, {
+		type: said || failed.length ? 'warning' : 'info',
+		message: said
+			? said[ 0 ]
+			: `Imported ${ imported.length } of ${
+					imported.length + skipped.length + failed.length
+			  } tracks.`,
+		detail: [
+			said ? said[ 1 ] : '',
+			counts.join( ', ' ),
+			failed.length ? `Not added: ${ failed.join( ', ' ) }` : '',
+		]
+			.filter( Boolean )
+			.join( '\n\n' ),
+	} );
+	if ( imported.length ) {
+		siteWindow.reload();
+	}
+	return result;
+}
+
 /**
  * Whether an IPC message comes from the connect form, and nowhere else.
  *
@@ -311,6 +419,12 @@ function menu() {
 		label: 'Change Site…',
 		click: openConnect,
 	};
+	const importItem = {
+		id: 'import-music',
+		label: 'Import Music…',
+		accelerator: 'CmdOrCtrl+O',
+		click: () => chooseMusic(),
+	};
 	const checkUpdates = {
 		id: 'check-updates',
 		label: 'Check for Updates…',
@@ -336,11 +450,13 @@ function menu() {
 							{ role: 'quit' },
 						],
 					},
+					{ label: 'File', submenu: [ importItem ] },
 				]
 			: [
 					{
 						label: '&File',
 						submenu: [
+							importItem,
 							changeSite,
 							{ type: 'separator' },
 							{ role: 'quit' },

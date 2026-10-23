@@ -2,7 +2,7 @@
 
 A Riff site's Listen library in a window of its own: the standalone Listen page (the Listen page's address plus `app/`) in Electron, with the media keys and the system's Now Playing, which come from the page's Media Session as they do in a browser.
 
-On first launch it asks for the site's address. The Listen page's address, as the browser shows it, always works; a site's own address works when the site has a published Listen page, found through core's pages route. Signing in is WordPress's own login, in the window; tick **Remember Me** and the cookie outlasts a restart. **Change Site…** is in the app menu (File on Windows and Linux).
+On first launch it asks for the site's address. The Listen page's address, as the browser shows it, always works; a site's own address works when the site has a published Listen page, found through core's pages route. Signing in is WordPress's own login, in the window; tick **Remember Me** and the cookie outlasts a restart. **Change Site…** is in the app menu (File on Windows and Linux). **Import Music…** in the File menu adds files or folders of MP3, M4A, FLAC, Ogg, Opus or WAV to the site's Media Library through core's media route, as whoever is signed in, skipping any it already has.
 
 Only the site's origin loads in the window. Every other link opens in the default browser, and the site needs https unless it is on this computer.
 
