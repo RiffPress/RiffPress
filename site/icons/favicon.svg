@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Riff: a record at LP proportions. The label is a third of the disc, the spindle hole is cut through. -->
+<!-- Riff: the app's icon, flat for small sizes. Riff's blue, and a record at LP proportions with an amber label and
+     the spindle hole cut through. packages/desktop/resources/icon.svg is the full one. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-	<mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="12" fill="#000"/></mask>
+	<rect width="1024" height="1024" rx="230" fill="#3858e9"/>
+	<mask id="hole"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="16" fill="#000"/></mask>
 	<g mask="url(#hole)">
-		<circle cx="512" cy="512" r="500" fill="#1e1e1e"/>
-		<circle cx="512" cy="512" r="166.7" fill="#3858e9"/>
+		<circle cx="512" cy="512" r="380" fill="#121216"/>
+		<circle cx="512" cy="512" r="142" fill="#ffb020"/>
 	</g>
 </svg>
