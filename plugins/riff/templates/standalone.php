@@ -22,8 +22,10 @@ defined( 'ABSPATH' ) || exit;
 <link rel="apple-touch-icon" href="<?php echo esc_url( get_site_icon_url( 180 ) ? get_site_icon_url( 180 ) : RIFF_URL . 'features/listen/icons/icon-192.png' ); ?>">
 <?php
 // On a computer, in a browser or installed as a web app, the page is laid out as Riff's desktop app
-// is, in Spotify's frame. A phone or a tablet keeps the touch layout.
-wp_print_inline_script_tag( 'try{if(matchMedia("(hover: hover) and (pointer: fine)").matches){document.documentElement.classList.add("riff-desktop");}}catch(e){}' );
+// is, in Spotify's frame; a phone or a tablet keeps the touch layout. Installed with the window's
+// controls over the page, it is riff-desktop-overlay too, and the strip is the title bar. A listener
+// can turn the title bar back on, so that follows the change.
+wp_print_inline_script_tag( '(function(){try{var r=document.documentElement,o=matchMedia("(display-mode: window-controls-overlay)");if(o.matches||matchMedia("(hover: hover) and (pointer: fine)").matches){r.classList.add("riff-desktop");}var s=function(){r.classList.toggle("riff-desktop-overlay",o.matches);};s();o.addEventListener("change",s);}catch(e){}})();' );
 // Riff's desktop app marks the document itself. On a development site (SCRIPT_DEBUG or WP_DEBUG),
 // ?riff_desktop=1 lays the page out as the app does, traffic lights drawn in, to work on with a
 // browser's tools; the choice is kept in this browser until ?riff_desktop=0.

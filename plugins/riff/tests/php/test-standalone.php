@@ -81,6 +81,7 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		$manifest = Standalone::manifest_data();
 
 		$this->assertSame( 'standalone', $manifest['display'] );
+		$this->assertSame( array( 'window-controls-overlay' ), $manifest['display_override'], 'no title bar where the browser can do without one' );
 		$this->assertSame( Standalone::url( $this->listen ), $manifest['start_url'] );
 		$this->assertSame( $manifest['start_url'], $manifest['scope'], 'the app stays inside app/' );
 		$this->assertSame( '#030303', $manifest['theme_color'] );
