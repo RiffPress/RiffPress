@@ -286,8 +286,16 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-riff-app-action="delete-playlist"', $html );
 		$this->assertSame( 2, substr_count( $html, 'data-riff-track="' ), 'a row for each of the two the listener can see' );
 		$this->assertStringContainsString( 'data-riff-places="[0,2]"', $html, 'their places, the hidden one skipped' );
-		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html, 'under Your Library' );
-		$this->assertMatchesRegularExpression( '/<a class="riff-app-playlist" href="[^"]*riff_playlist=' . $id . '" aria-current="page">Road trip<\/a>/', $html, 'and in the sidebar\'s list' );
+		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab[^"]*" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html, 'under Your Library' );
+		// The sidebar's library is drawn in standalone mode only, so it is asked for directly.
+		$side = \Riff\Listen\Collection::sidebar(
+			home_url( '/' ),
+			array(
+				'view' => 'playlist',
+				'id'   => $id,
+			)
+		);
+		$this->assertMatchesRegularExpression( '/<a class="riff-app-item" href="[^"]*riff_playlist=' . $id . '" aria-current="page">.*?<span class="riff-app-item-title">Road trip<\/span>/', $side, 'and in the sidebar\'s library' );
 	}
 
 	public function test_someone_elses_playlist_does_not_open(): void {

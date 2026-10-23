@@ -78,14 +78,48 @@ function normalize( input ) {
 }
 
 /**
- * Whether an address loads inside the window: only the connected site's own origin does. Anything
- * else opens in the default browser.
+ * Whether an address loads inside the window: the Listen page's app (its standalone address and
+ * everything under it, or the same page with riff_app on a site without pretty permalinks) and
+ * WordPress's login, which has to run in the window for the window to be signed in. The rest of
+ * the site, theme and dashboard alike, is not the app.
  *
  * @param {string} address Address being opened.
  * @param {string} site    The connected site's standalone address.
  * @return {boolean} Whether it stays in the window.
  */
 function inWindow( address, site ) {
+	try {
+		const url = new URL( address );
+		const app = new URL( site );
+		if ( url.origin !== app.origin ) {
+			return false;
+		}
+		if ( url.pathname.endsWith( '/wp-login.php' ) ) {
+			return true;
+		}
+		if ( app.searchParams.has( 'riff_app' ) ) {
+			return (
+				url.pathname === app.pathname &&
+				[ ...app.searchParams ].every(
+					( [ key ] ) => key === 'riff_app' || url.searchParams.get( key ) === app.searchParams.get( key )
+				) &&
+				url.searchParams.has( 'riff_app' )
+			);
+		}
+		return url.pathname.startsWith( app.pathname );
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Whether an address is on the connected site, in the window or not.
+ *
+ * @param {string} address Address being opened.
+ * @param {string} site    The connected site's standalone address.
+ * @return {boolean} Whether it is the site's origin.
+ */
+function sameSite( address, site ) {
 	try {
 		return new URL( address ).origin === new URL( site ).origin;
 	} catch {
@@ -319,6 +353,7 @@ function codeError( code ) {
 }
 
 module.exports = {
+	sameSite,
 	isLoopback,
 	isAllowed,
 	normalize,
