@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.24.0](https://github.com/RiffPress/RiffPress/compare/v4.23.0...v4.24.0) (2026-10-23)
+
+
+### Features
+
+* Riff for the desktop, an Electron window on a site's Listen page ([#508](https://github.com/RiffPress/RiffPress/issues/508)) ([fcb3022](https://github.com/RiffPress/RiffPress/commit/fcb3022d567eb8c99cab0371a45397380e481e13))
+* Spotify's cards, titles and Play in the frame ([#523](https://github.com/RiffPress/RiffPress/issues/523)) ([67ed946](https://github.com/RiffPress/RiffPress/commit/67ed9464175ef915f24df763df899a439d1514bc))
+* Spotify's frame for the Listen app on any computer, in a browser or installed ([#520](https://github.com/RiffPress/RiffPress/issues/520)) ([3096258](https://github.com/RiffPress/RiffPress/commit/3096258fbc7b0624fe9f2ee16d166c80e708ca81))
+* the desktop app in Spotify's frame, with a Mac icon on Apple's grid ([#510](https://github.com/RiffPress/RiffPress/issues/510)) ([48d075b](https://github.com/RiffPress/RiffPress/commit/48d075bdacec36822a070d016fb50250d7f8ef51))
+* Your Library in the sidebar and an album's header, as Spotify's ([#514](https://github.com/RiffPress/RiffPress/issues/514)) ([a0d671e](https://github.com/RiffPress/RiffPress/commit/a0d671e247bb9caa55a37be84249ca0784349cfa))
+
+
+### Bug Fixes
+
+* a protected file on a password-protected post needs the password ([#506](https://github.com/RiffPress/RiffPress/issues/506)) ([877f16c](https://github.com/RiffPress/RiffPress/commit/877f16cb82b69a3654820fdd0fcdf7b1372b6093))
+* adding music starts from the Media Library, not from writing a post ([#503](https://github.com/RiffPress/RiffPress/issues/503)) ([3a93d69](https://github.com/RiffPress/RiffPress/commit/3a93d69798d7ea25806ffff446d4f7eaa22538b1))
+
 ## [4.23.0](https://github.com/RiffPress/RiffPress/compare/v4.22.0...v4.23.0) (2026-10-20)
 
 
