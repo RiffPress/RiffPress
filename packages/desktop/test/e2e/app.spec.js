@@ -52,6 +52,11 @@ async function launch() {
 	running = await electron.launch( {
 		...options,
 		args: [ ...options.args, `--user-data-dir=${ profile }` ],
+		// Hidden, muted and out of the Dock (main.js), unless RIFF_DESKTOP_SHOW=1 asks to watch.
+		env: {
+			...process.env,
+			RIFF_DESKTOP_QUIET: process.env.RIFF_DESKTOP_SHOW === '1' ? '' : '1',
+		},
 	} );
 	return running;
 }

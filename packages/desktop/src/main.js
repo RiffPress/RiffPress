@@ -29,6 +29,25 @@ const {
 	shell,
 } = electron;
 
+// The e2e suite's quiet mode: windows stay hidden, nothing plays aloud, and on a Mac the app keeps
+// out of the Dock, so a test run does not take over the computer it runs on.
+const QUIET = process.env.RIFF_DESKTOP_QUIET === '1';
+if ( QUIET ) {
+	app.commandLine.appendSwitch( 'mute-audio' );
+}
+
+/**
+ * Brings a window forward, except in quiet mode.
+ *
+ * @param {Object} win Window.
+ */
+function reveal( win ) {
+	if ( ! QUIET ) {
+		win.show();
+		win.focus();
+	}
+}
+
 const PARTITION = 'persist:riff';
 const SCHEME = 'riff';
 const CONNECT = `${ SCHEME }://app/index.html`;
@@ -126,13 +145,14 @@ function savedBounds() {
 function openSite( url ) {
 	if ( siteWindow ) {
 		siteWindow.loadURL( url );
-		siteWindow.show();
+		reveal( siteWindow );
 		return;
 	}
 	siteWindow = new BrowserWindow( {
 		...savedBounds(),
 		minWidth: 360,
 		minHeight: 480,
+		show: ! QUIET,
 		title: 'Riff',
 		backgroundColor: BACKGROUND,
 		// On a Mac, no title bar: the page's own strip across the top drags the window, with the
@@ -223,7 +243,7 @@ function openSite( url ) {
  */
 function openConnect() {
 	if ( connectWindow ) {
-		connectWindow.focus();
+		reveal( connectWindow );
 		return;
 	}
 	connectWindow = new BrowserWindow( {
@@ -232,6 +252,7 @@ function openConnect() {
 		resizable: false,
 		maximizable: false,
 		fullscreenable: false,
+		show: ! QUIET,
 		title: 'Riff',
 		backgroundColor: BACKGROUND,
 		// On a Mac, no title bar, as the site's window has none; the page drags the window.
@@ -579,8 +600,7 @@ if ( ! app.requestSingleInstanceLock() ) {
 			if ( win.isMinimized() ) {
 				win.restore();
 			}
-			win.show();
-			win.focus();
+			reveal( win );
 		}
 	} );
 
@@ -589,6 +609,9 @@ if ( ! app.requestSingleInstanceLock() ) {
 		updater = updates.setup( electron );
 		serveConnect();
 		permissions();
+		if ( QUIET && process.platform === 'darwin' ) {
+			app.dock.hide();
+		}
 		menu();
 		// A packaged build has its icon from electron-builder; from source the Dock would show
 		// Electron's.
@@ -610,7 +633,7 @@ if ( ! app.requestSingleInstanceLock() ) {
 
 	app.on( 'activate', () => {
 		if ( siteWindow ) {
-			siteWindow.show();
+			reveal( siteWindow );
 		} else if ( ! connectWindow ) {
 			openConnect();
 		}

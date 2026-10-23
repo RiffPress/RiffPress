@@ -19,6 +19,8 @@ RIFF_DESKTOP_E2E=1 npm run build:dir --workspace=packages/desktop
 npx playwright test --config packages/desktop/playwright.config.js   # the unpacked app against the tests site
 ```
 
+The end-to-end run keeps the app's windows hidden, its sound muted and its icon out of the Dock, so it can run while you work. `RIFF_DESKTOP_SHOW=1` in front of the Playwright command shows it.
+
 `RIFF_DESKTOP_E2E=1` keeps the fuse Playwright attaches through; release builds turn it off. Without a build in `dist/` the e2e suite drives the source instead.
 
 ## Releases and updates
