@@ -69,15 +69,31 @@ test( 'plain http is refused away from this machine, as are other schemes and cr
 	);
 } );
 
-test( 'only the site’s origin stays in the window', () => {
-	const home = 'https://example.com/listen/app/';
-	assert.ok( site.inWindow( 'https://example.com/wp-login.php', home ) );
-	assert.ok( ! site.inWindow( 'https://example.org/', home ) );
-	assert.ok( ! site.inWindow( 'http://example.com/listen/app/', home ) );
-	assert.ok( ! site.inWindow( 'https://example.com:8443/', home ) );
-	assert.ok( ! site.inWindow( 'https://sub.example.com/', home ) );
-	assert.ok( ! site.inWindow( 'not a url', home ) );
-	assert.ok( ! site.inWindow( 'https://example.com/', undefined ) );
+test( 'only the Listen app and the login stay in the window', () => {
+	const app = 'https://example.com/listen/app/';
+	assert.ok( site.inWindow( app, app ) );
+	assert.ok( site.inWindow( 'https://example.com/listen/app/?riff=album/12', app ) );
+	assert.ok( site.inWindow( 'https://example.com/wp-login.php?action=logout', app ) );
+	// The theme's pages and the dashboard are not the app.
+	assert.ok( ! site.inWindow( 'https://example.com/', app ) );
+	assert.ok( ! site.inWindow( 'https://example.com/listen/', app ) );
+	assert.ok( ! site.inWindow( 'https://example.com/blog/', app ) );
+	assert.ok( ! site.inWindow( 'https://example.com/wp-admin/', app ) );
+	assert.ok( ! site.inWindow( 'https://example.org/', app ) );
+	assert.ok( ! site.inWindow( 'http://example.com/listen/app/', app ) );
+	assert.ok( ! site.inWindow( 'https://example.com:8443/listen/app/', app ) );
+	assert.ok( ! site.inWindow( 'https://sub.example.com/listen/app/', app ) );
+	assert.ok( ! site.inWindow( 'not a url', app ) );
+	assert.ok( ! site.inWindow( app, undefined ) );
+
+	// Without pretty permalinks: the same page, with riff_app.
+	const plain = 'https://example.com/?page_id=7&riff_app=1';
+	assert.ok( site.inWindow( 'https://example.com/?page_id=7&riff_app=1&riff=tracks', plain ) );
+	assert.ok( ! site.inWindow( 'https://example.com/?page_id=7', plain ) );
+	assert.ok( ! site.inWindow( 'https://example.com/?page_id=8&riff_app=1', plain ) );
+
+	assert.ok( site.sameSite( 'https://example.com/blog/', app ) );
+	assert.ok( ! site.sameSite( 'https://example.org/', app ) );
 } );
 
 test( 'only web and mail links go to the default browser', () => {

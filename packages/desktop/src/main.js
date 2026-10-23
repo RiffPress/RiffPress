@@ -63,23 +63,29 @@ let quitting = false;
 const currentSite = () => store.get( 'site' );
 
 /**
- * Keeps a window on the site: navigation, redirects and new windows to anywhere else go to the
- * default browser instead, and only http(s) and mailto links get that far.
+ * Keeps a window on the Listen app and the login (site.inWindow()). The site's home page, and
+ * wherever WordPress sends the window after signing in (the dashboard, without a redirect_to),
+ * bring it back to the app. Any other page, on the site or not, opens in the default browser,
+ * and only http(s) and mailto links get that far.
  *
  * @param {Object} contents The window's contents.
  */
 function confine( contents ) {
-	const outside = ( event, url ) => {
-		if ( site.inWindow( url, currentSite() ) ) {
+	const outside = ( redirect ) => ( event, url ) => {
+		const listen = currentSite();
+		if ( site.inWindow( url, listen ) ) {
 			return;
 		}
 		event.preventDefault();
-		if ( site.isExternal( url ) ) {
+		const home = site.sameSite( url, listen ) && new URL( url ).pathname === '/';
+		if ( site.sameSite( url, listen ) && ( redirect || home ) ) {
+			contents.loadURL( listen );
+		} else if ( site.isExternal( url ) ) {
 			shell.openExternal( url );
 		}
 	};
-	contents.on( 'will-navigate', outside );
-	contents.on( 'will-redirect', outside );
+	contents.on( 'will-navigate', outside( false ) );
+	contents.on( 'will-redirect', outside( true ) );
 	contents.on( 'will-attach-webview', ( event ) => event.preventDefault() );
 	contents.setWindowOpenHandler( ( { url } ) => {
 		if ( site.isExternal( url ) ) {
