@@ -2926,6 +2926,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-image: linear-gradient(var(--riff-album-fade)) fill 0 / 0 / 240px 100vmax 160px;
 }
 
+/* The quieter line on a tint: mixed from the text and the wash itself, not
+   the fixed grey, so it keeps 4.5:1 on a light cover's wash as on a dark
+   one. */
+.riff-standalone .riff-album-tinted .riff-album-meta {
+	color: color-mix(in srgb, var(--riff-app-ink) 88%, var(--riff-album-wash));
+}
+
 /* An artist's picture is round, as the apps draw one. */
 .riff-album-round .riff-album-cover {
 	border-radius: 50%;
