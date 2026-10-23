@@ -595,6 +595,40 @@ test.describe( 'Standalone', () => {
 		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 	} );
 
+	test( 'the … menu and the account menu are drawn as WordPress\'s toolbar draws its menus', async ( {
+		page,
+	} ) => {
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
+		const look = ( locator ) =>
+			locator.evaluate( ( el ) => {
+				const style = getComputedStyle( el );
+				return { background: style.backgroundColor, radius: style.borderTopLeftRadius };
+			} );
+		const toolbar = { background: 'rgb(44, 51, 56)', radius: '0px' };
+		const blue = 'rgb(114, 174, 230)';
+
+		// It opens before anything has played, while the player itself is still hidden.
+		await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
+		const menu = page.locator( '.riff-menu:not([hidden])' );
+		await expect( menu ).toBeVisible();
+		expect( ( await menu.boundingBox() ).height ).toBeGreaterThan( 0 );
+		expect( await look( menu ) ).toEqual( toolbar );
+		const item = menu.getByRole( 'menuitem' ).first();
+		await item.hover();
+		await expect( item ).toHaveCSS( 'color', blue );
+		await page.keyboard.press( 'Escape' );
+
+		await page.locator( '.riff-app-account summary' ).click();
+		const account = page.locator( '.riff-app-account-menu' );
+		await expect( account ).toBeVisible();
+		expect( await look( account ) ).toEqual( toolbar );
+		const link = account.locator( 'a' ).first();
+		await link.hover();
+		await expect( link ).toHaveCSS( 'color', blue );
+		expect( ( await new AxeBuilder( { page } ).include( '.riff-app-account' ).analyze() ).violations ).toEqual( [] );
+	} );
+
 	test( 'the sidebar collapses to a rail of icons, and stays that way across views and reloads', async ( {
 		page,
 		isMobile,
