@@ -1,10 +1,12 @@
 /* WordPress.org's design system, extended to a music player: its charcoals
    and greys, Inter for text, EB Garamond for headings, 2px corners, its
-   spacing. Riff's one colour is amber, where wordpress.org has blueberry:
-   amber grounds with charcoal on them, and a deeper amber for text on light
-   grounds, where Riff's own amber is too pale to read. The bars and the bands
-   between sections take the desktop app's frame: black, #121212 panels, and
-   the pictures of the player in 8px corners. */
+   spacing. Where wordpress.org's buttons and links are blueberry, Riff's are
+   its pomegranate: Pomegrade-1 (#e26f56) where it reads, on the dark bands,
+   and a deeper shade of it for solid buttons with white on them and for text
+   on light grounds, where Pomegrade-1 is too pale. Amber is Riff's logo and
+   its player's. The bars and the bands between sections take the desktop
+   app's frame: black, #121212 panels, and the pictures of the player in 8px
+   corners. */
 @font-face {
 	font-family: Inter;
 	font-style: normal;
@@ -36,13 +38,16 @@
 	--amber: #ffb020;
 	--amber-deep: #f29a00;
 	--amber-ink: #9a5b00;
+	--pomegrade: #e26f56;
+	--pomegrade-deep: #ae381e;
+	--pomegrade-deeper: #9d321b;
 	--bg: var(--white);
 	--surface: var(--panel);
 	--line: var(--grey-1);
 	--ink: var(--charcoal-1);
 	--ink-2: var(--charcoal-4);
 	--ink-3: var(--charcoal-5);
-	--accent: var(--amber-ink);
+	--accent: var(--pomegrade-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
 	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -91,8 +96,8 @@ a:hover {
 	left: 16px;
 	top: -200px;
 	z-index: 20;
-	background: var(--amber);
-	color: var(--charcoal-1);
+	background: var(--pomegrade-deep);
+	color: var(--white);
 	padding: 10px 16px;
 	border-radius: 2px;
 	text-decoration: none;
@@ -158,25 +163,25 @@ a:hover {
 	text-underline-offset: 4px;
 }
 
-/* Download, in the player's amber, as its Play is */
+/* Download, as wordpress.org's bar has Get WordPress */
 .nav .btn {
 	padding: 7px 12px;
-	border-color: var(--amber);
-	background: var(--amber);
-	color: var(--black);
+	border-color: var(--pomegrade-deep);
+	background: var(--pomegrade-deep);
+	color: var(--white);
 	font-size: 0.875rem;
 	line-height: 1.714;
 }
 
 .nav .btn:hover {
-	border-color: var(--amber-deep);
-	background: var(--amber-deep);
-	color: var(--black);
+	border-color: var(--pomegrade-deeper);
+	background: var(--pomegrade-deeper);
+	color: var(--white);
 }
 
 .nav .btn:focus-visible {
 	box-shadow: inset 0 0 0 3px var(--black);
-	outline-color: var(--amber);
+	outline-color: var(--pomegrade);
 }
 
 /* the section bar: under the global one, then on top once that has scrolled
@@ -211,7 +216,7 @@ a:hover {
 
 .local-nav a:focus-visible {
 	outline: none;
-	box-shadow: inset 0 0 0 1.5px var(--amber);
+	box-shadow: inset 0 0 0 1.5px var(--pomegrade);
 }
 
 .local-nav .local-title {
@@ -290,7 +295,7 @@ section {
 	--ink-2: #b3b3b3;
 	--ink-3: #8a8a8a;
 	--line: #2a2a2a;
-	--accent: var(--amber);
+	--accent: var(--pomegrade);
 	background: var(--surface);
 	color: var(--ink);
 }
@@ -330,16 +335,16 @@ section {
 	justify-content: center;
 }
 
-/* buttons: amber with charcoal on it, 2px corners, as wordpress.org draws its
-   own; and a text link with an arrow */
+/* buttons: pomegranate with white on it, 2px corners, as wordpress.org draws
+   its own; and a text link with an arrow */
 
 /* buttons, as wordpress.org draws them: 600 weight, 14px by 32px, 2px
    corners; the outline style for the second action */
 .btn {
 	appearance: none;
-	border: 1px solid var(--amber);
-	background: var(--amber);
-	color: var(--charcoal-1);
+	border: 1px solid var(--pomegrade-deep);
+	background: var(--pomegrade-deep);
+	color: var(--white);
 	border-radius: 2px;
 	padding: 14px 32px;
 	display: inline-flex;
@@ -353,9 +358,9 @@ section {
 }
 
 .btn:hover {
-	background: var(--amber-deep);
-	border-color: var(--amber-deep);
-	color: var(--charcoal-1);
+	background: var(--pomegrade-deeper);
+	border-color: var(--pomegrade-deeper);
+	color: var(--white);
 }
 
 .btn:focus-visible {
@@ -377,14 +382,14 @@ section {
 }
 
 .btn.outline:hover {
-	background: var(--amber);
-	border-color: var(--amber);
-	color: var(--charcoal-1);
+	background: var(--pomegrade-deep);
+	border-color: var(--pomegrade-deep);
+	color: var(--white);
 }
 
 .btn.outline:focus-visible {
-	background: var(--amber);
-	color: var(--charcoal-1);
+	background: var(--pomegrade-deep);
+	color: var(--white);
 	box-shadow: none;
 	outline: 1.5px solid var(--charcoal-1);
 	outline-offset: -1.5px;
