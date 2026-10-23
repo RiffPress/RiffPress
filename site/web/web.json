@@ -1015,7 +1015,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"line": 2991,
+				"line": 2998,
 				"code": "text-wrap: balance;"
 			}
 		],
