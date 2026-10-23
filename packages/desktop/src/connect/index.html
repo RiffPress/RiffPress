@@ -4,20 +4,22 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'">
 <meta name="color-scheme" content="dark">
-<title>Connect to a site</title>
+<title>Riff</title>
 <link rel="stylesheet" href="connect.css">
 <script src="connect.js" defer></script>
 </head>
 <body>
 <main>
-	<h1>Connect to a site</h1>
-	<p>The address of a WordPress site with Riff, or of its Listen page.</p>
+	<img src="icon.png" alt="" width="96" height="96">
+	<h1>Play a site’s music</h1>
+	<p>Type the address of the site, as you would in a browser.</p>
 	<form>
 		<label for="address">Site address</label>
-		<input id="address" name="address" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="example.com" required autofocus>
+		<input id="address" name="address" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yourband.com" aria-describedby="hint" required autofocus>
 		<p id="error" role="alert"></p>
 		<button type="submit">Connect</button>
 	</form>
+	<p id="hint" class="hint">Riff finds the site’s music for you. Signing in, if the site asks, happens in the window.</p>
 </main>
 </body>
 </html>

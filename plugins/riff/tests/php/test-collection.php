@@ -101,7 +101,7 @@ class Test_Riff_Collection extends Riff_TestCase {
 		$html = $this->library();
 
 		$this->assertMatchesRegularExpression( '/riff_view=posts.*riff_view=library/s', $html, 'after the site\'s own lists' );
-		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html );
+		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab[^"]*" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html );
 		$this->assertStringContainsString( 'Your Library', $html );
 	}
 

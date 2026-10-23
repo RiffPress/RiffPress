@@ -153,11 +153,11 @@ test( 'a playlist opens from Your Library, plays, reorders, loses a track, is re
 test( 'New playlist in the standalone app opens it, and the sidebar lists it', async ( { page } ) => {
 	await page.setViewportSize( { width: 1440, height: 900 } );
 	await page.goto( withArg( listenUrl.replace( /\/?$/, '/' ) + 'app/', 'riff_view=library' ) );
-	await page.locator( '[data-riff-app-action="new-playlist"]' ).click();
+	await page.locator( '.riff-library [data-riff-app-action="new-playlist"]' ).click();
 	await expect( page ).toHaveURL( /riff_playlist=\d+/ );
 	await expect( page.locator( '.riff-album-title' ) ).toHaveText( 'New playlist' );
 	await expect( page.locator( '.riff-app-empty' ) ).toContainText( 'Nothing in it yet' );
-	await expect( page.locator( '.riff-app-playlist[aria-current="page"]' ) ).toHaveText( 'New playlist' );
+	await expect( page.locator( '.riff-app-library .riff-app-item[aria-current="page"] .riff-app-item-title' ) ).toHaveText( 'New playlist' );
 	await expectTidy( page, '.riff-app', 'a new playlist, standalone' );
 	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 } );

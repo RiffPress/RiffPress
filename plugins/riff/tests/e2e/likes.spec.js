@@ -427,3 +427,55 @@ test( 'an album\'s and an artist\'s heart save them, and say so', async ( { page
 	await expect( page.locator( '.riff-app-status' ) ).toHaveText( /removed from your library/ );
 	await expect.poll( () => likesOf( requestUtils ) ).toEqual( [ `album:${ album }` ] );
 } );
+
+test( 'the standalone sidebar lists Your Library with artwork, and its chips narrow it in place', async ( {
+	page,
+	requestUtils,
+	isMobile,
+} ) => {
+	test.skip( isMobile, 'On a phone the navigation is tabs, with no room for the library.' );
+	await requestUtils.rest( {
+		method: 'POST',
+		path: '/riff/v1/users/me/likes',
+		data: {
+			items: [
+				{ kind: 'artist', id: artist, at: 1000 },
+				{ kind: 'track', id: audio[ 0 ].id, at: 2000 },
+				{ kind: 'album', id: album, at: 4000 },
+			],
+		},
+	} );
+	await page.setViewportSize( { width: 1440, height: 900 } );
+	await page.goto( listenUrl.replace( /\/?$/, '/' ) + 'app/' );
+	const library = page.locator( '.riff-app-library' );
+	await expect( library.locator( '.riff-app-library-title' ) ).toHaveText( 'Your Library' );
+	// Liked songs first, then what was liked, newest first, each with what it is.
+	const rows = library.locator( 'li:not([hidden])' );
+	await expect( rows.locator( '.riff-app-item-title' ) ).toHaveText( [ 'Liked songs', /./, /./ ] );
+	await expect( rows.locator( '.riff-app-item-sub' ) ).toHaveText( [ 'Playlist · 1 song', /^Album · /, 'Artist' ] );
+	await expect( rows.nth( 2 ).locator( '.riff-app-item-art' ) ).toHaveClass( /riff-app-item-round/ );
+	// The tab for the library would say it twice beside its own heading.
+	await expect( page.locator( '.riff-app-tab-library' ) ).toBeHidden();
+
+	// A chip narrows the rows where they are; pressed again, everything is back.
+	const albums = library.locator( '.riff-app-library-chip', { hasText: 'Albums' } );
+	await albums.click();
+	await expect( page ).not.toHaveURL( /riff_view=library/ );
+	await expect( albums ).toHaveAttribute( 'aria-pressed', 'true' );
+	await expect( rows ).toHaveCount( 1 );
+	await expect( rows.locator( '.riff-app-item-sub' ) ).toHaveText( /^Album · / );
+	// It holds while the sidebar is drawn again for the next view.
+	await rows.locator( 'a' ).click();
+	await expect( page ).toHaveURL( new RegExp( `riff_album=${ album }` ) );
+	await expect( library.locator( '.riff-app-item[aria-current="page"]' ) ).toHaveCount( 1 );
+	await expect( rows ).toHaveCount( 1 );
+	await library.locator( '.riff-app-library-chip', { hasText: 'Albums' } ).click();
+	await expect( rows ).toHaveCount( 3 );
+	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
+
+	// Folded to a rail, the rows are their artwork, and still have their names.
+	await page.locator( '.riff-app-collapse' ).click();
+	await expect( library.locator( '.riff-app-library-head' ) ).toBeHidden();
+	await expect( rows.first().locator( 'a' ) ).toHaveAccessibleName( /Liked songs/ );
+	await page.locator( '.riff-app-collapse' ).click();
+} );
