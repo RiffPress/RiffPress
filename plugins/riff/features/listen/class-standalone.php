@@ -183,6 +183,9 @@ final class Standalone {
 			'start_url'        => $start,
 			'scope'            => $start,
 			'display'          => 'standalone',
+			// On a computer, Chrome and Edge draw the window's controls over the page, and the
+			// app's own strip is the title bar, as in Riff's desktop app (riff.css).
+			'display_override' => array( 'window-controls-overlay' ),
 			'background_color' => self::BACKGROUND,
 			'theme_color'      => self::BACKGROUND,
 			'icons'            => $icons,
