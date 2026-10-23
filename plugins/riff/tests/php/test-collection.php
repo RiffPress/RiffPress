@@ -144,7 +144,10 @@ class Test_Riff_Collection extends Riff_TestCase {
 		$this->assertSame( 2, substr_count( $html, 'data-riff-track=' ), 'the two a visitor may see' );
 		$this->assertLessThan( strpos( $html, 'Underground' ), strpos( $html, 'Trombone Detritus' ), 'newest first' );
 		$this->assertStringContainsString( 'data-riff-app-action="shuffle"', $html );
-		$this->assertMatchesRegularExpression( '/<a class="riff-chip-link" href="[^"]*riff_filter=songs"[^>]*aria-current="true">Songs/', $html );
+		// Opened as a playlist is: its own header, not Your Library's chips.
+		$this->assertStringContainsString( '<p class="riff-album-kind">Playlist</p><h2 class="riff-album-title" tabindex="-1">Liked songs</h2>', $html );
+		$this->assertStringContainsString( 'class="riff-album-liked"', $html, 'the heart for its cover' );
+		$this->assertStringNotContainsString( 'riff-chip-row', $html );
 	}
 
 	public function test_a_signed_in_listener_sees_their_account_and_not_what_the_address_says(): void {

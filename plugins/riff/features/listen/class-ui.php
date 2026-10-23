@@ -284,8 +284,21 @@ final class Ui {
 				esc_html( (string) $choice['label'] )
 			);
 		}
+		// The sort, as Spotify's library has it: the one in use on a button, the choices under it.
+		// A details element, so it opens without the script.
 		if ( 'sort' === $kind ) {
-			return sprintf( '<div class="riff-library-sort" role="group" aria-labelledby="riff-library-sort"><span id="riff-library-sort">%s</span>%s</div>', esc_html( $label ), $links );
+			$current = '';
+			foreach ( $choices as $choice ) {
+				$current = ! empty( $choice['current'] ) ? (string) $choice['label'] : $current;
+			}
+			return sprintf(
+				'<details class="riff-library-sort"><summary aria-label="%1$s">%2$s<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg></summary><div class="riff-library-sort-menu" role="group" aria-label="%3$s">%4$s</div></details>',
+				/* translators: 1: "Sort by", 2: the order in use, such as Recently added. */
+				esc_attr( sprintf( __( '%1$s: %2$s', 'riff' ), $label, $current ) ),
+				esc_html( $current ),
+				esc_attr( $label ),
+				$links
+			);
 		}
 		return sprintf( '<div class="riff-chip-row" role="group" aria-label="%s">%s</div>', esc_attr( $label ), $links );
 	}

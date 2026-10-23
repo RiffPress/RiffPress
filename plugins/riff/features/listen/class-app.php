@@ -447,6 +447,7 @@ final class App {
 	 * @since 4.17.0
 	 * @since 4.20.0 A heart beside Play and Shuffle, for an album or artist; a playlist's mosaic,
 	 *               and more buttons beside Play and Shuffle.
+	 * @since 4.28.0 A cover drawn in markup.
 	 *
 	 * @param string $title Title.
 	 * @param string $meta  The line under it.
@@ -458,12 +459,13 @@ final class App {
 	 * @param int    $id     The album's or artist's term ID, for the heart.
 	 * @param array  $covers Up to four covers for a playlist's mosaic, when there is no art.
 	 * @param string $extra  More buttons after Play and Shuffle, or empty.
+	 * @param string $drawn  A cover drawn in markup, when there is no picture: Liked songs' heart.
 	 * @return string
 	 */
-	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '' ): string {
+	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '', string $drawn = '' ): string {
 		$tint  = (string) sanitize_hex_color( $tint );
 		$heart = in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ? Ui::heart( $like, $id, $title ) : '';
-		$cover = '' !== $art ? '<img src="' . esc_url( $art ) . '" alt="" decoding="async">' : Ui::mosaic( $covers );
+		$cover = '' !== $art ? '<img src="' . esc_url( $art ) . '" alt="" decoding="async">' : ( '' !== $drawn ? $drawn : Ui::mosaic( $covers ) );
 		return sprintf(
 			'<header class="riff-album%1$s"%6$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>%7$s</div></header>',
 			( '' !== $cover ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),

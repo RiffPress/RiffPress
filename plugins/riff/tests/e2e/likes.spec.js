@@ -335,6 +335,7 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 	await expect( grid.nth( 2 ) ).toHaveAttribute( 'data-riff-artist', String( artist ) );
 	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'All' ).toEqual( [] );
 
+	await page.locator( '.riff-library-sort summary' ).click();
 	await page.locator( '.riff-sort-link', { hasText: 'Alphabetical' } ).click();
 	await expect( page ).toHaveURL( /riff_sort=name/ );
 	await expect( page.locator( '.riff-sort-link[aria-current="true"]' ) ).toHaveText( 'Alphabetical' );
@@ -347,6 +348,7 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, chip ).toEqual( [] );
 	}
 
+	await page.locator( '.riff-library-sort summary' ).click();
 	await page.locator( '.riff-sort-link', { hasText: 'Recently added' } ).click();
 	await expect( page.locator( '.riff-sort-link[aria-current="true"]' ) ).toHaveText( 'Recently added' );
 	await page.locator( '.riff-chip-link', { hasText: 'Songs' } ).click();
