@@ -3693,8 +3693,10 @@ html.has-riff .riff-standalone .riff-app {
 		display: none;
 	}
 
-	/* The names stay for a screen reader, the links' only names on the rail. */
+	/* The names stay for a screen reader, the links' only names on the rail. A
+	   block, not the column: a column squeezed into the 1px box crushes them. */
 	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item-text {
+		display: block;
 		position: absolute;
 		width: 1px;
 		height: 1px;
@@ -3884,11 +3886,38 @@ html.has-riff .riff-standalone .riff-app {
 	display: none;
 }
 
-/* ---- Riff's desktop app marks the document riff-desktop: no browser around
-   the window, so a strip across the top holds a back and forward pair over
-   the app's history and the sidebar's toggle. On a Mac it is riff-desktop-inset
-   too: the window has no title bar, the strip drags the window, and its left
-   end is the traffic lights'. Internal to the app; not for themes. */
+/* ---- An app, not a page: in the Listen app the frame, the sidebar, the rows,
+   the cards, the headings and every control are not text to select, and no
+   picture drags out of it, so a drag or a double-click never paints the view
+   blue. Only the fields select. The player is controls wherever it plays. */
+.riff-standalone .riff-app,
+#riff {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.riff-standalone .riff-app img,
+.riff-standalone .riff-app svg,
+#riff img {
+	-webkit-user-drag: none;
+}
+
+.riff-standalone .riff-app input,
+.riff-standalone .riff-app textarea,
+#riff input[type="text"],
+#riff input[type="search"],
+#riff textarea {
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+/* ---- Spotify's frame, on a computer: the document is riff-desktop in Riff's
+   desktop app, and in a browser or an installed web app with a mouse or a
+   trackpad (templates/standalone.php). A strip across the top holds a back
+   and forward pair over the app's history and the sidebar's toggle. In the
+   desktop app on a Mac it is riff-desktop-inset too: the window has no title
+   bar, the strip drags the window, and its left end is the traffic lights'.
+   Internal to the app; not for themes. */
 .riff-app-titlebar {
 	display: none;
 }
@@ -3974,6 +4003,19 @@ html.riff-desktop .riff-standalone .riff-app-history svg {
 html.riff-desktop .riff-standalone .riff-app .riff-app-collapse svg {
 	width: 20px;
 	height: 20px;
+}
+
+/* A library at rest; over the panel's head, the panel it would close, or
+   open when it is a rail. */
+html.riff-desktop .riff-standalone .riff-app-collapse-close,
+html.riff-desktop .riff-standalone .riff-app-collapse-open,
+html.riff-desktop .riff-standalone .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-rest {
+	display: none;
+}
+
+html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-close,
+html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-open {
+	display: inline;
 }
 
 /* A narrow window: the tabs start under the strip. */
@@ -4170,6 +4212,26 @@ html.riff-desktop .riff-standalone .riff-app {
 	html.riff-desktop #riff .riff-bar {
 		border-top: 0;
 		background: #000;
+	}
+}
+
+/* Installed as a web app on a computer, with the window's controls drawn
+   over the page, the strip is the title bar: it drags the window and keeps
+   clear of the controls, on the left on a Mac and on the right elsewhere. */
+@media (display-mode: window-controls-overlay) {
+
+	html.riff-desktop .riff-standalone .riff-app-titlebar {
+		padding-left: calc(env(titlebar-area-x, 0px) + 16px);
+		-webkit-app-region: drag;
+		app-region: drag;
+	}
+}
+
+@media (display-mode: window-controls-overlay) and (min-width: 900px) {
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-account,
+	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
+		right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 16px);
 	}
 }
 
