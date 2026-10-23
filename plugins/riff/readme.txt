@@ -119,6 +119,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.26.0 =
+* Riff's own mark, a tuning fork drawn from EB Garamond's f, in amber, with no blue anywhere.
+
 = 4.25.0 =
 * Listeners can install the app, offered from their second visit.
 * Now Playing in the desktop app, full screen as Tidal's.
@@ -145,13 +148,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: the seek bar moves on the compositor, so it glides without shaking whatever the page is doing.
 * Fixed: the seek line stays under the pointer while it is dragged, instead of shaking back to the time playing.
 * Fixed: under a block theme, standalone mode has one title and keeps the iPhone safe areas.
-
-= 4.21.2 =
-* Fixed: a name that is one long word wraps instead of widening the Listen page.
-* Fixed: a one-word name wraps inside its card in every row, not only on album pages.
-* Fixed: an album of more than 100 tracks lists and plays every track.
-* Fixed: an album of more than 100 tracks plays in track order across its pages.
-* Fixed: an empty Posts view tells visitors only that there is nothing to play yet.
-* Fixed: before the first upload, visitors to the Listen page are not told how to add music.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
