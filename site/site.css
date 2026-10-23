@@ -509,14 +509,15 @@ section {
 		display: block;
 	}
 
+	/* The mark whole in the margin, its rings running off the edge. */
 	.hero .marg {
-		right: -200px;
-		top: 120px;
+		right: -60px;
+		top: 80px;
 	}
 
 	#owners .marg {
-		left: -240px;
-		bottom: -120px;
+		left: -60px;
+		bottom: -40px;
 	}
 }
 
