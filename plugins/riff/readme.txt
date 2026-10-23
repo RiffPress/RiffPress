@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.25.0
+Stable tag: 4.27.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.27.0 =
+* Riff's logo is its own name, with its ff as a score writes fortissimo.
+* Fixed: the line under an album's title keeps its contrast on a light cover's tint.
+
 = 4.26.0 =
 * Riff's own mark, a tuning fork drawn from EB Garamond's f, in amber, with no blue anywhere.
 
@@ -139,14 +143,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * A listener without a Gravatar sees their initial, not the grey silhouette.
 * Deleting Riff keeps listeners' playlists, likes and history, and Erase Personal Data removes them.
 * Fixed: a row's heart is copied from the bar's icons, not parsed from the page's data.
-
-= 4.22.0 =
-* The Listen app shows who is listening, with their picture and a menu, or Sign in.
-* The player's strings are translated in its script modules, from WordPress's script module translations.
-* Fixed: the order in use in Your Library is underlined, not bolder, so choosing one moves nothing.
-* Fixed: the player's notices are dark on light with room around them, not white on white.
-* Fixed: the seek bar moves on the compositor, so it glides without shaking whatever the page is doing.
-* Fixed: the seek line stays under the pointer while it is dragged, instead of shaking back to the time playing.
-* Fixed: under a block theme, standalone mode has one title and keeps the iPhone safe areas.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
