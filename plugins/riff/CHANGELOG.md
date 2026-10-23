@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.27.0](https://github.com/RiffPress/RiffPress/compare/v4.26.0...v4.27.0) (2026-10-23)
+
+
+### Features
+
+* Riff's logo is its own name, with its ff as a score writes fortissimo ([#531](https://github.com/RiffPress/RiffPress/issues/531)) ([793eba8](https://github.com/RiffPress/RiffPress/commit/793eba8722e9c847c40e23026a3f8cef60ffe77a))
+
+
+### Bug Fixes
+
+* the line under an album's title keeps its contrast on a light cover's tint ([#536](https://github.com/RiffPress/RiffPress/issues/536)) ([4fdc89e](https://github.com/RiffPress/RiffPress/commit/4fdc89ee3a9fcfdb3bc80395347d18c558f50bb0))
+
 ## [4.26.0](https://github.com/RiffPress/RiffPress/compare/v4.25.0...v4.26.0) (2026-10-23)
 
 
