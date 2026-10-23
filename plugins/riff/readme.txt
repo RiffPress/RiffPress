@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.24.0
+Stable tag: 4.25.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.25.0 =
+* Listeners can install the app, offered from their second visit.
+* Now Playing in the desktop app, full screen as Tidal's.
+
 = 4.24.0 =
 * Riff for the desktop, an Electron window on a site's Listen page.
 * Spotify's cards, titles and Play in the frame.
@@ -149,8 +153,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: an album of more than 100 tracks plays in track order across its pages.
 * Fixed: an empty Posts view tells visitors only that there is nothing to play yet.
 * Fixed: before the first upload, visitors to the Listen page are not told how to add music.
-
-= 4.21.1 =
-* Fixed: the Listen app loads without moving.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
