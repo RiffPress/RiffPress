@@ -163,7 +163,7 @@ test( 'nothing starts without audio, a WordPress site, or a signed-in listener',
 
 test( 'the quoted file name is plain ASCII for the header, and the UTF-8 one keeps it whole', () => {
 	assert.equal(
-		disposition( 'Café "Live".mp3' ),
-		'attachment; filename="Cafe _Live_.mp3"; filename*=UTF-8\'\'Caf%C3%A9%20%22Live%22.mp3'
+		disposition( 'Señor "Live".mp3' ),
+		'attachment; filename="Senor _Live_.mp3"; filename*=UTF-8\'\'Se%C3%B1or%20%22Live%22.mp3'
 	);
 } );
