@@ -1451,17 +1451,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
+/* The … menu, drawn as WordPress's toolbar draws its menus: square, on the
+   toolbar's #2c3338, light grey words that turn the toolbar's blue under the
+   pointer or the keyboard. Its rows keep 44px on a touch screen. */
 .riff-menu {
 	position: fixed;
 	z-index: 2147483000;
 	display: grid;
 	min-width: 200px;
-	padding: 8px 0;
-	border-radius: 8px;
-	background: #282828;
-	box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
-	color: #fff;
-	font: 400 15px/1.3 "Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif;
+	padding: 6px 0;
+	border-radius: 0;
+	background: #2c3338;
+	box-shadow: 0 3px 5px rgb(0 0 0 / 0.2);
+	color: #f0f0f1;
+	font: 400 14px/1.3 "Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif;
 }
 
 .riff-menu[hidden] {
@@ -1472,7 +1475,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 #riff .riff-menu > * {
 	all: unset;
 	box-sizing: border-box;
-	padding: 10px 20px;
+	padding: 8px 16px;
 	color: inherit;
 	cursor: pointer;
 }
@@ -1481,7 +1484,22 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-menu > :focus-visible,
 #riff .riff-menu > :hover,
 #riff .riff-menu > :focus-visible {
-	background: rgb(255 255 255 / 0.1);
+	color: #72aee6;
+}
+
+.riff-menu > :focus-visible,
+#riff .riff-menu > :focus-visible {
+	box-shadow: inset 0 0 0 2px #72aee6;
+}
+
+@media (pointer: coarse) {
+
+	.riff-menu > *,
+	#riff .riff-menu > * {
+		display: flex;
+		align-items: center;
+		min-height: 44px;
+	}
 }
 
 #riff .riff-queue-head {
@@ -2217,6 +2235,40 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app .riff-app-account-menu a:focus-visible {
 	background: var(--riff-app-accent-tint);
 	outline: none;
+}
+
+/* In standalone mode, the account menu is the toolbar's too, as the …
+   menu is. */
+.riff-standalone .riff-app .riff-app-account-menu {
+	padding: 6px 0;
+	border: 0;
+	border-radius: 0;
+	background: #2c3338;
+	box-shadow: 0 3px 5px rgb(0 0 0 / 0.2);
+}
+
+.riff-standalone .riff-app .riff-app-account-name {
+	margin: 0 0 6px;
+	padding: 6px 16px 10px;
+	border-bottom-color: rgb(240 240 241 / 0.15);
+	color: #c3c4c7;
+	font-size: 13px;
+}
+
+.riff-standalone .riff-app .riff-app-account-menu a {
+	padding: 8px 16px;
+	color: #f0f0f1;
+	font-size: 14px;
+}
+
+.riff-standalone .riff-app .riff-app-account-menu a:hover,
+.riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
+	background: none;
+	color: #72aee6;
+}
+
+.riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
+	box-shadow: inset 0 0 0 2px #72aee6;
 }
 
 .riff-app .riff-app-search input:focus-visible {
@@ -3792,8 +3844,10 @@ html.has-riff .riff-standalone .riff-app {
 		display: none;
 	}
 
-	/* The names stay for a screen reader, the links' only names on the rail. */
+	/* The names stay for a screen reader, the links' only names on the rail. A
+	   block, not the column: a column squeezed into the 1px box crushes them. */
 	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item-text {
+		display: block;
 		position: absolute;
 		width: 1px;
 		height: 1px;
@@ -3983,11 +4037,38 @@ html.has-riff .riff-standalone .riff-app {
 	display: none;
 }
 
-/* ---- Riff's desktop app marks the document riff-desktop: no browser around
-   the window, so a strip across the top holds a back and forward pair over
-   the app's history and the sidebar's toggle. On a Mac it is riff-desktop-inset
-   too: the window has no title bar, the strip drags the window, and its left
-   end is the traffic lights'. Internal to the app; not for themes. */
+/* ---- An app, not a page: in the Listen app the frame, the sidebar, the rows,
+   the cards, the headings and every control are not text to select, and no
+   picture drags out of it, so a drag or a double-click never paints the view
+   blue. Only the fields select. The player is controls wherever it plays. */
+.riff-standalone .riff-app,
+#riff {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.riff-standalone .riff-app img,
+.riff-standalone .riff-app svg,
+#riff img {
+	-webkit-user-drag: none;
+}
+
+.riff-standalone .riff-app input,
+.riff-standalone .riff-app textarea,
+#riff input[type="text"],
+#riff input[type="search"],
+#riff textarea {
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+/* ---- Spotify's frame, on a computer: the document is riff-desktop in Riff's
+   desktop app, and in a browser or an installed web app with a mouse or a
+   trackpad (templates/standalone.php). A strip across the top holds a back
+   and forward pair over the app's history and the sidebar's toggle. In the
+   desktop app on a Mac it is riff-desktop-inset too: the window has no title
+   bar, the strip drags the window, and its left end is the traffic lights'.
+   Internal to the app; not for themes. */
 .riff-app-titlebar {
 	display: none;
 }
@@ -4091,6 +4172,19 @@ html.riff-desktop .riff-standalone .riff-app-history svg {
 html.riff-desktop .riff-standalone .riff-app .riff-app-collapse svg {
 	width: 20px;
 	height: 20px;
+}
+
+/* A library at rest; over the panel's head, the panel it would close, or
+   open when it is a rail. */
+html.riff-desktop .riff-standalone .riff-app-collapse-close,
+html.riff-desktop .riff-standalone .riff-app-collapse-open,
+html.riff-desktop .riff-standalone .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-rest {
+	display: none;
+}
+
+html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-close,
+html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-open {
+	display: inline;
 }
 
 /* A narrow window: the tabs start under the strip. */
@@ -4288,6 +4382,91 @@ html.riff-desktop .riff-standalone .riff-app {
 		border-top: 0;
 		background: #000;
 	}
+}
+
+/* Spotify's view in the frame: a wash of the accent at the top of the view
+   that scrolls away with it, bold titles, and denser cards, each a panel
+   that lights on hover with its cover's corners rounded; the title stays
+   white, as Spotify's does. */
+html.riff-desktop .riff-standalone .riff-app-view {
+	background:
+		linear-gradient(color-mix(in srgb, var(--riff-app-accent) 12%, var(--riff-app-bg)), var(--riff-app-bg) 320px)
+		var(--riff-app-bg);
+}
+
+html.riff-desktop .riff-standalone .riff-app-title {
+	margin-bottom: 24px;
+	font-family: var(--riff-app-font);
+	font-size: 32px;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+html.riff-desktop .riff-standalone .riff-grid {
+	grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+	gap: 0;
+	margin: 0 -12px;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-shelf-row:has(> .riff-card) {
+	grid-auto-columns: clamp(164px, 15vw, 200px);
+	gap: 0;
+	margin: 0 -12px;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-card {
+	padding: 12px;
+	border-radius: 8px;
+	transition: background-color 0.2s;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-card:hover {
+	background: rgb(255 255 255 / 0.07);
+}
+
+html.riff-desktop .riff-standalone .riff-card:not(.riff-card-artist) .riff-card-art {
+	border-radius: 6px;
+}
+
+html.riff-desktop .riff-standalone .riff-card:hover .riff-card-art {
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+html.riff-desktop .riff-standalone .riff-card:hover .riff-card-title {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* The bar as Spotify's: a white round Play, and the track in smaller type.
+   The seek line keeps Riff's filament. */
+html.riff-desktop #riff .riff-bar .riff-play {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: #fff;
+	color: #000;
+	transition: transform 0.1s;
+}
+
+html.riff-desktop #riff .riff-bar .riff-play:hover {
+	transform: scale(1.06);
+}
+
+html.riff-desktop #riff .riff-bar .riff-play svg {
+	width: 20px;
+	height: 20px;
+}
+
+html.riff-desktop #riff .riff-bar .riff-title {
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+html.riff-desktop #riff .riff-bar .riff-sub {
+	font-size: 12px;
+	line-height: 1.4;
 }
 
 /* Trying the layout in a browser (templates/standalone.php, with SCRIPT_DEBUG

@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.23.0
+Stable tag: 4.24.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,15 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.24.0 =
+* Riff for the desktop, an Electron window on a site's Listen page.
+* Spotify's cards, titles and Play in the frame.
+* Spotify's frame for the Listen app on any computer, in a browser or installed.
+* The desktop app in Spotify's frame, with a Mac icon on Apple's grid.
+* Your Library in the sidebar and an album's header, as Spotify's.
+* Fixed: a protected file on a password-protected post needs the password.
+* Fixed: adding music starts from the Media Library, not from writing a post.
+
 = 4.23.0 =
 * A listener without a Gravatar sees their initial, not the grey silhouette.
 * Deleting Riff keeps listeners' playlists, likes and history, and Erase Personal Data removes them.
@@ -143,11 +152,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 4.21.1 =
 * Fixed: the Listen app loads without moving.
-
-= 4.21.0 =
-* First run creates the Listen page and points to the first album.
-* Fixed: every album card's line is its artist, from one shared card.
-* Fixed: on a wide screen the seek line sits under the controls, where it is easy to reach.
-* Fixed: security review fixes before the plugin directory.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

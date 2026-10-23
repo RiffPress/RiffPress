@@ -21,10 +21,11 @@ defined( 'ABSPATH' ) || exit;
 <link rel="manifest" href="<?php echo esc_url( Standalone::url( 0, true ) ); ?>">
 <link rel="apple-touch-icon" href="<?php echo esc_url( get_site_icon_url( 180 ) ? get_site_icon_url( 180 ) : RIFF_URL . 'features/listen/icons/icon-192.png' ); ?>">
 <?php
-// Installed as an app on a computer, the page is laid out as the desktop app is: riff-desktop for
-// the frame, and riff-desktop-overlay where the window has no title bar and its controls sit in
-// the app's strip. A listener can turn the title bar back on, so it follows the change.
-wp_print_inline_script_tag( '(function(){try{var r=document.documentElement,q=["(display-mode: window-controls-overlay)","(display-mode: standalone) and (pointer: fine)"].map(function(x){return matchMedia(x);});var s=function(){var o=q[0].matches;if(o||q[1].matches){r.classList.add("riff-desktop","riff-installed");}else if(r.classList.contains("riff-installed")){r.classList.remove("riff-desktop","riff-installed");}r.classList.toggle("riff-desktop-overlay",o);};s();q.forEach(function(x){x.addEventListener("change",s);});}catch(e){}})();' );
+// On a computer, in a browser or installed as a web app, the page is laid out as Riff's desktop app
+// is, in Spotify's frame; a phone or a tablet keeps the touch layout. Installed with the window's
+// controls over the page, it is riff-desktop-overlay too, and the strip is the title bar. A listener
+// can turn the title bar back on, so that follows the change.
+wp_print_inline_script_tag( '(function(){try{var r=document.documentElement,o=matchMedia("(display-mode: window-controls-overlay)");if(o.matches||matchMedia("(hover: hover) and (pointer: fine)").matches){r.classList.add("riff-desktop");}var s=function(){r.classList.toggle("riff-desktop-overlay",o.matches);};s();o.addEventListener("change",s);}catch(e){}})();' );
 // Riff's desktop app marks the document itself. On a development site (SCRIPT_DEBUG or WP_DEBUG),
 // ?riff_desktop=1 lays the page out as the app does, traffic lights drawn in, to work on with a
 // browser's tools; the choice is kept in this browser until ?riff_desktop=0.
