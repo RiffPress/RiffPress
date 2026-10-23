@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.28.0](https://github.com/RiffPress/RiffPress/compare/v4.27.0...v4.28.0) (2026-10-23)
+
+
+### Features
+
+* Liked songs opens as a playlist, and Your Library sorts from a menu, as Spotify's do ([#540](https://github.com/RiffPress/RiffPress/issues/540)) ([abac6b9](https://github.com/RiffPress/RiffPress/commit/abac6b9ede4cf952c29fbe02416668fcaf7bd433))
+
 ## [4.27.0](https://github.com/RiffPress/RiffPress/compare/v4.26.0...v4.27.0) (2026-10-23)
 
 

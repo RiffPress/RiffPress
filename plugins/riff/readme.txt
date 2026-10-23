@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.27.0
+Stable tag: 4.28.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.28.0 =
+* Liked songs opens as a playlist, and Your Library sorts from a menu, as Spotify's do.
+
 = 4.27.0 =
 * Riff's logo is its own name, with its ff as a score writes fortissimo.
 * Fixed: the line under an album's title keeps its contrast on a light cover's tint.
@@ -138,10 +141,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Your Library in the sidebar and an album's header, as Spotify's.
 * Fixed: a protected file on a password-protected post needs the password.
 * Fixed: adding music starts from the Media Library, not from writing a post.
-
-= 4.23.0 =
-* A listener without a Gravatar sees their initial, not the grey silhouette.
-* Deleting Riff keeps listeners' playlists, likes and history, and Erase Personal Data removes them.
-* Fixed: a row's heart is copied from the bar's icons, not parsed from the page's data.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
