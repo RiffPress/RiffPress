@@ -42,7 +42,7 @@ body { width: 1200px; height: 630px; overflow: hidden; position: relative; backg
 h1 { position: absolute; left: 80px; top: 230px; width: 720px; margin: 0; font-family: "EB Garamond", serif; font-weight: 400; font-size: 92px; line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
 p { position: absolute; left: 80px; bottom: 80px; width: 640px; margin: 0; font-size: 28px; line-height: 1.45; color: #979aa1; text-wrap: pretty; }
 </style></head><body>
-<div class="mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><mask id="m"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="24" fill="#000"/></mask><g mask="url(#m)"><circle cx="512" cy="512" r="512" fill="#fff"/><circle cx="512" cy="512" r="171" fill="#3858e9"/></g></svg>RiffPress</div>
+<div class="mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="230" fill="#3858e9"/><mask id="m"><rect width="1024" height="1024" fill="#fff"/><circle cx="512" cy="512" r="16" fill="#000"/></mask><g mask="url(#m)"><circle cx="512" cy="512" r="380" fill="#121216"/><circle cx="512" cy="512" r="142" fill="#ffb020"/></g></svg>RiffPress</div>
 <svg class="record" viewBox="0 0 1024 1024" aria-hidden="true">
 	<circle cx="512" cy="512" r="510" fill="#23282d"/>
 	${ Array.from( { length: 9 }, ( _, i ) => `<circle cx="512" cy="512" r="${ 470 - i * 34 }" fill="none" stroke="#40464d" stroke-width="3"/>` ).join( '' ) }
