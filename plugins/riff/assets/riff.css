@@ -4235,6 +4235,91 @@ html.riff-desktop .riff-standalone .riff-app {
 	}
 }
 
+/* Spotify's view in the frame: a wash of the accent at the top of the view
+   that scrolls away with it, bold titles, and denser cards, each a panel
+   that lights on hover with its cover's corners rounded; the title stays
+   white, as Spotify's does. */
+html.riff-desktop .riff-standalone .riff-app-view {
+	background:
+		linear-gradient(color-mix(in srgb, var(--riff-app-accent) 12%, var(--riff-app-bg)), var(--riff-app-bg) 320px)
+		var(--riff-app-bg);
+}
+
+html.riff-desktop .riff-standalone .riff-app-title {
+	margin-bottom: 24px;
+	font-family: var(--riff-app-font);
+	font-size: 32px;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+html.riff-desktop .riff-standalone .riff-grid {
+	grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+	gap: 0;
+	margin: 0 -12px;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-shelf-row:has(> .riff-card) {
+	grid-auto-columns: clamp(164px, 15vw, 200px);
+	gap: 0;
+	margin: 0 -12px;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-card {
+	padding: 12px;
+	border-radius: 8px;
+	transition: background-color 0.2s;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-card:hover {
+	background: rgb(255 255 255 / 0.07);
+}
+
+html.riff-desktop .riff-standalone .riff-card:not(.riff-card-artist) .riff-card-art {
+	border-radius: 6px;
+}
+
+html.riff-desktop .riff-standalone .riff-card:hover .riff-card-art {
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+html.riff-desktop .riff-standalone .riff-card:hover .riff-card-title {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* The bar as Spotify's: a white round Play, and the track in smaller type.
+   The seek line keeps Riff's filament. */
+html.riff-desktop #riff .riff-bar .riff-play {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: #fff;
+	color: #000;
+	transition: transform 0.1s;
+}
+
+html.riff-desktop #riff .riff-bar .riff-play:hover {
+	transform: scale(1.06);
+}
+
+html.riff-desktop #riff .riff-bar .riff-play svg {
+	width: 20px;
+	height: 20px;
+}
+
+html.riff-desktop #riff .riff-bar .riff-title {
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+html.riff-desktop #riff .riff-bar .riff-sub {
+	font-size: 12px;
+	line-height: 1.4;
+}
+
 /* Trying the layout in a browser (templates/standalone.php, with SCRIPT_DEBUG
    or WP_DEBUG on): where the traffic lights would be. */
 html.riff-desktop-preview .riff-standalone .riff-app-titlebar::before {
