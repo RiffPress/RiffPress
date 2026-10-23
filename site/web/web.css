@@ -25,6 +25,9 @@
 	--grey-2: #f6f6f6;
 	--white: #fff;
 	--amber-ink: #9a5b00;
+	--pomegrade: #e26f56;
+	--pomegrade-deep: #ae381e;
+	--pomegrade-deeper: #9d321b;
 	--black: #000;
 	--panel: #121212;
 	--amber: #ffb020;
@@ -33,7 +36,7 @@
 	--ink: var(--charcoal-1);
 	--ink-2: var(--charcoal-4);
 	--line: var(--grey-1);
-	--accent: var(--amber-ink);
+	--accent: var(--pomegrade-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
 	--t: 0.2s;
@@ -90,8 +93,8 @@ code {
 	left: 16px;
 	top: -200px;
 	z-index: 20;
-	background: var(--amber);
-	color: var(--charcoal-1);
+	background: var(--pomegrade-deep);
+	color: var(--white);
 	padding: 10px 16px;
 	border-radius: 2px;
 	text-decoration: none;
@@ -158,9 +161,9 @@ code {
 
 .btn {
 	appearance: none;
-	border: 1px solid var(--amber);
-	background: var(--amber);
-	color: var(--charcoal-1);
+	border: 1px solid var(--pomegrade-deep);
+	background: var(--pomegrade-deep);
+	color: var(--white);
 	border-radius: 2px;
 	padding: 7px 12px;
 	display: inline-flex;
@@ -173,9 +176,9 @@ code {
 }
 
 .btn:hover {
-	background: var(--amber-deep);
-	border-color: var(--amber-deep);
-	color: var(--charcoal-1);
+	background: var(--pomegrade-deeper);
+	border-color: var(--pomegrade-deeper);
+	color: var(--white);
 }
 
 .btn:focus-visible {
@@ -184,22 +187,22 @@ code {
 	outline-offset: -1.5px;
 }
 
-/* Download, in the player's amber, as its Play is */
+/* Download, as wordpress.org's bar has Get WordPress */
 .nav .btn {
-	border-color: var(--amber);
-	background: var(--amber);
-	color: var(--black);
+	border-color: var(--pomegrade-deep);
+	background: var(--pomegrade-deep);
+	color: var(--white);
 }
 
 .nav .btn:hover {
-	border-color: var(--amber-deep);
-	background: var(--amber-deep);
-	color: var(--black);
+	border-color: var(--pomegrade-deeper);
+	background: var(--pomegrade-deeper);
+	color: var(--white);
 }
 
 .nav .btn:focus-visible {
 	box-shadow: inset 0 0 0 3px var(--black);
-	outline-color: var(--amber);
+	outline-color: var(--pomegrade);
 }
 
 /* marginalia, as wordpress.org sets it: a band of dots before the footer, a
@@ -657,9 +660,9 @@ figcaption {
 }
 
 .btn.outline:hover {
-	background: var(--amber);
-	border-color: var(--amber);
-	color: var(--charcoal-1);
+	background: var(--pomegrade-deep);
+	border-color: var(--pomegrade-deep);
+	color: var(--white);
 }
 
 /* ---- the download page */
@@ -863,7 +866,7 @@ figcaption {
 
 .local-nav a:focus-visible {
 	outline: none;
-	box-shadow: inset 0 0 0 1.5px var(--amber);
+	box-shadow: inset 0 0 0 1.5px var(--pomegrade);
 }
 
 .local-nav .local-title {
@@ -958,9 +961,9 @@ main h2[id] {
 }
 
 .hook-search input:focus-visible {
-	outline: 1.5px solid var(--amber-ink);
+	outline: 1.5px solid var(--pomegrade-deep);
 	outline-offset: -1.5px;
-	border-color: var(--amber-ink);
+	border-color: var(--pomegrade-deep);
 }
 
 .reference {
@@ -1064,7 +1067,7 @@ main h2[id] {
 }
 
 .is-toc-heading:target {
-	border-left: 2px solid var(--amber);
+	border-left: 2px solid var(--pomegrade-deep);
 	padding-left: 8px;
 }
 
