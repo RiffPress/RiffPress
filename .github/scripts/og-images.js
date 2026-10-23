@@ -2,7 +2,7 @@
 /**
  * The share cards: the 1200×630 picture a link to each page of the site shows on social sites
  * and in chat. One per main page, as the site is drawn: the RiffPress mark, the page's title in EB
- * Garamond, one line under it in Inter, on the app's #121212 with the tuning fork and its rings
+ * Garamond, one line under it in Inter, on the app's #121212 with the ff and its rings of sound
  * cropped into the corner. Pages below a section (the developer reference, the web platform pages) use their
  * section's card; site-shell.js picks it from the page's address.
  *
@@ -43,7 +43,7 @@ h1 { position: absolute; left: 80px; top: 230px; width: 720px; margin: 0; font-f
 p { position: absolute; left: 80px; bottom: 80px; width: 640px; margin: 0; font-size: 28px; line-height: 1.45; color: #979aa1; text-wrap: pretty; }
 </style></head><body>
 <div class="mark"><img src="${ file( 'icons/favicon.svg' ) }" alt="">RiffPress</div>
-<img class="fork" src="${ file( 'brand/fork-ghost-dark.svg' ) }" alt="">
+<img class="fork" src="${ file( 'brand/ff-ghost-dark.svg' ) }" alt="">
 <h1>${ esc( card.title ) }</h1>
 <p>${ esc( card.line ) }</p>
 </body></html>`;
