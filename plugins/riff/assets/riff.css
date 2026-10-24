@@ -4189,6 +4189,13 @@ html.riff-desktop:has(body.riff-standalone) {
 	background: #000;
 }
 
+/* An app's window does not stretch past its ends. On a Mac's trackpad the
+   page would, and the view would slide inside its frame, showing its square
+   top edge under the frame's round corners. */
+html.riff-desktop:has(body.riff-standalone) {
+	overscroll-behavior: none;
+}
+
 html.riff-desktop .riff-standalone .riff-app-titlebar {
 	position: fixed;
 	top: 0;
@@ -4456,6 +4463,10 @@ html.riff-desktop .riff-standalone .riff-app {
 		box-sizing: border-box;
 		margin-top: var(--riff-desktop-strip);
 		padding: 24px clamp(16px, 2.5vw, 32px) 48px;
+
+		/* The frame's corners, on the view too, so anything that moves it in
+		   its window still shows a round edge. */
+		border-radius: 8px;
 		background: var(--riff-app-bg);
 	}
 

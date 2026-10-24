@@ -750,6 +750,20 @@ test.describe( 'Standalone', () => {
 		expect( ( await new AxeBuilder( { page } ).include( '.riff-app-account' ).analyze() ).violations ).toEqual( [] );
 	} );
 
+	test( 'in the desktop app the window does not stretch past its ends, and the view keeps its round corners', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'The desktop app\'s layout is for a wide window.' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		// What the app's preload marks the document with.
+		await page.evaluate( () => document.documentElement.classList.add( 'riff-desktop' ) );
+		// A trackpad's stretch past the top would slide the view in its frame and show a square edge.
+		await expect( page.locator( 'html' ) ).toHaveCSS( 'overscroll-behavior-y', 'none' );
+		await expect( page.locator( '.riff-app-view' ) ).toHaveCSS( 'border-top-left-radius', '8px' );
+	} );
+
 	test( 'in the desktop app, Now Playing is Tidal\'s: the art alone, and Up next opens beside it', async ( {
 		page,
 		isMobile,
