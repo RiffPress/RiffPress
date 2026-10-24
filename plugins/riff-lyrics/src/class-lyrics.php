@@ -72,6 +72,9 @@ final class Lyrics {
 					'idle'  => __( 'Play something to see its lyrics.', 'riff-lyrics' ),
 					'error' => __( 'The lyrics could not load.', 'riff-lyrics' ),
 				)
+				// Signed in, the media route answers for the account only with its nonce: a track in a
+				// private or draft post is the account's to read.
+				+ ( is_user_logged_in() ? array( 'nonce' => wp_create_nonce( 'wp_rest' ) ) : array() )
 			) . ';',
 			'before'
 		);
