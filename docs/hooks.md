@@ -217,6 +217,20 @@ Since 4.16.0. Fires in `plugins/riff/assets/riff.js`.
 | `detail.track` | `Object\|null` | The track playing. |
 | `api` | `Object` | `window.riff`. |
 
+#### `riff.time`
+
+Fires as the track plays, a few times a second, and again after a seek.
+
+Since 4.32.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | Where the track is. |
+| `detail.track` | `Object` | The track. |
+| `detail.time` | `number` | Seconds from its start. |
+| `detail.duration` | `number` | Its length in seconds, or 0 until known. |
+| `api` | `Object` | `window.riff`. |
+
 #### `riff.track`
 
 Fires when a track is loaded, before it plays.

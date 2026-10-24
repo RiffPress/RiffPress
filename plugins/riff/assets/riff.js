@@ -231,6 +231,14 @@ function start() {
 		 */
 		playing: () => !! track() && ! el().paused,
 		/**
+		 * Where the track is.
+		 *
+		 * @since 4.32.0
+		 *
+		 * @return {number} Seconds from the start of the track, or 0 with nothing playing.
+		 */
+		time: () => ( track() ? el().currentTime || 0 : 0 ),
+		/**
 		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
 		 * through the `riff_now_playing_tabs` filter.
 		 *
@@ -1491,6 +1499,26 @@ function start() {
 		for ( const ev of [ 'seeked', 'ratechange', 'durationchange' ] ) {
 			m.addEventListener( ev, () => live() && glide() );
 		}
+		// Where the track is, for a script that follows it: synced lyrics, a visualiser.
+		const sayTime = () => {
+			/**
+			 * Fires as the track plays, a few times a second, and again after a seek.
+			 *
+			 * @since 4.32.0
+			 *
+			 * @param {Object} detail          Where the track is.
+			 * @param {Object} detail.track    The track.
+			 * @param {number} detail.time     Seconds from its start.
+			 * @param {number} detail.duration Its length in seconds, or 0 until known.
+			 * @param {Object} api             `window.riff`.
+			 */
+			emit( 'time', {
+				track: track(),
+				time: m.currentTime,
+				duration: Number.isFinite( m.duration ) ? m.duration : 0,
+			} );
+		};
+		m.addEventListener( 'seeked', () => live() && sayTime() );
 		m.addEventListener( 'timeupdate', () => {
 			if ( ! live() ) {
 				return;
@@ -1498,6 +1526,7 @@ function start() {
 			progress();
 			keepAimed();
 			position();
+			sayTime();
 			if ( m.currentTime > 5 && Math.floor( m.currentTime ) % 5 === 0 ) {
 				save();
 			}
