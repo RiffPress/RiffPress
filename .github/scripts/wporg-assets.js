@@ -80,7 +80,11 @@ async function drawn( browser, tmp ) {
 	await page.close();
 }
 
-/** The six screenshots, in the order readme.txt captions them: five as a visitor sees the site. */
+/**
+ * The six screenshots, in the order readme.txt captions them: five as a visitor sees the site.
+ *
+ * @param {import('@playwright/test').Browser} browser Chromium.
+ */
 async function screenshots( browser ) {
 	const base = ( process.env.RIFF_SHOTS_URL || 'http://localhost:8890' ).replace( /\/$/, '' );
 	const user = process.env.RIFF_SHOTS_USER || 'admin';
