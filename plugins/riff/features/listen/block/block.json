@@ -59,6 +59,6 @@
 	},
 	"example": {},
 	"editorScript": "file:./index.js",
-	"editorStyle": "file:../../../assets/riff.css",
+	"editorStyle": [ "file:../../../assets/tokens.css", "file:../../../assets/riff.css" ],
 	"render": "file:./render.php"
 }

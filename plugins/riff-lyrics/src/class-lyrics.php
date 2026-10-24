@@ -78,7 +78,8 @@ final class Lyrics {
 			) . ';',
 			'before'
 		);
-		wp_register_style( 'riff-lyrics', false, array(), RIFF_LYRICS_VERSION );
+		// Riff's design tokens, such as --riff-fg-2, come from its riff-tokens stylesheet, not copies.
+		wp_register_style( 'riff-lyrics', false, array( 'riff-tokens' ), RIFF_LYRICS_VERSION );
 		wp_enqueue_style( 'riff-lyrics' );
 		wp_add_inline_style( 'riff-lyrics', '.riff-lyrics{margin:0;white-space:pre-line;font-size:18px;line-height:1.7}.riff-lyrics-note{margin:0;color:var(--riff-fg-2)}' );
 	}

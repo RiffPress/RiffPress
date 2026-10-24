@@ -6,7 +6,8 @@
  *   the track schema from Tracks::schema(), and the Listen block from its block.json.
  * - REST API: the routes, their arguments and response schemas, the REST field on media, and the
  *   WPGraphQL types, from the plugin's own registration code run by surface.php.
- * - CSS: every custom property in riff.css with a docblock, which is what makes it public.
+ * - CSS: every custom property in tokens.css (the riff-tokens stylesheet) with a docblock, which
+ *   is what makes it public.
  *
  * The pages quote line numbers, so they are built at deploy time from the commit being published.
  * --check fails when something public has no docblock or no @since, or the harness cannot run.
@@ -66,12 +67,12 @@ function interfaceDoc( file ) {
 }
 
 /**
- * Every public custom property: a declaration in riff.css with a docblock above it.
+ * Every public custom property: a declaration in tokens.css with a docblock above it.
  *
  * @param {string} file The stylesheet.
  * @return {Array} Properties, with the selector they are set on.
  */
-function customProperties( file = path.join( PLUGIN, 'assets', 'riff.css' ) ) {
+function customProperties( file = path.join( PLUGIN, 'assets', 'tokens.css' ) ) {
 	const lines = fs.readFileSync( file, 'utf8' ).split( '\n' );
 	const out = [];
 	let selector = '';
@@ -150,7 +151,7 @@ function problems( data ) {
 	need( 'Riff\\Sources::unregister()', data.unregister );
 	need( 'The [riff] shortcode, App::shortcode()', data.shortcode );
 	if ( ! data.properties.length ) {
-		out.push( 'riff.css has no documented custom properties' );
+		out.push( 'tokens.css has no documented custom properties' );
 	}
 	for ( const p of data.properties ) {
 		need( `The custom property ${ p.name }`, p );
@@ -322,7 +323,7 @@ function cssPage( data ) {
 		[ 'player', 'The player', '#riff', 'Set on the player\'s root, <code>#riff</code>, so they reach the bar and Now Playing and nothing else. <code>--riff-bar-h</code> is on <code>:root</code>, since the page keeps room for the bar.' ],
 		[ 'listen-block', 'The Listen block', '.riff-app', 'Set on the block\'s root, <code>.riff-app</code>. The block\'s colour settings in the editor set its background and text colour directly, on top of these.' ],
 	];
-	let body = '<section class="summary"><p>The player and the Listen block take their colours and sizes from custom properties. The ones below are public: each keeps its name within a major version. Any other <code>--riff-*</code> property is internal and may change.</p></section>\n';
+	let body = '<section class="summary"><p>The player and the Listen block take their colours and sizes from custom properties. The ones below are public: each keeps its name within a major version. Any other <code>--riff-*</code> property is internal and may change.</p><p>They are all in one stylesheet, <code>riff-tokens</code>. An extension lists it as a dependency of its own, <code>wp_register_style( \'my-extension\', $src, array( \'riff-tokens\' ) )</code>, and uses the names rather than copying values.</p></section>\n';
 	for ( const [ id, title, selector, text ] of groups ) {
 		const list = data.properties.filter( ( p ) => ( selector === '#riff' ? ! p.selector.includes( '.riff-app' ) : p.selector.includes( '.riff-app' ) ) );
 		body += `<section>${ hooks.h2( id, title ) }<p>${ text }</p>`;

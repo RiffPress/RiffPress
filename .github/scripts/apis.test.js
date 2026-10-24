@@ -13,7 +13,7 @@ const ROOT = path.resolve( __dirname, '..', '..' );
 const read = ( file ) => fs.readFileSync( path.join( ROOT, file ), 'utf8' );
 
 const JS = [ 'plugins/riff/assets/riff.js', 'plugins/riff/features/listen/app.js' ].map( read ).join( '\n' );
-const CSS = read( 'plugins/riff/assets/riff.css' );
+const CSS = read( 'plugins/riff/assets/tokens.css' ) + read( 'plugins/riff/assets/riff.css' );
 const PHP = [ 'plugins/riff/templates/player.php', 'plugins/riff/features/listen/class-app.php', 'plugins/riff/src/class-player.php' ].map( read ).join( '\n' );
 const ALL = JS + '\n' + CSS + '\n' + PHP;
 

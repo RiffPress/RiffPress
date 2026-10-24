@@ -1,0 +1,170 @@
+/* Riff's design tokens: every custom property Riff documents, with its
+   default, and nothing else. riff.css and every Riff extension list this
+   stylesheet, riff-tokens, as a dependency and use these names rather than
+   copying values, so a theme or a block style that sets them reaches all of
+   them at once. A docblock is what makes a property public; site/developers/css
+   is written from them. */
+
+:root {
+
+	/**
+	 * The height of the player bar. The page keeps this much room at its end
+	 * so the bar never covers the last line.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-bar-h: 64px;
+}
+
+@media (min-width: 900px) {
+
+	:root {
+		--riff-bar-h: 72px;
+	}
+}
+
+#riff {
+
+	/**
+	 * The background of Now Playing.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-bg: #030303;
+
+	/**
+	 * The bar, the Up next sheet, tooltips, and the Song and Video switch.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-surface: #212121;
+
+	/**
+	 * The player's text and icons, and the played part of the seek bar in Now
+	 * Playing.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-fg: #fff;
+
+	/**
+	 * Secondary text, such as the artist, the times and the format, and
+	 * toggles that are off.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-fg-2: rgb(255 255 255 / 0.7);
+
+	/**
+	 * The unselected side of the Song and Video switch.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-fg-3: rgb(255 255 255 / 0.5);
+
+	/**
+	 * Dividers and the unplayed part of the seek bar.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-line: rgb(255 255 255 / 0.1);
+
+	/**
+	 * The wash behind a control under the pointer, and behind chips, the
+	 * current Up next item, and artwork while it loads.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-hover: rgb(255 255 255 / 0.1);
+
+	/**
+	 * The played part of the seek bar in the bar, its knob, the format label,
+	 * and the glow behind the cover. A theme sets it in theme.json under
+	 * `settings.custom.riff.accent`, or in its own CSS.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-accent: #ffb020;
+}
+
+.riff-app {
+
+	/**
+	 * The Listen block's background.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-bg: #f6f6f6;
+
+	/**
+	 * The album's track list and the now-playing card in the Listen block.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-surface: #fff;
+
+	/**
+	 * The Listen block's text.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-ink: #1e1e1e;
+
+	/**
+	 * Secondary text in the Listen block.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-ink-2: #656a71;
+
+	/**
+	 * Borders in the Listen block, and the space artwork fills while it loads.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-line: #d9d9d9;
+
+	/**
+	 * Links, play buttons, focus rings, and the title of the card under the
+	 * pointer in the Listen block.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-accent: #9a5b00;
+
+	/**
+	 * The accent under the pointer or in focus.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-accent-deep: #7a4700;
+
+	/**
+	 * The background of the row playing.
+	 *
+	 * @since 4.0.0
+	 */
+	--riff-app-accent-tint: #fff4dd;
+
+	/**
+	 * Text and icons on a filled button: the accent, or the text colour under
+	 * the pointer.
+	 *
+	 * @since 4.14.0
+	 */
+	--riff-app-on-accent: #fff;
+
+	/**
+	 * The Listen block's text font.
+	 *
+	 * @since 4.14.0
+	 */
+	--riff-app-font: "Riff Inter", inter, -apple-system, blinkmacsystemfont, sans-serif;
+
+	/**
+	 * The Listen block's headings: the library's title and each album's.
+	 *
+	 * @since 4.14.0
+	 */
+	--riff-app-heading-font: "Riff Garamond", "EB Garamond", garamond, georgia, serif;
+}
