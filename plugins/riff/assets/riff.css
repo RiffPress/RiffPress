@@ -233,9 +233,29 @@ div.riff-row-locked {
 	vertical-align: -3px;
 }
 
-/* The quality pill: format and bit rate for the playing track, as Tidal
-   sets its tier at the right end of the bar. Centred with the controls. */
-.riff-quality {
+/* The player's areas (docs/player.md, "Areas"): badges and controls
+   from Riff's own listeners. An empty area takes no room. */
+.riff-area {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* In the bar an area is .riff-desk too, an inline grid: it runs across. */
+.riff-bar-end .riff-area {
+	grid-auto-flow: column;
+	align-items: center;
+	gap: 8px;
+}
+
+#riff .riff-area:empty {
+	display: none !important;
+}
+
+/* A badge is a pill, as Tidal sets its tier at the right end of the
+   bar. Riff's own is the quality: format and bit rate for the playing
+   track. Centred with the controls. */
+.riff-badge {
 	display: inline-flex;
 	align-items: center;
 	flex: none;
@@ -251,15 +271,12 @@ div.riff-row-locked {
 	font-variant-numeric: tabular-nums;
 }
 
-.riff-quality:empty {
-	display: none;
-}
-
-.riff-bar-end .riff-quality {
+.riff-bar-end .riff-area {
 	margin-inline-end: 8px;
 }
 
 #riff .riff-np-quality {
+	display: flex;
 	margin: 8px 0 0;
 	color: var(--riff-fg-2);
 	line-height: 1;

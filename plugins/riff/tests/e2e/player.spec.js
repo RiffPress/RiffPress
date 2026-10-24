@@ -625,6 +625,42 @@ test.describe( 'Player', () => {
 		).toHaveText( /^MP3 · \d+ kbps$/ );
 	} );
 
+	test( 'Riff\'s own features add badges and controls to the player\'s areas, and hear the meter', async ( {
+		page,
+	} ) => {
+		await page.evaluate( () => {
+			window.riffHeard = 0;
+			window.riffInternal.listen( 'badges', ( list, t ) => [ ...list, { id: 'e2e', text: t ? 'Live' : '' } ] );
+			window.riffInternal.listen( 'controls', ( list, t ) => t ? [
+				...list,
+				{
+					id: 'e2e',
+					label: 'Pin',
+					pressed: !! window.riffPinned,
+					run: ( track ) => ( window.riffPinned = track.title ),
+				},
+			] : list );
+			window.riffInternal.listen( 'meter', ( { heat } ) => heat > 0 && window.riffHeard++ );
+		} );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect.poll( () => page.evaluate( () => window.riffHeard ) ).toBeGreaterThan( 0 );
+		// Paused, so the short track can't end and empty the queue under the test.
+		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
+		const end = page.locator( '.riff-bar-end' );
+		// After Riff's own quality pill, in the order the listeners were added.
+		await expect( end.locator( '[data-riff-area="badges"] > *' ) ).toHaveText( [ /^MP3 · /, 'Live' ] );
+		// The bar's copy is for a wide screen, Now Playing's for a phone, and every copy follows a press.
+		const copies = page.locator( '[data-riff-control="e2e"]' );
+		await expect( copies ).toHaveCount( 2 );
+		await page.locator( '.riff-bar-info' ).click();
+		const pin = page.getByRole( 'button', { name: 'Pin' } ).locator( 'visible=true' ).first();
+		await expect( pin ).toHaveAttribute( 'aria-pressed', 'false' );
+		await pin.click();
+		await expect( copies.nth( 0 ) ).toHaveAttribute( 'aria-pressed', 'true' );
+		await expect( copies.nth( 1 ) ).toHaveAttribute( 'aria-pressed', 'true' );
+		expect( await page.evaluate( () => window.riffPinned === window.riff.current().title ) ).toBe( true );
+	} );
+
 	test( 'a lossless track shows its bit depth and sample rate instead of a bit rate', async ( {
 		page,
 		requestUtils,

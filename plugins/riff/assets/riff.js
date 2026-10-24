@@ -112,9 +112,22 @@ function start() {
 	}
 	const filter = ( name, value, ...args ) =>
 		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
-	// Riff's own features hear of likes and playlists, and add to the track menu, here rather
-	// than through wp.hooks, so none of it is a promise to other plugins.
-	const own = { like: new Set(), playlist: new Set(), menu: new Set() };
+	// Riff's own features hear of likes and playlists, add to the track menu, fill the player's
+	// areas (badges and controls) and hear the meter, here rather than through wp.hooks, so none
+	// of it is a promise to other plugins yet (docs/player.md, "Areas").
+	const own = {
+		like: new Set(),
+		playlist: new Set(),
+		menu: new Set(),
+		badges: new Set(),
+		controls: new Set(),
+		meter: new Set(),
+	};
+	// Riff's own badge: the playing track's format and rate, through the same area as any other.
+	own.badges.add( ( list, t ) => {
+		const line = quality( t );
+		return line ? [ ...list, { id: 'quality', text: line } ] : list;
+	} );
 	const tell = ( name, detail ) => own[ name ].forEach( ( fn ) => fn( detail ) );
 	const api = {
 		/**
@@ -242,11 +255,16 @@ function start() {
 		/**
 		 * Calls `fn` on a change: `like` with `{ change, kind, id }`, `playlist` with
 		 * `{ change, playlist }`, or `menu` with a track menu's items, track and context, for
-		 * `fn` to return the items.
+		 * `fn` to return the items. The player's areas work as `menu` does: `badges` is called
+		 * with the badges so far and the track, and returns them, each `{ id, text, label? }`;
+		 * `controls` likewise, each `{ id, label, icon?, pressed?, run( track ) }`. `meter` is
+		 * called each frame while the music plays, with `{ heat, levels }`: the wire's heat, 0 to
+		 * a little over 1, and the three bands, 0 to 1, or null while it cools.
 		 *
 		 * @since 4.23.0
+		 * @since 4.29.0 `badges`, `controls` and `meter`.
 		 *
-		 * @param {string}                                 name `like`, `playlist` or `menu`.
+		 * @param {string}                                 name `like`, `playlist`, `menu`, `badges`, `controls` or `meter`.
 		 * @param {(...args: Object[]) => (Object[]|void)} fn   The listener.
 		 * @return {() => void} Stops listening.
 		 */
@@ -1628,6 +1646,25 @@ function start() {
 		}
 	}
 
+	// The meter area: each frame's heat and bands go to Riff's own listeners (own.meter), the
+	// wire's glow and the playing row's bars among them. levels is null while the wire cools.
+	const hear = ( h, levels = null ) =>
+		own.meter.forEach( ( fn ) => fn( { heat: h, levels } ) );
+	own.meter.add( ( { heat: h } ) => setHeat( h ) );
+	// Three bars per place the current track is shown: the row in the post and the item in Up
+	// next. Each place's bars take the three bands in turn.
+	own.meter.add( ( { levels } ) => {
+		if ( ! levels ) {
+			return;
+		}
+		bars.forEach( ( bar, k ) => {
+			bar.style.transform = `scaleY(${ (
+				0.15 +
+				0.85 * levels[ k % levels.length ]
+			).toFixed( 2 ) })`;
+		} );
+	} );
+
 	const liveBars = () => [
 		...document.querySelectorAll(
 			'.riff-row[data-current] .riff-row-state i, .riff-queue-list [aria-current] .riff-row-state i'
@@ -1641,12 +1678,12 @@ function start() {
 		lastTick = now;
 		if ( cooling ) {
 			advance( 0, dt );
-			setHeat( heat );
+			hear( heat );
 			if ( heat > 0.004 ) {
 				meterRaf = requestAnimationFrame( tick );
 			} else {
 				heat = 0;
-				setHeat( 0 );
+				hear( 0 );
 				meterRaf = 0;
 				cooling = false;
 			}
@@ -1658,16 +1695,7 @@ function start() {
 		ref +=
 			( rms - ref ) * ( 1 - Math.exp( -dt / ( rms > ref ? 0.15 : 6 ) ) );
 		advance( rms / Math.max( 0.02, ref ), dt );
-		setHeat( heat );
-		const levels = bandLevels( dt );
-		// Three bars per place the current track is shown: the row in the post and the item in Up
-		// next. Each place's bars take the three bands in turn.
-		bars.forEach( ( bar, k ) => {
-			bar.style.transform = `scaleY(${ (
-				0.15 +
-				0.85 * levels[ k % levels.length ]
-			).toFixed( 2 ) })`;
-		} );
+		hear( heat, bandLevels( dt ) );
 		meterRaf = requestAnimationFrame( tick );
 	}
 
@@ -1687,7 +1715,7 @@ function start() {
 			cancelAnimationFrame( meterRaf );
 			meterRaf = 0;
 			heat = 0;
-			setHeat( 0 );
+			hear( 0 );
 			return;
 		}
 		cooling = true;
@@ -1702,7 +1730,7 @@ function start() {
 		if ( reduce() ) {
 			cancelAnimationFrame( meterRaf );
 			meterRaf = 0;
-			setHeat( 0.25 );
+			hear( 0.25 );
 			return;
 		}
 		ensureAnalyser();
@@ -1710,7 +1738,7 @@ function start() {
 			cancelAnimationFrame( meterRaf );
 			meterRaf = 0;
 			heat = 0.5;
-			setHeat( heat );
+			hear( heat );
 			breath = heart.animate(
 				[ { opacity: 0 }, { opacity: 0.45 }, { opacity: 0 } ],
 				{
@@ -1759,7 +1787,7 @@ function start() {
 		text( 'title', t?.title || '' );
 		text( 'subtitle', t ? subtitle( t ) : '' );
 		text( 'artist', t ? t.artist || t.post?.title || '' : '' );
-		text( 'quality', quality( t ) );
+		areas( t );
 		text( 'source', t?.post?.title || '' );
 		for ( const img of $$( 'img[data-riff-art]' ) ) {
 			const src =
@@ -1896,6 +1924,65 @@ function start() {
 		const value = ratio.toFixed( 4 );
 		for ( const node of seekers ) {
 			node.style.setProperty( '--riff-p', value );
+		}
+	}
+
+	// The player's areas, from Riff's own listeners (own.badges, own.controls): drawn again only
+	// when what they hold changes, so a control keeps its focus while the track plays on.
+	let areasKey = '';
+	function areas( t = track() ) {
+		const collect = ( name ) =>
+			[ ...own[ name ] ].reduce( ( list, fn ) => fn( list, t ) || list, [] );
+		const badges = collect( 'badges' ).filter(
+			( b ) => b && b.id && b.text
+		);
+		const controls = collect( 'controls' ).filter(
+			( c ) => c && c.id && c.label && typeof c.run === 'function'
+		);
+		const key = JSON.stringify( [
+			badges.map( ( b ) => [ b.id, b.text, b.label ] ),
+			controls.map( ( c ) => [ c.id, c.label, c.pressed ] ),
+		] );
+		if ( key === areasKey ) {
+			return;
+		}
+		areasKey = key;
+		for ( const area of $$( '[data-riff-area="badges"]' ) ) {
+			area.replaceChildren(
+				...badges.map( ( b ) => {
+					const pill = document.createElement( 'span' );
+					// The quality pill keeps the class its styles and tests know it by.
+					pill.className = `riff-badge riff-badge-${ b.id }${
+						b.id === 'quality' ? ' riff-quality' : ''
+					}`;
+					pill.textContent = b.text;
+					if ( b.label ) {
+						pill.title = b.label;
+					}
+					return pill;
+				} )
+			);
+		}
+		for ( const area of $$( '[data-riff-area="controls"]' ) ) {
+			area.replaceChildren(
+				...controls.map( ( c ) => {
+					const button = document.createElement( 'button' );
+					button.type = 'button';
+					button.className = `riff-btn riff-control riff-control-${ c.id }`;
+					button.dataset.riffControl = c.id;
+					button.setAttribute( 'aria-label', c.label );
+					if ( 'pressed' in c ) {
+						button.setAttribute( 'aria-pressed', String( !! c.pressed ) );
+					}
+					// An icon from Riff's own code, never from the page.
+					button.innerHTML = c.icon || '';
+					button.addEventListener( 'click', () => {
+						c.run( track() );
+						areas();
+					} );
+					return button;
+				} )
+			);
 		}
 	}
 
