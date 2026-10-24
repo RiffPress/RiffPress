@@ -1,6 +1,6 @@
 # Agents
 
-Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup, tests, and pull request conventions. The README's "How the player works" section explains the front end; read it before changing anything under `plugins/riff/`.
+Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup, tests, and pull request conventions. [docs/player.md](docs/player.md) explains the front end; read it before changing anything under `plugins/riff/`.
 
 ## Pull request descriptions
 

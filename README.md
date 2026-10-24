@@ -46,128 +46,82 @@ To try it first, with nine public-domain albums and nothing to install:
 
 ## How the player works
 
-### Blocks become one queue
-
-- The server marks each core audio and video block with its track, as a data attribute on the
-  figure, and each item of a playlist block (WordPress 7.1) with its own. It leaves the block's
-  markup alone, so a page still plays if the script never runs.
-- A playlist's own player is not started, since it fetches the whole current file to draw its
-  waveform. The page's player plays the playlist's tracks instead.
-- The script turns those blocks into rows and plays them through one queue: the post's media is
-  the queue, and the row you tap is where it starts.
-- One `<audio>` and one `<video>` element serve the whole page. A track with a video version plays
-  through whichever is showing, and switching hands the position across.
-- A phone pauses video when the page goes to the background, so the track moves to audio while
-  hidden and back when it returns.
-
-### What else it does
-
-The rest is what a player should do:
-
-- Media Session gives the lock screen its metadata and controls.
-- AirPlay and Cast appear when a device is in reach.
-- A swipe on the bar skips, and a drag on Now Playing closes it.
-- The queue and position are kept for the tab's session. A full-page navigation saves them and
-  attempts to resume on the next page; a reload restores the same track paused.
-
-On a keyboard:
-
-| Keys | Action |
-| --- | --- |
-| Space or K | Play and pause |
-| J and L | Back and forward ten seconds |
-| Shift+N and Shift+P | Next and previous track |
-| Escape | Close Now Playing |
-
-Nothing fires while you type in a field. A site can turn the single-key shortcuts off with the
-`riff.shortcuts` filter, as WCAG 2.1.4 asks.
-
-### Addresses
-
-| Address | What it opens |
-| --- | --- |
-| A post's address with `?riff_track=<id>` | The post on that track, focused and not playing. Whatever is already playing is left alone. This is what Share links to. |
-| A Listen page with `?riff_page=2` | The same posts Load more showed, when reloaded or shared. It works without JavaScript. |
-
-### A Listen page
-
-A dedicated Listen page lists posts with audio or video. Opening a post keeps you on that page
-while its tracks play, and Load more adds the next page of posts in place. To make one, do any of
-these:
-
-- Press **Create Listen page** in the notice Riff shows on the Dashboard after activation.
-- Create a WordPress page and add the Riff block.
-- Put `[riff]` in a page's content.
-
-Listeners can install the Listen page's `app/` address as an app of its own. From their second visit Riff offers it, with the browser's own Install where there is one (Chrome and Edge) and the steps where there is not (Safari's Add to Dock and Add to Home Screen). Installed from Chrome or Edge on a computer it has no title bar and is laid out as the desktop app is. Its name and icon are the site's, so set a site icon under **Settings › General**.
-
-### Video versions
-
-A track with a video version is set in the Media Library: click an audio file and choose a video
-under **Video version**.
-
-### Design
-
-On a computer the Listen app is laid out in Spotify's frame: back and forward, home and search across the top, the library and the view as panels on black, and the player bar along the bottom with the seek line under the controls, as Tidal arranges it. Phones and tablets keep a touch layout. It's all in Riff's amber. [DESIGN.md](DESIGN.md) has the rest.
+Riff leaves your blocks as they are and adds one player on top: a post's audio, video and playlist
+blocks become one queue, so a page still plays if the script never runs. The queue carries on from
+page to page, and media keys, the lock screen, AirPlay and Cast all control it.
+[docs/player.md](docs/player.md) has the details: keyboard shortcuts, shareable addresses, the
+Listen page, video versions and the design.
 
 ## Extending it
 
-- The developer reference is at [riffpress.com/developers](https://riffpress.com/developers/), one
-  section per language: [PHP](https://riffpress.com/developers/php/),
-  [JavaScript](https://riffpress.com/developers/javascript/),
-  [REST API](https://riffpress.com/developers/rest/) and [CSS](https://riffpress.com/developers/css/).
-  Every page is generated from the plugin's own docblocks and registration code.
-- CI fails a change that adds a hook, a `window.riff` member, a `Riff\Source` method or a REST
-  argument without documenting it. A custom property is public only once it has a docblock.
-- [docs/hooks.md](docs/hooks.md) and [docs/javascript.md](docs/javascript.md) are the same hooks and
-  `window.riff` reference, for reading on GitHub.
-- [.github/SUPPORT.md](.github/SUPPORT.md) has the stability promise.
+| Reference | |
+| --- | --- |
+| [PHP](https://riffpress.com/developers/php/) | Filters and actions, such as `riff_track` and `riff_can_play` |
+| [JavaScript](https://riffpress.com/developers/javascript/) | `window.riff`: the queue, its events and filters |
+| [REST API](https://riffpress.com/developers/rest/) | The `riff/v1` routes |
+| [CSS](https://riffpress.com/developers/css/) | Custom properties for colours, fonts and spacing |
 
-## What is in this repository
+Every page is generated from the code, and CI fails a change that adds to the API without
+documenting it. [Riff Lyrics](plugins/riff-lyrics/) is built only on this API.
+
+## Contributing
+
+```
+npm install
+npm run env:start   # WordPress at http://localhost:8890, the tests site at :8891
+npm run seed:tests  # the demo albums on the tests site
+npm run test:e2e
+```
+
+[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup, checks, pull requests and releases.
+
+<details>
+<summary>What is in this repository</summary>
 
 | Path | What it is |
 | --- | --- |
 | `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js` and `assets/riff.css` are what ships. |
-| `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing, built only on Riff's documented API. |
+| `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing. |
+| `packages/desktop/` | The desktop app: a site's Listen library in an Electron window. |
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
-| `packages/wp-api-coverage/` | A command-line tool that lists the WordPress APIs a plugin uses and the ones it doesn't use yet. `npm run api-coverage` runs it on Riff. |
-| `packages/desktop/` | Riff for the desktop: a site's Listen library in an Electron window of its own, with media keys and Now Playing. |
+| `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
 | `apps/ios/` | Reserved for the native app. |
-| `site/` | The landing page, published with GitHub Pages, with a live demo in WordPress Playground. |
+| `site/` | [riffpress.com](https://riffpress.com/), published with GitHub Pages. |
 | `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |
 
-## Docs in this repository
+</details>
+
+<details>
+<summary>More commands</summary>
+
+```
+npm run seed:tests -- wp-content/riff/path/to/your/music   # any folder of audio, as a post
+npm run lint
+npm run test:php
+npm run desktop     # the desktop app from source, against the development site
+```
+
+The repository root is mounted in the containers at `wp-content/riff`, which is why seed paths start
+there, and `.wp-env.override.json` moves the ports when another wp-env holds them. For the demo
+built from `main`, open the `preview-main` blueprint:
+`https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json`
+
+</details>
+
+<details>
+<summary>Docs in this repository</summary>
 
 | File | What it covers |
 | --- | --- |
 | [PRODUCT.md](PRODUCT.md) | Who Riff is for, what it does, and what is out of scope. |
 | [DESIGN.md](DESIGN.md) | How the player and the Listen block look and behave. |
-| [docs/native.md](docs/native.md) | What Riff uses from WordPress as is, what it adds, why, and the core ticket for each. |
+| [docs/player.md](docs/player.md) | How the player works, for anyone changing it. |
+| [docs/native.md](docs/native.md) | What Riff uses from WordPress as is, what it adds, and why. |
 | [docs/hooks.md](docs/hooks.md), [docs/javascript.md](docs/javascript.md) | The hooks and `window.riff`, generated from the code. |
 | [docs/iphone-checklist.md](docs/iphone-checklist.md) | What to check on a real iPhone before a release. |
-| [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) | Setup, checks, pull requests and releases. |
-| [.github/SUPPORT.md](.github/SUPPORT.md), [SECURITY.md](SECURITY.md) | Supported versions, the public API promise, and reporting a vulnerability. |
-| [AGENTS.md](AGENTS.md) | Notes for coding agents. |
+| [.github/SUPPORT.md](.github/SUPPORT.md), [SECURITY.md](SECURITY.md) | Supported versions, the API promise, and reporting a vulnerability. |
 
-## Development
-
-```
-npm install
-npm run env:start      # WordPress at http://localhost:8890, the tests site at :8891
-npm run seed:tests     # the public-domain demo post on the tests site
-npm run seed:tests -- wp-content/riff/path/to/your/music   # any folder of audio, as a post
-npm run lint
-npm run test:e2e
-npm run test:php
-```
-
-- The repository root is mounted in the containers at `wp-content/riff`, which is why seed paths
-  start there.
-- `.wp-env.override.json` moves the ports when another wp-env on the machine holds them.
-- [riffpress.com/demo](https://riffpress.com/demo) opens the demo built from the latest release. For
-  what is on `main` right now, use the `preview-main` branch: the Playground Main Build workflow
-  rebuilds `riff.zip`, the demo media and a blueprint that names them on every push to `main`, at
-  `https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json`.
+</details>
 
 ## Licence
 
