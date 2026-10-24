@@ -5,7 +5,7 @@ Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +22,10 @@ Riff Lyrics adds a Lyrics tab next to Up next in Riff's Now Playing, the way str
 It is also the reference extension for Riff: it is built only on Riff's documented public API, so a change to Riff that would break a plugin breaks this one first.
 
 == Changelog ==
+
+= 0.2.0 =
+* Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on.
+* Fixed: signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account.
 
 = 0.1.0 =
 * Riff Lyrics, a Lyrics tab beside Up next, as a plugin built only on Riff's public API.
