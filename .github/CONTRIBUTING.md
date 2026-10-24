@@ -12,6 +12,31 @@ The plugin is `plugins/riff/`. It ships one stylesheet and one script with no bu
 
 To play your own music, point the seed script at any folder of audio: `npm run seed -- wp-content/riff/path/inside/the/repo`. The repository root is mounted in the containers at `wp-content/riff`.
 
+## Finding your way
+
+| Path | What it is |
+| --- | --- |
+| `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js` and `assets/riff.css` are what ships. |
+| `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing. |
+| `packages/desktop/` | The desktop app: a site's Listen library in an Electron window. |
+| `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
+| `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
+| `apps/ios/` | Reserved for the native app. |
+| `site/` | [riffpress.com](https://riffpress.com/), published with GitHub Pages. |
+| `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |
+
+| File | What it covers |
+| --- | --- |
+| [PRODUCT.md](../PRODUCT.md) | Who Riff is for, what it does, and what is out of scope. |
+| [DESIGN.md](../DESIGN.md) | How the player and the Listen block look and behave. |
+| [docs/player.md](../docs/player.md) | How the player works, for anyone changing it. |
+| [docs/native.md](../docs/native.md) | What Riff uses from WordPress as is, what it adds, and why. |
+| [docs/hooks.md](../docs/hooks.md), [docs/javascript.md](../docs/javascript.md) | The hooks and `window.riff`, generated from the code. |
+| [docs/iphone-checklist.md](../docs/iphone-checklist.md) | What to check on a real iPhone before a release. |
+| [SUPPORT.md](SUPPORT.md), [SECURITY.md](../SECURITY.md) | Supported versions, the API promise, and reporting a vulnerability. |
+
+`.wp-env.override.json` moves the ports when another wp-env holds them. For the demo built from `main`, open the `preview-main` blueprint: `https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json`
+
 ## The reference extension
 
 `plugins/riff-lyrics/` is Riff Lyrics, a real plugin built only on Riff's documented public API: the hooks in `docs/hooks.md`, `window.riff` in `docs/javascript.md`, and REST. `.github/scripts/extension-surface.test.js` fails if it hooks anything undocumented or reaches into Riff's classes. When a feature needs something Riff doesn't offer, add it to Riff as a documented extension point, not as a shortcut in the plugin. wp-env loads both plugins, and PHPUnit, Plugin Check and e2e cover both.
