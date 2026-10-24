@@ -26,6 +26,10 @@ test( 'the hand-written pages use the shared breadcrumbs', () => {
 
 test( 'every page under /web/ has the bar, with Built on the open web current', () => {
 	const dir = path.join( __dirname, '..', '..', 'site', 'web' );
+	// The pages are built, not committed; a fresh checkout has none until they are.
+	if ( ! fs.existsSync( path.join( dir, 'index.html' ) ) ) {
+		require( 'node:child_process' ).execFileSync( process.execPath, [ path.join( __dirname, 'web-pages.js' ) ] );
+	}
 	const pages = [ 'index.html', ...fs.readdirSync( dir, { withFileTypes: true } ).filter( ( e ) => e.isDirectory() ).map( ( e ) => `${ e.name }/index.html` ) ];
 	for ( const page of pages ) {
 		const html = fs.readFileSync( path.join( dir, page ), 'utf8' );
