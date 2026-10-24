@@ -38,6 +38,28 @@ On a keyboard:
 Nothing fires while you type in a field. A site can turn the single-key shortcuts off with the
 `riff.shortcuts` filter, as WCAG 2.1.4 asks.
 
+## Areas
+
+The player has places that features fill: **badges**, the pills at the bar's right end and under
+the title in Now Playing; **controls**, buttons beside them; and the **meter**, the music's level
+each frame, which lights the seek line and moves the playing row's bars. Riff's own features use
+them as any feature would: the quality pill is a badge, and the seek line's glow is a meter
+listener.
+
+They are internal for now, on the object Riff hands its own Listen app, and not yet on
+`window.riff`: they become public once they have settled. Each works as the track menu does,
+through `listen( name, fn )`:
+
+| Name | `fn` is called with | and returns |
+| --- | --- | --- |
+| `badges` | the badges so far, and the playing track | the badges, each `{ id, text, label? }` |
+| `controls` | the controls so far, and the playing track | the controls, each `{ id, label, icon?, pressed?, run( track ) }` |
+| `meter` | `{ heat, levels }` each frame while music plays: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
+
+An area is redrawn only when what it holds changes, so a control keeps focus while the track plays,
+and a control's `run` redraws them after it. A control's `icon` is markup from the feature's own
+code.
+
 ## Addresses
 
 | Address | What it opens |
