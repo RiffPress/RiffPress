@@ -1008,6 +1008,8 @@ test.describe( 'App pages', () => {
 		page,
 	} ) => {
 		await page.goto( postsUrl() );
+		// Each view has its own title, rendered and swapped in alike, which a screen reader says.
+		await expect( page ).toHaveTitle( /^Posts – Listen e2e – / );
 		const cards = page.locator( '.riff-grid .riff-card' );
 		await expect( cards ).toHaveCount( 24 );
 		await page
@@ -1021,13 +1023,16 @@ test.describe( 'App pages', () => {
 		await expect( cards ).toHaveCount( 25 );
 		await expect( page ).toHaveURL( /[?&]riff_page=2$/ );
 		await expect( page.locator( '#riff-page-2 a' ) ).toBeFocused();
+		await expect( page.locator( '#a11y-speak-polite' ) ).toHaveText( '1 more post' );
 		expect( ( await playing( page ) ).paused ).toBe( false );
 
 		// Out to a post and back: the address still asks for both pages.
 		await page.locator( `.riff-card[data-riff-post="${ postId }"] a` ).click();
 		await expect( page.locator( '.riff-album-title' ) ).toBeVisible();
+		await expect( page ).toHaveTitle( /^Riff app e2e \d+ – Listen e2e – / );
 		await page.goBack();
 		await expect( cards ).toHaveCount( 25 );
+		await expect( page ).toHaveTitle( /^Posts – Listen e2e – / );
 		await expect(
 			page.getByRole( 'link', { name: 'Load more' } )
 		).toHaveCount( 0 );

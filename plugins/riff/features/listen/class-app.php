@@ -9,7 +9,9 @@
 namespace Riff\Listen;
 
 use WP_Post;
+use WP_Term;
 
+use Riff\Catalog;
 use Riff\Library;
 use Riff\Player;
 use Riff\Tracks;
@@ -68,6 +70,7 @@ final class App {
 		register_block_type( RIFF_DIR . 'features/listen/block' );
 		wp_set_script_translations( 'riff-app-editor-script', 'riff' );
 		add_shortcode( 'riff', array( self::class, 'shortcode' ) );
+		add_filter( 'document_title_parts', array( self::class, 'title_parts' ) );
 		if ( function_exists( 'register_block_template' ) ) {
 			register_block_template(
 				self::TEMPLATE,
@@ -78,6 +81,68 @@ final class App {
 					'content'     => '<!-- wp:riff/app {"align":"full"} /-->',
 				)
 			);
+		}
+	}
+
+	/**
+	 * Puts the view's name before the page's in the document title.
+	 *
+	 * Each view has its own address, so it has its own title too: a screen reader says it when the
+	 * view opens, and a tab, a bookmark and the history list it by what is in it, not as Listen.
+	 * The script copies the title across when it swaps views in place.
+	 *
+	 * @since 4.30.0
+	 *
+	 * @param array<string, string> $parts The title's parts.
+	 * @return array<string, string>
+	 */
+	public static function title_parts( $parts ) {
+		$page = get_queried_object();
+		if ( ! is_array( $parts ) || ! $page instanceof WP_Post || ! ( Standalone::holds_player( $page ) || has_shortcode( $page->post_content, 'riff' ) ) ) {
+			return $parts;
+		}
+		$name = self::view_name();
+		if ( '' !== $name ) {
+			$parts['title'] = $name . ' ' . apply_filters( 'document_title_separator', '-' ) . ' ' . ( $parts['title'] ?? '' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's own filter, applied as wp_get_document_title() does.
+		}
+		return $parts;
+	}
+
+	/**
+	 * The name of the view the address opens, as its heading shows it; empty for Home.
+	 *
+	 * @return string
+	 */
+	private static function view_name(): string {
+		$post = self::requested();
+		if ( $post ) {
+			return get_the_title( $post );
+		}
+		$browse = Browse::requested();
+		if ( ! $browse ) {
+			return '';
+		}
+		switch ( $browse['view'] ) {
+			case 'albums':
+				return __( 'Albums', 'riff' );
+			case 'artists':
+				return __( 'Artists', 'riff' );
+			case 'tracks':
+				return __( 'Tracks', 'riff' );
+			case 'posts':
+				return __( 'Posts', 'riff' );
+			case 'library':
+				return __( 'Your Library', 'riff' );
+			case 'playlist':
+				// A listener's playlist is private: its name is only for whoever may read it.
+				return current_user_can( 'read_post', $browse['id'] ) ? get_the_title( $browse['id'] ) : __( 'Playlist', 'riff' );
+			case 'album':
+			case 'artist':
+				$term = get_term( $browse['id'], 'album' === $browse['view'] ? Catalog::ALBUM : Catalog::ARTIST );
+				return $term instanceof WP_Term ? $term->name : '';
+			default:
+				/* translators: %s: the words searched for. */
+				return sprintf( __( 'Results for “%s”', 'riff' ), $browse['search'] );
 		}
 	}
 

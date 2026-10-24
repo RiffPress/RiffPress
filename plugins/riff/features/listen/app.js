@@ -71,6 +71,9 @@ export function start( api ) {
 		clearTimeout( statusTimer );
 		statusTimer = setTimeout( () => ( status.textContent = '' ), 6000 );
 	}
+	// Said to a screen reader only, through WordPress's live regions, where the change is already
+	// plain to see: new cards, a new name, a new view.
+	const speak = ( message ) => window.wp?.a11y?.speak?.( message );
 	function untell() {
 		clearTimeout( statusTimer );
 		status.textContent = '';
@@ -222,6 +225,7 @@ export function start( api ) {
 							view: body.innerHTML,
 							nav: doc.querySelector( '.riff-app-bar' )
 								?.innerHTML,
+							title: doc.title,
 						};
 					} )
 			);
@@ -239,10 +243,11 @@ export function start( api ) {
 		app.setAttribute( 'aria-busy', 'true' );
 		let html;
 		let bar;
+		let title;
 		try {
 			// Every view, Home and a post's too, is what the server renders at its address, so it
 			// is written in one place.
-			( { view: html, nav: bar } = await pageView(
+			( { view: html, nav: bar, title } = await pageView(
 				to.browse ? to.href : addressOf( id, upto )
 			) );
 		} catch {
@@ -259,6 +264,10 @@ export function start( api ) {
 		// Home's rows of what was played are filled here, before the new view is painted.
 		const swap = () => {
 			view.innerHTML = html;
+			// Its title too, which a screen reader says, and the tab and the history list show.
+			if ( title ) {
+				document.title = title;
+			}
 			home();
 			fade( view );
 			if ( bar !== undefined && nav ) {
@@ -345,6 +354,17 @@ export function start( api ) {
 			grid.insertAdjacentHTML( 'beforeend', cardsOf( items, next ) );
 			grid.dataset.riffPage = String( next );
 			untell();
+			speak(
+				fmt(
+					/* translators: %s: how many posts were added. */ _n(
+						'%s more post',
+						'%s more posts',
+						items.length,
+						'riff'
+					),
+					items.length
+				)
+			);
 			// The address that renders these same cards, so a reload or a shared link shows them.
 			history.replaceState( history.state, '', postsAddress( next ) );
 			if ( next >= ( pages || 1 ) ) {
@@ -957,6 +977,15 @@ export function start( api ) {
 			);
 			if ( sure ) {
 				api.deletePlaylist( id ).then( () => {
+					speak(
+						fmt(
+							/* translators: %s: playlist name. */ __(
+								'%s deleted',
+								'riff'
+							),
+							name
+						)
+					);
 					const to = postOf( libraryAddress( 'playlists' ) );
 					if ( to ) {
 						show( to ).catch( () => {} );
@@ -1005,15 +1034,22 @@ export function start( api ) {
 		form.addEventListener( 'submit', ( e ) => {
 			e.preventDefault();
 			e.stopPropagation();
-			api.renamePlaylist( id, field.value ).then(
-				() =>
-					redraw( () =>
-						view.querySelector(
-							'[data-riff-app-action="rename-playlist"]'
-						)
-					),
-				failed
-			);
+			api.renamePlaylist( id, field.value ).then( () => {
+				speak(
+					fmt(
+						/* translators: %s: the playlist's new name. */ __(
+							'Renamed %s',
+							'riff'
+						),
+						field.value.trim()
+					)
+				);
+				redraw( () =>
+					view.querySelector(
+						'[data-riff-app-action="rename-playlist"]'
+					)
+				);
+			}, failed );
 		} );
 	}
 

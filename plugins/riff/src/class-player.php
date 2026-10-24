@@ -58,6 +58,9 @@ final class Player {
 		// wp.hooks is how a plugin's script listens to the player (see docs/javascript.md); the
 		// module reads it from the window when it is there.
 		wp_enqueue_script( 'wp-hooks' );
+		// wp.a11y.speak() is how the player tells a screen reader what changed: the track, the
+		// queue, a like. Its live regions are WordPress's, shared with anything else on the page.
+		wp_enqueue_script( 'wp-a11y' );
 		// The modules' strings are translated with wp.i18n, from the translations WordPress prints
 		// for each module before it runs (wp_set_script_module_translations()). Core prints wp-i18n
 		// itself when there are any; without them the modules show the English they are written in.
