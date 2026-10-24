@@ -18,6 +18,7 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | A listener's own playlist | A private post of Riff's `riff_playlist` type, written by the listener, holding one Playlist block (WordPress 7.1) whose playlist-track blocks are its tracks in order. |
 | Who can play what | The status and visibility of the post a track appears in. |
 | People and app sign-in | WordPress users and application passwords. |
+| AI tools and other plugins reading the library or keeping likes and playlists | The Abilities API: Riff registers one ability per `riff/v1` route it answers for, each run as that route's REST request. |
 | Per-site upload limits on a network | Multisite's `blog_upload_space`. |
 
 ## Added by Riff, and why

@@ -32,6 +32,7 @@ final class Plugin {
 		Player::register();
 		Library::register();
 		Api::register();
+		Abilities::register();
 		Cli::register();
 		// The Listen feature: the block, its views, the drawn covers. Built on the hooks above.
 		Listen\App::register();
