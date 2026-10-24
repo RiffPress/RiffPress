@@ -93,6 +93,14 @@ Returns `boolean`: True while a track plays.
 
 Since 4.0.0.
 
+### `window.riff.time()`
+
+Where the track is.
+
+Returns `number`: Seconds from the start of the track, or 0 with nothing playing.
+
+Since 4.32.0.
+
 ### `window.riff.tab( id )`
 
 Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added through the `riff_now_playing_tabs` filter.
@@ -129,6 +137,7 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.queue`](hooks.md#riffqueue), action: Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
 - [`riff.ready`](hooks.md#riffready), action: Fires once the player is set up, its state restored and `window.riff` available.
 - [`riff.tab`](hooks.md#rifftab), action: Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
+- [`riff.time`](hooks.md#rifftime), action: Fires as the track plays, a few times a second, and again after a seek.
 - [`riff.track`](hooks.md#rifftrack), action: Fires when a track is loaded, before it plays.
 
 ## A track
