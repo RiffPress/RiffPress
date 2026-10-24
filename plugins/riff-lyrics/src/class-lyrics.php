@@ -21,8 +21,9 @@ defined( 'ABSPATH' ) || exit;
  * the attachment's own metadata as `unsynchronised_lyric`, which the media REST route returns in
  * `media_details`. This shows that field in a Lyrics tab and lets the Media Library edit it, so the
  * plugin stores nothing of its own. Everything it does goes through Riff's documented surface:
- * the `riff_now_playing_tabs` filter, the `riff_before_player` action, and the `riff.tab` and
- * `riff.track` actions in the player.
+ * the `riff_now_playing_tabs` filter, the `riff_before_player` action, and the `riff.tab`,
+ * `riff.track` and `riff.time` actions in the player. Lyrics whose lines start with a timestamp,
+ * as the LRC format has them, follow the music and seek on a tap, through `window.riff`.
  */
 final class Lyrics {
 
@@ -81,7 +82,19 @@ final class Lyrics {
 		// Riff's design tokens, such as --riff-fg-2, come from its riff-tokens stylesheet, not copies.
 		wp_register_style( 'riff-lyrics', false, array( 'riff-tokens' ), RIFF_LYRICS_VERSION );
 		wp_enqueue_style( 'riff-lyrics' );
-		wp_add_inline_style( 'riff-lyrics', '.riff-lyrics{margin:0;white-space:pre-line;font-size:18px;line-height:1.7}.riff-lyrics-note{margin:0;color:var(--riff-fg-2)}' );
+		wp_add_inline_style(
+			'riff-lyrics',
+			'.riff-lyrics{margin:0;white-space:pre-line;font-size:18px;line-height:1.7}'
+			. '.riff-lyrics-note{margin:0;color:var(--riff-fg-2)}'
+			// Synced: a list of lines, each a button that seeks; the one being sung in the foreground.
+			. '.riff-lyrics-synced{list-style:none;padding:0;white-space:normal}'
+			. '.riff-lyrics-synced li{margin:0}'
+			. '.riff-lyrics-gap{margin-top:1.2em!important}'
+			. '.riff-lyrics-line{all:unset;display:block;box-sizing:border-box;width:100%;padding:3px 0;cursor:pointer;color:var(--riff-fg-2);font:inherit;font-weight:500;transition:color .2s,opacity .2s}'
+			. '.riff-lyrics-line:hover{color:var(--riff-fg)}'
+			. '.riff-lyrics-line:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px;border-radius:4px}'
+			. '[aria-current] > .riff-lyrics-line{color:var(--riff-fg);font-weight:700}'
+		);
 	}
 
 	/**
