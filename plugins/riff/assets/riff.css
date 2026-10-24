@@ -3335,8 +3335,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	margin: 12px 0 0;
 	padding: 16px 44px 16px 16px;
 	border-radius: 8px;
-	background: linear-gradient(135deg, #5d7cff, #2236c2);
-	color: #fff;
+
+	/* Riff's accent, as Liked songs has it, and the site's when the block is
+	   given its own. */
+	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
+	color: var(--riff-app-on-accent);
 }
 
 .riff-app-install[hidden],
@@ -3352,13 +3355,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-app .riff-app-install-text p {
 	margin: 0;
-	color: rgb(255 255 255 / 0.85);
+	color: color-mix(in srgb, var(--riff-app-on-accent) 85%, transparent);
 	font-size: 13px;
 	line-height: 1.4;
 }
 
 .riff-app .riff-app-install-text .riff-app-install-title {
-	color: #fff;
+	color: var(--riff-app-on-accent);
 	font-size: 15px;
 	font-weight: 700;
 }
@@ -3369,16 +3372,16 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	min-height: 36px;
 	height: 36px;
 	padding: 0 20px;
-	border-color: #fff;
+	border-color: var(--riff-app-on-accent);
 	border-radius: 999px;
-	background: #fff;
-	color: #000;
+	background: var(--riff-app-on-accent);
+	color: var(--riff-app-accent);
 	font-size: 14px;
 	font-weight: 700;
 }
 
 .riff-app .riff-app-install .riff-pill:hover {
-	background: rgb(255 255 255 / 0.85);
+	background: color-mix(in srgb, var(--riff-app-on-accent) 85%, transparent);
 }
 
 .riff-app .riff-app-install-close {
@@ -3391,12 +3394,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	width: 32px;
 	height: 32px;
 	border-radius: 50%;
-	color: #fff;
+	color: var(--riff-app-on-accent);
 	cursor: pointer;
 }
 
 .riff-app .riff-app-install-close:hover {
-	background: rgb(255 255 255 / 0.15);
+	background: color-mix(in srgb, var(--riff-app-on-accent) 12%, transparent);
 }
 
 .riff-app .riff-app-install-close svg {
@@ -3405,7 +3408,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-app .riff-app-install :focus-visible {
-	outline: 2px solid #fff;
+	outline: 2px solid var(--riff-app-on-accent);
 	outline-offset: 2px;
 }
 
