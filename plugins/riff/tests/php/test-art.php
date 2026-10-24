@@ -5,6 +5,7 @@
  * @package Riff
  */
 
+use Riff\Catalog;
 use Riff\Listen\Art;
 use Riff\Tracks;
 
@@ -44,6 +45,49 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertCount( 1, $track['art'] );
 		$this->assertSame( Art::url( $post ), $track['art'][0]['src'] );
 		$this->assertStringContainsString( 'riff-art=' . $post, $track['art'][0]['src'] );
+	}
+
+	public function test_an_album_with_no_image_gets_a_cover_drawn_for_the_album(): void {
+		[ $post, $id ] = $this->bare_post();
+		$album         = (int) wp_get_object_terms( $id, Catalog::ALBUM )[0]->term_id;
+		$track         = Tracks::from_attachment( $id, $post );
+
+		$art = Art::album_art( $album, $track['art'] );
+		$svg = Art::album_svg( $album );
+
+		$this->assertTrue( Art::drawn( $track['art'] ), 'the track alone falls back to its post\'s drawn cover' );
+		$this->assertStringContainsString( 'riff-art=album-' . $album, $art[0]['src'] );
+		$this->assertStringContainsString( '>Compositions<', $svg, 'the album\'s own name' );
+		$this->assertStringContainsString( 'The Airmen of Note', $svg, 'and its artist' );
+		$this->assertStringContainsString( '>1</text>', $svg, 'and how many of its tracks can be seen' );
+		$this->assertStringNotContainsString( 'Night Sessions', $svg, 'not the post\'s' );
+		$this->assertSame( array(), Art::album( 0 ) );
+
+		$cover = self::attach( 'cover.png', $post );
+		set_post_thumbnail( $id, $cover );
+		$own = Tracks::from_attachment( $id, $post )['art'];
+		$this->assertFalse( Art::drawn( $own ) );
+		$this->assertSame( $own, Art::album_art( $album, $own ), 'an image of the site\'s own wins' );
+
+		$tint = Art::tint( $art );
+		$this->assertMatchesRegularExpression( '/^#[0-9a-f]{6}$/', $tint, 'an album\'s drawn cover tints its page as a post\'s does' );
+	}
+
+	public function test_a_private_albums_cover_is_not_drawn_for_a_visitor(): void {
+		[ $post, $id ] = $this->bare_post();
+		$album         = (int) wp_get_object_terms( $id, Catalog::ALBUM )[0]->term_id;
+		wp_update_post(
+			array(
+				'ID'          => $post,
+				'post_status' => 'private',
+			)
+		);
+
+		wp_set_current_user( 0 );
+		$this->assertNull( Art::album_svg( $album ), 'nothing to learn an album\'s name from' );
+		$this->assertNull( Art::album_svg( 0 ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$this->assertStringContainsString( '>Compositions<', (string) Art::album_svg( $album ) );
 	}
 
 	public function test_a_sites_own_image_wins(): void {

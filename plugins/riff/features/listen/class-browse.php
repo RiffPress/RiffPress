@@ -825,8 +825,12 @@ final class Browse {
 			return Ui::title( $title ) . self::empty_note();
 		}
 		// An album leads with its cover and numbers its tracks; other lists show each track's art.
-		$art  = $album && ! empty( $data['items'][0]['art'] ) ? (string) end( $data['items'][0]['art'] )['src'] : '';
-		$tint = $album ? Art::tint( (array) ( $data['items'][0]['art'] ?? array() ) ) : '';
+		$cover = $album ? (array) ( $data['items'][0]['art'] ?? array() ) : array();
+		if ( $album && $id ) {
+			$cover = Art::album_art( $id, $cover );
+		}
+		$art  = $cover ? (string) end( $cover )['src'] : '';
+		$tint = $album ? Art::tint( $cover ) : '';
 		return App::header( $title, $meta, $kind, $art, $tint, false, $id ? 'album' : '', $id ) . self::rows( $data['items'], $album );
 	}
 

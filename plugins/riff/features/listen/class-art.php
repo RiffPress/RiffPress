@@ -10,7 +10,10 @@ namespace Riff\Listen;
 
 use WP;
 use WP_Post;
+use WP_REST_Request;
+use WP_Term;
 
+use Riff\Catalog;
 use Riff\Library;
 use Riff\Player;
 
@@ -123,6 +126,109 @@ final class Art {
 	}
 
 	/**
+	 * Whether a track's artwork is one Riff drew, or nothing at all, rather than an image of the
+	 * site's own.
+	 *
+	 * @since 4.32.0
+	 *
+	 * @param array $art Artwork list, as a track carries it.
+	 * @return bool
+	 */
+	public static function drawn( array $art ): bool {
+		$src = $art ? (string) ( end( $art )['src'] ?? '' ) : '';
+		if ( '' === $src ) {
+			return true;
+		}
+		parse_str( (string) wp_parse_url( $src, PHP_URL_QUERY ), $query );
+		return ! empty( $query[ self::QUERY ] );
+	}
+
+	/**
+	 * An album's artwork: its first track's own image when it has one, else a cover drawn for the
+	 * album itself, with its own name, artist and track count. An album with no image and no
+	 * post used to stay a grey square, and one on a post took the post's drawn cover, with the
+	 * post's title and count on it.
+	 *
+	 * @since 4.32.0
+	 *
+	 * @param int   $term_id The album's term ID.
+	 * @param array $art     The first track's artwork as the player shows it.
+	 * @return array List of { src, sizes }.
+	 */
+	public static function album_art( int $term_id, array $art ): array {
+		return self::drawn( $art ) ? self::album( $term_id ) : $art;
+	}
+
+	/**
+	 * The drawn cover of an album, as the artwork list the player reads.
+	 *
+	 * @since 4.32.0
+	 *
+	 * @param int $term_id The album's term ID.
+	 * @return array List of { src, sizes }.
+	 */
+	public static function album( int $term_id ): array {
+		if ( ! $term_id ) {
+			return array();
+		}
+		return array(
+			array(
+				'src'   => add_query_arg( self::QUERY, 'album-' . $term_id, home_url( '/' ) ),
+				'sizes' => '1024x1024',
+				'type'  => 'image/svg+xml',
+			),
+		);
+	}
+
+	/**
+	 * Draws the cover for an album: its name, its artist and the tracks the requester may see,
+	 * read through the tracks route so a private album stays private. The palette and layout come
+	 * from the term's slug, as a post's come from its own.
+	 *
+	 * @since 4.32.0
+	 *
+	 * @param int $term_id The album's term ID.
+	 * @return string|null SVG document, or null for no album the requester may see.
+	 */
+	public static function album_svg( int $term_id ): ?string {
+		$term = get_term( $term_id, Catalog::ALBUM );
+		if ( ! $term instanceof WP_Term ) {
+			return null;
+		}
+		$request = new WP_REST_Request( 'GET', '/' . Library::REST . '/tracks' );
+		$request->set_query_params(
+			array(
+				'album'    => $term_id,
+				'per_page' => 100,
+			)
+		);
+		$data   = rest_do_request( $request )->get_data();
+		$tracks = is_array( $data['items'] ?? null ) ? $data['items'] : array();
+		if ( ! $tracks ) {
+			return null;
+		}
+		$duration = 0.0;
+		foreach ( $tracks as $track ) {
+			$duration += (float) ( $track['duration'] ?? 0 );
+		}
+		$item     = array(
+			'title'    => html_entity_decode( (string) $term->name, ENT_QUOTES, 'UTF-8' ),
+			'artist'   => (string) get_term_meta( $term_id, Catalog::ALBUM_ARTIST, true ),
+			'count'    => (int) ( $data['total'] ?? count( $tracks ) ),
+			'duration' => $duration,
+		);
+		$seed     = crc32( (string) $term->slug );
+		$palettes = self::palettes();
+		$layouts  = self::layouts();
+		return self::draw(
+			$item,
+			$tracks,
+			$palettes[ $seed % count( $palettes ) ],
+			$layouts[ intdiv( $seed, count( $palettes ) ) % count( $layouts ) ]
+		);
+	}
+
+	/**
 	 * Tells the player where the Listen script is, for pages that hold the block.
 	 *
 	 * @since 4.0.0
@@ -199,12 +305,19 @@ final class Art {
 			echo self::sheet(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- an HTML document built here, every value escaped where it is placed.
 			exit;
 		}
-		$post = get_post( absint( $wp->query_vars[ self::QUERY ] ) );
-		if ( ! $post instanceof WP_Post || ! is_post_publicly_viewable( $post ) || post_password_required( $post ) ) {
+		$svg = null;
+		if ( preg_match( '/^album-(\d+)$/', (string) $wp->query_vars[ self::QUERY ], $m ) ) {
+			$svg = self::album_svg( (int) $m[1] );
+		} else {
+			$post = get_post( absint( $wp->query_vars[ self::QUERY ] ) );
+			if ( $post instanceof WP_Post && is_post_publicly_viewable( $post ) && ! post_password_required( $post ) ) {
+				$svg = self::svg( $post );
+			}
+		}
+		if ( null === $svg ) {
 			status_header( 404 );
 			exit;
 		}
-		$svg  = self::svg( $post );
 		$etag = '"' . md5( $svg ) . '"';
 		if ( isset( $_SERVER['HTTP_IF_NONE_MATCH'] ) && trim( sanitize_text_field( wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ) ) ) === $etag ) {
 			status_header( 304 );
@@ -571,14 +684,22 @@ final class Art {
 			return '';
 		}
 		parse_str( (string) wp_parse_url( $src, PHP_URL_QUERY ), $query );
-		if ( ! empty( $query[ self::QUERY ] ) && is_numeric( $query[ self::QUERY ] ) ) {
-			$post = get_post( (int) $query[ self::QUERY ] );
-			if ( ! $post instanceof WP_Post ) {
+		$drawn = (string) ( $query[ self::QUERY ] ?? '' );
+		if ( '' !== $drawn ) {
+			// The slug the cover was drawn from: a post's, or an album term's.
+			if ( preg_match( '/^album-(\d+)$/', $drawn, $m ) ) {
+				$term = get_term( (int) $m[1], Catalog::ALBUM );
+				$slug = $term instanceof WP_Term ? (string) $term->slug : null;
+			} else {
+				$post = is_numeric( $drawn ) ? get_post( (int) $drawn ) : null;
+				$slug = $post instanceof WP_Post ? (string) $post->post_name : null;
+			}
+			if ( null === $slug ) {
 				return '';
 			}
 			// A drawn cover's ground, unless it is the neutral charcoal or grey; then its accent.
 			$palettes = self::palettes();
-			$palette  = $palettes[ crc32( (string) $post->post_name ) % count( $palettes ) ];
+			$palette  = $palettes[ crc32( $slug ) % count( $palettes ) ];
 			return isset( self::DISCS[ $palette[0] ] ) && '#ffb020' !== $palette[0] ? (string) $palette[1] : (string) $palette[0];
 		}
 		$id = attachment_url_to_postid( $src );
