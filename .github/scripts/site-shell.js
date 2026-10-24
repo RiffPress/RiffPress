@@ -53,7 +53,7 @@ function head( title, description, url, depth, css, section = '' ) {
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><img src="${ up }icons/favicon.svg" alt="" width="32" height="32">RiffPress</a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><img src="${ up }icons/favicon.svg" alt="" width="44" height="44">RiffPress</a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
 `;
 }
 
