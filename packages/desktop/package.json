@@ -1,7 +1,7 @@
 {
 	"name": "riff-desktop",
 	"productName": "Riff",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "Riff for the desktop: a Riff site's Listen page in a window of its own, with media keys and Now Playing.",
 	"license": "GPL-2.0-or-later",
 	"private": true,
