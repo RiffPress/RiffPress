@@ -174,7 +174,10 @@ class Test_Riff_Bindings extends Riff_TestCase {
 
 		$html = $this->render( $post, $block );
 
-		$this->assertMatchesRegularExpression( '/<img[^>]*src="[^"]*cover[^"]*"[^>]*alt="Underground"/', $html );
+		// Core's attribute order differs between releases, so each one is looked for on its own.
+		preg_match( '/<img[^>]*>/', $html, $img );
+		$this->assertMatchesRegularExpression( '/ src="[^"]*cover[^"]*"/', $img[0] ?? '' );
+		$this->assertStringContainsString( ' alt="Underground"', $img[0] ?? '' );
 	}
 
 	public function test_a_key_or_a_track_there_is_none_of_leaves_the_block_as_it_was(): void {
