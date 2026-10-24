@@ -2543,11 +2543,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	grid-auto-flow: column;
 	gap: 20px;
 
-	/* Room for a focused card's ring, which the scroll would otherwise
-	   clip, given back so the row lines up as before. */
-	margin: -6px -6px -2px;
-	padding: 6px;
-	scroll-padding-inline: 6px;
+	/* Room above and below for a focused card's ring, which the scroll would
+	   otherwise clip, given back so the row sits where it did. There is none
+	   to borrow at the sides: the view has no padding there to take it. */
+	margin: -6px 0 -2px;
+	padding: 6px 0;
 	overflow-x: auto;
 	overscroll-behavior-x: contain;
 	scroll-snap-type: x mandatory;
@@ -4627,7 +4627,7 @@ html.riff-desktop .riff-standalone .riff-grid {
 html.riff-desktop .riff-standalone .riff-app .riff-shelf-row:has(> .riff-card) {
 	grid-auto-columns: clamp(164px, 15vw, 200px);
 	gap: 0;
-	margin: -6px -18px -2px;
+	margin: -6px -12px -2px;
 }
 
 html.riff-desktop .riff-standalone .riff-app .riff-card {
