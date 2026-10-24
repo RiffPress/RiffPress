@@ -10,6 +10,10 @@ Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup
 
 Every pull request includes the template's "Use of AI tools" section with the tool, the model, and how much of the change it wrote, per the [WordPress AI Guidelines](https://make.wordpress.org/ai/handbook/ai-guidelines/). Put the disclosure there and nowhere else. No `Co-Authored-By` or session trailers in commits; the squash commit message becomes the changelog.
 
+## Branches
+
+Branch every pull request from `main`, never from another open pull request's branch. Pull requests are squash-merged, so the commit a stacked branch sits on never reaches `main`, and the stacked pull request conflicts with the very change it was built on. When one change needs another, wait for it to merge, then branch.
+
 ## Before a commit
 
 The Playwright suite runs from the pre-commit hook against the local wp-env site, and again in Actions on the pull request. Do not skip the hook for changes under `plugins/`. Docs and site changes may skip it with `RIFF_SKIP_E2E=1`.
