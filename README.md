@@ -11,7 +11,7 @@
 
 <p align="center"><a href="https://riffpress.com/">Website</a> · <a href="https://riffpress.com/demo">Live demo</a> · <a href="https://riffpress.com/download/">Download</a> · <a href="https://github.com/RiffPress/RiffPress/releases?q=riff-desktop&expanded=true">Desktop app</a></p>
 
-<p align="center"><img src="site/desktop-listen.png" alt="The Listen app in Spotify's layout: the library in a panel at the side, home and search across the top, a grid of album covers, and the player bar along the bottom" width="880"></p>
+<p align="center"><img src="site/desktop-listen.png" alt="The Listen app: the library in a panel at the side, home and search across the top, a grid of album covers, and the player bar along the bottom" width="880"></p>
 
 <p align="center">
 <img src="site/phone-post.png" alt="A post's tracks on a phone, one playing, with the player bar along the bottom" width="260">

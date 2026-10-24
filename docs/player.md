@@ -64,4 +64,4 @@ under **Video version**.
 
 ## Design
 
-On a computer the Listen app is laid out in Spotify's frame: back and forward, home and search across the top, the library and the view as panels on black, and the player bar along the bottom with the seek line under the controls, as Tidal arranges it. Phones and tablets keep a touch layout. It's all in Riff's amber. [DESIGN.md](DESIGN.md) has the rest.
+On a computer the Listen app is laid out as a desktop streaming app is: back and forward, home and search across the top, the library and the view as panels on black, and the player bar along the bottom with the seek line under the controls. Phones and tablets keep a touch layout. It's all in Riff's amber. [DESIGN.md](DESIGN.md) has the rest.
