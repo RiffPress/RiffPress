@@ -21,7 +21,8 @@ defined( 'ABSPATH' ) || exit;
  * track to a playlist and taking one out. An ability is run as a REST request to its route, so it
  * answers exactly what the route answers and is allowed exactly what the route allows: the
  * route's own permission callback decides. Nothing plays through an ability, since playback
- * happens in a browser, not on the server. Registered only where WordPress has the API.
+ * happens in a browser, not on the server. Each is public, so core's `wp-abilities/v1` REST
+ * routes run it too: a read-only ability answers GET, unlike answers DELETE, the rest POST.
  */
 final class Abilities {
 
@@ -33,7 +34,7 @@ final class Abilities {
 	public const CATEGORY = 'riff';
 
 	/**
-	 * Hooks the category and the abilities, where the Abilities API exists.
+	 * Hooks the category and the abilities.
 	 *
 	 * @since 4.32.0
 	 */
@@ -69,6 +70,10 @@ final class Abilities {
 	 *                 output (the route's schema) and readonly.
 	 */
 	public static function list(): array {
+		static $list = null;
+		if ( null !== $list ) {
+			return $list;
+		}
 		$page   = array(
 			'type'        => 'integer',
 			'description' => __( 'Page of results, from 1.', 'riff' ),
@@ -88,8 +93,8 @@ final class Abilities {
 			'description' => __( 'Its ID: an audio attachment, an album term or an artist term.', 'riff' ),
 			'minimum'     => 1,
 		);
-		return array(
-			'riff/tracks'               => array(
+		$list   = array(
+			'riff/list-tracks'          => array(
 				'label'       => __( 'List tracks', 'riff' ),
 				'description' => __( 'Lists the tracks the requester can see, searchable by title, artist or album, or those on one album or by one artist, a page at a time.', 'riff' ),
 				'method'      => 'GET',
@@ -120,7 +125,7 @@ final class Abilities {
 				'output'      => Catalog_Rest::tracks_schema(),
 				'readonly'    => true,
 			),
-			'riff/albums'               => array(
+			'riff/list-albums'          => array(
 				'label'       => __( 'List albums', 'riff' ),
 				'description' => __( 'Lists the albums with a track the requester can see, by name, each with its artist, artwork and track count, searchable by name.', 'riff' ),
 				'method'      => 'GET',
@@ -132,7 +137,7 @@ final class Abilities {
 				'output'      => Catalog_Rest::terms_schema( Catalog::ALBUM ),
 				'readonly'    => true,
 			),
-			'riff/artists'              => array(
+			'riff/list-artists'         => array(
 				'label'       => __( 'List artists', 'riff' ),
 				'description' => __( 'Lists the artists with a track the requester can see, by name, each with a track count, searchable by name.', 'riff' ),
 				'method'      => 'GET',
@@ -144,7 +149,7 @@ final class Abilities {
 				'output'      => Catalog_Rest::terms_schema( Catalog::ARTIST ),
 				'readonly'    => true,
 			),
-			'riff/library'              => array(
+			'riff/list-library'         => array(
 				'label'       => __( 'List the library', 'riff' ),
 				'description' => __( 'Lists the posts with music the requester can see, newest first, each with its title, artwork, track count and length, a page at a time.', 'riff' ),
 				'method'      => 'GET',
@@ -153,7 +158,7 @@ final class Abilities {
 				'output'      => Library::list_schema(),
 				'readonly'    => true,
 			),
-			'riff/likes'                => array(
+			'riff/list-likes'           => array(
 				'label'       => __( 'List likes', 'riff' ),
 				'description' => __( 'Lists what the signed-in user has liked: tracks, albums and artists, newest first.', 'riff' ),
 				'method'      => 'GET',
@@ -162,7 +167,7 @@ final class Abilities {
 				'output'      => Likes::likes_schema(),
 				'readonly'    => true,
 			),
-			'riff/history'              => array(
+			'riff/list-history'         => array(
 				'label'       => __( 'List listening history', 'riff' ),
 				'description' => __( 'Lists the tracks the signed-in user has played, most recent first.', 'riff' ),
 				'method'      => 'GET',
@@ -171,7 +176,7 @@ final class Abilities {
 				'output'      => Likes::history_schema(),
 				'readonly'    => true,
 			),
-			'riff/playlists'            => array(
+			'riff/list-playlists'       => array(
 				'label'       => __( 'List playlists', 'riff' ),
 				'description' => __( 'Lists the signed-in user\'s playlists, each with its tracks.', 'riff' ),
 				'method'      => 'GET',
@@ -224,6 +229,7 @@ final class Abilities {
 							'minimum' => 1,
 						),
 						'minItems'    => 1,
+						'maxItems'    => Playlists::MAX_TRACKS,
 						'required'    => true,
 					),
 				),
@@ -253,6 +259,7 @@ final class Abilities {
 				'readonly'    => false,
 			),
 		);
+		return $list;
 	}
 
 	/**
@@ -280,12 +287,17 @@ final class Abilities {
 					'output_schema'       => $ability['output'],
 					'execute_callback'    => static fn( $input = null ) => self::run( $name, is_array( $input ) ? $input : array() ),
 					'permission_callback' => static fn( $input = null ) => self::permitted( $name, is_array( $input ) ? $input : array() ),
+					// Public, and in REST by name as well: WordPress 7.0 has no `public` and reads only
+					// `show_in_rest`. Core picks the verb from the annotations: read only answers GET,
+					// destructive and idempotent DELETE, the rest POST. Taking a track out by its place
+					// is not idempotent, since the next track moves into that place.
 					'meta'                => array(
-						'public'      => true,
-						'annotations' => array(
+						'public'       => true,
+						'show_in_rest' => true,
+						'annotations'  => array(
 							'readonly'    => $ability['readonly'],
-							'destructive' => 'riff/unlike' === $name || 'riff/remove-from-playlist' === $name,
-							'idempotent'  => 'riff/add-to-playlist' !== $name,
+							'destructive' => in_array( $name, array( 'riff/unlike', 'riff/remove-from-playlist' ), true ),
+							'idempotent'  => ! in_array( $name, array( 'riff/add-to-playlist', 'riff/remove-from-playlist' ), true ),
 						),
 					),
 				// An ability that takes nothing has no input schema: core holds any input to the
@@ -365,7 +377,9 @@ final class Abilities {
 
 	/**
 	 * Whether the current user may run an ability: what the route's own permission callback says
-	 * of the same request.
+	 * of the same request. The route answers a `WP_Error` with its reason (sign in, no such
+	 * playlist); that is reduced to false here on purpose, since core treats a `WP_Error` from a
+	 * permission callback as a mistake and answers its own generic refusal either way.
 	 *
 	 * @since 4.32.0
 	 *
@@ -384,8 +398,8 @@ final class Abilities {
 				continue;
 			}
 			foreach ( $handlers as $handler ) {
-				$methods = (array) ( $handler['methods'] ?? array() );
-				if ( ! isset( $methods[ $request->get_method() ] ) && ! in_array( $request->get_method(), $methods, true ) ) {
+				// The server keys each handler's methods by name.
+				if ( ! isset( $handler['methods'][ $request->get_method() ] ) ) {
 					continue;
 				}
 				$request->set_url_params( array_filter( $matches, 'is_string', ARRAY_FILTER_USE_KEY ) );

@@ -82,15 +82,16 @@ class Test_Riff_Abilities extends Riff_TestCase {
 			$this->assertSame( $spec['output'], $ability->get_output_schema(), "$name answers in its route's shape" );
 			$this->assertSame( $spec['readonly'], $ability->get_meta_item( 'annotations' )['readonly'] );
 			$this->assertTrue( $ability->get_meta_item( 'public' ) );
+			$this->assertTrue( $ability->get_meta_item( 'show_in_rest' ), 'WordPress 7.0 reads only show_in_rest' );
 		}
 		$this->assertCount( 11, Abilities::list() );
 	}
 
 	public function test_the_read_abilities_answer_what_their_routes_answer_to_a_visitor(): void {
 		$cases = array(
-			array( 'riff/tracks', '/tracks', array( 'search' => 'Underground' ) ),
+			array( 'riff/list-tracks', '/tracks', array( 'search' => 'Underground' ) ),
 			array(
-				'riff/tracks',
+				'riff/list-tracks',
 				'/tracks',
 				array(
 					'orderby'  => 'added',
@@ -98,9 +99,9 @@ class Test_Riff_Abilities extends Riff_TestCase {
 					'page'     => 2,
 				),
 			),
-			array( 'riff/albums', '/albums', array( 'search' => 'Compositions' ) ),
-			array( 'riff/artists', '/artists', array() ),
-			array( 'riff/library', '/library', array( 'page' => 1 ) ),
+			array( 'riff/list-albums', '/albums', array( 'search' => 'Compositions' ) ),
+			array( 'riff/list-artists', '/artists', array() ),
+			array( 'riff/list-library', '/library', array( 'page' => 1 ) ),
 		);
 		foreach ( $cases as list( $name, $path, $input ) ) {
 			$answer = wp_get_ability( $name )->execute( $input );
@@ -108,12 +109,12 @@ class Test_Riff_Abilities extends Riff_TestCase {
 			$this->assertSame( $this->route( 'GET', $path, $input ), $answer, $name );
 			$this->assertNotEmpty( $answer['items'], $name );
 		}
-		$tracks = wp_get_ability( 'riff/tracks' )->execute( array( 'album' => (int) wp_get_object_terms( $this->tracks[0], 'riff_album' )[0]->term_id ) );
+		$tracks = wp_get_ability( 'riff/list-tracks' )->execute( array( 'album' => (int) wp_get_object_terms( $this->tracks[0], 'riff_album' )[0]->term_id ) );
 		$this->assertSame( array( 'Underground', 'Trombone Detritus' ), array_column( $tracks['items'], 'title' ), 'an album, in album order' );
 	}
 
 	public function test_a_visitor_is_refused_what_the_routes_refuse(): void {
-		foreach ( array( 'riff/likes', 'riff/history', 'riff/playlists', 'riff/like', 'riff/unlike', 'riff/add-to-playlist', 'riff/remove-from-playlist' ) as $name ) {
+		foreach ( array( 'riff/list-likes', 'riff/list-history', 'riff/list-playlists', 'riff/like', 'riff/unlike', 'riff/add-to-playlist', 'riff/remove-from-playlist' ) as $name ) {
 			$input  = array(
 				'kind'     => 'track',
 				'id'       => $this->tracks[0],
@@ -132,9 +133,9 @@ class Test_Riff_Abilities extends Riff_TestCase {
 	public function test_likes_and_history_are_the_users_own_and_a_like_can_be_taken_back(): void {
 		wp_set_current_user( $this->user );
 
-		$this->assertSame( array(), wp_get_ability( 'riff/likes' )->execute()['items'], 'nothing yet, and nothing to pass' );
-		$this->assertWPError( wp_get_ability( 'riff/likes' )->execute( array( 'page' => 2 ) ), 'an ability that takes nothing takes nothing' );
-		$this->assertSame( $this->route( 'GET', '/users/me/history' ), wp_get_ability( 'riff/history' )->execute() );
+		$this->assertSame( array(), wp_get_ability( 'riff/list-likes' )->execute()['items'], 'nothing yet, and nothing to pass' );
+		$this->assertWPError( wp_get_ability( 'riff/list-likes' )->execute( array( 'page' => 2 ) ), 'an ability that takes nothing takes nothing' );
+		$this->assertSame( $this->route( 'GET', '/users/me/history' ), wp_get_ability( 'riff/list-history' )->execute() );
 
 		$liked = wp_get_ability( 'riff/like' )->execute(
 			array(
@@ -144,7 +145,7 @@ class Test_Riff_Abilities extends Riff_TestCase {
 		);
 		$this->assertNotWPError( $liked );
 		$this->assertSame( array( array( 'track', $this->tracks[0] ) ), array_map( static fn( array $l ): array => array( $l['kind'], (int) $l['id'] ), $liked['items'] ) );
-		$this->assertSame( $this->route( 'GET', '/users/me/likes' ), wp_get_ability( 'riff/likes' )->execute(), 'the list is the route\'s' );
+		$this->assertSame( $this->route( 'GET', '/users/me/likes' ), wp_get_ability( 'riff/list-likes' )->execute(), 'the list is the route\'s' );
 
 		$album = (int) wp_get_object_terms( $this->tracks[0], 'riff_album' )[0]->term_id;
 		wp_get_ability( 'riff/like' )->execute(
@@ -153,7 +154,7 @@ class Test_Riff_Abilities extends Riff_TestCase {
 				'id'   => $album,
 			)
 		);
-		$this->assertCount( 2, wp_get_ability( 'riff/likes' )->execute()['items'] );
+		$this->assertCount( 2, wp_get_ability( 'riff/list-likes' )->execute()['items'] );
 
 		$left = wp_get_ability( 'riff/unlike' )->execute(
 			array(
@@ -178,7 +179,7 @@ class Test_Riff_Abilities extends Riff_TestCase {
 		$id   = (int) $made['id'];
 		$this->assertGreaterThan( 0, $id );
 
-		$this->assertSame( $this->route( 'GET', '/users/me/playlists' ), wp_get_ability( 'riff/playlists' )->execute() );
+		$this->assertSame( $this->route( 'GET', '/users/me/playlists' ), wp_get_ability( 'riff/list-playlists' )->execute() );
 
 		$added = wp_get_ability( 'riff/add-to-playlist' )->execute(
 			array(
@@ -197,7 +198,7 @@ class Test_Riff_Abilities extends Riff_TestCase {
 		);
 		$this->assertNotWPError( $left );
 		$this->assertSame( array( $this->tracks[1], $this->tracks[0] ), array_map( 'intval', array_column( $left['tracks'], 'id' ) ) );
-		$listed = wp_get_ability( 'riff/playlists' )->execute()['items'];
+		$listed = wp_get_ability( 'riff/list-playlists' )->execute()['items'];
 		$this->assertSame( $this->route( 'GET', '/users/me/playlists' )['items'], $listed );
 		$this->assertSame( array( $id, 2 ), array( (int) $listed[0]['id'], (int) $listed[0]['count'] ) );
 
@@ -213,6 +214,93 @@ class Test_Riff_Abilities extends Riff_TestCase {
 		$this->assertSame( 'ability_invalid_permissions', $other->get_error_code() );
 	}
 
+	public function test_the_abilities_run_over_rest_with_the_verb_their_annotations_choose(): void {
+		$run = static function ( string $method, string $name, array $input = array() ): WP_REST_Response {
+			$request = new WP_REST_Request( $method, '/wp-abilities/v1/abilities/' . $name . '/run' );
+			if ( 'POST' === $method ) {
+				$request->set_header( 'Content-Type', 'application/json' );
+				$request->set_body( wp_json_encode( array( 'input' => $input ) ) );
+			} elseif ( $input ) {
+				$request->set_query_params( array( 'input' => $input ) );
+			}
+			return rest_do_request( $request );
+		};
+
+		$found = $run( 'GET', 'riff/list-tracks', array( 'search' => 'Underground' ) );
+		$this->assertSame( 200, $found->get_status() );
+		$this->assertSame( 'Underground', $found->get_data()['items'][0]['title'] );
+
+		$this->assertSame(
+			401,
+			$run(
+				'POST',
+				'riff/like',
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[0],
+				)
+			)->get_status(),
+			'a visitor is told to sign in'
+		);
+
+		wp_set_current_user( $this->user );
+		$liked = $run(
+			'POST',
+			'riff/like',
+			array(
+				'kind' => 'track',
+				'id'   => $this->tracks[0],
+			)
+		);
+		$this->assertSame( 200, $liked->get_status() );
+		$this->assertSame( (string) $this->tracks[0], (string) $liked->get_data()['items'][0]['id'] );
+		$this->assertSame( 200, $run( 'GET', 'riff/list-likes' )->get_status(), 'nothing to pass, and nothing passed' );
+		$this->assertSame(
+			200,
+			$run(
+				'DELETE',
+				'riff/unlike',
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[0],
+				)
+			)->get_status(),
+			'destructive and idempotent: DELETE'
+		);
+		$this->assertSame( array(), $run( 'GET', 'riff/list-likes' )->get_data()['items'] );
+
+		$made = $this->route(
+			'POST',
+			'/users/me/playlists',
+			array(
+				'title'  => 'Mine',
+				'tracks' => array( $this->tracks[0], $this->tracks[1] ),
+			)
+		);
+		$this->assertSame(
+			405,
+			$run(
+				'DELETE',
+				'riff/remove-from-playlist',
+				array(
+					'playlist' => (int) $made['id'],
+					'index'    => 0,
+				)
+			)->get_status(),
+			'by place, so not idempotent: not DELETE'
+		);
+		$left = $run(
+			'POST',
+			'riff/remove-from-playlist',
+			array(
+				'playlist' => (int) $made['id'],
+				'index'    => 0,
+			)
+		);
+		$this->assertSame( 200, $left->get_status() );
+		$this->assertSame( array( $this->tracks[1] ), array_map( 'intval', array_column( $left->get_data()['tracks'], 'id' ) ) );
+	}
+
 	public function test_input_is_held_to_the_schema_before_the_route_sees_it(): void {
 		wp_set_current_user( $this->user );
 
@@ -226,7 +314,7 @@ class Test_Riff_Abilities extends Riff_TestCase {
 			'not a kind'
 		);
 		$this->assertWPError( wp_get_ability( 'riff/like' )->execute( array( 'id' => $this->tracks[0] ) ), 'the kind is required' );
-		$this->assertWPError( wp_get_ability( 'riff/tracks' )->execute( array( 'genre' => 'jazz' ) ), 'nothing the route does not take' );
+		$this->assertWPError( wp_get_ability( 'riff/list-tracks' )->execute( array( 'genre' => 'jazz' ) ), 'nothing the route does not take' );
 		$this->assertWPError( Abilities::run( 'riff/nothing', array() ) );
 		$this->assertNull( Abilities::request( 'riff/nothing', array() ) );
 	}

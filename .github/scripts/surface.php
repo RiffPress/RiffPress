@@ -50,6 +50,8 @@ function wp_register_ability( $name, $args ) {
 		'category'    => $args['category'] ?? '',
 		'input'       => $args['input_schema'] ?? array(),
 		'readonly'    => $args['meta']['annotations']['readonly'] ?? null,
+		'destructive' => $args['meta']['annotations']['destructive'] ?? null,
+		'idempotent'  => $args['meta']['annotations']['idempotent'] ?? null,
 	);
 }
 require_once RIFF_DIR . 'src/interface-source.php';
