@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.31.0
+Stable tag: 4.32.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,16 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.32.0 =
+* A Block Bindings source, riff/track, so core blocks show a track's details.
+* A listener can turn the single-key shortcuts off from the player (WCAG 2.1.4).
+* Riff's library, likes and playlists as abilities, through the Abilities API.
+* The player says where the track is, through riff.time and window.riff.time().
+* Fixed: a track with no title shows its file name.
+* Fixed: an album with no cover gets a cover drawn for the album, not its post.
+* Fixed: an artist or album tag with angle brackets is filed under its whole name.
+* Fixed: the keyboard-shortcuts switch sits at the top of Now Playing, out of the transport.
+
 = 4.31.0 =
 * Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on.
 * Fixed: in the desktop app the window doesn't stretch past its ends, so the view's corners stay round.
@@ -140,9 +150,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 4.28.0 =
 * Liked songs opens as a playlist, and Your Library sorts from a menu.
-
-= 4.27.0 =
-* Riff's logo is its own name, with its ff as a score writes fortissimo.
-* Fixed: the line under an album's title keeps its contrast on a light cover's tint.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
