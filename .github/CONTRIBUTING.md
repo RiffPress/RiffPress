@@ -97,7 +97,8 @@ Riff Lyrics, wp-api-coverage and the desktop app have `"initial-version": "0.1.0
 
 Two things a package's folder doesn't cover:
 
-- A change outside `plugins/riff/` that changes what `riff.zip` or the WordPress.org listing holds (`.distignore`, `.wordpress-org/`) doesn't open a Riff release by itself. It goes out with Riff's next one; if it can't wait, add a `Release-As: x.y.z` footer to a commit that touches `plugins/riff/`.
+- A change outside `plugins/riff/` that changes what `riff.zip` holds (`.distignore`) doesn't open a Riff release by itself. It goes out with Riff's next one; if it can't wait, add a `Release-As: x.y.z` footer to a commit that touches `plugins/riff/`.
+- The listing's banner, icon and screenshots in `.wordpress-org/`, and `readme.txt`, go to WordPress.org on their own when they change on `main` (`wporg-assets.yml`), once `WPORG_DEPLOY` is on. `wporg-dry-run.yml`, run by hand, does the whole release deploy without the final commit, against `riff` or a test plugin's slug.
 - A wp-api-coverage version released while `NPM_PUBLISH` is off isn't published to npm later on its own. When turning publishing on, run `npm publish --access public ./packages/wp-api-coverage` once for the current version.
 
 <details>

@@ -1,0 +1,48 @@
+name: WordPress.org dry run
+
+# Runs the release deploy without the final commit: the plugin folder is built as
+# release-please.yml builds it, checked out against the SVN repository and laid into trunk, the
+# tag and assets, and the result is printed, with nothing sent. Run it by hand before the first
+# real deploy, against a test plugin's slug if there is one, and whenever the deploy's inputs
+# change. No secret is needed for a dry run.
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: 'The WordPress.org plugin slug to check out: riff, or a test plugin of your own.'
+        default: riff
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    name: Deploy without committing
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the plugin folder
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff
+          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+      - name: The version being deployed
+        id: version
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^ \* Version: *//p' plugins/riff/riff.php | head -1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Riff $version"
+      - name: Deploy to WordPress.org, dry run
+        uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        with:
+          dry-run: true
+        env:
+          SLUG: ${{ inputs.slug }}
+          BUILD_DIR: build/riff
+          ASSETS_DIR: .wordpress-org
+          VERSION: ${{ steps.version.outputs.version }}
