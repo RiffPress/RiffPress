@@ -410,24 +410,32 @@ final class Tracks {
 	/**
 	 * The attachment's title, unless it is still the file's name and the file's own tags know
 	 * better. The block editor and the REST API name an upload after its file; only the classic
-	 * uploader reads the tags. A title somebody has edited is left alone.
+	 * uploader reads the tags. A title somebody has edited is left alone. With no title anywhere,
+	 * the file's name stands in, as the Media Library shows it, so a row is never blank.
 	 *
 	 * @since 4.0.0
+	 * @since 4.32.0 An untitled track is named after its file.
 	 * @param int   $attachment_id Attachment ID.
 	 * @param array $meta          Attachment metadata, which carries the tags for audio.
 	 * @return string
 	 */
 	private static function title( int $attachment_id, array $meta ): string {
-		$title = (string) get_post_field( 'post_title', $attachment_id, 'raw' );
+		$title = trim( (string) get_post_field( 'post_title', $attachment_id, 'raw' ) );
 		$file  = (string) get_attached_file( $attachment_id );
-		$stem  = $file ? pathinfo( $file, PATHINFO_FILENAME ) : '';
+		if ( '' === $file ) {
+			$file = (string) wp_parse_url( (string) wp_get_attachment_url( $attachment_id ), PHP_URL_PATH );
+		}
+		$stem = $file ? rawurldecode( pathinfo( $file, PATHINFO_FILENAME ) ) : '';
 		// Compared loosely: the factory, the editor and a hand upload each punctuate the name differently.
 		// Letters and digits in any script: a Cyrillic or Japanese title must not collapse to nothing.
 		$named = static fn( string $s ): string => mb_strtolower( (string) preg_replace( '/[^\p{L}\p{N}]+/u', '', (string) preg_replace( '/\.[a-z0-9]{2,4}$/i', '', $s ) ) );
 		// A second upload of the same name gets "-1" on the file but not on the title.
 		$stems = array_map( $named, array( $stem, (string) preg_replace( '/-\d+$/', '', $stem ) ) );
-		if ( ! empty( $meta['title'] ) && ( '' === $title || in_array( $named( $title ), $stems, true ) ) ) {
-			$title = (string) $meta['title'];
+		if ( ! empty( $meta['title'] ) && is_scalar( $meta['title'] ) && '' !== trim( (string) $meta['title'] ) && ( '' === $title || in_array( $named( $title ), $stems, true ) ) ) {
+			$title = trim( (string) $meta['title'] );
+		}
+		if ( '' === $title ) {
+			$title = $stem;
 		}
 		return html_entity_decode( $title, ENT_QUOTES, 'UTF-8' );
 	}
