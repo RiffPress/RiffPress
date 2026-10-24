@@ -888,7 +888,9 @@ export function start( api ) {
 			stored( 'riff-install-dismissed', '1' );
 			installShow();
 			// The card is gone with the focus in it: the bar it sat in takes it.
-			nav?.querySelector( 'a[href], button:not([hidden]), input' )?.focus();
+			[ ...( nav?.querySelectorAll( 'a[href], button, input' ) || [] ) ]
+				.find( ( el ) => el.checkVisibility() )
+				?.focus();
 			return;
 		}
 		if ( installPrompt ) {
