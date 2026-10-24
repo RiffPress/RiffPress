@@ -288,6 +288,8 @@ test.describe( 'Player', () => {
 			await expect( list.locator( 'li' ).nth( 1 ).locator( 'button' ).first() ).toBeFocused();
 		}
 		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Trombone Detritus', 'Underground' ] );
+		const said = page.locator( '#a11y-speak-polite' );
+		await expect( said ).toHaveText( 'Moved to 2 of 3' );
 
 		await list.locator( 'li' ).nth( 1 ).locator( '.riff-more-button' ).click();
 		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Move down' } ).click();
@@ -296,6 +298,7 @@ test.describe( 'Player', () => {
 		await list.locator( 'li' ).nth( 2 ).locator( '.riff-more-button' ).click();
 		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Remove from queue' } ).click();
 		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Underground' ] );
+		await expect( said ).toHaveText( 'Removed from the queue' );
 		// The list is drawn again on every change; the focus stays in it, on the nearest place left.
 		await expect( list.locator( 'li' ).nth( 1 ).locator( '.riff-more-button' ) ).toBeFocused();
 
@@ -312,6 +315,7 @@ test.describe( 'Player', () => {
 		await expect.poll( titles ).toEqual( [ 'Underground' ] );
 		await expect( clear ).toBeHidden();
 		await expect( list.locator( 'li' ).first().locator( 'button' ).first(), 'Clear hides itself and hands on the focus' ).toBeFocused();
+		await expect( said ).toHaveText( 'Queue cleared' );
 		expect(
 			await page.evaluate( () => window.riff.playing() ),
 			'the track playing plays on'
@@ -599,6 +603,11 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
 			'Underground'
 		);
+		// A screen reader hears the new track, through WordPress's live region, which Now Playing
+		// leaves out of what it makes inert.
+		const said = page.locator( '#a11y-speak-polite' );
+		await expect( said ).toContainText( /^Now playing Underground/ );
+		expect( await said.evaluate( ( el ) => !! el.closest( '[inert]' ) ) ).toBe( false );
 		await control( 'prev' ).click();
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
 			'Intensities in Ten Cities'

@@ -148,6 +148,6 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 	</div>
 
-	<p class="riff-toast" role="status" hidden></p>
+	<p class="riff-toast" aria-hidden="true" hidden></p>
 	<audio class="riff-audio" preload="metadata"></audio>
 </div>

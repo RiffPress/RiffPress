@@ -219,6 +219,7 @@ test( 'a like the account refuses goes back, and says so', async ( { page } ) =>
 	await bar.click();
 	await expect( bar ).toHaveAttribute( 'aria-pressed', 'false' );
 	await expect( page.locator( '.riff-toast' ) ).toHaveText( /could not be saved/ );
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( /could not be saved/ );
 } );
 
 test( 'a visitor\'s likes are kept in the browser, and Your Library shows them', async ( {

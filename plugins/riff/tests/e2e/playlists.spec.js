@@ -142,11 +142,13 @@ test( 'a playlist opens from Your Library, plays, reorders, loses a track, is re
 	await field.press( 'Enter' );
 	await expect( page.locator( '.riff-album-title' ) ).toHaveText( 'Night drive' );
 	await expect( page.locator( '[data-riff-app-action="rename-playlist"]' ) ).toBeFocused();
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Renamed Night drive' );
 
 	page.once( 'dialog', ( d ) => d.accept() );
 	await page.locator( '[data-riff-app-action="delete-playlist"]' ).click();
 	await expect( page ).toHaveURL( /riff_filter=playlists/ );
 	await expect( page.locator( '.riff-app-empty' ) ).toContainText( 'Playlists you make show up here' );
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Night drive deleted' );
 	expect( await mine( requestUtils ) ).toEqual( [] );
 } );
 

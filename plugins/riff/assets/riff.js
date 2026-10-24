@@ -56,9 +56,7 @@ function start() {
 					'%1$s-bit %2$s kHz',
 					'riff'
 				),
-				t.bits
-			).replace(
-				'%2$s',
+				t.bits,
 				String( t.rate / 1000 ).replace( /\.?0+$/, '' )
 			);
 		} else {
@@ -739,6 +737,16 @@ function start() {
 		order.splice( to, 0, index );
 		pos = order.indexOf( current );
 		changed( 'move' );
+		speak(
+			fmt(
+				/* translators: 1: the track's new place in the queue, 2: how many tracks it holds. */ __(
+					'Moved to %1$s of %2$s',
+					'riff'
+				),
+				to + 1,
+				order.length
+			)
+		);
 	}
 	function remove( at ) {
 		if ( at === pos || at < 0 || at >= order.length ) {
@@ -749,6 +757,7 @@ function start() {
 			pos--;
 		}
 		changed( 'remove' );
+		speak( __( 'Removed from the queue', 'riff' ) );
 	}
 	function clear() {
 		if ( pos < 0 ) {
@@ -757,6 +766,7 @@ function start() {
 		order = [ order[ pos ] ];
 		pos = 0;
 		changed( 'clear' );
+		speak( __( 'Queue cleared', 'riff' ) );
 	}
 	function changed( change ) {
 		renderQueue();
@@ -1182,6 +1192,27 @@ function start() {
 		stopAll();
 		pos = to;
 		load( { play } );
+		const t = track();
+		if ( play && t ) {
+			speak(
+				t.artist
+					? fmt(
+							/* translators: 1: track title, 2: artist. */ __(
+								'Now playing %1$s by %2$s',
+								'riff'
+							),
+							t.title,
+							t.artist
+					  )
+					: fmt(
+							/* translators: %s: track title. */ __(
+								'Now playing %s',
+								'riff'
+							),
+							t.title
+					  )
+			);
+		}
 	}
 
 	function next( auto = false ) {
@@ -2496,7 +2527,12 @@ function start() {
 			? []
 			: [ $( '.riff-bar' ), $( '.riff-toast' ) ];
 		for ( const node of [ ...document.body.children, ...covered ] ) {
-			if ( node && node !== root && ! node.inert ) {
+			if (
+				node &&
+				node !== root &&
+				! node.id.startsWith( 'a11y-speak' ) &&
+				! node.inert
+			) {
 				node.inert = true;
 				node.dataset.riffInert = '';
 			}
@@ -2702,6 +2738,9 @@ function start() {
 	const toastEl = $( '.riff-toast' );
 	let toastTimer = 0;
 	function toast( message ) {
+		// Shown in the player, and said through WordPress's live regions: the player is hidden
+		// until something plays, and its toast is inert while Now Playing covers it on a phone.
+		speak( message );
 		toastEl.textContent = message;
 		toastEl.hidden = false;
 		clearTimeout( toastTimer );
@@ -3215,8 +3254,18 @@ function time( seconds ) {
 		: `${ m }:${ r }`;
 }
 
-function fmt( pattern, value ) {
-	return String( pattern || '%s' ).replace( /%(1\$)?s/, value );
+// Said to a screen reader through WordPress's own live regions (wp.a11y), which sit at the end of
+// the body, outside the player: they speak while the player is hidden or Now Playing covers it.
+function speak( message ) {
+	window.wp?.a11y?.speak?.( message );
+}
+
+function fmt( pattern, ...values ) {
+	let next = 0;
+	return String( pattern || '%s' ).replace(
+		/%(?:(\d)\$)?s/g,
+		( _, place ) => values[ place ? place - 1 : next++ ] ?? ''
+	);
 }
 
 // The artist and album, or the post the track came from when the file has neither, as a video
