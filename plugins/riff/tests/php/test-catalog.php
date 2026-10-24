@@ -6,6 +6,7 @@
  */
 
 use Riff\Catalog;
+use Riff\Tracks;
 
 /**
  * Riff\Catalog.
@@ -49,6 +50,42 @@ class Test_Riff_Catalog extends Riff_TestCase {
 		$album = wp_get_object_terms( $id, Catalog::ALBUM )[0];
 		$this->assertSame( 'The Airmen of Note', get_term_meta( $album->term_id, Catalog::ALBUM_ARTIST, true ), 'the album artist comes from the band tag' );
 		$this->assertSame( Catalog::VERSION, (int) get_post_meta( $id, Catalog::FILED, true ) );
+	}
+
+	public function test_a_tag_with_angle_brackets_is_filed_under_its_whole_name(): void {
+		$id = self::attach( '02 - Underground [underground].mp3' );
+		wp_update_attachment_metadata(
+			$id,
+			array(
+				'artist' => 'AC/DC & <Friends>',
+				'album'  => '<Untitled> & Other Songs',
+			)
+		);
+
+		$artist = wp_get_object_terms( $id, Catalog::ARTIST )[0];
+		$album  = wp_get_object_terms( $id, Catalog::ALBUM )[0];
+		$this->assertSame( 'AC/DC & <Friends>', Catalog::name( $artist->name ), 'nothing read as a tag and stripped' );
+		$this->assertSame( '<Untitled> & Other Songs', Catalog::name( $album->name ) );
+		$this->assertSame( 'ac-dc-friends', $artist->slug );
+		$this->assertSame( '<Untitled> & Other Songs', Catalog::name( get_term_by( 'slug', 'untitled-other-songs-ac-dc-friends', Catalog::ALBUM )->name ), 'the slug keeps every word' );
+
+		$again = self::attach( '03 - Trombone Detritus [detritus].mp3' );
+		wp_update_attachment_metadata(
+			$again,
+			array(
+				'artist' => 'AC/DC & <Friends>',
+				'album'  => '<Untitled> & Other Songs',
+			)
+		);
+		$this->assertSame( $artist->term_id, wp_get_object_terms( $again, Catalog::ARTIST )[0]->term_id, 'a second track joins the same artist' );
+		$this->assertSame( $album->term_id, wp_get_object_terms( $again, Catalog::ALBUM )[0]->term_id );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$artists = rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/artists' ) )->get_data();
+		$albums  = rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/albums' ) )->get_data();
+		$this->assertSame( 'AC/DC & <Friends>', $artists['items'][0]['name'], 'the route says the whole name, as the track rows do' );
+		$this->assertSame( '<Untitled> & Other Songs', $albums['items'][0]['name'] );
+		$this->assertSame( 'AC/DC & <Friends>', Tracks::from_attachment( $id )['artist'] );
 	}
 
 	public function test_tracks_of_one_album_share_its_term_and_same_named_albums_by_others_do_not(): void {

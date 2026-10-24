@@ -64,7 +64,7 @@ final class Catalog {
 	 *
 	 * @since 4.16.0
 	 */
-	public const VERSION = 1;
+	public const VERSION = 2;
 
 	/**
 	 * The background job that files a library from before the catalogue.
@@ -240,7 +240,12 @@ final class Catalog {
 	}
 
 	/**
-	 * One tag from attachment metadata, trimmed.
+	 * One tag from attachment metadata, trimmed, as a term name WordPress keeps whole.
+	 *
+	 * A term's name goes through core's `pre_term_name` filters, which strip anything that looks
+	 * like a markup tag, so an artist tagged `AC/DC & <Friends>` would be filed as `AC/DC &`. The
+	 * angle brackets are handed over as entities instead, the way core stores an ampersand, and
+	 * the name decodes back to the whole tag wherever it is read.
 	 *
 	 * @param array  $meta Metadata.
 	 * @param string $key  Tag.
@@ -248,7 +253,33 @@ final class Catalog {
 	 */
 	private static function tag( array $meta, string $key ): string {
 		$value = $meta[ $key ] ?? '';
-		return is_scalar( $value ) ? trim( (string) $value ) : '';
+		return is_scalar( $value ) ? str_replace( array( '<', '>' ), array( '&lt;', '&gt;' ), trim( (string) $value ) ) : '';
+	}
+
+	/**
+	 * A slug from a name that may hold entities: `sanitize_title()` strips what looks like a tag and
+	 * drops everything from a bare ampersand to the next semicolon, so `<Untitled> & Other Songs`
+	 * would come out as `other-songs`. The brackets and ampersands become spaces first; a name
+	 * without them gets the slug it always had.
+	 *
+	 * @param string $name Name, as `tag()` returns it.
+	 * @return string
+	 */
+	private static function slug( string $name ): string {
+		return sanitize_title( str_replace( array( '<', '>', '&' ), ' ', self::name( $name ) ) );
+	}
+
+	/**
+	 * A term's name as text: the tag it was filed from, with core's entities decoded, so it reads
+	 * the same as the artist and album on the track rows.
+	 *
+	 * @since 4.32.0
+	 *
+	 * @param string $name Term name as stored.
+	 * @return string
+	 */
+	public static function name( string $name ): string {
+		return html_entity_decode( $name, ENT_QUOTES, 'UTF-8' );
 	}
 
 	/**
@@ -260,7 +291,7 @@ final class Catalog {
 	 * @return int Term ID, or 0.
 	 */
 	private static function album_term( string $album, string $artist ): int {
-		$slug  = sanitize_title( '' !== $artist ? $album . '-' . $artist : $album );
+		$slug  = self::slug( '' !== $artist ? $album . '-' . $artist : $album );
 		$found = get_term_by( 'slug', $slug, self::ALBUM );
 		if ( $found ) {
 			$term_id = (int) $found->term_id;

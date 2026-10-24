@@ -417,24 +417,23 @@ class Test_Riff_Browse extends Riff_TestCase {
 				'artist' => 'Artist ' . $hostile,
 			)
 		);
-		$artist = (int) get_term_by( 'name', 'Artist ' . $hostile, Catalog::ARTIST )->term_id;
+		// Filed under the whole names, brackets and all, so every view has them to escape.
+		$artist = (int) wp_get_object_terms( $track, Catalog::ARTIST )[0]->term_id;
+		$album  = (int) wp_get_object_terms( $track, Catalog::ALBUM )[0]->term_id;
 		$views  = array(
 			'home'    => array(),
 			'albums'  => array( Browse::VIEW => 'albums' ),
 			'artists' => array( Browse::VIEW => 'artists' ),
 			'tracks'  => array( Browse::VIEW => 'tracks' ),
 			'posts'   => array( Browse::VIEW => 'posts' ),
-			'album'   => array( Browse::ALBUM => $this->album( 'Album ' . $hostile ) ),
+			'album'   => array( Browse::ALBUM => $album ),
 			'artist'  => array( Browse::ARTIST => $artist ),
 			'search'  => array( Browse::SEARCH => 'Track' ),
 			'post'    => array( App::QUERY => $post ),
 		);
 		foreach ( $views as $name => $args ) {
 			$html = $this->render_at( $args );
-			if ( 'artists' !== $name ) {
-				// WordPress strips tags from a term's name itself, so the artists list has nothing to escape.
-				$this->assertStringContainsString( 'riffxss', $html, "$name shows the names" );
-			}
+			$this->assertStringContainsString( 'riffxss', $html, "$name shows the names" );
 			$this->assertStringNotContainsString( '<img src=x', $html, "$name escapes them" );
 			foreach ( Browse::ARGS as $key ) {
 				unset( $_GET[ $key ] );

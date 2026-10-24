@@ -11,6 +11,7 @@ namespace Riff\Listen;
 use WP_REST_Request;
 use WP_User;
 
+use Riff\Catalog;
 use Riff\Library;
 use Riff\Tracks;
 
@@ -697,7 +698,7 @@ final class Browse {
 		}
 		$artist = (string) get_term_meta( $id, 'riff_album_artist', true );
 		$meta   = implode( ' · ', array_filter( array( $artist, self::count( (int) $data['total'] ) ) ) );
-		return self::list_view( $term->name, $meta, $data, __( 'Album', 'riff' ), true, $id ) . self::more_by( $artist, $id, $page );
+		return self::list_view( Catalog::name( $term->name ), $meta, $data, __( 'Album', 'riff' ), true, $id ) . self::more_by( $artist, $id, $page );
 	}
 
 	/**
@@ -772,7 +773,7 @@ final class Browse {
 			/* translators: %s: number of albums. */
 			$meta[] = sprintf( _n( '%s album', '%s albums', (int) $albums['total'], 'riff' ), number_format_i18n( (int) $albums['total'] ) );
 		}
-		$html  = App::header( $term->name, implode( ' · ', $meta ), __( 'Artist', 'riff' ), $cover, Art::tint( $art ), true, 'artist', $id );
+		$html  = App::header( Catalog::name( $term->name ), implode( ' · ', $meta ), __( 'Artist', 'riff' ), $cover, Art::tint( $art ), true, 'artist', $id );
 		$html .= '<h3 class="riff-app-section">' . esc_html__( 'Latest', 'riff' ) . '</h3>' . self::rows( $data['items'] ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
 		if ( $albums['items'] ) {
 			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Albums', 'riff' ) . '</h3>' . self::album_grid( $albums['items'], $page );

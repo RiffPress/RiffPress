@@ -365,7 +365,7 @@ final class Catalog_Rest {
 		foreach ( $terms as $term ) {
 			$rows[] = (object) array(
 				'term_id' => $term->term_id,
-				'name'    => $term->name,
+				'name'    => Catalog::name( (string) $term->name ),
 				'tracks'  => (int) $term->count - ( $hidden[ $term->term_id ]['hidden'] ?? 0 ),
 				'first'   => 0,
 			);
