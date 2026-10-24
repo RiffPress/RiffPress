@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.31.0](https://github.com/RiffPress/RiffPress/compare/v4.30.0...v4.31.0) (2026-10-24)
+
+
+### Features
+
+* Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on ([#577](https://github.com/RiffPress/RiffPress/issues/577)) ([04799d5](https://github.com/RiffPress/RiffPress/commit/04799d5e2d918bbb76f670c01d0b11fb59b78212))
+
+
+### Bug Fixes
+
+* in the desktop app the window doesn't stretch past its ends, so the view's corners stay round ([#576](https://github.com/RiffPress/RiffPress/issues/576)) ([ea099d3](https://github.com/RiffPress/RiffPress/commit/ea099d3718c7cd5982695c2ad7f6fd64c5835847))
+* signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account ([#572](https://github.com/RiffPress/RiffPress/issues/572)) ([3e5d5ba](https://github.com/RiffPress/RiffPress/commit/3e5d5ba7ec405f317b100388f2fe6601de7d4384))
+
 ## [4.30.0](https://github.com/RiffPress/RiffPress/compare/v4.29.0...v4.30.0) (2026-10-24)
 
 
