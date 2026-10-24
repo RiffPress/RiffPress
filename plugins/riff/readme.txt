@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.30.0
+Stable tag: 4.31.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.31.0 =
+* Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on.
+* Fixed: in the desktop app the window doesn't stretch past its ends, so the view's corners stay round.
+* Fixed: signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account.
+
 = 4.30.0 =
 * The player's badges, controls and meter are areas Riff's own features fill.
 * Fixed: dismissing the install card on a phone leaves the focus on a control that shows.
@@ -139,8 +144,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 4.27.0 =
 * Riff's logo is its own name, with its ff as a score writes fortissimo.
 * Fixed: the line under an album's title keeps its contrast on a light cover's tint.
-
-= 4.26.0 =
-* Riff's own mark, a tuning fork drawn from EB Garamond's f, in amber, with no blue anywhere.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
