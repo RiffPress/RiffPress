@@ -87,13 +87,14 @@ final class Lyrics {
 			'.riff-lyrics{margin:0;white-space:pre-line;font-size:18px;line-height:1.7}'
 			. '.riff-lyrics-note{margin:0;color:var(--riff-fg-2)}'
 			// Synced: a list of lines, each a button that seeks; the one being sung in the foreground.
-			. '.riff-lyrics-synced{list-style:none;padding:0;white-space:normal}'
-			. '.riff-lyrics-synced li{margin:0}'
-			. '.riff-lyrics-gap{margin-top:1.2em!important}'
-			. '.riff-lyrics-line{all:unset;display:block;box-sizing:border-box;width:100%;padding:3px 0;cursor:pointer;color:var(--riff-fg-2);font:inherit;font-weight:500;transition:color .2s,opacity .2s}'
-			. '.riff-lyrics-line:hover{color:var(--riff-fg)}'
-			. '.riff-lyrics-line:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px;border-radius:4px}'
-			. '[aria-current] > .riff-lyrics-line{color:var(--riff-fg);font-weight:700}'
+			// Under #riff, as the player's own button styles are, so these win.
+			. '#riff .riff-lyrics-synced{list-style:none;padding:0;white-space:normal}'
+			. '#riff .riff-lyrics-synced li{margin:0}'
+			. '#riff .riff-lyrics-synced li.riff-lyrics-gap{margin-top:1.2em}'
+			. '#riff .riff-lyrics-line{all:unset;display:block;box-sizing:border-box;width:100%;padding:3px 0;cursor:pointer;color:var(--riff-fg-2);font:inherit;font-weight:500;transition:color .2s}'
+			. '#riff .riff-lyrics-line:hover{color:var(--riff-fg)}'
+			. '#riff .riff-lyrics-line:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px;border-radius:4px}'
+			. '#riff [aria-current] > .riff-lyrics-line{color:var(--riff-fg);font-weight:700}'
 		);
 	}
 
