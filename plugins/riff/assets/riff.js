@@ -2279,6 +2279,13 @@ function start() {
 	clearButton?.addEventListener( 'click', () => clear() );
 
 	function renderQueue() {
+		// Redrawing replaces every button, so a keyboard listener in the list, or on Clear as it
+		// hides, is put back on the same place, or the nearest one left, rather than on the body.
+		const focused = document.activeElement;
+		const inList = queueList.contains( focused );
+		const at = inList ? Number( focused.closest( 'li' )?.dataset.pos ) : -1;
+		const onMore = inList && focused.classList.contains( 'riff-more-button' );
+		const onClear = !! clearButton && focused === clearButton;
 		queueList.textContent = '';
 		if ( clearButton ) {
 			clearButton.hidden = order.length < 2;
@@ -2348,6 +2355,16 @@ function start() {
 			li.append( moreButton( t, p ) );
 			queueList.append( li );
 		} );
+		if ( at >= 0 || ( onClear && clearButton.hidden ) ) {
+			const li =
+				queueList.children[
+					Math.min( Math.max( at, 0 ), queueList.children.length - 1 )
+				];
+			( onMore
+				? li?.querySelector( '.riff-more-button' )
+				: li?.firstElementChild
+			)?.focus( { preventScroll: true } );
+		}
 	}
 
 	// ---- Seeking. The range is the control; the line drawn under it is decoration.

@@ -813,6 +813,13 @@ export function start( api ) {
 		}
 	}
 	libraryShow( '' );
+	// A link standing in as a button answers Space as a button does, not by scrolling the page.
+	nav?.addEventListener( 'keydown', ( e ) => {
+		if ( e.key === ' ' && e.target.matches?.( '[data-riff-library-show]' ) ) {
+			e.preventDefault();
+			e.target.click();
+		}
+	} );
 
 	// ---- Install: the browser's own prompt where it has one (Chrome, Edge), the steps where it
 	// has none (Safari), and nothing where it cannot install (Firefox) or already has. The card
@@ -880,6 +887,8 @@ export function start( api ) {
 		if ( action.dataset.riffAppAction === 'install-dismiss' ) {
 			stored( 'riff-install-dismissed', '1' );
 			installShow();
+			// The card is gone with the focus in it: the bar it sat in takes it.
+			nav?.querySelector( 'a[href], button:not([hidden]), input' )?.focus();
 			return;
 		}
 		if ( installPrompt ) {
@@ -897,6 +906,9 @@ export function start( api ) {
 		if ( how ) {
 			how.hidden = false;
 			action.hidden = true;
+			// The steps replace the focused button, so they take the focus and are read.
+			how.tabIndex = -1;
+			how.focus();
 		}
 	}
 

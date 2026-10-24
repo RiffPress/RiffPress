@@ -296,12 +296,22 @@ test.describe( 'Player', () => {
 		await list.locator( 'li' ).nth( 2 ).locator( '.riff-more-button' ).click();
 		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Remove from queue' } ).click();
 		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Underground' ] );
+		// The list is drawn again on every change; the focus stays in it, on the nearest place left.
+		await expect( list.locator( 'li' ).nth( 1 ).locator( '.riff-more-button' ) ).toBeFocused();
+
+		// Picking a track from the keyboard keeps the focus on it as it starts.
+		await list.locator( 'li' ).nth( 1 ).locator( 'button' ).first().focus();
+		await page.keyboard.press( 'Enter' );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Underground' );
+		await expect( list.locator( 'li' ).nth( 1 ).locator( 'button' ).first() ).toBeFocused();
 
 		const clear = page.locator( '[data-riff-action="clear-queue"]' );
 		await expect( clear ).toBeVisible();
-		await clear.click();
-		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities' ] );
+		await clear.focus();
+		await page.keyboard.press( 'Enter' );
+		await expect.poll( titles ).toEqual( [ 'Underground' ] );
 		await expect( clear ).toBeHidden();
+		await expect( list.locator( 'li' ).first().locator( 'button' ).first(), 'Clear hides itself and hands on the focus' ).toBeFocused();
 		expect(
 			await page.evaluate( () => window.riff.playing() ),
 			'the track playing plays on'

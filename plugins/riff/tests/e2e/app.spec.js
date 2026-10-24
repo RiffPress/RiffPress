@@ -633,12 +633,47 @@ test.describe( 'Standalone', () => {
 		// Offered again, then dismissed: gone, and still gone after a reload.
 		await offer();
 		await expect( card ).toBeVisible();
-		await card.getByRole( 'button', { name: 'Not now' } ).click();
+		await card.getByRole( 'button', { name: 'Not now' } ).focus();
+		await page.keyboard.press( 'Enter' );
 		await expect( card ).toBeHidden();
+		await expect
+			.poll(
+				() => page.evaluate( () => {
+					const el = document.activeElement;
+					return !! el?.closest( '.riff-app-bar' ) && el.checkVisibility();
+				} ),
+				{ message: 'the focus stays in the bar the card left' }
+			)
+			.toBe( true );
 		await page.reload();
 		await offer();
 		await expect( card ).toBeHidden();
 		await page.evaluate( () => localStorage.removeItem( 'riff-install-dismissed' ) );
+	} );
+
+	test( 'a card in a row shows its whole focus ring, where the row\'s scroll would clip it', async ( {
+		page,
+	} ) => {
+		await page.goto( pageUrl );
+		const play = page.locator( '.riff-shelf-row .riff-card-play' ).first();
+		await play.focus();
+		await page.keyboard.press( 'Tab' );
+		const link = page.locator( '.riff-shelf-row .riff-card-link' ).first();
+		await expect( link ).toBeFocused();
+		const { ring, row } = await link.evaluate( ( el ) => {
+			const card = el.closest( '.riff-card' );
+			const style = getComputedStyle( card );
+			const out = parseFloat( style.outlineOffset ) + parseFloat( style.outlineWidth );
+			const c = card.getBoundingClientRect();
+			const r = card.closest( '.riff-shelf-row' ).getBoundingClientRect();
+			return {
+				ring: { top: c.top - out, left: c.left - out, bottom: c.bottom + out, right: c.right + out },
+				row: { top: r.top, left: r.left, bottom: r.bottom, right: r.right },
+			};
+		} );
+		expect( ring.top ).toBeGreaterThanOrEqual( row.top );
+		expect( ring.left ).toBeGreaterThanOrEqual( row.left );
+		expect( ring.bottom ).toBeLessThanOrEqual( row.bottom );
 	} );
 
 	test( 'in Safari, which has no install prompt, Install shows how to add the app to the Dock', async ( {
@@ -658,9 +693,11 @@ test.describe( 'Standalone', () => {
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
 		const card = page.locator( '[data-riff-install]' );
 		await expect( card ).toBeVisible();
-		await card.getByRole( 'button', { name: 'Install' } ).click();
+		await card.getByRole( 'button', { name: 'Install' } ).focus();
+		await page.keyboard.press( 'Enter' );
 		await expect( card.locator( '[data-riff-install-how="mac"]' ) ).toHaveText( 'In Safari, choose File, then Add to Dock.' );
 		await expect( card.getByRole( 'button', { name: 'Install' } ) ).toBeHidden();
+		await expect( card.locator( '[data-riff-install-how="mac"]' ), 'the steps take the focus from the button they replace' ).toBeFocused();
 		await context.close();
 	} );
 
