@@ -20,6 +20,7 @@ $GLOBALS['riff_surface'] = array(
 	'fields'     => array(),
 	'gql_types'  => array(),
 	'gql_fields' => array(),
+	'bindings'   => array(),
 );
 
 function __( $text, $domain = null ) {
@@ -39,6 +40,9 @@ function register_graphql_object_type( $name, $args ) {
 function register_graphql_field( $type, $name, $args ) {
 	$GLOBALS['riff_surface']['gql_fields'][] = array( 'type' => $type, 'name' => $name, 'args' => $args );
 }
+function register_block_bindings_source( $name, $args ) {
+	$GLOBALS['riff_surface']['bindings'][] = array( 'name' => $name, 'label' => $args['label'] ?? '', 'context' => $args['uses_context'] ?? array() );
+}
 
 require_once RIFF_DIR . 'src/interface-source.php';
 foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
@@ -51,6 +55,7 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 \Riff\Playlists::routes();
 \Riff\Api::rest_field();
 \Riff\Api::graphql();
+\Riff\Bindings::source();
 
 $out = $GLOBALS['riff_surface'];
 foreach ( $out['routes'] as &$route ) {
@@ -89,6 +94,10 @@ foreach ( $out['gql_fields'] as &$field ) {
 	);
 }
 unset( $field );
+foreach ( $out['bindings'] as &$binding ) {
+	$binding['keys'] = \Riff\Bindings::keys();
+}
+unset( $binding );
 $out['track']   = \Riff\Tracks::schema();
 $out['version'] = \Riff\Tracks::SCHEMA_VERSION;
 
