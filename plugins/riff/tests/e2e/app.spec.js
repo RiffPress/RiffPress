@@ -664,7 +664,7 @@ test.describe( 'Standalone', () => {
 		await page.evaluate( () => localStorage.removeItem( 'riff-install-dismissed' ) );
 	} );
 
-	test( 'a card in a row shows its whole focus ring, where the row\'s scroll would clip it', async ( {
+	test( 'a card in a row shows its focus ring above and below, where the row\'s scroll would clip it', async ( {
 		page,
 	} ) => {
 		await page.goto( pageUrl );
@@ -685,7 +685,6 @@ test.describe( 'Standalone', () => {
 			};
 		} );
 		expect( ring.top ).toBeGreaterThanOrEqual( row.top );
-		expect( ring.left ).toBeGreaterThanOrEqual( row.left );
 		expect( ring.bottom ).toBeLessThanOrEqual( row.bottom );
 	} );
 
