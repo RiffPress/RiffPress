@@ -13,44 +13,18 @@
 
 <p align="center"><img src="site/desktop-listen.png" alt="The Listen app in Spotify's layout: the library in a panel at the side, home and search across the top, a grid of album covers, and the player bar along the bottom" width="880"></p>
 
-## What it does
-
-Install Riff, and the audio, video and playlist blocks already in your posts play in one player
-docked at the bottom of the screen. Nothing to configure, and no new place to upload: your music
-stays in the Media Library.
-
-- **A player that feels like an app:** a full-screen Now Playing, a queue, lyrics with Riff Lyrics,
-  and a Song/Video switch for tracks that have both. Media keys and the lock screen work too.
-- **A library to browse:** a Listen page with albums, artists and tracks, filed from your files'
-  own tags, with search as you type and album pages tinted from their covers.
-- **Things for listeners to keep:** likes, playlists and recently played, in their account or in
-  the browser if they aren't signed in.
-- **An app of its own:** the Listen page installs as a web app, and the
-  [desktop app](packages/desktop/) puts it in a window with media keys, a Dock menu and drag and
-  drop import.
-- **Protected files:** a track can stay unplayable to visitors who can't read its post.
-- **Room to extend:** documented hooks, a JavaScript API, REST routes and CSS custom properties,
-  with [Riff Lyrics](plugins/riff-lyrics/) built only on them.
+<p align="center">
+<img src="site/phone-post.png" alt="A post's tracks on a phone, one playing, with the player bar along the bottom" width="260">
+<img src="site/phone-now-playing.png" alt="Now Playing on a phone: the cover, the title and artist, the seek line and the controls" width="260">
+<img src="site/phone-up-next.png" alt="Now Playing on a phone with the queue pulled up under it" width="260">
+</p>
 
 ## Get started
 
-1. Download the zip from [riffpress.com/download](https://riffpress.com/download/), and upload it
-   under **Plugins › Add New Plugin › Upload Plugin**. Riff needs WordPress 7.0 and PHP 8.1 or newer.
-2. Press **Create Listen page** in the notice on the Dashboard, or add the Riff block to any page.
-3. Add music: upload audio to the Media Library, or put an audio or playlist block in a post. Riff
-   files each track under its album and artist as it arrives.
+Upload the [zip](https://riffpress.com/download/) under **Plugins › Add New Plugin**, then press
+**Create Listen page** on the Dashboard. Riff needs WordPress 7.0 and PHP 8.1.
 
-To try it first, with nine public-domain albums and nothing to install:
-
-[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-FFB020?style=for-the-badge&logo=wordpress&logoColor=1E1E1E)](https://riffpress.com/demo)
-
-## How the player works
-
-Riff leaves your blocks as they are and adds one player on top: a post's audio, video and playlist
-blocks become one queue, so a page still plays if the script never runs. The queue carries on from
-page to page, and media keys, the lock screen, AirPlay and Cast all control it.
-[docs/player.md](docs/player.md) has the details: keyboard shortcuts, shareable addresses, the
-Listen page, video versions and the design.
+[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://riffpress.com/demo)
 
 ## Extending it
 
@@ -61,8 +35,7 @@ Listen page, video versions and the design.
 | [REST API](https://riffpress.com/developers/rest/) | The `riff/v1` routes |
 | [CSS](https://riffpress.com/developers/css/) | Custom properties for colours, fonts and spacing |
 
-Every page is generated from the code, and CI fails a change that adds to the API without
-documenting it. [Riff Lyrics](plugins/riff-lyrics/) is built only on this API.
+[Riff Lyrics](plugins/riff-lyrics/) is built only on this API.
 
 ## Contributing
 
