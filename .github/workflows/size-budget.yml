@@ -2,7 +2,9 @@ name: Size budget
 
 # Builds a 5,000-track catalogue on a fresh wp-env (MySQL) and measures Riff's routes against
 # packages/benchmarks/budget.json: the query count each request may make and a time ceiling. A
-# change that makes the library cost more per request than the budget fails here (#368).
+# change that makes the library cost more per request than the budget fails here (#368). The
+# messy library is built beside it, and the layout checks run over every view that shows it, for
+# long titles, missing covers and names in every script (#446).
 on:
   pull_request:
     paths:
@@ -38,10 +40,22 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-playwright-
+      - run: npx playwright install-deps chromium
+      - run: npx playwright install chromium
+        if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+
       - run: npm run env:start
 
-      - name: Build the catalogue
-        run: npx wp-env run tests-cli wp eval-file wp-content/riff/packages/benchmarks/catalog.php build
+      - name: Build the catalogue, and the messy library beside it
+        run: npx wp-env run tests-cli wp eval-file wp-content/riff/packages/benchmarks/catalog.php build messy
 
       # SAVEQUERIES has to be on before WordPress loads to count queries.
       - name: Measure
@@ -54,6 +68,17 @@ jobs:
         run: |
           set -euo pipefail
           node .github/scripts/size-budget.js measured.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Every view of the messy library is tidy
+        run: npm run test:e2e -- plugins/riff/tests/e2e/messy.spec.js --project=chromium
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: messy-e2e-artifacts
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Stop the testing environment
         if: ${{ always() }}
