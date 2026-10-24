@@ -13,6 +13,11 @@ use Riff\Tracks;
  */
 class Test_Riff_Bindings extends Riff_TestCase {
 
+	public function set_up(): void {
+		parent::set_up();
+		Bindings::flush();
+	}
+
 	/**
 	 * A published post with one track in an audio block and no cover of its own.
 	 *
@@ -92,7 +97,8 @@ class Test_Riff_Bindings extends Riff_TestCase {
 		$this->assertSame( 'Underground', Bindings::field( $track, 'title' ) );
 		$this->assertSame( 'Airmen of Note, United States Air Force Band', Bindings::field( $track, 'artist' ) );
 		$this->assertSame( 'Compositions', Bindings::field( $track, 'album' ) );
-		$this->assertSame( '2012', Bindings::field( $track, 'year' ), 'the year tag, which the track itself does not carry' );
+		$this->assertSame( 2012, $track['year'], 'the track carries its year' );
+		$this->assertSame( '2012', Bindings::field( $track, 'year' ) );
 		$this->assertSame( '8:58', Bindings::field( $track, 'duration' ) );
 		$this->assertSame( 'MP3 · 128 kbps', Bindings::field( $track, 'quality' ), 'the badge\'s words' );
 		$this->assertSame( end( $track['art'] )['src'], Bindings::field( $track, 'cover' ) );
@@ -135,8 +141,20 @@ class Test_Riff_Bindings extends Riff_TestCase {
 				)
 			)
 		);
+		$this->assertSame(
+			'FLAC · 16-bit 22.05 kHz',
+			Bindings::quality(
+				array(
+					'format'   => 'flac',
+					'lossless' => true,
+					'bits'     => 16,
+					'rate'     => 22050,
+				)
+			),
+			'as the badge prints it'
+		);
 		$this->assertSame( '', Bindings::quality( array() ), 'a file that told nothing' );
-		$this->assertSame( 'OGG', Bindings::quality( array( 'format' => 'ogg' ) ) );
+		$this->assertSame( '', Bindings::quality( array( 'format' => 'ogg' ) ), 'no bit rate, no badge, as riff.js has it' );
 	}
 
 	public function test_a_bound_heading_shows_the_named_track_and_a_bare_one_the_posts_first(): void {
@@ -188,6 +206,109 @@ class Test_Riff_Bindings extends Riff_TestCase {
 		$this->assertSame( 2, substr_count( $html, '<h2 class="wp-block-heading"></h2>' ), 'nothing to show, nothing invented' );
 		$this->assertNull( Bindings::value( array( 'key' => 'title' ), null, 'content' ) );
 		$this->assertNull( Bindings::track( 0, 0 ) );
+	}
+
+	public function test_a_block_in_a_query_loop_reads_the_post_it_is_in_not_the_page(): void {
+		[ $post ] = $this->post_with_track();
+		$other    = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$id       = self::attach( '03 - Trombone Detritus [detritus].mp3', $other );
+		wp_update_post(
+			array(
+				'ID'           => $other,
+				'post_content' => sprintf( '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="%s"></audio></figure><!-- /wp:audio -->', $id, wp_get_attachment_url( $id ) ),
+			)
+		);
+		$this->go_to( get_permalink( $post ) );
+		// As core hands a bound block to its source inside a Query Loop: the loop's post in its context.
+		$block          = new WP_Block(
+			array(
+				'blockName'    => 'core/heading',
+				'attrs'        => array(),
+				'innerBlocks'  => array(),
+				'innerHTML'    => '',
+				'innerContent' => array(),
+			)
+		);
+		$block->context = array( 'postId' => $other );
+
+		$this->assertSame( $post, get_the_ID(), 'the page is one post' );
+		$this->assertSame( 'Trombone Detritus', Bindings::value( array( 'key' => 'title' ), $block, 'content' ), 'and the block another' );
+		$this->assertSame( 'Underground', Bindings::value( array( 'key' => 'title' ), null, 'content' ), 'without a block, the page' );
+	}
+
+	public function test_a_tag_that_reads_like_markup_is_text_in_a_heading_and_itself_in_an_attribute(): void {
+		[ $post, $id ] = $this->post_with_track();
+		wp_update_post(
+			array(
+				'ID'         => $id,
+				'post_title' => 'Under <em>ground</em> & more',
+			)
+		);
+		$block = '<!-- wp:image ' . wp_json_encode(
+			array(
+				'metadata' => array(
+					'bindings' => array(
+						'url' => array(
+							'source' => Bindings::SOURCE,
+							'args'   => array( 'key' => 'cover' ),
+						),
+						'alt' => array(
+							'source' => Bindings::SOURCE,
+							'args'   => array( 'key' => 'title' ),
+						),
+					),
+				),
+			)
+		) . ' --><figure class="wp-block-image"><img src="" alt=""/></figure><!-- /wp:image -->';
+
+		$html = $this->render( $post, $this->heading( 'title' ) . $block );
+
+		$this->assertStringContainsString( '<h2 class="wp-block-heading">Under &lt;em&gt;ground&lt;/em&gt; &amp; more</h2>', $html, 'text, as the player shows it' );
+		$this->assertStringContainsString( 'alt="Under &lt;em&gt;ground&lt;/em&gt; &amp; more"', $html, 'escaped once, by core' );
+	}
+
+	public function test_a_named_track_is_shown_only_where_the_media_route_would_show_it(): void {
+		[ $post ] = $this->post_with_track();
+		$draft    = self::factory()->post->create( array( 'post_status' => 'draft' ) );
+		$hidden   = self::attach( '03 - Trombone Detritus [detritus].mp3', $draft );
+
+		$this->assertNull( Bindings::track( $hidden, $post ), 'a visitor cannot name a draft\'s file into a public post' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		Bindings::flush();
+		$this->assertSame( 'Trombone Detritus', Bindings::track( $hidden, $post )['title'], 'an editor sees it, as on the media route' );
+	}
+
+	public function test_a_track_is_read_once_a_request_however_many_blocks_bind_it(): void {
+		[ $post, $id ] = $this->post_with_track();
+		$reads         = 0;
+		add_filter(
+			'riff_track',
+			static function ( $track ) use ( &$reads ) {
+				++$reads;
+				return $track;
+			}
+		);
+
+		$this->render( $post, $this->heading( 'title', $id ) . $this->heading( 'artist', $id ) . $this->heading( 'album', $id ) );
+
+		$this->assertSame( 1, $reads - 1, 'once for the three bindings, beside the audio block\'s own read' );
+	}
+
+	public function test_a_file_outside_the_media_library_binds_what_it_knows(): void {
+		$post = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => '<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="https://example.com/elsewhere.mp3"></audio><figcaption>Elsewhere</figcaption></figure><!-- /wp:audio -->',
+			)
+		);
+
+		$track = Bindings::track( 0, $post );
+
+		$this->assertStringStartsWith( 'url:', $track['id'] );
+		$this->assertSame( 'Elsewhere', Bindings::field( $track, 'title' ) );
+		$this->assertSame( '', Bindings::field( $track, 'year' ) );
+		$this->assertSame( '', Bindings::field( $track, 'quality' ) );
+		$this->assertStringContainsString( 'riff-art=', Bindings::field( $track, 'cover' ), 'its post\'s drawn cover' );
 	}
 
 	public function test_a_locked_track_still_names_itself_but_not_its_file(): void {

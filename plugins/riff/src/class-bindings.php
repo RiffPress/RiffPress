@@ -19,9 +19,9 @@ defined( 'ABSPATH' ) || exit;
  * quality, and an Image bound to it shows the cover, with no Riff block on the page: a site
  * builder lays an album page out of core blocks, and the details still come from the files in
  * the Media Library. The binding names its track by attachment ID, or takes the post's first
- * track when it names none. Every value but the year is read from the same track the REST API
- * and the player see, after the `riff_track` filter; the year is the file's year tag, which the
- * track does not carry.
+ * track when it names none. Every value is read from the same track the REST API and the player
+ * see, after the `riff_track` filter, and a named track is shown only where the media route
+ * would show it.
  *
  * ```
  * <!-- wp:heading {"metadata":{"bindings":{"content":{"source":"riff/track","args":{"key":"title","id":123}}}}} -->
@@ -29,7 +29,8 @@ defined( 'ABSPATH' ) || exit;
  * <!-- /wp:heading -->
  * ```
  *
- * In the editor a bound value is read only, as core's post meta source is.
+ * In the editor the block shows that it is bound; the value is filled on the front end, since
+ * Riff registers no editor-side source.
  */
 final class Bindings {
 
@@ -61,7 +62,7 @@ final class Bindings {
 			'title'    => __( 'The track’s title.', 'riff' ),
 			'artist'   => __( 'The artist.', 'riff' ),
 			'album'    => __( 'The album.', 'riff' ),
-			'year'     => __( 'The year from the file’s tags, or nothing.', 'riff' ),
+			'year'     => __( 'The year, or nothing when the file has none.', 'riff' ),
 			'duration' => __( 'The length as the player shows it, such as 4:32, or nothing when unknown.', 'riff' ),
 			'quality'  => __( 'The format and rate as the player’s badge shows them, such as MP3 · 128 kbps or FLAC · 24-bit 96 kHz.', 'riff' ),
 			'cover'    => __( 'The address of the largest artwork: the file’s own, else its post’s, else the cover Riff draws. For an Image block’s url.', 'riff' ),
@@ -99,21 +100,45 @@ final class Bindings {
 	 * @return string|null The value, or null for a key or a track there is none of.
 	 */
 	public static function value( array $args, $block, string $attribute ): ?string {
-		unset( $attribute );
-		$key = (string) ( $args['key'] ?? 'title' );
-		if ( ! array_key_exists( $key, self::keys() ) ) {
+		// Hand-written bindings can hold anything; only a key by name and an ID by number count.
+		$key = $args['key'] ?? 'title';
+		$id  = $args['id'] ?? 0;
+		if ( ! is_string( $key ) || ! array_key_exists( $key, self::keys() ) || ! is_numeric( $id ) ) {
 			return null;
 		}
 		$post_id = (int) ( $block instanceof WP_Block ? ( $block->context['postId'] ?? 0 ) : 0 );
 		if ( ! $post_id ) {
 			$post_id = (int) get_the_ID();
 		}
-		$track = self::track( (int) ( $args['id'] ?? 0 ), $post_id );
+		$track = self::track( (int) $id, $post_id );
 		if ( ! $track ) {
 			return null;
 		}
 		$value = self::field( $track, $key );
-		return '' === $value ? null : $value;
+		if ( '' === $value ) {
+			return null;
+		}
+		// Core lays a rich-text attribute into the block as markup, through wp_kses_post(), so a
+		// tag that reads like markup is made text here, as the player shows it. An attribute such
+		// as an image's url or alt is set as an attribute, escaped by core, and must stay as it is.
+		$source = $block instanceof WP_Block ? ( $block->block_type->attributes[ $attribute ]['source'] ?? '' ) : '';
+		return in_array( $source, array( 'rich-text', 'html' ), true ) ? esc_html( $value ) : $value;
+	}
+
+	/**
+	 * The tracks read so far this request, so three bound blocks on one track read it once.
+	 *
+	 * @var array<string, array|null>
+	 */
+	private static array $read = array();
+
+	/**
+	 * Forgets the tracks read this request.
+	 *
+	 * @since 4.32.0
+	 */
+	public static function flush(): void {
+		self::$read = array();
 	}
 
 	/**
@@ -127,15 +152,22 @@ final class Bindings {
 	 * @return array|null The track, or null.
 	 */
 	public static function track( int $attachment_id, int $post_id ): ?array {
+		$key = $attachment_id . ':' . $post_id;
+		if ( array_key_exists( $key, self::$read ) ) {
+			return self::$read[ $key ];
+		}
+		$track = null;
 		if ( $attachment_id ) {
-			return Tracks::from_attachment( $attachment_id, $post_id );
+			// A file on a draft or private post is the media route's to hide; it is not shown by
+			// naming its ID on a post that can be seen.
+			$track = Catalog_Rest::visible( $attachment_id ) ? Tracks::from_attachment( $attachment_id, $post_id ) : null;
+		} else {
+			$post   = $post_id ? get_post( $post_id ) : null;
+			$tracks = $post ? Library::tracks( $post ) : array();
+			$track  = $tracks ? $tracks[0] : null;
 		}
-		$post = $post_id ? get_post( $post_id ) : null;
-		if ( ! $post ) {
-			return null;
-		}
-		$tracks = Library::tracks( $post );
-		return $tracks ? $tracks[0] : null;
+		self::$read[ $key ] = $track;
+		return $track;
 	}
 
 	/**
@@ -154,9 +186,7 @@ final class Bindings {
 			case 'album':
 				return (string) ( $track[ $key ] ?? '' );
 			case 'year':
-				$id   = (int) ( $track['id'] ?? 0 );
-				$meta = $id ? wp_get_attachment_metadata( $id ) : null;
-				return is_array( $meta ) && ! empty( $meta['year'] ) ? (string) (int) $meta['year'] : '';
+				return ! empty( $track['year'] ) ? (string) (int) $track['year'] : '';
 			case 'duration':
 				return self::duration( (float) ( $track['duration'] ?? 0 ) );
 			case 'quality':
@@ -196,12 +226,16 @@ final class Bindings {
 	 * @return string Such as `MP3 · 128 kbps`, or an empty string when the file told nothing.
 	 */
 	public static function quality( array $track ): string {
+		// As riff.js draws the badge: nothing at all for a lossy file that told no bit rate.
+		if ( empty( $track['bitrate'] ) && empty( $track['lossless'] ) ) {
+			return '';
+		}
 		$format = strtoupper( (string) ( $track['format'] ?? '' ) );
 		$rate   = '';
 		if ( ! empty( $track['lossless'] ) ) {
 			if ( ! empty( $track['bits'] ) && ! empty( $track['rate'] ) ) {
 				/* translators: 1: bits per sample, 2: sample rate in kHz. */
-				$rate = sprintf( __( '%1$s-bit %2$s kHz', 'riff' ), (int) $track['bits'], rtrim( rtrim( number_format( (float) $track['rate'] / 1000, 1, '.', '' ), '0' ), '.' ) );
+				$rate = sprintf( __( '%1$s-bit %2$s kHz', 'riff' ), (int) $track['bits'], rtrim( rtrim( sprintf( '%.3F', (float) $track['rate'] / 1000 ), '0' ), '.' ) );
 			} else {
 				$rate = __( 'Lossless', 'riff' );
 			}

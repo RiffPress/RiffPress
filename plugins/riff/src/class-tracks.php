@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  * Track data.
  *
  * A track is an array with these keys, the same shape the player keeps in its queue:
- * id (string), src, type ('audio' or 'video'), title, artist, album, duration (seconds, 0 when
+ * id (string), src, type ('audio' or 'video'), title, artist, album, year (0 when unknown), duration (seconds, 0 when
  * unknown), art (list of { src, sizes }), video ({ src, poster } or null), and post ({ title, url }).
  */
 final class Tracks {
@@ -66,6 +66,7 @@ final class Tracks {
 				'title'    => self::title( $attachment_id, $meta ),
 				'artist'   => isset( $meta['artist'] ) ? (string) $meta['artist'] : '',
 				'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
+				'year'     => isset( $meta['year'] ) && is_numeric( $meta['year'] ) ? (int) $meta['year'] : 0,
 				'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
 				// What WordPress read from the file on upload: the container, the bit rate, whether it is
 				// lossless, and for a lossless file its bit depth and sample rate. The player shows them
@@ -114,6 +115,7 @@ final class Tracks {
 				'title'    => $title,
 				'artist'   => '',
 				'album'    => '',
+				'year'     => 0,
 				'duration' => 0,
 				'format'   => '',
 				'bitrate'  => 0,
@@ -238,6 +240,10 @@ final class Tracks {
 				'title'    => array( 'type' => 'string' ),
 				'artist'   => array( 'type' => 'string' ),
 				'album'    => array( 'type' => 'string' ),
+				'year'     => array(
+					'type'        => 'integer',
+					'description' => __( 'The year from the file\'s tags, or 0.', 'riff' ),
+				),
 				'duration' => array(
 					'type'        => 'number',
 					'description' => __( 'Seconds, 0 when unknown.', 'riff' ),
@@ -321,6 +327,7 @@ final class Tracks {
 		$track['title']    = (string) ( $track['title'] ?? '' );
 		$track['artist']   = (string) ( $track['artist'] ?? '' );
 		$track['album']    = (string) ( $track['album'] ?? '' );
+		$track['year']     = max( 0, (int) ( $track['year'] ?? 0 ) );
 		$track['duration'] = (float) max( 0, (float) ( $track['duration'] ?? 0 ) );
 		$track['format']   = strtolower( (string) ( $track['format'] ?? '' ) );
 		$track['bitrate']  = max( 0, (int) ( $track['bitrate'] ?? 0 ) );
