@@ -3,7 +3,8 @@
  * The PHP, REST API and CSS references under /developers/, each read from the code:
  *
  * - PHP: the PHP hooks, the Riff\Source interface and Sources::register() from their docblocks,
- *   the track schema from Tracks::schema(), and the Listen block from its block.json.
+ *   the track schema from Tracks::schema(), the abilities from Abilities::list(), and the Listen
+ *   block from its block.json.
  * - REST API: the routes, their arguments and response schemas, the REST field on media, and the
  *   WPGraphQL types, from the plugin's own registration code run by surface.php.
  * - CSS: every custom property in tokens.css (the riff-tokens stylesheet) with a docblock, which
@@ -150,6 +151,14 @@ function problems( data ) {
 	need( 'Riff\\Sources::register()', data.register );
 	need( 'Riff\\Sources::unregister()', data.unregister );
 	need( 'The [riff] shortcode, App::shortcode()', data.shortcode );
+	if ( ! data.surface.abilities?.length ) {
+		out.push( 'no abilities are registered' );
+	}
+	for ( const a of data.surface.abilities || [] ) {
+		if ( ! a.label || ! a.description ) {
+			out.push( `the ability ${ a.name } has no label or description` );
+		}
+	}
 	if ( ! data.properties.length ) {
 		out.push( 'tokens.css has no documented custom properties' );
 	}
@@ -239,12 +248,19 @@ function phpPage( data ) {
 	body += `<section>${ hooks.h2( 'track-schema', 'The track schema' ) }<p>One shape for a track: the REST field and routes, the block markup and the player script all use it, and WPGraphQL carries <a href="../rest/#graphql">${ gqlComplete ? 'all of it' : 'most of it' }</a>. It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
 
 	const supports = Object.entries( data.block.supports || {} ).filter( ( [ , v ] ) => v ).map( ( [ k ] ) => k );
+	if ( data.surface.abilities?.length ) {
+		const rows = data.surface.abilities.map( ( a ) => {
+			const args = Object.entries( a.input?.properties || {} ).map( ( [ k, v ] ) => `<code>${ esc( k ) }</code>${ ( a.input.required || [] ).includes( k ) ? ' (required)' : '' }: ${ inline( v.description || '' ) }` ).join( '<br>' );
+			return `<tr><td><code>${ esc( a.name ) }</code></td><td>${ inline( a.description ) }</td><td>${ args || '–' }</td><td>${ a.readonly ? 'Read only' : 'Writes' }</td></tr>`;
+		} );
+		body += `<section>${ hooks.h2( 'abilities', 'Abilities' ) }<p>Through the <a href="https://developer.wordpress.org/apis/abilities-api/">Abilities API</a>, AI tools and other plugins list the library and keep a listener's likes and playlists. Each ability runs its <a href="../rest/#routes"><code>riff/v1</code> route</a> as a REST request, so it answers what the route answers and is allowed what the route allows; the ones about likes, history and playlists need a signed-in user. Nothing plays through an ability: playback happens in a browser.</p>${ hooks.codeBlock( "$albums = wp_get_ability( 'riff/albums' )->execute( array( 'search' => 'Compositions' ) );" ) }${ table( [ 'Ability', 'What it does', 'Input', '' ], rows ) }</section>\n`;
+	}
 	body += `<section>${ hooks.h2( 'the-listen-block', 'The Listen block' ) }<p><code>${ esc( data.block.name ) }</code>: ${ inline( data.block.description ) } One per page. It supports ${ supports.map( ( s ) => `<code>${ esc( s ) }</code>` ).join( ', ' ) }.</p>${ hooks.codeBlock( `<!-- wp:${ data.block.name } {"align":"full"} /-->` ) }<p>Anywhere blocks are not an option, the <code>[riff]</code> shortcode does the same.</p></section>\n`;
 	body += member( data.shortcode, '[riff]' );
 
 	return referencePage( {
 		title: 'PHP | RiffPress',
-		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema and the Listen block.',
+		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema, the abilities and the Listen block.',
 		url: 'developers/php/',
 		current: 'php',
 		trail: [ [ 'PHP' ] ],
@@ -253,6 +269,7 @@ function phpPage( data ) {
 			[ 'hooks', 'Hooks', [ [ 'filters', 'Filters' ], [ 'actions', 'Actions' ] ] ],
 			[ 'sources', 'Sources', [ [ 'the-source-interface', 'The Source interface' ] ] ],
 			[ 'track-schema', 'The track schema' ],
+			[ 'abilities', 'Abilities' ],
 			[ 'the-listen-block', 'The Listen block' ],
 		],
 		body,
