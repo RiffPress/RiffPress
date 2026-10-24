@@ -14,6 +14,7 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | Lyrics | The file's lyrics tag (ID3 USLT), which WordPress reads on upload into the same metadata as `unsynchronised_lyric`, and the media REST route returns in `media_details`. Riff Lyrics shows it, and its Media Library field edits that same key. |
 | Artwork | The attachment's featured image. WordPress saves artwork embedded in the file as an image and sets it on upload; Riff's Artwork field in the Media Library sets the same featured image. |
 | Where a track appears | The audio, video and playlist blocks in posts. |
+| A track's details in a Heading, Paragraph or Image | Block Bindings: Riff registers the `riff/track` source, and core fills the block from it on the front end. Core decides which attributes a source can fill (a paragraph's, heading's and list item's content, an image's url, alt, title, id and caption, a button's text and link, and a few more); in the editor the block shows that it is bound, since Riff registers no editor-side source. |
 | A shared playlist | A post with the Playlist block (WordPress 7.1). |
 | A listener's own playlist | A private post of Riff's `riff_playlist` type, written by the listener, holding one Playlist block (WordPress 7.1) whose playlist-track blocks are its tracks in order. |
 | Who can play what | The status and visibility of the post a track appears in. |

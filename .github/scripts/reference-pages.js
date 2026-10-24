@@ -3,8 +3,8 @@
  * The PHP, REST API and CSS references under /developers/, each read from the code:
  *
  * - PHP: the PHP hooks, the Riff\Source interface and Sources::register() from their docblocks,
- *   the track schema from Tracks::schema(), the abilities from Abilities::list(), and the Listen
- *   block from its block.json.
+ *   the track schema from Tracks::schema(), the Block Bindings source from Bindings::keys(), the
+ *   abilities from Abilities::list(), and the Listen block from its block.json.
  * - REST API: the routes, their arguments and response schemas, the REST field on media, and the
  *   WPGraphQL types, from the plugin's own registration code run by surface.php.
  * - CSS: every custom property in tokens.css (the riff-tokens stylesheet) with a docblock, which
@@ -118,6 +118,7 @@ function collect() {
 		register: functionsIn( path.join( PLUGIN, 'src', 'class-sources.php' ), 'register' )[ 0 ],
 		unregister: functionsIn( path.join( PLUGIN, 'src', 'class-sources.php' ), 'unregister' )[ 0 ],
 		shortcode: functionsIn( path.join( PLUGIN, 'features', 'listen', 'class-app.php' ), 'shortcode' )[ 0 ],
+		bindingValue: functionsIn( path.join( PLUGIN, 'src', 'class-bindings.php' ), 'value' )[ 0 ],
 		block: JSON.parse( fs.readFileSync( path.join( PLUGIN, 'features', 'listen', 'block', 'block.json' ), 'utf8' ) ),
 		properties: customProperties(),
 		surface: surface(),
@@ -151,6 +152,10 @@ function problems( data ) {
 	need( 'Riff\\Sources::register()', data.register );
 	need( 'Riff\\Sources::unregister()', data.unregister );
 	need( 'The [riff] shortcode, App::shortcode()', data.shortcode );
+	need( 'The Block Bindings source, Bindings::value()', data.bindingValue );
+	if ( ! data.surface.bindings?.length ) {
+		out.push( 'no Block Bindings source is registered' );
+	}
 	if ( ! data.surface.abilities?.length ) {
 		out.push( 'no abilities are registered' );
 	}
@@ -248,6 +253,9 @@ function phpPage( data ) {
 	body += `<section>${ hooks.h2( 'track-schema', 'The track schema' ) }<p>One shape for a track: the REST field and routes, the block markup and the player script all use it, and WPGraphQL carries <a href="../rest/#graphql">${ gqlComplete ? 'all of it' : 'most of it' }</a>. It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
 
 	const supports = Object.entries( data.block.supports || {} ).filter( ( [ , v ] ) => v ).map( ( [ k ] ) => k );
+	for ( const b of data.surface.bindings || [] ) {
+		body += `<section>${ hooks.h2( 'block-bindings', 'Block Bindings' ) }<p><code>${ esc( b.name ) }</code> (“${ esc( b.label ) }”) is a <a href="https://developer.wordpress.org/block-editor/reference-guides/block-api/block-bindings/">Block Bindings</a> source: a Heading or Paragraph bound to it shows a track's details, and an Image bound to it shows the cover, with no Riff block on the page. The binding's <code>key</code> picks the detail and <code>id</code> names the attachment; with no <code>id</code>, it is the post's first track. Every value is the track as <a href="#track-schema">the track schema</a> has it, after <a href="../hooks/riff_track/"><code>riff_track</code></a>, and a named track shows only where the media route would show it. In the editor the block shows that it is bound; the value is filled on the front end.</p>${ hooks.codeBlock( '<!-- wp:heading {"metadata":{"bindings":{"content":{"source":"riff/track","args":{"key":"title","id":123}}}}} -->\n<h2 class="wp-block-heading"></h2>\n<!-- /wp:heading -->\n\n<!-- wp:image {"metadata":{"bindings":{"url":{"source":"riff/track","args":{"key":"cover","id":123}}}}} -->\n<figure class="wp-block-image"><img src="" alt=""/></figure>\n<!-- /wp:image -->' ) }${ table( [ 'Key', 'Shows' ], Object.entries( b.keys ).map( ( [ k, d ] ) => `<tr><td><code>${ esc( k ) }</code></td><td>${ inline( d ) }</td></tr>` ) ) }</section>\n`;
+	}
 	if ( data.surface.abilities?.length ) {
 		const rows = data.surface.abilities.map( ( a ) => {
 			const args = Object.entries( a.input?.properties || {} ).map( ( [ k, v ] ) => `<code>${ esc( k ) }</code>${ ( a.input.required || [] ).includes( k ) ? ' (required)' : '' }: ${ inline( v.description || '' ) }` ).join( '<br>' );
@@ -260,7 +268,7 @@ function phpPage( data ) {
 
 	return referencePage( {
 		title: 'PHP | RiffPress',
-		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema, the abilities and the Listen block.',
+		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema, the Block Bindings source, the abilities and the Listen block.',
 		url: 'developers/php/',
 		current: 'php',
 		trail: [ [ 'PHP' ] ],
@@ -269,6 +277,7 @@ function phpPage( data ) {
 			[ 'hooks', 'Hooks', [ [ 'filters', 'Filters' ], [ 'actions', 'Actions' ] ] ],
 			[ 'sources', 'Sources', [ [ 'the-source-interface', 'The Source interface' ] ] ],
 			[ 'track-schema', 'The track schema' ],
+			[ 'block-bindings', 'Block Bindings' ],
 			[ 'abilities', 'Abilities' ],
 			[ 'the-listen-block', 'The Listen block' ],
 		],

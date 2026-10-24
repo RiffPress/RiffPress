@@ -29,6 +29,7 @@ final class Plugin {
 		Likes::register();
 		Playlists::register();
 		Blocks::register();
+		Bindings::register();
 		Player::register();
 		Library::register();
 		Api::register();
