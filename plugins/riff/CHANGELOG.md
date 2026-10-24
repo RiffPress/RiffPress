@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.32.0](https://github.com/RiffPress/RiffPress/compare/v4.31.0...v4.32.0) (2026-10-24)
+
+
+### Features
+
+* a Block Bindings source, riff/track, so core blocks show a track's details ([#585](https://github.com/RiffPress/RiffPress/issues/585)) ([d38010a](https://github.com/RiffPress/RiffPress/commit/d38010a03e0b68507ad3f7c7169a0e8d01163993))
+* a listener can turn the single-key shortcuts off from the player (WCAG 2.1.4) ([#583](https://github.com/RiffPress/RiffPress/issues/583)) ([ca6eda8](https://github.com/RiffPress/RiffPress/commit/ca6eda8a2d99560f481ae6a9805db1e7cbf0f58e))
+* Riff's library, likes and playlists as abilities, through the Abilities API ([#586](https://github.com/RiffPress/RiffPress/issues/586)) ([636395f](https://github.com/RiffPress/RiffPress/commit/636395f085ab56e79db6e84ced744cf6fdb99f7c))
+* the player says where the track is, through riff.time and window.riff.time() ([#593](https://github.com/RiffPress/RiffPress/issues/593)) ([c3ebe2c](https://github.com/RiffPress/RiffPress/commit/c3ebe2ca0053f0b3871dea6627d90d54b79a58dd))
+
+
+### Bug Fixes
+
+* a track with no title shows its file name ([#581](https://github.com/RiffPress/RiffPress/issues/581)) ([d858a99](https://github.com/RiffPress/RiffPress/commit/d858a9942ed89083c9ba6fb3f40317bd682dc333))
+* an album with no cover gets a cover drawn for the album, not its post ([#582](https://github.com/RiffPress/RiffPress/issues/582)) ([957bed0](https://github.com/RiffPress/RiffPress/commit/957bed063e8d342edcb6278eb859718e7bbbfa7b))
+* an artist or album tag with angle brackets is filed under its whole name ([#579](https://github.com/RiffPress/RiffPress/issues/579)) ([45898a5](https://github.com/RiffPress/RiffPress/commit/45898a50bea0a3a3287b245dbcc911d06c577fd0))
+* the keyboard-shortcuts switch sits at the top of Now Playing, out of the transport ([#591](https://github.com/RiffPress/RiffPress/issues/591)) ([5cdc85f](https://github.com/RiffPress/RiffPress/commit/5cdc85f3ff649bc2864e0f775665a289ba8425e2))
+
 ## [4.31.0](https://github.com/RiffPress/RiffPress/compare/v4.30.0...v4.31.0) (2026-10-24)
 
 
