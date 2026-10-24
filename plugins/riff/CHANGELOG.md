@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.30.0](https://github.com/RiffPress/RiffPress/compare/v4.29.0...v4.30.0) (2026-10-24)
+
+
+### Features
+
+* the player's badges, controls and meter are areas Riff's own features fill ([#550](https://github.com/RiffPress/RiffPress/issues/550)) ([444c53a](https://github.com/RiffPress/RiffPress/commit/444c53ac91c4e994111d1803d52b0a6d60f886aa))
+
+
+### Bug Fixes
+
+* dismissing the install card on a phone leaves the focus on a control that shows ([#559](https://github.com/RiffPress/RiffPress/issues/559)) ([bec5732](https://github.com/RiffPress/RiffPress/commit/bec57323b4b02034e728f41984e776f481fbd4df))
+* in a contrast theme the seek line, the current track and what is selected keep showing ([#561](https://github.com/RiffPress/RiffPress/issues/561)) ([c576d2f](https://github.com/RiffPress/RiffPress/commit/c576d2f0f0e8b0333a4e833cf49dcdd47b1f045e))
+* screen readers hear the track change, queue edits, notices and each view's title ([#555](https://github.com/RiffPress/RiffPress/issues/555)) ([f15bb20](https://github.com/RiffPress/RiffPress/commit/f15bb2034315091b9c7320a19288e6d65307a600))
+* the install card is in Riff's accent, as Liked songs is, not blue ([#571](https://github.com/RiffPress/RiffPress/issues/571)) ([9971f69](https://github.com/RiffPress/RiffPress/commit/9971f69d857a960249505d1e0e17630fd6951b66))
+* the keyboard's focus stays visible and in place as Up next and the install card change ([#554](https://github.com/RiffPress/RiffPress/issues/554)) ([810df7c](https://github.com/RiffPress/RiffPress/commit/810df7c4ccf8ab26a5292bb21174a2cca0cb068d))
+* the Listen block no longer runs wider than its page, from room borrowed for a focus ring ([#563](https://github.com/RiffPress/RiffPress/issues/563)) ([d1ba577](https://github.com/RiffPress/RiffPress/commit/d1ba577d1a74b38b25c9c8e440c7fe6f27174dc0))
+* the seek line, the playing row, Up next and Now Playing tell a screen reader what they are ([#556](https://github.com/RiffPress/RiffPress/issues/556)) ([22fe7c6](https://github.com/RiffPress/RiffPress/commit/22fe7c6c4f8650015570507744350e0a61c08ecd))
+
 ## [4.29.0](https://github.com/RiffPress/RiffPress/compare/v4.28.0...v4.29.0) (2026-10-24)
 
 
