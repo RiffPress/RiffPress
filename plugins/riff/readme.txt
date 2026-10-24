@@ -22,7 +22,7 @@ There's no other account to sign up for, nobody takes a cut, and your files stay
 * Now Playing, with the artwork, the controls and the rest of the album lined up next.
 * Controls on the phone's lock screen and on headphones, plus AirPlay and Chromecast when a speaker or TV is in reach.
 * A song with a video, such as a live take, switches between the two without losing its place.
-* Swipe the bar to skip, and use Space, J, L, Shift+N and Shift+P on a keyboard.
+* Swipe the bar to skip, and use Space, J, L, Shift+N and Shift+P on a keyboard; the keyboard button turns the single-key ones off.
 * Follow a link to another page and the music carries on; reload and it's paused where it was.
 * Each track shows its quality as WordPress read it from the file, such as MP3 · 320 kbps or FLAC · 24-bit 96 kHz.
 
