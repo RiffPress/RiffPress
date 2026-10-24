@@ -490,8 +490,7 @@ picture {
 	margin-top: 32px;
 }
 
-/* marginalia, as wordpress.org sets it: a band of dots between sections, and
-   a record cropped into the margin on a wide screen */
+/* wordpress.org's band of dots between sections */
 .dots {
 	height: 60px;
 	margin: 0 auto var(--gap);
@@ -500,42 +499,9 @@ picture {
 	background-size: auto;
 }
 
-.marg {
-	position: absolute;
-	width: 400px;
-	height: 400px;
-	pointer-events: none;
-	user-select: none;
-	display: none;
-}
-
-.marg img {
-	display: block;
-	width: 100%;
-	height: 100%;
-}
-
 section {
 	position: relative;
 	overflow: hidden;
-}
-
-@media (min-width: 1280px) {
-
-	.marg {
-		display: block;
-	}
-
-	/* The mark whole in the margin, its rings running off the edge. */
-	.hero .marg {
-		right: -60px;
-		top: 80px;
-	}
-
-	#owners .marg {
-		left: -60px;
-		bottom: -40px;
-	}
 }
 
 /* the shelf: the demo's nine covers, eight drawn by the player and one real,

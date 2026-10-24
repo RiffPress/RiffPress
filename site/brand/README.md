@@ -2,9 +2,9 @@
 
 **The wordmark** is the word *Riff*: *Ri* in EB Garamond Italic at weight 800, and its *ff* as a score writes *fortissimo*, music's marking for very loud. The *ff* is Bravura's (the SMuFL reference font for music notation), scaled so its *f*s rise to Garamond's ascender, and set close so its tails sweep under the *i*. In a score, dynamics sit beside a text face, so the pair is how music is printed. Every file is outlines, so nothing depends on either font being installed.
 
-**The mark**, for sizes where the word can't be read (32px and smaller: the favicon, the site's nav, the share cards, the GitHub avatar), is the *ff* alone.
+**There is one mark**: the word on its charcoal tile, the app icon, at every size. The favicon and the site's nav use the same tile cropped to its edge, so it fills a small square. There is no second mark.
 
-**Proportions** follow the golden ratio, φ. On the app icon, the word's margins either side are 1/φ⁵ of the tile. On the small tile, the *ff*'s ink is 1/φ of its height.
+**Proportions** follow the golden ratio, φ. On the app icon, the word's margins either side are 1/φ⁵ of the tile.
 
 **Colour** is Riff's amber, `#ffb020`, on charcoal: `#1e1e1e`, or the app's `#121212`. On a light ground, amber is too pale to read as text, so links and outline buttons there use a deep amber, `#9a5b00` (5.4:1 on white). Filled buttons stay amber, with charcoal on them. There is no blue.
 
@@ -13,10 +13,9 @@
 | File | What it is |
 | --- | --- |
 | `wordmark.svg` | *Riff*, in amber, on a transparent ground |
-| `mark.svg`, `../icons/favicon.svg` | The *ff* on a charcoal tile, for small sizes |
-| `mark.png` | The app icon's tile, 512px, for the README |
-| `avatar.png` | The *ff* on charcoal, full bleed, 1024px, for the GitHub organisation |
-| `ff-ghost.svg`, `ff-ghost-dark.svg` | The *ff* as marginalia, its outline and rings of sound, for a white or a #121212 band |
+| `../icons/favicon.svg` | The app icon cropped to its tile, for the favicon and the site's nav |
+| `mark.png` | The app icon's tile, 512px, for the README and the site |
+| `avatar.png` | The GitHub organisation's picture, still the old *ff*: replace it with `mark.png` in the organisation's settings |
 | `dots.svg` | wordpress.org's dots, between sections |
 | `../../packages/desktop/resources/icon.svg` | The app icon, on Apple's icon grid |
 
