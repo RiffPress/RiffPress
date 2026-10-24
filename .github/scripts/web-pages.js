@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 /**
  * Writes site/web/: one page per browser API or CSS feature the player uses, from site/web/web.json,
- * plus the index of them and the sitemap. Run `npm run docs:web`; CI checks the output is current.
+ * plus the index of them and the sitemap. Run `npm run docs:web` to see them locally.
+ *
+ * Each page links the lines it quotes, so the pages are built by the Pages deploy from the commit it
+ * publishes, and are not committed: a committed copy changed with every edit above a quoted line.
+ * web.json names a quote by its file and its code, and by the line above it (`after`) only when the
+ * code appears earlier in the file too. --check fails when a quote is no longer in its file, and
+ * when the committed sitemap is out of date.
  *
  * Usage: node .github/scripts/web-pages.js [--check]
  */
@@ -146,18 +152,15 @@ function sitemap( entries ) {
 }
 
 /**
- * Every quoted line must still be at the line it claims, or the link would point at the wrong code.
- * When the writer runs, a line that moved is found again (the nearest line holding the same code)
- * and the data updated; the check only reports it, so a commit that moved code without running
- * the writer fails. A quoted line that is gone altogether is a problem either way.
+ * Finds each quoted line in its file as it is now: the first line holding the code, after the line
+ * that is `after`, exactly as written, when there is one. A quote, or its `after`, that is gone is a problem, as is an
+ * `after` that appears more than once, since then it does not say which.
  *
- * @param {Array}   entries The pages.
- * @param {boolean} fix     Whether to move line numbers to where the code is now.
- * @return {{problems: string[], moved: number}} Problems found, and lines moved.
+ * @param {Array} entries The pages. Each quote is given its `line`.
+ * @return {string[]} Problems found.
  */
-function verify( entries, fix ) {
+function verify( entries ) {
 	const problems = [];
-	let moved = 0;
 	const cache = new Map();
 	for ( const e of entries ) {
 		// Every page cites the standard that defines its feature, published by a standards body, so
@@ -168,37 +171,35 @@ function verify( entries, fix ) {
 		for ( const w of e.where ) {
 			if ( ! cache.has( w.file ) ) {
 				const file = path.join( ROOT, w.file );
-				cache.set( w.file, fs.existsSync( file ) ? fs.readFileSync( file, 'utf8' ).split( '\n' ) : null );
+				cache.set( w.file, fs.existsSync( file ) ? fs.readFileSync( file, 'utf8' ).split( '\n' ) : [] );
 			}
 			const lines = cache.get( w.file );
-			const actual = lines ? lines[ w.line - 1 ] : undefined;
-			if ( actual !== undefined && actual.includes( w.code ) ) {
+			let from = 0;
+			if ( w.after ) {
+				const anchors = lines.flatMap( ( l, i ) => ( l === w.after ? [ i ] : [] ) );
+				if ( anchors.length !== 1 ) {
+					problems.push( `${ e.slug }: ${ w.file } has "${ w.after }" ${ anchors.length ? anchors.length + ' times' : 'no longer' }; give site/web/web.json an after it has once` );
+					continue;
+				}
+				from = anchors[ 0 ] + 1;
+			}
+			const at = lines.findIndex( ( l, i ) => i >= from && l.includes( w.code ) );
+			if ( at < 0 ) {
+				problems.push( `${ e.slug }: ${ w.file } no longer has "${ w.code }"${ w.after ? ` after "${ w.after }"` : '' }; update site/web/web.json` );
 				continue;
 			}
-			const hits = lines ? lines.map( ( l, i ) => ( l.includes( w.code ) ? i + 1 : 0 ) ).filter( Boolean ) : [];
-			if ( ! hits.length ) {
-				problems.push( `${ e.slug }: ${ w.file } no longer has "${ w.code }"; update site/web/web.json` );
-			} else if ( fix ) {
-				w.line = hits.reduce( ( a, b ) => ( Math.abs( b - w.line ) < Math.abs( a - w.line ) ? b : a ) );
-				moved++;
-			} else {
-				problems.push( `${ e.slug }: ${ w.file }:${ w.line } does not contain "${ w.code }" (it moved); run npm run docs:web` );
-			}
+			w.line = at + 1;
 		}
 	}
-	return { problems, moved };
+	return problems;
 }
 
-function build( fix ) {
+function build() {
 	const entries = JSON.parse( fs.readFileSync( DATA, 'utf8' ) );
-	const { problems, moved } = verify( entries, fix );
+	const problems = verify( entries );
 	if ( problems.length ) {
 		problems.forEach( ( p ) => console.error( p ) );
 		process.exit( 1 );
-	}
-	if ( moved ) {
-		fs.writeFileSync( DATA, JSON.stringify( entries, null, '\t' ) + '\n' );
-		console.log( `site/web/web.json: ${ moved } quoted line${ moved === 1 ? '' : 's' } moved with the code` );
 	}
 	const files = new Map();
 	files.set( path.join( DIR, 'index.html' ), index( entries ) );
@@ -208,9 +209,13 @@ function build( fix ) {
 }
 
 const check = process.argv.includes( '--check' );
-const files = build( ! check );
+const files = build();
 let stale = 0;
 for ( const [ file, content ] of files ) {
+	// Only the sitemap is committed; the pages are checked by building them, above.
+	if ( check && file !== SITEMAP ) {
+		continue;
+	}
 	const current = fs.existsSync( file ) ? fs.readFileSync( file, 'utf8' ) : null;
 	if ( current === content ) {
 		continue;
@@ -224,18 +229,14 @@ for ( const [ file, content ] of files ) {
 	}
 }
 // Pages whose entry was removed.
-for ( const entry of fs.readdirSync( DIR, { withFileTypes: true } ) ) {
+for ( const entry of check ? [] : fs.readdirSync( DIR, { withFileTypes: true } ) ) {
 	const file = path.join( DIR, entry.name, 'index.html' );
 	if ( entry.isDirectory() && ! files.has( file ) ) {
 		stale++;
-		if ( check ) {
-			console.error( `${ path.relative( ROOT, file ) } has no entry in web.json` );
-		} else {
-			fs.rmSync( path.join( DIR, entry.name ), { recursive: true } );
-		}
+		fs.rmSync( path.join( DIR, entry.name ), { recursive: true } );
 	}
 }
 if ( check && stale ) {
 	process.exit( 1 );
 }
-console.log( check ? `site/web is current (${ files.size - 2 } pages)` : `site/web written (${ files.size - 2 } pages)` );
+console.log( check ? `site/web's quotes are all in place (${ files.size - 2 } pages)` : `site/web written (${ files.size - 2 } pages)` );
