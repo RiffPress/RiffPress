@@ -290,6 +290,8 @@ test.describe( 'Player', () => {
 		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Trombone Detritus', 'Underground' ] );
 
 		await list.locator( 'li' ).nth( 1 ).locator( '.riff-more-button' ).click();
+		// The menu opens inside the dialog, where a screen reader kept to it can reach it.
+		await expect( page.locator( '.riff-np .riff-menu' ) ).toBeVisible();
 		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Move down' } ).click();
 		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Underground', 'Trombone Detritus' ] );
 
@@ -336,6 +338,11 @@ test.describe( 'Player', () => {
 			'data-playing',
 			'true'
 		);
+		// Its name says which track Pause is for, among rows that all play something.
+		await expect( page.locator( '.riff-row' ).nth( 1 ) ).toHaveAttribute(
+			'aria-label',
+			'Pause Underground'
+		);
 		const session = await page.evaluate( () => ( {
 			title: navigator.mediaSession?.metadata?.title,
 			state: navigator.mediaSession?.playbackState,
@@ -348,11 +355,15 @@ test.describe( 'Player', () => {
 
 	test( 'the bar opens Now Playing, which closes with Escape and returns focus', { tag: '@smoke' }, async ( {
 		page,
+		isMobile,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-bar-info' ).click();
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
+		// Modal on a phone, where it covers the bar; beside the bar on a wide screen, where the bar
+		// is still how the music is controlled.
+		await expect( np ).toHaveAttribute( 'aria-modal', isMobile ? 'true' : 'false' );
 		await expect(
 			np.locator( '.riff-np-title, .riff-bar-text .riff-title' ).first()
 		).toContainText( 'Intensities in Ten Cities' );
@@ -465,6 +476,7 @@ test.describe( 'Player', () => {
 		await expect( list.locator( '[aria-current]' ) ).toContainText(
 			'Intensities in Ten Cities'
 		);
+		await expect( list.locator( '[aria-current]' ) ).toHaveAttribute( 'aria-current', 'true' );
 		await list.locator( 'li' ).nth( 2 ).locator( 'button' ).first().click();
 		await expect( list.locator( '[aria-current]' ) ).toContainText(
 			'Trombone Detritus'
@@ -640,7 +652,7 @@ test.describe( 'Player', () => {
 	} ) => {
 		await page.evaluate( () => {
 			window.riffHeard = 0;
-			window.riffInternal.listen( 'badges', ( list, t ) => [ ...list, { id: 'e2e', text: t ? 'Live' : '' } ] );
+			window.riffInternal.listen( 'badges', ( list, t ) => [ ...list, { id: 'e2e', text: t ? 'Live' : '', label: 'Recorded live' } ] );
 			window.riffInternal.listen( 'controls', ( list, t ) => t ? [
 				...list,
 				{
@@ -658,7 +670,10 @@ test.describe( 'Player', () => {
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 		const end = page.locator( '.riff-bar-end' );
 		// After Riff's own quality pill, in the order the listeners were added.
-		await expect( end.locator( '[data-riff-area="badges"] > *' ) ).toHaveText( [ /^MP3 · /, 'Live' ] );
+		await expect( end.locator( '[data-riff-area="badges"] > *' ) ).toHaveText( [ /^MP3 · /, /^Live/ ] );
+		// A badge's label is read in place of its short text, not only shown to a pointer.
+		await expect( end.locator( '.riff-badge-e2e [aria-hidden="true"]' ) ).toHaveText( 'Live' );
+		await expect( end.locator( '.riff-badge-e2e .riff-app-sr' ) ).toHaveText( 'Recorded live' );
 		// The bar's copy is for a wide screen, Now Playing's for a phone, and every copy follows a press.
 		const copies = page.locator( '[data-riff-control="e2e"]' );
 		await expect( copies ).toHaveCount( 2 );
@@ -881,6 +896,27 @@ test.describe( 'Player', () => {
 		await expect
 			.poll( async () => ( await audioState( page ) ).paused )
 			.toBe( false );
+	} );
+
+	test( 'the seek line moves five seconds a key, and says where it is in words', async ( { page } ) => {
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( 0.5 );
+		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
+		const seek = page.locator( '.riff-bar [data-riff-seek]' );
+		await seek.focus();
+		const before = ( await audioState( page ) ).time;
+		await page.keyboard.press( 'ArrowRight' );
+		const after = ( await audioState( page ) ).time;
+		expect( after - before ).toBeCloseTo( 5, 1 );
+		// Read the moment the key moves it, in the time just reached: not the clock's "0:06 / 7:33".
+		await expect( seek ).toHaveAttribute(
+			'aria-valuetext',
+			`${ Math.floor( after ) } seconds of 7 minutes, 33 seconds`
+		);
+		await page.keyboard.press( 'ArrowLeft' );
+		expect( ( await audioState( page ) ).time ).toBeCloseTo( before, 1 );
 	} );
 
 	test( 'a reload picks up paused where it left off', async ( { page } ) => {

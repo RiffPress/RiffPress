@@ -511,7 +511,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/riff.js",
-				"code": "const covered = window.matchMedia( '(min-width: 900px)' ).matches"
+				"code": "const wide = window.matchMedia( '(min-width: 900px)' ).matches;"
 			}
 		],
 		"shot": {
