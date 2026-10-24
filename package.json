@@ -40,6 +40,7 @@
     "docs:web:check": "node .github/scripts/web-pages.js --check",
     "docs:changelog": "node .github/scripts/readme-changelog.js",
     "docs:og": "node .github/scripts/og-images.js",
+    "docs:wporg": "node .github/scripts/wporg-assets.js",
     "docs:changelog:check": "node .github/scripts/readme-changelog.js --check"
   },
   "devDependencies": {

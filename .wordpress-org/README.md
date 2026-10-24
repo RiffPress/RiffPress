@@ -1,0 +1,3 @@
+# The WordPress.org listing's pictures
+
+The banner, the icon and the six screenshots the plugin directory shows, made by `npm run docs:wporg` (`.github/scripts/wporg-assets.js`): the banner and icon from the brand in `site/`, the screenshots from a local site that holds the demo albums and nothing else (`npm run seed`, a page named Listen holding the Riff block, signed in as wp-env's admin for the Media Library shot only). Run it again after a change to the brand or to what the screenshots show, and commit the result; `wporg-assets.yml` sends the folder to WordPress.org when it changes on `main`. Never run it against a site with a personal library.
