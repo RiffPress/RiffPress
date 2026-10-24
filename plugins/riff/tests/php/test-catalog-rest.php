@@ -92,7 +92,7 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertNotContains( 'Sunk in Dars', wp_list_pluck( $this->get( '/tracks' )['items'], 'title' ) );
 	}
 
-	public function test_an_album_without_artwork_of_its_own_shows_its_posts_cover(): void {
+	public function test_an_album_without_artwork_of_its_own_shows_a_cover_drawn_for_the_album(): void {
 		foreach ( $this->published as $id ) {
 			delete_post_thumbnail( $id );
 		}
@@ -100,7 +100,7 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$album = $this->get( '/albums' )['items'][0];
 
 		$this->assertNotEmpty( $album['art'], 'not a blank square' );
-		$this->assertStringContainsString( 'riff-art=', $album['art'][0]['src'], 'the cover Riff draws for the post' );
+		$this->assertStringContainsString( 'riff-art=album-' . $album['id'], $album['art'][0]['src'], 'the cover Riff draws for the album, not its post' );
 	}
 
 	public function test_someone_who_can_upload_sees_the_whole_library(): void {

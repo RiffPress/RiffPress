@@ -401,10 +401,10 @@ final class Catalog_Rest {
 			);
 			if ( Catalog::ALBUM === $taxonomy ) {
 				$item['artist'] = (string) get_term_meta( (int) $row->term_id, Catalog::ALBUM_ARTIST, true );
-				// The first track's artwork as the player shows it: its own, else its post's, else the
-				// cover Riff draws for the post.
+				// The first track's own artwork, or its post's; with neither, the cover Riff draws for
+				// the album.
 				$first       = Tracks::from_attachment( (int) $row->first, (int) get_post_field( 'post_parent', (int) $row->first ) );
-				$item['art'] = $first['art'] ?? array();
+				$item['art'] = Listen\Art::album_art( (int) $row->term_id, (array) ( $first['art'] ?? array() ) );
 			}
 			$items[] = $item;
 		}
