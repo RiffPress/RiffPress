@@ -142,6 +142,18 @@ a:hover {
 	height: 32px;
 }
 
+/* the app's own tile over Get Riff, as a store leads with an app's icon */
+.app-icon {
+	display: block;
+	width: 96px;
+	height: 96px;
+	margin: 0 0 24px;
+}
+
+#owners .app-icon {
+	margin-inline: auto;
+}
+
 .nav nav {
 	display: flex;
 	align-items: center;
