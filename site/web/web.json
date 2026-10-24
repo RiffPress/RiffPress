@@ -898,7 +898,7 @@
 				"code": "html:has(#riff[data-live]) [data-playing=\"true\"] .riff-row-state i {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.css",
+				"file": "plugins/riff/features/listen/app.css",
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],
@@ -951,7 +951,7 @@
 		"fallback": "The title wraps normally.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.css",
+				"file": "plugins/riff/features/listen/app.css",
 				"code": "text-wrap: balance;"
 			}
 		],
@@ -1096,7 +1096,7 @@
 				"code": "aspect-ratio: 16 / 9;"
 			},
 			{
-				"file": "plugins/riff/assets/riff.css",
+				"file": "plugins/riff/features/listen/app.css",
 				"code": "aspect-ratio: 1;"
 			}
 		],
@@ -1208,7 +1208,7 @@
 				"code": ".riff-row:focus-visible {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.css",
+				"file": "plugins/riff/features/listen/app.css",
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
 		],

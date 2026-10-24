@@ -1,0 +1,602 @@
+/* Standalone mode: the Listen block on its own at app/, in Riff's dark.
+   Loaded only there, after app.css. No build step: this file is what ships. */
+
+/* ---- Standalone mode: the Listen block on its own at app/, in Riff's dark
+   look, with no theme around it. */
+.riff-standalone {
+	margin: 0;
+	background: #030303;
+	color: #fff;
+	color-scheme: dark;
+}
+
+.riff-standalone .riff-app {
+	max-width: none;
+	min-height: 100dvh;
+	padding-bottom: 48px;
+}
+
+/* Once the bar shows, the page already keeps its height free below
+   (body::after above), so the app fills only what is left: one screen in
+   all, never a scroll for a short view. */
+html.has-riff .riff-standalone .riff-app {
+	min-height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
+}
+
+/* Standalone mode's buttons are pills at every width, as the player's own are;
+   the Listen block in a theme keeps the site's corners. */
+.riff-standalone .riff-app .riff-pill {
+	border-radius: 999px;
+	font-weight: 600;
+}
+
+/* On a wide screen standalone mode is laid out like the apps people know: a
+   column on the left with the site's name, search and the views, and the view
+   beside it. The column stays put while the view scrolls. */
+@media (min-width: 900px) {
+
+	.riff-standalone .riff-app {
+		display: grid;
+		grid-template-columns: 240px minmax(0, 1fr);
+		align-items: start;
+		padding: 0;
+	}
+
+	.riff-standalone .riff-app-bar {
+		position: sticky;
+		top: 0;
+		flex-direction: column;
+		flex-wrap: nowrap;
+		align-items: stretch;
+		gap: 2px;
+		box-sizing: border-box;
+		height: 100dvh;
+		margin: 0;
+		padding: 24px 12px;
+		overflow-y: auto;
+		border-right: 1px solid var(--riff-app-line);
+		border-bottom: 0;
+
+		/* Sticky, so it stacks on its own: above the view, or the account menu
+		   it holds would open under the covers. The search panel, at the app's
+		   root, is above both. */
+		z-index: 2;
+	}
+
+	html.has-riff .riff-standalone .riff-app-bar {
+		height: calc(100dvh - var(--riff-bar-h) - var(--riff-safe-b));
+	}
+
+	.riff-standalone .riff-app-brand {
+		display: flex;
+		order: -2;
+		align-items: center;
+		gap: 12px;
+		min-width: 0;
+		margin: 0 0 16px;
+		font-size: 20px;
+		font-weight: 700;
+	}
+
+	.riff-standalone .riff-app-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* The toggle needs app.js, which loads after the page: until then it would
+	   be a button that does nothing, so it keeps its place but stays unseen,
+	   and fades in when it works. */
+	.riff-standalone .riff-app:not([data-riff-app-ready]) .riff-app-collapse {
+		visibility: hidden;
+		opacity: 0;
+	}
+
+	.riff-standalone .riff-app .riff-app-collapse {
+		display: grid;
+		flex: none;
+		place-items: center;
+		width: 48px;
+		height: 48px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	.riff-standalone .riff-app .riff-app-collapse:hover,
+	.riff-standalone .riff-app .riff-app-collapse:focus-visible {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app-collapse svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	/* Collapsed: a rail of icons, each with a small label under it, as YouTube
+	   Music draws its narrow guide. Search waits for the sidebar to open. */
+	.riff-standalone .riff-app[data-sidebar="mini"] {
+		grid-template-columns: 72px minmax(0, 1fr);
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
+		padding: 24px 4px;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand {
+		justify-content: center;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-name,
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
+		display: none;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-tab {
+		flex-direction: column;
+		justify-content: center;
+		gap: 4px;
+		min-height: 72px;
+		padding: 0;
+		font-size: 10px;
+	}
+
+	.riff-standalone .riff-app-search {
+		flex: none;
+		order: -1;
+		margin: 0 0 16px;
+	}
+
+	.riff-standalone .riff-app .riff-app-search input {
+		max-width: none;
+	}
+
+	/* Who is listening sits at the window's top right, over the view, as the
+	   music apps place it; the column keeps the views. */
+	.riff-standalone .riff-app .riff-app-account,
+	.riff-standalone .riff-app .riff-app-signin {
+		position: fixed;
+		top: 16px;
+		right: 24px;
+		z-index: 5;
+		margin: 0;
+	}
+
+	/* In the sidebar's column the offer is a card at its own height. */
+	.riff-standalone .riff-app-install {
+		flex: none;
+		margin-top: 16px;
+	}
+
+	/* Your Library, as Spotify's sidebar has it: a head with New playlist,
+	   chips, then a row for each thing with its artwork and what it is. */
+	.riff-standalone .riff-app-library {
+		display: block;
+		order: 1;
+		min-width: 0;
+		margin: 16px 0 0;
+		padding: 16px 0 0;
+		border-top: 1px solid var(--riff-app-line);
+	}
+
+	.riff-standalone .riff-app-library-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin: 0 4px 12px 12px;
+	}
+
+	.riff-standalone .riff-app .riff-app-library-title {
+		color: var(--riff-app-ink);
+		font-size: 16px;
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-library-title:hover,
+	.riff-standalone .riff-app .riff-app-library-title[aria-current="page"] {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.riff-standalone .riff-app .riff-app-library-create {
+		all: unset;
+		display: grid;
+		place-items: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		color: var(--riff-app-ink-2);
+		cursor: pointer;
+	}
+
+	.riff-standalone .riff-app .riff-app-library-create:hover {
+		background: var(--riff-app-surface);
+		color: var(--riff-app-ink);
+	}
+
+	.riff-standalone .riff-app .riff-app-library-create svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.riff-standalone .riff-app-library-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 0 8px 12px;
+	}
+
+	.riff-standalone .riff-app .riff-app-library-chip {
+		padding: 4px 12px;
+		border-radius: 999px;
+		background: var(--riff-app-surface);
+		color: var(--riff-app-ink);
+		font-size: 14px;
+		line-height: 24px;
+		text-decoration: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-library-chip:hover {
+		background: color-mix(in srgb, var(--riff-app-ink) 14%, var(--riff-app-bg));
+	}
+
+	.riff-standalone .riff-app .riff-app-library-chip[aria-pressed="true"] {
+		background: var(--riff-app-ink);
+		color: var(--riff-app-bg);
+	}
+
+	.riff-standalone .riff-app-library ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.riff-standalone .riff-app-library li[hidden] {
+		display: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 8px;
+		border-radius: 6px;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-item:hover,
+	.riff-standalone .riff-app .riff-app-item[aria-current="page"] {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app .riff-app-item:focus-visible,
+	.riff-standalone .riff-app .riff-app-library-chip:focus-visible,
+	.riff-standalone .riff-app .riff-app-library-create:focus-visible,
+	.riff-standalone .riff-app .riff-app-library-title:focus-visible {
+		outline: 2px solid var(--riff-app-accent);
+		outline-offset: -2px;
+	}
+
+	/* What is showing has its name in the accent, as Spotify colours it. */
+	.riff-standalone .riff-app .riff-app-item[aria-current="page"] .riff-app-item-title {
+		color: var(--riff-app-accent);
+	}
+
+	.riff-standalone .riff-app-item-art {
+		display: grid;
+		flex: none;
+		place-items: center;
+		width: 48px;
+		height: 48px;
+		overflow: hidden;
+		border-radius: 4px;
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app-item-round {
+		border-radius: 50%;
+	}
+
+	.riff-standalone .riff-app-item-art img,
+	.riff-standalone .riff-app-item-art .riff-mosaic {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.riff-standalone .riff-app-item-art .riff-mosaic {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+	}
+
+	/* Liked songs: the heart on the accent, as the apps draw theirs. */
+	.riff-standalone .riff-app-item-heart {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(135deg, var(--riff-app-accent), color-mix(in srgb, var(--riff-app-accent) 55%, #000));
+		color: #000;
+	}
+
+	.riff-standalone .riff-app-item-heart svg {
+		width: 20px;
+		height: 20px;
+		fill: currentcolor;
+	}
+
+	.riff-standalone .riff-app-item-note svg {
+		display: block;
+		width: 24px;
+		height: 24px;
+		fill: var(--riff-app-ink-2);
+	}
+
+	/* Your Library heads its own list here, so the tab for it would say it
+	   twice. */
+	.riff-standalone .riff-app .riff-app-tab-library {
+		display: none;
+	}
+
+	.riff-standalone .riff-app-item-mark {
+		color: var(--riff-app-accent);
+		font-size: 20px;
+	}
+
+	.riff-standalone .riff-app-item-text {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	.riff-standalone .riff-app-item-title,
+	.riff-standalone .riff-app-item-sub {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app-item-title {
+		color: var(--riff-app-ink);
+		font-size: 15px;
+		line-height: 1.4;
+	}
+
+	.riff-standalone .riff-app-item-sub {
+		color: var(--riff-app-ink-2);
+		font-size: 13px;
+		line-height: 1.4;
+	}
+
+	/* Folded to a rail, the library is its artwork alone, as Spotify's is. */
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-library-head,
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-library-chips {
+		display: none;
+	}
+
+	/* The names stay for a screen reader, the links' only names on the rail. A
+	   block, not the column: a column squeezed into the 1px box crushes them.
+	   Clipped, so they don't widen the rail into a scrolling one. */
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item-text {
+		display: block;
+		position: absolute;
+		overflow: hidden;
+		width: 1px;
+		height: 1px;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item {
+		justify-content: center;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab {
+		gap: 16px;
+		padding: 0 12px;
+		border-radius: 8px;
+		font-size: 15px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab svg {
+		display: block;
+		flex: none;
+		width: 24px;
+		height: 24px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab:hover {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app .riff-app-tab[aria-current="page"] {
+		background: var(--riff-app-surface);
+		box-shadow: none;
+	}
+
+	.riff-standalone .riff-app .riff-pill {
+		min-height: 44px;
+		padding: 0 28px;
+	}
+
+	.riff-standalone .riff-album-title {
+		font-weight: 700;
+		letter-spacing: -0.02em;
+	}
+
+	/* An album's, artist's or playlist's header, as Spotify's: the cover
+	   beside a large title, then a row of actions under both, led by a round
+	   Play in the accent. The text block gives its parts to the grid. */
+	.riff-standalone .riff-album {
+		display: grid;
+		grid-template-areas:
+			"cover ."
+			"cover kind"
+			"cover title"
+			"cover meta"
+			"actions actions";
+		grid-template-rows: 1fr auto auto auto auto;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: end;
+		gap: 0 24px;
+	}
+
+	.riff-standalone .riff-album-text {
+		display: contents;
+	}
+
+	.riff-standalone .riff-album-cover {
+		grid-area: cover;
+	}
+
+	.riff-standalone .riff-album-kind {
+		grid-area: kind;
+	}
+
+	.riff-standalone .riff-album-meta {
+		grid-area: meta;
+	}
+
+	.riff-standalone .riff-app .riff-album-title {
+		grid-area: title;
+		margin: 4px 0 8px;
+		font-size: clamp(40px, 5.5vw, 88px);
+		font-weight: 800;
+		line-height: 1.05;
+		letter-spacing: -0.04em;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions {
+		grid-area: actions;
+		align-items: center;
+		gap: 16px;
+		margin: 32px 0 0;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions .riff-pill svg {
+		display: block;
+		width: 28px;
+		height: 28px;
+	}
+
+	/* The words stay as the buttons' names; the clip hides them. */
+	.riff-standalone .riff-album-actions .riff-pill-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="play"] {
+		justify-content: center;
+		width: 56px;
+		height: 56px;
+		min-height: 56px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: var(--riff-app-accent);
+		color: #000;
+		transition: transform 0.15s, background-color 0.15s;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="play"]:hover {
+		transform: scale(1.04);
+		background: color-mix(in srgb, var(--riff-app-accent) 85%, #fff);
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"] {
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		min-height: 40px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: var(--riff-app-ink-2);
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"]:hover {
+		color: var(--riff-app-ink);
+	}
+
+	/* Over an album's tracks: #, Title and a clock, over a rule. */
+	.riff-standalone .riff-tracks-head {
+		display: flex;
+		align-items: center;
+		gap: 24px;
+		margin: 0 0 8px;
+		padding: 0 112px 8px 12px;
+		border-bottom: 1px solid var(--riff-app-line);
+		color: var(--riff-app-ink-2);
+		font-size: 14px;
+	}
+
+	.riff-standalone .riff-tracks-head span:first-child {
+		width: 40px;
+		text-align: center;
+	}
+
+	.riff-standalone .riff-tracks-head span:nth-child(2) {
+		flex: 1;
+	}
+
+	.riff-standalone .riff-tracks-head svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.riff-standalone .riff-app > *,
+	.riff-standalone .riff-album,
+	.riff-standalone .riff-album-tracks {
+		max-width: none;
+		margin-right: 0;
+		margin-left: 0;
+	}
+
+	.riff-standalone .riff-app-view {
+		grid-column: 2;
+		min-width: 0;
+		padding: clamp(32px, 4vw, 56px) clamp(24px, 4vw, 64px) 48px;
+	}
+}
+
+/* The bar already says what is playing; the app does not repeat it above the
+   library. */
+.riff-standalone .riff-now {
+	display: none;
+}
+
+/* ---- An app, not a page: in the Listen app the frame, the sidebar, the rows,
+   the cards, the headings and every control are not text to select, and no
+   picture drags out of it, so a drag or a double-click never paints the view
+   blue. Only the fields select. The player is controls wherever it plays. */
+.riff-standalone .riff-app,
+#riff {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.riff-standalone .riff-app img,
+.riff-standalone .riff-app svg,
+#riff img {
+	-webkit-user-drag: none;
+}
+
+.riff-standalone .riff-app input,
+.riff-standalone .riff-app textarea,
+#riff input[type="text"],
+#riff input[type="search"],
+#riff textarea {
+	-webkit-user-select: text;
+	user-select: text;
+}

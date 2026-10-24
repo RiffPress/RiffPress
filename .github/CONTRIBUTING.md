@@ -8,7 +8,7 @@ npm run env:start          # WordPress at http://localhost:8890 (admin / passwor
 npm run seed               # a post with ten public-domain jazz tracks, and one with a video
 ```
 
-The plugin is `plugins/riff/`. It ships one stylesheet and one script with no build step, and the only thing it adds to a page is the player. Keep it that way: transform and opacity animations only, native controls first, every browser feature behind a check.
+The plugin is `plugins/riff/`. It ships plain stylesheets and scripts with no build step, each loaded only where it applies, and the only thing it adds to a page is the player. Keep it that way: transform and opacity animations only, native controls first, every browser feature behind a check.
 
 To play your own music, point the seed script at any folder of audio: `npm run seed -- wp-content/riff/path/inside/the/repo`. The repository root is mounted in the containers at `wp-content/riff`.
 
@@ -16,7 +16,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 
 | Path | What it is |
 | --- | --- |
-| `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js` and `assets/riff.css` are what ships. |
+| `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js`, `assets/riff.css` and the files under `features/listen/` are what ships. |
 | `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing. |
 | `packages/desktop/` | The desktop app: a site's Listen library in an Electron window. |
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |

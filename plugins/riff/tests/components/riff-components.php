@@ -21,6 +21,9 @@ add_action(
 		if ( ! isset( $_GET['riff-components'] ) || ! class_exists( Ui::class ) ) {
 			return;
 		}
+		// The app's own stylesheet, which only a Listen page loads on its own.
+		\Riff\Player::styles();
+		wp_enqueue_style( 'riff-app' );
 		$long = 'Vedi! Le fosche notturne spoglie, from Il Trovatore, Act Two, as arranged for the band';
 		// A name that is one long word, as a library's tags sometimes are: it has to break, not widen the page.
 		$word   = 'Supercalifragilisticexpialidociousandthensomemorewithoutanyspacesatall';

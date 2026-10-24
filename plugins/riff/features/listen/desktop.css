@@ -1,0 +1,554 @@
+/* The desktop frame: the document is riff-desktop in Riff's desktop app and
+   on a computer in standalone mode. Loaded with standalone.css. No build
+   step: this file is what ships. */
+
+/* ---- Spotify's frame, on a computer: the document is riff-desktop in Riff's
+   desktop app, and in a browser or an installed web app with a mouse or a
+   trackpad (templates/standalone.php). A strip across the top holds a back
+   and forward pair over the app's history and the sidebar's toggle. In the
+   desktop app on a Mac it is riff-desktop-inset too: the window has no title
+   bar, the strip drags the window, and its left end is the traffic lights'.
+   Internal to the app; not for themes. */
+.riff-app-titlebar {
+	display: none;
+}
+
+html.riff-desktop {
+
+	/* Spotify's frame: a strip across the top, and panels 8px apart, with 8px
+	   corners, on black. */
+	--riff-desktop-strip: 64px;
+	--riff-desktop-side: 280px;
+	--riff-desktop-gap: 8px;
+}
+
+html.riff-desktop .riff-standalone,
+html.riff-desktop:has(body.riff-standalone) {
+	background: #000;
+}
+
+/* An app's window does not stretch past its ends. On a Mac's trackpad the
+   page would, and the view would slide inside its frame, showing its square
+   top edge under the frame's round corners. */
+html.riff-desktop:has(body.riff-standalone) {
+	overscroll-behavior: none;
+}
+
+html.riff-desktop .riff-standalone .riff-app-titlebar {
+	position: fixed;
+	top: 0;
+	right: 0;
+	left: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	height: var(--riff-desktop-strip);
+	padding-left: 16px;
+	background: #000;
+}
+
+/* Installed from Chrome or Edge with no title bar: the strip drags the
+   window and keeps clear of its controls, wherever the system puts them, the
+   traffic lights at the left or the buttons at the right. */
+html.riff-desktop-overlay .riff-standalone {
+	--riff-desktop-controls: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+}
+
+html.riff-desktop-overlay .riff-standalone .riff-app-titlebar {
+	padding-left: max(16px, calc(env(titlebar-area-x, 0px) + 8px));
+	-webkit-app-region: drag;
+	app-region: drag;
+}
+
+html.riff-desktop.riff-desktop-overlay .riff-standalone .riff-app .riff-app-account,
+html.riff-desktop.riff-desktop-overlay .riff-standalone .riff-app .riff-app-signin {
+	right: calc(16px + var(--riff-desktop-controls));
+}
+
+html.riff-desktop-inset .riff-standalone .riff-app-titlebar {
+	padding-left: 84px;
+	-webkit-app-region: drag;
+	app-region: drag;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history {
+	display: flex;
+	gap: 4px;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button,
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	color: var(--riff-app-ink-2);
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button:hover:not(:disabled),
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:hover {
+	color: var(--riff-app-ink);
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button:focus-visible,
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 0;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history button:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+html.riff-desktop .riff-standalone .riff-app-history svg {
+	width: 24px;
+	height: 24px;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-app-collapse svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* A library at rest; over the panel's head, the panel it would close, or
+   open when it is a rail. */
+html.riff-desktop .riff-standalone .riff-app-collapse-close,
+html.riff-desktop .riff-standalone .riff-app-collapse-open,
+html.riff-desktop .riff-standalone .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-rest {
+	display: none;
+}
+
+html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-close,
+html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-open {
+	display: inline;
+}
+
+/* A narrow window: the tabs start under the strip. */
+html.riff-desktop .riff-standalone .riff-app {
+	padding-top: var(--riff-desktop-strip);
+}
+
+@media (min-width: 900px) {
+
+	/* The library and the view are panels in a black frame. The page still
+	   scrolls as a whole, so the view's panel is a window cut in a fixed black
+	   frame (the ::after below), and the view scrolls behind it. */
+	html.riff-desktop .riff-standalone .riff-app {
+
+		/* The panels' colour, over the one the page sets inline, so the
+		   surfaces and lines are mixed from it. */
+		--riff-app-bg: #121212 !important;
+		--riff-desktop-bottom: var(--riff-desktop-gap);
+		grid-template-columns: var(--riff-desktop-side) minmax(0, 1fr);
+		column-gap: var(--riff-desktop-gap);
+		padding: 0 var(--riff-desktop-gap);
+		background: #000;
+	}
+
+	/* Over the bar, the panels end at its edge; the bar is black too. */
+	html.riff-desktop.has-riff .riff-standalone .riff-app {
+		--riff-desktop-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
+	}
+
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] {
+		--riff-desktop-side: 72px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app::after {
+		content: "";
+		position: fixed;
+		top: var(--riff-desktop-strip);
+		right: var(--riff-desktop-gap);
+		bottom: var(--riff-desktop-bottom);
+		left: calc(var(--riff-desktop-side) + 2 * var(--riff-desktop-gap));
+		z-index: 1;
+		border-radius: 8px;
+		box-shadow: 0 0 0 100vmax #000;
+		pointer-events: none;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app-bar,
+	html.riff-desktop.has-riff .riff-standalone .riff-app-bar {
+		top: var(--riff-desktop-strip);
+		height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
+		margin-top: var(--riff-desktop-strip);
+		padding: 12px 8px;
+		border: 0;
+		border-radius: 8px;
+		background: var(--riff-app-bg);
+	}
+
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
+		padding: 12px 4px;
+	}
+
+	/* The panel's head, as Spotify's library has it: the toggle, then the
+	   site's name. */
+	html.riff-desktop .riff-standalone .riff-app-brand {
+		gap: 8px;
+		margin: 0 0 8px;
+		padding: 0 4px;
+		min-height: 40px;
+		font-size: 16px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand {
+		padding: 0;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab {
+		min-height: 40px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-tab svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	/* Home and search leave the panel for the middle of the strip, as
+	   Spotify's do: a round button, then the pill. */
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search,
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
+		--riff-desktop-search: min(480px, 100vw - 640px);
+		position: fixed;
+		top: 8px;
+		left: 50%;
+		z-index: 3;
+		display: block;
+		width: var(--riff-desktop-search);
+		margin: 0;
+		transform: translateX(-50%);
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search input {
+		min-height: 48px;
+		padding: 0 16px 0 48px;
+		border: 0;
+		border-radius: 999px;
+		background: #1f1f1f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b3b3b3'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") 14px center / 24px no-repeat;
+		font-size: 16px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search input:hover {
+		background-color: #2a2a2a;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-search input:focus-visible {
+		outline: 2px solid var(--riff-app-ink);
+		outline-offset: 0;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home,
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-home {
+		position: fixed;
+		top: 8px;
+		right: calc(50% + min(480px, 100vw - 640px) / 2 + 8px);
+		z-index: 3;
+		justify-content: center;
+		width: 48px;
+		min-height: 48px;
+		height: 48px;
+		padding: 0;
+		border-radius: 50%;
+		background: #1f1f1f;
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home:hover {
+		background: #2a2a2a;
+		color: var(--riff-app-ink);
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home[aria-current="page"] {
+		background: #1f1f1f;
+		color: var(--riff-app-ink);
+	}
+
+	/* Its label stays for a screen reader; the clip hides it. */
+	html.riff-desktop .riff-standalone .riff-app .riff-app-home span {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app-name {
+		display: block;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-name {
+		display: none;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app-view {
+		align-self: stretch;
+		min-height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
+		box-sizing: border-box;
+		margin-top: var(--riff-desktop-strip);
+		padding: 24px clamp(16px, 2.5vw, 32px) 48px;
+
+		/* The frame's corners, on the view too, so anything that moves it in
+		   its window still shows a round edge. */
+		border-radius: 8px;
+		background: var(--riff-app-bg);
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-account,
+	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
+		top: 12px;
+		right: 16px;
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
+		top: 12px;
+		min-height: 40px;
+		height: 40px;
+		padding: 0 20px;
+		font-size: 15px;
+	}
+
+	html.riff-desktop .riff-standalone .riff-app .riff-app-account summary {
+		width: 40px;
+		height: 40px;
+	}
+
+	html.riff-desktop #riff .riff-bar {
+		border-top: 0;
+		background: #000;
+	}
+
+	/* The bar at Spotify's height, the controls and the line with room
+	   between them, and the line 4px with round ends that holds its weight
+	   under the pointer. */
+	html.riff-desktop {
+		--riff-bar-h: 88px;
+	}
+
+	html.riff-desktop #riff .riff-bar-center {
+		gap: 8px;
+	}
+
+	html.riff-desktop #riff .riff-bar-seek .riff-line {
+		top: 6px;
+		height: 4px;
+		border-radius: 2px;
+	}
+
+	html.riff-desktop #riff .riff-bar-seek:hover .riff-line,
+	html.riff-desktop #riff[data-seeking] .riff-bar-seek .riff-line {
+		transform: none;
+	}
+
+	/* Now Playing, full screen as Tidal's: on a dark wash of the art's own
+	   colour, the art alone in the middle, and Up next and Lyrics as words at
+	   the top right that open their panel beside it (riff.js keeps
+	   data-riff-drawer). Its top drags the window, clear of the lights. */
+	html.riff-desktop #riff .riff-np-bg {
+		display: block;
+		background: linear-gradient(color-mix(in srgb, var(--riff-tint) 45%, #000), color-mix(in srgb, var(--riff-tint) 18%, #000));
+	}
+
+	html.riff-desktop #riff .riff-np-head {
+		height: var(--riff-desktop-strip);
+		-webkit-app-region: drag;
+		app-region: drag;
+	}
+
+	html.riff-desktop #riff .riff-np-head button {
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+
+	html.riff-desktop #riff .riff-np-body {
+		grid-template-columns: minmax(0, 1fr);
+		padding: 0 56px;
+	}
+
+	html.riff-desktop #riff .riff-stage {
+		place-content: center;
+		padding: 0 0 48px;
+		transition: padding 0.2s;
+	}
+
+	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-stage {
+		padding-right: 440px;
+	}
+
+	html.riff-desktop #riff .riff-cover {
+		width: min(640px, 100%, 64vh);
+		max-width: none;
+		height: auto;
+		max-height: none;
+		aspect-ratio: 1;
+		align-self: center;
+		justify-self: center;
+		object-fit: cover;
+		box-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
+	}
+
+	html.riff-desktop #riff .riff-queue {
+		display: contents;
+	}
+
+	/* The body sits under the head, so the tabs climb into it. */
+	html.riff-desktop #riff .riff-tabs {
+		position: absolute;
+		top: calc(12px - var(--riff-desktop-strip));
+		right: 24px;
+		z-index: 2;
+		gap: 8px;
+		border: 0;
+		-webkit-app-region: no-drag;
+		app-region: no-drag;
+	}
+
+	html.riff-desktop #riff .riff-tab {
+		width: auto;
+		height: 40px;
+		padding: 0 12px;
+		border: 0;
+		box-shadow: none;
+		color: rgb(255 255 255 / 0.7);
+		font-size: 15px;
+		text-transform: none;
+	}
+
+	html.riff-desktop #riff .riff-tab:hover,
+	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-tab[aria-selected="true"] {
+		color: #fff;
+	}
+
+	html.riff-desktop #riff .riff-np:not([data-riff-drawer="open"]) .riff-panel {
+		display: none;
+	}
+
+	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-panel:not([hidden]) {
+		position: absolute;
+		top: 0;
+		right: 24px;
+		bottom: 24px;
+		width: 400px;
+		padding: 8px;
+		overflow-y: auto;
+		border-radius: 8px;
+		background: rgb(0 0 0 / 0.35);
+	}
+}
+
+/* Spotify's view in the frame: a wash of the accent at the top of the view
+   that scrolls away with it, bold titles, and denser cards, each a panel
+   that lights on hover with its cover's corners rounded; the title stays
+   white, as Spotify's does. */
+html.riff-desktop .riff-standalone .riff-app-view {
+	background:
+		linear-gradient(color-mix(in srgb, var(--riff-app-accent) 12%, var(--riff-app-bg)), var(--riff-app-bg) 320px)
+		var(--riff-app-bg);
+}
+
+html.riff-desktop .riff-standalone .riff-app-title {
+	margin-bottom: 24px;
+	font-family: var(--riff-app-font);
+	font-size: 32px;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+html.riff-desktop .riff-standalone .riff-grid {
+	grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+	gap: 0;
+	margin: 0 -12px;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-shelf-row:has(> .riff-card) {
+	grid-auto-columns: clamp(164px, 15vw, 200px);
+	gap: 0;
+	margin: -6px -12px -2px;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-card {
+	padding: 12px;
+	border-radius: 8px;
+	transition: background-color 0.2s;
+}
+
+html.riff-desktop .riff-standalone .riff-app .riff-card:hover {
+	background: rgb(255 255 255 / 0.07);
+}
+
+html.riff-desktop .riff-standalone .riff-card:not(.riff-card-artist) .riff-card-art {
+	border-radius: 6px;
+}
+
+html.riff-desktop .riff-standalone .riff-card:hover .riff-card-art {
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+html.riff-desktop .riff-standalone .riff-card:hover .riff-card-title {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* The bar as Spotify's: a white round Play, and the track in smaller type.
+   The seek line keeps Riff's filament. */
+html.riff-desktop #riff .riff-bar .riff-play {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: #fff;
+	color: #000;
+	transition: transform 0.1s;
+}
+
+html.riff-desktop #riff .riff-bar .riff-play:hover {
+	transform: scale(1.06);
+}
+
+html.riff-desktop #riff .riff-bar .riff-play svg {
+	width: 20px;
+	height: 20px;
+}
+
+html.riff-desktop #riff .riff-bar .riff-title {
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+html.riff-desktop #riff .riff-bar .riff-sub {
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+/* Trying the layout in a browser (templates/standalone.php, with SCRIPT_DEBUG
+   or WP_DEBUG on): where the traffic lights would be. */
+html.riff-desktop-preview .riff-standalone .riff-app-titlebar::before {
+	content: "";
+	position: absolute;
+	top: 26px;
+	left: 20px;
+	width: 52px;
+	height: 12px;
+	background:
+		radial-gradient(circle 6px at 6px 6px, #ff5f57 98%, transparent) no-repeat,
+		radial-gradient(circle 6px at 26px 6px, #febc2e 98%, transparent) no-repeat,
+		radial-gradient(circle 6px at 46px 6px, #28c840 98%, transparent) no-repeat;
+}
+
