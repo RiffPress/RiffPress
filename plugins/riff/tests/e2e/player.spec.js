@@ -1128,6 +1128,29 @@ test.describe( 'Player', () => {
 		expect( np ).toBe( 'none' );
 	} );
 
+	test( 'the first track pressed is announced, and the queue names what each row plays', async ( {
+		page,
+		isMobile,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		// Said where a track starts, so the first press is heard as Next and Previous are.
+		await expect( page.locator( '#a11y-speak-polite' ) ).toContainText(
+			/^Now playing Underground by Airmen of Note/
+		);
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '.riff-np' ) ).toBeVisible();
+		if ( isMobile ) {
+			await page.locator( '.riff-peek' ).click();
+		}
+		// Each row of Up next is named with its artist, as a post's rows are, rather than its title
+		// and artist read run together; the playing one offers Pause.
+		const rows = page.locator( '.riff-queue-list li > button:first-child' );
+		await expect( rows.nth( 0 ) ).toHaveAttribute( 'aria-label', /^Play Intensities in Ten Cities by Airmen of Note/ );
+		await expect( rows.nth( 1 ) ).toHaveAttribute( 'aria-label', /^Pause Underground by Airmen of Note/ );
+		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
+		await expect( rows.nth( 1 ) ).toHaveAttribute( 'aria-label', /^Play Underground by/ );
+	} );
+
 	test( 'the player says where the track is, as it plays and after a seek', async ( {
 		page,
 	} ) => {
