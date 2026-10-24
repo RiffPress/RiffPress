@@ -158,9 +158,8 @@ export function start( api ) {
 		if ( ! cache.has( key ) ) {
 			cache.set(
 				key,
-				fetch( key, {
-					headers: { Accept: 'application/json' },
-				} ).then( ( r ) => {
+				// As whoever is signed in, as the views the server draws are.
+				api.request( key ).then( ( r ) => {
 					if ( ! r.ok ) {
 						throw new Error( String( r.status ) );
 					}
@@ -438,9 +437,7 @@ export function start( api ) {
 				);
 				u.searchParams.set( 'per_page', '100' );
 				u.searchParams.set( 'page', String( n ) );
-				const r = await fetch( u, {
-					headers: { Accept: 'application/json' },
-				} );
+				const r = await api.request( u );
 				if ( ! r.ok ) {
 					throw new Error( String( r.status ) );
 				}
@@ -1510,15 +1507,15 @@ export function start( api ) {
 		let answers;
 		try {
 			answers = await Promise.all( [
-				fetch( catalog( 'tracks', { search: q, per_page: 5 } ) ).then(
-					( r ) => r.json()
-				),
-				fetch( catalog( 'albums', { search: q } ) ).then( ( r ) =>
-					r.json()
-				),
-				fetch( catalog( 'artists', { search: q } ) ).then( ( r ) =>
-					r.json()
-				),
+				api
+					.request( catalog( 'tracks', { search: q, per_page: 5 } ) )
+					.then( ( r ) => r.json() ),
+				api
+					.request( catalog( 'albums', { search: q } ) )
+					.then( ( r ) => r.json() ),
+				api
+					.request( catalog( 'artists', { search: q } ) )
+					.then( ( r ) => r.json() ),
 			] );
 		} catch {
 			return;

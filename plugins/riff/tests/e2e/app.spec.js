@@ -379,9 +379,12 @@ test.describe( 'Browse', () => {
 		const field = page.locator( '.riff-app-search input' );
 		await expect( field ).toHaveAttribute( 'role', 'combobox' );
 		await field.click();
+		// Signed in, the suggestions are asked for as the account, with its nonce, as the views are.
+		const asked = page.waitForRequest( ( r ) => /riff\/v1\/tracks.*search=/.test( decodeURIComponent( r.url() ) ) );
 		await field.pressSequentially( 'Compo' );
 		const list = page.locator( '.riff-suggest' );
 		await expect( list ).toBeVisible();
+		expect( ( await asked ).headers()[ 'x-wp-nonce' ] ).toBeTruthy();
 		await expect( field ).toHaveAttribute( 'aria-expanded', 'true' );
 		await expect( list.locator( '.riff-suggest-top' ) ).toContainText( 'Compositions' );
 		await expect( page.locator( '.riff-app-sr' ) ).toHaveText( /\d+ suggestions?/ );

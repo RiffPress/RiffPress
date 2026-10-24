@@ -42,10 +42,13 @@ test( 'the Lyrics tab shows the words from the file, and says so when a track ha
 		await page.locator( '.riff-peek' ).click();
 	}
 	const tab = page.locator( '.riff-tab[data-riff-tab="lyrics"]' );
+	// Signed in, the media route is asked as the account, so a private post's track has its lyrics.
+	const asked = page.waitForRequest( ( r ) => decodeURIComponent( r.url() ).includes( 'wp/v2/media/' ) );
 	await tab.click();
 	await expect( tab ).toHaveAttribute( 'aria-selected', 'true' );
 	const panel = page.locator( '[data-riff-panel="lyrics"]' );
 	await expect( panel.locator( '.riff-lyrics' ) ).toHaveText( /First line\s+Second line/ );
+	expect( ( await asked ).headers()[ 'x-wp-nonce' ] ).toBeTruthy();
 
 	// The next track has no lyrics; the open tab follows the track.
 	await page.evaluate( () => window.riff.next() );

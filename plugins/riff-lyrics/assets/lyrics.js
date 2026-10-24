@@ -21,7 +21,10 @@
 			url.searchParams.set( '_fields', 'media_details' );
 			const asked = fetch( url, {
 				credentials: 'same-origin',
-				headers: { Accept: 'application/json' },
+				headers: {
+					Accept: 'application/json',
+					...( config.nonce ? { 'X-WP-Nonce': config.nonce } : {} ),
+				},
 			} )
 				.then( ( r ) => {
 					if ( ! r.ok ) {

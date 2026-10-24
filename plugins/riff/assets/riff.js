@@ -280,6 +280,24 @@ function start() {
 			return () => own[ name ]?.delete( fn );
 		},
 		/**
+		 * A GET to one of Riff's routes as whoever is signed in: with the account's nonce, or
+		 * WordPress answers as it would a visitor, whatever the cookie says.
+		 *
+		 * @since 4.30.0
+		 *
+		 * @param {string|URL} url The route.
+		 * @return {Promise<Response>} The response.
+		 */
+		request( url ) {
+			return fetch( url, {
+				credentials: 'same-origin',
+				headers: {
+					Accept: 'application/json',
+					...( me ? { 'X-WP-Nonce': me.nonce } : {} ),
+				},
+			} );
+		},
+		/**
 		 * Puts tracks right after the one playing, or starts them when nothing is.
 		 *
 		 * Each track goes through the `riff.track` filter first; one without a file is left out.
