@@ -42,7 +42,7 @@ stays in the Media Library.
 
 To try it first, with nine public-domain albums and nothing to install:
 
-[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-FFB020?style=for-the-badge&logo=wordpress&logoColor=1E1E1E)](https://riffpress.com/demo)
+[![Launch Riff in WordPress Playground](https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white)](https://riffpress.com/demo)
 
 ## How the player works
 
