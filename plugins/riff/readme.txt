@@ -120,7 +120,7 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 == Changelog ==
 
 = 4.28.0 =
-* Liked songs opens as a playlist, and Your Library sorts from a menu, as Spotify's do.
+* Liked songs opens as a playlist, and Your Library sorts from a menu.
 
 = 4.27.0 =
 * Riff's logo is its own name, with its ff as a score writes fortissimo.
@@ -135,10 +135,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 4.24.0 =
 * Riff for the desktop, an Electron window on a site's Listen page.
-* Spotify's cards, titles and Play in the frame.
-* Spotify's frame for the Listen app on any computer, in a browser or installed.
-* The desktop app in Spotify's frame, with a Mac icon on Apple's grid.
-* Your Library in the sidebar and an album's header, as Spotify's.
+* Denser cards, bold titles and a round Play in the desktop layout.
+* The desktop layout for the Listen app on any computer, in a browser or installed.
+* The desktop app in the desktop layout, with a Mac icon on Apple's grid.
+* Your Library in the sidebar, and a fuller album header.
 * Fixed: a protected file on a password-protected post needs the password.
 * Fixed: adding music starts from the Media Library, not from writing a post.
 

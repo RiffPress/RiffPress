@@ -21,7 +21,7 @@
 ### Features
 
 * Import Music… in the desktop app, into the site's Media Library ([#519](https://github.com/RiffPress/RiffPress/issues/519)) ([d3152a6](https://github.com/RiffPress/RiffPress/commit/d3152a60e0207004d28b620edd46963a6cf46466))
-* the desktop app signs in as Spotify does, and stays on the player ([#521](https://github.com/RiffPress/RiffPress/issues/521)) ([1574cb1](https://github.com/RiffPress/RiffPress/commit/1574cb17f7d80f04666b54f0b7ec51b656bfef7d))
+* the desktop app's own sign-in look, and it stays on the player ([#521](https://github.com/RiffPress/RiffPress/issues/521)) ([1574cb1](https://github.com/RiffPress/RiffPress/commit/1574cb17f7d80f04666b54f0b7ec51b656bfef7d))
 
 ## 0.1.0 (2026-10-21)
 

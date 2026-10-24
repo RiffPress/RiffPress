@@ -3921,10 +3921,12 @@ html.has-riff .riff-standalone .riff-app {
 	}
 
 	/* The names stay for a screen reader, the links' only names on the rail. A
-	   block, not the column: a column squeezed into the 1px box crushes them. */
+	   block, not the column: a column squeezed into the 1px box crushes them.
+	   Clipped, so they don't widen the rail into a scrolling one. */
 	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-item-text {
 		display: block;
 		position: absolute;
+		overflow: hidden;
 		width: 1px;
 		height: 1px;
 		clip-path: inset(50%);
@@ -4457,6 +4459,28 @@ html.riff-desktop .riff-standalone .riff-app {
 	html.riff-desktop #riff .riff-bar {
 		border-top: 0;
 		background: #000;
+	}
+
+	/* The bar at Spotify's height, the controls and the line with room
+	   between them, and the line 4px with round ends that holds its weight
+	   under the pointer. */
+	html.riff-desktop {
+		--riff-bar-h: 88px;
+	}
+
+	html.riff-desktop #riff .riff-bar-center {
+		gap: 8px;
+	}
+
+	html.riff-desktop #riff .riff-bar-seek .riff-line {
+		top: 6px;
+		height: 4px;
+		border-radius: 2px;
+	}
+
+	html.riff-desktop #riff .riff-bar-seek:hover .riff-line,
+	html.riff-desktop #riff[data-seeking] .riff-bar-seek .riff-line {
+		transform: none;
 	}
 
 	/* Now Playing, full screen as Tidal's: on a dark wash of the art's own
