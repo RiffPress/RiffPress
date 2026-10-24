@@ -1185,6 +1185,7 @@ function start() {
 		if ( play ) {
 			m.play().catch( paint );
 			remember( t );
+			speak( nowPlaying( t ) );
 		}
 		metadata( t );
 		paint();
@@ -1221,6 +1222,20 @@ function start() {
 		}
 	}
 
+	// What a screen reader hears a track called: its title, and its artist when it has one.
+	const named = ( t ) =>
+		t.artist
+			? fmt(
+					/* translators: 1: track title, 2: artist. */ __( '%1$s by %2$s', 'riff' ),
+					t.title,
+					t.artist
+			  )
+			: t.title;
+	const nowPlaying = ( t ) =>
+		fmt(
+			/* translators: %s: the track, as its title and artist. */ __( 'Now playing %s', 'riff' ),
+			named( t )
+		);
 	function go( to, { play = true } = {} ) {
 		if ( to < 0 || to >= order.length ) {
 			return;
@@ -1228,27 +1243,6 @@ function start() {
 		stopAll();
 		pos = to;
 		load( { play } );
-		const t = track();
-		if ( play && t ) {
-			speak(
-				t.artist
-					? fmt(
-							/* translators: 1: track title, 2: artist. */ __(
-								'Now playing %1$s by %2$s',
-								'riff'
-							),
-							t.title,
-							t.artist
-					  )
-					: fmt(
-							/* translators: %s: track title. */ __(
-								'Now playing %s',
-								'riff'
-							),
-							t.title
-					  )
-			);
-		}
 	}
 
 	function next( auto = false ) {
@@ -1946,6 +1940,20 @@ function start() {
 				li.firstElementChild.removeAttribute( 'aria-current' );
 			}
 			li.dataset.playing = current && playing ? 'true' : 'false';
+			// Named as a post's rows are, with the artist, since the title and the artist would
+			// otherwise be read run together; the playing one offers Pause.
+			const qt = queue[ order[ Number( li.dataset.pos ) ] ];
+			if ( qt ) {
+				li.firstElementChild.setAttribute(
+					'aria-label',
+					fmt(
+						current && playing
+							? /* translators: %s: the track, as its title and artist. */ __( 'Pause %s', 'riff' )
+							: /* translators: %s: the track, as its title and artist. */ __( 'Play %s', 'riff' ),
+						named( qt )
+					)
+				);
+			}
 		}
 		paintHearts();
 		progress();
