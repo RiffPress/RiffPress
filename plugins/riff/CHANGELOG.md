@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.29.0](https://github.com/RiffPress/RiffPress/compare/v4.28.0...v4.29.0) (2026-10-24)
+
+
+### Features
+
+* the player bar at its full desktop height, with a 4px line, and a rail that doesn't scroll sideways ([#548](https://github.com/RiffPress/RiffPress/issues/548)) ([02f9926](https://github.com/RiffPress/RiffPress/commit/02f99266b0d8433c0dba34f07c177960dd967ff1))
+
+
+### Bug Fixes
+
+* the seek line's glow fades in from the start of the line, instead of ending in a hard edge ([#545](https://github.com/RiffPress/RiffPress/issues/545)) ([1300947](https://github.com/RiffPress/RiffPress/commit/1300947578e1882316015e39b1f8f53d8e16a90e))
+
 ## [4.28.0](https://github.com/RiffPress/RiffPress/compare/v4.27.0...v4.28.0) (2026-10-23)
 
 

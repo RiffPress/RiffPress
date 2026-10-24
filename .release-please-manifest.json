@@ -1,5 +1,5 @@
 {
-	"plugins/riff": "4.28.0",
+	"plugins/riff": "4.29.0",
 	"plugins/riff-lyrics": "0.1.0",
 	"packages/wp-api-coverage": "0.1.0",
 	"packages/desktop": "0.4.0"
