@@ -936,9 +936,12 @@ test.describe( 'Player', () => {
 				shadow: getComputedStyle( line.querySelector( '.riff-hot' ) ).boxShadow,
 			};
 		} );
-		// The bloom is its own layer, faded at its end; a box-shadow on the stretched hot
-		// layer is what drew the square edge.
-		expect( glow.mask ).toMatch( /rgba\( *0, *0, *0, *0 *\)\)$/ );
+		// The bloom is its own layer, faded at both ends: out before the knob, and in from the
+		// line's start, so the line's clip shows no edge. A box-shadow on the stretched hot layer
+		// is what drew the square edge.
+		const [ end, start ] = glow.mask.split( /\),\s*linear-gradient/ );
+		expect( end ).toMatch( /rgba\( *0, *0, *0, *0 *\)$/ );
+		expect( start ).toMatch( /^\(90deg, rgba\( *0, *0, *0, *0 *\)/ );
 		expect( glow.shadow ).toBe( 'none' );
 		// Now Playing's seek line is plain white: no bloom tints it.
 		const np = await page.evaluate(
