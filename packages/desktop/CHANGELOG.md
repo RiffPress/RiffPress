@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.4.0...riff-desktop-v0.5.0) (2026-10-24)
+
+
+### Features
+
+* the player bar at its full desktop height, with a 4px line, and a rail that doesn't scroll sideways ([#548](https://github.com/RiffPress/RiffPress/issues/548)) ([02f9926](https://github.com/RiffPress/RiffPress/commit/02f99266b0d8433c0dba34f07c177960dd967ff1))
+
 ## [0.4.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.3.0...riff-desktop-v0.4.0) (2026-10-23)
 
 
