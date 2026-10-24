@@ -21,6 +21,7 @@ $GLOBALS['riff_surface'] = array(
 	'gql_types'  => array(),
 	'gql_fields' => array(),
 	'bindings'   => array(),
+	'abilities'  => array(),
 );
 
 function __( $text, $domain = null ) {
@@ -44,6 +45,17 @@ function register_block_bindings_source( $name, $args ) {
 	$GLOBALS['riff_surface']['bindings'][] = array( 'name' => $name, 'label' => $args['label'] ?? '', 'context' => $args['uses_context'] ?? array() );
 }
 
+function wp_register_ability_category( $slug, $args ) {}
+function wp_register_ability( $name, $args ) {
+	$GLOBALS['riff_surface']['abilities'][] = array(
+		'name'        => $name,
+		'label'       => $args['label'] ?? '',
+		'description' => $args['description'] ?? '',
+		'category'    => $args['category'] ?? '',
+		'input'       => $args['input_schema'] ?? array(),
+		'readonly'    => $args['meta']['annotations']['readonly'] ?? null,
+	);
+}
 require_once RIFF_DIR . 'src/interface-source.php';
 foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 	require_once $file;
@@ -56,6 +68,7 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 \Riff\Api::rest_field();
 \Riff\Api::graphql();
 \Riff\Bindings::source();
+\Riff\Abilities::abilities();
 
 $out = $GLOBALS['riff_surface'];
 foreach ( $out['routes'] as &$route ) {

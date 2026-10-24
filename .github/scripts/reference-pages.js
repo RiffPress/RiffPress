@@ -3,8 +3,8 @@
  * The PHP, REST API and CSS references under /developers/, each read from the code:
  *
  * - PHP: the PHP hooks, the Riff\Source interface and Sources::register() from their docblocks,
- *   the track schema from Tracks::schema(), the Block Bindings source from Bindings::keys(), and
- *   the Listen block from its block.json.
+ *   the track schema from Tracks::schema(), the Block Bindings source from Bindings::keys(), the
+ *   abilities from Abilities::list(), and the Listen block from its block.json.
  * - REST API: the routes, their arguments and response schemas, the REST field on media, and the
  *   WPGraphQL types, from the plugin's own registration code run by surface.php.
  * - CSS: every custom property in tokens.css (the riff-tokens stylesheet) with a docblock, which
@@ -156,6 +156,14 @@ function problems( data ) {
 	if ( ! data.surface.bindings?.length ) {
 		out.push( 'no Block Bindings source is registered' );
 	}
+	if ( ! data.surface.abilities?.length ) {
+		out.push( 'no abilities are registered' );
+	}
+	for ( const a of data.surface.abilities || [] ) {
+		if ( ! a.label || ! a.description ) {
+			out.push( `the ability ${ a.name } has no label or description` );
+		}
+	}
 	if ( ! data.properties.length ) {
 		out.push( 'tokens.css has no documented custom properties' );
 	}
@@ -248,12 +256,19 @@ function phpPage( data ) {
 	for ( const b of data.surface.bindings || [] ) {
 		body += `<section>${ hooks.h2( 'block-bindings', 'Block Bindings' ) }<p><code>${ esc( b.name ) }</code> (“${ esc( b.label ) }”) is a <a href="https://developer.wordpress.org/block-editor/reference-guides/block-api/block-bindings/">Block Bindings</a> source: a Heading or Paragraph bound to it shows a track's details, and an Image bound to it shows the cover, with no Riff block on the page. The binding's <code>key</code> picks the detail and <code>id</code> names the attachment; with no <code>id</code>, it is the post's first track. Every value is the track as <a href="#track-schema">the track schema</a> has it, after <a href="../hooks/riff_track/"><code>riff_track</code></a>, and a named track shows only where the media route would show it. In the editor the block shows that it is bound; the value is filled on the front end.</p>${ hooks.codeBlock( '<!-- wp:heading {"metadata":{"bindings":{"content":{"source":"riff/track","args":{"key":"title","id":123}}}}} -->\n<h2 class="wp-block-heading"></h2>\n<!-- /wp:heading -->\n\n<!-- wp:image {"metadata":{"bindings":{"url":{"source":"riff/track","args":{"key":"cover","id":123}}}}} -->\n<figure class="wp-block-image"><img src="" alt=""/></figure>\n<!-- /wp:image -->' ) }${ table( [ 'Key', 'Shows' ], Object.entries( b.keys ).map( ( [ k, d ] ) => `<tr><td><code>${ esc( k ) }</code></td><td>${ inline( d ) }</td></tr>` ) ) }</section>\n`;
 	}
+	if ( data.surface.abilities?.length ) {
+		const rows = data.surface.abilities.map( ( a ) => {
+			const args = Object.entries( a.input?.properties || {} ).map( ( [ k, v ] ) => `<code>${ esc( k ) }</code>${ ( a.input.required || [] ).includes( k ) ? ' (required)' : '' }: ${ inline( v.description || '' ) }` ).join( '<br>' );
+			return `<tr><td><code>${ esc( a.name ) }</code></td><td>${ inline( a.description ) }</td><td>${ args || '–' }</td><td>${ a.readonly ? 'Read only' : 'Writes' }</td></tr>`;
+		} );
+		body += `<section>${ hooks.h2( 'abilities', 'Abilities' ) }<p>Through the <a href="https://developer.wordpress.org/apis/abilities-api/">Abilities API</a>, AI tools and other plugins list the library and keep a listener's likes and playlists. Each ability runs its <a href="../rest/#routes"><code>riff/v1</code> route</a> as a REST request, so it answers what the route answers and is allowed what the route allows; the ones about likes, history and playlists need a signed-in user. Nothing plays through an ability: playback happens in a browser.</p>${ hooks.codeBlock( "$albums = wp_get_ability( 'riff/albums' )->execute( array( 'search' => 'Compositions' ) );" ) }${ table( [ 'Ability', 'What it does', 'Input', '' ], rows ) }</section>\n`;
+	}
 	body += `<section>${ hooks.h2( 'the-listen-block', 'The Listen block' ) }<p><code>${ esc( data.block.name ) }</code>: ${ inline( data.block.description ) } One per page. It supports ${ supports.map( ( s ) => `<code>${ esc( s ) }</code>` ).join( ', ' ) }.</p>${ hooks.codeBlock( `<!-- wp:${ data.block.name } {"align":"full"} /-->` ) }<p>Anywhere blocks are not an option, the <code>[riff]</code> shortcode does the same.</p></section>\n`;
 	body += member( data.shortcode, '[riff]' );
 
 	return referencePage( {
 		title: 'PHP | RiffPress',
-		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema, the Block Bindings source and the Listen block.',
+		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema, the Block Bindings source, the abilities and the Listen block.',
 		url: 'developers/php/',
 		current: 'php',
 		trail: [ [ 'PHP' ] ],
@@ -263,6 +278,7 @@ function phpPage( data ) {
 			[ 'sources', 'Sources', [ [ 'the-source-interface', 'The Source interface' ] ] ],
 			[ 'track-schema', 'The track schema' ],
 			[ 'block-bindings', 'Block Bindings' ],
+			[ 'abilities', 'Abilities' ],
 			[ 'the-listen-block', 'The Listen block' ],
 		],
 		body,
