@@ -237,7 +237,7 @@ test( 'the landing page takes its own address from the Pages build', () => {
 
 test( 'every human-facing link names the same landing page', () => {
 	const landing = [
-		[ 'README.md', /href="(https:\/\/[^"]+)">Website/ ],
+		[ 'README.md', /href="(https:\/\/[^"]+)">riffpress\.com</ ],
 		[ 'plugins/riff/riff.php', /Plugin URI: (\S+)/ ],
 		[ 'composer.json', /"homepage": "([^"]+)"/ ],
 		[ 'package.json', /"homepage": "([^"]+)"/ ],
