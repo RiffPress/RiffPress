@@ -2523,37 +2523,23 @@ function start() {
 		write( localStorage, VOLUME, String( audio.volume ) );
 	} );
 
-	// ---- The single-key shortcuts, which the listener can turn off with a control of the
-	// player's own: in the bar on a wide screen, under the title in Now Playing on a phone. The
-	// choice is remembered on this device as the volume is. Shift+N, Shift+P and Escape stay on: a
-	// key with a modifier is what WCAG 2.1.4 allows, and Escape closes Now Playing as any dialog's.
+	// ---- The single-key shortcuts, which the listener can turn off with a switch of the
+	// player's own at the top of Now Playing, on every width: a setting, so it sits out of the
+	// transport. The choice is remembered on this device as the volume is. Shift+N, Shift+P and
+	// Escape stay on: a key with a modifier is what WCAG 2.1.4 allows, and Escape closes Now
+	// Playing as any dialog's.
 	let shortcutsOn = read( localStorage, SHORTCUTS ) !== 'off';
-	const KEYBOARD =
-		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>';
-	own.controls.add( ( controls ) => [
-		...controls,
-		{
-			id: 'shortcuts',
-			label: shortcutsOn
-				? __( 'Keyboard shortcuts on', 'riff' )
-				: __( 'Keyboard shortcuts off', 'riff' ),
-			icon: KEYBOARD,
-			pressed: shortcutsOn,
-			run: () => {
-				shortcutsOn = ! shortcutsOn;
-				if ( shortcutsOn ) {
-					drop( localStorage, SHORTCUTS );
-				} else {
-					write( localStorage, SHORTCUTS, 'off' );
-				}
-				toast(
-					shortcutsOn
-						? __( 'Keyboard shortcuts on', 'riff' )
-						: __( 'Keyboard shortcuts off', 'riff' )
-				);
-			},
-		},
-	] );
+	const shortcutsLabel = () =>
+		shortcutsOn
+			? __( 'Keyboard shortcuts on', 'riff' )
+			: __( 'Keyboard shortcuts off', 'riff' );
+	function paintShortcuts() {
+		for ( const button of $$( '[data-riff-action="shortcuts"]' ) ) {
+			button.setAttribute( 'aria-pressed', String( shortcutsOn ) );
+			button.setAttribute( 'aria-label', shortcutsLabel() );
+		}
+	}
+	paintShortcuts();
 
 	// ---- Buttons.
 	root.addEventListener( 'click', ( e ) => {
@@ -2581,6 +2567,15 @@ function start() {
 			}
 		} else if ( action === 'close' ) {
 			close();
+		} else if ( action === 'shortcuts' ) {
+			shortcutsOn = ! shortcutsOn;
+			if ( shortcutsOn ) {
+				drop( localStorage, SHORTCUTS );
+			} else {
+				write( localStorage, SHORTCUTS, 'off' );
+			}
+			paintShortcuts();
+			toast( shortcutsLabel() );
 		} else if ( action === 'queue' ) {
 			sheet( { none: 'half', half: 'full', full: 'none' }[ sheetState ] );
 		} else if ( action === 'share' ) {

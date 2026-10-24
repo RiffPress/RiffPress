@@ -72,7 +72,11 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" role="radio" data-riff-mode="song" aria-checked="true"><?php echo Player::icon( 'song' ); ?><span><?php esc_html_e( 'Song', 'riff' ); ?></span></button>
 				<button type="button" role="radio" data-riff-mode="video" aria-checked="false"><?php echo Player::icon( 'video' ); ?><span><?php esc_html_e( 'Video', 'riff' ); ?></span></button>
 			</div>
-			<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
+			<span class="riff-np-end">
+				<?php // The single-key shortcuts switch, the player's own setting: at the top of Now Playing on every width, out of the transport. ?>
+				<button type="button" class="riff-btn" data-riff-action="shortcuts" aria-label="<?php esc_attr_e( 'Keyboard shortcuts on', 'riff' ); ?>" aria-pressed="true"><?php echo Player::icon( 'keyboard' ); ?></button>
+				<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
+			</span>
 		</header>
 
 		<?php /* With the queue fully open on a phone, the player shrinks to this row above it. */ ?>
