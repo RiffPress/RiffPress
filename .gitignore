@@ -51,3 +51,6 @@ packages/fixtures/*/cover-[0-9]*x[0-9]*.png
 # The old fixture mapping. On some machines a personal music library still lives here; it is never
 # part of the repository.
 /tests/
+
+# The directory listing's banner, icons and screenshots are made by npm run docs:wporg and committed.
+!/.wordpress-org/*.png
