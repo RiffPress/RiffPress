@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.28.0
+Stable tag: 4.29.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.29.0 =
+* The player bar at its full desktop height, with a 4px line, and a rail that doesn't scroll sideways.
+* Fixed: the seek line's glow fades in from the start of the line, instead of ending in a hard edge.
+
 = 4.28.0 =
 * Liked songs opens as a playlist, and Your Library sorts from a menu.
 
@@ -132,14 +136,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 4.25.0 =
 * Listeners can install the app, offered from their second visit.
 * Now Playing in the desktop app, full screen as Tidal's.
-
-= 4.24.0 =
-* Riff for the desktop, an Electron window on a site's Listen page.
-* Denser cards, bold titles and a round Play in the desktop layout.
-* The desktop layout for the Listen app on any computer, in a browser or installed.
-* The desktop app in the desktop layout, with a Mac icon on Apple's grid.
-* Your Library in the sidebar, and a fuller album header.
-* Fixed: a protected file on a password-protected post needs the password.
-* Fixed: adding music starts from the Media Library, not from writing a post.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
