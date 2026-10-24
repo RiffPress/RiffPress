@@ -4699,3 +4699,73 @@ html.riff-desktop-preview .riff-standalone .riff-app-titlebar::before {
 		radial-gradient(circle 6px at 26px 6px, #febc2e 98%, transparent) no-repeat,
 		radial-gradient(circle 6px at 46px 6px, #28c840 98%, transparent) no-repeat;
 }
+
+/* Forced colours (Windows contrast themes): the browser replaces backgrounds
+   with its own and drops box shadows, which is how the seek line, a selected
+   tab, a checked mode and the current track are drawn. Each gets the theme's
+   own colours instead: the line in GrayText played through in Highlight, and
+   what is selected or current in Highlight, as the system draws a selection.
+   Outlines and borders survive as they are. */
+@media (forced-colors: active) {
+
+	.riff-line {
+		forced-color-adjust: none;
+		background: GrayText;
+	}
+
+	.riff-line i {
+		background: Highlight;
+	}
+
+	.riff-line::before,
+	.riff-bar-seek .riff-line::after,
+	.riff-wire,
+	.riff-hot {
+		display: none;
+	}
+
+	#riff .riff-tab[aria-selected="true"] {
+		border-bottom: 2px solid Highlight;
+	}
+
+	#riff .riff-modes button[aria-checked="true"] {
+		outline: 2px solid Highlight;
+		outline-offset: -2px;
+	}
+
+	#riff .riff-queue-list button[aria-current],
+	.riff-row[data-current],
+	.riff-app .riff-app-tab[aria-current="page"],
+	.riff-app .riff-chip-link[aria-current="true"],
+	.riff-standalone .riff-app .riff-app-library-chip[aria-pressed="true"],
+	.riff-standalone .riff-app .riff-app-item[aria-current="page"] {
+		forced-color-adjust: none;
+
+		/* Above every layout's own shade of current, the desktop app's
+		   included: in a contrast theme the theme's colours win. */
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+
+	/* What is inside takes the selection's text colour, not Riff's own
+	   greys, which would not be the theme's. */
+	#riff .riff-queue-list button[aria-current] *,
+	.riff-row[data-current] *,
+	.riff-app .riff-app-tab[aria-current="page"] *,
+	.riff-standalone .riff-app .riff-app-item[aria-current="page"] * {
+		color: inherit !important;
+	}
+
+	/* On and off, told apart by colour alone. */
+	#riff .riff-btn[aria-pressed="true"],
+	.riff-app .riff-sort-link[aria-current="true"] {
+		forced-color-adjust: none;
+		color: Highlight !important;
+	}
+
+	.riff-app .riff-app-account-menu a:focus-visible,
+	.riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
+		outline: 2px solid Highlight;
+		outline-offset: -2px;
+	}
+}

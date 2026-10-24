@@ -34,6 +34,19 @@ const FILES = [
 let postUrl;
 let playlistUrl;
 
+// What the theme's system colours resolve to inside an element, for its styles to be compared with:
+// they follow the color-scheme there, which is dark in the player and the page's own outside it.
+const systemColours = ( locator ) =>
+	locator.evaluate( ( el ) => {
+		const probe = document.createElement( 'div' );
+		probe.style.cssText = 'forced-color-adjust: none; background: Highlight; color: GrayText';
+		el.append( probe );
+		const style = getComputedStyle( probe );
+		const colours = { highlight: style.backgroundColor, gray: style.color };
+		probe.remove();
+		return colours;
+	} );
+
 const made = own();
 
 test.beforeAll( async ( { requestUtils } ) => {
@@ -926,6 +939,30 @@ test.describe( 'Player', () => {
 		);
 		await page.keyboard.press( 'ArrowLeft' );
 		expect( ( await audioState( page ) ).time ).toBeCloseTo( before, 1 );
+	} );
+
+	test( 'in a contrast theme the seek line, the current track and the open tab still show', async ( { page } ) => {
+		await page.emulateMedia( { forcedColors: 'active' } );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect( page.locator( '.riff-row' ).nth( 1 ) ).toHaveAttribute( 'data-current', '' );
+		// The line is a background, which a contrast theme would otherwise paint over.
+		const line = page.locator( '.riff-bar .riff-line' );
+		const player = await systemColours( page.locator( '.riff-bar' ) );
+		await expect( line ).toHaveCSS( 'background-color', player.gray );
+		await expect( line.locator( '> i:first-child' ) ).toHaveCSS( 'background-color', player.highlight );
+		await expect( line.locator( '.riff-hot' ) ).toBeHidden();
+		// What plays is marked as the system marks a selection, not by a shade it would drop.
+		const row = page.locator( '.riff-row' ).nth( 1 );
+		const post = await systemColours( row.locator( '..' ) );
+		await expect( row ).toHaveCSS( 'background-color', post.highlight );
+		await page.evaluate( () => window.riff.open() );
+		// On a phone, the tabs are on the Up next sheet, pulled up from its handle.
+		if ( await page.locator( '.riff-peek' ).isVisible() ) {
+			await page.locator( '.riff-peek' ).click();
+		}
+		const tab = page.locator( '#riff .riff-tab[aria-selected="true"]' ).locator( 'visible=true' ).first();
+		await expect( tab ).toHaveCSS( 'border-bottom-style', 'solid' );
+		await expect( tab ).toHaveCSS( 'border-bottom-width', '2px' );
 	} );
 
 	test( 'a reload picks up paused where it left off', async ( { page } ) => {
