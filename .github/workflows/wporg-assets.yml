@@ -1,0 +1,42 @@
+name: WordPress.org assets
+
+# The listing's banner, icon and screenshots in .wordpress-org/, and plugins/riff/readme.txt,
+# go to the plugin's WordPress.org SVN repository on their own when they change on main, between
+# releases, so a new screenshot or a readme fix does not wait for the next version. Only those
+# files are sent: the code goes out with a release (release-please.yml). It stays off until the
+# repository variable WPORG_DEPLOY is "true", as the release deploy does.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.wordpress-org/**'
+      - 'plugins/riff/readme.txt'
+      - '.github/workflows/wporg-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assets:
+    name: Readme and assets to SVN
+    if: ${{ vars.WPORG_DEPLOY == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: wordpress-org
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The action reads the readme from the repository root; Riff's lives with its plugin.
+      - name: Put the readme where the action looks
+        run: cp plugins/riff/readme.txt readme.txt
+      - name: Update the readme and assets on WordPress.org
+        uses: 10up/action-wordpress-plugin-asset-update@2480306f6f693672726d08b5917ea114cb2825f7 # 2.2.0
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: riff
+          ASSETS_DIR: .wordpress-org
+          README_NAME: readme.txt
+          IGNORE_OTHER_FILES: 'true'
