@@ -139,7 +139,7 @@ final class App {
 			case 'album':
 			case 'artist':
 				$term = get_term( $browse['id'], 'album' === $browse['view'] ? Catalog::ALBUM : Catalog::ARTIST );
-				return $term instanceof WP_Term ? $term->name : '';
+				return $term instanceof WP_Term ? Catalog::name( $term->name ) : '';
 			default:
 				/* translators: %s: the words searched for. */
 				return sprintf( __( 'Results for “%s”', 'riff' ), $browse['search'] );
