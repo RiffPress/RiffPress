@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v0.2.0...riff-lyrics-v0.3.0) (2026-10-24)
+
+
+### Features
+
+* **riff-lyrics:** timed lyrics follow the music, and a tap on a line seeks to it ([#595](https://github.com/RiffPress/RiffPress/issues/595)) ([544f556](https://github.com/RiffPress/RiffPress/commit/544f556576bf43b60ae3e591a9438166b7c01d49))
+
 ## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v0.1.0...riff-lyrics-v0.2.0) (2026-10-24)
 
 
