@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v0.1.0...riff-lyrics-v0.2.0) (2026-10-24)
+
+
+### Features
+
+* Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on ([#577](https://github.com/RiffPress/RiffPress/issues/577)) ([04799d5](https://github.com/RiffPress/RiffPress/commit/04799d5e2d918bbb76f670c01d0b11fb59b78212))
+
+
+### Bug Fixes
+
+* signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account ([#572](https://github.com/RiffPress/RiffPress/issues/572)) ([3e5d5ba](https://github.com/RiffPress/RiffPress/commit/3e5d5ba7ec405f317b100388f2fe6601de7d4384))
+
 ## 0.1.0 (2026-10-20)
 
 
