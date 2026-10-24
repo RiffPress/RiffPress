@@ -36,6 +36,11 @@ plugins/riff/languages/
 /site/developers/php/
 /site/developers/rest/
 /site/developers/css/
+# Built by npm run docs:web, and by the Pages deploy, for the same reason: each page links the lines it
+# quotes. Only its data, its stylesheet and the sitemap are committed.
+/site/web/*
+!/site/web/web.json
+!/site/web/web.css
 # Written by .github/scripts/detect-public-surface.js when run locally.
 comment.md
 

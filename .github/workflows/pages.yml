@@ -88,6 +88,7 @@ jobs:
           node .github/scripts/hooks-reference.js
           node .github/scripts/js-reference.js
           node .github/scripts/reference-pages.js
+          node .github/scripts/web-pages.js
           cp -R site/. out/
           cp build/riff.zip out/
           cp packages/fixtures/seed.php out/demo/
