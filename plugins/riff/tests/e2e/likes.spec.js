@@ -471,7 +471,9 @@ test( 'the standalone sidebar lists Your Library with artwork, and its chips nar
 	await expect( page ).toHaveURL( new RegExp( `riff_album=${ album }` ) );
 	await expect( library.locator( '.riff-app-item[aria-current="page"]' ) ).toHaveCount( 1 );
 	await expect( rows ).toHaveCount( 1 );
-	await library.locator( '.riff-app-library-chip', { hasText: 'Albums' } ).click();
+	// It is a button to a screen reader, so Space presses it as Enter does.
+	await library.locator( '.riff-app-library-chip', { hasText: 'Albums' } ).focus();
+	await page.keyboard.press( 'Space' );
 	await expect( rows ).toHaveCount( 3 );
 	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 
