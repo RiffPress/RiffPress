@@ -968,9 +968,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	touch-action: none;
 }
 
-#riff .riff-np-head [data-riff-action="cast"] {
+/* The right end: the shortcuts switch and Cast. */
+.riff-np-end {
 	grid-column: 3;
 	justify-self: end;
+	display: flex;
+	align-items: center;
+	gap: 4px;
 }
 
 /* Song and Video: two icons on a phone, two words on a wide screen. */

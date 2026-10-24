@@ -36,8 +36,7 @@ On a keyboard:
 | Escape | Close Now Playing |
 
 Nothing fires while you type in a field. A listener can turn the single-key shortcuts off with the
-keyboard control, in the bar on a wide screen and under the title in Now Playing on a phone, kept
-in the browser as the volume is; a site can turn them off for everyone with the `riff.shortcuts`
+keyboard switch at the top of Now Playing, beside Cast, kept in the browser as the volume is; a site can turn them off for everyone with the `riff.shortcuts`
 filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
 
 ## Areas
@@ -49,8 +48,8 @@ them as any feature would: the quality pill is a badge, and the seek line's glow
 listener.
 
 They are internal for now, on the object Riff hands its own Listen app, and not yet on
-`window.riff`: they become public once they have settled. Riff's own keyboard-shortcuts switch is
-a control. Each works as the track menu does, through `listen( name, fn )`:
+`window.riff`: they become public once they have settled. Each works as the track menu does,
+through `listen( name, fn )`:
 
 | Name | `fn` is called with | and returns |
 | --- | --- | --- |

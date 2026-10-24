@@ -757,27 +757,21 @@ test.describe( 'Player', () => {
 
 	test( 'a listener can turn the single-key shortcuts off, and the choice stays', async ( {
 		page,
-		isMobile,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect
 			.poll( async () => ( await audioState( page ) ).time )
 			.toBeGreaterThan( 0.5 );
-		// In the bar on a wide screen; under the title in Now Playing on a phone.
-		if ( isMobile ) {
-			await page.locator( '.riff-bar-info' ).click();
-		}
-		const where = isMobile ? '.riff-np-extras' : '.riff-bar-end';
-		const control = page.locator( `${ where } [data-riff-control="shortcuts"]` );
+		// At the top of Now Playing, on every width.
+		await page.locator( '.riff-bar-info' ).click();
+		const control = page.locator( '.riff-np-head [data-riff-action="shortcuts"]' );
 		await expect( control ).toHaveAttribute( 'aria-pressed', 'true' );
 		await control.click();
 		await expect( control ).toHaveAttribute( 'aria-pressed', 'false' );
 		await expect( control ).toHaveAttribute( 'aria-label', 'Keyboard shortcuts off' );
-		if ( isMobile ) {
-			// Escape stays on: it closes Now Playing as any dialog's does.
-			await page.keyboard.press( 'Escape' );
-			await expect( page.locator( '.riff-np' ) ).toBeHidden();
-		}
+		// Escape stays on: it closes Now Playing as any dialog's does.
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
 		await page.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
 		const before = ( await audioState( page ) ).time;
 		await page.keyboard.press( 'k' );
@@ -795,15 +789,11 @@ test.describe( 'Player', () => {
 		// Kept on this device, as the volume is.
 		await page.reload();
 		await expect( page.locator( '.riff-bar' ) ).toBeVisible();
-		if ( isMobile ) {
-			await page.locator( '.riff-bar-info' ).click();
-		}
+		await page.locator( '.riff-bar-info' ).click();
 		await expect( control ).toHaveAttribute( 'aria-pressed', 'false' );
 		await control.click();
 		await expect( control ).toHaveAttribute( 'aria-pressed', 'true' );
-		if ( isMobile ) {
-			await page.keyboard.press( 'Escape' );
-		}
+		await page.keyboard.press( 'Escape' );
 		await page.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
 		await page.keyboard.press( 'k' );
 		await expect
