@@ -200,6 +200,26 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertSame( array_keys( $schema['properties'] ), array_keys( $track ) );
 	}
 
+	public function test_an_untitled_track_is_named_after_its_file(): void {
+		$id = self::factory()->attachment->create_upload_object( self::fixture( '02 - Underground [underground].mp3' ) );
+		wp_update_post(
+			array(
+				'ID'         => $id,
+				'post_title' => '',
+			)
+		);
+		$meta = (array) wp_get_attachment_metadata( $id );
+		unset( $meta['title'] );
+		wp_update_attachment_metadata( $id, $meta );
+
+		$this->assertSame( '', get_post_field( 'post_title', $id, 'raw' ), 'no title on the attachment' );
+		$this->assertStringStartsWith( '02-Underground-underground', Tracks::from_attachment( $id )['title'], 'the file\'s name, as the Media Library shows it' );
+
+		$meta['title'] = '   ';
+		wp_update_attachment_metadata( $id, $meta );
+		$this->assertStringStartsWith( '02-Underground-underground', Tracks::from_attachment( $id )['title'], 'a blank tag is no title either' );
+	}
+
 	public function test_a_title_in_another_script_is_not_mistaken_for_the_file_name(): void {
 		// A Cyrillic file name and a Cyrillic title that differ: with Latin-only comparison both collapse
 		// to nothing, look equal, and the tag's title overwrites what the author typed.
