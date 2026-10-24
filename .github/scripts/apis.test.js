@@ -67,10 +67,8 @@ const USES = {
 };
 
 function listed() {
-	// The list lives on the Built on the open web page, generated from site/web/web.json; the
-	// landing page links to it.
-	const html = read( 'site/web/index.html' );
-	return [ ...html.matchAll( /<li><a href="[a-z-]+\/">([^<]+)<\/a>/g ) ].map( ( m ) => m[ 1 ].trim() );
+	// The list is the Built on the open web page's, which is built from site/web/web.json.
+	return JSON.parse( read( 'site/web/web.json' ) ).map( ( e ) => e.name );
 }
 
 test( 'every API the open web page lists is used by the plugin', () => {
