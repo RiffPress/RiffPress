@@ -27,25 +27,10 @@
 }
 
 :root {
-
-	/**
-	 * The height of the player bar. The page keeps this much room at its end
-	 * so the bar never covers the last line.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-bar-h: 64px;
 	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
 	--riff-safe-b: env(safe-area-inset-bottom, 0px);
 	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
 	--riff-safe-t: env(safe-area-inset-top, 0px);
-}
-
-@media (min-width: 900px) {
-
-	:root {
-		--riff-bar-h: 72px;
-	}
 }
 
 /* While Now Playing is open the page under it stays still, as in the apps:
@@ -305,67 +290,6 @@ div.riff-row-locked {
 /* ---- The player. Theme styles stop at #riff. */
 
 #riff {
-
-	/**
-	 * The background of Now Playing.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-bg: #030303;
-
-	/**
-	 * The bar, the Up next sheet, tooltips, and the Song and Video switch.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-surface: #212121;
-
-	/**
-	 * The player's text and icons, and the played part of the seek bar in Now
-	 * Playing.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-fg: #fff;
-
-	/**
-	 * Secondary text, such as the artist, the times and the format, and
-	 * toggles that are off.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-fg-2: rgb(255 255 255 / 0.7);
-
-	/**
-	 * The unselected side of the Song and Video switch.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-fg-3: rgb(255 255 255 / 0.5);
-
-	/**
-	 * Dividers and the unplayed part of the seek bar.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-line: rgb(255 255 255 / 0.1);
-
-	/**
-	 * The wash behind a control under the pointer, and behind chips, the
-	 * current Up next item, and artwork while it loads.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-hover: rgb(255 255 255 / 0.1);
-
-	/**
-	 * The played part of the seek bar in the bar, its knob, the format label,
-	 * and the glow behind the cover. A theme sets it in theme.json under
-	 * `settings.custom.riff.accent`, or in its own CSS.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-accent: #ffb020;
 	--riff-tint: #303030;
 	--riff-p: 0;
 	position: relative;
@@ -1984,85 +1908,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-app {
 	font-weight: 400;
 	letter-spacing: 0;
-
-	/**
-	 * The Listen block's background.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-bg: #f6f6f6;
-
-	/**
-	 * The album's track list and the now-playing card in the Listen block.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-surface: #fff;
-
-	/**
-	 * The Listen block's text.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-ink: #1e1e1e;
-
-	/**
-	 * Secondary text in the Listen block.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-ink-2: #656a71;
-
-	/**
-	 * Borders in the Listen block, and the space artwork fills while it loads.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-line: #d9d9d9;
-
-	/**
-	 * Links, play buttons, focus rings, and the title of the card under the
-	 * pointer in the Listen block.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-accent: #9a5b00;
-
-	/**
-	 * The accent under the pointer or in focus.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-accent-deep: #7a4700;
-
-	/**
-	 * The background of the row playing.
-	 *
-	 * @since 4.0.0
-	 */
-	--riff-app-accent-tint: #fff4dd;
-
-	/**
-	 * Text and icons on a filled button: the accent, or the text colour under
-	 * the pointer.
-	 *
-	 * @since 4.14.0
-	 */
-	--riff-app-on-accent: #fff;
-
-	/**
-	 * The Listen block's text font.
-	 *
-	 * @since 4.14.0
-	 */
-	--riff-app-font: "Riff Inter", inter, -apple-system, blinkmacsystemfont, sans-serif;
-
-	/**
-	 * The Listen block's headings: the library's title and each album's.
-	 *
-	 * @since 4.14.0
-	 */
-	--riff-app-heading-font: "Riff Garamond", "EB Garamond", garamond, georgia, serif;
 
 	box-sizing: border-box;
 	padding: clamp(40px, 5vw, 60px) clamp(20px, 5vw, 80px) clamp(60px, 6vw, 100px);

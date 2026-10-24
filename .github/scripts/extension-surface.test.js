@@ -51,3 +51,15 @@ test( 'its PHP reaches no Riff class but its own', () => {
 		.filter( ( name ) => ! name.startsWith( 'Lyrics' ) );
 	assert.deepEqual( reached, [], 'use hooks and REST, not Riff\'s classes' );
 } );
+
+test( 'it sets none of Riff\'s custom properties, and uses only the public ones from riff-tokens', () => {
+	const code = PHP + '\n' + SCRIPT + '\n' + files( DIR, '.css' ).map( read ).join( '\n' );
+	const set = [ ...code.matchAll( /(--riff-[\w-]+)\s*:/g ) ].map( ( m ) => m[ 1 ] );
+	assert.deepEqual( set, [], 'a value of its own would drift from Riff\'s; use the token' );
+	const tokens = read( path.join( ROOT, 'plugins', 'riff', 'assets', 'tokens.css' ) );
+	const used = [ ...new Set( [ ...code.matchAll( /var\(\s*(--riff-[\w-]+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
+	for ( const name of used ) {
+		assert.match( tokens, new RegExp( `^\\s*${ name }\\s*:`, 'm' ), `${ name } is not a public token in tokens.css` );
+	}
+	assert.match( PHP, /array\(\s*'riff-tokens'\s*\)/, 'its stylesheet lists riff-tokens as a dependency' );
+} );

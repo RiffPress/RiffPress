@@ -54,6 +54,14 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'assets/riff.css' ), wp_styles()->registered['riff']->ver );
 	}
 
+	public function test_the_design_tokens_are_their_own_stylesheet_that_riff_depends_on(): void {
+		$this->go_to( home_url( '/' ) );
+		Player::enqueue();
+		$this->assertArrayHasKey( 'riff-tokens', wp_styles()->registered, 'extensions can list riff-tokens as a dependency' );
+		$this->assertContains( 'riff-tokens', wp_styles()->registered['riff']->deps );
+		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'assets/tokens.css' ), wp_styles()->registered['riff-tokens']->ver );
+	}
+
 	public function test_icons_are_inline_svg_and_an_unknown_name_is_empty(): void {
 		$this->assertStringStartsWith( '<svg ', Player::icon( 'play' ) );
 		$this->assertStringContainsString( 'aria-hidden="true"', Player::icon( 'play' ) );

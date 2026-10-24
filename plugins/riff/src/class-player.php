@@ -54,7 +54,10 @@ final class Player {
 		if ( ! self::enabled() ) {
 			return;
 		}
-		wp_enqueue_style( 'riff', RIFF_URL . 'assets/riff.css', array(), self::version( 'assets/riff.css' ) );
+		// The design tokens are their own stylesheet, riff-tokens, which Riff's extensions list
+		// as a dependency rather than copying values.
+		wp_register_style( 'riff-tokens', RIFF_URL . 'assets/tokens.css', array(), self::version( 'assets/tokens.css' ) );
+		wp_enqueue_style( 'riff', RIFF_URL . 'assets/riff.css', array( 'riff-tokens' ), self::version( 'assets/riff.css' ) );
 		// wp.hooks is how a plugin's script listens to the player (see docs/javascript.md); the
 		// module reads it from the window when it is there.
 		wp_enqueue_script( 'wp-hooks' );
