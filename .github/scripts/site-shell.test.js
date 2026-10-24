@@ -16,9 +16,9 @@ test( 'the Developers page has the Developers bar, marked as the page', () => {
 } );
 
 test( 'the hand-written pages use the shared breadcrumbs', () => {
-	assert.ok( read( 'site/developers/index.html' ).includes( crumbs( [ [ 'RiffPress', '../' ], [ 'Developers' ] ] ) ) );
-	assert.ok( read( 'site/add-music/index.html' ).includes( crumbs( [ [ 'RiffPress', '../' ], [ 'Add your music' ] ] ) ) );
-	assert.ok( read( 'site/download/index.html' ).includes( crumbs( [ [ 'RiffPress', '../' ], [ 'Get Riff' ] ] ) ) );
+	assert.ok( read( 'site/developers/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Developers' ] ] ) ) );
+	assert.ok( read( 'site/add-music/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Add your music' ] ] ) ) );
+	assert.ok( read( 'site/download/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Get Riff' ] ] ) ) );
 	for ( const file of [ 'site/developers/index.html', 'site/add-music/index.html', 'site/download/index.html' ] ) {
 		assert.doesNotMatch( read( file ), /class="crumb"/, `${ file } still has the old breadcrumb` );
 	}

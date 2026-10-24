@@ -107,8 +107,9 @@ a:hover {
 	top: 12px;
 }
 
-/* the global bar: light, on the page's own ground, with Riff's tile at
-   full weight; it scrolls away and the section bar under it stays */
+/* the global bar: light, on the page's own ground, with the wordmark
+   alone, Riff and nothing more; it scrolls away and the section bar
+   under it stays */
 .nav {
 	position: relative;
 	z-index: 10;
@@ -139,8 +140,8 @@ a:hover {
 .mark img {
 	flex: none;
 	display: block;
-	width: 44px;
-	height: 44px;
+	width: auto;
+	height: 30px;
 }
 
 /* the app's own tile over Get Riff, as a store leads with an app's icon */
