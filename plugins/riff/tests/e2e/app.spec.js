@@ -30,6 +30,19 @@ let postId;
 let extraId;
 let audioMedia;
 
+// What the theme's system colours resolve to inside an element, for its styles to be compared with:
+// they follow the color-scheme there, which is dark in the player and the page's own outside it.
+const systemColours = ( locator ) =>
+	locator.evaluate( ( el ) => {
+		const probe = document.createElement( 'div' );
+		probe.style.cssText = 'forced-color-adjust: none; background: Highlight; color: GrayText';
+		el.append( probe );
+		const style = getComputedStyle( probe );
+		const colours = { highlight: style.backgroundColor, gray: style.color };
+		probe.remove();
+		return colours;
+	} );
+
 const made = own();
 
 test.beforeAll( async ( { requestUtils } ) => {
@@ -838,6 +851,25 @@ test.describe( 'Standalone', () => {
 		await page.keyboard.press( 'Escape' );
 		await expect( page.locator( '.riff-app-account' ) ).not.toHaveAttribute( 'open' );
 		await expect( page.locator( '.riff-app-account summary' ) ).toBeFocused();
+	} );
+
+	test( 'in a contrast theme the current view and a focused account link still show', async ( {
+		page,
+	} ) => {
+		await page.emulateMedia( { forcedColors: 'active' } );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=albums' );
+		const current = page.locator( '.riff-app-tab[aria-current="page"]' ).locator( 'visible=true' ).first();
+		const system = await systemColours( current.locator( '..' ) );
+		await expect( current ).toHaveCSS( 'background-color', system.highlight );
+		// The menu's links show focus with a tint and no ring, which a contrast theme drops.
+		const summary = page.locator( '.riff-app-account summary' );
+		await summary.focus();
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.press( 'Tab' );
+		const link = page.locator( '.riff-app-account-menu a' ).first();
+		await expect( link ).toBeFocused();
+		await expect( link ).toHaveCSS( 'outline-style', 'solid' );
 	} );
 
 	test( 'app/ is the player on its own: no theme, installable, and browsing stays inside it', async ( {
