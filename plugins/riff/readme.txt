@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.29.0
+Stable tag: 4.30.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,16 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.30.0 =
+* The player's badges, controls and meter are areas Riff's own features fill.
+* Fixed: dismissing the install card on a phone leaves the focus on a control that shows.
+* Fixed: in a contrast theme the seek line, the current track and what is selected keep showing.
+* Fixed: screen readers hear the track change, queue edits, notices and each view's title.
+* Fixed: the install card is in Riff's accent, as Liked songs is, not blue.
+* Fixed: the keyboard's focus stays visible and in place as Up next and the install card change.
+* Fixed: the Listen block no longer runs wider than its page, from room borrowed for a focus ring.
+* Fixed: the seek line, the playing row, Up next and Now Playing tell a screen reader what they are.
+
 = 4.29.0 =
 * The player bar at its full desktop height, with a 4px line, and a rail that doesn't scroll sideways.
 * Fixed: the seek line's glow fades in from the start of the line, instead of ending in a hard edge.
@@ -132,9 +142,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 4.26.0 =
 * Riff's own mark, a tuning fork drawn from EB Garamond's f, in amber, with no blue anywhere.
-
-= 4.25.0 =
-* Listeners can install the app, offered from their second visit.
-* Now Playing in the desktop app, full screen as Tidal's.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
