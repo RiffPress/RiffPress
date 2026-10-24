@@ -53,7 +53,7 @@ function head( title, description, url, depth, css, section = '' ) {
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><img src="${ up }icons/favicon.svg" alt="" width="44" height="44">RiffPress</a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
+<div class="nav"><div class="wrap"><a class="mark" href="${ up }"><img src="${ up }brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
 `;
 }
 
@@ -114,7 +114,7 @@ function crumbs( trail, extra = '' ) {
  * @param {string} page.description Meta description.
  * @param {string} page.url         Path from the site root, ending in a slash.
  * @param {string} page.current     The bar entry it sits under.
- * @param {Array}  page.trail       Breadcrumbs after RiffPress and Developers, as [ label, href ].
+ * @param {Array}  page.trail       Breadcrumbs after Riff and Developers, as [ label, href ].
  * @param {string} page.h1          The heading's HTML, with its attributes.
  * @param {Array}  page.toc         [ id, label, children ] entries for "In this article".
  * @param {string} page.body        The article.
@@ -127,7 +127,7 @@ function referencePage( { title, description, url, current, trail, h1, toc, body
 	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ esc( label ) }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
 	let html = head( title, description, url, depth, `${ up }web/web.css`, 'developers' );
 	html += localNav( up, current );
-	html += crumbs( [ [ 'RiffPress', up ], [ 'Developers', `${ up }developers/` ], ...trail ], search );
+	html += crumbs( [ [ 'Riff', up ], [ 'Developers', `${ up }developers/` ], ...trail ], search );
 	html += `<main id="main" class="wrap reference">
 ${ h1 }
 <div class="with-toc">

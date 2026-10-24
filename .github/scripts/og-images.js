@@ -41,7 +41,7 @@ body { width: 1200px; height: 630px; overflow: hidden; position: relative; backg
 h1 { position: absolute; left: 80px; top: 230px; width: 720px; margin: 0; font-family: "EB Garamond", serif; font-weight: 400; font-size: 92px; line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
 p { position: absolute; left: 80px; bottom: 80px; width: 640px; margin: 0; font-size: 28px; line-height: 1.45; color: #979aa1; text-wrap: pretty; }
 </style></head><body>
-<div class="mark"><img src="${ file( 'icons/favicon.svg' ) }" alt="">RiffPress</div>
+<div class="mark"><img src="${ file( 'brand/wordmark-ink.svg' ) }" alt="Riff"></div>
 <h1>${ esc( card.title ) }</h1>
 <p>${ esc( card.line ) }</p>
 </body></html>`;

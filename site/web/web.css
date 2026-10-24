@@ -104,8 +104,8 @@ code {
 	top: 12px;
 }
 
-/* the global bar: light, on the page's own ground, with Riff's tile at
-   full weight; the footer stays dark, as wordpress.org's is */
+/* the global bar: light, on the page's own ground, with the wordmark
+   alone, Riff and nothing more; the footer stays dark, as wordpress.org's is */
 .nav {
 	position: relative;
 	z-index: 10;
@@ -136,8 +136,8 @@ code {
 .mark svg {
 	flex: none;
 	display: block;
-	width: 44px;
-	height: 44px;
+	width: auto;
+	height: 30px;
 }
 
 .nav nav {
