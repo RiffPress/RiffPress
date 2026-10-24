@@ -38,12 +38,10 @@ html, body { margin: 0; }
 body { width: 1200px; height: 630px; overflow: hidden; position: relative; background: #121212; color: #fff; font-family: Inter, sans-serif; }
 .mark { position: absolute; left: 80px; top: 72px; display: flex; align-items: center; gap: 16px; font-size: 30px; font-weight: 600; letter-spacing: -0.01em; }
 .mark img { width: 52px; height: 52px; }
-.fork { position: absolute; right: -150px; bottom: -190px; width: 680px; height: 680px; }
 h1 { position: absolute; left: 80px; top: 230px; width: 720px; margin: 0; font-family: "EB Garamond", serif; font-weight: 400; font-size: 92px; line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
 p { position: absolute; left: 80px; bottom: 80px; width: 640px; margin: 0; font-size: 28px; line-height: 1.45; color: #979aa1; text-wrap: pretty; }
 </style></head><body>
 <div class="mark"><img src="${ file( 'icons/favicon.svg' ) }" alt="">RiffPress</div>
-<img class="fork" src="${ file( 'brand/ff-ghost-dark.svg' ) }" alt="">
 <h1>${ esc( card.title ) }</h1>
 <p>${ esc( card.line ) }</p>
 </body></html>`;

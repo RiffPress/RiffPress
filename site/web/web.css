@@ -214,31 +214,6 @@ code {
 	background: url(../brand/dots.svg) top center repeat-x;
 }
 
-.marg {
-	position: fixed;
-	right: -200px;
-	top: 140px;
-	width: 400px;
-	height: 400px;
-	pointer-events: none;
-	user-select: none;
-	display: none;
-	z-index: 0;
-}
-
-.marg img {
-	display: block;
-	width: 100%;
-	height: 100%;
-}
-
-@media (min-width: 1440px) {
-
-	.marg {
-		display: block;
-	}
-}
-
 main,
 .layout {
 	position: relative;
@@ -972,8 +947,7 @@ main h2[id] {
 
 /* under the breadcrumbs, a page starts close to them, as on wordpress.org */
 .crumbs + main,
-.crumbs + .layout,
-.crumbs + .marg + main {
+.crumbs + .layout {
 	padding-top: 20px;
 }
 
