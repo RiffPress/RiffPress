@@ -1,13 +1,21 @@
 /* Riff Lyrics: fills the Lyrics tab beside Up next with the lyrics WordPress keeps on the track's
- * file, from the media REST route. It listens to the player's riff:tab and riff:track events, which
- * Riff dispatches on its own element for any script, so it needs nothing loaded before it. */
+ * file, from the media REST route. It listens to the player's riff:tab, riff:track and riff:time
+ * events, which Riff dispatches on its own element for any script, so it needs nothing loaded
+ * before it. Lyrics whose lines start with a timestamp, as the LRC format and most taggers write
+ * them, follow the music: the line being sung is marked and kept in view, and a tap on a line
+ * seeks to it through window.riff.seek(). */
 ( () => {
 	const config = window.riffLyrics || {};
 	const cache = new Map();
 	let showing = false;
 	let turn = 0; // So a slow answer for an earlier track cannot replace the current one's.
+	let lines = []; // The synced lines showing, each { time, el }, in time order.
+	let current = -1;
+	let scrolledAt = 0; // When the listener last scrolled the lyrics by hand.
 
 	const panel = () => document.querySelector( '[data-riff-panel="lyrics"]' );
+	// Until the player starts, window.riff is the #riff element, by its id.
+	const player = () => ( typeof window.riff?.seek === 'function' ? window.riff : null );
 
 	// The lyrics for a track that is a Media Library file; an empty string for none.
 	function lyricsFor( track ) {
@@ -41,6 +49,48 @@
 		return cache.get( id );
 	}
 
+	// A line's timestamps, [mm:ss.xx] or [mm:ss], one or more at its start, as LRC writes them;
+	// LRC's tag lines ([ar:...], [ti:...]) are not lyrics.
+	const STAMPS = /^\s*((?:\[\d{1,3}:\d{1,2}(?:\.\d{1,3})?\]\s*)+)(.*)$/;
+	const STAMP = /\[(\d{1,3}):(\d{1,2}(?:\.\d{1,3})?)\]/g;
+	const TAG = /^\s*\[[a-z]+:[^\]]*\]\s*$/i;
+
+	// The lines with their times, or null when none has one. A blank line is a gap before the next;
+	// a line without a time among timed ones is shown with the one before it.
+	function parse( text ) {
+		const out = [];
+		let synced = false;
+		let gap = false;
+		let last = 0;
+		for ( const raw of text.split( /\r?\n/ ) ) {
+			if ( TAG.test( raw ) ) {
+				continue;
+			}
+			if ( ! raw.trim() ) {
+				gap = out.length > 0;
+				continue;
+			}
+			const m = raw.match( STAMPS );
+			if ( ! m ) {
+				out.push( { time: last, text: raw.trim(), gap } );
+			} else {
+				synced = true;
+				for ( const s of m[ 1 ].matchAll( STAMP ) ) {
+					last = Number( s[ 1 ] ) * 60 + Number( s[ 2 ] );
+					out.push( { time: last, text: m[ 2 ].trim(), gap } );
+				}
+			}
+			gap = false;
+		}
+		if ( ! synced ) {
+			return null;
+		}
+		// A chorus line can carry every time it is sung: the lines are shown in the order they are heard.
+		return out
+			.map( ( line, i ) => ( { ...line, i } ) )
+			.sort( ( a, b ) => a.time - b.time || a.i - b.i );
+	}
+
 	function say( where, text, className ) {
 		const p = document.createElement( 'p' );
 		p.className = className;
@@ -48,11 +98,87 @@
 		where.replaceChildren( p );
 	}
 
+	function show( where, text ) {
+		lines = [];
+		current = -1;
+		const synced = parse( text );
+		if ( ! synced ) {
+			say( where, text, 'riff-lyrics' );
+			return;
+		}
+		const list = document.createElement( 'ol' );
+		list.className = 'riff-lyrics riff-lyrics-synced';
+		lines = synced.map( ( line ) => {
+			const li = document.createElement( 'li' );
+			if ( line.gap ) {
+				li.className = 'riff-lyrics-gap';
+			}
+			const button = document.createElement( 'button' );
+			button.type = 'button';
+			button.className = 'riff-lyrics-line';
+			button.textContent = line.text || '♪';
+			button.addEventListener( 'click', () => player()?.seek( line.time ) );
+			li.append( button );
+			list.append( li );
+			return { time: line.time, el: li };
+		} );
+		where.replaceChildren( list );
+		follow( player()?.time?.() ?? 0 );
+	}
+
+	// Marks the line whose time has come and keeps it in the middle of the panel, unless the
+	// listener has just scrolled the lyrics themselves.
+	function follow( time ) {
+		if ( ! lines.length ) {
+			return;
+		}
+		let i = -1;
+		while ( i + 1 < lines.length && lines[ i + 1 ].time <= time + 0.05 ) {
+			i++;
+		}
+		if ( i === current ) {
+			return;
+		}
+		lines[ current ]?.el.removeAttribute( 'aria-current' );
+		current = i;
+		if ( i < 0 ) {
+			return;
+		}
+		lines[ i ].el.setAttribute( 'aria-current', 'true' );
+		if ( showing && Date.now() - scrolledAt > 4000 ) {
+			centre( lines[ i ].el );
+		}
+	}
+
+	function centre( el ) {
+		let box = el.parentElement;
+		while (
+			box &&
+			! (
+				box.scrollHeight > box.clientHeight &&
+				/auto|scroll/.test( getComputedStyle( box ).overflowY )
+			)
+		) {
+			box = box.parentElement;
+		}
+		if ( ! box ) {
+			return;
+		}
+		const line = el.getBoundingClientRect();
+		const view = box.getBoundingClientRect();
+		box.scrollTo( {
+			top: box.scrollTop + ( line.top - view.top ) - ( view.height - line.height ) / 2,
+			behavior: matchMedia( '(prefers-reduced-motion: reduce)' ).matches ? 'auto' : 'smooth',
+		} );
+	}
+
 	async function fill( where, track ) {
 		if ( ! where ) {
 			return;
 		}
 		const mine = ++turn;
+		lines = [];
+		current = -1;
 		if ( ! track ) {
 			say( where, config.idle || '', 'riff-lyrics-note' );
 			return;
@@ -63,7 +189,7 @@
 				return;
 			}
 			if ( text ) {
-				say( where, text, 'riff-lyrics' );
+				show( where, text );
 			} else {
 				say( where, config.none || '', 'riff-lyrics-note' );
 			}
@@ -85,4 +211,17 @@
 			fill( panel(), e.detail?.track );
 		}
 	} );
+	document.addEventListener( 'riff:time', ( e ) => follow( Number( e.detail?.time ) || 0 ) );
+	// A wheel or a finger on the lyrics is the listener's scrolling, which the following gives way to.
+	for ( const ev of [ 'wheel', 'touchmove' ] ) {
+		document.addEventListener(
+			ev,
+			( e ) => {
+				if ( lines.length && e.target.closest?.( '[data-riff-panel="lyrics"]' ) ) {
+					scrolledAt = Date.now();
+				}
+			},
+			{ passive: true }
+		);
+	}
 } )();
