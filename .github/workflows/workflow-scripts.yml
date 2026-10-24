@@ -10,6 +10,7 @@ on:
       - '.github/workflows/**'
       - 'blueprint.json'
       - 'site/index.html'
+      - 'site/web/**'
       - 'packages/fixtures/**'
       - 'README.md'
       - 'plugins/riff/riff.php'
@@ -21,6 +22,7 @@ on:
       - '.github/workflows/**'
       - 'blueprint.json'
       - 'site/index.html'
+      - 'site/web/**'
       - 'packages/fixtures/**'
       - 'README.md'
       - 'plugins/riff/riff.php'
@@ -43,6 +45,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      # site/web is built, not committed, as the Pages deploy builds it; the tests read its pages.
+      - name: Build site/web
+        run: node .github/scripts/web-pages.js
 
       - name: Run tests
         run: node --test .github/scripts/*.test.js
