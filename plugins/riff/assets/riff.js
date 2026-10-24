@@ -20,6 +20,15 @@ function start() {
 	// English they are written in.
 	const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
+	// What the seek line says: where the track is and how long it is, in words.
+	const seekText = ( at, duration ) =>
+		/* translators: 1: time played, 2: the track's length, both in words. */ __(
+			'%1$s of %2$s',
+			'riff'
+		)
+			.replace( '%1$s', spoken( at ) )
+			.replace( '%2$s', spoken( duration ) );
+
 	// "MP3 · 128 kbps", "FLAC · Lossless", or nothing when the file was never read. Shown on every
 	// track, the way the streaming services show their tier, from what WordPress read on upload.
 	// A track with a video version carries a small film mark after its title, where the eye already
@@ -1833,7 +1842,13 @@ function start() {
 			row.setAttribute(
 				'aria-label',
 				current && playing
-					? __( 'Pause', 'riff' )
+					? fmt(
+							/* translators: %s: track title. */ __(
+								'Pause %s',
+								'riff'
+							),
+							rt.title
+					  )
 					: fmt(
 							/* translators: %s: track title. */ __(
 								'Play %s',
@@ -1845,7 +1860,12 @@ function start() {
 		}
 		for ( const li of queueList.children ) {
 			const current = Number( li.dataset.pos ) === pos;
-			li.firstElementChild.toggleAttribute( 'aria-current', current );
+			// aria-current="" reads as false, so the playing one says true.
+			if ( current ) {
+				li.firstElementChild.setAttribute( 'aria-current', 'true' );
+			} else {
+				li.firstElementChild.removeAttribute( 'aria-current' );
+			}
 			li.dataset.playing = current && playing ? 'true' : 'false';
 		}
 		paintHearts();
@@ -1872,19 +1892,16 @@ function start() {
 		if ( ! seeking ) {
 			setProgress( ratio );
 			// A range's value is written only when it moves a step: each write lays the thumb out again.
+			// Its words change once a second, and are written apart from it, so they are never
+			// left behind when a key has already moved the value.
 			const value = String( Math.round( ratio * 1000 ) );
+			const said = seekText( m.currentTime, duration );
 			for ( const input of $$( '[data-riff-seek]' ) ) {
 				if ( input.value !== value ) {
 					input.value = value;
-					input.setAttribute(
-						'aria-valuetext',
-						/* translators: 1: elapsed time, 2: total time. */ __(
-							'%1$s / %2$s',
-							'riff'
-						)
-							.replace( '%1$s', time( m.currentTime ) )
-							.replace( '%2$s', time( duration ) )
-					);
+				}
+				if ( input.getAttribute( 'aria-valuetext' ) !== said ) {
+					input.setAttribute( 'aria-valuetext', said );
 				}
 			}
 		}
@@ -1957,7 +1974,12 @@ function start() {
 					}`;
 					pill.textContent = b.text;
 					if ( b.label ) {
+						// The title is for a pointer; the words are for everyone else, read in
+						// place of the short text.
 						pill.title = b.label;
+						pill.innerHTML = `<span aria-hidden="true">${ esc(
+							b.text
+						) }</span><span class="riff-app-sr">${ esc( b.label ) }</span>`;
 					}
 					return pill;
 				} )
@@ -2185,8 +2207,9 @@ function start() {
 			} )
 		);
 		// The player is hidden until something plays, and the menu would be too; before then it
-		// opens from the page itself.
-		( root.hidden ? document.body : root ).append( menu );
+		// opens from the page itself. Opened from Now Playing it goes inside the dialog, where a
+		// screen reader kept to it can reach it.
+		( root.hidden ? document.body : ( ! np.hidden && np ) || root ).append( menu );
 		menu.hidden = false;
 		const r = button.getBoundingClientRect();
 		const w = menu.offsetWidth;
@@ -2383,9 +2406,41 @@ function start() {
 		} );
 		input.addEventListener( 'input', () => {
 			setProgress( Number( input.value ) / 1000 );
+			input.setAttribute(
+				'aria-valuetext',
+				seekText(
+					( Number( input.value ) / 1000 ) * durationOf( el() ),
+					durationOf( el() )
+				)
+			);
 			if ( ! seeking ) {
 				commit();
 			}
+		} );
+		// An arrow moves five seconds, as a video player's do, where the range's own step is a
+		// thousandth of the track: a fraction of a second.
+		input.addEventListener( 'keydown', ( e ) => {
+			const way = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[
+				e.key
+			];
+			const m = el();
+			const duration = durationOf( m );
+			if ( ! way || ! duration || e.altKey || e.ctrlKey || e.metaKey ) {
+				return;
+			}
+			e.preventDefault();
+			const mirrored =
+				e.key.endsWith( 'Left' ) || e.key.endsWith( 'Right' )
+					? getComputedStyle( input ).direction === 'rtl'
+					: false;
+			const to = Math.min(
+				duration,
+				Math.max( 0, m.currentTime + ( mirrored ? -way : way ) * 5 )
+			);
+			m.currentTime = to;
+			input.value = String( Math.round( ( to / duration ) * 1000 ) );
+			setProgress( to / duration );
+			input.setAttribute( 'aria-valuetext', seekText( to, duration ) );
 		} );
 		input.addEventListener( 'change', () => {
 			commit();
@@ -2492,9 +2547,11 @@ function start() {
 		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own
 		// bar and toast, which the dialog covers there and which would otherwise still take focus.
 		// On a wide screen the dialog opens above the bar and the bar stays the control surface.
-		const covered = window.matchMedia( '(min-width: 900px)' ).matches
-			? []
-			: [ $( '.riff-bar' ), $( '.riff-toast' ) ];
+		const wide = window.matchMedia( '(min-width: 900px)' ).matches;
+		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
+		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
+		// screen the bar beside it is still how the music is controlled.
+		np.setAttribute( 'aria-modal', String( ! wide ) );
 		for ( const node of [ ...document.body.children, ...covered ] ) {
 			if ( node && node !== root && ! node.inert ) {
 				node.inert = true;
@@ -3200,6 +3257,35 @@ function drop( store, key ) {
 	try {
 		store.removeItem( key );
 	} catch {}
+}
+
+// A time in words, in the page's language, for a screen reader: "7 minutes, 33 seconds" rather
+// than "7 colon 33". A browser without Intl.DurationFormat gets the clock's "7:33". The formatter
+// is made on first use: the player starts before the module's last lines have run.
+function spoken( seconds ) {
+	spoken.words ??= durationWords( document.documentElement.lang || undefined );
+	const s = Number.isFinite( seconds ) && seconds > 0 ? Math.floor( seconds ) : 0;
+	if ( ! spoken.words ) {
+		return time( s );
+	}
+	return spoken.words( {
+		hours: Math.floor( s / 3600 ),
+		minutes: Math.floor( ( s % 3600 ) / 60 ),
+		seconds: s % 60,
+	} );
+}
+function durationWords( lang ) {
+	try {
+		const words = new Intl.DurationFormat( lang, { style: 'long' } );
+		// Nothing at all is said for no time; the start of a track is "0 seconds".
+		const none = new Intl.DurationFormat( lang, {
+			style: 'long',
+			secondsDisplay: 'always',
+		} ).format( { seconds: 0 } );
+		return ( d ) => words.format( d ) || none;
+	} catch {
+		return false;
+	}
 }
 
 function time( seconds ) {
