@@ -1,0 +1,20 @@
+name: Ask a question
+description: How to do something with Riff, or whether it can.
+labels: ['[Type] Question']
+body:
+  - type: markdown
+    attributes:
+      value: The [guide](https://riffpress.com/add-music/) and the [developer reference](https://riffpress.com/developers/) may already answer it.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What you are trying to do, and what you tried.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Riff and WordPress, if it is about your site.
+      placeholder: Riff 5.1.0, WordPress 7.2 Beta 1

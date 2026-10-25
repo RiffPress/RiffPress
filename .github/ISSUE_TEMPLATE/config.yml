@@ -1,8 +1,2 @@
+# GitHub adds "Report a security vulnerability" itself, from SECURITY.md and private reporting.
 blank_issues_enabled: false
-contact_links:
-  - name: Report a security vulnerability
-    url: https://github.com/RiffPress/RiffPress/security/advisories/new
-    about: Privately, so it can be fixed before it is public. See SECURITY.md.
-  - name: Ask for help
-    url: https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md
-    about: Where to ask, and which versions are supported.

@@ -1,5 +1,5 @@
-name: Something is wrong
-description: Riff, an extension or the site does something it should not, or not what it should.
+name: Report a bug
+description: Riff, an extension or the site does something it should not.
 labels: ['[Type] Bug']
 body:
   - type: textarea
