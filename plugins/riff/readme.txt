@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.2.3
+Stable tag: 5.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.2.4 =
+* Fixed: a drawn cover's address changes when the drawing does, and its title never leaves one word alone.
+
 = 5.2.3 =
 * Fixed: drawn covers no longer use Riff's amber, which is kept for what you press, such as Play.
 * Fixed: the app's manifest names each icon by the size it really is, so a browser does not skip a site icon set without the Customizer's crop.
@@ -137,8 +140,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * The single-key shortcuts are a signed-in listener's choice under Personal Options on their profile, and a visitor has only the Shift ones, so Now Playing's header loses its keyboard switch.
 * Fixed: in the installed app, Now Playing's tabs stop short of the head's own buttons instead of sitting under Stop.
 * Fixed: the player's controls keep one name each, leave their state to the role, and use the words music apps use: Now Playing, Shuffle, Repeat with its state, Track position, Like &lt;title&gt;, Volume in percent, Stop.
-
-= 5.1.1 =
-* Fixed: a track that cannot play is said and marked in the list, "Now playing" waits until the sound starts, and the player stops after three failures in a row rather than skipping through the album.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
