@@ -8,14 +8,14 @@
 import { animate } from 'animejs';
 
 const STRINGS = [
-	// y in the 28px band, stroke width, how long it rings (ms): treble at the top.
-	{ y: 4, width: 0.6, ring: 1400 },
-	{ y: 9, width: 0.85, ring: 1700 },
-	{ y: 14, width: 1.15, ring: 2000 },
-	{ y: 19, width: 1.55, ring: 2400 },
-	{ y: 24, width: 2.1, ring: 2800 },
+	// y in the 40px band, stroke width, how long it rings (ms): treble at the top.
+	{ y: 6, width: 1, ring: 1400 },
+	{ y: 13, width: 1.35, ring: 1700 },
+	{ y: 20, width: 1.8, ring: 2000 },
+	{ y: 27, width: 2.4, ring: 2400 },
+	{ y: 34, width: 3, ring: 2800 },
 ];
-const HEIGHT = 28;
+const HEIGHT = 40;
 const SVG = 'http://www.w3.org/2000/svg';
 
 function neck( bar ) {
