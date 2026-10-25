@@ -157,6 +157,43 @@ final class Standalone {
 	}
 
 	/**
+	 * The site icon's copy nearest a size, named by the size it really is: a site icon set without
+	 * the Customizer's crop has no 192 pixel copy, and WordPress hands back the nearest, which a
+	 * browser may skip if the manifest names it as something else.
+	 *
+	 * @since 5.2.3
+	 *
+	 * @param int $id   The site icon's attachment ID, or 0.
+	 * @param int $size The size wanted, in pixels.
+	 * @return array|null A manifest icon, or null when the site has no icon.
+	 */
+	private static function icon( int $id, int $size ): ?array {
+		$meta = $id ? wp_get_attachment_metadata( $id ) : false;
+		if ( ! is_array( $meta ) || empty( $meta['width'] ) ) {
+			return null;
+		}
+		// The copy WordPress would serve, and its own dimensions from the metadata: what
+		// image_get_intermediate_size() reports is scaled down to the size asked for.
+		$copy   = image_get_intermediate_size( $id, array( $size, $size ) );
+		$width  = (int) $meta['width'];
+		$height = (int) $meta['height'];
+		$url    = (string) wp_get_attachment_url( $id );
+		foreach ( is_array( $copy ) ? (array) ( $meta['sizes'] ?? array() ) : array() as $made ) {
+			if ( ( $made['file'] ?? '' ) === $copy['file'] ) {
+				$width  = (int) $made['width'];
+				$height = (int) $made['height'];
+				$url    = (string) $copy['url'];
+				break;
+			}
+		}
+		return array(
+			'src'   => $url,
+			'sizes' => $width . 'x' . $height,
+			'type'  => (string) get_post_mime_type( $id ),
+		);
+	}
+
+	/**
 	 * The web app manifest's members for the queried Listen page.
 	 *
 	 * @since 4.17.0
@@ -168,13 +205,14 @@ final class Standalone {
 		$start = self::url();
 		$icons = array();
 		foreach ( array( 192, 512 ) as $size ) {
-			$site    = get_site_icon_url( $size );
-			$icons[] = array(
-				'src'   => $site ? $site : RIFF_URL . 'features/listen/icons/icon-' . $size . '.png',
+			$site    = self::icon( (int) get_option( 'site_icon' ), $size );
+			$icons[] = $site ? $site : array(
+				'src'   => RIFF_URL . 'features/listen/icons/icon-' . $size . '.png',
 				'sizes' => $size . 'x' . $size,
 				'type'  => 'image/png',
 			);
 		}
+		$icons    = array_values( array_unique( $icons, SORT_REGULAR ) );
 		$manifest = array(
 			'id'               => $start,
 			'name'             => '' !== $name ? $name : 'Riff',

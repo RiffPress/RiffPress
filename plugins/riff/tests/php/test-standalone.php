@@ -92,6 +92,21 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		}
 	}
 
+	public function test_a_site_icon_is_named_by_the_size_each_copy_really_is(): void {
+		// Set as a plain upload, without the Customizer's crop, the icon has no 192 pixel copy.
+		$icon = self::factory()->attachment->create_upload_object( RIFF_DIR . 'features/listen/icons/icon-512.png' );
+		update_option( 'site_icon', $icon );
+		$this->go_to( Standalone::url( $this->listen ) );
+
+		foreach ( Standalone::manifest_data()['icons'] as $entry ) {
+			$path                   = get_attached_file( $icon );
+			$file                   = dirname( $path ) . '/' . wp_basename( (string) wp_parse_url( $entry['src'], PHP_URL_PATH ) );
+			list( $width, $height ) = wp_getimagesize( $file );
+			$this->assertSame( "{$width}x{$height}", $entry['sizes'], $entry['src'] );
+		}
+		delete_option( 'site_icon' );
+	}
+
 	public function test_the_document_is_riffs_own_with_links_that_stay_in_the_app(): void {
 		$this->go_to( Standalone::url( $this->listen ) );
 
