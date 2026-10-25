@@ -7,19 +7,10 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
-const { own } = require( './own' );
-const { watchShifts, layoutShift } = require( './tidy' );
+const { own } = require( '../helpers/own' );
+const { watchShifts, layoutShift } = require( '../helpers/tidy' );
 
-const FIXTURES = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'..',
-	'packages',
-	'fixtures',
-	'compositions'
-);
+const { FIXTURES } = require( '../helpers/site' );
 // Core Web Vitals calls 0.1 good; the apps this follows sit near nothing.
 const CALM = 0.01;
 

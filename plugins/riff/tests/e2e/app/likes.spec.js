@@ -7,21 +7,12 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
-const { own } = require( './own' );
+const { own } = require( '../helpers/own' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 // WCAG 2.2 AA, with axe's best practices: what the page is held to.
 const AXE_TAGS = [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice' ];
 
-const FIXTURES = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'..',
-	'packages',
-	'fixtures',
-	'compositions'
-);
+const { FIXTURES } = require( '../helpers/site' );
 const FILES = [
 	'02 - Underground [underground].mp3',
 	'03 - Trombone Detritus [detritus].mp3',

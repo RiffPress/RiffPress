@@ -4,7 +4,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
-const { own } = require( '../../../riff/tests/e2e/own' );
+const { own } = require( '../../../riff/tests/e2e/helpers/own' );
 
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
 const made = own();

@@ -14,18 +14,9 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
-const { own } = require( './own' );
+const { own } = require( '../helpers/own' );
 
-const FIXTURES = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'..',
-	'packages',
-	'fixtures',
-	'compositions'
-);
+const { FIXTURES } = require( '../helpers/site' );
 const FILES = [
 	'02 - Underground [underground].mp3',
 	'03 - Trombone Detritus [detritus].mp3',

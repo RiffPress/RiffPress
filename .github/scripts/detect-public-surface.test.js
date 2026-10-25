@@ -431,7 +431,7 @@ test( 'scans shipped code only', () => {
 	// The tests are the loudest false-positive source: they call hooks
 	// constantly without publishing any.
 	for ( const path of [
-		'plugins/riff/tests/e2e/player.spec.js',
+		'plugins/riff/tests/e2e/player/queue.spec.js',
 		'plugins/riff/assets/riff.test.js',
 		'packages/fixtures/seed.php',
 		'.github/scripts/detect-public-surface.js',

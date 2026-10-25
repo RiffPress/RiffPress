@@ -76,7 +76,7 @@ jobs:
         run: npx wp-env run tests-cli wp eval-file wp-content/riff/packages/benchmarks/catalog.php build messy
 
       - name: Every view of the messy library is tidy
-        run: npm run test:e2e -- plugins/riff/tests/e2e/messy.spec.js --project=chromium
+        run: npm run test:e2e -- plugins/riff/tests/e2e/app/messy.spec.js --project=chromium
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
