@@ -33,6 +33,7 @@ final class Plugin {
 		Blocks::register();
 		Bindings::register();
 		Player::register();
+		Shortcuts::register();
 		Library::register();
 		Api::register();
 		Fields::register();

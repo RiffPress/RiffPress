@@ -77,8 +77,6 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" class="riff-btn riff-captions" data-riff-action="captions" aria-label="<?php esc_attr_e( 'Captions', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::icon( 'captions' ); ?></button>
 				<?php // Stop: what swiping the bar down does, as a button (WCAG 2.5.7). ?>
 				<button type="button" class="riff-btn" data-riff-action="dismiss" aria-label="<?php esc_attr_e( 'Stop', 'riff' ); ?>"><?php echo Player::icon( 'stop' ); ?></button>
-				<?php // The single-key shortcuts switch, the player's own setting: at the top of Now Playing on every width, out of the transport. ?>
-				<button type="button" class="riff-btn" data-riff-action="shortcuts" aria-label="<?php esc_attr_e( 'Keyboard shortcuts', 'riff' ); ?>" aria-pressed="true"><?php echo Player::icon( 'keyboard' ); ?></button>
 				<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			</span>
 		</header>

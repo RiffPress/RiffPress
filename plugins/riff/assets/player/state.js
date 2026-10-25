@@ -40,7 +40,6 @@ export function createPlayer( root, data ) {
 		// A shared link names its track: ?riff_track={id} on the post's own address.
 		SHARED: 'riff_track',
 		VOLUME: 'riff:volume',
-		SHORTCUTS: 'riff:shortcuts',
 		CAPTIONS: 'riff:captions',
 		reduce: () =>
 			window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches,

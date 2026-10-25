@@ -1,0 +1,51 @@
+name: Report a bug
+description: Riff, an extension or the site does something it should not.
+labels: ['[Type] Bug']
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to see it
+      description: Steps from a fresh page. A Playground link that shows it is the best of all.
+      placeholder: |
+        1. Open a post with an album
+        2. Press the second track
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Riff, WordPress, the theme, and the browser and device.
+      placeholder: Riff 5.1.0, WordPress 7.2 Beta 1, Twenty Twenty-Five, Safari 19 on an iPhone
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - The player
+        - The Listen app
+        - The desktop app
+        - Riff Lyrics
+        - Riff Sign In
+        - The Media Library or the editor
+        - riffpress.com
+        - Something else
+    validations:
+      required: true
+  - type: checkboxes
+    id: a11y
+    attributes:
+      label: Accessibility
+      options:
+        - label: This affects a keyboard, screen reader, zoom or contrast user.

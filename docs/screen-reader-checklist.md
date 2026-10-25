@@ -24,10 +24,10 @@ Use the demo at https://riffpress.com/demo, or any post with at least three trac
 ## Now Playing
 
 5. Open Now Playing. On a phone it is a dialog that keeps you inside it; Escape, or the Close button, returns you to the button you opened it from. On a computer it is not modal, and you can move out to the bar and back.
-6. Move through it: the keyboard-shortcuts switch and its state, Up next and Lyrics as tabs, Clear the queue, then each track as "Play <title> by <artist>" with "More options" after it, the playing one "Pause …".
+6. Move through it: Up next and Lyrics as tabs, Clear the queue, then each track as "Play <title> by <artist>" with "More options" after it, the playing one "Pause …".
 7. Open a row's More options. The first item has focus; the arrows move through Play next, Add to queue, Add to Liked songs, Move up or down, Remove from queue, Go to post; Escape returns you to the … button.
 8. Choose Play next. You hear "<title> plays next". Choose Remove from queue on another. You hear "<title> removed from the queue". Clear the queue. You hear "Queue cleared".
-9. Press the keyboard-shortcuts switch. You hear "Keyboard shortcuts off". Press K. Nothing happens. Press it again, then K. The track pauses.
+9. Signed in, open your profile and clear "Keyboard shortcuts in the player" under Personal Options. Back on the post, press K: nothing happens. Turn it on again, then K: the track pauses. Signed out, K does nothing and Shift+N still changes track.
 
 ## The Listen app
 

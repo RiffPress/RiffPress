@@ -1,5 +1,5 @@
 /**
- * The keyboard: Space, K, J, L and the seek line's keys, and the single-key shortcuts turned off by a site (WCAG 2.1.4) and by the listener.
+ * The keyboard: Space, K, J, L and the seek line's keys, and the single-key shortcuts turned off by a site (WCAG 2.1.4), on a listener's profile, and absent for a visitor.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -49,25 +49,14 @@ test.describe( 'Player', () => {
 			.toBe( true );
 	} );
 
-	test( 'a listener can turn the single-key shortcuts off, and the choice stays', async ( {
-		page,
-	} ) => {
+	test( 'a visitor has no single-key shortcuts, only the Shift ones', async ( { browser } ) => {
+		const context = await browser.newContext( { storageState: { cookies: [], origins: [] } } );
+		const page = await context.newPage();
+		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect
 			.poll( async () => ( await audioState( page ) ).time )
 			.toBeGreaterThan( 0.5 );
-		// At the top of Now Playing, on every width.
-		await page.locator( '.riff-bar-info' ).click();
-		const control = page.locator( '.riff-np-head [data-riff-action="shortcuts"]' );
-		await expect( control ).toHaveAttribute( 'aria-pressed', 'true' );
-		await control.click();
-		await expect( control ).toHaveAttribute( 'aria-pressed', 'false' );
-		// The name stays; the state is the toggle's, and the change is said as a notice.
-		await expect( control ).toHaveAttribute( 'aria-label', 'Keyboard shortcuts' );
-		await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Keyboard shortcuts off' );
-		// Escape stays on: it closes Now Playing as any dialog's does.
-		await page.keyboard.press( 'Escape' );
-		await expect( page.locator( '.riff-np' ) ).toBeHidden();
 		await page.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
 		const before = ( await audioState( page ) ).time;
 		await page.keyboard.press( 'k' );
@@ -75,26 +64,54 @@ test.describe( 'Player', () => {
 			.poll( async () => ( await audioState( page ) ).time )
 			.toBeGreaterThan( before + 0.3 );
 		expect( ( await audioState( page ) ).paused ).toBe( false );
-		// The Shift shortcuts stay on too.
 		const was = await page.evaluate( () => window.riff.current().id );
 		await page.keyboard.press( 'Shift+N' );
 		await expect
 			.poll( () => page.evaluate( () => window.riff.current().id ) )
 			.not.toBe( was );
+		// There is no switch in the player to look for.
+		await expect( page.locator( '[data-riff-action="shortcuts"]' ) ).toHaveCount( 0 );
+		await context.close();
+	} );
 
-		// Kept on this device, as the volume is.
-		await page.reload();
-		await expect( page.locator( '.riff-bar' ) ).toBeVisible();
-		await page.locator( '.riff-bar-info' ).click();
-		await expect( control ).toHaveAttribute( 'aria-pressed', 'false' );
-		await control.click();
-		await expect( control ).toHaveAttribute( 'aria-pressed', 'true' );
-		await page.keyboard.press( 'Escape' );
+	test( 'a signed-in listener turns the single-key shortcuts off on their profile', async ( { page } ) => {
+		const profile = async ( on ) => {
+			await page.goto( '/wp-admin/profile.php' );
+			const box = page.getByLabel( /Play and pause with Space or K/ );
+			// Under Personal Options, where WordPress keeps a user's other choices about how the site behaves.
+			await expect( page.locator( '.riff-shortcuts-wrap th' ) ).toHaveText( 'Keyboard shortcuts in the player' );
+			await box.setChecked( on );
+			await page.getByRole( 'button', { name: 'Update Profile' } ).click();
+			await expect( page.locator( '#message, .notice-success' ).first() ).toBeVisible();
+			await expect( box ).toBeChecked( { checked: on } );
+		};
+		try {
+			await profile( false );
+			await page.goto( postUrl );
+			await page.locator( '.riff-row' ).nth( 1 ).click();
+			await expect
+				.poll( async () => ( await audioState( page ) ).time )
+				.toBeGreaterThan( 0.5 );
+			await page.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
+			const before = ( await audioState( page ) ).time;
+			await page.keyboard.press( 'k' );
+			await expect
+				.poll( async () => ( await audioState( page ) ).time )
+				.toBeGreaterThan( before + 0.3 );
+			expect( ( await audioState( page ) ).paused ).toBe( false );
+		} finally {
+			await profile( true );
+		}
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).time )
+			.toBeGreaterThan( 0.5 );
 		await page.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
 		await page.keyboard.press( 'k' );
 		await expect
 			.poll( async () => ( await audioState( page ) ).paused )
-			.toBe( false );
+			.toBe( true );
 	} );
 
 	test( 'the keyboard plays, pauses and seeks', { tag: '@smoke' }, async ( { page } ) => {
