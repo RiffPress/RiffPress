@@ -6,6 +6,12 @@
  * written each frame; it is aimed again only when the time jumps: a seek, a pause or a stall, a new
  * rate or track, or drift past 150 ms. --riff-p is still written on timeupdate, for the times, the
  * input, and where the line rests when the animations stop. */
+import { speak, fmt } from 'riff-player/helpers';
+
+// Strings are WordPress translations of this module (wp_set_script_module_translations()).
+// Core prints wp.i18n only when there are translations, so without it the strings are the
+// English they are written in.
+const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function media( P ) {
 	const { root, audio, video, emit } = P;
@@ -187,6 +193,13 @@ export function media( P ) {
 		} );
 		m.addEventListener( 'playing', () => {
 			if ( live() ) {
+				const t = P.track();
+				if ( t && P.announcing === t.id ) {
+					P.announcing = null;
+					speak( P.nowPlaying( t ) );
+				}
+				P.failures = 0;
+				P.failed.delete( t?.id );
 				root.removeAttribute( 'data-waiting' );
 				P.paint();
 				glide();
@@ -264,7 +277,29 @@ export function media( P ) {
 			if ( ! live() || ! m.getAttribute( 'src' ) ) {
 				return;
 			}
+			// Said, and marked in the list, then the next track is tried. Three in a row and the
+			// rest are probably missing too, so the player stops rather than reading out the album.
+			const t = P.track();
+			P.announcing = null;
+			P.failed.add( t?.id );
+			P.failures++;
 			root.dataset.error = '';
+			P.paint();
+			if ( P.failures >= 3 ) {
+				P.failures = 0;
+				speak( __( 'These tracks couldn’t be played.', 'riff' ) );
+				setTimeout( () => root.removeAttribute( 'data-error' ), 1500 );
+				return;
+			}
+			speak(
+				fmt(
+					/* translators: %s: track title. */ __(
+						'Couldn’t play %s.',
+						'riff'
+					),
+					t?.title
+				)
+			);
 			setTimeout( () => {
 				root.removeAttribute( 'data-error' );
 				if ( P.pos < P.order.length - 1 ) {

@@ -1,7 +1,7 @@
 /* Playing: loading a track into whichever element it plays through, play and pause, next and
  * previous, the song and video switch, the hand-off to audio while a phone has the page in the
  * background, one tab at a time, and dismissing the player. */
-import { speak, largest } from 'riff-player/helpers';
+import { largest } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -41,7 +41,8 @@ export function playback( P ) {
 		if ( play ) {
 			m.play().catch( P.paint );
 			P.remember( t );
-			speak( P.nowPlaying( t ) );
+			// Said when the sound starts (media.js), so a track that never starts is not called playing.
+			P.announcing = t.id;
 		}
 		// The lock screen, the filament and the wake lock are modules of their own, loaded when the
 		// first track does and told about this one once they are.

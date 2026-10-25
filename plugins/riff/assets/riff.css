@@ -208,6 +208,11 @@ html.has-riff {
 	font-variant-numeric: tabular-nums;
 }
 
+/* A track that could not be played, in words under its title. */
+.riff-row-note {
+	font-size: 0.875em;
+}
+
 /* A track this visitor may not play: dimmed, with a lock by its length. */
 .riff-row-locked {
 	text-decoration: none;

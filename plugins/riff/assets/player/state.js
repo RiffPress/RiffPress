@@ -55,6 +55,9 @@ export function createPlayer( root, data ) {
 		backgrounded: false, // Video handed to audio because the page went to the background.
 		preloader: null,
 		swiped: false, // A swipe on the bar just ended, so the click it also fires is not a press.
+		announcing: null, // The track loaded to play, said to be playing once its sound starts.
+		failed: new Set(), // Tracks that could not be played, by id, marked in the list.
+		failures: 0, // Tracks that failed one after another; the player stops skipping at three.
 
 		track: () => P.queue[ P.order[ P.pos ] ],
 		// The signed-in listener: their nonce and routes, from the page, or null for a visitor.

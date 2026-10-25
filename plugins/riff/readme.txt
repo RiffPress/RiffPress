@@ -119,6 +119,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.1.1 =
+* Fixed: a track that cannot play is said and marked in the list, "Now playing" waits until the sound starts, and the player stops after three failures in a row rather than skipping through the album.
+
 = 5.1.0 =
 * Captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement.
 * Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player.
@@ -140,10 +143,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: an album with no cover gets a cover drawn for the album, not its post.
 * Fixed: an artist or album tag with angle brackets is filed under its whole name.
 * Fixed: the keyboard-shortcuts switch sits at the top of Now Playing, out of the transport.
-
-= 4.31.0 =
-* Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on.
-* Fixed: in the desktop app the window doesn't stretch past its ends, so the view's corners stay round.
-* Fixed: signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

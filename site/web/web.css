@@ -929,29 +929,6 @@ figcaption {
 	overflow: visible;
 }
 
-/* over the strings, a mouse holds a pick instead of the arrow */
-.has-neck-live .neck-live {
-	cursor: none;
-}
-
-.neck-pick {
-	position: fixed;
-	top: 0;
-	left: 0;
-	z-index: 100;
-	width: 24px;
-	height: 28px;
-	pointer-events: none;
-	transform-origin: 12px 27px;
-	opacity: 0;
-	transition: opacity 0.12s;
-	filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.25));
-}
-
-.neck-pick.is-on {
-	opacity: 1;
-}
-
 .local-nav a[aria-current] {
 	color: var(--ink);
 	text-decoration: underline;

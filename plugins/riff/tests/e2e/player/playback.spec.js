@@ -117,4 +117,53 @@ test.describe( 'Player', () => {
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 		await expect( rows.nth( 1 ) ).toHaveAttribute( 'aria-label', /^Play Underground by/ );
 	} );
+
+	// What the polite live region says, in order, from here on.
+	const listen = ( page ) =>
+		page.evaluate( () => {
+			window.said = [];
+			const region = document.getElementById( 'a11y-speak-polite' );
+			new MutationObserver( () => {
+				const text = region.textContent.replace( /\u00a0/g, '' ).trim();
+				if ( text && text !== window.said.at( -1 ) ) {
+					window.said.push( text );
+				}
+			} ).observe( region, { childList: true, characterData: true, subtree: true } );
+		} );
+	const said = ( page ) => page.evaluate( () => window.said );
+
+	test( 'a track that cannot play is said and marked, and the next is only called playing once it plays', async ( {
+		page,
+	} ) => {
+		// The first file asked for is missing; the others play.
+		let missing;
+		await page.route( '**/*.mp3', ( route ) => {
+			missing ??= route.request().url();
+			return route.request().url() === missing
+				? route.fulfill( { status: 404, body: '' } )
+				: route.continue();
+		} );
+		await listen( page );
+		await page.locator( '.riff-row' ).first().click();
+		await expect.poll( () => said( page ) ).toContainEqual( 'Couldn’t play Intensities in Ten Cities.' );
+		await expect( page.locator( '.riff-row' ).first() ).toHaveAttribute( 'aria-description', 'Couldn’t be played' );
+		await expect( page.locator( '.riff-row' ).first().locator( '.riff-row-note' ) ).toBeVisible();
+		await expect.poll( () => said( page ) ).toContainEqual( expect.stringMatching( /^Now playing Underground by/ ) );
+		const heard = await said( page );
+		expect( heard.some( ( m ) => m.startsWith( 'Now playing Intensities' ) ) ).toBe( false );
+		expect( heard.indexOf( 'Couldn’t play Intensities in Ten Cities.' ) ).toBeLessThan(
+			heard.findIndex( ( m ) => m.startsWith( 'Now playing Underground' ) )
+		);
+	} );
+
+	test( 'when track after track cannot play, the player stops at the third and says so', async ( { page } ) => {
+		await page.route( '**/*.mp3', ( route ) => route.fulfill( { status: 404, body: '' } ) );
+		await listen( page );
+		await page.locator( '.riff-row' ).first().click();
+		await expect.poll( () => said( page ), { timeout: 15_000 } ).toContainEqual( 'These tracks couldn’t be played.' );
+		const heard = await said( page );
+		expect( heard.filter( ( m ) => m.startsWith( 'Couldn’t play' ) ) ).toHaveLength( 2 );
+		expect( heard.some( ( m ) => m.startsWith( 'Now playing' ) ) ).toBe( false );
+		await expect( page.locator( '.riff-row[data-failed]' ) ).toHaveCount( 3 );
+	} );
 } );
