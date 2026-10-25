@@ -68,7 +68,8 @@ function groups( entries ) {
 
 function sidebar( entries, current, depth ) {
 	const up = depth === 2 ? '../' : '';
-	let html = `<aside class="side" aria-label="All the features"><p class="side-title"><a href="${ up }">Built on the open web</a></p>`;
+	// No title of its own: the Developers bar and the breadcrumbs already name the section.
+	let html = '<aside class="side" aria-label="All the features">';
 	for ( const [ group, list ] of groups( entries ) ) {
 		html += `<h2>${ esc( group ) }</h2><ul>`;
 		for ( const e of list ) {
