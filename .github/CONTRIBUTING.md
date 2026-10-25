@@ -67,7 +67,7 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 1. Branch off `main`.
 2. Title the pull request as a [Conventional Commit](https://www.conventionalcommits.org/). Pull requests squash-merge with the title as the commit subject, so the title is what release-please reads. `lint-pr.yml` enforces this.
 3. Fill in the template. The line at the top saying what we would miss by only reading the diff is the part that matters most.
-4. Every pull request gets a sticky comment with a WordPress Playground link built from its own commit. Use it to check the change on a phone.
+4. Every pull request gets a sticky comment with Playground links built from its own commit, signed in as admin. **Standalone app** opens `/listen/app/`, the installable player with no theme. **Listen page** opens `/listen/`, the same player as a block in the theme, which is where theme and block changes show. **Blog post** opens an album's post. **Website** is riffpress.com as the branch builds it. Use them to check the change on a phone.
 
 ## What runs itself
 
