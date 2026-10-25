@@ -87,6 +87,7 @@ source.tracks.forEach( ( track, index ) => {
 		'-metadata', `title=${ track.title }`,
 		'-metadata', `artist=${ track.artist || source.artist }`,
 		'-metadata', `album=${ source.name }`,
+		'-metadata', `album_artist=${ source.artist }`,
 		'-metadata', `copyright=${ source.license }`,
 		output,
 	] );

@@ -150,6 +150,8 @@ if ( ! function_exists( 'riff_seed' ) ) {
 				array(
 					'artist'      => (string) ( $track['artist'] ?? $track['uploader'] ?? $manifest['curator'] ?? '' ),
 					'album'       => $name,
+					// The album's own artist, so an album with a different artist on each track is one album.
+					'band'        => (string) ( $manifest['curator'] ?? '' ),
 					'length'      => (float) ( $track['duration'] ?? 0 ),
 					'dataformat'  => 'mp3',
 					'fileformat'  => 'mp3',
