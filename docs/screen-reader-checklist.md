@@ -32,7 +32,8 @@ Use the demo at https://riffpress.com/demo, or any post with at least three trac
 
 ## Lyrics
 
-14. With a track that has lyrics, open the Lyrics tab. The lines are read as a list; a timed line is a button, and pressing it moves the track there.
+14. With a track that has lyrics, open the Lyrics tab. The lines are read as a list; a timed line is a button, and pressing it moves the track there. Press "Show as text": the same words are read as one paragraph, and the button says "Follow the music", pressed.
+14a. With a video that has captions, press Video in Now Playing: a Captions button is there, and pressing it shows the captions on the video and says "Captions on".
 
 ## Seeing
 

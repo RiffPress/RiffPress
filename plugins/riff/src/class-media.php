@@ -26,6 +26,63 @@ final class Media {
 	public const VIDEO_META = '_riff_video';
 
 	/**
+	 * Post meta on a video attachment holding the ID of its captions, a WebVTT file in the Media
+	 * Library, shown by the player as the video block shows a track of its own.
+	 *
+	 * @since 4.33.0
+	 */
+	public const CAPTIONS_META = '_riff_captions';
+
+	/**
+	 * The language tags getID3 reads, as ISO 639-2 codes, and the ISO 639-1 code a `lang`
+	 * attribute wants for each; a code not here is kept as it is when it is already two letters.
+	 */
+	private const LANGUAGES = array(
+		'eng' => 'en',
+		'fra' => 'fr',
+		'fre' => 'fr',
+		'deu' => 'de',
+		'ger' => 'de',
+		'spa' => 'es',
+		'ita' => 'it',
+		'por' => 'pt',
+		'nld' => 'nl',
+		'dut' => 'nl',
+		'swe' => 'sv',
+		'nor' => 'no',
+		'dan' => 'da',
+		'fin' => 'fi',
+		'pol' => 'pl',
+		'ces' => 'cs',
+		'cze' => 'cs',
+		'rus' => 'ru',
+		'ukr' => 'uk',
+		'ell' => 'el',
+		'gre' => 'el',
+		'tur' => 'tr',
+		'ara' => 'ar',
+		'heb' => 'he',
+		'hin' => 'hi',
+		'jpn' => 'ja',
+		'kor' => 'ko',
+		'zho' => 'zh',
+		'chi' => 'zh',
+		'vie' => 'vi',
+		'tha' => 'th',
+		'ind' => 'id',
+		'hun' => 'hu',
+		'ron' => 'ro',
+		'rum' => 'ro',
+		'cat' => 'ca',
+		'gle' => 'ga',
+		'cym' => 'cy',
+		'wel' => 'cy',
+		'isl' => 'is',
+		'ice' => 'is',
+		'lat' => 'la',
+	);
+
+	/**
 	 * Field errors from this request's save, by attachment ID and then field.
 	 *
 	 * @var array<int, array<string, string>>
@@ -41,7 +98,8 @@ final class Media {
 		add_action( 'init', array( self::class, 'register_meta' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'fields' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
-		add_action( 'wp_enqueue_media', array( self::class, 'enqueue' ) );
+		add_filter( 'wp_read_audio_metadata', array( self::class, 'language' ), 10, 4 );
+		add_action( 'wp_enqueue_media', array( self::class, 'enqueue' ), 10 );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_media' ) );
 		add_action( Catalog::ARTIST . '_edit_form_fields', array( self::class, 'artist_field' ) );
 		add_action( 'edited_' . Catalog::ARTIST, array( self::class, 'save_artist' ) );
@@ -152,6 +210,67 @@ final class Media {
 				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
 			)
 		);
+		register_post_meta(
+			'attachment',
+			self::CAPTIONS_META,
+			array(
+				'type'              => 'integer',
+				'single'            => true,
+				'default'           => 0,
+				'show_in_rest'      => true,
+				'sanitize_callback' => array( self::class, 'sanitize_captions' ),
+				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
+			)
+		);
+	}
+
+	/**
+	 * Keeps the language a file's tags name, which WordPress reads but does not keep: ID3's TLAN
+	 * frame, a Vorbis comment's LANGUAGE. It is kept as `language` in the attachment's metadata,
+	 * as a two-letter code where the tag's three-letter one has a plain equivalent, and the player
+	 * marks a track's title with it where it is not the page's language.
+	 *
+	 * @since 4.33.0
+	 *
+	 * @param array       $metadata    What WordPress keeps.
+	 * @param string      $file        The file.
+	 * @param string|null $file_format Its format.
+	 * @param array       $data        Everything getID3 read.
+	 * @return array
+	 */
+	public static function language( $metadata, $file, $file_format, $data ) {
+		unset( $file, $file_format );
+		if ( ! is_array( $metadata ) || ! is_array( $data ) ) {
+			return $metadata;
+		}
+		foreach ( (array) ( $data['tags'] ?? array() ) as $tags ) {
+			$code = is_array( $tags ) ? ( $tags['language'][0] ?? '' ) : '';
+			$code = self::language_code( is_scalar( $code ) ? (string) $code : '' );
+			if ( '' !== $code ) {
+				$metadata['language'] = $code;
+				break;
+			}
+		}
+		return $metadata;
+	}
+
+	/**
+	 * A language tag as a `lang` attribute takes it, from what a file's tag says, or empty.
+	 *
+	 * @since 4.33.0
+	 *
+	 * @param string $code The tag's value: an ISO 639-2 code (eng), an ISO 639-1 one (en), or a BCP 47 tag (en-GB).
+	 * @return string
+	 */
+	public static function language_code( string $code ): string {
+		$code = strtolower( trim( $code ) );
+		if ( '' === $code || 'und' === $code || 'xxx' === $code ) {
+			return '';
+		}
+		if ( isset( self::LANGUAGES[ $code ] ) ) {
+			return self::LANGUAGES[ $code ];
+		}
+		return preg_match( '/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/', $code ) ? $code : '';
 	}
 
 	/**
@@ -179,7 +298,20 @@ final class Media {
 	}
 
 	/**
-	 * Adds "Artwork" to audio and video files in the Media Library, and "Video version" to audio.
+	 * Keeps only IDs of WebVTT attachments, for captions.
+	 *
+	 * @since 4.33.0
+	 * @param mixed $value Submitted value.
+	 * @return int
+	 */
+	public static function sanitize_captions( $value ): int {
+		$id = absint( $value );
+		return $id && 'text/vtt' === (string) get_post_mime_type( $id ) ? $id : 0;
+	}
+
+	/**
+	 * Adds "Artwork" to audio and video files in the Media Library, "Video version" to audio, and
+	 * "Captions" to video.
 	 *
 	 * Artwork is the file's featured image, the same thing WordPress sets from a tag inside the file
 	 * on upload, so a cover set here shows in the player, the queue and on the lock screen.
@@ -219,7 +351,25 @@ final class Media {
 			),
 			'helps'        => __( 'An image from the Media Library, chosen or entered by address or ID. Without one, the post\'s featured image is used, and failing that a cover is drawn.', 'riff' ),
 		);
-		if ( ! str_starts_with( $mime, 'audio/' ) ) {
+		if ( str_starts_with( $mime, 'video/' ) ) {
+			$fields['riff_captions'] = array(
+				'label' => __( 'Captions', 'riff' ),
+				'input' => 'html',
+				'html'  => self::picker(
+					$post->ID,
+					'riff_captions',
+					(int) get_post_meta( $post->ID, self::CAPTIONS_META, true ),
+					$errors['riff_captions'] ?? '',
+					array(
+						'type'    => 'text/vtt',
+						'choose'  => __( 'Choose captions', 'riff' ),
+						'replace' => __( 'Replace captions', 'riff' ),
+						'remove'  => __( 'Remove captions', 'riff' ),
+						'button'  => __( 'Use as captions', 'riff' ),
+					)
+				),
+				'helps' => __( 'A WebVTT file (.vtt) from the Media Library, chosen or entered by address or ID. Listeners can turn the captions on in Now Playing, as the video block shows a text track of its own.', 'riff' ),
+			);
 			return $fields;
 		}
 		$fields['riff_video'] = array(
@@ -347,6 +497,16 @@ final class Media {
 				delete_post_meta( $post_id, self::VIDEO_META );
 			} else {
 				$errors['riff_video'] = __( 'That is not a video in the Media Library, so the video version was not changed.', 'riff' );
+			}
+		}
+		if ( isset( $attachment['riff_captions'] ) ) {
+			$id = self::submitted( $attachment['riff_captions'], array( self::class, 'sanitize_captions' ) );
+			if ( $id > 0 ) {
+				update_post_meta( $post_id, self::CAPTIONS_META, $id );
+			} elseif ( 0 === $id ) {
+				delete_post_meta( $post_id, self::CAPTIONS_META );
+			} else {
+				$errors['riff_captions'] = __( 'That is not a WebVTT file in the Media Library, so the captions were not changed.', 'riff' );
 			}
 		}
 		self::$errors[ $post_id ] = $errors;

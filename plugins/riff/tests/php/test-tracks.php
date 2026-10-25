@@ -34,6 +34,69 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertNull( $track['post'] );
 	}
 
+	public function test_the_art_carries_the_images_alt_text_and_the_track_its_language(): void {
+		$post  = self::factory()->post->create();
+		$cover = self::attach( 'cover.png', $post );
+		update_post_meta( $cover, '_wp_attachment_image_alt', 'A brass band on a bandstand' );
+		$id = self::attach( '02 - Underground [underground].mp3', $post );
+		set_post_thumbnail( $id, $cover );
+		$track = Tracks::from_attachment( $id, $post );
+		$this->assertNotEmpty( $track['art'] );
+		foreach ( $track['art'] as $size ) {
+			$this->assertSame( 'A brass band on a bandstand', $size['alt'], 'every size says what the picture shows' );
+		}
+		$this->assertSame( '', $track['lang'], 'the fixture names no language' );
+
+		$meta             = wp_get_attachment_metadata( $id );
+		$meta['language'] = 'eng';
+		wp_update_attachment_metadata( $id, $meta );
+		$this->assertSame( 'en', Tracks::from_attachment( $id, $post )['lang'], 'the language the file\'s tag names, as a lang attribute takes it' );
+		$this->assertSame( 'de', Tracks::normalize( array( 'lang' => 'deu' ) )['lang'] );
+		$this->assertSame( '', Tracks::normalize( array( 'lang' => 'not a tag' ) )['lang'] );
+		$this->assertArrayHasKey( 'lang', Tracks::schema()['properties'] );
+		$this->assertArrayHasKey( 'alt', Tracks::schema()['properties']['art']['items']['properties'] );
+	}
+
+	public function test_a_videos_captions_come_from_its_vtt_file_or_its_blocks_text_tracks(): void {
+		$post  = self::factory()->post->create();
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm', $post );
+		$vtt   = self::attach( '../test/captions.vtt', $post );
+		$this->assertSame( array(), Tracks::from_attachment( $video, $post )['captions'], 'nothing until a file is chosen' );
+
+		update_post_meta( $video, Media::CAPTIONS_META, $vtt );
+		$track = Tracks::from_attachment( $video, $post );
+		$this->assertCount( 1, $track['captions'] );
+		$this->assertSame( wp_get_attachment_url( $vtt ), $track['captions'][0]['src'] );
+		$this->assertSame( 'captions', $track['captions'][0]['kind'] );
+		$this->assertSame( get_bloginfo( 'language' ), $track['captions'][0]['srclang'] );
+
+		// A song's video version carries its video's captions.
+		$audio = self::attach( '02 - Underground [underground].mp3', $post );
+		update_post_meta( $audio, Media::VIDEO_META, $video );
+		$this->assertSame( $track['captions'], Tracks::from_attachment( $audio, $post )['video']['captions'] );
+
+		// A video block's own text tracks, when the file has none.
+		delete_post_meta( $video, Media::CAPTIONS_META );
+		$block = parse_blocks( sprintf( '<!-- wp:video {"id":%1$d,"tracks":[{"src":"%2$s","label":"English","srcLang":"en","kind":"subtitles"}]} --><figure class="wp-block-video"><video controls src="%3$s"></video></figure><!-- /wp:video -->', $video, wp_get_attachment_url( $vtt ), wp_get_attachment_url( $video ) ) )[0];
+		$from  = Tracks::from_block( $block, $post );
+		$this->assertSame( array( array( 'src' => wp_get_attachment_url( $vtt ), 'label' => 'English', 'srclang' => 'en', 'kind' => 'subtitles' ) ), $from['captions'] ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		$this->assertSame( array(), Tracks::normalize( array( 'captions' => array( array( 'label' => 'no file' ) ) ) )['captions'], 'a track without a file is left out' );
+		$this->assertSame(
+			'subtitles',
+			Tracks::normalize(
+				array(
+					'captions' => array(
+						array(
+							'src'  => 'x.vtt',
+							'kind' => 'karaoke',
+						),
+					),
+				)
+			)['captions'][0]['kind'],
+			'an unknown kind is subtitles'
+		);
+	}
+
 	public function test_an_upload_named_after_its_file_takes_its_title_from_the_tags(): void {
 		$id = self::factory()->attachment->create_upload_object( self::fixture( '02 - Underground [underground].mp3' ) );
 		$this->assertStringContainsString( 'Underground-underground', get_post_field( 'post_title', $id, 'raw' ), 'named after the file, as the block editor leaves it' );

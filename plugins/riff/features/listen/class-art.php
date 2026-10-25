@@ -135,13 +135,34 @@ final class Art {
 		if ( ! $term_id ) {
 			return array();
 		}
+		$term   = get_term( $term_id, Catalog::ALBUM );
+		$name   = $term instanceof WP_Term ? html_entity_decode( (string) $term->name, ENT_QUOTES, 'UTF-8' ) : '';
+		$artist = (string) get_term_meta( $term_id, Catalog::ALBUM_ARTIST, true );
 		return array(
 			array(
 				'src'   => add_query_arg( self::QUERY, 'album-' . $term_id, home_url( '/' ) ),
 				'sizes' => '1024x1024',
 				'type'  => 'image/svg+xml',
+				'alt'   => self::alt( $name, $artist ),
 			),
 		);
+	}
+
+	/**
+	 * What a drawn cover shows, for a screen reader: the album and the artist it names.
+	 *
+	 * @since 4.33.0
+	 *
+	 * @param string $title  The album's, or the post's, name.
+	 * @param string $artist The artist, or empty.
+	 * @return string
+	 */
+	public static function alt( string $title, string $artist ): string {
+		if ( '' === $title ) {
+			return '';
+		}
+		/* translators: 1: an album or post, 2: its artist. */
+		return '' !== $artist ? sprintf( __( 'Cover of %1$s by %2$s', 'riff' ), $title, $artist ) : sprintf( /* translators: %s: an album or post. */ __( 'Cover of %s', 'riff' ), $title );
 	}
 
 	/**
@@ -243,6 +264,7 @@ final class Art {
 				'src'   => self::url( $post_id ),
 				'sizes' => '1024x1024',
 				'type'  => 'image/svg+xml',
+				'alt'   => self::alt( html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' ), '' ),
 			),
 		);
 	}

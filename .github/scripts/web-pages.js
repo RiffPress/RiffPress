@@ -31,7 +31,7 @@ const SPEC_HOSTS = [
 ];
 const shell = require( './site-shell.js' );
 const hooksReference = require( './hooks-reference.js' );
-const { esc, inline, FOOT, localNav, crumbs } = shell;
+const { esc, inline, foot, localNav, crumbs } = shell;
 const head = ( title, description, url, depth ) =>
 	shell.head( title, description, url, depth, `${ depth === 2 ? '../' : '' }web.css`, 'developers' ) + localNav( '../'.repeat( depth ), 'web' );
 
@@ -110,7 +110,7 @@ function page( e, i, entries ) {
 ${ sidebar( entries, e.slug, 2 ) }
 </div>
 `;
-	return html + FOOT;
+	return html + foot( '../../' );
 }
 
 function index( entries ) {
@@ -127,7 +127,7 @@ function index( entries ) {
 		}
 		html += '</ul></section>';
 	}
-	return html + '</div>\n</main>\n' + FOOT;
+	return html + '</div>\n</main>\n' + foot( '../' );
 }
 
 function sitemap( entries ) {

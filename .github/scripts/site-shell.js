@@ -57,8 +57,15 @@ function head( title, description, url, depth, css, section = '' ) {
 `;
 }
 
-const FOOT = `<div class="dots" aria-hidden="true"></div>
-<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
+/**
+ * The global footer: the licence, and the links every page of wordpress.org carries at its foot
+ * (here the accessibility statement, security, support and the source).
+ *
+ * @param {string} up Path back to the site root.
+ * @return {string} HTML.
+ */
+const foot = ( up ) => `<div class="dots" aria-hidden="true"></div>
+<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</span><nav aria-label="Footer"><a href="${ up }accessibility/">Accessibility</a><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a></nav></div></footer>
 </body>
 </html>
 `;
@@ -143,7 +150,7 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 }
 </script>
 `;
-	return html + FOOT;
+	return html + foot( up );
 }
 
-module.exports = { esc, inline, head, FOOT, localNav, crumbs, referencePage };
+module.exports = { esc, inline, head, foot, localNav, crumbs, referencePage };

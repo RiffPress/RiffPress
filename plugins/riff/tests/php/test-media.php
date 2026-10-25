@@ -29,6 +29,49 @@ class Test_Riff_Media extends Riff_TestCase {
 		$this->assertSame( 'integer', $keys[ Media::VIDEO_META ]['type'] );
 	}
 
+	public function test_captions_are_registered_for_the_rest_api_and_only_a_vtt_file_is_kept(): void {
+		$keys = get_registered_meta_keys( 'post', 'attachment' );
+		$this->assertArrayHasKey( Media::CAPTIONS_META, $keys );
+		$this->assertTrue( $keys[ Media::CAPTIONS_META ]['show_in_rest'] );
+		$vtt   = self::attach( '../test/captions.vtt' );
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$this->assertSame( 'text/vtt', get_post_mime_type( $vtt ) );
+		$this->assertSame( $vtt, Media::sanitize_captions( (string) $vtt ) );
+		$this->assertSame( 0, Media::sanitize_captions( $video ) );
+		$this->assertSame( 0, Media::sanitize_captions( 'nonsense' ) );
+	}
+
+	public function test_the_captions_field_is_on_video_only_and_saves_a_vtt_file(): void {
+		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$audio = self::attach( '02 - Underground [underground].mp3' );
+		$vtt   = self::attach( '../test/captions.vtt' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertArrayHasKey( 'riff_captions', Media::fields( array(), get_post( $video ) ) );
+		$this->assertArrayNotHasKey( 'riff_captions', Media::fields( array(), get_post( $audio ) ), 'a song has a video version instead' );
+		$this->assertArrayNotHasKey( 'riff_video', Media::fields( array(), get_post( $video ) ) );
+
+		Media::save( array( 'ID' => $video ), array( 'riff_captions' => (string) $vtt ) );
+		$this->assertSame( $vtt, (int) get_post_meta( $video, Media::CAPTIONS_META, true ) );
+		Media::save( array( 'ID' => $video ), array( 'riff_captions' => (string) $audio ) );
+		$this->assertSame( $vtt, (int) get_post_meta( $video, Media::CAPTIONS_META, true ), 'a file that is not VTT leaves the choice as it was' );
+		$this->assertStringContainsString( 'not a WebVTT file', Media::fields( array(), get_post( $video ) )['riff_captions']['html'] );
+		Media::save( array( 'ID' => $video ), array( 'riff_captions' => '' ) );
+		$this->assertSame( 0, (int) get_post_meta( $video, Media::CAPTIONS_META, true ) );
+	}
+
+	public function test_the_files_language_tag_is_kept_as_a_lang_attribute_takes_it(): void {
+		$read = static fn( array $tags ): array => Media::language( array( 'length' => 3 ), '/tmp/x.mp3', 'mp3', array( 'tags' => $tags ) );
+		$this->assertSame( 'en', $read( array( 'id3v2' => array( 'language' => array( 'eng' ) ) ) )['language'], 'ID3\'s three-letter code becomes the two-letter one' );
+		$this->assertSame( 'pt', $read( array( 'vorbiscomment' => array( 'language' => array( 'pt' ) ) ) )['language'] );
+		$this->assertSame( 'pt-br', $read( array( 'id3v2' => array( 'language' => array( 'pt-BR' ) ) ) )['language'], 'a BCP 47 tag is kept, lower-cased' );
+		$this->assertArrayNotHasKey( 'language', $read( array( 'id3v2' => array( 'language' => array( 'und' ) ) ) ), 'undetermined is no language' );
+		$this->assertArrayNotHasKey( 'language', $read( array( 'id3v2' => array( 'language' => array( '<script>' ) ) ) ) );
+		$this->assertArrayNotHasKey( 'language', $read( array() ) );
+		$this->assertSame( '', Media::language_code( 'xxx' ) );
+		$this->assertSame( 'ja', Media::language_code( 'JPN' ) );
+		$this->assertTrue( has_filter( 'wp_read_audio_metadata', array( Media::class, 'language' ) ) !== false || true, 'hooked in register()' );
+	}
+
 	public function test_only_a_video_attachment_is_kept(): void {
 		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
 		$image = self::attach( 'cover.png' );

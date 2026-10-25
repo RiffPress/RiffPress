@@ -254,6 +254,13 @@ footer a {
 	color: var(--white);
 }
 
+/* the footer's links, as wordpress.org's foot has its row of them */
+footer nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 24px;
+}
+
 /* type */
 h1,
 h2 {

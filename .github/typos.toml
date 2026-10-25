@@ -22,3 +22,7 @@ extend-exclude = [
   # WordPress's own function and hook names, spelled the way core spells them.
   "packages/wp-api-coverage/catalog/",
 ]
+
+[default]
+# The ISO 639-2 to 639-1 map in class-media.php: three-letter codes, not misspelt words.
+extend-ignore-re = ["'[a-z]{3}' => '[a-z]{2}',"]

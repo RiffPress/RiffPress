@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Accessibility | Riff</title>
+<meta name="description" content="Riff's accessibility statement: the player and the Listen app are built to WCAG 2.2 AA, how that is tested on every change, what is known not to meet it yet, and where to write.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="RiffPress">
+<meta property="og:url" content="{{pages_url}}accessibility/">
+<meta property="og:title" content="Accessibility | Riff">
+<meta property="og:description" content="Riff is built to WCAG 2.2 AA, tested on every change, with its known gaps written down.">
+<meta property="og:image" content="{{pages_url}}og/home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Accessibility | Riff">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Accessibility | Riff">
+<meta name="twitter:description" content="Riff is built to WCAG 2.2 AA, tested on every change, with its known gaps written down.">
+<meta name="twitter:image" content="{{pages_url}}og/home.png">
+<link rel="canonical" href="{{pages_url}}accessibility/">
+<link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="theme-color" content="#000">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="../web/web.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="nav"><div class="wrap"><a class="mark" href="../"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="../add-music/">Add your music</a><a href="../developers/">Developers</a><a class="btn" href="../download/">Download</a></nav></div></div>
+<div class="local-nav"><div class="wrap"><a class="local-title" href="./" aria-current="page">Accessibility</a><nav aria-label="Accessibility"><a href="#target">The target</a><a href="#how">How it is tested</a><a href="#known">Known issues</a><a href="#write">Write to us</a></nav></div></div>
+
+<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../">Riff</a></span><span class="is-current-page">Accessibility</span></nav></div></div>
+<main id="main" class="wrap dl">
+<h1>Accessibility</h1>
+<p class="lede">Riff is a music player that sits inside someone else's site, so it has to be usable by everyone who can use the site around it. This page says what it is held to, how, and what it does not yet do.</p>
+
+<h2 id="target">The target</h2>
+<p>The player, Now Playing and the Listen app are built to meet the <a href="https://www.w3.org/TR/WCAG22/">Web Content Accessibility Guidelines 2.2</a> at level AA, and AAA wherever it is cheap. In particular: native controls first, so the browser's own behaviour carries the keyboard and the screen reader; every control named and its state spoken; every change the listener did not make announced through WordPress's own live regions; the single-key shortcuts under a switch the listener controls, as 2.1.4 asks; every swipe and drag with a button or a key that does the same; controls at least 24 pixels each way; the docked bar never covering what has focus; and nothing playing until Play is pressed, a reload included.</p>
+<p>The theme around the player is the site's own, and what Riff cannot answer for is the theme's.</p>
+
+<h2 id="how">How it is tested</h2>
+<p>Every change runs the checks before it can merge. <a href="https://github.com/dequelabs/axe-core">axe</a> runs over every view of the Listen app at three widths, over Now Playing, and over a page that shows every control in every state, at the WCAG 2.2 AA rule set with axe's best practices. A test holds every text and control colour in the stylesheet to the contrast WCAG asks. Tests measure every control's size, Tab through a long post to see that the bar covers nothing with focus, keep Tab inside the modal, and read the accessibility tree directly for what a screen reader will hear: the names of the bar's buttons, the seek line's spoken time, the announcements as tracks and the queue change. Contrast themes and reduced motion are tested in the browser.</p>
+<p>None of that is a screen reader. Before a release that touches the player, a person runs <a href="https://github.com/RiffPress/RiffPress/blob/main/docs/screen-reader-checklist.md">the screen-reader checklist</a> with VoiceOver, NVDA, JAWS or TalkBack, and records the result in the release. The contributor's guide to all of this is <a href="https://github.com/RiffPress/RiffPress/blob/main/docs/accessibility.md">docs/accessibility.md</a>.</p>
+
+<h2 id="known">Known issues</h2>
+<ul>
+	<li>The checklist has been run by script, not yet by a person with a screen reader. How VoiceOver reads the seek line while it is dragged, and how the announcements sound against the music, are unverified.</li>
+	<li>A cover Riff draws is an image whose text is the album's name and artist; its alt text says so, but the image's own type cannot be read by a screen reader.</li>
+	<li>Video versions show captions only where a WebVTT file has been chosen for the video in the Media Library, or where the video block carries one.</li>
+</ul>
+<p>Each is tracked under the <a href="https://github.com/RiffPress/RiffPress/issues?q=is%3Aissue+label%3AAccessibility">Accessibility label</a>, where new ones go.</p>
+
+<h2 id="write">Write to us</h2>
+<p>If something in Riff does not work with your assistive technology, <a href="https://github.com/RiffPress/RiffPress/issues/new">open an issue</a> and say which screen reader, browser and Riff version you used, and what you heard. A fix for an accessibility issue goes ahead of other work.</p>
+<p>This statement was last reviewed on 25 October 2026.</p>
+</main>
+
+<div class="dots" aria-hidden="true"></div>
+<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</span><nav aria-label="Footer"><a href="../accessibility/">Accessibility</a><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a></nav></div></footer>
+</body>
+</html>

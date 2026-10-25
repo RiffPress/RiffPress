@@ -5,7 +5,7 @@ const { test } = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { localNav, crumbs } = require( './site-shell.js' );
+const { localNav, crumbs, foot } = require( './site-shell.js' );
 
 const read = ( file ) => fs.readFileSync( path.join( __dirname, '..', '..', file ), 'utf8' );
 
@@ -19,8 +19,16 @@ test( 'the hand-written pages use the shared breadcrumbs', () => {
 	assert.ok( read( 'site/developers/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Developers' ] ] ) ) );
 	assert.ok( read( 'site/add-music/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Add your music' ] ] ) ) );
 	assert.ok( read( 'site/download/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Get Riff' ] ] ) ) );
+	assert.ok( read( 'site/accessibility/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Accessibility' ] ] ) ) );
 	for ( const file of [ 'site/developers/index.html', 'site/add-music/index.html', 'site/download/index.html' ] ) {
 		assert.doesNotMatch( read( file ), /class="crumb"/, `${ file } still has the old breadcrumb` );
+	}
+} );
+
+test( 'the hand-written pages carry the shared footer, with its links relative to the page', () => {
+	for ( const [ file, up ] of [ [ 'site/index.html', '' ], [ 'site/add-music/index.html', '../' ], [ 'site/download/index.html', '../' ], [ 'site/developers/index.html', '../' ], [ 'site/built/index.html', '../' ], [ 'site/accessibility/index.html', '../' ] ] ) {
+		const footer = foot( up ).match( /<footer>.*<\/footer>/s )[ 0 ];
+		assert.ok( read( file ).includes( footer ), `${ file } has the footer with links from ${ up || 'the root' }` );
 	}
 } );
 

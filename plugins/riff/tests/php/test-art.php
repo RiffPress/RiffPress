@@ -48,6 +48,16 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertStringContainsString( 'riff-art=' . $post, $track['art'][0]['src'] );
 	}
 
+	public function test_a_drawn_cover_says_what_it_draws(): void {
+		[ $post, $id ] = $this->bare_post();
+		$album         = (int) wp_get_object_terms( $id, Catalog::ALBUM )[0]->term_id;
+		$track         = Tracks::from_attachment( $id, $post );
+		$this->assertSame( 'Cover of ' . html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ), $track['art'][0]['alt'], 'a post\'s cover names the post, as it is written' );
+		$art = Art::album_art( $album, $track['art'] );
+		$this->assertSame( 'Cover of Compositions by The Airmen of Note', $art[0]['alt'], 'an album\'s cover names the album and its artist' );
+		$this->assertSame( '', Art::alt( '', 'Nobody' ) );
+	}
+
 	public function test_an_album_with_no_image_gets_a_cover_drawn_for_the_album(): void {
 		[ $post, $id ] = $this->bare_post();
 		$album         = (int) wp_get_object_terms( $id, Catalog::ALBUM )[0]->term_id;
