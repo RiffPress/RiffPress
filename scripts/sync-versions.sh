@@ -29,9 +29,9 @@
 # plugin was in fact tested on. Skipped quietly when api.wordpress.org cannot
 # be reached.
 #
-# Each package is released on its own, so .github/workflows/release-please.yml
-# syncs only the package a release pull request is for, and nothing of the
-# others lands with it:
+# One release pull request can release several packages; .github/workflows/release-please.yml
+# syncs each package whose version it moves, by name, and leaves the
+# others as they are:
 #
 #   bash scripts/sync-versions.sh riff-lyrics
 #
