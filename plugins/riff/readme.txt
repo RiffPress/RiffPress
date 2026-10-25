@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.1.0
+Stable tag: 5.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.2.0 =
+* The single-key shortcuts are a signed-in listener's choice under Personal Options on their profile, and a visitor has only the Shift ones, so Now Playing's header loses its keyboard switch.
+* Fixed: in the installed app, Now Playing's tabs stop short of the head's own buttons instead of sitting under Stop.
+* Fixed: the player's controls keep one name each, leave their state to the role, and use the words music apps use: Now Playing, Shuffle, Repeat with its state, Track position, Like &lt;title&gt;, Volume in percent, Stop.
+
 = 5.1.1 =
 * Fixed: a track that cannot play is said and marked in the list, "Now playing" waits until the sound starts, and the player stops after three failures in a row rather than skipping through the album.
 
@@ -133,15 +138,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 4.32.1 =
 * Fixed: the bar never covers what has focus, a modal Now Playing keeps Tab, and the surface is held to WCAG 2.2 AA by test.
 * Fixed: the first track pressed is announced, and Up next's rows say what they play, with the artist.
-
-= 4.32.0 =
-* A Block Bindings source, riff/track, so core blocks show a track's details.
-* A listener can turn the single-key shortcuts off from the player (WCAG 2.1.4).
-* Riff's library, likes and playlists as abilities, through the Abilities API.
-* The player says where the track is, through riff.time and window.riff.time().
-* Fixed: a track with no title shows its file name.
-* Fixed: an album with no cover gets a cover drawn for the album, not its post.
-* Fixed: an artist or album tag with angle brackets is filed under its whole name.
-* Fixed: the keyboard-shortcuts switch sits at the top of Now Playing, out of the transport.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
