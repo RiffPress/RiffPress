@@ -100,3 +100,41 @@ test( 'a passkey is saved after a code and signs in on its own', async ( { page,
 	expect( used[ 0 ].signCount ).toBeGreaterThan( credentials[ 0 ].signCount );
 	testInfo.annotations.push( { type: 'passkey', description: 'resident credential made and used' } );
 } );
+
+// The tokens are set on #riff, and the sheet sits outside it. It once took nothing from them, so
+// its colours fell back to nothing everywhere, and in the Listen app's own document, where no
+// theme sets a font, the text fell back to the browser's serif.
+test( 'the sheet is drawn in the player\'s tokens in the installed app', async ( { page } ) => {
+	await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+	await page.locator( '.riff-app-signin' ).click();
+	const sheet = page.locator( 'dialog.riff-signin' );
+	await expect( sheet ).toBeVisible();
+	const looks = await sheet.evaluate( ( dialog ) => {
+		// What the player's surface and text resolve to, from an element inside the player.
+		const probe = document.createElement( 'span' );
+		probe.style.cssText = 'background:var(--riff-surface);color:var(--riff-fg)';
+		document.getElementById( 'riff' ).append( probe );
+		const player = getComputedStyle( probe );
+		const wanted = { background: player.backgroundColor, color: player.color };
+		probe.remove();
+		const drawn = getComputedStyle( dialog );
+		const field = getComputedStyle( dialog.querySelector( 'input' ) );
+		const main = getComputedStyle( dialog.querySelector( 'button.riff-signin-main' ) );
+		return {
+			wanted,
+			background: drawn.backgroundColor,
+			color: drawn.color,
+			font: drawn.fontFamily,
+			field: { width: field.borderTopWidth, style: field.borderTopStyle, colour: field.borderTopColor },
+			main: main.backgroundColor,
+		};
+	} );
+	expect( looks.background ).toBe( looks.wanted.background );
+	expect( looks.color ).toBe( looks.wanted.color );
+	expect( looks.font ).toContain( 'Roboto' );
+	expect( looks.field ).toMatchObject( { width: '1px', style: 'solid' } );
+	expect( looks.field.colour ).not.toBe( 'rgba(0, 0, 0, 0)' );
+	expect( looks.main ).not.toBe( 'rgba(0, 0, 0, 0)' );
+	await sheet.getByRole( 'button', { name: 'Close' } ).click();
+	await expect( sheet ).toBeHidden();
+} );

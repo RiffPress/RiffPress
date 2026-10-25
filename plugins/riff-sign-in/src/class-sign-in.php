@@ -110,32 +110,43 @@ final class Sign_In {
 	}
 
 	/**
-	 * The sheet's styles, in Riff's tokens: a dialog in the player's dark, its fields as the
-	 * player's pills are.
+	 * The sheet's styles, in Riff's tokens: a sheet on the player's surface, as Up next is, its
+	 * buttons as the player's pills are. The tokens are set on the player's root, which the sheet
+	 * is not inside, so sign-in.js copies their values onto the dialog as it opens. Everything the
+	 * sheet shows is set here, the font, margins and sizes included, so neither a theme's styles
+	 * nor the browser's defaults (all the Listen app's own document has) show through.
 	 *
 	 * @return string
 	 */
 	private static function css(): string {
-		return '.riff-signin{box-sizing:border-box;width:min(420px,calc(100vw - 32px));max-width:none;margin:auto;padding:24px;border:0;border-radius:12px;background:var(--riff-bg);color:var(--riff-fg);font:16px/1.5 var(--riff-font,inherit);box-shadow:0 24px 64px rgba(0,0,0,.5)}'
-			. '.riff-signin::backdrop{background:rgba(0,0,0,.6)}'
+		return '.riff-signin{box-sizing:border-box;width:min(420px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:28px 24px 24px;overflow:auto;border:1px solid var(--riff-line);border-radius:16px;background:var(--riff-surface);color:var(--riff-fg);font-size:16px;font-weight:400;line-height:1.5;-webkit-font-smoothing:antialiased;box-shadow:0 24px 64px rgb(0 0 0/.5)}'
+			. '.riff-signin *,.riff-signin *::before,.riff-signin *::after{box-sizing:border-box}'
+			. '.riff-signin::backdrop{background:rgb(0 0 0/.6)}'
 			. '.riff-signin[open]{display:flex;flex-direction:column;gap:12px}'
-			. '.riff-signin h2{margin:0;font-size:22px;line-height:1.2}'
-			. '.riff-signin p{margin:0;color:var(--riff-fg-2)}'
-			. '.riff-signin label{display:block;font-size:14px;color:var(--riff-fg-2)}'
-			. '.riff-signin input{box-sizing:border-box;width:100%;min-height:44px;margin-top:4px;padding:10px 12px;border:1px solid var(--riff-fg-2);border-radius:8px;background:transparent;color:var(--riff-fg);font:inherit}'
-			. '.riff-signin input:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px}'
-			. '.riff-signin-code{font-size:24px;letter-spacing:.3em;text-align:center}'
-			. '.riff-signin-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}'
-			. '.riff-signin button{all:unset;box-sizing:border-box;min-height:44px;padding:0 18px;border-radius:999px;cursor:pointer;font:inherit;font-weight:600;color:var(--riff-fg);border:1px solid var(--riff-fg-2)}'
-			. '.riff-signin button.riff-signin-main{background:var(--riff-accent);border-color:var(--riff-accent);color:#000}'
-			. '.riff-signin button:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px}'
-			. '.riff-signin button[disabled]{opacity:.5;cursor:default}'
-			. '.riff-signin-note{font-size:14px}'
-			. '.riff-signin-error{color:var(--riff-accent)}'
-			. '.riff-signin a{color:var(--riff-fg);text-underline-offset:3px}'
-			. '.riff-signin-close{position:absolute;top:12px;right:12px;min-height:40px;min-width:40px;padding:0;border:0!important;text-align:center}'
-			. '.riff-signin{position:fixed;inset:0}'
-			. '@media (max-width:600px){.riff-signin{width:calc(100vw - 16px);margin:auto 8px 8px;border-radius:12px}}';
+			. '.riff-signin h2{margin:0 40px 0 0;padding:0;color:inherit;font-family:inherit;font-size:22px;font-weight:700;line-height:1.25;letter-spacing:normal;text-transform:none}'
+			. '.riff-signin p{margin:0;padding:0;color:var(--riff-fg-2);font:inherit}'
+			. '.riff-signin form{display:flex;flex-direction:column;gap:6px;margin:4px 0 0}'
+			. '.riff-signin label{display:block;margin:0;color:var(--riff-fg);font-size:14px;font-weight:600;line-height:1.4}'
+			. '.riff-signin input{display:block;width:100%;min-height:48px;margin:0;padding:12px 14px;border:1px solid var(--riff-fg-3);border-radius:8px;background:var(--riff-bg);box-shadow:none;color:var(--riff-fg);caret-color:var(--riff-accent);font-family:inherit;font-size:16px;line-height:1.4;appearance:none}'
+			. '.riff-signin input:hover{border-color:var(--riff-fg-2)}'
+			. '.riff-signin input:focus{border-color:var(--riff-accent);outline:2px solid var(--riff-accent);outline-offset:0}'
+			. '.riff-signin input.riff-signin-code{font-size:24px;font-variant-numeric:tabular-nums;letter-spacing:.3em;text-align:center}'
+			. '.riff-signin-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}'
+			. '.riff-signin button{all:unset;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;padding:0 20px;border:1px solid var(--riff-fg-3);border-radius:999px;color:var(--riff-fg);font-family:inherit;font-size:15px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}'
+			. '.riff-signin button:hover{border-color:var(--riff-fg-2);background:var(--riff-hover)}'
+			. '.riff-signin button.riff-signin-main{border-color:var(--riff-accent);background:var(--riff-accent);color:var(--riff-bg)}'
+			. '.riff-signin button.riff-signin-main:hover{filter:brightness(1.1)}'
+			. '.riff-signin button:focus-visible{outline:2px solid var(--riff-fg);outline-offset:2px}'
+			. '.riff-signin button[disabled]{opacity:.5;filter:none;cursor:default}'
+			. '.riff-signin button.riff-signin-close{position:absolute;top:12px;right:12px;width:40px;min-height:40px;padding:0;border-color:transparent;border-radius:50%;color:var(--riff-fg-2)}'
+			. '.riff-signin button.riff-signin-close:hover{background:var(--riff-hover);color:var(--riff-fg)}'
+			. '.riff-signin-close svg{display:block;width:20px;height:20px}'
+			. '.riff-signin p.riff-signin-note{font-size:14px}'
+			. '.riff-signin p.riff-signin-error{color:var(--riff-accent);font-weight:600}'
+			. '.riff-signin a{color:var(--riff-fg-2);text-decoration:underline;text-underline-offset:3px}'
+			. '.riff-signin a:hover{color:var(--riff-fg)}'
+			. '.riff-signin a:focus-visible{border-radius:2px;outline:2px solid var(--riff-fg);outline-offset:2px}'
+			. '@media (max-width:600px){.riff-signin{width:calc(100vw - 16px);margin:auto 8px max(8px,env(safe-area-inset-bottom))}}';
 	}
 
 	/**

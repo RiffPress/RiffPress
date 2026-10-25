@@ -57,6 +57,28 @@
 		}
 		return node;
 	}
+	// The sheet is drawn in Riff's tokens, which are set on the player's root, #riff, as a theme
+	// sets them too. It cannot sit inside the player, which is hidden until a track loads, and a
+	// dialog in a hidden element is never drawn; so it sits in the body and takes the tokens'
+	// values from the player each time it opens. Without them every colour in its stylesheet
+	// falls back to nothing, and in the Listen app's own document, where no theme sets a font,
+	// the text falls back to the browser's serif.
+	const TOKENS = [ '--riff-bg', '--riff-surface', '--riff-fg', '--riff-fg-2', '--riff-fg-3', '--riff-line', '--riff-hover', '--riff-accent' ];
+	function dress() {
+		const root = document.getElementById( 'riff' );
+		if ( ! root ) {
+			return;
+		}
+		const style = getComputedStyle( root );
+		for ( const name of TOKENS ) {
+			const value = style.getPropertyValue( name ).trim();
+			if ( value ) {
+				dialog.style.setProperty( name, value );
+			}
+		}
+		dialog.style.fontFamily = style.fontFamily;
+		dialog.style.colorScheme = style.colorScheme;
+	}
 	function build() {
 		dialog = el( 'dialog', { className: 'riff-signin' } );
 		dialog.setAttribute( 'aria-labelledby', 'riff-signin-title' );
@@ -67,11 +89,13 @@
 		document.body.append( dialog );
 	}
 	function show( parts, focus ) {
-		const close = el( 'button', { type: 'button', className: 'riff-signin-close', textContent: '×' } );
+		const close = el( 'button', { type: 'button', className: 'riff-signin-close' } );
 		close.setAttribute( 'aria-label', S.close || 'Close' );
+		close.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 		close.addEventListener( 'click', () => dialog.close() );
 		dialog.replaceChildren( close, ...parts );
 		if ( ! dialog.open ) {
+			dress();
 			dialog.showModal();
 		}
 		( focus || dialog.querySelector( 'input, button.riff-signin-main' ) )?.focus();
