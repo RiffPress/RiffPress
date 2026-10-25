@@ -57,6 +57,11 @@ test.describe( 'Standalone', () => {
 		const upNext = page.locator( '.riff-tab[data-riff-tab="queue"]' );
 		const tab = await upNext.boundingBox();
 		expect( tab.y ).toBeLessThan( 64 );
+		// In the head, the tabs stop short of its own buttons, however many show.
+		const tabs = await page.locator( '.riff-np .riff-tabs' ).boundingBox();
+		for ( const button of await page.locator( '.riff-np-end > .riff-btn:visible' ).all() ) {
+			expect( tabs.x + tabs.width ).toBeLessThanOrEqual( ( await button.boundingBox() ).x - 8 );
+		}
 		await upNext.click();
 		await expect( np ).toHaveAttribute( 'data-riff-drawer', 'open' );
 		await expect( upNext ).toHaveAttribute( 'aria-expanded', 'true' );
