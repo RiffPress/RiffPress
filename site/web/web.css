@@ -943,6 +943,18 @@ figcaption {
 	overflow: visible;
 }
 
+/* the chord held while strumming, quietly, beside the strings */
+.neck-chord {
+	order: 1;
+	flex: none;
+	min-width: 2.5em;
+	margin: 0 0 0 -40px;
+	color: var(--ink-2);
+	font: 600 13px/1 var(--sans);
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+}
+
 /* only once the strings have been asked to sound, in the gap before the menu */
 .neck-mute {
 	order: 1;
