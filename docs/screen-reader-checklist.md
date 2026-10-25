@@ -8,11 +8,17 @@ Run it with at least two of: VoiceOver with Safari on a Mac, VoiceOver on an iPh
 
 Use the demo at https://riffpress.com/demo, or any post with at least three tracks, and a page with the Listen block.
 
+## Before you start
+
+- Play a track with the screen reader off and check the time moves. On a local site, changing `.wp-env.json`'s `core` rebuilds the WordPress folder and empties `wp-content/uploads` while the database keeps the attachments, so every track fails and the player skips through the album. Run `npm run seed` on a fresh environment.
+- VoiceOver reads whatever is in front, terminal included. To keep it quiet in another app, open VoiceOver Utility, add an Activity for that app with speech muted, and choose it under Activities.
+- On a Mac laptop, F3 without Fn opens Mission Control. Describe item is VO + Fn + F3 there.
+
 ## The post
 
-1. Move through the post to the first track. Its row is a button, "Play <title>", and the … after it is "More options for <title>".
+1. Move through the post to the first track. Its row is a button, "Play <title>"; after it come a heart, "Like <title>", a toggle button, and the …, "More options for <title>".
 2. Press it. You hear "Now playing <title> by <artist>", and the row's button is now "Pause <title>".
-3. The bar at the foot of the page is a region named Player. Its first button is "Open Now Playing: <title> by <artist>"; then Shuffle, Previous, Pause, Next, Repeat, the Seek slider, Like, the quality pill, Volume on a computer, and a second "Open Now Playing".
+3. The bar at the foot of the page is a region named Player. Its first button is "Open Now Playing: <title> by <artist>"; then Shuffle, Previous, Pause, Next, Repeat, the Seek slider, Like, Volume on a computer, and a second "Open Now Playing". The quality pill ("MP3 · 128 kbps") between Like and Volume is text, not a control: Tab passes it, and the VoiceOver cursor (VO + arrows) reads it.
 4. On the Seek slider, press the right arrow. You hear a time, "11 seconds of 8 minutes, 57 seconds", five seconds on from before. Drag it with the screen reader's own gesture: the time keeps being spoken.
 
 ## Now Playing
