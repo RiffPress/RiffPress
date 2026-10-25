@@ -78,3 +78,13 @@ test( 'nothing the pull request names can reach outside its album, or be a link'
 	assert.throws( () => stage( from, to, BASE ), /Not a plain track/ );
 	assert.throws( () => stage( built( {} ), to, 'http://example.test/' ), /https/ );
 } );
+
+test( 'every workflow that publishes the demo publishes albums.json with it', () => {
+	const dir = path.join( ROOT, '.github/workflows' );
+	for ( const name of fs.readdirSync( dir ) ) {
+		const yml = fs.readFileSync( path.join( dir, name ), 'utf8' );
+		if ( /demo-blueprint\.js (resolve|stage)/.test( yml ) ) {
+			assert.match( yml, /demo-albums\.js (bundle|stage)/, `${ name } publishes the demo without albums.json` );
+		}
+	}
+} );

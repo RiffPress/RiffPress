@@ -66,12 +66,8 @@ jobs:
           cp packages/fixtures/seed.php preview/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} preview/demo/ \;
           cp site/brand/mark.png preview/demo/
-          for m in packages/fixtures/*/manifest.json; do
-            slug=$(basename "$(dirname "$m")")
-            node -e "process.exit(require('./$m').remote ? 0 : 1)" || continue
-            cp "$m" "preview/demo/$slug.manifest.json"
-            cp "$(dirname "$m")/levels.json" "preview/demo/$slug.levels.json"
-          done
+          # Every streamed album's manifest and levels in one albums.json, as blueprint.json fetches it.
+          node .github/scripts/demo-albums.js bundle packages/fixtures preview/demo/albums.json
           printf 'https://riffpress.com/demo/' > preview/demo/base.txt
           BASE="https://raw.githubusercontent.com/${GH_REPO}/preview-main/"
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" > preview/blueprint.json
