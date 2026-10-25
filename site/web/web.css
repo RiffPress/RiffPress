@@ -825,13 +825,14 @@ figcaption {
 	position: sticky;
 	top: 0;
 	z-index: 9;
-	background: var(--panel);
-	color: var(--white);
+	background: var(--white);
+	color: var(--ink);
 	font-size: 0.875rem;
+	border-bottom: 1px solid var(--charcoal-5);
 }
 
 .local-nav .wrap {
-	height: 60px;
+	height: 56px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -839,22 +840,30 @@ figcaption {
 }
 
 .local-nav a {
-	color: var(--white);
+	color: var(--charcoal-4);
 	text-decoration: none;
 	padding: 5px;
 	border-radius: 2px;
 }
 
 .local-nav a:hover {
+	color: var(--ink);
 	text-decoration: underline;
+}
+
+.local-nav a[aria-current] {
+	color: var(--ink);
+	text-decoration: underline;
+	text-underline-offset: 6px;
 }
 
 .local-nav a:focus-visible {
 	outline: none;
-	box-shadow: inset 0 0 0 1.5px var(--pomegrade);
+	box-shadow: inset 0 0 0 1.5px var(--pomegrade-deep);
 }
 
 .local-nav .local-title {
+	color: var(--ink);
 	font-size: 1rem;
 	font-weight: 600;
 	margin-left: -5px;
@@ -1490,4 +1499,71 @@ main h2[id] {
 
 .member .dot-links {
 	margin-top: 20px;
+}
+
+/* ---- the pages: a title, then the article with "In this article" beside it,
+   as wordpress.org's documentation is laid out */
+.doc {
+	max-width: 1160px;
+	padding-top: 24px;
+}
+
+.doc .lede {
+	max-width: 40rem;
+	text-wrap: pretty;
+}
+
+.doc .with-toc {
+	margin-top: 40px;
+}
+
+.doc .entry {
+	max-width: 760px;
+}
+
+.doc .entry h2 {
+	margin-top: 48px;
+}
+
+.doc .entry > h2:first-child {
+	margin-top: 0;
+}
+
+.toc-edit {
+	margin: 10px 0 0;
+}
+
+.toc-edit a {
+	color: var(--charcoal-4);
+}
+
+/* the guide's sections are numbered as a tracklist is: the number in mono,
+   before the title and before each entry of the contents */
+.guide .entry {
+	counter-reset: step;
+}
+
+.guide .entry h2::before {
+	counter-increment: step;
+	content: counter(step, decimal-leading-zero);
+	display: block;
+	margin-bottom: 8px;
+	font-family: var(--mono);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	color: var(--pomegrade-deep);
+}
+
+.guide .toc-box > ul {
+	counter-reset: track;
+}
+
+.guide .toc-box > ul > li::before {
+	counter-increment: track;
+	content: counter(track, decimal-leading-zero);
+	margin-right: 10px;
+	font-family: var(--mono);
+	font-size: 0.75rem;
+	color: var(--charcoal-4);
 }

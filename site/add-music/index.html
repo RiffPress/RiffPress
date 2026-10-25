@@ -29,13 +29,15 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <div class="nav"><div class="wrap"><a class="mark" href="../"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="./" aria-current="page">Add your music</a><a href="../developers/">Developers</a><a class="btn" href="../download/">Download</a></nav></div></div>
-<div class="local-nav"><div class="wrap"><a class="local-title" href="./" aria-current="page">Add your music</a><nav aria-label="Add your music"><a href="#start">Before you start</a><a href="#listen">Listen page</a><a href="#upload">Upload</a><a href="#details">Details</a><a href="#post">Album posts</a><a href="#many">Many albums</a></nav></div></div>
+<div class="local-nav"><div class="wrap"><a class="local-title" href="./" aria-current="page">Add your music</a><nav aria-label="Add your music"><a href="../download/">Get Riff</a><a href="../developers/">Developers</a><a href="../built/">How Riff is built</a></nav></div></div>
 
 <div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../">Riff</a></span><span class="is-current-page">Add your music</span></nav></div></div>
-<main id="main" class="wrap guide">
+<main id="main" class="wrap doc guide">
 <h1>Add your music</h1>
 <p class="lede">How an album goes onto a site you own, starting from nothing. It takes no code and there is nothing to configure.</p>
-
+<div class="with-toc">
+<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary><ul><li><a href="#start">Before you start</a></li><li><a href="#listen">Make your Listen page</a></li><li><a href="#upload">Upload your music</a></li><li><a href="#details">Titles, artists and covers come from the files</a></li><li><a href="#post">Give an album its own post</a></li><li><a href="#many">Many albums at once</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/add-music/index.html">Edit this page on GitHub</a></p></aside>
+<article class="entry">
 <h2 id="start">Before you start</h2>
 <p>You need a WordPress site. WordPress is free software that runs on a web host. Most hosts set it up in a few clicks, and any host will do as long as it runs WordPress 7.0 or newer. Once it is up, you sign in at your site's address followed by <code>/wp-admin</code>. That is the dashboard, where everything below happens.</p>
 <p>Then install Riff. In the dashboard, go to <kbd>Plugins</kbd>, then <kbd>Add New Plugin</kbd>, then <kbd>Upload Plugin</kbd>, choose the zip, and activate it.</p>
@@ -84,7 +86,15 @@
 <p>If you have a folder per album and your host gives you <a href="https://wp-cli.org/">WP-CLI</a>, <code>wp riff import</code> with the path to the folder uploads everything and gives each album a post. A cover image in the folder becomes the artwork. Run it again and it skips what it already imported; add <code>--dry-run</code> to see what it would do first.</p>
 
 <div class="aside">Stuck? <a href="https://github.com/RiffPress/RiffPress/issues">Open an issue</a> and say what you tried. If something here is wrong or unclear, that is a bug in this page too.</div>
+</article>
+</div>
 </main>
+<script>
+// Folded on a narrow screen, as the code reference folds it.
+if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
+	document.querySelector( '.toc-box' ).open = false;
+}
+</script>
 
 <div class="dots" aria-hidden="true"></div>
 <footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>

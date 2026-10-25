@@ -209,13 +209,14 @@ a:hover {
 	position: sticky;
 	top: 0;
 	z-index: 9;
-	background: var(--panel);
-	color: var(--white);
+	background: var(--white);
+	color: var(--ink);
 	font-size: 0.875rem;
+	border-bottom: 1px solid var(--charcoal-5);
 }
 
 .local-nav .wrap {
-	height: 60px;
+	height: 56px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -223,22 +224,30 @@ a:hover {
 }
 
 .local-nav a {
-	color: var(--white);
+	color: var(--charcoal-4);
 	text-decoration: none;
 	padding: 5px;
 	border-radius: 2px;
 }
 
 .local-nav a:hover {
+	color: var(--ink);
 	text-decoration: underline;
+}
+
+.local-nav a[aria-current] {
+	color: var(--ink);
+	text-decoration: underline;
+	text-underline-offset: 6px;
 }
 
 .local-nav a:focus-visible {
 	outline: none;
-	box-shadow: inset 0 0 0 1.5px var(--pomegrade);
+	box-shadow: inset 0 0 0 1.5px var(--pomegrade-deep);
 }
 
 .local-nav .local-title {
+	color: var(--ink);
 	flex: none;
 	font-size: 1rem;
 	font-weight: 600;

@@ -32,26 +32,28 @@
 <div class="local-nav"><div class="wrap"><a class="local-title" href="../developers/" aria-current="page">Developers</a><nav aria-label="Developers"><a href="../developers/php/">PHP</a><a href="../developers/javascript/">JavaScript</a><a href="../developers/rest/">REST API</a><a href="../developers/css/">CSS</a><a class="aside-link" href="../web/">Built on the open web</a></nav></div></div>
 
 <div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../">Riff</a></span><span class="is-current-page">Developers</span></nav></div></div>
-<main id="main" class="wrap dl">
+<main id="main" class="wrap doc dl">
 <h1>Built to be extended</h1>
 <p class="lede">Riff is built the way a feature plugin is: one track shape everywhere, read through WordPress's own APIs, with a public surface that is written down and kept. Everything below is stable within a major version.</p>
-
-<h2>PHP</h2>
+<div class="with-toc">
+<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary><ul><li><a href="#php">PHP</a></li><li><a href="#javascript">JavaScript</a></li><li><a href="#rest-and-graphql">REST and GraphQL</a></li><li><a href="#your-own-tracks">Your own tracks</a></li><li><a href="#tabs-beside-up-next">Tabs beside Up next</a></li><li><a href="#standalone-mode-and-wp-cli">Standalone mode and WP-CLI</a></li><li><a href="#design">Design and theming</a></li><li><a href="#under-the-hood">Under the hood</a></li><li><a href="#the-code">The code</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/developers/index.html">Edit this page on GitHub</a></p></aside>
+<article class="entry">
+<h2 id="php">PHP</h2>
 <p>Every filter and action has a page of its own, generated from the docblock above the line it fires on, and CI fails a change that adds one without it. <a href="php/">The PHP reference</a> lists them with the <code>Riff\Source</code> interface, the track schema and the Listen block. Set the accent, add chips under Now Playing or controls to the bar, redraw a cover, or turn the player off on a page; <a href="hooks/">all hooks</a> are searchable in one list.</p>
 
-<h2>JavaScript</h2>
+<h2 id="javascript">JavaScript</h2>
 <p><code>window.riff</code> is the player's API. Actions and filters through <code>wp.hooks</code>, and <code>riff:*</code> events on the player's root, announce every change of state: what is playing, what is queued, what a press did. <a href="javascript/">The JavaScript reference</a> has every member of <code>window.riff</code>, generated from the player's own docblocks, and each action and filter has a page in <a href="hooks/">the hooks reference</a>.</p>
 
-<h2>REST and GraphQL</h2>
+<h2 id="rest-and-graphql">REST and GraphQL</h2>
 <p>The REST API gives each audio and video item in <code>wp/v2/media</code> a <code>riff_track</code>. <code>riff/v1/library</code> lists the posts with tracks and <code>riff/v1/library/{id}</code> opens one with its tracks and rendered blocks. <code>riff/v1/tracks</code>, <code>riff/v1/albums</code> and <code>riff/v1/artists</code> browse and search the Media Library, and a visitor sees only what WordPress's own media route would show them. Every route describes itself on <code>OPTIONS</code>. With WPGraphQL active, <code>MediaItem.riffTrack</code> and <code>Post.riffTracks</code>. All of it shares one schema with the player, <code>Riff\Tracks::schema()</code>, versioned and held to after the <code>riff_track</code> filter; WPGraphQL's <code>RiffTrack</code> is built from it. <a href="rest/">The REST API reference</a> has every route, argument and field.</p>
 
-<h2>Your own tracks</h2>
+<h2 id="your-own-tracks">Your own tracks</h2>
 <p>Tracks come from registered sources. The core source reads the audio, video and playlist blocks in posts. A plugin adds its own post type or catalogue by implementing <code>Riff\Source</code> and calling <code>Riff\Sources::register()</code> on <code>init</code>, or through the <code>riff_sources</code> filter, and the library, the REST routes and the player read it like any other. <a href="php/#sources">The PHP reference</a> has the interface, method by method.</p>
 
-<h2>Tabs beside Up next</h2>
+<h2 id="tabs-beside-up-next">Tabs beside Up next</h2>
 <p>The <code>riff_now_playing_tabs</code> filter adds a tab next to Up next in Now Playing, and your script fills its panel and listens for the track changing through <code>window.riff</code>. <a href="https://github.com/RiffPress/RiffPress/tree/main/plugins/riff-lyrics">Riff Lyrics</a> is the reference extension: a separate plugin that adds a Lyrics tab using only Riff's documented API, and CI fails if it reaches past it.</p>
 
-<h2>Standalone mode and WP-CLI</h2>
+<h2 id="standalone-mode-and-wp-cli">Standalone mode and WP-CLI</h2>
 <p>Any page with the Riff block also answers at its address plus <code>app/</code>, outside the theme and with a web app manifest. <code>wp riff import &lt;folder&gt;</code> adds a folder of music to the Media Library, one album post per folder, and <code>--dry-run</code> shows what it would do.</p>
 
 <h2 id="design">Design and theming</h2>
@@ -63,12 +65,20 @@
 </ul>
 <p>Other plugins' styles still load in standalone mode, where only the theme's are left out, so a stylesheet can set the player's public custom properties there too; <a href="css/">the CSS reference</a> lists each with its default. Now Playing takes new tabs through <code>riff_now_playing_tabs</code>.</p>
 
-<h2>Under the hood</h2>
+<h2 id="under-the-hood">Under the hood</h2>
 <p>Each browser API and CSS feature the player calls has <a href="../web/">a page of its own</a>: how Riff uses it, why, what happens without it, and the exact lines in the source at the commit that was published.</p>
 
-<h2>The code</h2>
+<h2 id="the-code">The code</h2>
 <p>No build step: the shipped files are the source. <a href="https://github.com/RiffPress/RiffPress">The repository</a> has the contributing guide, the test suites, and a Playground blueprint for a scratch site with the demo on it.</p>
+</article>
+</div>
 </main>
+<script>
+// Folded on a narrow screen, as the code reference folds it.
+if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
+	document.querySelector( '.toc-box' ).open = false;
+}
+</script>
 
 <div class="dots" aria-hidden="true"></div>
 <footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
