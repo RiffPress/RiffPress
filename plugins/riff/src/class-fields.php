@@ -101,7 +101,7 @@ final class Fields {
 				'applies'     => $media,
 				'get'         => static fn( WP_Post $post ): bool => Protect::is( $post->ID ),
 				'set'         => static function ( WP_Post $post, $value ): void {
-					$done = rest_sanitize_boolean( $value ) ? Protect::protect( $post->ID ) : Protect::unprotect( $post->ID );
+					$done = rest_sanitize_boolean( $value ) ? Protected_Files::protect( $post->ID ) : Protected_Files::unprotect( $post->ID );
 					if ( is_wp_error( $done ) ) {
 						throw new \RuntimeException( esc_html( $done->get_error_message() ) );
 					}

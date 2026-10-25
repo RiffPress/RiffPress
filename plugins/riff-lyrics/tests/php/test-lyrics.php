@@ -97,7 +97,6 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 			$registry = WP_Entity_Fields_Registry::get_instance();
 			foreach ( array( 'initialized' => false, 'fields' => array(), 'field_modules' => array() ) as $name => $value ) { // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 				$property = new ReflectionProperty( $registry, $name );
-				$property->setAccessible( true );
 				$property->setValue( $registry, $value );
 			}
 			$fields = array_column( wp_get_registered_entity_fields( 'postType', 'attachment' ), null, 'id' );

@@ -51,10 +51,12 @@
 /* On a theme or a block that sets its colours (riff-app-themed, with
    --riff-app-bg or --riff-app-ink from global styles or the block's own
    settings), the quieter shades are mixed from them, so they hold on a dark
-   background as well as a light one. */
+   background as well as a light one. The second ink keeps 78% of the first:
+   at 70%, Twenty Twenty-Six's text on its base came out at 4.3:1, under the
+   4.5:1 a card's second line needs. */
 .riff-app.riff-app-themed {
 	--riff-app-surface: color-mix(in srgb, var(--riff-app-ink) 4%, var(--riff-app-bg));
-	--riff-app-ink-2: color-mix(in srgb, var(--riff-app-ink) 70%, var(--riff-app-bg));
+	--riff-app-ink-2: color-mix(in srgb, var(--riff-app-ink) 78%, var(--riff-app-bg));
 	--riff-app-line: color-mix(in srgb, var(--riff-app-ink) 18%, var(--riff-app-bg));
 	--riff-app-accent-deep: color-mix(in srgb, var(--riff-app-accent) 75%, var(--riff-app-bg));
 	--riff-app-accent-tint: color-mix(in srgb, var(--riff-app-accent) 10%, var(--riff-app-bg));
