@@ -8,6 +8,8 @@
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
+// WCAG 2.2 AA, with axe's best practices: what the page is held to.
+const AXE_TAGS = [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice' ];
 const { own } = require( './own' );
 const { expectTidy } = require( './tidy' );
 
@@ -305,7 +307,7 @@ test.describe( 'The components page', () => {
 			);
 			expect(
 				(
-					await new AxeBuilder( { page } )
+					await new AxeBuilder( { page } ).withTags( AXE_TAGS )
 						.include( '.riff-app' )
 						.analyze()
 				).violations,
@@ -321,7 +323,7 @@ test.describe( 'The components page', () => {
 		await expect( page.locator( '.riff-menu' ) ).toBeVisible();
 		expect(
 			(
-				await new AxeBuilder( { page } )
+				await new AxeBuilder( { page } ).withTags( AXE_TAGS )
 					.include( '.riff-menu' )
 					.analyze()
 			).violations,

@@ -35,6 +35,17 @@ width and on an iPhone viewport, so include both when a change touches layout.
 </details>
 
 <details>
+<summary>Accessibility</summary>
+
+<!--
+For a change to the player or the Listen app: what changed for the keyboard, a screen reader
+and zoom, and which checks ran (axe in the e2e suite, the aria snapshots, a screen reader).
+"Nothing on the surface changed" is a fine answer.
+-->
+
+</details>
+
+<details>
 <summary>Use of AI tools</summary>
 
 <!--

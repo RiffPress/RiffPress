@@ -14,6 +14,8 @@ const { own } = require( './own' );
 const iosAgent = ( testInfo ) =>
 	/iP(hone|ad|od)/.test( testInfo.project.use.userAgent || '' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
+// WCAG 2.2 AA, with axe's best practices: what the page is held to.
+const AXE_TAGS = [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice' ];
 
 const FIXTURES = path.join(
 	__dirname,
@@ -1239,7 +1241,7 @@ test.describe( 'Player', () => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-bar-info' ).click();
 		await expect( page.locator( '.riff-np' ) ).toBeVisible();
-		const results = await new AxeBuilder( { page } )
+		const results = await new AxeBuilder( { page } ).withTags( AXE_TAGS )
 			.include( '#riff' )
 			.analyze();
 		expect( results.violations ).toEqual( [] );

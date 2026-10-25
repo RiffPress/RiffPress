@@ -59,7 +59,7 @@ module.exports = defineConfig( {
 				...devices[ 'iPhone 14' ],
 				defaultBrowserType: 'chromium',
 			},
-			testMatch: /tests\/e2e\/(player|app|lyrics)\.spec\.js$/,
+			testMatch: /tests\/e2e\/(player|app|lyrics|wcag)\.spec\.js$/,
 		},
 		{
 			name: 'webkit',

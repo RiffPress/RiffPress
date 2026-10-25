@@ -8,6 +8,8 @@ const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( './own' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
+// WCAG 2.2 AA, with axe's best practices: what the page is held to.
+const AXE_TAGS = [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice' ];
 const { expectTidy } = require( './tidy' );
 
 const FIXTURES = path.join(
@@ -266,7 +268,7 @@ test.describe( 'App', () => {
 		await expect( page.locator( '.riff-grid .riff-card' ).first() ).toBeVisible();
 		await page.locator( '.riff-app-home' ).click();
 		await expect( page.locator( '[data-riff-shelf="added"]' ) ).toBeVisible();
-		const results = await new AxeBuilder( { page } ).include( '.riff-app' ).analyze();
+		const results = await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze();
 		expect( results.violations ).toEqual( [] );
 	} );
 
@@ -388,7 +390,7 @@ test.describe( 'Browse', () => {
 		await expect( field ).toHaveAttribute( 'aria-expanded', 'true' );
 		await expect( list.locator( '.riff-suggest-top' ) ).toContainText( 'Compositions' );
 		await expect( page.locator( '.riff-app-sr' ) ).toHaveText( /\d+ suggestions?/ );
-		const results = await new AxeBuilder( { page } ).include( '.riff-app' ).analyze();
+		const results = await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze();
 		expect( results.violations ).toEqual( [] );
 
 		await field.press( 'ArrowDown' );
@@ -418,18 +420,18 @@ test.describe( 'Browse', () => {
 		for ( const view of views ) {
 			await page.goto( pageUrl + ( view ? ( pageUrl.includes( '?' ) ? '&' : '?' ) + view : '' ) );
 			await expect( page.locator( '.riff-app-view h2' ).first() ).toBeVisible();
-			const results = await new AxeBuilder( { page } ).include( '.riff-app' ).analyze();
+			const results = await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze();
 			expect( results.violations, view || 'Home' ).toEqual( [] );
 		}
 		// One album and one artist, reached the way a listener reaches them.
 		await page.goto( pageUrl + ( pageUrl.includes( '?' ) ? '&' : '?' ) + 'riff_view=albums' );
 		await page.locator( '.riff-card[data-riff-album] .riff-card-link' ).first().click();
 		await expect( page.locator( '.riff-album-title' ) ).toBeVisible();
-		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'an album' ).toEqual( [] );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'an album' ).toEqual( [] );
 		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
 		await page.locator( '.riff-artist' ).first().click();
 		await expect( page.locator( '.riff-album-title' ) ).toBeVisible();
-		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'an artist' ).toEqual( [] );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'an artist' ).toEqual( [] );
 	} );
 
 	test( 'every browse view reads without the script', async ( { browser } ) => {
@@ -608,7 +610,7 @@ test.describe( 'Standalone', () => {
 		expect( Math.abs( at.title - at.rowTitle ) ).toBeLessThanOrEqual( 2 );
 		expect( Math.abs( at.clock - at.time ) ).toBeLessThanOrEqual( 4 );
 		await expectTidy( page, '.riff-app', 'an album, standalone' );
-		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 	} );
 
 	test( 'the app offers to install itself from the second visit, with the browser\'s prompt, and stays away once dismissed', async ( {
@@ -642,7 +644,7 @@ test.describe( 'Standalone', () => {
 		await offer();
 		await expect( card ).toBeVisible();
 		await expect( card.locator( '.riff-app-install-title' ) ).toHaveText( /^Get the .+ app$/ );
-		expect( ( await new AxeBuilder( { page } ).include( '[data-riff-install]' ).analyze() ).violations ).toEqual( [] );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '[data-riff-install]' ).analyze() ).violations ).toEqual( [] );
 		await card.getByRole( 'button', { name: 'Install' } ).click();
 		expect( await page.evaluate( () => window.prompted ) ).toBe( 1 );
 
@@ -747,7 +749,7 @@ test.describe( 'Standalone', () => {
 		const link = account.locator( 'a' ).first();
 		await link.hover();
 		await expect( link ).toHaveCSS( 'color', amber );
-		expect( ( await new AxeBuilder( { page } ).include( '.riff-app-account' ).analyze() ).violations ).toEqual( [] );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app-account' ).analyze() ).violations ).toEqual( [] );
 	} );
 
 	test( 'in the desktop app the window does not stretch past its ends, and the view keeps its round corners', async ( {
@@ -791,7 +793,7 @@ test.describe( 'Standalone', () => {
 		await expect( np ).toHaveAttribute( 'data-riff-drawer', 'open' );
 		await expect( upNext ).toHaveAttribute( 'aria-expanded', 'true' );
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeVisible();
-		expect( ( await new AxeBuilder( { page } ).include( '.riff-np' ).analyze() ).violations ).toEqual( [] );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-np' ).analyze() ).violations ).toEqual( [] );
 
 		// Pressed again, it closes; Escape still closes Now Playing.
 		await upNext.click();
