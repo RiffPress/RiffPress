@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.0.0](https://github.com/RiffPress/RiffPress/compare/v4.32.1...v5.0.0) (2026-10-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them ([#613](https://github.com/RiffPress/RiffPress/issues/613))
+
+### Features
+
+* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them ([#613](https://github.com/RiffPress/RiffPress/issues/613)) ([8a7c980](https://github.com/RiffPress/RiffPress/commit/8a7c980407214bdebeafd06e4a4e85627927e617))
+* the player says where a track sits in Up next, reads a title in its language, tells what the cover shows, draws a video's captions behind a Captions switch, and stops from a button ([#617](https://github.com/RiffPress/RiffPress/issues/617)) ([7d325df](https://github.com/RiffPress/RiffPress/commit/7d325dff27ca39602eae3cfd57bf0d2c2c2a7873))
+
 ## [4.32.1](https://github.com/RiffPress/RiffPress/compare/v4.32.0...v4.32.1) (2026-10-25)
 
 
