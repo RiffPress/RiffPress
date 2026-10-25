@@ -4,7 +4,7 @@
 
 ```bash
 npm install && composer install
-npm run env:start          # WordPress at http://localhost:8890 (admin / password); the tests site at :8891
+npm run env:start          # WordPress at http://localhost:8890 (admin / password); the tests site at :8891. Core is trunk until 7.2 ships on 8 December 2026, since Riff needs 7.2
 npm run seed               # a post with ten public-domain jazz tracks, and one with a video
 ```
 

@@ -20,6 +20,7 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | Who can play what | The status and visibility of the post a track appears in. |
 | People and app sign-in | WordPress users and application passwords. |
 | AI tools and other plugins reading the library or keeping likes and playlists | The Abilities API: Riff registers one ability per `riff/v1` route it answers for, each run as that route's REST request. |
+| A track's artist, album, video version, captions and protection in the Media Library's views and forms | The Entity Fields API (WordPress 7.2): Riff registers each as a field of the attachment entity, reading and writing a REST field of the same name on `wp/v2/media`, so DataViews shows and edits them beside core's own without a screen of Riff's. |
 | Per-site upload limits on a network | Multisite's `blog_upload_space`. |
 
 ## Added by Riff, and why

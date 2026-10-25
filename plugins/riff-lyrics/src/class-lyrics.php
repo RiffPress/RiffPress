@@ -45,6 +45,72 @@ final class Lyrics {
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
+		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
+		add_action( 'wp_entity_fields_api_init', array( self::class, 'entity_field' ) );
+	}
+
+	/**
+	 * `riff_lyrics` on wp/v2/media: the same lyrics the tab shows, written by whoever may edit the
+	 * file into the same place WordPress keeps the file's own.
+	 *
+	 * @since 0.4.0
+	 */
+	public static function rest_field(): void {
+		register_rest_field(
+			'attachment',
+			'riff_lyrics',
+			array(
+				'get_callback'    => static function ( array $item ): ?string {
+					if ( ! str_starts_with( (string) get_post_mime_type( (int) $item['id'] ), 'audio/' ) ) {
+						return null;
+					}
+					$meta = wp_get_attachment_metadata( (int) $item['id'] );
+					return is_array( $meta ) ? (string) ( $meta[ self::KEY ] ?? '' ) : '';
+				},
+				'update_callback' => static function ( $value, WP_Post $post ) {
+					if ( ! current_user_can( 'edit_post', $post->ID ) ) {
+						return new \WP_Error( 'rest_cannot_edit', __( 'Sorry, you are not allowed to edit this file.', 'riff-lyrics' ), array( 'status' => rest_authorization_required_code() ) );
+					}
+					self::save( array( 'ID' => $post->ID ), array( 'riff_lyrics' => wp_slash( (string) $value ) ) );
+					return true;
+				},
+				'schema'          => array(
+					'description' => __( 'The lyrics, as the file\'s tag has them or as typed in the Media Library.', 'riff-lyrics' ),
+					'type'        => array( 'string', 'null' ),
+					'context'     => array( 'view', 'edit' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Lyrics as a field of the attachment entity, so WordPress 7.2's Media Library shows and edits
+	 * them in its views and forms beside the file's other details.
+	 *
+	 * @since 0.4.0
+	 */
+	public static function entity_field(): void {
+		if ( ! function_exists( 'wp_register_entity_fields' ) ) {
+			return;
+		}
+		wp_register_entity_fields(
+			'riff-lyrics',
+			'postType',
+			'attachment',
+			array(
+				array(
+					'id'            => 'riff_lyrics',
+					'type'          => 'text',
+					'label'         => __( 'Lyrics', 'riff-lyrics' ),
+					'Edit'          => array(
+						'control' => 'textarea',
+						'rows'    => 6,
+					),
+					'enableSorting' => false,
+					'filterBy'      => false,
+				),
+			)
+		);
 	}
 
 	/**

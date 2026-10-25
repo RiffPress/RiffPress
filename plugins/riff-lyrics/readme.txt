@@ -1,8 +1,8 @@
 === Riff Lyrics ===
 Contributors: joefusco
 Tags: lyrics, music, audio, player
-Requires at least: 7.0
-Tested up to: 7.1
+Requires at least: 7.2
+Tested up to: 7.2
 Requires PHP: 8.1
 Requires Plugins: riff
 Stable tag: 0.3.0

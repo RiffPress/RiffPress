@@ -196,9 +196,12 @@ html.has-riff {
 	font-weight: 500;
 }
 
+/* The second line and the time step back from the title, but not past
+   4.5:1 on a theme whose own text is translucent: Ipsum's is black at 75%,
+   and 0.7 of that on its base came out at 4.3:1. */
 .riff-row-sub,
 .riff-row-time {
-	opacity: 0.7;
+	opacity: 0.8;
 }
 
 .riff-row-time {
