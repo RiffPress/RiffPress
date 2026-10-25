@@ -33,6 +33,12 @@
 			"include-component-in-tag": true,
 			"initial-version": "0.1.0"
 		},
+		"plugins/riff-sign-in": {
+			"package-name": "riff-sign-in",
+			"component": "riff-sign-in",
+			"include-component-in-tag": true,
+			"initial-version": "0.1.0"
+		},
 		"packages/wp-api-coverage": {
 			"package-name": "wp-api-coverage",
 			"component": "wp-api-coverage",

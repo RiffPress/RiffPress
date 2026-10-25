@@ -14,6 +14,56 @@ use Riff\Listen\Ui;
 
 defined( 'ABSPATH' ) || exit;
 
+// The tests site keeps the last sign-in code Riff Sign In made, so the e2e suite can type it in
+// place of reading an email, and answers it on a route of its own.
+add_action(
+	'riff_sign_in_code',
+	static function ( string $email, string $code, string $link ): void {
+		set_transient(
+			'riff_test_sign_in_code',
+			array(
+				'email' => $email,
+				'code'  => $code,
+				'link'  => $link,
+			),
+			MINUTE_IN_SECONDS
+		);
+	},
+	10,
+	3
+);
+add_action(
+	'rest_api_init',
+	static function (): void {
+		// Whether anyone may register, which core's settings route does not expose, for the admin.
+		register_rest_route(
+			'riff-test/v1',
+			'/registration',
+			array(
+				'methods'             => 'POST',
+				'callback'            => static function ( WP_REST_Request $request ) {
+					global $wpdb;
+					update_option( 'users_can_register', rest_sanitize_boolean( $request['open'] ) ? 1 : 0 );
+					// The code limits count over a quarter of an hour, per address and per network
+					// address; a suite run on one machine starts each time with a clean slate.
+					$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient%_riff_signin_rate_%'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+					return rest_ensure_response( array( 'open' => (bool) get_option( 'users_can_register' ) ) );
+				},
+				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+			)
+		);
+		register_rest_route(
+			'riff-test/v1',
+			'/sign-in-code',
+			array(
+				'methods'             => 'GET',
+				'callback'            => static fn() => rest_ensure_response( get_transient( 'riff_test_sign_in_code' ) ?: array() ), // phpcs:ignore Universal.Operators.DisallowShortTernary.Found
+				'permission_callback' => '__return_true',
+			)
+		);
+	}
+);
+
 add_action(
 	'template_redirect',
 	static function (): void {

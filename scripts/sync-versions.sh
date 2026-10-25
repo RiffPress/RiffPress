@@ -13,6 +13,10 @@
 #   - plugins/riff-lyrics/riff-lyrics.php plugin header and `RIFF_LYRICS_VERSION`
 #   - plugins/riff-lyrics/readme.txt `Stable tag:`, `Tested up to:` and its changelog
 #
+# riff-sign-in (plugins/riff-sign-in):
+#   - plugins/riff-sign-in/riff-sign-in.php plugin header and `RIFF_SIGN_IN_VERSION`
+#   - plugins/riff-sign-in/readme.txt `Stable tag:`, `Tested up to:` and its changelog
+#
 # wp-api-coverage (packages/wp-api-coverage):
 #   - packages/wp-api-coverage/package.json and its package-lock.json entry
 #
@@ -45,8 +49,8 @@ command -v npm >/dev/null 2>&1 || { echo "npm is required to run scripts/sync-ve
 
 ONLY=${1:-all}
 case "$ONLY" in
-	all | riff | riff-lyrics | wp-api-coverage | riff-desktop) ;;
-	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, wp-api-coverage or riff-desktop" >&2; exit 1 ;;
+	all | riff | riff-lyrics | riff-sign-in | wp-api-coverage | riff-desktop) ;;
+	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, riff-sign-in, wp-api-coverage or riff-desktop" >&2; exit 1 ;;
 esac
 
 # A package's version, or nothing for one that has never been released: it is
@@ -115,6 +119,15 @@ if [[ "$ONLY" == all || "$ONLY" == riff-lyrics ]]; then
 		sync_plugin plugins/riff-lyrics/riff-lyrics.php RIFF_LYRICS_VERSION plugins/riff-lyrics/readme.txt "$LYRICS_VERSION"
 		node .github/scripts/readme-changelog.js riff-lyrics
 		echo "Synced Riff Lyrics to ${LYRICS_VERSION}"
+	fi
+fi
+
+if [[ "$ONLY" == all || "$ONLY" == riff-sign-in ]]; then
+	SIGN_IN_VERSION=$(manifest_version plugins/riff-sign-in)
+	if [[ -n "$SIGN_IN_VERSION" ]]; then
+		sync_plugin plugins/riff-sign-in/riff-sign-in.php RIFF_SIGN_IN_VERSION plugins/riff-sign-in/readme.txt "$SIGN_IN_VERSION"
+		node .github/scripts/readme-changelog.js riff-sign-in
+		echo "Synced Riff Sign In to ${SIGN_IN_VERSION}"
 	else
 		echo "Riff Lyrics has not been released yet; nothing to sync"
 	fi

@@ -10,13 +10,13 @@
  *
  * --check fails when a readme.txt's changelog is not what CHANGELOG.md says.
  *
- * Usage: node .github/scripts/readme-changelog.js [--check] [riff|riff-lyrics ...]
+ * Usage: node .github/scripts/readme-changelog.js [--check] [riff|riff-lyrics|riff-sign-in ...]
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
 const ROOT = path.resolve( __dirname, '..', '..' );
-const PLUGINS = [ 'riff', 'riff-lyrics' ];
+const PLUGINS = [ 'riff', 'riff-lyrics', 'riff-sign-in' ];
 // How many releases the readme keeps; the rest are on GitHub.
 const KEEP = 5;
 const FOOTER =
