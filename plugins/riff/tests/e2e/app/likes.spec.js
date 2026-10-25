@@ -349,6 +349,8 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 	await page.locator( '.riff-library-sort summary' ).click();
 	await page.locator( '.riff-sort-link', { hasText: 'Recently added' } ).click();
 	await expect( page.locator( '.riff-sort-link[aria-current="true"]' ) ).toHaveText( 'Recently added' );
+	// Liked songs is pinned first under Playlists, the chip the loop above did not leave on.
+	await page.locator( '.riff-chip-link', { hasText: 'Playlists' } ).click();
 	await page.locator( '.riff-card-liked a' ).first().click();
 	const rows = page.locator( '.riff-library .riff-row' );
 	await expect( rows ).toHaveCount( 2 );
