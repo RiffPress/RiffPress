@@ -53,6 +53,7 @@ jobs:
           node .github/scripts/reference-pages.js
           node .github/scripts/web-pages.js
           mkdir -p build && cp -R site build/site
+          node .github/scripts/no-widows.js build/site
       - name: Build riff.zip
         run: |
           set -euo pipefail

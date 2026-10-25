@@ -820,3 +820,21 @@ footer nav {
 .has-crate .shelf {
 	display: none;
 }
+
+/* no lone last word on a line: headings balanced, running text shaped so
+   its last line is never one word (the deploy also binds the last two) */
+h1,
+h2,
+h3,
+h4 {
+	text-wrap: balance;
+}
+
+p,
+li,
+dd,
+dt,
+figcaption,
+blockquote {
+	text-wrap: pretty;
+}

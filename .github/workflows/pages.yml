@@ -95,6 +95,8 @@ jobs:
           node .github/scripts/reference-pages.js
           node .github/scripts/web-pages.js
           cp -R site/. out/
+          # No lone last word on a line: each block's last two words joined by a no-break space.
+          node .github/scripts/no-widows.js out
           cp build/riff.zip out/
           cp packages/fixtures/seed.php out/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;

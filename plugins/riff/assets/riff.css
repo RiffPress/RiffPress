@@ -1985,3 +1985,19 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		outline-offset: -2px;
 	}
 }
+
+/* No lone last word on a line in the player or the Listen app: headings and
+   short headings balanced, running text shaped. */
+#riff h2,
+#riff h3,
+.riff-app h1,
+.riff-app h2,
+.riff-app h3 {
+	text-wrap: balance;
+}
+
+#riff p,
+.riff-app p,
+.riff-app li {
+	text-wrap: pretty;
+}
