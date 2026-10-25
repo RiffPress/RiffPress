@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v0.3.0...riff-lyrics-v1.0.0) (2026-10-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them ([#613](https://github.com/RiffPress/RiffPress/issues/613))
+
+### Features
+
+* captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement ([#610](https://github.com/RiffPress/RiffPress/issues/610)) ([fff41d1](https://github.com/RiffPress/RiffPress/commit/fff41d1e9648f0cea0a11bfcd8d9b13a83ab3772))
+* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them ([#613](https://github.com/RiffPress/RiffPress/issues/613)) ([8a7c980](https://github.com/RiffPress/RiffPress/commit/8a7c980407214bdebeafd06e4a4e85627927e617))
+
 ## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v0.2.0...riff-lyrics-v0.3.0) (2026-10-24)
 
 
