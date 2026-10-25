@@ -54,6 +54,23 @@ if ( ! function_exists( 'riff_seed' ) ) {
 	}
 
 	/**
+	 * A song's words and the language they are sung in, from its manifest entry, under the keys
+	 * an upload through the Media Library puts them: getID3 reads a USLT frame into
+	 * `unsynchronised_lyric`, which Riff Lyrics shows, and Riff reads `language`.
+	 *
+	 * @param array $track The track's manifest entry.
+	 * @return array Metadata to add; empty for a track without words.
+	 */
+	function riff_seed_words( array $track ): array {
+		return array_filter(
+			array(
+				'unsynchronised_lyric' => (string) ( $track['lyrics'] ?? '' ),
+				'language'             => (string) ( $track['language'] ?? '' ),
+			)
+		);
+	}
+
+	/**
 	 * Files a post under a category, made if it does not exist.
 	 *
 	 * @param int    $post_id Post ID.
@@ -138,7 +155,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 					'fileformat'  => 'mp3',
 					'bitrate'     => 1000 * (float) ( $track['bitrate'] ?? 0 ),
 					'riff_levels' => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
-				)
+				) + riff_seed_words( $track )
 			);
 			$ids[] = $id;
 		}
@@ -258,7 +275,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 				'length'      => (float) ( $track['duration'] ?? 0 ),
 				// The level envelope, measured when the album was built: the drawn cover's groove.
 				'riff_levels' => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
-			);
+			) + riff_seed_words( $track );
 			$changed = false;
 			foreach ( $known as $key => $value ) {
 				if ( empty( $meta[ $key ] ) && ! empty( $value ) ) {
