@@ -208,7 +208,9 @@ if ( ! function_exists( 'riff_seed' ) ) {
 				),
 				static fn( $v ) => '' !== $v && null !== $v
 			);
-			$items .= '<!-- wp:playlist-track ' . wp_json_encode( $attrs, JSON_UNESCAPED_SLASHES ) . ' /-->';
+			// As core writes a block's attributes: a quote in a name is \u0022, which wp_insert_post()'s
+			// unslashing leaves alone, where wp_json_encode()'s \" would lose its backslash.
+			$items .= '<!-- wp:playlist-track ' . serialize_block_attributes( $attrs ) . ' /-->';
 		}
 		return '<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">' . $items . '</ol></figure><!-- /wp:playlist -->';
 	}
