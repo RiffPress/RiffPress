@@ -3,10 +3,12 @@
  * is what a reader without this script, or with reduced motion, sees; this lays five live strings in
  * their place and plucks one when the pointer crosses it, with the wave equation in string.js.
  *
- * A click on the strings asks them to sound. From then on each pluck also rings: a Karplus-Strong
- * string, a delay line one period long, averaged and damped as it goes round, which is the physical
- * model of a plucked string, tuned to a D major pentatonic voicing so any strum is in key. The first
- * click strums all five, top to bottom. A Mute button appears beside them then, and only then.
+ * A click on the strings asks them to sound. From then on each pluck also rings, as a steel string
+ * (steel.js), tuned as the top five strings of a guitar: E, B, G, D, A. Holding a key while strumming
+ * frets a chord, as a guitarist would name it: a letter for its major chord, Shift for minor, 7 held
+ * for the seventh (chords.js); a string the shape does not play gives a muted thud. The chord's name
+ * shows beside the strings while it is held. The first click strums all five, top to bottom, and a
+ * Mute button appears beside them then, and only then.
  *
  * On a phone they sit between the wordmark and Download; a finger strums across them, or taps one.
  *
@@ -14,15 +16,17 @@
  * real button, in the tab order once there is sound to mute.
  */
 import { POINTS, string, step, pluck } from './string.js';
+import { OPEN, notes, chordFor } from './chords.js';
+import { render } from './steel.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const SET = [
-	// Stroke width, the fundamental shown (cycles a second), how long it rings (s), the note (Hz): treble at the top.
-	{ width: 1, hz: 7.5, ring: 2, note: 587.33 }, // D5
-	{ width: 1.25, hz: 6.3, ring: 2.2, note: 493.88 }, // B4
-	{ width: 1.7, hz: 5.2, ring: 2.5, note: 369.99 }, // F♯4
-	{ width: 2.2, hz: 4.3, ring: 2.8, note: 293.66 }, // D4
-	{ width: 2.8, hz: 3.5, ring: 3.1, note: 220 }, // A3
+	// Stroke width, the fundamental shown (cycles a second), how long it shows ringing (s), wound or plain: treble at the top.
+	{ width: 1, hz: 7.5, ring: 2, wound: false }, // E4
+	{ width: 1.25, hz: 6.3, ring: 2.2, wound: false }, // B3
+	{ width: 1.7, hz: 5.2, ring: 2.5, wound: true }, // G3
+	{ width: 2.2, hz: 4.3, ring: 2.8, wound: true }, // D3
+	{ width: 2.8, hz: 3.5, ring: 3.1, wound: true }, // A2
 ];
 
 function neck( bar ) {
@@ -95,35 +99,81 @@ function neck( bar ) {
 		muted = ! muted;
 		mute.setAttribute( 'aria-pressed', String( muted ) );
 	} );
-	function sound( s, at, force ) {
+	// A guitar's body under the strings: its air and wood resonances, and the fizz above taken off.
+	let body = null;
+	function bodyOf( ctx ) {
+		const stages = [
+			[ 'peaking', 105, 1.3, 3.5 ],
+			[ 'peaking', 230, 1.4, 2.5 ],
+			[ 'peaking', 2800, 0.9, 1.5 ],
+			[ 'highshelf', 6000, 0.7, -5 ],
+		].map( ( [ type, frequency, q, gain ] ) => {
+			const f = ctx.createBiquadFilter();
+			f.type = type;
+			f.frequency.value = frequency;
+			f.Q.value = q;
+			f.gain.value = gain;
+			return f;
+		} );
+		stages.reduce( ( a, b ) => a.connect( b ) );
+		stages[ stages.length - 1 ].connect( ctx.destination );
+		return stages[ 0 ];
+	}
+	function sound( s, i, at, force ) {
 		if ( ! audio || muted ) {
 			return;
 		}
-		const rate = audio.sampleRate;
-		const period = Math.round( rate / s.note );
-		const length = Math.round( rate * s.ring );
-		const buffer = audio.createBuffer( 1, length, rate );
-		const out = buffer.getChannelData( 0 );
-		const ring = new Float32Array( period );
-		const k = Math.max( 1, Math.round( at * period ) );
-		for ( let i = 0; i < period; i++ ) {
-			// The pluck's triangle, and a little noise for the pick.
-			const tri = i <= k ? i / k : ( period - i ) / ( period - k );
-			ring[ i ] = ( tri - 0.5 ) * 0.6 + ( Math.random() - 0.5 ) * 0.4;
-		}
-		const damp = 0.994 + s.width * 0.0008;
-		for ( let n = 0; n < length; n++ ) {
-			const j = n % period;
-			out[ n ] = ring[ j ];
-			ring[ j ] = damp * 0.5 * ( ring[ j ] + ring[ ( j + 1 ) % period ] );
-		}
+		const pitches = chord ? notes( chord ) : OPEN;
+		const hz = pitches[ i ];
+		const wave = render( {
+			rate: audio.sampleRate,
+			hz: hz || OPEN[ i ],
+			seconds: hz ? 3.5 : 0.25,
+			at,
+			force,
+			wound: s.wound,
+			muted: ! hz,
+		} );
+		const buffer = audio.createBuffer( 1, wave.length, audio.sampleRate );
+		buffer.copyToChannel( wave, 0 );
 		const source = audio.createBufferSource();
 		source.buffer = buffer;
 		const gain = audio.createGain();
-		gain.gain.value = 0.16 * force;
-		source.connect( gain ).connect( audio.destination );
+		gain.gain.value = 0.22;
+		source.connect( gain ).connect( body );
 		source.start();
 	}
+
+	// ---- Chords: the keys held while strumming, as a guitarist names them.
+	let chord = null;
+	const held = new Set();
+	const label = document.createElement( 'span' );
+	label.className = 'neck-chord';
+	label.setAttribute( 'aria-hidden', 'true' );
+	wrap.insertBefore( label, mute.nextSibling );
+	const typing = ( e ) => e.target.closest?.( 'input, textarea, select, [contenteditable=""], [contenteditable="true"]' );
+	const name = ( e ) => {
+		const letters = [ ...held ].filter( ( k ) => /^[a-g]$/.test( k ) );
+		chord = chordFor( letters[ letters.length - 1 ], e.shiftKey, held.has( '7' ) );
+		label.textContent = chord || '';
+	};
+	document.addEventListener( 'keydown', ( e ) => {
+		if ( ! audio || e.metaKey || e.ctrlKey || e.altKey || typing( e ) ) {
+			return;
+		}
+		held.add( e.key.toLowerCase() === '&' ? '7' : e.key.toLowerCase() );
+		name( e );
+	} );
+	document.addEventListener( 'keyup', ( e ) => {
+		held.delete( e.key.toLowerCase() );
+		held.delete( e.key.toLowerCase() === '&' ? '7' : '' );
+		name( e );
+	} );
+	window.addEventListener( 'blur', () => {
+		held.clear();
+		chord = null;
+		label.textContent = '';
+	} );
 
 	// ---- Motion: the loop runs only while a string moves.
 	let running = false;
@@ -157,8 +207,11 @@ function neck( bar ) {
 	// A pluck pulls as far as the stroke was fast, and never so far it would touch the next string.
 	function strike( s, at, direction, force ) {
 		const f = Math.max( 0.35, Math.min( 1, force ) );
-		pluck( s, at, direction * ( height / ( lines.length + 1 ) ) * 0.45 * f );
-		sound( s, at, f );
+		const i = lines.indexOf( s );
+		// Under the fretting hand a string the chord does not play hardly moves.
+		const damped = chord && ! notes( chord )[ i ];
+		pluck( s, at, direction * ( height / ( lines.length + 1 ) ) * ( damped ? 0.12 : 0.45 ) * f );
+		sound( s, i, at, f );
 		if ( ! running ) {
 			running = true;
 			then = performance.now();
@@ -171,6 +224,7 @@ function neck( bar ) {
 			return;
 		}
 		audio = new ( window.AudioContext || window.webkitAudioContext )();
+		body = bodyOf( audio );
 		mute.hidden = false;
 		lines.forEach( ( s, i ) => setTimeout( () => strike( s, 0.5, 1, 0.9 ), i * 70 ) );
 	} );
