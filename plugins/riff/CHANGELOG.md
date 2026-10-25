@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.2.3](https://github.com/RiffPress/RiffPress/compare/riff-v5.2.2...riff-v5.2.3) (2026-10-25)
+
+
+### Bug Fixes
+
+* **app:** drawn covers no longer use Riff's amber, which is kept for what you press, such as Play ([#682](https://github.com/RiffPress/RiffPress/issues/682)) ([41f004b](https://github.com/RiffPress/RiffPress/commit/41f004b36494b9f787e5e3f7b1a2926c4aaa5ef4))
+* **app:** the app's manifest names each icon by the size it really is, so a browser does not skip a site icon set without the Customizer's crop ([#680](https://github.com/RiffPress/RiffPress/issues/680)) ([96283dc](https://github.com/RiffPress/RiffPress/commit/96283dcfe9b9c8321851e0cf33f9b6ee71b7a516))
+* **app:** Your Library has no Songs chip that left the library: Liked songs is pinned first under Playlists, as the apps file it ([#679](https://github.com/RiffPress/RiffPress/issues/679)) ([d2e6876](https://github.com/RiffPress/RiffPress/commit/d2e6876c720327cd4188441ab8465996a5bac465))
+* **blocks:** the Riff block shows the app in the editor as it is on the page, with the app's own stylesheet ([#684](https://github.com/RiffPress/RiffPress/issues/684)) ([b15a8cc](https://github.com/RiffPress/RiffPress/commit/b15a8cc4682153774d006d98bf5e6e6f798cfc28))
+
 ## [5.2.2](https://github.com/RiffPress/RiffPress/compare/riff-v5.2.1...riff-v5.2.2) (2026-10-25)
 
 
