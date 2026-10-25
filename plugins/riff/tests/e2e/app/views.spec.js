@@ -169,6 +169,40 @@ test.describe( 'App', () => {
 		await expect( page.locator( '.riff-row' ) ).toHaveCount( 2 );
 	} );
 
+	test( 'a visitor’s Home leaves out what the site no longer has, rather than a dead card', async ( {
+		browser,
+	} ) => {
+		const context = await browser.newContext( { storageState: { cookies: [], origins: [] } } );
+		const page = await context.newPage();
+		await page.goto( `${ pageUrl }?riff=${ postId }` );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect.poll( async () => ( await playing( page ) ).time ).toBeGreaterThan( 0.5 );
+		// As if a post and its file had been played here, then deleted from the site.
+		await page.evaluate( () => {
+			const list = JSON.parse( localStorage.getItem( 'riff-history' ) || '[]' );
+			list.unshift( {
+				id: '999999',
+				title: 'Gone track',
+				artist: 'Nobody',
+				art: [ { src: '/wp-content/uploads/gone.png' } ],
+				post: { id: 999998, title: 'Gone post', url: '/gone/' },
+				played: Date.now(),
+			} );
+			localStorage.setItem( 'riff-history', JSON.stringify( list ) );
+		} );
+		await page.goto( pageUrl );
+		const jump = page.locator( '[data-riff-shelf="jump"]' );
+		await expect( jump.locator( '.riff-card-title' ).first() ).toBeVisible();
+		await expect( jump.locator( '.riff-card-title', { hasText: 'Gone post' } ) ).toHaveCount( 0 );
+		await expect( page.locator( '[data-riff-shelf="recent"] .riff-card-title', { hasText: 'Gone track' } ) ).toHaveCount( 0 );
+		await expect( jump.locator( '.riff-card-link' ).first() ).toHaveAttribute( 'href', new RegExp( `[?&]riff=${ postId }$` ) );
+		// No card on the page shows a broken cover.
+		expect(
+			await page.evaluate( () => [ ...document.querySelectorAll( '.riff-card-art img' ) ].filter( ( img ) => img.complete && img.naturalWidth === 0 ).length )
+		).toBe( 0 );
+		await context.close();
+	} );
+
 	test( 'Home is rows that scroll sideways, each with Show all, and passes an accessibility check', async ( {
 		page,
 	} ) => {
