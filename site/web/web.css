@@ -350,20 +350,6 @@ main p {
 	line-height: 1.714;
 }
 
-.side-title {
-	margin: 0 0 20px;
-	font-weight: 600;
-	font-size: 1rem;
-}
-
-.side-title a {
-	color: var(--ink);
-	text-decoration: none;
-}
-
-.side-title a:hover {
-	text-decoration: underline;
-}
 
 .side h2 {
 	font-family: var(--sans);
