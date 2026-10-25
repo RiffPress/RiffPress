@@ -13,7 +13,7 @@ const ROOT = path.resolve( __dirname, '..', '..' );
 const read = ( file ) => fs.readFileSync( path.join( ROOT, file ), 'utf8' );
 
 const under = ( dir ) => fs.readdirSync( path.join( ROOT, dir ) ).filter( ( f ) => f.endsWith( '.js' ) ).map( ( f ) => `${ dir }/${ f }` );
-const JS = [ 'plugins/riff/assets/riff.js', 'plugins/riff/features/listen/app.js', ...under( 'plugins/riff/features/listen/app' ) ].map( read ).join( '\n' );
+const JS = [ 'plugins/riff/assets/riff.js', ...under( 'plugins/riff/assets/player' ), 'plugins/riff/features/listen/app.js', ...under( 'plugins/riff/features/listen/app' ) ].map( read ).join( '\n' );
 const CSS = [ 'plugins/riff/assets/tokens.css', 'plugins/riff/assets/riff.css', 'plugins/riff/features/listen/app.css', 'plugins/riff/features/listen/standalone.css', 'plugins/riff/features/listen/desktop.css' ].map( read ).join( '\n' );
 const PHP = [ 'plugins/riff/templates/player.php', 'plugins/riff/features/listen/class-app.php', 'plugins/riff/src/class-player.php' ].map( read ).join( '\n' );
 const ALL = JS + '\n' + CSS + '\n' + PHP;

@@ -27,6 +27,21 @@ final class Player {
 	public const APP_MODULES = array( 'helpers', 'addresses', 'fetch', 'cards', 'views', 'hearts', 'playlists', 'home', 'sidebar', 'install', 'desktop', 'search' );
 
 	/**
+	 * The player's sections under assets/player/: the modules riff.js imports as it starts, each
+	 * registered as the script module `riff-player/<name>`.
+	 *
+	 * @since 4.33.0
+	 */
+	public const PLAYER_SECTIONS = array( 'helpers', 'state', 'media', 'rows', 'resume', 'queue', 'playback', 'account', 'paint', 'menu', 'seek', 'now-playing', 'controls', 'keyboard' );
+
+	/**
+	 * The player's optional features under assets/player/, imported when first needed.
+	 *
+	 * @since 4.33.0
+	 */
+	public const PLAYER_FEATURES = array( 'filament', 'gestures', 'session', 'cast', 'share', 'wake-lock' );
+
+	/**
 	 * Hooks the assets and the markup.
 	 *
 	 * @since 4.0.0
@@ -136,11 +151,14 @@ final class Player {
 		wp_enqueue_script_module(
 			'riff',
 			RIFF_URL . 'assets/riff.js',
-			array(
+			array_merge(
+				self::player_modules(),
 				array(
-					'id'     => 'riff-app',
-					'import' => 'dynamic',
-				),
+					array(
+						'id'     => 'riff-app',
+						'import' => 'dynamic',
+					),
+				)
 			),
 			self::version( 'assets/riff.js' ),
 			array(
@@ -156,6 +174,38 @@ final class Player {
 		foreach ( $modules as $id ) {
 			wp_set_script_module_translations( $id, 'riff' );
 		}
+		foreach ( array_merge( self::PLAYER_SECTIONS, self::PLAYER_FEATURES ) as $module ) {
+			wp_set_script_module_translations( 'riff-player/' . $module, 'riff' );
+		}
+	}
+
+	/**
+	 * Registers the player's modules under assets/player/ and lists them as riff.js's dependencies:
+	 * the sections it imports as it starts, which the page preloads with it, and the features it
+	 * imports when first needed (the filament, gestures, the lock screen, Cast, sharing, the wake
+	 * lock), which the import map names so a dynamic import finds them.
+	 *
+	 * @since 4.33.0
+	 *
+	 * @return array[] Dependencies, as wp_enqueue_script_module() takes them.
+	 */
+	private static function player_modules(): array {
+		$deps   = array();
+		$groups = array(
+			'static'  => self::PLAYER_SECTIONS,
+			'dynamic' => self::PLAYER_FEATURES,
+		);
+		foreach ( $groups as $import => $modules ) {
+			foreach ( $modules as $module ) {
+				$id = 'riff-player/' . $module;
+				wp_register_script_module( $id, RIFF_URL . "assets/player/{$module}.js", array(), self::version( "assets/player/{$module}.js" ) );
+				$deps[] = array(
+					'id'     => $id,
+					'import' => $import,
+				);
+			}
+		}
+		return $deps;
 	}
 
 	/**

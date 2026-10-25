@@ -147,6 +147,47 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'assets/tokens.css' ), wp_styles()->registered['riff-tokens']->ver );
 	}
 
+	public function test_the_player_is_modules_the_import_map_names_and_a_language_pack_reaches(): void {
+		$this->go_to( home_url( '/' ) );
+		Player::enqueue();
+		$player = wp_script_modules()->get_registered( 'riff' );
+		$deps   = array_column( $player['dependencies'], 'import', 'id' );
+		foreach ( Player::PLAYER_SECTIONS as $module ) {
+			$this->assertSame( 'static', $deps[ 'riff-player/' . $module ] ?? null, "$module is imported as the player starts, so the page preloads it" );
+		}
+		foreach ( Player::PLAYER_FEATURES as $module ) {
+			$this->assertSame( 'dynamic', $deps[ 'riff-player/' . $module ] ?? null, "$module is imported when first needed, so the import map names it" );
+		}
+		// Every module file is registered, and every registered module is a file.
+		$files = array_map( static fn( string $file ): string => basename( $file, '.js' ), glob( RIFF_DIR . 'assets/player/*.js' ) );
+		sort( $files );
+		$all = array_merge( Player::PLAYER_SECTIONS, Player::PLAYER_FEATURES );
+		sort( $all );
+		$this->assertSame( $files, $all );
+		foreach ( $all as $module ) {
+			$registered = wp_script_modules()->get_registered( 'riff-player/' . $module );
+			$this->assertStringEndsWith( "assets/player/{$module}.js", strtok( (string) $registered['src'], '?' ), $module );
+			$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . "assets/player/{$module}.js" ), $registered['version'], "$module is cache-busted by its own time" );
+		}
+		// The entry imports each section by its id and each feature through P.feature( name ), and
+		// no module imports by path: an import by path would skip the map, the preload and the version.
+		$ids   = array_map( static fn( $m ) => 'riff-player/' . $m, $all );
+		$entry = (string) file_get_contents( RIFF_DIR . 'assets/riff.js' );
+		foreach ( Player::PLAYER_SECTIONS as $module ) {
+			$this->assertStringContainsString( "from 'riff-player/{$module}';", $entry, "riff.js imports $module" );
+		}
+		foreach ( array_merge( array( RIFF_DIR . 'assets/riff.js' ), glob( RIFF_DIR . 'assets/player/*.js' ) ) as $file ) {
+			preg_match_all( "/^import .* from '([^']+)';$/m", (string) file_get_contents( $file ), $m );
+			$this->assertSame( array(), array_diff( $m[1], $ids ), basename( $file ) . ' imports only registered modules' );
+		}
+		ob_start();
+		wp_script_modules()->print_import_map();
+		$map = (string) ob_get_clean();
+		foreach ( $ids as $id ) {
+			$this->assertStringContainsString( '"' . $id . '":', $map, "$id is in the import map" );
+		}
+	}
+
 	public function test_icons_are_inline_svg_and_an_unknown_name_is_empty(): void {
 		$this->assertStringStartsWith( '<svg ', Player::icon( 'play' ) );
 		$this->assertStringContainsString( 'aria-hidden="true"', Player::icon( 'play' ) );
