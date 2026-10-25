@@ -5,7 +5,7 @@
  * @package Riff
  */
 
-use Riff\Listen\Browse;
+use Riff\Listen\Home_View;
 use Riff\Listen\First_Run;
 
 /**
@@ -235,9 +235,9 @@ class Test_Riff_First_Run extends Riff_TestCase {
 	public function test_the_listen_apps_empty_state_links_an_uploader_to_the_first_album(): void {
 		$page = (string) get_permalink( $this->listen_page() );
 
-		$this->assertStringContainsString( admin_url( 'media-new.php' ), Browse::home_view( $page ) );
+		$this->assertStringContainsString( admin_url( 'media-new.php' ), Home_View::view( $page ) );
 
 		wp_set_current_user( 0 );
-		$this->assertStringNotContainsString( 'media-new.php', Browse::home_view( $page ) );
+		$this->assertStringNotContainsString( 'media-new.php', Home_View::view( $page ) );
 	}
 }

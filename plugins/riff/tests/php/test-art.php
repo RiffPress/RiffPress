@@ -7,6 +7,7 @@
 
 use Riff\Catalog;
 use Riff\Listen\Art;
+use Riff\Listen\Cover;
 use Riff\Tracks;
 
 /**
@@ -143,12 +144,12 @@ class Test_Riff_Art extends Riff_TestCase {
 
 	public function test_every_colour_is_riffs_amber_or_a_wordpress_org_token(): void {
 		$tokens = array( '#1e1e1e', '#ffb020', '#f6f6f6', '#ffffff', '#e26f56', '#33f078', '#fff972', '#d7a7ff', '#7a00df', '#40464d', '#d98a00' );
-		foreach ( Art::palettes() as $palette ) {
+		foreach ( Cover::palettes() as $palette ) {
 			foreach ( $palette as $colour ) {
 				$this->assertContains( strtolower( $colour ), $tokens, "$colour is a design system token" );
 			}
 		}
-		$this->assertSame( array( 'corner', 'centre', 'horizon' ), Art::layouts() );
+		$this->assertSame( array( 'corner', 'centre', 'horizon' ), Cover::layouts() );
 	}
 
 	public function test_a_track_with_level_data_puts_the_music_in_the_groove(): void {
@@ -167,7 +168,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->bare_post();
 		$html = Art::sheet();
 		$this->assertStringContainsString( '<!DOCTYPE html>', $html );
-		$this->assertSame( count( Art::palettes() ) * count( Art::layouts() ), substr_count( $html, '<figure>' ), 'one cell per palette and layout' );
+		$this->assertSame( count( Cover::palettes() ) * count( Cover::layouts() ), substr_count( $html, '<figure>' ), 'one cell per palette and layout' );
 		$this->assertStringContainsString( 'data:image/svg+xml;base64,', $html );
 	}
 
@@ -182,7 +183,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		$track             = Tracks::from_attachment( $id, $post );
 
 		$tint    = Art::tint( $track['art'] );
-		$colours = array_merge( ...array_map( static fn( $p ) => array_slice( $p, 0, 2 ), Art::palettes() ) );
+		$colours = array_merge( ...array_map( static fn( $p ) => array_slice( $p, 0, 2 ), Cover::palettes() ) );
 
 		$this->assertMatchesRegularExpression( '/^#[0-9a-f]{6}$/', $tint );
 		$this->assertContains( $tint, $colours, 'the ground or the accent of the palette the cover was drawn in' );

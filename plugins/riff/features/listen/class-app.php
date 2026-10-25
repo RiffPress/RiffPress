@@ -181,7 +181,7 @@ final class App {
 		} elseif ( $browse ) {
 			$view = Browse::view( $browse, $page );
 		} else {
-			$view = Browse::home_view( $page );
+			$view = Home_View::view( $page );
 		}
 		$align = isset( $attributes['align'] ) && in_array( $attributes['align'], array( 'wide', 'full' ), true ) ? ' align' . $attributes['align'] : '';
 		// Inside a block render the wrapper carries the block's supports (colours, type); the
@@ -499,7 +499,7 @@ final class App {
 	private static function post_view( WP_Post $post, string $page ): string {
 		$detail = Library::post( $post );
 		if ( ! $detail['tracks'] ) {
-			return Browse::home_view( $page );
+			return Home_View::view( $page );
 		}
 		$art = $detail['art'] ? end( $detail['art'] )['src'] : '';
 		return self::header( $detail['title'], self::meta( $detail ), '', (string) $art, Art::tint( (array) $detail['art'] ) ) . sprintf(

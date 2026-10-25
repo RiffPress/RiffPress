@@ -18,7 +18,8 @@ use Riff\Tracks;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The browse views.
+ * The browse views: which one an address asks for, the navigation above every view, and what the
+ * views share. Each view is a class of its own (Home_View, Albums_View, Album_View and the rest).
  *
  * Each view is an address on the Listen page and renders on the server, so it reads without the
  * script, a link to it can be shared, and Back works; app.js swaps the next view in without a
@@ -75,11 +76,6 @@ final class Browse {
 	 * @since 4.20.0
 	 */
 	public const PLAYLIST = 'riff_playlist';
-
-	/**
-	 * The most pages of 100 an album view reads: an album of up to 2,000 tracks shows whole.
-	 */
-	private const ALBUM_PAGES = 20;
 
 	/**
 	 * Every query argument a browse view uses, for the script to recognise its own addresses.
@@ -329,11 +325,11 @@ final class Browse {
 	public static function view( array $current, string $page ): string {
 		switch ( $current['view'] ) {
 			case 'albums':
-				return self::albums_view( $page, $current['page'] );
+				return Albums_View::view( $page, $current['page'] );
 			case 'artists':
-				return self::artists_view( $page, $current['page'] );
+				return Artists_View::view( $page, $current['page'] );
 			case 'tracks':
-				return self::tracks_view( $page, $current['page'] );
+				return Tracks_View::view( $page, $current['page'] );
 			case 'posts':
 				return App::posts_view( $page );
 			case 'library':
@@ -341,11 +337,11 @@ final class Browse {
 			case 'playlist':
 				return Playlist_View::view( $page, $current['id'] );
 			case 'album':
-				return self::album_view( $page, $current['id'] );
+				return Album_View::view( $page, $current['id'] );
 			case 'artist':
-				return self::artist_view( $page, $current['id'], $current['page'] );
+				return Artist_View::view( $page, $current['id'], $current['page'] );
 			default:
-				return self::search_view( $page, $current['search'] );
+				return Search_View::view( $page, $current['search'] );
 		}
 	}
 
@@ -392,28 +388,13 @@ final class Browse {
 	}
 
 	/**
-	 * The albums grid.
-	 *
-	 * @param string $page   Listen page.
-	 * @param int    $number Page of albums.
-	 * @return string
-	 */
-	private static function albums_view( string $page, int $number ): string {
-		$data = self::get( '/albums', array( 'page' => $number ) );
-		if ( ! $data['items'] ) {
-			return Ui::title( __( 'Albums', 'riff' ) ) . self::empty_note();
-		}
-		return Ui::title( __( 'Albums', 'riff' ) ) . self::album_grid( $data['items'], $page ) . self::next( add_query_arg( self::VIEW, 'albums', $page ), $data );
-	}
-
-	/**
 	 * Album cards, each opening the album and playing it from its cover.
 	 *
 	 * @param array  $albums Albums from the route.
 	 * @param string $page   Listen page.
 	 * @return string
 	 */
-	private static function album_grid( array $albums, string $page ): string {
+	public static function album_grid( array $albums, string $page ): string {
 		return '<div class="riff-grid">' . self::album_cards( $albums, $page ) . '</div>';
 	}
 
@@ -433,28 +414,13 @@ final class Browse {
 	}
 
 	/**
-	 * The artists list.
-	 *
-	 * @param string $page   Listen page.
-	 * @param int    $number Page of artists.
-	 * @return string
-	 */
-	private static function artists_view( string $page, int $number ): string {
-		$data = self::get( '/artists', array( 'page' => $number ) );
-		if ( ! $data['items'] ) {
-			return Ui::title( __( 'Artists', 'riff' ) ) . self::empty_note();
-		}
-		return Ui::title( __( 'Artists', 'riff' ) ) . self::artist_list( $data['items'], $page ) . self::next( add_query_arg( self::VIEW, 'artists', $page ), $data );
-	}
-
-	/**
 	 * Artists as a list of links with their track counts.
 	 *
 	 * @param array  $artists Artists from the route.
 	 * @param string $page    Listen page.
 	 * @return string
 	 */
-	private static function artist_list( array $artists, string $page ): string {
+	public static function artist_list( array $artists, string $page ): string {
 		return '<ul class="riff-artists">' . self::artist_items( $artists, $page ) . '</ul>';
 	}
 
@@ -488,328 +454,6 @@ final class Browse {
 	public const HISTORY_HINT = 'riff_history';
 
 	/**
-	 * How many cards a row held for a visitor's history shows while the script fills it: more than
-	 * fit across the widest window, so the row looks full.
-	 */
-	private const SKELETONS = 8;
-
-	/**
-	 * Home: rows that scroll sideways, as the apps open.
-	 *
-	 * What was played draws here too, so nothing moves once the page is up: a signed-in listener's
-	 * from their account, and a visitor's as rows of empty cards the script fills in place, when
-	 * the player's cookie says their browser has a history. Without it the rows stay hidden, and
-	 * are only filled when the script draws Home itself; nothing appears above a page already shown.
-	 *
-	 * @since 4.18.0
-	 * @since 4.21.0 Draws what was played, or holds its place.
-	 *
-	 * @param string $page Listen page.
-	 * @return string
-	 */
-	public static function home_view( string $page ): string {
-		$albums  = self::get( '/albums', array( 'orderby' => 'added' ) );
-		$artists = self::get( '/artists' );
-		$posts   = App::post_cards( $page );
-		if ( ! $albums['items'] && ! $artists['items'] && '' === $posts ) {
-			return Ui::title( __( 'Home', 'riff' ) ) . self::empty_note();
-		}
-		$html  = Ui::title( __( 'Home', 'riff' ) );
-		$html .= self::played_shelves( $page );
-		if ( $albums['items'] ) {
-			$html .= Ui::shelf( 'added', __( 'Recently added', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ), self::album_cards( $albums['items'], $page ) );
-		}
-		if ( $artists['items'] ) {
-			$html .= Ui::shelf( 'artists', __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ), self::artist_items( $artists['items'], $page ), false, 'ul' );
-		}
-		if ( '' !== $posts ) {
-			$html .= Ui::shelf( 'posts', __( 'New posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ), $posts );
-		}
-		return $html;
-	}
-
-	/**
-	 * Jump back in and Recently played, as Home shows them, or Recently played alone, as Your
-	 * Library does: drawn from a signed-in listener's account, held as empty cards for a visitor
-	 * whose browser has a history, or hidden for the script.
-	 *
-	 * @since 4.21.0
-	 *
-	 * @param string $page Listen page.
-	 * @param bool   $jump Whether Jump back in comes first.
-	 * @return string
-	 */
-	public static function played_shelves( string $page, bool $jump = true ): string {
-		$response = rest_do_request( new WP_REST_Request( 'GET', '/' . Library::REST . '/users/me/history' ) );
-		if ( ! $response->is_error() ) {
-			$played = array_values( (array) ( $response->get_data()['items'] ?? array() ) );
-			return ( $jump ? self::jump_shelf( $played, $page ) : '' ) . self::recent_shelf( $played, $page );
-		}
-		$hint = isset( $_COOKIE[ self::HISTORY_HINT ] ) ? (int) $_COOKIE[ self::HISTORY_HINT ] : 0;
-		if ( $hint > 0 ) {
-			// The script fills these in place; until then they are only a shape.
-			// A no-break space keeps each line its full height.
-			$cards = str_repeat(
-				Ui::card(
-					array(
-						'title' => "\u{00A0}",
-						'sub'   => "\u{00A0}",
-						'class' => 'riff-card-skeleton',
-					)
-				),
-				self::SKELETONS
-			);
-			$wait  = array( 'skeleton' => '' );
-			$first = $hint > 1 ? Ui::shelf( 'jump', __( 'Jump back in', 'riff' ), '', $cards, false, 'div', $wait ) : Ui::shelf( 'jump', __( 'Jump back in', 'riff' ), '', '', true );
-			return ( $jump ? $first : '' ) . Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', $cards, false, 'div', $wait );
-		}
-		return ( $jump ? Ui::shelf( 'jump', __( 'Jump back in', 'riff' ), '', '', true ) : '' ) . Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', '', true );
-	}
-
-	/**
-	 * What app.js compares with the player's history, to leave a row the server drew alone.
-	 *
-	 * @param array[] $played Tracks played, newest first.
-	 * @return string
-	 */
-	private static function played_key( array $played ): string {
-		return $played ? count( $played ) . ':' . $played[0]['id'] . ':' . (int) ( $played[0]['played'] ?? 0 ) : '0';
-	}
-
-	/**
-	 * A played track's largest cover, as app.js picks it.
-	 *
-	 * @param array $track Track.
-	 * @return string
-	 */
-	private static function played_art( array $track ): string {
-		$art = (array) ( $track['art'] ?? array() );
-		return $art ? (string) ( end( $art )['src'] ?? '' ) : '';
-	}
-
-	/**
-	 * Jump back in: the posts last played from, each once, as app.js draws it.
-	 *
-	 * @param array[] $played Tracks played, newest first.
-	 * @param string  $page   Listen page.
-	 * @return string
-	 */
-	private static function jump_shelf( array $played, string $page ): string {
-		$cards = '';
-		$seen  = array();
-		foreach ( $played as $track ) {
-			$post = (int) ( $track['post']['id'] ?? 0 );
-			if ( ! $post || isset( $seen[ $post ] ) || count( $seen ) >= 12 ) {
-				continue;
-			}
-			$seen[ $post ] = true;
-			$title         = (string) ( $track['post']['title'] ?? '' );
-			$cards        .= Ui::card(
-				array(
-					'title' => $title,
-					'href'  => add_query_arg( App::QUERY, $post, $page ),
-					'sub'   => (string) ( $track['artist'] ?? '' ),
-					'art'   => self::played_art( $track ),
-					'play'  => array(
-						'action' => 'play-card',
-						'data'   => array( 'post' => $post ),
-						/* translators: %s: track or post title. */
-						'label'  => sprintf( __( 'Play %s', 'riff' ), $title ),
-					),
-				)
-			);
-		}
-		return Ui::shelf( 'jump', __( 'Jump back in', 'riff' ), '', $cards, '' === $cards, 'div', array( 'played' => self::played_key( $played ) ) );
-	}
-
-	/**
-	 * Recently played: the tracks themselves, as app.js draws them.
-	 *
-	 * @param array[] $played Tracks played, newest first.
-	 * @param string  $page   Listen page.
-	 * @return string
-	 */
-	private static function recent_shelf( array $played, string $page ): string {
-		$cards = '';
-		foreach ( array_slice( $played, 0, 20 ) as $i => $track ) {
-			$post   = (int) ( $track['post']['id'] ?? 0 );
-			$title  = (string) ( $track['title'] ?? '' );
-			$cards .= Ui::card(
-				array(
-					'title' => $title,
-					'href'  => $post ? add_query_arg( App::QUERY, $post, $page ) : '',
-					'sub'   => (string) ( $track['artist'] ?? '' ),
-					'art'   => self::played_art( $track ),
-					'play'  => array(
-						'action' => 'play-history',
-						'data'   => array( 'index' => $i ),
-						/* translators: %s: track or post title. */
-						'label'  => sprintf( __( 'Play %s', 'riff' ), $title ),
-					),
-				)
-			);
-		}
-		return Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', $cards, '' === $cards, 'div', array( 'played' => self::played_key( $played ) ) );
-	}
-
-	/**
-	 * Every track, a page at a time.
-	 *
-	 * @param string $page   Listen page.
-	 * @param int    $number Page of tracks.
-	 * @return string
-	 */
-	private static function tracks_view( string $page, int $number ): string {
-		$data = self::get( '/tracks', array( 'page' => $number ) );
-		return self::list_view( __( 'Tracks', 'riff' ), self::count( (int) $data['total'] ), $data ) . self::next( add_query_arg( self::VIEW, 'tracks', $page ), $data );
-	}
-
-	/**
-	 * One album: its name and artist beside Play and Shuffle, then its tracks in order.
-	 *
-	 * @param string $page Listen page.
-	 * @param int    $id   Album term ID.
-	 * @return string
-	 */
-	private static function album_view( string $page, int $id ): string {
-		// The whole album, page by page: a box set runs past one page of the route.
-		$data = self::get(
-			'/tracks',
-			array(
-				'album'    => $id,
-				'per_page' => 100,
-			)
-		);
-		$last = min( (int) $data['pages'], self::ALBUM_PAGES );
-		for ( $number = 2; $number <= $last; $number++ ) {
-			$more          = self::get(
-				'/tracks',
-				array(
-					'album'    => $id,
-					'per_page' => 100,
-					'page'     => $number,
-				)
-			);
-			$data['items'] = array_merge( $data['items'], $more['items'] );
-		}
-		$term = get_term( $id );
-		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
-			return self::albums_view( $page, 1 );
-		}
-		$artist = (string) get_term_meta( $id, 'riff_album_artist', true );
-		$meta   = implode( ' · ', array_filter( array( $artist, self::count( (int) $data['total'] ) ) ) );
-		return self::list_view( Catalog::name( $term->name ), $meta, $data, __( 'Album', 'riff' ), true, $id ) . self::more_by( $artist, $id, $page );
-	}
-
-	/**
-	 * More by this artist: their other albums, under one album's tracks.
-	 *
-	 * @since 4.18.0
-	 *
-	 * @param string $artist The album's artist, as its term meta has it.
-	 * @param int    $album  The album showing, left out.
-	 * @param string $page   Listen page.
-	 * @return string
-	 */
-	private static function more_by( string $artist, int $album, string $page ): string {
-		$term = '' !== $artist ? get_term_by( 'name', $artist, 'riff_artist' ) : false;
-		if ( ! $term instanceof \WP_Term ) {
-			return '';
-		}
-		$data   = self::get( '/albums', array( 'artist' => (int) $term->term_id ) );
-		$others = array_values( array_filter( $data['items'], static fn( $a ) => (int) $a['id'] !== $album ) );
-		if ( ! $others ) {
-			return '';
-		}
-		return sprintf(
-			'<section class="riff-more" aria-labelledby="riff-more-title"><h3 class="riff-more-title" id="riff-more-title"><a href="%s">%s</a></h3>%s</section>',
-			esc_url( add_query_arg( self::ARTIST, (int) $term->term_id, $page ) ),
-			/* translators: %s: artist name. */
-			esc_html( sprintf( __( 'More by %s', 'riff' ), $artist ) ),
-			self::album_grid( $others, $page )
-		);
-	}
-
-	/**
-	 * One artist, as the apps draw them: their picture and name with Play and Shuffle, their tracks
-	 * newest first (until plays are counted, the newest stand in for the most played), ten at a
-	 * time, then their albums.
-	 *
-	 * @since 4.16.0
-	 * @since 4.19.0 Their picture, their latest tracks, and their albums.
-	 *
-	 * @param string $page   Listen page.
-	 * @param int    $id     Artist term ID.
-	 * @param int    $number Page of tracks.
-	 * @return string
-	 */
-	private static function artist_view( string $page, int $id, int $number ): string {
-		$data = self::get(
-			'/tracks',
-			array(
-				'artist'   => $id,
-				'orderby'  => 'added',
-				'per_page' => 10,
-				'page'     => $number,
-			)
-		);
-		$term = get_term( $id );
-		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
-			return self::artists_view( $page, 1 );
-		}
-		$albums = self::get(
-			'/albums',
-			array(
-				'artist'  => $id,
-				'orderby' => 'added',
-			)
-		);
-		// Their own picture, else their newest album's cover.
-		$image = (int) get_term_meta( $id, 'riff_artist_image', true );
-		$art   = $image ? Tracks::art( $image ) : (array) ( $albums['items'][0]['art'] ?? array() );
-		$cover = $art ? (string) end( $art )['src'] : '';
-		$meta  = array( self::count( (int) $data['total'] ) );
-		if ( $albums['total'] ) {
-			/* translators: %s: number of albums. */
-			$meta[] = sprintf( _n( '%s album', '%s albums', (int) $albums['total'], 'riff' ), number_format_i18n( (int) $albums['total'] ) );
-		}
-		$html  = App::header( Catalog::name( $term->name ), implode( ' · ', $meta ), __( 'Artist', 'riff' ), $cover, Art::tint( $art ), true, 'artist', $id );
-		$html .= '<h3 class="riff-app-section">' . esc_html__( 'Latest', 'riff' ) . '</h3>' . self::rows( $data['items'] ) . self::next( add_query_arg( self::ARTIST, $id, $page ), $data );
-		if ( $albums['items'] ) {
-			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Albums', 'riff' ) . '</h3>' . self::album_grid( $albums['items'], $page );
-		}
-		return $html;
-	}
-
-	/**
-	 * Search: the albums, artists and tracks that match.
-	 *
-	 * @param string $page   Listen page.
-	 * @param string $search Words.
-	 * @return string
-	 */
-	private static function search_view( string $page, string $search ): string {
-		$albums  = self::get( '/albums', array( 'search' => $search ) );
-		$artists = self::get( '/artists', array( 'search' => $search ) );
-		$tracks  = self::get( '/tracks', array( 'search' => $search ) );
-		/* translators: %s: the words searched for. */
-		$html = Ui::title( sprintf( __( 'Results for “%s”', 'riff' ), $search ) );
-		if ( ! $albums['items'] && ! $artists['items'] && ! $tracks['items'] ) {
-			return $html . '<p class="riff-app-empty">' . esc_html__( 'Nothing matches that. Try fewer words, or part of a name.', 'riff' ) . '</p>';
-		}
-		if ( $albums['items'] ) {
-			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Albums', 'riff' ) . '</h3>' . self::album_grid( array_slice( $albums['items'], 0, 12 ), $page );
-		}
-		if ( $artists['items'] ) {
-			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Artists', 'riff' ) . '</h3>' . self::artist_list( array_slice( $artists['items'], 0, 12 ), $page );
-		}
-		if ( $tracks['items'] ) {
-			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Tracks', 'riff' ) . '</h3>' . self::rows( $tracks['items'] );
-		}
-		return $html;
-	}
-
-	/**
 	 * A heading beside Play and Shuffle, then the tracks as rows.
 	 *
 	 * @param string $title Heading.
@@ -820,7 +464,7 @@ final class Browse {
 	 * @param bool   $album Whether it is an album: its cover leads, and its tracks are numbered.
 	 * @param int    $id    The album's term ID, for its heart, or 0.
 	 */
-	private static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false, int $id = 0 ): string {
+	public static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false, int $id = 0 ): string {
 		if ( ! $data['items'] ) {
 			return Ui::title( $title ) . self::empty_note();
 		}
@@ -895,7 +539,7 @@ final class Browse {
 	 *
 	 * @return string
 	 */
-	private static function empty_note(): string {
+	public static function empty_note(): string {
 		if ( ! current_user_can( 'upload_files' ) ) {
 			return Ui::empty_note( __( 'Nothing here yet.', 'riff' ) );
 		}

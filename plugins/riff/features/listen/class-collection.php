@@ -412,7 +412,7 @@ final class Collection {
 		// The listener's playlists come right after Liked songs, as the apps pin them.
 		$playlists = implode( '', array_map( static fn( $l ) => Playlist_View::card( $l, $page ), $lists ) );
 		$html      = '<div class="riff-grid riff-library-grid">' . $liked . $playlists . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';
-		$recent    = Browse::played_shelves( $page, false );
+		$recent    = Home_View::played_shelves( $page, false );
 		$html     .= $recent;
 		// Somewhere to start, unless what was played is already there to show instead.
 		if ( ! $likes && ! $lists && str_contains( $recent, 'aria-labelledby="riff-shelf-recent" hidden>' ) ) {

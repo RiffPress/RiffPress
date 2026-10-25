@@ -27,7 +27,9 @@ final class Plugin {
 		Catalog::register();
 		Catalog_Rest::register();
 		Likes::register();
+		Likes_Rest::register();
 		Playlists::register();
+		Playlists_Rest::register();
 		Blocks::register();
 		Bindings::register();
 		Player::register();

@@ -7,6 +7,7 @@
 
 use Riff\Catalog;
 use Riff\Likes;
+use Riff\Likes_Rest;
 
 /**
  * Riff\Likes.
@@ -407,7 +408,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 
 	public function test_the_player_gets_a_signed_in_users_likes_and_history_and_a_visitor_nothing(): void {
 		wp_set_current_user( 0 );
-		$this->assertArrayNotHasKey( 'me', Likes::player_data( array() ) );
+		$this->assertArrayNotHasKey( 'me', Likes_Rest::player_data( array() ) );
 
 		wp_set_current_user( $this->user );
 		Likes::add(
@@ -420,7 +421,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 			)
 		);
 		Likes::played( $this->user, array( array( 'id' => $this->tracks[0] ) ) );
-		$me = Likes::player_data( array() )['me'];
+		$me = Likes_Rest::player_data( array() )['me'];
 
 		$this->assertSame( array( $this->tracks[1] ), wp_list_pluck( $me['likes'], 'id' ) );
 		$this->assertSame( array( (string) $this->tracks[0] ), wp_list_pluck( $me['history'], 'id' ) );

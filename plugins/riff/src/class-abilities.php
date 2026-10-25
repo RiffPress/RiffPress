@@ -159,7 +159,7 @@ final class Abilities {
 				'method'      => 'GET',
 				'route'       => '/users/me/likes',
 				'input'       => array(),
-				'output'      => Likes::likes_schema(),
+				'output'      => Likes_Rest::likes_schema(),
 				'readonly'    => true,
 			),
 			'riff/history'              => array(
@@ -168,7 +168,7 @@ final class Abilities {
 				'method'      => 'GET',
 				'route'       => '/users/me/history',
 				'input'       => array(),
-				'output'      => Likes::history_schema(),
+				'output'      => Likes_Rest::history_schema(),
 				'readonly'    => true,
 			),
 			'riff/playlists'            => array(
@@ -177,7 +177,7 @@ final class Abilities {
 				'method'      => 'GET',
 				'route'       => '/users/me/playlists',
 				'input'       => array(),
-				'output'      => Playlists::list_schema(),
+				'output'      => Playlists_Rest::list_schema(),
 				'readonly'    => true,
 			),
 			'riff/like'                 => array(
@@ -189,7 +189,7 @@ final class Abilities {
 					'kind' => $kind + array( 'required' => true ),
 					'id'   => $id + array( 'required' => true ),
 				),
-				'output'      => Likes::likes_schema(),
+				'output'      => Likes_Rest::likes_schema(),
 				'readonly'    => false,
 			),
 			'riff/unlike'               => array(
@@ -201,7 +201,7 @@ final class Abilities {
 					'kind' => $kind + array( 'required' => true ),
 					'id'   => $id + array( 'required' => true ),
 				),
-				'output'      => Likes::likes_schema(),
+				'output'      => Likes_Rest::likes_schema(),
 				'readonly'    => false,
 			),
 			'riff/add-to-playlist'      => array(
@@ -227,7 +227,7 @@ final class Abilities {
 						'required'    => true,
 					),
 				),
-				'output'      => Playlists::playlist_schema(),
+				'output'      => Playlists_Rest::playlist_schema(),
 				'readonly'    => false,
 			),
 			'riff/remove-from-playlist' => array(
@@ -249,7 +249,7 @@ final class Abilities {
 						'required'    => true,
 					),
 				),
-				'output'      => Playlists::playlist_schema(),
+				'output'      => Playlists_Rest::playlist_schema(),
 				'readonly'    => false,
 			),
 		);

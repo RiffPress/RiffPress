@@ -7,6 +7,7 @@
 
 use Riff\Catalog;
 use Riff\Protect;
+use Riff\Protected_Files;
 use Riff\Tracks;
 
 /**
@@ -35,7 +36,7 @@ class Test_Riff_Protect extends Riff_TestCase {
 	}
 
 	public function tear_down(): void {
-		Protect::unprotect( $this->track );
+		Protected_Files::unprotect( $this->track );
 		parent::tear_down();
 	}
 
@@ -43,14 +44,14 @@ class Test_Riff_Protect extends Riff_TestCase {
 		$public = (string) get_attached_file( $this->track );
 		$under  = (string) get_post_meta( $this->track, '_wp_attached_file', true );
 
-		$this->assertTrue( Protect::protect( $this->track ) );
+		$this->assertTrue( Protected_Files::protect( $this->track ) );
 
 		$file = (string) get_attached_file( $this->track );
 		$this->assertFileDoesNotExist( $public, 'no longer at its public address' );
 		$this->assertFileExists( $file );
-		$this->assertSame( Protect::dir() . '/' . $under, $file, 'in the same folders under the protected one as under uploads' );
-		$this->assertSame( $under, get_post_meta( $this->track, Protect::META, true ), 'its place under uploads, to go back to' );
-		$this->assertFileExists( Protect::dir() . '/.htaccess', 'Apache is told to refuse the folder' );
+		$this->assertSame( Protected_Files::dir() . '/' . $under, $file, 'in the same folders under the protected one as under uploads' );
+		$this->assertSame( $under, get_post_meta( $this->track, Protected_Files::META, true ), 'its place under uploads, to go back to' );
+		$this->assertFileExists( Protected_Files::dir() . '/.htaccess', 'Apache is told to refuse the folder' );
 		$this->assertSame( Protect::address( $this->track ), wp_get_attachment_url( $this->track ) );
 		$this->assertStringContainsString( '?riff-file=' . $this->track, wp_get_attachment_url( $this->track ) );
 	}
@@ -58,9 +59,9 @@ class Test_Riff_Protect extends Riff_TestCase {
 	public function test_unprotecting_puts_it_back_where_it_was(): void {
 		$public = (string) get_attached_file( $this->track );
 		$url    = (string) wp_get_attachment_url( $this->track );
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 
-		$this->assertTrue( Protect::unprotect( $this->track ) );
+		$this->assertTrue( Protected_Files::unprotect( $this->track ) );
 
 		$this->assertSame( $public, get_attached_file( $this->track ) );
 		$this->assertFileExists( $public );
@@ -78,19 +79,19 @@ class Test_Riff_Protect extends Riff_TestCase {
 		);
 		$revisions = count( wp_get_post_revisions( $this->post ) );
 
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 		$content = get_post_field( 'post_content', $this->post );
 
 		$this->assertStringNotContainsString( $url, $content );
 		$this->assertSame( 2, substr_count( $content, Protect::address( $this->track ) ), 'the block\'s src and the playlist track\'s' );
 		$this->assertCount( $revisions, wp_get_post_revisions( $this->post ), 'an address changing is not an edit' );
 
-		Protect::unprotect( $this->track );
+		Protected_Files::unprotect( $this->track );
 		$this->assertSame( 2, substr_count( get_post_field( 'post_content', $this->post ), $url ) );
 	}
 
 	public function test_a_visitor_may_have_the_file_only_when_they_may_play_it(): void {
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 		$this->assertTrue( Protect::can( $this->track ), 'a published post\'s track' );
 
 		add_filter( 'riff_can_play', '__return_false' );
@@ -109,7 +110,7 @@ class Test_Riff_Protect extends Riff_TestCase {
 	}
 
 	public function test_a_signed_address_works_until_it_expires_and_only_for_its_file(): void {
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 		parse_str( (string) wp_parse_url( Protect::signed( $this->track ), PHP_URL_QUERY ), $query );
 
 		$this->assertTrue( Protect::valid( $this->track, (int) $query['riff-expires'], $query['riff-sig'] ) );
@@ -120,7 +121,7 @@ class Test_Riff_Protect extends Riff_TestCase {
 	}
 
 	public function test_a_protected_track_carries_a_signed_address_and_a_locked_one_none(): void {
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 
 		$track = Tracks::from_attachment( $this->track, $this->post );
 		$this->assertStringContainsString( 'riff-sig=', $track['src'], 'AirPlay and Cast fetch without the visitor\'s cookie' );
@@ -131,7 +132,7 @@ class Test_Riff_Protect extends Riff_TestCase {
 	}
 
 	public function test_a_password_protected_posts_file_waits_for_the_password_even_for_a_signed_in_reader(): void {
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 		wp_update_post(
 			array(
 				'ID'            => $this->post,
@@ -147,7 +148,7 @@ class Test_Riff_Protect extends Riff_TestCase {
 	}
 
 	public function test_a_track_is_signed_only_for_a_visitor_who_may_read_its_post(): void {
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 		wp_update_post(
 			array(
 				'ID'            => $this->post,
@@ -222,7 +223,7 @@ class Test_Riff_Protect extends Riff_TestCase {
 
 		$this->assertSame(
 			sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><a href="%1$s&amp;x=1">', 'https://cdn.example/$1.mp3', Protect::address( 55 ) ),
-			Protect::replace( $from, 'https://cdn.example/$1.mp3', $text ),
+			Protected_Files::replace( $from, 'https://cdn.example/$1.mp3', $text ),
 			'file 55\'s address is left alone, and the new address is taken literally'
 		);
 	}
@@ -236,14 +237,14 @@ class Test_Riff_Protect extends Riff_TestCase {
 			)
 		);
 
-		Protect::protect( $this->track );
-		Protect::unprotect( $this->track );
+		Protected_Files::protect( $this->track );
+		Protected_Files::unprotect( $this->track );
 
 		$this->assertStringContainsString( 'src="' . $longer . '"', (string) get_post_field( 'post_content', $this->post ) );
 	}
 
 	public function test_uninstalling_relinks_only_the_whole_address(): void {
-		Protect::protect( $this->track );
+		Protected_Files::protect( $this->track );
 		$longer = Protect::address( $this->track ) . '7';
 		wp_update_post(
 			array(
@@ -284,7 +285,7 @@ class Test_Riff_Protect extends Riff_TestCase {
 	}
 
 	public function test_the_site_health_check_asks_its_loopback_like_core_does(): void {
-		Protect::dir();
+		Protected_Files::dir();
 		$seen = null;
 		$hook = static function ( $pre, $args ) use ( &$seen ) {
 			$seen = $args['sslverify'];

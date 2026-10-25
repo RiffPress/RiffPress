@@ -358,7 +358,7 @@ class Test_Riff_Playlists extends Riff_TestCase {
 	public function test_the_player_gets_the_users_playlists_and_a_visitor_a_way_to_sign_in(): void {
 		$id = $this->made( array( $this->tracks[0] ) );
 		wp_set_current_user( $this->user );
-		$data = \Riff\Playlists::player_data( array() );
+		$data = \Riff\Playlists_Rest::player_data( array() );
 
 		$this->assertSame(
 			array(
@@ -373,7 +373,7 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertStringContainsString( 'riff/v1/users/me/playlists', $data['me']['rest']['playlists'] );
 
 		wp_set_current_user( 0 );
-		$data = \Riff\Playlists::player_data( array() );
+		$data = \Riff\Playlists_Rest::player_data( array() );
 		$this->assertArrayNotHasKey( 'me', $data );
 		$this->assertStringContainsString( 'wp-login.php', $data['signIn'] );
 	}
