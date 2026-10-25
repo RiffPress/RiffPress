@@ -167,8 +167,9 @@ export default async function crate( shelf ) {
 		{ passive: true }
 	);
 
+	// Its own width, which the stylesheet sets: a column beside the words, or the page's on a phone.
 	const size = () => {
-		const w = canvas.parentElement.clientWidth;
+		const w = canvas.clientWidth || canvas.parentElement.clientWidth;
 		const h = 360;
 		renderer.setSize( w, h, false );
 		canvas.style.height = `${ h }px`;
@@ -176,6 +177,6 @@ export default async function crate( shelf ) {
 		camera.updateProjectionMatrix();
 		renderer.render( scene, camera );
 	};
-	new ResizeObserver( size ).observe( canvas.parentElement );
+	new ResizeObserver( size ).observe( canvas );
 	size();
 }
