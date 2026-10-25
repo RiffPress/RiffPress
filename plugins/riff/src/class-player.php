@@ -235,9 +235,9 @@ final class Player {
 			// Where the player's cookie applies: the site's own path, as WordPress's cookies use.
 			'cookiePath' => COOKIEPATH,
 		);
-		// What Riff's own features add for the script: the Listen app's address, and the listener's
-		// likes and playlists.
-		$data = Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) );
+		// What Riff's own features add for the script: the Listen app's address, the listener's
+		// likes and playlists, and whether they have the single-key shortcuts.
+		$data = Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) );
 		printf(
 			'<script type="application/json" id="riff-data">%s</script>',
 			wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )

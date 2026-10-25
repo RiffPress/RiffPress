@@ -1,8 +1,8 @@
 /* Keyboard: Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change
  * track. Nothing fires while typing, and Space leaves buttons and links alone. Escape closes Now
- * Playing from anywhere, a field included. The single-key shortcuts can be turned off by the
- * listener from the keyboard control, and by a site through the riff.shortcuts filter, which is
- * what WCAG 2.1.4 asks of them. */
+ * Playing from anywhere, a field included. The single-key shortcuts act only for a signed-in
+ * listener who has not turned them off on their profile, and a site can turn them off through the
+ * riff.shortcuts filter, which is what WCAG 2.1.4 asks of them; the Shift ones act for everyone. */
 
 export function keyboard( P ) {
 	const { np, filter } = P;

@@ -10,13 +10,14 @@
   ],
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
+    "doctor": "node scripts/doctor.js",
     "postinstall": "node .github/scripts/patch-wp-env.js",
     "env:start": "wp-env start",
     "env:stop": "wp-env stop",
     "env:clean": "wp-env clean all",
     "desktop": "node packages/desktop/scripts/dev.js",
     "site:js": "node .github/scripts/site-js.js",
-		"seed": "wp-env run cli wp eval-file wp-content/riff/packages/fixtures/seed.php",
+    "seed": "wp-env run cli wp eval-file wp-content/riff/packages/fixtures/seed.php",
     "seed:tests": "wp-env run tests-cli wp eval-file wp-content/riff/packages/fixtures/seed.php",
     "lint": "npm run lint:php && npm run lint:js && npm run lint:css",
     "lint:php": "composer lint",
@@ -54,6 +55,10 @@
     "esbuild": "0.28.2",
     "globals": "^17.13.0",
     "three": "0.186.1"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
   },
   "homepage": "https://riffpress.com/",
   "repository": {

@@ -1,0 +1,20 @@
+{
+  "eslint.useFlatConfig": true,
+  "eslint.workingDirectories": [ { "mode": "auto" } ],
+  "stylelint.validate": [ "css" ],
+  "css.validate": false,
+  "phpsab.executablePathCS": "./vendor/bin/phpcs",
+  "phpsab.executablePathCBF": "./vendor/bin/phpcbf",
+  "phpsab.standard": "./phpcs.xml.dist",
+  "intelephense.environment.phpVersion": "8.1.0",
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[php]": { "editor.defaultFormatter": "valeryanm.vscode-phpsab" },
+  "files.exclude": { "**/node_modules": true },
+  "search.exclude": {
+    "vendor": true,
+    "site/js": true,
+    "artifacts": true,
+    "tests": true
+  }
+}

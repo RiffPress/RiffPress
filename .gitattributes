@@ -1,9 +1,16 @@
+# Line endings are LF in the repository whatever the platform, as .editorconfig writes them.
+* text=auto eol=lf
+
 /.github export-ignore
 /tests export-ignore
 /scripts export-ignore
 /site export-ignore
 /.wp-env.json export-ignore
 /.editorconfig export-ignore
+/.nvmrc export-ignore
+/.php-version export-ignore
+/.vscode export-ignore
+/.devcontainer export-ignore
 /eslint.config.js export-ignore
 /.distignore export-ignore
 /.release-please-manifest.json export-ignore
@@ -20,3 +27,4 @@ CHANGELOG.md export-ignore
 *.png binary
 *.ttf binary
 /.prettierignore export-ignore
+/.prettierrc.js export-ignore

@@ -8,7 +8,21 @@ Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup
 
 ## AI disclosure
 
-Every pull request includes the template's "Use of AI tools" section with the tool, the model, and how much of the change it wrote, per the [WordPress AI Guidelines](https://make.wordpress.org/ai/handbook/ai-guidelines/). Put the disclosure there and nowhere else. No `Co-Authored-By` or session trailers in commits; the squash commit message becomes the changelog.
+Every pull request ends with the template's "Use of AI tools" block, per the [WordPress AI Guidelines](https://make.wordpress.org/ai/handbook/ai-guidelines/), in the collapsed form WordPress's own feature plugins use, never as a heading:
+
+```
+<details>
+<summary>Use of AI tools</summary>
+
+AI assistance: Yes
+Tool(s): the tool
+Model(s): the exact model ID
+Used for: how much of the change it wrote, and that a person reviewed it
+
+</details>
+```
+
+Put the disclosure there and nowhere else. No `Co-Authored-By` or session trailers in commits; the squash commit message becomes the changelog.
 
 ## Branches
 
