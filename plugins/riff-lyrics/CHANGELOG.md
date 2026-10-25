@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.0.0...riff-lyrics-v1.1.0) (2026-10-25)
+
+
+### Features
+
+* **lyrics:** timed lyrics are read in the formats taggers and players write: LRC with its offset, Enhanced LRC with words that light up as they are sung, WebVTT, and a file's own ID3 SYLT frame on upload ([#639](https://github.com/RiffPress/RiffPress/issues/639)) ([14c5ec3](https://github.com/RiffPress/RiffPress/commit/14c5ec3688becefb1676d2f54a1671d7af5fc4d9))
+
 ## [1.0.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v0.3.0...riff-lyrics-v1.0.0) (2026-10-25)
 
 
