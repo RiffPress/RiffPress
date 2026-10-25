@@ -25,7 +25,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 	 * @param string $mark Path to the mark, a square PNG; skipped when unreadable.
 	 */
 	function riff_seed_site( string $mark = '' ): void {
-		if ( in_array( get_option( 'blogname' ), array( '', 'callboard', 'WordPress', 'My WordPress Website' ), true ) ) {
+		if ( in_array( get_option( 'blogname' ), array( '', 'WordPress', 'My WordPress Website' ), true ) ) {
 			update_option( 'blogname', 'Riff' );
 		}
 		if ( in_array( get_option( 'blogdescription' ), array( '', 'Just another WordPress site' ), true ) ) {
