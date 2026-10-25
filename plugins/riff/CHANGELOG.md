@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.4](https://github.com/RiffPress/RiffPress/compare/riff-v5.2.3...riff-v5.2.4) (2026-10-25)
+
+
+### Bug Fixes
+
+* **app:** a drawn cover's address changes when the drawing does, and its title never leaves one word alone ([#689](https://github.com/RiffPress/RiffPress/issues/689)) ([7bb7c1f](https://github.com/RiffPress/RiffPress/commit/7bb7c1f1aaf85b8d86ecd1a1e52dee971be1b829))
+
 ## [5.2.3](https://github.com/RiffPress/RiffPress/compare/riff-v5.2.2...riff-v5.2.3) (2026-10-25)
 
 
