@@ -13,9 +13,12 @@
 | File | What it is |
 | --- | --- |
 | `wordmark.svg` | *Riff*, in amber, on a transparent ground |
+| `wordmark-ink.svg`, `wordmark-ink.png` | *Riff* in charcoal ink on a transparent ground; the PNG 2048px wide |
+| `avatar-ink.png` | The ink word on Riff's paper, `#fcfaf6`, 1024px square, with 1/φ⁵ margins: the GitHub organisation's picture |
+| `social-preview.png` | 1280×640, the word, "A music player for WordPress" and the five strings on the paper: the repository's social preview, in Settings › General |
 | `../icons/favicon.svg` | The app icon cropped to its tile, for the favicon and the site's nav |
 | `mark.png` | The app icon's tile, 512px, for the README and the site |
-| `avatar.png` | The GitHub organisation's picture, still the old *ff*: replace it with `mark.png` in the organisation's settings |
+| `avatar.png` | The GitHub organisation's old picture, the *ff* alone |
 | `dots.svg` | wordpress.org's dots, between sections |
 | `../../packages/desktop/resources/icon.svg` | The app icon, on Apple's icon grid |
 
