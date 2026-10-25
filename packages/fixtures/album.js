@@ -24,6 +24,12 @@ if ( ! slug ) {
 }
 const dir = path.join( __dirname, slug );
 const source = JSON.parse( fs.readFileSync( path.join( dir, 'source.json' ), 'utf8' ) );
+// The words of the songs that have them, by track id, with the language they are sung in: texts in
+// the public domain, kept out of source.json so that changing a word does not download and encode
+// every album again (the Pages cache is keyed on source.json).
+const words = fs.existsSync( path.join( dir, 'lyrics.json' ) )
+	? JSON.parse( fs.readFileSync( path.join( dir, 'lyrics.json' ), 'utf8' ) )
+	: {};
 const out = outIndex >= 0 ? path.resolve( args[ outIndex + 1 ] ) : path.join( os.tmpdir(), 'riff-album-' + slug );
 fs.mkdirSync( out, { recursive: true } );
 
@@ -97,6 +103,7 @@ source.tracks.forEach( ( track, index ) => {
 		uploader_url: source.collection,
 		license: source.license,
 		license_url: source.license_url,
+		...words[ track.id ],
 	} );
 } );
 
