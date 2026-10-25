@@ -7,8 +7,8 @@ const os = require( 'node:os' );
 const path = require( 'node:path' );
 const { test, expect, _electron: electron } = require( '@playwright/test' );
 const { RequestUtils } = require( '@wordpress/e2e-test-utils-playwright' );
-const { own } = require( '../../../../plugins/riff/tests/e2e/own' );
-const { expectTidy } = require( '../../../../plugins/riff/tests/e2e/tidy' );
+const { own } = require( '../../../../plugins/riff/tests/e2e/helpers/own' );
+const { expectTidy } = require( '../../../../plugins/riff/tests/e2e/helpers/tidy' );
 
 const BASE = process.env.WP_BASE_URL;
 const ROOT = path.join( __dirname, '..', '..' );
