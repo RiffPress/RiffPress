@@ -25,7 +25,7 @@
 	--warm-ink-2: #625c53;
 	--warm-dark: #1c1a17;
 	--paper: #fcfaf6;
-	--fingerboard: #f1e9dc;
+	--fingerboard: #efe5d5;
 	--space-1: 8px;
 	--space-2: 16px;
 	--space-3: 24px;
@@ -127,18 +127,20 @@ code {
 .nav {
 	position: relative;
 	z-index: 10;
-	background: var(--bg);
+	background: var(--fingerboard);
 	color: var(--ink);
 }
 
-/* five strings under the bar, treble at the top and each heavier gauge
-   below, as a five-string's are; nothing else on them */
+/* the header is the fingerboard, a shade of wood above the paper, and the
+   five strings run along it at close to life: a hand's width apart in
+   total, the heavier gauges below, across the content column only */
 .nav::after {
-	--strings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='0' y1='4' x2='1000' y2='4' stroke='%23a69a88' stroke-width='0.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='9' x2='1000' y2='9' stroke='%23a69a88' stroke-width='0.85' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='14' x2='1000' y2='14' stroke='%23a69a88' stroke-width='1.15' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='19' x2='1000' y2='19' stroke='%23a69a88' stroke-width='1.55' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='24' x2='1000' y2='24' stroke='%23a69a88' stroke-width='2.1' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+	--neck: min(100vw - 2 * var(--edge), 1160px - 2 * var(--edge));
+	--strings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 40' preserveAspectRatio='none'%3E%3Cline x1='0' y1='6' x2='1000' y2='6' stroke='%23a2937d' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='13' x2='1000' y2='13' stroke='%23a2937d' stroke-width='1.35' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='20' x2='1000' y2='20' stroke='%23a2937d' stroke-width='1.8' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='27' x2='1000' y2='27' stroke='%23a2937d' stroke-width='2.4' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='34' x2='1000' y2='34' stroke='%23a2937d' stroke-width='3' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
 	content: "";
 	display: block;
-	height: 28px;
-	background: var(--strings) 0 0 / 100% 28px no-repeat, var(--fingerboard);
+	height: 40px;
+	background: var(--strings) center 0 / var(--neck) 40px no-repeat;
 }
 
 .nav .wrap {
@@ -912,12 +914,12 @@ figcaption {
 
 .neck-live {
 	position: absolute;
-	left: 0;
 	bottom: 0;
-	width: 100%;
-	height: 28px;
+	left: calc((100% - min(100vw - 2 * var(--edge), 1160px - 2 * var(--edge))) / 2);
+	width: min(100vw - 2 * var(--edge), 1160px - 2 * var(--edge));
+	height: 40px;
 	fill: none;
-	stroke: #a69a88;
+	stroke: #a2937d;
 	overflow: visible;
 }
 
