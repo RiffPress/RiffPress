@@ -53,7 +53,7 @@ Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P chang
 ## Media
 
 - **Captions.** A video version's captions are the WebVTT file its Captions field in the Media Library names, or the text tracks its video block carries; the track carries them as `captions`, and the player shows them as `<track>` elements on its video with a Captions control in Now Playing.
-- **Transcript.** Timed lyrics are the song's transcript (1.2.1, 1.2.2): Riff Lyrics shows them following the music, and a switch above them shows the same words as plain text in one piece.
+- **Transcript.** Timed lyrics are the song's transcript (1.2.1, 1.2.2): the lines are text, read as a list, and the one being sung is marked.
 - **Alt text.** A cover's alt text is the image's own from the Media Library; a cover Riff draws says the album and artist it draws. The player's large cover in Now Playing carries it; a row's or a card's cover is `alt=""`, since the title beside it says what it is.
 - **Language.** The language a file's tags name is kept on upload as `language` and reaches the track as `lang`, which the player puts on a title in another language than the page's, so a screen reader pronounces it.
 

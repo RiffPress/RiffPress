@@ -96,7 +96,7 @@ test( 'timed lyrics follow the music, and a tap on a line seeks to it', async ( 
 	await expect( panel.locator( '.riff-lyrics-synced' ) ).toHaveCount( 0 );
 } );
 
-test( 'timed lyrics are the transcript: a switch shows the same words as plain text', async ( {
+test( 'timed lyrics are text a screen reader reads as a list, with nothing to switch', async ( {
 	page,
 	isMobile,
 } ) => {
@@ -110,29 +110,7 @@ test( 'timed lyrics are the transcript: a switch shows the same words as plain t
 	}
 	await page.locator( '.riff-tab[data-riff-tab="lyrics"]' ).click();
 	const panel = page.locator( '[data-riff-panel="lyrics"]' );
-	const toggle = panel.getByRole( 'button', { name: 'Show as text' } );
-	await expect( toggle ).toHaveAttribute( 'aria-pressed', 'false' );
-	await expect( panel.locator( '.riff-lyrics-synced li' ) ).toHaveCount( 3 );
-
-	// Pressed: the lines as one piece of text, in the order they are heard, with no times and no
-	// buttons, which is what a transcript is (WCAG 1.2.1); the switch keeps focus and says so.
-	await toggle.click();
-	await expect( panel.getByRole( 'button', { name: 'Follow the music' } ) ).toHaveAttribute( 'aria-pressed', 'true' );
-	await expect( panel.getByRole( 'button', { name: 'Follow the music' } ) ).toBeFocused();
-	await expect( panel.locator( '.riff-lyrics-transcript' ) ).toHaveText( /^First line\s+Second line\s+Third line$/ );
-	await expect( panel.locator( 'button.riff-lyrics-line' ) ).toHaveCount( 0 );
-
-	// The choice holds across tracks, and a plain lyric has no switch, being text already.
-	await page.evaluate( () => window.riff.play( window.riff.queue(), 0 ) );
-	await expect( panel.locator( 'p.riff-lyrics' ) ).toHaveText( /First line\s+Second line/ );
-	await expect( panel.locator( '.riff-lyrics-switch' ) ).toHaveCount( 0 );
-	await page.evaluate( () => window.riff.play( window.riff.queue(), 2 ) );
-	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
-	await expect( panel.locator( '.riff-lyrics-transcript' ) ).toBeVisible();
-
-	// Back: the timed lines again, following the music.
-	await panel.getByRole( 'button', { name: 'Follow the music' } ).click();
-	await expect( panel.locator( '.riff-lyrics-synced li' ) ).toHaveCount( 3 );
-	await page.evaluate( () => window.riff.seek( 1.6 ) );
-	await expect( panel.locator( '.riff-lyrics-synced li' ).nth( 1 ) ).toHaveAttribute( 'aria-current', 'true' );
+	await expect( panel.getByRole( 'list' ) ).toBeVisible();
+	await expect( panel.getByRole( 'listitem' ) ).toHaveText( [ 'First line', 'Second line', 'Third line' ] );
+	await expect( panel.getByRole( 'button', { name: /Show as text|Follow the music/ } ) ).toHaveCount( 0 );
 } );
