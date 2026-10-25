@@ -1,6 +1,6 @@
-name: An idea
+name: Suggest a feature
 description: Something Riff could do, or do better.
-labels: ['[Type] Enhancement']
+labels: ['[Type] Feature']
 body:
   - type: textarea
     id: need
