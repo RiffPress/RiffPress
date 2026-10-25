@@ -63,7 +63,7 @@ test( 'leaves the source blueprint untouched', () => {
 
 test( 'refuses a source blueprint that names a host', () => {
 	const input = blueprint();
-	input.steps[ 0 ].pluginData.url = 'https://josephfus.co/callboard/riff.zip';
+	input.steps[ 0 ].pluginData.url = 'https://example.com/riff/riff.zip';
 	assert.throws(
 		() => resolve( input, 'https://example.github.io/riffpress/' ),
 		/names a host/
@@ -211,7 +211,7 @@ test( 'every demo file blueprint.json fetches exists in the fixture set', () => 
 	assert.deepEqual( missing, [] );
 } );
 
-test( 'no workflow, blueprint, or landing page hardcodes the old Pages address', () => {
+test( 'no workflow, blueprint, or landing page hardcodes a Pages address', () => {
 	const files = [
 		'blueprint.json',
 		'site/index.html',
@@ -220,7 +220,7 @@ test( 'no workflow, blueprint, or landing page hardcodes the old Pages address',
 			.map( ( name ) => `.github/workflows/${ name }` ),
 	];
 	const hits = files.filter( ( file ) =>
-		read( file ).includes( 'josephfus.co/callboard' )
+		/https:\/\/[a-z0-9-]+\.github\.io\/|josephfus\.co\//.test( read( file ) )
 	);
 	assert.deepEqual( hits, [] );
 } );
