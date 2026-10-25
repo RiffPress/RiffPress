@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.2.1
+Stable tag: 5.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.2.2 =
+* Fixed: the install card shows Riff's own icon when the site icon's file is gone, rather than a broken image.
+* Fixed: Stop shows only on a phone, beside Share, where it stands in for the swipe that stops the player, and Cast sits in the bar beside the volume at every width.
+
 = 5.2.1 =
 * Fixed: a visitor's Home leaves out the posts and tracks the site no longer has, instead of a card with a broken cover that opens nothing.
 * Fixed: Stop says Stop beside its square, so it no longer reads as a checkbox, and the app's tabs keep clear of its width.
@@ -134,9 +138,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 5.1.0 =
 * Captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement.
 * Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player.
-
-= 5.0.0 =
-* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them.
-* The player says where a track sits in Up next, reads a title in its language, tells what the cover shows, draws a video's captions behind a Captions switch, and stops from a button.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

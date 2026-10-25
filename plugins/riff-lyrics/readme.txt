@@ -5,7 +5,7 @@ Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.2.0 =
+* Riff Lyrics and Riff Sign In say which Riff they need, Requires Riff in their headers, stay out of the way on an older one, and CI holds each to the hooks it uses.
+
 = 1.1.1 =
 * Fixed: no Show as text switch: the timed lines are already text a screen reader reads as a list.
 
@@ -36,9 +39,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 0.3.0 =
 * Timed lyrics follow the music, and a tap on a line seeks to it.
-
-= 0.2.0 =
-* Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on.
-* Fixed: signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
