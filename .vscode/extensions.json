@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "editorconfig.editorconfig",
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    "esbenp.prettier-vscode",
+    "valeryanm.vscode-phpsab",
+    "bmewburn.vscode-intelephense-client",
+    "ms-playwright.playwright",
+    "tekumara.typos-vscode",
+    "github.vscode-github-actions"
+  ]
+}

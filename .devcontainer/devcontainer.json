@@ -1,0 +1,33 @@
+{
+  "name": "Riff",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/php:1": {
+      "version": "8.3",
+      "installComposer": true
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "npm ci && composer install && npx playwright install --with-deps chromium webkit",
+  "postStartCommand": "npm run doctor",
+  "forwardPorts": [ 8890, 8891 ],
+  "portsAttributes": {
+    "8890": { "label": "WordPress", "onAutoForward": "notify" },
+    "8891": { "label": "Tests site", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "editorconfig.editorconfig",
+        "dbaeumer.vscode-eslint",
+        "stylelint.vscode-stylelint",
+        "esbenp.prettier-vscode",
+        "valeryanm.vscode-phpsab",
+        "bmewburn.vscode-intelephense-client",
+        "ms-playwright.playwright"
+      ]
+    }
+  },
+  "hostRequirements": { "cpus": 4, "memory": "8gb" }
+}
