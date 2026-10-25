@@ -63,3 +63,48 @@ test( 'it sets none of Riff\'s custom properties, and uses only the public ones 
 	}
 	assert.match( PHP, /array\(\s*'riff-tokens'\s*\)/, 'its stylesheet lists riff-tokens as a dependency' );
 } );
+
+// Each extension's Requires Riff is no older than the newest Riff surface it uses: every hook it
+// hooks, riff: event it listens to and window.riff member it calls, by the "Since" each has in the
+// generated references.
+const since = ( doc, heading ) => {
+	const at = doc.indexOf( heading );
+	const m = at < 0 ? null : doc.slice( at, at + 1200 ).match( /Since (\d+\.\d+(?:\.\d+)?)/ );
+	return m ? m[ 1 ] : null;
+};
+const newer = ( a, b ) => {
+	const x = a.split( '.' ).map( Number );
+	const y = b.split( '.' ).map( Number );
+	for ( let i = 0; i < 3; i++ ) {
+		if ( ( x[ i ] || 0 ) !== ( y[ i ] || 0 ) ) {
+			return ( x[ i ] || 0 ) > ( y[ i ] || 0 );
+		}
+	}
+	return false;
+};
+for ( const slug of [ 'riff-lyrics', 'riff-sign-in' ] ) {
+	test( `${ slug }'s Requires Riff covers every Riff hook and API it uses`, () => {
+		const dir = path.join( ROOT, 'plugins', slug );
+		const header = read( path.join( dir, `${ slug }.php` ) ).match( /^ \* Requires Riff: *(\S+)/m );
+		assert.ok( header, `${ slug }.php has no Requires Riff header` );
+		const php = files( dir, '.php' ).map( read ).join( '\n' );
+		const js = files( dir, '.js' ).map( read ).join( '\n' );
+		const used = [
+			...[ ...php.matchAll( /add_(?:filter|action)\(\s*'(riff_[a-z_]+)'/g ) ].map( ( m ) => [ HOOKS, `### \`${ m[ 1 ] }\`` ] ),
+			...[ ...js.matchAll( /'riff:([a-z]+)'/g ) ].map( ( m ) => [ HOOKS, `#### \`riff.${ m[ 1 ] }\`` ] ),
+			...[ ...js.matchAll( /(?:window\.riff|player\(\))\??\.([a-z]+)\b/g ) ].map( ( m ) => [ JS, `### \`window.riff.${ m[ 1 ] }` ] ),
+		];
+		let needed = '0.0.0';
+		const unknown = [];
+		for ( const [ doc, heading ] of used ) {
+			const v = since( doc, heading );
+			if ( ! v ) {
+				unknown.push( heading );
+			} else if ( newer( v, needed ) ) {
+				needed = v;
+			}
+		}
+		assert.deepEqual( unknown, [], 'every Riff surface it uses has a Since in the references' );
+		assert.ok( ! newer( needed, header[ 1 ] ), `${ slug } uses Riff ${ needed } surface but says Requires Riff: ${ header[ 1 ] }` );
+	} );
+}
