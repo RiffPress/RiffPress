@@ -292,7 +292,10 @@ final class Cover {
 	}
 
 	/**
-	 * Breaks a title into at most two lines of about so many characters, at a space.
+	 * Breaks a title into at most two lines of about so many characters, at a space, as evenly as
+	 * they will go, and never with one word alone on the second line when the title has three or
+	 * more: "Hands Across / the Sea", not "Hands Across the / Sea". A title too long for two lines
+	 * keeps its most even break and is shortened on the second.
 	 *
 	 * @param string $text Text.
 	 * @param int    $max  Characters per line.
@@ -303,15 +306,26 @@ final class Cover {
 			return array( $text );
 		}
 		$words = explode( ' ', $text );
-		$first = '';
-		while ( $words && mb_strlen( $first . ' ' . $words[0] ) <= $max ) {
-			$first .= ( $first ? ' ' : '' ) . array_shift( $words );
+		$count = count( $words );
+		if ( 1 === $count ) {
+			return array( self::clip( $text, $max ) );
 		}
-		if ( '' === $first ) {
-			$first = array_shift( $words );
+		$best = null;
+		for ( $k = 1; $k < $count; $k++ ) {
+			// No lone last word, unless the title is only two words.
+			if ( $count >= 3 && $count - $k < 2 ) {
+				continue;
+			}
+			$first  = implode( ' ', array_slice( $words, 0, $k ) );
+			$second = implode( ' ', array_slice( $words, $k ) );
+			$fits   = mb_strlen( $first ) <= $max && mb_strlen( $second ) <= $max;
+			// Breaks that fit come first; among them, the most even; then the fuller first line.
+			$score = array( $fits ? 0 : 1, max( mb_strlen( $first ), mb_strlen( $second ) ), -mb_strlen( $first ) );
+			if ( null === $best || $score < $best[0] ) {
+				$best = array( $score, $first, $second );
+			}
 		}
-		$rest = implode( ' ', $words );
-		return $rest ? array( $first, self::clip( $rest, $max ) ) : array( self::clip( $first, $max ) );
+		return array( self::clip( $best[1], $max ), self::clip( $best[2], $max ) );
 	}
 
 	/**
