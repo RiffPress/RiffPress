@@ -24,6 +24,20 @@
 }
 
 :root {
+
+	/* warm greys in place of wordpress.org's cool ones, where the page is
+	   paper: the surfaces, the rules and the quieter text */
+	--warm-1: #e4ded4;
+	--warm-2: #f6f3ee;
+	--warm-ink-2: #625c53;
+	--warm-dark: #1c1a17;
+	--space-1: 8px;
+	--space-2: 16px;
+	--space-3: 24px;
+	--space-4: 32px;
+	--space-5: 48px;
+	--space-6: 64px;
+	--space-7: 96px;
 	--charcoal-1: #1e1e1e;
 	--charcoal-2: #23282d;
 	--charcoal-3: #40464d;
@@ -33,7 +47,7 @@
 	--grey-2: #f6f6f6;
 	--white: #fff;
 	--black: #000;
-	--panel: #121212;
+	--panel: var(--warm-dark);
 	--panel-2: #1f1f1f;
 	--amber: #ffb020;
 	--amber-deep: #f29a00;
@@ -43,9 +57,9 @@
 	--pomegrade-deeper: #9d321b;
 	--bg: var(--white);
 	--surface: var(--panel);
-	--line: var(--grey-1);
+	--line: var(--warm-1);
 	--ink: var(--charcoal-1);
-	--ink-2: var(--charcoal-4);
+	--ink-2: var(--warm-ink-2);
 	--ink-3: var(--charcoal-5);
 	--accent: var(--pomegrade-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
@@ -116,31 +130,14 @@ a:hover {
 	color: var(--ink);
 }
 
-/* the neck: five strings, treble at the top and each heavier gauge below,
-   running from a bone nut level with the wordmark over frets that close up
-   as a guitar's do (each 2^(1/12) nearer the last), with pearl inlays at
-   the 3rd, 5th, 7th, 9th and on, two at the 12th. The frets and inlays span
-   the content column, so they line up with the page under them. */
+/* five strings under the bar, treble at the top and each heavier gauge
+   below, as a five-string's are; nothing else on them */
 .nav::after {
-	--neck: min(100vw - 2 * var(--edge), 1160px - 2 * var(--edge));
-	--nut: calc((100vw - var(--neck)) / 2);
-	--strings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='0' y1='4' x2='1000' y2='4' stroke='%23979aa1' stroke-width='0.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='9' x2='1000' y2='9' stroke='%23979aa1' stroke-width='0.85' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='14' x2='1000' y2='14' stroke='%23979aa1' stroke-width='1.15' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='19' x2='1000' y2='19' stroke='%23979aa1' stroke-width='1.55' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='24' x2='1000' y2='24' stroke='%23979aa1' stroke-width='2.1' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+	--strings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='0' y1='4' x2='1000' y2='4' stroke='%23b3aca1' stroke-width='0.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='9' x2='1000' y2='9' stroke='%23b3aca1' stroke-width='0.85' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='14' x2='1000' y2='14' stroke='%23b3aca1' stroke-width='1.15' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='19' x2='1000' y2='19' stroke='%23b3aca1' stroke-width='1.55' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='24' x2='1000' y2='24' stroke='%23b3aca1' stroke-width='2.1' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
 	content: "";
 	display: block;
 	height: 28px;
-	background:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.2013 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.3431 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.4694 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.5819 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.8511 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.922 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.9851 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.7281 - 3px) 6px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.7281 - 3px) 16px / 6px 6px no-repeat,
-		var(--strings) 0 0 / 100% 28px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 28'%3E%3Crect width='4' height='28' rx='1' fill='%23e6e0d4'/%3E%3C/svg%3E") calc(var(--nut) - 4px) 0 / 4px 28px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='84.2361' y1='2' x2='84.2361' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='163.7444' y1='2' x2='163.7444' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='238.7903' y1='2' x2='238.7903' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='309.6241' y1='2' x2='309.6241' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='376.4824' y1='2' x2='376.4824' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='439.5882' y1='2' x2='439.5882' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='499.1521' y1='2' x2='499.1521' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='555.373' y1='2' x2='555.373' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='608.4384' y1='2' x2='608.4384' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='658.5255' y1='2' x2='658.5255' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='705.8014' y1='2' x2='705.8014' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='750.4239' y1='2' x2='750.4239' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='792.542' y1='2' x2='792.542' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='832.2962' y1='2' x2='832.2962' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='869.8191' y1='2' x2='869.8191' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='905.236' y1='2' x2='905.236' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='938.6651' y1='2' x2='938.6651' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='970.218' y1='2' x2='970.218' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='1000' y1='2' x2='1000' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") var(--nut) 0 / var(--neck) 28px no-repeat;
+	background: var(--strings) 0 0 / 100% 28px no-repeat;
 }
 
 .nav .wrap {
@@ -232,7 +229,7 @@ a:hover {
 	background: var(--white);
 	color: var(--ink);
 	font-size: 0.875rem;
-	border-bottom: 1px solid var(--grey-1);
+	border-bottom: 1px solid var(--warm-1);
 }
 
 .local-nav .wrap {
@@ -244,9 +241,9 @@ a:hover {
 }
 
 .local-nav a {
-	color: var(--charcoal-4);
+	color: var(--warm-ink-2);
 	text-decoration: none;
-	padding: 5px;
+	padding: 4px 8px;
 	border-radius: 2px;
 }
 
@@ -267,7 +264,7 @@ a:hover {
 	width: 100%;
 	height: 28px;
 	fill: none;
-	stroke: #979aa1;
+	stroke: #b3aca1;
 	overflow: visible;
 }
 
@@ -287,12 +284,12 @@ a:hover {
 	flex: none;
 	font-size: 1rem;
 	font-weight: 600;
-	margin-left: -5px;
+	margin-left: -8px;
 }
 
 .local-nav nav {
 	display: flex;
-	gap: 10px;
+	gap: var(--space-1);
 	overflow-x: auto;
 	white-space: nowrap;
 	scrollbar-width: none;
@@ -324,13 +321,13 @@ h2 {
 }
 
 .lede {
-	margin: 20px auto 0;
+	margin: var(--space-2) 0 0;
 	font-size: clamp(1.125rem, 1.6vw, 1.25rem);
 	font-weight: 400;
 	color: var(--charcoal-3);
-	max-width: 36rem;
+	max-width: 40rem;
 	line-height: 1.7;
-	text-wrap: balance;
+	text-wrap: pretty;
 }
 
 .fine {
@@ -341,18 +338,18 @@ h2 {
 	text-wrap: pretty;
 }
 
-/* sections: one idea each, centred, text above the picture; white, with grey
-   bands between */
+/* sections: one idea each, the words on the content column's left edge
+   and the picture under them, the same on every section, with the same room
+   between each */
 section {
-	padding: var(--section) 0;
-	text-align: center;
+	padding: var(--space-7) 0;
+	text-align: left;
 }
 
 /* the hero: the heading, one sentence, one button, and the app itself under
-   them, left-aligned on the content column as wordpress.org opens */
+   them */
 .hero {
-	padding: clamp(40px, 6vw, 72px) 0 var(--section);
-	text-align: left;
+	padding: var(--space-6) 0 var(--space-7);
 }
 
 .hero .lede {
@@ -362,8 +359,7 @@ section {
 }
 
 .hero .cta {
-	justify-content: flex-start;
-	margin-bottom: clamp(32px, 4vw, 48px);
+	margin-bottom: var(--space-5);
 }
 
 /* the second action is a link, not a second button */
@@ -377,13 +373,12 @@ section {
 /* how it works: the words, then the phone beside them */
 #how {
 	padding-top: 0;
-	text-align: left;
 }
 
 #how .wrap {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
-	gap: var(--gap) clamp(40px, 6vw, 96px);
+	gap: var(--space-5) var(--space-7);
 	align-items: start;
 }
 
@@ -392,43 +387,25 @@ section {
 }
 
 .how-words p {
-	margin: 20px 0 0;
+	margin: var(--space-2) 0 0;
 	font-size: 1.125rem;
 	line-height: 1.75;
 	color: var(--charcoal-2);
 }
 
 .plain {
-	margin: 28px 0 0;
+	margin: var(--space-3) 0 0;
 	padding-left: 1.2em;
 	line-height: 1.75;
 	color: var(--charcoal-2);
 }
 
 .plain li {
-	margin: 0 0 6px;
+	margin: 0 0 var(--space-1);
 }
 
 .plain li::marker {
 	color: var(--pomegrade-deep);
-}
-
-#get {
-	padding: var(--gap) 0 0;
-	text-align: left;
-}
-
-#get p {
-	margin: 0;
-	max-width: 46rem;
-	font-size: 1.125rem;
-	line-height: 1.75;
-	color: var(--charcoal-2);
-}
-
-#get a {
-	color: var(--accent);
-	text-underline-offset: 4px;
 }
 
 @media (max-width: 900px) {
@@ -446,16 +423,16 @@ section {
 /* a band: one of the app's panels, the text on it light */
 .alt {
 	--ink: var(--white);
-	--ink-2: #b3b3b3;
-	--ink-3: #8a8a8a;
-	--line: #2a2a2a;
+	--ink-2: #b8b1a6;
+	--ink-3: #8f897f;
+	--line: #34302a;
 	--accent: var(--pomegrade);
 	background: var(--surface);
 	color: var(--ink);
 }
 
 .alt .lede {
-	color: #cfcfcf;
+	color: #d6d1c8;
 }
 
 .alt .btn.outline {
@@ -542,12 +519,12 @@ section {
 }
 
 .cta {
-	margin-top: 32px;
+	margin-top: var(--space-4);
 	display: flex;
 	flex-wrap: wrap;
 	gap: 16px 20px;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
 }
 
 .cta + .fine {
@@ -589,16 +566,7 @@ picture {
 }
 
 .shot + .fine {
-	margin-top: 32px;
-}
-
-/* wordpress.org's band of dots between sections */
-.dots {
-	height: 60px;
-	margin: 0 auto var(--gap);
-	max-width: 1160px;
-	background: url(brand/dots.svg) top center repeat-x;
-	background-size: auto;
+	margin-top: var(--space-4);
 }
 
 section {
@@ -635,9 +603,9 @@ section {
 
 /* the global footer: dark, as wordpress.org's is */
 footer {
-	background: var(--black);
-	color: var(--charcoal-5);
-	padding: 40px 0 56px;
+	background: var(--warm-dark);
+	color: #a39d93;
+	padding: var(--space-5) 0;
 	font-size: 0.875rem;
 	line-height: 1.714;
 }

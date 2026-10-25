@@ -17,6 +17,20 @@
 }
 
 :root {
+
+	/* warm greys in place of wordpress.org's cool ones, where the page is
+	   paper: the surfaces, the rules and the quieter text */
+	--warm-1: #e4ded4;
+	--warm-2: #f6f3ee;
+	--warm-ink-2: #625c53;
+	--warm-dark: #1c1a17;
+	--space-1: 8px;
+	--space-2: 16px;
+	--space-3: 24px;
+	--space-4: 32px;
+	--space-5: 48px;
+	--space-6: 64px;
+	--space-7: 96px;
 	--charcoal-1: #1e1e1e;
 	--charcoal-3: #40464d;
 	--charcoal-4: #656a71;
@@ -32,10 +46,10 @@
 	--panel: #121212;
 	--amber: #ffb020;
 	--amber-deep: #f29a00;
-	--surface: var(--grey-2);
+	--surface: var(--warm-2);
 	--ink: var(--charcoal-1);
-	--ink-2: var(--charcoal-4);
-	--line: var(--grey-1);
+	--ink-2: var(--warm-ink-2);
+	--line: var(--warm-1);
 	--accent: var(--pomegrade-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
@@ -76,7 +90,7 @@ a:hover {
 code {
 	font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 	font-size: 0.875em;
-	background: var(--grey-2);
+	background: var(--surface);
 	border: 1px solid var(--line);
 	padding: 1px 5px;
 	border-radius: 2px;
@@ -115,31 +129,14 @@ code {
 	color: var(--ink);
 }
 
-/* the neck: five strings, treble at the top and each heavier gauge below,
-   running from a bone nut level with the wordmark over frets that close up
-   as a guitar's do (each 2^(1/12) nearer the last), with pearl inlays at
-   the 3rd, 5th, 7th, 9th and on, two at the 12th. The frets and inlays span
-   the content column, so they line up with the page under them. */
+/* five strings under the bar, treble at the top and each heavier gauge
+   below, as a five-string's are; nothing else on them */
 .nav::after {
-	--neck: min(100vw - 2 * var(--edge), 1160px - 2 * var(--edge));
-	--nut: calc((100vw - var(--neck)) / 2);
-	--strings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='0' y1='4' x2='1000' y2='4' stroke='%23979aa1' stroke-width='0.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='9' x2='1000' y2='9' stroke='%23979aa1' stroke-width='0.85' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='14' x2='1000' y2='14' stroke='%23979aa1' stroke-width='1.15' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='19' x2='1000' y2='19' stroke='%23979aa1' stroke-width='1.55' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='24' x2='1000' y2='24' stroke='%23979aa1' stroke-width='2.1' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+	--strings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='0' y1='4' x2='1000' y2='4' stroke='%23b3aca1' stroke-width='0.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='9' x2='1000' y2='9' stroke='%23b3aca1' stroke-width='0.85' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='14' x2='1000' y2='14' stroke='%23b3aca1' stroke-width='1.15' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='19' x2='1000' y2='19' stroke='%23b3aca1' stroke-width='1.55' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='24' x2='1000' y2='24' stroke='%23b3aca1' stroke-width='2.1' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
 	content: "";
 	display: block;
 	height: 28px;
-	background:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.2013 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.3431 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.4694 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.5819 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.8511 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.922 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.9851 - 3px) 11px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.7281 - 3px) 6px / 6px 6px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.7281 - 3px) 16px / 6px 6px no-repeat,
-		var(--strings) 0 0 / 100% 28px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 28'%3E%3Crect width='4' height='28' rx='1' fill='%23e6e0d4'/%3E%3C/svg%3E") calc(var(--nut) - 4px) 0 / 4px 28px no-repeat,
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='84.2361' y1='2' x2='84.2361' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='163.7444' y1='2' x2='163.7444' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='238.7903' y1='2' x2='238.7903' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='309.6241' y1='2' x2='309.6241' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='376.4824' y1='2' x2='376.4824' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='439.5882' y1='2' x2='439.5882' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='499.1521' y1='2' x2='499.1521' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='555.373' y1='2' x2='555.373' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='608.4384' y1='2' x2='608.4384' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='658.5255' y1='2' x2='658.5255' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='705.8014' y1='2' x2='705.8014' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='750.4239' y1='2' x2='750.4239' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='792.542' y1='2' x2='792.542' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='832.2962' y1='2' x2='832.2962' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='869.8191' y1='2' x2='869.8191' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='905.236' y1='2' x2='905.236' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='938.6651' y1='2' x2='938.6651' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='970.218' y1='2' x2='970.218' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='1000' y1='2' x2='1000' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") var(--nut) 0 / var(--neck) 28px no-repeat;
+	background: var(--strings) 0 0 / 100% 28px no-repeat;
 }
 
 .nav .wrap {
@@ -237,13 +234,6 @@ code {
 
 /* marginalia, as wordpress.org sets it: a band of dots before the footer, a
    record cropped into the margin on a wide screen */
-.dots {
-	height: 60px;
-	margin: var(--section) auto 0;
-	max-width: 1160px;
-	background: url(../brand/dots.svg) top center repeat-x;
-}
-
 main,
 .layout {
 	position: relative;
@@ -251,12 +241,12 @@ main,
 }
 
 footer {
-	background: var(--black);
-	color: var(--charcoal-5);
-	padding: 40px 0 56px;
+	background: var(--warm-dark);
+	color: #a39d93;
+	padding: var(--space-5) 0;
 	font-size: 0.875rem;
 	line-height: 1.714;
-	margin-top: var(--gap);
+	margin-top: var(--space-7);
 	position: relative;
 	z-index: 1;
 }
@@ -300,11 +290,11 @@ h1 {
 main h2 {
 	font-size: clamp(26px, 3vw, 30px);
 	line-height: 1.3;
-	margin: 40px 0 8px;
+	margin: var(--space-5) 0 var(--space-2);
 }
 
 .lede {
-	margin: 16px 0 0;
+	margin: var(--space-2) 0 0;
 	font-size: 1.25rem;
 	line-height: 1.7;
 	color: var(--charcoal-3);
@@ -447,7 +437,7 @@ figcaption {
 .where pre {
 	margin: 4px 0 0;
 	padding: 10px 14px;
-	background: var(--grey-2);
+	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: 2px;
 	overflow: auto;
@@ -571,7 +561,7 @@ figcaption {
 }
 
 .guide h2 {
-	margin-top: 56px;
+	margin-top: var(--space-6);
 }
 
 .guide p {
@@ -598,18 +588,18 @@ figcaption {
 .guide kbd {
 	font-family: var(--sans);
 	font-size: 0.9375em;
-	background: var(--grey-2);
+	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: 2px;
 	padding: 1px 6px;
 }
 
 .guide figure {
-	margin-top: 28px;
+	margin-top: var(--space-4);
 }
 
 .guide .fine {
-	margin-top: 12px;
+	margin-top: var(--space-2);
 }
 
 .with-cover {
@@ -694,7 +684,7 @@ figcaption {
 }
 
 .dl h2 {
-	margin-top: 56px;
+	margin-top: var(--space-6);
 }
 
 .dl p {
@@ -722,7 +712,7 @@ figcaption {
 .dl kbd {
 	font-family: var(--sans);
 	font-size: 0.9375em;
-	background: var(--grey-2);
+	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: 2px;
 	padding: 1px 6px;
@@ -756,13 +746,13 @@ figcaption {
    fine print on the left, what it needs on the right, in one grey box
    straight under the heading */
 .get {
-	margin-top: 32px;
-	padding: 32px;
+	margin-top: var(--space-5);
+	padding: var(--space-5);
 	background: var(--surface);
 	border-radius: 2px;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
-	gap: 24px 48px;
+	gap: var(--space-3) var(--space-6);
 	align-items: start;
 }
 
@@ -799,7 +789,7 @@ figcaption {
 }
 
 .get .fine {
-	margin: 14px 0 0;
+	margin: var(--space-2) 0 0;
 }
 
 .links {
@@ -870,7 +860,7 @@ figcaption {
 	--syntax-grey: #646970;
 	--syntax-red: #d63638;
 	--syntax-amber: #9a5b00;
-	--code-bg: #f7f7f7;
+	--code-bg: #f8f6f2;
 }
 
 .screen-reader-text {
@@ -890,7 +880,7 @@ figcaption {
 	background: var(--white);
 	color: var(--ink);
 	font-size: 0.875rem;
-	border-bottom: 1px solid var(--grey-1);
+	border-bottom: 1px solid var(--warm-1);
 }
 
 .local-nav .wrap {
@@ -902,9 +892,9 @@ figcaption {
 }
 
 .local-nav a {
-	color: var(--charcoal-4);
+	color: var(--warm-ink-2);
 	text-decoration: none;
-	padding: 5px;
+	padding: 4px 8px;
 	border-radius: 2px;
 }
 
@@ -925,7 +915,7 @@ figcaption {
 	width: 100%;
 	height: 28px;
 	fill: none;
-	stroke: #979aa1;
+	stroke: #b3aca1;
 	overflow: visible;
 }
 
@@ -944,12 +934,12 @@ figcaption {
 	color: var(--ink);
 	font-size: 1rem;
 	font-weight: 600;
-	margin-left: -5px;
+	margin-left: -8px;
 }
 
 .local-nav nav {
 	display: flex;
-	gap: 10px;
+	gap: var(--space-1);
 	overflow-x: auto;
 	white-space: nowrap;
 }
@@ -1050,7 +1040,7 @@ main h2[id] {
 
 /* a top-level page has no breadcrumbs, so its title gets the room they took */
 .local-nav + main {
-	padding-top: 48px;
+	padding-top: var(--space-6);
 }
 
 .reference h1,
@@ -1415,7 +1405,7 @@ main h2[id] {
 
 .hook-list li {
 	padding: 20px 0;
-	border-bottom: 1px solid var(--grey-1);
+	border-bottom: 1px solid var(--warm-1);
 }
 
 .hook-list .hook-name {
