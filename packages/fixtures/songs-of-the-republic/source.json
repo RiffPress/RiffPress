@@ -1,0 +1,111 @@
+{
+	"name": "Songs of the Republic",
+	"slug": "songs-of-the-republic",
+	"artist": "Various artists",
+	"ensemble": "U.S. service bands and choruses",
+	"collection": "https://commons.wikimedia.org/wiki/Category:Audio_files_of_music_by_the_United_States_Army_Band",
+	"license": "Public domain — U.S. Government work",
+	"license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov",
+	"tracks": [
+		{
+			"id": "the-star-spangled-banner",
+			"title": "The Star-Spangled Banner",
+			"artist": "United States Army Field Band - Concert Band and Soldiers' Chorus",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/5/5e/%22The_Star-Spangled_Banner%22_-_Choral_with_band_accompaniment_-_United_States_Army_Field_Band.oga?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:%22The_Star-Spangled_Banner%22_-_Choral_with_band_accompaniment_-_United_States_Army_Field_Band.oga",
+			"lyrics_source": "https://en.wikisource.org/wiki/The_Star-Spangled_Banner",
+			"words_by": "Francis Scott Key, 1814",
+			"language": "English"
+		},
+		{
+			"id": "yankee-doodle",
+			"title": "Yankee Doodle",
+			"artist": "United States Army Chorus",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Yankee_Doodle_%28choral%29.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Yankee_Doodle_(choral).ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Yankee_Doodle_(traditional)",
+			"words_by": "traditional, 18th century",
+			"language": "English"
+		},
+		{
+			"id": "shenandoah",
+			"title": "Shenandoah",
+			"artist": "Singing Sergeants, United States Air Force Band",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/4/47/Shenandoah_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Shenandoah_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3",
+			"lyrics_source": "https://en.wikipedia.org/wiki/Oh_Shenandoah#Lyrics",
+			"words_by": "traditional American folk song, 19th century",
+			"language": "English"
+		},
+		{
+			"id": "skip-to-my-lou",
+			"title": "Skip to My Lou",
+			"artist": "Singing Sergeants, United States Air Force Band",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/7/70/Skip_to_My_Lou_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Skip_to_My_Lou_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3",
+			"lyrics_source": "https://en.wikipedia.org/wiki/Skip_to_My_Lou#Lyrics",
+			"words_by": "traditional American folk song",
+			"language": "English"
+		},
+		{
+			"id": "tenting-on-the-old-camp",
+			"title": "Tenting on the Old Camp Ground",
+			"artist": "United States Army Field Band and Chorus",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Tenting_Tonight_on_Old_Camp_Ground.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Tenting_Tonight_on_Old_Camp_Ground.ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Tenting_on_the_Old_Camp_Ground",
+			"words_by": "Walter Kittredge, 1863",
+			"language": "English"
+		},
+		{
+			"id": "the-battle-hymn-of-the-r",
+			"title": "The Battle Hymn of the Republic",
+			"artist": "Singing Sergeants, United States Air Force Band",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/7/7a/The_Battle_Hymn_of_the_Republic_%281995%29_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:The_Battle_Hymn_of_the_Republic_(1995)_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3",
+			"lyrics_source": "https://en.wikisource.org/wiki/Battle_Hymn_of_the_Republic",
+			"words_by": "Julia Ward Howe, 1862",
+			"language": "English"
+		},
+		{
+			"id": "america-the-beautiful",
+			"title": "America the Beautiful",
+			"artist": "Singing Sergeants, United States Air Force Band",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/cf/America_the_Beautiful_%281995%29_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:America_the_Beautiful_(1995)_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3",
+			"lyrics_source": "https://en.wikisource.org/wiki/America_the_Beautiful",
+			"words_by": "Katharine Lee Bates, 1895 (revised 1911)",
+			"language": "English"
+		},
+		{
+			"id": "arirang",
+			"title": "Arirang",
+			"artist": "United States Army Chorus with a tenor soloist",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Arirang.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Arirang.ogg",
+			"lyrics_source": "https://en.wikipedia.org/wiki/Arirang#Lyrics",
+			"words_by": "traditional Korean folk song",
+			"language": "Korean"
+		},
+		{
+			"id": "air-force-hymn-lord-guar",
+			"title": "Air Force Hymn (Lord, Guard and Guide the Men Who Fly)",
+			"artist": "Singing Sergeants, United States Air Force Band",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Air_Force_Hymn_%281995%29_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Air_Force_Hymn_(1995)_-_Singing_Sergeants_-_United_States_Air_Force_Band.mp3",
+			"lyrics_source": "https://en.wikisource.org/wiki/The_Army_and_Navy_Hymnal/Hymns/Lord,_Guard_and_Guide_the_Men_Who_Fly",
+			"words_by": "Mary C. D. Hamilton, 1915",
+			"language": "English"
+		},
+		{
+			"id": "eternal-father-strong-to",
+			"title": "Eternal Father, Strong to Save",
+			"artist": "United States Navy Band",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/3/33/Eternal_Father%2C_Strong_to_Save_%28A_cappella_chorus_with_words%29.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Eternal_Father,_Strong_to_Save_(A_cappella_chorus_with_words).mp3",
+			"lyrics_source": "https://en.wikisource.org/wiki/Eternal_Father,_Strong_to_Save",
+			"words_by": "William Whiting, 1860",
+			"language": "English"
+		}
+	]
+}

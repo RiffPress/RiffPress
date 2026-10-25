@@ -1,0 +1,93 @@
+{
+	"name": "Christmas With The Chorus",
+	"slug": "christmas-with-the-chorus",
+	"artist": "Chorus of the U.S. Army Band \"Pershing's Own\"",
+	"ensemble": "U.S. Army Band",
+	"collection": "https://commons.wikimedia.org/wiki/Category:Christmas_With_The_Chorus",
+	"license": "Public domain — U.S. Government work",
+	"license_url": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military-Army",
+	"tracks": [
+		{
+			"id": "lo-how-a-rose-eer-bloomi",
+			"title": "Lo, How a Rose E'er Blooming",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c9/U.S._Army_Band_-_Lo_How_a_Rose.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_Lo_How_a_Rose.ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Lo,_How_a_Rose_E%27er_Blooming",
+			"words_by": "German carol (16th c.), English translation by Theodore Baker, 1894",
+			"language": "English"
+		},
+		{
+			"id": "joy-to-the-world",
+			"title": "Joy to the World",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Joy_To_The_World.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Joy_To_The_World.ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Joy_to_the_World",
+			"words_by": "Isaac Watts, 1719",
+			"language": "English"
+		},
+		{
+			"id": "here-we-come-a-wassailin",
+			"title": "Here We Come A-wassailing",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/1/17/U.S._Army_Band_-_Here_We_Come_A-wassailing.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_Here_We_Come_A-wassailing.ogg",
+			"lyrics_source": "https://en.wikipedia.org/wiki/Here_We_Come_A-wassailing#Lyrics",
+			"words_by": "traditional English, c. 1850",
+			"language": "English"
+		},
+		{
+			"id": "coventry-carol",
+			"title": "Coventry Carol",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/6/66/U.S._Army_Band_-_Coventry_Carol.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_Coventry_Carol.ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Coventry_Carol",
+			"words_by": "traditional English, 16th century (Pageant of the Shearmen and Tailors)",
+			"language": "English"
+		},
+		{
+			"id": "good-king-wenceslas",
+			"title": "Good King Wenceslas",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/84/U.S._Army_Band_-_Good_King_Wenceslaus.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_Good_King_Wenceslaus.ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Good_King_Wenceslas",
+			"words_by": "John Mason Neale, 1853",
+			"language": "English"
+		},
+		{
+			"id": "hark-the-herald-angels-s",
+			"title": "Hark! The Herald Angels Sing",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/4/43/U.S._Army_Band_-_Hark%21_The_Herald_Angels_Sing.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_Hark!_The_Herald_Angels_Sing.ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Hark!_The_Herald_Angels_Sing",
+			"words_by": "Charles Wesley, 1739, revised by George Whitefield",
+			"language": "English"
+		},
+		{
+			"id": "angels-we-have-heard-on",
+			"title": "Angels We Have Heard on High",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/8/87/U.S._Army_Band_-_Angels_We_Have_Heard_on_High.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_Angels_We_Have_Heard_on_High.ogg",
+			"lyrics_source": "https://en.wikipedia.org/wiki/Angels_We_Have_Heard_on_High#Lyrics",
+			"words_by": "James Chadwick (English paraphrase of a French carol), 1862",
+			"language": "English"
+		},
+		{
+			"id": "gesu-bambino",
+			"title": "Gesù Bambino",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/U.S._Army_Band_-_Ges%C3%B9_Bambino.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_Ges%C3%B9_Bambino.ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/Gesu_Bambino",
+			"words_by": "Frederick H. Martens (English), 1917, to Pietro Yon's music",
+			"language": "English"
+		},
+		{
+			"id": "silent-night",
+			"title": "Silent Night",
+			"artist": "United States Army Chorus",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Silent_Night_%28choral%29.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Silent_Night_(choral).ogg",
+			"lyrics_source": "https://en.wikisource.org/wiki/The_Army_and_Navy_Hymnal/Hymns/Silent_Night,_Holy_Night",
+			"words_by": "Joseph Mohr, 1818; English by John Freeman Young, 1859",
+			"language": "English (assumed; the page credits Joseph Mohr and doesn't name the language)"
+		}
+	]
+}
