@@ -42,6 +42,20 @@ export function installOffer( ctx ) {
 		if ( ! offer ) {
 			return;
 		}
+		// A site icon whose file is gone shows Riff's own, not a broken image.
+		const icon = offer.querySelector( 'img[data-riff-fallback]' );
+		if ( icon && ! icon.dataset.riffWatched ) {
+			icon.dataset.riffWatched = '1';
+			const fall = () => {
+				if ( icon.src !== icon.dataset.riffFallback ) {
+					icon.src = icon.dataset.riffFallback;
+				}
+			};
+			icon.addEventListener( 'error', fall, { once: true } );
+			if ( icon.complete && ! icon.naturalWidth ) {
+				fall();
+			}
+		}
 		offer.hidden =
 			window.matchMedia(
 				'(display-mode: standalone), (display-mode: window-controls-overlay)'

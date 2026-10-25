@@ -50,6 +50,8 @@ test.describe( 'Standalone', () => {
 		await offer();
 		await expect( card ).toBeVisible();
 		await expect( card.locator( '.riff-app-install-title' ) ).toHaveText( /^Get the .+ app$/ );
+		// Whatever the site icon is, the card shows an image that loaded.
+		await expect.poll( () => card.locator( 'img' ).evaluate( ( img ) => img.complete && img.naturalWidth > 0 ) ).toBe( true );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '[data-riff-install]' ).analyze() ).violations ).toEqual( [] );
 		await card.getByRole( 'button', { name: 'Install' } ).click();
 		expect( await page.evaluate( () => window.prompted ) ).toBe( 1 );
@@ -98,5 +100,33 @@ test.describe( 'Standalone', () => {
 		await expect( card.getByRole( 'button', { name: 'Install' } ) ).toBeHidden();
 		await expect( card.locator( '[data-riff-install-how="mac"]' ), 'the steps take the focus from the button they replace' ).toBeFocused();
 		await context.close();
+	} );
+
+	test( 'a site icon whose file is gone leaves Riff\'s own on the install card, not a broken image', async ( { page, requestUtils } ) => {
+		const app = pageUrl.replace( /\/?$/, '/' ) + 'app/';
+		// A real site icon, whose file then answers 404, as when it was deleted but the setting kept.
+		const icon = await made.media( requestUtils, require( 'node:path' ).join( __dirname, '..', '..', '..', '..', '..', 'site', 'brand', 'mark.png' ) );
+		await requestUtils.rest( { path: '/wp/v2/settings', method: 'POST', data: { site_icon: icon.id } } );
+		await page.route( /\/uploads\/.*\.(png|jpe?g|webp)$/, ( route ) => route.fulfill( { status: 404, body: '' } ) );
+		// A returning listener, counted before the app reads the count.
+		await page.addInitScript( () => {
+			localStorage.setItem( 'riff-visits', '5' );
+			localStorage.removeItem( 'riff-install-dismissed' );
+			sessionStorage.setItem( 'riff-visit', '1' );
+		} );
+		await page.goto( app );
+		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+		await page.evaluate( () => {
+			const e = new Event( 'beforeinstallprompt' );
+			e.prompt = () => {};
+			e.userChoice = Promise.resolve( { outcome: 'dismissed' } );
+			window.dispatchEvent( e );
+		} );
+		const shown = page.locator( '[data-riff-install] img' );
+		await expect( page.locator( '[data-riff-install]' ) ).toBeVisible();
+		await expect( shown ).toHaveAttribute( 'data-riff-fallback', /icon-192\.png/ );
+		await expect.poll( () => shown.evaluate( ( img ) => img.complete && img.naturalWidth > 0 ) ).toBe( true );
+		await expect( shown ).toHaveAttribute( 'src', /features\/listen\/icons\/icon-192\.png/ );
+		await requestUtils.rest( { path: '/wp/v2/settings', method: 'POST', data: { site_icon: 0 } } );
 	} );
 } );
