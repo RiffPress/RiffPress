@@ -167,7 +167,11 @@ test( 'every dragging movement has a single-pointer alternative (2.5.7)', async 
 			page.locator( `#riff [data-riff-action="${ action }"]:visible` ).first()
 		).toBeVisible();
 	}
-	await page.locator( '#riff [data-riff-action="dismiss"]' ).click();
+	// Stop says so in words, and is named by them (2.5.3): a square alone reads as a checkbox.
+	const stop = page.locator( '#riff [data-riff-action="dismiss"]' );
+	await expect( stop ).toHaveText( 'Stop' );
+	await expect( stop ).toHaveAccessibleName( 'Stop' );
+	await stop.click();
 	await expect( page.locator( '#riff' ) ).toBeHidden();
 	expect(
 		await page.evaluate( () =>

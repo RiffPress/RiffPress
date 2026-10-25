@@ -76,7 +76,8 @@ defined( 'ABSPATH' ) || exit;
 				<?php // Captions, for a video version that has them, in video mode. ?>
 				<button type="button" class="riff-btn riff-captions" data-riff-action="captions" aria-label="<?php esc_attr_e( 'Captions', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::icon( 'captions' ); ?></button>
 				<?php // Stop: what swiping the bar down does, as a button (WCAG 2.5.7). ?>
-				<button type="button" class="riff-btn" data-riff-action="dismiss" aria-label="<?php esc_attr_e( 'Stop', 'riff' ); ?>"><?php echo Player::icon( 'stop' ); ?></button>
+				<?php // Named by its word, which shows: a square alone reads as a checkbox. ?>
+				<button type="button" class="riff-btn riff-stop" data-riff-action="dismiss"><?php echo Player::icon( 'stop' ); ?><span><?php esc_html_e( 'Stop', 'riff' ); ?></span></button>
 				<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			</span>
 		</header>

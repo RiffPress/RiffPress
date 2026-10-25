@@ -995,6 +995,22 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	gap: 4px;
 }
 
+/* Stop, with its word beside the square, in a pill as wide as they need. */
+#riff .riff-btn.riff-stop {
+	display: inline-flex;
+	gap: 6px;
+	width: auto;
+	padding: 0 14px 0 10px;
+	border-radius: 999px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+#riff .riff-stop svg {
+	width: 18px;
+	height: 18px;
+}
+
 /* Song and Video: two icons on a phone, two words on a wide screen. */
 .riff-modes {
 	grid-column: 2;
