@@ -8,6 +8,8 @@
  * model of a plucked string, tuned to a D major pentatonic voicing so any strum is in key. The first
  * click strums all five, top to bottom. A Mute button appears beside them then, and only then.
  *
+ * On a phone they sit between the wordmark and Download; a finger strums across them, or taps one.
+ *
  * The strings are decoration: hidden from assistive technology, never focused. The Mute button is a
  * real button, in the tab order once there is sound to mute.
  */
@@ -190,13 +192,26 @@ function neck( bar ) {
 		lastTime = e.timeStamp;
 	} );
 	region.addEventListener( 'pointerleave', () => ( last = null ) );
+	// A finger can tap a string as well as strum: the one nearest the touch is plucked where it was
+	// touched. Inside the strings a drag strums rather than scrolls (touch-action in the stylesheet).
+	region.addEventListener( 'pointerdown', ( e ) => {
+		if ( e.pointerType === 'mouse' ) {
+			return;
+		}
+		const box = region.getBoundingClientRect();
+		const y = e.clientY - box.top;
+		const nearest = lines.reduce( ( a, s ) => ( Math.abs( s.y - y ) < Math.abs( a.y - y ) ? s : a ) );
+		strike( nearest, ( e.clientX - box.left ) / box.width, 1, 0.7 );
+		last = y;
+		lastTime = e.timeStamp;
+	} );
+	region.addEventListener( 'pointerup', () => ( last = null ) );
 }
 
 const bar = document.querySelector( '.nav' );
 if (
 	bar &&
-	! window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches &&
-	window.matchMedia( '(min-width: 721px)' ).matches
+	! window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches
 ) {
 	neck( bar );
 }

@@ -281,7 +281,7 @@ a:hover {
 .neck-live {
 	display: block;
 	overflow: visible;
-	touch-action: pan-y;
+	touch-action: none;
 	cursor: pointer;
 }
 
@@ -316,11 +316,19 @@ a:hover {
 	outline: 2px solid var(--accent);
 }
 
+/* on a phone, the strings take the space between the wordmark and
+   Download, a finger strums them there, and the page still scrolls
+   everywhere else */
 @media (max-width: 720px) {
 
 	.nav .wrap::after,
 	.neck-live {
-		display: none;
+		height: 40px;
+		margin: 0 16px;
+	}
+
+	.neck-mute {
+		margin: 0 8px 0 -20px;
 	}
 }
 
