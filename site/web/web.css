@@ -1012,6 +1012,11 @@ main h2[id] {
 	padding-top: 20px;
 }
 
+/* a top-level page has no breadcrumbs, so its title gets the room they took */
+.local-nav + main {
+	padding-top: 48px;
+}
+
 .reference h1,
 .reference h2,
 .reference h3 {

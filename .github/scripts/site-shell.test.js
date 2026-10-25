@@ -15,14 +15,12 @@ test( 'the Developers page has the Developers bar, marked as the page', () => {
 	assert.match( localNav( '../', 'developers' ), /class="local-title" href="\.\.\/developers\/" aria-current="page"/ );
 } );
 
-test( 'the hand-written pages use the shared breadcrumbs', () => {
-	assert.ok( read( 'site/developers/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Developers' ] ] ) ) );
-	assert.ok( read( 'site/add-music/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Add your music' ] ] ) ) );
-	assert.ok( read( 'site/download/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Get Riff' ] ] ) ) );
-	assert.ok( read( 'site/accessibility/index.html' ).includes( crumbs( [ [ 'Riff', '../' ], [ 'Accessibility' ] ] ) ) );
-	for ( const file of [ 'site/developers/index.html', 'site/add-music/index.html', 'site/download/index.html' ] ) {
-		assert.doesNotMatch( read( file ), /class="crumb"/, `${ file } still has the old breadcrumb` );
+test( 'a top-level page has no breadcrumbs: the section bar under the global one already says where it is', () => {
+	for ( const file of [ 'site/developers/index.html', 'site/add-music/index.html', 'site/download/index.html', 'site/built/index.html', 'site/accessibility/index.html' ] ) {
+		assert.doesNotMatch( read( file ), /class="crumbs"|class="crumb"/, `${ file } still has breadcrumbs` );
 	}
+	// A page deeper than that keeps them: site/web's pages are under Developers.
+	assert.match( read( 'site/web/index.html' ), /class="crumbs"/ );
 } );
 
 test( 'the hand-written pages carry the shared footer, with its links relative to the page', () => {
