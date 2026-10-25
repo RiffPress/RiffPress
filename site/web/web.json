@@ -18,12 +18,12 @@
 				"code": "<audio class=\"riff-audio\" preload=\"metadata\"></audio>"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "const el = ( t = track() ) =>"
+				"file": "plugins/riff/assets/player/media.js",
+				"code": "const el = ( t = P.track() ) =>"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "m.play().catch( paint );"
+				"file": "plugins/riff/assets/player/playback.js",
+				"code": "m.play().catch( P.paint );"
 			}
 		],
 		"shot": {
@@ -46,11 +46,11 @@
 		"fallback": "With no matching range the function returns 0 and the band is empty.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/paint.js",
 				"code": "function buffered( m, duration ) {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/paint.js",
 				"code": "const ranges = m.buffered;"
 			}
 		],
@@ -74,8 +74,8 @@
 		"fallback": "The call is guarded by `navigator.wakeLock` and a try/catch, so the screen follows the system timeout.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "wakeLock = await navigator.wakeLock.request( 'screen' );"
+				"file": "plugins/riff/assets/player/wake-lock.js",
+				"code": "lock = await navigator.wakeLock.request( 'screen' );"
 			}
 		],
 		"shot": {
@@ -98,7 +98,7 @@
 		"fallback": "The call is optional, so a browser without it skips the tick.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/playback.js",
 				"code": "navigator.vibrate?.( 8 );"
 			}
 		],
@@ -122,7 +122,7 @@
 		"fallback": "The property is optionally chained, so browsers without it keep the template's preload.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/state.js",
 				"code": "if ( navigator.connection?.saveData ) {"
 			}
 		],
@@ -146,15 +146,15 @@
 		"fallback": "Guarded by feature checks and a try/catch per action, so the on-page controls are the only controls.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/session.js",
 				"code": "navigator.mediaSession.metadata = new window.MediaMetadata( {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/session.js",
 				"code": "navigator.mediaSession.setActionHandler( action, handler );"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/session.js",
 				"code": "navigator.mediaSession.setPositionState( {"
 			}
 		],
@@ -178,11 +178,11 @@
 		"fallback": "Both calls are optionally chained, so a browser with neither keeps the buttons hidden.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "audio.remote.watchAvailability( castAvailable ).catch( () => {} );"
+				"file": "plugins/riff/assets/player/cast.js",
+				"code": "audio.remote.watchAvailability( available ).catch( () => {} );"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/cast.js",
 				"code": "m.remote.prompt().catch( () => {} );"
 			}
 		],
@@ -206,11 +206,11 @@
 		"fallback": "Where there is no analyser the wire breathes at working temperature on a fixed loop instead.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "const ctx = new AudioContext();"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "const src = ctx.createMediaElementSource( audio );"
 			}
 		],
@@ -234,15 +234,15 @@
 		"fallback": "Same as Web Audio: the bars stay still and the wire breathes on a loop.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "analyser = ctx.createAnalyser();"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "analyser.getFloatTimeDomainData( samples );"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "analyser.getByteFrequencyData( bins );"
 			}
 		],
@@ -266,7 +266,7 @@
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/playback.js",
 				"code": "document.addEventListener( 'visibilitychange', () => {"
 			}
 		],
@@ -290,7 +290,7 @@
 		"fallback": "A browser without the attribute loads the images eagerly.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/helpers.js",
 				"code": "? `<img src=\"${ esc( art ) }\" alt=\"\" loading=\"lazy\" decoding=\"async\">`"
 			},
 			{
@@ -322,7 +322,7 @@
 				"code": "<img class=\"riff-cover\" data-riff-art data-riff-size=\"large\" alt=\"\" decoding=\"async\" draggable=\"false\" hidden>"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "img.decoding = 'async';"
 			}
 		],
@@ -346,11 +346,11 @@
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/gestures.js",
 				"code": "function drag( zone, { move, end } ) {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/gestures.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],
@@ -374,11 +374,11 @@
 		"fallback": "Without the API the line rests where `timeupdate` puts it, four times a second.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/media.js",
 				"code": "glides.push( node.animate( frames, { ...timing, ...extra } ) );"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "breath = heart.animate("
 			}
 		],
@@ -402,7 +402,7 @@
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "meterRaf = requestAnimationFrame( tick );"
 			}
 		],
@@ -426,7 +426,7 @@
 		"fallback": "Falls through to the clipboard and a Copied toast.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/share.js",
 				"code": "await navigator.share( {"
 			}
 		],
@@ -450,7 +450,7 @@
 		"fallback": "A failing write is caught and the toast does not appear.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/share.js",
 				"code": "await navigator.clipboard.writeText( url );"
 			}
 		],
@@ -474,11 +474,11 @@
 		"fallback": "The page stays focusable behind the dialog.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "node.inert = true;"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "node.inert = false;"
 			}
 		],
@@ -502,15 +502,15 @@
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
+				"file": "plugins/riff/assets/player/state.js",
+				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches,"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/playback.js",
 				"code": "if ( window.matchMedia( '(hover: none)' ).matches ) {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "const wide = window.matchMedia( '(min-width: 900px)' ).matches;"
 			}
 		],
@@ -534,7 +534,7 @@
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "?.scrollIntoView( { block: 'nearest' } );"
 			},
 			{
@@ -614,11 +614,11 @@
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "history.pushState( { ...history.state, riff: 'open' }, '' );"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "window.addEventListener( 'popstate', () => {"
 			},
 			{
@@ -646,12 +646,12 @@
 		"fallback": "Every read and write is wrapped in try/catch, so in private mode or over quota the player works without remembering.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "const saved = parse( read( sessionStorage, STATE ) );"
+				"file": "plugins/riff/assets/player/resume.js",
+				"code": "const saved = parse( read( sessionStorage, P.STATE ) );"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "write( localStorage, VOLUME, String( audio.volume ) );"
+				"file": "plugins/riff/assets/player/seek.js",
+				"code": "write( localStorage, P.VOLUME, String( audio.volume ) );"
 			}
 		],
 		"shot": {
@@ -702,7 +702,7 @@
 		"fallback": "The entry is optionally chained, so without one the saved playing flag decides alone.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/resume.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;"
 			}
 		],
@@ -726,7 +726,7 @@
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/resume.js",
 				"code": "window.addEventListener( 'pagehide', save );"
 			}
 		],
@@ -750,7 +750,7 @@
 		"fallback": "`persisted` is checked, so a normal load does nothing.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/media.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {"
 			}
 		],
@@ -778,11 +778,11 @@
 				"code": "<div class=\"riff-np\" role=\"dialog\" aria-modal=\"true\" aria-label=\"<?php esc_attr_e( 'Now Playing', 'riff' ); ?>\" hidden>"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "document.activeElement && document.activeElement !== document.body"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/keyboard.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {"
 			}
 		],
@@ -810,7 +810,7 @@
 				"code": "@property --riff-heat {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/filament.js",
 				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
 			}
 		],
@@ -1007,8 +1007,8 @@
 				"code": "@media (prefers-reduced-motion: reduce) {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
-				"code": "const reduce = () =>"
+				"file": "plugins/riff/assets/player/state.js",
+				"code": "reduce: () =>"
 			},
 			{
 				"file": "plugins/riff/features/listen/app/views.js",
@@ -1152,7 +1152,7 @@
 				"code": "touch-action: none;"
 			},
 			{
-				"file": "plugins/riff/assets/riff.js",
+				"file": "plugins/riff/assets/player/gestures.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
 		],

@@ -21,7 +21,8 @@ const ROOT = path.resolve( __dirname, '..', '..' );
 const PLUGIN = path.join( ROOT, 'plugins', 'riff' );
 const OUT = path.join( ROOT, 'docs', 'hooks.md' );
 const SITE = path.join( ROOT, 'site', 'developers', 'hooks' );
-// The JavaScript hooks fire through emit() and filter() in the player, which prefix the name.
+// The JavaScript hooks fire through emit() and filter() in the player, which prefix the name: in
+// its entry and in its sections under assets/player/.
 const PLAYER = path.join( PLUGIN, 'assets', 'riff.js' );
 // The deploy fills {{commit}} with the SHA it publishes, so every link opens the code as deployed.
 const REPO = 'https://github.com/RiffPress/RiffPress/blob/{{commit}}/';
@@ -264,7 +265,7 @@ function parse( block ) {
 
 /** Every hook, in the order the reference lists them: PHP, then JavaScript; filters, then actions. */
 function collect() {
-	const hooks = [ ...files( PLUGIN, '.php' ), PLAYER ].flatMap( hooksIn );
+	const hooks = [ ...files( PLUGIN, '.php' ), PLAYER, ...files( path.join( PLUGIN, 'assets', 'player' ), '.js' ) ].flatMap( hooksIn );
 	const rank = ( h ) => ( h.lang === 'php' ? 0 : 2 ) + ( h.type === 'filter' ? 0 : 1 );
 	hooks.sort( ( a, b ) => rank( a ) - rank( b ) || a.name.localeCompare( b.name ) || a.file.localeCompare( b.file ) || a.line - b.line );
 	// A JavaScript name can be both an action and a filter (riff.track is), so its page says which.

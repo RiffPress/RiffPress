@@ -108,7 +108,7 @@ Filters the tracks about to become the queue.
 
 Return a new array to add, drop or reorder tracks before any of them plays.
 
-Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.0.0. Fires in `plugins/riff/assets/player/queue.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -121,7 +121,7 @@ Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
 
 Return `false` to turn them off, which WCAG 2.1.4 asks to be possible.
 
-Since 4.0.1. Fires in `plugins/riff/assets/riff.js`.
+Since 4.0.1. Fires in `plugins/riff/assets/player/keyboard.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -132,7 +132,7 @@ Since 4.0.1. Fires in `plugins/riff/assets/riff.js`.
 
 Filters one track as a queue is set, after `riff.queue`.
 
-Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.0.0. Fires in `plugins/riff/assets/player/queue.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -144,7 +144,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires when a track plays to its end, before the next one loads.
 
-Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.0.0. Fires in `plugins/riff/assets/player/media.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -156,7 +156,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires when the track pauses.
 
-Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.0.0. Fires in `plugins/riff/assets/player/media.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -168,7 +168,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires when the track starts or resumes playing.
 
-Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.0.0. Fires in `plugins/riff/assets/player/media.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -180,7 +180,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
 
-Since 4.19.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.19.0. Fires in `plugins/riff/assets/player/queue.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -207,7 +207,7 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
 
-Since 4.16.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.16.0. Fires in `plugins/riff/assets/player/now-playing.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -221,7 +221,7 @@ Since 4.16.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires as the track plays, a few times a second, and again after a seek.
 
-Since 4.32.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.32.0. Fires in `plugins/riff/assets/player/media.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -235,7 +235,7 @@ Since 4.32.0. Fires in `plugins/riff/assets/riff.js`.
 
 Fires when a track is loaded, before it plays.
 
-Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
+Since 4.0.0. Fires in `plugins/riff/assets/player/playback.js`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
