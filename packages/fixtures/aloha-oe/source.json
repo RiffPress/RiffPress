@@ -1,0 +1,53 @@
+{
+	"name": "Aloha ʻOe",
+	"slug": "aloha-oe",
+	"artist": "Various artists",
+	"ensemble": "Hawaiian song and steel guitar, 1911–1925",
+	"collection": "https://commons.wikimedia.org/wiki/Category:Music_of_Hawaii",
+	"license": "Public domain — U.S. sound recording published before 1926",
+	"license_url": "https://commons.wikimedia.org/wiki/Template:PD-US",
+	"tracks": [
+		{
+			"id": "aloha-oe",
+			"title": "Aloha ʻOe",
+			"artist": "Nani Alapai and Henry N. Clark",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/4/45/Madam_Alapai%2C_Henry_N._Clark_-_Aloha_Oe.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Madam_Alapai,_Henry_N._Clark_-_Aloha_Oe.ogg"
+		},
+		{
+			"id": "aloha-oe-waltz-medley",
+			"title": "Aloha ʻOe waltz medley",
+			"artist": "William Smith and Walter K. Kolomoku",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Aloha_oe_waltz_medley.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Aloha_oe_waltz_medley.ogg"
+		},
+		{
+			"id": "hawaiian-portuguese-tang",
+			"title": "Hawaiian Portuguese Tango",
+			"artist": "Frank Ferera and Helen Louise",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/6/64/Frank_Ferera%2C_Helen_Louise_-_Hawaiian_Portuguese_Tango.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Frank_Ferera,_Helen_Louise_-_Hawaiian_Portuguese_Tango.ogg"
+		},
+		{
+			"id": "hawaiian-echoes",
+			"title": "Hawaiian Echoes",
+			"artist": "Frank Ferera and Helen Louise",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/6/61/HawaiianEchoes.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:HawaiianEchoes.ogg"
+		},
+		{
+			"id": "southern-blues",
+			"title": "Southern Blues",
+			"artist": "Frank Ferera and John K. Paalihu",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/2/2e/SouthernBlues.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:SouthernBlues.ogg"
+		},
+		{
+			"id": "hawaiian-hotel",
+			"title": "Hawaiian Hotel",
+			"artist": "Palakiko & Paaluhi (Frank Ferera & John Paaluhi)",
+			"source": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Palakiko_%26_Paaluhi_%28Ferera_%26_Paaluhi%29_-_Hawaiian_Hotel.mp3?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"page": "https://commons.wikimedia.org/wiki/File:Palakiko_%26_Paaluhi_(Ferera_%26_Paaluhi)_-_Hawaiian_Hotel.mp3"
+		}
+	]
+}
