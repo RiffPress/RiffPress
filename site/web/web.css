@@ -1708,3 +1708,38 @@ main h2[id] {
 	font-size: 0.75rem;
 	color: var(--charcoal-4);
 }
+
+/* what is content can be selected and copied; what is the page's chrome
+   cannot, so select-all, a double click or a strum across the strings
+   picks up words and not the bar, the buttons or the pictures */
+.nav,
+.local-nav,
+.btn,
+.go,
+.neck-live,
+.neck-mute,
+.neck-chord,
+.device,
+.desk,
+.shot,
+.fan,
+.crate,
+.shelf,
+figure img {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+
+/* selected words in Riff's amber: a pale wash under dark ink on the paper,
+   and deep amber under light text on a dark band */
+::selection {
+	background: #ffe2a8;
+	color: var(--charcoal-1);
+}
+
+.alt ::selection,
+footer ::selection {
+	background: #7a4c06;
+	color: #fff;
+}

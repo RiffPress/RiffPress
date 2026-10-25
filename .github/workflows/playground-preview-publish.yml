@@ -149,15 +149,18 @@ jobs:
             const marker = '<!-- riff:playground-preview -->';
             const sha = process.env.HEAD_SHA;
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
-            // Three ways in, named for where each lands: the same Playground build opened on the
-            // Listen app (the blueprint's landing page) or on an album's post, and the pull
-            // request's own site.
+            // Four ways in, named for where each lands: the same Playground build opened on the
+            // standalone app (the blueprint's landing page), on the Listen page inside the theme, or
+            // on an album's post, and the pull request's own site.
             const play = process.env.PLAYGROUND_URL;
-            const onPost = play.replace( '?mode=seamless', '?mode=seamless&url=%2Fcompositions%2F' );
+            const at = ( path ) => play.replace( '?mode=seamless', `?mode=seamless&url=${ encodeURIComponent( path ) }` );
+            const inTheme = at( '/listen/' );
+            const onPost = at( '/compositions/' );
             const site = process.env.SITE_URL;
             const button = ( label, colour, logo ) => `https://img.shields.io/badge/${ encodeURIComponent( label ).replace( /-/g, '--' ) }-${ colour }?style=for-the-badge${ logo ? `&logo=${ logo }&logoColor=white` : '' }`;
             const buttons = [
-              `[![Player app](${ button( 'Player app', '3858E9', 'wordpress' ) })](${ play })`,
+              `[![Standalone app](${ button( 'Standalone app', '3858E9', 'wordpress' ) })](${ play })`,
+              `[![Listen page](${ button( 'Listen page', '3858E9', 'wordpress' ) })](${ inTheme })`,
               `[![Blog post](${ button( 'Blog post', '3858E9', 'wordpress' ) })](${ onPost })`,
               site ? `[![Website](${ button( 'Website', '1E1E1E' ) })](${ site })` : '',
             ].filter( Boolean ).join( ' ' );
@@ -168,6 +171,8 @@ jobs:
               `Built from <a href="${commitUrl}"><samp>${sha.slice(0, 7)}</samp></a>, signed in as admin.`,
               '',
               buttons,
+              '',
+              '<sub><b>Standalone app</b> is <code>/listen/app/</code>, the installable player with no theme around it. <b>Listen page</b> is <code>/listen/</code>, the same player as a block inside the theme. <b>Blog post</b> is an album post with its Riff block. <b>Website</b> is riffpress.com as this branch builds it.</sub>',
               '',
             ].join('\n');
             const prNumber = parseInt(process.env.PR_NUMBER, 10);
