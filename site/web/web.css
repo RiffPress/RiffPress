@@ -132,27 +132,30 @@ code {
 	color: var(--ink);
 }
 
-/* the bar is the neck: five strings run along it behind the wordmark and
-   the links, evenly through its height, the heavier gauges below, fading
-   out at the window's edges; neck.js plays them */
-.nav::before,
+/* the bar's open middle holds five strings, between the wordmark and the
+   menu so no word sits on one: the heavier gauges below, each with a
+   hairline of light along its top as on round wire. neck.js plays them,
+   and sounds them once a visitor clicks one. */
+.nav .wrap::after,
 .neck-live {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	pointer-events: none;
-	mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-}
-
-.nav::before {
 	content: "";
-	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 72' preserveAspectRatio='none'%3E%3Cline x1='0' y1='12' x2='1000' y2='12' stroke='%23c2b296' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='24' x2='1000' y2='24' stroke='%23c2b296' stroke-width='1.35' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='36' x2='1000' y2='36' stroke='%23c2b296' stroke-width='1.8' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='48' x2='1000' y2='48' stroke='%23c2b296' stroke-width='2.4' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='60' x2='1000' y2='60' stroke='%23c2b296' stroke-width='3' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+	order: 1;
+	flex: 1;
+	align-self: center;
+	height: 46px;
+	margin: 0 44px;
 }
 
-.nav .wrap {
-	position: relative;
-	z-index: 1;
+.nav .wrap::after {
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 46' preserveAspectRatio='none'%3E%3Cline x1='0' y1='7.67' x2='1000' y2='7.67' stroke='%239c8f7b' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='7.42' x2='1000' y2='7.42' stroke='%23fff' stroke-opacity='.55' stroke-width='0.50' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='15.33' x2='1000' y2='15.33' stroke='%239c8f7b' stroke-width='1.25' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='15.02' x2='1000' y2='15.02' stroke='%23fff' stroke-opacity='.55' stroke-width='0.50' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='23.00' x2='1000' y2='23.00' stroke='%239c8f7b' stroke-width='1.7' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='22.57' x2='1000' y2='22.57' stroke='%23fff' stroke-opacity='.55' stroke-width='0.51' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='30.67' x2='1000' y2='30.67' stroke='%239c8f7b' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='30.12' x2='1000' y2='30.12' stroke='%23fff' stroke-opacity='.55' stroke-width='0.66' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='38.33' x2='1000' y2='38.33' stroke='%239c8f7b' stroke-width='2.8' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='37.63' x2='1000' y2='37.63' stroke='%23fff' stroke-opacity='.55' stroke-width='0.84' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+}
+
+.nav .mark {
+	order: 0;
+}
+
+.nav .wrap > nav {
+	order: 2;
 }
 
 .nav .wrap {
@@ -920,15 +923,56 @@ figcaption {
 }
 
 /* neck.js lays live strings over the drawn ones and takes over from them */
-.nav.has-neck-live::before {
+
+/* neck.js lays live strings in their place */
+.nav.has-neck-live .wrap::after {
 	content: none;
 }
 
 .neck-live {
-	z-index: 0;
-	fill: none;
-	stroke: #c2b296;
+	display: block;
 	overflow: visible;
+	touch-action: pan-y;
+	cursor: pointer;
+}
+
+.neck-live svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+/* only once the strings have been asked to sound, in the gap before the menu */
+.neck-mute {
+	order: 1;
+	flex: none;
+	width: 24px;
+	height: 24px;
+	margin: 0 20px 0 -44px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--ink-2);
+	font: 12px/24px var(--sans);
+	cursor: pointer;
+}
+
+.neck-mute[aria-pressed="true"] {
+	opacity: 0.45;
+}
+
+.neck-mute:focus-visible {
+	outline: 2px solid var(--accent);
+}
+
+@media (max-width: 720px) {
+
+	.nav .wrap::after,
+	.neck-live {
+		display: none;
+	}
 }
 
 .local-nav a[aria-current] {
