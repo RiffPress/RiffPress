@@ -64,8 +64,7 @@ function head( title, description, url, depth, css, section = '' ) {
  * @param {string} up Path back to the site root.
  * @return {string} HTML.
  */
-const foot = ( up ) => `<div class="dots" aria-hidden="true"></div>
-<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</span><nav aria-label="Footer"><a href="${ up }accessibility/">Accessibility</a><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a></nav></div></footer>
+const foot = ( up ) => `<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</span><nav aria-label="Footer"><a href="${ up }accessibility/">Accessibility</a><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a></nav></div></footer>
 <script type="module" src="${ up }js/neck.js"></script>
 </body>
 </html>
