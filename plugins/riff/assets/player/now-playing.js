@@ -14,10 +14,12 @@ export function nowPlaying( P ) {
 			return;
 		}
 		// Safari doesn't focus a button on click, so after a click the active element is the body;
-		// focus then goes back to the bar's title, the control that opens Now Playing.
+		// focus then goes back to the bar's title, the control that opens Now Playing. So it does
+		// after the chevron, which is out of the tree.
+		const active = document.activeElement;
 		opener =
-			document.activeElement && document.activeElement !== document.body
-				? document.activeElement
+			active && active !== document.body && ! active.matches( '.riff-chevron' )
+				? active
 				: $( '.riff-bar-info' );
 		np.hidden = false;
 		root.classList.add( 'is-open' );

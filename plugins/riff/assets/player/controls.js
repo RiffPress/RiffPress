@@ -21,7 +21,6 @@ export function controls( P ) {
 	function paintShortcuts() {
 		for ( const button of $$( '[data-riff-action="shortcuts"]' ) ) {
 			button.setAttribute( 'aria-pressed', String( P.shortcutsOn ) );
-			button.setAttribute( 'aria-label', shortcutsLabel() );
 		}
 	}
 	paintShortcuts();

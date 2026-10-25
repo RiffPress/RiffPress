@@ -48,30 +48,31 @@ test.describe( 'The tree is the spec', () => {
 		if ( isMobile ) {
 			await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 				- region "Player":
-				  - 'button "Open Now Playing: Underground by Airmen of Note, United States Air Force Band"'
+				  - 'button "Now Playing: Underground by Airmen of Note, United States Air Force Band"'
 				  - button "Pause"
-				  - slider "Seek"
-				  - button "Like"
+				  - slider "Track position"
+				  - button "Like Underground"
 			` );
 			return;
 		}
-		// The two buttons that open Now Playing told apart by name, the transport in order, the
-		// seek line a slider named Seek with its times beside it, the quality pill as text.
+		// Now Playing named for the track and heard once (the chevron is out of the tree), the
+		// transport in order with Shuffle a toggle and Repeat its state after its name, the seek
+		// line a slider named Track position with its times beside it, the quality pill as text,
+		// the volume as a percentage.
 		await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 			- region "Player":
-			  - 'button "Open Now Playing: Underground by Airmen of Note, United States Air Force Band"'
-			  - button "Shuffle off"
+			  - 'button "Now Playing: Underground by Airmen of Note, United States Air Force Band"'
+			  - button "Shuffle"
 			  - button "Previous"
 			  - button "Pause"
 			  - button "Next"
-			  - button "Repeat off"
+			  - button "Repeat, off"
 			  - text: /\\d+:\\d\\d/
-			  - slider "Seek"
+			  - slider "Track position"
 			  - text: /\\d+:\\d\\d/
-			  - button "Like"
+			  - button "Like Underground"
 			  - text: MP3 · 128 kbps
 			  - slider "Volume"
-			  - button "Open Now Playing"
 		` );
 	} );
 
@@ -88,7 +89,7 @@ test.describe( 'The tree is the spec', () => {
 		await expect( page.locator( '.riff-np' ) ).toMatchAriaSnapshot( `
 			- dialog "Now Playing":
 			  - banner:
-			    - button "Keyboard shortcuts on" [pressed]
+			    - button "Keyboard shortcuts" [pressed]
 			  - region "Up next":
 			    - tablist:
 			      - tab "Up next" [selected]

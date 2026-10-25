@@ -256,6 +256,19 @@ export function account( P ) {
 		for ( const b of $$( '[data-riff-action="like"]' ) ) {
 			b.hidden = ! can;
 			b.setAttribute( 'aria-pressed', String( can && isLiked( t.id ) ) );
+			// Named for the track, as a row's heart is, since focus can reach it from anywhere.
+			b.setAttribute(
+				'aria-label',
+				t
+					? fmt(
+							/* translators: %s: a track, album or artist. */ __(
+								'Like %s',
+								'riff'
+							),
+							t.title
+						)
+					: __( 'Like', 'riff' )
+			);
 		}
 		for ( const { t: rt, row } of P.rows ) {
 			P.rowHearts

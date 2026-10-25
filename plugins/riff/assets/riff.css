@@ -383,7 +383,8 @@ div.riff-row-locked {
 	background: var(--riff-hover);
 }
 
-#riff .riff-btn[aria-pressed="false"] {
+#riff .riff-btn[aria-pressed="false"],
+#riff [data-riff-action="repeat"][data-repeat="off"] {
 	color: var(--riff-fg-2);
 }
 
@@ -927,6 +928,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	#riff .riff-bar-end .riff-btn[aria-pressed="true"],
 	#riff .riff-bar .riff-mode[aria-pressed="true"],
+	#riff .riff-bar .riff-mode[data-repeat="all"],
+	#riff .riff-bar .riff-mode[data-repeat="one"],
 	#riff .riff-bar-end .riff-chevron {
 		color: var(--riff-fg);
 	}
@@ -1968,6 +1971,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	/* On and off, told apart by colour alone. */
 	#riff .riff-btn[aria-pressed="true"],
+	#riff [data-riff-action="repeat"][data-repeat="all"],
+	#riff [data-riff-action="repeat"][data-repeat="one"],
 	.riff-app .riff-sort-link[aria-current="true"] {
 		forced-color-adjust: none;
 		color: Highlight !important;

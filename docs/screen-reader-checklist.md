@@ -18,15 +18,15 @@ Use the demo at https://riffpress.com/demo, or any post with at least three trac
 
 1. Move through the post to the first track. Its row is a button, "Play <title>"; after it come a heart, "Like <title>", a toggle button, and the …, "More options for <title>".
 2. Press it. You hear "Now playing <title> by <artist>", and the row's button is now "Pause <title>".
-3. The bar at the foot of the page is a region named Player. Its first button is "Open Now Playing: <title> by <artist>"; then Shuffle, Previous, Pause, Next, Repeat, the Seek slider, Like, Volume on a computer, and a second "Open Now Playing". The quality pill ("MP3 · 128 kbps") between Like and Volume is text, not a control: Tab passes it, and the VoiceOver cursor (VO + arrows) reads it.
-4. On the Seek slider, press the right arrow. You hear a time, "11 seconds of 8 minutes, 57 seconds", five seconds on from before. Drag it with the screen reader's own gesture: the time keeps being spoken.
+3. The bar at the foot of the page is a region named Player. Its first button is "Now Playing: <title> by <artist>", dialog pop up; then Shuffle, a toggle button; Previous, Pause, Next; "Repeat, off"; the Track position slider; "Like <title>"; and on a computer Volume, "100 percent". The chevron at the end is not a stop: it does what the first button does. The quality pill ("MP3 · 128 kbps") between Like and Volume is text, not a control: Tab passes it, and the VoiceOver cursor (VO + arrows) reads it.
+4. On the Track position slider, press the right arrow. You hear a time, "11 seconds of 8 minutes, 57 seconds", five seconds on from before. Drag it with the screen reader's own gesture: the time keeps being spoken.
 
 ## Now Playing
 
 5. Open Now Playing. On a phone it is a dialog that keeps you inside it; Escape, or the Close button, returns you to the button you opened it from. On a computer it is not modal, and you can move out to the bar and back.
 6. Move through it: the keyboard-shortcuts switch and its state, Up next and Lyrics as tabs, Clear the queue, then each track as "Play <title> by <artist>" with "More options" after it, the playing one "Pause …".
 7. Open a row's More options. The first item has focus; the arrows move through Play next, Add to queue, Add to Liked songs, Move up or down, Remove from queue, Go to post; Escape returns you to the … button.
-8. Choose Play next. You hear "<title> plays next". Choose Remove from queue on another. You hear "Removed from the queue". Clear the queue. You hear "Queue cleared".
+8. Choose Play next. You hear "<title> plays next". Choose Remove from queue on another. You hear "<title> removed from the queue". Clear the queue. You hear "Queue cleared".
 9. Press the keyboard-shortcuts switch. You hear "Keyboard shortcuts off". Press K. Nothing happens. Press it again, then K. The track pauses.
 
 ## The Listen app

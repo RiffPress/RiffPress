@@ -114,12 +114,21 @@ export function queue( P ) {
 		if ( at === P.pos || at < 0 || at >= P.order.length ) {
 			return;
 		}
+		const gone = P.queue[ P.order[ at ] ];
 		P.order.splice( at, 1 );
 		if ( at < P.pos ) {
 			P.pos--;
 		}
 		changed( 'remove' );
-		speak( __( 'Removed from the queue', 'riff' ) );
+		speak(
+			fmt(
+				/* translators: %s: track title. */ __(
+					'%s removed from the queue',
+					'riff'
+				),
+				gone?.title
+			)
+		);
 	}
 	function clear() {
 		if ( P.pos < 0 ) {
