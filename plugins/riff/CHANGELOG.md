@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.2](https://github.com/RiffPress/RiffPress/compare/riff-v5.2.1...riff-v5.2.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* **app:** the install card shows Riff's own icon when the site icon's file is gone, rather than a broken image ([#669](https://github.com/RiffPress/RiffPress/issues/669)) ([9edaafc](https://github.com/RiffPress/RiffPress/commit/9edaafc9500a1684fff80eeb626de9677272ae19))
+* **player:** Stop shows only on a phone, beside Share, where it stands in for the swipe that stops the player, and Cast sits in the bar beside the volume at every width ([#664](https://github.com/RiffPress/RiffPress/issues/664)) ([51f4142](https://github.com/RiffPress/RiffPress/commit/51f41422458e9f2aa6e9f53249e140f99476778f))
+
 ## [5.2.1](https://github.com/RiffPress/RiffPress/compare/v5.2.0...v5.2.1) (2026-10-25)
 
 

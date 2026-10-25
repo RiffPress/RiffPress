@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.1.1...riff-sign-in-v0.2.0) (2026-10-25)
+
+
+### Features
+
+* **extensions:** Riff Lyrics and Riff Sign In say which Riff they need, Requires Riff in their headers, stay out of the way on an older one, and CI holds each to the hooks it uses ([#659](https://github.com/RiffPress/RiffPress/issues/659)) ([f7e5f0e](https://github.com/RiffPress/RiffPress/commit/f7e5f0e7870cde87b8c6d09bfc8cd26c5a854914))
+
 ## [0.1.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.1.0...riff-sign-in-v0.1.1) (2026-10-25)
 
 
