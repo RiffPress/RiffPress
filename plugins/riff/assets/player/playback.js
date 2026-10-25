@@ -20,6 +20,18 @@ export function playback( P ) {
 		const other = m === audio ? video : audio;
 		other.pause();
 		P.point( m, P.srcFor( t, m ) );
+		// The video's captions, as <track> elements the browser draws when the Captions switch is on.
+		for ( const old of video.querySelectorAll( 'track' ) ) {
+			old.remove();
+		}
+		for ( const c of t.video?.captions || [] ) {
+			const track = document.createElement( 'track' );
+			track.kind = c.kind || 'captions';
+			track.src = c.src;
+			track.srclang = c.srclang || '';
+			track.label = c.label || '';
+			video.append( track );
+		}
 		if ( at || m.currentTime ) {
 			m.currentTime = at;
 		}

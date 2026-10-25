@@ -13,6 +13,7 @@ export function controls( P ) {
 	const { root, $$ } = P;
 
 	P.shortcutsOn = read( localStorage, P.SHORTCUTS ) !== 'off';
+	P.captionsOn = read( localStorage, P.CAPTIONS ) === 'on';
 	const shortcutsLabel = () =>
 		P.shortcutsOn
 			? __( 'Keyboard shortcuts on', 'riff' )
@@ -48,6 +49,17 @@ export function controls( P ) {
 			} else {
 				P.close();
 			}
+		} else if ( action === 'dismiss' ) {
+			P.dismiss();
+		} else if ( action === 'captions' ) {
+			P.captionsOn = ! P.captionsOn;
+			write( localStorage, P.CAPTIONS, P.captionsOn ? 'on' : 'off' );
+			P.paintCaptions();
+			P.toast(
+				P.captionsOn
+					? __( 'Captions on', 'riff' )
+					: __( 'Captions off', 'riff' )
+			);
 		} else if ( action === 'close' ) {
 			P.close();
 		} else if ( action === 'shortcuts' ) {

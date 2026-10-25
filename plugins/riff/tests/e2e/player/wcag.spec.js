@@ -137,3 +137,103 @@ test( 'a modal Now Playing keeps Tab inside it', async ( { page, isMobile } ) =>
 	await page.keyboard.press( 'Tab' );
 	await expect( page.locator( '[data-riff-action="close"]' ) ).toBeFocused();
 } );
+
+test( 'Up next tells a screen reader where each track sits in the list', async ( {
+	page,
+} ) => {
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( 0 ).click();
+	const items = page.locator( '#riff-queue-list > li' );
+	await expect( items ).toHaveCount( 2 );
+	await expect( items.nth( 0 ) ).toHaveAttribute( 'aria-posinset', '1' );
+	await expect( items.nth( 1 ) ).toHaveAttribute( 'aria-posinset', '2' );
+	await expect( items.nth( 1 ) ).toHaveAttribute( 'aria-setsize', '2' );
+} );
+
+test( 'every dragging movement has a single-pointer alternative (2.5.7)', async ( {
+	page,
+	isMobile,
+} ) => {
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( 0 ).click();
+	// Swiping the bar sideways skips: Next and Previous, in the bar on a wide screen and in Now
+	// Playing on a phone. Dragging Now Playing down closes it: Close, where it is a sheet; a wide
+	// screen's panel closes from the bar's caret and Escape. Swiping the bar down stops the
+	// player: Stop, at the top of Now Playing.
+	await page.locator( '.riff-bar-info' ).click();
+	for ( const action of [ 'next', 'prev', 'dismiss', isMobile ? 'close' : 'toggle' ] ) {
+		await expect(
+			page.locator( `#riff [data-riff-action="${ action }"]:visible` ).first()
+		).toBeVisible();
+	}
+	await page.locator( '#riff [data-riff-action="dismiss"]' ).click();
+	await expect( page.locator( '#riff' ) ).toBeHidden();
+	expect(
+		await page.evaluate( () =>
+			document.documentElement.classList.contains( 'has-riff' )
+		)
+	).toBe( false );
+} );
+
+test( 'what the track says reaches the player: captions, the language of a title, and what the cover shows', async ( {
+	page,
+} ) => {
+	await page.goto( postUrl );
+	// A track as the server would send it with those fields filled, through the player's own API.
+	await page.evaluate( () => {
+		const t = JSON.parse(
+			document.querySelector( 'figure[data-riff-track]' ).dataset
+				.riffTrack
+		);
+		t.lang = 'fr';
+		t.art = ( t.art || [] ).map( ( a ) => ( {
+			...a,
+			alt: 'Cover of Compositions by Airmen of Note',
+		} ) );
+		t.video = {
+			src: t.src,
+			poster: '',
+			captions: [
+				{
+					src: 'data:text/vtt,WEBVTT%0A%0A00:00.000%20--%3E%2000:05.000%0AUnderground',
+					label: 'English',
+					srclang: 'en',
+					kind: 'captions',
+				},
+			],
+		};
+		window.riff.play( [ t ] );
+	} );
+	await expect(
+		page.locator( '#riff-queue-list .riff-row-title' ).first()
+	).toHaveAttribute( 'lang', 'fr' );
+	await expect( page.locator( '.riff-cover' ) ).toHaveAttribute(
+		'alt',
+		'Cover of Compositions by Airmen of Note'
+	);
+	await expect( page.locator( '.riff-video track' ) ).toHaveAttribute(
+		'srclang',
+		'en'
+	);
+	// The Captions switch sits with the Song or Video switch at the top of Now Playing: hidden
+	// in song mode, shown in video mode, off until pressed, and kept once it is.
+	await page.locator( '.riff-bar-info' ).click();
+	const captions = page.locator( '[data-riff-action="captions"]' );
+	await expect( captions ).toBeHidden();
+	await page.locator( '[data-riff-mode="video"]' ).click();
+	await expect( captions ).toBeVisible();
+	await expect( captions ).toHaveAttribute( 'aria-pressed', 'false' );
+	await captions.click();
+	await expect( captions ).toHaveAttribute( 'aria-pressed', 'true' );
+	await expect
+		.poll( () =>
+			page.evaluate(
+				() =>
+					document.querySelector( '.riff-video' ).textTracks[ 0 ].mode
+			)
+		)
+		.toBe( 'showing' );
+	expect(
+		await page.evaluate( () => localStorage.getItem( 'riff:captions' ) )
+	).toBe( 'on' );
+} );

@@ -49,17 +49,21 @@ export function paint( P ) {
 		areas( t );
 		text( 'source', t?.post?.title || '' );
 		for ( const img of $$( 'img[data-riff-art]' ) ) {
-			const src =
-				img.dataset.riffSize === 'large'
-					? largest( t?.art )
-					: smallest( t?.art );
+			const large = img.dataset.riffSize === 'large';
+			const src = large ? largest( t?.art ) : smallest( t?.art );
 			if ( src && img.getAttribute( 'src' ) !== src ) {
 				img.src = src;
 			}
 			img.hidden = ! src;
+			// The large cover is content, told by what it shows; the small ones beside a title
+			// are decoration, the title says it.
+			img.alt = large
+				? ( t?.art || [] ).find( ( a ) => a?.alt )?.alt || ''
+				: '';
 		}
 		const modes = $( '.riff-modes' );
 		modes.hidden = ! t?.video;
+		paintCaptions();
 		for ( const b of $$( '[data-riff-mode]' ) ) {
 			b.setAttribute(
 				'aria-checked',
@@ -302,5 +306,27 @@ export function paint( P ) {
 		}
 	}
 
-	return { paint: paintAll, progress, seekers, setProgress, areas, text };
+	// Captions: the switch shows for a video version that has them, in video mode, and the
+	// video's text tracks follow it.
+	function paintCaptions() {
+		const t = P.track();
+		const has = !! t?.video?.captions?.length;
+		for ( const b of $$( '[data-riff-action="captions"]' ) ) {
+			b.hidden = ! has || P.mode !== 'video';
+			b.setAttribute( 'aria-pressed', String( !! P.captionsOn ) );
+		}
+		for ( const track of P.video.textTracks ) {
+			track.mode = has && P.captionsOn ? 'showing' : 'hidden';
+		}
+	}
+
+	return {
+		paint: paintAll,
+		progress,
+		seekers,
+		setProgress,
+		areas,
+		text,
+		paintCaptions,
+	};
 }
