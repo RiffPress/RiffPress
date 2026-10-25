@@ -5,7 +5,8 @@
 	"include-v-in-tag": true,
 	"draft": true,
 	"force-tag-creation": true,
-	"separate-pull-requests": true,
+	"separate-pull-requests": false,
+	"group-pull-request-title-pattern": "chore${scope}: release",
 	"bootstrap-sha": "b1f83e815a11cd938ae068d322b27980b821dd79",
 	"pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
 	"changelog-sections": [

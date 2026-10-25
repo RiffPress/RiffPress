@@ -68,9 +68,12 @@ jobs:
   # release-please only updates the manifest and each package's CHANGELOG.md.
   # The plugin headers, version defines, readme.txt Stable tags and the
   # package.json files are synced by scripts/sync-versions.sh, the same script
-  # a maintainer runs locally, so the CI behavior is grep-able. Each package
-  # has its own release pull request, and each is synced for its own package
-  # only, so nothing of another package lands with it.
+  # a maintainer runs locally, so the CI behavior is grep-able. Every package
+  # with changes releases from one pull request (release-please-config.json),
+  # each with its own version, tag, changelog and release; only the packages
+  # whose version that pull request moves are synced, so a package it does not
+  # release is left as it is. One pull request writes the manifest once, so
+  # two releases never conflict over its neighbouring lines.
   sync-versions:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_branches != '[]' && needs.release-please.outputs.release_branches != '' }}
@@ -98,31 +101,29 @@ jobs:
       # the branch on an older main, failing checks main already passes. Main is
       # merged in here and pushed with the synced versions below; release-please
       # replaces the branch outright the next time it rebuilds it.
-      # Another package's release on main changes the manifest's line next to
-      # this one's, which git calls a conflict. The manifest is main's, with
-      # this package's version from its release branch; any other conflict
-      # still stops the job.
       - name: Bring the release branch up to date with main
-        env:
-          BRANCH: ${{ matrix.branch }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if ! git merge-base --is-ancestor origin/main HEAD; then
-            if ! git merge --no-edit origin/main; then
-              if [ "$(git diff --name-only --diff-filter=U)" != ".release-please-manifest.json" ]; then
-                exit 1
-              fi
-              PACKAGE="${BRANCH##*--components--}" node .github/scripts/release-manifest.js
-              git add .release-please-manifest.json
-              git commit --no-edit
-            fi
+            git merge --no-edit origin/main
           fi
-      # The branch names its package: release-please--branches--main--components--riff-lyrics.
-      - name: Sync this package's version strings
-        env:
-          BRANCH: ${{ matrix.branch }}
-        run: bash scripts/sync-versions.sh "${BRANCH##*--components--}"
+      # The packages this pull request releases are the ones whose manifest
+      # version differs from main's; each is synced by its component name.
+      - name: Sync the version strings of the packages it releases
+        run: |
+          set -euo pipefail
+          CHANGED=$(jq -r --argjson main "$(git show origin/main:.release-please-manifest.json)" 'to_entries[] | select(.value != $main[.key]) | .key' .release-please-manifest.json)
+          if [[ -z "$CHANGED" ]]; then
+            echo "No package's version moves; nothing to sync."
+            exit 0
+          fi
+          for path in $CHANGED; do
+            component=$(jq -r --arg path "$path" '.packages[$path].component' release-please-config.json)
+            [[ -n "$component" && "$component" != null ]] || { echo "::error::No component for $path"; exit 1; }
+            echo "Syncing $component ($path)"
+            bash scripts/sync-versions.sh "$component"
+          done
       - name: Commit synced versions back to the release pull request
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
