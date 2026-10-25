@@ -1,2 +1,6 @@
 # GitHub adds "Report a security vulnerability" itself, from SECURITY.md and private reporting.
 blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/RiffPress/RiffPress/discussions/new?category=q-a
+    about: How to do something with Riff, or whether it can. Answers stay findable in Discussions.
