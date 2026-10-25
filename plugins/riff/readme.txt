@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.32.0
+Stable tag: 4.32.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 4.32.1 =
+* Fixed: the bar never covers what has focus, a modal Now Playing keeps Tab, and the surface is held to WCAG 2.2 AA by test.
+* Fixed: the first track pressed is announced, and Up next's rows say what they play, with the artist.
+
 = 4.32.0 =
 * A Block Bindings source, riff/track, so core blocks show a track's details.
 * A listener can turn the single-key shortcuts off from the player (WCAG 2.1.4).
@@ -147,8 +151,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 4.29.0 =
 * The player bar at its full desktop height, with a 4px line, and a rail that doesn't scroll sideways.
 * Fixed: the seek line's glow fades in from the start of the line, instead of ending in a hard edge.
-
-= 4.28.0 =
-* Liked songs opens as a playlist, and Your Library sorts from a menu.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

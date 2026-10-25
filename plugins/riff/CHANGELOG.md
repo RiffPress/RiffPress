@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.32.1](https://github.com/RiffPress/RiffPress/compare/v4.32.0...v4.32.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* the bar never covers what has focus, a modal Now Playing keeps Tab, and the surface is held to WCAG 2.2 AA by test ([#605](https://github.com/RiffPress/RiffPress/issues/605)) ([88c6ebc](https://github.com/RiffPress/RiffPress/commit/88c6ebcae6c194bdb018312ebb9d99f41343ea2b))
+* the first track pressed is announced, and Up next's rows say what they play, with the artist ([#599](https://github.com/RiffPress/RiffPress/issues/599)) ([9297ddf](https://github.com/RiffPress/RiffPress/commit/9297ddf4dd4ed9824c16de5346011f0c4ced6308))
+
 ## [4.32.0](https://github.com/RiffPress/RiffPress/compare/v4.31.0...v4.32.0) (2026-10-24)
 
 
