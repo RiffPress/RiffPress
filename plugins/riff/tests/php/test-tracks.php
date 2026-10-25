@@ -81,7 +81,20 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$from  = Tracks::from_block( $block, $post );
 		$this->assertSame( array( array( 'src' => wp_get_attachment_url( $vtt ), 'label' => 'English', 'srclang' => 'en', 'kind' => 'subtitles' ) ), $from['captions'] ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		$this->assertSame( array(), Tracks::normalize( array( 'captions' => array( array( 'label' => 'no file' ) ) ) )['captions'], 'a track without a file is left out' );
-		$this->assertSame( 'subtitles', Tracks::normalize( array( 'captions' => array( array( 'src' => 'x.vtt', 'kind' => 'karaoke' ) ) ) )['captions'][0]['kind'], 'an unknown kind is subtitles' );
+		$this->assertSame(
+			'subtitles',
+			Tracks::normalize(
+				array(
+					'captions' => array(
+						array(
+							'src'  => 'x.vtt',
+							'kind' => 'karaoke',
+						),
+					),
+				)
+			)['captions'][0]['kind'],
+			'an unknown kind is subtitles'
+		);
 	}
 
 	public function test_an_upload_named_after_its_file_takes_its_title_from_the_tags(): void {

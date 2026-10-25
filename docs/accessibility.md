@@ -41,8 +41,16 @@ Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P chang
 
 - **axe** runs in the e2e suites at the `wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa` and `best-practice` rule sets, on every view of the app at three widths, on Now Playing, on the components page with every component in every state.
 - **`tests/e2e/player/wcag.spec.js`** holds the criteria a docked player trips on: target size, focus not obscured, audio control, the modal's Tab, the bar's names.
+- **`tests/e2e/player/aria.spec.js` and `app/aria.spec.js`** are the tree as the spec: an aria snapshot of each surface in each state (a post's rows, the bar, Now Playing with Up next, a row's menu, the Lyrics tab; the app's bar, a post, the lists, search), matched as a subset, so a name, a role or a state cannot change unreviewed. A change to a surface starts by changing its snapshot.
 - **The accessibility tree** is read directly where it matters: `#a11y-speak-polite` for what is said, `aria-valuetext` for the slider, the focus order through Now Playing and out to the bar.
 - **`docs/screen-reader-checklist.md`** is run with real screen readers before a release that touches the surface.
+
+## Media
+
+- **Captions.** A video version's captions are the WebVTT file its Captions field in the Media Library names, or the text tracks its video block carries; the track carries them as `captions`, and the player shows them as `<track>` elements on its video with a Captions control in Now Playing.
+- **Transcript.** Timed lyrics are the song's transcript (1.2.1, 1.2.2): Riff Lyrics shows them following the music, and a switch above them shows the same words as plain text in one piece.
+- **Alt text.** A cover's alt text is the image's own from the Media Library; a cover Riff draws says the album and artist it draws. The player's large cover in Now Playing carries it; a row's or a card's cover is `alt=""`, since the title beside it says what it is.
+- **Language.** The language a file's tags name is kept on upload as `language` and reaches the track as `lang`, which the player puts on a title in another language than the page's, so a screen reader pronounces it.
 
 ## Adding something
 

@@ -300,10 +300,6 @@ final class Tracks {
 				'title'    => array( 'type' => 'string' ),
 				'artist'   => array( 'type' => 'string' ),
 				'album'    => array( 'type' => 'string' ),
-				'lang'     => array(
-					'type'        => 'string',
-					'description' => __( 'The language of the title and artist, as a lang attribute takes it, from the file\'s tags; empty when the file does not say.', 'riff' ),
-				),
 				'year'     => array(
 					'type'        => 'integer',
 					'description' => __( 'The year from the file\'s tags, or 0.', 'riff' ),
@@ -311,6 +307,10 @@ final class Tracks {
 				'duration' => array(
 					'type'        => 'number',
 					'description' => __( 'Seconds, 0 when unknown.', 'riff' ),
+				),
+				'lang'     => array(
+					'type'        => 'string',
+					'description' => __( 'The language of the title and artist, as a lang attribute takes it, from the file\'s tags; empty when the file does not say.', 'riff' ),
 				),
 				'format'   => array(
 					'type'        => 'string',
