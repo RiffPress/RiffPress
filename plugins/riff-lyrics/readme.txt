@@ -5,7 +5,7 @@ Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.1.1 =
+* Fixed: no Show as text switch: the timed lines are already text a screen reader reads as a list.
+
 = 1.1.0 =
 * Timed lyrics are read in the formats taggers and players write: LRC with its offset, Enhanced LRC with words that light up as they are sung, WebVTT, and a file's own ID3 SYLT frame on upload.
 
@@ -37,8 +40,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 = 0.2.0 =
 * Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on.
 * Fixed: signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account.
-
-= 0.1.0 =
-* Riff Lyrics, a Lyrics tab beside Up next, as a plugin built only on Riff's public API.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
