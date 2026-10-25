@@ -73,7 +73,7 @@
 		}
 		const fresh = document.createElement( 'table' );
 		fresh.innerHTML = item;
-		for ( const field of [ 'riff_art', 'riff_video' ] ) {
+		for ( const field of [ 'riff_art', 'riff_video', 'riff_captions' ] ) {
 			const name = `attachments[${ model.id }][${ field }]`;
 			const next = fresh
 				.querySelector( `[name="${ CSS.escape( name ) }"]` )

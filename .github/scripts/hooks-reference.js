@@ -15,7 +15,7 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { esc, inline, head, FOOT, localNav, crumbs } = require( './site-shell.js' );
+const { esc, inline, head, foot, localNav, crumbs } = require( './site-shell.js' );
 
 const ROOT = path.resolve( __dirname, '..', '..' );
 const PLUGIN = path.join( ROOT, 'plugins', 'riff' );
@@ -523,7 +523,7 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 }
 </script>
 `;
-	return html + FOOT;
+	return html + foot( '../../../' );
 }
 
 function indexPage( list ) {
@@ -573,7 +573,7 @@ function indexPage( list ) {
 </script>
 </main>
 `;
-	return html + FOOT;
+	return html + foot( '../../' );
 }
 
 /**

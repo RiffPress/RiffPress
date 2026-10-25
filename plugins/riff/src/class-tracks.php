@@ -17,7 +17,8 @@ defined( 'ABSPATH' ) || exit;
  *
  * A track is an array with these keys, the same shape the player keeps in its queue:
  * id (string), src, type ('audio' or 'video'), title, artist, album, year (0 when unknown), duration (seconds, 0 when
- * unknown), art (list of { src, sizes }), video ({ src, poster } or null), and post ({ title, url }).
+ * unknown), lang (the title's language, or empty), art (list of { src, sizes, alt }), captions (list of
+ * { src, label, srclang, kind } for a video), video ({ src, poster, captions } or null), and post ({ title, url }).
  */
 final class Tracks {
 
@@ -68,6 +69,9 @@ final class Tracks {
 				'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
 				'year'     => isset( $meta['year'] ) && is_numeric( $meta['year'] ) ? (int) $meta['year'] : 0,
 				'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
+				// The language the file's tags name, which Media::language() keeps on upload, so a
+				// title in another script can say what it is.
+				'lang'     => Media::language_code( (string) ( $meta['language'] ?? '' ) ),
 				// What WordPress read from the file on upload: the container, the bit rate, whether it is
 				// lossless, and for a lossless file its bit depth and sample rate. The player shows them
 				// on every track, the way the streaming services do.
@@ -79,12 +83,66 @@ final class Tracks {
 				// Level data, when something measured it on upload and stored it as riff_levels.
 				'levels'   => isset( $meta['riff_levels'] ) && is_string( $meta['riff_levels'] ) ? $meta['riff_levels'] : '',
 				'art'      => $art,
+				'captions' => 'video' === $type ? self::captions( $attachment_id ) : array(),
 				'video'    => $video,
 				'post'     => self::post( $post_id ),
 			),
 			$attachment_id,
 			$post_id
 		);
+	}
+
+	/**
+	 * A video's captions, from the WebVTT file its Captions field names, as the track elements a
+	 * video block carries: the file, a label, its language and its kind.
+	 *
+	 * @since 4.33.0
+	 *
+	 * @param int $video_id The video attachment.
+	 * @return array[] One captions track, or none.
+	 */
+	public static function captions( int $video_id ): array {
+		$id  = (int) get_post_meta( $video_id, Media::CAPTIONS_META, true );
+		$src = $id ? wp_get_attachment_url( $id ) : '';
+		if ( ! $src || 'text/vtt' !== (string) get_post_mime_type( $id ) ) {
+			return array();
+		}
+		$lang = (string) get_bloginfo( 'language' );
+		return array(
+			array(
+				'src'     => $src,
+				'label'   => (string) get_the_title( $id ),
+				'srclang' => '' !== $lang ? $lang : 'en',
+				'kind'    => 'captions',
+			),
+		);
+	}
+
+	/**
+	 * The text tracks a video block carries, as captions the player can show: the block's `tracks`
+	 * attribute, which the editor fills from its Text tracks panel.
+	 *
+	 * @since 4.33.0
+	 *
+	 * @param array $tracks The attribute: each { src, label, srcLang, kind }.
+	 * @return array[]
+	 */
+	public static function block_captions( array $tracks ): array {
+		$out = array();
+		foreach ( $tracks as $track ) {
+			$src = is_array( $track ) ? (string) ( $track['src'] ?? '' ) : '';
+			if ( '' === $src ) {
+				continue;
+			}
+			$kind  = (string) ( $track['kind'] ?? 'subtitles' );
+			$out[] = array(
+				'src'     => $src,
+				'label'   => (string) ( $track['label'] ?? '' ),
+				'srclang' => (string) ( $track['srcLang'] ?? $track['srclang'] ?? '' ),
+				'kind'    => in_array( $kind, array( 'captions', 'subtitles', 'descriptions' ), true ) ? $kind : 'subtitles',
+			);
+		}
+		return $out;
 	}
 
 	/**
@@ -115,6 +173,7 @@ final class Tracks {
 				'title'    => $title,
 				'artist'   => '',
 				'album'    => '',
+				'lang'     => '',
 				'year'     => 0,
 				'duration' => 0,
 				'format'   => '',
@@ -124,6 +183,7 @@ final class Tracks {
 				'rate'     => 0,
 				'levels'   => '',
 				'art'      => self::post_art( $post_id ),
+				'captions' => array(),
 				'video'    => null,
 				'post'     => self::post( $post_id ),
 			),
@@ -240,6 +300,10 @@ final class Tracks {
 				'title'    => array( 'type' => 'string' ),
 				'artist'   => array( 'type' => 'string' ),
 				'album'    => array( 'type' => 'string' ),
+				'lang'     => array(
+					'type'        => 'string',
+					'description' => __( 'The language of the title and artist, as a lang attribute takes it, from the file\'s tags; empty when the file does not say.', 'riff' ),
+				),
 				'year'     => array(
 					'type'        => 'integer',
 					'description' => __( 'The year from the file\'s tags, or 0.', 'riff' ),
@@ -280,14 +344,27 @@ final class Tracks {
 						'properties' => array(
 							'src'   => array( 'type' => 'string' ),
 							'sizes' => array( 'type' => 'string' ),
+							'alt'   => array(
+								'type'        => 'string',
+								'description' => __( 'What the picture shows, for a screen reader: the image\'s alt text, or the album and artist a drawn cover names.', 'riff' ),
+							),
 						),
 					),
+				),
+				'captions' => array(
+					'type'        => 'array',
+					'description' => __( 'Text tracks for a video: the WebVTT file its Captions field names, or the tracks its video block carries.', 'riff' ),
+					'items'       => self::captions_schema(),
 				),
 				'video'    => array(
 					'type'       => array( 'object', 'null' ),
 					'properties' => array(
-						'src'    => array( 'type' => 'string' ),
-						'poster' => array( 'type' => 'string' ),
+						'src'      => array( 'type' => 'string' ),
+						'poster'   => array( 'type' => 'string' ),
+						'captions' => array(
+							'type'  => 'array',
+							'items' => self::captions_schema(),
+						),
 					),
 				),
 				'post'     => array(
@@ -311,6 +388,26 @@ final class Tracks {
 	}
 
 	/**
+	 * The shape of one text track.
+	 *
+	 * @return array
+	 */
+	private static function captions_schema(): array {
+		return array(
+			'type'       => 'object',
+			'properties' => array(
+				'src'     => array( 'type' => 'string' ),
+				'label'   => array( 'type' => 'string' ),
+				'srclang' => array( 'type' => 'string' ),
+				'kind'    => array(
+					'type' => 'string',
+					'enum' => array( 'captions', 'subtitles', 'descriptions' ),
+				),
+			),
+		);
+	}
+
+	/**
 	 * Holds a track to its shape after a filter has had it: every key present with the right type,
 	 * extra keys kept for whoever added them. A track that lost its source is returned without one
 	 * and the player skips it.
@@ -327,6 +424,7 @@ final class Tracks {
 		$track['title']    = (string) ( $track['title'] ?? '' );
 		$track['artist']   = (string) ( $track['artist'] ?? '' );
 		$track['album']    = (string) ( $track['album'] ?? '' );
+		$track['lang']     = Media::language_code( (string) ( $track['lang'] ?? '' ) );
 		$track['year']     = max( 0, (int) ( $track['year'] ?? 0 ) );
 		$track['duration'] = (float) max( 0, (float) ( $track['duration'] ?? 0 ) );
 		$track['format']   = strtolower( (string) ( $track['format'] ?? '' ) );
@@ -341,10 +439,14 @@ final class Tracks {
 				static fn( $a ) => is_array( $a ) && ! empty( $a['src'] )
 			)
 		);
+		$track['captions'] = self::block_captions( (array) ( $track['captions'] ?? array() ) );
 		$track['video']    = is_array( $track['video'] ?? null ) && ! empty( $track['video']['src'] ) ? $track['video'] : null;
-		$track['post']     = is_array( $track['post'] ?? null ) && ! empty( $track['post']['url'] ) ? $track['post'] : null;
-		$track['locked']   = ! empty( $track['locked'] );
-		$track['unlock']   = is_string( $track['unlock'] ?? null ) ? $track['unlock'] : '';
+		if ( $track['video'] ) {
+			$track['video']['captions'] = self::block_captions( (array) ( $track['video']['captions'] ?? array() ) );
+		}
+		$track['post']   = is_array( $track['post'] ?? null ) && ! empty( $track['post']['url'] ) ? $track['post'] : null;
+		$track['locked'] = ! empty( $track['locked'] );
+		$track['unlock'] = is_string( $track['unlock'] ?? null ) ? $track['unlock'] : '';
 		return $track;
 	}
 
@@ -410,8 +512,13 @@ final class Tracks {
 			$id = (int) ( $attrs['id'] ?? 0 );
 			return $id ? self::from_attachment( $id, $post_id ) : null;
 		}
-		$type = 'core/video' === $name ? 'video' : 'audio';
-		return self::from_markup( (string) ( $block['innerHTML'] ?? '' ), $attrs, $type, $post_id );
+		$type  = 'core/video' === $name ? 'video' : 'audio';
+		$track = self::from_markup( (string) ( $block['innerHTML'] ?? '' ), $attrs, $type, $post_id );
+		// A video block's own text tracks, from its Text tracks panel, when the file has none of its own.
+		if ( $track && 'video' === $type && empty( $track['captions'] ) && ! empty( $attrs['tracks'] ) && is_array( $attrs['tracks'] ) ) {
+			$track['captions'] = self::block_captions( $attrs['tracks'] );
+		}
+		return $track;
 	}
 
 	/**
@@ -465,16 +572,20 @@ final class Tracks {
 		$poster = self::art( (int) get_post_thumbnail_id( $video_id ) );
 		$poster = $poster ? $poster : $art;
 		return array(
-			'src'    => $src,
-			'poster' => $poster ? end( $poster )['src'] : '',
+			'src'      => $src,
+			'poster'   => $poster ? end( $poster )['src'] : '',
+			'captions' => self::captions( $video_id ),
 		);
 	}
 
 	/**
-	 * Artwork in every registered size the image has.
+	 * Artwork in every registered size the image has, each with the image's alt text from the
+	 * Media Library, as the Image block takes it.
+	 *
+	 * @since 4.33.0 Each size carries the image's alt text.
 	 *
 	 * @param int $image_id Image attachment ID, or 0.
-	 * @return array List of { src, sizes }.
+	 * @return array List of { src, sizes, alt }.
 	 */
 	public static function art( int $image_id ): array {
 		if ( ! $image_id ) {
@@ -482,6 +593,7 @@ final class Tracks {
 		}
 		$art  = array();
 		$seen = array();
+		$alt  = trim( (string) get_post_meta( $image_id, '_wp_attachment_image_alt', true ) );
 		foreach ( self::ART_SIZES as $size ) {
 			$image = wp_get_attachment_image_src( $image_id, $size );
 			if ( ! $image || isset( $seen[ $image[0] ] ) ) {
@@ -491,6 +603,7 @@ final class Tracks {
 			$art[]             = array(
 				'src'   => $image[0],
 				'sizes' => $image[1] . 'x' . $image[2],
+				'alt'   => $alt,
 			);
 		}
 		return $art;
