@@ -55,3 +55,6 @@ packages/fixtures/*/cover-[0-9]*x[0-9]*.png
 # The directory listing's banner, icons and screenshots are made by npm run docs:wporg and committed.
 !/.wordpress-org/*.png
 .phpunit.result.cache
+
+# Built from site/src by .github/scripts/site-js.js when the site deploys.
+site/js/
