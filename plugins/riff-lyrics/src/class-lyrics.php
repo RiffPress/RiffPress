@@ -22,8 +22,12 @@ defined( 'ABSPATH' ) || exit;
  * `media_details`. This shows that field in a Lyrics tab and lets the Media Library edit it, so the
  * plugin stores nothing of its own. Everything it does goes through Riff's documented surface:
  * the `riff_now_playing_tabs` filter, the `riff_before_player` action, and the `riff.tab`,
- * `riff.track` and `riff.time` actions in the player. Lyrics whose lines start with a timestamp,
- * as the LRC format has them, follow the music and seek on a tap, through `window.riff`.
+ * `riff.track` and `riff.time` actions in the player. Timed lyrics follow the music and seek on a
+ * tap, through `window.riff`, in the formats taggers and players already write: LRC (with its
+ * `[offset:]` tag and Enhanced LRC's word times) and WebVTT, typed into the field or read from the
+ * file's tags, and ID3's own SYLT frame, which getID3 reads on upload but WordPress then drops:
+ * Riff Lyrics writes it into the same field as LRC, so a file tagged with timed lyrics follows the
+ * music as soon as it is uploaded.
  */
 final class Lyrics {
 
@@ -47,6 +51,98 @@ final class Lyrics {
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
 		add_action( 'wp_entity_fields_api_init', array( self::class, 'entity_field' ) );
+		add_filter( 'wp_read_audio_metadata', array( self::class, 'synced_from_tags' ), 10, 4 );
+	}
+
+	/**
+	 * Text in an ID3 frame's encoding, as UTF-8.
+	 *
+	 * @param string $text     The bytes.
+	 * @param string $encoding getID3's name for the encoding: ISO-8859-1, UTF-16, UTF-16BE or UTF-8.
+	 * @return string
+	 */
+	private static function utf8( string $text, string $encoding ): string {
+		if ( 'UTF-8' !== $encoding && function_exists( 'mb_convert_encoding' ) ) {
+			$text = (string) mb_convert_encoding( $text, 'UTF-8', $encoding );
+		}
+		return str_replace( "\u{FEFF}", '', $text );
+	}
+
+	/**
+	 * Typed lyrics, as plain text: sanitize_textarea_field(), which would also take Enhanced LRC's
+	 * <mm:ss.xx> word times for tags and drop them, so those are set aside first and put back.
+	 *
+	 * @param string $text What was typed.
+	 * @return string
+	 */
+	public static function clean( string $text ): string {
+		$text = preg_replace( '/<(\d{1,3}:\d{1,2}(?:\.\d{1,3})?)>/', "\u{E000}$1\u{E001}", $text );
+		$text = sanitize_textarea_field( (string) $text );
+		return str_replace( array( "\u{E000}", "\u{E001}" ), array( '<', '>' ), $text );
+	}
+
+	/**
+	 * A file's SYLT frame (synchronised lyrics, timed in milliseconds), as LRC in the lyrics field,
+	 * in place of its untimed USLT words when it has both, since they are the same song.
+	 *
+	 * SYLT carries text in pieces, often a syllable each, each with the time it starts; a piece that
+	 * begins with a line break starts a new line, which is how taggers write it.
+	 *
+	 * @param array  $metadata    What WordPress read from the file.
+	 * @param string $file        Path to the file.
+	 * @param string $file_format The file's format.
+	 * @param array  $data        getID3's whole reading of the file.
+	 * @return array
+	 */
+	public static function synced_from_tags( $metadata, $file = '', $file_format = '', $data = array() ) {
+		unset( $file, $file_format );
+		if ( ! is_array( $metadata ) || ! is_array( $data ) ) {
+			return $metadata;
+		}
+		$lrc = self::lrc_from_sylt( (array) ( $data['id3v2']['SYLT'] ?? array() ) );
+		if ( '' !== $lrc ) {
+			$metadata[ self::KEY ] = $lrc;
+		}
+		return $metadata;
+	}
+
+	/**
+	 * LRC from getID3's SYLT frames: the first one timed in milliseconds whose content is lyrics.
+	 *
+	 * @param array $frames getID3's `id3v2.SYLT`.
+	 * @return string LRC, or an empty string for none.
+	 */
+	public static function lrc_from_sylt( array $frames ): string {
+		foreach ( $frames as $frame ) {
+			// Format 2 is milliseconds (1 is MPEG frames, which needs the file's frame rate); content
+			// type 1 is lyrics, 0 "other", which taggers use for lyrics too.
+			if ( ! is_array( $frame ) || 2 !== (int) ( $frame['timestampformat'] ?? 0 ) || ! in_array( (int) ( $frame['contenttypeid'] ?? 1 ), array( 0, 1 ), true ) ) {
+				continue;
+			}
+			$lines    = array();
+			$encoding = (string) ( $frame['encoding'] ?? 'ISO-8859-1' );
+			foreach ( (array) ( $frame['lyrics'] ?? array() ) as $piece ) {
+				// The piece without a time is the frame's content descriptor, not a word.
+				if ( ! isset( $piece['timestamp'] ) ) {
+					continue;
+				}
+				// getID3 leaves each piece in the frame's own encoding, often UTF-16 with its mark.
+				$text = self::utf8( (string) ( $piece['data'] ?? '' ), $encoding );
+				$ms   = (int) $piece['timestamp'];
+				if ( ! $lines || preg_match( '/^[\r\n]/', $text ) ) {
+					$lines[] = array( $ms, '' );
+				}
+				$lines[ count( $lines ) - 1 ][1] .= str_replace( array( "\r", "\n" ), '', $text );
+			}
+			$out = array();
+			foreach ( $lines as list( $ms, $text ) ) {
+				$out[] = sprintf( '[%02d:%05.2f]%s', intdiv( $ms, 60000 ), ( $ms % 60000 ) / 1000, trim( $text ) );
+			}
+			if ( $out ) {
+				return implode( "\n", $out );
+			}
+		}
+		return '';
 	}
 
 	/**
@@ -165,6 +261,10 @@ final class Lyrics {
 			. '#riff .riff-lyrics-line:hover{color:var(--riff-fg)}'
 			. '#riff .riff-lyrics-line:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px;border-radius:4px}'
 			. '#riff [aria-current] > .riff-lyrics-line{color:var(--riff-fg);font-weight:700}'
+			// Enhanced LRC: in the line being sung, the words still to come wait in the quieter colour.
+			. '#riff [aria-current] > .riff-lyrics-line .riff-lyrics-word{color:var(--riff-fg-2);transition:color .12s}'
+			. '#riff [aria-current] > .riff-lyrics-line .riff-lyrics-word.is-sung{color:var(--riff-fg)}'
+			. '@media (prefers-reduced-motion:reduce){#riff .riff-lyrics-word{transition:none}}'
 			// The transcript switch, a pill above the lines, pressed while the words are plain text.
 			. '#riff .riff-lyrics-switch{all:unset;display:inline-block;box-sizing:border-box;min-height:24px;margin:0 0 12px;padding:2px 10px;border:1px solid var(--riff-fg-2);border-radius:999px;color:var(--riff-fg-2);font:inherit;font-size:13px;cursor:pointer}'
 			. '#riff .riff-lyrics-switch[aria-pressed="true"]{color:var(--riff-fg);border-color:var(--riff-fg)}'
@@ -212,7 +312,7 @@ final class Lyrics {
 		}
 		$meta = wp_get_attachment_metadata( $id );
 		$meta = is_array( $meta ) ? $meta : array();
-		$text = sanitize_textarea_field( wp_unslash( (string) $attachment['riff_lyrics'] ) );
+		$text = self::clean( wp_unslash( (string) $attachment['riff_lyrics'] ) );
 		if ( '' === $text ) {
 			unset( $meta[ self::KEY ] );
 		} else {
