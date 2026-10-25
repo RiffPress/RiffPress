@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.2.2
+Stable tag: 5.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,12 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.2.3 =
+* Fixed: drawn covers no longer use Riff's amber, which is kept for what you press, such as Play.
+* Fixed: the app's manifest names each icon by the size it really is, so a browser does not skip a site icon set without the Customizer's crop.
+* Fixed: Your Library has no Songs chip that left the library: Liked songs is pinned first under Playlists, as the apps file it.
+* Fixed: the Riff block shows the app in the editor as it is on the page, with the app's own stylesheet.
+
 = 5.2.2 =
 * Fixed: the install card shows Riff's own icon when the site icon's file is gone, rather than a broken image.
 * Fixed: Stop shows only on a phone, beside Share, where it stands in for the swipe that stops the player, and Cast sits in the bar beside the volume at every width.
@@ -134,9 +140,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 5.1.1 =
 * Fixed: a track that cannot play is said and marked in the list, "Now playing" waits until the sound starts, and the player stops after three failures in a row rather than skipping through the album.
-
-= 5.1.0 =
-* Captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement.
-* Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
