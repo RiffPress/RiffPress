@@ -28,6 +28,9 @@ Admins and editors keep signing in as they always have; this is for listeners.
 == Changelog ==
 
 = 0.1.0 =
+* Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player.
+
+= 0.1.0 =
 * Riff Sign In: passkeys and email codes for listeners, in a sheet inside the player.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
