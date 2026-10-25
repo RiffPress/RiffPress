@@ -83,12 +83,12 @@ final class Collection {
 		}
 		switch ( $filter ) {
 			case 'playlists':
+				// Liked songs is a playlist, pinned first, as the apps file it: there is no Songs chip.
+				$html .= '<div class="riff-grid">' . self::liked( $page, $ids, $sort ) . implode( '', array_map( static fn( $l ) => Playlist_View::card( $l, $page ), $lists ) ) . '</div>';
 				if ( ! $account ) {
 					$html .= Ui::empty_note( __( 'Sign in to make playlists. They are kept in your account.', 'riff' ) );
 				} elseif ( ! $lists ) {
 					$html .= Ui::empty_note( __( 'Playlists you make show up here. Press New playlist, or choose Add to playlist in the … menu beside any track.', 'riff' ) );
-				} else {
-					$html .= '<div class="riff-grid">' . implode( '', array_map( static fn( $l ) => Playlist_View::card( $l, $page ), $lists ) ) . '</div>';
 				}
 				break;
 			case 'songs':
@@ -293,7 +293,6 @@ final class Collection {
 		$chips  = array(
 			'all'       => __( 'All', 'riff' ),
 			'playlists' => __( 'Playlists', 'riff' ),
-			'songs'     => __( 'Songs', 'riff' ),
 			'albums'    => __( 'Albums', 'riff' ),
 			'artists'   => __( 'Artists', 'riff' ),
 		);
@@ -341,6 +340,45 @@ final class Collection {
 	}
 
 	/**
+	 * The Liked songs card: playable from its cover with the first hundred, newest first.
+	 *
+	 * @param string  $page Listen page.
+	 * @param array[] $ids  Liked IDs by kind, newest first.
+	 * @param string  $sort recent or name.
+	 * @return string
+	 */
+	private static function liked( string $page, array $ids, string $sort ): string {
+		// Liked songs, playable from its cover with the first hundred, newest first.
+		$songs = $ids['track'] ? Browse::get(
+			'/tracks',
+			array(
+				'include'  => $ids['track'],
+				'orderby'  => 'include',
+				'per_page' => 100,
+			)
+		) : array(
+			'items' => array(),
+			'total' => 0,
+		);
+		$count = (int) $songs['total'];
+		return Ui::card(
+			array(
+				'title' => __( 'Liked songs', 'riff' ),
+				'href'  => self::link( $page, 'songs', $sort ),
+				/* translators: %s: number of songs. */
+				'sub'   => $count ? sprintf( _n( '%s song', '%s songs', $count, 'riff' ), number_format_i18n( $count ) ) : __( 'Press the heart on a song to keep it here', 'riff' ),
+				'heart' => true,
+				'class' => 'riff-card-liked',
+				'play'  => $songs['items'] ? array(
+					'action' => 'play-liked',
+					'data'   => array( 'tracks' => (string) wp_json_encode( $songs['items'] ) ),
+					'label'  => __( 'Play Liked songs', 'riff' ),
+				) : array(),
+			)
+		);
+	}
+
+	/**
 	 * All: Liked songs first, then the albums and artists, together, then what was played lately.
 	 * It never looks empty, as the apps' libraries never do: Liked songs is always there and says
 	 * how to fill it, and with nothing liked a row of the site's albums offers somewhere to start.
@@ -381,34 +419,7 @@ final class Collection {
 				? static fn( $a, $b ) => strnatcasecmp( $a['name'], $b['name'] )
 				: static fn( $a, $b ) => $a['at'] <=> $b['at']
 		);
-		// Liked songs, playable from its cover with the first hundred, newest first.
-		$songs = $ids['track'] ? Browse::get(
-			'/tracks',
-			array(
-				'include'  => $ids['track'],
-				'orderby'  => 'include',
-				'per_page' => 100,
-			)
-		) : array(
-			'items' => array(),
-			'total' => 0,
-		);
-		$count = (int) $songs['total'];
-		$liked = Ui::card(
-			array(
-				'title' => __( 'Liked songs', 'riff' ),
-				'href'  => self::link( $page, 'songs', $sort ),
-				/* translators: %s: number of songs. */
-				'sub'   => $count ? sprintf( _n( '%s song', '%s songs', $count, 'riff' ), number_format_i18n( $count ) ) : __( 'Press the heart on a song to keep it here', 'riff' ),
-				'heart' => true,
-				'class' => 'riff-card-liked',
-				'play'  => $songs['items'] ? array(
-					'action' => 'play-liked',
-					'data'   => array( 'tracks' => (string) wp_json_encode( $songs['items'] ) ),
-					'label'  => __( 'Play Liked songs', 'riff' ),
-				) : array(),
-			)
-		);
+		$liked = self::liked( $page, $ids, $sort );
 		// The listener's playlists come right after Liked songs, as the apps pin them.
 		$playlists = implode( '', array_map( static fn( $l ) => Playlist_View::card( $l, $page ), $lists ) );
 		$html      = '<div class="riff-grid riff-library-grid">' . $liked . $playlists . implode( '', wp_list_pluck( $items, 'card' ) ) . '</div>';

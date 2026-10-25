@@ -245,7 +245,11 @@ test( 'a visitor\'s likes are kept in the browser, and Your Library shows them',
 	await expect( page.locator( '[data-riff-library="device"]' ) ).toBeVisible();
 	await expect( page.locator( '.riff-card-liked .riff-card-sub' ) ).toHaveText( '1 song' );
 	await expect( page.locator( '.riff-library-note' ) ).toContainText( 'kept in this browser' );
-	await page.locator( '.riff-chip-link', { hasText: 'Songs' } ).click();
+	// Liked songs is a playlist, pinned first under Playlists; the library has no Songs chip.
+	await expect( page.locator( '.riff-chip-link', { hasText: 'Songs' } ) ).toHaveCount( 0 );
+	await page.locator( '.riff-chip-link', { hasText: 'Playlists' } ).click();
+	await expect( page.locator( '.riff-library .riff-card' ).first() ).toContainText( 'Liked songs' );
+	await page.locator( '.riff-card-liked a' ).first().click();
 	await expect( page ).toHaveURL( /riff_filter=songs/ );
 	await expect( page.locator( '.riff-library .riff-row' ) ).toHaveCount( 1 );
 	await expect( page.locator( '.riff-library .riff-row-title' ) ).toHaveText( 'Trombone Detritus' );
@@ -345,7 +349,7 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 	await page.locator( '.riff-library-sort summary' ).click();
 	await page.locator( '.riff-sort-link', { hasText: 'Recently added' } ).click();
 	await expect( page.locator( '.riff-sort-link[aria-current="true"]' ) ).toHaveText( 'Recently added' );
-	await page.locator( '.riff-chip-link', { hasText: 'Songs' } ).click();
+	await page.locator( '.riff-card-liked a' ).first().click();
 	const rows = page.locator( '.riff-library .riff-row' );
 	await expect( rows ).toHaveCount( 2 );
 	await expect( rows.locator( '.riff-row-title' ) ).toHaveText( [ 'Trombone Detritus', 'Underground' ] );
