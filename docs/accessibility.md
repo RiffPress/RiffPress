@@ -10,6 +10,8 @@ How the player and the Listen app are built to be used by everyone, and how a ch
 - **The seek line** is a native range named Seek, whose `aria-valuetext` is its time in words, "11 seconds of 8 minutes, 57 seconds", and whose arrows move five seconds. Volume is a native range.
 - **The Listen app** is a `navigation` named Riff, a `search` form whose field is a `combobox` over a `listbox` of suggestions, and views with one heading each. A view change moves focus to the heading, which is how it is announced.
 
+Each track in Up next carries `aria-posinset` and `aria-setsize`, so a screen reader says "2 of 10" as the list is read, and a title in another language than the page's carries its `lang`, so it is pronounced in that language.
+
 ## What is said
 
 Everything that changes without the listener's focus being on it is spoken through WordPress's live regions, `wp.a11y.speak()`, never a region of Riff's own: the player and the app share those regions with whatever else is on the page.
@@ -28,7 +30,7 @@ A change the listener made with focus on the control is not repeated: the contro
 
 ## The keyboard
 
-Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change track, Escape closes Now Playing. Nothing fires in a field. The single-key ones can be turned off by the listener with the switch at the top of Now Playing, kept on the device, and by a site for everyone with the `riff.shortcuts` filter, which is what WCAG 2.1.4 asks. Every swipe and drag has a button or a key that does the same.
+Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change track, Escape closes Now Playing. Nothing fires in a field. The single-key ones can be turned off by the listener with the switch at the top of Now Playing, kept on the device, and by a site for everyone with the `riff.shortcuts` filter, which is what WCAG 2.1.4 asks. Every swipe and drag has a button or a key that does the same: Next and Previous for a swipe across the bar, Close for a drag down on Now Playing, and Stop at the top of Now Playing for a swipe down on the bar (WCAG 2.5.7).
 
 ## Seeing
 
@@ -36,6 +38,8 @@ Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P chang
 - `prefers-reduced-motion` stops the filament, the equaliser and the sliding sheets; `prefers-reduced-transparency` removes the washes. A contrast theme (`forced-colors`) keeps the seek line, the current row and the open tab told apart in the system's colours.
 - Every control is at least 24 by 24 pixels (WCAG 2.5.8), and the bar never covers what has focus: the document carries `scroll-padding-bottom` for the bar's height while it shows (2.4.11).
 - Nothing plays until Play is pressed, a reload included (1.4.2).
+- A video version with captions gets a Captions switch at the top of Now Playing, in video mode; the browser draws the captions, and the choice is kept on the device (1.2.2).
+- The large cover in Now Playing says what it shows, the album and the artist; the small covers beside a title are decoration, since the title says it.
 
 ## How it is kept
 

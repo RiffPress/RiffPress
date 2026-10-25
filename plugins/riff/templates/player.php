@@ -73,6 +73,10 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" role="radio" data-riff-mode="video" aria-checked="false"><?php echo Player::icon( 'video' ); ?><span><?php esc_html_e( 'Video', 'riff' ); ?></span></button>
 			</div>
 			<span class="riff-np-end">
+				<?php // Captions, for a video version that has them, in video mode. ?>
+				<button type="button" class="riff-btn riff-captions" data-riff-action="captions" aria-label="<?php esc_attr_e( 'Captions', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::icon( 'captions' ); ?></button>
+				<?php // Stop: what swiping the bar down does, as a button (WCAG 2.5.7). ?>
+				<button type="button" class="riff-btn" data-riff-action="dismiss" aria-label="<?php esc_attr_e( 'Stop and close the player', 'riff' ); ?>"><?php echo Player::icon( 'stop' ); ?></button>
 				<?php // The single-key shortcuts switch, the player's own setting: at the top of Now Playing on every width, out of the transport. ?>
 				<button type="button" class="riff-btn" data-riff-action="shortcuts" aria-label="<?php esc_attr_e( 'Keyboard shortcuts on', 'riff' ); ?>" aria-pressed="true"><?php echo Player::icon( 'keyboard' ); ?></button>
 				<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>

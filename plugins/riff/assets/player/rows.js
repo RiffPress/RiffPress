@@ -107,10 +107,17 @@ export function rows( P ) {
 		return row;
 	}
 
+	// A title in another language than the page's carries it, so it is read in that language.
+	const langAttr = ( t ) =>
+		t.lang && t.lang !== document.documentElement.lang
+			? ` lang="${ esc( t.lang ) }"`
+			: '';
+	P.langAttr = langAttr;
+
 	function rowInner( t, locked = false ) {
 		return (
 			rowArt( t ) +
-			`<span class="riff-row-text"><span class="riff-row-title">${ esc(
+			`<span class="riff-row-text"><span class="riff-row-title"${ langAttr( t ) }>${ esc(
 				t.title
 			) }${ P.videoMark( t ) }</span>` +
 			`<span class="riff-row-sub">${ esc(

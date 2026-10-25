@@ -41,6 +41,7 @@ export function createPlayer( root, data ) {
 		SHARED: 'riff_track',
 		VOLUME: 'riff:volume',
 		SHORTCUTS: 'riff:shortcuts',
+		CAPTIONS: 'riff:captions',
 		reduce: () =>
 			window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches,
 

@@ -193,10 +193,12 @@ export function queue( P ) {
 			const t = P.queue[ index ];
 			const li = document.createElement( 'li' );
 			li.dataset.pos = String( p );
+			li.setAttribute( 'aria-posinset', String( p + 1 ) );
+			li.setAttribute( 'aria-setsize', String( P.order.length ) );
 			li.innerHTML =
 				'<button type="button">' +
 				rowArt( t ) +
-				`<span class="riff-row-text"><span class="riff-row-title">${ esc(
+				`<span class="riff-row-text"><span class="riff-row-title"${ P.langAttr( t ) }>${ esc(
 					t.title
 				) }</span>` +
 				`<span class="riff-row-sub">${ esc(
