@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.0](https://github.com/RiffPress/RiffPress/compare/v5.0.0...v5.1.0) (2026-10-25)
+
+
+### Features
+
+* captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement ([#610](https://github.com/RiffPress/RiffPress/issues/610)) ([fff41d1](https://github.com/RiffPress/RiffPress/commit/fff41d1e9648f0cea0a11bfcd8d9b13a83ab3772))
+* Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player ([#616](https://github.com/RiffPress/RiffPress/issues/616)) ([a9f896c](https://github.com/RiffPress/RiffPress/commit/a9f896ca9fb56ac98e5239a0c14a11c25f296830))
+
 ## [5.0.0](https://github.com/RiffPress/RiffPress/compare/v4.32.1...v5.0.0) (2026-10-25)
 
 
