@@ -149,16 +149,25 @@ jobs:
             const marker = '<!-- riff:playground-preview -->';
             const sha = process.env.HEAD_SHA;
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
-            const badge = 'https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white';
-            const siteBadge = 'https://img.shields.io/badge/Site-1E1E1E?style=for-the-badge';
+            // Three ways in, named for where each lands: the same Playground build opened on the
+            // Listen app (the blueprint's landing page) or on an album's post, and the pull
+            // request's own site.
+            const play = process.env.PLAYGROUND_URL;
+            const onPost = play.replace( '?mode=seamless', '?mode=seamless&url=%2Fcompositions%2F' );
             const site = process.env.SITE_URL;
+            const button = ( label, colour, logo ) => `https://img.shields.io/badge/${ encodeURIComponent( label ).replace( /-/g, '--' ) }-${ colour }?style=for-the-badge${ logo ? `&logo=${ logo }&logoColor=white` : '' }`;
+            const buttons = [
+              `[![Player app](${ button( 'Player app', '3858E9', 'wordpress' ) })](${ play })`,
+              `[![Blog post](${ button( 'Blog post', '3858E9', 'wordpress' ) })](${ onPost })`,
+              site ? `[![Website](${ button( 'Website', '1E1E1E' ) })](${ site })` : '',
+            ].filter( Boolean ).join( ' ' );
             const body = [
               marker,
               '### 🛝 Preview',
               '',
-              `Built from <a href="${commitUrl}"><samp>${sha.slice(0, 7)}</samp></a>. The app lands on the demo set, logged in as admin${site ? '; the site is this pull request\'s, and its "Try the demo" opens the same build' : ''}.`,
+              `Built from <a href="${commitUrl}"><samp>${sha.slice(0, 7)}</samp></a>, signed in as admin.`,
               '',
-              `[![Launch this PR in WordPress Playground](${badge})](${process.env.PLAYGROUND_URL})${site ? ` [![See this PR's site](${siteBadge})](${site})` : ''}`,
+              buttons,
               '',
             ].join('\n');
             const prNumber = parseInt(process.env.PR_NUMBER, 10);
