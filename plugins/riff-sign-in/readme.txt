@@ -5,7 +5,7 @@ Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,6 +26,9 @@ Riff Sign In gives a site's listeners a way in that asks nothing to remember.
 Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
+
+= 0.1.1 =
+* Fixed: the sheet takes Riff's tokens from the player, so it is drawn in the player's surface, font and amber in the installed app and on every other page, with a visible field, a filled Continue and a close button in its corner.
 
 = 0.1.0 =
 * Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player.

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.1.0...riff-sign-in-v0.1.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **sign-in:** the sheet takes Riff's tokens from the player, so it is drawn in the player's surface, font and amber in the installed app and on every other page, with a visible field, a filled Continue and a close button in its corner ([#638](https://github.com/RiffPress/RiffPress/issues/638)) ([f04e91d](https://github.com/RiffPress/RiffPress/commit/f04e91d5877055ff9598ea02dad06b049b5c67c0))
+
 ## 0.1.0 (2026-10-25)
 
 
