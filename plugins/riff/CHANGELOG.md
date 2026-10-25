@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.2.0](https://github.com/RiffPress/RiffPress/compare/v5.1.1...v5.2.0) (2026-10-25)
+
+
+### Features
+
+* **player:** the single-key shortcuts are a signed-in listener's choice under Personal Options on their profile, and a visitor has only the Shift ones, so Now Playing's header loses its keyboard switch ([#637](https://github.com/RiffPress/RiffPress/issues/637)) ([2067a90](https://github.com/RiffPress/RiffPress/commit/2067a90a59ae88d3295bf2f53e50c641dcdbe8b0))
+
+
+### Bug Fixes
+
+* **app:** in the installed app, Now Playing's tabs stop short of the head's own buttons instead of sitting under Stop ([#640](https://github.com/RiffPress/RiffPress/issues/640)) ([2a32083](https://github.com/RiffPress/RiffPress/commit/2a320832930f4a644eb67002937489feedbd26ec))
+* **player:** the player's controls keep one name each, leave their state to the role, and use the words music apps use: Now Playing, Shuffle, Repeat with its state, Track position, Like &lt;title&gt;, Volume in percent, Stop ([#633](https://github.com/RiffPress/RiffPress/issues/633)) ([da7886b](https://github.com/RiffPress/RiffPress/commit/da7886b7188dad57ab1e02f7ebb919563753a682))
+
 ## [5.1.1](https://github.com/RiffPress/RiffPress/compare/v5.1.0...v5.1.1) (2026-10-25)
 
 
