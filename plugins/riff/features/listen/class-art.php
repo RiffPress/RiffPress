@@ -140,7 +140,7 @@ final class Art {
 		$artist = (string) get_term_meta( $term_id, Catalog::ALBUM_ARTIST, true );
 		return array(
 			array(
-				'src'   => add_query_arg( self::QUERY, 'album-' . $term_id, home_url( '/' ) ),
+				'src'   => self::address( 'album-' . $term_id ),
 				'sizes' => '1024x1024',
 				'type'  => 'image/svg+xml',
 				'alt'   => self::alt( $name, $artist ),
@@ -245,7 +245,29 @@ final class Art {
 	 * @return string
 	 */
 	public static function url( int $post_id ): string {
-		return add_query_arg( self::QUERY, $post_id, home_url( '/' ) );
+		return self::address( (string) $post_id );
+	}
+
+	/**
+	 * A drawn cover's address, with the version of the drawing in it: a browser keeps a cover for a
+	 * day, so when Riff draws covers differently (a new palette, a new layout) the address changes
+	 * and every browser fetches the new one, instead of showing the old for up to a day.
+	 *
+	 * @since 5.2.3
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return string
+	 */
+	private static function address( string $drawn ): string {
+		static $version = null;
+		$version        = $version ?? substr( md5( RIFF_VERSION . (string) filemtime( __DIR__ . '/class-cover.php' ) . (string) filemtime( __FILE__ ) ), 0, 8 );
+		return add_query_arg(
+			array(
+				self::QUERY => $drawn,
+				'ver'       => $version,
+			),
+			home_url( '/' )
+		);
 	}
 
 	/**
