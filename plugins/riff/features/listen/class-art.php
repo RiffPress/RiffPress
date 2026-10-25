@@ -415,7 +415,7 @@ final class Art {
 			// A drawn cover's ground, unless it is the neutral charcoal or grey; then its accent.
 			$palettes = Cover::palettes();
 			$palette  = $palettes[ crc32( $slug ) % count( $palettes ) ];
-			return isset( Cover::DISCS[ $palette[0] ] ) && '#ffb020' !== $palette[0] ? (string) $palette[1] : (string) $palette[0];
+			return isset( Cover::DISCS[ $palette[0] ] ) && '#3858e9' !== $palette[0] ? (string) $palette[1] : (string) $palette[0];
 		}
 		$id = attachment_url_to_postid( $src );
 		if ( ! $id ) {

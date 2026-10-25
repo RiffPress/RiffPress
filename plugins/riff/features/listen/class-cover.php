@@ -19,33 +19,33 @@ defined( 'ABSPATH' ) || exit;
 final class Cover {
 
 	/**
-	 * Palettes: background, accent, ink. Riff's amber, and wordpress.org design system tokens for
-	 * the rest. Charcoal grounds take full-strength accents; amber grounds charcoal, white and the
-	 * lighter accents, with charcoal ink; the light ground the deep colours, with the charcoal
-	 * record of Riff's own amber label.
+	 * Palettes: background, accent, ink, all wordpress.org design system tokens. Not Riff's amber:
+	 * that is the player's own colour, kept for what you press, as Play, so a cover never looks
+	 * like a button. Charcoal grounds take full-strength accents; blueberry grounds white, charcoal
+	 * and the lighter accents, with white ink; the light ground the deep colours, with charcoal ink.
 	 */
 	private const PALETTES = array(
-		array( '#1e1e1e', '#ffb020', '#ffffff' ), // charcoal-1, Riff's amber, white.
+		array( '#1e1e1e', '#3858e9', '#ffffff' ), // charcoal-1, blueberry-1, white.
 		array( '#1e1e1e', '#e26f56', '#ffffff' ), // charcoal-1, pomegrade-1.
 		array( '#1e1e1e', '#33f078', '#ffffff' ), // charcoal-1, acid-green-1.
 		array( '#1e1e1e', '#fff972', '#ffffff' ), // charcoal-1, lemon-1.
 		array( '#1e1e1e', '#d7a7ff', '#ffffff' ), // charcoal-1, purple-3.
-		array( '#ffb020', '#1e1e1e', '#1e1e1e' ), // amber, charcoal-1.
-		array( '#ffb020', '#ffffff', '#1e1e1e' ), // amber, white.
-		array( '#ffb020', '#e26f56', '#1e1e1e' ), // amber, pomegrade-1.
-		array( '#ffb020', '#fff972', '#1e1e1e' ), // amber, lemon-1.
-		array( '#f6f6f6', '#ffb020', '#1e1e1e' ), // light-grey-2, amber, charcoal-1.
+		array( '#3858e9', '#1e1e1e', '#ffffff' ), // blueberry-1, charcoal-1.
+		array( '#3858e9', '#ffffff', '#ffffff' ), // blueberry-1, white.
+		array( '#3858e9', '#33f078', '#ffffff' ), // blueberry-1, acid-green-1.
+		array( '#3858e9', '#fff972', '#ffffff' ), // blueberry-1, lemon-1.
+		array( '#f6f6f6', '#3858e9', '#1e1e1e' ), // light-grey-2, blueberry-1, charcoal-1.
 		array( '#f6f6f6', '#e26f56', '#1e1e1e' ), // light-grey-2, pomegrade-1.
 		array( '#f6f6f6', '#7a00df', '#1e1e1e' ), // light-grey-2, purple-2.
 	);
 
 	/**
 	 * The record's own colour on each ground: a step lighter than charcoal, a step deeper than
-	 * amber, and charcoal on the light ground.
+	 * blueberry, and charcoal on the light ground.
 	 */
 	public const DISCS = array(
 		'#1e1e1e' => '#40464d', // charcoal-3.
-		'#ffb020' => '#d98a00', // deep amber.
+		'#3858e9' => '#213fd4', // deep blueberry.
 		'#f6f6f6' => '#1e1e1e', // charcoal-1.
 	);
 
