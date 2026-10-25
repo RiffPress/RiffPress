@@ -111,6 +111,26 @@ export function paint( P ) {
 							rt.title
 						)
 			);
+			// A track that could not be played says so in words under its title, and to a screen
+			// reader after its name.
+			const failed = P.failed.has( rt.id );
+			const why = __( 'Couldn’t be played', 'riff' );
+			row.toggleAttribute( 'data-failed', failed );
+			let note = row.querySelector( '.riff-row-note' );
+			if ( failed && ! note ) {
+				note = document.createElement( 'span' );
+				note.className = 'riff-row-note';
+				note.textContent = why;
+				row.querySelector( '.riff-row-text' )?.append( note );
+			}
+			if ( note ) {
+				note.hidden = ! failed;
+			}
+			if ( failed ) {
+				row.setAttribute( 'aria-description', why );
+			} else {
+				row.removeAttribute( 'aria-description' );
+			}
 		}
 		for ( const li of queueList.children ) {
 			const current = Number( li.dataset.pos ) === P.pos;

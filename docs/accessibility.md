@@ -18,7 +18,9 @@ Everything that changes without the listener's focus being on it is spoken throu
 
 | When | Said |
 | --- | --- |
-| A track starts, from a row, Next or Previous | "Now playing <title> by <artist>" |
+| A track starts, from a row, Next or Previous, once its sound does | "Now playing <title> by <artist>" |
+| A track cannot be played, and the next is tried | "Couldn’t play <title>.", and the row reads "Couldn’t be played" |
+| A third track in a row cannot be played, and the player stops | "These tracks couldn’t be played." |
 | Play next, Add to queue | "<title> plays next", "<title> added to the queue" |
 | A track moved, removed, the queue cleared | "Moved to 3 of 10", "Removed from the queue", "Queue cleared" |
 | A notice (a toast) | its words |
