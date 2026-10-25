@@ -18,6 +18,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | --- | --- |
 | `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js`, `assets/riff.css` and the files under `features/listen/` are what ships. |
 | `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing. |
+| `plugins/riff-sign-in/` | Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player. |
 | `packages/desktop/` | The desktop app: a site's Listen library in an Electron window. |
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |

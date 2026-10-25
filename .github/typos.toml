@@ -8,6 +8,9 @@ TPE = "TPE"
 Automattic = "Automattic"
 # Core's get_post_stati(), the plural it uses for post statuses.
 stati = "stati"
+# CBOR Object Signing and Encryption, the key format inside a WebAuthn attestation.
+COSE = "COSE"
+cose = "cose"
 
 [files]
 extend-exclude = [
