@@ -51,7 +51,7 @@ npm run test:e2e           # Playwright: desktop Chromium, Chromium at an iPhone
 npm run test:php           # PHPUnit on the WordPress test suite, inside the tests container
 ```
 
-The size-budget workflow builds a 5,000-track catalogue with `packages/benchmarks/catalog.php build messy`, which adds the messy library a real site has (untitled tracks, no covers, one-word and 300-character names, other scripts, emoji), and runs `plugins/riff/tests/e2e/messy.spec.js` over every view that shows it. Locally: `npx wp-env run tests-cli wp eval-file wp-content/riff/packages/benchmarks/catalog.php build tracks=10 messy`, then that spec; it skips itself where the library isn't built, and `npx wp-env reset tests` clears it.
+The size-budget workflow builds a 5,000-track catalogue with `packages/benchmarks/catalog.php build messy`, which adds the messy library a real site has (untitled tracks, no covers, one-word and 300-character names, other scripts, emoji), and runs `plugins/riff/tests/e2e/app/messy.spec.js` over every view that shows it. Locally: `npx wp-env run tests-cli wp eval-file wp-content/riff/packages/benchmarks/catalog.php build tracks=10 messy`, then that spec; it skips itself where the library isn't built, and `npx wp-env reset tests` clears it.
 
 Playwright smoke tests run **before every commit**, from the hook in `.githooks` that `npm install` wires up, against your running wp-env, and the full suite runs in GitHub Actions on every pull request. Skip the suite for one commit with `RIFF_SKIP_E2E=1 git commit ...`, or every hook with `--no-verify`. CI also runs PHPCS, ESLint, the spell check, the workflow script tests, a lint of the workflow files, and Plugin Check against the built zip whenever the code changes.
 

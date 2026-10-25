@@ -18,7 +18,9 @@ const EXEMPT = new Set( [ 'own.js', 'own.spec.js' ] );
 
 test( 'every spec makes posts, pages and media through own.js', () => {
 	const direct = [];
-	for ( const file of DIRS.flatMap( ( d ) => fs.readdirSync( d ).map( ( f ) => path.join( d, f ) ) ).filter( ( f ) => f.endsWith( '.js' ) && ! EXEMPT.has( path.basename( f ) ) ) ) {
+	// The specs sit in folders, one per surface (player/, app/) with their helpers beside them.
+	const files = DIRS.flatMap( ( d ) => fs.readdirSync( d, { recursive: true } ).map( ( f ) => path.join( d, f ) ) );
+	for ( const file of files.filter( ( f ) => f.endsWith( '.js' ) && ! EXEMPT.has( path.basename( f ) ) ) ) {
 		fs.readFileSync( file, 'utf8' )
 			.split( '\n' )
 			.forEach( ( line, i ) => {
