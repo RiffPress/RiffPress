@@ -31,4 +31,4 @@ if ! curl -sf -o /dev/null "http://localhost:${PORT}/"; then
 fi
 
 echo "pre-commit: Playwright smoke tests against http://localhost:${PORT}"
-WP_BASE_URL="http://localhost:${PORT}" npx wp-scripts test-playwright plugins/riff/tests/e2e/player.spec.js --project=chromium --reporter=line
+WP_BASE_URL="http://localhost:${PORT}" npx wp-scripts test-playwright plugins/riff/tests/e2e/player/ --project=chromium --reporter=line

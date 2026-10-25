@@ -7,8 +7,8 @@
  * is not built, the test skips.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
-const { own } = require( './own' );
-const { expectTidy } = require( './tidy' );
+const { own } = require( '../helpers/own' );
+const { expectTidy } = require( '../helpers/tidy' );
 
 const WIDTHS = [ 1440, 790, 390 ];
 const made = own();

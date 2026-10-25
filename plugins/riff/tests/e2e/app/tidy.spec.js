@@ -10,19 +10,10 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 // WCAG 2.2 AA, with axe's best practices: what the page is held to.
 const AXE_TAGS = [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice' ];
-const { own } = require( './own' );
-const { expectTidy } = require( './tidy' );
+const { own } = require( '../helpers/own' );
+const { expectTidy } = require( '../helpers/tidy' );
 
-const FIXTURES = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'..',
-	'packages',
-	'fixtures',
-	'compositions'
-);
+const { FIXTURES } = require( '../helpers/site' );
 const WIDTHS = [ 1440, 790, 390 ];
 const LONG =
 	'Vedi! Le fosche notturne spoglie, from Il Trovatore, Act Two, as arranged for the band';

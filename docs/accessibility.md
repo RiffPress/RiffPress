@@ -40,7 +40,7 @@ Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P chang
 ## How it is kept
 
 - **axe** runs in the e2e suites at the `wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa` and `best-practice` rule sets, on every view of the app at three widths, on Now Playing, on the components page with every component in every state.
-- **`tests/e2e/wcag.spec.js`** holds the criteria a docked player trips on: target size, focus not obscured, audio control, the modal's Tab, the bar's names.
+- **`tests/e2e/player/wcag.spec.js`** holds the criteria a docked player trips on: target size, focus not obscured, audio control, the modal's Tab, the bar's names.
 - **The accessibility tree** is read directly where it matters: `#a11y-speak-polite` for what is said, `aria-valuetext` for the slider, the focus order through Now Playing and out to the bar.
 - **`docs/screen-reader-checklist.md`** is run with real screen readers before a release that touches the surface.
 
