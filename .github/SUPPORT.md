@@ -2,7 +2,7 @@
 
 ## Getting help
 
-Ask a question or report a bug in [GitHub issues](https://github.com/RiffPress/RiffPress/issues). Report security problems privately, as [SECURITY.md](../SECURITY.md) describes, never in a public issue.
+Ask a question in [Discussions](https://github.com/RiffPress/RiffPress/discussions/categories/q-a), where an answer is marked and stays findable, and share an idea in its [Ideas](https://github.com/RiffPress/RiffPress/discussions/categories/ideas) while it is still a thought. Report a bug or ask for a feature in [issues](https://github.com/RiffPress/RiffPress/issues/new/choose). Report security problems privately, as [SECURITY.md](../SECURITY.md) describes, never in a public issue.
 
 ## Supported versions
 
