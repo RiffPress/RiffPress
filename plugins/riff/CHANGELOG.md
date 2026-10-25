@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.1](https://github.com/RiffPress/RiffPress/compare/v5.1.0...v5.1.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **player:** a track that cannot play is said and marked in the list, "Now playing" waits until the sound starts, and the player stops after three failures in a row rather than skipping through the album ([#631](https://github.com/RiffPress/RiffPress/issues/631)) ([fa52fd6](https://github.com/RiffPress/RiffPress/commit/fa52fd6c5d7172808bada9a40683a07edbdda0d4))
+
 ## [5.1.0](https://github.com/RiffPress/RiffPress/compare/v5.0.0...v5.1.0) (2026-10-25)
 
 
