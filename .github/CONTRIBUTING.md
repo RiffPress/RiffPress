@@ -33,6 +33,8 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | [docs/native.md](../docs/native.md) | What Riff uses from WordPress as is, what it adds, and why. |
 | [docs/hooks.md](../docs/hooks.md), [docs/javascript.md](../docs/javascript.md) | The hooks and `window.riff`, generated from the code. |
 | [docs/iphone-checklist.md](../docs/iphone-checklist.md) | What to check on a real iPhone before a release. |
+| [docs/screen-reader-checklist.md](../docs/screen-reader-checklist.md) | What to hear with VoiceOver, NVDA, JAWS or TalkBack before a release that touches the surface. |
+| [docs/accessibility.md](../docs/accessibility.md) | What the page is to a screen reader, what is said and when, and what a new control needs. |
 | [SUPPORT.md](SUPPORT.md), [SECURITY.md](../SECURITY.md) | Supported versions, the API promise, and reporting a vulnerability. |
 
 `.wp-env.override.json` moves the ports when another wp-env holds them. For the demo built from `main`, open the `preview-main` blueprint: `https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json`

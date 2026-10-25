@@ -1874,6 +1874,19 @@ function start() {
 		}
 		text( 'title', t?.title || '' );
 		text( 'subtitle', t ? subtitle( t ) : '' );
+		// Named for the track, so the two buttons that open Now Playing are told apart.
+		$( '.riff-bar-info' )?.setAttribute(
+			'aria-label',
+			t
+				? fmt(
+						/* translators: %s: the track, as its title and artist. */ __(
+							'Open Now Playing: %s',
+							'riff'
+						),
+						named( t )
+				  )
+				: __( 'Open Now Playing', 'riff' )
+		);
 		text( 'artist', t ? t.artist || t.post?.title || '' : '' );
 		areas( t );
 		text( 'source', t?.post?.title || '' );
@@ -3025,6 +3038,31 @@ function start() {
 			close();
 			e.preventDefault();
 			return;
+		}
+		// Where Now Playing is modal (it covers the bar), Tab stays inside it: without this the
+		// last control hands focus to the browser's own chrome before coming round.
+		if ( e.key === 'Tab' && ! np.hidden && np.getAttribute( 'aria-modal' ) === 'true' ) {
+			const inside = [
+				...np.querySelectorAll(
+					'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+				),
+			].filter(
+				( node ) =>
+					! node.disabled &&
+					node.checkVisibility?.() !== false &&
+					node.offsetParent !== null
+			);
+			if ( inside.length ) {
+				const first = inside[ 0 ];
+				const last = inside[ inside.length - 1 ];
+				if ( e.shiftKey && document.activeElement === first ) {
+					last.focus();
+					e.preventDefault();
+				} else if ( ! e.shiftKey && document.activeElement === last ) {
+					first.focus();
+					e.preventDefault();
+				}
+			}
 		}
 		const target = e.target;
 		if (

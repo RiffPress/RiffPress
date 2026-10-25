@@ -47,6 +47,13 @@ html.has-riff body::after {
 	height: calc(var(--riff-bar-h) + var(--riff-safe-b));
 }
 
+/* And room above the bar when the page scrolls to something: the browser
+   brings a focused link or a target into view clear of the bar rather than
+   just under it (WCAG 2.4.11, focus not obscured). */
+html.has-riff {
+	scroll-padding-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b) + 16px);
+}
+
 /* ---- Rows in the post */
 
 .riff-track > audio[hidden],

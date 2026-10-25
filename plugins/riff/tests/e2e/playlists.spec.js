@@ -5,6 +5,8 @@
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
+// WCAG 2.2 AA, with axe's best practices: what the page is held to.
+const AXE_TAGS = [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice' ];
 const { own } = require( './own' );
 const { expectTidy } = require( './tidy' );
 
@@ -105,14 +107,14 @@ test( 'a playlist opens from Your Library, plays, reorders, loses a track, is re
 	await expect( page ).toHaveURL( /riff_filter=playlists/ );
 	const card = page.locator( `.riff-card-playlist[data-riff-playlist="${ list.id }"]` );
 	await expect( card ).toContainText( 'Playlist · 3 songs' );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'the Playlists chip' ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'the Playlists chip' ).toEqual( [] );
 
 	await card.locator( '.riff-card-link' ).click();
 	await expect( page ).toHaveURL( new RegExp( `riff_playlist=${ list.id }` ) );
 	await expect( page.locator( '.riff-album-title' ) ).toHaveText( 'Road trip' );
 	await expect( page.locator( '.riff-album-kind' ) ).toHaveText( 'Playlist' );
 	await expect( titles( page ) ).toHaveText( [ 'Underground', 'Trombone Detritus', 'Stole Back My Soul' ] );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'a playlist' ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'a playlist' ).toEqual( [] );
 	await expectTidy( page, '.riff-app-view', 'a playlist' );
 
 	await page.locator( '[data-riff-app-action="play"]' ).click();
@@ -162,7 +164,7 @@ test( 'New playlist in the standalone app opens it, and the sidebar lists it', a
 	await expect( page.locator( '.riff-app-empty' ) ).toContainText( 'Nothing in it yet' );
 	await expect( page.locator( '.riff-app-library .riff-app-item[aria-current="page"] .riff-app-item-title' ) ).toHaveText( 'New playlist' );
 	await expectTidy( page, '.riff-app', 'a new playlist, standalone' );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 } );
 
 test( 'a visitor is offered a way to sign in instead', async ( { browser, baseURL } ) => {

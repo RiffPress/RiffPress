@@ -9,6 +9,8 @@ const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( './own' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
+// WCAG 2.2 AA, with axe's best practices: what the page is held to.
+const AXE_TAGS = [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice' ];
 
 const FIXTURES = path.join(
 	__dirname,
@@ -334,7 +336,7 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 	await expect( grid.nth( 0 ) ).toContainText( '2 songs' );
 	await expect( grid.nth( 1 ) ).toHaveAttribute( 'data-riff-album', String( album ) );
 	await expect( grid.nth( 2 ) ).toHaveAttribute( 'data-riff-artist', String( artist ) );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'All' ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'All' ).toEqual( [] );
 
 	await page.locator( '.riff-library-sort summary' ).click();
 	await page.locator( '.riff-sort-link', { hasText: 'Alphabetical' } ).click();
@@ -346,7 +348,7 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 		await page.locator( '.riff-chip-link', { hasText: chip } ).click();
 		await expect( page.locator( '.riff-chip-link[aria-current="true"]' ) ).toHaveText( chip );
 		await expect( page.locator( `.riff-library ${ items }` ) ).toHaveCount( 1 );
-		expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, chip ).toEqual( [] );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, chip ).toEqual( [] );
 	}
 
 	await page.locator( '.riff-library-sort summary' ).click();
@@ -356,7 +358,7 @@ test( 'Your Library lists what was liked, narrows and sorts, and drops what is u
 	const rows = page.locator( '.riff-library .riff-row' );
 	await expect( rows ).toHaveCount( 2 );
 	await expect( rows.locator( '.riff-row-title' ) ).toHaveText( [ 'Trombone Detritus', 'Underground' ] );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'Songs' ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'Songs' ).toEqual( [] );
 	await page.locator( '[data-riff-app-action="play"]' ).click();
 	await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Trombone Detritus' );
 
@@ -387,7 +389,7 @@ test( 'Your Library never looks empty: Liked songs, somewhere to start, then wha
 	const recent = page.locator( '.riff-library [data-riff-shelf="recent"]' );
 	await expect( start ).toBeVisible();
 	await expect( recent ).toBeHidden();
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'empty' ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'empty' ).toEqual( [] );
 
 	// The row is Home's: an album plays from its cover.
 	await start.locator( `.riff-card-play[data-riff-album="${ album }"]` ).click();
@@ -409,7 +411,7 @@ test( 'Your Library never looks empty: Liked songs, somewhere to start, then wha
 	await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( first );
 	await expect.poll( () => page.evaluate( () => ! document.querySelector( '.riff-audio' ).paused ) ).toBe( true );
 	await expect( start ).toHaveCount( 0 );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations, 'filled' ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'filled' ).toEqual( [] );
 	await context.close();
 } );
 
@@ -421,7 +423,7 @@ test( 'an album\'s and an artist\'s heart save them, and say so', async ( { page
 	await expect( save ).toHaveAttribute( 'aria-pressed', 'true' );
 	await expect( page.locator( '.riff-app-status' ) ).toHaveText( 'Compositions added to your library' );
 	await expect.poll( () => likesOf( requestUtils ) ).toEqual( [ `album:${ album }` ] );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 
 	await page.goto( withArg( listenUrl, `riff_artist=${ artist }` ) );
 	await page.locator( '.riff-app-like' ).click();
@@ -476,7 +478,7 @@ test( 'the standalone sidebar lists Your Library with artwork, and its chips nar
 	await library.locator( '.riff-app-library-chip', { hasText: 'Albums' } ).focus();
 	await page.keyboard.press( 'Space' );
 	await expect( rows ).toHaveCount( 3 );
-	expect( ( await new AxeBuilder( { page } ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
+	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 
 	// Folded to a rail, the rows are their artwork, and still have their names.
 	await page.locator( '.riff-app-collapse' ).click();
