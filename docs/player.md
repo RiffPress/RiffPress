@@ -35,8 +35,8 @@ On a keyboard:
 | Shift+N and Shift+P | Next and previous track |
 | Escape | Close Now Playing |
 
-Nothing fires while you type in a field. A listener can turn the single-key shortcuts off with the
-keyboard switch at the top of Now Playing, beside Cast, kept in the browser as the volume is; a site can turn them off for everyone with the `riff.shortcuts`
+Nothing fires while you type in a field. The single-key shortcuts act only for a signed-in listener,
+who can turn them off under Personal Options on their profile (`Shortcuts` in PHP); a visitor has none, and a site can turn them off for everyone with the `riff.shortcuts`
 filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
 
 ## Areas

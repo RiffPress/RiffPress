@@ -4,7 +4,7 @@ How the player and the Listen app are built to be used by everyone, and how a ch
 
 ## What the page is
 
-- **The bar** is a `section` named Player, at the foot of every page with a track. Its buttons keep their names while their state changes: `aria-pressed` for Shuffle, Like and the shortcuts switch, and Repeat, which has three states, says its state after its name ("Repeat, all"). The track's own button, "Now Playing: <title> by <artist>", opens Now Playing; the chevron at the end does the same and is left out of the tree and the Tab order, so it is heard once. The heart is "Like <title>", as each row's is.
+- **The bar** is a `section` named Player, at the foot of every page with a track. Its buttons keep their names while their state changes: `aria-pressed` for Shuffle and Like, and Repeat, which has three states, says its state after its name ("Repeat, all"). The track's own button, "Now Playing: <title> by <artist>", opens Now Playing; the chevron at the end does the same and is left out of the tree and the Tab order, so it is heard once. The heart is "Like <title>", as each row's is.
 - **Now Playing** is a `dialog`. On a phone it covers the bar, so it is `aria-modal` and everything else is `inert`; Tab stays inside it and Escape closes it, returning focus to the opener. On a wide screen it sits above the bar and is not modal, because the bar is still how the music is controlled. Up next and Lyrics are `tabs` with panels; a plugin's tab comes through `riff_now_playing_tabs` and is the same.
 - **A track's row** in a post is a button, "Play <title>", then "Pause <title>" while it plays, with "More options for <title>" after it. Up next's rows are "Play <title> by <artist>". The … opens a `menu` of `menuitem`s with arrow keys and Escape.
 - **The seek line** is a native range named Track position, whose `aria-valuetext` is its time in words, "11 seconds of 8 minutes, 57 seconds", and whose arrows move five seconds. Volume is a native range, spoken as "80 percent", and "Muted" at nothing.
@@ -26,13 +26,12 @@ Everything that changes without the listener's focus being on it is spoken throu
 | A notice (a toast) | its words |
 | Search suggestions | "N suggestions" |
 | A playlist renamed or deleted | "Renamed <name>", "<name> deleted" |
-| The shortcuts switch | "Keyboard shortcuts on" or "off" |
 
 A change the listener made with focus on the control is not repeated: the control's own state (`aria-pressed`, the row's new name) says it.
 
 ## The keyboard
 
-Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change track, Escape closes Now Playing. Nothing fires in a field. The single-key ones can be turned off by the listener with the switch at the top of Now Playing, kept on the device, and by a site for everyone with the `riff.shortcuts` filter, which is what WCAG 2.1.4 asks. Every swipe and drag has a button or a key that does the same: Next and Previous for a swipe across the bar, Close for a drag down on Now Playing, and Stop at the top of Now Playing for a swipe down on the bar (WCAG 2.5.7).
+Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change track, Escape closes Now Playing. Nothing fires in a field. The single-key ones act only for a signed-in listener, who can turn them off under Personal Options on their profile; a visitor has only the Shift ones and Escape, and a site can turn the single-key ones off for everyone with the `riff.shortcuts` filter. That is what WCAG 2.1.4 asks. Every swipe and drag has a button or a key that does the same: Next and Previous for a swipe across the bar, Close for a drag down on Now Playing, and Stop at the top of Now Playing for a swipe down on the bar (WCAG 2.5.7).
 
 ## Seeing
 
