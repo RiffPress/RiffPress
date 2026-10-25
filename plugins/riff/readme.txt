@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.0.0
+Stable tag: 5.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.1.0 =
+* Captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement.
+* Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player.
+
 = 5.0.0 =
 * Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them.
 * The player says where a track sits in Up next, reads a title in its language, tells what the cover shows, draws a video's captions behind a Captions switch, and stops from a button.
@@ -141,15 +145,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Riff's design tokens are one stylesheet, riff-tokens, that its extensions depend on.
 * Fixed: in the desktop app the window doesn't stretch past its ends, so the view's corners stay round.
 * Fixed: signed in, the Listen app and Riff Lyrics ask Riff's and WordPress's routes as the account.
-
-= 4.30.0 =
-* The player's badges, controls and meter are areas Riff's own features fill.
-* Fixed: dismissing the install card on a phone leaves the focus on a control that shows.
-* Fixed: in a contrast theme the seek line, the current track and what is selected keep showing.
-* Fixed: screen readers hear the track change, queue edits, notices and each view's title.
-* Fixed: the install card is in Riff's accent, as Liked songs is, not blue.
-* Fixed: the keyboard's focus stays visible and in place as Up next and the install card change.
-* Fixed: the Listen block no longer runs wider than its page, from room borrowed for a focus ring.
-* Fixed: the seek line, the playing row, Up next and Now Playing tell a screen reader what they are.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
