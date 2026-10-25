@@ -43,6 +43,8 @@ export function cards( ctx ) {
 		const src = art?.length ? art[ art.length - 1 ].src : '';
 		const img = card.querySelector( '.riff-card-art img' );
 		if ( src ) {
+			// A cover that will not load leaves the card's own ground, not a broken image.
+			img.addEventListener( 'error', () => img.remove(), { once: true } );
 			img.src = src;
 		} else {
 			img.remove();
