@@ -408,36 +408,24 @@ html.riff-desktop .riff-standalone .riff-app {
 	}
 
 	/* The body sits under the head, so the tabs climb into it, to the
-	   left of the head's own buttons: Stop, always, and Captions and
-	   Cast when they show, 16px clear of the last tab. */
+	   left of Captions when a video has them. */
 	html.riff-desktop #riff .riff-np {
-		--riff-np-captions: 0px;
-		--riff-np-cast: 0px;
+		--riff-np-end: 0px;
 	}
 
 	html.riff-desktop #riff .riff-np:has(.riff-np-end .riff-captions:not([hidden])) {
-		--riff-np-captions: 44px;
-	}
-
-	html.riff-desktop #riff .riff-np:has(.riff-np-end [data-riff-action="cast"]:not([hidden])) {
-		--riff-np-cast: 44px;
+		--riff-np-end: 56px;
 	}
 
 	html.riff-desktop #riff .riff-tabs {
 		position: absolute;
 		top: calc(12px - var(--riff-desktop-strip));
-		right: calc(24px + var(--riff-stop-width, 80px) + 16px + var(--riff-np-captions) + var(--riff-np-cast));
+		right: calc(24px + var(--riff-np-end));
 		z-index: 2;
 		gap: 8px;
 		border: 0;
 		-webkit-app-region: no-drag;
 		app-region: no-drag;
-	}
-
-	html.riff-desktop #riff .riff-stop {
-		--riff-stop-width: 80px;
-		width: var(--riff-stop-width);
-		justify-content: center;
 	}
 
 	html.riff-desktop #riff .riff-tab {

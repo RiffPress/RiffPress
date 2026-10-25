@@ -54,7 +54,8 @@ defined( 'ABSPATH' ) || exit;
 			<?php // The player's areas, filled by Riff's own listeners: badges (the format and bit rate, a pill at the bar's right end, as Tidal sets its tier) and controls. ?>
 			<span class="riff-area riff-desk" data-riff-area="badges"></span>
 			<span class="riff-area riff-desk" data-riff-area="controls"></span>
-			<button type="button" class="riff-btn riff-mobile" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
+			<?php // Cast and AirPlay, beside the volume, as music apps put "play on another device": both choose where the sound goes. ?>
+			<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			<label class="riff-volume riff-desk">
 				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>" aria-valuetext="<?php esc_attr_e( '100 percent', 'riff' ); ?>">
 				<?php echo Player::icon( 'volume' ); ?>
@@ -75,10 +76,6 @@ defined( 'ABSPATH' ) || exit;
 			<span class="riff-np-end">
 				<?php // Captions, for a video version that has them, in video mode. ?>
 				<button type="button" class="riff-btn riff-captions" data-riff-action="captions" aria-label="<?php esc_attr_e( 'Captions', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::icon( 'captions' ); ?></button>
-				<?php // Stop: what swiping the bar down does, as a button (WCAG 2.5.7). ?>
-				<?php // Named by its word, which shows: a square alone reads as a checkbox. ?>
-				<button type="button" class="riff-btn riff-stop" data-riff-action="dismiss"><?php echo Player::icon( 'stop' ); ?><span><?php esc_html_e( 'Stop', 'riff' ); ?></span></button>
-				<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			</span>
 		</header>
 
@@ -122,6 +119,8 @@ defined( 'ABSPATH' ) || exit;
 					<?php foreach ( Player::chips() as $riff_slug => $riff_chip ) : ?>
 						<?php echo Player::control( (string) $riff_slug, $riff_chip, 'riff-chip' ); ?>
 					<?php endforeach; ?>
+					<?php // Stop, on a phone only: what swiping the bar down does, as a button (WCAG 2.5.7). A computer has no such swipe, and music apps have no Stop. ?>
+					<button type="button" class="riff-chip riff-mobile" data-riff-action="dismiss"><?php echo Player::icon( 'stop' ); ?><span><?php esc_html_e( 'Stop', 'riff' ); ?></span></button>
 				</div>
 			</div>
 
