@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Riff Lyrics
  * Description: A Lyrics tab beside Up next in Riff's Now Playing, from the lyrics in your audio files or typed into the Media Library.
- * Version: 0.3.0
+ * Version: 1.0.0
  * Requires at least: 7.2
  * Requires PHP: 8.1
  * Requires Plugins: riff
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'RIFF_LYRICS_VERSION', '0.3.0' );
+define( 'RIFF_LYRICS_VERSION', '1.0.0' );
 define( 'RIFF_LYRICS_URL', plugin_dir_url( __FILE__ ) );
 
 require __DIR__ . '/src/class-lyrics.php';

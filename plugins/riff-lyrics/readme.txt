@@ -2,10 +2,10 @@
 Contributors: joefusco
 Tags: lyrics, music, audio, player
 Requires at least: 7.2
-Tested up to: 7.2
+Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.3.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,10 @@ Riff Lyrics adds a Lyrics tab next to Up next in Riff's Now Playing, the way str
 It is also the reference extension for Riff: it is built only on Riff's documented public API, so a change to Riff that would break a plugin breaks this one first.
 
 == Changelog ==
+
+= 1.0.0 =
+* Captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement.
+* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them.
 
 = 0.3.0 =
 * Timed lyrics follow the music, and a tap on a line seeks to it.
