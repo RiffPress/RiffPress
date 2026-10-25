@@ -168,6 +168,10 @@ final class App {
 		if ( ! Player::enabled() ) {
 			return '';
 		}
+		// The app's own stylesheet, enqueued where it is used: a block theme renders the template
+		// before the head prints, and a classic theme hoists a late style into the head.
+		Player::styles();
+		wp_enqueue_style( 'riff-app' );
 		// In standalone mode every link stays under app/, so the player never drops back into the theme.
 		$page   = Standalone::active() ? Standalone::url() : (string) get_permalink();
 		$post   = self::requested();

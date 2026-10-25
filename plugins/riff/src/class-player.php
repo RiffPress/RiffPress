@@ -46,7 +46,45 @@ final class Player {
 	}
 
 	/**
-	 * Enqueues the stylesheet and the script module.
+	 * Registers the stylesheets: one per surface, each loaded only where it applies, in a chain
+	 * so the cascade keeps its order.
+	 *
+	 * The design tokens are their own stylesheet, riff-tokens, which Riff's extensions list as a
+	 * dependency rather than copying values. The player's own, riff, is on every page; the Listen
+	 * app's only on the page that holds the block; standalone mode's and the desktop frame's only
+	 * under app/.
+	 *
+	 * @since 4.33.0
+	 */
+	public static function styles(): void {
+		if ( wp_style_is( 'riff-desktop', 'registered' ) ) {
+			return;
+		}
+		wp_register_style( 'riff-tokens', RIFF_URL . 'assets/tokens.css', array(), self::version( 'assets/tokens.css' ) );
+		wp_register_style( 'riff', RIFF_URL . 'assets/riff.css', array( 'riff-tokens' ), self::version( 'assets/riff.css' ) );
+		wp_register_style( 'riff-app', RIFF_URL . 'features/listen/app.css', array( 'riff' ), self::version( 'features/listen/app.css' ) );
+		wp_register_style( 'riff-standalone', RIFF_URL . 'features/listen/standalone.css', array( 'riff-app' ), self::version( 'features/listen/standalone.css' ) );
+		wp_register_style( 'riff-desktop', RIFF_URL . 'features/listen/desktop.css', array( 'riff-standalone' ), self::version( 'features/listen/desktop.css' ) );
+	}
+
+	/**
+	 * Whether the request is for a Listen page: the block in the page, the Listen template, or
+	 * standalone mode. There the app is the content; elsewhere the player waits at the foot of
+	 * the page.
+	 *
+	 * @since 4.33.0
+	 * @return bool
+	 */
+	public static function listen_page(): bool {
+		if ( Listen\Standalone::active() ) {
+			return true;
+		}
+		$page = is_singular() ? get_queried_object() : null;
+		return $page instanceof \WP_Post && Listen\Standalone::holds_player( $page );
+	}
+
+	/**
+	 * Enqueues the stylesheets and the script module.
 	 *
 	 * @since 4.0.0
 	 */
@@ -54,10 +92,15 @@ final class Player {
 		if ( ! self::enabled() ) {
 			return;
 		}
-		// The design tokens are their own stylesheet, riff-tokens, which Riff's extensions list
-		// as a dependency rather than copying values.
-		wp_register_style( 'riff-tokens', RIFF_URL . 'assets/tokens.css', array(), self::version( 'assets/tokens.css' ) );
-		wp_enqueue_style( 'riff', RIFF_URL . 'assets/riff.css', array( 'riff-tokens' ), self::version( 'assets/riff.css' ) );
+		self::styles();
+		$listen = self::listen_page();
+		wp_enqueue_style( 'riff' );
+		if ( $listen ) {
+			wp_enqueue_style( 'riff-app' );
+		}
+		if ( Listen\Standalone::active() ) {
+			wp_enqueue_style( 'riff-desktop' );
+		}
 		// wp.hooks is how a plugin's script listens to the player (see docs/javascript.md); the
 		// module reads it from the window when it is there.
 		wp_enqueue_script( 'wp-hooks' );
@@ -70,6 +113,9 @@ final class Player {
 		// The Listen app is imported by riff.js on the page that holds the block. Registering it as
 		// a dynamic dependency puts it on the page's map of modules, so its translations print too.
 		wp_register_script_module( 'riff-app', RIFF_URL . 'features/listen/app.js', array(), self::version( 'features/listen/app.js' ) );
+		// On a Listen page the module is the content. Elsewhere it is the bar at the foot of the
+		// page, which can wait: fetched at low priority and printed in the footer, so it never
+		// competes with the post's own images for the first paint.
 		wp_enqueue_script_module(
 			'riff',
 			RIFF_URL . 'assets/riff.js',
@@ -79,8 +125,15 @@ final class Player {
 					'import' => 'dynamic',
 				),
 			),
-			self::version( 'assets/riff.js' )
+			self::version( 'assets/riff.js' ),
+			array(
+				'fetchpriority' => $listen ? 'auto' : 'low',
+				'in_footer'     => ! $listen,
+			)
 		);
+		// Set again by name: a module registered earlier in the request keeps its first arguments.
+		wp_script_modules()->set_fetchpriority( 'riff', $listen ? 'auto' : 'low' );
+		wp_script_modules()->set_in_footer( 'riff', ! $listen );
 		wp_set_script_module_translations( 'riff', 'riff' );
 		wp_set_script_module_translations( 'riff-app', 'riff' );
 	}

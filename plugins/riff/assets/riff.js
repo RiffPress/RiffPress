@@ -8,8 +8,14 @@
 
 const root = document.getElementById( 'riff' );
 
+// A page core's speculative loading prerendered is not being looked at: nothing starts, and
+// nothing is restored or announced, until it is shown.
 if ( root ) {
-	start();
+	if ( document.prerendering ) {
+		document.addEventListener( 'prerenderingchange', start, { once: true } );
+	} else {
+		start();
+	}
 }
 
 function start() {

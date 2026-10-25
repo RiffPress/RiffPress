@@ -54,6 +54,50 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'assets/riff.css' ), wp_styles()->registered['riff']->ver );
 	}
 
+	public function test_each_surface_has_its_own_stylesheet_loaded_only_where_it_applies(): void {
+		// An earlier test's render may have enqueued the app's; each request here starts clean.
+		wp_styles()->queue = array();
+		$this->go_to( home_url( '/' ) );
+		Player::enqueue();
+		$this->assertTrue( wp_style_is( 'riff', 'enqueued' ), 'the player, on every page' );
+		$this->assertFalse( wp_style_is( 'riff-app', 'enqueued' ), 'the Listen app, not on a plain page' );
+		$this->assertFalse( wp_style_is( 'riff-standalone', 'enqueued' ) );
+		$this->assertFalse( wp_style_is( 'riff-desktop', 'enqueued' ) );
+		$this->assertSame( array( 'riff' ), wp_styles()->registered['riff-app']->deps, 'the app builds on the player' );
+		$this->assertSame( array( 'riff-app' ), wp_styles()->registered['riff-standalone']->deps );
+		$this->assertSame( array( 'riff-standalone' ), wp_styles()->registered['riff-desktop']->deps );
+		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'features/listen/app.css' ), wp_styles()->registered['riff-app']->ver );
+		$module = wp_script_modules()->get_registered( 'riff' );
+		$this->assertSame( 'low', $module['fetchpriority'], 'the bar at the foot of a post can wait' );
+		$this->assertTrue( $module['in_footer'] );
+
+		$listen            = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_content' => '<!-- wp:riff/app /-->',
+			)
+		);
+		wp_styles()->queue = array();
+		$this->go_to( get_permalink( $listen ) );
+		Player::enqueue();
+		$this->assertTrue( wp_style_is( 'riff-app', 'enqueued' ), 'the Listen app, on the page that holds the block' );
+		$this->assertFalse( wp_style_is( 'riff-desktop', 'enqueued' ), 'but not standalone mode' );
+		$module = wp_script_modules()->get_registered( 'riff' );
+		$this->assertSame( 'auto', $module['fetchpriority'], 'where the app is the content, it is not held back' );
+		$this->assertFalse( $module['in_footer'] );
+
+		// Standalone mode is an endpoint under the page, which needs the rewrite rules it adds.
+		$this->set_permalink_structure( '/%postname%/' );
+		\Riff\Listen\Standalone::endpoint();
+		flush_rewrite_rules( false );
+		wp_styles()->queue = array();
+		$this->go_to( \Riff\Listen\Standalone::url( $listen ) );
+		Player::enqueue();
+		$this->assertTrue( wp_style_is( 'riff-desktop', 'enqueued' ), 'standalone mode and the desktop frame, under app/' );
+		$this->assertTrue( wp_style_is( 'riff-app', 'enqueued' ) );
+	}
+
 	public function test_the_design_tokens_are_their_own_stylesheet_that_riff_depends_on(): void {
 		$this->go_to( home_url( '/' ) );
 		Player::enqueue();

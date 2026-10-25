@@ -1,0 +1,1522 @@
+/* Riff's Listen app: the library and a post inside it, on the page that
+   holds the block. Loaded only there, after riff.css. No build step: this
+   file is what ships. */
+
+/* ---- The app: the library and a post inside it, on the page that holds the
+   block. On a theme with a theme.json it takes the theme's colours and fonts
+   (Riff\Listen\App::theme_style() sets the --riff-app-* properties on the
+   block). Otherwise it is drawn in WordPress.org's own design system: its
+   palette, Inter for text, EB Garamond for the headings, 2px corners. The two
+   fonts are bundled (SIL Open Font License, see fonts/) and fetched only where
+   they are used. The bar and Now Playing keep their own dark look below. */
+
+@font-face {
+	font-family: "Riff Inter";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(../../assets/fonts/inter/inter.woff2) format("woff2");
+}
+
+@font-face {
+	font-family: "Riff Garamond";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(../../assets/fonts/eb-garamond/eb-garamond.woff2) format("woff2");
+}
+
+.riff-app {
+	font-weight: 400;
+	letter-spacing: 0;
+
+	box-sizing: border-box;
+	padding: clamp(40px, 5vw, 60px) clamp(20px, 5vw, 80px) clamp(60px, 6vw, 100px);
+	background: var(--riff-app-bg);
+	color: var(--riff-app-ink);
+	font-family: var(--riff-app-font);
+	font-size: 16px;
+	line-height: 1.875;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* Names and titles come from tags, and a tag can be one long word. It breaks
+   where it would run past its box, and the box can be narrower than the
+   word, so a card, a row or a heading keeps its size instead of growing to
+   fit it. */
+.riff-app :is(.riff-app-title, .riff-shelf-title, .riff-album-title, .riff-album-meta, .riff-artist-name, .riff-artist-sub, .riff-card-title, .riff-card-sub, .riff-more-title) {
+	overflow-wrap: anywhere;
+}
+
+/* On a theme or a block that sets its colours (riff-app-themed, with
+   --riff-app-bg or --riff-app-ink from global styles or the block's own
+   settings), the quieter shades are mixed from them, so they hold on a dark
+   background as well as a light one. */
+.riff-app.riff-app-themed {
+	--riff-app-surface: color-mix(in srgb, var(--riff-app-ink) 4%, var(--riff-app-bg));
+	--riff-app-ink-2: color-mix(in srgb, var(--riff-app-ink) 70%, var(--riff-app-bg));
+	--riff-app-line: color-mix(in srgb, var(--riff-app-ink) 18%, var(--riff-app-bg));
+	--riff-app-accent-deep: color-mix(in srgb, var(--riff-app-accent) 75%, var(--riff-app-bg));
+	--riff-app-accent-tint: color-mix(in srgb, var(--riff-app-accent) 10%, var(--riff-app-bg));
+	--riff-app-on-accent: var(--riff-app-bg);
+}
+
+.riff-app *,
+.riff-app *::before,
+.riff-app *::after {
+	box-sizing: border-box;
+}
+
+.riff-app[aria-busy="true"] .riff-app-view {
+	opacity: 0.6;
+	transition: opacity 0.2s;
+}
+
+/* wordpress.org's content width: whatever the block's alignment, what it
+   holds sits in a 1160px column, the library grid and the strip above it
+   sharing one edge. */
+.riff-app > * {
+	max-width: 1160px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* The navigation: the library, albums, artists and tracks as tabs, and search
+   at the end. On a narrow screen the tabs scroll sideways and search takes its
+   own line. */
+.riff-app-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 24px;
+	margin-bottom: 32px;
+	border-bottom: 1px solid var(--riff-app-line);
+}
+
+.riff-app .riff-app-tab {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: var(--riff-app-ink-2);
+	font-size: 15px;
+	font-weight: 500;
+	text-decoration: none;
+}
+
+/* The site's name and the icons belong to the sidebar; as tabs, only labels. */
+.riff-app .riff-app-brand,
+.riff-app .riff-app-tab svg {
+	display: none;
+}
+
+.riff-app .riff-app-tab:hover,
+.riff-app .riff-app-tab:focus-visible {
+	color: var(--riff-app-ink);
+}
+
+.riff-app .riff-app-tab[aria-current="page"] {
+	box-shadow: inset 0 -2px 0 var(--riff-app-ink);
+	color: var(--riff-app-ink);
+}
+
+.riff-app-search {
+	flex: 1 1 200px;
+	display: flex;
+	justify-content: flex-end;
+	margin: 6px 0;
+}
+
+.riff-app .riff-app-search input {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 40px;
+	padding: 0 16px;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 20px;
+	background: var(--riff-app-surface);
+	color: var(--riff-app-ink);
+	font: inherit;
+	font-size: 15px;
+}
+
+@media (min-width: 600px) {
+
+	.riff-app .riff-app-search input {
+		max-width: 320px;
+	}
+}
+
+/* Who is listening, at the end of the bar: a picture that opens a short menu,
+   or Sign in. */
+.riff-app .riff-app-account,
+.riff-app .riff-app-signin {
+	position: relative;
+	flex: none;
+	margin: 6px 0;
+}
+
+.riff-app .riff-app-account summary {
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	cursor: pointer;
+	list-style: none;
+}
+
+.riff-app .riff-app-account summary::-webkit-details-marker {
+	display: none;
+}
+
+.riff-app .riff-app-account summary:hover,
+.riff-app .riff-app-account[open] summary {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-app-account summary:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-app-avatar {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.riff-app .riff-app-initial {
+	background: var(--riff-app-accent-tint);
+	color: var(--riff-app-accent);
+	font-size: 15px;
+}
+
+.riff-app .riff-app-account-menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 10;
+	display: grid;
+	min-width: 200px;
+	padding: 8px 0;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 8px;
+	background: var(--riff-app-surface);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.24);
+}
+
+.riff-app .riff-app-account-name {
+	margin: 0 0 8px;
+	padding: 8px 16px 12px;
+	border-bottom: 1px solid var(--riff-app-line);
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.riff-app .riff-app-account-menu a {
+	padding: 10px 16px;
+	color: var(--riff-app-ink);
+	font-size: 15px;
+	text-decoration: none;
+}
+
+.riff-app .riff-app-account-menu a:hover,
+.riff-app .riff-app-account-menu a:focus-visible {
+	background: var(--riff-app-accent-tint);
+	outline: none;
+}
+
+/* In standalone mode, the account menu is the toolbar's too, as the …
+   menu is. */
+.riff-standalone .riff-app .riff-app-account-menu {
+	padding: 6px 0;
+	border: 0;
+	border-radius: 0;
+	background: #2c3338;
+	box-shadow: 0 3px 5px rgb(0 0 0 / 0.2);
+}
+
+.riff-standalone .riff-app .riff-app-account-name {
+	margin: 0 0 6px;
+	padding: 6px 16px 10px;
+	border-bottom-color: rgb(240 240 241 / 0.15);
+	color: #c3c4c7;
+	font-size: 13px;
+}
+
+.riff-standalone .riff-app .riff-app-account-menu a {
+	padding: 8px 16px;
+	color: #f0f0f1;
+	font-size: 14px;
+}
+
+.riff-standalone .riff-app .riff-app-account-menu a:hover,
+.riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
+	background: none;
+	color: #ffb020;
+}
+
+.riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
+	box-shadow: inset 0 0 0 2px #ffb020;
+}
+
+.riff-app .riff-app-search input:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 1px;
+}
+
+/* Search as you type: a list under the field, the best match first, placed
+   by the script against the window. */
+.riff-suggest {
+	position: fixed;
+	z-index: 20;
+	box-sizing: border-box;
+	max-height: min(70vh, 560px);
+	padding: 8px;
+	overflow-y: auto;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 12px;
+	background: var(--riff-app-bg);
+	box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
+	overscroll-behavior: contain;
+}
+
+.riff-suggest[hidden] {
+	display: none;
+}
+
+.riff-app .riff-suggest-head {
+	margin: 8px 8px 4px;
+	color: var(--riff-app-ink-2);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
+.riff-app .riff-suggest-option {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
+	gap: 12px;
+	padding: 6px 8px;
+	border-radius: 8px;
+	color: inherit;
+	line-height: 1.35;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.riff-app .riff-suggest-recent,
+.riff-app .riff-suggest-all {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.riff-app .riff-suggest-option:hover,
+.riff-app .riff-suggest-option[aria-selected="true"] {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-suggest-art {
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	overflow: hidden;
+	border-radius: 4px;
+	background: var(--riff-app-surface);
+	font-weight: 600;
+}
+
+.riff-app .riff-suggest-top .riff-suggest-art {
+	width: 64px;
+	height: 64px;
+}
+
+.riff-app .riff-suggest-round {
+	border-radius: 50%;
+}
+
+.riff-app .riff-suggest-art img {
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	object-fit: cover;
+}
+
+.riff-app .riff-suggest-text {
+	display: grid;
+	min-width: 0;
+}
+
+.riff-app .riff-suggest-title,
+.riff-app .riff-suggest-sub {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.riff-app .riff-suggest-top .riff-suggest-title {
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.riff-app .riff-suggest-sub {
+	color: var(--riff-app-ink-2);
+	font-size: 13px;
+}
+
+.riff-app .riff-app-section {
+	margin: 40px 0 16px;
+	font-family: var(--riff-app-heading-font);
+	font-size: 26px;
+	font-weight: 400;
+}
+
+/* Artists: a mark with the first letter, the name, and the track count. */
+.riff-app .riff-artists {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 8px 24px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.riff-app .riff-artist {
+	display: grid;
+	grid-template-columns: 48px 1fr;
+	grid-template-rows: auto auto;
+	align-items: center;
+	column-gap: 16px;
+	padding: 8px 0;
+	color: inherit;
+	text-decoration: none;
+}
+
+.riff-app .riff-artist-mark {
+	display: grid;
+	grid-row: span 2;
+	place-items: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: var(--riff-app-accent-tint);
+	color: var(--riff-app-accent);
+	font-family: var(--riff-app-heading-font);
+	font-size: 22px;
+}
+
+.riff-app .riff-artist-name {
+	align-self: end;
+	font-weight: 500;
+	line-height: 1.3;
+}
+
+.riff-app .riff-artist:hover .riff-artist-name,
+.riff-app .riff-artist:focus-visible .riff-artist-name {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.riff-app .riff-artist-sub {
+	align-self: start;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
+.riff-app h2 {
+	margin: 0;
+	color: inherit;
+	font-family: var(--riff-app-heading-font);
+	font-weight: 400;
+	letter-spacing: 0;
+}
+
+.riff-app h2:focus {
+	outline: none;
+}
+
+.riff-app .riff-app-title {
+	margin-bottom: 32px;
+	font-size: clamp(36px, 4vw, 50px);
+	line-height: 1.2;
+}
+
+.riff-app .riff-app-empty {
+	margin: 0;
+	color: var(--riff-app-ink-2);
+}
+
+/* The library grid: square art, two lines under it. */
+
+/* Home's rows: covers that scroll sideways, as the apps open, with a Show all
+   link to the full list. The row takes focus, so arrow keys scroll it, and
+   each card in it can be tabbed to. */
+.riff-shelf {
+	margin: 0 0 40px;
+}
+
+.riff-shelf[hidden] {
+	display: none;
+}
+
+.riff-shelf-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.riff-app .riff-shelf-title {
+	margin: 0;
+	font-size: 22px;
+	line-height: 1.3;
+}
+
+.riff-app .riff-shelf-all {
+	flex: none;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.riff-app .riff-shelf-all:hover,
+.riff-app .riff-shelf-all:focus-visible {
+	color: var(--riff-app-ink);
+	text-decoration: underline;
+}
+
+.riff-app .riff-shelf-row {
+	display: grid;
+	grid-auto-columns: clamp(140px, 17vw, 200px);
+	grid-auto-flow: column;
+	gap: 20px;
+
+	/* Room above and below for a focused card's ring, which the scroll would
+	   otherwise clip, given back so the row sits where it did. There is none
+	   to borrow at the sides: the view has no padding there to take it. */
+	margin: -6px 0 -2px;
+	padding: 6px 0;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+	list-style: none;
+}
+
+.riff-app .riff-shelf-row::-webkit-scrollbar {
+	display: none;
+}
+
+.riff-app .riff-shelf-row:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 4px;
+}
+
+.riff-app .riff-shelf-row > * {
+	scroll-snap-align: start;
+}
+
+/* An artist in a row stands on its own: a large round mark, the name under. */
+.riff-app .riff-shelf-row .riff-artist {
+	grid-template-columns: 1fr;
+	justify-items: center;
+	row-gap: 8px;
+	text-align: center;
+}
+
+.riff-app .riff-shelf-row .riff-artist-mark {
+	grid-row: auto;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 1;
+	font-size: clamp(40px, 6vw, 64px);
+}
+
+.riff-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 32px 24px;
+}
+
+/* A card is a link and a play button side by side, never one inside the
+   other: the link stretches over the whole card through its ::after, and
+   the button sits above that. */
+.riff-app .riff-card {
+	position: relative;
+	display: grid;
+
+	/* One column the card's own width: an implicit column would grow to its
+	   widest child's min-content, which for a title that doesn't wrap is the
+	   whole title, and the card would spill over the next one. */
+	grid-template-columns: minmax(0, 1fr);
+	gap: 2px;
+	min-width: 0;
+}
+
+.riff-app .riff-card-link {
+	color: inherit;
+	text-decoration: none;
+}
+
+.riff-app .riff-card-link::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
+
+.riff-app .riff-card-link:focus-visible {
+	outline: none;
+}
+
+.riff-app .riff-card:has(> .riff-card-link:focus-visible) {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 4px;
+}
+
+.riff-card-art {
+	position: relative;
+	display: block;
+	aspect-ratio: 1;
+	margin-bottom: 12px;
+	border-radius: 2px;
+	overflow: hidden;
+	background: var(--riff-app-line);
+	box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+	transition: box-shadow 0.2s;
+}
+
+.riff-card-art img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+}
+
+/* A cover fades in as it arrives, into the square kept for it. The script
+   marks the ones still on their way; without it, nothing is hidden. */
+.riff-app img[data-riff-fade] {
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+	.riff-app img {
+		transition: opacity 0.2s ease-out;
+	}
+}
+
+/* A row held for what was played, until the script fills it: the cards'
+   shape, title and line included, so the filled row is the same size. */
+.riff-app .riff-card-skeleton {
+	pointer-events: none;
+}
+
+.riff-app .riff-card-skeleton .riff-card-title,
+.riff-app .riff-card-skeleton .riff-card-sub {
+	width: 70%;
+	background: linear-gradient(var(--riff-app-line), var(--riff-app-line)) 0 50% / 100% 60% no-repeat;
+}
+
+.riff-app .riff-card-skeleton .riff-card-sub {
+	width: 45%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+	.riff-app [data-riff-skeleton] .riff-card {
+		animation: riff-pulse 1.2s ease-in-out infinite alternate;
+	}
+}
+
+.riff-card:hover .riff-card-art {
+	box-shadow: 0 8px 24px -8px rgb(30 30 30 / 0.35);
+}
+
+/* A playlist's cover: its first four covers, two by two, on a card or a
+   header alike. */
+.riff-app .riff-mosaic {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	width: 100%;
+	height: 100%;
+}
+
+.riff-app .riff-mosaic img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	object-fit: cover;
+}
+
+/* A card's variants: Liked songs, with a heart for its cover, and an artist,
+   round, with a letter when there is no picture. */
+.riff-app .riff-card-liked .riff-card-art {
+	display: grid;
+	place-items: center;
+	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
+	color: var(--riff-app-on-accent);
+}
+
+.riff-app .riff-card-heart {
+	display: grid;
+	place-items: center;
+	width: 40%;
+	height: 40%;
+}
+
+.riff-app .riff-card-heart svg {
+	width: 100%;
+	height: 100%;
+}
+
+.riff-app .riff-card-artist .riff-card-art {
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-card-mark {
+	color: var(--riff-app-accent);
+	font-family: var(--riff-app-heading-font);
+	font-size: 64px;
+}
+
+.riff-card-title {
+	display: block;
+	overflow: hidden;
+	font-weight: 600;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.riff-card:hover .riff-card-title {
+	color: var(--riff-app-accent);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.riff-card-sub {
+	display: block;
+	overflow: hidden;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	line-height: 1.714;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Play from a cover: a button in the accent that appears when the cover is
+   pointed at or focused, as every streaming app has. */
+.riff-app .riff-card-play {
+	all: unset;
+	position: absolute;
+	z-index: 1;
+	right: 12px;
+	bottom: 12px;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--riff-app-accent);
+	color: var(--riff-app-on-accent);
+	box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+	opacity: 0;
+	transform: translateY(6px);
+	cursor: pointer;
+	transition: opacity 0.15s, transform 0.15s, background-color 0.15s;
+}
+
+.riff-app .riff-card-play svg {
+	width: 26px;
+	height: 26px;
+}
+
+.riff-card:hover .riff-card-play,
+.riff-app .riff-card-play:focus-visible {
+	opacity: 1;
+	transform: none;
+}
+
+.riff-app .riff-card-play:hover {
+	background: var(--riff-app-accent-deep);
+}
+
+.riff-app .riff-card-play:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+
+@media (hover: none) {
+
+	.riff-app .riff-card-play {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* Now playing, at the top of the library: a way back to what is on. */
+.riff-now {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin: 0 auto 32px;
+	padding: 12px 16px;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 2px;
+	background: var(--riff-app-surface);
+}
+
+.riff-now-art {
+	display: block;
+	flex: none;
+	width: 56px;
+	height: 56px;
+	border-radius: 2px;
+	overflow: hidden;
+	background: var(--riff-app-line);
+}
+
+.riff-now-art img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+}
+
+.riff-now-text {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+}
+
+/* A label, as wordpress.org sets one: quiet and tracked, the accent kept
+   for links. */
+.riff-now-label {
+	color: var(--riff-app-ink-2);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.riff-now-title,
+.riff-now-sub {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.riff-now-title {
+	font-weight: 600;
+}
+
+.riff-now-sub {
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
+.riff-app .riff-app-more {
+	margin: 32px 0 0;
+	text-align: center;
+}
+
+.riff-app .riff-pill:disabled,
+.riff-app .riff-pill[aria-disabled="true"] {
+	opacity: 0.5;
+	cursor: progress;
+}
+
+.riff-app .riff-card-play[aria-busy="true"] {
+	opacity: 1;
+	cursor: progress;
+}
+
+/* A failed request, said where the player's own notices appear. Empty, it is
+   still in the page, so a screen reader hears what is put in it. */
+.riff-app-status:not(:empty) {
+	position: fixed;
+	left: 50%;
+	bottom: calc(var(--riff-bar-h) + var(--riff-safe-b) + 16px);
+	z-index: 1;
+	max-width: calc(100vw - 32px);
+	margin: 0;
+	padding: 12px 16px;
+	border-radius: 4px;
+	background: #e6e6e6;
+	color: #030303;
+	font-size: 14px;
+	transform: translateX(-50%);
+}
+
+.riff-app-status:empty {
+	position: absolute;
+	margin: 0;
+}
+
+@media (min-width: 900px) {
+
+	.riff-app-status:not(:empty) {
+		left: 24px;
+		transform: none;
+	}
+}
+
+/* The browser's own view transition between the library and a post. */
+@media (prefers-reduced-motion: no-preference) {
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 0.22s;
+	}
+}
+
+/* A post opened: one line, the title and byline beside Play and Shuffle,
+   then the rows the post itself has, on a white card. */
+.riff-album {
+	display: flex;
+	max-width: 960px;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 24px 32px;
+	margin-bottom: 32px;
+}
+
+/* In standalone mode, an album's header is tinted from its cover, fading
+   into the page below, as the apps draw it. The tint is mixed with the
+   background, so the text on it keeps its contrast. The wash reaches past the
+   header to the view's edges, which clip it. Inside a theme the header keeps
+   the site's look; --riff-album-tint is still set there for a theme to use. */
+.riff-standalone .riff-app-view {
+	overflow: clip;
+}
+
+.riff-standalone .riff-album-tinted {
+	--riff-album-mix: var(--riff-album-tint) 40%, var(--riff-app-bg);
+	--riff-album-wash: color-mix(in srgb, var(--riff-album-mix));
+	--riff-album-fade: var(--riff-album-wash) 45%, var(--riff-app-bg);
+	border-image: linear-gradient(var(--riff-album-fade)) fill 0 / 0 / 240px 100vmax 160px;
+}
+
+/* The quieter line on a tint: mixed from the text and the wash itself, not
+   the fixed grey, so it keeps 4.5:1 on a light cover's wash as on a dark
+   one. */
+.riff-standalone .riff-album-tinted .riff-album-meta {
+	color: color-mix(in srgb, var(--riff-app-ink) 88%, var(--riff-album-wash));
+}
+
+/* An artist's picture is round, as the apps draw one. */
+.riff-album-round .riff-album-cover {
+	border-radius: 50%;
+}
+
+/* More by this artist, under an album's tracks. */
+.riff-more {
+	margin-top: 56px;
+}
+
+.riff-app .riff-more-title {
+	margin: 0 0 20px;
+	font-size: 22px;
+	line-height: 1.3;
+}
+
+.riff-app .riff-more-title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.riff-app .riff-more-title a:hover,
+.riff-app .riff-more-title a:focus-visible {
+	text-decoration: underline;
+}
+
+/* The cover leads, as on an album page in the apps. */
+.riff-album-cover {
+	flex: none;
+	width: clamp(160px, 22vw, 240px);
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: 6px;
+	background: var(--riff-app-surface);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.riff-app .riff-album-cover img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	object-fit: cover;
+}
+
+.riff-app .riff-album-kind {
+	margin: 0 0 8px;
+	color: var(--riff-app-ink-2);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
+.riff-album-text {
+	min-width: 0;
+}
+
+.riff-app .riff-album-title {
+	font-size: clamp(30px, 3.5vw, 50px);
+	line-height: 1.2;
+	text-wrap: balance;
+}
+
+.riff-app .riff-album-meta {
+	margin: 4px 0 0;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	line-height: 1.714;
+}
+
+/* Play and Shuffle carry their icons for standalone mode, which draws them as
+   Spotify does; elsewhere they are words. */
+.riff-app .riff-album-actions .riff-pill svg,
+.riff-tracks-head {
+	display: none;
+}
+
+.riff-app .riff-album-actions {
+	display: flex;
+	flex: none;
+
+	/* A playlist's Rename and Delete beside Play and Shuffle go to a second
+	   line on a phone rather than past the window's edge. */
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 24px 0 0;
+}
+
+.riff-app .riff-pill {
+	all: unset;
+	display: inline-flex;
+	align-items: center;
+	height: 44px;
+	padding: 0 24px;
+	border: 1px solid var(--riff-app-ink);
+	border-radius: 2px;
+	font: inherit;
+	font-size: 16px;
+	line-height: 1;
+	cursor: pointer;
+	transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.riff-app .riff-pill:hover {
+	background: var(--riff-app-ink);
+	color: var(--riff-app-on-accent);
+}
+
+.riff-app .riff-pill:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-pill-solid {
+	border-color: var(--riff-app-accent);
+	background: var(--riff-app-accent);
+	color: var(--riff-app-on-accent);
+}
+
+.riff-app .riff-pill-solid:hover {
+	border-color: var(--riff-app-accent-deep);
+	background: var(--riff-app-accent-deep);
+}
+
+/* The heart beside an album's or artist's Play and Shuffle: outlined, filled
+   in the accent while liked. It needs the script, so it shows once the app
+   is listening. */
+.riff-app .riff-app-like {
+	all: unset;
+	display: inline-grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	color: var(--riff-app-ink);
+	cursor: pointer;
+	transition: background-color 0.15s;
+}
+
+/* A heart needs the script; until it runs, it keeps its place unseen, and
+   fades in when it works. */
+.riff-app:not([data-riff-app-ready]) .riff-app-like {
+	visibility: hidden;
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+	.riff-app .riff-app-like,
+	.riff-standalone .riff-app .riff-app-collapse {
+		transition: opacity 0.2s ease-out, background-color 0.15s;
+	}
+}
+
+.riff-app .riff-app-like:hover {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-app-like:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-app-like svg {
+	width: 24px;
+	height: 24px;
+}
+
+.riff-app .riff-app-like[aria-pressed="true"],
+.riff-app .riff-like-button[aria-pressed="true"] {
+	color: var(--riff-app-accent);
+}
+
+/* Your Library: chips to narrow it, a sort, then one grid with Liked songs
+   pinned first, as the apps lay theirs out. */
+.riff-library-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin: -12px 0 32px;
+}
+
+.riff-chip-row,
+.riff-library-sort {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+/* The sort: the order in use on a button, the choices in a menu under it,
+   as Spotify's library has it. A details element, so it opens without the
+   script. */
+.riff-library-sort {
+	position: relative;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
+.riff-library-sort summary {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 32px;
+	padding: 0 4px 0 10px;
+	border-radius: 16px;
+	list-style: none;
+	cursor: pointer;
+}
+
+.riff-library-sort summary::-webkit-details-marker {
+	display: none;
+}
+
+.riff-library-sort summary:hover {
+	color: var(--riff-app-ink);
+}
+
+.riff-library-sort summary:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-library-sort summary svg {
+	width: 20px;
+	height: 20px;
+}
+
+.riff-library-sort-menu {
+	position: absolute;
+	z-index: 5;
+	top: calc(100% + 4px);
+	right: 0;
+	display: grid;
+	min-width: 180px;
+	padding: 4px;
+	border-radius: 6px;
+	background: var(--riff-app-surface);
+	box-shadow: 0 12px 32px rgb(0 0 0 / 0.4);
+}
+
+.riff-app .riff-chip-link,
+.riff-app .riff-sort-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 32px;
+	padding: 0 14px;
+	border: 1px solid var(--riff-app-line);
+	border-radius: 16px;
+	color: var(--riff-app-ink);
+	font-size: 14px;
+	text-decoration: none;
+	transition: background-color 0.15s, border-color 0.15s;
+}
+
+.riff-app .riff-sort-link {
+	border-color: transparent;
+	border-radius: 4px;
+	padding: 0 12px;
+	color: var(--riff-app-ink);
+}
+
+.riff-app .riff-chip-link:hover,
+.riff-app .riff-sort-link:hover {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-chip-link:focus-visible,
+.riff-app .riff-sort-link:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-chip-link[aria-current="true"] {
+	border-color: var(--riff-app-ink);
+	background: var(--riff-app-ink);
+	color: var(--riff-app-bg);
+}
+
+/* The order in use, in the accent. Never in a heavier weight: a change of
+   weight lays the words out again and moves what is beside them. */
+.riff-app .riff-sort-link[aria-current="true"] {
+	color: var(--riff-app-accent);
+}
+
+.riff-library .riff-shelf {
+	margin-top: 48px;
+}
+
+/* Liked songs' cover, drawn: the heart on Riff's amber, as its card has it. */
+.riff-app .riff-album-liked {
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
+	color: var(--riff-app-on-accent);
+}
+
+.riff-app .riff-album-liked .riff-card-heart {
+	width: 38%;
+	height: 38%;
+}
+
+/* Your Library's New playlist, at the end of its bar. In Spotify's frame on a
+   wide screen the sidebar's + makes one, as Spotify's Create does, so the bar
+   leaves it out. */
+.riff-app .riff-library-create {
+	height: 36px;
+	padding: 0 18px;
+	font-size: 14px;
+}
+
+@media (min-width: 900px) {
+
+	html.riff-desktop .riff-standalone .riff-app .riff-library-create {
+		display: none;
+	}
+}
+
+/* Renaming a playlist: its name becomes a field, with Save and Cancel. */
+.riff-app .riff-rename {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 4px;
+}
+
+.riff-app .riff-rename input {
+	flex: 1 1 240px;
+	min-width: 0;
+	height: 44px;
+	padding: 0 12px;
+	border: 1px solid var(--riff-app-ink);
+	border-radius: 2px;
+	background: var(--riff-app-surface);
+	color: var(--riff-app-ink);
+	font: inherit;
+	font-size: 20px;
+}
+
+.riff-app .riff-rename input:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+/* Your Library under the views, only in the standalone sidebar. */
+.riff-app-library {
+	display: none;
+}
+
+/* The offer to install the app, in standalone mode only, on Riff's blue as
+   its icon is. On a phone it runs across under the tabs; on a wide screen it
+   is a card under the library, as Spotify's offers are. */
+.riff-app-install {
+	position: relative;
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr);
+	align-items: center;
+	gap: 12px 12px;
+	flex: 1 1 100%;
+	order: 3;
+	box-sizing: border-box;
+	margin: 12px 0 0;
+	padding: 16px 44px 16px 16px;
+	border-radius: 8px;
+
+	/* Riff's accent, as Liked songs has it, and the site's when the block is
+	   given its own. */
+	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
+	color: var(--riff-app-on-accent);
+}
+
+.riff-app-install[hidden],
+.riff-app .riff-app-install [hidden] {
+	display: none;
+}
+
+.riff-app .riff-app-install-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 10px;
+}
+
+.riff-app .riff-app-install-text p {
+	margin: 0;
+	color: color-mix(in srgb, var(--riff-app-on-accent) 85%, transparent);
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.riff-app .riff-app-install-text .riff-app-install-title {
+	color: var(--riff-app-on-accent);
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.riff-app .riff-app-install .riff-pill {
+	grid-column: 1 / -1;
+	justify-self: start;
+	min-height: 36px;
+	height: 36px;
+	padding: 0 20px;
+	border-color: var(--riff-app-on-accent);
+	border-radius: 999px;
+	background: var(--riff-app-on-accent);
+	color: var(--riff-app-accent);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.riff-app .riff-app-install .riff-pill:hover {
+	background: color-mix(in srgb, var(--riff-app-on-accent) 85%, transparent);
+}
+
+.riff-app .riff-app-install-close {
+	all: unset;
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	color: var(--riff-app-on-accent);
+	cursor: pointer;
+}
+
+.riff-app .riff-app-install-close:hover {
+	background: color-mix(in srgb, var(--riff-app-on-accent) 12%, transparent);
+}
+
+.riff-app .riff-app-install-close svg {
+	width: 18px;
+	height: 18px;
+}
+
+.riff-app .riff-app-install :focus-visible {
+	outline: 2px solid var(--riff-app-on-accent);
+	outline-offset: 2px;
+}
+
+.riff-app[data-sidebar="mini"] .riff-app-install {
+	display: none;
+}
+
+.riff-app .riff-library-note {
+	margin: 32px 0 0;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
+.riff-app .riff-library-note a {
+	color: var(--riff-app-accent);
+}
+
+.riff-album-tracks {
+	max-width: 960px;
+	counter-reset: riff-track;
+}
+
+/* A list of tracks, not a post: no list markers of the browser's, even where
+   WordPress's own block styles are not loaded. */
+.riff-app .riff-album-tracks ol,
+.riff-app .riff-album-tracks ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.riff-app .riff-album-tracks li,
+.riff-app .riff-album-tracks figure {
+	margin: 0;
+}
+
+.riff-app .riff-album-tracks .riff-row {
+	gap: 16px;
+	padding: 6px 12px;
+	border-radius: 6px;
+	line-height: 1.4;
+}
+
+.riff-app .riff-album-tracks .riff-row-art {
+	width: 40px;
+	height: 40px;
+}
+
+.riff-app .riff-album-tracks .riff-row-title {
+	font-size: 15px;
+}
+
+.riff-app .riff-album-tracks .riff-row-sub {
+	font-size: 13px;
+}
+
+.riff-app .riff-album-tracks .riff-row-time {
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+
+/* An album numbers its tracks where the art would be; the playing one shows
+   its bars instead. Its cover and artist are already in the header. */
+.riff-album-tracks[data-riff-numbered] .riff-row {
+	counter-increment: riff-track;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art {
+	display: grid;
+	place-items: center;
+	background: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art img {
+	display: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-art::before {
+	content: counter(riff-track);
+	color: var(--riff-app-ink-2);
+	font-size: 15px;
+	font-variant-numeric: tabular-nums;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row[data-current] .riff-row-art::before {
+	content: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-state {
+	padding-bottom: 0;
+	align-items: center;
+	background: none;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row:not([data-current]) .riff-row-state {
+	opacity: 0;
+}
+
+.riff-album-tracks[data-riff-numbered] .riff-row-sub {
+	display: none;
+}
+
+/* Until the player turns a track into its row, the track holds the row's
+   height (its 40px art and 6px above and below) and the browser's own
+   controls wait unseen, so the list does not move when the rows arrive.
+   Without the script the controls show as they are. */
+@media (scripting: enabled) {
+
+	.riff-app .riff-album-tracks .riff-track:not(:has(> .riff-row)) {
+		height: 52px;
+		overflow: hidden;
+	}
+
+	.riff-app .riff-album-tracks .riff-track:not(:has(> .riff-row)) > :is(audio, video) {
+		visibility: hidden;
+	}
+}
+
+.riff-app .riff-track {
+	margin: 0;
+}
+
+.riff-app .riff-row {
+	border-radius: 6px;
+}
+
+.riff-app .riff-row:hover,
+.riff-app .riff-row[data-current],
+.riff-app .riff-row[data-shared] {
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-row-art {
+	border-radius: 2px;
+}
+
+/* While a view that was not fetched ahead is on its way, the old one dims,
+   after a beat so a quick answer never flickers. */
+.riff-app[aria-busy="true"] .riff-app-view {
+	opacity: 0.55;
+	transition: opacity 0.15s 0.12s;
+}
+
+/* A view arrives in a short cross-fade, not the browser's default. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.12s;
+}
+
+/* The page's own scrollbar matches the dark app. */
+html:has(body.riff-standalone) {
+	background: #030303;
+	color-scheme: dark;
+}

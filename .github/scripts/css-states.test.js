@@ -10,7 +10,7 @@ const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
-const FILES = [ 'plugins/riff/assets/riff.css' ];
+const FILES = [ 'plugins/riff/assets/riff.css', 'plugins/riff/features/listen/app.css', 'plugins/riff/features/listen/standalone.css', 'plugins/riff/features/listen/desktop.css' ];
 const STATE = /:hover|:focus|:active|:checked|aria-(current|selected|pressed|checked|expanded)|\.is-[a-z]|\[data-(current|active|selected)/;
 
 function stateWeights( css ) {
