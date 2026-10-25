@@ -538,7 +538,7 @@
 				"code": "?.scrollIntoView( { block: 'nearest' } );"
 			},
 			{
-				"file": "plugins/riff/features/listen/app.js",
+				"file": "plugins/riff/features/listen/app/views.js",
 				"code": "app.scrollIntoView( { block: 'start' } );"
 			}
 		],
@@ -622,7 +622,7 @@
 				"code": "window.addEventListener( 'popstate', () => {"
 			},
 			{
-				"file": "plugins/riff/features/listen/app.js",
+				"file": "plugins/riff/features/listen/app/views.js",
 				"code": "{ ...history.state, riffApp: id },"
 			}
 		],
@@ -674,12 +674,12 @@
 		"fallback": "A failed fetch sends the browser to the real URL with a full navigation.",
 		"where": [
 			{
-				"file": "plugins/riff/features/listen/app.js",
+				"file": "plugins/riff/features/listen/app/fetch.js",
 				"code": "fetch( href, { headers: { Accept: 'text/html' } } )"
 			},
 			{
-				"file": "plugins/riff/features/listen/app.js",
-				"code": "location.assign( to.browse ? to.href : addressOf( id, upto ) );"
+				"file": "plugins/riff/features/listen/app/views.js",
+				"code": "to.browse ? to.href : ctx.addressOf( id, upto )"
 			}
 		],
 		"shot": {
@@ -1011,7 +1011,7 @@
 				"code": "const reduce = () =>"
 			},
 			{
-				"file": "plugins/riff/features/listen/app.js",
+				"file": "plugins/riff/features/listen/app/views.js",
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
 		],

@@ -19,6 +19,14 @@ defined( 'ABSPATH' ) || exit;
 final class Player {
 
 	/**
+	 * The Listen app's modules under features/listen/app/, each registered as the script module
+	 * `riff-app/<name>` and a dependency of `riff-app`, which imports them by those ids.
+	 *
+	 * @since 4.33.0
+	 */
+	public const APP_MODULES = array( 'helpers', 'addresses', 'fetch', 'cards', 'views', 'hearts', 'playlists', 'home', 'sidebar', 'install', 'desktop', 'search' );
+
+	/**
 	 * Hooks the assets and the markup.
 	 *
 	 * @since 4.0.0
@@ -112,7 +120,16 @@ final class Player {
 		// itself when there are any; without them the modules show the English they are written in.
 		// The Listen app is imported by riff.js on the page that holds the block. Registering it as
 		// a dynamic dependency puts it on the page's map of modules, so its translations print too.
-		wp_register_script_module( 'riff-app', RIFF_URL . 'features/listen/app.js', array(), self::version( 'features/listen/app.js' ) );
+		// Its own modules, one per concern under features/listen/app/, are its static dependencies:
+		// the import map names each by its id, which is how app.js imports them, core preloads them
+		// with it, and each one's translations print as its own file from a language pack.
+		$modules = array();
+		foreach ( self::APP_MODULES as $module ) {
+			$id        = 'riff-app/' . $module;
+			$modules[] = $id;
+			wp_register_script_module( $id, RIFF_URL . "features/listen/app/{$module}.js", array(), self::version( "features/listen/app/{$module}.js" ) );
+		}
+		wp_register_script_module( 'riff-app', RIFF_URL . 'features/listen/app.js', $modules, self::version( 'features/listen/app.js' ) );
 		// On a Listen page the module is the content. Elsewhere it is the bar at the foot of the
 		// page, which can wait: fetched at low priority and printed in the footer, so it never
 		// competes with the post's own images for the first paint.
@@ -136,6 +153,9 @@ final class Player {
 		wp_script_modules()->set_in_footer( 'riff', ! $listen );
 		wp_set_script_module_translations( 'riff', 'riff' );
 		wp_set_script_module_translations( 'riff-app', 'riff' );
+		foreach ( $modules as $id ) {
+			wp_set_script_module_translations( $id, 'riff' );
+		}
 	}
 
 	/**

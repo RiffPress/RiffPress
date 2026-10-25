@@ -98,6 +98,47 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertTrue( wp_style_is( 'riff-app', 'enqueued' ) );
 	}
 
+	public function test_the_listen_app_is_modules_the_import_map_names_and_a_language_pack_reaches(): void {
+		$this->go_to( home_url( '/' ) );
+		Player::enqueue();
+		$app = wp_script_modules()->get_registered( 'riff-app' );
+		$this->assertNotNull( $app, 'the app is registered on every page, as a dynamic dependency of the player' );
+		$ids = array_map( static fn( $module ) => 'riff-app/' . $module, Player::APP_MODULES );
+		$this->assertSame( $ids, array_column( $app['dependencies'], 'id' ), 'each module under features/listen/app/ is a static dependency of the app' );
+		$this->assertSame( array_fill( 0, count( $ids ), 'static' ), array_column( $app['dependencies'], 'import' ) );
+		// Every module file is registered, and every registered module is a file: a module added
+		// without a registration would not be in the import map, and the app would not load.
+		$files = array_map( static fn( string $file ): string => basename( $file, '.js' ), glob( RIFF_DIR . 'features/listen/app/*.js' ) );
+		sort( $files );
+		$sorted = Player::APP_MODULES;
+		sort( $sorted );
+		$this->assertSame( $files, $sorted );
+		foreach ( Player::APP_MODULES as $module ) {
+			$registered = wp_script_modules()->get_registered( 'riff-app/' . $module );
+			$this->assertStringEndsWith( "features/listen/app/{$module}.js", strtok( (string) $registered['src'], '?' ), $module );
+			$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . "features/listen/app/{$module}.js" ), $registered['version'], "$module is cache-busted by its own time" );
+		}
+		// app.js imports each module by its id, and nothing else: an import by path would skip the
+		// map, the preload and the version.
+		$source  = (string) file_get_contents( RIFF_DIR . 'features/listen/app.js' );
+		$imports = array();
+		preg_match_all( "/^import .* from '([^']+)';$/m", $source, $imports );
+		$this->assertSame( $ids, array_values( array_intersect( $ids, $imports[1] ) ), 'app.js imports every module by its id' );
+		$this->assertSame( array(), array_diff( $imports[1], $ids ), 'and nothing by path' );
+		foreach ( glob( RIFF_DIR . 'features/listen/app/*.js' ) as $file ) {
+			preg_match_all( "/^import .* from '([^']+)';$/m", (string) file_get_contents( $file ), $m );
+			$this->assertSame( array(), array_diff( $m[1], $ids ), basename( $file ) . ' imports only registered modules' );
+		}
+
+		// The translations print for each module, as its own file.
+		ob_start();
+		wp_script_modules()->print_import_map();
+		$map = (string) ob_get_clean();
+		foreach ( $ids as $id ) {
+			$this->assertStringContainsString( '"' . $id . '":', $map, "$id is in the import map" );
+		}
+	}
+
 	public function test_the_design_tokens_are_their_own_stylesheet_that_riff_depends_on(): void {
 		$this->go_to( home_url( '/' ) );
 		Player::enqueue();
