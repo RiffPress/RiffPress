@@ -1,13 +1,12 @@
 {
 	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
 	"release-type": "simple",
-	"include-component-in-tag": false,
+	"include-component-in-tag": true,
 	"include-v-in-tag": true,
 	"draft": true,
 	"force-tag-creation": true,
 	"separate-pull-requests": false,
 	"group-pull-request-title-pattern": "chore${scope}: release",
-	"pull-request-header": "Releases in this pull request. The section named only by its version is Riff itself; each extension's section carries its name.",
 	"bootstrap-sha": "b1f83e815a11cd938ae068d322b27980b821dd79",
 	"pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
 	"changelog-sections": [
@@ -26,31 +25,26 @@
 	"packages": {
 		"plugins/riff": {
 			"package-name": "riff",
-			"component": "riff",
-			"pull-request-title-pattern": "chore${scope}: release riff ${version}"
+			"component": "riff"
 		},
 		"plugins/riff-lyrics": {
 			"package-name": "riff-lyrics",
 			"component": "riff-lyrics",
-			"include-component-in-tag": true,
 			"initial-version": "0.1.0"
 		},
 		"plugins/riff-sign-in": {
 			"package-name": "riff-sign-in",
 			"component": "riff-sign-in",
-			"include-component-in-tag": true,
 			"initial-version": "0.1.0"
 		},
 		"packages/wp-api-coverage": {
 			"package-name": "wp-api-coverage",
 			"component": "wp-api-coverage",
-			"include-component-in-tag": true,
 			"initial-version": "0.1.0"
 		},
 		"packages/desktop": {
 			"package-name": "riff-desktop",
 			"component": "riff-desktop",
-			"include-component-in-tag": true,
 			"initial-version": "0.1.0"
 		}
 	}

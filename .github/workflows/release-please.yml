@@ -205,7 +205,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ needs.release-please.outputs.riff_tag }}
-        run: gh release edit "$TAG_NAME" --draft=false --latest
+        run: bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff/riff.php latest
 
   # After the GitHub release is published, the same build goes to the plugin's
   # WordPress.org SVN repository, with the banner, icon and screenshots from
@@ -273,7 +273,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release upload --clobber "$TAG_NAME" build/riff-lyrics.zip
-          gh release edit "$TAG_NAME" --draft=false --latest=false
+          bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-lyrics/riff-lyrics.php not-latest
 
   # Riff Sign In's release: its own zip on its own GitHub release, built the way
   # Riff's is. It is never marked the latest release; that stays Riff's.
@@ -310,7 +310,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release upload --clobber "$TAG_NAME" build/riff-sign-in.zip
-          gh release edit "$TAG_NAME" --draft=false --latest=false
+          bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-sign-in/riff-sign-in.php not-latest
 
   # wp-api-coverage's release: the GitHub release is published, and the
   # package goes to npm as @riffpress/wp-api-coverage. Publishing stays off
