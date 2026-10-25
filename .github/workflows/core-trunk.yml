@@ -28,7 +28,8 @@ jobs:
         core: [trunk, release]
     env:
       WP_ENV_PHP_VERSION: '8.4'
-      # The mirror's nightly branch is master; empty means the current release.
+      # The mirror's nightly branch is master; empty leaves the core to .wp-env.json, the 7.2
+      # build Riff is developed on (the beta until 7.2 ships, then the release).
       WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

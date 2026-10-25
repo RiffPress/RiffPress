@@ -1,5 +1,5 @@
 {
-  "core": "WordPress/WordPress#master",
+  "core": "https://wordpress.org/wordpress-7.2-beta1.zip",
   "phpVersion": "8.2",
   "plugins": [
     "./plugins/riff",
