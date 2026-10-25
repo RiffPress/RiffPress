@@ -1,5 +1,5 @@
 {
-  "core": null,
+  "core": "WordPress/WordPress#master",
   "phpVersion": "8.2",
   "plugins": [
     "./plugins/riff",

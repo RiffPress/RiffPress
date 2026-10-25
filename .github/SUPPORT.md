@@ -6,7 +6,7 @@ Ask a question or report a bug in [GitHub issues](https://github.com/RiffPress/R
 
 ## Supported versions
 
-- **WordPress:** the current release and the one before it, 7.1 and 7.0 today.
+- **WordPress:** the current release, 7.2. Riff is built on what 7.2 added, so it needs it.
 - **PHP:** 8.1 or newer.
 - **Riff:** the latest release. Fixes, including security fixes, ship in a new release instead of being backported.
 

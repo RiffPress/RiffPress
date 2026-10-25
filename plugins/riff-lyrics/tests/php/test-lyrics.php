@@ -77,6 +77,34 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 		$this->assertSame( "First line\nSecond line", wp_get_attachment_metadata( $id )[ Lyrics::KEY ] );
 	}
 
+	public function test_lyrics_are_a_rest_field_on_the_media_item_and_a_field_of_the_entity(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		do_action( 'rest_api_init' );
+		$id      = self::attach( '02 - Underground [underground].mp3' );
+		$request = new WP_REST_Request( 'POST', '/wp/v2/media/' . $id );
+		$request->set_body_params( array( 'riff_lyrics' => "First line\nSecond line" ) );
+		$this->assertSame( 200, rest_do_request( $request )->get_status() );
+		$this->assertSame( "First line\nSecond line", wp_get_attachment_metadata( $id )[ Lyrics::KEY ], 'written where WordPress keeps the file\'s own' );
+		$read = new WP_REST_Request( 'GET', '/wp/v2/media/' . $id );
+		$read->set_param( 'context', 'edit' );
+		$this->assertSame( "First line\nSecond line", rest_do_request( $read )->get_data()['riff_lyrics'] );
+		$this->assertNull( rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/media/' . self::attach( 'cover.png' ) ) )->get_data()['riff_lyrics'], 'an image has no lyrics' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$this->assertContains( rest_do_request( $request )->get_status(), array( 401, 403 ) );
+		if ( function_exists( 'wp_get_registered_entity_fields' ) ) {
+			// The registry fills itself once per request, on first read; Lyrics::register() ran after
+			// that in this suite, so it is emptied and reads again with the plugin's hook in place.
+			$registry = WP_Entity_Fields_Registry::get_instance();
+			foreach ( array( 'initialized' => false, 'fields' => array(), 'field_modules' => array() ) as $name => $value ) { // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+				$property = new ReflectionProperty( $registry, $name );
+				$property->setAccessible( true );
+				$property->setValue( $registry, $value );
+			}
+			$fields = array_column( wp_get_registered_entity_fields( 'postType', 'attachment' ), null, 'id' );
+			$this->assertSame( 'text', $fields['riff_lyrics']['type'] ?? null, 'and a field of the attachment entity on 7.2' );
+		}
+	}
+
 	public function test_the_script_loads_only_where_the_player_renders(): void {
 		$this->assertFalse( wp_script_is( 'riff-lyrics', 'enqueued' ) );
 

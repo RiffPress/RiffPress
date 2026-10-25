@@ -43,7 +43,7 @@
 <h2 id="testing">Tested on every change</h2>
 <p>Every pull request that changes code runs the full suite, and it can't merge until the suite passes. A scheduled run every Monday repeats it against the current WordPress release, so a change in core is caught even when Riff hasn't changed.</p>
 <ul class="req">
-	<li><span>PHP and WordPress</span><span>The WordPress test suite on PHP 8.1 with WordPress 7.0 (the oldest supported), PHP 8.5 with the current release, a multisite network on PHP 8.3, and WordPress trunk.</span></li>
+	<li><span>PHP and WordPress</span><span>The WordPress test suite on PHP 8.1 with WordPress 7.2 (the oldest supported), PHP 8.5 with the current release, a multisite network on PHP 8.3, and WordPress trunk.</span></li>
 	<li><span>In a browser</span><span>Playwright plays real tracks in Chromium at desktop width and at an iPhone's size, and runs a smoke pass in WebKit, the engine under Safari. Lock-screen and background playback are checked by hand on a real iPhone.</span></li>
 	<li><span>Accessibility</span><span>axe checks Now Playing for accessibility problems, and the tests play, pause and seek from the keyboard.</span></li>
 	<li><span>Standards</span><span>WordPress Coding Standards, ESLint, stylelint, a spell check, and Plugin Check, the tool the WordPress.org plugin team uses to review plugins.</span></li>
@@ -55,7 +55,7 @@
 
 <h2 id="commitments">What we commit to</h2>
 <ul class="req">
-	<li><span>WordPress</span><span>The current release and the one before it. Today that is 7.1 and 7.0.</span></li>
+	<li><span>WordPress</span><span>The current release, 7.2.</span></li>
 	<li><span>PHP</span><span>8.1 or newer, tested up to the newest release.</span></li>
 	<li><span>Raising the minimum</span><span>Only in a new minor or major version, named in the release notes, and only once the test suite runs on the new minimum.</span></li>
 	<li><span>Public API</span><span>Every public hook, REST field and route, the track schema and the public CSS custom properties keep their names and shapes within a major version. Anything that has to go is deprecated with a notice for at least one release first, and removed only in the next major version.</span></li>

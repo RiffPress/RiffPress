@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { php: '8.1', core: '7.0',    multisite: false }
+          - { php: '8.1', core: '7.2',    multisite: false }
           - { php: '8.3', core: 'latest', multisite: true }
           - { php: '8.5', core: 'latest', multisite: false }
           - { php: '8.5', core: 'trunk',  multisite: false }
@@ -29,7 +29,8 @@ jobs:
       WP_ENV_PHP_VERSION: ${{ matrix.php }}
       # The mirror's nightly branch is master; trunk is what WordPress calls it. A release line is
       # its branch, which carries that line's latest security release.
-      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || matrix.core == '7.0' && 'WordPress/WordPress#7.0-branch' || '' }}
+      # Until 7.2 ships (8 December 2026) its branch is trunk, and so is the latest Riff runs on.
+      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || matrix.core == '7.2' && 'WordPress/WordPress#master' || 'WordPress/WordPress#master' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
