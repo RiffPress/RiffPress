@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.1](https://github.com/RiffPress/RiffPress/compare/v5.2.0...v5.2.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **app:** a visitor's Home leaves out the posts and tracks the site no longer has, instead of a card with a broken cover that opens nothing ([#652](https://github.com/RiffPress/RiffPress/issues/652)) ([824557f](https://github.com/RiffPress/RiffPress/commit/824557f292f2f2148c6da4f1ec281279d18de151))
+* **player:** Stop says Stop beside its square, so it no longer reads as a checkbox, and the app's tabs keep clear of its width ([#653](https://github.com/RiffPress/RiffPress/issues/653)) ([2bb13b2](https://github.com/RiffPress/RiffPress/commit/2bb13b2014acc95fd4eed22334743a083cc7dc77))
+
 ## [5.2.0](https://github.com/RiffPress/RiffPress/compare/v5.1.1...v5.2.0) (2026-10-25)
 
 

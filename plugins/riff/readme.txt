@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.2.0
+Stable tag: 5.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.2.1 =
+* Fixed: a visitor's Home leaves out the posts and tracks the site no longer has, instead of a card with a broken cover that opens nothing.
+* Fixed: Stop says Stop beside its square, so it no longer reads as a checkbox, and the app's tabs keep clear of its width.
+
 = 5.2.0 =
 * The single-key shortcuts are a signed-in listener's choice under Personal Options on their profile, and a visitor has only the Shift ones, so Now Playing's header loses its keyboard switch.
 * Fixed: in the installed app, Now Playing's tabs stop short of the head's own buttons instead of sitting under Stop.
@@ -134,9 +138,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 5.0.0 =
 * Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them.
 * The player says where a track sits in Up next, reads a title in its language, tells what the cover shows, draws a video's captions behind a Captions switch, and stops from a button.
-
-= 4.32.1 =
-* Fixed: the bar never covers what has focus, a modal Now Playing keeps Tab, and the surface is held to WCAG 2.2 AA by test.
-* Fixed: the first track pressed is announced, and Up next's rows say what they play, with the artist.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
