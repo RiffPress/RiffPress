@@ -126,7 +126,7 @@ jobs:
           # WordPress (5.0.0 needs 7.2, in beta until 8 December 2026) the 7.2-only releases are flagged
           # pre-release, so this is the last one for 7.0 and 7.1, and the Download page offers both. The
           # line goes once the two agree.
-          STABLE=$(curl -fsSL -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | sed -nE 's/^ *"tag_name": *"v?([^"]+)".*$/\1/p' | head -n1)
+          STABLE=$(curl -fsSL -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | sed -nE 's/^ *"tag_name": *"(riff-)?v?([^"]+)".*$/\2/p' | head -n1)
           [[ -n "$STABLE" ]] || STABLE="$VERSION"
           if [[ "$STABLE" == "$VERSION" ]]; then sed -i -E '/class="fine stable"/d' out/download/index.html; fi
           sed -i -E "s#\{\{stable\}\}#${STABLE}#g" out/download/index.html
