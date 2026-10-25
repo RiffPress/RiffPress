@@ -377,9 +377,38 @@ section {
 
 #how .wrap {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	gap: var(--space-5) var(--space-7);
-	align-items: start;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	gap: var(--space-5) var(--space-6);
+	align-items: center;
+}
+
+/* three phones fanned: a post, then Now Playing in front, then Up next, so
+   the picture tells the story the words leave out */
+.fan {
+	position: relative;
+	display: grid;
+	place-items: center;
+	padding-block: var(--space-5);
+	max-width: 100%;
+}
+
+.fan .device {
+	grid-area: 1 / 1;
+	width: min(44%, 300px);
+	box-shadow: 0 18px 40px rgb(60 40 20 / 0.18);
+}
+
+.fan .fan-left {
+	transform: translateX(-58%) rotate(-7deg) scale(0.9);
+}
+
+.fan .fan-right {
+	transform: translateX(58%) rotate(7deg) scale(0.9);
+}
+
+.fan .fan-front {
+	position: relative;
+	z-index: 1;
 }
 
 .how-words {
@@ -541,7 +570,7 @@ section {
    fold. */
 .device {
 	display: inline-block;
-	width: min(360px, 78vw, calc(72vh * 780 / 1688));
+	width: min(420px, 82vw, calc(86vh * 780 / 1688));
 	border-radius: 2px;
 	border: 1px solid var(--line);
 	overflow: hidden;
