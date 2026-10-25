@@ -71,61 +71,49 @@
 
 <main id="top">
 <section class="hero"><div class="wrap">
-	<div class="hero-words">
-		<p class="eyebrow">A music player for WordPress</p>
-		<h1>Own every note</h1>
-		<p class="lede">Publish your music from the Media Library. Your listeners get a full streaming player, on a site you own.</p>
-		<div class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Try the live demo</a><a class="btn outline" href="download/">Get Riff</a></div>
-		<p class="fine">Nine albums on a WordPress site, in a new tab.</p>
+	<h1>Own every note</h1>
+	<p class="lede">Riff turns the music in your WordPress Media Library into a streaming player on your own site, with albums, search, a queue and the lock screen.</p>
+	<p class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Try the demo</a> <a class="go" href="download/">or download Riff {{version}}</a></p>
+	<div class="shot"><picture><source type="image/avif" srcset="desktop-listen.avif 2880w, desktop-listen-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen app: the library in a panel at the side, home and search across the top, a grid of album covers, and the player bar along the bottom" fetchpriority="high" decoding="async"></picture></div>
+</div></section>
+
+<section id="how"><div class="wrap">
+	<div class="how-words">
+		<h2>From the Media Library to the lock screen</h2>
+		<p>Upload an album's files to the Media Library. Riff reads the title, artist, album and cover from the tags inside them, the same tags your music app uses, so there is nothing to fill in.</p>
+		<p>Put the Riff block on a page and that page becomes your library: every album as a cover, the artists and tracks, and one search box. Press a track and the player bar appears. It keeps playing while people read the rest of your site, and it sits on their lock screen with the cover and the controls.</p>
+		<ul class="plain">
+			<li>A queue you can reorder, likes, and playlists for people who sign in.</li>
+			<li>A song's video version, a tap away, at the same point in the song.</li>
+			<li>AirPlay and Chromecast, where the browser has them.</li>
+			<li>An <code>app/</code> address that installs on a phone or a computer.</li>
+			<li>No account, no tracking and no outside service. The files stay on your host.</li>
+		</ul>
 	</div>
-	<div class="hero-phone"><span class="device"><picture><source type="image/avif" srcset="phone-now-playing.avif"><img src="phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls" fetchpriority="high" decoding="async"></picture></span></div>
+	<div class="how-phone"><span class="device"><picture><source type="image/avif" srcset="phone-now-playing.avif"><img src="phone-now-playing.png" width="780" height="1688" alt="Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls" loading="lazy" decoding="async"></picture></span></div>
 </div></section>
 
-<section class="stage"><div class="wrap">
-	<div class="shot"><picture><source type="image/avif" srcset="desktop-listen.avif 2880w, desktop-listen-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen app: the library in a panel at the side, home and search across the top, a grid of album covers, and the player bar along the bottom" decoding="async"></picture></div>
-</div></section>
-
-<section id="sides"><div class="dots" aria-hidden="true"></div><div class="wrap">
-	<div><h2>Publish like Bandcamp. Listen like Spotify.</h2><p class="lede">You run it from the WordPress Media Library. Your listeners get a player like the streaming apps they already use.</p></div>
-	<ul class="facts">
-		<li><strong>Your files, your site</strong><span>Upload to the Media Library. Nothing to sign up for, and nobody takes a cut.</span></li>
-		<li><strong>A real streaming player</strong><span>A queue, likes, playlists, the lock screen, AirPlay and Cast.</span></li>
-		<li><strong>Keeps playing as they browse</strong><span>The music carries on across every page of your site.</span></li>
-	</ul>
-	<p class="fine">Riff doesn't sell music. Bandcamp and Spotify are trademarks of their owners, and Riff isn't connected to either.</p>
-</div></section>
-
-<section class="alt wire" id="listen"><div class="dots" aria-hidden="true"></div><div class="wrap">
-	<div><h2>One page where everything plays</h2><p class="lede">Add the Riff block to a page and it becomes your shelf of albums, artists and tracks.</p></div>
+<section class="alt" id="listen"><div class="wrap">
+	<h2>Now Playing, on a wide screen</h2>
+	<p class="lede">The cover, the rest of the album in Up next, and the bar that never leaves.</p>
 	<div class="shot"><picture><source type="image/avif" srcset="desktop-now-playing.avif 2880w, desktop-now-playing-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the album's cover, Up next listing the rest of its tracks, and the player bar with the controls and the seek line" loading="lazy" decoding="async"></picture></div>
-	<ul class="facts">
-		<li><strong>Browse and search</strong><span>Albums, artists and tracks, filed from your files' own tags.</span></li>
-		<li><strong>Your Library</strong><span>Liked songs, albums and artists, and playlists of their own.</span></li>
-		<li><strong>Up next</strong><span>Every track in the post lines up behind the one you chose.</span></li>
-		<li><strong>Song or video</strong><span>Flip to a track's video without losing your place.</span></li>
-		<li><strong>Lock screen and Cast</strong><span>Controls on the lock screen, with AirPlay and Chromecast.</span></li>
-		<li><strong>Installs as an app</strong><span>Its <code>app/</code> address installs on a phone or a desktop.</span></li>
-	</ul>
 </div></section>
 
-<section class="wire" id="try"><div class="dots" aria-hidden="true"></div><div class="wrap">
-	<div>
-		<h2>Try it in your browser</h2>
-		<p class="lede">Nine albums on a WordPress site, with nothing to install.</p>
-		<div class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the live demo</a></div>
-		<p class="fine">Opens in a new tab. Recordings by the United States Air Force Band, in the public domain.</p>
-	</div>
+<section id="try"><div class="wrap">
+	<h2>Try it in your browser</h2>
+	<p class="lede">The demo is a WordPress site running in your browser, with nine albums by the United States Air Force Band, which are in the public domain.</p>
+	<p class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the demo</a></p>
 	<ul class="shelf" aria-hidden="true"><li><img src="covers/compositions.png" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/born-of-a-dream.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/carols-of-the-season.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/celtic-aire.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/hands-across-the-sea.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/shades-of-blue.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/silver-wings.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/stellar-brass.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li><li><img src="covers/strolling-strings.svg" alt="" width="1024" height="1024" loading="lazy" decoding="async"></li></ul>
 </div></section>
 
-<section class="alt wire" id="owners"><div class="dots" aria-hidden="true"></div><div class="wrap">
-	<div><img class="app-icon" src="brand/mark.png" alt="" width="96" height="96" loading="lazy" decoding="async"><h2>Get Riff</h2><p class="lede">Free and open source. WordPress 7.2 and PHP 8.1 or newer, and nothing to configure.</p></div>
-	<div class="cta"><a class="btn" href="download/">Download Riff</a><a class="btn outline" href="add-music/">Add your music</a></div>
-	<p class="fine">Version {{version}}. <a href="download/">Requirements and what it adds</a> · <a href="https://github.com/RiffPress/RiffPress">Source on GitHub</a> · <a href="web/">Built on the open web</a></p>
+<section id="get"><div class="wrap">
+	<p>Riff {{version}} is free software under the GPL, like WordPress. It needs WordPress 7.2 and PHP 8.1. <a href="download/">Download it</a>, <a href="add-music/">add your music</a>, read <a href="https://github.com/RiffPress/RiffPress">the source</a>, or see <a href="built/">how it is built</a>.</p>
 </div></section>
-
+<div class="dots" aria-hidden="true"></div>
 </main>
 
 <footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</span><nav aria-label="Footer"><a href="accessibility/">Accessibility</a><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a></nav></div></footer>
+<script type="module" src="js/neck.js"></script>
+<script type="module" src="js/crate.js"></script>
 </body>
 </html>

@@ -115,11 +115,31 @@ code {
 	color: var(--ink);
 }
 
+/* the neck: five strings, treble at the top and each heavier gauge below,
+   running from a bone nut level with the wordmark over frets that close up
+   as a guitar's do (each 2^(1/12) nearer the last), with pearl inlays at
+   the 3rd, 5th, 7th, 9th and on, two at the 12th. The frets and inlays span
+   the content column, so they line up with the page under them. */
 .nav::after {
+	--neck: min(100vw - 2 * var(--edge), 1160px - 2 * var(--edge));
+	--nut: calc((100vw - var(--neck)) / 2);
+	--strings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='0' y1='4' x2='1000' y2='4' stroke='%23979aa1' stroke-width='0.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='9' x2='1000' y2='9' stroke='%23979aa1' stroke-width='0.85' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='14' x2='1000' y2='14' stroke='%23979aa1' stroke-width='1.15' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='19' x2='1000' y2='19' stroke='%23979aa1' stroke-width='1.55' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='24' x2='1000' y2='24' stroke='%23979aa1' stroke-width='2.1' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
 	content: "";
 	display: block;
-	height: 20px;
-	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cline x1='0' y1='2' x2='100' y2='2' stroke='%23979aa1' stroke-width='0.6'/%3E%3Cline x1='0' y1='6' x2='100' y2='6' stroke='%23979aa1' stroke-width='0.85'/%3E%3Cline x1='0' y1='10' x2='100' y2='10' stroke='%23979aa1' stroke-width='1.15'/%3E%3Cline x1='0' y1='14' x2='100' y2='14' stroke='%23979aa1' stroke-width='1.55'/%3E%3Cline x1='0' y1='18' x2='100' y2='18' stroke='%23979aa1' stroke-width='2.1'/%3E%3C/svg%3E") 0 0 / 100% 20px no-repeat;
+	height: 28px;
+	background:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.2013 - 3px) 11px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.3431 - 3px) 11px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.4694 - 3px) 11px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.5819 - 3px) 11px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.8511 - 3px) 11px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.922 - 3px) 11px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.9851 - 3px) 11px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.7281 - 3px) 6px / 6px 6px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%23c3c4c7'/%3E%3C/svg%3E") calc(var(--nut) + var(--neck) * 0.7281 - 3px) 16px / 6px 6px no-repeat,
+		var(--strings) 0 0 / 100% 28px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 28'%3E%3Crect width='4' height='28' rx='1' fill='%23e6e0d4'/%3E%3C/svg%3E") calc(var(--nut) - 4px) 0 / 4px 28px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 28' preserveAspectRatio='none'%3E%3Cline x1='84.2361' y1='2' x2='84.2361' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='163.7444' y1='2' x2='163.7444' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='238.7903' y1='2' x2='238.7903' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='309.6241' y1='2' x2='309.6241' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='376.4824' y1='2' x2='376.4824' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='439.5882' y1='2' x2='439.5882' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='499.1521' y1='2' x2='499.1521' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='555.373' y1='2' x2='555.373' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='608.4384' y1='2' x2='608.4384' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='658.5255' y1='2' x2='658.5255' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='705.8014' y1='2' x2='705.8014' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='750.4239' y1='2' x2='750.4239' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='792.542' y1='2' x2='792.542' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='832.2962' y1='2' x2='832.2962' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='869.8191' y1='2' x2='869.8191' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='905.236' y1='2' x2='905.236' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='938.6651' y1='2' x2='938.6651' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='970.218' y1='2' x2='970.218' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='1000' y1='2' x2='1000' y2='26' stroke='%23d9d9d9' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") var(--nut) 0 / var(--neck) 28px no-repeat;
 }
 
 .nav .wrap {
@@ -835,7 +855,7 @@ figcaption {
 	background: var(--white);
 	color: var(--ink);
 	font-size: 0.875rem;
-	border-bottom: 1px solid var(--charcoal-5);
+	border-bottom: 1px solid var(--grey-1);
 }
 
 .local-nav .wrap {
@@ -856,6 +876,45 @@ figcaption {
 .local-nav a:hover {
 	color: var(--ink);
 	text-decoration: underline;
+}
+
+/* neck.js lays live strings over the drawn ones and takes over from them */
+.nav.has-neck-live::after {
+	--strings: none;
+}
+
+.neck-live {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	height: 28px;
+	fill: none;
+	stroke: #979aa1;
+	overflow: visible;
+}
+
+/* over the strings, a mouse holds a pick instead of the arrow */
+.has-neck-live .neck-live {
+	cursor: none;
+}
+
+.neck-pick {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	width: 24px;
+	height: 28px;
+	pointer-events: none;
+	transform-origin: 12px 27px;
+	opacity: 0;
+	transition: opacity 0.12s;
+	filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.25));
+}
+
+.neck-pick.is-on {
+	opacity: 1;
 }
 
 .local-nav a[aria-current] {

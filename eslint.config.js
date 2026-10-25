@@ -12,6 +12,8 @@ module.exports = [
 			'**/node_modules/**',
 			'**/vendor/**',
 			'**/artifacts/**',
+			// The site's scripts, built from site/src by .github/scripts/site-js.js.
+			'site/js/**',
 			// Fixture plugins for the API coverage tests: input to a scanner, written to exercise it, not project code.
 			'packages/wp-api-coverage/test/fixtures/**',
 		],
