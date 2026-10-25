@@ -5,7 +5,7 @@ Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,9 @@ Riff Lyrics adds a Lyrics tab next to Up next in Riff's Now Playing, the way str
 It is also the reference extension for Riff: it is built only on Riff's documented public API, so a change to Riff that would break a plugin breaks this one first.
 
 == Changelog ==
+
+= 1.1.0 =
+* Timed lyrics are read in the formats taggers and players write: LRC with its offset, Enhanced LRC with words that light up as they are sung, WebVTT, and a file's own ID3 SYLT frame on upload.
 
 = 1.0.0 =
 * Captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement.
