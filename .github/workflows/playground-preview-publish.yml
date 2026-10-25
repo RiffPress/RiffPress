@@ -8,6 +8,13 @@ name: Playground Preview Publish
 # asset URLs are rewritten, and those always point at this repository. The demo
 # set rides along in the build artifact, and only the files the base-ref
 # blueprint names are copied out of it.
+#
+# For a pull request from this repository (not a fork, whose pages would be
+# published under the project's address), the site it built is deployed as a
+# Cloudflare Pages preview at pr-N.riffpress.pages.dev, with that same
+# Playground blueprint as its blueprint.json, so its "Try the demo" opens the
+# pull request's own build. Its placeholders are filled by the base branch's
+# site-preview.js, which only rewrites text, and it asks not to be indexed.
 
 on:
   workflow_run: # zizmor: ignore[dangerous-triggers] never checks out or executes pull request code
@@ -39,8 +46,10 @@ jobs:
           script: |
             const fs = require('fs');
             const list = await github.rest.actions.listWorkflowRunArtifacts({ owner: context.repo.owner, repo: context.repo.repo, run_id: context.payload.workflow_run.id });
-            for (const name of ['release-assets', 'pr-meta']) {
+            for (const name of ['release-assets', 'pr-meta', 'site']) {
               const found = list.data.artifacts.find(a => a.name === name);
+              // The site is optional: a run from before it was built has none.
+              if (!found && name === 'site') continue;
               if (!found) { core.setFailed(`Required artifact "${name}" not found.`); return; }
               const dl = await github.rest.actions.downloadArtifact({ owner: context.repo.owner, repo: context.repo.repo, artifact_id: found.id, archive_format: 'zip' });
               fs.writeFileSync(`${name}.zip`, Buffer.from(dl.data));
@@ -56,12 +65,13 @@ jobs:
           mkdir -p artifacts/release-assets artifacts/pr-meta
           # The pull request wrote these archives, so refuse any entry that is a link or leaves its folder
           # before unzip can restore it: a link would let the copy below publish a file from this runner.
-          for z in release-assets.zip pr-meta.zip; do
+          for z in release-assets.zip pr-meta.zip $(test -f site.zip && echo site.zip); do
             if zipinfo -1 "$z" | grep -qE '(^/|(^|/)\.\.(/|$))'; then echo "::error::$z has an entry outside its folder"; exit 1; fi
             if zipinfo "$z" | grep -qE '^l'; then echo "::error::$z contains a symlink"; exit 1; fi
           done
           unzip -q -o -d artifacts/release-assets release-assets.zip
           unzip -q -o -d artifacts/pr-meta pr-meta.zip
+          if test -f site.zip; then mkdir -p artifacts/site && unzip -q -o -d artifacts/site site.zip; fi
           test -f artifacts/release-assets/riff.zip
           META_HEAD_SHA=$(jq -r '.head_sha' artifacts/pr-meta/pr-meta.json)
           [[ "$META_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid SHA in pr-meta"; exit 1; }
@@ -107,6 +117,25 @@ jobs:
           # A link to a demo that cannot load its files is worse than no link; wait out the push, then fail.
           node .github/scripts/demo-blueprint.js check preview-blueprint.json 30
           echo "url=https://playground.wordpress.net/?mode=seamless#$(jq -c . preview-blueprint.json | base64 -w0)" >> "$GITHUB_OUTPUT"
+      - name: Publish the site preview
+        id: site
+        if: steps.meta.outputs.skipped != 'true' && github.event.workflow_run.head_repository.full_name == github.repository && hashFiles('artifacts/site/index.html') != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          BASE="https://pr-${PR_NUMBER}.riffpress.pages.dev/"
+          VERSION=$(unzip -p artifacts/release-assets/riff.zip riff/riff.php | sed -nE 's/^ \* Version: *([0-9][0-9A-Za-z.-]*).*$/\1/p' | head -n1)
+          STABLE=$(curl -fsSL -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GH_REPO}/releases/latest" | jq -r '.tag_name | ltrimstr("v")')
+          [[ -n "$STABLE" && "$STABLE" != null ]] || STABLE="$VERSION"
+          cp preview-blueprint.json artifacts/site/blueprint.json
+          node .github/scripts/site-preview.js artifacts/site "$BASE" "$VERSION" "$STABLE" "$HEAD_SHA"
+          npx --yes wrangler@4 pages deploy artifacts/site --project-name riffpress --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
+          echo "url=$BASE" >> "$GITHUB_OUTPUT"
       - name: Post or update the sticky comment
         if: steps.meta.outputs.skipped != 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -114,19 +143,22 @@ jobs:
           PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
           HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
           PLAYGROUND_URL: ${{ steps.playground.outputs.url }}
+          SITE_URL: ${{ steps.site.outputs.url }}
         with:
           script: |
             const marker = '<!-- riff:playground-preview -->';
             const sha = process.env.HEAD_SHA;
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
             const badge = 'https://img.shields.io/badge/Launch-3858E9?style=for-the-badge&logo=wordpress&logoColor=white';
+            const siteBadge = 'https://img.shields.io/badge/Site-1E1E1E?style=for-the-badge';
+            const site = process.env.SITE_URL;
             const body = [
               marker,
-              '### 🛝 WordPress Playground',
+              '### 🛝 Preview',
               '',
-              `Built from <a href="${commitUrl}"><samp>${sha.slice(0, 7)}</samp></a> · lands on the demo set, logged in as admin.`,
+              `Built from <a href="${commitUrl}"><samp>${sha.slice(0, 7)}</samp></a>. The app lands on the demo set, logged in as admin${site ? '; the site is this pull request\'s, and its "Try the demo" opens the same build' : ''}.`,
               '',
-              `[![Launch this PR in WordPress Playground](${badge})](${process.env.PLAYGROUND_URL})`,
+              `[![Launch this PR in WordPress Playground](${badge})](${process.env.PLAYGROUND_URL})${site ? ` [![See this PR's site](${siteBadge})](${site})` : ''}`,
               '',
             ].join('\n');
             const prNumber = parseInt(process.env.PR_NUMBER, 10);

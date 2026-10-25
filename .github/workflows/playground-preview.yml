@@ -1,9 +1,11 @@
 name: Playground Preview
 
-# Builds riff.zip from the pull request commit and uploads it as an
-# artifact. "Playground Preview Publish" hosts it and comments on the pull
-# request, so every pull request gets a one-click Playground of its own build.
-# Pull request code is untrusted here: read-only token, no composer scripts.
+# Builds riff.zip and the site from the pull request commit and uploads them
+# as artifacts. "Playground Preview Publish" hosts them and comments on the
+# pull request, so every pull request gets a one-click Playground of its own
+# build and, from this repository, a preview of its own site.
+# Pull request code is untrusted here: read-only token, no composer or npm
+# install scripts.
 
 on:
   pull_request:
@@ -37,6 +39,20 @@ jobs:
         with:
           php-version: '8.3'
           coverage: none
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Build the site
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run site:js
+          # The reference pages, as the Pages workflow builds them from the commit.
+          node .github/scripts/hooks-reference.js
+          node .github/scripts/js-reference.js
+          node .github/scripts/reference-pages.js
+          node .github/scripts/web-pages.js
+          mkdir -p build && cp -R site build/site
       - name: Build riff.zip
         run: |
           set -euo pipefail
@@ -76,6 +92,12 @@ jobs:
           path: |
             build/riff.zip
             build/demo/
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: site
+          path: build/site/
           retention-days: 14
           if-no-files-found: error
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
