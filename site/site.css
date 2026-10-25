@@ -856,6 +856,92 @@ footer ::selection {
 	color: #fff;
 }
 
+/* Every album has a cover: the words on the left, and four of the covers
+   Riff drew spread out beside them like records on a table, each a little
+   turned, the one under the pointer lifted out of the spread */
+#covers {
+	padding-top: 0;
+}
+
+#covers .wrap {
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	gap: var(--space-5) var(--space-6);
+	align-items: center;
+}
+
+.covers-words .fine {
+	margin-top: var(--space-3);
+}
+
+.spread {
+	position: relative;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	aspect-ratio: 1.6;
+	max-width: 100%;
+}
+
+.spread li {
+	position: absolute;
+	top: 12%;
+	width: 52%;
+	aspect-ratio: 1;
+	transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.spread img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: 2px;
+	box-shadow: 0 14px 34px rgb(60 40 20 / 0.18), 0 2px 6px rgb(60 40 20 / 0.12);
+}
+
+.spread li:nth-child(1) {
+	left: 0;
+	transform: rotate(-6deg);
+	z-index: 1;
+}
+
+.spread li:nth-child(2) {
+	left: 16%;
+	transform: rotate(-2deg) translateY(-3%);
+	z-index: 2;
+}
+
+.spread li:nth-child(3) {
+	left: 32%;
+	transform: rotate(2.5deg) translateY(2%);
+	z-index: 3;
+}
+
+.spread li:nth-child(4) {
+	left: 48%;
+	transform: rotate(6deg) translateY(-1%);
+	z-index: 4;
+}
+
+.spread li:hover {
+	z-index: 5;
+	transform: rotate(0deg) translateY(-8%) scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.spread li {
+		transition: none;
+	}
+}
+
+@media (max-width: 900px) {
+
+	#covers .wrap {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
 /* no lone last word on a line: headings balanced, running text shaped so
    its last line is never one word (the deploy also binds the last two) */
 h1,

@@ -29,7 +29,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # Building an album the pull request adds or changes downloads and encodes its recordings.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -66,13 +67,40 @@ jobs:
           cp packages/fixtures/seed.php build/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} build/demo/ \;
           cp site/brand/mark.png build/demo/
+          printf 'https://riffpress.com/demo/' > build/demo/base.txt
+      - name: Keep the album downloads between runs
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/riff-albums/src
+          key: albums-src-${{ hashFiles('packages/fixtures/*/source.json') }}
+          restore-keys: albums-
+      - name: Build the albums this pull request adds or changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          # An album is built here when its source.json, or album.js itself, differs from the base, so
+          # the preview plays its recordings before the site has published them; the rest play from
+          # the site. The publisher copies only these albums' own tracks out of the build.
+          git fetch -q --depth=1 origin "$BASE_SHA"
+          built=()
           for m in packages/fixtures/*/manifest.json; do
             slug=$(basename "$(dirname "$m")")
             node -e "process.exit(require('./$m').remote ? 0 : 1)" || continue
-            cp "$m" "build/demo/$slug.manifest.json"
-            cp "$(dirname "$m")/levels.json" "build/demo/$slug.levels.json"
+            if git diff --quiet "$BASE_SHA" -- "packages/fixtures/$slug/source.json" packages/fixtures/album.js \
+              && git cat-file -e "$BASE_SHA:packages/fixtures/$slug/source.json" 2>/dev/null; then continue; fi
+            built+=("$slug")
           done
-          printf 'https://riffpress.com/demo/' > build/demo/base.txt
+          if (( ${#built[@]} )); then
+            sudo apt-get install -y -qq ffmpeg > /dev/null
+            for slug in "${built[@]}"; do
+              RIFF_JAZZ_CACHE=~/.cache/riff-albums/src node packages/fixtures/album.js "$slug" --out "build/demo/$slug"
+            done
+            # album.js rewrites the manifest it builds from; the preview seeds the committed one.
+            git checkout -- packages/fixtures
+          fi
+          node .github/scripts/demo-albums.js bundle packages/fixtures build/demo/albums.json "${built[@]}"
+          echo "Built here: ${built[*]:-none}"
       - name: Smoke-test the build
         run: |
           set -euo pipefail

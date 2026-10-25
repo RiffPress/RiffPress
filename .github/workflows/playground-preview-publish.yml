@@ -96,6 +96,8 @@ jobs:
           # Only the demo files the base-ref blueprint names, each checked to be a plain file of a sane size,
           # laid out beside the zip the same way Pages lays them out.
           node .github/scripts/demo-blueprint.js stage blueprint.json artifacts/release-assets/demo "preview/${HEAD_SHA}/demo"
+          # The albums the pull request added or changed play from their own copy here; the rest, from the site.
+          node .github/scripts/demo-albums.js stage artifacts/release-assets/demo "preview/${HEAD_SHA}/demo" "https://raw.githubusercontent.com/${GH_REPO}/preview-pr-${PR_NUMBER}/${HEAD_SHA}/demo/"
           cd preview
           git init -q -b "preview-pr-${PR_NUMBER}"
           git add -A

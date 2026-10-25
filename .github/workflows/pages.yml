@@ -101,16 +101,15 @@ jobs:
           cp packages/fixtures/seed.php out/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;
           cp site/brand/mark.png out/demo/
-          # The streamed albums: audio under demo/<slug>/, each manifest and its levels flat beside
-          # the seed, and base.txt, where the seed finds the audio.
+          # The streamed albums: audio under demo/<slug>/, every album's manifest and levels in one
+          # albums.json beside the seed, and base.txt, where the seed finds the audio.
           for m in packages/fixtures/*/manifest.json; do
             slug=$(basename "$(dirname "$m")")
             node -e "process.exit(require('./$m').remote ? 0 : 1)" || continue
             mkdir -p "out/demo/$slug"
             cp ~/.cache/riff-albums/built/"$slug"/*.mp3 "out/demo/$slug/"
-            cp "$m" "out/demo/$slug.manifest.json"
-            cp "$(dirname "$m")/levels.json" "out/demo/$slug.levels.json"
           done
+          node .github/scripts/demo-albums.js bundle packages/fixtures out/demo/albums.json
           printf '%sdemo/' "$(printf '%s' "$SITE_URL" | sed -E 's#^http://#https://#; s#/*$#/#')" > out/demo/base.txt
           du -sh out/demo
           # Playground runs on https and a browser will not fetch http from it, so the scheme is always https.
