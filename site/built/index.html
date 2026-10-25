@@ -29,13 +29,15 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <div class="nav"><div class="wrap"><a class="mark" href="../"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="../add-music/">Add your music</a><a href="../developers/">Developers</a><a class="btn" href="../download/">Download</a></nav></div></div>
-<div class="local-nav"><div class="wrap"><a class="local-title" href="./" aria-current="page">How Riff is built</a><nav aria-label="How Riff is built"><a href="#wordpress">WordPress</a><a href="#testing">Testing</a><a href="#docs">Docs</a><a href="#commitments">Commitments</a><a href="#releases">Releases</a><a href="#help">Help</a></nav></div></div>
+<div class="local-nav"><div class="wrap"><a class="local-title" href="./" aria-current="page">How Riff is built</a><nav aria-label="How Riff is built"><a href="../add-music/">Add your music</a><a href="../download/">Get Riff</a><a href="../developers/">Developers</a></nav></div></div>
 
 <div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><span><a href="../">Riff</a></span><span class="is-current-page">How Riff is built</span></nav></div></div>
-<main id="main" class="wrap dl">
+<main id="main" class="wrap doc dl">
 <h1>How Riff is built</h1>
 <p class="lede">Your music should outlast the software that plays it. Riff is built on what WordPress already has, is tested on every change, and comes with written commitments about how it will be maintained.</p>
-
+<div class="with-toc">
+<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary><ul><li><a href="#wordpress">Built on WordPress</a></li><li><a href="#testing">Tested on every change</a></li><li><a href="#docs">Documentation that matches the code</a></li><li><a href="#commitments">What we commit to</a></li><li><a href="#releases">Every release</a></li><li><a href="#help">Get help</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/built/index.html">Edit this page on GitHub</a></p></aside>
+<article class="entry">
 <h2 id="wordpress">Built on WordPress</h2>
 <p>Riff plays the Audio, Video and Playlist blocks that ship with WordPress, and reads track details from the Media Library. It adds no settings screen and no database tables. It stores albums and artists as terms filed from your tags, listeners' playlists, likes and what they played, and a few fields on media items, such as a track's artwork and its video version. If you turn it off, your posts still play in the browser's own player.</p>
 <p>There is no account, no tracking and no CDN, and the fonts ship inside the plugin. The one outside service is Gravatar, for signed-in listeners' pictures through WordPress's own avatars: the site asks once a day whether a listener has one, so it can show their initial instead. Turning avatars off turns that off. Your music and your listeners' visits stay on your server.</p>
@@ -69,7 +71,15 @@
 
 <h2 id="help">Get help</h2>
 <p>Ask a question or report a bug in <a href="https://github.com/RiffPress/RiffPress/issues">GitHub issues</a>. Report a security problem privately, through the <a href="https://github.com/RiffPress/RiffPress/security/advisories/new">security advisory form</a>.</p>
+</article>
+</div>
 </main>
+<script>
+// Folded on a narrow screen, as the code reference folds it.
+if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
+	document.querySelector( '.toc-box' ).open = false;
+}
+</script>
 
 <div class="dots" aria-hidden="true"></div>
 <footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>.</span><a href="https://github.com/RiffPress/RiffPress">GitHub</a></div></footer>
