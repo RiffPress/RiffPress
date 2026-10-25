@@ -732,11 +732,44 @@ figcaption {
 	object-fit: cover;
 }
 
+/* the download, as wordpress.org/download sets it: the button and its
+   fine print on the left, what it needs on the right, in one grey box
+   straight under the heading */
 .get {
 	margin-top: 32px;
 	padding: 32px;
 	background: var(--surface);
 	border-radius: 2px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 24px 48px;
+	align-items: start;
+}
+
+.get-main .fine {
+	max-width: 34rem;
+}
+
+.get-needs {
+	margin: 0;
+	display: grid;
+	gap: 8px;
+	font-size: 0.9375rem;
+	line-height: 1.5;
+}
+
+.get-needs div {
+	display: grid;
+	grid-template-columns: 7rem auto;
+	gap: 12px;
+}
+
+.get-needs dt {
+	color: var(--ink-2);
+}
+
+.get-needs dd {
+	margin: 0;
 }
 
 .get .btn {
@@ -759,6 +792,7 @@ figcaption {
 	font-size: 0.9375rem;
 }
 
+.dl .req,
 .req {
 	margin: 16px 0 0;
 	padding: 0;
@@ -781,6 +815,7 @@ figcaption {
 
 	.get {
 		padding: 20px;
+		grid-template-columns: minmax(0, 1fr);
 	}
 
 	.req li {
@@ -975,6 +1010,11 @@ main h2[id] {
 .crumbs + main,
 .crumbs + .layout {
 	padding-top: 20px;
+}
+
+/* a top-level page has no breadcrumbs, so its title gets the room they took */
+.local-nav + main {
+	padding-top: 48px;
 }
 
 .reference h1,
