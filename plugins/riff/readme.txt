@@ -2,9 +2,9 @@
 Contributors: joefusco
 Tags: music, audio, video, player, media
 Requires at least: 7.2
-Tested up to: 7.2
+Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 4.32.1
+Stable tag: 5.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.0.0 =
+* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them.
+* The player says where a track sits in Up next, reads a title in its language, tells what the cover shows, draws a video's captions behind a Captions switch, and stops from a button.
+
 = 4.32.1 =
 * Fixed: the bar never covers what has focus, a modal Now Playing keeps Tab, and the surface is held to WCAG 2.2 AA by test.
 * Fixed: the first track pressed is announced, and Up next's rows say what they play, with the artist.
@@ -147,9 +151,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: the keyboard's focus stays visible and in place as Up next and the install card change.
 * Fixed: the Listen block no longer runs wider than its page, from room borrowed for a focus ring.
 * Fixed: the seek line, the playing row, Up next and Now Playing tell a screen reader what they are.
-
-= 4.29.0 =
-* The player bar at its full desktop height, with a 4px line, and a rail that doesn't scroll sideways.
-* Fixed: the seek line's glow fades in from the start of the line, instead of ending in a hard edge.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
