@@ -183,6 +183,20 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertStringContainsString( 'data:image/svg+xml;base64,', $html );
 	}
 
+	public function test_a_cover_title_breaks_evenly_and_never_leaves_one_word_alone(): void {
+		$wrap = new ReflectionMethod( Cover::class, 'wrap' );
+		$wrap->setAccessible( true );
+		$this->assertSame( array( 'Hands Across', 'the Sea' ), $wrap->invoke( null, 'Hands Across the Sea', 14 ) );
+		$this->assertSame( array( 'Carols of', 'the Season' ), $wrap->invoke( null, 'Carols of the Season', 14 ) );
+		$this->assertSame( array( 'Strolling', 'Strings' ), $wrap->invoke( null, 'Strolling Strings', 14 ), 'two words may sit one a line' );
+		$this->assertSame( array( 'Silver Wings' ), $wrap->invoke( null, 'Silver Wings', 14 ) );
+		foreach ( array( 'Little Dreamer Big Dreams', 'The Stars and Stripes Forever', 'A Night on the Town Again' ) as $title ) {
+			$lines = $wrap->invoke( null, $title, 14 );
+			$this->assertCount( 2, $lines, $title );
+			$this->assertStringContainsString( ' ', $lines[1], "$title leaves one word alone" );
+		}
+	}
+
 	public function test_the_route_is_a_public_query_variable(): void {
 		$this->assertContains( 'riff-art', apply_filters( 'query_vars', array() ) );
 		[ $post ] = $this->bare_post();
