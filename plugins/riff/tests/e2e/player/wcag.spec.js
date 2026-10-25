@@ -160,9 +160,19 @@ test( 'every dragging movement has a single-pointer alternative (2.5.7)', async 
 	// Swiping the bar sideways skips: Next and Previous, in the bar on a wide screen and in Now
 	// Playing on a phone. Dragging Now Playing down closes it: Close, where it is a sheet; a wide
 	// screen's panel closes from the bar's caret and Escape. Swiping the bar down stops the
-	// player: Stop, at the top of Now Playing.
+	// player, on a phone: Stop, beside Share under the controls. A wide screen has no such swipe,
+	// and no Stop.
 	await page.locator( '.riff-bar-info' ).click();
-	for ( const action of [ 'next', 'prev', 'dismiss', isMobile ? 'close' : 'toggle' ] ) {
+	for ( const action of [ 'next', 'prev', isMobile ? 'close' : 'toggle' ] ) {
+		await expect(
+			page.locator( `#riff [data-riff-action="${ action }"]:visible` ).first()
+		).toBeVisible();
+	}
+	if ( ! isMobile ) {
+		await expect( page.locator( '#riff [data-riff-action="dismiss"]:visible' ) ).toHaveCount( 0 );
+		return;
+	}
+	for ( const action of [ 'dismiss' ] ) {
 		await expect(
 			page.locator( `#riff [data-riff-action="${ action }"]:visible` ).first()
 		).toBeVisible();
