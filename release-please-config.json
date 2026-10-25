@@ -7,6 +7,7 @@
 	"force-tag-creation": true,
 	"separate-pull-requests": false,
 	"group-pull-request-title-pattern": "chore${scope}: release",
+	"pull-request-header": "Releases in this pull request. The section named only by its version is Riff itself; each extension's section carries its name.",
 	"bootstrap-sha": "b1f83e815a11cd938ae068d322b27980b821dd79",
 	"pull-request-title-pattern": "chore${scope}: release ${component} ${version}",
 	"changelog-sections": [
