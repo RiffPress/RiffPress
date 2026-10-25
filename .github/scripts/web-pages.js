@@ -84,7 +84,7 @@ function page( e, i, entries ) {
 	const prev = entries[ i - 1 ];
 	const next = entries[ i + 1 ];
 	let html = head( `${ e.name } | Riff`, e.summary, `web/${ e.slug }/`, 2 );
-	html += crumbs( [ [ 'Riff', '../../' ], [ 'Developers', '../../developers/' ], [ 'Built on the open web', '../' ], [ e.name ] ] );
+	html += crumbs( [ [ 'Built on the open web', '../' ], [ e.name ] ] );
 	html += `<div class="wrap layout">
 <main id="main">
 <h1>${ esc( e.name ) }</h1>
@@ -115,10 +115,9 @@ ${ sidebar( entries, e.slug, 2 ) }
 
 function index( entries ) {
 	let html = head( 'Built on the open web | Riff', 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.', 'web/', 1 );
-	html += crumbs( [ [ 'Riff', '../' ], [ 'Developers', '../developers/' ], [ 'Built on the open web' ] ] );
 	html += `<main id="main" class="wrap index">
 <h1>Built on the open web</h1>
-<p class="lede">Every browser API and CSS feature the player calls, and what each one is for. A music player touches a lot of them, which is part of the point.</p>
+<p class="lede">Every browser API and CSS feature the player uses, and what each one is for.</p>
 <div class="groups">`;
 	for ( const [ group, list ] of groups( entries ) ) {
 		html += `<section><h2>${ esc( group ) }</h2><ul>`;

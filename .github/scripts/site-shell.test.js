@@ -19,8 +19,10 @@ test( 'a top-level page has no breadcrumbs: the section bar under the global one
 	for ( const file of [ 'site/developers/index.html', 'site/add-music/index.html', 'site/download/index.html', 'site/built/index.html', 'site/accessibility/index.html' ] ) {
 		assert.doesNotMatch( read( file ), /class="crumbs"|class="crumb"/, `${ file } still has breadcrumbs` );
 	}
-	// A page deeper than that keeps them: site/web's pages are under Developers.
-	assert.match( read( 'site/web/index.html' ), /class="crumbs"/ );
+	// Nor does a page one level under Developers, which the bar marks; one deeper keeps a way back up.
+	assert.doesNotMatch( read( 'site/web/index.html' ), /class="crumbs"/ );
+	assert.doesNotMatch( crumbs( [ [ 'PHP' ] ] ), /Breadcrumbs/ );
+	assert.match( crumbs( [ [ 'Built on the open web', '../' ], [ 'Inert' ] ] ), /href="\.\.\/">Built on the open web<\/a>.*Inert/ );
 } );
 
 test( 'the hand-written pages carry the shared footer, with its links relative to the page', () => {
