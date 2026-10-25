@@ -232,10 +232,6 @@ final class Lyrics {
 				array(
 					'media' => esc_url_raw( rest_url( 'wp/v2/media/' ) ),
 					'none'  => __( 'No lyrics for this track.', 'riff-lyrics' ),
-					// Timed lyrics are the song's transcript (WCAG 1.2.1 and 1.2.2): a switch shows them
-					// as plain text, read in one piece, where the timed view marks a line at a time.
-					'text'  => __( 'Show as text', 'riff-lyrics' ),
-					'timed' => __( 'Follow the music', 'riff-lyrics' ),
 					'idle'  => __( 'Play something to see its lyrics.', 'riff-lyrics' ),
 					'error' => __( 'The lyrics could not load.', 'riff-lyrics' ),
 				)
@@ -265,10 +261,6 @@ final class Lyrics {
 			. '#riff [aria-current] > .riff-lyrics-line .riff-lyrics-word{color:var(--riff-fg-2);transition:color .12s}'
 			. '#riff [aria-current] > .riff-lyrics-line .riff-lyrics-word.is-sung{color:var(--riff-fg)}'
 			. '@media (prefers-reduced-motion:reduce){#riff .riff-lyrics-word{transition:none}}'
-			// The transcript switch, a pill above the lines, pressed while the words are plain text.
-			. '#riff .riff-lyrics-switch{all:unset;display:inline-block;box-sizing:border-box;min-height:24px;margin:0 0 12px;padding:2px 10px;border:1px solid var(--riff-fg-2);border-radius:999px;color:var(--riff-fg-2);font:inherit;font-size:13px;cursor:pointer}'
-			. '#riff .riff-lyrics-switch[aria-pressed="true"]{color:var(--riff-fg);border-color:var(--riff-fg)}'
-			. '#riff .riff-lyrics-switch:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px}'
 		);
 	}
 

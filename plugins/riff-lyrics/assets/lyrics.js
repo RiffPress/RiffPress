@@ -5,8 +5,8 @@
  * tap on a line seeks to it through window.riff.seek(). They are read in the formats players and
  * taggers already write: LRC, with its [offset:] tag and Enhanced LRC's <mm:ss.xx> word times, whose
  * words light up as they are sung; WebVTT, the web's own timed text; and an ID3 SYLT frame, which
- * the plugin turns into LRC when the file is uploaded. Timed lyrics are the song's transcript: a
- * switch above them shows the same words as plain text, in one piece (WCAG 1.2.1 and 1.2.2). */
+ * the plugin turns into LRC when the file is uploaded. The lines are text, read as a list, so
+ * they are the song's transcript as they stand (WCAG 1.2.1 and 1.2.2). */
 ( () => {
 	const config = window.riffLyrics || {};
 	const cache = new Map();
@@ -15,8 +15,6 @@
 	let lines = []; // The synced lines showing, each { time, el }, in time order.
 	let current = -1;
 	let scrolledAt = 0; // When the listener last scrolled the lyrics by hand.
-	let asText = false; // The transcript view: timed lyrics shown as plain text.
-	let shown = null; // What is showing: { where, text }, so the switch can draw it again.
 
 	const panel = () => document.querySelector( '[data-riff-panel="lyrics"]' );
 	// Until the player starts, window.riff is the #riff element, by its id.
@@ -161,38 +159,12 @@
 		where.replaceChildren( p );
 	}
 
-	// The switch between the timed lines and the transcript, above timed lyrics only.
-	function switcher() {
-		const button = document.createElement( 'button' );
-		button.type = 'button';
-		button.className = 'riff-lyrics-switch';
-		button.textContent = asText ? config.timed || '' : config.text || '';
-		button.setAttribute( 'aria-pressed', String( asText ) );
-		button.addEventListener( 'click', () => {
-			asText = ! asText;
-			if ( shown ) {
-				show( shown.where, shown.text );
-			}
-			shown?.where.querySelector( '.riff-lyrics-switch' )?.focus();
-		} );
-		return button;
-	}
-
 	function show( where, text ) {
 		lines = [];
 		current = -1;
-		shown = { where, text };
 		const synced = parse( text );
 		if ( ! synced ) {
 			say( where, text, 'riff-lyrics' );
-			return;
-		}
-		if ( asText ) {
-			// The transcript: the lines in the order they are heard, without their times.
-			const p = document.createElement( 'p' );
-			p.className = 'riff-lyrics riff-lyrics-transcript';
-			p.textContent = synced.map( ( line ) => line.text ).filter( Boolean ).join( '\n' );
-			where.replaceChildren( switcher(), p );
 			return;
 		}
 		const list = document.createElement( 'ol' );
@@ -226,7 +198,7 @@
 			list.append( li );
 			return { time: line.time, el: li, words: sung };
 		} );
-		where.replaceChildren( switcher(), list );
+		where.replaceChildren( list );
 		follow( player()?.time?.() ?? 0 );
 	}
 
@@ -289,7 +261,6 @@
 		const mine = ++turn;
 		lines = [];
 		current = -1;
-		shown = null;
 		if ( ! track ) {
 			say( where, config.idle || '', 'riff-lyrics-note' );
 			return;
