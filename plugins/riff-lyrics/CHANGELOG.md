@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.1.0...riff-lyrics-v1.1.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **lyrics:** no Show as text switch: the timed lines are already text a screen reader reads as a list ([#657](https://github.com/RiffPress/RiffPress/issues/657)) ([d4156a4](https://github.com/RiffPress/RiffPress/commit/d4156a4db5125c5d78ded8fbd55578ad478d8c0d))
+
 ## [1.1.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.0.0...riff-lyrics-v1.1.0) (2026-10-25)
 
 
