@@ -1,6 +1,11 @@
 /* Seeking. The range is the control; the line drawn under it is decoration. Volume, remembered on
  * this device, and the time under the pointer above the bar's seek line on a wide screen. */
-import { read, write, time } from 'riff-player/helpers';
+import { read, write, time, fmt } from 'riff-player/helpers';
+
+// Strings are WordPress translations of this module (wp_set_script_module_translations()).
+// Core prints wp.i18n only when there are translations, so without it the strings are the
+// English they are written in.
+const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function seek( P ) {
 	const { root, $, $$, audio, video } = P;
@@ -81,13 +86,29 @@ export function seek( P ) {
 	const volume = $( '[data-riff-volume]' );
 	const kept = read( localStorage, P.VOLUME );
 	const stored = kept === null ? NaN : Number( kept );
+	// Spoken as a percentage, and as Muted at nothing, rather than a bare number.
+	const sayVolume = () =>
+		volume.setAttribute(
+			'aria-valuetext',
+			Number( volume.value ) === 0
+				? __( 'Muted', 'riff' )
+				: fmt(
+						/* translators: %s: the volume, from 1 to 100. */ __(
+							'%s percent',
+							'riff'
+						),
+						volume.value
+					)
+		);
 	if ( Number.isFinite( stored ) && stored >= 0 && stored <= 1 ) {
 		audio.volume = video.volume = stored;
 		volume.value = String( Math.round( stored * 100 ) );
 	}
+	sayVolume();
 	volume.addEventListener( 'input', () => {
 		audio.volume = video.volume = Number( volume.value ) / 100;
 		write( localStorage, P.VOLUME, String( audio.volume ) );
+		sayVolume();
 	} );
 
 	// ---- The time under the pointer, above the bar's seek line on a wide screen.

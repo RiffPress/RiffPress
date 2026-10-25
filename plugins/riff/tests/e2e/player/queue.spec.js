@@ -99,7 +99,7 @@ test.describe( 'Player', () => {
 		await list.locator( 'li' ).nth( 2 ).locator( '.riff-more-button' ).click();
 		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Remove from queue' } ).click();
 		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Underground' ] );
-		await expect( said ).toHaveText( 'Removed from the queue' );
+		await expect( said ).toHaveText( 'Trombone Detritus removed from the queue' );
 		// The list is drawn again on every change; the focus stays in it, on the nearest place left.
 		await expect( list.locator( 'li' ).nth( 1 ).locator( '.riff-more-button' ) ).toBeFocused();
 
@@ -196,11 +196,11 @@ test.describe( 'Player', () => {
 			'Intensities in Ten Cities'
 		);
 		const repeat = control( 'repeat' );
-		await expect( repeat ).toHaveAttribute( 'aria-label', 'Repeat off' );
+		await expect( repeat ).toHaveAttribute( 'aria-label', 'Repeat, off' );
 		await repeat.click();
-		await expect( repeat ).toHaveAttribute( 'aria-label', 'Repeat all' );
+		await expect( repeat ).toHaveAttribute( 'aria-label', 'Repeat, all' );
 		await repeat.click();
-		await expect( repeat ).toHaveAttribute( 'aria-label', 'Repeat one' );
+		await expect( repeat ).toHaveAttribute( 'aria-label', 'Repeat, one' );
 		await expect( repeat ).toHaveAttribute( 'data-repeat', 'one' );
 		const shuffle = control( 'shuffle' );
 		await shuffle.click();

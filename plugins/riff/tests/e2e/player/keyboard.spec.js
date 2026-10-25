@@ -62,7 +62,9 @@ test.describe( 'Player', () => {
 		await expect( control ).toHaveAttribute( 'aria-pressed', 'true' );
 		await control.click();
 		await expect( control ).toHaveAttribute( 'aria-pressed', 'false' );
-		await expect( control ).toHaveAttribute( 'aria-label', 'Keyboard shortcuts off' );
+		// The name stays; the state is the toggle's, and the change is said as a notice.
+		await expect( control ).toHaveAttribute( 'aria-label', 'Keyboard shortcuts' );
+		await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Keyboard shortcuts off' );
 		// Escape stays on: it closes Now Playing as any dialog's does.
 		await page.keyboard.press( 'Escape' );
 		await expect( page.locator( '.riff-np' ) ).toBeHidden();

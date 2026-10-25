@@ -115,11 +115,12 @@ test( 'nothing plays until the listener presses Play, a reload included (1.4.2)'
 	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( false );
 } );
 
-test( 'the two buttons that open Now Playing are told apart by name', async ( { page } ) => {
+test( 'Now Playing is opened by one button named for the track; the chevron beside it is not heard', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-label', /^Open Now Playing: Underground by Airmen of Note/ );
-	await expect( page.locator( '.riff-bar .riff-chevron' ) ).toHaveAttribute( 'aria-label', 'Open Now Playing' );
+	await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-label', /^Now Playing: Underground by Airmen of Note/ );
+	await expect( page.locator( '.riff-bar .riff-chevron' ) ).toHaveAttribute( 'aria-hidden', 'true' );
+	await expect( page.locator( '.riff-bar .riff-chevron' ) ).toHaveAttribute( 'tabindex', '-1' );
 } );
 
 test( 'a modal Now Playing keeps Tab inside it', async ( { page, isMobile } ) => {

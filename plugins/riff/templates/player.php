@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div id="riff" class="riff" hidden<?php echo Player::root_style(); ?>>
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
-		<button type="button" class="riff-bar-info" data-riff-action="open" aria-label="<?php esc_attr_e( 'Open Now Playing', 'riff' ); ?>" aria-haspopup="dialog">
+		<button type="button" class="riff-bar-info" data-riff-action="open" aria-label="<?php esc_attr_e( 'Now Playing', 'riff' ); ?>" aria-haspopup="dialog">
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
 				<span class="riff-title" data-riff-text="title"></span>
@@ -29,11 +29,11 @@ defined( 'ABSPATH' ) || exit;
 		<?php // On a wide screen the transport sits in the middle with the seek line under it, as Tidal has it. ?>
 		<div class="riff-bar-center">
 			<div class="riff-bar-transport">
-				<button type="button" class="riff-btn riff-desk riff-mode" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
+				<button type="button" class="riff-btn riff-desk riff-mode" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
 				<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="prev" aria-label="<?php esc_attr_e( 'Previous', 'riff' ); ?>"><?php echo Player::icon( 'prev' ); ?></button>
 				<button type="button" class="riff-btn riff-play" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><?php echo Player::icon( 'play' ) . Player::icon( 'pause' ); ?></button>
 				<button type="button" class="riff-btn riff-desk riff-skip-sm" data-riff-action="next" aria-label="<?php esc_attr_e( 'Next', 'riff' ); ?>"><?php echo Player::icon( 'next' ); ?></button>
-				<button type="button" class="riff-btn riff-desk riff-mode" data-riff-action="repeat" aria-label="<?php esc_attr_e( 'Repeat off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
+				<button type="button" class="riff-btn riff-desk riff-mode" data-riff-action="repeat" data-repeat="off" aria-label="<?php esc_attr_e( 'Repeat, off', 'riff' ); ?>"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
 			</div>
 			<div class="riff-bar-progress">
 				<?php // Times read left to right in every language. ?>
@@ -43,7 +43,7 @@ defined( 'ABSPATH' ) || exit;
 					<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i></span>
 					<b class="riff-knob" aria-hidden="true"></b>
 					<span class="riff-tip" aria-hidden="true" hidden></span>
-					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Seek', 'riff' ); ?>">
+					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Track position', 'riff' ); ?>">
 				</div>
 				<span class="riff-time riff-desk" dir="ltr" data-riff-text="duration">0:00</span>
 			</div>
@@ -56,10 +56,10 @@ defined( 'ABSPATH' ) || exit;
 			<span class="riff-area riff-desk" data-riff-area="controls"></span>
 			<button type="button" class="riff-btn riff-mobile" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			<label class="riff-volume riff-desk">
-				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>">
+				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>" aria-valuetext="<?php esc_attr_e( '100 percent', 'riff' ); ?>">
 				<?php echo Player::icon( 'volume' ); ?>
 			</label>
-			<button type="button" class="riff-btn riff-desk riff-chevron" data-riff-action="open" aria-label="<?php esc_attr_e( 'Open Now Playing', 'riff' ); ?>" aria-haspopup="dialog" aria-expanded="false"><?php echo Player::icon( 'caret' ); ?></button>
+			<button type="button" class="riff-btn riff-desk riff-chevron" data-riff-action="open" aria-hidden="true" tabindex="-1"><?php echo Player::icon( 'caret' ); ?></button>
 		</div>
 	</section>
 
@@ -68,7 +68,7 @@ defined( 'ABSPATH' ) || exit;
 		<div class="riff-np-glow" data-riff-npglow aria-hidden="true"></div>
 		<header class="riff-np-head">
 			<button type="button" class="riff-btn" data-riff-action="close" aria-label="<?php esc_attr_e( 'Close Now Playing', 'riff' ); ?>"><?php echo Player::icon( 'down' ); ?></button>
-			<div class="riff-modes" role="radiogroup" aria-label="<?php esc_attr_e( 'Show', 'riff' ); ?>" hidden>
+			<div class="riff-modes" role="radiogroup" aria-label="<?php esc_attr_e( 'Song or video', 'riff' ); ?>" hidden>
 				<button type="button" role="radio" data-riff-mode="song" aria-checked="true"><?php echo Player::icon( 'song' ); ?><span><?php esc_html_e( 'Song', 'riff' ); ?></span></button>
 				<button type="button" role="radio" data-riff-mode="video" aria-checked="false"><?php echo Player::icon( 'video' ); ?><span><?php esc_html_e( 'Video', 'riff' ); ?></span></button>
 			</div>
@@ -76,9 +76,9 @@ defined( 'ABSPATH' ) || exit;
 				<?php // Captions, for a video version that has them, in video mode. ?>
 				<button type="button" class="riff-btn riff-captions" data-riff-action="captions" aria-label="<?php esc_attr_e( 'Captions', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::icon( 'captions' ); ?></button>
 				<?php // Stop: what swiping the bar down does, as a button (WCAG 2.5.7). ?>
-				<button type="button" class="riff-btn" data-riff-action="dismiss" aria-label="<?php esc_attr_e( 'Stop and close the player', 'riff' ); ?>"><?php echo Player::icon( 'stop' ); ?></button>
+				<button type="button" class="riff-btn" data-riff-action="dismiss" aria-label="<?php esc_attr_e( 'Stop', 'riff' ); ?>"><?php echo Player::icon( 'stop' ); ?></button>
 				<?php // The single-key shortcuts switch, the player's own setting: at the top of Now Playing on every width, out of the transport. ?>
-				<button type="button" class="riff-btn" data-riff-action="shortcuts" aria-label="<?php esc_attr_e( 'Keyboard shortcuts on', 'riff' ); ?>" aria-pressed="true"><?php echo Player::icon( 'keyboard' ); ?></button>
+				<button type="button" class="riff-btn" data-riff-action="shortcuts" aria-label="<?php esc_attr_e( 'Keyboard shortcuts', 'riff' ); ?>" aria-pressed="true"><?php echo Player::icon( 'keyboard' ); ?></button>
 				<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
 			</span>
 		</header>
@@ -109,15 +109,15 @@ defined( 'ABSPATH' ) || exit;
 				</div>
 				<div class="riff-np-seek">
 					<span class="riff-line" aria-hidden="true"><i></i></span>
-					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Seek', 'riff' ); ?>">
+					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Track position', 'riff' ); ?>">
 					<span class="riff-np-times" dir="ltr"><span data-riff-text="current">0:00</span><span data-riff-text="duration">0:00</span></span>
 				</div>
 				<div class="riff-np-controls">
-					<button type="button" class="riff-btn" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
+					<button type="button" class="riff-btn" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
 					<button type="button" class="riff-btn riff-skip" data-riff-action="prev" aria-label="<?php esc_attr_e( 'Previous', 'riff' ); ?>"><?php echo Player::icon( 'prev' ); ?></button>
 					<button type="button" class="riff-btn riff-play riff-play-big" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><?php echo Player::icon( 'play' ) . Player::icon( 'pause' ); ?></button>
 					<button type="button" class="riff-btn riff-skip" data-riff-action="next" aria-label="<?php esc_attr_e( 'Next', 'riff' ); ?>"><?php echo Player::icon( 'next' ); ?></button>
-					<button type="button" class="riff-btn" data-riff-action="repeat" aria-label="<?php esc_attr_e( 'Repeat off', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
+					<button type="button" class="riff-btn" data-riff-action="repeat" data-repeat="off" aria-label="<?php esc_attr_e( 'Repeat, off', 'riff' ); ?>"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
 				</div>
 				<div class="riff-chips">
 					<?php foreach ( Player::chips() as $riff_slug => $riff_chip ) : ?>

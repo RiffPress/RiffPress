@@ -4,10 +4,10 @@ How the player and the Listen app are built to be used by everyone, and how a ch
 
 ## What the page is
 
-- **The bar** is a `section` named Player, at the foot of every page with a track. Its buttons carry their names and their state (`aria-pressed` for Shuffle, Repeat, Like and the shortcuts switch; `aria-expanded` on the two that open Now Playing). The track's own button is named for the track, "Open Now Playing: <title> by <artist>", so the two are told apart.
+- **The bar** is a `section` named Player, at the foot of every page with a track. Its buttons keep their names while their state changes: `aria-pressed` for Shuffle, Like and the shortcuts switch, and Repeat, which has three states, says its state after its name ("Repeat, all"). The track's own button, "Now Playing: <title> by <artist>", opens Now Playing; the chevron at the end does the same and is left out of the tree and the Tab order, so it is heard once. The heart is "Like <title>", as each row's is.
 - **Now Playing** is a `dialog`. On a phone it covers the bar, so it is `aria-modal` and everything else is `inert`; Tab stays inside it and Escape closes it, returning focus to the opener. On a wide screen it sits above the bar and is not modal, because the bar is still how the music is controlled. Up next and Lyrics are `tabs` with panels; a plugin's tab comes through `riff_now_playing_tabs` and is the same.
 - **A track's row** in a post is a button, "Play <title>", then "Pause <title>" while it plays, with "More options for <title>" after it. Up next's rows are "Play <title> by <artist>". The … opens a `menu` of `menuitem`s with arrow keys and Escape.
-- **The seek line** is a native range named Seek, whose `aria-valuetext` is its time in words, "11 seconds of 8 minutes, 57 seconds", and whose arrows move five seconds. Volume is a native range.
+- **The seek line** is a native range named Track position, whose `aria-valuetext` is its time in words, "11 seconds of 8 minutes, 57 seconds", and whose arrows move five seconds. Volume is a native range, spoken as "80 percent", and "Muted" at nothing.
 - **The Listen app** is a `navigation` named Riff, a `search` form whose field is a `combobox` over a `listbox` of suggestions, and views with one heading each. A view change moves focus to the heading, which is how it is announced.
 
 Each track in Up next carries `aria-posinset` and `aria-setsize`, so a screen reader says "2 of 10" as the list is read, and a title in another language than the page's carries its `lang`, so it is pronounced in that language.
@@ -20,7 +20,7 @@ Everything that changes without the listener's focus being on it is spoken throu
 | --- | --- |
 | A track starts, from a row, Next or Previous | "Now playing <title> by <artist>" |
 | Play next, Add to queue | "<title> plays next", "<title> added to the queue" |
-| A track moved, removed, the queue cleared | "Moved to 3 of 10", "Removed from the queue", "Queue cleared" |
+| A track moved, removed, the queue cleared | "Moved to 3 of 10", "<title> removed from the queue", "Queue cleared" |
 | A notice (a toast) | its words |
 | Search suggestions | "N suggestions" |
 | A playlist renamed or deleted | "Renamed <name>", "<name> deleted" |

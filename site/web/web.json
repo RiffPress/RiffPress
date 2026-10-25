@@ -779,7 +779,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/player/now-playing.js",
-				"code": "document.activeElement && document.activeElement !== document.body"
+				"code": "active && active !== document.body"
 			},
 			{
 				"file": "plugins/riff/assets/player/keyboard.js",

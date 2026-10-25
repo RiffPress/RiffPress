@@ -32,18 +32,19 @@ export function paint( P ) {
 		}
 		text( 'title', t?.title || '' );
 		text( 'subtitle', t ? subtitle( t ) : '' );
-		// Named for the track, so the two buttons that open Now Playing are told apart.
+		// Named for the track; "dialog pop up" already says it opens. The chevron beside it does
+		// the same and is left out of the tree, so it is heard once.
 		$( '.riff-bar-info' )?.setAttribute(
 			'aria-label',
 			t
 				? fmt(
-						/* translators: %s: the track, as its title and artist. */ __(
-							'Open Now Playing: %s',
+						/* translators: The bar's button that opens the Now Playing view. %s: the track, as its title and artist. */ __(
+							'Now Playing: %s',
 							'riff'
 						),
 						P.named( t )
 					)
-				: __( 'Open Now Playing', 'riff' )
+				: __( 'Now Playing', 'riff' )
 		);
 		text( 'artist', t ? t.artist || t.post?.title || '' : '' );
 		areas( t );
@@ -70,24 +71,22 @@ export function paint( P ) {
 				String( b.dataset.riffMode === P.mode )
 			);
 		}
+		// Repeat has three states, which a pressed button cannot say: one name, the state after it.
 		const repeatLabel = {
-			off: __( 'Repeat off', 'riff' ),
-			all: __( 'Repeat all', 'riff' ),
-			one: __( 'Repeat one', 'riff' ),
+			/* translators: The Repeat button while nothing repeats. */
+			off: __( 'Repeat, off', 'riff' ),
+			/* translators: The Repeat button while the queue repeats. */
+			all: __( 'Repeat, all', 'riff' ),
+			/* translators: The Repeat button while one track repeats. */
+			one: __( 'Repeat, one', 'riff' ),
 		}[ P.repeat ];
 		for ( const b of $$( '[data-riff-action="repeat"]' ) ) {
 			b.dataset.repeat = P.repeat;
-			b.setAttribute( 'aria-pressed', String( P.repeat !== 'off' ) );
 			b.setAttribute( 'aria-label', repeatLabel );
 		}
+		// Shuffle's name stays put; whether it is on is the toggle's pressed state.
 		for ( const b of $$( '[data-riff-action="shuffle"]' ) ) {
 			b.setAttribute( 'aria-pressed', String( P.shuffle ) );
-			b.setAttribute(
-				'aria-label',
-				P.shuffle
-					? __( 'Shuffle on', 'riff' )
-					: __( 'Shuffle off', 'riff' )
-			);
 		}
 		for ( const { t: rt, row } of P.rows ) {
 			const current = !! t && rt.id === t.id && P.sameQueue();
