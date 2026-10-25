@@ -1,8 +1,8 @@
 /* Buttons. Controls that appear in more than one place are separate buttons with the same
- * data-riff-action, and every copy is kept in step by paint(), so no control owns any state. The
- * single-key shortcuts switch is the player's own setting, at the top of Now Playing on every
- * width, remembered on this device as the volume is. */
-import { read, write, drop } from 'riff-player/helpers';
+ * data-riff-action, and every copy is kept in step by paint(), so no control owns any state.
+ * Whether the single-key shortcuts act is the listener's choice on their profile (Shortcuts in
+ * PHP), sent with the page: a visitor has none. */
+import { read, write } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -10,20 +10,10 @@ import { read, write, drop } from 'riff-player/helpers';
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function controls( P ) {
-	const { root, $$ } = P;
+	const { root } = P;
 
-	P.shortcutsOn = read( localStorage, P.SHORTCUTS ) !== 'off';
+	P.shortcutsOn = P.data.shortcuts === true;
 	P.captionsOn = read( localStorage, P.CAPTIONS ) === 'on';
-	const shortcutsLabel = () =>
-		P.shortcutsOn
-			? __( 'Keyboard shortcuts on', 'riff' )
-			: __( 'Keyboard shortcuts off', 'riff' );
-	function paintShortcuts() {
-		for ( const button of $$( '[data-riff-action="shortcuts"]' ) ) {
-			button.setAttribute( 'aria-pressed', String( P.shortcutsOn ) );
-		}
-	}
-	paintShortcuts();
 
 	root.addEventListener( 'click', ( e ) => {
 		const mode = e.target.closest( '[data-riff-mode]' );
@@ -61,15 +51,6 @@ export function controls( P ) {
 			);
 		} else if ( action === 'close' ) {
 			P.close();
-		} else if ( action === 'shortcuts' ) {
-			P.shortcutsOn = ! P.shortcutsOn;
-			if ( P.shortcutsOn ) {
-				drop( localStorage, P.SHORTCUTS );
-			} else {
-				write( localStorage, P.SHORTCUTS, 'off' );
-			}
-			paintShortcuts();
-			P.toast( shortcutsLabel() );
 		} else if ( action === 'queue' ) {
 			P.sheet(
 				{ none: 'half', half: 'full', full: 'none' }[ P.sheetState ]

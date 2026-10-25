@@ -83,13 +83,11 @@ test.describe( 'The tree is the spec', () => {
 		if ( isMobile ) {
 			await page.locator( '.riff-peek' ).click();
 		}
-		// A dialog named Now Playing; its header holds the shortcuts switch, pressed while they are
-		// on; Up next is a region with the tabs and the queue, each row named for what it plays,
-		// with the artist, the playing one offering Pause, and the … after each.
+		// A dialog named Now Playing; Up next is a region with the tabs and the queue, each row
+		// named for what it plays, with the artist, the playing one offering Pause, and the …
+		// after each.
 		await expect( page.locator( '.riff-np' ) ).toMatchAriaSnapshot( `
 			- dialog "Now Playing":
-			  - banner:
-			    - button "Keyboard shortcuts" [pressed]
 			  - region "Up next":
 			    - tablist:
 			      - tab "Up next" [selected]
