@@ -112,4 +112,70 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 		$this->assertTrue( wp_script_is( 'riff-lyrics', 'enqueued' ) );
 		$this->assertStringContainsString( 'wp\/v2\/media\/', wp_scripts()->get_inline_script_data( 'riff-lyrics', 'before' ) );
 	}
+
+	public function test_a_files_sylt_frame_becomes_lrc_on_upload(): void {
+		// SYLT in syllables, one per piece, a line break starting each line after the first.
+		$id = self::factory()->attachment->create_upload_object( dirname( __DIR__, 4 ) . '/packages/fixtures/test/lyrics-sylt.mp3' );
+		$this->assertSame(
+			"[00:00.50]First line\n[00:01.50]Second line\n[00:02.50]Third line",
+			wp_get_attachment_metadata( $id )[ Lyrics::KEY ]
+		);
+	}
+
+	public function test_sylt_timed_in_mpeg_frames_or_holding_something_else_is_left_alone(): void {
+		$piece = array(
+			array(
+				'data'      => 'Word',
+				'timestamp' => 1000,
+			),
+		);
+		$this->assertSame(
+			'',
+			Lyrics::lrc_from_sylt(
+				array(
+					array(
+						'timestampformat' => 1,
+						'contenttypeid'   => 1,
+						'lyrics'          => $piece,
+					),
+				)
+			)
+		);
+		$this->assertSame(
+			'',
+			Lyrics::lrc_from_sylt(
+				array(
+					array(
+						'timestampformat' => 2,
+						'contenttypeid'   => 5,
+						'lyrics'          => $piece,
+					),
+				)
+			)
+		);
+		$this->assertSame(
+			'[01:01.25]Word',
+			Lyrics::lrc_from_sylt(
+				array(
+					array(
+						'timestampformat' => 2,
+						'contenttypeid'   => 1,
+						'lyrics'          => array(
+							array(
+								'data'      => 'Word',
+								'timestamp' => 61250,
+							),
+						),
+					),
+				)
+			)
+		);
+	}
+
+	public function test_typed_lyrics_keep_enhanced_lrc_word_times_and_lose_markup(): void {
+		$this->assertSame(
+			'[00:01.00]<00:01.00>Silent <00:01.80>night',
+			Lyrics::clean( '[00:01.00]<00:01.00>Silent <00:01.80>night<script>x</script>' )
+		);
+	}
 }

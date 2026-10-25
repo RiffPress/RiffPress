@@ -1,10 +1,12 @@
 /* Riff Lyrics: fills the Lyrics tab beside Up next with the lyrics WordPress keeps on the track's
  * file, from the media REST route. It listens to the player's riff:tab, riff:track and riff:time
  * events, which Riff dispatches on its own element for any script, so it needs nothing loaded
- * before it. Lyrics whose lines start with a timestamp, as the LRC format and most taggers write
- * them, follow the music: the line being sung is marked and kept in view, and a tap on a line
- * seeks to it through window.riff.seek(). Timed lyrics are the song's transcript: a switch above
- * them shows the same words as plain text, in one piece (WCAG 1.2.1 and 1.2.2). */
+ * before it. Timed lyrics follow the music: the line being sung is marked and kept in view, and a
+ * tap on a line seeks to it through window.riff.seek(). They are read in the formats players and
+ * taggers already write: LRC, with its [offset:] tag and Enhanced LRC's <mm:ss.xx> word times, whose
+ * words light up as they are sung; WebVTT, the web's own timed text; and an ID3 SYLT frame, which
+ * the plugin turns into LRC when the file is uploaded. Timed lyrics are the song's transcript: a
+ * switch above them shows the same words as plain text, in one piece (WCAG 1.2.1 and 1.2.2). */
 ( () => {
 	const config = window.riffLyrics || {};
 	const cache = new Map();
@@ -57,14 +59,72 @@
 	const STAMPS = /^\s*((?:\[\d{1,3}:\d{1,2}(?:\.\d{1,3})?\]\s*)+)(.*)$/;
 	const STAMP = /\[(\d{1,3}):(\d{1,2}(?:\.\d{1,3})?)\]/g;
 	const TAG = /^\s*\[[a-z]+:[^\]]*\]\s*$/i;
+	// [offset:+250]: milliseconds the whole file is early by, so every line is shown that much sooner.
+	const OFFSET = /^\s*\[offset:\s*([+-]?\d+)\s*\]\s*$/im;
+	// Enhanced LRC's word times inside a line: <mm:ss.xx>word.
+	const WORD = /<(\d{1,3}):(\d{1,2}(?:\.\d{1,3})?)>/g;
+	// A WebVTT cue's timing line: [hh:]mm:ss.ttt --> [hh:]mm:ss.ttt, then any settings.
+	const CUE = /^\s*((?:\d+:)?\d{1,2}:\d{2}\.\d{3})\s+-->\s+((?:\d+:)?\d{1,2}:\d{2}\.\d{3})/;
+
+	const seconds = ( stamp ) =>
+		stamp.split( ':' ).reduce( ( total, part ) => total * 60 + Number( part ), 0 );
+
+	// A line's words with their times, when Enhanced LRC gives them, and the line's text without them.
+	function words( text, offset ) {
+		const marks = [ ...text.matchAll( WORD ) ];
+		if ( ! marks.length ) {
+			return { text, words: null };
+		}
+		const out = [];
+		marks.forEach( ( m, i ) => {
+			const end = marks[ i + 1 ]?.index ?? text.length;
+			const word = text.slice( m.index + m[ 0 ].length, end );
+			if ( word.trim() ) {
+				out.push( { time: Number( m[ 1 ] ) * 60 + Number( m[ 2 ] ) - offset, text: word } );
+			}
+		} );
+		const lead = text.slice( 0, marks[ 0 ].index );
+		if ( lead.trim() ) {
+			out.unshift( { time: null, text: lead } );
+		}
+		return { text: text.replace( WORD, '' ).replace( /\s+/g, ' ' ).trim(), words: out };
+	}
+
+	// WebVTT: each cue is a line, at the time it starts; a pause of two seconds or more is a gap.
+	function parseVtt( text ) {
+		const out = [];
+		const blocks = text.replace( /\r/g, '' ).split( /\n\s*\n/ );
+		let end = 0;
+		for ( const block of blocks ) {
+			const rows = block.split( '\n' );
+			const at = rows.findIndex( ( row ) => CUE.test( row ) );
+			if ( at < 0 ) {
+				continue;
+			}
+			const [ , from, to ] = rows[ at ].match( CUE );
+			const said = rows
+				.slice( at + 1 )
+				.join( ' ' )
+				.replace( /[<>]/g, '' )
+				.trim();
+			const time = seconds( from );
+			out.push( { time, text: said, gap: out.length > 0 && time - end >= 2, words: null } );
+			end = seconds( to );
+		}
+		return out.length ? out.map( ( line, i ) => ( { ...line, i } ) ) : null;
+	}
 
 	// The lines with their times, or null when none has one. A blank line is a gap before the next;
 	// a line without a time among timed ones is shown with the one before it.
 	function parse( text ) {
+		if ( /^\uFEFF?WEBVTT/.test( text ) ) {
+			return parseVtt( text );
+		}
 		const out = [];
 		let synced = false;
 		let gap = false;
 		let last = 0;
+		const offset = Number( text.match( OFFSET )?.[ 1 ] || 0 ) / 1000;
 		for ( const raw of text.split( /\r?\n/ ) ) {
 			if ( TAG.test( raw ) ) {
 				continue;
@@ -75,12 +135,12 @@
 			}
 			const m = raw.match( STAMPS );
 			if ( ! m ) {
-				out.push( { time: last, text: raw.trim(), gap } );
+				out.push( { time: last, ...words( raw.trim(), offset ), gap } );
 			} else {
 				synced = true;
 				for ( const s of m[ 1 ].matchAll( STAMP ) ) {
-					last = Number( s[ 1 ] ) * 60 + Number( s[ 2 ] );
-					out.push( { time: last, text: m[ 2 ].trim(), gap } );
+					last = Math.max( 0, Number( s[ 1 ] ) * 60 + Number( s[ 2 ] ) - offset );
+					out.push( { time: last, ...words( m[ 2 ].trim(), offset ), gap } );
 				}
 			}
 			gap = false;
@@ -145,11 +205,26 @@
 			const button = document.createElement( 'button' );
 			button.type = 'button';
 			button.className = 'riff-lyrics-line';
-			button.textContent = line.text || '♪';
+			// Enhanced LRC's words are spans that light up as they are sung; the button's name is
+			// still the whole line.
+			const sung = [];
+			if ( line.words ) {
+				for ( const w of line.words ) {
+					const span = document.createElement( 'span' );
+					span.className = 'riff-lyrics-word';
+					span.textContent = w.text;
+					button.append( span );
+					if ( w.time !== null ) {
+						sung.push( { time: w.time, el: span } );
+					}
+				}
+			} else {
+				button.textContent = line.text || '♪';
+			}
 			button.addEventListener( 'click', () => player()?.seek( line.time ) );
 			li.append( button );
 			list.append( li );
-			return { time: line.time, el: li };
+			return { time: line.time, el: li, words: sung };
 		} );
 		where.replaceChildren( switcher(), list );
 		follow( player()?.time?.() ?? 0 );
@@ -165,8 +240,14 @@
 		while ( i + 1 < lines.length && lines[ i + 1 ].time <= time + 0.05 ) {
 			i++;
 		}
+		for ( const w of lines[ i ]?.words || [] ) {
+			w.el.classList.toggle( 'is-sung', w.time <= time + 0.05 );
+		}
 		if ( i === current ) {
 			return;
+		}
+		for ( const w of lines[ current ]?.words || [] ) {
+			w.el.classList.remove( 'is-sung' );
 		}
 		lines[ current ]?.el.removeAttribute( 'aria-current' );
 		current = i;
