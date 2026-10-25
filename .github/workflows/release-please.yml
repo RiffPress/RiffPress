@@ -92,7 +92,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       # release-please rebuilds a release pull request only when its package's
       # changelog would change, so a fix outside the package (to CI, say) leaves
       # the branch on an older main, failing checks main already passes. Main is
@@ -180,7 +180,7 @@ jobs:
           persist-credentials: false
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
-          php-version: '8.3'
+          php-version-file: .php-version
           coverage: none
       - name: Build riff.zip
         run: |
@@ -251,7 +251,7 @@ jobs:
           persist-credentials: false
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
-          php-version: '8.3'
+          php-version-file: .php-version
           coverage: none
       - name: Build riff-lyrics.zip
         run: |
@@ -288,7 +288,7 @@ jobs:
           persist-credentials: false
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
-          php-version: '8.3'
+          php-version-file: .php-version
           coverage: none
       - name: Build riff-sign-in.zip
         run: |
@@ -329,7 +329,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org
       - name: Test the package
         run: npm test --prefix packages/wp-api-coverage
@@ -376,7 +376,7 @@ jobs:
       # No dependency cache: what ships is installed fresh from the lockfile.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       # Only the app's own dependencies, without the root's wp-env tooling and
       # its install scripts.
       - run: npm ci --workspace=packages/desktop --ignore-scripts

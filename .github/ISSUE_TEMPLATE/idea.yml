@@ -1,0 +1,20 @@
+name: An idea
+description: Something Riff could do, or do better.
+labels: ['[Type] Enhancement']
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What you are trying to do
+      description: The listener's or site owner's need, before any solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+      description: If WordPress already has a way to do part of it, say which. Riff fills gaps rather than adding its own (see docs/native.md).
+  - type: textarea
+    id: else
+    attributes:
+      label: Anything else

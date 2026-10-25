@@ -2,6 +2,10 @@
 
 ## Local development
 
+You need Node (the version in `.nvmrc`), PHP (`.php-version`; 8.1 is the oldest Riff runs on), Composer and Docker. `npm run doctor` checks each and, for anything missing, says how to get it on your machine: through the Node version manager you already have (nvm, fnm, Volta, mise or asdf all read `.nvmrc`), or Homebrew, winget or your package manager. CI reads the same two files, so what passes here passes there. Or skip all of it: open the repository in a GitHub Codespace or a dev container, and `.devcontainer/` installs everything, the browsers for the tests included.
+
+In VS Code, accept the recommended extensions (`.vscode/extensions.json`): ESLint, stylelint, Prettier with WordPress's config, PHP CodeSniffer with `phpcs.xml.dist`, Playwright and the spell check run in the editor as they do in CI.
+
 ```bash
 npm install && composer install
 npm run env:start          # WordPress at http://localhost:8890 (admin / password); the tests site at :8891. Core is the 7.2 build Riff needs: the current beta or release candidate until 7.2 ships on 8 December 2026
