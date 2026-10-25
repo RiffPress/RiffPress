@@ -79,7 +79,8 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
-          # An album is built here when its source.json, or album.js itself, differs from the base, so
+          # An album is built here when its source.json differs from the base (a change to album.js alone
+          # is left to the deploy, since it would rebuild every album), so
           # the preview plays its recordings before the site has published them; the rest play from
           # the site. The publisher copies only these albums' own tracks out of the build.
           git fetch -q --depth=1 origin "$BASE_SHA"
@@ -87,7 +88,7 @@ jobs:
           for m in packages/fixtures/*/manifest.json; do
             slug=$(basename "$(dirname "$m")")
             node -e "process.exit(require('./$m').remote ? 0 : 1)" || continue
-            if git diff --quiet "$BASE_SHA" -- "packages/fixtures/$slug/source.json" packages/fixtures/album.js \
+            if git diff --quiet "$BASE_SHA" -- "packages/fixtures/$slug/source.json" \
               && git cat-file -e "$BASE_SHA:packages/fixtures/$slug/source.json" 2>/dev/null; then continue; fi
             built+=("$slug")
           done

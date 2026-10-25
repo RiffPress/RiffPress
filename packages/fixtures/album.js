@@ -1,8 +1,9 @@
 /* eslint-disable no-console -- a command-line script; it talks. */
 /* An album for the demo, from Wikimedia Commons.
 
-   Every album under packages/fixtures/ has a source.json naming its recordings on Commons, all
-   public domain as United States Government works. This script downloads them, re-encodes each
+   Every album under packages/fixtures/ has a source.json naming its recordings on Commons, each in
+   the public domain in the United States: a Government work, or a recording published before 1926.
+   A track names its own artist when the album has several. This script downloads them, re-encodes each
    whole recording at a size the demo can carry, measures its length and its level envelope, and
    writes manifest.json and levels.json beside the source. The audio itself is written to --out,
    never to the repository: the Pages deploy builds it from the same source and publishes it with
@@ -84,9 +85,10 @@ source.tracks.forEach( ( track, index ) => {
 		'-af', 'loudnorm=I=-18:TP=-1.5:LRA=11',
 		'-ar', '44100', '-b:a', '128k', '-id3v2_version', '3',
 		'-metadata', `title=${ track.title }`,
-		'-metadata', `artist=${ source.artist }`,
+		'-metadata', `artist=${ track.artist || source.artist }`,
 		'-metadata', `album=${ source.name }`,
-		'-metadata', 'copyright=Public domain — U.S. Government work',
+		'-metadata', `album_artist=${ source.artist }`,
+		'-metadata', `copyright=${ source.license }`,
 		output,
 	] );
 	const duration = Math.round( parseFloat( sh( 'ffprobe', [ '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', output ] ).toString() ) );
@@ -95,6 +97,7 @@ source.tracks.forEach( ( track, index ) => {
 		index: index + 1,
 		id: track.id,
 		title: track.title,
+		...( track.artist ? { artist: track.artist } : {} ),
 		file,
 		duration,
 		bitrate: 128,
