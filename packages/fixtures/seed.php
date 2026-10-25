@@ -323,6 +323,37 @@ if ( ! function_exists( 'riff_seed' ) ) {
 	}
 }
 
+if ( ! function_exists( 'riff_seed_albums' ) ) {
+	/**
+	 * Every album in a demo bundle (albums.json, built by .github/scripts/demo-albums.js): each one's
+	 * manifest and levels written to a folder of its own beside the bundle, and seeded as a streamed
+	 * album, playing from its own base when the bundle names one, from $base/<slug>/ when not.
+	 *
+	 * @param string $bundle Path to albums.json.
+	 * @param string $base   Where the albums' audio is published, each under a folder named for it.
+	 * @return int[] The posts made.
+	 */
+	function riff_seed_albums( string $bundle, string $base ): array {
+		$albums = is_readable( $bundle ) ? json_decode( (string) file_get_contents( $bundle ), true ) : array();
+		$made   = array();
+		foreach ( is_array( $albums ) ? $albums : array() as $slug => $album ) {
+			if ( ! preg_match( '/^[a-z0-9]+(-[a-z0-9]+)*$/', (string) $slug ) || empty( $album['manifest'] ) ) {
+				continue;
+			}
+			$dir = dirname( $bundle ) . '/albums/' . $slug;
+			wp_mkdir_p( $dir );
+			file_put_contents( $dir . '/manifest.json', wp_json_encode( $album['manifest'] ) );
+			file_put_contents( $dir . '/levels.json', wp_json_encode( $album['levels'] ?? array() ) );
+			$from = (string) ( $album['base'] ?? '' );
+			$id   = riff_seed_remote( $dir, '' !== $from ? $from : rtrim( $base, '/' ) . '/' . $slug );
+			if ( $id ) {
+				$made[] = $id;
+			}
+		}
+		return $made;
+	}
+}
+
 // Only as `wp eval-file seed.php [folder]`: WP-CLI puts the script's path in $file. A require from
 // other code (the Playground demo) gets the function and nothing else.
 if ( defined( 'WP_CLI' ) && WP_CLI && isset( $file ) && realpath( (string) $file ) === __FILE__ ) {
@@ -339,7 +370,11 @@ if ( defined( 'WP_CLI' ) && WP_CLI && isset( $file ) && realpath( (string) $file
 	foreach ( is_array( $manifests ) ? $manifests : array() as $remote ) {
 		$album = json_decode( (string) file_get_contents( $remote ), true );
 		if ( ! empty( $album['remote'] ) ) {
-			$made = riff_seed_remote( dirname( $remote ), $base . basename( dirname( $remote ) ) );
+			// Audio built here by `npm run albums` plays from this checkout, so a new or changed album
+			// plays before it is published; wp-env serves the repository at wp-content/riff/.
+			$here = dirname( $remote ) . '/audio';
+			$from = is_dir( $here ) && ! getenv( 'RIFF_DEMO_BASE' ) ? content_url( 'riff/packages/fixtures/' . basename( dirname( $remote ) ) . '/audio' ) : $base . basename( dirname( $remote ) );
+			$made = riff_seed_remote( dirname( $remote ), $from );
 			if ( $made ) {
 				WP_CLI::log( 'Seeded ' . get_permalink( $made ) . ' (streamed)' );
 			}

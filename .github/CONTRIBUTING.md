@@ -83,7 +83,11 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 
 ## The demo library
 
-The demo library is one uploaded album, `packages/fixtures/compositions`, and a folder per streamed album beside it, each with a `source.json` naming its recordings on Wikimedia Commons. `node packages/fixtures/album.js <slug> --out <dir>` downloads and encodes one, measures each track, and writes its `manifest.json` and `levels.json`, which are committed; the audio is not, since the Pages deploy builds it the same way and publishes it under `demo/<slug>/`. `npm run seed:tests` seeds the uploaded album and every streamed one, pointed at the live demo set (or `RIFF_DEMO_BASE`).
+The demo library is one uploaded album, `packages/fixtures/compositions`, and a folder per streamed album beside it, each with a `source.json` naming its recordings on Wikimedia Commons.
+
+To add or change a streamed album, edit its `source.json` and run `npm run albums <slug>` (needs ffmpeg). That downloads and encodes the recordings into `packages/fixtures/<slug>/audio/`, which git ignores, and writes `manifest.json` and `levels.json`, which you commit. `npm run seed` then plays the album from your checkout. Without a local `audio/` folder, or with `RIFF_DEMO_BASE` set, an album plays from riffpress.com.
+
+Nothing else needs editing: the deploy bundles every streamed album into one `demo/albums.json`, so `blueprint.json` never lists them. A pull request's Playground preview builds the albums whose `source.json` it adds or changes and plays them from the preview, and plays the rest from riffpress.com. Once merged, the Pages deploy publishes their audio under `demo/<slug>/`.
 
 ## Translations
 
