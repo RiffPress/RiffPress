@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [riff, riff-lyrics]
+        plugin: [riff, riff-lyrics, riff-sign-in]
     env:
       PLUGIN: ${{ matrix.plugin }}
     steps:
@@ -41,7 +41,7 @@ jobs:
       - name: Build the plugins the way a release does
         run: |
           set -euo pipefail
-          for p in riff riff-lyrics; do
+          for p in riff riff-lyrics riff-sign-in; do
             mkdir -p "build/$p"
             rsync -a --exclude-from='.distignore' "./plugins/$p/" "build/$p/"
           done
@@ -49,7 +49,7 @@ jobs:
       - name: Mount the built plugin instead of the checkout
         run: |
           cat > .wp-env.override.json <<'JSON'
-          { "core": "WordPress/WordPress#master", "plugins": [ "./build/riff", "./build/riff-lyrics" ], "mappings": {} }
+          { "core": "WordPress/WordPress#master", "plugins": [ "./build/riff", "./build/riff-lyrics", "./build/riff-sign-in" ], "mappings": {} }
           JSON
 
       - run: npx wp-env start
@@ -57,7 +57,7 @@ jobs:
       - name: Install Plugin Check
         run: |
           npx wp-env run cli wp plugin install plugin-check --activate
-          npx wp-env run cli wp plugin activate riff riff-lyrics
+          npx wp-env run cli wp plugin activate riff riff-lyrics riff-sign-in
 
       # The translation template is generated, not committed: translations come from
       # translate.wordpress.org, and a release carries the template for everyone else.

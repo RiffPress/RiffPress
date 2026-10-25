@@ -155,12 +155,24 @@ test.describe( 'First run', () => {
 			.context()
 			.addCookies( [ { name: NO_MUSIC, value: '1', url: baseURL } ] );
 
+		// A plugin that requires Riff (Riff Sign In, Riff Lyrics) keeps WordPress from offering
+		// Deactivate on Riff's row while it is active, so those step aside first and come back.
+		const dependents = ( await requestUtils.rest( { path: '/wp/v2/plugins' } ) )
+			.filter( ( p ) => p.status === 'active' && /^riff-(lyrics|sign-in)\//.test( p.plugin ) )
+			.map( ( p ) => p.plugin );
+		for ( const plugin of dependents ) {
+			await requestUtils.rest( { method: 'PUT', path: `/wp/v2/plugins/${ plugin }`, data: { status: 'inactive' } } );
+		}
+
 		// Activation, from the Plugins screen.
 		await admin.visitAdminPage( 'plugins.php' );
 		const row = () => page.locator( 'tr[data-plugin="riff/riff.php"]' );
 		await row().locator( '.deactivate a' ).click();
 		await row().locator( '.activate a' ).click();
 		await expect( row().locator( '.deactivate a' ) ).toBeVisible();
+		for ( const plugin of dependents ) {
+			await requestUtils.rest( { method: 'PUT', path: `/wp/v2/plugins/${ plugin }`, data: { status: 'active' } } );
+		}
 
 		// The notice offers the page, and the first album.
 		const notice = page.locator( '.notice.riff-first-run' );

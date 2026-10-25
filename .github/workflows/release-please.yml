@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    # Four packages release on their own (release-please-config.json), so
+    # Five packages release on their own (release-please-config.json), so
     # each output is read under its package's path.
     outputs:
       riff_release: ${{ steps.release.outputs['plugins/riff--release_created'] }}
@@ -33,6 +33,8 @@ jobs:
       riff_version: ${{ steps.release.outputs['plugins/riff--version'] }}
       lyrics_release: ${{ steps.release.outputs['plugins/riff-lyrics--release_created'] }}
       lyrics_tag: ${{ steps.release.outputs['plugins/riff-lyrics--tag_name'] }}
+      sign_in_release: ${{ steps.release.outputs['plugins/riff-sign-in--release_created'] }}
+      sign_in_tag: ${{ steps.release.outputs['plugins/riff-sign-in--tag_name'] }}
       coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
       coverage_tag: ${{ steps.release.outputs['packages/wp-api-coverage--tag_name'] }}
       desktop_release: ${{ steps.release.outputs['packages/desktop--release_created'] }}
@@ -270,6 +272,43 @@ jobs:
         run: |
           set -euo pipefail
           gh release upload --clobber "$TAG_NAME" build/riff-lyrics.zip
+          gh release edit "$TAG_NAME" --draft=false --latest=false
+
+  # Riff Sign In's release: its own zip on its own GitHub release, built the way
+  # Riff's is. It is never marked the latest release; that stays Riff's.
+  release-riff-sign-in:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.sign_in_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Build riff-sign-in.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff-sign-in
+          rsync -a --exclude-from='.distignore' ./plugins/riff-sign-in/ build/riff-sign-in/
+          (cd build && zip -qr riff-sign-in.zip riff-sign-in/)
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/riff-sign-in/riff-sign-in.php
+          find build/riff-sign-in -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Attach the zip and publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.sign_in_tag }}
+        run: |
+          set -euo pipefail
+          gh release upload --clobber "$TAG_NAME" build/riff-sign-in.zip
           gh release edit "$TAG_NAME" --draft=false --latest=false
 
   # wp-api-coverage's release: the GitHub release is published, and the
