@@ -100,13 +100,20 @@ function localNav( up, current ) {
 }
 
 /**
- * The breadcrumb strip, as wordpress.org sets it: grey links, a light slash between.
+ * The breadcrumb strip, as wordpress.org sets it: grey links, a light slash between. The bar
+ * above already says Riff and Developers, and marks a page one level under it, so the trail
+ * starts below Developers and a page with only itself in it has none; the strip stays only for
+ * what sits at its right, such as a search form.
  *
  * @param {Array}  trail  [ label, href ] pairs; the last, without an href, is the page.
  * @param {string} extra  HTML for the right-hand side, such as a search form.
  * @return {string} HTML.
  */
 function crumbs( trail, extra = '' ) {
+	if ( trail.length < 2 ) {
+		return extra ? `<div class="crumbs"><div class="wrap">${ extra }</div></div>
+` : '';
+	}
 	const parts = trail.map( ( [ label, href ] ) => ( href ? `<span><a href="${ href }">${ esc( label ) }</a></span>` : `<span class="is-current-page">${ esc( label ) }</span>` ) );
 	return `<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs">${ parts.join( '' ) }</nav>${ extra }</div></div>
 `;
@@ -121,7 +128,7 @@ function crumbs( trail, extra = '' ) {
  * @param {string} page.description Meta description.
  * @param {string} page.url         Path from the site root, ending in a slash.
  * @param {string} page.current     The bar entry it sits under.
- * @param {Array}  page.trail       Breadcrumbs after Riff and Developers, as [ label, href ].
+ * @param {Array}  page.trail       Breadcrumbs below Developers, as [ label, href ].
  * @param {string} page.h1          The heading's HTML, with its attributes.
  * @param {Array}  page.toc         [ id, label, children ] entries for "In this article".
  * @param {string} page.body        The article.
@@ -134,7 +141,7 @@ function referencePage( { title, description, url, current, trail, h1, toc, body
 	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ esc( label ) }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
 	let html = head( title, description, url, depth, `${ up }web/web.css`, 'developers' );
 	html += localNav( up, current );
-	html += crumbs( [ [ 'Riff', up ], [ 'Developers', `${ up }developers/` ], ...trail ], search );
+	html += crumbs( trail, search );
 	html += `<main id="main" class="wrap reference">
 ${ h1 }
 <div class="with-toc">

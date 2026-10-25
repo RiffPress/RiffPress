@@ -948,20 +948,6 @@ main h2[id] {
 	scroll-margin-top: 80px;
 }
 
-/* background reading, set apart from the languages by a dot, as wporg's
-   local bars separate their groups */
-.local-nav .aside-link {
-	position: relative;
-	margin-left: 15px;
-}
-
-.local-nav .aside-link::before {
-	content: "\2022";
-	position: absolute;
-	left: -14px;
-	color: var(--charcoal-5);
-}
-
 .local-nav nav a[aria-current] {
 	text-decoration: underline;
 	text-underline-offset: 6px;
