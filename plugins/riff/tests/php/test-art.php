@@ -186,7 +186,11 @@ class Test_Riff_Art extends Riff_TestCase {
 	public function test_the_route_is_a_public_query_variable(): void {
 		$this->assertContains( 'riff-art', apply_filters( 'query_vars', array() ) );
 		[ $post ] = $this->bare_post();
-		$this->assertSame( add_query_arg( 'riff-art', $post, home_url( '/' ) ), Art::url( $post ) );
+		$url      = Art::url( $post );
+		$this->assertStringStartsWith( add_query_arg( 'riff-art', $post, home_url( '/' ) ) . '&ver=', $url );
+		// The drawing's version is in the address, so a browser that kept a cover for a day fetches
+		// the new one when Riff draws covers differently.
+		$this->assertMatchesRegularExpression( '/&ver=[0-9a-f]{8}$/', $url );
 	}
 
 	public function test_a_drawn_cover_tints_its_album_with_its_own_colour(): void {
