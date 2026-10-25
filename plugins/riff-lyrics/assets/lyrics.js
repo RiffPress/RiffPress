@@ -105,7 +105,7 @@
 			const said = rows
 				.slice( at + 1 )
 				.join( ' ' )
-				.replace( /<[^>]*>/g, '' )
+				.replace( /[<>]/g, '' )
 				.trim();
 			const time = seconds( from );
 			out.push( { time, text: said, gap: out.length > 0 && time - end >= 2, words: null } );
