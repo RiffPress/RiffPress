@@ -189,9 +189,8 @@ test( 'every demo file blueprint.json fetches exists in the fixture set', () => 
 		names.includes( 'seed.php' ),
 		'the demo has no seed script to run'
 	);
-	// The seed and the mark travel with the demo from elsewhere in the repository; a streamed
-	// album's manifest and levels are flattened to <slug>.manifest.json beside them; base.txt is
-	// written by the deploy.
+	// The seed and the mark travel with the demo from elsewhere in the repository; albums.json and
+	// base.txt are written by the deploy.
 	const where = ( name ) => {
 		if ( name === 'seed.php' ) {
 			return path.join( ROOT, 'packages/fixtures', name );
@@ -199,14 +198,10 @@ test( 'every demo file blueprint.json fetches exists in the fixture set', () => 
 		if ( name === 'mark.png' ) {
 			return path.join( ROOT, 'site/brand', name );
 		}
-		const album = name.match( /^([a-z0-9-]+)\.(manifest|levels)\.json$/ );
-		if ( album ) {
-			return path.join( ROOT, 'packages/fixtures', album[ 1 ], album[ 2 ] + '.json' );
-		}
 		return path.join( ROOT, 'packages/fixtures/compositions', name );
 	};
 	const missing = names.filter(
-		( name ) => name !== 'base.txt' && ! fs.existsSync( where( name ) )
+		( name ) => ! [ 'base.txt', 'albums.json' ].includes( name ) && ! fs.existsSync( where( name ) )
 	);
 	assert.deepEqual( missing, [] );
 } );
