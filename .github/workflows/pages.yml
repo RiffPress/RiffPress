@@ -79,6 +79,11 @@ jobs:
           (cd build && zip -qr riff.zip riff/)
           test -f build/riff/riff.php
           find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Build the site's scripts
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run site:js
       - name: Assemble the site
         id: site
         run: |

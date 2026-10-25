@@ -21,8 +21,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint:js
-      # The site's animated pieces are committed built; they must match site/src.
-      - run: node .github/scripts/site-js.js --check
+      # The site's animated pieces build; Pages builds them again to deploy.
+      - run: npm run site:js
 
   # WordPress's stylelint config, over the plugin's and the site's CSS, as the pre-commit hook runs it.
   lint-css:
