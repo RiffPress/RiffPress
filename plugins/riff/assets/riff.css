@@ -1273,12 +1273,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
-/* A stage wider than it is tall, as on a computer, sizes the pair by
-   itself: each as large as the stage allows, side by side at full size, the
-   sleeve and the plinth a sliver apart, the plinth's height and its arm
-   side inside the stage.
-   The sleeve alone, before the record comes out, is as large. */
-@container riff-stage (min-aspect-ratio: 1.5) and (min-width: 700px) {
+/* A stage wider than it is tall, as on a computer or above a phone's
+   controls, sizes the pair by itself: each as large as the stage allows,
+   side by side at full size, the sleeve and the plinth a sliver apart, the
+   plinth's height and its arm side inside the stage. The sleeve alone,
+   before the record comes out, is as large. */
+@container riff-stage (min-aspect-ratio: 1.2) {
 
 	:root #riff .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
 		width: min(78cqh, 40cqw);
@@ -1399,7 +1399,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	rotate: var(--riff-arm, -14deg);
 }
 
-#riff[data-riff-deck="out"]:not([data-riff-turning], [data-riff-cued], [data-riff-lowering]) .riff-arm-tube {
+#riff[data-riff-deck="out"]:not([data-riff-turning], [data-riff-cued]) .riff-arm-tube {
 	filter: drop-shadow(0.8cqi 2.4cqi 1.4cqi rgb(0 0 0 / 0.4));
 }
 

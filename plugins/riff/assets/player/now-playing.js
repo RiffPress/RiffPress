@@ -506,10 +506,9 @@ export function nowPlaying( P ) {
 		}
 		let wait = 0;
 		if ( root.dataset.riffDeck === 'out' && m.paused && ! flipping && ! ( 'riffArriving' in root.dataset ) ) {
-			// The arm is up: it comes down onto the record, from the moment Play was pressed, and the
-			// platter starts once the stylus is in the groove.
-			wait = Math.max( 0, LOWER - ( lower.at ? performance.now() - lower.at : 0 ) );
-			lower.at = 0;
+			// The arm is up: it comes down onto the record, and the platter starts once the stylus
+			// is in the groove.
+			wait = LOWER;
 		} else if ( flipping ) {
 			wait = flip.until - performance.now() + LAND;
 		} else if ( 'riffArriving' in root.dataset ) {
@@ -565,22 +564,8 @@ export function nowPlaying( P ) {
 	// controls show what was asked for.
 	const held = () => 'riffCued' in root.dataset;
 
-	// Pressing Play, before it is let go: the arm starts down onto the record, so the stylus is in
-	// the groove as the platter starts (riff.css lowers it while data-riff-lowering is on). Let go
-	// anywhere but on the button, it goes back up.
+	// How long the arm takes to come down onto the record (riff.css, the tube's shadow).
 	const LOWER = 300;
-	function lower( e ) {
-		const button = e.target.closest?.( '[data-riff-action="toggle"]' );
-		if ( ! button || ! P.el().paused || root.dataset.riffDeck !== 'out' || ! seen() ) {
-			return;
-		}
-		lower.at = performance.now();
-		root.dataset.riffLowering = '';
-		const up = () => setTimeout( () => delete root.dataset.riffLowering, 0 );
-		document.addEventListener( 'pointerup', up, { once: true } );
-		document.addEventListener( 'pointercancel', up, { once: true } );
-	}
-	document.addEventListener( 'pointerdown', lower );
 	const stopping = () => !! halt.going && P.ramping;
 
 	// ---- Out of the sleeve once the album plays, and not while a new one is arriving; it stays

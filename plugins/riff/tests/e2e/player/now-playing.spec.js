@@ -54,16 +54,19 @@ test.describe( 'Player', () => {
 		isMobile,
 	} ) => {
 		test.skip( isMobile, 'the wide layout only' );
-		// Tall enough that the stage could hold more than 640px of art: the cap, not the stage, must win.
+		// Tall enough that the stage could hold more than 640px of art. Beside Up next the stage is
+		// wider than tall, so the sleeve is sized for the sleeve and the turntable side by side, the
+		// record's size, and never past the cap.
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-chevron' ).click();
 		// The cover's own box, before the record moves it aside while the track plays.
-		const cover = await page
-			.locator( '.riff-cover' )
-			.evaluate( ( el ) => ( { width: el.offsetWidth, height: el.offsetHeight } ) );
+		const size = ( selector ) =>
+			page.locator( selector ).evaluate( ( el ) => ( { width: el.offsetWidth, height: el.offsetHeight } ) );
+		const cover = await size( '.riff-cover' );
 		expect( cover.width ).toBe( cover.height );
-		expect( cover.width ).toBe( 640 );
+		expect( cover ).toEqual( await size( '.riff-record' ) );
+		expect( cover.width ).toBeLessThanOrEqual( 640 );
 		// Playing, the record is out of its sleeve, to the cover's right.
 		await expect
 			.poll( async () => {
