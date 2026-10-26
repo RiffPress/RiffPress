@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* eslint-disable no-console -- a build script that says what it wrote, as og-images.js does. */
 /**
- * The pictures of the player on the site's landing page, in site/: the Listen app, Now Playing and
- * a sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post, Now Playing, Up
+ * The pictures of the player on the site's landing page, in site/: the Listen app, an album open in
+ * it, Now Playing and a sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post, Now Playing, Up
  * next and the lyrics on a phone (780×1688), each as a PNG and an AVIF. They are taken from a site
  * that holds the demo albums and nothing else, set up as the demo's blueprint sets up Playground,
  * so the pictures show the demo a visitor will open:
@@ -123,6 +123,18 @@ async function desktop( browser ) {
 	await page.goto( `${ BASE }/listen/app/?riff_view=albums` );
 	await page.locator( '[data-riff-app-ready]' ).waitFor();
 	await save( page, 'desktop-listen', true );
+
+	// The album being heard, open in the app: its cover, its tracks with the one playing marked, the
+	// library beside it and the bar under it. Arriving in the app pauses, so it is played again.
+	const album = await page.evaluate( async ( slug ) => ( await ( await fetch( `/wp-json/wp/v2/posts?slug=${ slug }` ) ).json() )[ 0 ].id, POST.replace( /\//g, '' ) );
+	await page.goto( `${ BASE }/listen/app/?riff=${ album }` );
+	await page.locator( '[data-riff-app-ready]' ).waitFor();
+	await page.waitForTimeout( 1500 );
+	if ( ! ( await page.evaluate( () => window.riff.playing() ) ) ) {
+		await page.evaluate( () => window.riff.toggle() );
+	}
+	await page.waitForTimeout( 1500 );
+	await save( page, 'desktop-album', true );
 	await page.locator( '.riff-bar-info' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await save( page, 'desktop-now-playing', true );

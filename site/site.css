@@ -440,17 +440,6 @@ section {
 	font-size: clamp(1.25rem, 1.8vw, 1.5rem);
 }
 
-/* the wide-screen shot without the empty black above the cover: the
-   lyrics and the bar are what it is of */
-@media (min-width: 641px) {
-
-	.hero .shot .desk {
-		aspect-ratio: 1440 / 830;
-		object-fit: cover;
-		object-position: bottom;
-	}
-}
-
 /* on a phone the hero shows the phone's own Now Playing, at a phone's
    size, not the width of the window */
 @media (max-width: 640px) {
