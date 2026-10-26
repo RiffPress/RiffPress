@@ -1,6 +1,11 @@
-# Review
+---
+applyTo: "**"
+excludeAgent: "coding-agent"
+---
 
-What a reviewer, a person or an agent, should look for in a Riff pull request. [AGENTS.md](AGENTS.md) lists what is not a bug; read its "Not bugs" section before reporting one.
+# Reviewing a Riff pull request
+
+What Copilot, or a person, should look for when reviewing a pull request. [AGENTS.md](../../AGENTS.md) lists what is not a bug; read its "Not bugs" section before reporting one.
 
 ## What counts as broken
 
@@ -19,7 +24,7 @@ A change that breaks one of these is a finding, with the rule named:
 - Animate only `transform` and `opacity`. Every browser feature sits behind a check.
 - State (hover, current, selected, pressed) never changes `font-weight`; it changes colour, opacity, an underline or a background, because a weight change shifts the layout.
 - Icons are filled Material icons, never outlined.
-- WordPress first: new storage, a field, a relation or a query needs a reason in [docs/native.md](docs/native.md), and WordPress's own version if it has one.
+- WordPress first: new storage, a field, a relation or a query needs a reason in [docs/native.md](../../docs/native.md), and WordPress's own version if it has one.
 - New public surface is a promise kept forever once Riff is on WordPress.org. Ask whether a real extension needs it; Riff Lyrics, built only on the public API, is the test. Private is the default.
 
 ## What to leave out
