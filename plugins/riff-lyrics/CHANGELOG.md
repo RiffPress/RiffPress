@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.2.0...riff-lyrics-v1.3.0) (2026-10-26)
+
+
+### Features
+
+* **player:** Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf ([#694](https://github.com/RiffPress/RiffPress/issues/694)) ([dda424b](https://github.com/RiffPress/RiffPress/commit/dda424b8818e44806d109ef1dd62cd3a22310658))
+
 ## [1.2.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.1.1...riff-lyrics-v1.2.0) (2026-10-25)
 
 
