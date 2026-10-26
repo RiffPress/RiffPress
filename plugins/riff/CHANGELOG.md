@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.4.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.3.0...riff-v5.4.0) (2026-10-26)
+
+
+### Features
+
+* **player:** the turntable is drawn as a real one is: a steel spindle on the deck, a printed label with the side's tracks, a cradle for the arm, an etched run-out and a strobe rim lit by its lamp ([#701](https://github.com/RiffPress/RiffPress/issues/701)) ([98fda5d](https://github.com/RiffPress/RiffPress/commit/98fda5de0c6e0ac672b128f80acb6c53ac7402c9))
+
+
+### Bug Fixes
+
+* **player:** the turntable stands only on a stage wide enough for it, so a phone held upright shows the cover alone; the label is printed in zones round the spindle, which shows once the record rests on it ([#720](https://github.com/RiffPress/RiffPress/issues/720)) ([373a50c](https://github.com/RiffPress/RiffPress/commit/373a50ccf5d7220f147f012132a8471f400ac4ed))
+
 ## [5.3.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.2.4...riff-v5.3.0) (2026-10-26)
 
 
