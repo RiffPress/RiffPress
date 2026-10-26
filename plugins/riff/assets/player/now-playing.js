@@ -459,21 +459,35 @@ export function nowPlaying( P ) {
 		const turning = 'riffTurning' in root.dataset && root.dataset.riffDeck === 'out' && ! P.reduce();
 		const rpm = root.dataset.riffFormat === '7' ? 45 : 100 / 3;
 		const step = turning ? ( ( rpm / 60 ) * 360 * ( m.playbackRate || 1 ) ) / FLASHES : 0;
-		$$( '.riff-strobe i' ).forEach( ( row, k ) => {
-			const count = k ? 160 : 216;
-			const dot = 360 / count;
-			if ( ! row.firstChild ) {
-				// The row's dots, round, at their radius on the rim: the platter's radius is 100.
-				const radius = k ? 97.9 : 95.7;
-				let circles = '';
+		// The rows' dots, round, at their radii on the rim, the platter's radius 100: drawn once, the
+		// two together where the room lights them, and each on its own in the lamp's patch.
+		const ROWS = [ [ 216, 95.7 ], [ 160, 97.9 ] ];
+		const dots = ( rows ) => {
+			let circles = '';
+			for ( const [ count, radius ] of rows ) {
 				for ( let n = 0; n < count; n++ ) {
 					const a = ( n * 2 * Math.PI ) / count;
 					circles += `<circle cx="${ ( radius * Math.cos( a ) ).toFixed( 2 ) }" cy="${ ( radius * Math.sin( a ) ).toFixed( 2 ) }" r="0.62"/>`;
 				}
-				row.innerHTML = `<svg viewBox="-100 -100 200 200" focusable="false">${ circles }</svg>`;
 			}
+			return `<svg viewBox="-100 -100 200 200" focusable="false">${ circles }</svg>`;
+		};
+		const room = $( '.riff-strobe-room i' );
+		if ( room && ! room.firstChild ) {
+			room.innerHTML = dots( ROWS );
+		}
+		$$( '.riff-strobe-lamp i' ).forEach( ( row, k ) => {
+			if ( ! row.firstChild ) {
+				row.innerHTML = dots( [ ROWS[ k ] ] );
+			}
+			const dot = 360 / ROWS[ k ][ 0 ];
 			const seen = step - dot * Math.round( step / dot );
-			row.drift ??= row.animate( [ { rotate: '0deg' }, { rotate: '360deg' } ], { duration: 1000, iterations: Infinity } );
+			if ( ! row.drift ) {
+				row.drift = row.animate( [ { rotate: '0deg' }, { rotate: '360deg' } ], { duration: 1000, iterations: Infinity } );
+				// Far into its turns, so it can run backwards as long as it needs to: run back from its
+				// start, an animation stops there.
+				row.drift.currentTime = 1e9;
+			}
 			row.drift.updatePlaybackRate( ( seen * FLASHES ) / 360 );
 		} );
 	}

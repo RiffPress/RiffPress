@@ -1373,12 +1373,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 /* The platter's rim, wider than the record as a Technics platter is (332mm
    to the record's 302mm), and on it the strobe: two rows of dots, 216 for
-   33⅓ and 160 for 45, as the deck's lamp shows them, flashing 120 times a
-   second on 60Hz mains. A row stands still when the platter turns a whole
-   number of its dots between flashes, and otherwise drifts by what is left
-   over; now-playing.js turns each row by just that, so the row for the
-   speed playing stands still and the other creeps, and both drift as the
-   platter comes up to speed or winds down, whatever the screen's rate. */
+   33⅓ and 160 for 45. In the room's light they turn with the platter. In
+   the patch the deck's lamp lights, at the front left, flashing 120 times a
+   second on 60Hz mains, a row seems to stand still when the platter turns a
+   whole number of its dots between flashes, and otherwise to drift by what
+   is left over; now-playing.js turns the lit rows by just that, so there
+   the row for the speed playing stands still and the other creeps, and
+   both drift as the platter comes up to speed or winds down. */
 .riff-strobe {
 	position: absolute;
 	z-index: 1;
@@ -1386,10 +1387,27 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 50%;
 }
 
+.riff-strobe-room,
+.riff-strobe-lamp,
 .riff-strobe i {
 	position: absolute;
 	inset: 0;
+}
+
+.riff-strobe i {
 	will-change: rotate;
+}
+
+.riff-strobe-room {
+	mask-image: conic-gradient(#000 0 195deg, transparent 207deg 243deg, #000 255deg);
+}
+
+/* the lamp's patch: its warm light on the rim, and the dots lit in it */
+.riff-strobe-lamp {
+	--riff-strobe-dot: rgb(255 150 80 / 0.85);
+	background: radial-gradient(circle at 14% 86%, rgb(255 120 50 / 0.16), transparent 30%);
+	mask-image: conic-gradient(transparent 0 195deg, #000 207deg 243deg, transparent 255deg);
+	clip-path: circle(50%);
 }
 
 /* each row its dots, round, drawn once (now-playing.js) */
@@ -1398,7 +1416,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	width: 100%;
 	height: 100%;
 	overflow: visible;
-	fill: rgb(200 200 200 / 0.26);
+	fill: var(--riff-strobe-dot, rgb(200 200 200 / 0.26));
 }
 
 /* The spindle: the turntable's, not the record's, so it stands where the
