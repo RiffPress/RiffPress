@@ -48,6 +48,12 @@
 		--stick: 56px;
 	}
 
+	/* the bar's strings are in the margin, and the chord and Mute over
+	   them are placed against the whole bar, not its middle */
+	[data-neck="margin"].has-neck-rail .nav .wrap {
+		position: static;
+	}
+
 	[data-neck="margin"].has-neck-rail .nav .wrap::after {
 		content: none;
 	}
@@ -152,14 +158,20 @@
 		}
 	}
 
-	/* the chord and Mute in the bar, the headstock, where a guitar keeps
-	   its tuners: out of the margin and the strings, and legible */
+	/* the chord and Mute in the bar, right over the neck, as a guitar keeps
+	   its tuners on the headstock above the nut: one instrument, and out of
+	   the menu's way, centred on the part of the neck in the window */
 	.neck.is-vertical {
-		order: 1;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: calc(var(--neck-w) * 0.94);
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		gap: var(--space-2);
-		margin: 0 28px 0 auto;
+		margin: 0;
 	}
 
 	.neck.is-vertical .neck-chord:empty {
@@ -167,7 +179,6 @@
 	}
 
 	.neck.is-vertical .neck-chord {
-		min-width: 2.5em;
 		margin: 0;
 		color: var(--ink);
 		font: 600 1rem/1 var(--sans);
