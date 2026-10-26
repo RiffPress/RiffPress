@@ -1187,8 +1187,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* the label: a disc that turns as one at 33⅓, an LP's speed (60s / 33⅓ =
-   1.8s a turn, at an even speed), printed as a record's label is, centred
-   on the spindle: the album above the hole, the artist and the speed below,
+   1.8s a turn, at an even speed), printed as a record's label is, in
+   zones round the spindle that nothing crosses: the album across the top
+   half, the side and speed beside the hole, the artist and the side's
+   tracks across the bottom half, the round edge clipping what runs long,
    on paper printed in the cover's own colour, its average (now-playing.js),
    the words dark on a light colour and light on a dark one so they read.
    It is flat, as printed paper is: the only light on it is the record's,
@@ -1209,7 +1211,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	position: absolute;
 	inset: 0;
 	display: grid;
-	grid-template-rows: 1fr 24% auto auto 1fr;
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: 38% 24% auto auto;
 	justify-items: center;
 	padding: 0 16%;
 	background: var(--riff-label-paper, #3a3a3a);
@@ -1222,7 +1225,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-label b {
 	display: -webkit-box;
+	grid-row: 1;
 	align-self: end;
+	margin-bottom: 2%;
 	overflow: hidden;
 	font-size: 9cqi;
 	font-weight: 700;
@@ -1233,6 +1238,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-label i {
 	display: -webkit-box;
 	grid-row: 3;
+	max-width: 100%;
 	overflow: hidden;
 	font-size: 6cqi;
 	font-style: normal;
@@ -1246,6 +1252,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-label-tracks {
 	display: none;
 	grid-row: 4;
+	max-width: 100%;
 	margin: 3% 0 0;
 	padding: 0;
 	list-style: none;
@@ -1267,11 +1274,21 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
+/* a long side in two columns, smaller, as a pressed label sets it */
+.riff-label-tracks:has(li:nth-child(6)) {
+	columns: 2;
+	column-gap: 6%;
+	width: 84%;
+	font-size: 2.5cqi;
+}
+
+/* the side and speed to the left of the hole */
 .riff-label small {
-	grid-row: 5;
-	align-self: start;
-	margin-top: 6%;
-	font-size: 5.5cqi;
+	grid-row: 2;
+	align-self: center;
+	justify-self: start;
+	margin-left: -6%;
+	font-size: 4.5cqi;
 	letter-spacing: 0.06em;
 	opacity: 0.7;
 }
