@@ -25,8 +25,9 @@
 <meta name="theme-color" content="#000">
 <meta name="color-scheme" content="light">
 <link rel="stylesheet" href="../web/web.css">
+<link rel="stylesheet" href="../neck.css">
 </head>
-<body>
+<body data-neck="margin">
 <a class="skip" href="#main">Skip to content</a>
 <div class="nav"><div class="wrap"><a class="mark" href="../"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="./" aria-current="page">Add your music</a><a href="../developers/">Developers</a><a class="btn" href="../download/">Download</a></nav></div></div>
 
@@ -50,7 +51,7 @@
 <li>Click the empty line, type <code>/riff</code> and choose the <em>Riff</em> block.</li>
 <li>Press <kbd>Publish</kbd>.</li>
 </ol>
-<figure><picture><source type="image/avif" srcset="../guide-riff-block.avif 2880w, ../guide-riff-block-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-riff-block.png" width="2880" height="1800" alt="The editor with a page titled Listen holding the Riff block, which shows the library: a Library heading and a grid of album covers" loading="lazy" decoding="async"></picture><figcaption>The Riff block on a page, showing the library as it will be on the site: every album as a cover.</figcaption></figure>
+<figure><picture><source type="image/avif" srcset="../guide-riff-block.avif 2880w, ../guide-riff-block-1440.avif 1440w" sizes="(max-width: 800px) 100vw, 760px"><img class="desk" src="../guide-riff-block.png" width="2880" height="1800" alt="The editor with a page titled Listen holding the Riff block, which shows the library as it will be on the site: Home, with the demo's four albums under Recently added" loading="lazy" decoding="async"></picture><figcaption>The Riff block on a page, showing the library as it will be on the site: every album as a cover.</figcaption></figure>
 <p>To make it the front page of the site, go to <kbd>Settings</kbd>, then <kbd>Reading</kbd>, choose <em>A static page</em>, and pick it as the homepage.</p>
 <p>Add <code>app/</code> to the page's address, for example <code>/listen/app/</code>, and the same page opens as a player on its own, in Riff's dark look and without your theme. A browser can install that address as an app.</p>
 

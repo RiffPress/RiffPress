@@ -41,9 +41,9 @@
 	--grey-2: #f6f6f6;
 	--white: #fff;
 	--amber-ink: #9a5b00;
-	--pomegrade: #e26f56;
-	--pomegrade-deep: #ae381e;
-	--pomegrade-deeper: #9d321b;
+	--action: var(--charcoal-1);
+	--action-hover: var(--charcoal-3);
+	--on-action: var(--paper);
 	--black: #000;
 	--panel: #121212;
 	--amber: #ffb020;
@@ -52,7 +52,7 @@
 	--ink: var(--charcoal-1);
 	--ink-2: var(--warm-ink-2);
 	--line: var(--warm-1);
-	--accent: var(--pomegrade-deep);
+	--accent: var(--charcoal-1);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
 	--t: 0.2s;
@@ -109,8 +109,8 @@ code {
 	left: 16px;
 	top: -200px;
 	z-index: 20;
-	background: var(--pomegrade-deep);
-	color: var(--white);
+	background: var(--action);
+	color: var(--on-action);
 	padding: 10px 16px;
 	border-radius: 2px;
 	text-decoration: none;
@@ -207,9 +207,9 @@ code {
 
 .btn {
 	appearance: none;
-	border: 1px solid var(--pomegrade-deep);
-	background: var(--pomegrade-deep);
-	color: var(--white);
+	border: 1px solid var(--action);
+	background: var(--action);
+	color: var(--on-action);
 	border-radius: 2px;
 	padding: 7px 12px;
 	display: inline-flex;
@@ -222,9 +222,9 @@ code {
 }
 
 .btn:hover {
-	background: var(--pomegrade-deeper);
-	border-color: var(--pomegrade-deeper);
-	color: var(--white);
+	background: var(--action-hover);
+	border-color: var(--action-hover);
+	color: var(--on-action);
 }
 
 .btn:focus-visible {
@@ -235,20 +235,20 @@ code {
 
 /* Download, as wordpress.org's bar has Get WordPress */
 .nav .btn {
-	border-color: var(--pomegrade-deep);
-	background: var(--pomegrade-deep);
-	color: var(--white);
+	border-color: var(--action);
+	background: var(--action);
+	color: var(--on-action);
 }
 
 .nav .btn:hover {
-	border-color: var(--pomegrade-deeper);
-	background: var(--pomegrade-deeper);
-	color: var(--white);
+	border-color: var(--action-hover);
+	background: var(--action-hover);
+	color: var(--on-action);
 }
 
 .nav .btn:focus-visible {
 	box-shadow: inset 0 0 0 3px var(--white);
-	outline-color: var(--pomegrade-deep);
+	outline-color: var(--accent);
 }
 
 /* marginalia, as wordpress.org sets it: a band of dots before the footer, a
@@ -667,9 +667,9 @@ figcaption {
 }
 
 .btn.outline:hover {
-	background: var(--pomegrade-deep);
-	border-color: var(--pomegrade-deep);
-	color: var(--white);
+	background: var(--action);
+	border-color: var(--action);
+	color: var(--on-action);
 }
 
 /* ---- the download page */
@@ -995,7 +995,7 @@ figcaption {
 
 .local-nav a:focus-visible {
 	outline: none;
-	box-shadow: inset 0 0 0 1.5px var(--pomegrade-deep);
+	box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
 .local-nav .local-title {
@@ -1077,9 +1077,9 @@ main h2[id] {
 }
 
 .hook-search input:focus-visible {
-	outline: 1.5px solid var(--pomegrade-deep);
+	outline: 1.5px solid var(--accent);
 	outline-offset: -1.5px;
-	border-color: var(--pomegrade-deep);
+	border-color: var(--action);
 }
 
 .reference {
@@ -1097,25 +1097,35 @@ main h2[id] {
 	padding-top: var(--space-6);
 }
 
+/* the reference in the site's own type: its titles and sections in the
+   heading face, as every other page's are; code titles and hook names keep
+   Inter and monospace */
 .reference h1,
 .reference h2,
 .reference h3 {
-	font-family: var(--sans);
 	color: var(--ink);
 	text-wrap: balance;
 }
 
-.reference h1 {
-	font-size: 38px;
+.reference h1,
+.reference h2 {
+	font-family: var(--serif);
 	font-weight: 400;
+}
+
+.reference h3 {
+	font-family: var(--sans);
+}
+
+.reference h1 {
+	font-size: clamp(40px, 5vw, 50px);
 	line-height: 1.2;
 	margin: 0 0 20px;
 }
 
 .reference h2 {
-	font-size: 20px;
-	font-weight: 600;
-	line-height: 1.2;
+	font-size: 28px;
+	line-height: 1.25;
 	margin: 0 0 16px;
 }
 
@@ -1187,7 +1197,7 @@ main h2[id] {
 }
 
 .is-toc-heading:target {
-	border-left: 2px solid var(--pomegrade-deep);
+	border-left: 2px solid var(--accent);
 	padding-left: 8px;
 }
 
@@ -1529,7 +1539,7 @@ main h2[id] {
 @media (max-width: 640px) {
 
 	.reference h1 {
-		font-size: 26px;
+		font-size: 36px;
 	}
 
 	.reference .code-title {
@@ -1679,7 +1689,7 @@ main h2[id] {
 	font-size: 0.8125rem;
 	font-weight: 600;
 	letter-spacing: 0.08em;
-	color: var(--pomegrade-deep);
+	color: var(--accent);
 }
 
 .guide .toc-box > ul {
@@ -1746,4 +1756,35 @@ dt,
 figcaption,
 blockquote {
 	text-wrap: pretty;
+}
+
+/* the missing page: the bar, the neck and the footer as on every page,
+   and the heading set as large as the landing page's, since it is the
+   only thing on the page */
+.lost {
+	min-height: calc(100vh - 72px - 120px);
+	padding-top: var(--space-7);
+}
+
+.lost h1 {
+	font-size: clamp(56px, 8vw, 96px);
+	line-height: 1;
+	letter-spacing: -0.015em;
+}
+
+.lost .lede {
+	margin-top: var(--space-3);
+}
+
+.lost .cta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px 20px;
+	align-items: center;
+	margin-top: var(--space-4);
+}
+
+.lost .go {
+	font-weight: 600;
+	text-underline-offset: 4px;
 }

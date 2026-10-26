@@ -1,0 +1,176 @@
+/* The neck, on every page: on a screen wide enough to have a margin, the
+   strings leave the bar and a guitar's neck lies down the left margin at
+   life size (neck.svg: maple, 22 frets where a guitar's stand) from the
+   width where it can be full size, against
+   the window's edge, its outer edge just out of frame, well clear of the
+   words, fading into the page past its last fret. It runs on a rail
+   from under the bar to the top of the footer: while the page is read it
+   holds still in the window, and as the page ends it comes away with the
+   page at the page's own pace, the rest of the neck arriving with the
+   footer. It never moves at any other speed than
+   the page's. It rests in the background, faded into the paper, and comes
+   forward while it is played: under the pointer, with a chord held or a
+   string still moving (neck.js marks the page .neck-awake), then sinks back
+   slowly once it is left. neck.js builds the rail; where it does not run,
+   the strings stay in the bar, as site.css and web.css draw them. */
+.neck {
+	display: contents;
+}
+
+.neck-mute-text,
+.neck-rail {
+	display: none;
+}
+
+@media (min-width: 1400px) {
+
+	[data-neck="margin"] {
+		--content-x: calc((100% - 1160px) / 2 + min(5vw, 80px));
+		--neck-w: clamp(56px, var(--content-x) - 40px, 150px);
+		--neck-top: 72px;
+		--foot-h: 120px;
+		--stick: 0px;
+
+		/* neck.svg's measures, which neck-svg.js writes here */
+		--svg-w: 150;
+		--svg-h: 1989.8;
+		--svg-nut: 8;
+		--svg-scale: 2449;
+		--svg-fade: 1789.8;
+
+		position: relative;
+	}
+
+	/* under the Developers bar too, where a page has one, and held below it */
+	[data-neck="margin"]:has(.local-nav) {
+		--neck-top: 128px;
+		--stick: 56px;
+	}
+
+	[data-neck="margin"].has-neck-rail .nav .wrap::after {
+		content: none;
+	}
+
+	/* the rail: the margin from the bar to the footer, which on a page
+	   shorter than the neck cuts it off. Built last on the page, it lies
+	   over the bands without a z-index, which, like a mask, would keep the
+	   neck from blending with the page under it */
+	[data-neck="margin"] .neck-rail {
+		display: block;
+		position: absolute;
+		top: var(--neck-top);
+		bottom: var(--foot-h);
+		left: calc(var(--neck-w) * -0.06);
+		width: var(--neck-w);
+		overflow: clip;
+		pointer-events: none;
+	}
+
+	/* the neck: held in the window, until the rail's end takes it on; past
+	   its last fret, board and strings fade into the page together */
+	.neck-guitar {
+		position: sticky;
+		top: var(--stick);
+		aspect-ratio: var(--svg-w) / var(--svg-h);
+		background: url(neck.svg) 0 0 / 100% 100% no-repeat;
+		mask-image: linear-gradient(#000 calc(var(--svg-fade) / var(--svg-h) * 100%), transparent);
+		opacity: 0.45;
+		mix-blend-mode: multiply;
+		transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	/* played: forward, quickly, but eased, and itself again over a dark
+	   band, where at rest it sinks into the dark as it fades into the paper */
+	.neck-awake .neck-guitar {
+		opacity: 1;
+		mix-blend-mode: normal;
+		transition-duration: 0.35s;
+	}
+
+	/* the strings, the length of the neck: drawn still, each with its
+	   shadow on the board, until neck.js plays them */
+	.neck-strings,
+	.neck-guitar > .neck-live {
+		position: absolute;
+		inset: 0;
+		height: auto;
+		margin: 0;
+	}
+
+	.neck-strings {
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 1000' preserveAspectRatio='none'%3E%3Cg stroke-opacity='.2' stroke='%23503720' vector-effect='non-scaling-stroke'%3E%3Cline x1='7.6' x2='7.6' y2='1000' stroke-width='1.3' vector-effect='non-scaling-stroke'/%3E%3Cline x1='19.3' x2='19.3' y2='1000' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='31.0' x2='31.0' y2='1000' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='42.7' x2='42.7' y2='1000' stroke-width='2.9' vector-effect='non-scaling-stroke'/%3E%3Cline x1='54.4' x2='54.4' y2='1000' stroke-width='3.7' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3Cg stroke='%239c8f7b'%3E%3Cline x1='6.6' x2='6.6' y2='1000' stroke-width='1.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='18.3' x2='18.3' y2='1000' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='30.0' x2='30.0' y2='1000' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='41.7' x2='41.7' y2='1000' stroke-width='2.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='53.4' x2='53.4' y2='1000' stroke-width='3.4' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+	}
+
+	.has-neck-live .neck-strings {
+		display: none;
+	}
+
+	.neck-guitar > .neck-live {
+		align-self: auto;
+		pointer-events: auto;
+		touch-action: auto;
+	}
+
+	/* a fingertip on the neck, or the index finger laid across as a barre:
+	   larger than an inlay, ringed, lifted off the board by its shadow, and
+	   pressed down as the chord is held */
+	.neck-finger {
+		filter: drop-shadow(0 2px 2px rgb(40 25 10 / 0.3));
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: neck-press 0.14s ease-out;
+	}
+
+	@keyframes neck-press {
+
+		from {
+			opacity: 0;
+			transform: scale(1.35);
+		}
+	}
+
+	/* the chord and Mute in the bar, the headstock, where a guitar keeps
+	   its tuners: out of the margin and the strings, and legible */
+	.neck.is-vertical {
+		order: 1;
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: 0 28px 0 auto;
+	}
+
+	.neck.is-vertical .neck-chord:empty {
+		display: none;
+	}
+
+	.neck.is-vertical .neck-chord {
+		min-width: 2.5em;
+		margin: 0;
+		color: var(--ink);
+		font: 600 1rem/1 var(--sans);
+		text-align: right;
+	}
+
+	.neck.is-vertical .neck-mute {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		width: auto;
+		height: 32px;
+		margin: 0;
+		padding: 0 12px;
+		border-radius: 16px;
+		background: var(--paper);
+		box-shadow: inset 0 0 0 1px #c9bca6;
+		color: var(--ink);
+		font: 500 0.875rem/1 var(--sans);
+	}
+
+	.neck.is-vertical .neck-mute[hidden] {
+		display: none;
+	}
+
+	.neck.is-vertical .neck-mute-text {
+		display: inline;
+	}
+}

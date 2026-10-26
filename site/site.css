@@ -54,16 +54,16 @@
 	--amber: #ffb020;
 	--amber-deep: #f29a00;
 	--amber-ink: #9a5b00;
-	--pomegrade: #e26f56;
-	--pomegrade-deep: #ae381e;
-	--pomegrade-deeper: #9d321b;
+	--action: var(--charcoal-1);
+	--action-hover: var(--charcoal-3);
+	--on-action: var(--paper);
 	--bg: var(--paper);
 	--surface: var(--panel);
 	--line: var(--warm-1);
 	--ink: var(--charcoal-1);
 	--ink-2: var(--warm-ink-2);
 	--ink-3: var(--charcoal-5);
-	--accent: var(--pomegrade-deep);
+	--accent: var(--charcoal-1);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
 	--t: 0.2s;
@@ -110,8 +110,8 @@ a:hover {
 	left: 16px;
 	top: -200px;
 	z-index: 20;
-	background: var(--pomegrade-deep);
-	color: var(--white);
+	background: var(--action);
+	color: var(--on-action);
 	padding: 10px 16px;
 	border-radius: 2px;
 	text-decoration: none;
@@ -221,22 +221,22 @@ a:hover {
 /* Download, as wordpress.org's bar has Get WordPress */
 .nav .btn {
 	padding: 7px 12px;
-	border-color: var(--pomegrade-deep);
-	background: var(--pomegrade-deep);
-	color: var(--white);
+	border-color: var(--action);
+	background: var(--action);
+	color: var(--on-action);
 	font-size: 0.875rem;
 	line-height: 1.714;
 }
 
 .nav .btn:hover {
-	border-color: var(--pomegrade-deeper);
-	background: var(--pomegrade-deeper);
-	color: var(--white);
+	border-color: var(--action-hover);
+	background: var(--action-hover);
+	color: var(--on-action);
 }
 
 .nav .btn:focus-visible {
 	box-shadow: inset 0 0 0 3px var(--white);
-	outline-color: var(--pomegrade-deep);
+	outline-color: var(--accent);
 }
 
 /* the section bar: under the global one, then on top once that has scrolled
@@ -352,7 +352,7 @@ a:hover {
 
 .local-nav a:focus-visible {
 	outline: none;
-	box-shadow: inset 0 0 0 1.5px var(--pomegrade-deep);
+	box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
 .local-nav .local-title {
@@ -423,9 +423,47 @@ section {
 }
 
 /* the hero: the heading, one sentence, one button, and the app itself under
-   them */
+   them. Its heading is the page's one loud moment: larger and set tighter
+   than any other on the site */
 .hero {
 	padding: var(--space-6) 0 var(--space-7);
+}
+
+.hero h1 {
+	font-size: clamp(56px, 8vw, 112px);
+	line-height: 0.98;
+	letter-spacing: -0.015em;
+}
+
+.hero .lede {
+	margin-top: var(--space-3);
+	font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+}
+
+/* the wide-screen shot without the empty black above the cover: the
+   lyrics and the bar are what it is of */
+@media (min-width: 641px) {
+
+	.hero .shot .desk {
+		aspect-ratio: 1440 / 830;
+		object-fit: cover;
+		object-position: bottom;
+	}
+}
+
+/* on a phone the hero shows the phone's own Now Playing, at a phone's
+   size, not the width of the window */
+@media (max-width: 640px) {
+
+	.hero .shot .desk {
+		max-width: 300px;
+		margin-inline: auto;
+		border-radius: 24px;
+	}
+
+	.wall li:nth-child(n + 17) {
+		display: none;
+	}
 }
 
 .hero .lede {
@@ -510,7 +548,7 @@ section {
 }
 
 .plain li::marker {
-	color: var(--pomegrade-deep);
+	color: var(--accent);
 }
 
 @media (max-width: 900px) {
@@ -531,7 +569,10 @@ section {
 	--ink-2: #b8b1a6;
 	--ink-3: #8f897f;
 	--line: #34302a;
-	--accent: var(--pomegrade);
+	--accent: var(--paper);
+	--action: var(--paper);
+	--action-hover: var(--warm-1);
+	--on-action: var(--charcoal-1);
 	background: var(--surface);
 	color: var(--ink);
 }
@@ -570,9 +611,9 @@ section {
    corners; the outline style for the second action */
 .btn {
 	appearance: none;
-	border: 1px solid var(--pomegrade-deep);
-	background: var(--pomegrade-deep);
-	color: var(--white);
+	border: 1px solid var(--action);
+	background: var(--action);
+	color: var(--on-action);
 	border-radius: 2px;
 	padding: 14px 32px;
 	display: inline-flex;
@@ -586,9 +627,9 @@ section {
 }
 
 .btn:hover {
-	background: var(--pomegrade-deeper);
-	border-color: var(--pomegrade-deeper);
-	color: var(--white);
+	background: var(--action-hover);
+	border-color: var(--action-hover);
+	color: var(--on-action);
 }
 
 .btn:focus-visible {
@@ -610,14 +651,14 @@ section {
 }
 
 .btn.outline:hover {
-	background: var(--pomegrade-deep);
-	border-color: var(--pomegrade-deep);
-	color: var(--white);
+	background: var(--action);
+	border-color: var(--action);
+	color: var(--on-action);
 }
 
 .btn.outline:focus-visible {
-	background: var(--pomegrade-deep);
-	color: var(--white);
+	background: var(--action);
+	color: var(--on-action);
 	box-shadow: none;
 	outline: 1.5px solid var(--charcoal-1);
 	outline-offset: -1.5px;
@@ -856,90 +897,78 @@ footer ::selection {
 	color: #fff;
 }
 
-/* Every album has a cover: the words on the left, and four of the covers
-   Riff drew spread out beside them like records on a table, each a little
-   turned, the one under the pointer lifted out of the spread */
-#covers {
-	padding-top: 0;
-}
-
+/* Every album has a cover: a charcoal band, the words, then a wall of the
+   covers Riff draws running edge to edge, as wordpress.org's Showcase does
+   its sites: the demo's four among records in the public domain */
 #covers .wrap {
-	display: grid;
-	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-	gap: var(--space-5) var(--space-6);
-	align-items: center;
+	max-width: 1160px;
 }
 
-.covers-words .fine {
-	margin-top: var(--space-3);
+.covers-words {
+	max-width: 40rem;
 }
 
-.spread {
-	position: relative;
+.wall {
 	list-style: none;
-	margin: 0;
-	padding: 0;
-	aspect-ratio: 1.6;
-	max-width: 100%;
+	margin: var(--space-6) 0 0;
+	padding: 0 6px;
+	display: grid;
+	grid-template-columns: repeat(8, minmax(0, 1fr));
+	gap: 6px;
 }
 
-.spread li {
-	position: absolute;
-	top: 12%;
-	width: 52%;
-	aspect-ratio: 1;
-	transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.spread img {
+.wall img {
 	display: block;
 	width: 100%;
-	height: 100%;
+	height: auto;
+	aspect-ratio: 1;
 	border-radius: 2px;
-	box-shadow: 0 14px 34px rgb(60 40 20 / 0.18), 0 2px 6px rgb(60 40 20 / 0.12);
 }
 
-.spread li:nth-child(1) {
-	left: 0;
-	transform: rotate(-6deg);
-	z-index: 1;
-}
+/* where the neck lies in the margin, the wall leaves the margin to it: it
+   starts in line with the words and runs off the right edge */
+@media (min-width: 1400px) {
 
-.spread li:nth-child(2) {
-	left: 16%;
-	transform: rotate(-2deg) translateY(-3%);
-	z-index: 2;
-}
+	[data-neck="margin"] .wall {
+		grid-template-columns: repeat(7, minmax(0, 1fr));
+		padding-left: var(--content-x);
+		padding-right: 0;
+	}
 
-.spread li:nth-child(3) {
-	left: 32%;
-	transform: rotate(2.5deg) translateY(2%);
-	z-index: 3;
-}
-
-.spread li:nth-child(4) {
-	left: 48%;
-	transform: rotate(6deg) translateY(-1%);
-	z-index: 4;
-}
-
-.spread li:hover {
-	z-index: 5;
-	transform: rotate(0deg) translateY(-8%) scale(1.03);
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-	.spread li {
-		transition: none;
+	[data-neck="margin"] .wall li:nth-child(n + 22) {
+		display: none;
 	}
 }
 
 @media (max-width: 900px) {
 
-	#covers .wrap {
-		grid-template-columns: minmax(0, 1fr);
+	.wall {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
+}
+
+/* the five things Riff does, large and light on ruled lines, as
+   wordpress.org sets its own; five lines, a stave */
+.staff {
+	list-style: none;
+	margin: var(--space-4) 0 0;
+	padding: 0;
+}
+
+.staff li {
+	padding: 10px 0 8px;
+	border-bottom: 1px solid #d9ccb5;
+	font-size: clamp(1.25rem, 2vw, 1.5rem);
+	font-weight: 300;
+	line-height: 1.3;
+	color: var(--ink);
+}
+
+/* Try it: a band in the fingerboard's maple, the bar's own colour, so the
+   page ends on the instrument */
+.board {
+	background: var(--fingerboard);
+	border-top: 1px solid #dccfb9;
 }
 
 /* no lone last word on a line: headings balanced, running text shaped so
@@ -958,4 +987,94 @@ dt,
 figcaption,
 blockquote {
 	text-wrap: pretty;
+}
+
+/* motion, only where it is welcome: the hero arrives, line by line, as the
+   page opens, and each cover on the wall turns in as it scrolls into view,
+   a column at a time. Nothing else on the site moves on its own. */
+@media (prefers-reduced-motion: no-preference) {
+
+	.hero h1,
+	.hero .lede,
+	.hero .cta,
+	.hero .shot {
+		animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	}
+
+	.hero .lede {
+		animation-delay: 0.08s;
+	}
+
+	.hero .cta {
+		animation-delay: 0.16s;
+	}
+
+	.hero .shot {
+		animation-delay: 0.28s;
+	}
+
+	@keyframes rise {
+
+		from {
+			opacity: 0;
+			translate: 0 18px;
+		}
+	}
+
+	@supports (animation-timeline: view()) {
+
+		.wall li {
+			animation: turn-in linear both;
+			animation-timeline: view();
+			animation-range: entry 0% entry 70%;
+		}
+
+		.wall li:nth-child(7n + 2) {
+			animation-range: entry 6% entry 76%;
+		}
+
+		.wall li:nth-child(7n + 3) {
+			animation-range: entry 12% entry 82%;
+		}
+
+		.wall li:nth-child(7n + 4) {
+			animation-range: entry 18% entry 88%;
+		}
+
+		.wall li:nth-child(7n + 5) {
+			animation-range: entry 24% entry 94%;
+		}
+
+		.wall li:nth-child(7n + 6) {
+			animation-range: entry 30% entry 100%;
+		}
+
+		.wall li:nth-child(7n) {
+			animation-range: entry 36% cover 30%;
+		}
+
+		@keyframes turn-in {
+
+			from {
+				opacity: 0;
+				transform: perspective(800px) rotateY(-24deg) scale(0.94);
+			}
+		}
+	}
+}
+
+/* on a phone the three phones fan wider, so each screen can be read */
+@media (max-width: 640px) {
+
+	.fan .device {
+		width: 54%;
+	}
+
+	.fan .fan-left {
+		transform: translateX(-50%) rotate(-7deg) scale(0.88);
+	}
+
+	.fan .fan-right {
+		transform: translateX(50%) rotate(7deg) scale(0.88);
+	}
 }

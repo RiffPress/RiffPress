@@ -64,24 +64,25 @@
 <meta name="theme-color" content="#000">
 <meta name="color-scheme" content="light">
 <link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="neck.css">
 </head>
-<body>
+<body data-neck="margin">
 <a class="skip" href="#top">Skip to content</a>
 <div class="nav"><div class="wrap"><a class="mark" href="./"><img src="brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="add-music/">Add your music</a><a href="developers/">Developers</a><a class="btn" href="download/">Download</a></nav></div></div>
 
 <main id="top">
 <section class="hero"><div class="wrap">
 	<h1>Own every note</h1>
-	<p class="lede">Riff turns the music in your WordPress Media Library into a streaming player on your own site, with albums, search, a queue and the lock screen.</p>
+	<p class="lede">Riff turns the music in your WordPress Media Library into a streaming player on your own site.</p>
 	<p class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Try the demo</a> <a class="go" href="download/">or download Riff {{version}}</a></p>
-	<div class="shot"><picture><source type="image/avif" srcset="desktop-listen.avif 2880w, desktop-listen-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-listen.png" width="2880" height="1800" alt="The Listen app: the library in a panel at the side, home and search across the top, a grid of album covers, and the player bar along the bottom" fetchpriority="high" decoding="async"></picture></div>
+	<div class="shot"><picture><source type="image/avif" media="(max-width: 640px)" srcset="phone-lyrics.avif"><source type="image/png" media="(max-width: 640px)" srcset="phone-lyrics.png"><source type="image/avif" srcset="desktop-lyrics.avif 2880w, desktop-lyrics-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-lyrics.png" width="2880" height="1800" alt="Now Playing on a wide screen: Lo, How a Rose E'er Blooming from Christmas With the Chorus, its cover beside the words, the line being sung picked out, and the player bar along the bottom" fetchpriority="high" decoding="async"></picture></div>
 </div></section>
 
 <section id="how"><div class="wrap">
 	<div class="how-words">
 		<h2>From the Media&nbsp;Library to the lock&nbsp;screen</h2>
 		<p>Upload an album. Riff reads its tags, makes a page of it, and keeps it playing from page to page, all the way to the lock screen.</p>
-		<ul class="plain">
+		<ul class="staff">
 			<li>Queue, likes and playlists</li>
 			<li>Video versions</li>
 			<li>AirPlay and Chromecast</li>
@@ -96,27 +97,41 @@
 	</div>
 </div></section>
 
-<section id="covers"><div class="wrap">
+<section class="alt" id="covers"><div class="wrap">
 	<div class="covers-words">
 		<h2>Every album has a cover</h2>
-		<p class="lede">When an album has none, Riff draws one from the record itself: a groove for each track, as long as the track, wavering with its music.</p>
-		<p class="fine">The palette and the layout come from the album's name, so no two are alike.</p>
+		<p class="lede">When an album has none, Riff draws one from the record itself: a groove for each track, as long as the track, wavering with its music. The palette and the layout come from the album's name, so no two are alike.</p>
 	</div>
-	<ul class="spread" aria-label="Covers Riff drew for the demo's albums">
-		<li><img src="covers/compositions.png" alt="Compositions, ten grooves on blue" width="1024" height="1024" loading="lazy" decoding="async"></li>
-		<li><img src="covers/carols-of-the-season.svg" alt="Carols of the Season, twelve grooves on charcoal" width="1024" height="1024" loading="lazy" decoding="async"></li>
-		<li><img src="covers/christmas-with-the-chorus.svg" alt="Christmas With the Chorus, nine grooves on white" width="1024" height="1024" loading="lazy" decoding="async"></li>
-		<li><img src="covers/songs-of-the-republic.svg" alt="Songs of the Republic, ten grooves on white" width="1024" height="1024" loading="lazy" decoding="async"></li>
+</div>
+	<ul class="wall" aria-label="Covers Riff drew, for the demo's albums and for records in the public domain">
+		<li><img src="covers/wall/eine-kleine-nachtmusik.avif" alt="Eine kleine Nachtmusik" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/nocturnes.avif" alt="Nocturnes" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/gymnopedies.avif" alt="Gymnopédies" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/compositions.png" alt="Compositions" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/goldberg-variations.avif" alt="Goldberg Variations" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/st-louis-blues.avif" alt="St. Louis Blues" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/the-four-seasons.avif" alt="The Four Seasons" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/the-planets.avif" alt="The Planets" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/carnival-of-the-animals.avif" alt="Carnival of the Animals" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/carols-of-the-season.svg" alt="Carols of the Season" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/clair-de-lune.avif" alt="Clair de Lune" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/swanee-river.avif" alt="Swanee River" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/peer-gynt.avif" alt="Peer Gynt" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/danny-boy.avif" alt="Danny Boy" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/rhapsody-in-blue.avif" alt="Rhapsody in Blue" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/christmas-with-the-chorus.svg" alt="Christmas With the Chorus" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/maple-leaf-rag.avif" alt="Maple Leaf Rag" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/shenandoah.avif" alt="Shenandoah" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/amazing-grace.avif" alt="Amazing Grace" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/the-entertainer.avif" alt="The Entertainer" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/songs-of-the-republic.svg" alt="Songs of the Republic" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/pictures-at-an-exhibition.avif" alt="Pictures at an Exhibition" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/moonlight-sonata.avif" alt="Moonlight Sonata" width="480" height="480" loading="lazy" decoding="async"></li>
+		<li><img src="covers/wall/the-stars-and-stripes-forever.avif" alt="The Stars and Stripes Forever" width="480" height="480" loading="lazy" decoding="async"></li>
 	</ul>
-</div></section>
+</section>
 
-<section class="alt" id="listen"><div class="wrap">
-	<h2>Now Playing, on a wide screen</h2>
-	<p class="lede">The cover, the rest of the album in Up next, and the bar that never leaves.</p>
-	<div class="shot"><picture><source type="image/avif" srcset="desktop-now-playing.avif 2880w, desktop-now-playing-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 1160px"><img class="desk" src="desktop-now-playing.png" width="2880" height="1800" alt="Now Playing on a wide screen: the album's cover, Up next listing the rest of its tracks, and the player bar with the controls and the seek line" loading="lazy" decoding="async"></picture></div>
-</div></section>
-
-<section id="try"><div class="wrap">
+<section class="board" id="try"><div class="wrap">
 	<h2>Try it in your browser</h2>
 	<p class="lede">The demo is a WordPress site running in your browser, with four albums in the public domain by the bands and choruses of the United States Air Force, Army and Navy, three of them sung, with their words timed to the music.</p>
 	<p class="cta"><a class="btn" href="https://playground.wordpress.net/?mode=seamless&blueprint-url={{pages_url}}blueprint.json" target="_blank" rel="noopener">Open the demo</a></p>

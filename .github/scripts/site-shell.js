@@ -50,8 +50,9 @@ function head( title, description, url, depth, css, section = '' ) {
 <meta name="theme-color" content="#000">
 <meta name="color-scheme" content="light">
 <link rel="stylesheet" href="${ css }">
+<link rel="stylesheet" href="${ up }neck.css">
 </head>
-<body>
+<body data-neck="margin">
 <a class="skip" href="#main">Skip to content</a>
 <div class="nav"><div class="wrap"><a class="mark" href="${ up }"><img src="${ up }brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="${ up }add-music/">Add your music</a><a href="${ up }developers/"${ dev }>Developers</a><a class="btn" href="${ up }download/">Download</a></nav></div></div>
 `;

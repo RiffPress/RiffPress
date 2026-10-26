@@ -123,6 +123,8 @@ jobs:
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g; s#(\.avif)( [0-9]+w)?(,|\")#\1?v=${V}\2\3#g; s#(content=\"[^\"?]+/og\.png)\"#\1?v=${V}\"#; s#(\"image\": \"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(blueprint-url=[^\"&?]+/blueprint\.json)#\1?v=${V}#g" out/index.html
           grep -c "blueprint.json?v=${V}" out/index.html
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g" out/robots.txt out/sitemap.xml
+          # The 404 is served at whatever address was missed, so its links are absolute.
+          sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g" out/404.html
           VERSION=$(sed -nE 's/^ \* Version: *([0-9][0-9A-Za-z.-]*).*$/\1/p' plugins/riff/riff.php | head -n1)
           [[ -n "$VERSION" ]] || { echo "::error::No version in riff.php"; exit 1; }
           # The newest release that is not a pre-release: what releases/latest serves. While Riff is ahead of
@@ -137,7 +139,7 @@ jobs:
           sed -i -E "s#\{\{stable\}\}#${STABLE}#g" out/download/index.html
           find out/web out/add-music out/download out/developers out/built out/accessibility -name index.html -exec sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#\{\{commit\}\}#${GITHUB_SHA}#g; s#\{\{version\}\}#${VERSION}#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g" {} +
           sed -i -E "s#\{\{version\}\}#${VERSION}#g" out/index.html
-          if grep -rn '{{' out/index.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
+          if grep -rn '{{' out/index.html out/404.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" "$V" > out/blueprint.json
           grep -c "?v=${V}" out/index.html out/blueprint.json
           # Everything stamped by commit can be cached forever; the page and the blueprint are fetched fresh.
