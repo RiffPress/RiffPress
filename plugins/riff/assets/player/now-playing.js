@@ -327,6 +327,7 @@ export function nowPlaying( P ) {
 		const next = sideOf( t );
 		const show = () => {
 			root.dataset.riffFormat = album?.format || '12';
+			strobe();
 			cut( next ? album.lengths.slice( next.from, next.to ) : [] );
 			label( next );
 			needle();
@@ -448,6 +449,24 @@ export function nowPlaying( P ) {
 		}, ARRIVE );
 	}
 
+	// ---- The strobe on the platter's rim, as the deck's lamp shows it (riff.css): between two of
+	// its flashes the platter turns some way, and a row of dots seems to move by only what is left
+	// over after the whole dots, so each row turns by that alone, a turn a second for each 360° a
+	// second it seems to drift. Still while the platter is.
+	const FLASHES = 120;
+	function strobe() {
+		const m = P.el();
+		const turning = 'riffTurning' in root.dataset && root.dataset.riffDeck === 'out' && ! P.reduce();
+		const rpm = root.dataset.riffFormat === '7' ? 45 : 100 / 3;
+		const step = turning ? ( ( rpm / 60 ) * 360 * ( m.playbackRate || 1 ) ) / FLASHES : 0;
+		$$( '.riff-strobe i' ).forEach( ( row, k ) => {
+			const dot = 360 / ( k ? 160 : 216 );
+			const seen = step - dot * Math.round( step / dot );
+			row.drift ??= row.animate( [ { rotate: '0deg' }, { rotate: '360deg' } ], { duration: 1000, iterations: Infinity } );
+			row.drift.updatePlaybackRate( ( seen * FLASHES ) / 360 );
+		} );
+	}
+
 	// The record out of its sleeve or back in it; out, the needle drops once it has come clear.
 	function deck( out ) {
 		const arm = $( '.riff-arm' );
@@ -456,6 +475,7 @@ export function nowPlaying( P ) {
 			delete root.dataset.riffDeck;
 			delete arm?.dataset.riffDown;
 			lift();
+			strobe();
 			return;
 		}
 		if ( root.dataset.riffDeck === 'out' ) {
@@ -463,6 +483,7 @@ export function nowPlaying( P ) {
 		}
 		root.dataset.riffDeck = 'out';
 		needle();
+		strobe();
 		deck.drop = setTimeout( () => {
 			if ( arm ) {
 				arm.dataset.riffDown = '';
@@ -605,6 +626,7 @@ export function nowPlaying( P ) {
 		el.addEventListener( 'playing', () => {
 			if ( el === P.el() ) {
 				root.dataset.riffTurning = '';
+				strobe();
 			}
 			if ( ! ( 'riffArriving' in root.dataset ) ) {
 				deck( true );
@@ -613,6 +635,7 @@ export function nowPlaying( P ) {
 		el.addEventListener( 'pause', () => {
 			if ( el === P.el() ) {
 				delete root.dataset.riffTurning;
+				strobe();
 			}
 		} );
 		el.addEventListener( 'ratechange', () => {
@@ -621,6 +644,7 @@ export function nowPlaying( P ) {
 					a.updatePlaybackRate( el.playbackRate || 1 );
 				}
 			}
+			strobe();
 		} );
 		for ( const type of [ 'timeupdate', 'pause', 'playing', 'seeked', 'ratechange' ] ) {
 			el.addEventListener( type, () => needle() );

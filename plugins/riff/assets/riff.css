@@ -1374,14 +1374,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* The platter's rim, wider than the record as a Technics platter is (332mm
-   to the record's 302mm), and on it the strobe: two rows of dots that stand
-   still at the right speed. Under a Technics' lamp, flashing at twice the
-   mains frequency, a row stands still when the platter turns one dot for
-   each flash; here the screen's frames are the flashes. At 60 frames a
-   second 33⅓ turns 3⅓° a frame, two of the inner row's 216 dots; 45 turns
-   4½°, two of the outer row's 160. So the row for the speed playing stands
-   still on a 60 or 120Hz screen and the other drifts, and both drift as the
-   platter comes up to speed or winds down, as on the deck. */
+   to the record's 302mm), and on it the strobe: two rows of dots, 216 for
+   33⅓ and 160 for 45, as the deck's lamp shows them, flashing 120 times a
+   second on 60Hz mains. A row stands still when the platter turns a whole
+   number of its dots between flashes, and otherwise drifts by what is left
+   over; now-playing.js turns each row by just that, so the row for the
+   speed playing stands still and the other creeps, and both drift as the
+   platter comes up to speed or winds down, whatever the screen's rate. */
 .riff-strobe {
 	position: absolute;
 	z-index: 1;
@@ -1389,20 +1388,19 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 50%;
 }
 
-.riff-strobe::before,
-.riff-strobe::after {
-	content: "";
+.riff-strobe i {
 	position: absolute;
 	inset: 0;
 	border-radius: 50%;
+	will-change: rotate;
 }
 
-.riff-strobe::before {
+.riff-strobe i:first-child {
 	background: repeating-conic-gradient(rgb(200 200 200 / 0.4) 0 0.62deg, transparent 0.62deg calc(360deg / 216));
 	mask-image: radial-gradient(circle closest-side, transparent 94.8%, #000 95% 96.4%, transparent 96.6%);
 }
 
-.riff-strobe::after {
+.riff-strobe i:last-child {
 	background: repeating-conic-gradient(rgb(200 200 200 / 0.4) 0 0.84deg, transparent 0.84deg calc(360deg / 160));
 	mask-image: radial-gradient(circle closest-side, transparent 97.2%, #000 97.4% 98.6%, transparent 98.8%);
 }
