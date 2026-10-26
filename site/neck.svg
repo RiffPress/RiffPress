@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 1989.8" width="150" height="1989.8">
 <defs>
-<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.6 0.006" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 0.42 0 0 0 0 0.3 0 0 0 0 0.16 0 0 0 0.24 0"/></filter>
-<linearGradient id="round" x2="1"><stop offset="0" stop-color="#503720" stop-opacity=".16"/><stop offset=".14" stop-color="#503720" stop-opacity="0"/><stop offset=".86" stop-color="#503720" stop-opacity="0"/><stop offset="1" stop-color="#503720" stop-opacity=".16"/></linearGradient>
-<linearGradient id="wire" y2="1"><stop offset="0" stop-color="#f2ede4"/><stop offset=".55" stop-color="#b9ae9b"/><stop offset="1" stop-color="#8c8170"/></linearGradient>
+<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.6 0.006" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 0.1 0 0 0 0 0.05 0 0 0 0 0.02 0 0 0 0.55 0"/></filter>
+<linearGradient id="round" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".3"/><stop offset=".14" stop-color="#503720" stop-opacity="0"/><stop offset=".86" stop-color="#503720" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>
+<linearGradient id="wire" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#cfd0cc"/><stop offset="1" stop-color="#7d7f7a"/></linearGradient>
 <linearGradient id="bone" y2="1"><stop offset="0" stop-color="#f8f3e9"/><stop offset="1" stop-color="#e0d4bf"/></linearGradient>
-<radialGradient id="dot" cx=".4" cy=".35"><stop offset="0" stop-color="#4a423a"/><stop offset=".7" stop-color="#25201b"/><stop offset="1" stop-color="#1a1612"/></radialGradient>
+<radialGradient id="dot" cx=".4" cy=".35"><stop offset="0" stop-color="#fffaf0"/><stop offset=".7" stop-color="#e9e0cf"/><stop offset="1" stop-color="#c8bba3"/></radialGradient>
 </defs>
-<rect width="150" height="1989.8" fill="#efe5d5"/>
+<rect width="150" height="1989.8" fill="#3a2419"/>
 <rect width="150" height="1989.8" filter="url(#grain)" opacity=".9"/>
 <rect width="150" height="1989.8" fill="url(#round)"/>
 <circle cx="75" cy="336.4" r="9" fill="url(#dot)"/>
@@ -18,27 +18,28 @@
 <circle cx="75" cy="1615.4" r="9" fill="url(#dot)"/>
 <circle cx="75" cy="1707.3" r="9" fill="url(#dot)"/>
 <circle cx="45" cy="1196.1" r="9" fill="url(#dot)"/><circle cx="105" cy="1196.1" r="9" fill="url(#dot)"/>
-<rect y="148.5" width="150" height="3" fill="#503720" opacity=".14"/><rect y="145.5" width="150" height="5" fill="url(#wire)"/>
-<rect y="278.2" width="150" height="3" fill="#503720" opacity=".14"/><rect y="275.2" width="150" height="5" fill="url(#wire)"/>
-<rect y="400.6" width="150" height="3" fill="#503720" opacity=".14"/><rect y="397.6" width="150" height="5" fill="url(#wire)"/>
-<rect y="516.2" width="150" height="3" fill="#503720" opacity=".14"/><rect y="513.2" width="150" height="5" fill="url(#wire)"/>
-<rect y="625.3" width="150" height="3" fill="#503720" opacity=".14"/><rect y="622.3" width="150" height="5" fill="url(#wire)"/>
-<rect y="728.3" width="150" height="3" fill="#503720" opacity=".14"/><rect y="725.3" width="150" height="5" fill="url(#wire)"/>
-<rect y="825.5" width="150" height="3" fill="#503720" opacity=".14"/><rect y="822.5" width="150" height="5" fill="url(#wire)"/>
-<rect y="917.2" width="150" height="3" fill="#503720" opacity=".14"/><rect y="914.2" width="150" height="5" fill="url(#wire)"/>
-<rect y="1003.8" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1000.8" width="150" height="5" fill="url(#wire)"/>
-<rect y="1085.5" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1082.5" width="150" height="5" fill="url(#wire)"/>
-<rect y="1162.7" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1159.7" width="150" height="5" fill="url(#wire)"/>
-<rect y="1235.5" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1232.5" width="150" height="5" fill="url(#wire)"/>
-<rect y="1304.2" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1301.2" width="150" height="5" fill="url(#wire)"/>
-<rect y="1369.1" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1366.1" width="150" height="5" fill="url(#wire)"/>
-<rect y="1430.3" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1427.3" width="150" height="5" fill="url(#wire)"/>
-<rect y="1488.1" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1485.1" width="150" height="5" fill="url(#wire)"/>
-<rect y="1542.7" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1539.7" width="150" height="5" fill="url(#wire)"/>
-<rect y="1594.1" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1591.1" width="150" height="5" fill="url(#wire)"/>
-<rect y="1642.7" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1639.7" width="150" height="5" fill="url(#wire)"/>
-<rect y="1688.6" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1685.6" width="150" height="5" fill="url(#wire)"/>
-<rect y="1731.9" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1728.9" width="150" height="5" fill="url(#wire)"/>
-<rect y="1772.8" width="150" height="3" fill="#503720" opacity=".14"/><rect y="1769.8" width="150" height="5" fill="url(#wire)"/>
-<rect width="150" height="8" fill="url(#bone)"/><rect y="8" width="150" height="2" fill="#503720" opacity=".14"/>
+<rect y="148.5" width="150" height="3" fill="#000" opacity=".35"/><rect y="145.5" width="150" height="5" fill="url(#wire)"/>
+<rect y="278.2" width="150" height="3" fill="#000" opacity=".35"/><rect y="275.2" width="150" height="5" fill="url(#wire)"/>
+<rect y="400.6" width="150" height="3" fill="#000" opacity=".35"/><rect y="397.6" width="150" height="5" fill="url(#wire)"/>
+<rect y="516.2" width="150" height="3" fill="#000" opacity=".35"/><rect y="513.2" width="150" height="5" fill="url(#wire)"/>
+<rect y="625.3" width="150" height="3" fill="#000" opacity=".35"/><rect y="622.3" width="150" height="5" fill="url(#wire)"/>
+<rect y="728.3" width="150" height="3" fill="#000" opacity=".35"/><rect y="725.3" width="150" height="5" fill="url(#wire)"/>
+<rect y="825.5" width="150" height="3" fill="#000" opacity=".35"/><rect y="822.5" width="150" height="5" fill="url(#wire)"/>
+<rect y="917.2" width="150" height="3" fill="#000" opacity=".35"/><rect y="914.2" width="150" height="5" fill="url(#wire)"/>
+<rect y="1003.8" width="150" height="3" fill="#000" opacity=".35"/><rect y="1000.8" width="150" height="5" fill="url(#wire)"/>
+<rect y="1085.5" width="150" height="3" fill="#000" opacity=".35"/><rect y="1082.5" width="150" height="5" fill="url(#wire)"/>
+<rect y="1162.7" width="150" height="3" fill="#000" opacity=".35"/><rect y="1159.7" width="150" height="5" fill="url(#wire)"/>
+<rect y="1235.5" width="150" height="3" fill="#000" opacity=".35"/><rect y="1232.5" width="150" height="5" fill="url(#wire)"/>
+<rect y="1304.2" width="150" height="3" fill="#000" opacity=".35"/><rect y="1301.2" width="150" height="5" fill="url(#wire)"/>
+<rect y="1369.1" width="150" height="3" fill="#000" opacity=".35"/><rect y="1366.1" width="150" height="5" fill="url(#wire)"/>
+<rect y="1430.3" width="150" height="3" fill="#000" opacity=".35"/><rect y="1427.3" width="150" height="5" fill="url(#wire)"/>
+<rect y="1488.1" width="150" height="3" fill="#000" opacity=".35"/><rect y="1485.1" width="150" height="5" fill="url(#wire)"/>
+<rect y="1542.7" width="150" height="3" fill="#000" opacity=".35"/><rect y="1539.7" width="150" height="5" fill="url(#wire)"/>
+<rect y="1594.1" width="150" height="3" fill="#000" opacity=".35"/><rect y="1591.1" width="150" height="5" fill="url(#wire)"/>
+<rect y="1642.7" width="150" height="3" fill="#000" opacity=".35"/><rect y="1639.7" width="150" height="5" fill="url(#wire)"/>
+<rect y="1688.6" width="150" height="3" fill="#000" opacity=".35"/><rect y="1685.6" width="150" height="5" fill="url(#wire)"/>
+<rect y="1731.9" width="150" height="3" fill="#000" opacity=".35"/><rect y="1728.9" width="150" height="5" fill="url(#wire)"/>
+<rect y="1772.8" width="150" height="3" fill="#000" opacity=".35"/><rect y="1769.8" width="150" height="5" fill="url(#wire)"/>
+<rect width="4" height="1989.8" fill="#efe3cc"/><rect x="146" width="4" height="1989.8" fill="#efe3cc"/>
+<rect width="150" height="8" fill="url(#bone)"/><rect y="8" width="150" height="3" fill="#000" opacity=".35"/>
 </svg>

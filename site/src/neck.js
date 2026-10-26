@@ -230,12 +230,13 @@ function neck( bar ) {
 			// Its shadow on the board, cast down and to the right, which moves as the string does, and
 			// meets the string where a finger presses it to the board.
 			const shadow = document.createElementNS( SVG, 'path' );
-			shadow.setAttribute( 'stroke', 'rgba(80,55,32,.2)' );
+			// On the rosewood in the margin, steel over a dark board; in the bar, on the paper.
+			shadow.setAttribute( 'stroke', vertical ? 'rgba(0,0,0,.5)' : 'rgba(80,55,32,.2)' );
 			shadow.setAttribute( 'stroke-width', String( width * 1.1 ) );
 			shadow.setAttribute( 'stroke-linecap', 'round' );
 			shadows.append( shadow );
 			const path = document.createElementNS( SVG, 'path' );
-			path.setAttribute( 'stroke', '#9c8f7b' );
+			path.setAttribute( 'stroke', vertical ? '#d9dad6' : '#9c8f7b' );
 			path.setAttribute( 'stroke-width', String( width ) );
 			path.setAttribute( 'stroke-linecap', 'round' );
 			// Light along a round wire: one hairline on its top in the bar, on its left in the margin.
@@ -511,6 +512,16 @@ function rail() {
 	track.innerHTML = '<div class="neck-guitar"><div class="neck-strings"></div></div>';
 	document.body.append( track );
 	document.body.classList.add( 'has-neck-rail' );
+	// The nut just under the bars, however tall they are; the Developers bar holds the neck under it
+	// once the global one has scrolled away.
+	const nav = document.querySelector( '.nav' );
+	const local = document.querySelector( '.local-nav' );
+	const fit = () => {
+		const style = document.body.style;
+		style.setProperty( '--neck-top', `${ ( nav?.offsetHeight || 0 ) + ( local?.offsetHeight || 0 ) }px` );
+		style.setProperty( '--stick', `${ local?.offsetHeight || 0 }px` );
+	};
+	new ResizeObserver( fit ).observe( nav || document.body );
 	return track.firstElementChild;
 }
 const guitar = document.body.dataset.neck === 'margin' ? rail() : null;
