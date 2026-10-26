@@ -32,6 +32,14 @@ Branch every pull request from `main`, never from another open pull request's br
 
 The Playwright suite runs from the pre-commit hook against the local wp-env site, and again in Actions on the pull request. Do not skip the hook for changes under `plugins/`. Docs and site changes may skip it with `RIFF_SKIP_E2E=1`.
 
+## Before a pull request
+
+Show the change working (the test, the build, a screenshot against the design), then run `/code-review` on the diff, or have a subagent review it with fresh context, against [REVIEW.md](REVIEW.md). For anything under `plugins/riff-sign-in/` or a REST route, run `/security-review` too. Stop after three rounds: if review keeps finding the same kind of problem, rethink the approach instead of patching it again. When a reviewer keeps flagging something that isn't wrong, add it to Not bugs below; when it keeps missing something, add it to REVIEW.md.
+
+## Merging
+
+A pull request may auto-merge (`gh pr merge --auto --squash`) once its work is done, except one that touches `.github/workflows/`, `.github/scripts/`, `release-please-config.json`, `scripts/sync-versions.sh`, `plugins/riff-sign-in/`, or adds public surface (the Public API label). Those, and release-please's release pull requests, wait for a person to merge them.
+
 ## Not bugs
 
 - `blueprint.json` names its zip and demo files relative to itself (`riff.zip`, `demo/…`), which is not a valid Playground URL on its own. The Pages workflow resolves them against wherever Pages serves the repository and stamps each with the commit, and a pull request's preview resolves them against its own preview branch, so neither demo depends on a hostname written down anywhere. `site/index.html`'s `{{pages_url}}` is filled in the same way.
