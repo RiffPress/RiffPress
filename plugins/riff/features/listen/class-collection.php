@@ -468,7 +468,7 @@ final class Collection {
 			'' !== $name ? $name . ' · ' . $count : $count,
 			__( 'Playlist', 'riff' ),
 			'',
-			'#ffb020',
+			'#7a00df',
 			false,
 			'',
 			0,

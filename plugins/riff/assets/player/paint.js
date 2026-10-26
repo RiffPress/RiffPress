@@ -21,7 +21,8 @@ export function paint( P ) {
 	function paintAll() {
 		const t = P.track();
 		const m = P.el();
-		const playing = !! t && ! m.paused;
+		// As asked: playing while the music waits on the needle, and not while it winds down.
+		const playing = !! t && ( P.held?.() || ( ! m.paused && ! P.stopping?.() ) );
 		root.dataset.playing = playing ? 'true' : 'false';
 		root.dataset.mode = P.isVideo( t ) ? 'video' : 'song';
 		for ( const b of $$( '[data-riff-action="toggle"]' ) ) {

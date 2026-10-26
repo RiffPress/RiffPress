@@ -247,7 +247,7 @@ class Test_Riff_Player extends Riff_TestCase {
 
 	public function test_the_accent_comes_from_the_theme(): void {
 		$this->go_to( home_url( '/' ) );
-		$this->assertSame( '', Player::root_style(), 'nothing set: the default amber' );
+		$this->assertSame( '', Player::root_style(), 'nothing set: the default ivory' );
 
 		$accent = '#3858e9';
 		$theme  = static function ( WP_Theme_JSON_Data $json ) use ( &$accent ): WP_Theme_JSON_Data {

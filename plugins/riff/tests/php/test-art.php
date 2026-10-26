@@ -152,8 +152,8 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertNotSame( Art::svg( $a ), Art::svg( $c ), 'a different slug draws a different cover' );
 	}
 
-	public function test_every_colour_is_a_wordpress_org_token_and_never_riffs_amber(): void {
-		// Amber is kept for what you press, as Play, so no cover looks like a button.
+	public function test_every_colour_is_a_wordpress_org_token_and_never_riffs_accent(): void {
+		// Riff's ivory is kept for what you press, as Play, so no cover looks like a button.
 		$tokens = array( '#1e1e1e', '#3858e9', '#f6f6f6', '#ffffff', '#e26f56', '#33f078', '#fff972', '#d7a7ff', '#7a00df', '#40464d', '#213fd4' );
 		foreach ( Cover::palettes() as $palette ) {
 			foreach ( $palette as $colour ) {

@@ -56,7 +56,7 @@
 		],
 		"shot": {
 			"image": "phone-now-playing",
-			"caption": "The lighter band on the seek line ahead of the amber played part is the buffered range."
+			"caption": "The lighter band on the seek line ahead of the played part is the buffered range."
 		}
 	},
 	{
@@ -202,7 +202,7 @@
 		},
 		"summary": "Reads the signal that lights the filament.",
 		"how": "The first time something plays through the audio element on a non-iOS browser, the script creates an `AudioContext`. It wraps the element in a media source and connects it through an analyser and back to the destination, so the sound still comes out. The context suspends on pause and resumes on play.",
-		"why": "This is what drives the amber filament. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
+		"why": "This is what drives the filament. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
 		"fallback": "Where there is no analyser the wire breathes at working temperature on a fixed loop instead.",
 		"where": [
 			{
@@ -322,7 +322,7 @@
 				"code": "<img class=\"riff-cover\" data-riff-art data-riff-size=\"large\" alt=\"\" decoding=\"async\" draggable=\"false\" hidden>"
 			},
 			{
-				"file": "plugins/riff/assets/player/now-playing.js",
+				"file": "plugins/riff/assets/player/helpers.js",
 				"code": "img.decoding = 'async';"
 			}
 		],
@@ -811,12 +811,12 @@
 			},
 			{
 				"file": "plugins/riff/assets/player/filament.js",
-				"code": "const heated = $$( '.riff-line, .riff-np-glow' );"
+				"code": "const heated = $$( '.riff-line, .riff-np-glow' ).map( ( node ) => ( {"
 			}
 		],
 		"shot": {
 			"image": "phone-post",
-			"caption": "The amber filament along the bar's seek line, whose brightness follows the music."
+			"caption": "The filament along the bar's seek line, whose brightness follows the music."
 		}
 	},
 	{
@@ -857,13 +857,13 @@
 			"url": "https://www.w3.org/TR/css-conditional-5/#container-queries"
 		},
 		"summary": "Sizes the cover from the stage it sits in, not the viewport.",
-		"how": "The stage in Now Playing, between the header and the title, is a size container. The cover is the smaller of the stage's width and height in `cqw` and `cqh`, so it is always a square that fits whatever room is left. The video fills the stage's width and caps at its height. There is no `@container` rule, only the units.",
+		"how": "The stage in Now Playing, between the header and the title, is a size container named `riff-stage`. The cover is the smaller of the stage's width and height in `cqw` and `cqh`, so it is always a square that fits whatever room is left. The video fills the stage's width and caps at its height. On a stage wider than 3:2, an `@container` rule sizes the sleeve and the record to sit side by side, as large as the stage allows.",
 		"why": "The stage's height changes with the phone, the safe areas and the Up next sheet, and the cover has to fit without the script measuring anything.",
 		"fallback": "The cover renders at the image's own size, clipped by the stage.",
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"code": "container-type: size;"
+				"code": "container: riff-stage / size;"
 			},
 			{
 				"file": "plugins/riff/assets/riff.css",

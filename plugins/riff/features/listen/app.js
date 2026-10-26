@@ -27,6 +27,7 @@ import { sidebarPanel } from 'riff-app/sidebar';
 import { installOffer } from 'riff-app/install';
 import { desktopFrame } from 'riff-app/desktop';
 import { search } from 'riff-app/search';
+import { rack } from 'riff-app/rack';
 
 export function start( api ) {
 	const app = document.querySelector( '[data-riff-app]' );
@@ -120,6 +121,7 @@ export function start( api ) {
 		sidebarPanel,
 		installOffer,
 		search,
+		rack,
 	] ) {
 		Object.assign( ctx, module( ctx ) );
 	}
@@ -233,6 +235,7 @@ export function start( api ) {
 	} );
 
 	ctx.home( true );
+	ctx.rackUp();
 	ctx.fade( app );
 	if ( ctx.desktop ) {
 		desktopFrame( ctx );

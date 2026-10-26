@@ -294,7 +294,8 @@ final class Standalone {
 		return array(
 			'--riff-app-bg'           => self::BACKGROUND,
 			'--riff-app-ink'          => '#ffffff',
-			'--riff-app-accent'       => '#ffb020',
+			'--riff-app-accent'       => '#f2eadb',
+			'--riff-app-on-accent'    => self::BACKGROUND,
 			'--riff-app-font'         => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',
 			'--riff-app-heading-font' => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',
 		);

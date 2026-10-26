@@ -92,6 +92,10 @@ defined( 'ABSPATH' ) || exit;
 
 		<div class="riff-np-body">
 			<div class="riff-stage">
+				<?php /* The turntable, which stays where it stands: its plinth and platter under the record, with the rest the arm sits on, and its tonearm over it. The record in the sleeve comes out onto it while the album plays, its label printed in the cover's colours with the album above the spindle and the artist below, as a record's is. */ ?>
+				<span class="riff-plinth riff-deck-part" aria-hidden="true"><span class="riff-armrest"></span></span>
+				<span class="riff-record" aria-hidden="true"><span class="riff-spin"><img data-riff-art alt="" decoding="async" draggable="false" hidden><span class="riff-label"><b data-riff-text="source"></b><i data-riff-text="artist"></i><small>33⅓</small></span></span></span>
+				<span class="riff-mount riff-deck-part" aria-hidden="true"><span class="riff-arm"><svg class="riff-arm-tube" viewBox="0 0 12 82" focusable="false"><rect x="2.6" y="-10" width="6.8" height="7" rx="1.2" fill="#3a3a3a" stroke="#5e5e5e" stroke-width=".4"/><path d="M6 -3V4C6 28 8.6 46 8.2 59C7.9 66 6.8 70 6 73" fill="none" stroke="#cfcfcf" stroke-width="1.1" stroke-linecap="round"/><rect x="3.6" y="72" width="4.8" height="9" rx="1" fill="#1d1d1d" stroke="#4a4a4a" stroke-width=".4" transform="rotate(-18 6 79)"/></svg><svg class="riff-arm-base" viewBox="0 0 12 82" focusable="false"><circle cx="6" cy="4" r="4" fill="#2a2a2a" stroke="#5a5a5a" stroke-width=".6"/><circle cx="6" cy="4" r="1.4" fill="#8a8a8a"/></svg></span></span>
 				<img class="riff-cover" data-riff-art data-riff-size="large" alt="" decoding="async" draggable="false" hidden>
 				<video class="riff-video" playsinline preload="metadata"></video>
 			</div>
@@ -119,8 +123,10 @@ defined( 'ABSPATH' ) || exit;
 					<?php foreach ( Player::chips() as $riff_slug => $riff_chip ) : ?>
 						<?php echo Player::control( (string) $riff_slug, $riff_chip, 'riff-chip' ); ?>
 					<?php endforeach; ?>
-					<?php // Stop, on a phone only: what swiping the bar down does, as a button (WCAG 2.5.7). A computer has no such swipe, and music apps have no Stop. ?>
-					<button type="button" class="riff-chip riff-mobile" data-riff-action="dismiss"><?php echo Player::icon( 'stop' ); ?><span><?php esc_html_e( 'Stop', 'riff' ); ?></span></button>
+					<?php // On a phone, a chip for each tab beside Up next, such as Lyrics, which opens the sheet on it: the tabs are otherwise behind the handle. ?>
+					<?php foreach ( array_slice( Player::tabs(), 1, null, true ) as $riff_slug => $riff_tab ) : ?>
+						<button type="button" class="riff-chip riff-mobile" data-riff-action="tab" data-riff-tab="<?php echo esc_attr( $riff_slug ); ?>"><?php echo Player::icon( 'tab' ); ?><span><?php echo esc_html( $riff_tab['label'] ); ?></span></button>
+					<?php endforeach; ?>
 				</div>
 			</div>
 
@@ -144,6 +150,8 @@ defined( 'ABSPATH' ) || exit;
 							<h3 data-riff-text="source"></h3>
 						</div>
 						<button type="button" class="riff-queue-clear" data-riff-action="clear-queue" aria-label="<?php esc_attr_e( 'Clear the queue', 'riff' ); ?>" hidden><?php esc_html_e( 'Clear', 'riff' ); ?></button>
+						<?php // On a phone only: what swiping the bar down does, as a button (WCAG 2.5.7). A computer has no such swipe. ?>
+						<button type="button" class="riff-queue-clear riff-mobile" data-riff-action="dismiss"><?php esc_html_e( 'Close player', 'riff' ); ?></button>
 					</header>
 					<ol class="riff-queue-list" id="riff-queue-list"></ol>
 				</div>

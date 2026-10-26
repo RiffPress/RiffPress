@@ -1,5 +1,7 @@
-/* What every module of the app shares: escaping for markup the app writes, a sprintf for one
- * value, and a JSON parse that answers null to anything that is not JSON. */
+/* What every module of the app shares: escaping for markup the app writes and a sprintf for one
+ * value; and, the player's own, JSON and storage that never throw, a route's address and a picture's average colour. */
+
+export { average, parse, read, route, write } from 'riff-player/helpers';
 
 export function esc( s ) {
 	return String( s )
@@ -11,12 +13,4 @@ export function esc( s ) {
 
 export function fmt( pattern, value ) {
 	return String( pattern || '%s' ).replace( /%(1\$)?s/, String( value ) );
-}
-
-export function parse( json ) {
-	try {
-		return json ? JSON.parse( json ) : null;
-	} catch {
-		return null;
-	}
 }

@@ -238,6 +238,11 @@ final class Lyrics {
 				// Signed in, the media route answers for the account only with its nonce: a track in a
 				// private or draft post is the account's to read.
 				+ ( is_user_logged_in() ? array( 'nonce' => wp_create_nonce( 'wp_rest' ) ) : array() )
+				// Someone who can edit the Media Library is shown the way to a track's Lyrics field.
+				+ ( current_user_can( 'upload_files' ) ? array(
+					'edit' => admin_url( 'post.php?action=edit&post=' ),
+					'add'  => __( 'Add lyrics', 'riff-lyrics' ),
+				) : array() )
 			) . ';',
 			'before'
 		);
@@ -248,6 +253,12 @@ final class Lyrics {
 			'riff-lyrics',
 			'.riff-lyrics{margin:0;white-space:pre-line;font-size:18px;line-height:1.7}'
 			. '.riff-lyrics-note{margin:0;color:var(--riff-fg-2)}'
+			// No lyrics, nothing playing, or none could load: one quiet message in the middle of the panel.
+			. '.riff-lyrics-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-sizing:border-box;min-height:min(320px,100%);height:100%;padding:32px 24px;text-align:center}'
+			. '#riff .riff-lyrics-empty svg{width:40px;height:40px;fill:currentColor;color:var(--riff-fg-3)}'
+			. '.riff-lyrics-empty .riff-lyrics-note{max-width:24em;color:var(--riff-fg);font-size:16px;font-weight:600;line-height:1.4}'
+			. '#riff .riff-lyrics-add{margin-top:4px;padding:8px 16px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-fg-3);color:var(--riff-fg);font-size:14px;font-weight:600;text-decoration:none}'
+			. '#riff .riff-lyrics-add:hover{box-shadow:inset 0 0 0 1px var(--riff-fg)}'
 			// Synced: a list of lines, each a button that seeks; the one being sung in the foreground.
 			// Under #riff, as the player's own button styles are, so these win.
 			. '#riff .riff-lyrics-synced{list-style:none;padding:0;white-space:normal}'

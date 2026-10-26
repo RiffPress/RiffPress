@@ -268,6 +268,19 @@ html.riff-desktop .riff-standalone .riff-app {
 		app-region: no-drag;
 	}
 
+	/* In a browser there are no window controls for back and forward to sit
+	   beside, so they join Home and search in the middle, one group; in the
+	   desktop app, and an installed app with no title bar, they stay at the
+	   strip's left end with the window's own controls. */
+	html.riff-desktop:not(.riff-desktop-inset, .riff-desktop-overlay) .riff-standalone .riff-app-history {
+		position: fixed;
+		top: 8px;
+		right: calc(50% + min(480px, 100vw - 640px) / 2 + 8px + 48px + 12px);
+		z-index: 3;
+		align-items: center;
+		height: 48px;
+	}
+
 	html.riff-desktop .riff-standalone .riff-app .riff-app-home:hover {
 		background: #2a2a2a;
 		color: var(--riff-app-ink);
@@ -391,7 +404,9 @@ html.riff-desktop .riff-standalone .riff-app {
 		padding-right: 440px;
 	}
 
-	html.riff-desktop #riff .riff-cover {
+	html.riff-desktop #riff .riff-cover,
+	html.riff-desktop #riff .riff-record,
+	html.riff-desktop #riff .riff-deck-part {
 		width: min(640px, 100%, 64vh);
 		max-width: none;
 		height: auto;
@@ -401,6 +416,10 @@ html.riff-desktop .riff-standalone .riff-app {
 		justify-self: center;
 		object-fit: cover;
 		box-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
+	}
+
+	html.riff-desktop #riff .riff-deck-part {
+		box-shadow: none;
 	}
 
 	html.riff-desktop #riff .riff-queue {
@@ -452,12 +471,32 @@ html.riff-desktop .riff-standalone .riff-app {
 		position: absolute;
 		top: 0;
 		right: 24px;
-		bottom: 24px;
 		width: 400px;
+
+		/* as tall as what it holds, up to the bar */
+		max-height: calc(100% - 24px);
 		padding: 8px;
 		overflow-y: auto;
 		border-radius: 8px;
 		background: rgb(0 0 0 / 0.35);
+	}
+}
+
+/* Too narrow for the record beside the panel: the panel takes the view, as
+   Spotify's lyrics do, and the record waits behind it. */
+@media (min-width: 900px) and (max-width: 1199px) {
+
+	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-stage {
+		visibility: hidden;
+		padding-right: 0;
+	}
+
+	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-panel:not([hidden]) {
+		left: 56px;
+		width: auto;
+		max-width: 720px;
+		margin-inline: auto;
+		right: 56px;
 	}
 }
 
@@ -499,6 +538,16 @@ html.riff-desktop .riff-standalone .riff-app .riff-card {
 
 html.riff-desktop .riff-standalone .riff-app .riff-card:hover {
 	background: rgb(255 255 255 / 0.07);
+}
+
+/* on the shelf a record is its own highlight, and casts its own shadow */
+html.riff-desktop .riff-standalone .riff-app .riff-rack .riff-card {
+	padding: 0;
+	background: none;
+}
+
+html.riff-desktop .riff-standalone .riff-rack .riff-card:hover .riff-card-art {
+	box-shadow: none;
 }
 
 html.riff-desktop .riff-standalone .riff-card:not(.riff-card-artist) .riff-card-art {

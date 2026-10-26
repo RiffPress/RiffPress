@@ -39,7 +39,6 @@ export function playback( P ) {
 		root.hidden = false;
 		document.documentElement.classList.add( 'has-riff' );
 		if ( play ) {
-			m.play().catch( P.paint );
 			P.remember( t );
 			// Said when the sound starts (media.js), so a track that never starts is not called playing.
 			P.announcing = t.id;
@@ -50,6 +49,12 @@ export function playback( P ) {
 		P.feature( 'filament' );
 		P.feature( 'wake-lock' );
 		P.metadata?.( t );
+		// Before the new artwork is painted, so a new album's record can leave as the old one.
+		P.groove( t );
+		// After the groove, so a new album's record comes in before the music starts.
+		if ( play ) {
+			P.turn( m );
+		}
 		P.paint();
 		P.renderQueue();
 		P.tint( largest( t.art ) || t.video?.poster );
@@ -77,10 +82,14 @@ export function playback( P ) {
 		if ( window.matchMedia( '(hover: none)' ).matches ) {
 			navigator.vibrate?.( 8 );
 		}
-		if ( m.paused ) {
-			m.play().catch( P.paint );
+		// Started and stopped as a turntable is where the record is seen (now-playing.js): pressed
+		// again while it waits on the needle or winds down, it changes its mind.
+		if ( P.held() ) {
+			P.halt( m );
+		} else if ( m.paused || P.stopping() ) {
+			P.turn( m );
 		} else {
-			m.pause();
+			P.halt( m );
 		}
 	}
 
@@ -117,6 +126,8 @@ export function playback( P ) {
 		P.order = [];
 		P.pos = -1;
 		root.hidden = true;
+		// The record back in its sleeve, for the next album's turn.
+		P.deck( false );
 		document.documentElement.classList.remove( 'has-riff' );
 		audio.removeAttribute( 'src' );
 		video.removeAttribute( 'src' );

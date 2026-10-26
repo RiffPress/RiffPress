@@ -60,11 +60,14 @@ export function views( ctx ) {
 		// Home's rows of what was played are filled here, before the new view is painted.
 		const swap = () => {
 			view.innerHTML = html;
+			// An album's cover, carried from the card pressed to the head of its page.
+			ctx.rackLand();
 			// Its title too, which a screen reader says, and the tab and the history list show.
 			if ( title ) {
 				document.title = title;
 			}
 			ctx.home();
+			ctx.rackUp();
 			ctx.fade( view );
 			if ( bar !== undefined && nav ) {
 				nav.innerHTML = bar;
