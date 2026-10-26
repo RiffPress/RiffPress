@@ -122,32 +122,13 @@ code {
 
 /* the global bar: light, on the page's own ground, with the wordmark
    alone, Riff and nothing more; it scrolls away and the section bar
-   under it stays. Under it, five strings in place of a hairline: evenly
-   spaced, each a heavier gauge than the last, as a five-string's are */
+   under it stays. The strings are in the margin (neck.css). */
 .nav {
 	position: relative;
 	z-index: 10;
 	background: var(--paper);
 	border-bottom: 1px solid var(--rule);
 	color: var(--ink);
-}
-
-/* the bar's open middle holds five strings, between the wordmark and the
-   menu so no word sits on one: the heavier gauges below, each with a
-   hairline of light along its top as on round wire. neck.js plays them,
-   and sounds them once a visitor clicks one. */
-.nav .wrap::after,
-.neck-live {
-	content: "";
-	order: 1;
-	flex: 1;
-	align-self: center;
-	height: 46px;
-	margin: 0 44px;
-}
-
-.nav .wrap::after {
-	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 46' preserveAspectRatio='none'%3E%3Cline x1='0' y1='7.67' x2='1000' y2='7.67' stroke='%239c8f7b' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='7.42' x2='1000' y2='7.42' stroke='%23fff' stroke-opacity='.55' stroke-width='0.50' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='15.33' x2='1000' y2='15.33' stroke='%239c8f7b' stroke-width='1.25' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='15.02' x2='1000' y2='15.02' stroke='%23fff' stroke-opacity='.55' stroke-width='0.50' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='23.00' x2='1000' y2='23.00' stroke='%239c8f7b' stroke-width='1.7' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='22.57' x2='1000' y2='22.57' stroke='%23fff' stroke-opacity='.55' stroke-width='0.51' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='30.67' x2='1000' y2='30.67' stroke='%239c8f7b' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='30.12' x2='1000' y2='30.12' stroke='%23fff' stroke-opacity='.55' stroke-width='0.66' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='38.33' x2='1000' y2='38.33' stroke='%239c8f7b' stroke-width='2.8' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='37.63' x2='1000' y2='37.63' stroke='%23fff' stroke-opacity='.55' stroke-width='0.84' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
 }
 
 .nav .mark {
@@ -908,13 +889,6 @@ figcaption {
 	text-decoration: underline;
 }
 
-/* neck.js lays live strings over the drawn ones and takes over from them */
-
-/* neck.js lays live strings in their place */
-.nav.has-neck-live .wrap::after {
-	content: none;
-}
-
 .neck-live {
 	display: block;
 	overflow: visible;
@@ -963,22 +937,6 @@ figcaption {
 
 .neck-mute:focus-visible {
 	outline: 2px solid var(--accent);
-}
-
-/* on a phone, the strings take the space between the wordmark and
-   Download, a finger strums them there, and the page still scrolls
-   everywhere else */
-@media (max-width: 720px) {
-
-	.nav .wrap::after,
-	.neck-live {
-		height: 40px;
-		margin: 0 16px;
-	}
-
-	.neck-mute {
-		margin: 0 8px 0 -20px;
-	}
 }
 
 .local-nav a[aria-current] {
