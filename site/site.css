@@ -441,6 +441,12 @@ section {
 	align-items: center;
 }
 
+/* the heading across both columns, on one line where there is room */
+#how .wrap > h2 {
+	grid-column: 1 / -1;
+	margin-bottom: calc(var(--space-5) * -0.5);
+}
+
 /* three phones, the story the words leave out: the album's post, Now
    Playing in front, then Up next, each whole and readable, the outer two
    tucked a little behind it and set back */
@@ -452,7 +458,7 @@ section {
 
 .fan .device {
 	flex: none;
-	width: min(36%, 240px);
+	width: min(36%, 280px);
 	box-shadow: 0 18px 40px rgb(60 40 20 / 0.18);
 }
 
@@ -476,28 +482,34 @@ section {
 	z-index: 1;
 }
 
-/* the turntable: its picture first and the words after, the other way
-   round from the phones above, on the same paper with a rule between */
-#turntable {
-	border-top: 1px solid var(--rule);
-}
-
-#turntable .wrap {
-	display: grid;
-	grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-	gap: var(--space-5) var(--space-6);
-	align-items: center;
+/* the turntable: the product, so on the player's charcoal, its picture
+   large under the heading and its four points in a row beneath, running on
+   into the wall of covers on the same ground */
+#turntable .deck-shot {
+	max-width: 760px;
+	margin: var(--space-5) auto 0;
 }
 
 .deck-shot .desk {
 	border: 0;
 	border-radius: 8px;
-	box-shadow: 0 24px 48px rgb(40 30 20 / 0.28);
+	box-shadow: 0 30px 60px rgb(0 0 0 / 0.5);
+}
+
+.deck-points {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0 var(--space-4);
+	margin-top: var(--space-5);
+}
+
+#turntable + #covers {
+	padding-top: 0;
 }
 
 @media (max-width: 900px) {
 
-	#turntable .wrap {
+	.deck-points {
 		grid-template-columns: minmax(0, 1fr);
 	}
 }
