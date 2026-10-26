@@ -123,32 +123,13 @@ a:hover {
 
 /* the global bar: on the page's own paper, with the wordmark
    alone, Riff and nothing more; it scrolls away and the section bar
-   under it stays. Under it, five strings in place of a hairline: evenly
-   spaced, each a heavier gauge than the last, as a five-string's are */
+   under it stays. The strings are in the margin (neck.css). */
 .nav {
 	position: relative;
 	z-index: 10;
 	background: var(--paper);
 	border-bottom: 1px solid var(--rule);
 	color: var(--ink);
-}
-
-/* the bar's open middle holds five strings, between the wordmark and the
-   menu so no word sits on one: the heavier gauges below, each with a
-   hairline of light along its top as on round wire. neck.js plays them,
-   and sounds them once a visitor clicks one. */
-.nav .wrap::after,
-.neck-live {
-	content: "";
-	order: 1;
-	flex: 1;
-	align-self: center;
-	height: 46px;
-	margin: 0 44px;
-}
-
-.nav .wrap::after {
-	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 46' preserveAspectRatio='none'%3E%3Cline x1='0' y1='7.67' x2='1000' y2='7.67' stroke='%239c8f7b' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='7.42' x2='1000' y2='7.42' stroke='%23fff' stroke-opacity='.55' stroke-width='0.50' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='15.33' x2='1000' y2='15.33' stroke='%239c8f7b' stroke-width='1.25' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='15.02' x2='1000' y2='15.02' stroke='%23fff' stroke-opacity='.55' stroke-width='0.50' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='23.00' x2='1000' y2='23.00' stroke='%239c8f7b' stroke-width='1.7' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='22.57' x2='1000' y2='22.57' stroke='%23fff' stroke-opacity='.55' stroke-width='0.51' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='30.67' x2='1000' y2='30.67' stroke='%239c8f7b' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='30.12' x2='1000' y2='30.12' stroke='%23fff' stroke-opacity='.55' stroke-width='0.66' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='38.33' x2='1000' y2='38.33' stroke='%239c8f7b' stroke-width='2.8' vector-effect='non-scaling-stroke'/%3E%3Cline x1='0' y1='37.63' x2='1000' y2='37.63' stroke='%23fff' stroke-opacity='.55' stroke-width='0.84' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
 }
 
 .nav .mark {
@@ -271,13 +252,6 @@ a:hover {
 	text-decoration: underline;
 }
 
-/* neck.js lays live strings over the drawn ones and takes over from them */
-
-/* neck.js lays live strings in their place */
-.nav.has-neck-live .wrap::after {
-	content: none;
-}
-
 .neck-live {
 	display: block;
 	overflow: visible;
@@ -326,22 +300,6 @@ a:hover {
 
 .neck-mute:focus-visible {
 	outline: 2px solid var(--accent);
-}
-
-/* on a phone, the strings take the space between the wordmark and
-   Download, a finger strums them there, and the page still scrolls
-   everywhere else */
-@media (max-width: 720px) {
-
-	.nav .wrap::after,
-	.neck-live {
-		height: 40px;
-		margin: 0 16px;
-	}
-
-	.neck-mute {
-		margin: 0 8px 0 -20px;
-	}
 }
 
 .local-nav a[aria-current] {
@@ -483,14 +441,71 @@ section {
 	align-items: center;
 }
 
-.how-phone {
-	display: grid;
-	place-items: center;
+/* the heading across both columns, on one line where there is room */
+#how .wrap > h2 {
+	grid-column: 1 / -1;
+	margin-bottom: calc(var(--space-5) * -0.5);
 }
 
-.how-phone .device {
-	width: min(340px, 82vw, calc(80vh * 780 / 1688));
+/* three phones, the story the words leave out: the album's post, Now
+   Playing in front, then Up next, side by side and apart, so each shows
+   whole, the outer two a little smaller and turned in */
+.fan {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4%;
+}
+
+.fan .device {
+	flex: none;
+	width: min(30%, 240px);
 	box-shadow: 0 18px 40px rgb(60 40 20 / 0.18);
+}
+
+.fan .fan-left,
+.fan .fan-right {
+	scale: 0.92;
+}
+
+.fan .fan-left {
+	rotate: -3deg;
+}
+
+.fan .fan-right {
+	rotate: 3deg;
+}
+
+/* the turntable: the product, so on the player's charcoal, its picture
+   large under the heading and its four points in a row beneath, running on
+   into the wall of covers on the same ground */
+#turntable .deck-shot {
+	max-width: 760px;
+	margin: var(--space-5) auto 0;
+}
+
+.deck-shot .desk {
+	border: 0;
+	border-radius: 8px;
+	box-shadow: 0 30px 60px rgb(0 0 0 / 0.5);
+}
+
+.deck-points {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0 var(--space-4);
+	margin-top: var(--space-5);
+}
+
+#turntable + #covers {
+	padding-top: 0;
+}
+
+@media (max-width: 900px) {
+
+	.deck-points {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 .how-words {
@@ -843,6 +858,7 @@ footer nav {
 .device,
 .desk,
 .shot,
+.fan,
 .crate,
 .shelf,
 figure img {
