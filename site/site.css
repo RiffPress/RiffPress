@@ -448,38 +448,32 @@ section {
 }
 
 /* three phones, the story the words leave out: the album's post, Now
-   Playing in front, then Up next, each whole and readable, the outer two
-   tucked a little behind it and set back */
+   Playing in front, then Up next, side by side and apart, so each shows
+   whole, the outer two a little smaller and turned in */
 .fan {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	gap: 4%;
 }
 
 .fan .device {
 	flex: none;
-	width: min(36%, 280px);
+	width: min(30%, 240px);
 	box-shadow: 0 18px 40px rgb(60 40 20 / 0.18);
 }
 
 .fan .fan-left,
 .fan .fan-right {
-	scale: 0.9;
+	scale: 0.92;
 }
 
 .fan .fan-left {
-	margin-right: -6%;
-	rotate: -4deg;
+	rotate: -3deg;
 }
 
 .fan .fan-right {
-	margin-left: -6%;
-	rotate: 4deg;
-}
-
-.fan .fan-front {
-	position: relative;
-	z-index: 1;
+	rotate: 3deg;
 }
 
 /* the turntable: the product, so on the player's charcoal, its picture
