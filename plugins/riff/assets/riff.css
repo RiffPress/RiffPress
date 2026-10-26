@@ -1173,24 +1173,27 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
-/* light across the grooves, which stays put while the record turns, and
-   the spindle hole through the label */
+/* light across the grooves and the label, which stays put while the
+   record turns, and the platter's spindle through the hole: a steel pin,
+   lit from above, in the dark of the hole round it */
 .riff-record::after {
 	content: "";
 	position: absolute;
 	inset: 0;
 	border-radius: 50%;
 	background:
-		radial-gradient(circle closest-side, #0b0b0b 0 var(--riff-hole), rgb(255 255 255 / 0.25) var(--riff-hole) calc(var(--riff-hole) + 0.5%), transparent calc(var(--riff-hole) + 0.5%)),
+		radial-gradient(circle closest-side, #e6e6e6 0, #aaa calc(var(--riff-hole) * 0.4), #6c6c6c calc(var(--riff-hole) * 0.7), transparent calc(var(--riff-hole) * 0.72)),
+		radial-gradient(circle closest-side, #050505 0 var(--riff-hole), rgb(255 255 255 / 0.18) var(--riff-hole) calc(var(--riff-hole) + 0.4%), transparent calc(var(--riff-hole) + 0.4%)),
 		conic-gradient(from 30deg, transparent 0 8%, rgb(255 255 255 / 0.1) 12%, transparent 18% 50%, rgb(255 255 255 / 0.08) 62%, transparent 68%);
 }
 
 /* the label: a disc that turns as one at 33⅓, an LP's speed (60s / 33⅓ =
    1.8s a turn, at an even speed), printed as a record's label is, centred
    on the spindle: the album above the hole, the artist and the speed below,
-   on the cover softened into a field of its own colours, the words dark on
-   a light cover and light on a dark one (now-playing.js) so they read.
-   The cover itself would only be cut in half and spun. */
+   on paper printed in the cover's own colour, its average (now-playing.js),
+   the words dark on a light colour and light on a dark one so they read.
+   It is flat, as printed paper is: the only light on it is the record's,
+   which stays still. */
 .riff-spin {
 	position: absolute;
 	inset: var(--riff-label-inset);
@@ -1204,17 +1207,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	will-change: rotate;
 }
 
-#riff .riff-spin img {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	max-width: none;
-	object-fit: cover;
-	filter: blur(10px) saturate(1.3);
-	scale: 1.3;
-}
-
 .riff-label {
 	position: absolute;
 	inset: 0;
@@ -1222,7 +1214,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	grid-template-rows: 1fr 24% auto 1fr;
 	justify-items: center;
 	padding: 0 16%;
-	background: var(--riff-label-veil, rgb(0 0 0 / 0.35));
+	background: var(--riff-label-paper, #3a3a3a);
 	color: var(--riff-label-ink, #fff);
 	font-family: var(--riff-font, inherit);
 	line-height: 1.15;

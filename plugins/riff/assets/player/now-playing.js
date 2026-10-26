@@ -189,18 +189,16 @@ export function nowPlaying( P ) {
 		} );
 	}
 
-	// ---- The background's colour, from the artwork, and the record's label printed in it: dark
-	// words on a light cover, light on a dark one, so they read on either, over a veil, pale under
-	// dark words and dark under light ones, so the label reads as one printed colour wherever the
-	// cover has light and dark. Only for the artwork still showing once it has been read.
+	// ---- The background's colour, from the artwork, and the record's label printed on paper of
+	// the cover's own colour, its average: dark words on a light colour, light on a dark one, so
+	// they read on either. Only for the artwork still showing once it has been read.
 	const LABEL = {
 		'--riff-label-ink': [ '#141414', '#fff' ],
 		'--riff-label-halo': [ 'rgb(255 255 255 / 0.4)', 'rgb(0 0 0 / 0.35)' ],
-		'--riff-label-veil': [ 'rgb(255 255 255 / 0.6)', 'rgb(0 0 0 / 0.35)' ],
 	};
 	function tint( src ) {
 		const clear = () => {
-			for ( const name of [ '--riff-tint', ...Object.keys( LABEL ) ] ) {
+			for ( const name of [ '--riff-tint', '--riff-label-paper', ...Object.keys( LABEL ) ] ) {
 				root.style.removeProperty( name );
 			}
 		};
@@ -220,6 +218,10 @@ export function nowPlaying( P ) {
 			root.style.setProperty(
 				'--riff-tint',
 				`hsl(${ Math.round( h ) } ${ Math.round( Math.min( sat, 0.55 ) * 100 ) }% 22%)`
+			);
+			root.style.setProperty(
+				'--riff-label-paper',
+				`rgb(${ Math.round( c.r ) } ${ Math.round( c.g ) } ${ Math.round( c.b ) })`
 			);
 			for ( const [ name, [ onLight, onDark ] ] of Object.entries( LABEL ) ) {
 				root.style.setProperty( name, c.light ? onLight : onDark );
