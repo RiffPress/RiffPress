@@ -1133,6 +1133,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* A 7-inch single at 45: a label half its width round a hole for a jukebox's
    spindle, and 60s / 45 = 1.33s a turn. */
 #riff[data-riff-format="7"] {
+	--riff-etch-scale: 1.425;
 	--riff-label-inset: 25%;
 	--riff-label-edge: 50%;
 	--riff-lead-out: 56%;
@@ -1204,7 +1205,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	   is one Safari has dropped */
 	clip-path: circle(50%);
 	container-type: inline-size;
-	will-change: rotate;
 }
 
 .riff-label {
@@ -1393,13 +1393,40 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    (now-playing.js marks it turning), and its speed is the music's: coming
    up to speed and winding down, the rate the music bends through is the
    rate it turns at. */
-.riff-spin {
+.riff-turns {
 	animation: riff-turn var(--riff-turn) linear infinite;
 	animation-play-state: paused;
+	will-change: rotate;
 }
 
-#riff[data-riff-deck="out"][data-riff-turning] .riff-spin {
+#riff[data-riff-deck="out"][data-riff-turning] .riff-turns {
 	animation-play-state: running;
+}
+
+/* The run-out: the matrix number scratched by hand into the smooth dead
+   wax between the label and the last groove, as every pressing carries,
+   on a layer that turns with the label (now-playing.js writes it). It sits
+   midway across the dead wax, wherever the format puts it. */
+.riff-wax {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+#riff .riff-wax svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	scale: var(--riff-etch-scale, 1);
+}
+
+.riff-wax text {
+	fill: rgb(255 255 255 / 0.2);
+	font-family: ui-monospace, "SF Mono", menlo, monospace;
+	font-size: 1.6px;
+	font-weight: 500;
+	letter-spacing: 0.3px;
 }
 
 @keyframes riff-turn {
@@ -1509,7 +1536,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		transition: none;
 	}
 
-	.riff-spin {
+	.riff-turns {
 		animation: none;
 	}
 }

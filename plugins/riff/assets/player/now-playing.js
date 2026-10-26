@@ -353,6 +353,11 @@ export function nowPlaying( P ) {
 			const speed = root.dataset.riffFormat === '7' ? '45' : '33⅓';
 			small.textContent = on ? `${ on.name } · ${ speed }` : speed;
 		}
+		// And the side's matrix number in the run-out, as a pressing plant scratches it.
+		const etch = $( '[data-riff-etch]' );
+		if ( etch ) {
+			etch.textContent = on ? `RIFF-${ playing }-${ on.name }1` : '';
+		}
 		const list = $( '.riff-label-tracks' );
 		const album = albums.get( playing );
 		if ( ! list ) {
@@ -413,6 +418,7 @@ export function nowPlaying( P ) {
 			for ( const n of [ copy, ...copy.querySelectorAll( '*' ) ] ) {
 				n.removeAttribute( 'data-riff-art' );
 				n.removeAttribute( 'data-riff-text' );
+				n.removeAttribute( 'id' );
 			}
 			copy.alt = '';
 			leaving.append( copy );
@@ -610,8 +616,10 @@ export function nowPlaying( P ) {
 			}
 		} );
 		el.addEventListener( 'ratechange', () => {
-			for ( const a of $( '.riff-spin' )?.getAnimations() || [] ) {
-				a.updatePlaybackRate( el.playbackRate || 1 );
+			for ( const turns of $$( '.riff-turns' ) ) {
+				for ( const a of turns.getAnimations() ) {
+					a.updatePlaybackRate( el.playbackRate || 1 );
+				}
 			}
 		} );
 		for ( const type of [ 'timeupdate', 'pause', 'playing', 'seeked', 'ratechange' ] ) {
