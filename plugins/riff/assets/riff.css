@@ -1342,15 +1342,16 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
-/* A stage wider than it is tall, as on a computer, an unfolded phone or
-   a phone on its side, is the only one with the turntable (--riff-deck,
-   read by now-playing.js); upright on a phone the cover stands alone. It
+/* A stage wider than it is tall and at least 480px across, as on a
+   computer, an unfolded phone or a phone on its side, is the only one with
+   the turntable (--riff-deck, read by now-playing.js); upright on a phone,
+   short or tall, the cover stands alone. It
    sizes the pair by itself: each as large as the stage allows,
    side by side at full size, the sleeve and the plinth a tenth of a record
    apart, about what the stage leaves either side of the pair, the
    plinth's height and its arm side inside the stage. The sleeve alone,
    before the record comes out, is as large. */
-@container riff-stage (min-aspect-ratio: 1.2) {
+@container riff-stage (min-aspect-ratio: 1.2) and (min-width: 480px) {
 
 	:root #riff .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
 		width: min(74cqh, 37cqw);
