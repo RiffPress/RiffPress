@@ -36,6 +36,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | --- | --- |
 | [PRODUCT.md](../PRODUCT.md) | Who Riff is for, what it does, and what is out of scope. |
 | [DESIGN.md](../DESIGN.md) | How the player and the Listen block look and behave. |
+| [REVIEW.md](../REVIEW.md) | What a reviewer, a person or an agent, looks for in a pull request, and what to leave out. |
 | [docs/player.md](../docs/player.md) | How the player works, for anyone changing it. |
 | [docs/native.md](../docs/native.md) | What Riff uses from WordPress as is, what it adds, and why. |
 | [docs/hooks.md](../docs/hooks.md), [docs/javascript.md](../docs/javascript.md) | The hooks and `window.riff`, generated from the code. |
