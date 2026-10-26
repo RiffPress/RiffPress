@@ -1,0 +1,240 @@
+/* The neck, on every page: on a screen wide enough to have a margin, the
+   strings leave the bar and a guitar's neck lies down the left margin at
+   life size (neck.svg: rosewood, 22 frets where a guitar's stand) from the
+   width where it can be full size, against
+   the window's edge, its outer edge just out of frame, well clear of the
+   words, fading into the page past its last fret. It runs on a rail
+   from under the bar to the top of the footer: while the page is read it
+   holds still in the window, and as the page ends it comes away with the
+   page at the page's own pace, the rest of the neck arriving with the
+   footer. It never moves at any other speed than the page's. The page is
+   what is read, so at rest only the strings are there, hairlines on the
+   paper; the board comes up under them when the neck is called on: under
+   the pointer, with a chord held or a string still moving (neck.js marks
+   the page .neck-awake), and goes again, slowly, once it is left.
+   neck.js builds the rail; where it does not run, the strings stay in the
+   bar, as site.css and web.css draw them. */
+.neck {
+	display: contents;
+}
+
+.neck-mute-text,
+.neck-rail,
+.neck-side {
+	display: none;
+}
+
+@media (min-width: 1400px) {
+
+	[data-neck="margin"] {
+		--content-x: calc((100% - 1160px) / 2 + min(5vw, 80px));
+		--neck-w: clamp(56px, var(--content-x) - 40px, 150px);
+		--neck-top: 72px;
+		--foot-h: 120px;
+		--stick: 0px;
+
+		/* neck.svg's measures, which neck-svg.js writes here */
+		--svg-w: 150;
+		--svg-h: 1989.8;
+		--svg-nut: 8;
+		--svg-scale: 2449;
+		--svg-fade: 1789.8;
+
+		position: relative;
+	}
+
+	/* under the Developers bar too, where a page has one, and held below it */
+	[data-neck="margin"]:has(.local-nav) {
+		--neck-top: 128px;
+		--stick: 56px;
+	}
+
+	[data-neck="margin"].has-neck-rail .nav .wrap::after {
+		content: none;
+	}
+
+	/* the rail: the margin from the bar to the footer, which on a page
+	   shorter than the neck cuts it off. Built last on the page, it lies
+	   over the bands without a z-index, which, like a mask, would keep the
+	   neck from blending with the page under it */
+	[data-neck="margin"] .neck-rail {
+		display: block;
+		position: absolute;
+		top: var(--neck-top);
+		bottom: var(--foot-h);
+		left: calc(var(--neck-w) * -0.06);
+		width: var(--neck-w);
+		overflow: clip;
+		pointer-events: none;
+	}
+
+	/* the neck: held in the window, until the rail's end takes it on; past
+	   its last fret, board and strings fade into the page together */
+	.neck-guitar {
+		position: sticky;
+		top: var(--stick);
+		aspect-ratio: var(--svg-w) / var(--svg-h);
+		mask-image: linear-gradient(#000 calc(var(--svg-fade) / var(--svg-h) * 100%), transparent);
+	}
+
+	/* the board, and the strings' shadows on it: away at rest, up when
+	   called on, quickly, but eased, and gone again slowly */
+	.neck-guitar::before,
+	.neck-live svg > g:first-child {
+		opacity: 0;
+		transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.neck-guitar::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: url(neck.svg) 0 0 / 100% 100% no-repeat;
+	}
+
+	.neck-awake .neck-guitar::before,
+	.neck-awake .neck-live svg > g:first-child {
+		opacity: 1;
+		transition-duration: 0.35s;
+	}
+
+	/* the strings at rest: faint enough to read as strings, not as rules
+	   between the margin and the page */
+	.neck-strings,
+	.neck-live svg > path {
+		opacity: 0.4;
+		transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.neck-awake .neck-live svg > path {
+		opacity: 1;
+		transition-duration: 0.35s;
+	}
+
+	/* the strings, the length of the neck: drawn still, each with its
+	   shadow on the board, until neck.js plays them */
+	.neck-strings,
+	.neck-guitar > .neck-live {
+		position: absolute;
+		inset: 0;
+		height: auto;
+		margin: 0;
+	}
+
+	.neck-strings {
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 1000' preserveAspectRatio='none'%3E%3Cg stroke-opacity='.2' stroke='%23503720' vector-effect='non-scaling-stroke'%3E%3Cline x1='7.6' x2='7.6' y2='1000' stroke-width='1.3' vector-effect='non-scaling-stroke'/%3E%3Cline x1='19.3' x2='19.3' y2='1000' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='31.0' x2='31.0' y2='1000' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='42.7' x2='42.7' y2='1000' stroke-width='2.9' vector-effect='non-scaling-stroke'/%3E%3Cline x1='54.4' x2='54.4' y2='1000' stroke-width='3.7' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3Cg stroke='%23b5ada0'%3E%3Cline x1='6.6' x2='6.6' y2='1000' stroke-width='1.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='18.3' x2='18.3' y2='1000' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='30.0' x2='30.0' y2='1000' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='41.7' x2='41.7' y2='1000' stroke-width='2.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='53.4' x2='53.4' y2='1000' stroke-width='3.4' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+	}
+
+	.has-neck-live .neck-strings {
+		display: none;
+	}
+
+	.neck-guitar > .neck-live {
+		align-self: auto;
+		pointer-events: auto;
+		touch-action: auto;
+	}
+
+	/* a fingertip on the neck, or the index finger laid across as a barre:
+	   larger than an inlay, ringed, lifted off the board by its shadow, and
+	   pressed down as the chord is held */
+	.neck-finger {
+		filter: drop-shadow(0 2px 2px rgb(40 25 10 / 0.3));
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: neck-press 0.14s ease-out;
+	}
+
+	@keyframes neck-press {
+
+		from {
+			opacity: 0;
+			transform: scale(1.35);
+		}
+	}
+
+	/* beside the rail, from the bar to the footer: the chord and Mute's
+	   own column, just right of the neck, in the gap before the words */
+	[data-neck="margin"] .neck-side {
+		display: block;
+		position: absolute;
+		top: var(--neck-top);
+		bottom: var(--foot-h);
+		left: calc(var(--neck-w) * 0.94 + 10px);
+		pointer-events: none;
+	}
+
+	/* the chord over Mute, at the height of the neck's head, so Mute is
+	   reached without crossing the strings. Held in the window on their
+	   own, since on a short page the neck leaves with it; taking no room,
+	   so with neither showing nothing is there */
+	.neck.is-vertical {
+		position: sticky;
+		top: var(--stick);
+		height: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 6px;
+		margin: 0;
+	}
+
+	.neck.is-vertical .neck-chord:empty {
+		display: none;
+	}
+
+	/* both as pills on paper, legible over the strings or the rosewood */
+	.neck.is-vertical .neck-chord,
+	.neck.is-vertical .neck-mute {
+		display: inline-flex;
+		align-items: center;
+		height: 32px;
+		margin: 0;
+		padding: 0 12px;
+		border-radius: 16px;
+		background: var(--paper);
+		box-shadow: inset 0 0 0 1px #c9bca6;
+		color: var(--ink);
+		pointer-events: auto;
+	}
+
+	.neck.is-vertical .neck-chord {
+		min-width: 0;
+		font: 600 1rem/1 var(--sans);
+	}
+
+	.neck.is-vertical .neck-mute {
+		gap: 6px;
+		width: auto;
+		font: 500 0.875rem/1 var(--sans);
+	}
+
+	.neck.is-vertical .neck-mute[hidden] {
+		display: none;
+	}
+
+	/* the first pill clear of the bar */
+	.neck.is-vertical > :first-child,
+	.neck.is-vertical .neck-chord:empty + .neck-mute {
+		margin-top: 12px;
+	}
+
+	/* Mute's word where the gap before the words has room for it; its
+	   note alone, with its label, where it does not */
+	.neck.is-vertical .neck-mute {
+		justify-content: center;
+		min-width: 32px;
+		padding: 0 9px;
+	}
+
+	@media (min-width: 1600px) {
+
+		.neck.is-vertical .neck-mute {
+			padding: 0 12px;
+		}
+
+		.neck.is-vertical .neck-mute-text {
+			display: inline;
+		}
+	}
+}

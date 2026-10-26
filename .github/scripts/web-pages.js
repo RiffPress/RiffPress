@@ -40,7 +40,7 @@ const SHOTS = {
 	'phone-post': { wide: false, alt: 'A post with its tracks listed, and the player bar along the bottom of the screen' },
 	'phone-up-next': { wide: false, alt: 'Now Playing with the Up next sheet open, listing the rest of the post\'s tracks' },
 	'desktop-now-playing': { wide: true, alt: 'Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom' },
-	'desktop-listen': { wide: true, alt: 'The Listen page: the library, nine albums as drawn record covers' },
+	'desktop-listen': { wide: true, alt: 'The Listen page: the library, the demo\'s four albums as drawn record covers' },
 };
 
 function picture( shot ) {
