@@ -6,7 +6,7 @@
  * is cut as an LP is: a band of grooves for each of the album's tracks, as wide as the track is
  * long. It turns at 33⅓, faster or slower with the music's speed as a turntable's pitch would, and
  * its tonearm tracks the album from the outside in. */
-import { average, hsl, largest, route } from 'riff-player/helpers';
+import { average, hsl, largest, route, time } from 'riff-player/helpers';
 
 export function nowPlaying( P ) {
 	const { root, np, $, $$, queueList, emit } = P;
@@ -189,18 +189,16 @@ export function nowPlaying( P ) {
 		} );
 	}
 
-	// ---- The background's colour, from the artwork, and the record's label printed in it: dark
-	// words on a light cover, light on a dark one, so they read on either, over a veil, pale under
-	// dark words and dark under light ones, so the label reads as one printed colour wherever the
-	// cover has light and dark. Only for the artwork still showing once it has been read.
+	// ---- The background's colour, from the artwork, and the record's label printed on paper of
+	// the cover's own colour, its average: dark words on a light colour, light on a dark one, so
+	// they read on either. Only for the artwork still showing once it has been read.
 	const LABEL = {
 		'--riff-label-ink': [ '#141414', '#fff' ],
 		'--riff-label-halo': [ 'rgb(255 255 255 / 0.4)', 'rgb(0 0 0 / 0.35)' ],
-		'--riff-label-veil': [ 'rgb(255 255 255 / 0.6)', 'rgb(0 0 0 / 0.35)' ],
 	};
 	function tint( src ) {
 		const clear = () => {
-			for ( const name of [ '--riff-tint', ...Object.keys( LABEL ) ] ) {
+			for ( const name of [ '--riff-tint', '--riff-label-paper', ...Object.keys( LABEL ) ] ) {
 				root.style.removeProperty( name );
 			}
 		};
@@ -220,6 +218,10 @@ export function nowPlaying( P ) {
 			root.style.setProperty(
 				'--riff-tint',
 				`hsl(${ Math.round( h ) } ${ Math.round( Math.min( sat, 0.55 ) * 100 ) }% 22%)`
+			);
+			root.style.setProperty(
+				'--riff-label-paper',
+				`rgb(${ Math.round( c.r ) } ${ Math.round( c.g ) } ${ Math.round( c.b ) })`
 			);
 			for ( const [ name, [ onLight, onDark ] ] of Object.entries( LABEL ) ) {
 				root.style.setProperty( name, c.light ? onLight : onDark );
@@ -298,7 +300,14 @@ export function nowPlaying( P ) {
 					albums.delete( album );
 					return;
 				}
-				albums.set( album, { ids: tracks.map( ( q ) => String( q.id ) ), lengths, starts, length, ...press( lengths ) } );
+				albums.set( album, {
+					ids: tracks.map( ( q ) => String( q.id ) ),
+					titles: tracks.map( ( q ) => q.title || '' ),
+					lengths,
+					starts,
+					length,
+					...press( lengths ),
+				} );
 				if ( playing === album ) {
 					place( P.track() );
 				}
@@ -318,6 +327,7 @@ export function nowPlaying( P ) {
 		const next = sideOf( t );
 		const show = () => {
 			root.dataset.riffFormat = album?.format || '12';
+			strobe();
 			cut( next ? album.lengths.slice( next.from, next.to ) : [] );
 			label( next );
 			needle();
@@ -336,12 +346,31 @@ export function nowPlaying( P ) {
 			show();
 		}
 	}
+	// The label says the side and the speed, and lists the side's tracks as a pressed label does:
+	// A1, A2 and on, each with its time.
 	function label( on ) {
 		const small = $( '.riff-label small' );
 		if ( small ) {
 			const speed = root.dataset.riffFormat === '7' ? '45' : '33⅓';
 			small.textContent = on ? `${ on.name } · ${ speed }` : speed;
 		}
+		// And the side's matrix number in the run-out, as a pressing plant scratches it.
+		const etch = $( '[data-riff-etch]' );
+		if ( etch ) {
+			etch.textContent = on ? `RIFF-${ playing }-${ on.name }1` : '';
+		}
+		const list = $( '.riff-label-tracks' );
+		const album = albums.get( playing );
+		if ( ! list ) {
+			return;
+		}
+		list.replaceChildren(
+			...( on && album ? album.titles.slice( on.from, on.to ) : [] ).map( ( title, k ) => {
+				const li = document.createElement( 'li' );
+				li.textContent = `${ on.name }${ k + 1 }  ${ title }  ${ time( album.lengths[ on.from + k ] ) }`;
+				return li;
+			} )
+		);
 	}
 
 	// ---- A new side of the same record: the needle goes back to its rest, the record is turned
@@ -390,6 +419,7 @@ export function nowPlaying( P ) {
 			for ( const n of [ copy, ...copy.querySelectorAll( '*' ) ] ) {
 				n.removeAttribute( 'data-riff-art' );
 				n.removeAttribute( 'data-riff-text' );
+				n.removeAttribute( 'id' );
 			}
 			copy.alt = '';
 			leaving.append( copy );
@@ -419,6 +449,49 @@ export function nowPlaying( P ) {
 		}, ARRIVE );
 	}
 
+	// ---- The strobe on the platter's rim, as the deck's lamp shows it (riff.css): between two of
+	// its flashes the platter turns some way, and a row of dots seems to move by only what is left
+	// over after the whole dots, so each row turns by that alone, a turn a second for each 360° a
+	// second it seems to drift. Still while the platter is.
+	const FLASHES = 120;
+	function strobe() {
+		const m = P.el();
+		const turning = 'riffTurning' in root.dataset && root.dataset.riffDeck === 'out' && ! P.reduce();
+		const rpm = root.dataset.riffFormat === '7' ? 45 : 100 / 3;
+		const step = turning ? ( ( rpm / 60 ) * 360 * ( m.playbackRate || 1 ) ) / FLASHES : 0;
+		// The rows' dots, round, at their radii on the rim, the platter's radius 100: drawn once, the
+		// two together where the room lights them, and each on its own in the lamp's patch.
+		const ROWS = [ [ 216, 95.7 ], [ 160, 97.9 ] ];
+		const dots = ( rows ) => {
+			let circles = '';
+			for ( const [ count, radius ] of rows ) {
+				for ( let n = 0; n < count; n++ ) {
+					const a = ( n * 2 * Math.PI ) / count;
+					circles += `<circle cx="${ ( radius * Math.cos( a ) ).toFixed( 2 ) }" cy="${ ( radius * Math.sin( a ) ).toFixed( 2 ) }" r="0.62"/>`;
+				}
+			}
+			return `<svg viewBox="-100 -100 200 200" focusable="false">${ circles }</svg>`;
+		};
+		const room = $( '.riff-strobe-room i' );
+		if ( room && ! room.firstChild ) {
+			room.innerHTML = dots( ROWS );
+		}
+		$$( '.riff-strobe-lamp i' ).forEach( ( row, k ) => {
+			if ( ! row.firstChild ) {
+				row.innerHTML = dots( [ ROWS[ k ] ] );
+			}
+			const dot = 360 / ROWS[ k ][ 0 ];
+			const seen = step - dot * Math.round( step / dot );
+			if ( ! row.drift ) {
+				row.drift = row.animate( [ { rotate: '0deg' }, { rotate: '360deg' } ], { duration: 1000, iterations: Infinity } );
+				// Far into its turns, so it can run backwards as long as it needs to: run back from its
+				// start, an animation stops there.
+				row.drift.currentTime = 1e9;
+			}
+			row.drift.updatePlaybackRate( ( seen * FLASHES ) / 360 );
+		} );
+	}
+
 	// The record out of its sleeve or back in it; out, the needle drops once it has come clear.
 	function deck( out ) {
 		const arm = $( '.riff-arm' );
@@ -427,6 +500,7 @@ export function nowPlaying( P ) {
 			delete root.dataset.riffDeck;
 			delete arm?.dataset.riffDown;
 			lift();
+			strobe();
 			return;
 		}
 		if ( root.dataset.riffDeck === 'out' ) {
@@ -434,6 +508,7 @@ export function nowPlaying( P ) {
 		}
 		root.dataset.riffDeck = 'out';
 		needle();
+		strobe();
 		deck.drop = setTimeout( () => {
 			if ( arm ) {
 				arm.dataset.riffDown = '';
@@ -576,6 +651,7 @@ export function nowPlaying( P ) {
 		el.addEventListener( 'playing', () => {
 			if ( el === P.el() ) {
 				root.dataset.riffTurning = '';
+				strobe();
 			}
 			if ( ! ( 'riffArriving' in root.dataset ) ) {
 				deck( true );
@@ -584,12 +660,16 @@ export function nowPlaying( P ) {
 		el.addEventListener( 'pause', () => {
 			if ( el === P.el() ) {
 				delete root.dataset.riffTurning;
+				strobe();
 			}
 		} );
 		el.addEventListener( 'ratechange', () => {
-			for ( const a of $( '.riff-spin' )?.getAnimations() || [] ) {
-				a.updatePlaybackRate( el.playbackRate || 1 );
+			for ( const turns of $$( '.riff-turns' ) ) {
+				for ( const a of turns.getAnimations() ) {
+					a.updatePlaybackRate( el.playbackRate || 1 );
+				}
 			}
+			strobe();
 		} );
 		for ( const type of [ 'timeupdate', 'pause', 'playing', 'seeked', 'ratechange' ] ) {
 			el.addEventListener( type, () => needle() );

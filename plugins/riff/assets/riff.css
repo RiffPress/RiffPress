@@ -1133,6 +1133,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* A 7-inch single at 45: a label half its width round a hole for a jukebox's
    spindle, and 60s / 45 = 1.33s a turn. */
 #riff[data-riff-format="7"] {
+	--riff-etch-scale: 1.425;
 	--riff-label-inset: 25%;
 	--riff-label-edge: 50%;
 	--riff-lead-out: 56%;
@@ -1173,24 +1174,25 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
-/* light across the grooves, which stays put while the record turns, and
-   the spindle hole through the label */
+/* light across the grooves and the label, which stays put while the
+   record turns, and the record's hole, dark round the turntable's spindle */
 .riff-record::after {
 	content: "";
 	position: absolute;
 	inset: 0;
 	border-radius: 50%;
 	background:
-		radial-gradient(circle closest-side, #0b0b0b 0 var(--riff-hole), rgb(255 255 255 / 0.25) var(--riff-hole) calc(var(--riff-hole) + 0.5%), transparent calc(var(--riff-hole) + 0.5%)),
+		radial-gradient(circle closest-side, #050505 0 var(--riff-hole), rgb(255 255 255 / 0.18) var(--riff-hole) calc(var(--riff-hole) + 0.4%), transparent calc(var(--riff-hole) + 0.4%)),
 		conic-gradient(from 30deg, transparent 0 8%, rgb(255 255 255 / 0.1) 12%, transparent 18% 50%, rgb(255 255 255 / 0.08) 62%, transparent 68%);
 }
 
 /* the label: a disc that turns as one at 33⅓, an LP's speed (60s / 33⅓ =
    1.8s a turn, at an even speed), printed as a record's label is, centred
    on the spindle: the album above the hole, the artist and the speed below,
-   on the cover softened into a field of its own colours, the words dark on
-   a light cover and light on a dark one (now-playing.js) so they read.
-   The cover itself would only be cut in half and spun. */
+   on paper printed in the cover's own colour, its average (now-playing.js),
+   the words dark on a light colour and light on a dark one so they read.
+   It is flat, as printed paper is: the only light on it is the record's,
+   which stays still. */
 .riff-spin {
 	position: absolute;
 	inset: var(--riff-label-inset);
@@ -1201,28 +1203,16 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	   is one Safari has dropped */
 	clip-path: circle(50%);
 	container-type: inline-size;
-	will-change: rotate;
-}
-
-#riff .riff-spin img {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	max-width: none;
-	object-fit: cover;
-	filter: blur(10px) saturate(1.3);
-	scale: 1.3;
 }
 
 .riff-label {
 	position: absolute;
 	inset: 0;
 	display: grid;
-	grid-template-rows: 1fr 24% auto 1fr;
+	grid-template-rows: 1fr 24% auto auto 1fr;
 	justify-items: center;
 	padding: 0 16%;
-	background: var(--riff-label-veil, rgb(0 0 0 / 0.35));
+	background: var(--riff-label-paper, #3a3a3a);
 	color: var(--riff-label-ink, #fff);
 	font-family: var(--riff-font, inherit);
 	line-height: 1.15;
@@ -1251,8 +1241,34 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	-webkit-box-orient: vertical;
 }
 
-.riff-label small {
+/* the side's tracks, as a pressed label lists them, where the label is
+   drawn large enough for its smallest type to be read */
+.riff-label-tracks {
+	display: none;
 	grid-row: 4;
+	margin: 3% 0 0;
+	padding: 0;
+	list-style: none;
+	font-size: 3.4cqi;
+	line-height: 1.35;
+	white-space: pre;
+	opacity: 0.8;
+}
+
+.riff-label-tracks li {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+@container (min-width: 200px) {
+
+	.riff-label-tracks {
+		display: block;
+	}
+}
+
+.riff-label small {
+	grid-row: 5;
 	align-self: start;
 	margin-top: 6%;
 	font-size: 5.5cqi;
@@ -1334,8 +1350,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* The plinth: a board under the platter and the arm, which reaches behind
    the arm's base and its rest; the platter, a little wider than the record,
    its rim showing round it; and the rest the arm sits on when it is up, a
-   post where the arm lies at rest (now-playing.js: 0.55 of the arm's length
-   from its base, turned out 14°). */
+   cradle with a notch for the tube, under it where the arm lies at rest:
+   turned out 14° on its base, the tube bowed 2.4 to the side at 43 along
+   (the drawing's units, in the record's hundredths), so 12.7 out and 41.1
+   down from the base at (105, 5). */
 .riff-plinth::before {
 	content: "";
 	position: absolute;
@@ -1348,35 +1366,125 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-plinth::after {
 	content: "";
 	position: absolute;
-	inset: -1.6%;
+	inset: -3.5%;
 	border-radius: 50%;
-	background: radial-gradient(circle closest-side, #0e0e0e 0 97%, #3a3a3a 98%, #262626);
+	background: radial-gradient(circle closest-side, #0e0e0e 0 98.4%, #3a3a3a 99%, #262626);
+}
+
+/* The platter's rim, wider than the record as a Technics platter is (332mm
+   to the record's 302mm), and on it the strobe: two rows of dots, 216 for
+   33⅓ and 160 for 45. In the room's light they turn with the platter. In
+   the patch the deck's lamp lights, at the front left, flashing 120 times a
+   second on 60Hz mains, a row seems to stand still when the platter turns a
+   whole number of its dots between flashes, and otherwise to drift by what
+   is left over; now-playing.js turns the lit rows by just that, so there
+   the row for the speed playing stands still and the other creeps, and
+   both drift as the platter comes up to speed or winds down. */
+.riff-strobe {
+	position: absolute;
+	z-index: 1;
+	inset: -3.5%;
+	border-radius: 50%;
+}
+
+.riff-strobe-room,
+.riff-strobe-lamp,
+.riff-strobe i {
+	position: absolute;
+	inset: 0;
+}
+
+.riff-strobe i {
+	will-change: rotate;
+}
+
+.riff-strobe-room {
+	mask-image: conic-gradient(#000 0 195deg, transparent 207deg 243deg, #000 255deg);
+}
+
+/* the lamp's patch: its warm light on the rim, and the dots lit in it */
+.riff-strobe-lamp {
+	--riff-strobe-dot: rgb(255 150 80 / 0.45);
+	background: radial-gradient(circle at 14% 86%, rgb(255 120 50 / 0.08), transparent 30%);
+	mask-image: conic-gradient(transparent 0 195deg, #000 207deg 243deg, transparent 255deg);
+	clip-path: circle(50%);
+}
+
+/* each row its dots, round, drawn once (now-playing.js) */
+#riff .riff-strobe svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	fill: var(--riff-strobe-dot, rgb(200 200 200 / 0.09));
+}
+
+/* The spindle: the turntable's, not the record's, so it stands where the
+   platter's centre is whether the record is on it or not, and shows
+   through the record's hole once it is. A steel pin, lit from above. */
+.riff-mount::before {
+	content: "";
+	position: absolute;
+	inset: calc(50% - var(--riff-hole) * 0.36);
+	border-radius: 50%;
+	background: radial-gradient(circle at 42% 38%, #f0f0f0, #a9a9a9 45%, #5f5f5f);
+	box-shadow: 0 0.2cqi 0.4cqi rgb(0 0 0 / 0.6);
 }
 
 .riff-armrest {
 	position: absolute;
 	z-index: 1;
-	top: 46.6%;
-	left: 115.4%;
-	width: 3.4cqi;
-	height: 3.4cqi;
-	border-radius: 50%;
-	background: radial-gradient(circle at 40% 35%, #555, #222 70%);
-	box-shadow: 0 0.4cqi 0.8cqi rgb(0 0 0 / 0.6);
+	top: 46.1%;
+	left: 117.7%;
+	width: 3.2cqi;
+	height: 7cqi;
+	border-radius: 0.8cqi;
+	background: linear-gradient(90deg, #2e2e2e, #3c3c3c 30%, #1c1c1c 42% 58%, #3c3c3c 70%, #2a2a2a);
+	box-shadow: 0 0.5cqi 1cqi rgb(0 0 0 / 0.6), inset 0 0.2cqi 0 rgb(255 255 255 / 0.08);
 	translate: -50% -50%;
+
+	/* along the arm where it rests, so the tube lies in its notch */
+	rotate: -14deg;
 }
 
 /* The platter turns at 33⅓, or 45 for a single, while the music sounds
    (now-playing.js marks it turning), and its speed is the music's: coming
    up to speed and winding down, the rate the music bends through is the
    rate it turns at. */
-.riff-spin {
+.riff-turns {
 	animation: riff-turn var(--riff-turn) linear infinite;
 	animation-play-state: paused;
+	will-change: rotate;
 }
 
-#riff[data-riff-deck="out"][data-riff-turning] .riff-spin {
+#riff[data-riff-deck="out"][data-riff-turning] .riff-turns {
 	animation-play-state: running;
+}
+
+/* The run-out: the matrix number scratched by hand into the smooth dead
+   wax between the label and the last groove, as every pressing carries,
+   on a layer that turns with the label (now-playing.js writes it). It sits
+   midway across the dead wax, wherever the format puts it. */
+.riff-wax {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+#riff .riff-wax svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	scale: var(--riff-etch-scale, 1);
+}
+
+.riff-wax text {
+	fill: rgb(255 255 255 / 0.2);
+	font-family: ui-monospace, "SF Mono", menlo, monospace;
+	font-size: 1.6px;
+	font-weight: 500;
+	letter-spacing: 0.3px;
 }
 
 @keyframes riff-turn {
@@ -1486,7 +1594,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		transition: none;
 	}
 
-	.riff-spin {
+	.riff-turns {
 		animation: none;
 	}
 }

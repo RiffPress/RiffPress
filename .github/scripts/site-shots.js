@@ -141,15 +141,18 @@ async function desktop( browser ) {
 	await save( page, 'desktop-now-playing', true );
 
 	// The turntable on its own, close: its plinth, which reaches beyond the record behind the arm
-	// and above it (riff.css), and a margin of the stage round it, but on the left, where the
-	// sleeve stands.
+	// and above it (riff.css), and a margin of the stage round it, as wide on the left as the gap
+	// to the sleeve allows, so the site can fade the edges into a ground of the same colour.
 	await page.waitForTimeout( 1500 );
 	const deck = await page.locator( '.riff-plinth' ).boundingBox();
+	const sleeve = await page.locator( '.riff-cover' ).boundingBox();
 	const pad = 24;
+	const left = deck.x - deck.width * 0.05;
+	const gap = Math.max( 0, Math.min( pad, left - ( sleeve.x + sleeve.width ) - 2 ) );
 	await save( page, 'desktop-turntable', false, {
-		x: deck.x - deck.width * 0.05,
+		x: left - gap,
 		y: deck.y - deck.height * 0.13 - pad,
-		width: deck.width * 1.31 + pad,
+		width: deck.width * 1.31 + pad + gap,
 		height: deck.height * 1.18 + pad * 2,
 	} );
 

@@ -11,6 +11,8 @@ stati = "stati"
 # CBOR Object Signing and Encryption, the key format inside a WebAuthn attestation.
 COSE = "COSE"
 cose = "cose"
+# The turntable maker, whose platter the drawn deck's measurements follow.
+Technics = "Technics"
 
 [files]
 extend-exclude = [
