@@ -280,10 +280,10 @@ div.riff-row-locked {
 	height: 40px;
 	padding: 0 22px;
 	border: 2px solid #000;
-	background: radial-gradient(120% 160% at 50% 40%, color-mix(in srgb, var(--riff-quality-ink) 13%, #0b0e0d), #080a09 78%);
+	background: radial-gradient(70% 90% at 50% 62%, color-mix(in srgb, var(--riff-quality-ink) 24%, #090c0b), color-mix(in srgb, var(--riff-quality-ink) 7%, #070908) 62%, #040505);
 	box-shadow:
-		inset 0 1px 3px rgb(0 0 0 / 0.85),
-		inset 0 -1px 0 rgb(255 255 255 / 0.04),
+		inset 0 3px 6px rgb(0 0 0 / 0.8),
+		inset 0 -1px 1px rgb(255 255 255 / 0.05),
 		0 0 0 1px rgb(255 255 255 / 0.08),
 		0 2px 4px rgb(0 0 0 / 0.5);
 	color: var(--riff-quality-ink);
