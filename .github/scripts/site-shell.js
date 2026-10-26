@@ -139,7 +139,8 @@ function crumbs( trail, extra = '' ) {
 function referencePage( { title, description, url, current, trail, h1, toc, body, search = '' } ) {
 	const depth = url.split( '/' ).filter( Boolean ).length;
 	const up = '../'.repeat( depth );
-	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ esc( label ) }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
+	// A long route wraps before one of its slashes, not inside a word.
+	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ esc( label ).replace( /(.)\//g, '$1<wbr>/' ) }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
 	let html = head( title, description, url, depth, `${ up }web/web.css`, 'developers' );
 	html += localNav( up, current );
 	html += crumbs( trail, search );

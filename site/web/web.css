@@ -1396,8 +1396,9 @@ main h2[id] {
 .code-table td {
 	text-align: left;
 	vertical-align: top;
-	font-size: 1rem;
-	padding: 10px 10px 10px 0;
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	padding: 10px 16px 10px 0;
 	border-bottom: 1px solid var(--grey-1);
 	width: 50%;
 }
@@ -1406,13 +1407,18 @@ main h2[id] {
 	font-weight: 700;
 }
 
-/* three columns, as a schema has: name and type narrow, description wide */
+/* three columns, as a schema has: the name wide enough for a nested path,
+   the type narrow, the description the rest */
 .code-table tr > :first-child:nth-last-child(3) {
-	width: 25%;
+	width: 32%;
 }
 
 .code-table tr > :nth-child(2):nth-last-child(2) {
-	width: 20%;
+	width: 16%;
+}
+
+.code-table td > .type {
+	white-space: nowrap;
 }
 
 .code-table tr > :nth-child(3):last-child {
@@ -1438,8 +1444,13 @@ main h2[id] {
 	margin-top: 2px;
 	background: none;
 	padding: 0;
-	color: var(--charcoal-4);
-	word-break: break-all;
+	color: var(--ink);
+	overflow-wrap: anywhere;
+}
+
+/* the path to a nested property, quieter than the property itself */
+.code-table td:first-child .path {
+	color: var(--charcoal-5);
 }
 
 /* the index */

@@ -189,14 +189,14 @@ function problems( data ) {
  *
  * @param {Object} schema JSON schema of an object.
  * @param {string} prefix Name so far.
- * @return {Array} [ name, type, description ] rows.
+ * @return {Array} [ name, type, description, values ] rows: values are an enum's, or empty.
  */
 function schemaRows( schema, prefix = '' ) {
 	const rows = [];
 	for ( const [ name, prop ] of Object.entries( schema.properties || {} ) ) {
 		const full = prefix + name;
-		const type = [].concat( prop.type || '' ).join( ' | ' ) + ( prop.enum ? ` (${ prop.enum.join( ', ' ) })` : '' );
-		rows.push( [ full, type, prop.description || '' ] );
+		const type = [].concat( prop.type || '' ).join( ' | ' );
+		rows.push( [ full, type, prop.description || '', prop.enum || [] ] );
 		if ( prop.properties ) {
 			rows.push( ...schemaRows( prop, `${ full }.` ) );
 		}
@@ -207,7 +207,16 @@ function schemaRows( schema, prefix = '' ) {
 	return rows;
 }
 
-const schemaTable = ( schema ) => table( [ 'Property', 'Type', 'Description' ], schemaRows( schema ).map( ( [ n, t, d ] ) => `<tr><td><code>${ esc( n ) }</code></td><td><span class="type">${ esc( t ) }</span></td><td>${ inline( d ) }</td></tr>` ) );
+// A nested property's name: the path to it quiet, the property itself plain, and a place to break
+// after each step, so a long path wraps between its parts and not inside a word.
+const propertyName = ( name ) => {
+	const at = name.lastIndexOf( '.' ) + 1;
+	const steps = ( part ) => esc( part ).replace( /\./g, '.<wbr>' );
+	return at ? `<span class="path">${ steps( name.slice( 0, at ) ) }</span>${ esc( name.slice( at ) ) }` : esc( name );
+};
+// An enum's values go with the description, where there is room for them, and not in the type.
+const values = ( list ) => ( list.length ? ` One of ${ list.map( ( v ) => `<code>${ esc( v ) }</code>` ).join( ', ' ) }.` : '' );
+const schemaTable = ( schema ) => table( [ 'Property', 'Type', 'Description' ], schemaRows( schema ).map( ( [ n, t, d, v ] ) => `<tr><td><code>${ propertyName( n ) }</code></td><td><span class="type">${ esc( t ) }</span></td><td>${ inline( d ) }${ values( v ) }</td></tr>` ) );
 
 function member( m, title ) {
 	let html = `<section class="member" id="${ esc( m.name.toLowerCase() ) }"><h3 class="code-title member-title"><a href="#${ esc( m.name.toLowerCase() ) }">${ esc( title || m.signature ) }</a></h3><p>${ inline( m.summary ) }</p>`;
@@ -302,7 +311,8 @@ function restPage( data ) {
 	for ( const r of s.routes ) {
 		const shown = `/${ r.namespace }${ r.route.replace( /\(\?P<(\w+)>[^)]+\)/g, '{$1}' ) }`;
 		const id = shown.replace( /[^a-z0-9]+/gi, '-' ).replace( /^-|-$/g, '' ).toLowerCase();
-		toc.push( [ id, shown ] );
+		// In the contents without the namespace every route shares, so the longest still fit.
+		toc.push( [ id, shown.replace( `/${ r.namespace }`, '' ) ] );
 		body += `<section class="member" id="${ id }"><h3 class="code-title member-title"><a href="#${ id }">${ r.methods.map( esc ).join( ', ' ) } ${ esc( shown ) }</a></h3>`;
 		body += `<p>${ inline( r.schema?.description || r.schema?.title || '' ) }</p>`;
 		const args = Object.entries( r.args );
@@ -337,7 +347,7 @@ function restPage( data ) {
 		current: 'rest',
 		trail: [ [ 'REST API' ] ],
 		h1: '<h1>REST API</h1>',
-		toc: [ [ 'media', 'The track on media' ], [ 'routes', 'Routes', toc ], [ 'graphql', 'WPGraphQL' ] ],
+		toc: [ [ 'media', 'The track on media' ], [ 'routes', [ ...new Set( s.routes.map( ( r ) => r.namespace ) ) ].length === 1 ? `Routes in /${ s.routes[ 0 ].namespace }` : 'Routes', toc ], [ 'graphql', 'WPGraphQL' ] ],
 		body,
 	} );
 }
