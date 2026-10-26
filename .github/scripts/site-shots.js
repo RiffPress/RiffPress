@@ -2,7 +2,7 @@
 /* eslint-disable no-console -- a build script that says what it wrote, as og-images.js does. */
 /**
  * The pictures of the player on the site's landing page, in site/: the Listen app, an album open in
- * it, Now Playing and a sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post, Now Playing, Up
+ * it, Now Playing, its turntable close and a sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post, Now Playing, Up
  * next and the lyrics on a phone (780×1688), each as a PNG and an AVIF. They are taken from a site
  * that holds the demo albums and nothing else, set up as the demo's blueprint sets up Playground,
  * so the pictures show the demo a visitor will open:
@@ -73,15 +73,16 @@ async function checkAlbums() {
  * @param {import('@playwright/test').Page} page The page to take.
  * @param {string}                          name The file's name, without its extension.
  * @param {boolean}                         wide Whether it is a wide-screen picture.
+ * @param {Object}                          clip The part of the window to take, or the whole of it.
  */
-async function save( page, name, wide ) {
+async function save( page, name, wide, clip ) {
 	// The pointer to the window's far corner, so nothing under the last tap shows as hovered, and
 	// not to the near one, where the admin bar's WordPress menu would open.
 	const view = page.viewportSize();
 	await page.mouse.move( view.width - 1, view.height - 1 );
 	await page.waitForTimeout( 800 );
 	const png = path.join( SITE, `${ name }.png` );
-	await page.screenshot( { path: png } );
+	await page.screenshot( { path: png, ...( clip ? { clip } : {} ) } );
 	console.log( `wrote site/${ name }.png` );
 	const avif = ( out, width ) => {
 		const args = [ '-q', '60', '-s', '4', '-j', 'all' ];
@@ -138,6 +139,19 @@ async function desktop( browser ) {
 	await page.locator( '.riff-bar-info' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await save( page, 'desktop-now-playing', true );
+
+	// The turntable on its own, close: its plinth, which reaches beyond the record behind the arm
+	// and above it (riff.css), and a margin of the stage round it, but on the left, where the
+	// sleeve stands.
+	await page.waitForTimeout( 1500 );
+	const deck = await page.locator( '.riff-plinth' ).boundingBox();
+	const pad = 24;
+	await save( page, 'desktop-turntable', false, {
+		x: deck.x - deck.width * 0.05,
+		y: deck.y - deck.height * 0.13 - pad,
+		width: deck.width * 1.31 + pad,
+		height: deck.height * 1.18 + pad * 2,
+	} );
 
 	// A sung album's words, timed to the music, a verse in: the line being sung stands out.
 	await page.goto( BASE + LYRICS );
