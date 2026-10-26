@@ -460,7 +460,18 @@ export function nowPlaying( P ) {
 		const rpm = root.dataset.riffFormat === '7' ? 45 : 100 / 3;
 		const step = turning ? ( ( rpm / 60 ) * 360 * ( m.playbackRate || 1 ) ) / FLASHES : 0;
 		$$( '.riff-strobe i' ).forEach( ( row, k ) => {
-			const dot = 360 / ( k ? 160 : 216 );
+			const count = k ? 160 : 216;
+			const dot = 360 / count;
+			if ( ! row.firstChild ) {
+				// The row's dots, round, at their radius on the rim: the platter's radius is 100.
+				const radius = k ? 97.9 : 95.7;
+				let circles = '';
+				for ( let n = 0; n < count; n++ ) {
+					const a = ( n * 2 * Math.PI ) / count;
+					circles += `<circle cx="${ ( radius * Math.cos( a ) ).toFixed( 2 ) }" cy="${ ( radius * Math.sin( a ) ).toFixed( 2 ) }" r="0.62"/>`;
+				}
+				row.innerHTML = `<svg viewBox="-100 -100 200 200" focusable="false">${ circles }</svg>`;
+			}
 			const seen = step - dot * Math.round( step / dot );
 			row.drift ??= row.animate( [ { rotate: '0deg' }, { rotate: '360deg' } ], { duration: 1000, iterations: Infinity } );
 			row.drift.updatePlaybackRate( ( seen * FLASHES ) / 360 );
