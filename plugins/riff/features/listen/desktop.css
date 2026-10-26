@@ -405,7 +405,8 @@ html.riff-desktop .riff-standalone .riff-app {
 	}
 
 	html.riff-desktop #riff .riff-cover,
-	html.riff-desktop #riff .riff-record {
+	html.riff-desktop #riff .riff-record,
+	html.riff-desktop #riff .riff-deck-part {
 		width: min(640px, 100%, 64vh);
 		max-width: none;
 		height: auto;
@@ -415,6 +416,10 @@ html.riff-desktop .riff-standalone .riff-app {
 		justify-self: center;
 		object-fit: cover;
 		box-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
+	}
+
+	html.riff-desktop #riff .riff-deck-part {
+		box-shadow: none;
 	}
 
 	html.riff-desktop #riff .riff-queue {

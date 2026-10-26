@@ -1067,30 +1067,55 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	user-select: none;
 }
 
-/* The record behind the cover, as in its sleeve. While the track plays it
-   slides out to the right, far enough to show its label, and turns at 33⅓,
-   the cover moving left to make room and both smaller, so the pair is no
-   wider than the cover alone and fits wherever the cover did; on pause it
-   slides back in. Its label is printed in the cover's own colours. */
-.riff-record {
+/* The record behind the cover, as in its sleeve, and the turntable it comes
+   out onto, which is the record's size and stands where the record goes:
+   its plinth and platter under the record, its arm over it. While the album
+   plays the record slides out onto the platter, far enough to show its
+   label, the cover moving left to make room. Its label is printed in the
+   cover's own colours. */
+.riff-record,
+.riff-deck-part {
 	position: relative;
 	grid-area: 1 / 1;
 	width: min(100cqw, 100cqh);
 	height: min(100cqw, 100cqh);
+	pointer-events: none;
+	container-type: inline-size;
+}
+
+/* The record's cut, by its share of the radius, a 12-inch LP's unless
+   now-playing.js says it is a 7-inch single: the label, its rim, the
+   lead-out groove, the spindle hole. */
+#riff {
+	--riff-label-inset: 33.5%;
+	--riff-label-edge: 34.5%;
+	--riff-lead-out: 40%;
+	--riff-hole: 2.4%;
+	--riff-turn: 1.8s;
+}
+
+/* A 7-inch single at 45: a label half its width round a hole for a jukebox's
+   spindle, and 60s / 45 = 1.33s a turn. */
+#riff[data-riff-format="7"] {
+	--riff-label-inset: 25%;
+	--riff-label-edge: 50%;
+	--riff-lead-out: 56%;
+	--riff-hole: 11%;
+	--riff-turn: 1.333s;
+}
+
+.riff-record {
 	border-radius: 50%;
 
-	/* as a 12-inch LP is cut, by its radius: the label to a third of it,
-	   then smooth dead wax to the lead-out groove at 40%, the grooves in a
-	   band for each track (--riff-bands, from now-playing.js), and a smooth
-	   lead-in rim from 97% */
+	/* by its radius: the label, then smooth dead wax to the lead-out groove,
+	   the grooves in a band for each track on the side playing
+	   (--riff-bands, from now-playing.js), and a smooth lead-in rim from 97% */
 	background:
 		var(--riff-bands, linear-gradient(transparent, transparent)),
-		radial-gradient(circle closest-side, #0c0c0c 0 34.5%, #161616 34.5% 40%, transparent 40% 97%, #161616 97%),
+		radial-gradient(circle closest-side, #0c0c0c 0 var(--riff-label-edge), #161616 var(--riff-label-edge) var(--riff-lead-out), transparent var(--riff-lead-out) 97%, #161616 97%),
 		repeating-radial-gradient(circle, #141414 0 1px, #1c1c1c 1px 3px),
 		#111;
 	box-shadow: 0 12px 40px rgb(0 0 0 / 0.45);
-	pointer-events: none;
-	container-type: inline-size;
 	transition: translate 0.75s var(--riff-spring), scale 0.75s var(--riff-spring);
 
 	/* moved and turned on the GPU, its grooves and label drawn
@@ -1120,7 +1145,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	inset: 0;
 	border-radius: 50%;
 	background:
-		radial-gradient(circle closest-side, #0b0b0b 0 2.4%, rgb(255 255 255 / 0.25) 2.4% 2.9%, transparent 2.9%),
+		radial-gradient(circle closest-side, #0b0b0b 0 var(--riff-hole), rgb(255 255 255 / 0.25) var(--riff-hole) calc(var(--riff-hole) + 0.5%), transparent calc(var(--riff-hole) + 0.5%)),
 		conic-gradient(from 30deg, transparent 0 8%, rgb(255 255 255 / 0.1) 12%, transparent 18% 50%, rgb(255 255 255 / 0.08) 62%, transparent 68%);
 }
 
@@ -1132,7 +1157,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    The cover itself would only be cut in half and spun. */
 .riff-spin {
 	position: absolute;
-	inset: 33.5%;
+	inset: var(--riff-label-inset);
 	border-radius: 50%;
 
 	/* the round edge as a clip on the turning layer itself, which every
@@ -1206,52 +1231,111 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* Out of the sleeve (now-playing.js, once the album first plays): the record
-   slides clear of it, and the sleeve, a beat behind, is set down beside it,
-   leaning a little, as against the deck. A 12-inch and its sleeve are one
+   slides onto the platter, and the sleeve, a beat behind, is set down beside
+   it, leaning a little, as against the deck. A record and its sleeve are one
    size, so they stay one size. It stays out when paused, as a record on the
-   platter does; it goes back in when the album changes. */
+   platter does; it goes back in when the album changes. The turntable is
+   always where the record goes, and shows once there is a record for it:
+   small enough, with the sleeve, to fit where the cover alone did, a little
+   right of the middle so its plinth and arm fit too. */
+.riff-stage {
+	--riff-out-scale: 0.42;
+	--riff-out-cover: -24.8%;
+	--riff-out-record: 18.9%;
+
+	/* the plinth reaches further above the record than below it: down a
+	   little, so the turntable is in the middle */
+	--riff-out-drop: 4%;
+}
+
 #riff[data-riff-deck="out"] .riff-cover {
-	translate: -25% 0;
-	scale: 0.46;
+	translate: var(--riff-out-cover) 0;
+	scale: var(--riff-out-scale);
 	rotate: -4deg;
 }
 
-/* a little left of the middle, so the arm's base, beyond the record, fits */
-#riff[data-riff-deck="out"] .riff-record {
-	translate: 22.5% 0;
-	scale: 0.46;
+#riff[data-riff-deck="out"] .riff-record,
+.riff-deck-part {
+	translate: var(--riff-out-record) var(--riff-out-drop);
+	scale: var(--riff-out-scale);
+}
+
+.riff-deck-part {
+	opacity: 0;
+	transition: opacity 0.4s;
+}
+
+#riff:is([data-riff-deck="out"], [data-riff-arriving]) .riff-deck-part {
+	opacity: 1;
+}
+
+#riff[data-mode="video"] .riff-deck-part {
+	display: none;
 }
 
 /* A stage wider than it is tall, as on a computer, sizes the pair by
-   itself: each as large as the stage allows, side by side at full size,
-   half a width and a sliver apart, with room left for the arm (its base
-   stands off the record's corner). The sleeve alone, before the record
-   comes out, is as large. */
+   itself: each as large as the stage allows, side by side at full size, the
+   sleeve and the plinth a sliver apart, the plinth's height and its arm
+   side inside the stage.
+   The sleeve alone, before the record comes out, is as large. */
 @container riff-stage (min-aspect-ratio: 1.5) and (min-width: 700px) {
 
-	:root #riff .riff-stage > :is(.riff-cover, .riff-record) {
-		width: min(92cqh, 44cqw);
+	:root #riff .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
+		width: min(78cqh, 40cqw);
 		max-width: none;
-		height: min(92cqh, 44cqw);
+		height: min(78cqh, 40cqw);
 		max-height: none;
 	}
 
-	#riff[data-riff-deck="out"] .riff-cover {
-		translate: -53% 0;
-		scale: 1;
-	}
-
-	#riff[data-riff-deck="out"] .riff-record {
-		translate: 53% 0;
-		scale: 1;
+	/* on what the stage holds: a query cannot restyle the stage itself */
+	.riff-stage > * {
+		--riff-out-scale: 1;
+		--riff-out-cover: -57%;
+		--riff-out-record: 50%;
 	}
 }
 
-/* The platter turns at 1.8s a turn while the music sounds (now-playing.js
-   marks it turning), and its speed is the music's: coming up to speed and
-   winding down, the rate the music bends through is the rate it turns at. */
+/* The plinth: a board under the platter and the arm, which reaches behind
+   the arm's base and its rest; the platter, a little wider than the record,
+   its rim showing round it; and the rest the arm sits on when it is up, a
+   post where the arm lies at rest (now-playing.js: 0.55 of the arm's length
+   from its base, turned out 14°). */
+.riff-plinth::before {
+	content: "";
+	position: absolute;
+	inset: -13% -26% -5% -5%;
+	border-radius: 3cqi;
+	background: linear-gradient(160deg, #222 0%, #181818 60%, #141414);
+	box-shadow: 0 2cqi 6cqi rgb(0 0 0 / 0.5), inset 0 0.2cqi 0 rgb(255 255 255 / 0.06);
+}
+
+.riff-plinth::after {
+	content: "";
+	position: absolute;
+	inset: -1.6%;
+	border-radius: 50%;
+	background: radial-gradient(circle closest-side, #0e0e0e 0 97%, #3a3a3a 98%, #262626);
+}
+
+.riff-armrest {
+	position: absolute;
+	z-index: 1;
+	top: 46.6%;
+	left: 115.4%;
+	width: 3.4cqi;
+	height: 3.4cqi;
+	border-radius: 50%;
+	background: radial-gradient(circle at 40% 35%, #555, #222 70%);
+	box-shadow: 0 0.4cqi 0.8cqi rgb(0 0 0 / 0.6);
+	translate: -50% -50%;
+}
+
+/* The platter turns at 33⅓, or 45 for a single, while the music sounds
+   (now-playing.js marks it turning), and its speed is the music's: coming
+   up to speed and winding down, the rate the music bends through is the
+   rate it turns at. */
 .riff-spin {
-	animation: riff-turn 1.8s linear infinite;
+	animation: riff-turn var(--riff-turn) linear infinite;
 	animation-play-state: paused;
 }
 
@@ -1267,18 +1351,18 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* The tonearm, on its base just off the record's corner (now-playing.js
-   works its angles from this place and length): it comes in once the record
-   is out, at rest until the needle drops. Paused, it lifts. Sized by the
-   record, so it scales with it. */
+   works its angles from this place and length), its counterweight behind the
+   base and its headshell angled, as a pivoted arm's is so the stylus sits
+   along the groove. At rest on its post until the needle drops; paused, it
+   lifts. Sized by the record, so it scales with it. */
 .riff-arm {
 	position: absolute;
 	top: 5%;
 	left: 105%;
 	width: 0;
 	height: 0;
-	opacity: 0;
 	rotate: -14deg;
-	transition: rotate 0.6s var(--riff-spring), opacity 0.3s;
+	transition: rotate 0.6s var(--riff-spring);
 	will-change: rotate;
 }
 
@@ -1311,15 +1395,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    from then on an animation as long as the album turns it, each angle one
    moment of the album, and it swings on its spring to a new track or a
    seek. With reduced motion, it is set where the music is instead. */
-#riff[data-riff-deck="out"] .riff-arm {
-	opacity: 1;
-}
-
 #riff[data-riff-deck="out"] .riff-arm[data-riff-down] {
 	rotate: var(--riff-arm, -14deg);
 }
 
-#riff[data-riff-deck="out"]:not([data-riff-turning], [data-riff-cued]) .riff-arm-tube {
+#riff[data-riff-deck="out"]:not([data-riff-turning], [data-riff-cued], [data-riff-lowering]) .riff-arm-tube {
 	filter: drop-shadow(0.8cqi 2.4cqi 1.4cqi rgb(0 0 0 / 0.4));
 }
 
@@ -1327,9 +1407,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
-/* A new album (now-playing.js): the old cover and record, copied, leave
-   over the stage while the new sleeve comes in from the right with its
-   record inside, which slides out once it has arrived. */
+/* A new album (now-playing.js): once the arm is back on its rest, the old
+   cover and record, copied, leave over the stage while the new sleeve comes
+   in from the right with its record inside, which slides out onto the
+   platter once it has arrived. */
 .riff-leaving {
 	display: grid;
 	grid-area: 1 / 1;
@@ -1348,7 +1429,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 #riff[data-riff-arriving] :is(.riff-cover, .riff-record) {
-	animation: riff-arrive 0.4s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	animation: riff-arrive 0.4s 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 @keyframes riff-arrive {
@@ -1363,6 +1444,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	.riff-record,
 	.riff-cover,
+	.riff-deck-part,
 	.riff-arm,
 	.riff-arm-tube {
 		transition: none;
@@ -2056,7 +2138,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	/* #riff img clears every theme's max-width; this rule outranks it so the
 	   cap holds and the art stays square. */
 	#riff .riff-cover,
-	.riff-record {
+	.riff-record,
+	.riff-deck-part {
 		max-width: 640px;
 		max-height: 640px;
 	}
