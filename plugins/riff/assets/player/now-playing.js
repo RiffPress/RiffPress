@@ -495,14 +495,16 @@ export function nowPlaying( P ) {
 	// The turntable stands only on a stage wider than it is tall, as on a computer or an unfolded
 	// phone; on a phone held upright the cover is shown alone, at full size, and the record stays
 	// in its sleeve. riff.css's container query says which, so the two never disagree; while Now
-	// Playing is closed its stage has no size, so the last answer holds. Turning the phone,
-	// unfolding it or resizing the window brings the record out or puts it back.
+	// Playing is closed its stage has no size, so the last answer holds, and before it has ever
+	// opened the window's shape stands in, so music playing on a computer already has its record
+	// out when Now Playing first opens. Turning the phone, unfolding it or resizing the window
+	// brings the record out or puts it back.
 	function roomy() {
 		const cover = $( '.riff-cover' );
 		if ( ! np.hidden && cover ) {
 			roomy.last = getComputedStyle( cover ).getPropertyValue( '--riff-deck' ).trim() === '1';
 		}
-		return !! roomy.last;
+		return roomy.last ?? window.innerWidth >= window.innerHeight * 1.2;
 	}
 	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
 		new ResizeObserver( () => {
