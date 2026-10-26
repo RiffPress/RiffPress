@@ -1368,9 +1368,43 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-plinth::after {
 	content: "";
 	position: absolute;
-	inset: -1.6%;
+	inset: -3.5%;
 	border-radius: 50%;
-	background: radial-gradient(circle closest-side, #0e0e0e 0 97%, #3a3a3a 98%, #262626);
+	background: radial-gradient(circle closest-side, #0e0e0e 0 98.4%, #3a3a3a 99%, #262626);
+}
+
+/* The platter's rim, wider than the record as a Technics platter is (332mm
+   to the record's 302mm), and on it the strobe: two rows of dots that stand
+   still at the right speed. Under a Technics' lamp, flashing at twice the
+   mains frequency, a row stands still when the platter turns one dot for
+   each flash; here the screen's frames are the flashes. At 60 frames a
+   second 33⅓ turns 3⅓° a frame, two of the inner row's 216 dots; 45 turns
+   4½°, two of the outer row's 160. So the row for the speed playing stands
+   still on a 60 or 120Hz screen and the other drifts, and both drift as the
+   platter comes up to speed or winds down, as on the deck. */
+.riff-strobe {
+	position: absolute;
+	z-index: 1;
+	inset: -3.5%;
+	border-radius: 50%;
+}
+
+.riff-strobe::before,
+.riff-strobe::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+}
+
+.riff-strobe::before {
+	background: repeating-conic-gradient(rgb(200 200 200 / 0.4) 0 0.62deg, transparent 0.62deg calc(360deg / 216));
+	mask-image: radial-gradient(circle closest-side, transparent 94.8%, #000 95% 96.4%, transparent 96.6%);
+}
+
+.riff-strobe::after {
+	background: repeating-conic-gradient(rgb(200 200 200 / 0.4) 0 0.84deg, transparent 0.84deg calc(360deg / 160));
+	mask-image: radial-gradient(circle closest-side, transparent 97.2%, #000 97.4% 98.6%, transparent 98.8%);
 }
 
 .riff-armrest {
