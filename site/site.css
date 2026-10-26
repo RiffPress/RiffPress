@@ -927,14 +927,15 @@ footer ::selection {
 
 /* where the neck lies in the margin, the wall leaves the margin to it: it
    starts in line with the words and fades out toward the right edge, so it
-   runs on past the window rather than being cut off by it */
+   runs on past the window rather than being cut off by it. The fade is
+   eased, so there is no line where it begins */
 @media (min-width: 1400px) {
 
 	[data-neck="margin"] .wall {
 		grid-template-columns: repeat(7, minmax(0, 1fr));
 		padding-left: var(--content-x);
 		padding-right: 0;
-		mask-image: linear-gradient(to right, #000 62%, transparent);
+		mask-image: linear-gradient(to right, #000 58%, rgb(0 0 0 / 0.96) 64%, rgb(0 0 0 / 0.86) 70%, rgb(0 0 0 / 0.7) 76%, rgb(0 0 0 / 0.5) 82%, rgb(0 0 0 / 0.3) 88%, rgb(0 0 0 / 0.14) 93%, rgb(0 0 0 / 0.04) 97%, transparent);
 	}
 
 	[data-neck="margin"] .wall li:nth-child(n + 22) {
