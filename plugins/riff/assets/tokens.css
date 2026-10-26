@@ -84,7 +84,7 @@
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-accent: #ffb020;
+	--riff-accent: #f2eadb;
 }
 
 .riff-app {
@@ -130,21 +130,21 @@
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-app-accent: #9a5b00;
+	--riff-app-accent: #2c2a26;
 
 	/**
 	 * The accent under the pointer or in focus.
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-app-accent-deep: #7a4700;
+	--riff-app-accent-deep: #11100e;
 
 	/**
 	 * The background of the row playing.
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-app-accent-tint: #fff4dd;
+	--riff-app-accent-tint: #f2eadb;
 
 	/**
 	 * Text and icons on a filled button: the accent, or the text colour under

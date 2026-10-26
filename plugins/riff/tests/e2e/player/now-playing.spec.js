@@ -58,9 +58,20 @@ test.describe( 'Player', () => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-chevron' ).click();
-		const cover = await page.locator( '.riff-cover' ).boundingBox();
+		// The cover's own box, before the record moves it aside while the track plays.
+		const cover = await page
+			.locator( '.riff-cover' )
+			.evaluate( ( el ) => ( { width: el.offsetWidth, height: el.offsetHeight } ) );
 		expect( cover.width ).toBe( cover.height );
 		expect( cover.width ).toBe( 640 );
+		// Playing, the record is out of its sleeve, to the cover's right.
+		await expect
+			.poll( async () => {
+				const art = await page.locator( '.riff-cover' ).boundingBox();
+				const record = await page.locator( '.riff-record' ).boundingBox();
+				return record.x + record.width > art.x + art.width;
+			} )
+			.toBe( true );
 		const tabs = await page.locator( '.riff-tabs' ).boundingBox();
 		const tab = await page.locator( '.riff-tab' ).first().boundingBox();
 		expect( tab.x ).toBe( tabs.x );

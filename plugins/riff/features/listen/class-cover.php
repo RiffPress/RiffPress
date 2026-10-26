@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 final class Cover {
 
 	/**
-	 * Palettes: background, accent, ink, all wordpress.org design system tokens. Not Riff's amber:
+	 * Palettes: background, accent, ink, all wordpress.org design system tokens. Not Riff's ivory:
 	 * that is the player's own colour, kept for what you press, as Play, so a cover never looks
 	 * like a button. Charcoal grounds take full-strength accents; blueberry grounds white, charcoal
 	 * and the lighter accents, with white ink; the light ground the deep colours, with charcoal ink.

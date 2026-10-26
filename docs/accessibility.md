@@ -31,7 +31,7 @@ A change the listener made with focus on the control is not repeated: the contro
 
 ## The keyboard
 
-Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change track, Escape closes Now Playing. Nothing fires in a field. The single-key ones act only for a signed-in listener, who can turn them off under Personal Options on their profile; a visitor has only the Shift ones and Escape, and a site can turn the single-key ones off for everyone with the `riff.shortcuts` filter. That is what WCAG 2.1.4 asks. Every swipe and drag has a button or a key that does the same: Next and Previous for a swipe across the bar, Close for a drag down on Now Playing, and Stop at the top of Now Playing for a swipe down on the bar (WCAG 2.5.7).
+Space or K plays and pauses, J and L skip ten seconds, Shift+N and Shift+P change track, Escape closes Now Playing. Nothing fires in a field. The single-key ones act only for a signed-in listener, who can turn them off under Personal Options on their profile; a visitor has only the Shift ones and Escape, and a site can turn the single-key ones off for everyone with the `riff.shortcuts` filter. That is what WCAG 2.1.4 asks. Every swipe and drag has a button or a key that does the same: Next and Previous for a swipe across the bar, Close for a drag down on Now Playing, and Close player in Up next's header for a swipe down on the bar (WCAG 2.5.7).
 
 ## Seeing
 

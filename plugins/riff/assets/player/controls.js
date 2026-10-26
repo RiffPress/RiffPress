@@ -38,6 +38,11 @@ export function controls( P ) {
 			} else {
 				P.close();
 			}
+		} else if ( action === 'tab' ) {
+			// A chip for a tab beside Up next, such as Lyrics: the sheet opens on it all the way, the
+			// player a row above it, as words to read along with want the whole screen.
+			P.sheet( 'full' );
+			P.pickTab( button.dataset.riffTab );
 		} else if ( action === 'dismiss' ) {
 			P.dismiss();
 		} else if ( action === 'captions' ) {

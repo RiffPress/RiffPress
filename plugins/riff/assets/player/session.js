@@ -44,8 +44,8 @@ export default function session( P ) {
 
 	if ( 'mediaSession' in navigator ) {
 		const actions = {
-			play: () => P.el().play().catch( P.paint ),
-			pause: () => P.el().pause(),
+			play: () => P.turn( P.el() ),
+			pause: () => P.halt( P.el() ),
 			previoustrack: () => P.prev(),
 			nexttrack: () => P.next(),
 			seekbackward: ( d ) =>

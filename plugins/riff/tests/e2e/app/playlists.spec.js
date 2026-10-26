@@ -114,6 +114,9 @@ test( 'a playlist opens from Your Library, plays, reorders, loses a track, is re
 	await expect( page.locator( '.riff-album-title' ) ).toHaveText( 'Road trip' );
 	await expect( page.locator( '.riff-album-kind' ) ).toHaveText( 'Playlist' );
 	await expect( titles( page ) ).toHaveText( [ 'Underground', 'Trombone Detritus', 'Stole Back My Soul' ] );
+	// The page opens under the pointer that pressed the card, over Shuffle: axe would read the pill
+	// halfway through its hover fade.
+	await page.mouse.move( 0, 0 );
 	expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations, 'a playlist' ).toEqual( [] );
 	await expectTidy( page, '.riff-app-view', 'a playlist' );
 

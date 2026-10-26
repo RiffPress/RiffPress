@@ -159,9 +159,9 @@ test( 'every dragging movement has a single-pointer alternative (2.5.7)', async 
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	// Swiping the bar sideways skips: Next and Previous, in the bar on a wide screen and in Now
 	// Playing on a phone. Dragging Now Playing down closes it: Close, where it is a sheet; a wide
-	// screen's panel closes from the bar's caret and Escape. Swiping the bar down stops the
-	// player, on a phone: Stop, beside Share under the controls. A wide screen has no such swipe,
-	// and no Stop.
+	// screen's panel closes from the bar's caret and Escape. Swiping the bar down closes the
+	// player, on a phone: Close player, in Up next's header beside Clear. A wide screen has no
+	// such swipe, and no Close player.
 	await page.locator( '.riff-bar-info' ).click();
 	for ( const action of [ 'next', 'prev', isMobile ? 'close' : 'toggle' ] ) {
 		await expect(
@@ -172,16 +172,14 @@ test( 'every dragging movement has a single-pointer alternative (2.5.7)', async 
 		await expect( page.locator( '#riff [data-riff-action="dismiss"]:visible' ) ).toHaveCount( 0 );
 		return;
 	}
-	for ( const action of [ 'dismiss' ] ) {
-		await expect(
-			page.locator( `#riff [data-riff-action="${ action }"]:visible` ).first()
-		).toBeVisible();
-	}
-	// Stop says so in words, and is named by them (2.5.3): a square alone reads as a checkbox.
-	const stop = page.locator( '#riff [data-riff-action="dismiss"]' );
-	await expect( stop ).toHaveText( 'Stop' );
-	await expect( stop ).toHaveAccessibleName( 'Stop' );
-	await stop.click();
+	// In Up next, opened by its handle: a press, not a drag.
+	await page.locator( '#riff [data-riff-action="queue"]' ).click();
+	const close = page.locator( '#riff [data-riff-action="dismiss"]' );
+	await expect( close ).toBeVisible();
+	// It says what it does in words, and is named by them (2.5.3).
+	await expect( close ).toHaveText( 'Close player' );
+	await expect( close ).toHaveAccessibleName( 'Close player' );
+	await close.click();
 	await expect( page.locator( '#riff' ) ).toBeHidden();
 	expect(
 		await page.evaluate( () =>

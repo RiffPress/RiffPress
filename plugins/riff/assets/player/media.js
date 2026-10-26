@@ -56,9 +56,24 @@ export function media( P ) {
 			m.src = src;
 		}
 	}
-	// The analyser, when the filament has made one, is wired to <audio>: see foreign().
-	const el = ( t = P.track() ) =>
-		isVideo( t ) || ( P.analyser && t && foreign( t ) ) ? video : audio;
+	// The analyser, when the filament has made one, is wired to <audio>: see foreign(). The track
+	// playing stays on the element that holds its file, whatever an origin answers about CORS after
+	// it was loaded: otherwise a yes arriving mid-track would send Play and Pause to the other one.
+	const el = ( t = P.track() ) => {
+		if ( isVideo( t ) ) {
+			return video;
+		}
+		if ( t && t === P.track() ) {
+			const holds = ( m ) => m.getAttribute( 'src' ) === t.src;
+			if ( holds( video ) && ! holds( audio ) ) {
+				return video;
+			}
+			if ( holds( audio ) && ! holds( video ) ) {
+				return audio;
+			}
+		}
+		return P.analyser && t && foreign( t ) ? video : audio;
+	};
 	const srcFor = ( t, m ) =>
 		m === video && isVideo( t ) && t.video ? t.video.src : t.src;
 
@@ -213,8 +228,9 @@ export function media( P ) {
 		} );
 		m.addEventListener( 'loadedmetadata', () => live() && P.progress() );
 		m.addEventListener( 'seeking', () => live() && settle() );
+		// Not at every step of a turntable's start or stop: once, at the speed it settles on.
 		for ( const ev of [ 'seeked', 'ratechange', 'durationchange' ] ) {
-			m.addEventListener( ev, () => live() && glide() );
+			m.addEventListener( ev, () => live() && ! P.ramping && glide() );
 		}
 		// Where the track is, for a script that follows it: synced lyrics, a visualiser.
 		const sayTime = () => {

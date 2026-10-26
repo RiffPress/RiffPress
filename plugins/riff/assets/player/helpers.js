@@ -1,6 +1,7 @@
 /* What every section of the player shares and nothing owns: JSON and storage that never throw,
- * times in digits and in words, a sprintf, escaping, the track's subtitle and its small cover, and
- * a word to a screen reader. */
+ * times in digits and in words, a sprintf, escaping, the track's subtitle and its small cover, a
+ * route's address, a picture's average colour, and a word to a screen reader. The Listen app shares some of these
+ * through its own helpers. */
 
 export function parse( json ) {
 	try {
@@ -30,6 +31,60 @@ export function drop( store, key ) {
 	try {
 		store.removeItem( key );
 	} catch {}
+}
+
+// A route's address with a path appended, whether the site has pretty permalinks
+// (/wp-json/riff/v1/library/12) or not (/?rest_route=/riff/v1/library/12).
+export function route( base, path = '' ) {
+	const u = new URL( base, location.href );
+	if ( u.searchParams.has( 'rest_route' ) ) {
+		u.searchParams.set( 'rest_route', u.searchParams.get( 'rest_route' ) + path );
+	} else {
+		u.pathname += path;
+	}
+	return u;
+}
+
+// A picture's average colour, read at eight by eight, and whether dark words read on it: one
+// reading a picture, kept for the page. null where it cannot be read, as a cover from another
+// origin that does not allow it.
+const averages = new Map();
+export function average( src ) {
+	if ( ! src ) {
+		return Promise.resolve( null );
+	}
+	if ( ! averages.has( src ) ) {
+		averages.set(
+			src,
+			new Promise( ( resolve ) => {
+				const img = new Image();
+				img.crossOrigin = 'anonymous';
+				img.decoding = 'async';
+				img.onload = () => {
+					try {
+						const c = document.createElement( 'canvas' );
+						c.width = c.height = 8;
+						const ctx = c.getContext( '2d', { willReadFrequently: true } );
+						ctx.drawImage( img, 0, 0, 8, 8 );
+						const px = ctx.getImageData( 0, 0, 8, 8 ).data;
+						const sum = [ 0, 0, 0 ];
+						for ( let i = 0; i < px.length; i += 4 ) {
+							sum[ 0 ] += px[ i ];
+							sum[ 1 ] += px[ i + 1 ];
+							sum[ 2 ] += px[ i + 2 ];
+						}
+						const [ r, g, b ] = sum.map( ( v ) => v / ( px.length / 4 ) );
+						resolve( { r, g, b, light: 0.299 * r + 0.587 * g + 0.114 * b > 150 } );
+					} catch {
+						resolve( null );
+					}
+				};
+				img.onerror = () => resolve( null );
+				img.src = src;
+			} )
+		);
+	}
+	return averages.get( src );
 }
 
 // A time in words, in the page's language, for a screen reader: "7 minutes, 33 seconds" rather

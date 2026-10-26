@@ -48,8 +48,12 @@ test.describe( 'Standalone', () => {
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
 
-		// The art on its own, square and in the middle, and no panel until a tab is pressed.
-		const cover = await page.locator( '.riff-cover' ).boundingBox();
+		// The art on its own, square and in the middle, and no panel until a tab is pressed: its own
+		// box, before the record moves it aside while the track plays.
+		const cover = await page.locator( '.riff-cover' ).evaluate( ( el ) => {
+			const at = el.offsetParent.getBoundingClientRect();
+			return { x: at.left + el.offsetLeft, width: el.offsetWidth, height: el.offsetHeight };
+		} );
 		expect( Math.round( cover.width ) ).toBe( Math.round( cover.height ) );
 		expect( Math.abs( cover.x + ( cover.width / 2 ) - 720 ) ).toBeLessThanOrEqual( 2 );
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeHidden();

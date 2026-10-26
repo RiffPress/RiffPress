@@ -32,12 +32,20 @@ export default function filament( P ) {
 	// keep the breath. A file from another origin cannot be analysed either; see foreign().
 	function ensureAnalyser() {
 		const t = P.track();
+		// Only once <audio> holds a file Web Audio may hear: its own origin's, or one loaded for
+		// CORS. One from another origin loaded before that origin said yes would play as silence.
+		const file = audio.currentSrc || audio.getAttribute( 'src' ) || '';
+		const readable =
+			! file ||
+			new URL( file, location.href ).origin === location.origin ||
+			audio.crossOrigin === 'anonymous';
 		if (
 			P.analyser ||
 			isIOS ||
 			! window.AudioContext ||
 			! t ||
-			P.foreign( t )
+			P.foreign( t ) ||
+			! readable
 		) {
 			return;
 		}
@@ -145,12 +153,22 @@ export default function filament( P ) {
 	// The wire is seen, not measured: a square root lifts the quiet end into view, since speech
 	// sits around a tenth of full scale and would otherwise read as unlit.
 	// Written on the lines and the glow themselves, not the root: a property on the root restyles
-	// every element in the player each frame, these three restyle three.
-	const heated = $$( '.riff-line, .riff-np-glow' );
+	// every element in the player each frame, these three restyle three. Only where it is seen, Now
+	// Playing's line and glow only while it is open, and only when the value moves by a step the eye
+	// could see: an unchanged write still costs the frame a restyle.
+	const heated = $$( '.riff-line, .riff-np-glow' ).map( ( node ) => ( {
+		node,
+		inNowPlaying: !! node.closest( '.riff-np' ),
+		last: '',
+	} ) );
 	function setHeat( h ) {
-		const value = Math.sqrt( Math.min( 1, Math.max( 0, h ) ) ).toFixed( 3 );
-		for ( const node of heated ) {
-			node.style.setProperty( '--riff-heat', value );
+		const value = Math.sqrt( Math.min( 1, Math.max( 0, h ) ) ).toFixed( 2 );
+		for ( const spot of heated ) {
+			if ( spot.last === value || ( spot.inNowPlaying && P.np.hidden ) ) {
+				continue;
+			}
+			spot.last = value;
+			spot.node.style.setProperty( '--riff-heat', value );
 		}
 	}
 
@@ -160,24 +178,47 @@ export default function filament( P ) {
 		own.meter.forEach( ( fn ) => fn( { heat: h, levels } ) );
 	own.meter.add( ( { heat: h } ) => setHeat( h ) );
 	// Three bars per place the current track is shown: the row in the post and the item in Up
-	// next. Each place's bars take the three bands in turn.
+	// next. Each place's bars take the three bands in turn. Only the places on screen are written,
+	// and only by a step the eye could see: each write restyles the bar and its neighbours.
+	const onScreen = new Set();
+	const watch =
+		'IntersectionObserver' in window
+			? new IntersectionObserver( ( entries ) => {
+				for ( const e of entries ) {
+					onScreen[ e.isIntersecting ? 'add' : 'delete' ]( e.target );
+				}
+			} )
+			: null;
 	own.meter.add( ( { levels } ) => {
 		if ( ! levels ) {
 			return;
 		}
 		bars.forEach( ( bar, k ) => {
-			bar.style.transform = `scaleY(${ (
-				0.15 +
-				0.85 * levels[ k % levels.length ]
-			).toFixed( 2 ) })`;
+			if ( watch && ! onScreen.has( bar.parentNode ) ) {
+				return;
+			}
+			const height = 0.15 + 0.85 * levels[ k % levels.length ];
+			const scale = `scaleY(${ ( Math.round( height * 20 ) / 20 ).toFixed( 2 ) })`;
+			// Unchanged, it is left alone: a write costs a restyle even when it says the same.
+			if ( bar.style.transform !== scale ) {
+				bar.style.transform = scale;
+			}
 		} );
 	} );
 
-	const liveBars = () => [
-		...document.querySelectorAll(
-			'.riff-row[data-current] .riff-row-state i, .riff-queue-list [aria-current] .riff-row-state i'
-		),
-	];
+	const liveBars = () => {
+		const found = [
+			...document.querySelectorAll(
+				'.riff-row[data-current] .riff-row-state i, .riff-queue-list [aria-current] .riff-row-state i'
+			),
+		];
+		if ( watch ) {
+			watch.disconnect();
+			onScreen.clear();
+			new Set( found.map( ( bar ) => bar.parentNode ) ).forEach( ( place ) => watch.observe( place ) );
+		}
+		return found;
+	};
 
 	function tick( now = 0 ) {
 		const dt = lastTick
@@ -258,11 +299,27 @@ export default function filament( P ) {
 			return;
 		}
 		root.dataset.live = '';
-		bars = liveBars();
+		bars = rest( liveBars() );
 		if ( ! meterRaf ) {
 			lastTick = 0;
 			meterRaf = requestAnimationFrame( tick );
 		}
+	}
+
+	// A new track's bars start from rest, each band's range from nothing: the last track's levels
+	// are not this one's, and would flash on the new row before the new song is heard.
+	let barsFor = null;
+	function rest( next ) {
+		for ( const bar of bars ) {
+			bar.style.transform = '';
+		}
+		for ( const band of bands ) {
+			Object.assign( band, { lo: -1, hi: 0, shown: 0 } );
+		}
+		for ( const bar of next ) {
+			bar.style.transform = 'scaleY(0.15)';
+		}
+		return next;
 	}
 
 	// Called from paint(): the wire follows whatever is playing, and the bars follow the current row.
@@ -272,8 +329,9 @@ export default function filament( P ) {
 			if ( ( ! meterRaf || cooling ) && ! breath ) {
 				meterStart();
 			} else if ( meterRaf ) {
-				bars = liveBars();
+				bars = barsFor === t ? liveBars() : rest( liveBars() );
 			}
+			barsFor = t;
 		} else {
 			meterStop();
 		}

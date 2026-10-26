@@ -2,22 +2,15 @@
  * from the REST route, and a browse view as the server rendered it at its address. And prefetch:
  * a view is fetched as soon as it is likely to be wanted. */
 
+import { route as routed } from 'riff-app/helpers';
+
 export function fetching( ctx ) {
 	const { api, app, nav, rest } = ctx;
 	const cache = new Map();
 
-	// The route's address, with a path appended and a page set, whether the site has pretty
-	// permalinks (/wp-json/riff/v1/library/12) or not (/?rest_route=/riff/v1/library/12).
+	// The route's address, with a path appended and a page set.
 	function route( path = '', pageNumber = 0 ) {
-		const u = new URL( rest );
-		if ( u.searchParams.has( 'rest_route' ) ) {
-			u.searchParams.set(
-				'rest_route',
-				u.searchParams.get( 'rest_route' ) + path
-			);
-		} else {
-			u.pathname += path;
-		}
+		const u = routed( rest, path );
 		if ( pageNumber > 1 ) {
 			u.searchParams.set( 'page', String( pageNumber ) );
 		}

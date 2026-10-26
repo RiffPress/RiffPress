@@ -152,11 +152,28 @@
 			.sort( ( a, b ) => a.time - b.time || a.i - b.i );
 	}
 
-	function say( where, text, className ) {
+	// A queue of lines under a note: what the empty panel shows, decoration beside its words.
+	const ICON =
+		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/></svg>';
+
+	// The panel with no lyrics in it: its message in the middle, and for someone who can edit the
+	// Media Library, the way to the track's Lyrics field.
+	function say( where, text, className, id = 0 ) {
+		const box = document.createElement( 'div' );
+		box.className = 'riff-lyrics-empty';
+		box.innerHTML = ICON;
 		const p = document.createElement( 'p' );
 		p.className = className;
 		p.textContent = text;
-		where.replaceChildren( p );
+		box.append( p );
+		if ( id > 0 && config.edit ) {
+			const add = document.createElement( 'a' );
+			add.className = 'riff-lyrics-add';
+			add.href = config.edit + id;
+			add.textContent = config.add || '';
+			box.append( add );
+		}
+		where.replaceChildren( box );
 	}
 
 	function show( where, text ) {
@@ -273,7 +290,7 @@
 			if ( text ) {
 				show( where, text );
 			} else {
-				say( where, config.none || '', 'riff-lyrics-note' );
+				say( where, config.none || '', 'riff-lyrics-note', Number( track.id ) );
 			}
 		} catch {
 			if ( mine === turn ) {

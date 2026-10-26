@@ -259,11 +259,11 @@
 .riff-standalone .riff-app .riff-app-account-menu a:hover,
 .riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
 	background: none;
-	color: #ffb020;
+	color: var(--riff-accent, #f2eadb);
 }
 
 .riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
-	box-shadow: inset 0 0 0 2px #ffb020;
+	box-shadow: inset 0 0 0 2px var(--riff-accent, #f2eadb);
 }
 
 .riff-app .riff-app-search input:focus-visible {
@@ -605,6 +605,221 @@
 	object-fit: cover;
 }
 
+/* An album's cover on its way from the card pressed to the head of its
+   page (rack.js): the move eased as the shelf's turns are, and the rest of
+   the view crossfading under it. */
+::view-transition-group(riff-album-cover) {
+	animation-duration: 0.5s;
+	animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* The Albums view's switch, Grid or Shelf, at the end of its title's line,
+   the title's box stopping short of it. */
+.riff-app .riff-app-title:has(+ .riff-rack-switch) {
+	width: fit-content;
+	max-width: calc(100% - 96px);
+}
+
+.riff-app .riff-rack-switch {
+	display: flex;
+	gap: 4px;
+	width: max-content;
+	margin: -52px 0 20px auto;
+}
+
+.riff-app .riff-rack-switch .riff-btn {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	color: var(--riff-app-ink-2);
+	cursor: pointer;
+}
+
+.riff-app .riff-rack-switch .riff-btn[aria-pressed="true"] {
+	background: var(--riff-app-line);
+	color: var(--riff-app-ink);
+}
+
+.riff-app .riff-rack-switch svg {
+	width: 22px;
+	height: 22px;
+}
+
+/* The shelf: the same cards in a row, each a record turned to show its
+   spine, the cover behind it. The one rack.js turns out (.is-out, where
+   the pointer has rested), or one tabbed to, turns to face you and the
+   records after it move along to make room; the rest stand back. All of it
+   moves by transform and opacity alone, which the compositor animates on
+   the GPU: no slot changes width, so nothing is laid out or painted again
+   while it moves. Each has its own
+   perspective, so all stand alike wherever they are in the row. A record
+   leans over its neighbour's place, so the picture takes no pointer: the
+   card's own link, over its place in the row, is what is pressed. */
+.riff-app .riff-grid.riff-rack {
+	display: flex;
+
+	/* a short shelf in the middle of the view; a long one from its start,
+	   so the first record is never scrolled out of reach */
+	justify-content: safe center;
+	gap: 0;
+	overflow-x: auto;
+	padding: 40px 48px 56px 64px;
+	scroll-padding: 0 160px;
+	scrollbar-width: thin;
+}
+
+.riff-app .riff-rack .riff-card {
+	flex: none;
+	width: 104px;
+	transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* the records after the one turned out move along by the room it takes;
+   the ones before it, and it, stay where they are, so nothing moves under
+   the pointer */
+.riff-app .riff-rack .riff-card:is(.is-out, :focus-within) ~ .riff-card {
+	transform: translateX(226px);
+}
+
+/* the turned-out record is pressed anywhere on its cover, not only in its
+   slot */
+.riff-app .riff-rack .riff-card:is(.is-out, :focus-within) .riff-card-link::after {
+	right: -226px;
+}
+
+.riff-app .riff-rack .riff-card-art {
+	width: 300px;
+	margin: 0;
+	overflow: visible;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+	transform: perspective(2600px) rotateY(64deg);
+	transform-origin: 0 50%;
+	pointer-events: none;
+	transform-style: preserve-3d;
+	transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* the light on a record: a turned cover sits back in shadow and comes into
+   the light as it turns to you, and casts a deeper shadow; both are drawn
+   once and faded, not drawn again at each step */
+.riff-app .riff-rack .riff-card-art::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 4px;
+	box-shadow: 0 28px 56px -16px rgb(0 0 0 / 0.65);
+	opacity: 0;
+	transition: opacity 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.riff-app .riff-rack .riff-card:is(.is-out, :focus-within) .riff-card-art::before {
+	opacity: 1;
+}
+
+.riff-app .riff-rack .riff-card-art::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 4px;
+	background: linear-gradient(90deg, rgb(0 0 0 / 0.4), rgb(0 0 0 / 0.12));
+	transition: opacity 0.45s;
+}
+
+.riff-app .riff-rack .riff-card:is(.is-out, :focus-within) .riff-card-art::after {
+	opacity: 0;
+}
+
+.riff-app .riff-rack .riff-card:is(.is-out, :focus-within) .riff-card-art {
+	transform: perspective(2600px) rotateY(8deg);
+}
+
+/* the grid's hover shadow is a card's; on the shelf the record casts its
+   own */
+.riff-app .riff-rack .riff-card:hover .riff-card-art {
+	box-shadow: none;
+}
+
+.riff-app .riff-rack .riff-card-art img {
+	border-radius: 4px;
+	box-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.55);
+
+	/* a transparent edge, so a turned cover's sides are drawn smooth */
+	outline: 1px solid transparent;
+	backface-visibility: hidden;
+}
+
+/* the spine, along the cover's left edge and square to it: as thin as a
+   gatefold sleeve's, the title printed small along it and read from the
+   foot up, as a record's is */
+.riff-app .riff-spine {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	width: 14px;
+	height: 100%;
+	padding: 12px 0;
+	box-sizing: border-box;
+	border-radius: 4px 0 0 4px;
+	background:
+		linear-gradient(90deg, rgb(0 0 0 / 0.28), rgb(255 255 255 / 0.1) 35%, rgb(255 255 255 / 0.04) 55%, rgb(0 0 0 / 0.22)),
+		var(--riff-spine, #2a2a2a);
+	color: #fff;
+	outline: 1px solid transparent;
+	writing-mode: vertical-rl;
+	transform: rotate(180deg) rotateY(90deg);
+	transform-origin: 0 50%;
+	overflow: hidden;
+	white-space: nowrap;
+	backface-visibility: hidden;
+}
+
+.riff-app .riff-spine.is-light {
+	color: #121212;
+}
+
+.riff-app .riff-spine b {
+	overflow: hidden;
+	font-size: 9px;
+	font-weight: 700;
+	line-height: 14px;
+	letter-spacing: 0.04em;
+	text-overflow: ellipsis;
+}
+
+.riff-app .riff-grid:not(.riff-rack) .riff-spine,
+.riff-app .riff-rack .riff-card-play {
+	display: none;
+}
+
+/* the words are on the spine; the link keeps them for a screen reader */
+.riff-app .riff-rack :is(.riff-card-title, .riff-card-sub) {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.riff-app .riff-rack .riff-card,
+	.riff-app .riff-rack .riff-card-art,
+	.riff-app .riff-rack .riff-card-art::before,
+	.riff-app .riff-rack .riff-card-art::after {
+		transition: none;
+	}
+}
+
 /* A cover fades in as it arrives, into the square kept for it. The script
    marks the ones still on their way; without it, nothing is hidden. */
 .riff-app img[data-riff-fade] {
@@ -664,12 +879,21 @@
 }
 
 /* A card's variants: Liked songs, with a heart for its cover, and an artist,
-   round, with a letter when there is no picture. */
+   round, with a letter when there is no picture. Liked songs has a colour
+   of its own, late-night purple into WordPress's blueberry, from the same
+   palette as the drawn covers but as a gradient, which none of them is, and
+   not the accent, which is kept for what you press. Mixed in OKLab, so the
+   blend has no grey middle and no bands. */
+.riff-app {
+	--riff-liked: linear-gradient(135deg in oklab, #7a00df, #3858e9);
+	--riff-on-liked: #f2eadb;
+}
+
 .riff-app .riff-card-liked .riff-card-art {
 	display: grid;
 	place-items: center;
-	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
-	color: var(--riff-app-on-accent);
+	background: var(--riff-liked);
+	color: var(--riff-on-liked);
 }
 
 .riff-app .riff-card-heart {
@@ -906,14 +1130,32 @@
    header to the view's edges, which clip it. Inside a theme the header keeps
    the site's look; --riff-album-tint is still set there for a theme to use. */
 .riff-standalone .riff-app-view {
+	position: relative;
+	isolation: isolate;
 	overflow: clip;
 }
 
 .riff-standalone .riff-album-tinted {
 	--riff-album-mix: var(--riff-album-tint) 40%, var(--riff-app-bg);
 	--riff-album-wash: color-mix(in srgb, var(--riff-album-mix));
-	--riff-album-fade: var(--riff-album-wash) 45%, var(--riff-app-bg);
-	border-image: linear-gradient(var(--riff-album-fade)) fill 0 / 0 / 240px 100vmax 160px;
+}
+
+/* The wash: behind everything in the view, from its top to below the
+   header, mixed in OKLab. A long, dark fade has too few shades to step
+   through smoothly and shows as bands; a fine grain blended into it breaks
+   each band's edge so the eye cannot find it. Both are one layer, drawn
+   once. */
+.riff-standalone .riff-album-tinted::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: -1;
+	height: 560px;
+	/* stylelint-disable-next-line @stylistic/max-line-length */
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 160px, linear-gradient(in oklab, var(--riff-album-wash) 30%, var(--riff-app-bg));
+	background-blend-mode: soft-light, normal;
+	mask-image: linear-gradient(#000 55%, transparent);
+	pointer-events: none;
 }
 
 /* The quieter line on a tint: mixed from the text and the wash itself, not
@@ -958,6 +1200,13 @@
 	border-radius: 6px;
 	background: var(--riff-app-surface);
 	box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+/* while the cover is on its way in from the card pressed (rack.js), its
+   frame shows nothing of its own: the cover arriving is the picture */
+.riff-album-cover:has(> img[style*="view-transition-name"]) {
+	background: none;
+	box-shadow: none;
 }
 
 .riff-app .riff-album-cover img {
@@ -1216,14 +1465,15 @@
 	margin-top: 48px;
 }
 
-/* Liked songs' cover, drawn: the heart on Riff's amber, as its card has it. */
+/* Liked songs' cover, drawn: the heart on its own colour, as its card
+   has it. */
 .riff-app .riff-album-liked {
 	display: grid;
 	place-items: center;
 	width: 100%;
 	height: 100%;
-	background: linear-gradient(135deg, var(--riff-app-accent), var(--riff-app-accent-deep));
-	color: var(--riff-app-on-accent);
+	background: var(--riff-liked);
+	color: var(--riff-on-liked);
 }
 
 .riff-app .riff-album-liked .riff-card-heart {

@@ -503,7 +503,7 @@ div.riff-row-locked {
 	left: -7px;
 }
 
-/* ---- The filament. riff.js writes one number a frame, --riff-heat, 0 cold
+/* ---- The filament. filament.js writes one number a frame, --riff-heat, 0 cold
    to 1 white-hot, and it changes nothing but opacity: every layer has one
    fixed colour and fades, so the GPU composites the light and nothing is
    painted again while the music plays. Over the played part of the line: the
@@ -511,7 +511,7 @@ div.riff-row-locked {
    it heats; the heart, a pale centre that shows at the peaks; and the bloom
    around them. The played part, wire and heart stretch with the played part,
    and the bloom slides, so its blur keeps its shape and its leading end fades
-   out rather than stopping square at the knob. While a track plays, riff.js
+   out rather than stopping square at the knob. While a track plays, media.js
    moves all of them with animations the compositor runs (see glide()), so the
    page's own work cannot make the line stutter. */
 
@@ -521,7 +521,7 @@ div.riff-row-locked {
 	initial-value: 0;
 }
 
-/* On the lines and the glow, where riff.js writes the heat, so nothing
+/* On the lines and the glow, where filament.js writes the heat, so nothing
    above them restyles each frame. */
 .riff-line,
 .riff-np-glow {
@@ -1050,7 +1050,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	place-items: center;
 	min-height: 0;
 	padding: 34px 32px 24px;
-	container-type: size;
+	container: riff-stage / size;
 	touch-action: none;
 }
 
@@ -1065,6 +1065,312 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	height: min(100cqw, 100cqh);
 	object-fit: cover;
 	user-select: none;
+}
+
+/* The record behind the cover, as in its sleeve. While the track plays it
+   slides out to the right, far enough to show its label, and turns at 33⅓,
+   the cover moving left to make room and both smaller, so the pair is no
+   wider than the cover alone and fits wherever the cover did; on pause it
+   slides back in. Its label is printed in the cover's own colours. */
+.riff-record {
+	position: relative;
+	grid-area: 1 / 1;
+	width: min(100cqw, 100cqh);
+	height: min(100cqw, 100cqh);
+	border-radius: 50%;
+
+	/* as a 12-inch LP is cut, by its radius: the label to a third of it,
+	   then smooth dead wax to the lead-out groove at 40%, the grooves in a
+	   band for each track (--riff-bands, from now-playing.js), and a smooth
+	   lead-in rim from 97% */
+	background:
+		var(--riff-bands, linear-gradient(transparent, transparent)),
+		radial-gradient(circle closest-side, #0c0c0c 0 34.5%, #161616 34.5% 40%, transparent 40% 97%, #161616 97%),
+		repeating-radial-gradient(circle, #141414 0 1px, #1c1c1c 1px 3px),
+		#111;
+	box-shadow: 0 12px 40px rgb(0 0 0 / 0.45);
+	pointer-events: none;
+	container-type: inline-size;
+	transition: translate 0.75s var(--riff-spring), scale 0.75s var(--riff-spring);
+
+	/* moved and turned on the GPU, its grooves and label drawn
+	   once rather than at every step */
+	will-change: translate, scale;
+}
+
+/* The way a record and its sleeve move: a spring, quick away and settling
+   with the slightest give, as a thing with weight does, drawn with linear()
+   where a browser has it and a curve where it has not. */
+#riff {
+	--riff-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+
+	#riff {
+		--riff-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.2%, 1);
+	}
+}
+
+/* light across the grooves, which stays put while the record turns, and
+   the spindle hole through the label */
+.riff-record::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background:
+		radial-gradient(circle closest-side, #0b0b0b 0 2.4%, rgb(255 255 255 / 0.25) 2.4% 2.9%, transparent 2.9%),
+		conic-gradient(from 30deg, transparent 0 8%, rgb(255 255 255 / 0.1) 12%, transparent 18% 50%, rgb(255 255 255 / 0.08) 62%, transparent 68%);
+}
+
+/* the label: a disc that turns as one at 33⅓, an LP's speed (60s / 33⅓ =
+   1.8s a turn, at an even speed), printed as a record's label is, centred
+   on the spindle: the album above the hole, the artist and the speed below,
+   on the cover softened into a field of its own colours, the words dark on
+   a light cover and light on a dark one (now-playing.js) so they read.
+   The cover itself would only be cut in half and spun. */
+.riff-spin {
+	position: absolute;
+	inset: 33.5%;
+	border-radius: 50%;
+
+	/* the round edge as a clip on the turning layer itself, which every
+	   engine keeps on the compositor; an overflow clip on a turning layer
+	   is one Safari has dropped */
+	clip-path: circle(50%);
+	container-type: inline-size;
+	will-change: rotate;
+}
+
+#riff .riff-spin img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	object-fit: cover;
+	filter: blur(10px) saturate(1.3);
+	scale: 1.3;
+}
+
+.riff-label {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	grid-template-rows: 1fr 24% auto 1fr;
+	justify-items: center;
+	padding: 0 16%;
+	background: var(--riff-label-veil, rgb(0 0 0 / 0.35));
+	color: var(--riff-label-ink, #fff);
+	font-family: var(--riff-font, inherit);
+	line-height: 1.15;
+	text-align: center;
+	text-shadow: 0 1px 2px var(--riff-label-halo, rgb(0 0 0 / 0.35));
+}
+
+.riff-label b {
+	display: -webkit-box;
+	align-self: end;
+	overflow: hidden;
+	font-size: 9cqi;
+	font-weight: 700;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.riff-label i {
+	display: -webkit-box;
+	grid-row: 3;
+	overflow: hidden;
+	font-size: 6cqi;
+	font-style: normal;
+	opacity: 0.85;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.riff-label small {
+	grid-row: 4;
+	align-self: start;
+	margin-top: 6%;
+	font-size: 5.5cqi;
+	letter-spacing: 0.06em;
+	opacity: 0.7;
+}
+
+.riff-cover {
+	position: relative;
+	transition: translate 0.75s var(--riff-spring) 0.08s, scale 0.75s var(--riff-spring) 0.08s, rotate 0.75s var(--riff-spring) 0.08s;
+	will-change: translate, scale, rotate;
+}
+
+/* Out of the sleeve (now-playing.js, once the album first plays): the record
+   slides clear of it, and the sleeve, a beat behind, is set down beside it,
+   leaning a little, as against the deck. A 12-inch and its sleeve are one
+   size, so they stay one size. It stays out when paused, as a record on the
+   platter does; it goes back in when the album changes. */
+#riff[data-riff-deck="out"] .riff-cover {
+	translate: -25% 0;
+	scale: 0.46;
+	rotate: -4deg;
+}
+
+/* a little left of the middle, so the arm's base, beyond the record, fits */
+#riff[data-riff-deck="out"] .riff-record {
+	translate: 22.5% 0;
+	scale: 0.46;
+}
+
+/* A stage wider than it is tall, as on a computer, sizes the pair by
+   itself: each as large as the stage allows, side by side at full size,
+   half a width and a sliver apart, with room left for the arm (its base
+   stands off the record's corner). The sleeve alone, before the record
+   comes out, is as large. */
+@container riff-stage (min-aspect-ratio: 1.5) and (min-width: 700px) {
+
+	:root #riff .riff-stage > :is(.riff-cover, .riff-record) {
+		width: min(92cqh, 44cqw);
+		max-width: none;
+		height: min(92cqh, 44cqw);
+		max-height: none;
+	}
+
+	#riff[data-riff-deck="out"] .riff-cover {
+		translate: -53% 0;
+		scale: 1;
+	}
+
+	#riff[data-riff-deck="out"] .riff-record {
+		translate: 53% 0;
+		scale: 1;
+	}
+}
+
+/* The platter turns at 1.8s a turn while the music sounds (now-playing.js
+   marks it turning), and its speed is the music's: coming up to speed and
+   winding down, the rate the music bends through is the rate it turns at. */
+.riff-spin {
+	animation: riff-turn 1.8s linear infinite;
+	animation-play-state: paused;
+}
+
+#riff[data-riff-deck="out"][data-riff-turning] .riff-spin {
+	animation-play-state: running;
+}
+
+@keyframes riff-turn {
+
+	to {
+		rotate: 1turn;
+	}
+}
+
+/* The tonearm, on its base just off the record's corner (now-playing.js
+   works its angles from this place and length): it comes in once the record
+   is out, at rest until the needle drops. Paused, it lifts. Sized by the
+   record, so it scales with it. */
+.riff-arm {
+	position: absolute;
+	top: 5%;
+	left: 105%;
+	width: 0;
+	height: 0;
+	opacity: 0;
+	rotate: -14deg;
+	transition: rotate 0.6s var(--riff-spring), opacity 0.3s;
+	will-change: rotate;
+}
+
+#riff .riff-arm svg {
+	position: absolute;
+	top: -4cqi;
+	left: -6cqi;
+	width: 12cqi;
+	height: 82cqi;
+	overflow: visible;
+
+	/* the base, where the arm turns and a swing to a new track turns it
+	   (now-playing.js) */
+	transform-origin: 6cqi 4cqi;
+}
+
+/* The base stands on the deck and never moves. The arm, lifted, rides a
+   little above the record, which from above shows as its shadow falling
+   further from it; lowered, the shadow comes in under it. */
+#riff .riff-arm-base {
+	filter: drop-shadow(0 0.6cqi 0.8cqi rgb(0 0 0 / 0.5));
+}
+
+#riff .riff-arm-tube {
+	filter: drop-shadow(0 0.5cqi 0.6cqi rgb(0 0 0 / 0.55));
+	transition: filter 0.3s;
+}
+
+/* The needle drops once the record is out (now-playing.js marks it down);
+   from then on an animation as long as the album turns it, each angle one
+   moment of the album, and it swings on its spring to a new track or a
+   seek. With reduced motion, it is set where the music is instead. */
+#riff[data-riff-deck="out"] .riff-arm {
+	opacity: 1;
+}
+
+#riff[data-riff-deck="out"] .riff-arm[data-riff-down] {
+	rotate: var(--riff-arm, -14deg);
+}
+
+#riff[data-riff-deck="out"]:not([data-riff-turning], [data-riff-cued]) .riff-arm-tube {
+	filter: drop-shadow(0.8cqi 2.4cqi 1.4cqi rgb(0 0 0 / 0.4));
+}
+
+#riff[data-mode="video"] .riff-record {
+	display: none;
+}
+
+/* A new album (now-playing.js): the old cover and record, copied, leave
+   over the stage while the new sleeve comes in from the right with its
+   record inside, which slides out once it has arrived. */
+.riff-leaving {
+	display: grid;
+	grid-area: 1 / 1;
+	place-items: center;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.riff-leaving > * {
+	grid-area: 1 / 1;
+}
+
+#riff[data-riff-arriving] .riff-record {
+	translate: 0 0;
+}
+
+#riff[data-riff-arriving] :is(.riff-cover, .riff-record) {
+	animation: riff-arrive 0.4s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes riff-arrive {
+
+	from {
+		opacity: 0;
+		transform: translateX(40%);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.riff-record,
+	.riff-cover,
+	.riff-arm,
+	.riff-arm-tube {
+		transition: none;
+	}
+
+	.riff-spin {
+		animation: none;
+	}
 }
 
 .riff-video {
@@ -1328,7 +1634,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-more-button:focus-visible {
-	outline: 2px solid var(--riff-accent, #ffb020);
+	outline: 2px solid var(--riff-accent, #f2eadb);
 	outline-offset: 1px;
 }
 
@@ -1404,7 +1710,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-like-button:focus-visible {
-	outline: 2px solid var(--riff-accent, #ffb020);
+	outline: 2px solid var(--riff-accent, #f2eadb);
 	outline-offset: 1px;
 }
 
@@ -1426,7 +1732,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* The … menu, drawn as WordPress's toolbar draws its menus: square, on the
-   toolbar's #2c3338, light grey words that turn Riff's amber under the pointer
+   toolbar's #2c3338, light grey words that turn Riff's ivory under the pointer
    or the keyboard. Its rows keep 44px on a touch screen. */
 .riff-menu {
 	position: fixed;
@@ -1458,12 +1764,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-menu > :focus-visible,
 #riff .riff-menu > :hover,
 #riff .riff-menu > :focus-visible {
-	color: #ffb020;
+	color: var(--riff-accent, #f2eadb);
 }
 
 .riff-menu > :focus-visible,
 #riff .riff-menu > :focus-visible {
-	box-shadow: inset 0 0 0 2px #ffb020;
+	box-shadow: inset 0 0 0 2px var(--riff-accent, #f2eadb);
 }
 
 @media (pointer: coarse) {
@@ -1484,6 +1790,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 #riff .riff-queue-clear {
+	flex: none;
+	white-space: nowrap;
 	padding: 6px 14px;
 	border: 1px solid var(--riff-line);
 	border-radius: 999px;
@@ -1747,7 +2055,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	/* #riff img clears every theme's max-width; this rule outranks it so the
 	   cap holds and the art stays square. */
-	#riff .riff-cover {
+	#riff .riff-cover,
+	.riff-record {
 		max-width: 640px;
 		max-height: 640px;
 	}
