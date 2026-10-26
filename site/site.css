@@ -441,14 +441,39 @@ section {
 	align-items: center;
 }
 
-.how-phone {
-	display: grid;
-	place-items: center;
+/* three phones, the story the words leave out: the album's post, Now
+   Playing in front, then Up next, each whole and readable, the outer two
+   tucked a little behind it and set back */
+.fan {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-.how-phone .device {
-	width: min(340px, 82vw, calc(80vh * 780 / 1688));
+.fan .device {
+	flex: none;
+	width: min(36%, 240px);
 	box-shadow: 0 18px 40px rgb(60 40 20 / 0.18);
+}
+
+.fan .fan-left,
+.fan .fan-right {
+	scale: 0.9;
+}
+
+.fan .fan-left {
+	margin-right: -6%;
+	rotate: -4deg;
+}
+
+.fan .fan-right {
+	margin-left: -6%;
+	rotate: 4deg;
+}
+
+.fan .fan-front {
+	position: relative;
+	z-index: 1;
 }
 
 .how-words {
@@ -801,6 +826,7 @@ footer nav {
 .device,
 .desk,
 .shot,
+.fan,
 .crate,
 .shelf,
 figure img {
