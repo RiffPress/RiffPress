@@ -490,7 +490,13 @@ function neck( bar ) {
 		const vertical = !! guitar && WIDE.matches;
 		group.classList.toggle( 'is-vertical', vertical );
 		const set = strings( vertical );
-		wrap.insertBefore( group, wrap.querySelector( ':scope > nav' ) );
+		if ( vertical ) {
+			// At the head of the neck, held in the window, so the chord and Mute are there wherever the
+			// page is scrolled, even once the neck has begun to leave with the page.
+			guitar.before( group );
+		} else {
+			wrap.insertBefore( group, wrap.querySelector( ':scope > nav' ) );
+		}
 		if ( vertical ) {
 			guitar.append( set.region );
 		} else {
@@ -510,8 +516,8 @@ function neck( bar ) {
 function rail() {
 	const track = document.createElement( 'div' );
 	track.className = 'neck-rail';
-	track.setAttribute( 'aria-hidden', 'true' );
-	track.innerHTML = '<div class="neck-guitar"><div class="neck-strings"></div></div>';
+	// The drawing is hidden from assistive technology; the Mute button neck() puts over it is not.
+	track.innerHTML = '<div class="neck-guitar" aria-hidden="true"><div class="neck-strings"></div></div>';
 	document.body.append( track );
 	document.body.classList.add( 'has-neck-rail' );
 	// The nut just under the bars, however tall they are; the Developers bar holds the neck under it
@@ -524,7 +530,7 @@ function rail() {
 		style.setProperty( '--stick', `${ local?.offsetHeight || 0 }px` );
 	};
 	new ResizeObserver( fit ).observe( nav || document.body );
-	return track.firstElementChild;
+	return track.querySelector( '.neck-guitar' );
 }
 const guitar = document.body.dataset.neck === 'margin' ? rail() : null;
 
