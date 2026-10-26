@@ -49,10 +49,6 @@
 		--stick: 56px;
 	}
 
-	[data-neck="margin"].has-neck-rail .nav .wrap::after {
-		content: none;
-	}
-
 	/* the rail: the margin from the bar to the footer, which on a page
 	   shorter than the neck cuts it off. Built last on the page, it lies
 	   over the bands without a z-index, which, like a mask, would keep the

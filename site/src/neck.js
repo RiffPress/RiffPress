@@ -1,22 +1,16 @@
 /**
- * The strings, played. site.css and web.css draw them still, which is what a reader without this
- * script, or with reduced motion, sees; this lays live strings in their place and plucks one when the
- * pointer crosses it, with the wave equation in string.js.
- *
- * In the global bar they lie in its open middle, between the wordmark and the menu. On a page that
- * asks for it (body[data-neck="margin"]), on a screen wide enough to have a margin, they run down a
- * guitar's neck in the left margin instead, from under the bar to the bridge, at life size (neck.css
- * and neck.svg draw the neck). Either way they strum once, without sound, as the page opens, so they
- * read as strings and not as rules.
+ * The strings, played: this lays live strings down a guitar's neck in the left margin and plucks one
+ * when the pointer crosses it, with the wave equation in string.js. They are there on a page that
+ * asks for them (body[data-neck="margin"]), on a screen wide enough to have a margin, from under the
+ * bar to the bridge, at life size (neck.css and neck.svg draw the neck); a narrower screen has none.
+ * They strum once, without sound, as the page opens, so they read as strings and not as rules.
  *
  * A click on the strings asks them to sound. From then on each pluck also rings, as a steel string
  * (steel.js), tuned as the top five strings of a guitar: E, B, G, D, A. Holding a key while strumming
  * frets a chord, as a guitarist would name it: a letter for its major chord, Shift for minor, 7 held
  * for the seventh (chords.js); a string the shape does not play gives a muted thud. The chord's name
- * shows in the bar while it is held. The first click strums all five, and a Mute button appears in
- * the bar then, and only then.
- *
- * On a phone a finger strums across them, or taps one.
+ * shows beside the neck while it is held. The first click strums all five, and a Mute button
+ * appears beside the neck then, and only then.
  *
  * The strings are decoration: hidden from assistive technology, never focused. The Mute button is a
  * real button, in the tab order once there is sound to mute.
@@ -47,9 +41,7 @@ const fingerAt = ( n ) => fretAt( n ) - 0.3 * ( fretAt( n ) - fretAt( n - 1 ) );
 const WIDE = window.matchMedia( '(min-width: 1400px)' );
 
 function neck( bar ) {
-	const wrap = bar.querySelector( '.wrap' );
-	// The chord and the Mute button, kept together in the bar: beside the strings when they are in it,
-	// before the menu when they are in the margin.
+	// The chord and the Mute button, kept together beside the neck.
 	const group = document.createElement( 'div' );
 	group.className = 'neck';
 	document.body.classList.add( 'has-neck-live' );
@@ -481,27 +473,23 @@ function neck( bar ) {
 		region.addEventListener( 'pointerup', () => ( last = null ) );
 	}
 
-	// In the margin when the page asks for it and there is one; in the bar when not.
+	// In the margin while there is one; none on a narrower screen.
 	const place = () => {
 		for ( const set of sets ) {
 			set.observer.disconnect();
 			set.region.remove();
 		}
-		const vertical = !! guitar && WIDE.matches;
-		group.classList.toggle( 'is-vertical', vertical );
-		const set = strings( vertical );
-		if ( vertical ) {
-			// Just right of the neck's head, so Mute is reached without crossing the strings, and held
-			// in the window, so they are there wherever the page is scrolled.
-			guitar.closest( '.neck-rail' ).nextElementSibling.append( group );
-		} else {
-			wrap.insertBefore( group, wrap.querySelector( ':scope > nav' ) );
+		sets = [];
+		if ( ! WIDE.matches ) {
+			group.remove();
+			return;
 		}
-		if ( vertical ) {
-			guitar.append( set.region );
-		} else {
-			group.prepend( set.region );
-		}
+		group.classList.add( 'is-vertical' );
+		const set = strings( true );
+		// Just right of the neck's head, so Mute is reached without crossing the strings, and held in
+		// the window, so they are there wherever the page is scrolled.
+		guitar.closest( '.neck-rail' ).nextElementSibling.append( group );
+		guitar.append( set.region );
 		sets = [ set ];
 		set.size();
 		// Once, as the page opens, so they read as strings and not as rules.
@@ -540,6 +528,7 @@ const guitar = document.body.dataset.neck === 'margin' ? rail() : null;
 const bar = document.querySelector( '.nav' );
 if (
 	bar &&
+	guitar &&
 	! window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches
 ) {
 	neck( bar );
