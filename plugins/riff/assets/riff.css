@@ -1211,7 +1211,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	position: absolute;
 	inset: 0;
 	display: grid;
-	grid-template-rows: 1fr 24% auto 1fr;
+	grid-template-rows: 1fr 24% auto auto 1fr;
 	justify-items: center;
 	padding: 0 16%;
 	background: var(--riff-label-paper, #3a3a3a);
@@ -1243,8 +1243,34 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	-webkit-box-orient: vertical;
 }
 
-.riff-label small {
+/* the side's tracks, as a pressed label lists them, where the label is
+   drawn large enough for its smallest type to be read */
+.riff-label-tracks {
+	display: none;
 	grid-row: 4;
+	margin: 3% 0 0;
+	padding: 0;
+	list-style: none;
+	font-size: 3.4cqi;
+	line-height: 1.35;
+	white-space: pre;
+	opacity: 0.8;
+}
+
+.riff-label-tracks li {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+@container (min-width: 200px) {
+
+	.riff-label-tracks {
+		display: block;
+	}
+}
+
+.riff-label small {
+	grid-row: 5;
 	align-self: start;
 	margin-top: 6%;
 	font-size: 5.5cqi;

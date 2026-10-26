@@ -6,7 +6,7 @@
  * is cut as an LP is: a band of grooves for each of the album's tracks, as wide as the track is
  * long. It turns at 33⅓, faster or slower with the music's speed as a turntable's pitch would, and
  * its tonearm tracks the album from the outside in. */
-import { average, hsl, largest, route } from 'riff-player/helpers';
+import { average, hsl, largest, route, time } from 'riff-player/helpers';
 
 export function nowPlaying( P ) {
 	const { root, np, $, $$, queueList, emit } = P;
@@ -300,7 +300,14 @@ export function nowPlaying( P ) {
 					albums.delete( album );
 					return;
 				}
-				albums.set( album, { ids: tracks.map( ( q ) => String( q.id ) ), lengths, starts, length, ...press( lengths ) } );
+				albums.set( album, {
+					ids: tracks.map( ( q ) => String( q.id ) ),
+					titles: tracks.map( ( q ) => q.title || '' ),
+					lengths,
+					starts,
+					length,
+					...press( lengths ),
+				} );
 				if ( playing === album ) {
 					place( P.track() );
 				}
@@ -338,12 +345,26 @@ export function nowPlaying( P ) {
 			show();
 		}
 	}
+	// The label says the side and the speed, and lists the side's tracks as a pressed label does:
+	// A1, A2 and on, each with its time.
 	function label( on ) {
 		const small = $( '.riff-label small' );
 		if ( small ) {
 			const speed = root.dataset.riffFormat === '7' ? '45' : '33⅓';
 			small.textContent = on ? `${ on.name } · ${ speed }` : speed;
 		}
+		const list = $( '.riff-label-tracks' );
+		const album = albums.get( playing );
+		if ( ! list ) {
+			return;
+		}
+		list.replaceChildren(
+			...( on && album ? album.titles.slice( on.from, on.to ) : [] ).map( ( title, k ) => {
+				const li = document.createElement( 'li' );
+				li.textContent = `${ on.name }${ k + 1 }  ${ title }  ${ time( album.lengths[ on.from + k ] ) }`;
+				return li;
+			} )
+		);
 	}
 
 	// ---- A new side of the same record: the needle goes back to its rest, the record is turned
