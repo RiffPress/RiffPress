@@ -34,7 +34,7 @@ The Playwright suite runs from the pre-commit hook against the local wp-env site
 
 ## Before a pull request
 
-Show the change working: the test, the build, a screenshot against the design. Don't run a code review locally; Copilot reviews every pull request on GitHub, following [.github/instructions/code-review.instructions.md](.github/instructions/code-review.instructions.md). Answer each of its comments with a fix or a reason. When it keeps flagging something that isn't wrong, add it to Not bugs below; when it misses something, add it to those instructions.
+Show the change working: the test, the build, a screenshot against the design. Don't run a code review locally; Copilot reviews every pull request on GitHub, following [.github/instructions/code-review.instructions.md](.github/instructions/code-review.instructions.md). Answer each of its comments with a fix or a reason. When it keeps flagging something that isn't wrong, or misses something it should catch, say so in those instructions.
 
 ## Merging
 

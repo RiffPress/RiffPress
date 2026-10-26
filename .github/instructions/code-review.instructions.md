@@ -5,7 +5,7 @@ excludeAgent: "coding-agent"
 
 # Reviewing a Riff pull request
 
-What Copilot, or a person, should look for when reviewing a pull request. [AGENTS.md](../../AGENTS.md) lists what is not a bug; read its "Not bugs" section before reporting one.
+What Copilot, or a person, should look for when reviewing a pull request.
 
 ## What counts as broken
 
@@ -20,10 +20,11 @@ What Copilot, or a person, should look for when reviewing a pull request. [AGENT
 
 A change that breaks one of these is a finding, with the rule named:
 
-- No build step. `plugins/riff/assets/` and `plugins/riff/features/` are what ships.
-- Animate only `transform` and `opacity`. Every browser feature sits behind a check.
+- No build step. Each plugin under `plugins/` ships as committed, with no bundler and no compiled files.
+- Movement uses `transform` and `opacity`. A new transition or animation on a size or position (`width`, `height`, `padding`, `margin`, `top`, `left`) is a finding; a colour fading on hover is not.
+- Every browser feature sits behind a check, so an older browser gets the plain version.
 - State (hover, current, selected, pressed) never changes `font-weight`; it changes colour, opacity, an underline or a background, because a weight change shifts the layout.
-- Icons are filled Material icons, never outlined.
+- Icons are solid Material icons, never outlined ones.
 - WordPress first: new storage, a field, a relation or a query needs a reason in [docs/native.md](../../docs/native.md), and WordPress's own version if it has one.
 - New public surface is a promise kept forever once Riff is on WordPress.org. Ask whether a real extension needs it; Riff Lyrics, built only on the public API, is the test. Private is the default.
 
@@ -33,6 +34,9 @@ A change that breaks one of these is a finding, with the rule named:
 - Code the pull request didn't touch, unless the change makes it wrong. Mark anything older as pre-existing.
 - Generated files: `docs/hooks.md`, `docs/javascript.md`, `site/developers/`, `site/web/`, `site/sitemap.xml`, each `CHANGELOG.md` and each `readme.txt` changelog. Review the source they are built from; CI checks they match it.
 - `vendor/`, `node_modules/`, `artifacts/`, `packages/fixtures/` media and `tests/`.
+- `blueprint.json` naming its zip and demo files relative to itself (`riff.zip`, `demo/…`), and `site/index.html`'s `{{pages_url}}`. The Pages and preview workflows resolve them; they are not broken URLs.
+- `packages/fixtures/*/cover-*.png` missing: they are WordPress's generated sizes, and gitignored.
+- `tests/` being gitignored: on some machines it holds a personal music library.
 
 ## How to report
 
