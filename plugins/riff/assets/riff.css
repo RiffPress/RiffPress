@@ -1175,15 +1175,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* light across the grooves and the label, which stays put while the
-   record turns, and the platter's spindle through the hole: a steel pin,
-   lit from above, in the dark of the hole round it */
+   record turns, and the record's hole, dark round the turntable's spindle */
 .riff-record::after {
 	content: "";
 	position: absolute;
 	inset: 0;
 	border-radius: 50%;
 	background:
-		radial-gradient(circle closest-side, #e6e6e6 0, #aaa calc(var(--riff-hole) * 0.4), #6c6c6c calc(var(--riff-hole) * 0.7), transparent calc(var(--riff-hole) * 0.72)),
 		radial-gradient(circle closest-side, #050505 0 var(--riff-hole), rgb(255 255 255 / 0.18) var(--riff-hole) calc(var(--riff-hole) + 0.4%), transparent calc(var(--riff-hole) + 0.4%)),
 		conic-gradient(from 30deg, transparent 0 8%, rgb(255 255 255 / 0.1) 12%, transparent 18% 50%, rgb(255 255 255 / 0.08) 62%, transparent 68%);
 }
@@ -1401,6 +1399,18 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	height: 100%;
 	overflow: visible;
 	fill: rgb(200 200 200 / 0.26);
+}
+
+/* The spindle: the turntable's, not the record's, so it stands where the
+   platter's centre is whether the record is on it or not, and shows
+   through the record's hole once it is. A steel pin, lit from above. */
+.riff-mount::before {
+	content: "";
+	position: absolute;
+	inset: calc(50% - var(--riff-hole) * 0.36);
+	border-radius: 50%;
+	background: radial-gradient(circle at 42% 38%, #f0f0f0, #a9a9a9 45%, #5f5f5f);
+	box-shadow: 0 0.2cqi 0.4cqi rgb(0 0 0 / 0.6);
 }
 
 .riff-armrest {
