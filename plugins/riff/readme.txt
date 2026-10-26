@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.2.4
+Stable tag: 5.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,12 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.3.0 =
+* Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf.
+* The quality badge is a capsule pressed into the bar, as Tidal's is, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it.
+* The quality capsule reads on the bar's black, its bevel lit from above and a lossy file's words a cooler white.
+* The sleeve lies flat beside the turntable, as on the desk it stands on, apart from its plinth.
+
 = 5.2.4 =
 * Fixed: a drawn cover's address changes when the drawing does, and its title never leaves one word alone.
 
@@ -135,10 +141,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 5.2.1 =
 * Fixed: a visitor's Home leaves out the posts and tracks the site no longer has, instead of a card with a broken cover that opens nothing.
 * Fixed: Stop says Stop beside its square, so it no longer reads as a checkbox, and the app's tabs keep clear of its width.
-
-= 5.2.0 =
-* The single-key shortcuts are a signed-in listener's choice under Personal Options on their profile, and a visitor has only the Shift ones, so Now Playing's header loses its keyboard switch.
-* Fixed: in the installed app, Now Playing's tabs stop short of the head's own buttons instead of sitting under Stop.
-* Fixed: the player's controls keep one name each, leave their state to the role, and use the words music apps use: Now Playing, Shuffle, Repeat with its state, Track position, Like &lt;title&gt;, Volume in percent, Stop.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
