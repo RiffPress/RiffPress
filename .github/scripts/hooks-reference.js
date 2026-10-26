@@ -529,7 +529,8 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 function indexPage( list ) {
 	let html = head( 'Hooks | Riff', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css', 'developers' );
 	html += localNav( '../../', '' );
-	html += crumbs( [ [ 'Hooks' ] ], searchForm( './' ) );
+	// Developers / Hooks, so the search sits at the bar's right, as on every hook's own page.
+	html += crumbs( [ [ 'Developers', '../' ], [ 'Hooks' ] ], searchForm( './' ) );
 	html += `<main id="main" class="wrap reference hooks-index">
 <h1>Hooks</h1>
 <p class="intro">Every filter and action Riff fires, in PHP and in the player. Each page is generated from the docblock above the line the hook fires on, at the commit this site was published from. A hook keeps its name and parameters within a major version.</p>
