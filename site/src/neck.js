@@ -230,13 +230,15 @@ function neck( bar ) {
 			// Its shadow on the board, cast down and to the right, which moves as the string does, and
 			// meets the string where a finger presses it to the board.
 			const shadow = document.createElementNS( SVG, 'path' );
-			// On the rosewood in the margin, steel over a dark board; in the bar, on the paper.
+			// In the margin its shadow falls on the rosewood, which is there only while the neck is
+			// played: neck.css shows it with the board.
 			shadow.setAttribute( 'stroke', vertical ? 'rgba(0,0,0,.5)' : 'rgba(80,55,32,.2)' );
 			shadow.setAttribute( 'stroke-width', String( width * 1.1 ) );
 			shadow.setAttribute( 'stroke-linecap', 'round' );
 			shadows.append( shadow );
 			const path = document.createElementNS( SVG, 'path' );
-			path.setAttribute( 'stroke', vertical ? '#d9dad6' : '#9c8f7b' );
+			// Steel, which in the margin reads both on the paper, at rest, and on the rosewood.
+			path.setAttribute( 'stroke', vertical ? '#b5ada0' : '#9c8f7b' );
 			path.setAttribute( 'stroke-width', String( width ) );
 			path.setAttribute( 'stroke-linecap', 'round' );
 			// Light along a round wire: one hairline on its top in the bar, on its left in the margin.
@@ -348,7 +350,7 @@ function neck( bar ) {
 			const f = shape[ i ];
 			if ( f === null ) {
 				const y = 22;
-				mark( 'path', { d: `M${ s.at - 5 } ${ y - 5 }l10 10m0 -10l-10 10`, stroke: '#1e1e1e', 'stroke-width': 2, 'stroke-linecap': 'round' } );
+				mark( 'path', { d: `M${ s.at - 5 } ${ y - 5 }l10 10m0 -10l-10 10`, stroke: '#fbf8f2', 'stroke-width': 2, 'stroke-linecap': 'round' } );
 			} else if ( f > 0 && ! ( barre && f === low ) ) {
 				mark( 'circle', { cx: s.at, cy: s.stop, r, ...finger } );
 			}

@@ -7,11 +7,13 @@
    from under the bar to the top of the footer: while the page is read it
    holds still in the window, and as the page ends it comes away with the
    page at the page's own pace, the rest of the neck arriving with the
-   footer. It never moves at any other speed than the page's. It
-   brightens while it is played: under the pointer, with a chord held or a
-   string still moving (neck.js marks the page .neck-awake), then dims
-   slowly once it is left. neck.js builds the rail; where it does not run,
-   the strings stay in the bar, as site.css and web.css draw them. */
+   footer. It never moves at any other speed than the page's. The page is
+   what is read, so at rest only the strings are there, hairlines on the
+   paper; the board comes up under them when the neck is called on: under
+   the pointer, with a chord held or a string still moving (neck.js marks
+   the page .neck-awake), and goes again, slowly, once it is left.
+   neck.js builds the rail; where it does not run, the strings stay in the
+   bar, as site.css and web.css draw them. */
 .neck {
 	display: contents;
 }
@@ -71,14 +73,27 @@
 		position: sticky;
 		top: var(--stick);
 		aspect-ratio: var(--svg-w) / var(--svg-h);
-		background: url(neck.svg) 0 0 / 100% 100% no-repeat;
 		mask-image: linear-gradient(#000 calc(var(--svg-fade) / var(--svg-h) * 100%), transparent);
-		transition: filter 1.6s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	/* played: brighter, as under a light, quickly, but eased */
-	.neck-awake .neck-guitar {
-		filter: brightness(1.25);
+	/* the board, and the strings' shadows on it: away at rest, up when
+	   called on, quickly, but eased, and gone again slowly */
+	.neck-guitar::before,
+	.neck-live svg > g:first-child {
+		opacity: 0;
+		transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.neck-guitar::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: url(neck.svg) 0 0 / 100% 100% no-repeat;
+	}
+
+	.neck-awake .neck-guitar::before,
+	.neck-awake .neck-live svg > g:first-child {
+		opacity: 1;
 		transition-duration: 0.35s;
 	}
 
@@ -93,7 +108,7 @@
 	}
 
 	.neck-strings {
-		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 1000' preserveAspectRatio='none'%3E%3Cg stroke-opacity='.5' stroke='%23000' vector-effect='non-scaling-stroke'%3E%3Cline x1='7.6' x2='7.6' y2='1000' stroke-width='1.3' vector-effect='non-scaling-stroke'/%3E%3Cline x1='19.3' x2='19.3' y2='1000' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='31.0' x2='31.0' y2='1000' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='42.7' x2='42.7' y2='1000' stroke-width='2.9' vector-effect='non-scaling-stroke'/%3E%3Cline x1='54.4' x2='54.4' y2='1000' stroke-width='3.7' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3Cg stroke='%23d9dad6'%3E%3Cline x1='6.6' x2='6.6' y2='1000' stroke-width='1.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='18.3' x2='18.3' y2='1000' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='30.0' x2='30.0' y2='1000' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='41.7' x2='41.7' y2='1000' stroke-width='2.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='53.4' x2='53.4' y2='1000' stroke-width='3.4' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 1000' preserveAspectRatio='none'%3E%3Cg stroke-opacity='.2' stroke='%23503720' vector-effect='non-scaling-stroke'%3E%3Cline x1='7.6' x2='7.6' y2='1000' stroke-width='1.3' vector-effect='non-scaling-stroke'/%3E%3Cline x1='19.3' x2='19.3' y2='1000' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='31.0' x2='31.0' y2='1000' stroke-width='2.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='42.7' x2='42.7' y2='1000' stroke-width='2.9' vector-effect='non-scaling-stroke'/%3E%3Cline x1='54.4' x2='54.4' y2='1000' stroke-width='3.7' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3Cg stroke='%23b5ada0'%3E%3Cline x1='6.6' x2='6.6' y2='1000' stroke-width='1.2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='18.3' x2='18.3' y2='1000' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3Cline x1='30.0' x2='30.0' y2='1000' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3Cline x1='41.7' x2='41.7' y2='1000' stroke-width='2.6' vector-effect='non-scaling-stroke'/%3E%3Cline x1='53.4' x2='53.4' y2='1000' stroke-width='3.4' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
 	}
 
 	.has-neck-live .neck-strings {
