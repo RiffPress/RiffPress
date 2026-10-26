@@ -1262,22 +1262,23 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-cover {
 	position: relative;
-	transition: translate 0.75s var(--riff-spring) 0.08s, scale 0.75s var(--riff-spring) 0.08s, rotate 0.75s var(--riff-spring) 0.08s;
-	will-change: translate, scale, rotate;
+	transition: translate 0.75s var(--riff-spring) 0.08s, scale 0.75s var(--riff-spring) 0.08s;
+	will-change: translate, scale;
 }
 
 /* Out of the sleeve (now-playing.js, once the album first plays): the record
-   slides onto the platter, and the sleeve, a beat behind, is set down beside
-   it, leaning a little, as against the deck. A record and its sleeve are one
+   slides onto the platter, and the sleeve, a beat behind, is laid flat
+   beside the turntable, as on the desk it stands on, a little apart from its
+   plinth. A record and its sleeve are one
    size, so they stay one size. It stays out when paused, as a record on the
    platter does; it goes back in when the album changes. The turntable is
    always where the record goes, and shows once there is a record for it:
-   small enough, with the sleeve, to fit where the cover alone did, a little
-   right of the middle so its plinth and arm fit too. */
+   small enough, with the sleeve, to fit where the cover alone did, the two
+   centred as one, the plinth reaching further on its arm side. */
 .riff-stage {
 	--riff-out-scale: 0.42;
-	--riff-out-cover: -24.8%;
-	--riff-out-record: 18.9%;
+	--riff-out-cover: -28.5%;
+	--riff-out-record: 17.6%;
 
 	/* the plinth reaches further above the record than below it: down a
 	   little, so the turntable is in the middle */
@@ -1287,7 +1288,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 #riff[data-riff-deck="out"] .riff-cover {
 	translate: var(--riff-out-cover) 0;
 	scale: var(--riff-out-scale);
-	rotate: -4deg;
 }
 
 #riff[data-riff-deck="out"] .riff-record,
@@ -1326,8 +1326,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	/* on what the stage holds: a query cannot restyle the stage itself */
 	.riff-stage > * {
 		--riff-out-scale: 1;
-		--riff-out-cover: -57%;
-		--riff-out-record: 50%;
+		--riff-out-cover: -67.5%;
+		--riff-out-record: 41.5%;
 	}
 }
 
