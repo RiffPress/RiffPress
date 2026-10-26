@@ -276,7 +276,7 @@ div.riff-row-locked {
    lower edge, and the words glowing softly in the colour of the tier
    (paint.js): pale for a lossy file, green at CD quality, gold past it. */
 .riff-quality {
-	--riff-quality-ink: #b9c4bf;
+	--riff-quality-ink: #c9d3db;
 	height: 40px;
 	padding: 0 18px;
 	border: 2px solid #000;
@@ -284,13 +284,19 @@ div.riff-row-locked {
 	box-shadow:
 		inset 0 3px 6px rgb(0 0 0 / 0.8),
 		inset 0 -1px 1px rgb(255 255 255 / 0.05),
-		0 0 0 1px rgb(255 255 255 / 0.08),
+		0 0 0 1px rgb(255 255 255 / 0.1),
+		0 -1px 0 1px rgb(255 255 255 / 0.06),
 		0 2px 4px rgb(0 0 0 / 0.5);
 	color: var(--riff-quality-ink);
 	font-size: 13.5px;
 	font-weight: 350;
 	letter-spacing: 0.015em;
 	text-shadow: 0 0 6px color-mix(in srgb, var(--riff-quality-ink) 45%, transparent);
+}
+
+/* a lossy file's capsule is lit less: no glow round its words */
+.riff-quality-lossy {
+	text-shadow: none;
 }
 
 .riff-quality-lossless {
