@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.3.0
+Stable tag: 5.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.4.0 =
+* The turntable is drawn as a real one is: a steel spindle on the deck, a printed label with the side's tracks, a cradle for the arm, an etched run-out and a strobe rim lit by its lamp.
+* Fixed: the turntable stands only on a stage wide enough for it, so a phone held upright shows the cover alone; the label is printed in zones round the spindle, which shows once the record rests on it.
+
 = 5.3.0 =
 * Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf.
 * The quality badge is a capsule pressed into the bar, as Tidal's is, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it.
@@ -137,9 +141,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 5.2.2 =
 * Fixed: the install card shows Riff's own icon when the site icon's file is gone, rather than a broken image.
 * Fixed: Stop shows only on a phone, beside Share, where it stands in for the swipe that stops the player, and Cast sits in the bar beside the volume at every width.
-
-= 5.2.1 =
-* Fixed: a visitor's Home leaves out the posts and tracks the site no longer has, instead of a card with a broken cover that opens nothing.
-* Fixed: Stop says Stop beside its square, so it no longer reads as a checkbox, and the app's tabs keep clear of its width.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
