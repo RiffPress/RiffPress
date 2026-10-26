@@ -24,8 +24,11 @@
 	--warm-2: #f6f3ee;
 	--warm-ink-2: #625c53;
 	--warm-dark: #1c1a17;
-	--paper: #fcfaf6;
-	--fingerboard: #efe5d5;
+	--paper: #efe5d5;
+	--rule: #dccfb9;
+	--fingerboard: var(--paper);
+	--blueberry: #3858e9;
+	--blueberry-deep: #213fd4;
 	--space-1: 8px;
 	--space-2: 16px;
 	--space-3: 24px;
@@ -40,19 +43,16 @@
 	--grey-1: #d9d9d9;
 	--grey-2: #f6f6f6;
 	--white: #fff;
-	--amber-ink: #9a5b00;
-	--action: var(--charcoal-1);
-	--action-hover: var(--charcoal-3);
-	--on-action: var(--paper);
+	--action: var(--blueberry);
+	--action-hover: var(--blueberry-deep);
+	--on-action: var(--white);
 	--black: #000;
 	--panel: #121212;
-	--amber: #ffb020;
-	--amber-deep: #f29a00;
-	--surface: #f4efe7;
+	--surface: #f6f0e6;
 	--ink: var(--charcoal-1);
 	--ink-2: var(--warm-ink-2);
-	--line: var(--warm-1);
-	--accent: var(--charcoal-1);
+	--line: var(--rule);
+	--accent: var(--blueberry-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
 	--t: 0.2s;
@@ -127,8 +127,8 @@ code {
 .nav {
 	position: relative;
 	z-index: 10;
-	background: var(--fingerboard);
-	border-bottom: 1px solid #dccfb9;
+	background: var(--paper);
+	border-bottom: 1px solid var(--rule);
 	color: var(--ink);
 }
 
@@ -885,7 +885,7 @@ figcaption {
 	background: var(--paper);
 	color: var(--ink);
 	font-size: 0.875rem;
-	border-bottom: 1px solid var(--warm-1);
+	border-bottom: 1px solid var(--rule);
 }
 
 .local-nav .wrap {
@@ -1480,7 +1480,7 @@ main h2[id] {
 
 .hook-list li {
 	padding: 20px 0;
-	border-bottom: 1px solid var(--warm-1);
+	border-bottom: 1px solid var(--rule);
 }
 
 .hook-list .hook-name {
@@ -1738,16 +1738,16 @@ figure img {
 	-webkit-touch-callout: none;
 }
 
-/* selected words in Riff's amber: a pale wash under dark ink on the paper,
-   and deep amber under light text on a dark band */
+/* selected words in blueberry: a pale wash under dark ink on the paper,
+   and the deep shade under light text on a dark band */
 ::selection {
-	background: #ffe2a8;
+	background: #c9d3fa;
 	color: var(--charcoal-1);
 }
 
 .alt ::selection,
 footer ::selection {
-	background: #7a4c06;
+	background: var(--blueberry-deep);
 	color: #fff;
 }
 
