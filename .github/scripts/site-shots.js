@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /* eslint-disable no-console -- a build script that says what it wrote, as og-images.js does. */
 /**
- * The pictures of the player on the site's landing page, in site/: the Listen app and Now Playing
- * on a wide screen (2880×1800, with a 1440 copy), and a post, Now Playing and Up next on a phone
- * (780×1688), each as a PNG and an AVIF. They are taken from a site that holds the demo albums and
- * nothing else, set up as the demo's blueprint sets up Playground, so the pictures show the demo a
- * visitor will open:
+ * The pictures of the player on the site's landing page, in site/: the Listen app, Now Playing and
+ * a sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post, Now Playing, Up
+ * next and the lyrics on a phone (780×1688), each as a PNG and an AVIF. They are taken from a site
+ * that holds the demo albums and nothing else, set up as the demo's blueprint sets up Playground,
+ * so the pictures show the demo a visitor will open:
  *
  *   npx wp-env reset development && npm run seed
  *   npx wp-env run cli wp rewrite structure '/%postname%/' --hard
@@ -19,6 +19,8 @@
  *   RIFF_SHOTS_URL   the site, default http://localhost:8890
  *   RIFF_SHOTS_POST  the album post's path, default /compositions/
  *   RIFF_SHOTS_TRACK the row to play, counted from 0, default 0
+ *   RIFF_SHOTS_LYRICS a sung album's post, for its lyrics, default /christmas-with-the-chorus/
+ *   RIFF_SHOTS_USER  and RIFF_SHOTS_PASSWORD, for the editor's pictures, default wp-env's admin / password
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
@@ -30,6 +32,10 @@ const FIXTURES = path.join( ROOT, 'packages', 'fixtures' );
 const BASE = ( process.env.RIFF_SHOTS_URL || 'http://localhost:8890' ).replace( /\/$/, '' );
 const POST = process.env.RIFF_SHOTS_POST || '/compositions/';
 const TRACK = Number( process.env.RIFF_SHOTS_TRACK || 0 );
+const LYRICS = process.env.RIFF_SHOTS_LYRICS || '/christmas-with-the-chorus/';
+const LYRICS_AT = 26;
+const USER = process.env.RIFF_SHOTS_USER || 'admin';
+const PASSWORD = process.env.RIFF_SHOTS_PASSWORD || 'password';
 
 /**
  * The demo's album names, from each fixture's manifest.
@@ -69,8 +75,10 @@ async function checkAlbums() {
  * @param {boolean}                         wide Whether it is a wide-screen picture.
  */
 async function save( page, name, wide ) {
-	// The pointer off the page, so nothing under the last tap shows as hovered.
-	await page.mouse.move( 0, 0 );
+	// The pointer to the window's far corner, so nothing under the last tap shows as hovered, and
+	// not to the near one, where the admin bar's WordPress menu would open.
+	const view = page.viewportSize();
+	await page.mouse.move( view.width - 1, view.height - 1 );
 	await page.waitForTimeout( 800 );
 	const png = path.join( SITE, `${ name }.png` );
 	await page.screenshot( { path: png } );
@@ -118,21 +126,28 @@ async function desktop( browser ) {
 	await page.locator( '.riff-bar-info' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await save( page, 'desktop-now-playing', true );
+
+	// A sung album's words, timed to the music, a verse in: the line being sung stands out.
+	await page.goto( BASE + LYRICS );
+	await page.locator( '.riff-row' ).first().click();
+	await page.locator( '.riff-bar' ).waitFor();
+	await page.evaluate( ( at ) => window.riff.seek( at ), LYRICS_AT );
+	await page.waitForTimeout( 1500 );
+	await page.locator( '.riff-bar-info' ).click();
+	await page.locator( '.riff-np' ).waitFor();
+	await page.locator( '.riff-tab', { hasText: /lyrics/i } ).click();
+	await save( page, 'desktop-lyrics', true );
 	await context.close();
 }
 
-async function phone( browser, devices ) {
-	const context = await browser.newContext( { ...devices[ 'iPhone 14' ], deviceScaleFactor: 2, colorScheme: 'dark' } );
-	const page = await context.newPage();
-	await play( page );
-	// The post's tracks, from the line above the first row: the rows are what the picture is of.
-	await page.evaluate( () => window.scrollTo( 0, document.querySelector( '.riff-row' ).getBoundingClientRect().top + window.scrollY - 100 ) );
-	await save( page, 'phone-post', false );
-	await page.locator( '.riff-bar-info' ).click();
-	await page.locator( '.riff-np' ).waitFor();
-	await save( page, 'phone-now-playing', false );
-	// A tap opens Up next halfway; a finger dragging its handle up opens it the rest of the way.
-	// The handle takes touch and not a mouse, so the drag is sent as touches.
+/**
+ * Opens the Up next sheet all the way: a tap opens it halfway, and a finger dragging its handle up
+ * opens it the rest. The handle takes touch and not a mouse, so the drag is sent as touches.
+ *
+ * @param {import('@playwright/test').BrowserContext} context The phone's context.
+ * @param {import('@playwright/test').Page}           page    Now Playing, open.
+ */
+async function openSheet( context, page ) {
 	const peek = page.locator( '.riff-peek' );
 	await peek.click();
 	await page.waitForTimeout( 400 );
@@ -145,7 +160,78 @@ async function phone( browser, devices ) {
 		await touch( 'touchMove', box.y + box.height / 2 - i * 30 );
 	}
 	await touch( 'touchEnd' );
+	await page.waitForTimeout( 400 );
+}
+
+async function phone( browser, devices ) {
+	const context = await browser.newContext( { ...devices[ 'iPhone 14' ], deviceScaleFactor: 2, colorScheme: 'dark' } );
+	const page = await context.newPage();
+	await play( page );
+	// The post's tracks, from the line above the first row: the rows are what the picture is of.
+	await page.evaluate( () => window.scrollTo( 0, document.querySelector( '.riff-row' ).getBoundingClientRect().top + window.scrollY - 100 ) );
+	await save( page, 'phone-post', false );
+	await page.locator( '.riff-bar-info' ).click();
+	await page.locator( '.riff-np' ).waitFor();
+	await save( page, 'phone-now-playing', false );
+	await openSheet( context, page );
 	await save( page, 'phone-up-next', false );
+
+	// The sung album's words on a phone: Now Playing, the sheet up, Lyrics picked.
+	await page.goto( BASE + LYRICS );
+	await page.locator( '.riff-row' ).first().click();
+	await page.locator( '.riff-bar' ).waitFor();
+	await page.evaluate( ( at ) => window.riff.seek( at ), LYRICS_AT );
+	await page.waitForTimeout( 1500 );
+	await page.locator( '.riff-bar-info' ).click();
+	await page.locator( '.riff-np' ).waitFor();
+	await openSheet( context, page );
+	await page.locator( '.riff-tab:visible', { hasText: /lyrics/i } ).click();
+	await save( page, 'phone-lyrics', false );
+	await context.close();
+}
+
+/**
+ * Two of Add your music's pictures, in the editor, signed in as the site's admin: the Listen page
+ * holding the Riff block, and a new post with an empty Playlist block. The editor's welcome guide
+ * is turned off first, as an editor who has seen it once would have it.
+ *
+ * @param {import('@playwright/test').Browser} browser Chromium.
+ */
+async function guides( browser ) {
+	const context = await browser.newContext( { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 } );
+	const page = await context.newPage();
+	await page.goto( `${ BASE }/wp-login.php` );
+	await page.fill( '#user_login', USER );
+	await page.fill( '#user_pass', PASSWORD );
+	await page.click( '#wp-submit' );
+	await page.waitForURL( /wp-admin/ );
+	const settle = async () => {
+		await page.waitForFunction( () => window.wp?.data?.select( 'core/editor' )?.getCurrentPostId() );
+		await page.evaluate( () => {
+			window.wp.data.dispatch( 'core/preferences' ).set( 'core/edit-post', 'welcomeGuide', false );
+			window.wp.data.dispatch( 'core/preferences' ).set( 'core', 'enableChoosePatternModal', false );
+			// The block toolbar in the top bar, so it does not cover the post's title.
+			window.wp.data.dispatch( 'core/preferences' ).set( 'core', 'fixedToolbar', true );
+		} );
+		await page.keyboard.press( 'Escape' );
+		await page.waitForTimeout( 2500 );
+	};
+	const listen = await page.evaluate( async ( b ) => ( await ( await fetch( `${ b }/wp-json/wp/v2/pages?slug=listen` ) ).json() )[ 0 ].id, BASE );
+	await page.goto( `${ BASE }/wp-admin/post.php?post=${ listen }&action=edit` );
+	await settle();
+	await save( page, 'guide-riff-block', true );
+
+	await page.goto( `${ BASE }/wp-admin/post-new.php` );
+	await settle();
+	await page.evaluate( () => {
+		const { dispatch } = window.wp.data;
+		dispatch( 'core/editor' ).editPost( { title: 'Songs of the Republic' } );
+		const block = window.wp.blocks.createBlock( 'core/playlist' );
+		dispatch( 'core/block-editor' ).insertBlocks( block );
+		dispatch( 'core/block-editor' ).selectBlock( block.clientId );
+	} );
+	await page.waitForTimeout( 1500 );
+	await save( page, 'guide-playlist-block', true );
 	await context.close();
 }
 
@@ -156,6 +242,7 @@ async function main() {
 	try {
 		await desktop( browser );
 		await phone( browser, devices );
+		await guides( browser );
 	} finally {
 		await browser.close();
 	}
