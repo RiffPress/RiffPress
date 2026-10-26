@@ -491,9 +491,9 @@ function neck( bar ) {
 		group.classList.toggle( 'is-vertical', vertical );
 		const set = strings( vertical );
 		if ( vertical ) {
-			// At the head of the neck, held in the window, so the chord and Mute are there wherever the
-			// page is scrolled, even once the neck has begun to leave with the page.
-			guitar.before( group );
+			// Just right of the neck's head, so Mute is reached without crossing the strings, and held
+			// in the window, so they are there wherever the page is scrolled.
+			guitar.closest( '.neck-rail' ).nextElementSibling.append( group );
 		} else {
 			wrap.insertBefore( group, wrap.querySelector( ':scope > nav' ) );
 		}
@@ -518,7 +518,10 @@ function rail() {
 	track.className = 'neck-rail';
 	// The drawing is hidden from assistive technology; the Mute button neck() puts over it is not.
 	track.innerHTML = '<div class="neck-guitar" aria-hidden="true"><div class="neck-strings"></div></div>';
-	document.body.append( track );
+	// Beside the rail, the same height, for the chord and Mute: the rail clips to the neck.
+	const side = document.createElement( 'div' );
+	side.className = 'neck-side';
+	document.body.append( track, side );
 	document.body.classList.add( 'has-neck-rail' );
 	// The nut just under the bars, however tall they are; the Developers bar holds the neck under it
 	// once the global one has scrolled away.

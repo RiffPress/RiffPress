@@ -19,7 +19,8 @@
 }
 
 .neck-mute-text,
-.neck-rail {
+.neck-rail,
+.neck-side {
 	display: none;
 }
 
@@ -152,20 +153,29 @@
 		}
 	}
 
-	/* the chord and Mute at the head of the neck, as a guitar keeps its
-	   tuners on the headstock: one instrument, out of the menu's way. Held
-	   in the window on their own, since on a short page the neck leaves
-	   with it; taking no room, so with neither showing nothing is there */
+	/* beside the rail, from the bar to the footer: the chord and Mute's
+	   own column, just right of the neck, in the gap before the words */
+	[data-neck="margin"] .neck-side {
+		display: block;
+		position: absolute;
+		top: var(--neck-top);
+		bottom: var(--foot-h);
+		left: calc(var(--neck-w) * 0.94 + 10px);
+		pointer-events: none;
+	}
+
+	/* the chord over Mute, at the height of the neck's head, so Mute is
+	   reached without crossing the strings. Held in the window on their
+	   own, since on a short page the neck leaves with it; taking no room,
+	   so with neither showing nothing is there */
 	.neck.is-vertical {
 		position: sticky;
 		top: var(--stick);
-		z-index: 1;
 		height: 0;
-		padding-left: 6%;
 		display: flex;
+		flex-direction: column;
 		align-items: flex-start;
-		justify-content: center;
-		gap: var(--space-2);
+		gap: 6px;
 		margin: 0;
 	}
 
@@ -179,7 +189,7 @@
 		display: inline-flex;
 		align-items: center;
 		height: 32px;
-		margin: 12px 0 0;
+		margin: 0;
 		padding: 0 12px;
 		border-radius: 16px;
 		background: var(--paper);
@@ -203,7 +213,28 @@
 		display: none;
 	}
 
-	.neck.is-vertical .neck-mute-text {
-		display: inline;
+	/* the first pill clear of the bar */
+	.neck.is-vertical > :first-child,
+	.neck.is-vertical .neck-chord:empty + .neck-mute {
+		margin-top: 12px;
+	}
+
+	/* Mute's word where the gap before the words has room for it; its
+	   note alone, with its label, where it does not */
+	.neck.is-vertical .neck-mute {
+		justify-content: center;
+		min-width: 32px;
+		padding: 0 9px;
+	}
+
+	@media (min-width: 1600px) {
+
+		.neck.is-vertical .neck-mute {
+			padding: 0 12px;
+		}
+
+		.neck.is-vertical .neck-mute-text {
+			display: inline;
+		}
 	}
 }
