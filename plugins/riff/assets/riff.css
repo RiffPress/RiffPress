@@ -278,7 +278,7 @@ div.riff-row-locked {
 .riff-quality {
 	--riff-quality-ink: #b9c4bf;
 	height: 40px;
-	padding: 0 22px;
+	padding: 0 18px;
 	border: 2px solid #000;
 	background: radial-gradient(70% 90% at 50% 62%, color-mix(in srgb, var(--riff-quality-ink) 24%, #090c0b), color-mix(in srgb, var(--riff-quality-ink) 7%, #070908) 62%, #040505);
 	box-shadow:
@@ -287,14 +287,14 @@ div.riff-row-locked {
 		0 0 0 1px rgb(255 255 255 / 0.08),
 		0 2px 4px rgb(0 0 0 / 0.5);
 	color: var(--riff-quality-ink);
-	font-size: 13px;
-	font-weight: 400;
-	letter-spacing: 0.01em;
+	font-size: 13.5px;
+	font-weight: 350;
+	letter-spacing: 0.015em;
 	text-shadow: 0 0 6px color-mix(in srgb, var(--riff-quality-ink) 45%, transparent);
 }
 
 .riff-quality-lossless {
-	--riff-quality-ink: #84dcb1;
+	--riff-quality-ink: #4fdcaa;
 }
 
 .riff-quality-hires {
