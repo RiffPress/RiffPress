@@ -1352,9 +1352,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* The plinth: a board under the platter and the arm, which reaches behind
    the arm's base and its rest; the platter, a little wider than the record,
    its rim showing round it; and the rest the arm sits on when it is up, a
-   cradle with a notch for the tube, where the arm lies at rest
-   (now-playing.js: 0.55 of the arm's length from its base, turned out
-   14°). */
+   cradle with a notch for the tube, under it where the arm lies at rest:
+   turned out 14° on its base, the tube bowed 2.4 to the side at 43 along
+   (the drawing's units, in the record's hundredths), so 12.7 out and 41.1
+   down from the base at (105, 5). */
 .riff-plinth::before {
 	content: "";
 	position: absolute;
@@ -1375,8 +1376,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 .riff-armrest {
 	position: absolute;
 	z-index: 1;
-	top: 46.6%;
-	left: 115.4%;
+	top: 46.1%;
+	left: 117.7%;
 	width: 3.2cqi;
 	height: 7cqi;
 	border-radius: 0.8cqi;
