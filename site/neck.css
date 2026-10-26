@@ -97,6 +97,19 @@
 		transition-duration: 0.35s;
 	}
 
+	/* the strings at rest: faint enough to read as strings, not as rules
+	   between the margin and the page */
+	.neck-strings,
+	.neck-live svg > path {
+		opacity: 0.4;
+		transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.neck-awake .neck-live svg > path {
+		opacity: 1;
+		transition-duration: 0.35s;
+	}
+
 	/* the strings, the length of the neck: drawn still, each with its
 	   shadow on the board, until neck.js plays them */
 	.neck-strings,
