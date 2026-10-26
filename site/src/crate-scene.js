@@ -13,6 +13,8 @@ import {
 	Mesh,
 	MeshStandardMaterial,
 	PerspectiveCamera,
+	Raycaster,
+	Vector2,
 	Scene,
 	SRGBColorSpace,
 	WebGLRenderer,
@@ -22,6 +24,8 @@ const SLEEVE = 1; // a sleeve is a 1 by 1 square, a 12-inch record's cover
 const GAP = 0.07; // the space between sleeves along the crate
 const LEAN = -0.16; // how far a sleeve at rest leans back, in radians
 const TIP = 0.5; // how far one already flipped leans forward, against the front of the crate
+const FACE = -0.62; // a sleeve pulled out tips back to face the camera above the crate
+const LIFT = 0.3; // and rises this far out of it, still inside the picture
 
 // A cover image drawn to a square canvas, so SVG covers become textures like the PNG one.
 function texture( src ) {
@@ -116,6 +120,15 @@ export default async function crate( shelf ) {
 	scene.add( crateGroup );
 
 	shelf.before( canvas );
+	// What it does, said once under it, since nothing about a crate says it can be dug through.
+	const touch = window.matchMedia( '(hover: none)' ).matches;
+	const hint = document.createElement( 'p' );
+	hint.className = 'crate-hint';
+	hint.setAttribute( 'aria-hidden', 'true' );
+	hint.textContent = touch
+		? 'Drag across the crate to dig through it. Tap a record to pull it out.'
+		: 'Move across the crate to dig through it. Click a record to pull it out.';
+	canvas.after( hint );
 	const section = shelf.closest( 'section' );
 	section.classList.add( 'has-crate' );
 	section.classList.remove( 'crate-pending' );
@@ -123,35 +136,85 @@ export default async function crate( shelf ) {
 
 	// Where the dig is: 0 is the front sleeve, covers.length - 1 the last. The pointer across the
 	// canvas sets it; with no pointer, scrolling the section past does.
+	// One sleeve at a time can be pulled out to face you; each eases towards in or out.
 	let target = 0;
 	let at = 0;
+	let pulled = -1;
+	const out = sleeves.map( () => 0 );
 	let running = false;
 	const frame = () => {
 		at = MathUtils.damp( at, target, 6, 1 / 60 );
+		let moving = Math.abs( at - target ) > 0.001;
 		sleeves.forEach( ( s, i ) => {
 			const flipped = MathUtils.clamp( at - i, 0, 1 );
-			s.rotation.x = MathUtils.lerp(
+			const lean = MathUtils.lerp(
 				LEAN,
 				TIP,
 				MathUtils.smoothstep( flipped, 0, 1 )
 			);
+			const want = i === pulled ? 1 : 0;
+			out[ i ] = MathUtils.damp( out[ i ], want, 7, 1 / 60 );
+			moving = moving || Math.abs( out[ i ] - want ) > 0.001;
+			const o = MathUtils.smoothstep( out[ i ], 0, 1 );
+			s.rotation.x = MathUtils.lerp( lean, FACE, o );
+			s.position.y = LIFT * o;
+			s.position.z = -i * GAP + 0.5 * o;
 		} );
 		renderer.render( scene, camera );
-		running = Math.abs( at - target ) > 0.001;
+		running = moving;
 		if ( running ) {
 			requestAnimationFrame( frame );
 		}
 	};
-	const go = ( to ) => {
-		target = MathUtils.clamp( to, 0, covers.length - 1 );
+	const wake = () => {
 		if ( ! running ) {
 			running = true;
 			requestAnimationFrame( frame );
 		}
 	};
+	const go = ( to ) => {
+		target = MathUtils.clamp( to, 0, covers.length - 1 );
+		wake();
+	};
+	// Across the crate digs, with a mouse by moving and on a screen by dragging sideways (the
+	// canvas leaves only vertical panning to the page). Digging puts back a sleeve pulled out.
+	let downX = null;
+	canvas.addEventListener( 'pointerdown', ( e ) => {
+		downX = e.clientX;
+	} );
 	canvas.addEventListener( 'pointermove', ( e ) => {
+		if ( e.pointerType !== 'mouse' && downX === null ) {
+			return;
+		}
+		if ( pulled !== -1 && Math.abs( e.clientX - ( downX ?? e.clientX ) ) > 8 ) {
+			pulled = -1;
+		}
 		const box = canvas.getBoundingClientRect();
 		go( ( ( e.clientX - box.left ) / box.width ) * ( covers.length - 1 ) );
+	} );
+	// A click or tap on a sleeve pulls it out of the crate to face you; on it again, or on
+	// nothing, puts it back.
+	const ray = new Raycaster();
+	const point = new Vector2();
+	canvas.addEventListener( 'pointerup', ( e ) => {
+		const moved = downX !== null && Math.abs( e.clientX - downX ) > 8;
+		downX = null;
+		if ( moved ) {
+			return;
+		}
+		const box = canvas.getBoundingClientRect();
+		point.set(
+			( ( e.clientX - box.left ) / box.width ) * 2 - 1,
+			-( ( e.clientY - box.top ) / box.height ) * 2 + 1
+		);
+		ray.setFromCamera( point, camera );
+		const hit = ray.intersectObjects( sleeves )[ 0 ];
+		const i = hit ? sleeves.indexOf( hit.object ) : -1;
+		pulled = i === pulled ? -1 : i;
+		wake();
+	} );
+	canvas.addEventListener( 'pointercancel', () => {
+		downX = null;
 	} );
 	window.addEventListener(
 		'scroll',

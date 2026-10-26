@@ -800,7 +800,7 @@ footer nav {
 	align-items: start;
 }
 
-#try .wrap > :not(.shelf, .crate) {
+#try .wrap > :not(.shelf, .crate, .crate-hint) {
 	grid-column: 1;
 }
 
@@ -844,6 +844,30 @@ footer nav {
 
 .crate.is-in {
 	opacity: 1;
+}
+
+/* the crate is dug by dragging sideways on a screen, so it keeps only
+   vertical panning for the page; the line under it says how */
+.crate {
+	touch-action: pan-y;
+	cursor: pointer;
+}
+
+#try .crate-hint {
+	grid-column: 2;
+	grid-row: 4;
+	margin: var(--space-2) 0 0;
+	font-size: 0.875rem;
+	color: var(--ink-2);
+	text-align: center;
+}
+
+@media (max-width: 900px) {
+
+	#try .crate-hint {
+		grid-column: 1;
+		grid-row: auto;
+	}
 }
 
 .crate-pending .shelf {
