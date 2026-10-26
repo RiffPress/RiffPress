@@ -264,9 +264,10 @@ export function paint( P ) {
 			area.replaceChildren(
 				...badges.map( ( b ) => {
 					const pill = document.createElement( 'span' );
-					// The quality pill keeps the class its styles and tests know it by.
+					// The quality pill keeps the class its styles and tests know it by, and is coloured
+					// by its tier.
 					pill.className = `riff-badge riff-badge-${ b.id }${
-						b.id === 'quality' ? ' riff-quality' : ''
+						b.id === 'quality' ? ` riff-quality riff-quality-${ P.tier( t ) }` : ''
 					}`;
 					pill.textContent = b.text;
 					if ( b.label ) {

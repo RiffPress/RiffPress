@@ -271,6 +271,36 @@ div.riff-row-locked {
 	font-variant-numeric: tabular-nums;
 }
 
+/* The quality, as Tidal sets it: a capsule pressed into the bar, its well
+   dark and lit faintly from inside, a bevel catching the light along its
+   lower edge, and the words glowing softly in the colour of the tier
+   (paint.js): pale for a lossy file, green at CD quality, gold past it. */
+.riff-quality {
+	--riff-quality-ink: #b9c4bf;
+	height: 30px;
+	padding: 0 16px;
+	border: 1px solid #000;
+	background: radial-gradient(120% 160% at 50% 40%, color-mix(in srgb, var(--riff-quality-ink) 13%, #0b0e0d), #080a09 78%);
+	box-shadow:
+		inset 0 1px 3px rgb(0 0 0 / 0.85),
+		inset 0 -1px 0 rgb(255 255 255 / 0.04),
+		0 1px 0 rgb(255 255 255 / 0.09),
+		0 0 0 1px rgb(255 255 255 / 0.03);
+	color: var(--riff-quality-ink);
+	font-size: 13px;
+	font-weight: 400;
+	letter-spacing: 0.01em;
+	text-shadow: 0 0 6px color-mix(in srgb, var(--riff-quality-ink) 45%, transparent);
+}
+
+.riff-quality-lossless {
+	--riff-quality-ink: #84dcb1;
+}
+
+.riff-quality-hires {
+	--riff-quality-ink: #f0c56a;
+}
+
 .riff-bar-end .riff-area {
 	margin-inline-end: 8px;
 }
