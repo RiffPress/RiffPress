@@ -800,7 +800,7 @@ footer nav {
 	align-items: start;
 }
 
-#try .wrap > :not(.shelf, .crate) {
+#try .wrap > :not(.shelf, .crate, .crate-hint) {
 	grid-column: 1;
 }
 
@@ -844,6 +844,30 @@ footer nav {
 
 .crate.is-in {
 	opacity: 1;
+}
+
+/* the crate is dug by dragging sideways on a screen, so it keeps only
+   vertical panning for the page; the line under it says how */
+.crate {
+	touch-action: pan-y;
+	cursor: pointer;
+}
+
+#try .crate-hint {
+	grid-column: 2;
+	grid-row: 4;
+	margin: var(--space-2) 0 0;
+	font-size: 0.875rem;
+	color: var(--ink-2);
+	text-align: center;
+}
+
+@media (max-width: 900px) {
+
+	#try .crate-hint {
+		grid-column: 1;
+		grid-row: auto;
+	}
 }
 
 .crate-pending .shelf {
@@ -918,21 +942,13 @@ footer ::selection {
 	border-radius: 2px;
 }
 
-/* where the neck lies in the margin, the wall leaves the margin to it: it
-   starts in line with the words and fades out toward the right edge, so it
-   runs on past the window rather than being cut off by it. The fade is
-   eased, so there is no line where it begins */
-@media (min-width: 1400px) {
+/* on a wide screen the wall runs the window's whole width and fades out at
+   both edges, eased, so it seems to go on past the window either side */
+@media (min-width: 900px) {
 
-	[data-neck="margin"] .wall {
-		grid-template-columns: repeat(7, minmax(0, 1fr));
-		padding-left: var(--content-x);
-		padding-right: 0;
-		mask-image: linear-gradient(to right, #000 58%, rgb(0 0 0 / 0.96) 64%, rgb(0 0 0 / 0.86) 70%, rgb(0 0 0 / 0.7) 76%, rgb(0 0 0 / 0.5) 82%, rgb(0 0 0 / 0.3) 88%, rgb(0 0 0 / 0.14) 93%, rgb(0 0 0 / 0.04) 97%, transparent);
-	}
-
-	[data-neck="margin"] .wall li:nth-child(n + 22) {
-		display: none;
+	.wall {
+		padding: 0;
+		mask-image: linear-gradient(to right, transparent, rgb(0 0 0 / 0.3) 5%, rgb(0 0 0 / 0.75) 11%, #000 18%, #000 82%, rgb(0 0 0 / 0.75) 89%, rgb(0 0 0 / 0.3) 95%, transparent);
 	}
 }
 
@@ -941,6 +957,16 @@ footer ::selection {
 	.wall {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
+}
+
+/* the album view: the Listen page on a computer, large, on the paper
+   between the turntable and the covers */
+.library-shot {
+	margin-top: var(--space-5);
+}
+
+.library-shot .desk {
+	box-shadow: 0 30px 60px rgb(60 40 20 / 0.18);
 }
 
 /* Try it: on the paper, after the wall, so the page ends where it began */

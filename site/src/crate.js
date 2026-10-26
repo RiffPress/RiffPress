@@ -2,9 +2,11 @@
  * The demo's albums as a crate of records. The row of covers in "Try it in your browser" is the
  * page's own content and stays as it is for anyone without WebGL, with reduced motion, or saving
  * data. Where none of that applies, and once the row scrolls into view, this loads three.js and
- * stands the same covers in a crate: moving the pointer across it, or scrolling past, flips
- * through them the way you dig through a crate in a record shop, the ones in front tipping
- * towards you. It is decoration over the row: hidden from assistive technology, no focus, no keys.
+ * stands the same covers in a crate: moving the pointer across it, dragging across it on a
+ * screen, or scrolling past, flips through them the way you dig through a crate in a record
+ * shop, the ones in front tipping towards you, and a click or tap pulls one out to face you. A
+ * line under it says so. It is decoration over the row: hidden from assistive technology, no
+ * focus, no keys.
  */
 const shelf = document.querySelector( '#try .shelf' );
 const reduced = window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
