@@ -408,7 +408,7 @@ export function nowPlaying( P ) {
 	// it moves by transform and opacity, on the compositor, and only where it is seen.
 	function change() {
 		const stage = $( '.riff-stage' );
-		if ( np.hidden || P.reduce() || P.mode === 'video' || ! stage ) {
+		if ( np.hidden || P.reduce() || P.mode === 'video' || ! stage || ! roomy() ) {
 			return;
 		}
 		const leaving = document.createElement( 'div' );
@@ -492,11 +492,32 @@ export function nowPlaying( P ) {
 		} );
 	}
 
+	// The turntable stands only on a stage wider than it is tall, as on a computer or an unfolded
+	// phone; on a phone held upright the cover is shown alone, at full size, and the record stays
+	// in its sleeve. riff.css's container query says which, so the two never disagree; while Now
+	// Playing is closed its stage has no size, so the last answer holds. Turning the phone,
+	// unfolding it or resizing the window brings the record out or puts it back.
+	function roomy() {
+		const cover = $( '.riff-cover' );
+		if ( ! np.hidden && cover ) {
+			roomy.last = getComputedStyle( cover ).getPropertyValue( '--riff-deck' ).trim() === '1';
+		}
+		return !! roomy.last;
+	}
+	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
+		new ResizeObserver( () => {
+			const was = roomy.last;
+			if ( ! np.hidden && roomy() !== was ) {
+				deck( roomy.last && 'riffTurning' in root.dataset );
+			}
+		} ).observe( $( '.riff-stage' ) );
+	}
+
 	// The record out of its sleeve or back in it; out, the needle drops once it has come clear.
 	function deck( out ) {
 		const arm = $( '.riff-arm' );
 		clearTimeout( deck.drop );
-		if ( ! out ) {
+		if ( ! out || ! roomy() ) {
 			delete root.dataset.riffDeck;
 			delete arm?.dataset.riffDown;
 			lift();
@@ -531,7 +552,7 @@ export function nowPlaying( P ) {
 	const CRAWL = 0.3;
 	let ramping = 0;
 	const seen = () =>
-		! np.hidden && ! document.hidden && ! P.reduce() && P.mode !== 'video' && !! $( '.riff-stage' );
+		! np.hidden && ! document.hidden && ! P.reduce() && P.mode !== 'video' && roomy();
 	function bend( m, to, ms ) {
 		const from = m.playbackRate || 1;
 		const id = ++ramping;

@@ -1325,8 +1325,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
-/* A stage wider than it is tall, as on a computer or above a phone's
-   controls, sizes the pair by itself: each as large as the stage allows,
+/* A stage wider than it is tall, as on a computer, an unfolded phone or
+   a phone on its side, is the only one with the turntable (--riff-deck,
+   read by now-playing.js); upright on a phone the cover stands alone. It
+   sizes the pair by itself: each as large as the stage allows,
    side by side at full size, the sleeve and the plinth a sliver apart, the
    plinth's height and its arm side inside the stage. The sleeve alone,
    before the record comes out, is as large. */
@@ -1341,6 +1343,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	/* on what the stage holds: a query cannot restyle the stage itself */
 	.riff-stage > * {
+		--riff-deck: 1;
 		--riff-out-scale: 1;
 		--riff-out-cover: -67.5%;
 		--riff-out-record: 41.5%;
