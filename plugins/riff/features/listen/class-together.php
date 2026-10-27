@@ -52,7 +52,7 @@ final class Together {
 	public const DRIFT = 1.0;
 
 	/**
-	 * Hooks the route, when there is somewhere to keep the room.
+	 * Hooks the routes.
 	 *
 	 * @since 5.6.0
 	 */
@@ -70,7 +70,7 @@ final class Together {
 	}
 
 	/**
-	 * Registers /together and /together/{user}.
+	 * Registers /together and /together/{user}, when there is somewhere to keep the room.
 	 *
 	 * @since 5.6.0
 	 */
@@ -82,8 +82,8 @@ final class Together {
 		 * GET /riff/v1/together: everyone else playing on the site, by name, with the room's
 		 * version. Given the version it last had, while no one has arrived, left, changed what they
 		 * share or dropped out, it answers `{ version, changed: false }` without looking up anyone's
-		 * track. POST shares what the listener is
-		 * playing and answers the same; DELETE stops sharing.
+		 * track. POST shares what the listener is playing and answers the same; DELETE stops
+		 * sharing.
 		 *
 		 * @since 5.6.0
 		 */
@@ -271,8 +271,9 @@ final class Together {
 	 */
 	private static function shared( int $user ): ?array {
 		foreach ( wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX . $user ) ) as $entry ) {
-			if ( self::PREFIX . $user === $entry->client_id ) {
-				return (array) $entry->data;
+			$row = self::row( $entry );
+			if ( $row && $user === $row['user']->ID ) {
+				return $row['state'];
 			}
 		}
 		return null;
