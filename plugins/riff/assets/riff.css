@@ -1373,6 +1373,39 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		--riff-out-cover: -71%;
 		--riff-out-record: 44%;
 	}
+
+	#riff .riff-stage > .riff-sleeve {
+		display: block;
+	}
+
+	.riff-cover {
+		cursor: pointer;
+	}
+}
+
+/* The sleeve is tapped to put the record away and tapped again to play it
+   (now-playing.js). A pointer taps the sleeve itself; a keyboard and a
+   screen reader reach this button, its focus shown on the sleeve. Only where
+   the turntable stands. */
+#riff .riff-sleeve {
+	display: none;
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+#riff[data-mode="video"] .riff-stage > .riff-sleeve {
+	display: none;
+}
+
+.riff-stage:has(.riff-sleeve:focus-visible) .riff-cover {
+	outline: 2px solid var(--riff-fg);
+	outline-offset: 4px;
 }
 
 /* The plinth: a board under the platter and the arm, which reaches behind
@@ -1579,7 +1612,33 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	rotate: var(--riff-arm, -14deg);
 }
 
-#riff[data-riff-deck="out"]:not([data-riff-turning], [data-riff-cued]) .riff-arm-tube {
+/* Picked up by hand (now-playing.js), the arm follows the hand with no
+   spring, lifted off the record, to wherever it is put down. */
+#riff[data-riff-deck="out"] .riff-arm[data-riff-held] {
+	rotate: var(--riff-arm, -14deg);
+	transition: none;
+}
+
+#riff[data-riff-deck="out"] .riff-arm-grip {
+	pointer-events: stroke;
+	cursor: grab;
+}
+
+#riff .riff-arm[data-riff-held] .riff-arm-grip {
+	cursor: grabbing;
+}
+
+#riff .riff-arm:focus-visible {
+	outline: none;
+}
+
+#riff .riff-arm:focus-visible .riff-arm-tube {
+	outline: 2px solid var(--riff-fg);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+#riff[data-riff-deck="out"]:is(:not([data-riff-turning], [data-riff-cued]), :has(.riff-arm[data-riff-held])) .riff-arm-tube {
 	filter: drop-shadow(0.8cqi 2.4cqi 1.4cqi rgb(0 0 0 / 0.4));
 }
 

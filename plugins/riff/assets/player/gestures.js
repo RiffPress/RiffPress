@@ -66,7 +66,7 @@ export default function gestures( P ) {
 			if (
 				e.pointerType === 'mouse' ||
 				e.target.closest(
-					'input, [role="radio"], [data-riff-action="close"], [data-riff-action="cast"]'
+					'input, [role="radio"], [role="slider"], [data-riff-action="close"], [data-riff-action="cast"]'
 				)
 			) {
 				return;

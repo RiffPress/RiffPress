@@ -8,6 +8,11 @@
  * its tonearm tracks the album from the outside in. */
 import { average, hsl, largest, route, time } from 'riff-player/helpers';
 
+// Strings are WordPress translations of this module (wp_set_script_module_translations()).
+// Core prints wp.i18n only when there are translations, so without it the strings are the
+// English they are written in.
+const __ = window.wp?.i18n?.__ || ( ( english ) => english );
+
 export function nowPlaying( P ) {
 	const { root, np, $, $$, queueList, emit } = P;
 
@@ -376,6 +381,7 @@ export function nowPlaying( P ) {
 			cut( next ? album.lengths.slice( next.from, next.to ) : [] );
 			label( next );
 			needle();
+			bands();
 		};
 		if ( ! side || ! next || next === side ) {
 			side = next;
@@ -569,12 +575,14 @@ export function nowPlaying( P ) {
 			delete arm?.dataset.riffDown;
 			lift();
 			strobe();
+			stand( false );
 			return;
 		}
 		if ( root.dataset.riffDeck === 'out' ) {
 			return;
 		}
 		root.dataset.riffDeck = 'out';
+		stand( true );
 		needle();
 		strobe();
 		deck.drop = setTimeout( () => {
@@ -598,6 +606,7 @@ export function nowPlaying( P ) {
 	const LAND = 250;
 	const CRAWL = 0.3;
 	let ramping = 0;
+	let stowing = 0;
 	const seen = () =>
 		! np.hidden && ! document.hidden && ! P.reduce() && P.mode !== 'video' && roomy();
 	function bend( m, to, ms ) {
@@ -639,6 +648,7 @@ export function nowPlaying( P ) {
 	}
 	function turn( m ) {
 		clearTimeout( turn.wait );
+		stowing++;
 		const turning = root.dataset.playing === 'true' && root.dataset.riffDeck === 'out' && ! ( 'riffCued' in root.dataset );
 		const flipping = flip.until > performance.now();
 		if ( ! seen() || ( turning && ! P.ramping && ! flipping ) ) {
@@ -822,7 +832,8 @@ export function nowPlaying( P ) {
 	function needle() {
 		const arm = $( '.riff-arm' );
 		const w = where();
-		if ( ! arm || ! w ) {
+		// In the hand, it is where the hand holds it.
+		if ( ! arm || ! w || 'riffHeld' in arm.dataset ) {
 			return;
 		}
 		if ( P.reduce() || ! ( 'riffDown' in arm.dataset ) ) {
@@ -855,6 +866,188 @@ export function nowPlaying( P ) {
 		} else if ( sweep.playState !== 'running' ) {
 			sweep.play();
 		}
+	}
+
+	// ---- The parts at hand. Tapping the sleeve puts the record away, as a hand does: the arm back
+	// on its rest, the platter wound down, the record into the sleeve. Tapped again, the record
+	// comes out and plays. Pressing play anywhere does the same once it is away.
+	const sleeve = $( '.riff-sleeve' );
+	function stand( out ) {
+		$( '.riff-mount' )?.toggleAttribute( 'inert', ! out );
+		if ( sleeve ) {
+			sleeve.textContent = out ? __( 'Put the record away' ) : __( 'Play the record' );
+		}
+	}
+	function stow() {
+		const m = P.el();
+		if ( root.dataset.riffDeck !== 'out' ) {
+			turn( m );
+			return;
+		}
+		const token = ++stowing;
+		delete $( '.riff-arm' )?.dataset.riffDown;
+		lift();
+		const away = () => token === stowing && deck( false );
+		if ( m.paused || held() ) {
+			halt( m );
+			away();
+			return;
+		}
+		m.addEventListener( 'pause', away, { once: true } );
+		halt( m );
+	}
+	sleeve?.addEventListener( 'click', stow );
+	$( '.riff-cover' )?.addEventListener( 'click', () => {
+		if ( sleeve?.checkVisibility() ) {
+			stow();
+		}
+	} );
+
+	// The arm, picked up and put down anywhere on the side: the stylus lands in the groove under
+	// it, at the moment of the side that groove holds, the inverse of angle(). Dragged, it follows
+	// the hand; clicked, it is picked up and follows the pointer until the next click puts it down,
+	// so a single pointer can move it without dragging (WCAG 2.5.7). For a keyboard it is a slider
+	// over the side's bands: the arrows put it at the lead-in of the band before or after, Home
+	// and End at the first and last.
+	const tonearm = $( '.riff-arm' );
+	// The share of the side under a point on the screen, from its distance to the record's centre.
+	function playedAt( x, y ) {
+		const r = $( '.riff-record' ).getBoundingClientRect();
+		const out = Math.hypot( x - r.left - r.width / 2, y - r.top - r.height / 2 ) / ( r.width / 2 );
+		return Math.min( 1, Math.max( 0, ( LEAD_IN - out ) / ( LEAD_IN - leadOut() ) ) );
+	}
+	function hold( played ) {
+		sweep?.cancel();
+		sweep = null;
+		swept = '';
+		tonearm.dataset.riffHeld = '';
+		delete tonearm.dataset.riffDown;
+		tonearm.style.setProperty( '--riff-tonearm', `${ angle( played ).toFixed( 2 ) }deg` );
+	}
+	// The band a moment of the side is in, and how far into it.
+	function bandAt( played ) {
+		const album = albums.get( playing );
+		const on = sideOf( P.track() );
+		const s = played * on.length;
+		let k = on.from;
+		while ( k + 1 < on.to && album.starts[ k + 1 ] - on.start <= s ) {
+			k++;
+		}
+		return { k, into: Math.max( 0, s - ( album.starts[ k ] - on.start ) ) };
+	}
+	// The needle down on a band: the track playing moves; another in the queue is loaded there,
+	// playing if the music was. A band whose track is not in the queue leaves the music alone.
+	function land( k, into = 0 ) {
+		delete tonearm.dataset.riffHeld;
+		if ( root.dataset.riffDeck === 'out' ) {
+			tonearm.dataset.riffDown = '';
+		}
+		const album = albums.get( playing );
+		const id = String( album.ids[ k ] );
+		const m = P.el();
+		if ( id === String( P.track().id ) ) {
+			m.currentTime = into;
+		} else {
+			const i = P.order.findIndex( ( q ) => String( P.queue[ q ].id ) === id );
+			if ( i >= 0 ) {
+				const play = ! m.paused || held();
+				P.stopAll();
+				P.pos = i;
+				P.load( { play, at: into } );
+			}
+		}
+		needle();
+	}
+	// The slider's value: the band playing, by its number on the side.
+	function bands() {
+		const album = albums.get( playing );
+		const on = sideOf( P.track() );
+		if ( ! tonearm || ! on ) {
+			return;
+		}
+		const k = album.ids.indexOf( String( P.track().id ) );
+		tonearm.setAttribute( 'aria-valuemax', String( on.to - on.from ) );
+		tonearm.setAttribute( 'aria-valuenow', String( k - on.from + 1 ) );
+		tonearm.setAttribute( 'aria-valuetext', `${ on.name }${ k - on.from + 1 } ${ album.titles[ k ] }` );
+	}
+	if ( tonearm ) {
+		let from = null;
+		let carried = false;
+		const follow = ( e ) => hold( playedAt( e.clientX, e.clientY ) );
+		const put = ( e ) => {
+			document.removeEventListener( 'pointermove', follow );
+			const { k, into } = bandAt( playedAt( e.clientX, e.clientY ) );
+			land( k, into );
+		};
+		tonearm.addEventListener( 'pointerdown', ( e ) => {
+			if ( ! sideOf( P.track() ) || carried ) {
+				return;
+			}
+			e.stopPropagation();
+			e.preventDefault();
+			tonearm.setPointerCapture( e.pointerId );
+			from = { x: e.clientX, y: e.clientY, moved: false };
+		} );
+		tonearm.addEventListener( 'pointermove', ( e ) => {
+			if ( ! from ) {
+				return;
+			}
+			if ( Math.hypot( e.clientX - from.x, e.clientY - from.y ) > 4 ) {
+				from.moved = true;
+			}
+			if ( from.moved ) {
+				follow( e );
+			}
+		} );
+		tonearm.addEventListener( 'pointerup', ( e ) => {
+			if ( ! from ) {
+				return;
+			}
+			const { moved } = from;
+			from = null;
+			if ( moved ) {
+				put( e );
+				return;
+			}
+			// Clicked: carried until the next press, wherever it is.
+			carried = true;
+			hold( playedAt( e.clientX, e.clientY ) );
+			document.addEventListener( 'pointermove', follow );
+			document.addEventListener(
+				'pointerdown',
+				( down ) => {
+					down.stopPropagation();
+					down.preventDefault();
+					carried = false;
+					put( down );
+				},
+				{ capture: true, once: true }
+			);
+		} );
+		tonearm.addEventListener( 'keydown', ( e ) => {
+			const on = sideOf( P.track() );
+			if ( ! on ) {
+				return;
+			}
+			const k = albums.get( playing ).ids.indexOf( String( P.track().id ) );
+			const back = document.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+			const ahead = document.dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+			const to = {
+				[ back ]: k - 1,
+				ArrowDown: k - 1,
+				[ ahead ]: k + 1,
+				ArrowUp: k + 1,
+				Home: on.from,
+				End: on.to - 1,
+			}[ e.key ];
+			if ( to === undefined ) {
+				return;
+			}
+			e.preventDefault();
+			if ( to >= on.from && to < on.to && to !== k ) {
+				land( to );
+			}
+		} );
 	}
 
 	function cut( lengths ) {
