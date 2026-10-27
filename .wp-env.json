@@ -4,7 +4,8 @@
   "plugins": [
     "./plugins/riff",
     "./plugins/riff-lyrics",
-    "./plugins/riff-sign-in"
+    "./plugins/riff-sign-in",
+    "https://github.com/WordPress/presence-api/releases/download/v0.18.4/presence-api.zip"
   ],
   "port": 8890,
   "testsPort": 8891,
@@ -30,6 +31,7 @@
         "./plugins/riff",
         "./plugins/riff-lyrics",
         "./plugins/riff-sign-in",
+        "https://github.com/WordPress/presence-api/releases/download/v0.18.4/presence-api.zip",
         "./plugins/riff/tests/components"
       ]
     }

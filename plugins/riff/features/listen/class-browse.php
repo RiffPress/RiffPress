@@ -296,10 +296,10 @@ final class Browse {
 	 *
 	 * @since 4.23.0
 	 *
-	 * @param WP_User $user The signed-in listener.
+	 * @param WP_User $user The listener.
 	 * @return string
 	 */
-	private static function face( WP_User $user ): string {
+	public static function face( WP_User $user ): string {
 		$data = get_avatar_data(
 			$user->ID,
 			array(

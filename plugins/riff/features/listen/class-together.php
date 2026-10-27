@@ -1,0 +1,377 @@
+<?php
+/**
+ * Listening together: who on the site is playing what, kept in the Presence API's rooms.
+ *
+ * @since 5.6.0
+ * @package Riff
+ */
+
+namespace Riff\Listen;
+
+use Riff\Library;
+use Riff\Likes_Rest;
+use Riff\Tracks;
+use WP_Error;
+use WP_REST_Request;
+use WP_REST_Response;
+use WP_User;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * The listening room, riff/listening, and riff/v1/together over it. Each signed-in listener who is
+ * playing has one row, `riff-{user ID}`, holding their queue as track IDs, where they are in it and
+ * whether they are playing, and the server's time when that was so; a reader works out where the
+ * music is now from that and the clock. Tracks are turned back into tracks for each reader, so a
+ * listener's track from a post the reader can't read is never shown to them.
+ *
+ * Only when the Presence API is active and recording. The route is Riff's own, for its player, and
+ * not public: it may change with the player.
+ */
+final class Together {
+
+	/**
+	 * The room everyone playing on the site is in. The Presence API keeps it per site.
+	 */
+	public const ROOM = 'riff/listening';
+
+	/**
+	 * Before each of Riff's client IDs, as the Presence API asks of plugins.
+	 */
+	public const PREFIX = 'riff-';
+
+	/**
+	 * The most of a queue that is kept, as many as the tracks route returns at once.
+	 */
+	public const QUEUE_MAX = 100;
+
+	/**
+	 * Hooks the route, when there is somewhere to keep the room.
+	 *
+	 * @since 5.6.0
+	 */
+	public static function register(): void {
+		add_action( 'rest_api_init', array( self::class, 'routes' ) );
+	}
+
+	/**
+	 * Whether the Presence API is active and recording on this site.
+	 *
+	 * @since 5.6.0
+	 */
+	public static function available(): bool {
+		return function_exists( 'wp_presence_is_available' ) && wp_presence_is_available();
+	}
+
+	/**
+	 * Registers /together and /together/{user}.
+	 *
+	 * @since 5.6.0
+	 */
+	public static function routes(): void {
+		if ( ! self::available() ) {
+			return;
+		}
+		/**
+		 * GET /riff/v1/together: everyone else playing on the site, newest first, with the room's
+		 * version. Given the version it last had, while nothing has changed or expired, it answers
+		 * `{ version, changed: false }` without reading the room. POST shares what the listener is
+		 * playing and answers the same; DELETE stops sharing.
+		 *
+		 * @since 5.6.0
+		 */
+		register_rest_route(
+			Library::REST,
+			'/together',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( self::class, 'rest_room' ),
+					'permission_callback' => array( self::class, 'allowed' ),
+					'args'                => array(
+						'version' => array(
+							'description' => __( 'The room\'s version the player last had.', 'riff' ),
+							'type'        => 'string',
+						),
+					),
+				),
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( self::class, 'rest_share' ),
+					'permission_callback' => array( self::class, 'allowed' ),
+					'args'                => array(
+						'queue'   => array(
+							'description' => __( 'The queue in play order, each track as its audio attachment and the post it plays from.', 'riff' ),
+							'type'        => 'array',
+							'required'    => true,
+							'minItems'    => 1,
+							'maxItems'    => self::QUEUE_MAX,
+							'items'       => array(
+								'type'                 => 'object',
+								'additionalProperties' => false,
+								'properties'           => array(
+									'id'   => array(
+										'type'     => 'integer',
+										'minimum'  => 1,
+										'required' => true,
+									),
+									'post' => array(
+										'type'    => 'integer',
+										'minimum' => 0,
+									),
+								),
+							),
+						),
+						'index'   => array(
+							'description' => __( 'Which track of the queue is playing.', 'riff' ),
+							'type'        => 'integer',
+							'minimum'     => 0,
+							'required'    => true,
+						),
+						'at'      => array(
+							'description' => __( 'Where the track is, in seconds.', 'riff' ),
+							'type'        => 'number',
+							'minimum'     => 0,
+							'required'    => true,
+						),
+						'playing' => array(
+							'description' => __( 'Whether it is playing, or paused.', 'riff' ),
+							'type'        => 'boolean',
+							'required'    => true,
+						),
+					),
+				),
+				array(
+					'methods'             => 'DELETE',
+					'callback'            => array( self::class, 'rest_leave' ),
+					'permission_callback' => array( self::class, 'allowed' ),
+				),
+			)
+		);
+		/**
+		 * GET /riff/v1/together/{user}: what one listener is playing, with their whole queue, to
+		 * listen along with them.
+		 *
+		 * @since 5.6.0
+		 */
+		register_rest_route(
+			Library::REST,
+			'/together/(?P<user>\d+)',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( self::class, 'rest_listener' ),
+				'permission_callback' => array( self::class, 'allowed' ),
+				'args'                => array(
+					'user' => array(
+						'description' => __( 'The listener\'s user ID.', 'riff' ),
+						'type'        => 'integer',
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Whether the request may see and join the room: anyone signed in who can read this site, as
+	 * for likes.
+	 *
+	 * @since 5.6.0
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function allowed() {
+		return Likes_Rest::allowed();
+	}
+
+	/**
+	 * GET /together.
+	 *
+	 * @since 5.6.0
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response
+	 */
+	public static function rest_room( WP_REST_Request $request ): WP_REST_Response {
+		$version = self::version();
+		if ( null !== $request['version'] && (string) $request['version'] === $version && ! self::expired() ) {
+			return new WP_REST_Response(
+				array(
+					'version' => $version,
+					'changed' => false,
+				)
+			);
+		}
+		return new WP_REST_Response( self::room( wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX ) ), $version ) );
+	}
+
+	/**
+	 * POST /together.
+	 *
+	 * @since 5.6.0
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function rest_share( WP_REST_Request $request ) {
+		$queue = array_map(
+			static fn( $item ) => array(
+				'id'   => (int) $item['id'],
+				'post' => (int) ( $item['post'] ?? 0 ),
+			),
+			array_values( (array) $request['queue'] )
+		);
+		$index = (int) $request['index'];
+		if ( $index >= count( $queue ) ) {
+			return new WP_Error( 'rest_invalid_param', __( 'The index is past the end of the queue.', 'riff' ), array( 'status' => 400 ) );
+		}
+		$user    = get_current_user_id();
+		$entries = wp_presence_exchange(
+			self::ROOM,
+			self::PREFIX . $user,
+			array(
+				'queue'   => $queue,
+				'index'   => $index,
+				'at'      => (float) $request['at'],
+				'since'   => self::now(),
+				'playing' => (bool) $request['playing'],
+			),
+			array(
+				'user_id'       => $user,
+				'client_prefix' => self::PREFIX,
+				'wp_error'      => true,
+			)
+		);
+		if ( is_wp_error( $entries ) ) {
+			return new WP_Error( 'riff_together_unavailable', __( 'Listening together is not available right now.', 'riff' ), array( 'status' => 503 ) );
+		}
+		return new WP_REST_Response( self::room( $entries, self::version() ) );
+	}
+
+	/**
+	 * DELETE /together.
+	 *
+	 * @since 5.6.0
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function rest_leave(): WP_REST_Response {
+		$entries = wp_presence_leave( self::ROOM, self::PREFIX . get_current_user_id(), array( 'client_prefix' => self::PREFIX ) );
+		return new WP_REST_Response( self::room( (array) $entries, self::version() ) );
+	}
+
+	/**
+	 * GET /together/{user}.
+	 *
+	 * @since 5.6.0
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function rest_listener( WP_REST_Request $request ) {
+		foreach ( wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX ) ) as $entry ) {
+			if ( (int) $entry->user_id !== (int) $request['user'] || self::PREFIX . $entry->user_id !== $entry->client_id ) {
+				continue;
+			}
+			$listener = self::listener( $entry, true );
+			if ( $listener ) {
+				return new WP_REST_Response( $listener );
+			}
+		}
+		return new WP_Error( 'riff_together_not_listening', __( 'They aren\'t listening to anything you can hear.', 'riff' ), array( 'status' => 404 ) );
+	}
+
+	/**
+	 * The room as the current user sees it: everyone else, each with the track they are on.
+	 *
+	 * @param object[]    $entries The room's rows, from the Presence API.
+	 * @param string|null $version The room's version.
+	 * @return array `{ version, changed, listeners }`.
+	 */
+	private static function room( array $entries, ?string $version ): array {
+		$listeners = array();
+		foreach ( $entries as $entry ) {
+			// One row for each listener, written by this class: anything else in the room is skipped.
+			if ( get_current_user_id() === (int) $entry->user_id || self::PREFIX . $entry->user_id !== $entry->client_id ) {
+				continue;
+			}
+			$listener = self::listener( $entry, false );
+			if ( $listener ) {
+				$listeners[] = $listener;
+			}
+		}
+		return array(
+			'version'   => $version,
+			'changed'   => true,
+			'listeners' => $listeners,
+		);
+	}
+
+	/**
+	 * One listener, as the current user may see them: who they are, the track they are on, where
+	 * it was and when, and, to join them, their queue. Null when the current user can't see the
+	 * track they are on.
+	 *
+	 * @param object $entry A row of the room.
+	 * @param bool   $queue Whether to include the whole queue.
+	 * @return array|null
+	 */
+	private static function listener( object $entry, bool $queue ): ?array {
+		$user  = get_userdata( (int) $entry->user_id );
+		$state = (array) $entry->data;
+		$items = array_values( array_filter( (array) ( $state['queue'] ?? array() ), 'is_array' ) );
+		$index = (int) ( $state['index'] ?? 0 );
+		if ( ! $user instanceof WP_User || ! isset( $items[ $index ] ) ) {
+			return null;
+		}
+		$tracks = Tracks::readable( $queue ? $items : array( $index => $items[ $index ] ) );
+		if ( empty( $tracks[ $index ] ) ) {
+			return null;
+		}
+		$listener = array(
+			'user'    => array(
+				'id'   => $user->ID,
+				'name' => $user->display_name,
+				'face' => Browse::face( $user ),
+			),
+			'track'   => $tracks[ $index ],
+			'at'      => (float) ( $state['at'] ?? 0 ),
+			'since'   => (int) ( $state['since'] ?? 0 ),
+			'playing' => ! empty( $state['playing'] ),
+		);
+		if ( $queue ) {
+			// The tracks the current user can't see are left out, and the index follows its track.
+			$listener['index'] = count( array_filter( array_slice( $tracks, 0, $index ) ) );
+			$listener['queue'] = array_values( array_filter( $tracks ) );
+		}
+		return $listener;
+	}
+
+	/**
+	 * The room's version, which moves when someone arrives, leaves or changes what they share.
+	 *
+	 * @return string|null Null for an empty room.
+	 */
+	private static function version(): ?string {
+		$versions = wp_get_presence_room_versions( array( self::ROOM ) );
+		return isset( $versions[ self::ROOM ] ) ? (string) $versions[ self::ROOM ] : null;
+	}
+
+	/**
+	 * Whether a row has expired since the room last changed, which doesn't move its version.
+	 *
+	 * @return bool
+	 */
+	private static function expired(): bool {
+		$expiry = wp_get_presence_room_next_expiry( array( self::ROOM ) );
+		return isset( $expiry[ self::ROOM ] ) && strtotime( $expiry[ self::ROOM ] . ' UTC' ) <= time();
+	}
+
+	/**
+	 * The server's time, in milliseconds since the epoch.
+	 *
+	 * @return int
+	 */
+	private static function now(): int {
+		return (int) round( microtime( true ) * 1000 );
+	}
+}
