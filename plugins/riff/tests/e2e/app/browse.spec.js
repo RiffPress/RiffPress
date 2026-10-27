@@ -144,6 +144,23 @@ test.describe( 'Browse', () => {
 		await expect( page.locator( '.riff-suggest-recent' ).nth( 1 ) ).toHaveText( 'Compo' );
 	} );
 
+	test( 'on a phone the cards stand two to a row, as the apps lay them out', async ( {
+		page,
+		isMobile,
+	} ) => {
+		// A wide screen's grid is the desktop specs' to check.
+		if ( ! isMobile ) {
+			return;
+		}
+		await page.goto( pageUrl + ( pageUrl.includes( '?' ) ? '&' : '?' ) + 'riff_view=posts' );
+		const cards = page.locator( '.riff-grid .riff-card' );
+		await expect( cards.nth( 1 ) ).toBeVisible();
+		const [ first, second ] = [ await cards.nth( 0 ).boundingBox(), await cards.nth( 1 ).boundingBox() ];
+		expect( Math.abs( first.y - second.y ) ).toBeLessThanOrEqual( 1 );
+		expect( second.x ).toBeGreaterThan( first.x + first.width );
+		expect( second.x + second.width ).toBeLessThanOrEqual( page.viewportSize().width );
+	} );
+
 	test( 'every view passes an accessibility check', async ( { page } ) => {
 		const views = [ '', 'riff_view=albums', 'riff_view=artists', 'riff_view=tracks', 'riff_view=posts', 'riff_view=library', 'riff_search=Compositions' ];
 		for ( const view of views ) {
