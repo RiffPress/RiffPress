@@ -570,6 +570,66 @@ html.has-riff .riff-standalone .riff-app {
 	}
 }
 
+/* On a phone or a tablet, an album, artist or playlist opens as the apps open
+   one there: the cover large and centred, the title, the line under it and
+   the actions centred below, all on a wash that reaches the screen's edges.
+   The view has no panel of its own here, so the wash is let past the view's
+   sides, out through the app's gutter, and the app clips it instead. */
+@media (max-width: 899px) {
+
+	.riff-standalone .riff-app {
+		overflow-x: clip;
+	}
+
+	.riff-standalone .riff-app-view {
+		overflow: visible;
+	}
+
+	.riff-standalone .riff-album-tinted::before {
+		right: calc(-1 * clamp(20px, 5vw, 80px));
+		left: calc(-1 * clamp(20px, 5vw, 80px));
+	}
+
+	.riff-standalone .riff-album {
+		flex-direction: column;
+		align-items: center;
+		gap: 24px;
+		text-align: center;
+	}
+
+	.riff-standalone .riff-album-cover {
+		width: min(66vw, 300px);
+		box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
+	}
+
+	.riff-standalone .riff-album-text {
+		width: 100%;
+	}
+
+	.riff-standalone .riff-app .riff-album-title {
+		font-size: clamp(24px, 6.5vw, 36px);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.riff-standalone .riff-app .riff-album-meta {
+		text-wrap: balance;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions {
+		justify-content: center;
+	}
+}
+
+/* On a phone the title keeps the row's width: the header already says how
+   long the album is, and the apps leave each track's length out there. */
+@media (max-width: 599px) {
+
+	.riff-standalone .riff-album-tracks .riff-row-time {
+		display: none;
+	}
+}
+
 /* The bar already says what is playing; the app does not repeat it above the
    library. */
 .riff-standalone .riff-now {

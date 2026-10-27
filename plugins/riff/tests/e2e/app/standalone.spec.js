@@ -142,7 +142,7 @@ test.describe( 'Standalone', () => {
 		expect( radii.filter( ( r ) => r !== '999px' ) ).toEqual( [] );
 	} );
 
-	test( 'an album\'s header is Spotify\'s on a wide screen: a round Play under a large title, and column heads that line up', async ( {
+	test( 'an album\'s header is Spotify\'s on a wide screen, with a round Play and column heads that line up, and centred on a phone', async ( {
 		page,
 		isMobile,
 	} ) => {
@@ -158,6 +158,19 @@ test.describe( 'Standalone', () => {
 			await expect( play.locator( '.riff-pill-label' ) ).toBeVisible();
 			await expect( play.locator( 'svg' ) ).toBeHidden();
 			await expect( page.locator( '.riff-tracks-head' ) ).toBeHidden();
+			// The cover is centred, as the apps draw an album on a phone, and the
+			// header's wash reaches the screen's edges instead of standing in a box.
+			const width = page.viewportSize().width;
+			const art = await page.locator( '.riff-album-cover' ).boundingBox();
+			expect( Math.abs( art.x + ( art.width / 2 ) - ( width / 2 ) ) ).toBeLessThanOrEqual( 2 );
+			const wash = await page.locator( '.riff-album-tinted' ).evaluate( ( el ) => {
+				const view = el.closest( '.riff-app-view' ).getBoundingClientRect();
+				const before = getComputedStyle( el, '::before' );
+				return { left: view.left + parseFloat( before.left ), right: view.right - parseFloat( before.right ) };
+			} );
+			expect( wash.left ).toBeLessThanOrEqual( 0 );
+			expect( wash.right ).toBeGreaterThanOrEqual( width );
+			await expect( page.locator( '.riff-album-tracks .riff-row-time' ).first() ).toBeHidden();
 			return;
 		}
 		const box = await play.boundingBox();
