@@ -40,7 +40,7 @@ defined( 'ABSPATH' ) || exit;
 				<span class="riff-time riff-desk" dir="ltr" data-riff-text="current">0:00</span>
 				<div class="riff-bar-seek">
 					<?php // The filament: the played part of the line is a wire that glows with the music (riff.js). ?>
-					<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i></span>
+					<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i><span class="riff-bloom"></span></span>
 					<b class="riff-knob" aria-hidden="true"></b>
 					<span class="riff-tip" aria-hidden="true" hidden></span>
 					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Track position', 'riff' ); ?>">

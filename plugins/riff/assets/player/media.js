@@ -140,7 +140,7 @@ export function media( P ) {
 				{ transform: slide( 1 ) },
 			];
 			if ( seeker.matches( '.riff-bar-seek' ) ) {
-				run( seeker.querySelector( '.riff-line' ), along, {
+				run( seeker.querySelector( '.riff-bloom' ), along, {
 					pseudoElement: '::after',
 				} );
 			}
