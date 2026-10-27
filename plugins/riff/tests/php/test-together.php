@@ -168,6 +168,37 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'levels', $listener['track'] );
 	}
 
+	public function test_listeners_are_listed_by_name_with_their_tracks_looked_up_at_once(): void {
+		wp_update_user(
+			array(
+				'ID'           => $this->host,
+				'display_name' => 'Zoë',
+			)
+		);
+		$amy = self::factory()->user->create(
+			array(
+				'role'         => 'subscriber',
+				'display_name' => 'Amy',
+			)
+		);
+		$this->share( $this->host, $this->queue(), 1 );
+		$this->share( $amy, $this->queue() );
+
+		$lookups = 0;
+		$count   = static function ( $result, $server, $request ) use ( &$lookups ) {
+			$lookups += '/riff/v1/tracks' === $request->get_route() ? 1 : 0;
+			return $result;
+		};
+		add_filter( 'rest_pre_dispatch', $count, 10, 3 );
+		wp_set_current_user( $this->guest );
+		$listeners = $this->call( 'GET', '/together' )->get_data()['listeners'];
+		remove_filter( 'rest_pre_dispatch', $count );
+
+		$this->assertSame( array( 'Amy', 'Zoë' ), array_map( fn( $l ) => $l['user']['name'], $listeners ) );
+		$this->assertSame( array( (string) $this->tracks[0], (string) $this->tracks[1] ), array_map( fn( $l ) => (string) $l['track']['id'], $listeners ) );
+		$this->assertSame( 1, $lookups, 'one lookup for everyone\'s track' );
+	}
+
 	public function test_a_track_the_reader_cannot_see_is_never_shown(): void {
 		$this->share( $this->host, array( $this->secret ) );
 		wp_set_current_user( $this->guest );

@@ -79,7 +79,7 @@ final class Together {
 			return;
 		}
 		/**
-		 * GET /riff/v1/together: everyone else playing on the site, newest first, with the room's
+		 * GET /riff/v1/together: everyone else playing on the site, by name, with the room's
 		 * version. Given the version it last had, while no one has arrived, left, changed what they
 		 * share or dropped out, it answers `{ version, changed: false }` without looking up anyone's
 		 * track. POST shares what the listener is
@@ -315,37 +315,50 @@ final class Together {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function rest_listener( WP_REST_Request $request ) {
-		foreach ( wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX ) ) as $entry ) {
-			if ( (int) $entry->user_id !== (int) $request['user'] || self::PREFIX . $entry->user_id !== $entry->client_id ) {
+		foreach ( wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX . (int) $request['user'] ) ) as $entry ) {
+			$row = self::row( $entry );
+			if ( ! $row || (int) $request['user'] !== $row['user']->ID ) {
 				continue;
 			}
-			$listener = self::listener( $entry, true );
-			if ( $listener ) {
-				return new WP_REST_Response( $listener );
+			$tracks = Tracks::readable( $row['queue'] );
+			if ( empty( $tracks[ $row['index'] ] ) ) {
+				break;
 			}
+			// With their queue: the tracks the current user can't see are left out, and the index
+			// follows its track.
+			$listener          = self::listener( $row, $tracks[ $row['index'] ] );
+			$listener['index'] = count( array_filter( array_slice( $tracks, 0, $row['index'] ) ) );
+			$listener['queue'] = array_values( array_filter( $tracks ) );
+			return new WP_REST_Response( $listener );
 		}
 		return new WP_Error( 'riff_together_not_listening', __( 'They aren\'t listening to anything you can hear.', 'riff' ), array( 'status' => 404 ) );
 	}
 
 	/**
-	 * The room as the current user sees it: everyone else, each with the track they are on.
+	 * The room as the current user sees it: everyone else, each with the track they are on, by name,
+	 * so the order stays put while they listen.
 	 *
 	 * @param object[]    $entries The room's rows, from the Presence API.
 	 * @param string|null $version The room's version.
 	 * @return array `{ version, changed, listeners }`.
 	 */
 	private static function room( array $entries, ?string $version ): array {
-		$listeners = array();
+		$rows = array();
 		foreach ( $entries as $entry ) {
-			// One row for each listener, written by this class: anything else in the room is skipped.
-			if ( get_current_user_id() === (int) $entry->user_id || self::PREFIX . $entry->user_id !== $entry->client_id ) {
-				continue;
-			}
-			$listener = self::listener( $entry, false );
-			if ( $listener ) {
-				$listeners[] = $listener;
+			$row = self::row( $entry );
+			if ( $row && get_current_user_id() !== $row['user']->ID ) {
+				$rows[] = $row;
 			}
 		}
+		// Everyone's track, looked up at once.
+		$tracks    = Tracks::readable( array_map( static fn( $row ) => $row['queue'][ $row['index'] ], $rows ) );
+		$listeners = array();
+		foreach ( $rows as $i => $row ) {
+			if ( $tracks[ $i ] ) {
+				$listeners[] = self::listener( $row, $tracks[ $i ] );
+			}
+		}
+		usort( $listeners, static fn( $a, $b ) => array( strtolower( $a['user']['name'] ), $a['user']['id'] ) <=> array( strtolower( $b['user']['name'] ), $b['user']['id'] ) );
 		return array(
 			'version'   => $version,
 			'changed'   => true,
@@ -354,43 +367,43 @@ final class Together {
 	}
 
 	/**
-	 * One listener, as the current user may see them: who they are, the track they are on, where
-	 * it was and when, and, to join them, their queue. Null when the current user can't see the
-	 * track they are on.
+	 * A row of the room as a listener and what they shared, or null for a row this class didn't
+	 * write: one for each listener, `riff-{user ID}`, naming a track in their queue.
 	 *
 	 * @param object $entry A row of the room.
-	 * @param bool   $queue Whether to include the whole queue.
-	 * @return array|null
+	 * @return array|null `{ user, state, queue, index }`.
 	 */
-	private static function listener( object $entry, bool $queue ): ?array {
+	private static function row( object $entry ): ?array {
 		$user  = get_userdata( (int) $entry->user_id );
 		$state = (array) $entry->data;
-		$items = array_values( array_filter( (array) ( $state['queue'] ?? array() ), 'is_array' ) );
+		$queue = array_values( array_filter( (array) ( $state['queue'] ?? array() ), 'is_array' ) );
 		$index = (int) ( $state['index'] ?? 0 );
-		if ( ! $user instanceof WP_User || ! isset( $items[ $index ] ) ) {
+		if ( ! $user instanceof WP_User || self::PREFIX . $user->ID !== $entry->client_id || ! isset( $queue[ $index ] ) ) {
 			return null;
 		}
-		$tracks = Tracks::readable( $queue ? $items : array( $index => $items[ $index ] ) );
-		if ( empty( $tracks[ $index ] ) ) {
-			return null;
-		}
-		$listener = array(
+		return compact( 'user', 'state', 'queue', 'index' );
+	}
+
+	/**
+	 * One listener, as the current user sees them: who they are, the track they are on, and where
+	 * it was and when.
+	 *
+	 * @param array $row   The listener's row, from row().
+	 * @param array $track Their track, as the current user may see it.
+	 * @return array
+	 */
+	private static function listener( array $row, array $track ): array {
+		return array(
 			'user'    => array(
-				'id'   => $user->ID,
-				'name' => $user->display_name,
-				'face' => Browse::face( $user ),
+				'id'   => $row['user']->ID,
+				'name' => $row['user']->display_name,
+				'face' => Browse::face( $row['user'] ),
 			),
-			'track'   => $tracks[ $index ],
-			'at'      => (float) ( $state['at'] ?? 0 ),
-			'since'   => (int) ( $state['since'] ?? 0 ),
-			'playing' => ! empty( $state['playing'] ),
+			'track'   => $track,
+			'at'      => (float) ( $row['state']['at'] ?? 0 ),
+			'since'   => (int) ( $row['state']['since'] ?? 0 ),
+			'playing' => ! empty( $row['state']['playing'] ),
 		);
-		if ( $queue ) {
-			// The tracks the current user can't see are left out, and the index follows its track.
-			$listener['index'] = count( array_filter( array_slice( $tracks, 0, $index ) ) );
-			$listener['queue'] = array_values( array_filter( $tracks ) );
-		}
-		return $listener;
 	}
 
 	/**
