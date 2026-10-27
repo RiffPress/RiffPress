@@ -46,9 +46,12 @@ jobs:
       # The apt packages are not covered by the cache above, so install-deps
       # runs unconditionally while the browser download is skipped on a hit.
       # WebKit runs the tests tagged @smoke (see playwright.config.js).
+      # apt waits on a stalled mirror indefinitely by default; a stalled download now gives up after
+      # 30 seconds and is tried again, up to three times.
+      - run: printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/80-retries
       # A stalled apt mirror once held this step for the job's whole 30 minutes.
       - run: npx playwright install-deps chromium webkit
-        timeout-minutes: 5
+        timeout-minutes: 10
       - run: npx playwright install chromium webkit
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
 
@@ -92,8 +95,11 @@ jobs:
           cache: npm
       - run: npm ci
       # Chromium's system libraries, which Electron needs too, and xvfb.
+      # apt waits on a stalled mirror indefinitely by default; a stalled download now gives up after
+      # 30 seconds and is tried again, up to three times.
+      - run: printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/80-retries
       - run: npx playwright install-deps chromium && sudo apt-get install -y xvfb
-        timeout-minutes: 5
+        timeout-minutes: 10
       # Ubuntu 24.04 keeps unprivileged user namespaces from AppArmor-confined
       # programs, and Chromium's sandbox needs one.
       - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
