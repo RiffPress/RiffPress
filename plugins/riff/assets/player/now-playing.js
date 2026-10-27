@@ -53,13 +53,58 @@ export function nowPlaying( P ) {
 		requestAnimationFrame( () => {
 			np.classList.add( 'is-in' );
 			$( '[data-riff-action="close"]' ).focus( { preventScroll: true } );
+			if ( P.reduce() ) {
+				hidePage();
+			} else {
+				np.addEventListener( 'transitionend', slidIn );
+			}
 		} );
+	}
+
+	// Once Now Playing has slid over the page, the page is neither styled nor painted. Each element
+	// keeps its height, so the page's scroll position holds, and it is all back before Now Playing
+	// slides away and focus returns to it.
+	function slidIn( event ) {
+		if ( event.target === np ) {
+			np.removeEventListener( 'transitionend', slidIn );
+			hidePage();
+		}
+	}
+
+	function hidePage() {
+		if ( np.hidden || ! np.classList.contains( 'is-in' ) ) {
+			return;
+		}
+		const nodes = [ ...document.querySelectorAll( 'body > [data-riff-inert]' ) ];
+		const heights = nodes.map( ( node ) => {
+			const s = getComputedStyle( node );
+			return (
+				node.getBoundingClientRect().height -
+				parseFloat( s.paddingTop ) -
+				parseFloat( s.paddingBottom ) -
+				parseFloat( s.borderTopWidth ) -
+				parseFloat( s.borderBottomWidth )
+			);
+		} );
+		nodes.forEach( ( node, i ) => {
+			node.style.containIntrinsicHeight = `${ Math.max( 0, heights[ i ] ) }px`;
+			node.dataset.riffCovered = '';
+		} );
+	}
+
+	function showPage() {
+		for ( const node of document.querySelectorAll( '[data-riff-covered]' ) ) {
+			node.removeAttribute( 'data-riff-covered' );
+			node.style.removeProperty( 'contain-intrinsic-height' );
+		}
 	}
 
 	function close( { fromHistory = false } = {} ) {
 		if ( np.hidden ) {
 			return;
 		}
+		np.removeEventListener( 'transitionend', slidIn );
+		showPage();
 		np.classList.remove( 'is-in' );
 		sheet( 'none' );
 		np.style.removeProperty( 'transform' );
