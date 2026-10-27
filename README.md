@@ -15,7 +15,7 @@
 1. Download [riff.zip](https://riffpress.com/download/) and upload it under **Plugins › Add New Plugin**.
 2. Press **Create Listen page** on the Dashboard.
 
-Riff needs WordPress 7.2 and PHP 8.1. There is nothing to configure.
+Riff needs WordPress 7.1 and PHP 8.1. There is nothing to configure. On WordPress 7.2 its fields also show in the Media Library's new views and forms.
 
 ## Build on it
 
