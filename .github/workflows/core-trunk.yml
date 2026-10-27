@@ -75,10 +75,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Stop the testing environment
-        if: ${{ always() }}
-        run: npx wp-env stop || true
-
   regressions:
     name: File core regressions
     needs: suite
