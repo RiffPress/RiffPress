@@ -94,8 +94,14 @@ test( 'a passkey is saved after a code and signs in on its own', async ( { page,
 	await page.context().clearCookies();
 	await page.goto( pageUrl );
 	await page.locator( '.riff-app-signin' ).click();
-	await sheet.getByRole( 'button', { name: 'Sign in with a passkey' } ).click();
-	await expect( page.locator( '.riff-app-account' ) ).toBeVisible();
+	// The email field keeps a quiet passkey request open (conditional UI), and the virtual
+	// authenticator answers it at once, so it can sign in before the button is pressed. Either way
+	// the passkey alone signed in; a click on a button the page has just left is no failure.
+	const account = page.locator( '.riff-app-account' );
+	const passkey = sheet.getByRole( 'button', { name: 'Sign in with a passkey' } );
+	await expect( passkey.or( account ) ).toBeVisible();
+	await passkey.click( { timeout: 2000 } ).catch( () => {} );
+	await expect( account ).toBeVisible();
 	const { credentials: used } = await cdp.send( 'WebAuthn.getCredentials', { authenticatorId } );
 	expect( used[ 0 ].signCount ).toBeGreaterThan( credentials[ 0 ].signCount );
 	testInfo.annotations.push( { type: 'passkey', description: 'resident credential made and used' } );
