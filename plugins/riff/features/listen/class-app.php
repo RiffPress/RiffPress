@@ -141,6 +141,9 @@ final class App {
 				$term = get_term( $browse['id'], 'album' === $browse['view'] ? Catalog::ALBUM : Catalog::ARTIST );
 				return $term instanceof WP_Term ? Catalog::name( $term->name ) : '';
 			default:
+				if ( '' === $browse['search'] ) {
+					return __( 'Search', 'riff' );
+				}
 				/* translators: %s: the words searched for. */
 				return sprintf( __( 'Results for “%s”', 'riff' ), $browse['search'] );
 		}

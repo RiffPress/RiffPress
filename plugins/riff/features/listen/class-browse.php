@@ -90,6 +90,7 @@ final class Browse {
 	 */
 	private const ICONS = array(
 		'home'    => 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+		'search'  => 'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
 		'albums'  => 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z',
 		'artists' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
 		'tracks'  => 'M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z',
@@ -124,7 +125,8 @@ final class Browse {
 		if ( ctype_digit( $artist ) && (int) $artist > 0 ) {
 			return array( 'view' => 'artist', 'id' => (int) $artist, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
-		if ( '' !== $search ) {
+		// Search with words is their results; without them, the Search tab's own view.
+		if ( '' !== $search || 'search' === $view ) {
 			return array( 'view' => 'search', 'id' => 0, 'search' => $search, 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		if ( in_array( $view, array( 'albums', 'artists', 'tracks', 'posts', 'library' ), true ) ) {
@@ -152,6 +154,9 @@ final class Browse {
 		$here  = array( 'album' => 'albums', 'artist' => 'artists', 'playlist' => 'library' )[ $here ] ?? $here; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		$links = array(
 			'home'    => array( __( 'Home', 'riff' ), $page ),
+			// A tab of its own only on a phone, at the bottom with Home and Library, as the apps
+			// have it; wider, the field is always in view.
+			'search'  => array( __( 'Search', 'riff' ), add_query_arg( self::VIEW, 'search', $page ) ),
 			'albums'  => array( __( 'Albums', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ) ),
 			'artists' => array( __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ) ),
 			'tracks'  => array( __( 'Tracks', 'riff' ), add_query_arg( self::VIEW, 'tracks', $page ) ),
@@ -159,17 +164,22 @@ final class Browse {
 			// Last, as Spotify's and YouTube Music's: what is the listener's own, under what is the site's.
 			'library' => array( __( 'Library', 'riff' ), add_query_arg( self::VIEW, 'library', $page ) ),
 		);
-		// The site's name heads the sidebar; as tabs it is hidden.
+		// The site's name heads the sidebar, and a phone's top row; as tabs it is hidden. The brand
+		// carries the view showing, which the tabs alone cannot say (an album marks Albums), so a
+		// phone can keep its chips to the lists.
 		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which view is showing; nothing changes.
+		$view = $current['view'] ?? ( empty( $_GET[ App::QUERY ] ) ? 'home' : 'post' );
 		$html = sprintf(
-			'<span class="riff-app-brand"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button><span class="riff-app-name">%s</span></span>',
+			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button><span class="riff-app-name">%s</span></span>',
+			esc_attr( $view ),
 			esc_attr__( 'Sidebar', 'riff' ),
 			esc_html( '' !== $name ? $name : 'Riff' )
 		);
 		foreach ( $links as $slug => list( $label, $href ) ) {
 			$html .= sprintf(
 				'<a class="riff-app-tab%s" href="%s"%s><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="%s"/></svg><span>%s</span></a>',
-				'home' === $slug ? ' riff-app-home' : ( 'library' === $slug ? ' riff-app-tab-library' : '' ),
+				array( 'home' => ' riff-app-home', 'search' => ' riff-app-tab-search', 'library' => ' riff-app-tab-library' )[ $slug ] ?? '', // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 				esc_url( $href ),
 				$slug === $here ? ' aria-current="page"' : '',
 				esc_attr( self::ICONS[ $slug ] ),

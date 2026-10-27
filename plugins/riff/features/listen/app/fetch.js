@@ -140,7 +140,10 @@ export function fetching( ctx ) {
 		window.requestIdleCallback || ( ( fn ) => setTimeout( fn, 1200 ) );
 	idle( () => {
 		for ( const tab of nav?.querySelectorAll( 'a[href]' ) || [] ) {
-			prefetch( tab.href );
+			// Not a tab this screen hides, as Search is beside a field always in view.
+			if ( tab.getClientRects().length ) {
+				prefetch( tab.href );
+			}
 		}
 	} );
 

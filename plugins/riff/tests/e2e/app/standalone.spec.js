@@ -102,22 +102,52 @@ test.describe( 'Standalone', () => {
 		}
 	} );
 
-	test( 'on a wide screen the navigation is a sidebar; on a phone it stays tabs', async ( {
+	test( 'on a wide screen the navigation is a sidebar; on a phone Home, Search and Library are tabs along the bottom, the bar on them', async ( {
 		page,
 		isMobile,
 	} ) => {
-		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const app = pageUrl.replace( /\/?$/, '/' ) + 'app/';
+		await page.goto( app );
 		const nav = await page.locator( '.riff-app-bar' ).boundingBox();
 		const view = await page.locator( '.riff-app-view' ).boundingBox();
 		const brand = page.locator( '.riff-app-brand' );
-		if ( isMobile ) {
-			await expect( brand ).toBeHidden();
-			expect( nav.y + nav.height ).toBeLessThanOrEqual( view.y + 1 );
-		} else {
-			await expect( brand ).toBeVisible();
+		const search = page.locator( '.riff-app-tab-search' );
+		await expect( brand ).toBeVisible();
+		if ( ! isMobile ) {
 			expect( nav.x + nav.width, 'the column sits left of the view' ).toBeLessThanOrEqual( view.x + 1 );
 			await expect( page.locator( '.riff-app-tab svg' ).first() ).toBeVisible();
+			await expect( search, 'the field is in view, so Search is no tab' ).toBeHidden();
+			return;
 		}
+		// At the top, one slim row (the site's name and Sign in) and the lists as chips.
+		expect( nav.y + nav.height ).toBeLessThanOrEqual( view.y + 1 );
+		expect( nav.height ).toBeLessThan( 120 );
+		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeVisible();
+		await expect( page.locator( '.riff-app-search' ) ).toBeHidden();
+		// Along the bottom, Home, Search and Library, each a full-height target, still in the navigation.
+		const height = page.viewportSize().height;
+		const tabs = page.locator( '.riff-app-bar' ).locator( '.riff-app-home, .riff-app-tab-search, .riff-app-tab-library' );
+		await expect( tabs ).toHaveCount( 3 );
+		for ( let i = 0; i < 3; i++ ) {
+			const box = await tabs.nth( i ).boundingBox();
+			expect( box.height ).toBeGreaterThanOrEqual( 44 );
+			expect( Math.abs( box.y + box.height - height ) ).toBeLessThanOrEqual( 1 );
+		}
+		await expect( page.locator( '.riff-app-home' ) ).toHaveAttribute( 'aria-current', 'page' );
+		// Search opens a view of its own: the field, and the lists as tiles; the chips give way.
+		await search.click();
+		await expect( page ).toHaveURL( /riff_view=search/ );
+		await expect( search ).toHaveAttribute( 'aria-current', 'page' );
+		await expect( page.locator( '.riff-app-search input' ) ).toBeVisible();
+		await expect( page.locator( '.riff-browse-tile' ) ).toHaveCount( 4 );
+		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeHidden();
+		// Playing, the bar sits on the tabs, and an album has no chips over it.
+		await page.goto( app + `?riff=${ postId }` );
+		await page.locator( '.riff-row' ).first().click();
+		const bar = await page.locator( '#riff .riff-bar' ).boundingBox();
+		const home = await page.locator( '.riff-app-home' ).boundingBox();
+		expect( Math.abs( bar.y + bar.height - home.y ) ).toBeLessThanOrEqual( 1 );
+		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeHidden();
 	} );
 
 	test( 'the app\'s buttons are pills on a phone as on a wide screen', async ( {

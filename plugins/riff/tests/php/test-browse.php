@@ -192,12 +192,26 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertSame( 'blue', Browse::requested()['search'] );
 	}
 
+	public function test_the_search_tab_opens_search_with_the_lists_to_browse(): void {
+		$_GET[ Browse::VIEW ] = 'search';
+		$this->assertSame( array( 'search', '' ), array( Browse::requested()['view'], Browse::requested()['search'] ) );
+		unset( $_GET[ Browse::VIEW ] );
+
+		$html = $this->render_at( array( Browse::VIEW => 'search' ) );
+		$this->assertStringContainsString( 'riff_view=search" aria-current="page"', $html );
+		$this->assertStringContainsString( 'data-riff-view="search"', $html );
+		$this->assertStringContainsString( '<h2 class="riff-app-title" tabindex="-1">Browse all</h2>', $html );
+		$this->assertSame( 4, substr_count( $html, 'class="riff-browse-tile"' ) );
+		$this->assertMatchesRegularExpression( '#class="riff-browse-tile" href="[^"]*riff_view=albums"#', $html );
+	}
+
 	public function test_the_navigation_marks_where_you_are_and_search_works_without_the_script(): void {
 		$html = $this->render_at( array( Browse::VIEW => 'albums' ) );
 
 		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab" href="[^"]*riff_view=albums" aria-current="page"><svg[^>]*><path d="[^"]+"/></svg><span>Albums</span></a>#', $html );
 		$this->assertStringContainsString( '<a class="riff-app-tab riff-app-home" href="' . esc_url( get_permalink( $this->page ) ) . '"><svg', $html, 'the library link the script and the tests know' );
-		$this->assertStringContainsString( '<span class="riff-app-brand">', $html, 'the site\'s name, for the sidebar' );
+		$this->assertStringContainsString( '<span class="riff-app-brand" data-riff-view="albums">', $html, 'the site\'s name, for the sidebar, with the view showing' );
+		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab riff-app-tab-search" href="[^"]*riff_view=search"><svg#', $html, 'Search, a tab on a phone' );
 		$this->assertStringContainsString( 'role="search" action="' . esc_url( strtok( get_permalink( $this->page ), '?' ) ) . '" method="get"', $html );
 		$this->assertStringContainsString( 'name="riff_search"', $html );
 		$this->assertStringContainsString( 'data-riff-browse="riff_view,riff_album,riff_artist,riff_search,riff_filter,riff_sort,riff_playlist"', $html );
