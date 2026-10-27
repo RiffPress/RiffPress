@@ -135,7 +135,7 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 5.3.0 =
 * Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf.
-* The quality badge is a capsule pressed into the bar, as Tidal's is, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it.
+* The quality badge is a capsule pressed into the bar, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it.
 * The quality capsule reads on the bar's black, its bevel lit from above and a lossy file's words a cooler white.
 * The sleeve lies flat beside the turntable, as on the desk it stands on, apart from its plinth.
 

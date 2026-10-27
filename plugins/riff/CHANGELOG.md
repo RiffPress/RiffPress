@@ -40,7 +40,7 @@
 ### Features
 
 * **player:** Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf ([#694](https://github.com/RiffPress/RiffPress/issues/694)) ([dda424b](https://github.com/RiffPress/RiffPress/commit/dda424b8818e44806d109ef1dd62cd3a22310658))
-* **player:** the quality badge is a capsule pressed into the bar, as Tidal's is, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it ([#697](https://github.com/RiffPress/RiffPress/issues/697)) ([364bf1c](https://github.com/RiffPress/RiffPress/commit/364bf1c16bf90f446e670efb23fe619660f30b4a))
+* **player:** the quality badge is a capsule pressed into the bar, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it ([#697](https://github.com/RiffPress/RiffPress/issues/697)) ([364bf1c](https://github.com/RiffPress/RiffPress/commit/364bf1c16bf90f446e670efb23fe619660f30b4a))
 * **player:** the quality capsule reads on the bar's black, its bevel lit from above and a lossy file's words a cooler white ([#699](https://github.com/RiffPress/RiffPress/issues/699)) ([ec55b9e](https://github.com/RiffPress/RiffPress/commit/ec55b9e19ac9bff5f052fd8871a8adc774ec5954))
 * **player:** the sleeve lies flat beside the turntable, as on the desk it stands on, apart from its plinth ([#700](https://github.com/RiffPress/RiffPress/issues/700)) ([dcceac5](https://github.com/RiffPress/RiffPress/commit/dcceac5c8a3b6e075255ca42bc90d8ceb0cd6e57))
 
