@@ -111,6 +111,43 @@
 	display: none;
 }
 
+/* Search is a tab only along a phone's bottom in standalone mode
+   (standalone.css); everywhere else its field is always in view. */
+.riff-app .riff-app-bar .riff-app-tab.riff-app-tab-search {
+	display: none;
+}
+
+/* Search before any words: the lists as tiles, as the apps' Search tab
+   opens, each in a colour of the drawn covers. */
+.riff-app .riff-browse {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.riff-app .riff-browse-tile {
+	display: flex;
+	min-height: 96px;
+	padding: 16px;
+	border-radius: 8px;
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-decoration: none;
+}
+
+.riff-app .riff-browse-tile:hover {
+	opacity: 0.88;
+}
+
+.riff-app .riff-browse-tile:focus-visible {
+	outline: 2px solid var(--riff-app-ink);
+	outline-offset: 2px;
+}
+
 .riff-app .riff-app-tab:hover,
 .riff-app .riff-app-tab:focus-visible {
 	color: var(--riff-app-ink);

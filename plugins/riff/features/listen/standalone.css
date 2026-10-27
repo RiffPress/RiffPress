@@ -660,3 +660,197 @@ html.has-riff .riff-standalone .riff-app {
 	-webkit-user-select: text;
 	user-select: text;
 }
+
+/* ---- On a phone, standalone mode is laid out as the apps are there: Home,
+   Search and Library as tabs along the bottom with the bar docked over them,
+   and at the top one slim row, the site's name and who is listening, with the
+   lists as chips under it on Home and on each list. The tabs stay in the
+   navigation they belong to and are only placed at the bottom, so the order
+   a keyboard and a screen reader meet them in is unchanged. */
+@media (max-width: 899px) {
+
+	.riff-standalone {
+		--riff-tabs-h: calc(56px + var(--riff-safe-b));
+	}
+
+	.riff-standalone .riff-app {
+		padding-top: calc(var(--riff-safe-t) + 8px);
+		padding-bottom: calc(var(--riff-tabs-h) + 32px);
+	}
+
+	/* The bar sits on the tabs, and the page keeps room for both. */
+	.riff-standalone #riff .riff-bar {
+		bottom: var(--riff-tabs-h);
+		height: var(--riff-bar-h);
+		padding-bottom: 0;
+	}
+
+	html.has-riff body.riff-standalone::after {
+		height: var(--riff-bar-h);
+	}
+
+	html.has-riff:has(body.riff-standalone) {
+		scroll-padding-bottom: calc(var(--riff-bar-h) + var(--riff-tabs-h) + 16px);
+	}
+
+	.riff-standalone #riff .riff-toast {
+		bottom: calc(var(--riff-bar-h) + var(--riff-tabs-h) + 16px);
+	}
+
+	.riff-standalone .riff-app-bar {
+		gap: 0 8px;
+		margin-bottom: 24px;
+		border-bottom: 0;
+	}
+
+	.riff-standalone .riff-app-brand {
+		display: flex;
+		flex: 1 1 0;
+		align-items: center;
+		min-width: 0;
+		min-height: 48px;
+		font-size: 22px;
+		font-weight: 700;
+	}
+
+	/* There is no sidebar to fold, the desktop app's narrow window included. */
+	.riff-standalone .riff-app .riff-app-collapse,
+	html.riff-desktop .riff-standalone .riff-app .riff-app-brand .riff-app-collapse {
+		display: none;
+	}
+
+	.riff-standalone .riff-app-name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.riff-standalone .riff-app .riff-app-account,
+	.riff-standalone .riff-app .riff-app-signin {
+		order: 1;
+		margin: 0;
+	}
+
+	.riff-standalone .riff-app .riff-app-signin {
+		padding: 0 18px;
+		font-size: 14px;
+	}
+
+	/* A break: the chips start a line of their own. */
+	.riff-standalone .riff-app-bar::before {
+		content: "";
+		order: 2;
+		flex-basis: 100%;
+	}
+
+	/* The lists, as chips: a pill inside each 44px tab, filled for the one
+	   showing. Only on Home and on the lists themselves; an album, a search or
+	   Your Library has its own head. */
+	.riff-standalone .riff-app .riff-app-tab {
+		order: 3;
+		min-height: 44px;
+		color: var(--riff-app-ink);
+		font-size: 14px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab span {
+		padding: 6px 14px;
+		border-radius: 999px;
+		background: var(--riff-app-surface);
+		line-height: 20px;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab[aria-current="page"] {
+		box-shadow: none;
+	}
+
+	.riff-standalone .riff-app .riff-app-tab[aria-current="page"] span {
+		background: var(--riff-app-ink);
+		color: var(--riff-app-bg);
+	}
+
+	.riff-standalone .riff-app-bar:not(:has(> .riff-app-brand:is([data-riff-view="home"], [data-riff-view="albums"], [data-riff-view="artists"], [data-riff-view="tracks"], [data-riff-view="posts"]))) > .riff-app-tab:not(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library) {
+		display: none;
+	}
+
+	/* Search's field shows on the Search tab, under the top row. */
+	.riff-standalone .riff-app .riff-app-search {
+		display: none;
+		order: 4;
+		flex-basis: 100%;
+		margin: 8px 0 0;
+	}
+
+	.riff-standalone .riff-app-bar:has(> .riff-app-brand[data-riff-view="search"]) .riff-app-search {
+		display: flex;
+	}
+
+	.riff-standalone .riff-app .riff-app-search input {
+		min-height: 48px;
+		max-width: none;
+		border: 0;
+		border-radius: 8px;
+		background: var(--riff-app-ink);
+		color: var(--riff-app-bg);
+		font-size: 16px;
+	}
+
+	/* The tabs along the bottom: an icon over its name, a third of the width
+	   each, on the bar's own surface. */
+	.riff-standalone .riff-app-bar::after {
+		content: "";
+		position: fixed;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 3;
+		height: var(--riff-tabs-h);
+		background: var(--riff-surface, #212121);
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab:is(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library) {
+		position: fixed;
+		bottom: 0;
+		z-index: 4;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		gap: 2px;
+		width: calc(100% / 3);
+		height: var(--riff-tabs-h);
+		padding-bottom: var(--riff-safe-b);
+		color: var(--riff-app-ink-2);
+		font-size: 11px;
+		font-weight: 500;
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-home {
+		left: 0;
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab-search {
+		left: calc(100% / 3);
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab-library {
+		left: calc(200% / 3);
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab:is(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library) span {
+		padding: 0;
+		background: none;
+		color: inherit;
+		line-height: 16px;
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab:is(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library) svg {
+		display: block;
+		width: 24px;
+		height: 24px;
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab:is(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library)[aria-current="page"] {
+		color: var(--riff-app-ink);
+	}
+}

@@ -59,7 +59,8 @@ test.describe( 'Browse', () => {
 	test( 'the tabs are fetched ahead, so choosing one waits on nothing', async ( {
 		page,
 	} ) => {
-		const tabs = page.locator( '.riff-app-tab[href*="riff_view="]' );
+		// Search is a tab only on a phone in standalone mode; here its field is in view.
+		const tabs = page.locator( '.riff-app-tab[href*="riff_view="]:visible' );
 		await expect( tabs ).toHaveCount( 5 );
 		// Once the page is idle every tab's view is fetched; this page's own resource timings show
 		// when all five have arrived.
