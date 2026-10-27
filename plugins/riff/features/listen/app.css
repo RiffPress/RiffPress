@@ -586,6 +586,31 @@
 	gap: 32px 24px;
 }
 
+/* On a phone the cards stand two to a row, as the apps lay out albums and
+   playlists there, rather than one cover the width of the screen; a tablet
+   fits three or four. The play button keeps its 44px and moves nearer the
+   corner of the smaller cover. */
+@media (max-width: 599px) {
+
+	.riff-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 24px 16px;
+	}
+
+	.riff-app .riff-grid .riff-card-play {
+		right: 8px;
+		bottom: 8px;
+	}
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+
+	.riff-grid {
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		gap: 28px 20px;
+	}
+}
+
 /* A card is a link and a play button side by side, never one inside the
    other: the link stretches over the whole card through its ::after, and
    the button sits above that. */
