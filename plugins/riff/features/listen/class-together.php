@@ -74,8 +74,9 @@ final class Together {
 		}
 		/**
 		 * GET /riff/v1/together: everyone else playing on the site, newest first, with the room's
-		 * version. Given the version it last had, while nothing has changed or expired, it answers
-		 * `{ version, changed: false }` without reading the room. POST shares what the listener is
+		 * version. Given the version it last had, while no one has arrived, left, changed what they
+		 * share or dropped out, it answers `{ version, changed: false }` without looking up anyone's
+		 * track. POST shares what the listener is
 		 * playing and answers the same; DELETE stops sharing.
 		 *
 		 * @since 5.6.0
@@ -90,7 +91,7 @@ final class Together {
 					'permission_callback' => array( self::class, 'allowed' ),
 					'args'                => array(
 						'version' => array(
-							'description' => __( 'The room\'s version the player last had.', 'riff' ),
+							'description' => __( 'The room\'s version the player last had, as this route gave it.', 'riff' ),
 							'type'        => 'string',
 						),
 					),
@@ -192,8 +193,9 @@ final class Together {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_room( WP_REST_Request $request ): WP_REST_Response {
-		$version = self::version();
-		if ( null !== $request['version'] && (string) $request['version'] === $version && ! self::expired() ) {
+		$entries = wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX ) );
+		$version = self::version( $entries );
+		if ( null !== $request['version'] && (string) $request['version'] === $version ) {
 			return new WP_REST_Response(
 				array(
 					'version' => $version,
@@ -201,7 +203,7 @@ final class Together {
 				)
 			);
 		}
-		return new WP_REST_Response( self::room( wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX ) ), $version ) );
+		return new WP_REST_Response( self::room( $entries, $version ) );
 	}
 
 	/**
@@ -244,7 +246,7 @@ final class Together {
 		if ( is_wp_error( $entries ) ) {
 			return new WP_Error( 'riff_together_unavailable', __( 'Listening together is not available right now.', 'riff' ), array( 'status' => 503 ) );
 		}
-		return new WP_REST_Response( self::room( $entries, self::version() ) );
+		return new WP_REST_Response( self::room( $entries, self::version( $entries ) ) );
 	}
 
 	/**
@@ -255,8 +257,8 @@ final class Together {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_leave(): WP_REST_Response {
-		$entries = wp_presence_leave( self::ROOM, self::PREFIX . get_current_user_id(), array( 'client_prefix' => self::PREFIX ) );
-		return new WP_REST_Response( self::room( (array) $entries, self::version() ) );
+		$entries = (array) wp_presence_leave( self::ROOM, self::PREFIX . get_current_user_id(), array( 'client_prefix' => self::PREFIX ) );
+		return new WP_REST_Response( self::room( $entries, self::version( $entries ) ) );
 	}
 
 	/**
@@ -347,23 +349,20 @@ final class Together {
 	}
 
 	/**
-	 * The room's version, which moves when someone arrives, leaves or changes what they share.
+	 * The room's version: the Presence API's, which moves when someone arrives, leaves or changes
+	 * what they share, with who is in the room now, which changes when someone drops out, as the
+	 * Presence API's version doesn't. The player keeps it as it is given.
 	 *
+	 * @param object[] $entries The room's rows, read with the version.
 	 * @return string|null Null for an empty room.
 	 */
-	private static function version(): ?string {
-		$versions = wp_get_presence_room_versions( array( self::ROOM ) );
-		return isset( $versions[ self::ROOM ] ) ? (string) $versions[ self::ROOM ] : null;
-	}
-
-	/**
-	 * Whether a row has expired since the room last changed, which doesn't move its version.
-	 *
-	 * @return bool
-	 */
-	private static function expired(): bool {
-		$expiry = wp_get_presence_room_next_expiry( array( self::ROOM ) );
-		return isset( $expiry[ self::ROOM ] ) && strtotime( $expiry[ self::ROOM ] . ' UTC' ) <= time();
+	private static function version( array $entries ): ?string {
+		if ( ! $entries ) {
+			return null;
+		}
+		$clients = wp_list_pluck( $entries, 'client_id' );
+		sort( $clients );
+		return ( wp_get_presence_room_versions( array( self::ROOM ) )[ self::ROOM ] ?? '' ) . '-' . substr( md5( implode( ' ', $clients ) ), 0, 8 );
 	}
 
 	/**

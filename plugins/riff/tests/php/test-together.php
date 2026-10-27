@@ -205,6 +205,21 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertSame( (string) $this->tracks[1], (string) $room['listeners'][0]['track']['id'] );
 	}
 
+	public function test_a_listener_who_drops_out_without_leaving_changes_the_version(): void {
+		global $wpdb;
+		$this->share( $this->host, $this->queue() );
+		$this->share( $this->guest, $this->queue() );
+		$version = $this->call( 'GET', '/together' )->get_data()['version'];
+
+		// The host closed the tab: their row runs out, which doesn't move the Presence API's version.
+		$wpdb->update( $wpdb->presence, array( 'expires_gmt' => gmdate( 'Y-m-d H:i:s', time() - 1 ) ), array( 'client_id' => 'riff-' . $this->host ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a test, ageing a row.
+		// Its reads are cached for the second, which a real row's running out moves past.
+		wp_cache_set_last_changed( 'presence' );
+		$room = $this->call( 'GET', '/together', array( 'version' => $version ) )->get_data();
+		$this->assertTrue( $room['changed'] );
+		$this->assertSame( array(), $room['listeners'] );
+	}
+
 	public function test_leaving_takes_the_listener_out_of_the_room(): void {
 		$this->share( $this->host, $this->queue() );
 		$this->assertSame( 200, $this->call( 'DELETE', '/together' )->get_status() );
