@@ -40,6 +40,12 @@ html:has(#riff.is-open) {
 	overflow: hidden;
 }
 
+/* Once Now Playing covers the page, the page is neither styled nor painted
+   until it starts to close. */
+[data-riff-covered] {
+	content-visibility: hidden;
+}
+
 /* Room at the end of the page, so the bar never covers a post's last line. */
 html.has-riff body::after {
 	content: "";

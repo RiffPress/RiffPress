@@ -43,8 +43,16 @@ test.describe( 'Player', () => {
 		// The page under it stays still: no scrolling behind it, no second scrollbar beside Up next.
 		const scrolls = () => page.evaluate( () => getComputedStyle( document.documentElement ).overflowY );
 		expect( await scrolls() ).toBe( 'hidden' );
+		// Once it has slid over the page, the page is neither styled nor painted, and keeps its
+		// place.
+		const covered = page.locator( 'body > [data-riff-covered]' ).first();
+		await expect( covered ).toHaveCSS( 'content-visibility', 'hidden' );
+		const height = () => page.evaluate( () => document.documentElement.scrollHeight );
+		const tall = await height();
 		await page.keyboard.press( 'Escape' );
 		await expect( np ).toBeHidden();
+		await expect( page.locator( '[data-riff-covered]' ) ).toHaveCount( 0 );
+		expect( await height(), 'the page is as tall as it was' ).toBe( tall );
 		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
 		expect( await scrolls(), 'and scrolls again once it closes' ).not.toBe( 'hidden' );
 	} );
