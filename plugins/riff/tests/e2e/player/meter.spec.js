@@ -162,27 +162,24 @@ test.describe( 'Player', () => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		const glow = await page.evaluate( () => {
 			const line = document.querySelector( '.riff-bar-seek .riff-line' );
-			const after = getComputedStyle( line, '::after' );
+			const frame = getComputedStyle( line.querySelector( '.riff-bloom' ) );
+			const after = getComputedStyle( line.querySelector( '.riff-bloom' ), '::after' );
 			return {
-				mask: after.maskImage || after.webkitMaskImage,
+				start: frame.maskImage || frame.webkitMaskImage,
+				end: after.maskImage || after.webkitMaskImage,
 				shadow: getComputedStyle( line.querySelector( '.riff-hot' ) ).boxShadow,
 			};
 		} );
-		// The bloom is its own layer, faded at both ends: out before the knob, and in from the
-		// line's start, so the line's clip shows no edge. A box-shadow on the stretched hot layer
-		// is what drew the square edge.
-		const [ end, start ] = glow.mask.split( /\),\s*linear-gradient/ );
-		expect( end ).toMatch( /rgba\( *0, *0, *0, *0 *\)$/ );
-		expect( start ).toMatch( /^\(90deg, rgba\( *0, *0, *0, *0 *\)/ );
+		// The bloom is faded at both ends: in from the line's start on a still frame, and out
+		// before the knob on the glow that slides, so neither fade reads the position and is
+		// repainted as it changes. A box-shadow on the stretched hot layer is what drew the
+		// square edge.
+		expect( glow.start ).toMatch( /^linear-gradient\(90deg, rgba\( *0, *0, *0, *0 *\)/ );
+		expect( glow.start ).not.toContain( 'calc' );
+		expect( glow.end ).toMatch( /rgba\( *0, *0, *0, *0 *\)\)$/ );
+		expect( glow.end ).not.toContain( '--riff-p' );
 		expect( glow.shadow ).toBe( 'none' );
 		// Now Playing's seek line is plain white: no bloom tints it.
-		const np = await page.evaluate(
-			() =>
-				getComputedStyle(
-					document.querySelector( '.riff-np-seek .riff-line' ),
-					'::after'
-				).content
-		);
-		expect( np ).toBe( 'none' );
+		await expect( page.locator( '.riff-np-seek .riff-bloom' ) ).toHaveCount( 0 );
 	} );
 } );
