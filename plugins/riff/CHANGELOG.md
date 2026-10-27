@@ -1,5 +1,27 @@
 # Changelog
 
+## [5.5.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.4.0...riff-v5.5.0) (2026-10-27)
+
+
+### Features
+
+* **app:** on a phone, Home, Search and Library are tabs along the bottom ([#726](https://github.com/RiffPress/RiffPress/issues/726)) ([7fdf697](https://github.com/RiffPress/RiffPress/commit/7fdf6975045cf40bd3183464093ff0dc772a77ee))
+* **player:** the turntable's sleeve puts the record away and plays it again, and its arm is put down on any band of the side, by hand, by two clicks or from the keyboard ([#731](https://github.com/RiffPress/RiffPress/issues/731)) ([3e97e13](https://github.com/RiffPress/RiffPress/commit/3e97e134fa2d920b8a0c93e6b505898c1c9f2331))
+
+
+### Bug Fixes
+
+* **app:** on a phone an album opens as the apps open one ([#722](https://github.com/RiffPress/RiffPress/issues/722)) ([dabaf27](https://github.com/RiffPress/RiffPress/commit/dabaf273cb51ce3b959410c83b2f29351e739c66))
+* **app:** on a phone the cards stand two to a row ([#723](https://github.com/RiffPress/RiffPress/issues/723)) ([410313c](https://github.com/RiffPress/RiffPress/commit/410313cc2a7079f222677cdac9c302dcd1d001c0))
+* **player:** on a phone Now Playing's art is as wide as the screen allows ([#724](https://github.com/RiffPress/RiffPress/issues/724)) ([b38a91f](https://github.com/RiffPress/RiffPress/commit/b38a91f5b5dfa070cfe90747acf5156183f5cca8))
+
+
+### Performance Improvements
+
+* **player:** once Now Playing has slid over the page, the page under it is neither styled nor painted, keeping its height and its place, until Now Playing starts to close ([#727](https://github.com/RiffPress/RiffPress/issues/727)) ([3a74151](https://github.com/RiffPress/RiffPress/commit/3a741518104c39d4aa5dd88146bf5bba9771514a))
+* **player:** the run-out etching's layer is the record's square whatever its text, so it is painted once and only turned ([#728](https://github.com/RiffPress/RiffPress/issues/728)) ([f9342c3](https://github.com/RiffPress/RiffPress/commit/f9342c3cbf34c597966987e4205ef98c51f0feed))
+* **player:** the seek line's bloom fades in from the line's start on a still frame and out before the knob on the glow that slides, so neither fade is repainted as the music plays ([#729](https://github.com/RiffPress/RiffPress/issues/729)) ([c2e70fa](https://github.com/RiffPress/RiffPress/commit/c2e70fab11903a143bbf19c9afe071accc1478a2))
+
 ## [5.4.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.3.0...riff-v5.4.0) (2026-10-26)
 
 
