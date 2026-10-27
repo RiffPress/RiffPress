@@ -20,6 +20,11 @@
     "afterStart": "npx wp-env run cli wp rewrite structure '/%postname%/' --hard >/dev/null && npx wp-env run tests-cli wp rewrite structure '/%postname%/' --hard >/dev/null"
   },
   "env": {
+    "development": {
+      "mappings": {
+        "wp-content/mu-plugins": "./packages/dev"
+      }
+    },
     "tests": {
       "plugins": [
         "./plugins/riff",
