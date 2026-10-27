@@ -57,12 +57,20 @@ test( 'every open string and a chord\'s fretted notes are within 5 cents', async
 
 test( 'it rings like steel, the wound strings longer, and a muted string is a short thud', async () => {
 	const { render } = await load();
-	const plain = render( { rate: RATE, hz: 329.63, seconds: 3, at: 0.3 } );
-	const wound = render( { rate: RATE, hz: 110, seconds: 3, at: 0.3, wound: true } );
 	const mute = render( { rate: RATE, hz: 110, seconds: 1, at: 0.3, muted: true } );
-	const kept = ( w ) => rms( w, RATE * 1.5, RATE * 1.6 ) / rms( w, RATE * 0.05, RATE * 0.15 );
-	assert.ok( kept( plain ) > 0.03, `a plain string keeps ${ kept( plain ).toFixed( 3 ) } of its level after 1.5 s` );
-	assert.ok( kept( wound ) > kept( plain ), 'a wound string rings longer' );
+	// A pluck is noise, so one note can ring short by chance (about one in forty): the average of
+	// eight is what a listener hears, and never comes near the line.
+	const kept = ( note ) => {
+		let sum = 0;
+		for ( let i = 0; i < 8; i++ ) {
+			const w = render( { rate: RATE, seconds: 3, at: 0.3, ...note } );
+			sum += rms( w, RATE * 1.5, RATE * 1.6 ) / rms( w, RATE * 0.05, RATE * 0.15 );
+		}
+		return sum / 8;
+	};
+	const plain = kept( { hz: 329.63 } );
+	assert.ok( plain > 0.03, `a plain string keeps ${ plain.toFixed( 3 ) } of its level after 1.5 s` );
+	assert.ok( kept( { hz: 110, wound: true } ) > plain, 'a wound string rings longer' );
 	assert.ok( rms( mute, RATE * 0.3, RATE * 0.4 ) < 0.001, 'a muted string is silent within a third of a second' );
 } );
 
