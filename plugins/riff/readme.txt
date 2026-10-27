@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.2
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.4.0
+Stable tag: 5.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,16 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.5.0 =
+* On a phone, Home, Search and Library are tabs along the bottom.
+* The turntable's sleeve puts the record away and plays it again, and its arm is put down on any band of the side, by hand, by two clicks or from the keyboard.
+* Fixed: on a phone an album opens as the apps open one.
+* Fixed: on a phone the cards stand two to a row.
+* Fixed: on a phone Now Playing's art is as wide as the screen allows.
+* Faster: once Now Playing has slid over the page, the page under it is neither styled nor painted, keeping its height and its place, until Now Playing starts to close.
+* Faster: the run-out etching's layer is the record's square whatever its text, so it is painted once and only turned.
+* Faster: the seek line's bloom fades in from the line's start on a still frame and out before the knob on the glow that slides, so neither fade is repainted as the music plays.
+
 = 5.4.0 =
 * The turntable is drawn as a real one is: a steel spindle on the deck, a printed label with the side's tracks, a cradle for the arm, an etched run-out and a strobe rim lit by its lamp.
 * Fixed: the turntable stands only on a stage wide enough for it, so a phone held upright shows the cover alone; the label is printed in zones round the spindle, which shows once the record rests on it.
@@ -137,9 +147,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: the app's manifest names each icon by the size it really is, so a browser does not skip a site icon set without the Customizer's crop.
 * Fixed: Your Library has no Songs chip that left the library: Liked songs is pinned first under Playlists, as the apps file it.
 * Fixed: the Riff block shows the app in the editor as it is on the page, with the app's own stylesheet.
-
-= 5.2.2 =
-* Fixed: the install card shows Riff's own icon when the site icon's file is gone, rather than a broken image.
-* Fixed: Stop shows only on a phone, beside Share, where it stands in for the swipe that stops the player, and Cast sits in the bar beside the volume at every width.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
