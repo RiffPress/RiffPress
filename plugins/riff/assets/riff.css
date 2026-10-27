@@ -2439,6 +2439,47 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
+/* ---- Now Playing on a phone, as YouTube Music lays it out: the art as wide
+   as the screen allows, 24px from either edge, with the title, the seek bar
+   and the controls lined up under its edges. Everything below the art keeps
+   to what it needs, so the art takes the rest. Closed, Up next is its handle
+   and source only; the queue's head belongs to the open sheet. */
+@media (max-width: 899px) {
+
+	.riff-stage {
+		padding: 16px 24px 20px;
+	}
+
+	.riff-np-panel {
+		padding: 0 24px;
+	}
+
+	.riff-chips {
+		margin: 16px -24px 0;
+		padding: 0 24px;
+	}
+
+	.riff-np-seek {
+		margin-top: 12px;
+	}
+
+	/* The capsule keeps its look at a phone's size. */
+	#riff .riff-np-quality .riff-quality {
+		height: 28px;
+		padding: 0 12px;
+		font-size: 12px;
+	}
+
+	#riff .riff-peek {
+		gap: 8px;
+		padding: 12px 24px 16px;
+	}
+
+	#riff .riff-np:not([data-sheet="half"], [data-sheet="full"]) .riff-queue-head {
+		display: none;
+	}
+}
+
 @media (max-height: 700px) and (max-width: 899px) {
 
 	.riff-stage {

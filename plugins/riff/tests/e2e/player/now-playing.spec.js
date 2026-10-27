@@ -1,5 +1,5 @@
 /**
- * Now Playing: opened from the bar and closed with Escape, the art square and the bar held to its measurements on a wide screen, the Song and Video switch, a contrast theme, and axe.
+ * Now Playing: opened from the bar and closed with Escape, the art square and the bar held to its measurements on a wide screen, the art as wide as a phone allows, the Song and Video switch, a contrast theme, and axe.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -109,6 +109,37 @@ test.describe( 'Player', () => {
 		const times = page.locator( '.riff-bar .riff-time' );
 		expect( ( await times.nth( 0 ).boundingBox() ).x ).toBeLessThan( seek.x );
 		expect( ( await times.nth( 1 ).boundingBox() ).x ).toBeGreaterThan( seek.x + seek.width - 1 );
+	} );
+
+	test( 'on a phone the art is as wide as the screen allows, and closed, Up next is only its handle', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( ! isMobile, 'the phone layout only' );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await page.locator( '.riff-bar-info' ).click();
+		const cover = page.locator( '.riff-np .riff-cover' );
+		await expect( cover ).toBeVisible();
+		// The queue's head belongs to the open sheet, not under the closed one's handle.
+		await expect( page.locator( '.riff-queue-head' ) ).toBeHidden();
+		// A short phone keeps most of its width for the art, and everything still fits on the
+		// screen once Now Playing has slid up.
+		const short = page.viewportSize();
+		expect( await cover.evaluate( ( el ) => el.offsetWidth ) ).toBeGreaterThanOrEqual( short.width * 0.6 );
+		await expect
+			.poll( async () => {
+				const peek = await page.locator( '.riff-peek' ).boundingBox();
+				return peek.y + peek.height;
+			} )
+			.toBeLessThanOrEqual( short.height + 1 );
+		// A tall one, as YouTube Music draws it: the art 24px from either edge, the title under its edge.
+		await page.setViewportSize( { width: 390, height: 844 } );
+		await expect.poll( () => cover.evaluate( ( el ) => el.offsetWidth ) ).toBe( 390 - 48 );
+		const art = await cover.boundingBox();
+		const title = await page.locator( '.riff-np-title' ).boundingBox();
+		expect( Math.abs( title.x - art.x ) ).toBeLessThanOrEqual( 1 );
+		await page.locator( '.riff-peek' ).click();
+		await expect( page.locator( '.riff-queue-head' ) ).toBeVisible();
 	} );
 
 	test( 'a track with a video switches to it without losing its place', async ( {
