@@ -8,7 +8,7 @@ In VS Code, accept the recommended extensions (`.vscode/extensions.json`): ESLin
 
 ```bash
 npm install && composer install
-npm run env:start          # WordPress at http://localhost:8890 (admin / password); the tests site at :8891. Core is the 7.2 build Riff needs: the current beta or release candidate until 7.2 ships on 8 December 2026
+npm run env:start          # WordPress at http://localhost:8890 (admin / password); the tests site at :8891. Core is the 7.2 beta or release candidate until 7.2 ships on 8 December 2026, so the fields only 7.2 shows can be worked on; Riff itself needs 7.1
 npm run seed               # a post with ten public-domain jazz tracks, and one with a video
 ```
 
