@@ -8,10 +8,16 @@ permissions:
   contents: read
 
 jobs:
+  # A quarter of the suite on each of four runners, each with its own wp-env, so the specs never
+  # share a site. Every runner pays the setup (about two and a half minutes) to run its quarter.
   e2e:
-    name: Playwright
+    name: Playwright (${{ matrix.shard }}/4)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,12 +53,12 @@ jobs:
       # Started here rather than by Playwright's webServer so a boot failure
       # lands in its own step instead of inside the test output.
       - run: npm run env:start
-      - run: npm run test:e2e
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
-          name: e2e-artifacts
+          name: e2e-artifacts-${{ matrix.shard }}
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 7
@@ -60,10 +66,6 @@ jobs:
       - name: WordPress debug log
         if: ${{ failure() }}
         run: npx wp-env run tests-cli -- cat wp-content/debug.log || true
-
-      - name: Stop the testing environment
-        if: ${{ always() }}
-        run: npx wp-env stop || true
 
   # The desktop app, unpacked, driven by Playwright's _electron against the same
   # wp-env tests site (packages/desktop/playwright.config.js). Linux only, under
@@ -107,7 +109,3 @@ jobs:
           path: artifacts/desktop/
           if-no-files-found: ignore
           retention-days: 7
-
-      - name: Stop the testing environment
-        if: ${{ always() }}
-        run: npx wp-env stop || true

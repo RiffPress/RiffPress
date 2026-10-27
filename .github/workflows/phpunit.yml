@@ -62,7 +62,3 @@ jobs:
       - name: WordPress debug log
         if: ${{ failure() }}
         run: npx wp-env run tests-cli -- cat wp-content/debug.log || true
-
-      - name: Stop the testing environment
-        if: ${{ always() }}
-        run: npx wp-env stop || true
