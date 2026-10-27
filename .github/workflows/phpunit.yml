@@ -31,8 +31,10 @@ jobs:
       # core to .wp-env.json, which names the 7.2 build Riff is developed on: the current beta or
       # release candidate until 7.2 ships (8 December 2026), then the release. Until then 7.2 and
       # latest are that same build, and a release line's branch (WordPress/WordPress#7.2) takes
-      # over once it exists. 7.1 is the oldest WordPress Riff runs on, with the oldest PHP.
-      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || matrix.core == '7.1' && 'WordPress/WordPress#7.1-branch' || '' }}
+      # over once it exists. 7.1 is the oldest WordPress Riff runs on, with the oldest PHP. It is the
+      # 7.1 tag, not 7.1-branch: the branch calls itself an alpha, and wp-env pairs an alpha with
+      # trunk's test library, which needs the newer core.
+      WP_ENV_CORE: ${{ matrix.core == 'trunk' && 'WordPress/WordPress#master' || matrix.core == '7.1' && 'WordPress/WordPress#7.1' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
