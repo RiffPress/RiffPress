@@ -46,6 +46,12 @@ final class Together {
 	public const QUEUE_MAX = 100;
 
 	/**
+	 * How far, in seconds, a listener's position may be from where it was said to be heading
+	 * before it counts as a seek: about a beat, which a listener along with them won't notice.
+	 */
+	public const DRIFT = 1.0;
+
+	/**
 	 * Hooks the route, when there is somewhere to keep the room.
 	 *
 	 * @since 5.6.0
@@ -226,17 +232,25 @@ final class Together {
 		if ( $index >= count( $queue ) ) {
 			return new WP_Error( 'rest_invalid_param', __( 'The index is past the end of the queue.', 'riff' ), array( 'status' => 400 ) );
 		}
-		$user    = get_current_user_id();
+		$user  = get_current_user_id();
+		$state = array(
+			'queue'   => $queue,
+			'index'   => $index,
+			'at'      => (float) $request['at'],
+			'since'   => self::now(),
+			'playing' => (bool) $request['playing'],
+		);
+		// Sharing again to stay in the room, with nothing new, keeps what was shared, so the room's
+		// version stays where it was and no one along with them corrects for nothing.
+		$was = self::shared( $user );
+		if ( $was && self::same( $was, $state ) ) {
+			$state['at']    = (float) $was['at'];
+			$state['since'] = (int) $was['since'];
+		}
 		$entries = wp_presence_exchange(
 			self::ROOM,
 			self::PREFIX . $user,
-			array(
-				'queue'   => $queue,
-				'index'   => $index,
-				'at'      => (float) $request['at'],
-				'since'   => self::now(),
-				'playing' => (bool) $request['playing'],
-			),
+			$state,
 			array(
 				'user_id'       => $user,
 				'client_prefix' => self::PREFIX,
@@ -247,6 +261,37 @@ final class Together {
 			return new WP_Error( 'riff_together_unavailable', __( 'Listening together is not available right now.', 'riff' ), array( 'status' => 503 ) );
 		}
 		return new WP_REST_Response( self::room( $entries, self::version( $entries ) ) );
+	}
+
+	/**
+	 * What a listener last shared, or null when they aren't in the room.
+	 *
+	 * @param int $user User ID.
+	 * @return array|null
+	 */
+	private static function shared( int $user ): ?array {
+		foreach ( wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX . $user ) ) as $entry ) {
+			if ( self::PREFIX . $user === $entry->client_id ) {
+				return (array) $entry->data;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Whether two shares say the same: the same queue, track and playing, and the position where
+	 * the first said it would be by the time of the second.
+	 *
+	 * @param array $was The share before.
+	 * @param array $now The share now.
+	 * @return bool
+	 */
+	private static function same( array $was, array $now ): bool {
+		if ( ( $was['queue'] ?? null ) !== $now['queue'] || ( $was['index'] ?? null ) !== $now['index'] || ( $was['playing'] ?? null ) !== $now['playing'] ) {
+			return false;
+		}
+		$heading = (float) ( $was['at'] ?? 0 ) + ( $now['playing'] ? ( $now['since'] - (int) ( $was['since'] ?? 0 ) ) / 1000 : 0 );
+		return abs( $heading - $now['at'] ) <= self::DRIFT;
 	}
 
 	/**

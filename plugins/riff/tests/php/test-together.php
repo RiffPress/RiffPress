@@ -109,10 +109,12 @@ class Test_Riff_Together extends Riff_TestCase {
 	 *
 	 * @param int     $user  Who.
 	 * @param array[] $queue Each `{ id, post }`.
-	 * @param int     $index Which is playing.
+	 * @param int     $index   Which is playing.
+	 * @param float   $at      Where it is.
+	 * @param bool    $playing Whether it plays.
 	 * @return WP_REST_Response
 	 */
-	private function share( int $user, array $queue, int $index = 0 ): WP_REST_Response {
+	private function share( int $user, array $queue, int $index = 0, float $at = 12.5, bool $playing = true ): WP_REST_Response {
 		wp_set_current_user( $user );
 		return $this->call(
 			'POST',
@@ -120,8 +122,8 @@ class Test_Riff_Together extends Riff_TestCase {
 			array(
 				'queue'   => $queue,
 				'index'   => $index,
-				'at'      => 12.5,
-				'playing' => true,
+				'at'      => $at,
+				'playing' => $playing,
 			)
 		);
 	}
@@ -203,6 +205,30 @@ class Test_Riff_Together extends Riff_TestCase {
 		$room = $this->call( 'GET', '/together', array( 'version' => $version ) )->get_data();
 		$this->assertTrue( $room['changed'], 'a skip moves the version' );
 		$this->assertSame( (string) $this->tracks[1], (string) $room['listeners'][0]['track']['id'] );
+	}
+
+	public function test_sharing_again_with_nothing_new_keeps_the_version_and_a_seek_or_pause_moves_it(): void {
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $this->guest );
+		$room = $this->call( 'GET', '/together' )->get_data();
+
+		$this->share( $this->host, $this->queue(), 0, 12.9 );
+		wp_set_current_user( $this->guest );
+		$again = $this->call( 'GET', '/together', array( 'version' => $room['version'] ) )->get_data();
+		$this->assertFalse( $again['changed'], 'within a beat of where it was heading is not a seek' );
+
+		$this->share( $this->host, $this->queue(), 0, 60 );
+		wp_set_current_user( $this->guest );
+		$seek = $this->call( 'GET', '/together', array( 'version' => $room['version'] ) )->get_data();
+		$this->assertTrue( $seek['changed'], 'a seek moves the version' );
+		$this->assertSame( 60.0, $seek['listeners'][0]['at'] );
+		$this->assertGreaterThanOrEqual( $room['listeners'][0]['since'], $seek['listeners'][0]['since'] );
+
+		$this->share( $this->host, $this->queue(), 0, 60, false );
+		wp_set_current_user( $this->guest );
+		$pause = $this->call( 'GET', '/together', array( 'version' => $seek['version'] ) )->get_data();
+		$this->assertTrue( $pause['changed'], 'a pause moves the version' );
+		$this->assertFalse( $pause['listeners'][0]['playing'] );
 	}
 
 	public function test_a_listener_who_drops_out_without_leaving_changes_the_version(): void {
