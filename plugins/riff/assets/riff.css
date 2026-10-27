@@ -1540,18 +1540,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* The run-out: the matrix number scratched by hand into the smooth dead
    wax between the label and the last groove, as every pressing carries,
    on a layer that turns with the label (now-playing.js writes it). It sits
-   midway across the dead wax, wherever the format puts it. */
+   midway across the dead wax, wherever the format puts it. Its layer is
+   the record's square whatever the text, so it is painted once and only
+   turned. */
 .riff-wax {
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
+	contain: strict;
 }
 
 #riff .riff-wax svg {
 	display: block;
 	width: 100%;
 	height: 100%;
-	overflow: visible;
 	scale: var(--riff-etch-scale, 1);
 }
 
