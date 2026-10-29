@@ -265,7 +265,7 @@ div.riff-row-locked {
 	display: none !important;
 }
 
-/* A badge is a pill, as Tidal sets its tier at the right end of the
+/* A badge is a pill, set at the right end of the
    bar. Riff's own is the quality: format and bit rate for the playing
    track. Centred with the controls. */
 .riff-badge {
@@ -284,7 +284,7 @@ div.riff-row-locked {
 	font-variant-numeric: tabular-nums;
 }
 
-/* The quality, as Tidal sets it: a capsule pressed into the bar, its well
+/* The quality: a capsule pressed into the bar, its well
    dark and lit faintly from inside, a bevel catching the light along its
    lower edge, and the words glowing softly in the colour of the tier
    (paint.js): pale for a lossy file, green at CD quality, gold past it. */
@@ -798,7 +798,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		display: none !important;
 	}
 
-	/* Three columns, as Tidal has them: the track, the transport with the
+	/* Three columns: the track, the transport with the
 	   seek line under it, then volume, the quality pill and the caret. */
 	.riff-bar {
 		display: grid;
@@ -1983,7 +1983,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 /* ---- Hearts: in the bar, in Now Playing, and beside a row's … for a track
    in the Media Library. Outlined, and filled while liked. A row's shows on
-   hover and focus, as Spotify's does, and always once the track is liked; on
+   hover and focus, and always once the track is liked; on
    a touch screen only once it is, and the … menu likes it. */
 #riff [aria-pressed="false"] > .riff-heart-on,
 #riff [aria-pressed="true"] > .riff-heart-off,
@@ -2547,7 +2547,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 
 	/* On a phone the badges leave the title and sit between the times,
-	   as Tidal sets its tier: small print in the tier's colour, with no
+	   as a tier: small print in the tier's colour, with no
 	   capsule round it. The capsule is the wide screen's. */
 	#riff .riff-np-quality {
 		display: none;

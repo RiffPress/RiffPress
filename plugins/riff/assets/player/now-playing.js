@@ -197,7 +197,7 @@ export function nowPlaying( P ) {
 			track: P.track() || null,
 		} );
 	}
-	// In Riff's desktop app Now Playing is Tidal's: the art on its own, and a tab opens its panel
+	// In Riff's desktop app Now Playing is the art on its own, and a tab opens its panel
 	// beside it. Pressed again while its panel is open, the tab closes it.
 	function drawer( tab ) {
 		if ( ! document.documentElement.classList.contains( 'riff-desktop' ) ) {

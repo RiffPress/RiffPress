@@ -1,5 +1,5 @@
 /**
- * The desktop app's layout, marked on the document with ?riff_desktop=1: the window does not stretch past its ends, and Now Playing is Tidal's with Up next beside the art.
+ * The desktop app's layout, marked on the document with ?riff_desktop=1: the window does not stretch past its ends, and Now Playing is the art alone with Up next beside it.
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -34,7 +34,7 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-view' ) ).toHaveCSS( 'border-top-left-radius', '8px' );
 	} );
 
-	test( 'in the desktop app, Now Playing is Tidal\'s: the art alone, and Up next opens beside it', async ( {
+	test( 'in the desktop app, Now Playing is the art alone, and Up next opens beside it', async ( {
 		page,
 		isMobile,
 	} ) => {

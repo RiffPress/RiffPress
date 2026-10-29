@@ -171,7 +171,7 @@ html.has-riff .riff-standalone .riff-app {
 		margin-top: 16px;
 	}
 
-	/* Your Library, as Spotify's sidebar has it: a head with New playlist,
+	/* Your Library, in the sidebar: a head with New playlist,
 	   chips, then a row for each thing with its artwork and what it is. */
 	.riff-standalone .riff-app-library {
 		display: block;
@@ -283,7 +283,7 @@ html.has-riff .riff-standalone .riff-app {
 		outline-offset: -2px;
 	}
 
-	/* What is showing has its name in the accent, as Spotify colours it. */
+	/* What is showing has its name in the accent. */
 	.riff-standalone .riff-app .riff-app-item[aria-current="page"] .riff-app-item-title {
 		color: var(--riff-app-accent);
 	}
@@ -375,7 +375,7 @@ html.has-riff .riff-standalone .riff-app {
 		line-height: 1.4;
 	}
 
-	/* Folded to a rail, the library is its artwork alone, as Spotify's is. */
+	/* Folded to a rail, the library is its artwork alone. */
 	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-library-head,
 	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-library-chips {
 		display: none;
@@ -431,7 +431,7 @@ html.has-riff .riff-standalone .riff-app {
 		letter-spacing: -0.02em;
 	}
 
-	/* An album's, artist's or playlist's header, as Spotify's: the cover
+	/* An album's, artist's or playlist's header: the cover
 	   beside a large title, then a row of actions under both, led by a round
 	   Play in the accent. The text block gives its parts to the grid. */
 	.riff-standalone .riff-album {

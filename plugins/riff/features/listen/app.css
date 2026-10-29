@@ -1307,7 +1307,7 @@
 }
 
 /* Play and Shuffle carry their icons for standalone mode, which draws them as
-   Spotify does; elsewhere they are words. */
+   the streaming apps do; elsewhere they are words. */
 .riff-app .riff-album-actions .riff-pill svg,
 .riff-tracks-head {
 	display: none;
@@ -1429,7 +1429,7 @@
 }
 
 /* The sort: the order in use on a button, the choices in a menu under it,
-   as Spotify's library has it. A details element, so it opens without the
+   as a library sidebar has it. A details element, so it opens without the
    script. */
 .riff-library-sort {
 	position: relative;
@@ -1543,8 +1543,8 @@
 	height: 38%;
 }
 
-/* Your Library's New playlist, at the end of its bar. In Spotify's frame on a
-   wide screen the sidebar's + makes one, as Spotify's Create does, so the bar
+/* Your Library's New playlist, at the end of its bar. In the desktop frame on a
+   wide screen the sidebar's + makes one, so the bar
    leaves it out. */
 .riff-app .riff-library-create {
 	height: 36px;
@@ -1593,7 +1593,7 @@
 
 /* The offer to install the app, in standalone mode only, on Riff's blue as
    its icon is. On a phone it runs across under the tabs; on a wide screen it
-   is a card under the library, as Spotify's offers are. */
+   is a card under the library. */
 .riff-app-install {
 	position: relative;
 	display: grid;

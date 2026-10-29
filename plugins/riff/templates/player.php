@@ -4,7 +4,7 @@
  *
  * The layout follows YouTube Music: on a phone, Now Playing is a full screen with the queue in a
  * sheet that peeks from the bottom; on a wide screen, the bar stays and Now Playing shows the art
- * beside an Up next panel. The wide bar is arranged as Tidal's, with the seek line under the
+ * beside an Up next panel. The wide bar has the seek line under the
  * transport. Controls that appear in more than one place are separate buttons with the same
  * data-riff-action, and riff.js keeps every copy in step, so no control owns any state.
  *
@@ -26,7 +26,7 @@ defined( 'ABSPATH' ) || exit;
 				<span class="riff-sub" data-riff-text="subtitle"></span>
 			</span>
 		</button>
-		<?php // On a wide screen the transport sits in the middle with the seek line under it, as Tidal has it. ?>
+		<?php // On a wide screen the transport sits in the middle with the seek line under it. ?>
 		<div class="riff-bar-center">
 			<div class="riff-bar-transport">
 				<button type="button" class="riff-btn riff-desk riff-mode" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>
@@ -49,9 +49,9 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 		</div>
 		<div class="riff-bar-end">
-			<?php // The heart, on a phone beside Play as Spotify's mini player has it. Shown for a track in the Media Library. ?>
+			<?php // The heart, on a phone beside Play in the mini player. Shown for a track in the Media Library. ?>
 			<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
-			<?php // The player's areas, filled by Riff's own listeners: badges (the format and bit rate, a pill at the bar's right end, as Tidal sets its tier) and controls. ?>
+			<?php // The player's areas, filled by Riff's own listeners: badges (the format and bit rate, a pill at the bar's right end) and controls. ?>
 			<span class="riff-area riff-desk" data-riff-area="badges"></span>
 			<span class="riff-area riff-desk" data-riff-area="controls"></span>
 			<?php // Cast and AirPlay, beside the volume, as music apps put "play on another device": both choose where the sound goes. ?>
@@ -126,7 +126,7 @@ defined( 'ABSPATH' ) || exit;
 				<div class="riff-np-seek">
 					<span class="riff-line" aria-hidden="true"><i></i></span>
 					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Track position', 'riff' ); ?>">
-					<?php // On a phone the badges are small print between the times, as Tidal sets its tier under the seek line, rather than a capsule on a row of their own. ?>
+					<?php // On a phone the badges are small print between the times under the seek line, rather than a capsule on a row of their own. ?>
 					<span class="riff-np-times" dir="ltr"><span data-riff-text="current">0:00</span><span class="riff-np-tier riff-area riff-mobile" data-riff-area="badges"></span><span data-riff-text="duration">0:00</span></span>
 				</div>
 				<div class="riff-np-controls">

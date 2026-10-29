@@ -111,7 +111,7 @@ export function createPlayer( root, data ) {
 		return format ? `${ format } · ${ rate }` : rate;
 	};
 
-	// The quality's tier, for the badge's colour, as Tidal colours its own: a lossy file, a lossless
+	// The quality's tier, for the badge's colour: a lossy file, a lossless
 	// one at CD quality, and one past it, more than 16 bits or 48 kHz.
 	P.tier = ( t ) => {
 		if ( ! t?.lossless ) {

@@ -20,7 +20,7 @@
 
 ### Bug Fixes
 
-* **player:** on a phone the quality is small print between the times, as Tidal sets it ([#740](https://github.com/RiffPress/RiffPress/issues/740)) ([60a5c7b](https://github.com/RiffPress/RiffPress/commit/60a5c7b5134938d9218fe9a9e851fd1b00b2b5eb))
+* **player:** on a phone the quality is small print between the times ([#740](https://github.com/RiffPress/RiffPress/issues/740)) ([60a5c7b](https://github.com/RiffPress/RiffPress/commit/60a5c7b5134938d9218fe9a9e851fd1b00b2b5eb))
 * **player:** the tonearm turns with the hand while it is held ([#741](https://github.com/RiffPress/RiffPress/issues/741)) ([05494f3](https://github.com/RiffPress/RiffPress/commit/05494f398436fa0ffa3ce0bcb29a9e2f231442c3))
 
 ## [5.5.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.4.0...riff-v5.5.0) (2026-10-27)
