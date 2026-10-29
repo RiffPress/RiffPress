@@ -9,6 +9,7 @@
 namespace Riff;
 
 use WP_HTML_Tag_Processor;
+use WP_REST_Request;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -26,6 +27,47 @@ final class Tracks {
 	 * Image sizes offered as artwork, smallest first. The lock screen picks the size it wants.
 	 */
 	private const ART_SIZES = array( 'thumbnail', 'medium', 'large' );
+
+	/**
+	 * Tracks kept as IDs, as the current user may see them now: each as it plays from its post,
+	 * which names where it plays from and lends its art, while the user can still read that post.
+	 * The result keeps the keys of `$items`, with null for a track the user can't see.
+	 *
+	 * @since 5.6.0
+	 *
+	 * @param array[] $items Each `{ id, post }`: the audio attachment, and the post it played from.
+	 * @return array<int, array|null> Tracks without their level envelope, as the player keeps them.
+	 */
+	public static function readable( array $items ): array {
+		$ids = array_values( array_unique( array_filter( array_map( static fn( $item ) => (int) ( $item['id'] ?? 0 ), $items ) ) ) );
+		if ( ! $ids ) {
+			return array_map( static fn() => null, $items );
+		}
+		// Through the tracks route, so a track the user may not play is left out as it is there.
+		$request = new WP_REST_Request( 'GET', '/' . Library::REST . '/tracks' );
+		$request->set_query_params(
+			array(
+				'include'  => $ids,
+				'orderby'  => 'include',
+				'per_page' => min( 100, count( $ids ) ),
+			)
+		);
+		$response = rest_do_request( $request );
+		$found    = $response->is_error() ? array() : array_column( (array) ( $response->get_data()['items'] ?? array() ), null, 'id' );
+		$tracks   = array();
+		foreach ( $items as $key => $item ) {
+			$track = $found[ (string) ( $item['id'] ?? '' ) ] ?? null;
+			$post  = get_post( (int) ( $item['post'] ?? 0 ) );
+			if ( $track && $post && ( is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $post->ID ) ) && ! post_password_required( $post ) ) {
+				$track = self::from_attachment( (int) $item['id'], $post->ID ) ?? $track;
+			}
+			if ( $track ) {
+				unset( $track['levels'] );
+			}
+			$tracks[ $key ] = $track;
+		}
+		return $tracks;
+	}
 
 	/**
 	 * Builds a track from an audio or video attachment.

@@ -44,5 +44,6 @@ final class Plugin {
 		Listen\Standalone::register();
 		Listen\Art::register();
 		Listen\First_Run::register();
+		Listen\Together::register();
 	}
 }

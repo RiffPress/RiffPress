@@ -215,32 +215,12 @@ final class Likes {
 		if ( ! $plays ) {
 			return array();
 		}
-		$request = new WP_REST_Request( 'GET', '/' . Library::REST . '/tracks' );
-		$request->set_query_params(
-			array(
-				'include'  => wp_list_pluck( $plays, 'id' ),
-				'orderby'  => 'include',
-				'per_page' => self::HISTORY_MAX,
-			)
-		);
-		$response = rest_do_request( $request );
-		if ( $response->is_error() ) {
-			return array();
-		}
-		$when   = array_column( $plays, 'played', 'id' );
-		$from   = array_column( $plays, 'post', 'id' );
 		$tracks = array();
-		foreach ( (array) ( $response->get_data()['items'] ?? array() ) as $track ) {
-			// As it was played: from its post, which names where it plays from and lends its art,
-			// while the user can still read that post.
-			$post = get_post( (int) ( $from[ (int) $track['id'] ] ?? 0 ) );
-			if ( $post && ( is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $post->ID ) ) && ! post_password_required( $post ) ) {
-				$track = Tracks::from_attachment( (int) $track['id'], $post->ID ) ?? $track;
+		foreach ( Tracks::readable( $plays ) as $i => $track ) {
+			if ( $track ) {
+				$track['played'] = (int) $plays[ $i ]['played'];
+				$tracks[]        = $track;
 			}
-			// Without the level envelope, as the player keeps it on a device.
-			unset( $track['levels'] );
-			$track['played'] = (int) ( $when[ (int) $track['id'] ] ?? 0 );
-			$tracks[]        = $track;
 		}
 		return $tracks;
 	}

@@ -75,10 +75,20 @@ tests_add_filter(
 		foreach ( array( 'cbor', 'passkeys', 'codes', 'routes', 'sign-in' ) as $riff_sign_in_class ) {
 			require dirname( __DIR__, 3 ) . "/riff-sign-in/src/class-{$riff_sign_in_class}.php";
 		}
+		// The Presence API, where wp-env installs it, for listening together; its tests skip without it.
+		if ( is_readable( WP_PLUGIN_DIR . '/presence-api/presence-api.php' ) ) {
+			require WP_PLUGIN_DIR . '/presence-api/presence-api.php';
+		}
 	}
 );
 
 require $riff_tests_dir . '/includes/bootstrap.php';
+
+// The suite reinstalls WordPress, which leaves the Presence API's table without its schema version,
+// so the site is provisioned as activation does.
+if ( function_exists( 'wp_presence_provision_site' ) ) {
+	wp_presence_provision_site();
+}
 
 /**
  * Shared helpers for the suite.
