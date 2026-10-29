@@ -2,7 +2,7 @@
 
 <p align="center"><strong>Your music, on your own site, played the way your listeners already love.</strong><br>A music player for WordPress.</p>
 
-<p align="center"><a href="https://riffpress.com/demo"><strong>Try the live demo</strong></a> · <a href="https://riffpress.com/download/">Download</a> · <a href="https://riffpress.com/">riffpress.com</a></p>
+<p align="center"><a href="https://next.riffpress.com/listen/app/"><strong>Try the live demo</strong></a> · <a href="https://riffpress.com/download/">Download</a> · <a href="https://riffpress.com/">riffpress.com</a></p>
 
 <p align="center"><img src="site/desktop-listen.png" alt="Riff on a computer: the library at the side, a grid of album covers, and the player bar along the bottom" width="880"></p>
 

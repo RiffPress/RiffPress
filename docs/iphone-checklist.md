@@ -4,7 +4,7 @@ Playwright runs the player in Chromium at an iPhone's size, and runs a smoke pas
 
 Record each check as **pass**, **fail** or **unverified**, with the iPhone model, the iOS version and the Riff version. A check that wasn't run is unverified, not a pass.
 
-Use the demo at https://riffpress.com/demo or any post with at least two tracks, one of which has a video version.
+Use the demo at https://next.riffpress.com/ or any post with at least two tracks, one of which has a video version.
 
 ## Playback
 
