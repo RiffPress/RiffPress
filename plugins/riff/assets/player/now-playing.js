@@ -322,6 +322,9 @@ export function nowPlaying( P ) {
 	const leadOut = () => ( root.dataset.riffFormat === '7' ? 0.56 : 0.4 );
 	const albums = new Map();
 	let playing = null;
+	// The deck's speed, as chosen on its board (null: the record's own), and its pitch, in percent.
+	let chosen = null;
+	let pitch = 0;
 	let side = null;
 	function groove( t ) {
 		const album = t?.post?.id || null;
@@ -331,6 +334,8 @@ export function nowPlaying( P ) {
 			}
 			playing = album;
 			side = null;
+			// A new record plays at its own speed; the pitch stays where the hand left it.
+			chosen = null;
 		}
 		place( t );
 		if ( albums.has( album ) || ! album || ! P.data.library || navigator.connection?.saveData ) {
@@ -571,6 +576,8 @@ export function nowPlaying( P ) {
 				return;
 			}
 			clearTimeout( deck.opening );
+			// Onto the deck its speed and pitch hold; off it the music is at its own speed again.
+			retune();
 			if ( roomy.last && wholeDeck() && ! P.reduce() ) {
 				// Opened: the sleeve settles at the deck's edge first, then the record slides out of it.
 				deck.opening = setTimeout( () => deck( roomy() ), OPENING );
@@ -654,8 +661,9 @@ export function nowPlaying( P ) {
 	function settle( m ) {
 		ramping++;
 		P.ramping = false;
-		m.playbackRate = 1;
-		m.preservesPitch = m.webkitPreservesPitch = true;
+		const to = deckRate();
+		m.playbackRate = m.defaultPlaybackRate = to;
+		m.preservesPitch = m.webkitPreservesPitch = to === 1;
 	}
 	function cued( on ) {
 		root.toggleAttribute( 'data-riff-cued', on );
@@ -695,7 +703,7 @@ export function nowPlaying( P ) {
 			m.playbackRate = from;
 			m.preservesPitch = m.webkitPreservesPitch = false;
 			m.play()
-				.then( () => bend( m, 1, 1100 * ( 1 - from ) ) )
+				.then( () => bend( m, deckRate(), 1100 * Math.abs( deckRate() - from ) ) )
 				.then( ( whole ) => whole && settle( m ) )
 				.catch( P.paint );
 		};
@@ -1081,6 +1089,76 @@ export function nowPlaying( P ) {
 				land( to );
 			}
 		} );
+	}
+
+	// ---- The deck's own controls, where the whole screen is the turntable: the two speeds and the
+	// pitch fader. The music plays at the speed chosen over the record's own (an LP at 45 runs
+	// fast, as on a deck), times the pitch, ±8%; its pitch moves with it, as a record's does, and
+	// the platter, the strobe and the arm follow the one rate (ratechange, above). Anywhere else
+	// the music plays at its own speed.
+	const RPM = { 33: 100 / 3, 45: 45 };
+	const own = () => ( root.dataset.riffFormat === '7' ? '45' : '33' );
+	function deckRate() {
+		if ( ! $( '.riff-cover' ) || ! wholeDeck() ) {
+			return 1;
+		}
+		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( 1 + pitch / 100 );
+	}
+	const board = $( '.riff-deck-board' );
+	const fader = $( '[data-riff-pitch]' );
+	function paintDeck() {
+		if ( ! board ) {
+			return;
+		}
+		for ( const b of board.querySelectorAll( '[data-riff-speed]' ) ) {
+			const on = b.dataset.riffSpeed === ( chosen ?? own() );
+			b.setAttribute( 'aria-checked', String( on ) );
+			b.tabIndex = on ? 0 : -1;
+		}
+		const readout = `${ pitch > 0 ? '+' : '' }${ pitch.toFixed( 1 ) }`;
+		fader.value = String( pitch );
+		fader.setAttribute( 'aria-valuetext', `${ readout }%` );
+		board.querySelector( 'output' ).textContent = readout;
+	}
+	// The motor pulls the platter to the new speed while it turns; stopped, it starts there.
+	function retune() {
+		paintDeck();
+		const m = P.el();
+		if ( m.paused || held() || P.ramping ) {
+			m.defaultPlaybackRate = deckRate();
+			return;
+		}
+		bend( m, deckRate(), 450 ).then( ( whole ) => whole && settle( m ) );
+	}
+	if ( board ) {
+		board.addEventListener( 'click', ( e ) => {
+			const speed = e.target.closest( '[data-riff-speed]' );
+			if ( speed ) {
+				chosen = speed.dataset.riffSpeed;
+				retune();
+			}
+		} );
+		// The speeds are a radio group: the arrows move between them.
+		board.querySelector( '.riff-speeds' ).addEventListener( 'keydown', ( e ) => {
+			if ( ! [ 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown' ].includes( e.key ) ) {
+				return;
+			}
+			e.preventDefault();
+			chosen = ( chosen ?? own() ) === '33' ? '45' : '33';
+			retune();
+			board.querySelector( `[data-riff-speed="${ chosen }"]` ).focus();
+		} );
+		fader.addEventListener( 'input', () => {
+			const v = Number( fader.value );
+			// It clicks into the middle, as a fader's centre detent does.
+			pitch = Math.abs( v ) < 0.3 ? 0 : v;
+			retune();
+		} );
+		fader.addEventListener( 'dblclick', () => {
+			pitch = 0;
+			retune();
+		} );
+		paintDeck();
 	}
 
 	function cut( lengths ) {

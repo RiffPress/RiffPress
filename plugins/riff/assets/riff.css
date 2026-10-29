@@ -2617,6 +2617,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
+/* The deck's board and the sleeve's rack are the turntable screen's alone. */
+.riff-deck-board,
+.riff-rack {
+	display: none;
+}
+
 /* The screen as a turntable: a touch screen wider than it is tall and no
    taller than a phone, as an unfolded iPhone Duo is (890 by 626) and any
    phone on its side, is the deck itself. The whole screen is the plinth;
@@ -2680,10 +2686,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		--riff-deck-screen: 1;
 		--riff-out-scale: 1;
 		--riff-out-record: -12%;
-		--riff-out-drop: 2%;
-		width: min(72cqw, 86cqh);
+		--riff-out-drop: -3%;
+		width: min(70cqw, 80cqh);
 		max-width: none;
-		height: min(72cqw, 86cqh);
+		height: min(70cqw, 80cqh);
 		max-height: none;
 	}
 
@@ -2790,9 +2796,213 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		gap: 8px;
 	}
 
+	/* The deck's own controls on its plinth: start and stop at the front
+	   left, a low key as a direct-drive deck's is, the two speeds beside it
+	   with a lamp lit in the strobe's amber for the one chosen, and the
+	   pitch fader at the deck's right, below the arm's rest, plus towards
+	   the hand as on the deck it is drawn after. */
+	#riff .riff-deck-board {
+		display: block;
+		position: relative;
+		z-index: 1;
+		grid-area: 1 / 1 / span 2 / 2;
+		pointer-events: none;
+	}
+
+	#riff .riff-deck-board > * {
+		position: absolute;
+		pointer-events: auto;
+	}
+
+	#riff .riff-start,
+	#riff .riff-speeds button {
+		height: 30px;
+		border: 0;
+		border-radius: 4px;
+		background: linear-gradient(#2c2c2c, #1d1d1d);
+		box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 1px 2px rgb(0 0 0 / 0.6);
+		color: #b9b9b9;
+		font-size: 10px;
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+
+	#riff .riff-start {
+		bottom: 4%;
+		left: 4%;
+		width: 104px;
+		height: 40px;
+		padding: 0 8px;
+		letter-spacing: 0.08em;
+	}
+
+	#riff .riff-start:active,
+	#riff .riff-speeds button:active {
+		background: #181818;
+		box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.7);
+	}
+
+	#riff .riff-speeds {
+		bottom: 4%;
+		left: calc(4% + 116px);
+		display: flex;
+		gap: 6px;
+	}
+
+	#riff .riff-speeds button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		width: 52px;
+		height: 40px;
+		justify-content: center;
+		font-size: 12px;
+		letter-spacing: 0.04em;
+	}
+
+	#riff .riff-speeds button::before {
+		content: "";
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: #3a2a20;
+	}
+
+	#riff .riff-speeds button[aria-checked="true"] {
+		color: #f2eadb;
+	}
+
+	#riff .riff-speeds button[aria-checked="true"]::before {
+		background: #ff9a50;
+		box-shadow: 0 0 6px rgb(255 150 80 / 0.8);
+	}
+
+	#riff .riff-start:focus-visible,
+	#riff .riff-speeds button:focus-visible,
+	#riff .riff-pitch input:focus-visible {
+		outline: 2px solid var(--riff-fg);
+		outline-offset: 2px;
+	}
+
+	#riff .riff-pitch {
+		right: 3%;
+		bottom: 4%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		height: 42%;
+		color: #8d8d8d;
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	#riff .riff-pitch input {
+		flex: 1;
+		width: 28px;
+		margin: 0;
+		background: none;
+		writing-mode: vertical-lr;
+		appearance: none;
+		cursor: pointer;
+	}
+
+	#riff .riff-pitch input::-webkit-slider-runnable-track {
+		width: 4px;
+		border-radius: 2px;
+		background: #0c0c0c;
+		box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 rgb(255 255 255 / 0.05);
+	}
+
+	#riff .riff-pitch input::-moz-range-track {
+		width: 4px;
+		border-radius: 2px;
+		background: #0c0c0c;
+	}
+
+	#riff .riff-pitch input::-webkit-slider-thumb {
+		width: 26px;
+		height: 14px;
+		margin-left: -11px;
+		border-radius: 3px;
+		background: linear-gradient(#3a3a3a, #232323);
+		box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -1px 0 #555, 0 2px 3px rgb(0 0 0 / 0.6);
+		appearance: none;
+	}
+
+	#riff .riff-pitch input::-moz-range-thumb {
+		width: 26px;
+		height: 14px;
+		border: 0;
+		border-radius: 3px;
+		background: linear-gradient(#3a3a3a, #232323);
+	}
+
+	/* Start and stop is on the plinth, so the strip's own play button goes,
+	   the rest of the transport drawn together */
+	#riff .riff-np-panel .riff-np-controls [data-riff-action="toggle"] {
+		display: none;
+	}
+
+	#riff .riff-np-panel .riff-np-controls {
+		justify-content: space-around;
+	}
+
+	/* The sleeve, stood in the rack once its record is out on the deck, as
+	   a record shop shows what is playing: on a wooden ledge, leaning back
+	   a little. */
+	#riff .riff-rack {
+		display: block;
+		position: relative;
+		width: min(128px, 46%);
+		margin: 0 0 16px;
+		opacity: 0;
+		transition: opacity 0.4s 0.5s;
+	}
+
+	#riff[data-riff-deck="out"] .riff-rack {
+		opacity: 1;
+	}
+
+	#riff .riff-rack img {
+		display: block;
+		width: 100%;
+		aspect-ratio: 1;
+		border-radius: 3px;
+		object-fit: cover;
+		box-shadow: 0 10px 20px rgb(0 0 0 / 0.5);
+		transform: perspective(400px) rotateX(4deg);
+		transform-origin: bottom;
+	}
+
+	#riff .riff-rack::after {
+		content: "";
+		position: absolute;
+		right: -8%;
+		bottom: -6px;
+		left: -8%;
+		height: 6px;
+		border-radius: 2px;
+		background: linear-gradient(#8a5a34, #5d3b20);
+		box-shadow: 0 3px 6px rgb(0 0 0 / 0.5);
+	}
+
 	/* the phone's chips, such as Lyrics, at any width */
 	#riff .riff-chips .riff-chip.riff-mobile {
 		display: inline-flex !important;
+	}
+}
+
+/* A phone on its side has no height for the rack: the sleeve stays off. */
+@media (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px) {
+
+	#riff .riff-rack {
+		display: none;
 	}
 }
 
