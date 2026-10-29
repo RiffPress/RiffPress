@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.6.0
+Stable tag: 5.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.6.1 =
+* Fixed: FLAC, Ogg and M4A files keep their tags, so the catalog files them by artist and album.
+
 = 5.6.0 =
 * On an unfolded iPhone Duo or a phone on its side the screen is the turntable, and the record comes out of its sleeve as it opens.
 * Where the screen is the turntable, its deck has start and stop, 33 and 45 and a pitch fader, and the sleeve stands in a rack.
@@ -146,8 +149,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * The quality badge is a capsule pressed into the bar, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it.
 * The quality capsule reads on the bar's black, its bevel lit from above and a lossy file's words a cooler white.
 * The sleeve lies flat beside the turntable, as on the desk it stands on, apart from its plinth.
-
-= 5.2.4 =
-* Fixed: a drawn cover's address changes when the drawing does, and its title never leaves one word alone.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
