@@ -1,0 +1,106 @@
+name: WP Engine
+
+# Deploys riff, riff-lyrics and riff-sign-in from main to a WordPress site on WP Engine, so a real
+# host runs every change as soon as it merges. Each plugin is built the way a release zips it, through
+# .distignore, and copied into wp-content/plugins/ over WP Engine's SSH Gateway, removing files the
+# plugin no longer has. Other plugins on the site are left alone.
+#
+# Needs the WPE_ENV repository variable, the WP Engine environment's name, and the WPE_SSHG_KEY_PRIVATE
+# secret on the wp-engine environment, the private half of an SSH key whose public half is added under
+# SSH Gateway in the WP Engine portal. Until WPE_ENV is set, the job is skipped. The site's address comes
+# from the WPE_URL repository variable when set.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - '.distignore'
+      - '.github/workflows/wp-engine.yml'
+
+permissions: {}
+
+# Queued, not cancelled: the last push to finish is the one the site runs.
+concurrency:
+  group: wp-engine
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.WPE_ENV != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    environment:
+      name: wp-engine
+      url: ${{ vars.WPE_URL || format('https://{0}.wpenginepowered.com/', vars.WPE_ENV) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version-file: .php-version
+          coverage: none
+
+      - name: Check the key is set
+        env:
+          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
+        run: |
+          if [ -z "$WPE_SSHG_KEY_PRIVATE" ]; then
+            echo "::error::Set the WPE_SSHG_KEY_PRIVATE secret on the wp-engine environment."
+            exit 1
+          fi
+
+      - name: Build the plugins
+        run: |
+          set -euo pipefail
+          for plugin in riff riff-lyrics riff-sign-in; do
+            mkdir -p "build/$plugin"
+            rsync -a --exclude-from='.distignore' "./plugins/$plugin/" "build/$plugin/"
+          done
+
+      # A `.distignore` that drifts out of step with a plugin's requires deploys fine and then fatals.
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          for plugin in riff riff-lyrics riff-sign-in; do
+            test -f "build/$plugin/$plugin.php"
+          done
+          find build -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+
+      # One deploy per plugin, so --delete reaches only into that plugin's folder.
+      - name: Deploy riff
+        uses: wpengine/github-action-wpe-site-deploy@996a3648a51f37dd54078741f46257fe9610a82c # v3.2.10
+        with:
+          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
+          WPE_ENV: ${{ vars.WPE_ENV }}
+          SRC_PATH: build/riff/
+          REMOTE_PATH: wp-content/plugins/riff/
+          FLAGS: -azvr --inplace --delete --exclude=".*"
+          PHP_LINT: false
+          CACHE_CLEAR: false
+
+      - name: Deploy riff-lyrics
+        uses: wpengine/github-action-wpe-site-deploy@996a3648a51f37dd54078741f46257fe9610a82c # v3.2.10
+        with:
+          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
+          WPE_ENV: ${{ vars.WPE_ENV }}
+          SRC_PATH: build/riff-lyrics/
+          REMOTE_PATH: wp-content/plugins/riff-lyrics/
+          FLAGS: -azvr --inplace --delete --exclude=".*"
+          PHP_LINT: false
+          CACHE_CLEAR: false
+
+      - name: Deploy riff-sign-in
+        uses: wpengine/github-action-wpe-site-deploy@996a3648a51f37dd54078741f46257fe9610a82c # v3.2.10
+        with:
+          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
+          WPE_ENV: ${{ vars.WPE_ENV }}
+          SRC_PATH: build/riff-sign-in/
+          REMOTE_PATH: wp-content/plugins/riff-sign-in/
+          FLAGS: -azvr --inplace --delete --exclude=".*"
+          PHP_LINT: false
+          CACHE_CLEAR: true
