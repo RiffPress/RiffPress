@@ -7,7 +7,8 @@ name: WP Engine
 #
 # Needs the WPE_ENV repository variable, the WP Engine environment's name, and the WPE_SSHG_KEY_PRIVATE
 # secret on the wp-engine environment, the private half of an SSH key whose public half is added under
-# SSH Gateway in the WP Engine portal. Until WPE_ENV is set, the job is skipped.
+# SSH Gateway in the WP Engine portal. Until WPE_ENV is set, the job is skipped. The site's address comes
+# from the WPE_URL repository variable when set.
 
 on:
   workflow_dispatch:
@@ -34,7 +35,7 @@ jobs:
       contents: read
     environment:
       name: wp-engine
-      url: https://${{ vars.WPE_ENV }}.wpengine.com/
+      url: ${{ vars.WPE_URL || format('https://{0}.wpenginepowered.com/', vars.WPE_ENV) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
