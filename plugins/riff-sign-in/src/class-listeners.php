@@ -9,6 +9,8 @@ namespace Riff\SignIn;
 
 defined( 'ABSPATH' ) || exit;
 
+// phpcs:set WordPress.WP.I18n text_domain[] riff-sign-in
+
 /**
  * An opt-in, on Settings → General beside "Anyone can register": people who cannot write posts
  * sign in and sign up in the player only. They keep their profile, where their passkeys and
@@ -169,3 +171,5 @@ final class Listeners {
 		}
 	}
 }
+
+// phpcs:set WordPress.WP.I18n text_domain[] riff
