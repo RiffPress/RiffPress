@@ -37,7 +37,7 @@ export function desktopFrame( ctx ) {
 	}
 
 	desktopBar();
-	// Spotify's question in the search pill, where there is room for it.
+	// A question in the search pill, where there is room for it.
 	const search = app.querySelector( '.riff-app-search input' );
 	if ( search ) {
 		search.placeholder = __( 'What do you want to play?', 'riff' );

@@ -1,5 +1,5 @@
 /**
- * Standalone mode, at the page's app/ address: an album page tinted from its cover, a playlist post, the sidebar on a wide screen and tabs on a phone, pills, Spotify's album header, the sidebar's rail, a contrast theme, and the app on its own without the theme.
+ * Standalone mode, at the page's app/ address: an album page tinted from its cover, a playlist post, the sidebar on a wide screen and tabs on a phone, pills, the wide album header, the sidebar's rail, a contrast theme, and the app on its own without the theme.
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -159,7 +159,7 @@ test.describe( 'Standalone', () => {
 		);
 		const pills = page.locator( '.riff-app .riff-pill' );
 		await expect( page.locator( '.riff-app .riff-pill:visible' ).first() ).toBeVisible();
-		// Play and Shuffle under a wide header are Spotify's round buttons, not pills; the rest
+		// Play and Shuffle under a wide header are round buttons, not pills; the rest
 		// are pills.
 		const radii = await pills.evaluateAll( ( els ) =>
 			els
@@ -172,7 +172,7 @@ test.describe( 'Standalone', () => {
 		expect( radii.filter( ( r ) => r !== '999px' ) ).toEqual( [] );
 	} );
 
-	test( 'an album\'s header is Spotify\'s on a wide screen, with a round Play and column heads that line up, and centred on a phone', async ( {
+	test( 'on a wide screen an album\'s header has a round Play and column heads that line up, and on a phone it is centred', async ( {
 		page,
 		isMobile,
 	} ) => {
@@ -272,7 +272,7 @@ test.describe( 'Standalone', () => {
 		await toggle.click();
 		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'false' );
 		expect( await width() ).toBeLessThan( 100 );
-		// Spotify's frame keeps search in the strip across the top, open sidebar or not.
+		// The desktop frame keeps search in the strip across the top, open sidebar or not.
 		await expect( page.locator( '.riff-app-search' ) ).toBeVisible();
 		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeVisible();
 

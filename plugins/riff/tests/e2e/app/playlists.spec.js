@@ -160,7 +160,7 @@ test( 'a playlist opens from Your Library, plays, reorders, loses a track, is re
 test( 'New playlist in the standalone app opens it, and the sidebar lists it', async ( { page } ) => {
 	await page.setViewportSize( { width: 1440, height: 900 } );
 	await page.goto( withArg( listenUrl.replace( /\/?$/, '/' ) + 'app/', 'riff_view=library' ) );
-	// On a wide screen the sidebar's + makes one, as Spotify's Create does.
+	// On a wide screen the sidebar's + makes one.
 	await page.locator( '.riff-app-library-create' ).click();
 	await expect( page ).toHaveURL( /riff_playlist=\d+/ );
 	await expect( page.locator( '.riff-album-title' ) ).toHaveText( 'New playlist' );

@@ -46,7 +46,7 @@ html.riff-desktop-page #wpadminbar {
 }
 `;
 
-// WordPress's login, drawn as Spotify draws its own: a card on a grey that fades to black, the
+// WordPress's login, drawn as a desktop app's sign-in: a card on a grey that fades to black, the
 // site's icon and "Sign in to" its name, bold labels over square fields that ring white when
 // focused, Remember Me as a switch, and the amber button. WordPress's own markup and fields,
 // unchanged; only the look.

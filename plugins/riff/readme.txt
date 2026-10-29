@@ -127,7 +127,7 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Where the screen is the turntable, its deck has start and stop, 33 and 45 and a pitch fader, and the sleeve stands in a rack.
 * With the Presence API active, Riff keeps who is listening to what in a listening room, shared and read through riff/v1/together.
 * Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
-* Fixed: on a phone the quality is small print between the times, as Tidal sets it.
+* Fixed: on a phone the quality is small print between the times.
 * Fixed: the tonearm turns with the hand while it is held.
 
 = 5.5.0 =
