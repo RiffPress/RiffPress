@@ -108,11 +108,10 @@ defined( 'ABSPATH' ) || exit;
 					<button type="button" role="radio" data-riff-speed="33" aria-checked="true" aria-label="<?php esc_attr_e( '33⅓ revolutions per minute', 'riff' ); ?>">33</button>
 					<button type="button" role="radio" data-riff-speed="45" aria-checked="false" aria-label="<?php esc_attr_e( '45 revolutions per minute', 'riff' ); ?>">45</button>
 				</span>
-				<label class="riff-pitch">
-					<span class="riff-app-sr"><?php esc_html_e( 'Pitch', 'riff' ); ?></span>
-					<input type="range" min="-8" max="8" step="0.1" value="0" data-riff-pitch aria-valuetext="0%">
+				<span class="riff-pitch">
+					<input type="range" min="-8" max="8" step="0.1" value="0" data-riff-pitch aria-label="<?php esc_attr_e( 'Pitch', 'riff' ); ?>" aria-valuetext="0%">
 					<output aria-hidden="true">0.0</output>
-				</label>
+				</span>
 			</div>
 			<div class="riff-np-panel">
 				<?php // The sleeve, stood in the rack as a record shop shows what is playing, once the record is out on the deck. ?>
