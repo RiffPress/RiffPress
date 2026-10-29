@@ -31,6 +31,13 @@
 	--riff-safe-b: env(safe-area-inset-bottom, 0px);
 	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
 	--riff-safe-t: env(safe-area-inset-top, 0px);
+
+	/* and the sides, where a phone on its side or an unfolded one keeps its
+	   status bar and its camera */
+	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
+	--riff-safe-l: env(safe-area-inset-left, 0px);
+	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
+	--riff-safe-r: env(safe-area-inset-right, 0px);
 }
 
 /* While Now Playing is open the page under it stays still, as in the apps:
@@ -2320,7 +2327,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	transform: translateX(-50%);
 }
 
-@media (min-width: 900px) {
+/* not where the whole screen is the turntable, which keeps the phone's Now
+   Playing under its own layout at any width (below) */
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px))) {
 
 	/* On a wide screen Now Playing fills the space above the bar, and the bar
 	   keeps the controls. */
@@ -2537,11 +2546,33 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		margin-top: 12px;
 	}
 
-	/* The capsule keeps its look at a phone's size. */
-	#riff .riff-np-quality .riff-quality {
-		height: 28px;
-		padding: 0 12px;
-		font-size: 12px;
+	/* On a phone the badges leave the title and sit between the times,
+	   as Tidal sets its tier: small print in the tier's colour, with no
+	   capsule round it. The capsule is the wide screen's. */
+	#riff .riff-np-quality {
+		display: none;
+	}
+
+	#riff .riff-np-tier {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		gap: 12px;
+	}
+
+	#riff .riff-np-tier .riff-badge {
+		height: auto;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+		color: var(--riff-quality-ink, var(--riff-fg-2));
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		text-shadow: none;
 	}
 
 	#riff .riff-peek {
@@ -2583,6 +2614,464 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	[data-playing="true"] .riff-row-state i,
 	#riff[data-waiting] .riff-play {
 		animation: none;
+	}
+}
+
+/* The deck's board and the sleeve's rack are the turntable screen's alone. */
+.riff-deck-board,
+.riff-rack {
+	display: none;
+}
+
+/* The screen as a turntable: a touch screen wider than it is tall and no
+   taller than a phone, as an unfolded iPhone Duo is (890 by 626) and any
+   phone on its side, is the deck itself. The whole screen is the plinth;
+   the platter and the record on it fill its height on the left, the arm
+   over them, and down the right the strip a deck keeps its controls in:
+   the title, the seek line, the transport and the chips. Opening the phone
+   brings the record out of its sleeve onto the platter, the sleeve drawn
+   away; closing it puts the record back in, and Now Playing is the phone's
+   again (now-playing.js, deck()). By the screen's shape, never the device,
+   as WebKit and Apple ask. */
+@media (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px) {
+
+	#riff .riff-np {
+		bottom: 0;
+		z-index: 3;
+		padding: var(--riff-safe-t) var(--riff-safe-r) var(--riff-safe-b) var(--riff-safe-l);
+		background:
+			radial-gradient(120% 90% at 30% 20%, rgb(255 255 255 / 0.035), transparent 60%),
+			linear-gradient(160deg, #222 0%, #181818 60%, #141414);
+	}
+
+	#riff .riff-np-bg,
+	#riff .riff-np-glow,
+	#riff .riff-np-mini {
+		display: none;
+	}
+
+	/* the head floats over the plinth's corner: close, and Song or video */
+	#riff .riff-np-head {
+		position: absolute;
+		z-index: 2;
+		top: var(--riff-safe-t);
+		left: var(--riff-safe-l);
+		display: flex;
+		gap: 8px;
+		height: 56px;
+		padding: 0 8px;
+	}
+
+	#riff .riff-np-head [data-riff-action="close"] {
+		display: inline-flex;
+	}
+
+	#riff .riff-np-body {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) clamp(224px, 30%, 300px);
+		grid-template-rows: minmax(0, 1fr) auto;
+		height: 100%;
+	}
+
+	#riff .riff-stage {
+		grid-row: 1 / span 2;
+		grid-column: 1;
+		padding: 4% 2% 4% 4%;
+	}
+
+	/* the deck alone, as large as the stage holds it: the record at the
+	   platter, the arm's reach to its right, all inside the stage */
+	:root #riff .riff-np .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
+		--riff-deck: 1;
+		--riff-deck-screen: 1;
+		--riff-out-scale: 1;
+		--riff-out-record: -12%;
+		--riff-out-drop: -3%;
+		width: min(70cqw, 80cqh);
+		max-width: none;
+		height: min(70cqw, 80cqh);
+		max-height: none;
+	}
+
+	/* In its sleeve, the record waits off the deck's left with the sleeve
+	   round it; out, it slides right onto the platter while the sleeve, a
+	   beat behind, is drawn away the other way. */
+	#riff .riff-stage > :is(.riff-cover, .riff-record) {
+		translate: -58% var(--riff-out-drop);
+	}
+
+	#riff .riff-stage > .riff-cover {
+		transition: translate 0.75s var(--riff-spring) 0.08s, scale 0.75s var(--riff-spring) 0.08s, opacity 0.4s 0.45s;
+	}
+
+	#riff[data-riff-deck="out"] .riff-stage > .riff-record {
+		translate: var(--riff-out-record) var(--riff-out-drop);
+	}
+
+	#riff[data-riff-deck="out"] .riff-stage > .riff-cover {
+		translate: -170% var(--riff-out-drop);
+		scale: 0.7;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	#riff .riff-stage > .riff-sleeve {
+		display: block;
+	}
+
+	/* the screen is the plinth, so the deck's own board is not drawn */
+	#riff .riff-plinth::before {
+		display: none;
+	}
+
+	/* the controls' strip: a little apart from the deck, set into the plinth */
+	#riff .riff-np-panel {
+		display: flex;
+		grid-row: 1;
+		grid-column: 2;
+		flex-direction: column;
+		justify-content: center;
+		gap: 4px;
+		min-height: 0;
+		padding: 56px 20px 8px 8px;
+	}
+
+	#riff .riff-np-controls {
+		margin: 4px -8px 0;
+	}
+
+	#riff .riff-chips {
+		flex-wrap: wrap;
+		margin: 8px 0 0;
+		padding: 0;
+		overflow: visible;
+	}
+
+	#riff .riff-queue {
+		grid-row: 2;
+		grid-column: 2;
+	}
+
+	#riff .riff-np:not([data-sheet="half"], [data-sheet="full"]) .riff-queue-head {
+		display: none;
+	}
+
+	/* Up next and the other tabs open in the controls' strip, never over
+	   the deck: the turntable keeps turning where it is, the player shrinks
+	   to its one row at the strip's top, and the list fills the rest. */
+	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-stage {
+		display: grid;
+		height: auto;
+		padding: 4% 2% 4% 4%;
+	}
+
+	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-head {
+		display: flex;
+	}
+
+	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-panel {
+		display: none;
+	}
+
+	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-mini {
+		display: flex;
+		position: absolute;
+		z-index: 1;
+		top: var(--riff-safe-t);
+		right: var(--riff-safe-r);
+		align-items: center;
+		gap: 12px;
+		width: clamp(224px, 30%, 300px);
+		height: 72px;
+		padding: 0 8px 0 12px;
+	}
+
+	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-queue {
+		grid-row: 1 / span 2;
+		margin-top: 72px;
+	}
+
+	#riff .riff-np .riff-queue-head {
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	/* The deck's own controls on its plinth: start and stop at the front
+	   left, a low key as a direct-drive deck's is, the two speeds beside it
+	   with a lamp lit in the strobe's amber for the one chosen, and the
+	   pitch fader at the deck's right, below the arm's rest, plus towards
+	   the hand as on the deck it is drawn after. */
+	#riff .riff-deck-board {
+		display: block;
+		position: relative;
+		z-index: 1;
+		grid-area: 1 / 1 / span 2 / 2;
+		pointer-events: none;
+	}
+
+	#riff .riff-deck-board > * {
+		position: absolute;
+		pointer-events: auto;
+	}
+
+	#riff .riff-start,
+	#riff .riff-speeds button {
+		height: 30px;
+		border: 0;
+		border-radius: 4px;
+		background: linear-gradient(#2c2c2c, #1d1d1d);
+		box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 1px 2px rgb(0 0 0 / 0.6);
+		color: #b9b9b9;
+		font-size: 10px;
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+
+	#riff .riff-start {
+		bottom: 4%;
+		left: 4%;
+		width: 104px;
+		height: 40px;
+		padding: 0 8px;
+		letter-spacing: 0.08em;
+	}
+
+	#riff .riff-start:active,
+	#riff .riff-speeds button:active {
+		background: #181818;
+		box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.7);
+	}
+
+	#riff .riff-speeds {
+		bottom: 4%;
+		left: calc(4% + 116px);
+		display: flex;
+		gap: 6px;
+	}
+
+	#riff .riff-speeds button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		width: 52px;
+		height: 40px;
+		justify-content: center;
+		font-size: 12px;
+		letter-spacing: 0.04em;
+	}
+
+	#riff .riff-speeds button::before {
+		content: "";
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: #3a2a20;
+	}
+
+	#riff .riff-speeds button[aria-checked="true"] {
+		color: #f2eadb;
+	}
+
+	#riff .riff-speeds button[aria-checked="true"]::before {
+		background: #ff9a50;
+		box-shadow: 0 0 6px rgb(255 150 80 / 0.8);
+	}
+
+	#riff .riff-start:focus-visible,
+	#riff .riff-speeds button:focus-visible,
+	#riff .riff-pitch input:focus-visible {
+		outline: 2px solid var(--riff-fg);
+		outline-offset: 2px;
+	}
+
+	#riff .riff-pitch {
+		right: 3%;
+		bottom: 4%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		height: 42%;
+		color: #8d8d8d;
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	#riff .riff-pitch input {
+		flex: 1;
+		width: 28px;
+		margin: 0;
+		background: none;
+		writing-mode: vertical-lr;
+		appearance: none;
+		cursor: pointer;
+	}
+
+	#riff .riff-pitch input::-webkit-slider-runnable-track {
+		width: 4px;
+		border-radius: 2px;
+		background: #0c0c0c;
+		box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 rgb(255 255 255 / 0.05);
+	}
+
+	#riff .riff-pitch input::-moz-range-track {
+		width: 4px;
+		border-radius: 2px;
+		background: #0c0c0c;
+	}
+
+	#riff .riff-pitch input::-webkit-slider-thumb {
+		width: 26px;
+		height: 14px;
+		margin-left: -11px;
+		border-radius: 3px;
+		background: linear-gradient(#3a3a3a, #232323);
+		box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -1px 0 #555, 0 2px 3px rgb(0 0 0 / 0.6);
+		appearance: none;
+	}
+
+	#riff .riff-pitch input::-moz-range-thumb {
+		width: 26px;
+		height: 14px;
+		border: 0;
+		border-radius: 3px;
+		background: linear-gradient(#3a3a3a, #232323);
+	}
+
+	/* Start and stop is on the plinth, so the strip's own play button goes,
+	   the rest of the transport drawn together */
+	#riff .riff-np-panel .riff-np-controls [data-riff-action="toggle"] {
+		display: none;
+	}
+
+	#riff .riff-np-panel .riff-np-controls {
+		justify-content: space-around;
+	}
+
+	/* The sleeve, stood in the rack once its record is out on the deck, as
+	   a record shop shows what is playing: on a wooden ledge, leaning back
+	   a little. */
+	#riff .riff-rack {
+		display: block;
+		position: relative;
+		width: min(128px, 46%);
+		margin: 0 0 16px;
+		opacity: 0;
+		transition: opacity 0.4s 0.5s;
+	}
+
+	#riff[data-riff-deck="out"] .riff-rack {
+		opacity: 1;
+	}
+
+	#riff .riff-rack img {
+		display: block;
+		width: 100%;
+		aspect-ratio: 1;
+		border-radius: 3px;
+		object-fit: cover;
+		box-shadow: 0 10px 20px rgb(0 0 0 / 0.5);
+		transform: perspective(400px) rotateX(4deg);
+		transform-origin: bottom;
+	}
+
+	#riff .riff-rack::after {
+		content: "";
+		position: absolute;
+		right: -8%;
+		bottom: -6px;
+		left: -8%;
+		height: 6px;
+		border-radius: 2px;
+		background: linear-gradient(#8a5a34, #5d3b20);
+		box-shadow: 0 3px 6px rgb(0 0 0 / 0.5);
+	}
+
+	/* the phone's chips, such as Lyrics, at any width */
+	#riff .riff-chips .riff-chip.riff-mobile {
+		display: inline-flex !important;
+	}
+}
+
+/* A phone on its side has no height for the rack: the sleeve stays off. */
+@media (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px) {
+
+	#riff .riff-rack {
+		display: none;
+	}
+}
+
+/* Folded part way (where the browser reports the fold: the Viewport
+   Segments API, behind a flag in Safari 27.1), nothing lands in the crease.
+   Like a book, two pages side by side: the deck on the left page, as large
+   as that page holds it, the controls on the right. */
+@media (horizontal-viewport-segments: 2) {
+
+	#riff .riff-np {
+		padding-right: 0;
+		padding-left: 0;
+	}
+
+	#riff .riff-np-body {
+		grid-template-columns: env(viewport-segment-width 0 0) env(viewport-segment-width 1 0);
+		column-gap: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0));
+	}
+
+	#riff .riff-np-panel {
+		padding-right: calc(20px + var(--riff-safe-r));
+		padding-left: 20px;
+	}
+
+	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-mini {
+		width: env(viewport-segment-width 1 0);
+	}
+}
+
+/* Stood on its edge like a tent or a laptop, one half above the other: the
+   upper half is wide, so the sleeve and the turntable stand there (the
+   stage's own query), and the lower half, nearer the hand, holds the
+   title, the seek line, the transport and Up next. */
+@media (vertical-viewport-segments: 2) {
+
+	#riff .riff-np {
+		padding-top: 0;
+	}
+
+	#riff .riff-np-body {
+		display: grid;
+		grid-template-rows: env(viewport-segment-height 0 0) env(viewport-segment-height 0 1);
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: calc(env(viewport-segment-top 0 1) - env(viewport-segment-bottom 0 0));
+		height: 100%;
+	}
+
+	#riff .riff-stage {
+		grid-area: 1 / 1;
+		padding: calc(56px + var(--riff-safe-t)) 24px 16px;
+	}
+
+	#riff .riff-np-panel {
+		grid-area: 2 / 1;
+		align-self: start;
+		padding-top: 16px;
+	}
+
+	#riff .riff-queue {
+		grid-area: 2 / 1;
+		align-self: end;
+	}
+
+	#riff .riff-np-head {
+		position: absolute;
+		z-index: 2;
+		top: var(--riff-safe-t);
+		right: 0;
+		left: 0;
 	}
 }
 

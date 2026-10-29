@@ -101,7 +101,21 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" class="riff-sleeve"><?php esc_html_e( 'Play the record', 'riff' ); ?></button>
 				<video class="riff-video" playsinline preload="metadata"></video>
 			</div>
+			<?php /* Where the whole screen is the turntable (riff.css), the deck's own controls on its plinth, as a direct-drive deck has them: start and stop at the front, the two speeds beside it, and the pitch fader at the side, moving the music, the platter, the strobe and the arm together. */ ?>
+			<div class="riff-deck-board" role="group" aria-label="<?php esc_attr_e( 'Turntable', 'riff' ); ?>">
+				<button type="button" class="riff-start" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><span aria-hidden="true"><?php esc_html_e( 'Start · Stop', 'riff' ); ?></span></button>
+				<span class="riff-speeds" role="radiogroup" aria-label="<?php esc_attr_e( 'Speed', 'riff' ); ?>">
+					<button type="button" role="radio" data-riff-speed="33" aria-checked="true" aria-label="<?php esc_attr_e( '33⅓ revolutions per minute', 'riff' ); ?>">33</button>
+					<button type="button" role="radio" data-riff-speed="45" aria-checked="false" aria-label="<?php esc_attr_e( '45 revolutions per minute', 'riff' ); ?>">45</button>
+				</span>
+				<span class="riff-pitch">
+					<input type="range" min="-8" max="8" step="0.1" value="0" data-riff-pitch aria-label="<?php esc_attr_e( 'Pitch', 'riff' ); ?>" aria-valuetext="0%">
+					<output aria-hidden="true">0.0</output>
+				</span>
+			</div>
 			<div class="riff-np-panel">
+				<?php // The sleeve, stood in the rack as a record shop shows what is playing, once the record is out on the deck. ?>
+				<span class="riff-rack" aria-hidden="true"><img data-riff-art data-riff-size="large" alt="" decoding="async" hidden></span>
 				<div class="riff-np-meta">
 					<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
 					<h2 class="riff-np-title" data-riff-text="title"></h2>
@@ -112,7 +126,8 @@ defined( 'ABSPATH' ) || exit;
 				<div class="riff-np-seek">
 					<span class="riff-line" aria-hidden="true"><i></i></span>
 					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Track position', 'riff' ); ?>">
-					<span class="riff-np-times" dir="ltr"><span data-riff-text="current">0:00</span><span data-riff-text="duration">0:00</span></span>
+					<?php // On a phone the badges are small print between the times, as Tidal sets its tier under the seek line, rather than a capsule on a row of their own. ?>
+					<span class="riff-np-times" dir="ltr"><span data-riff-text="current">0:00</span><span class="riff-np-tier riff-area riff-mobile" data-riff-area="badges"></span><span data-riff-text="duration">0:00</span></span>
 				</div>
 				<div class="riff-np-controls">
 					<button type="button" class="riff-btn" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>

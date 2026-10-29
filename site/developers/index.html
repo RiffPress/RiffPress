@@ -63,7 +63,7 @@
 <li><strong>The standalone player is one design.</strong> At a Listen page's <code>app/</code> address, Riff looks the same on every site, in its own dark style, the way a streaming app does. The Site Editor doesn't change it.</li>
 <li><strong>The docked player is the same everywhere too.</strong> The bar and Now Playing keep Riff's layout on every page. A theme sets their accent under <code>settings.custom.riff.accent</code> in <code>theme.json</code>.</li>
 </ul>
-<p>Other plugins' styles still load in standalone mode, where only the theme's are left out, so a stylesheet can set the player's public custom properties there too; <a href="css/">the CSS reference</a> lists each with its default. Now Playing takes new tabs through <code>riff_now_playing_tabs</code>.</p>
+<p>Other plugins' styles still load in standalone mode, where only the theme's are left out, so a stylesheet can set the player's public custom properties there too; <a href="css/">the CSS reference</a> lists each with its default.</p>
 
 <h2 id="under-the-hood">Under the hood</h2>
 <p>Each browser API and CSS feature the player calls has <a href="../web/">a page of its own</a>: how Riff uses it, why, what happens without it, and the exact lines in the source at the commit that was published.</p>

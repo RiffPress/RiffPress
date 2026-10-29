@@ -55,6 +55,7 @@ const USES = {
 	'Container queries': [ CSS, /container-type|@container/ ],
 	':has()': [ CSS, /:has\(/ ],
 	'env() safe areas': [ CSS, /env\(safe-area/ ],
+	'Viewport segments': [ CSS, /viewport-segments|env\(viewport-segment/ ],
 	'text-wrap': [ CSS, /text-wrap/ ],
 	'Variable fonts': [ CSS, /font-weight: \d+ \d+/ ],
 	'prefers-reduced-motion': [ CSS, /prefers-reduced-motion/ ],

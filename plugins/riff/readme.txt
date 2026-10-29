@@ -1,7 +1,7 @@
 === Riff Music Player ===
 Contributors: joefusco
 Tags: music, audio, video, player, media
-Requires at least: 7.2
+Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Stable tag: 5.5.0
