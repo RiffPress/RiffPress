@@ -25,7 +25,8 @@ const GAP = 0.07; // the space between sleeves along the crate
 const LEAN = -0.16; // how far a sleeve at rest leans back, in radians
 const TIP = 0.5; // how far one already flipped leans forward, against the front of the crate
 const FACE = -0.62; // a sleeve pulled out tips back to face the camera above the crate
-const LIFT = 0.3; // and rises this far out of it, still inside the picture
+const LIFT = 1.0; // and rises this far out of it, still inside the picture
+const CLEAR = 0.5; // standing this far in front of the crate, clear of every sleeve in it
 
 // A cover image drawn to a square canvas, so SVG covers become textures like the PNG one.
 function texture( src ) {
@@ -69,7 +70,7 @@ export default async function crate( shelf ) {
 	// Above and in front, looking down into the crate, as you stand over one in a shop.
 	const camera = new PerspectiveCamera( 34, 2, 0.1, 50 );
 	camera.position.set( 0, 2.35, 2.7 );
-	camera.lookAt( 0, 0.22, -0.2 );
+	camera.lookAt( 0, 1.05, -0.2 );
 	scene.add( new AmbientLight( 0xffffff, 1.6 ) );
 	const sun = new DirectionalLight( 0xffffff, 1.4 );
 	sun.position.set( 1.5, 3, 2.5 );
@@ -158,7 +159,7 @@ export default async function crate( shelf ) {
 			const o = MathUtils.smoothstep( out[ i ], 0, 1 );
 			s.rotation.x = MathUtils.lerp( lean, FACE, o );
 			s.position.y = LIFT * o;
-			s.position.z = -i * GAP + 0.5 * o;
+			s.position.z = MathUtils.lerp( -i * GAP, CLEAR, o );
 		} );
 		renderer.render( scene, camera );
 		running = moving;
@@ -177,13 +178,14 @@ export default async function crate( shelf ) {
 		wake();
 	};
 	// Across the crate digs, with a mouse by moving and on a screen by dragging sideways (the
-	// canvas leaves only vertical panning to the page). Digging puts back a sleeve pulled out.
+	// canvas leaves only vertical panning to the page). Dragging puts back a sleeve pulled out; a
+	// mouse leaves it out, and the crate still, until the next click.
 	let downX = null;
 	canvas.addEventListener( 'pointerdown', ( e ) => {
 		downX = e.clientX;
 	} );
 	canvas.addEventListener( 'pointermove', ( e ) => {
-		if ( e.pointerType !== 'mouse' && downX === null ) {
+		if ( e.pointerType === 'mouse' ? pulled !== -1 : downX === null ) {
 			return;
 		}
 		if ( pulled !== -1 && Math.abs( e.clientX - ( downX ?? e.clientX ) ) > 8 ) {

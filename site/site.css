@@ -25,14 +25,11 @@
 
 	/* warm greys in place of wordpress.org's cool ones, where the page is
 	   paper: the surfaces, the rules and the quieter text */
-	--warm-1: #e4ded4;
-	--warm-2: #f6f3ee;
 	--warm-ink-2: #625c53;
 	--warm-dark: #1c1a17;
 	--paper: #efe5d5;
 	--paper-raised: #f6f0e6;
 	--rule: #dccfb9;
-	--fingerboard: var(--paper);
 	--blueberry: #3858e9;
 	--blueberry-deep: #213fd4;
 	--ivory: #f2eadb;
@@ -44,16 +41,11 @@
 	--space-6: 64px;
 	--space-7: 96px;
 	--charcoal-1: #1e1e1e;
-	--charcoal-2: #23282d;
 	--charcoal-3: #40464d;
-	--charcoal-4: #656a71;
 	--charcoal-5: #979aa1;
-	--grey-1: #d9d9d9;
 	--grey-2: #f6f6f6;
 	--white: #fff;
-	--black: #000;
 	--panel: var(--warm-dark);
-	--panel-2: #1f1f1f;
 	--action: var(--blueberry);
 	--action-hover: var(--blueberry-deep);
 	--on-action: var(--white);
@@ -62,7 +54,6 @@
 	--line: var(--rule);
 	--ink: var(--charcoal-1);
 	--ink-2: var(--warm-ink-2);
-	--ink-3: var(--charcoal-5);
 	--accent: var(--blueberry-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
@@ -103,6 +94,8 @@ a:hover {
 	max-width: 1160px;
 	margin: 0 auto;
 	padding: 0 var(--edge);
+	position: relative;
+	z-index: 1;
 }
 
 .skip {
@@ -164,18 +157,6 @@ a:hover {
 	display: block;
 	width: auto;
 	height: 30px;
-}
-
-/* the app's own tile over Get Riff, as a store leads with an app's icon */
-.app-icon {
-	display: block;
-	width: 96px;
-	height: 96px;
-	margin: 0 0 24px;
-}
-
-#owners .app-icon {
-	margin-inline: auto;
 }
 
 .nav nav {
@@ -340,7 +321,6 @@ h2 {
 	font-weight: 400;
 	margin: 0;
 	letter-spacing: 0;
-	text-wrap: balance;
 	color: var(--ink);
 }
 
@@ -361,7 +341,6 @@ h2 {
 	color: var(--charcoal-3);
 	max-width: 40rem;
 	line-height: 1.7;
-	text-wrap: pretty;
 }
 
 .fine {
@@ -369,13 +348,14 @@ h2 {
 	font-size: 0.875rem;
 	line-height: 1.714;
 	color: var(--ink-2);
-	text-wrap: pretty;
 }
 
 /* sections: one idea each, the words on the content column's left edge
    and the picture under them, the same on every section, with the same room
    between each */
 section {
+	position: relative;
+	overflow: hidden;
 	padding: var(--space-7) 0;
 	text-align: left;
 }
@@ -394,7 +374,7 @@ section {
 }
 
 .hero .lede {
-	margin-top: var(--space-3);
+	margin: var(--space-3) 0 0;
 	font-size: clamp(1.25rem, 1.8vw, 1.5rem);
 }
 
@@ -413,12 +393,6 @@ section {
 	}
 }
 
-.hero .lede {
-	margin-left: 0;
-	max-width: 40rem;
-	text-wrap: pretty;
-}
-
 .hero .cta {
 	margin-bottom: var(--space-5);
 }
@@ -431,7 +405,7 @@ section {
 	color: var(--accent);
 }
 
-/* how it works: the heading and a line, then three phones in a row, each
+/* how it works: the heading, then three phones in a row, each
    the same size and its caption under it on a hairline, as the turntable's
    points are set */
 .trio {
@@ -452,7 +426,6 @@ section {
 .trio .device {
 	display: block;
 	width: 100%;
-	box-shadow: 0 24px 48px rgb(60 40 20 / 0.14);
 }
 
 .trio b,
@@ -493,7 +466,7 @@ section {
 /* the turntable: on the ground Now Playing gives it in the player, the
    artwork's tint darkening downwards (riff.css's .riff-np-bg, for
    Compositions), so the picture's edges fade into the page as the deck
-   stands on the screen; its four points in a row beneath */
+   stands on the screen; two points beneath, at the deck's width */
 #turntable {
 	background: linear-gradient(#0b1227, #04070f);
 }
@@ -513,10 +486,11 @@ section {
 
 .points {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0 var(--space-4);
+	max-width: 760px;
 	list-style: none;
-	margin: var(--space-5) 0 0;
+	margin: var(--space-5) auto 0;
 	padding: 0;
 }
 
@@ -528,39 +502,10 @@ section {
 	color: var(--ink-2);
 }
 
-@media (max-width: 900px) {
-
-	.points {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--space-4);
-	}
-}
-
-.plain {
-	margin: var(--space-3) 0 0;
-	padding-left: 1.2em;
-	line-height: 1.75;
-	color: var(--charcoal-2);
-}
-
-.plain li {
-	margin: 0 0 var(--space-1);
-}
-
-.plain li::marker {
-	color: var(--accent);
-}
-
-.wrap {
-	position: relative;
-	z-index: 1;
-}
-
 /* a band: one of the app's panels, the text on it light */
 .alt {
 	--ink: var(--white);
 	--ink-2: #b8b1a6;
-	--ink-3: #8f897f;
 	--line: #34302a;
 	--accent: var(--ivory);
 	--action: var(--ivory);
@@ -596,9 +541,6 @@ section {
 	display: flex;
 	justify-content: center;
 }
-
-/* buttons: pomegranate with white on it, 2px corners, as wordpress.org draws
-   its own; and a text link with an arrow */
 
 /* buttons, as wordpress.org draws them: 600 weight, 14px by 32px, 2px
    corners; the outline style for the second action */
@@ -670,10 +612,6 @@ section {
 	margin-top: 14px;
 }
 
-.shelf + .fine {
-	margin-top: 16px;
-}
-
 /* screenshots: flat, 2px corners, a hairline, as wordpress.org shows them.
    A phone is never taller than most of the window: the width follows the
    height, so the whole screen shows, smaller, rather than running past the
@@ -704,17 +642,8 @@ picture {
 	display: contents;
 }
 
-.shot + .fine {
-	margin-top: var(--space-4);
-}
-
-section {
-	position: relative;
-	overflow: hidden;
-}
-
-/* the shelf: the demo's nine covers, eight drawn by the player and one real,
-   in a row */
+/* the shelf: eight covers from the demo and the wall, until crate.js
+   stands them in a crate */
 .shelf {
 	list-style: none;
 	margin: var(--gap) auto 0;
@@ -730,7 +659,6 @@ section {
 	border-radius: 2px;
 	overflow: hidden;
 	background: var(--grey-2);
-	box-shadow: 0 1px 0 rgba(30, 30, 30, 0.06);
 }
 
 .shelf img {
@@ -783,11 +711,6 @@ footer nav {
 	.nav nav a:not(.btn) {
 		display: none;
 	}
-
-	.facts {
-		grid-template-columns: 1fr;
-		gap: 20px;
-	}
 }
 
 /* Try it: the words on the left and the demo's covers beside them, as the
@@ -831,7 +754,9 @@ footer nav {
 }
 
 /* crate.js stands the covers in a crate over the row, which it then hides.
-   Its height is held while it loads, so the page under it never moves. */
+   Its height is held while it loads, so the page under it never moves.
+   It is dug by dragging sideways, so it keeps only vertical panning for
+   the page; the line under it says how. */
 .crate {
 	display: block;
 	width: 100%;
@@ -840,17 +765,12 @@ footer nav {
 	max-width: 62rem;
 	opacity: 0;
 	transition: opacity 0.6s ease;
+	touch-action: pan-y;
+	cursor: pointer;
 }
 
 .crate.is-in {
 	opacity: 1;
-}
-
-/* the crate is dug by dragging sideways on a screen, so it keeps only
-   vertical panning for the page; the line under it says how */
-.crate {
-	touch-action: pan-y;
-	cursor: pointer;
 }
 
 #try .crate-hint {
@@ -963,10 +883,6 @@ footer ::selection {
    between the turntable and the covers */
 .library-shot {
 	margin-top: var(--space-5);
-}
-
-.library-shot .desk {
-	box-shadow: 0 30px 60px rgb(60 40 20 / 0.18);
 }
 
 /* Try it: on the paper, after the wall, so the page ends where it began */
