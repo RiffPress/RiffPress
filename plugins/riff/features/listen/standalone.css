@@ -854,3 +854,109 @@ html.has-riff .riff-standalone .riff-app {
 		color: var(--riff-app-ink);
 	}
 }
+
+/* A short screen, wider for its height than a phone held upright, as a
+   folded iPhone Duo's outer screen is and a phone on its side: the tabs go
+   down the right edge, where iOS keeps its own bars on such a screen, the
+   first under the status bar's corner, and the page gets back the height
+   they took along the bottom. The bar keeps the bottom, beside them. By the
+   screen's shape, never the device. */
+@media (max-width: 899px) and (min-aspect-ratio: 13 / 20) {
+
+	.riff-standalone {
+		--riff-tabs-h: var(--riff-safe-b);
+		--riff-rail-w: calc(72px + var(--riff-safe-r));
+	}
+
+	.riff-standalone .riff-app {
+		padding-right: calc(var(--riff-rail-w) + 16px);
+	}
+
+	.riff-standalone #riff .riff-bar,
+	.riff-standalone #riff .riff-toast {
+		right: var(--riff-rail-w);
+	}
+
+	/* the bar reaches the screen's foot, its contents above the home
+	   indicator, so nothing scrolls past under it */
+	.riff-standalone #riff .riff-bar {
+		bottom: 0;
+		height: calc(var(--riff-bar-h) + var(--riff-safe-b));
+		padding-bottom: var(--riff-safe-b);
+	}
+
+	.riff-standalone .riff-app-bar::after {
+		top: 0;
+		left: auto;
+		width: var(--riff-rail-w);
+		height: auto;
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab:is(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library) {
+		right: 0;
+		bottom: auto;
+		left: auto;
+		width: var(--riff-rail-w);
+		height: 64px;
+		padding-right: var(--riff-safe-r);
+		padding-bottom: 0;
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-home {
+		top: calc(var(--riff-safe-t) + 48px);
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab-search {
+		top: calc(var(--riff-safe-t) + 112px);
+	}
+
+	.riff-standalone .riff-app .riff-app-bar .riff-app-tab-library {
+		top: calc(var(--riff-safe-t) + 176px);
+	}
+}
+
+/* Wider still, as an unfolded iPhone Duo and a phone on its side are, an
+   album, artist or playlist opens as a gatefold sleeve does: the cover on
+   the left page, held there, and the title, the actions and the tracks on
+   the right page, which scrolls. */
+@media (max-width: 899px) and (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px) {
+
+	.riff-standalone .riff-app-view:has(> .riff-album) {
+		display: grid;
+		grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+		column-gap: 32px;
+		align-items: start;
+	}
+
+	.riff-standalone .riff-app-view:has(> .riff-album) > * {
+		grid-column: 2;
+	}
+
+	.riff-standalone .riff-app-view > .riff-album {
+		display: contents;
+	}
+
+	.riff-standalone .riff-app-view > .riff-album > .riff-album-cover {
+		position: sticky;
+		top: calc(var(--riff-safe-t) + 16px);
+		grid-row: 1 / span 2;
+		grid-column: 1;
+		justify-self: center;
+		width: min(100%, calc(100dvh - var(--riff-bar-h) - var(--riff-safe-t) - var(--riff-safe-b) - 48px));
+	}
+
+	.riff-standalone .riff-app-view > .riff-album > .riff-album-text {
+		grid-row: 1;
+		grid-column: 2;
+		text-align: start;
+	}
+
+	.riff-standalone .riff-app .riff-app-view > .riff-album .riff-album-actions {
+		justify-content: flex-start;
+	}
+
+	.riff-standalone .riff-app-view:has(> .riff-album) > .riff-album-tracks {
+		grid-row: 2;
+		margin-top: 16px;
+	}
+}

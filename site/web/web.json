@@ -497,7 +497,7 @@
 			"url": "https://www.w3.org/TR/cssom-view-1/#dom-window-matchmedia"
 		},
 		"summary": "Reads the same breakpoint and motion preference the stylesheet uses.",
-		"how": "Three queries are read from script. `prefers-reduced-motion` skips the frame loops and the close transition. `(hover: none)` stands in for a touch screen before vibrating. `(min-width: 900px)` decides whether the bar sits beside the dialog and stays live, or under it and goes inert.",
+		"how": "Three queries are read from script. `prefers-reduced-motion` skips the frame loops and the close transition. `(hover: none)` stands in for a touch screen before vibrating. `(min-width: 900px)` decides whether the bar sits beside the dialog and stays live, or under it and goes inert; where the whole screen is the turntable, as on an unfolded phone, the dialog covers the bar at any width.",
 		"why": "The phone and desktop layouts differ in ways CSS alone cannot express, and the script has to agree with the stylesheet about where the line is.",
 		"fallback": null,
 		"where": [
@@ -511,7 +511,7 @@
 			},
 			{
 				"file": "plugins/riff/assets/player/now-playing.js",
-				"code": "const wide = window.matchMedia( '(min-width: 900px)' ).matches;"
+				"code": "const wide = window.matchMedia( '(min-width: 900px)' ).matches && ! wholeDeck();"
 			}
 		],
 		"shot": {
@@ -934,6 +934,34 @@
 		"shot": {
 			"image": "phone-post",
 			"caption": "The player bar, padded so its controls clear the home indicator."
+		}
+	},
+	{
+		"slug": "viewport-segments",
+		"name": "Viewport segments",
+		"group": "Styling",
+		"mdn": "https://developer.mozilla.org/docs/Web/API/Viewport_segments_API",
+		"spec": {
+			"name": "CSS Environment Variables Module Level 1",
+			"url": "https://drafts.csswg.org/css-env-1/#viewport-segments"
+		},
+		"summary": "Keeps the turntable and the controls out of a folding phone's crease.",
+		"how": "Where the browser reports a fold, the `horizontal-viewport-segments` and `vertical-viewport-segments` media queries say whether it runs down the screen or across it, and the `viewport-segment-width`, `viewport-segment-height` and edge variables give each segment's size. Folded like a book, Now Playing's grid takes its two columns from the two segments, the deck on the left page and the controls on the right, with the crease as the gap between them; stood like a tent, it takes two rows, the sleeve and the turntable above and the controls below.",
+		"why": "An iPhone Duo can be half open, and anything centred on the whole screen lands in the fold. The browser knows where the fold is; the layout follows it rather than guessing from the screen's size.",
+		"fallback": "Without it, as in Safari until its flag is on, the unfolded layout holds: the screen is one turntable, crease and all.",
+		"where": [
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"code": "@media (horizontal-viewport-segments: 2) {"
+			},
+			{
+				"file": "plugins/riff/assets/riff.css",
+				"code": "grid-template-columns: env(viewport-segment-width 0 0) env(viewport-segment-width 1 0);"
+			}
+		],
+		"shot": {
+			"image": "desktop-now-playing",
+			"caption": "The turntable, which keeps to one page of a half-open phone."
 		}
 	},
 	{

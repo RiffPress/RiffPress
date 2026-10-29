@@ -34,8 +34,9 @@ export function nowPlaying( P ) {
 		P.syncWakeLock?.();
 		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own
 		// bar and toast, which the dialog covers there and which would otherwise still take focus.
-		// On a wide screen the dialog opens above the bar and the bar stays the control surface.
-		const wide = window.matchMedia( '(min-width: 900px)' ).matches;
+		// On a wide screen the dialog opens above the bar and the bar stays the control surface,
+		// unless the whole screen is the turntable, which covers the bar as a phone's does.
+		const wide = window.matchMedia( '(min-width: 900px)' ).matches && ! wholeDeck();
 		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
 		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
 		// screen the bar beside it is still how the music is controlled.
@@ -557,12 +558,25 @@ export function nowPlaying( P ) {
 		}
 		return roomy.last ?? window.innerWidth >= window.innerHeight * 1.2;
 	}
+	// Where the whole screen is the turntable (riff.css: an unfolded phone, a phone on its side),
+	// opening it brings the record out whether or not it is playing, as setting a record on the
+	// platter does; elsewhere it comes out only while it turns.
+	const OPENING = 400;
+	const wholeDeck = () =>
+		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
 	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
 		new ResizeObserver( () => {
 			const was = roomy.last;
-			if ( ! np.hidden && roomy() !== was ) {
-				deck( roomy.last && 'riffTurning' in root.dataset );
+			if ( np.hidden || roomy() === was ) {
+				return;
 			}
+			clearTimeout( deck.opening );
+			if ( roomy.last && wholeDeck() && ! P.reduce() ) {
+				// Opened: the sleeve settles at the deck's edge first, then the record slides out of it.
+				deck.opening = setTimeout( () => deck( roomy() ), OPENING );
+				return;
+			}
+			deck( roomy.last && ( 'riffTurning' in root.dataset || wholeDeck() ) );
 		} ).observe( $( '.riff-stage' ) );
 	}
 
