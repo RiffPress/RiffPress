@@ -275,7 +275,7 @@ final class Media {
 	 * Keeps the tags of a file without ID3, such as FLAC, Ogg and M4A, which WordPress reads but
 	 * does not keep, under the names ID3 gives them, so the catalog files the track by its artist
 	 * and album. A tag WordPress already kept is left as it is, so this does nothing once core
-	 * keeps them (Core #NNNNN). The language is left to language().
+	 * keeps them (Core #66417). The language is left to language().
 	 *
 	 * @since 5.7.0
 	 *
