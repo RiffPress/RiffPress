@@ -1,6 +1,6 @@
 /**
  * The turntable's parts: the sleeve puts the record away and plays it again, and the arm is put
- * down on any band of the side, by dragging, by two clicks, or from the keyboard.
+ * down on any band of the side, by dragging (turning on its base with the hand), by two clicks, or from the keyboard.
  * Runs in desktop Chromium, where the turntable stands; a phone held upright shows the cover alone.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -74,10 +74,14 @@ test.describe( 'Turntable', () => {
 		const record = await page.locator( '.riff-record' ).boundingBox();
 		const grip = await onArm( page );
 		const max = await arm.getAttribute( 'aria-valuemax' );
+		const turned = () => arm.evaluate( ( el ) => parseFloat( getComputedStyle( el ).rotate ) || 0 );
 		await page.mouse.move( grip.x, grip.y );
 		await page.mouse.down();
+		const before = await turned();
 		await page.mouse.move( record.x + record.width * 0.5, record.y + record.height * 0.7, { steps: 8 } );
 		await expect( arm ).toHaveAttribute( 'data-riff-held', '' );
+		// In the hand it turns with the hand, towards the label, before it is let go.
+		await expect.poll( turned ).toBeGreaterThan( before + 5 );
 		await page.mouse.up();
 		await expect( arm ).not.toHaveAttribute( 'data-riff-held', '' );
 		await expect( arm ).toHaveAttribute( 'aria-valuenow', max );
