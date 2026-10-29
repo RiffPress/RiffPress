@@ -32,6 +32,7 @@ final class Sign_In {
 	 */
 	public static function register(): void {
 		Routes::register();
+		Listeners::register();
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_action( 'template_redirect', array( self::class, 'link' ) );
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporters' ) );

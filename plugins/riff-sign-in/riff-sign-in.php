@@ -29,6 +29,7 @@ require __DIR__ . '/src/class-cbor.php';
 require __DIR__ . '/src/class-passkeys.php';
 require __DIR__ . '/src/class-codes.php';
 require __DIR__ . '/src/class-routes.php';
+require __DIR__ . '/src/class-listeners.php';
 require __DIR__ . '/src/class-sign-in.php';
 
 /*
