@@ -6,7 +6,7 @@ Record each check as **pass**, **fail** or **unverified**, with the screen reade
 
 Run it with at least two of: VoiceOver with Safari on a Mac, VoiceOver on an iPhone, NVDA with Firefox, JAWS with Chrome, TalkBack with Chrome. Windows High Contrast and 400% zoom are at the end.
 
-Use the demo at https://riffpress.com/demo, or any post with at least three tracks, and a page with the Listen block.
+Use the demo at https://next.riffpress.com/, or any post with at least three tracks, and a page with the Listen block.
 
 ## Before you start
 
