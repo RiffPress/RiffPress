@@ -66,11 +66,50 @@ test.describe( 'iPhone Duo', () => {
 		const panel = await page.locator( '.riff-np-panel' ).boundingBox();
 		expect( record.x + record.width ).toBeLessThan( panel.x );
 		expect( record.height ).toBeGreaterThan( OPEN.height * 0.6 );
-		await expect( page.locator( '.riff-np-panel [data-riff-action="toggle"]' ) ).toBeVisible();
+		await expect( page.locator( '.riff-deck-board .riff-start' ) ).toBeVisible();
 		// Up next opens in the strip; the turntable stays as large as it was.
 		await page.locator( '.riff-peek' ).click();
 		await expect( page.locator( '.riff-queue-list' ) ).toBeVisible();
 		expect( ( await page.locator( '.riff-record' ).boundingBox() ).height ).toBeCloseTo( record.height, 0 );
+	} );
+
+	test( 'the deck has its own controls: start and stop, the two speeds, and the pitch', async ( { page } ) => {
+		await nowPlaying( page );
+		const rate = () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate );
+		const board = page.getByRole( 'group', { name: 'Turntable' } );
+		await expect( board ).toBeVisible();
+		// The strip's own play button gives way to the deck's.
+		await expect( page.locator( '.riff-np-panel [data-riff-action="toggle"]' ) ).toBeHidden();
+		const lp = board.getByRole( 'radio', { name: '33⅓ revolutions per minute' } );
+		const single = board.getByRole( 'radio', { name: '45 revolutions per minute' } );
+		await expect( lp ).toHaveAttribute( 'aria-checked', 'true' );
+		// An LP at 45 runs fast, as on a deck; the arrows move between the speeds.
+		await single.click();
+		await expect( single ).toHaveAttribute( 'aria-checked', 'true' );
+		await expect.poll( rate ).toBeCloseTo( 45 / ( 100 / 3 ), 2 );
+		await page.keyboard.press( 'ArrowLeft' );
+		await expect( lp ).toHaveAttribute( 'aria-checked', 'true' );
+		await expect.poll( rate ).toBeCloseTo( 1, 2 );
+		// The pitch adds its percentage, says it, and clicks into the middle.
+		const pitch = board.getByRole( 'slider', { name: 'Pitch' } );
+		await pitch.fill( '4' );
+		await expect( pitch ).toHaveAttribute( 'aria-valuetext', '+4.0%' );
+		await expect.poll( rate ).toBeCloseTo( 1.04, 2 );
+		await pitch.fill( '0.2' );
+		await expect( pitch ).toHaveAttribute( 'aria-valuetext', '0.0%' );
+		await expect.poll( rate ).toBeCloseTo( 1, 2 );
+		// Off the deck the music is at its own speed; back on it, the deck's again.
+		await pitch.fill( '-6' );
+		await expect.poll( rate ).toBeCloseTo( 0.94, 2 );
+		await page.setViewportSize( FOLDED );
+		await expect.poll( rate ).toBeCloseTo( 1, 2 );
+		await page.setViewportSize( OPEN );
+		await expect.poll( rate ).toBeCloseTo( 0.94, 2 );
+		// Start and stop is the transport's play and pause.
+		const start = board.locator( '.riff-start' );
+		await expect( start ).toHaveAttribute( 'aria-label', 'Pause' );
+		await start.click();
+		await expect( start ).toHaveAttribute( 'aria-label', 'Play' );
 	} );
 
 	test( 'opening brings the record out of its sleeve, and closing puts it back', async ( { page } ) => {
