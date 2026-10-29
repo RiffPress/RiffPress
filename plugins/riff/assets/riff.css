@@ -2537,11 +2537,33 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		margin-top: 12px;
 	}
 
-	/* The capsule keeps its look at a phone's size. */
-	#riff .riff-np-quality .riff-quality {
-		height: 28px;
-		padding: 0 12px;
-		font-size: 12px;
+	/* On a phone the badges leave the title and sit between the times,
+	   as Tidal sets its tier: small print in the tier's colour, with no
+	   capsule round it. The capsule is the wide screen's. */
+	#riff .riff-np-quality {
+		display: none;
+	}
+
+	#riff .riff-np-tier {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		gap: 12px;
+	}
+
+	#riff .riff-np-tier .riff-badge {
+		height: auto;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+		color: var(--riff-quality-ink, var(--riff-fg-2));
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		text-shadow: none;
 	}
 
 	#riff .riff-peek {

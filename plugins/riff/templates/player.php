@@ -112,7 +112,8 @@ defined( 'ABSPATH' ) || exit;
 				<div class="riff-np-seek">
 					<span class="riff-line" aria-hidden="true"><i></i></span>
 					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Track position', 'riff' ); ?>">
-					<span class="riff-np-times" dir="ltr"><span data-riff-text="current">0:00</span><span data-riff-text="duration">0:00</span></span>
+					<?php // On a phone the badges are small print between the times, as Tidal sets its tier under the seek line, rather than a capsule on a row of their own. ?>
+					<span class="riff-np-times" dir="ltr"><span data-riff-text="current">0:00</span><span class="riff-np-tier riff-area riff-mobile" data-riff-area="badges"></span><span data-riff-text="duration">0:00</span></span>
 				</div>
 				<div class="riff-np-controls">
 					<button type="button" class="riff-btn" data-riff-action="shuffle" aria-label="<?php esc_attr_e( 'Shuffle', 'riff' ); ?>" aria-pressed="false"><?php echo Player::icon( 'shuffle' ); ?></button>

@@ -43,7 +43,7 @@ filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
 ## Areas
 
 The player has places that features fill: **badges**, the pills at the bar's right end and under
-the title in Now Playing; **controls**, buttons beside them; and the **meter**, the music's level
+the title in Now Playing, and on a phone small print between the seek line's times, as Tidal sets its tier; **controls**, buttons beside them; and the **meter**, the music's level
 each frame, which lights the seek line and moves the playing row's bars. Riff's own features use
 them as any feature would: the quality pill is a badge, and the seek line's glow is a meter
 listener.
