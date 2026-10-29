@@ -34,6 +34,22 @@ final class Media {
 	public const CAPTIONS_META = '_riff_captions';
 
 	/**
+	 * Tag names in Vorbis comments (FLAC, Ogg) and QuickTime atoms (M4A) whose ID3 name differs.
+	 *
+	 * @since 5.7.0
+	 */
+	private const ID3_KEYS = array(
+		'albumartist'   => 'band',
+		'album_artist'  => 'band',
+		'date'          => 'year',
+		'creation_date' => 'year',
+		'tracknumber'   => 'track_number',
+		'discnumber'    => 'part_of_a_set',
+		'disc_number'   => 'part_of_a_set',
+		'lyrics'        => 'unsynchronised_lyric',
+	);
+
+	/**
 	 * The language tags getID3 reads, as ISO 639-2 codes, and the ISO 639-1 code a `lang`
 	 * attribute wants for each; a code not here is kept as it is when it is already two letters.
 	 */
@@ -98,6 +114,7 @@ final class Media {
 		add_action( 'init', array( self::class, 'register_meta' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'fields' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
+		add_filter( 'wp_read_audio_metadata', array( self::class, 'tags' ), 10, 4 );
 		add_filter( 'wp_read_audio_metadata', array( self::class, 'language' ), 10, 4 );
 		add_action( 'wp_enqueue_media', array( self::class, 'enqueue' ), 10 );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_media' ) );
@@ -250,6 +267,41 @@ final class Media {
 				$metadata['language'] = $code;
 				break;
 			}
+		}
+		return $metadata;
+	}
+
+	/**
+	 * Keeps the tags of a file without ID3, such as FLAC, Ogg and M4A, which WordPress reads but
+	 * does not keep, under the names ID3 gives them, so the catalog files the track by its artist
+	 * and album. A tag WordPress already kept is left as it is, so this does nothing once core
+	 * keeps them (Core #NNNNN). The language is left to language().
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param array       $metadata    What WordPress keeps.
+	 * @param string      $file        The file.
+	 * @param string|null $file_format Its format.
+	 * @param array       $data        Everything getID3 read.
+	 * @return array
+	 */
+	public static function tags( $metadata, $file, $file_format, $data ) {
+		unset( $file, $file_format );
+		if ( ! is_array( $metadata ) || ! is_array( $data ) || ! empty( $data['id3v2']['comments'] ) || ! empty( $data['id3v1']['comments'] ) ) {
+			return $metadata;
+		}
+		foreach ( (array) ( $data['tags'] ?? array() ) as $tags ) {
+			if ( empty( $tags ) || ! is_array( $tags ) ) {
+				continue;
+			}
+			foreach ( $tags as $key => $list ) {
+				$key = self::ID3_KEYS[ $key ] ?? $key;
+				if ( in_array( $key, array( 'length', 'picture', 'language' ), true ) || isset( $metadata[ $key ] ) || empty( $list ) ) {
+					continue;
+				}
+				$metadata[ $key ] = is_array( $list ) ? wp_kses_post_deep( reset( $list ) ) : wp_kses_post( $list );
+			}
+			break;
 		}
 		return $metadata;
 	}
