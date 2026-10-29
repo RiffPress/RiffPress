@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.6.1](https://github.com/RiffPress/RiffPress/compare/riff-v5.6.0...riff-v5.6.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **media:** FLAC, Ogg and M4A files keep their tags, so the catalog files them by artist and album ([#748](https://github.com/RiffPress/RiffPress/issues/748)) ([bdad10a](https://github.com/RiffPress/RiffPress/commit/bdad10ae133a65fd0d151015363e9bc34772ff04))
+
 ## [5.6.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.5.0...riff-v5.6.0) (2026-10-29)
 
 
