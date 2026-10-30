@@ -32,6 +32,21 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$this->sent[] = array( $email, $code, $link );
 	}
 
+	/**
+	 * Opens or closes registration where the site keeps it: "Anyone can register" on a single
+	 * site, and the network's registration setting on a network, which WordPress reads in its
+	 * place.
+	 *
+	 * @param bool $open Whether anyone may register.
+	 */
+	private function registration( bool $open ): void {
+		if ( is_multisite() ) {
+			update_site_option( 'registration', $open ? 'user' : 'none' );
+		} else {
+			update_option( 'users_can_register', $open ? 1 : 0 );
+		}
+	}
+
 	public function test_a_code_signs_an_existing_user_in_and_a_wrong_one_does_not(): void {
 		$user = self::factory()->user->create( array( 'user_email' => 'ella@example.com', 'role' => 'subscriber' ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		$sent = Codes::request( 'ella@example.com', home_url( '/listen/' ) );
@@ -63,7 +78,7 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 	}
 
 	public function test_an_unknown_address_gets_the_same_answer_and_no_email_while_registration_is_closed(): void {
-		update_option( 'users_can_register', 0 );
+		$this->registration( false );
 		$sent = Codes::request( 'nobody@example.com' );
 		$this->assertIsArray( $sent, 'the answer says nothing about who has an account' );
 		$this->assertSame( array(), $this->sent, 'nothing is mailed where nobody can sign in' );
@@ -71,7 +86,7 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 	}
 
 	public function test_with_registration_open_a_new_address_becomes_a_user_when_its_code_comes_back(): void {
-		update_option( 'users_can_register', 1 );
+		$this->registration( true );
 		update_option( 'default_role', 'subscriber' );
 		$sent = Codes::request( 'new.listener@example.com' );
 		$this->assertCount( 1, $this->sent );
