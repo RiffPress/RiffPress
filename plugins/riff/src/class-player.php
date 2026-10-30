@@ -24,7 +24,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const APP_MODULES = array( 'helpers', 'addresses', 'fetch', 'cards', 'views', 'hearts', 'playlists', 'home', 'sidebar', 'install', 'desktop', 'search', 'rack' );
+	public const APP_MODULES = array( 'helpers', 'addresses', 'fetch', 'cards', 'views', 'hearts', 'playlists', 'home', 'sidebar', 'install', 'desktop', 'search', 'rack', 'together' );
 
 	/**
 	 * The player's sections under assets/player/: the modules riff.js imports as it starts, each
@@ -39,7 +39,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const PLAYER_FEATURES = array( 'filament', 'gestures', 'session', 'cast', 'share', 'wake-lock' );
+	public const PLAYER_FEATURES = array( 'filament', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together' );
 
 	/**
 	 * Hooks the assets and the markup.
@@ -240,8 +240,9 @@ final class Player {
 			'library'    => rest_url( 'riff/v1/library/' ),
 		);
 		// What Riff's own features add for the script: the Listen app's address, the listener's
-		// likes and playlists, and whether they have the single-key shortcuts.
-		$data = Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) );
+		// likes and playlists, whether they have the single-key shortcuts, and where they share what
+		// they play.
+		$data = Listen\Together::player_data( Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) ) );
 		printf(
 			'<script type="application/json" id="riff-data">%s</script>',
 			wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )

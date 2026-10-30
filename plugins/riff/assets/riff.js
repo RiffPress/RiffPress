@@ -233,6 +233,20 @@ function start() {
 		 */
 		playNext: ( tracks ) => P.insert( tracks, P.pos + 1, 'next' ),
 		/**
+		 * Plays someone else's queue in its order from a point in one of its tracks, to listen
+		 * along with them.
+		 *
+		 * @since 5.7.0
+		 *
+		 * @param {Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
+		 * @param {number}   index  The one to play.
+		 * @param {number}   at     Where in it, in seconds.
+		 */
+		playFrom( tracks, index, at ) {
+			P.shuffle = false;
+			P.setQueue( tracks, index, { at: Math.max( 0, Number( at ) || 0 ) } );
+		},
+		/**
 		 * Adds tracks to the end of the queue, or starts them when nothing is playing.
 		 *
 		 * @since 4.19.0

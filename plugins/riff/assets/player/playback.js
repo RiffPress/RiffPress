@@ -43,11 +43,14 @@ export function playback( P ) {
 			// Said when the sound starts (media.js), so a track that never starts is not called playing.
 			P.announcing = t.id;
 		}
-		// The lock screen, the filament and the wake lock are modules of their own, loaded when the
-		// first track does and told about this one once they are.
+		// The lock screen, the filament, the wake lock and listening together are modules of their
+		// own, loaded when the first track does and told about this one once they are.
 		P.feature( 'session' );
 		P.feature( 'filament' );
 		P.feature( 'wake-lock' );
+		if ( P.me?.rest?.together ) {
+			P.feature( 'together' );
+		}
 		P.metadata?.( t );
 		// Before the new artwork is painted, so a new album's record can leave as the old one.
 		P.groove( t );

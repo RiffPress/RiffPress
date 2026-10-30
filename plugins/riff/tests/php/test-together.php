@@ -216,6 +216,14 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertSame( array_map( 'strval', $this->tracks ), array_map( fn( $t ) => (string) $t['id'], $listener['queue'] ), 'the draft\'s track is left out' );
 		$this->assertSame( 1, $listener['index'], 'the index follows its track' );
 		$this->assertSame( (string) $this->tracks[1], (string) $listener['track']['id'] );
+		$this->assertGreaterThanOrEqual( $listener['since'], $listener['now'], 'with the server\'s clock, to work out where they are now' );
+	}
+
+	public function test_the_player_is_told_where_to_share_only_when_signed_in(): void {
+		wp_set_current_user( $this->guest );
+		$data = Together::player_data( array( 'me' => array( 'rest' => array() ) ) );
+		$this->assertSame( rest_url( 'riff/v1/together' ), $data['me']['rest']['together'] );
+		$this->assertSame( array(), Together::player_data( array() ), 'a visitor\'s player has no account to share from' );
 	}
 
 	public function test_the_version_says_when_nothing_has_changed(): void {

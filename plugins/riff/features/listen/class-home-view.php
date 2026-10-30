@@ -11,6 +11,7 @@ namespace Riff\Listen;
 use WP_REST_Request;
 
 use Riff\Library;
+use Riff\Likes_Rest;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -45,6 +46,10 @@ final class Home_View {
 		}
 		$html  = Ui::title( __( 'Home', 'riff' ) );
 		$html .= self::played_shelves( $page );
+		// Who else is playing, which the script fills; hidden until someone is.
+		if ( Together::available() && true === Likes_Rest::allowed() ) {
+			$html .= Ui::shelf( 'together', __( 'Listening now', 'riff' ), '', '', true, 'div', array( 'together' => rest_url( Library::REST . '/together' ) ) );
+		}
 		if ( $albums['items'] ) {
 			$html .= Ui::shelf( 'added', __( 'Recently added', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( $albums['items'], $page ) );
 		}
