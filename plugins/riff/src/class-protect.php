@@ -480,7 +480,9 @@ final class Protect {
 				esc_html__( 'Only listeners who may play it can load the file', 'riff' ),
 				'' !== $error ? '<p class="riff-pick-error" role="alert">' . esc_html( $error ) . '</p>' : ''
 			),
-			'helps' => __( 'Moves the file into a folder the web server refuses, and serves it through WordPress to whoever can read its post. Posts that link to it are updated.', 'riff' ),
+			'helps' => self::is( $post->ID ) || Protected_Files::local( (string) get_attached_file( $post->ID, true ) )
+				? __( 'Moves the file into a folder the web server refuses, and serves it through WordPress to whoever can read its post. Posts that link to it are updated.', 'riff' )
+				: __( 'This file is kept off this server, so the plugin that stores it has to make it private there; without one that can, it stays public. Riff then serves it to whoever can read its post. Posts that link to it are updated.', 'riff' ),
 		);
 		return $fields;
 	}

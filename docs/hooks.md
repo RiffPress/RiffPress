@@ -41,6 +41,18 @@ Since 4.16.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$tabs` | `array[]` | Tabs keyed by slug, each with a label. |
 
+### `riff_protect_storage`
+
+Filters whether the storage a file is kept in elsewhere was made private, when it is protected, or public again, when it isn't. A plugin that keeps uploads in object storage or on a CDN answers for its own files: true once the copy there is private (or public again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an answer, a file only on this server is moved into the protected folder, and one kept elsewhere is not protected, as moving it would leave it public there.
+
+Since 5.7.0. Fires in `plugins/riff/src/class-protected-files.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$done` | `true\|WP_Error\|null` | Null, the default: nothing keeps it elsewhere. |
+| `$id` | `int` | Attachment ID. |
+| `$protect` | `bool` | True to make it private, false to make it public again. |
+
 ### `riff_protected_send`
 
 Filters how a protected file is handed over: 'php' sends it from PHP; 'x-sendfile' asks Apache's mod_xsendfile or LiteSpeed to send it; 'x-accel-redirect' asks Nginx, which then needs an internal location for the protected folder (see the readme).
