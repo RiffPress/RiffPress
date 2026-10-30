@@ -53,6 +53,18 @@ Since 4.18.0. Fires in `plugins/riff/src/class-protect.php`.
 | `$file` | `string` | Absolute path. |
 | `$id` | `int` | Attachment ID. |
 
+### `riff_protected_url`
+
+Filters the address a protected file is sent from instead of WordPress: a signed address on a CDN or in object storage, such as a CloudFront or S3 presigned URL or a Bunny or Cloudflare token, that stops working at $expires. Riff has checked that the visitor may have the file before it asks, and sends them on with a 302 nothing caches. Empty, the default, sends the file as riff_protected_send says.
+
+Since 5.7.0. Fires in `plugins/riff/src/class-protect.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | Signed address, or empty. |
+| `$id` | `int` | Attachment ID. |
+| `$expires` | `int` | When the address should stop working, as a Unix time: an hour on. |
+
 ### `riff_sources`
 
 Filters the sources tracks are read from, keyed by id.

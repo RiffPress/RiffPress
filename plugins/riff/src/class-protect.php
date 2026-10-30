@@ -228,7 +228,43 @@ final class Protect {
 		if ( ! self::valid( $id, $expires, $signature ) && ! self::can( $id ) ) {
 			self::refuse( 403 );
 		}
+		$to = self::elsewhere( $id );
+		if ( '' !== $to ) {
+			// For this visitor and this once: never kept by a cache along the way.
+			nocache_headers();
+			wp_redirect( $to, 302, 'Riff' ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- a CDN's or storage's own host, given by a plugin, never by the request.
+			exit;
+		}
 		self::send( $id );
+	}
+
+	/**
+	 * Where a protected file is sent from instead of WordPress, when a CDN or storage plugin signs
+	 * an address for it: the visitor has been checked by now, and is sent on to an address that
+	 * works for a while, which the CDN checks and serves from its edge with byte ranges, so no PHP
+	 * worker holds the file while it plays. Empty when no plugin does.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int $id Attachment ID.
+	 * @return string
+	 */
+	public static function elsewhere( int $id ): string {
+		/**
+		 * Filters the address a protected file is sent from instead of WordPress: a signed address
+		 * on a CDN or in object storage, such as a CloudFront or S3 presigned URL or a Bunny or
+		 * Cloudflare token, that stops working at $expires. Riff has checked that the visitor may
+		 * have the file before it asks, and sends them on with a 302 nothing caches. Empty, the
+		 * default, sends the file as riff_protected_send says.
+		 *
+		 * @since 5.7.0
+		 *
+		 * @param string $url     Signed address, or empty.
+		 * @param int    $id      Attachment ID.
+		 * @param int    $expires When the address should stop working, as a Unix time: an hour on.
+		 */
+		$url = (string) apply_filters( 'riff_protected_url', '', $id, time() + HOUR_IN_SECONDS );
+		return in_array( wp_parse_url( $url, PHP_URL_SCHEME ), array( 'https', 'http' ), true ) ? $url : '';
 	}
 
 	/**
