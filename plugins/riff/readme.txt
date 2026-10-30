@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.6.1
+Stable tag: 5.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,16 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.7.0 =
+* An album's artist opens their page from the album's header.
+* With the Presence API active, a signed-in listener sees who else is playing what under Listening now, and can listen along.
+* Listeners can stay in the player, with their profile but no dashboard, toolbar or wp-login.php registration form.
+* Fixed: on a phone, an artist without a picture shows their initial, the tabs and status bar keep the page from showing past them, a phone on its side is laid out as one at any width, and the install card says why in a phone's terms.
+* Fixed: a track's edit screen no longer splits an artist or album with a comma in its name into two.
+* Fixed: Jump back in no longer shows the Listen page as a post with nothing in it.
+* Faster: a deploy that leaves the drawing code alone keeps every drawn cover's address, so covers stay cached.
+* Faster: a drawn cover is kept as a file in uploads once drawn, so pages link to it and it no longer starts WordPress for each request.
+
 = 5.6.1 =
 * Fixed: FLAC, Ogg and M4A files keep their tags, so the catalog files them by artist and album.
 
@@ -143,11 +153,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 5.4.0 =
 * The turntable is drawn as a real one is: a steel spindle on the deck, a printed label with the side's tracks, a cradle for the arm, an etched run-out and a strobe rim lit by its lamp.
 * Fixed: the turntable stands only on a stage wide enough for it, so a phone held upright shows the cover alone; the label is printed in zones round the spindle, which shows once the record rests on it.
-
-= 5.3.0 =
-* Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf.
-* The quality badge is a capsule pressed into the bar, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it.
-* The quality capsule reads on the bar's black, its bevel lit from above and a lossy file's words a cooler white.
-* The sleeve lies flat beside the turntable, as on the desk it stands on, apart from its plinth.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
