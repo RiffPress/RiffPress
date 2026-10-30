@@ -15,6 +15,7 @@ const site = require( './site' );
 const updates = require( './updates' );
 const { importMusic, AUDIO } = require( './import' );
 const { settings } = require( './settings' );
+const { watchAway } = require( './away' );
 
 const {
 	app,
@@ -228,14 +229,11 @@ function openSite( url ) {
 			}
 		}
 	} );
+	const unwatch = watchAway( app, siteWindow, away );
 	siteWindow.on( 'closed', () => {
+		unwatch();
 		siteWindow = null;
 	} );
-
-	siteWindow.on( 'minimize', () => away( true ) );
-	siteWindow.on( 'hide', () => away( true ) );
-	siteWindow.on( 'restore', () => away( false ) );
-	siteWindow.on( 'show', () => away( false ) );
 	// A page loaded while the window is down, as on resuming after a navigation, starts away.
 	siteWindow.webContents.on( 'dom-ready', () => {
 		if ( siteWindow.isMinimized() || ! siteWindow.isVisible() ) {
