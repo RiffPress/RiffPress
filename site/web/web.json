@@ -285,7 +285,7 @@
 			"url": "https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes"
 		},
 		"summary": "Fetches list thumbnails only as they scroll into view.",
-		"how": "Every thumbnail in a list is marked `loading=\"lazy\"`: the art on each track row, each item in Up next, and each record cover in the library grid. The cover of the current track is not lazy.",
+		"how": "Every thumbnail in a list is marked `loading=\"lazy\"`: the art on each track row, each item in Up next, and each record cover in the library grid. The cover of the current track is not lazy, and neither are the first row of covers on Home and the cover at the head of an album, which the page is painted around; the first of them is fetched before anything else.",
 		"why": "A post or library can have dozens of covers, and the browser should not fetch them all before the listener scrolls.",
 		"fallback": "A browser without the attribute loads the images eagerly.",
 		"where": [
@@ -295,7 +295,7 @@
 			},
 			{
 				"file": "plugins/riff/features/listen/class-ui.php",
-				"code": "$cover = '<img src=\"' . esc_url( $card['art'] ) . '\" alt=\"\" loading=\"lazy\" decoding=\"async\">';"
+				"code": "$load = ' loading=\"lazy\"';"
 			}
 		],
 		"shot": {

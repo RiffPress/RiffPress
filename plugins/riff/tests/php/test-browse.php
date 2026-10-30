@@ -422,6 +422,7 @@ class Test_Riff_Browse extends Riff_TestCase {
 
 		$this->assertStringContainsString( '<header class="riff-album riff-album-has-cover riff-album-tinted" style="--riff-album-tint:#', $html );
 		$this->assertStringContainsString( '<p class="riff-album-kind">Album</p>', $html );
+		$this->assertMatchesRegularExpression( '#<span class="riff-album-cover"><img [^>]*sizes="\(max-width: 599px\) 66vw, 300px" alt="" fetchpriority="high"#', $html, 'the cover the page is painted around, first' );
 		$this->assertStringContainsString( '<div class="riff-album-tracks" data-riff-numbered data-riff-more=', $html );
 		$this->assertStringNotContainsString( 'data-riff-numbered', $this->render_at( array( Browse::VIEW => 'tracks' ) ), 'a list of everything shows each track\'s art' );
 	}

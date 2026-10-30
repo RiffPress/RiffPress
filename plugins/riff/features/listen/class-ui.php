@@ -28,6 +28,35 @@ final class Ui {
 	private const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 
 	/**
+	 * How wide a card's cover is shown: two to a row on a phone, about a fifth of a computer's.
+	 *
+	 * @since 5.8.0
+	 */
+	public const CARD_SIZES = '(max-width: 599px) 45vw, 240px';
+
+	/**
+	 * How wide a list's cover is shown at its head: two thirds of a phone, at most 300px.
+	 *
+	 * @since 5.8.0
+	 */
+	public const HEADER_SIZES = '(max-width: 599px) 66vw, 300px';
+
+	/**
+	 * How many covers still to come load at once rather than when scrolled to, for the first row
+	 * of a view that leads with covers.
+	 *
+	 * @var int
+	 */
+	private static $eager = 0;
+
+	/**
+	 * Whether the next cover is the first of those, the one the page is painted around.
+	 *
+	 * @var bool
+	 */
+	private static $lead = false;
+
+	/**
 	 * A card: a square cover with a play button on it, a title that links, and a line under it.
 	 * The link and the button sit side by side, never one inside the other.
 	 *
@@ -39,7 +68,7 @@ final class Ui {
 	 *     @type string $title Title.
 	 *     @type string $href  Where the title links, or empty for plain text.
 	 *     @type string $sub   The line under the title.
-	 *     @type string $art    The cover's address, or empty.
+	 *     @type string|array $art The cover: its sizes, as a track's art list, or one address, or empty.
 	 *     @type array  $covers Up to four covers for a playlist's mosaic, used when there is no art.
 	 *     @type string $mark  A letter to show in place of a cover, or empty.
 	 *     @type bool   $heart Whether the cover is Liked songs' heart.
@@ -65,8 +94,8 @@ final class Ui {
 			'play'   => array(),
 		);
 		$cover = '';
-		if ( '' !== $card['art'] ) {
-			$cover = '<img src="' . esc_url( $card['art'] ) . '" alt="" loading="lazy" decoding="async">';
+		if ( array() !== $card['art'] && '' !== $card['art'] ) {
+			$cover = self::image( is_array( $card['art'] ) ? $card['art'] : array( array( 'src' => (string) $card['art'] ) ), self::CARD_SIZES );
 		} elseif ( $card['covers'] ) {
 			$cover = self::mosaic( (array) $card['covers'] );
 		} elseif ( $card['heart'] ) {
@@ -113,7 +142,7 @@ final class Ui {
 				'title' => (string) $album['name'],
 				'href'  => $href,
 				'sub'   => self::album_line( $album ),
-				'art'   => ! empty( $album['art'] ) ? (string) end( $album['art'] )['src'] : '',
+				'art'   => (array) ( $album['art'] ?? array() ),
 				'data'  => array( 'album' => $id ),
 				'play'  => array(
 					'action' => 'play-album',
@@ -136,6 +165,59 @@ final class Ui {
 	public static function album_line( array $album ): string {
 		$artist = trim( (string) ( $album['artist'] ?? '' ) );
 		return '' !== $artist ? $artist : __( 'Album', 'riff' );
+	}
+
+	/**
+	 * A cover the browser picks the size of: every size WordPress made of the image, and how wide
+	 * it is shown, so a card on a phone doesn't fetch the largest. A drawn cover is one SVG, sharp
+	 * at any size. It loads when scrolled to, unless lead() asked for the first few at once.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param array  $art   The cover's sizes, as a track's art list: each { src, sizes "WxH", type }.
+	 * @param string $sizes How wide it is shown, as an img's sizes attribute.
+	 * @return string An img, or empty.
+	 */
+	public static function image( array $art, string $sizes ): string {
+		$art = array_values( array_filter( $art, static fn( $a ) => is_array( $a ) && '' !== (string) ( $a['src'] ?? '' ) ) );
+		if ( ! $art ) {
+			return '';
+		}
+		$set = array();
+		foreach ( $art as $size ) {
+			$width = (int) strtok( (string) ( $size['sizes'] ?? '' ), 'x' );
+			if ( $width > 0 && 'image/svg+xml' !== ( $size['type'] ?? '' ) ) {
+				$set[] = esc_url( (string) $size['src'] ) . ' ' . $width . 'w';
+			}
+		}
+		if ( self::$eager > 0 ) {
+			--self::$eager;
+			$load       = self::$lead ? ' fetchpriority="high"' : '';
+			self::$lead = false;
+		} else {
+			$load = ' loading="lazy"';
+		}
+		return sprintf(
+			'<img src="%s"%s sizes="%s" alt=""%s decoding="async">',
+			esc_url( (string) end( $art )['src'] ),
+			count( $set ) > 1 ? ' srcset="' . esc_attr( implode( ', ', $set ) ) . '"' : '',
+			esc_attr( $sizes ),
+			$load
+		);
+	}
+
+	/**
+	 * Has the next covers drawn load at once, the first of them before anything else on the page:
+	 * the first row of a view that leads with covers, which is what its first paint waits for.
+	 * lead( 0 ) after the row, so nothing later loads early.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $count How many.
+	 */
+	public static function lead( int $count ): void {
+		self::$eager = max( 0, $count );
+		self::$lead  = $count > 0;
 	}
 
 	/**

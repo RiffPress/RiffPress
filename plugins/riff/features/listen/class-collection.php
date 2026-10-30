@@ -532,7 +532,7 @@ final class Collection {
 				'title' => (string) $artist['name'],
 				'href'  => add_query_arg( Browse::ARTIST, (int) $artist['id'], $page ),
 				'sub'   => __( 'Artist', 'riff' ),
-				'art'   => $art ? (string) end( $art )['src'] : '',
+				'art'   => $art,
 				'mark'  => mb_strtoupper( mb_substr( (string) $artist['name'], 0, 1 ) ),
 				'class' => 'riff-card-artist',
 				'data'  => array( 'artist' => (int) $artist['id'] ),

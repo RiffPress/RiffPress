@@ -44,7 +44,10 @@ final class Home_View {
 		if ( ! $albums['items'] && ! $artists['items'] && '' === $posts ) {
 			return Ui::title( __( 'Home', 'riff' ) ) . Browse::empty_note();
 		}
-		$html  = Ui::title( __( 'Home', 'riff' ) );
+		$html = Ui::title( __( 'Home', 'riff' ) );
+		// Home is painted around its first row of covers, whichever row that is: they load at once,
+		// the first before anything else, and the rest when scrolled to.
+		Ui::lead( self::LEAD );
 		$html .= self::played_shelves( $page );
 		// Who else is playing, which the script fills; hidden until someone is.
 		if ( Together::available() && true === Likes_Rest::allowed() ) {
@@ -59,6 +62,7 @@ final class Home_View {
 		if ( '' !== $posts ) {
 			$html .= Ui::shelf( 'posts', __( 'New posts', 'riff' ), add_query_arg( Browse::VIEW, 'posts', $page ), $posts );
 		}
+		Ui::lead( 0 );
 		return $html;
 	}
 
@@ -67,6 +71,11 @@ final class Home_View {
 	 * fit across the widest window, so the row looks full.
 	 */
 	private const SKELETONS = 8;
+
+	/**
+	 * How many covers Home loads at once: its first row, as many as fit across a computer.
+	 */
+	private const LEAD = 6;
 
 	/**
 	 * Jump back in and Recently played, as Home shows them, or Recently played alone, as Your
@@ -117,14 +126,13 @@ final class Home_View {
 	}
 
 	/**
-	 * A played track's largest cover, as app.js picks it.
+	 * A played track's cover, in every size it has, as app.js draws it.
 	 *
 	 * @param array $track Track.
-	 * @return string
+	 * @return array
 	 */
-	private static function played_art( array $track ): string {
-		$art = (array) ( $track['art'] ?? array() );
-		return $art ? (string) ( end( $art )['src'] ?? '' ) : '';
+	private static function played_art( array $track ): array {
+		return (array) ( $track['art'] ?? array() );
 	}
 
 	/**

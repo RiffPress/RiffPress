@@ -24,9 +24,11 @@ defined( 'ABSPATH' ) || exit;
 final class Tracks {
 
 	/**
-	 * Image sizes offered as artwork, smallest first. The lock screen picks the size it wants.
+	 * Image sizes offered as artwork, smallest first. The lock screen picks the size it wants, and
+	 * so does a cover's srcset: medium_large is what a card on a phone's sharp screen asks for,
+	 * between medium, too soft there, and large.
 	 */
-	private const ART_SIZES = array( 'thumbnail', 'medium', 'large' );
+	private const ART_SIZES = array( 'thumbnail', 'medium', 'medium_large', 'large' );
 
 	/**
 	 * Tracks kept as IDs, as the current user may see them now: each as it plays from its post,
@@ -682,10 +684,15 @@ final class Tracks {
 	}
 
 	/**
-	 * Artwork in every registered size the image has, each with the image's alt text from the
-	 * Media Library, as the Image block takes it.
+	 * Artwork in every registered size the image has, smallest first, each with the image's alt
+	 * text from the Media Library, as the Image block takes it.
+	 *
+	 * A size WordPress didn't make, for an image smaller than it or one uploaded while the size was
+	 * turned off, is the original under that size's name, shrunk only in its numbers. It is offered
+	 * at its own size, so a srcset never takes a large original for a small copy.
 	 *
 	 * @since 4.33.0 Each size carries the image's alt text.
+	 * @since 5.8.0 The original at its own size, in its place by width.
 	 *
 	 * @param int $image_id Image attachment ID, or 0.
 	 * @return array List of { src, sizes, alt }.
@@ -697,10 +704,14 @@ final class Tracks {
 		$art  = array();
 		$seen = array();
 		$alt  = trim( (string) get_post_meta( $image_id, '_wp_attachment_image_alt', true ) );
+		$full = wp_get_attachment_image_src( $image_id, 'full' );
 		foreach ( self::ART_SIZES as $size ) {
 			$image = wp_get_attachment_image_src( $image_id, $size );
 			if ( ! $image || isset( $seen[ $image[0] ] ) ) {
 				continue;
+			}
+			if ( $full && $full[0] === $image[0] ) {
+				$image = $full;
 			}
 			$seen[ $image[0] ] = true;
 			$art[]             = array(
@@ -709,6 +720,7 @@ final class Tracks {
 				'alt'   => $alt,
 			);
 		}
+		usort( $art, static fn( array $a, array $b ): int => (int) $a['sizes'] <=> (int) $b['sizes'] );
 		return $art;
 	}
 

@@ -54,8 +54,8 @@ final class Artist_View {
 		// as on their card, in the album's colour.
 		$image = (int) get_term_meta( $id, 'riff_artist_image', true );
 		$art   = $image ? Tracks::art( $image ) : (array) ( $albums['items'][0]['art'] ?? array() );
-		$cover = $art && ! Art::drawn( $art ) ? (string) end( $art )['src'] : '';
-		$mark  = '' === $cover ? '<span class="riff-album-mark" aria-hidden="true">' . esc_html( mb_strtoupper( mb_substr( Catalog::name( $term->name ), 0, 1 ) ) ) . '</span>' : '';
+		$cover = $art && ! Art::drawn( $art ) ? $art : array();
+		$mark  = ! $cover ? '<span class="riff-album-mark" aria-hidden="true">' . esc_html( mb_strtoupper( mb_substr( Catalog::name( $term->name ), 0, 1 ) ) ) . '</span>' : '';
 		$meta  = array( Browse::count( (int) $data['total'] ) );
 		if ( $albums['total'] ) {
 			/* translators: %s: number of albums. */
