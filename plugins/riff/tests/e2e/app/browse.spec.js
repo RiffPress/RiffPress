@@ -112,10 +112,20 @@ test.describe( 'Browse', () => {
 		await field.click();
 		// Signed in, the suggestions are asked for as the account, with its nonce, as the views are.
 		const asked = page.waitForRequest( ( r ) => /riff\/v1\/tracks.*search=/.test( decodeURIComponent( r.url() ) ) );
+		const searches = [];
+		page.on( 'request', ( r ) => {
+			const u = decodeURIComponent( r.url() );
+			if ( /riff\/v1\/(tracks|albums|artists).*search=/.test( u ) ) {
+				searches.push( u );
+			}
+		} );
 		await field.pressSequentially( 'Compo' );
 		const list = page.locator( '.riff-suggest' );
 		await expect( list ).toBeVisible();
 		expect( ( await asked ).headers()[ 'x-wp-nonce' ] ).toBeTruthy();
+		// Typed without a pause, the word is asked for once, and only for as many as are shown.
+		expect( searches ).toHaveLength( 3 );
+		expect( searches.find( ( u ) => /\/albums/.test( u ) ) ).toMatch( /per_page=3/ );
 		await expect( field ).toHaveAttribute( 'aria-expanded', 'true' );
 		await expect( list.locator( '.riff-suggest-top' ) ).toContainText( 'Compositions' );
 		await expect( page.locator( '.riff-app-sr' ) ).toHaveText( /\d+ suggestions?/ );
