@@ -72,7 +72,7 @@ tests_add_filter(
 		// Riff Sign In the same way: its classes, hooked by each test that needs them.
 		define( 'RIFF_SIGN_IN_VERSION', '0.0.0' );
 		define( 'RIFF_SIGN_IN_URL', 'http://example.org/wp-content/plugins/riff-sign-in/' );
-		foreach ( array( 'cbor', 'passkeys', 'codes', 'routes', 'sign-in' ) as $riff_sign_in_class ) {
+		foreach ( array( 'cbor', 'passkeys', 'codes', 'routes', 'listeners', 'sign-in' ) as $riff_sign_in_class ) {
 			require dirname( __DIR__, 3 ) . "/riff-sign-in/src/class-{$riff_sign_in_class}.php";
 		}
 		// The Presence API, where wp-env installs it, for listening together; its tests skip without it.
