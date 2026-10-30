@@ -260,7 +260,8 @@ export default function filament( P ) {
 			bar.style.transform = '';
 		}
 		bars = [];
-		if ( P.reduce() ) {
+		// Out at once where the wire cooling would not be seen.
+		if ( P.reduce() || P.away() ) {
 			cancelAnimationFrame( meterRaf );
 			meterRaf = 0;
 			heat = 0;
@@ -325,7 +326,7 @@ export default function filament( P ) {
 	// Called from paint(): the wire follows whatever is playing, and the bars follow the current row.
 	function meterSync() {
 		const t = P.track();
-		if ( t && ! P.el().paused && ! document.hidden ) {
+		if ( t && ! P.el().paused && ! P.away() ) {
 			if ( ( ! meterRaf || cooling ) && ! breath ) {
 				meterStart();
 			} else if ( meterRaf ) {

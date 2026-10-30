@@ -156,6 +156,40 @@ test.describe( 'Player', () => {
 			.toBeLessThan( 0.1 );
 	} );
 
+	test( 'in the desktop app the filament goes dark while the window is down, and the music plays on', async ( {
+		page,
+	}, testInfo ) => {
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.reload();
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		const riff = page.locator( '#riff' );
+		await expect( riff ).toHaveAttribute( 'data-live', '' );
+		// What the desktop app's preload does when the window is minimised or hidden.
+		const down = ( away ) =>
+			page.evaluate( ( on ) => {
+				document.documentElement.classList.toggle( 'riff-desktop-away', on );
+				document.dispatchEvent( new Event( 'visibilitychange' ) );
+			}, away );
+		await down( true );
+		await expect( riff ).not.toHaveAttribute( 'data-live', '' );
+		const heat = () =>
+			page.evaluate( () =>
+				Number(
+					getComputedStyle(
+						document.querySelector( '.riff-bar-seek .riff-line' )
+					).getPropertyValue( '--riff-heat' )
+				)
+			);
+		// At once, with no cooling drawn for no one.
+		expect( await heat() ).toBe( 0 );
+		expect( await page.evaluate( () => window.riffInternal.playing() ) ).toBe(
+			true
+		);
+		await down( false );
+		await expect( riff ).toHaveAttribute( 'data-live', '' );
+	} );
+
 	test( 'the glow fades out before the knob instead of ending in a square edge', async ( {
 		page,
 	} ) => {

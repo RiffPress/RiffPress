@@ -167,9 +167,11 @@ export function playback( P ) {
 	// A phone pauses video when the page goes to the background, and audio keeps going. So the
 	// track moves to audio while hidden and back to video when the page returns.
 	document.addEventListener( 'visibilitychange', () => {
-		if ( ! document.hidden && ! P.el().paused ) {
+		if ( ! P.away() && ! P.el().paused ) {
 			P.glide();
 		}
+		// The filament goes dark while the page is out of sight, and lights again on its return.
+		P.meterSync?.();
 		const t = P.track();
 		if ( ! t || ! t.video ) {
 			return;

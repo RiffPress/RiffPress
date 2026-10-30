@@ -629,7 +629,7 @@ export function nowPlaying( P ) {
 	let ramping = 0;
 	let stowing = 0;
 	const seen = () =>
-		! np.hidden && ! document.hidden && ! P.reduce() && P.mode !== 'video' && roomy();
+		! np.hidden && ! P.away() && ! P.reduce() && P.mode !== 'video' && roomy();
 	function bend( m, to, ms ) {
 		const from = m.playbackRate || 1;
 		const id = ++ramping;

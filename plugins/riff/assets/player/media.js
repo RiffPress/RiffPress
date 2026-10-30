@@ -105,7 +105,7 @@ export function media( P ) {
 			m.readyState < 3 ||
 			P.seeking ||
 			P.reduce() ||
-			document.hidden ||
+			P.away() ||
 			typeof root.animate !== 'function'
 		) {
 			return;
