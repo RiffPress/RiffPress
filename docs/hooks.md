@@ -43,7 +43,7 @@ Since 4.16.0. Fires in `plugins/riff/src/class-player.php`.
 
 ### `riff_protect_storage`
 
-Filters whether the storage a file is kept in elsewhere was made private, when it is protected, or public again, when it isn't. A plugin that keeps uploads in object storage or on a CDN answers for its own files: true once the copy there is private (or public again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an answer, a file only on this server is moved into the protected folder, and one kept elsewhere is not protected, as moving it would leave it public there.
+Filters whether the storage a file is kept in elsewhere was made private, when it is protected, or public again, when it isn't. A plugin that keeps uploads in object storage or on a CDN answers for its own files: true once the copy there is private (or public again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an answer, a file only on this server is moved into the protected folder, and one kept elsewhere is not protected, as moving it would leave it public there. Riff can't send a file it doesn't have, so a plugin that protects its files signs their addresses through riff_protected_url too.
 
 Since 5.7.0. Fires in `plugins/riff/src/class-protected-files.php`.
 
