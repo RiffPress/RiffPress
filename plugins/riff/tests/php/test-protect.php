@@ -323,6 +323,31 @@ class Test_Riff_Protect extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'riff_protected', Protect::field( array(), get_post( self::attach( 'cover.png' ) ) ), 'not on an image' );
 	}
 
+	public function test_the_media_library_says_when_the_protected_folder_is_open_without_asking_the_server_itself(): void {
+		Protected_Files::protect( $this->track );
+		$box = static fn( int $id ) => Protect::field( array(), get_post( $id ) )['riff_protected']['html'];
+
+		delete_transient( Protect::OPEN );
+		wp_clear_scheduled_hook( Protect::PROBE );
+		$asked = false;
+		$spy   = static function ( $pre ) use ( &$asked ) {
+			$asked = true;
+			return $pre;
+		};
+		add_filter( 'pre_http_request', $spy );
+		$this->assertStringNotContainsString( 'role="alert"', $box( $this->track ), 'not known yet' );
+		remove_filter( 'pre_http_request', $spy );
+		$this->assertFalse( $asked, 'the box never waits on a request' );
+		$this->assertNotFalse( wp_next_scheduled( Protect::PROBE ), 'cron asks instead' );
+
+		set_transient( Protect::OPEN, '1' );
+		$this->assertStringContainsString( 'Site Health shows the rule', $box( $this->track ) );
+		$this->assertStringNotContainsString( 'role="alert"', $box( self::attach( '03 - Trombone Detritus [detritus].mp3', $this->post ) ), 'only on a protected file' );
+
+		set_transient( Protect::OPEN, '0' );
+		$this->assertStringNotContainsString( 'role="alert"', $box( $this->track ), 'not once the folder is closed' );
+	}
+
 	public function test_an_address_is_relinked_only_where_it_is_the_whole_address(): void {
 		$from = Protect::address( 5 );
 		$text = sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><a href="%1$s&amp;x=1">', $from, Protect::address( 55 ) );
@@ -437,5 +462,20 @@ class Test_Riff_Protect extends Riff_TestCase {
 		remove_filter( 'pre_http_request', $hook, 10 );
 
 		$this->assertTrue( $seen, 'https_local_ssl_verify decides, as for core\'s own loopback requests' );
+		$this->assertSame( '0', get_transient( Protect::OPEN ), 'closed, and kept for the Media Library' );
+
+		$served = static fn() => array(
+			'headers'  => array(),
+			'body'     => 'riff',
+			'response' => array( 'code' => 200 ),
+			'cookies'  => array(),
+		);
+		add_filter( 'pre_http_request', $served );
+		$result = Protect::health();
+		remove_filter( 'pre_http_request', $served );
+
+		$this->assertSame( 'recommended', $result['status'] );
+		$this->assertStringContainsString( '/' . get_option( Protected_Files::DIR ) . '/ { internal; }', $result['description'], 'with the rule for the folder' );
+		$this->assertSame( '1', get_transient( Protect::OPEN ) );
 	}
 }

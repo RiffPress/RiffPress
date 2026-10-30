@@ -43,6 +43,20 @@ final class Protect {
 	public const TTL = 6 * HOUR_IN_SECONDS;
 
 	/**
+	 * The transient holding whether the protected folder was found open: '1' or '0'.
+	 *
+	 * @since 5.7.0
+	 */
+	public const OPEN = 'riff_protected_open';
+
+	/**
+	 * The cron event that asks the web server whether the protected folder is open.
+	 *
+	 * @since 5.7.0
+	 */
+	public const PROBE = 'riff_protected_probe';
+
+	/**
 	 * Hooks the address, the field, the signing and the Site Health check.
 	 *
 	 * @since 4.18.0
@@ -55,6 +69,7 @@ final class Protect {
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 20, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 20, 2 );
 		add_filter( 'site_status_tests', array( self::class, 'tests' ) );
+		add_action( self::PROBE, array( self::class, 'probe' ) );
 	}
 
 	/**
@@ -470,6 +485,9 @@ final class Protect {
 		}
 		$error = (string) get_transient( 'riff_protect_error_' . $post->ID );
 		delete_transient( 'riff_protect_error_' . $post->ID );
+		if ( '' === $error && self::is( $post->ID ) && self::open() ) {
+			$error = __( 'The web server still sends this file to anyone who has the protected folder\'s address, as Nginx ignores the rule Riff leaves for Apache. Tools > Site Health shows the rule that closes the folder.', 'riff' );
+		}
 		$fields['riff_protected'] = array(
 			'label' => __( 'Protected', 'riff' ),
 			'input' => 'html',
@@ -532,6 +550,7 @@ final class Protect {
 	 * @return array Site Health result.
 	 */
 	public static function health(): array {
+		$open   = get_option( Protected_Files::DIR ) && self::probe();
 		$result = array(
 			'label'       => __( 'Riff\'s protected files can only be loaded through WordPress', 'riff' ),
 			'status'      => 'good',
@@ -542,15 +561,30 @@ final class Protect {
 			'description' => '<p>' . esc_html__( 'The web server refuses the protected folder, so a protected file is only served to listeners who may play it.', 'riff' ) . '</p>',
 			'test'        => 'riff_protected_files',
 		);
-		if ( ! get_option( Protected_Files::DIR ) ) {
-			return $result;
+		if ( $open ) {
+			$folder                = (string) wp_parse_url( trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( Protected_Files::dir() ), PHP_URL_PATH );
+			$result['status']      = 'recommended';
+			$result['label']       = __( 'Riff\'s protected files can be loaded directly', 'riff' );
+			$result['description'] = '<p>' . esc_html__( 'The web server sends files from the protected folder to anyone who has their address, so protecting a file only hides that address. On Nginx, add a rule that refuses the folder:', 'riff' ) . '</p><p><code>location ^~ ' . esc_html( $folder ) . '/ { internal; }</code></p>';
 		}
+		return $result;
+	}
+
+	/**
+	 * Whether the web server sends files from the protected folder to anyone, by asking it for one,
+	 * as Nginx does when it ignores the .htaccess Apache reads. Kept for a day, so the Media Library
+	 * can say so without asking again.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @return bool
+	 */
+	public static function probe(): bool {
 		$dir   = Protected_Files::dir();
 		$probe = $dir . '/riff-probe.txt';
 		file_put_contents( $probe, 'riff' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a probe, removed below.
-		$url      = trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( $dir ) . '/riff-probe.txt';
 		$response = wp_remote_get(
-			$url,
+			trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( $dir ) . '/riff-probe.txt',
 			array(
 				'timeout'   => 5,
 				/** This filter is documented in wp-includes/cron.php */
@@ -558,11 +592,24 @@ final class Protect {
 			)
 		);
 		wp_delete_file( $probe );
-		if ( 200 === wp_remote_retrieve_response_code( $response ) && 'riff' === wp_remote_retrieve_body( $response ) ) {
-			$result['status']      = 'recommended';
-			$result['label']       = __( 'Riff\'s protected files can be loaded directly', 'riff' );
-			$result['description'] = '<p>' . esc_html__( 'The web server sends files from the protected folder to anyone who has their address, so protecting a file only hides that address. On Nginx, add a rule that refuses the folder:', 'riff' ) . '</p><p><code>location ^~ ' . esc_html( dirname( (string) wp_parse_url( $url, PHP_URL_PATH ) ) ) . '/ { internal; }</code></p>';
+		$open = 200 === wp_remote_retrieve_response_code( $response ) && 'riff' === wp_remote_retrieve_body( $response );
+		set_transient( self::OPEN, $open ? '1' : '0', DAY_IN_SECONDS );
+		return $open;
+	}
+
+	/**
+	 * Whether the protected folder was found open when last asked. Never asks itself, so the Media
+	 * Library doesn't wait on a request: when nobody has asked for a day, asking is left to cron.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @return bool
+	 */
+	public static function open(): bool {
+		$open = get_transient( self::OPEN );
+		if ( false === $open && ! wp_next_scheduled( self::PROBE ) ) {
+			wp_schedule_single_event( time(), self::PROBE );
 		}
-		return $result;
+		return '1' === $open;
 	}
 }
