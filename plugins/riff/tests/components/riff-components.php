@@ -312,3 +312,12 @@ add_action(
 	},
 	1
 );
+
+/*
+ * A site that turned the turntable off, through the riff_turntable filter as a plugin would, while
+ * the browser carries the riff_test_no_turntable cookie. Loaded only on the tests site.
+ */
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
+if ( ! empty( $_COOKIE['riff_test_no_turntable'] ) ) {
+	add_filter( 'riff_turntable', '__return_false' );
+}

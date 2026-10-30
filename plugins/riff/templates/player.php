@@ -11,12 +11,13 @@
  */
 
 use Riff\Player;
+use Riff\Turntable;
 
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Player::icon() returns static SVG shipped with the plugin.
 ?>
-<div id="riff" class="riff" hidden<?php echo Player::root_style(); ?>>
+<div id="riff" class="riff" hidden<?php echo Player::root_style(); ?><?php echo Turntable::on() ? '' : ' data-riff-turntable="off"'; ?>>
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
 		<button type="button" class="riff-bar-info" data-riff-action="open" aria-label="<?php esc_attr_e( 'Now Playing', 'riff' ); ?>" aria-haspopup="dialog">
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>

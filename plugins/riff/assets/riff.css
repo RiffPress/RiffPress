@@ -2531,6 +2531,17 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
+/* The turntable turned off (Settings › Media, now-playing.js): the cover on
+   its own, where the record would have come out of it onto the deck, and
+   on a touch screen on its side the cover beside the controls. */
+#riff[data-riff-turntable="off"] :is(.riff-record, .riff-deck-part, .riff-sleeve, .riff-deck-board, .riff-rack) {
+	display: none !important;
+}
+
+#riff[data-riff-turntable="off"] .riff-stage > .riff-cover {
+	translate: none;
+}
+
 /* The screen as a turntable: a touch screen wider than it is tall and no
    taller than a phone, as an unfolded iPhone Duo is (890 by 626) and any
    phone on its side, is the deck itself. The whole screen is the plinth;

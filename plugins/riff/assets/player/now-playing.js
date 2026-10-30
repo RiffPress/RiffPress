@@ -34,8 +34,11 @@ export function nowPlaying( P ) {
 		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own
 		// bar and toast, which the dialog covers there and which would otherwise still take focus.
 		// On a wide screen the dialog opens above the bar and the bar stays the control surface,
-		// unless the whole screen is the turntable, which covers the bar as a phone's does.
-		const wide = window.matchMedia( '(min-width: 900px)' ).matches && ! wholeDeck();
+		// unless it is a touch screen on its side, where Now Playing covers the bar as a phone's
+		// does, the turntable or not (riff.css).
+		const wide = window.matchMedia(
+			'(min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px)))'
+		).matches;
 		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
 		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
 		// screen the bar beside it is still how the music is controlled.
@@ -460,7 +463,12 @@ export function nowPlaying( P ) {
 	// opened the window's shape stands in, so music playing on a computer already has its record
 	// out when Now Playing first opens. Turning the phone, unfolding it or resizing the window
 	// brings the record out or puts it back.
+	// A site that turned the turntable off (Settings › Media) has the cover on its own everywhere.
+	const turntable = P.data.turntable !== false;
 	function roomy() {
+		if ( ! turntable ) {
+			return false;
+		}
 		const cover = $( '.riff-cover' );
 		if ( ! np.hidden && cover ) {
 			roomy.last = getComputedStyle( cover ).getPropertyValue( '--riff-deck' ).trim() === '1';
@@ -472,6 +480,7 @@ export function nowPlaying( P ) {
 	// platter does; elsewhere it comes out only while it turns.
 	const OPENING = 400;
 	const wholeDeck = () =>
+		turntable &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
 	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
 		new ResizeObserver( () => {

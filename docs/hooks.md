@@ -89,6 +89,16 @@ Since 4.0.0. Fires in `plugins/riff/src/class-tracks.php`.
 | `$attachment_id` | `int` | Attachment ID, or 0 for a file outside the Media Library. |
 | `$post_id` | `int` | The post the track appears in, or 0. |
 
+### `riff_turntable`
+
+Filters whether Now Playing shows the record and the turntable. Off, it shows the cover on its own, and a touch screen on its side shows the cover beside the controls.
+
+Since 5.8.0. Fires in `plugins/riff/src/class-turntable.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$on` | `bool` | Whether it shows, from Settings › Media. Default true. |
+
 ### `riff_unlock_url`
 
 Filters where a locked track sends the visitor to unlock it: a sign-up, membership or checkout page.

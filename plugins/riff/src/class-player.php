@@ -240,9 +240,9 @@ final class Player {
 			'library'    => rest_url( 'riff/v1/library/' ),
 		);
 		// What Riff's own features add for the script: the Listen app's address, the listener's
-		// likes and playlists, whether they have the single-key shortcuts, and where they share what
-		// they play.
-		$data = Listen\Together::player_data( Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) ) );
+		// likes and playlists, whether they have the single-key shortcuts, where they share what
+		// they play, and whether the site has turned the turntable off.
+		$data = Turntable::player_data( Listen\Together::player_data( Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) ) ) );
 		printf(
 			'<script type="application/json" id="riff-data">%s</script>',
 			wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )
