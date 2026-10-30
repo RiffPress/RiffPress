@@ -116,9 +116,11 @@ export function search( ctx ) {
 		field.setAttribute( 'autocomplete', 'off' );
 		// On the app's root, not in the sidebar, whose own stacking would put the view over it.
 		app.append( panel, said );
+		// Asked once typing pauses, a quarter of a second, rather than for each letter: each ask is
+		// three searches of the whole library on the server.
 		field.addEventListener( 'input', () => {
 			clearTimeout( suggestTimer );
-			suggestTimer = setTimeout( () => suggest( field ), 100 );
+			suggestTimer = setTimeout( () => suggest( field ), 250 );
 		} );
 		field.addEventListener( 'focus', () => suggest( field ) );
 		field.addEventListener( 'keydown', ( e ) => keys( e, field ) );
@@ -168,15 +170,16 @@ export function search( ctx ) {
 		}
 		let answers;
 		try {
+			// As many of each as are shown.
 			answers = await Promise.all( [
 				api
-					.request( catalog( 'tracks', { search: q, per_page: 5 } ) )
+					.request( catalog( 'tracks', { search: q, per_page: 4 } ) )
 					.then( ( r ) => r.json() ),
 				api
-					.request( catalog( 'albums', { search: q } ) )
+					.request( catalog( 'albums', { search: q, per_page: 3 } ) )
 					.then( ( r ) => r.json() ),
 				api
-					.request( catalog( 'artists', { search: q } ) )
+					.request( catalog( 'artists', { search: q, per_page: 3 } ) )
 					.then( ( r ) => r.json() ),
 			] );
 		} catch {
