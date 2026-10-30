@@ -89,11 +89,51 @@ final class Import {
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
+		// Every file imported before, by its contents, read once for the run rather than looked up
+		// for each file, which grows slower with every file a library has.
+		$known = self::imported();
+		// Each album's terms are counted once, at the end, rather than again for every track filed.
+		$counting = ! wp_defer_term_counting();
+		if ( $counting ) {
+			wp_defer_term_counting( true );
+		}
 		$albums = array();
-		foreach ( self::album_folders( $dir ) as $folder ) {
-			$albums[] = self::album( $folder, $args );
+		try {
+			foreach ( self::album_folders( $dir ) as $folder ) {
+				$albums[] = self::album( $folder, $args, $known );
+				// What WordPress keeps in memory of each album's posts, which a run of thousands of
+				// files would otherwise hold to its end.
+				wp_cache_flush_runtime();
+			}
+		} finally {
+			if ( $counting ) {
+				wp_defer_term_counting( false );
+			}
 		}
 		return array( 'albums' => $albums );
+	}
+
+	/**
+	 * Every file imported before, as its hash and the attachment it became.
+	 *
+	 * @return array<string, int>
+	 */
+	private static function imported(): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- once a run, every hash at once.
+		$rows  = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT m.meta_value, m.post_id FROM {$wpdb->postmeta} m INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id WHERE m.meta_key = %s AND p.post_type = 'attachment' AND p.post_status NOT IN ( 'trash', 'auto-draft' )",
+				self::HASH
+			)
+		);
+		$known = array();
+		foreach ( (array) $rows as $row ) {
+			if ( '' !== (string) $row->meta_value ) {
+				$known[ (string) $row->meta_value ] = (int) $row->post_id;
+			}
+		}
+		return $known;
 	}
 
 	/**
@@ -120,11 +160,12 @@ final class Import {
 	/**
 	 * Imports one album folder.
 	 *
-	 * @param string $dir  Folder.
-	 * @param array  $args Arguments from folder().
+	 * @param string $dir   Folder.
+	 * @param array  $args  Arguments from folder().
+	 * @param array  $known Files imported before, from imported(), with each file this one adds.
 	 * @return array{folder: string, post: int, imported: string[], skipped: string[], failed: array<string, string>}
 	 */
-	private static function album( string $dir, array $args ): array {
+	private static function album( string $dir, array $args, array &$known ): array {
 		$report = array(
 			'folder'   => $dir,
 			'post'     => 0,
@@ -140,7 +181,7 @@ final class Import {
 
 		if ( $args['dry_run'] ) {
 			foreach ( $audio as $file ) {
-				$report[ self::existing( $dir . '/' . $file ) ? 'skipped' : 'imported' ][] = $file;
+				$report[ self::existing( self::hash( $dir . '/' . $file ), $known ) ? 'skipped' : 'imported' ][] = $file;
 			}
 			return $report;
 		}
@@ -157,16 +198,16 @@ final class Import {
 		);
 		add_filter( 'upload_mimes', $mimes );
 
-		$cover = self::cover( $dir, $files );
+		$cover = self::cover( $dir, $files, $known );
 		$ids   = array();
 		foreach ( $audio as $file ) {
 			$path = $dir . '/' . $file;
-			$id   = self::existing( $path );
-			if ( $id ) {
+			$hash = self::hash( $path );
+			if ( self::existing( $hash, $known ) ) {
 				$report['skipped'][] = $file;
 				continue;
 			}
-			$id = self::sideload( $path );
+			$id = self::sideload( $path, $hash, $known );
 			if ( is_wp_error( $id ) ) {
 				$report['failed'][ $file ] = $id->get_error_message();
 				continue;
@@ -175,7 +216,7 @@ final class Import {
 			if ( $cover && ! has_post_thumbnail( $id ) ) {
 				set_post_thumbnail( $id, $cover );
 			}
-			self::pair_video( $id, $dir, $file, $video, $cover );
+			self::pair_video( $id, $dir, $file, $video, $cover, $known );
 			$ids[]                = $id;
 			$report['imported'][] = $file;
 		}
@@ -186,42 +227,36 @@ final class Import {
 	}
 
 	/**
-	 * The attachment already imported from a file with these contents, if any.
+	 * A file's contents as a hash, read once for each file, or empty when it can't be read.
 	 *
 	 * @param string $path File.
-	 * @return int Attachment ID, or 0.
+	 * @return string
 	 */
-	private static function existing( string $path ): int {
-		$hash = sha1_file( $path );
-		if ( ! $hash ) {
-			return 0;
-		}
-		$found = get_posts(
-			array(
-				'post_type'      => 'attachment',
-				'post_status'    => 'any',
-				'fields'         => 'ids',
-				'posts_per_page' => 1,
-				'no_found_rows'  => true,
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- one lookup per file, only while importing.
-				'meta_query'     => array(
-					array(
-						'key'   => self::HASH,
-						'value' => $hash,
-					),
-				),
-			)
-		);
-		return $found ? (int) $found[0] : 0;
+	private static function hash( string $path ): string {
+		return (string) sha1_file( $path );
 	}
 
 	/**
-	 * Adds a file to the Media Library through core's sideload, from a copy so the original stays.
+	 * The attachment already imported from a file with these contents, if any.
 	 *
-	 * @param string $path File.
+	 * @param string $hash  The file's hash, from hash().
+	 * @param array  $known Files imported before, from imported().
+	 * @return int Attachment ID, or 0.
+	 */
+	private static function existing( string $hash, array $known ): int {
+		return '' !== $hash ? (int) ( $known[ $hash ] ?? 0 ) : 0;
+	}
+
+	/**
+	 * Adds a file to the Media Library through core's sideload, from a copy so the original stays,
+	 * and to the files imported before, so the same file later in the run is found.
+	 *
+	 * @param string $path  File.
+	 * @param string $hash  Its hash, from hash().
+	 * @param array  $known Files imported before, from imported().
 	 * @return int|WP_Error Attachment ID.
 	 */
-	private static function sideload( string $path ) {
+	private static function sideload( string $path, string $hash, array &$known ) {
 		$tmp = wp_tempnam( basename( $path ) );
 		if ( ! $tmp || ! copy( $path, $tmp ) ) {
 			return new WP_Error( 'riff_import_copy', __( 'The file could not be copied for upload.', 'riff' ) );
@@ -237,19 +272,23 @@ final class Import {
 			wp_delete_file( $tmp );
 			return $id;
 		}
-		update_post_meta( (int) $id, self::HASH, (string) sha1_file( $path ) );
+		if ( '' !== $hash ) {
+			update_post_meta( (int) $id, self::HASH, $hash );
+			$known[ $hash ] = (int) $id;
+		}
 		return (int) $id;
 	}
 
 	/**
 	 * Titles a track from its tags, as an upload through the Media Library is; a sideload names it
-	 * after the file. Without a title tag, "03 - Title [id].mp3" becomes "Title".
+	 * after the file. The tags as the sideload read them into the attachment's metadata, not read
+	 * from the file again. Without a title tag, "03 - Title [id].mp3" becomes "Title".
 	 *
 	 * @param int    $id   Attachment ID.
 	 * @param string $path File.
 	 */
 	private static function title_from_tags( int $id, string $path ): void {
-		$tags  = wp_read_audio_metadata( $path );
+		$tags  = wp_get_attachment_metadata( $id );
 		$title = is_array( $tags ) ? trim( (string) ( $tags['title'] ?? '' ) ) : '';
 		if ( '' === $title ) {
 			$title = (string) preg_replace( '/^\d+\s*[-.]\s*|\s*\[[^\]]*\]$/', '', pathinfo( $path, PATHINFO_FILENAME ) );
@@ -267,16 +306,18 @@ final class Import {
 	 *
 	 * @param string   $dir   Folder.
 	 * @param string[] $files Its files.
+	 * @param array    $known Files imported before, from imported().
 	 * @return int Attachment ID, or 0.
 	 */
-	private static function cover( string $dir, array $files ): int {
+	private static function cover( string $dir, array $files, array &$known ): int {
 		foreach ( self::COVERS as $stem ) {
 			foreach ( $files as $file ) {
 				if ( preg_match( '/^' . $stem . '\.(jpe?g|png|webp)$/i', $file ) ) {
 					$path = $dir . '/' . $file;
-					$id   = self::existing( $path );
+					$hash = self::hash( $path );
+					$id   = self::existing( $hash, $known );
 					if ( ! $id ) {
-						$id = self::sideload( $path );
+						$id = self::sideload( $path, $hash, $known );
 					}
 					return is_wp_error( $id ) ? 0 : (int) $id;
 				}
@@ -293,17 +334,19 @@ final class Import {
 	 * @param string   $file  Track file name.
 	 * @param string[] $video Video file names in the folder.
 	 * @param int      $cover Cover attachment ID, or 0.
+	 * @param array    $known Files imported before, from imported().
 	 */
-	private static function pair_video( int $id, string $dir, string $file, array $video, int $cover ): void {
+	private static function pair_video( int $id, string $dir, string $file, array $video, int $cover, array &$known ): void {
 		$stem = pathinfo( $file, PATHINFO_FILENAME );
 		foreach ( $video as $clip ) {
 			if ( pathinfo( $clip, PATHINFO_FILENAME ) !== $stem ) {
 				continue;
 			}
 			$path     = $dir . '/' . $clip;
-			$video_id = self::existing( $path );
+			$hash     = self::hash( $path );
+			$video_id = self::existing( $hash, $known );
 			if ( ! $video_id ) {
-				$video_id = self::sideload( $path );
+				$video_id = self::sideload( $path, $hash, $known );
 			}
 			if ( is_wp_error( $video_id ) || ! $video_id ) {
 				return;
