@@ -145,6 +145,25 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( 0, $this->get( '/tracks', array( 'search' => '%%' ) )['total'], 'a wildcard is a character, not a pattern' );
 	}
 
+	public function test_a_track_search_asks_a_search_plugin_to_answer_it(): void {
+		$asked = array();
+		$see   = static function ( WP_Query $query ) use ( &$asked ): void {
+			if ( $query->get( 'riff_catalog' ) ) {
+				$asked[] = (bool) $query->get( 'ep_integrate' );
+			}
+		};
+		add_action( 'pre_get_posts', $see );
+		$this->get( '/tracks', array( 'search' => 'Trombone' ) );
+		$searched = $asked;
+		$asked    = array();
+		$this->get( '/tracks' );
+		remove_action( 'pre_get_posts', $see );
+
+		$this->assertNotEmpty( $searched );
+		$this->assertNotContains( false, $searched, 'as ElasticPress asks of a query that is not the page\'s own' );
+		$this->assertNotContains( true, $asked, 'and only a search' );
+	}
+
 	public function test_a_search_of_one_character_finds_nothing(): void {
 		foreach ( array( '/tracks', '/albums', '/artists' ) as $route ) {
 			$data = $this->get( $route, array( 'search' => 'o' ) );
