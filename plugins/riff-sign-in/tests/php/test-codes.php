@@ -123,15 +123,22 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 
 		$_GET[ Codes::QUERY ] = $sent['token'] . '.' . $this->sent[0][1];
 		$redirected           = '';
+		// The redirect is where the request ends, so it is stopped there, before the exit after it.
 		add_filter(
 			'wp_redirect',
 			static function ( $to ) use ( &$redirected ) {
 				$redirected = $to;
-				return false;
+				throw new RuntimeException( 'redirected' );
 			}
 		);
-		Sign_In::link();
-		unset( $_GET[ Codes::QUERY ] );
+		try {
+			Sign_In::link();
+			$this->fail( 'the link redirects' );
+		} catch ( RuntimeException $e ) {
+			$this->assertSame( 'redirected', $e->getMessage() );
+		} finally {
+			unset( $_GET[ Codes::QUERY ] );
+		}
 		$this->assertSame( home_url( '/listen/?riff_view=albums' ), $redirected );
 		$this->assertSame( $user, get_current_user_id() );
 	}
