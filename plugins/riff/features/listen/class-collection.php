@@ -11,6 +11,8 @@ namespace Riff\Listen;
 use WP_REST_Request;
 
 use Riff\Library;
+use Riff\Catalog;
+use Riff\Catalog_Rest;
 use Riff\Player;
 use Riff\Tracks;
 
@@ -95,11 +97,11 @@ final class Collection {
 				$html .= self::songs( $page, $ids['track'], $sort, $number, $account );
 				break;
 			case 'albums':
-				$albums = self::terms( '/albums', $ids['album'], $sort );
+				$albums = self::terms( Catalog::ALBUM, $ids['album'], $sort );
 				$html  .= $albums ? '<div class="riff-grid">' . Browse::album_cards( $albums, $page ) . '</div>' : Ui::empty_note( __( 'Albums you like show up here. Press the heart on an album’s page.', 'riff' ) );
 				break;
 			case 'artists':
-				$artists = self::terms( '/artists', $ids['artist'], $sort );
+				$artists = self::terms( Catalog::ARTIST, $ids['artist'], $sort );
 				$html   .= $artists ? '<ul class="riff-artists">' . Browse::artist_items( $artists, $page ) . '</ul>' : Ui::empty_note( __( 'Artists you like show up here. Press the heart on an artist’s page.', 'riff' ) );
 				break;
 			default:
@@ -167,7 +169,7 @@ final class Collection {
 			$place[ $like['kind'] . ':' . $like['id'] ] = $i;
 		}
 		$items = array();
-		foreach ( self::terms( '/albums', $ids['album'], 'recent' ) as $album ) {
+		foreach ( self::terms( Catalog::ALBUM, $ids['album'], 'recent' ) as $album ) {
 			$art     = ! empty( $album['art'] ) ? (string) reset( $album['art'] )['src'] : '';
 			$items[] = array(
 				'at'  => $place[ 'album:' . (int) $album['id'] ] ?? PHP_INT_MAX,
@@ -182,7 +184,7 @@ final class Collection {
 				),
 			);
 		}
-		foreach ( self::terms( '/artists', $ids['artist'], 'recent' ) as $artist ) {
+		foreach ( self::terms( Catalog::ARTIST, $ids['artist'], 'recent' ) as $artist ) {
 			$image   = (int) get_term_meta( (int) $artist['id'], 'riff_artist_image', true );
 			$art     = $image ? Tracks::art( $image ) : array();
 			$items[] = array(
@@ -399,14 +401,14 @@ final class Collection {
 			$place[ $like['kind'] . ':' . $like['id'] ] = $i;
 		}
 		$items = array();
-		foreach ( self::terms( '/albums', $ids['album'], 'recent' ) as $album ) {
+		foreach ( self::terms( Catalog::ALBUM, $ids['album'], 'recent' ) as $album ) {
 			$items[] = array(
 				'name' => (string) $album['name'],
 				'at'   => $place[ 'album:' . (int) $album['id'] ] ?? PHP_INT_MAX,
 				'card' => Browse::album_cards( array( $album ), $page ),
 			);
 		}
-		foreach ( self::terms( '/artists', $ids['artist'], 'recent' ) as $artist ) {
+		foreach ( self::terms( Catalog::ARTIST, $ids['artist'], 'recent' ) as $artist ) {
 			$items[] = array(
 				'name' => (string) $artist['name'],
 				'at'   => $place[ 'artist:' . (int) $artist['id'] ] ?? PHP_INT_MAX,
@@ -489,20 +491,18 @@ final class Collection {
 	}
 
 	/**
-	 * Liked albums or artists as the catalogue shows them, newest first or by name.
+	 * Liked albums or artists as the catalogue shows them, newest first or by name, all of them at
+	 * once rather than a page of the route at a time.
 	 *
-	 * @param string $route /albums or /artists.
-	 * @param int[]  $ids   Term IDs, newest first.
-	 * @param string $sort  recent or name.
+	 * @param string $taxonomy Catalog::ALBUM or Catalog::ARTIST.
+	 * @param int[]  $ids      Term IDs, newest first.
+	 * @param string $sort     recent or name.
 	 * @return array[]
 	 */
-	private static function terms( string $route, array $ids, string $sort ): array {
+	private static function terms( string $taxonomy, array $ids, string $sort ): array {
 		$found = array();
-		// A page of the route is 48 terms; a long list of likes is asked for in as many pages.
-		foreach ( array_chunk( $ids, 48 ) as $chunk ) {
-			foreach ( Browse::get( $route, array( 'include' => $chunk ) )['items'] as $term ) {
-				$found[ (int) $term['id'] ] = $term;
-			}
+		foreach ( Catalog_Rest::named( $taxonomy, $ids ) as $term ) {
+			$found[ (int) $term['id'] ] = $term;
 		}
 		if ( 'name' === $sort ) {
 			usort( $found, static fn( $a, $b ) => strnatcasecmp( (string) $a['name'], (string) $b['name'] ) );

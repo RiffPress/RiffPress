@@ -296,7 +296,7 @@ final class Catalog_Rest {
 			$args['s']              = $search;
 			$args['sentence']       = true;
 			$args['search_columns'] = array( 'post_title' );
-			$named                  = self::named( $search );
+			$named                  = self::names_holding( $search );
 		}
 
 		$where = self::visible_where();
@@ -447,7 +447,6 @@ final class Catalog_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_terms( WP_REST_Request $request, string $taxonomy ): WP_REST_Response {
-		global $wpdb;
 		$page   = max( 1, (int) $request['page'] );
 		$search = trim( (string) $request['search'] );
 		if ( self::too_short( $search ) ) {
@@ -490,8 +489,60 @@ final class Catalog_Rest {
 				'offset' => ( $page - 1 ) * self::TERMS_PER_PAGE,
 			)
 		);
-		$terms = is_array( $terms ) ? $terms : array();
-		$rows  = array();
+		return new WP_REST_Response(
+			array(
+				'items' => self::items( $taxonomy, is_array( $terms ) ? $terms : array(), $hidden ),
+				'page'  => $page,
+				'pages' => (int) ceil( $total / self::TERMS_PER_PAGE ),
+				'total' => $total,
+			)
+		);
+	}
+
+	/**
+	 * The albums or artists named, each as /albums or /artists lists it, all at once rather than a
+	 * page at a time: those with no track the requester can see are left out, the rest in no order.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $taxonomy Catalog::ALBUM or Catalog::ARTIST.
+	 * @param int[]  $ids      Term IDs.
+	 * @return array[]
+	 */
+	public static function named( string $taxonomy, array $ids ): array {
+		$ids = array_values( array_filter( array_map( 'intval', $ids ) ) );
+		if ( ! $ids ) {
+			return array();
+		}
+		$hidden = self::hidden_by_term( $taxonomy );
+		// Without the terms whose every track is hidden, in include itself, as WordPress drops
+		// exclude once include is given.
+		$ids = array_values( array_diff( $ids, array_keys( array_filter( $hidden, static fn( $h ) => $h['hidden'] >= $h['count'] ) ) ) );
+		if ( ! $ids ) {
+			return array();
+		}
+		$terms = get_terms(
+			array(
+				'taxonomy'   => $taxonomy,
+				'hide_empty' => true,
+				'include'    => $ids,
+			)
+		);
+		return self::items( $taxonomy, is_array( $terms ) ? $terms : array(), $hidden );
+	}
+
+	/**
+	 * Albums or artists as the routes give them: each counted by the tracks the requester can see,
+	 * and an album with its artist and the cover of its first track the requester can see.
+	 *
+	 * @param string  $taxonomy Catalog::ALBUM or Catalog::ARTIST.
+	 * @param array   $terms    Terms.
+	 * @param array[] $hidden   Hidden tracks by term, from hidden_by_term().
+	 * @return array[]
+	 */
+	private static function items( string $taxonomy, array $terms, array $hidden ): array {
+		global $wpdb;
+		$rows = array();
 		foreach ( $terms as $term ) {
 			$rows[] = (object) array(
 				'term_id' => $term->term_id,
@@ -533,14 +584,7 @@ final class Catalog_Rest {
 			}
 			$items[] = $item;
 		}
-		return new WP_REST_Response(
-			array(
-				'items' => $items,
-				'page'  => $page,
-				'pages' => (int) ceil( $total / self::TERMS_PER_PAGE ),
-				'total' => $total,
-			)
-		);
+		return $items;
 	}
 
 	/**
@@ -657,7 +701,7 @@ final class Catalog_Rest {
 	 * @param string $search Words.
 	 * @return int[]
 	 */
-	private static function named( string $search ): array {
+	private static function names_holding( string $search ): array {
 		$found = get_terms(
 			array(
 				'taxonomy'   => array( Catalog::ALBUM, Catalog::ARTIST ),

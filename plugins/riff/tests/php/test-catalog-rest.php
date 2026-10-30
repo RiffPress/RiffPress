@@ -6,6 +6,7 @@
  */
 
 use Riff\Catalog;
+use Riff\Catalog_Rest;
 
 /**
  * Riff\Catalog_Rest.
@@ -394,6 +395,15 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( 1, $counted, 'once for every page' );
 		self::attach( '02 - Underground [underground].mp3' );
 		$this->assertSame( 4, $this->get( '/tracks' )['total'], 'and again once a track is added' );
+	}
+
+	public function test_albums_named_come_back_at_once_as_the_route_gives_them(): void {
+		$albums = wp_list_pluck( $this->get( '/albums' )['items'], 'id' );
+		$secret = (int) wp_get_object_terms( $this->secret, Catalog::ALBUM )[0]->term_id;
+
+		$this->assertSame( $this->get( '/albums', array( 'include' => $albums ) )['items'], Catalog_Rest::named( Catalog::ALBUM, $albums ) );
+		$this->assertSame( array(), wp_list_pluck( Catalog_Rest::named( Catalog::ALBUM, array( $secret ) ), 'id' ), 'not one the visitor cannot see' );
+		$this->assertSame( array(), Catalog_Rest::named( Catalog::ARTIST, array() ) );
 	}
 
 	public function test_the_routes_describe_themselves(): void {
