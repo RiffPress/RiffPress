@@ -31,9 +31,11 @@ final class Tracks {
 	/**
 	 * Tracks kept as IDs, as the current user may see them now: each as it plays from its post,
 	 * which names where it plays from and lends its art, while the user can still read that post.
-	 * The result keeps the keys of `$items`, with null for a track the user can't see.
+	 * A Listen page is not where a track plays from, though older plays may name one. The result
+	 * keeps the keys of `$items`, with null for a track the user can't see.
 	 *
 	 * @since 5.6.0
+	 * @since 5.7.0 A Listen page named as where a track played from is left out.
 	 *
 	 * @param array[] $items Each `{ id, post }`: the audio attachment, and the post it played from.
 	 * @return array<int, array|null> Tracks without their level envelope, as the player keeps them.
@@ -58,7 +60,7 @@ final class Tracks {
 		foreach ( $items as $key => $item ) {
 			$track = $found[ (string) ( $item['id'] ?? '' ) ] ?? null;
 			$post  = get_post( (int) ( $item['post'] ?? 0 ) );
-			if ( $track && $post && ( is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $post->ID ) ) && ! post_password_required( $post ) ) {
+			if ( $track && $post && ! Listen\App::holds_app( $post ) && ( is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $post->ID ) ) && ! post_password_required( $post ) ) {
 				$track = self::from_attachment( (int) $item['id'], $post->ID ) ?? $track;
 			}
 			if ( $track ) {
