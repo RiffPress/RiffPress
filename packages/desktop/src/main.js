@@ -46,6 +46,23 @@ function reveal( win ) {
 	if ( ! QUIET ) {
 		win.show();
 		win.focus();
+		if ( win === siteWindow ) {
+			away( false );
+		}
+	}
+}
+
+/**
+ * Tells the Listen app whether its window is out of sight (site-preload.js). With background
+ * throttling off, which keeps the music's timers running, the page is never told so by Chromium,
+ * and would draw the filament for no one. Electron doesn't report a window hidden or shown from
+ * code, so the app says so where it does either, as well as on the window's own events.
+ *
+ * @param {boolean} out Whether the window is minimised or hidden.
+ */
+function away( out ) {
+	if ( siteWindow && ! siteWindow.isDestroyed() ) {
+		siteWindow.webContents.send( 'riff:away', out );
 	}
 }
 
@@ -202,6 +219,7 @@ function openSite( url ) {
 		// it back and Quit ends it.
 		if ( process.platform === 'darwin' && ! quitting ) {
 			event.preventDefault();
+			away( true );
 			if ( siteWindow.isFullScreen() ) {
 				siteWindow.once( 'leave-full-screen', () => siteWindow.hide() );
 				siteWindow.setFullScreen( false );
@@ -212,6 +230,17 @@ function openSite( url ) {
 	} );
 	siteWindow.on( 'closed', () => {
 		siteWindow = null;
+	} );
+
+	siteWindow.on( 'minimize', () => away( true ) );
+	siteWindow.on( 'hide', () => away( true ) );
+	siteWindow.on( 'restore', () => away( false ) );
+	siteWindow.on( 'show', () => away( false ) );
+	// A page loaded while the window is down, as on resuming after a navigation, starts away.
+	siteWindow.webContents.on( 'dom-ready', () => {
+		if ( siteWindow.isMinimized() || ! siteWindow.isVisible() ) {
+			away( true );
+		}
 	} );
 
 	siteWindow.webContents.on(
