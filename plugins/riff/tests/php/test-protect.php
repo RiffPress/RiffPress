@@ -203,6 +203,30 @@ class Test_Riff_Protect extends Riff_TestCase {
 		$this->assertSame( $want, Protect::range( $header, 1000 ) );
 	}
 
+	public function test_a_cdn_that_signs_an_address_serves_the_file_instead_of_wordpress(): void {
+		$this->assertSame( '', Protect::elsewhere( $this->track ), 'from WordPress, without a plugin that signs' );
+
+		$asked = array();
+		$sign  = static function ( $url, $id, $expires ) use ( &$asked ) {
+			$asked = array( $id, $expires );
+			return 'https://cdn.example/file.mp3?Expires=' . $expires . '&Signature=a~b';
+		};
+		add_filter( 'riff_protected_url', $sign, 10, 3 );
+		$url = Protect::elsewhere( $this->track );
+		remove_filter( 'riff_protected_url', $sign );
+
+		$this->assertSame( 'https://cdn.example/file.mp3?Expires=' . $asked[1] . '&Signature=a~b', $url );
+		$this->assertSame( $this->track, $asked[0] );
+		$this->assertEqualsWithDelta( time() + HOUR_IN_SECONDS, $asked[1], 5, 'for an hour' );
+
+		foreach ( array( 'javascript:alert(1)', '//cdn.example/file.mp3', 'file:///etc/passwd' ) as $bad ) {
+			$give = static fn() => $bad;
+			add_filter( 'riff_protected_url', $give );
+			$this->assertSame( '', Protect::elsewhere( $this->track ), "not $bad" );
+			remove_filter( 'riff_protected_url', $give );
+		}
+	}
+
 	public function test_a_copy_the_player_has_is_current_as_the_rfc_has_it(): void {
 		$etag = '"abc"';
 		$time = strtotime( '2026-10-01 12:00:00 UTC' );
