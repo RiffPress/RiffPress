@@ -84,6 +84,8 @@ export function media( P ) {
 		0;
 	let glides = [];
 	let aimed = null;
+	// The second of the track last saved at.
+	let savedAt = -1;
 	function stopGlide() {
 		for ( const a of glides ) {
 			a.cancel();
@@ -260,7 +262,10 @@ export function media( P ) {
 			keepAimed();
 			P.position?.();
 			sayTime();
-			if ( m.currentTime > 5 && Math.floor( m.currentTime ) % 5 === 0 ) {
+			// Every five seconds of the track, once: timeupdate comes several times a second.
+			const second = Math.floor( m.currentTime );
+			if ( second > 5 && second % 5 === 0 && second !== savedAt ) {
+				savedAt = second;
 				P.save();
 			}
 			if ( m.duration && m.currentTime / m.duration > 0.5 ) {
