@@ -28,7 +28,8 @@ The rest is what a player should do:
   listener plays is shared with the site's other listeners, who see it under Listening now on a
   Listen page's Home and can press it to play the same queue from the same point.
 - The queue and position are kept for the tab's session. A full-page navigation saves them and
-  attempts to resume on the next page; a reload restores the same track paused.
+  attempts to resume on the next page; a reload restores the same track paused. A queue of more
+  than 500 tracks keeps the 500 around the one playing, in the order they play.
 
 On a keyboard:
 

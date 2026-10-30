@@ -70,6 +70,40 @@ test.describe( 'Player', () => {
 		expect( state.time ).toBeGreaterThan( 1.5 );
 	} );
 
+	test( 'a reload of a long queue keeps the tracks around the one playing', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).paused )
+			.toBe( false );
+		// Six hundred tracks, each the post's first under its own name, playing the 551st.
+		await page.evaluate( () => {
+			const [ first ] = window.riff.queue();
+			const tracks = Array.from( { length: 600 }, ( _, i ) => ( {
+				...first,
+				id: `url:${ first.src }#${ i + 1 }`,
+				title: `Take ${ i + 1 }`,
+			} ) );
+			window.riff.play( tracks, 550 );
+		} );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
+			'Take 551'
+		);
+		await page.reload();
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
+			'Take 551'
+		);
+		const queue = await page.evaluate( () =>
+			window.riff.queue().map( ( t ) => t.title )
+		);
+		expect( queue ).toHaveLength( 500 );
+		// The rest after it, and before it as many as make five hundred.
+		expect( queue[ 0 ] ).toBe( 'Take 101' );
+		expect( queue[ 450 ] ).toBe( 'Take 551' );
+		expect( queue.at( -1 ) ).toBe( 'Take 600' );
+	} );
+
 	test( 'a link to another page keeps playing', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect

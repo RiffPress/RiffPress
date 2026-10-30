@@ -37,6 +37,7 @@ export function createPlayer( root, data ) {
 		np: $( '.riff-np' ),
 		queueList: $( '.riff-queue-list' ),
 		STATE: 'riff:state',
+		QUEUE: 'riff:queue',
 		// A shared link names its track: ?riff_track={id} on the post's own address.
 		SHARED: 'riff_track',
 		VOLUME: 'riff:volume',
