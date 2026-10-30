@@ -203,6 +203,33 @@ class Test_Riff_Protect extends Riff_TestCase {
 		$this->assertSame( $want, Protect::range( $header, 1000 ) );
 	}
 
+	public function test_a_copy_the_player_has_is_current_as_the_rfc_has_it(): void {
+		$etag = '"abc"';
+		$time = strtotime( '2026-10-01 12:00:00 UTC' );
+		$at   = gmdate( 'D, d M Y H:i:s', $time ) . ' GMT';
+
+		$this->assertTrue( Protect::current( '"abc"', '', $etag, $time ) );
+		$this->assertTrue( Protect::current( '"x", W/"abc"', '', $etag, $time ), 'weakly, in a list' );
+		$this->assertTrue( Protect::current( '*', '', $etag, $time ) );
+		$this->assertFalse( Protect::current( '"x"', $at, $etag, $time ), 'If-None-Match decides alone when it is sent' );
+		$this->assertTrue( Protect::current( '', $at, $etag, $time ), 'not changed since' );
+		$this->assertFalse( Protect::current( '', gmdate( 'D, d M Y H:i:s', $time - 60 ) . ' GMT', $etag, $time ), 'changed since' );
+		$this->assertFalse( Protect::current( '', 'not a date', $etag, $time ) );
+		$this->assertFalse( Protect::current( '', '', $etag, $time ) );
+	}
+
+	public function test_a_range_is_met_only_of_the_file_the_player_had(): void {
+		$etag = '"abc"';
+		$time = strtotime( '2026-10-01 12:00:00 UTC' );
+
+		$this->assertTrue( Protect::ranged( '', $etag, $time ) );
+		$this->assertTrue( Protect::ranged( '"abc"', $etag, $time ) );
+		$this->assertFalse( Protect::ranged( 'W/"abc"', $etag, $time ), 'never by a weak tag' );
+		$this->assertFalse( Protect::ranged( '"old"', $etag, $time ) );
+		$this->assertTrue( Protect::ranged( gmdate( 'D, d M Y H:i:s', $time ) . ' GMT', $etag, $time ) );
+		$this->assertFalse( Protect::ranged( gmdate( 'D, d M Y H:i:s', $time + 60 ) . ' GMT', $etag, $time ), 'only exactly when it changed' );
+	}
+
 	public function test_the_media_library_box_protects_and_unprotects(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$fields = Protect::field( array(), get_post( $this->track ) );
