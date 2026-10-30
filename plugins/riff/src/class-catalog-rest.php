@@ -39,6 +39,14 @@ final class Catalog_Rest {
 	public const TERMS_PER_PAGE = 48;
 
 	/**
+	 * The fewest characters a search looks for: one matches nearly every title and name, and would
+	 * read them all to say so.
+	 *
+	 * @since 5.7.0
+	 */
+	private const SEARCH_MIN = 2;
+
+	/**
 	 * Hooks the routes.
 	 *
 	 * @since 4.16.0
@@ -54,7 +62,7 @@ final class Catalog_Rest {
 	 */
 	public static function routes(): void {
 		$search  = array(
-			'description' => __( 'Words to look for: a track matches on its title, artist or album; an album or artist on its name.', 'riff' ),
+			'description' => __( 'Words to look for, at least two characters: a track matches on its title, artist or album; an album or artist on its name.', 'riff' ),
 			'type'        => 'string',
 			'default'     => '',
 		);
@@ -198,6 +206,9 @@ final class Catalog_Rest {
 		$album    = (int) $request['album'];
 		$artist   = (int) $request['artist'];
 		$search   = trim( (string) $request['search'] );
+		if ( self::too_short( $search ) ) {
+			return self::nothing( $page );
+		}
 
 		$args = array(
 			'post_type'        => 'attachment',
@@ -257,14 +268,35 @@ final class Catalog_Rest {
 			$args['tax_query'] = $tax; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- the point of the route.
 		}
 
+		$named = array();
+		if ( '' !== $search ) {
+			// Through WordPress's own search, on the title and as one phrase, as the route has always
+			// matched; so a search plugin that answers WP_Query from an index of its own answers this.
+			$args['s']              = $search;
+			$args['sentence']       = true;
+			$args['search_columns'] = array( 'post_title' );
+			$named                  = self::named( $search );
+		}
+
 		$where = self::visible_where();
-		$match = '' !== $search ? self::search_where( $search ) : '';
-		$scope = static function ( string $sql, \WP_Query $query ) use ( $where, $match ): string {
-			return $query->get( 'riff_catalog' ) ? $sql . $where . $match : $sql;
+		$scope = static function ( string $sql, \WP_Query $query ) use ( $where ): string {
+			return $query->get( 'riff_catalog' ) ? $sql . $where : $sql;
+		};
+		// Where WordPress searches its own tables, a track also matches by its album's or artist's
+		// name: core's search, which starts " AND (", stands beside the tracks filed under them.
+		$also = static function ( string $sql, \WP_Query $query ) use ( $named ): string {
+			global $wpdb;
+			if ( ! $query->get( 'riff_catalog' ) || '' === $sql || ! $named ) {
+				return $sql;
+			}
+			$in = implode( ',', array_map( 'intval', $named ) );
+			return " AND ( ( 1=1{$sql} ) OR {$wpdb->posts}.ID IN ( SELECT object_id FROM {$wpdb->term_relationships} WHERE term_taxonomy_id IN ( {$in} ) ) )";
 		};
 		add_filter( 'posts_where', $scope, 10, 2 );
+		add_filter( 'posts_search', $also, 10, 2 );
 		$query = new \WP_Query( $args );
 		remove_filter( 'posts_where', $scope, 10 );
+		remove_filter( 'posts_search', $also, 10 );
 
 		$total = (int) $query->found_posts;
 		$pages = (int) $query->max_num_pages;
@@ -323,6 +355,9 @@ final class Catalog_Rest {
 		global $wpdb;
 		$page   = max( 1, (int) $request['page'] );
 		$search = trim( (string) $request['search'] );
+		if ( self::too_short( $search ) ) {
+			return self::nothing( $page );
+		}
 
 		// WordPress keeps each term's count of files; only the few tracks a visitor may not see are
 		// subtracted, so a page of albums never has to group the whole library.
@@ -531,24 +566,48 @@ final class Catalog_Rest {
 	}
 
 	/**
-	 * SQL matching a track's title, artist or album against the search words.
+	 * The albums and artists whose names hold the search words, as term taxonomy IDs, through
+	 * get_terms(), which WordPress caches until a term changes.
 	 *
 	 * @param string $search Words.
-	 * @return string
+	 * @return int[]
 	 */
-	private static function search_where( string $search ): string {
-		global $wpdb;
-		$like = '%' . $wpdb->esc_like( $search ) . '%';
-		return $wpdb->prepare(
-			" AND ( {$wpdb->posts}.post_title LIKE %s OR {$wpdb->posts}.ID IN (
-				SELECT sr.object_id FROM {$wpdb->term_relationships} sr
-				INNER JOIN {$wpdb->term_taxonomy} stt ON stt.term_taxonomy_id = sr.term_taxonomy_id AND stt.taxonomy IN ( %s, %s )
-				INNER JOIN {$wpdb->terms} st ON st.term_id = stt.term_id
-				WHERE st.name LIKE %s ) )",
-			$like,
-			Catalog::ALBUM,
-			Catalog::ARTIST,
-			$like
+	private static function named( string $search ): array {
+		$found = get_terms(
+			array(
+				'taxonomy'   => array( Catalog::ALBUM, Catalog::ARTIST ),
+				'name__like' => $search,
+				'hide_empty' => false,
+				'fields'     => 'tt_ids',
+			)
+		);
+		return is_array( $found ) ? array_map( 'intval', $found ) : array();
+	}
+
+	/**
+	 * Whether a search is too short to look for.
+	 *
+	 * @param string $search Words.
+	 * @return bool
+	 */
+	private static function too_short( string $search ): bool {
+		return '' !== $search && mb_strlen( $search ) < self::SEARCH_MIN;
+	}
+
+	/**
+	 * A page with nothing on it, as a route answers a search too short to look for.
+	 *
+	 * @param int $page The page asked for.
+	 * @return WP_REST_Response
+	 */
+	private static function nothing( int $page ): WP_REST_Response {
+		return new WP_REST_Response(
+			array(
+				'items' => array(),
+				'page'  => $page,
+				'pages' => 0,
+				'total' => 0,
+			)
 		);
 	}
 

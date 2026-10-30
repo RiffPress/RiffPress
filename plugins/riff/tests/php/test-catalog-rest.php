@@ -118,6 +118,31 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( array(), $this->get( '/albums', array( 'search' => '%' ) )['items'], 'a wildcard is a character, not a pattern' );
 	}
 
+	public function test_a_track_search_is_wordpress_own_as_one_phrase(): void {
+		$seen = array();
+		$see  = static function ( WP_Query $query ) use ( &$seen ): void {
+			if ( $query->get( 'riff_catalog' ) ) {
+				$seen[] = $query->get( 's' );
+			}
+		};
+		add_action( 'pre_get_posts', $see );
+		$titles = wp_list_pluck( $this->get( '/tracks', array( 'search' => 'Trombone Det' ) )['items'], 'title' );
+		remove_action( 'pre_get_posts', $see );
+
+		$this->assertSame( array( 'Trombone Detritus' ), $titles );
+		$this->assertSame( array( 'Trombone Det' ), $seen, 'so a search plugin that answers WP_Query answers it' );
+		$this->assertSame( 0, $this->get( '/tracks', array( 'search' => 'Detritus Trombone' ) )['total'], 'the words as written, together' );
+		$this->assertSame( 0, $this->get( '/tracks', array( 'search' => '%%' ) )['total'], 'a wildcard is a character, not a pattern' );
+	}
+
+	public function test_a_search_of_one_character_finds_nothing(): void {
+		foreach ( array( '/tracks', '/albums', '/artists' ) as $route ) {
+			$data = $this->get( $route, array( 'search' => 'o' ) );
+			$this->assertSame( array(), $data['items'], "$route reads nothing for it" );
+			$this->assertSame( 0, $data['total'] );
+		}
+	}
+
 	public function test_an_album_lists_its_tracks_in_album_order(): void {
 		$album = $this->get( '/albums' )['items'][0]['id'];
 
