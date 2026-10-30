@@ -48,14 +48,59 @@ final class Art {
 	public const SHEET = 'sheet';
 
 	/**
-	 * Hooks the query variable and the handler.
+	 * The folder in uploads where a cover is kept once drawn, one folder for each drawing.
+	 *
+	 * @since 5.7.0
+	 */
+	public const DIR = 'riff-art';
+
+	/**
+	 * The option naming the drawing: what changes when anything a cover draws from does.
+	 *
+	 * @since 5.7.0
+	 */
+	public const STAMP = 'riff_art_stamp';
+
+	/**
+	 * The option holding when anything a cover draws from last changed, in seconds, so a cover
+	 * drawn from what was there before is not kept.
+	 *
+	 * @since 5.7.0
+	 */
+	public const CHANGED = 'riff_art_changed';
+
+	/**
+	 * The drawing's version, for this request, by site.
+	 *
+	 * @var string[]
+	 */
+	private static $version = array();
+
+	/**
+	 * Hooks the query variable and the handler, and what draws the covers again.
 	 *
 	 * @since 4.0.0
+	 * @since 5.7.0 And what draws the covers again.
 	 */
 	public static function register(): void {
 		add_filter( 'query_vars', array( self::class, 'query_vars' ) );
 		add_action( 'parse_request', array( self::class, 'serve' ) );
 		add_filter( 'riff_track', array( self::class, 'track_art' ), 10, 3 );
+		// A cover draws from its post or album, its tracks' tags and levels, and which posts are
+		// public, so a change to any of these draws every cover again when it is next asked for.
+		add_action( 'save_post', array( self::class, 'saved' ), 10, 2 );
+		add_action( 'post_updated', array( self::class, 'updated' ), 10, 3 );
+		add_action( 'before_delete_post', array( self::class, 'deleting' ) );
+		add_action( 'attachment_updated', array( self::class, 'moved' ), 10, 3 );
+		add_action( 'wp_media_attach_action', array( self::class, 'attached' ), 10, 2 );
+		add_action( 'delete_attachment', array( self::class, 'removed' ) );
+		add_action( 'set_object_terms', array( self::class, 'filed' ), 10, 4 );
+		add_action( 'edited_' . Catalog::ALBUM, array( self::class, 'redraw' ) );
+		add_action( 'delete_' . Catalog::ALBUM, array( self::class, 'redraw' ) );
+		foreach ( array( 'added', 'updated', 'deleted' ) as $did ) {
+			add_action( "{$did}_post_meta", array( self::class, 'meta' ), 10, 3 );
+			add_action( "{$did}_term_meta", array( self::class, 'meta' ), 10, 3 );
+		}
 	}
 
 	/**
@@ -100,11 +145,22 @@ final class Art {
 	 */
 	public static function drawn( array $art ): bool {
 		$src = $art ? (string) ( end( $art )['src'] ?? '' ) : '';
-		if ( '' === $src ) {
-			return true;
-		}
+		return '' === $src || '' !== self::which( $src );
+	}
+
+	/**
+	 * Which drawn cover an address is, at ?riff-art or kept in uploads, or empty for an image of
+	 * the site's own.
+	 *
+	 * @param string $src The cover's address.
+	 * @return string A post ID, album-<term ID>, or empty.
+	 */
+	private static function which( string $src ): string {
 		parse_str( (string) wp_parse_url( $src, PHP_URL_QUERY ), $query );
-		return ! empty( $query[ self::QUERY ] );
+		if ( ! empty( $query[ self::QUERY ] ) ) {
+			return (string) $query[ self::QUERY ];
+		}
+		return preg_match( '#/' . self::DIR . '/[0-9a-f]{8}/((?:album-)?\d+)\.svg$#', (string) wp_parse_url( $src, PHP_URL_PATH ), $m ) ? $m[1] : '';
 	}
 
 	/**
@@ -249,28 +305,283 @@ final class Art {
 	}
 
 	/**
-	 * A drawn cover's address, with the version of the drawing in it: a browser keeps a cover for a
-	 * day, so when Riff draws covers differently (a new palette, a new layout) the address changes
-	 * and every browser fetches the new one, instead of showing the old for up to a day. From what
-	 * the drawing code says, not when its files were written: a deploy writes every file anew, and
-	 * would make every cover a new address, drawn again, with nothing changed.
+	 * A drawn cover's address: the file in uploads once it has been drawn, which the web server
+	 * serves to everyone without starting WordPress, and until then ?riff-art, which draws it and
+	 * keeps the file. Either way with the version of the drawing in it, so a browser that keeps a
+	 * cover for a day fetches the new one when the drawing changes.
 	 *
 	 * @since 5.2.3
-	 * @since 5.7.0 From the drawing code's contents, not its files' times.
+	 * @since 5.7.0 The file in uploads once there is one.
 	 *
 	 * @param string $drawn A post ID, or album-<term ID>.
 	 * @return string
 	 */
 	private static function address( string $drawn ): string {
-		static $version = null;
-		$version        = $version ?? substr( md5( RIFF_VERSION . (string) md5_file( __DIR__ . '/class-cover.php' ) . (string) md5_file( __FILE__ ) ), 0, 8 );
+		$file = self::file( $drawn );
+		if ( $file && is_file( $file['path'] ) ) {
+			return $file['url'];
+		}
 		return add_query_arg(
 			array(
 				self::QUERY => $drawn,
-				'ver'       => $version,
+				'ver'       => self::version(),
 			),
 			home_url( '/' )
 		);
+	}
+
+	/**
+	 * The version of the drawing: from what the drawing code says, not when its files were
+	 * written, as a deploy writes every file anew; and from the stamp, which moves when anything a
+	 * cover draws from does.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @return string
+	 */
+	private static function version(): string {
+		$site = get_current_blog_id();
+		if ( ! isset( self::$version[ $site ] ) ) {
+			self::$version[ $site ] = substr( md5( RIFF_VERSION . (string) md5_file( __DIR__ . '/class-cover.php' ) . (string) md5_file( __FILE__ ) . (string) get_option( self::STAMP, '' ) ), 0, 8 );
+		}
+		return self::$version[ $site ];
+	}
+
+	/**
+	 * Where a cover is kept, in this drawing's folder, or null where none can be: without uploads,
+	 * or with uploads somewhere a folder can't be listed, as on S3, where a cover that must go
+	 * could not be found to delete.
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return array|null `{ path, url }`.
+	 */
+	private static function file( string $drawn ): ?array {
+		$uploads = wp_upload_dir( null, false );
+		if ( ! empty( $uploads['error'] ) || wp_is_stream( $uploads['basedir'] ) || ! preg_match( '/^(album-)?\d+$/', $drawn ) ) {
+			return null;
+		}
+		$name = self::DIR . '/' . self::version() . '/' . $drawn . '.svg';
+		return array(
+			'path' => trailingslashit( $uploads['basedir'] ) . $name,
+			'url'  => trailingslashit( $uploads['baseurl'] ) . $name,
+		);
+	}
+
+	/**
+	 * Keeps a drawn cover where the next page will link to it. Written whole and then moved into
+	 * place, so the web server never serves half of one; and taken away again when something it
+	 * draws from changed while it was drawn, as the cover is then of what was there before.
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @param string $svg   The cover.
+	 * @param float  $since When it began to be drawn.
+	 */
+	private static function keep( string $drawn, string $svg, float $since ): void {
+		$file = self::file( $drawn );
+		if ( ! $file || ! wp_mkdir_p( dirname( $file['path'] ) ) ) {
+			return;
+		}
+		$part = $file['path'] . '.' . wp_generate_password( 6, false ) . '.part';
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename -- a cover drawn here, written once and moved into place.
+		if ( false === file_put_contents( $part, $svg ) || ! @rename( $part, $file['path'] ) ) {
+			wp_delete_file( $part );
+			return;
+		}
+		// After the file is in place, so a change made while it was written is seen here, or its
+		// redraw() finds the file.
+		wp_cache_delete( self::CHANGED, 'options' );
+		if ( (float) get_option( self::CHANGED, 0 ) >= $since ) {
+			wp_delete_file( $file['path'] );
+		}
+	}
+
+	/**
+	 * Draws the covers again when they are next asked for: a new stamp, so a new folder. The
+	 * folder before stays, as a page cached a moment ago still links to it; any older goes. With
+	 * $all, every folder goes, for a cover that must not be seen again.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param bool $all Whether the folder before goes too.
+	 */
+	public static function redraw( $all = false ): void {
+		$all = true === $all;
+		// Every change, so a cover being drawn from what was there before is not kept. To the second
+		// after, which is never early, and the same for every change within it, so a backfill filing
+		// hundreds of tracks writes it once a second rather than for each.
+		update_option( self::CHANGED, (string) ceil( microtime( true ) ), false );
+		$was     = self::version();
+		$uploads = wp_upload_dir( null, false );
+		$base    = empty( $uploads['error'] ) && ! wp_is_stream( $uploads['basedir'] ) ? trailingslashit( $uploads['basedir'] ) . self::DIR : '';
+		// Nothing drawn since the last change has been seen, so there is nothing to draw again: an
+		// import saving a hundred tracks moves the stamp once.
+		if ( ! $all && '' !== $base && ! is_dir( "$base/$was" ) ) {
+			return;
+		}
+		update_option( self::STAMP, wp_generate_password( 8, false ), false );
+		unset( self::$version[ get_current_blog_id() ] );
+		if ( '' === $base ) {
+			return;
+		}
+		foreach ( (array) glob( "$base/*", GLOB_ONLYDIR ) as $dir ) {
+			if ( $all || basename( $dir ) !== $was ) {
+				foreach ( (array) glob( $dir . '/*' ) as $file ) {
+					wp_delete_file( $file );
+				}
+				@rmdir( $dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- empty now, or another request is drawing into it.
+			}
+		}
+	}
+
+	/**
+	 * A post saved: its cover, and any album with a track in it, may draw differently. Only a post
+	 * with tracks, or one that had a cover kept, as every redraw gives every cover a new address.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int     $post_id Post ID.
+	 * @param WP_Post $post    Post.
+	 */
+	public static function saved( $post_id, $post ): void {
+		if ( $post instanceof WP_Post && is_post_type_viewable( $post->post_type ) && ! wp_is_post_revision( $post ) && ! wp_is_post_autosave( $post ) && 'auto-draft' !== $post->post_status && self::holds( $post ) ) {
+			self::redraw();
+		}
+	}
+
+	/**
+	 * Whether a post has a cover drawn, or tracks a cover draws: in it, attached to it, or kept.
+	 *
+	 * @param WP_Post $post Post.
+	 * @return bool
+	 */
+	private static function holds( WP_Post $post ): bool {
+		$file = self::file( (string) $post->ID );
+		if ( $file && is_file( $file['path'] ) ) {
+			return true;
+		}
+		$attached = get_children(
+			array(
+				'post_parent'    => $post->ID,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'audio',
+				'numberposts'    => 1,
+				'fields'         => 'ids',
+			)
+		);
+		return $attached || Library::tracks( $post );
+	}
+
+	/**
+	 * A track moved to another post, which may be one a visitor can't read.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int     $post_id Attachment ID.
+	 * @param WP_Post $after   The attachment now.
+	 * @param WP_Post $before  The attachment before.
+	 */
+	public static function moved( $post_id, $after, $before ): void {
+		if ( $after instanceof WP_Post && $before instanceof WP_Post && $after->post_parent !== $before->post_parent && wp_attachment_is( 'audio', $after ) ) {
+			self::redraw( true );
+		}
+	}
+
+	/**
+	 * A track attached or detached in the Media Library, which changes its post without saving it.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $action        Attach or detach.
+	 * @param int    $attachment_id Attachment ID.
+	 */
+	public static function attached( $action, $attachment_id ): void {
+		if ( wp_attachment_is( 'audio', (int) $attachment_id ) ) {
+			self::redraw( true );
+		}
+	}
+
+	/**
+	 * A track deleted.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int $post_id Attachment ID.
+	 */
+	public static function removed( $post_id ): void {
+		if ( wp_attachment_is( 'audio', (int) $post_id ) ) {
+			self::redraw();
+		}
+	}
+
+	/**
+	 * A post that stops being public, or gains a password, takes every kept cover with it: its own,
+	 * and an album's that counted its tracks.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int     $post_id Post ID.
+	 * @param WP_Post $after   The post now.
+	 * @param WP_Post $before  The post before.
+	 */
+	public static function updated( $post_id, $after, $before ): void {
+		if ( $before instanceof WP_Post && $after instanceof WP_Post && self::open( $before ) && ! self::open( $after ) ) {
+			self::redraw( true );
+		}
+	}
+
+	/**
+	 * A public post deleted outright takes every kept cover with it.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	public static function deleting( $post_id ): void {
+		$post = get_post( (int) $post_id );
+		if ( $post instanceof WP_Post && self::open( $post ) ) {
+			self::redraw( true );
+		}
+	}
+
+	/**
+	 * Whether anyone may see a post, and so its cover.
+	 *
+	 * @param WP_Post $post Post.
+	 * @return bool
+	 */
+	private static function open( WP_Post $post ): bool {
+		return is_post_publicly_viewable( $post ) && '' === $post->post_password;
+	}
+
+	/**
+	 * A track filed under another album or artist.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int    $object_id Object ID.
+	 * @param array  $terms     Terms.
+	 * @param array  $tt_ids    Term taxonomy IDs.
+	 * @param string $taxonomy  Taxonomy.
+	 */
+	public static function filed( $object_id, $terms, $tt_ids, $taxonomy ): void {
+		if ( in_array( $taxonomy, array( Catalog::ALBUM, Catalog::ARTIST ), true ) ) {
+			self::redraw();
+		}
+	}
+
+	/**
+	 * A track's tags or levels, or an album's artist, changed.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int|int[] $meta_id   Meta ID, or IDs.
+	 * @param int       $object_id Object ID.
+	 * @param string    $key       Meta key.
+	 */
+	public static function meta( $meta_id, $object_id, $key ): void {
+		if ( Catalog::ALBUM_ARTIST === $key || ( '_wp_attachment_metadata' === $key && wp_attachment_is( 'audio', (int) $object_id ) ) ) {
+			self::redraw();
+		}
 	}
 
 	/**
@@ -316,14 +627,17 @@ final class Art {
 			echo self::sheet(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- an HTML document built here, every value escaped where it is placed.
 			exit;
 		}
-		$svg = null;
-		if ( preg_match( '/^album-(\d+)$/', (string) $wp->query_vars[ self::QUERY ], $m ) ) {
-			$svg = self::album_svg( (int) $m[1] );
-		} else {
-			$post = get_post( absint( $wp->query_vars[ self::QUERY ] ) );
-			if ( $post instanceof WP_Post && is_post_publicly_viewable( $post ) && ! post_password_required( $post ) ) {
-				$svg = self::svg( $post );
-			}
+		$drawn = (string) $wp->query_vars[ self::QUERY ];
+		$cache = 'public, max-age=86400';
+		$since = microtime( true );
+		$svg   = self::shared( $drawn );
+		if ( null !== $svg ) {
+			self::keep( $drawn, $svg, $since );
+		} elseif ( is_user_logged_in() ) {
+			// A cover only this listener may see, of an album of private tracks, is drawn for them
+			// and kept nowhere.
+			$svg   = self::draw( $drawn );
+			$cache = 'private, max-age=86400';
 		}
 		if ( null === $svg ) {
 			status_header( 404 );
@@ -336,10 +650,51 @@ final class Art {
 		}
 		status_header( 200 );
 		header( 'Content-Type: image/svg+xml; charset=utf-8' );
-		header( 'Cache-Control: public, max-age=86400' );
+		header( 'Cache-Control: ' . $cache );
 		header( 'ETag: ' . $etag );
 		echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- an SVG document, every text node escaped where it is built.
 		exit;
+	}
+
+	/**
+	 * A cover as the requester may see it: an album's from the tracks they may play, a post's when
+	 * they may read it.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return string|null SVG document, or null for nothing the requester may see.
+	 */
+	public static function draw( string $drawn ): ?string {
+		if ( preg_match( '/^album-(\d+)$/', $drawn, $m ) ) {
+			return self::album_svg( (int) $m[1] );
+		}
+		$post = get_post( absint( $drawn ) );
+		return $post instanceof WP_Post && is_post_publicly_viewable( $post ) && ! post_password_required( $post ) ? self::svg( $post ) : null;
+	}
+
+	/**
+	 * A cover as anyone may see it, signed in or not, which is the one kept in uploads.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return string|null SVG document, or null for nothing everyone may see.
+	 */
+	public static function shared( string $drawn ): ?string {
+		if ( ! preg_match( '/^album-\d+$/', $drawn ) ) {
+			$post = get_post( absint( $drawn ) );
+			if ( ! $post instanceof WP_Post || ! self::open( $post ) ) {
+				return null;
+			}
+		}
+		$user = get_current_user_id();
+		wp_set_current_user( 0 );
+		try {
+			return self::draw( $drawn );
+		} finally {
+			wp_set_current_user( $user );
+		}
 	}
 
 	/**
@@ -423,8 +778,7 @@ final class Art {
 		if ( '' === $src ) {
 			return '';
 		}
-		parse_str( (string) wp_parse_url( $src, PHP_URL_QUERY ), $query );
-		$drawn = (string) ( $query[ self::QUERY ] ?? '' );
+		$drawn = self::which( $src );
 		if ( '' !== $drawn ) {
 			// The slug the cover was drawn from: a post's, or an album term's.
 			if ( preg_match( '/^album-(\d+)$/', $drawn, $m ) ) {
