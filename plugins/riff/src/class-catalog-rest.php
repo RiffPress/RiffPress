@@ -257,7 +257,7 @@ final class Catalog_Rest {
 			$args['tax_query'] = $tax; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- the point of the route.
 		}
 
-		$where = self::visible_where();
+		$where = self::visible_where() . self::versions_where();
 		$match = '' !== $search ? self::search_where( $search ) : '';
 		$scope = static function ( string $sql, \WP_Query $query ) use ( $where, $match ): string {
 			return $query->get( 'riff_catalog' ) ? $sql . $where . $match : $sql;
@@ -510,6 +510,17 @@ final class Catalog_Rest {
 		// post it was uploaded to is not, so an unattached file is public. Riff also hides a file on a
 		// post behind a password.
 		return " AND ( {$wpdb->posts}.post_parent = 0 OR {$wpdb->posts}.post_parent IN ( SELECT pp.ID FROM {$wpdb->posts} pp WHERE pp.post_status = 'publish' AND pp.post_password = '' ) )";
+	}
+
+	/**
+	 * SQL leaving out every file that is another's streaming version: the same music as a track
+	 * already listed. Read once for the query, by the meta key's index.
+	 *
+	 * @return string
+	 */
+	private static function versions_where(): string {
+		global $wpdb;
+		return $wpdb->prepare( " AND {$wpdb->posts}.ID NOT IN ( SELECT CAST( sv.meta_value AS UNSIGNED ) FROM {$wpdb->postmeta} sv WHERE sv.meta_key = %s )", Media::STREAM_META );
 	}
 
 	/**

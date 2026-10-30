@@ -42,7 +42,8 @@ final class Fields {
 
 	/**
 	 * The fields, keyed by the REST property each reads and writes: the tag fields the file's
-	 * metadata holds, the video a song points at, and whether the file is protected.
+	 * metadata holds, the video and the streaming version a song points at, and whether the file
+	 * is protected.
 	 *
 	 * @since 4.33.0
 	 *
@@ -92,6 +93,20 @@ final class Fields {
 						throw new \RuntimeException( esc_html__( 'That is not a video in the Media Library.', 'riff' ) );
 					}
 					update_post_meta( $post->ID, Media::VIDEO_META, $id );
+				},
+			),
+			'riff_stream'    => array(
+				'label'       => __( 'Streaming version', 'riff' ),
+				'type'        => 'media',
+				'description' => __( 'A smaller copy of this song in the Media Library, such as an MP3 of a lossless file; listeners stream it in this file\'s place.', 'riff' ),
+				'applies'     => $audio,
+				'get'         => static fn( WP_Post $post ): int => (int) get_post_meta( $post->ID, Media::STREAM_META, true ),
+				'set'         => static function ( WP_Post $post, $value ): void {
+					$id = $value ? Media::sanitize_stream( $value ) : 0;
+					if ( $value && ( ! $id || $id === $post->ID ) ) {
+						throw new \RuntimeException( esc_html__( 'That is not another audio file in the Media Library.', 'riff' ) );
+					}
+					Media::link_stream( $post->ID, $id );
 				},
 			),
 			'riff_protected' => array(
