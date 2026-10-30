@@ -327,6 +327,32 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertLessThanOrEqual( $few + 4, $many, 'no queries per track, nor per post or cover' );
 	}
 
+	public function test_what_a_visitor_may_not_see_is_looked_up_once_until_a_post_changes(): void {
+		$lookups = 0;
+		$count   = static function ( $sql ) use ( &$lookups ) {
+			if ( str_contains( $sql, 'par.post_password' ) ) {
+				++$lookups;
+			}
+			return $sql;
+		};
+		add_filter( 'query', $count );
+		$this->get( '/albums' );
+		$this->get( '/artists' );
+		$this->get( '/albums', array( 'artist' => 1 ) );
+		remove_filter( 'query', $count );
+
+		$this->assertSame( 1, $lookups, 'once for every list' );
+		$this->assertNotContains( 'Secret Sessions', wp_list_pluck( $this->get( '/albums' )['items'], 'name' ) );
+
+		wp_update_post(
+			array(
+				'ID'          => (int) get_post_field( 'post_parent', $this->secret ),
+				'post_status' => 'publish',
+			)
+		);
+		$this->assertContains( 'Secret Sessions', wp_list_pluck( $this->get( '/albums' )['items'], 'name' ), 'and again once a post changes' );
+	}
+
 	public function test_the_routes_describe_themselves(): void {
 		foreach ( array( '/tracks', '/albums', '/artists' ) as $route ) {
 			$data = rest_do_request( new WP_REST_Request( 'OPTIONS', '/riff/v1' . $route ) )->get_data();

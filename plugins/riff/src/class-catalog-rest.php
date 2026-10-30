@@ -455,7 +455,8 @@ final class Catalog_Rest {
 
 	/**
 	 * The audio files the requester may not see: those uploaded to a post that is unpublished or
-	 * behind a password. Usually a handful; none for someone who can upload files.
+	 * behind a password. Usually a handful; none for someone who can upload files. The same for
+	 * every visitor, so kept in the object cache until a post next changes.
 	 *
 	 * @return int[]
 	 */
@@ -464,8 +465,14 @@ final class Catalog_Rest {
 		if ( current_user_can( 'upload_files' ) ) {
 			return array();
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a narrow lookup with no API.
-		return array_map( 'intval', $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a INNER JOIN {$wpdb->posts} par ON par.ID = a.post_parent WHERE a.post_type = 'attachment' AND a.post_mime_type LIKE 'audio/%' AND ( par.post_status <> 'publish' OR par.post_password <> '' )" ) );
+		$key    = 'hidden:' . wp_cache_get_last_changed( 'posts' );
+		$hidden = wp_cache_get( $key, 'riff' );
+		if ( ! is_array( $hidden ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a narrow lookup with no API, cached above.
+			$hidden = array_map( 'intval', $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a INNER JOIN {$wpdb->posts} par ON par.ID = a.post_parent WHERE a.post_type = 'attachment' AND a.post_mime_type LIKE 'audio/%' AND ( par.post_status <> 'publish' OR par.post_password <> '' )" ) );
+			wp_cache_set( $key, $hidden, 'riff', DAY_IN_SECONDS );
+		}
+		return $hidden;
 	}
 
 	/**
@@ -480,6 +487,13 @@ final class Catalog_Rest {
 		if ( ! $hidden ) {
 			return array();
 		}
+		// Kept until a post or a term next changes, as the hidden files and the terms they are filed
+		// under both come into it.
+		$key  = 'hidden-by-term:' . $taxonomy . ':' . wp_cache_get_last_changed( 'posts' ) . ':' . wp_cache_get_last_changed( 'terms' );
+		$kept = wp_cache_get( $key, 'riff' );
+		if ( is_array( $kept ) ) {
+			return $kept;
+		}
 		$in = implode( ',', array_fill( 0, count( $hidden ), '%d' ) );
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID.
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, tt.count, COUNT(*) AS n FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tr.object_id IN ({$in}) GROUP BY tt.term_id, tt.count", array_merge( array( $taxonomy ), $hidden ) ) );
@@ -490,6 +504,7 @@ final class Catalog_Rest {
 				'count'  => (int) $row->count,
 			);
 		}
+		wp_cache_set( $key, $out, 'riff', DAY_IN_SECONDS );
 		return $out;
 	}
 
