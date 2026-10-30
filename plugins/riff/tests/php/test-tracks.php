@@ -118,6 +118,24 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertSame( 'Underground', Tracks::from_attachment( $again )['title'] );
 	}
 
+	public function test_artwork_offers_each_size_at_its_own_width_smallest_first(): void {
+		$art = Tracks::art( self::attach( 'cover.png' ) );
+		$this->assertSame( array( 150, 300, 768, 1024 ), array_map( static fn( $a ) => (int) $a['sizes'], $art ) );
+
+		// Uploaded while medium_large was turned off: WordPress hands back the original under its
+		// name, shrunk only in its numbers.
+		$off = static function ( $sizes ) {
+			unset( $sizes['medium_large'], $sizes['large'] );
+			return $sizes;
+		};
+		add_filter( 'intermediate_image_sizes_advanced', $off );
+		$art = Tracks::art( self::attach( 'cover.png' ) );
+		remove_filter( 'intermediate_image_sizes_advanced', $off );
+
+		$this->assertSame( '1024x1024', end( $art )['sizes'], 'the original, at its own size' );
+		$this->assertSame( array( 150, 300, 1024 ), array_map( static fn( $a ) => (int) $a['sizes'], $art ), 'once, and in its place' );
+	}
+
 	public function test_artwork_comes_from_the_attachment_then_the_post(): void {
 		$post  = self::factory()->post->create();
 		$cover = self::attach( 'cover.png', $post );

@@ -45,6 +45,16 @@ export function cards( ctx ) {
 		if ( src ) {
 			// A cover that will not load leaves the card's own ground, not a broken image.
 			img.addEventListener( 'error', () => img.remove(), { once: true } );
+			// Every size it has, for the browser to pick by the template's sizes, as Ui::image()
+			// draws a card: a drawn cover is one SVG, sharp at any size.
+			const set = art
+				.filter(
+					( a ) => a.type !== 'image/svg+xml' && parseInt( a.sizes, 10 ) > 0
+				)
+				.map( ( a ) => `${ a.src } ${ parseInt( a.sizes, 10 ) }w` );
+			if ( set.length > 1 ) {
+				img.srcset = set.join( ', ' );
+			}
 			img.src = src;
 		} else {
 			img.remove();

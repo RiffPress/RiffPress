@@ -483,9 +483,8 @@ final class Browse {
 		if ( $album && $id ) {
 			$cover = Art::album_art( $id, $cover );
 		}
-		$art  = $cover ? (string) end( $cover )['src'] : '';
 		$tint = $album ? Art::tint( $cover ) : '';
-		return App::header( $title, $meta, $kind, $art, $tint, false, $id ? 'album' : '', $id ) . self::rows( $data['items'], $album );
+		return App::header( $title, $meta, $kind, $cover, $tint, false, $id ? 'album' : '', $id ) . self::rows( $data['items'], $album );
 	}
 
 	/**

@@ -30,7 +30,7 @@ class Test_Riff_Ui extends Riff_TestCase {
 		);
 
 		$this->assertSame(
-			'<div class="riff-card" id="riff-page-2" data-riff-album="1"><span class="riff-card-art"><img src="https://example.org/cover.jpg" alt="" loading="lazy" decoding="async"><button type="button" class="riff-card-play" data-riff-app-action="play-album" data-riff-album="1" aria-label="Play Compositions"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="https://example.org/?riff_album=1"><span class="riff-card-title">Compositions &lt;b&gt;</span></a><span class="riff-card-sub">The Airmen of Note</span></div>',
+			'<div class="riff-card" id="riff-page-2" data-riff-album="1"><span class="riff-card-art"><img src="https://example.org/cover.jpg" sizes="(max-width: 599px) 45vw, 240px" alt="" loading="lazy" decoding="async"><button type="button" class="riff-card-play" data-riff-app-action="play-album" data-riff-album="1" aria-label="Play Compositions"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="https://example.org/?riff_album=1"><span class="riff-card-title">Compositions &lt;b&gt;</span></a><span class="riff-card-sub">The Airmen of Note</span></div>',
 			$html
 		);
 	}
@@ -107,5 +107,54 @@ class Test_Riff_Ui extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-riff-app-action="play-album" data-riff-album="3" aria-label="Play Compositions"', $html );
 		$this->assertStringContainsString( '<img src="https://example.org/cover.jpg"', $html );
 		$this->assertSame( 'Album', Ui::album_line( array( 'artist' => '  ' ) ), 'a line of the same height when there is no artist' );
+	}
+
+	public function test_a_cover_offers_every_size_for_the_browser_to_pick_by_how_wide_it_is_shown(): void {
+		$art = array(
+			array(
+				'src'   => 'https://example.org/cover-150x150.jpg',
+				'sizes' => '150x150',
+			),
+			array(
+				'src'   => 'https://example.org/cover-768x768.jpg',
+				'sizes' => '768x768',
+			),
+			array(
+				'src'   => 'https://example.org/cover-1024x1024.jpg',
+				'sizes' => '1024x1024',
+			),
+		);
+
+		$this->assertSame(
+			'<img src="https://example.org/cover-1024x1024.jpg" srcset="https://example.org/cover-150x150.jpg 150w, https://example.org/cover-768x768.jpg 768w, https://example.org/cover-1024x1024.jpg 1024w" sizes="(max-width: 599px) 45vw, 240px" alt="" loading="lazy" decoding="async">',
+			Ui::image( $art, Ui::CARD_SIZES )
+		);
+		$drawn = Ui::image(
+			array(
+				array(
+					'src'   => 'https://example.org/?riff-art=1',
+					'sizes' => '1024x1024',
+					'type'  => 'image/svg+xml',
+				),
+			),
+			Ui::CARD_SIZES
+		);
+		$this->assertStringNotContainsString( 'srcset', $drawn, 'a drawn cover is one SVG, sharp at any size' );
+		$this->assertSame( '', Ui::image( array(), Ui::CARD_SIZES ) );
+	}
+
+	public function test_the_first_row_loads_at_once_and_the_first_cover_before_anything_else(): void {
+		$art = array( array( 'src' => 'https://example.org/cover.jpg' ) );
+
+		Ui::lead( 2 );
+		$first  = Ui::image( $art, Ui::CARD_SIZES );
+		$second = Ui::image( $art, Ui::CARD_SIZES );
+		$third  = Ui::image( $art, Ui::CARD_SIZES );
+
+		$this->assertStringContainsString( 'fetchpriority="high"', $first );
+		$this->assertStringNotContainsString( 'loading=', $first );
+		$this->assertStringNotContainsString( 'fetchpriority', $second, 'the rest of the row at once, but not first' );
+		$this->assertStringNotContainsString( 'loading=', $second );
+		$this->assertStringContainsString( 'loading="lazy"', $third, 'and after the row, when scrolled to' );
 	}
 }
