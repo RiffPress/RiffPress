@@ -788,7 +788,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none !important;
 }
 
-@media (min-width: 900px) {
+/* Wide, but not a phone on its side, however wide its screen: that keeps
+   the phone's bar, beside its tabs, as it does at 899px. */
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px))) {
 
 	.riff-desk {
 		display: inline-grid !important;

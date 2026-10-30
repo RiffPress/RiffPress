@@ -320,6 +320,20 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( (string) wp_get_attachment_url( $picture ), $this->render_at( array( Browse::ARTIST => $artist ) ) );
 	}
 
+	public function test_an_artist_without_a_picture_is_their_initial_not_a_drawn_cover_cut_round(): void {
+		$artist = (int) get_term_by( 'name', 'Airmen of Note, United States Air Force Band', Catalog::ARTIST )->term_id;
+		// No image anywhere, so their album's cover is one Riff draws.
+		foreach ( get_objects_in_term( $artist, Catalog::ARTIST ) as $id ) {
+			delete_post_thumbnail( (int) $id );
+			delete_post_thumbnail( (int) get_post_field( 'post_parent', (int) $id ) );
+		}
+
+		preg_match( '#<header class="riff-album[^"]*".*?</header>#s', $this->render_at( array( Browse::ARTIST => $artist ) ), $head );
+
+		$this->assertStringContainsString( '<span class="riff-album-mark" aria-hidden="true">A</span>', $head[0] ?? '', 'their initial, as on their card' );
+		$this->assertStringNotContainsString( '<img', $head[0] ?? '', 'not the drawn cover, whose type the round frame cuts off' );
+	}
+
 	public function test_an_artist_page_shows_ten_tracks_at_a_time(): void {
 		$artist = (int) get_term_by( 'name', 'Airmen of Note, United States Air Force Band', Catalog::ARTIST )->term_id;
 		$post   = self::factory()->post->create( array( 'post_status' => 'publish' ) );
