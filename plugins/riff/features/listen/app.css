@@ -1158,7 +1158,7 @@
 	margin: 0;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px))) {
 
 	.riff-app-status:not(:empty) {
 		left: 24px;
@@ -1230,6 +1230,21 @@
 /* An artist's picture is round, as the apps draw one. */
 .riff-album-round .riff-album-cover {
 	border-radius: 50%;
+}
+
+/* Without one, their initial, as on their card, sized to the circle. */
+.riff-album-cover:has(> .riff-album-mark) {
+	display: grid;
+	place-items: center;
+	container-type: inline-size;
+	background: var(--riff-app-accent-tint);
+}
+
+.riff-app .riff-album-mark {
+	color: var(--riff-app-accent);
+	font-family: var(--riff-app-heading-font);
+	font-size: 40cqi;
+	line-height: 1;
 }
 
 /* More by this artist, under an album's tracks. */

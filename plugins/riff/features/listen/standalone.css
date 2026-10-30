@@ -32,8 +32,9 @@ html.has-riff .riff-standalone .riff-app {
 
 /* On a wide screen standalone mode is laid out like the apps people know: a
    column on the left with the site's name, search and the views, and the view
-   beside it. The column stays put while the view scrolls. */
-@media (min-width: 900px) {
+   beside it. The column stays put while the view scrolls. Not on a phone on
+   its side, however wide: that is laid out as a phone, below. */
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px))) {
 
 	.riff-standalone .riff-app {
 		display: grid;
@@ -575,7 +576,7 @@ html.has-riff .riff-standalone .riff-app {
    the actions centred below, all on a wash that reaches the screen's edges.
    The view has no panel of its own here, so the wash is let past the view's
    sides, out through the app's gutter, and the app clips it instead. */
-@media (max-width: 899px) {
+@media (max-width: 899px), (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px) {
 
 	.riff-standalone .riff-app {
 		overflow-x: clip;
@@ -666,8 +667,9 @@ html.has-riff .riff-standalone .riff-app {
    and at the top one slim row, the site's name and who is listening, with the
    lists as chips under it on Home and on each list. The tabs stay in the
    navigation they belong to and are only placed at the bottom, so the order
-   a keyboard and a screen reader meet them in is unchanged. */
-@media (max-width: 899px) {
+   a keyboard and a screen reader meet them in is unchanged. A phone on its
+   side is a phone at any width. */
+@media (max-width: 899px), (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px) {
 
 	.riff-standalone {
 		--riff-tabs-h: calc(56px + var(--riff-safe-b));
@@ -796,16 +798,33 @@ html.has-riff .riff-standalone .riff-app {
 	}
 
 	/* The tabs along the bottom: an icon over its name, a third of the width
-	   each, on the bar's own surface. */
+	   each, on the bar's own surface. The surface runs on past the screen's
+	   foot: Safari on iOS 26 paints the page under its floating toolbar, below
+	   where anything fixed to the bottom ends, and the page would scroll past
+	   there under the tabs. */
 	.riff-standalone .riff-app-bar::after {
 		content: "";
 		position: fixed;
 		right: 0;
-		bottom: 0;
+		bottom: -50vh;
 		left: 0;
 		z-index: 3;
-		height: var(--riff-tabs-h);
+		height: calc(var(--riff-tabs-h) + 50vh);
 		background: var(--riff-surface, #212121);
+	}
+
+	/* And the status bar's strip at the top in the page's own black, as the
+	   apps keep it, so what scrolls up goes under it rather than under the
+	   clock. */
+	body.riff-standalone::before {
+		content: "";
+		position: fixed;
+		top: 0;
+		right: 0;
+		left: 0;
+		z-index: 4;
+		height: var(--riff-safe-t);
+		background: #030303;
 	}
 
 	.riff-standalone .riff-app .riff-app-bar .riff-app-tab:is(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library) {
@@ -861,7 +880,7 @@ html.has-riff .riff-standalone .riff-app {
    first under the status bar's corner, and the page gets back the height
    they took along the bottom. The bar keeps the bottom, beside them. By the
    screen's shape, never the device. */
-@media (max-width: 899px) and (min-aspect-ratio: 13 / 20) {
+@media (max-width: 899px) and (min-aspect-ratio: 13 / 20), (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px) {
 
 	.riff-standalone {
 		--riff-tabs-h: var(--riff-safe-b);
@@ -883,6 +902,18 @@ html.has-riff .riff-standalone .riff-app {
 		bottom: 0;
 		height: calc(var(--riff-bar-h) + var(--riff-safe-b));
 		padding-bottom: var(--riff-safe-b);
+	}
+
+	/* and its surface on past the foot, under Safari's floating toolbar, as
+	   the tabs' is along the bottom */
+	.riff-standalone #riff .riff-bar::after {
+		content: "";
+		position: absolute;
+		top: 100%;
+		right: 0;
+		left: 0;
+		height: 50vh;
+		background: inherit;
 	}
 
 	.riff-standalone .riff-app-bar::after {
@@ -919,7 +950,7 @@ html.has-riff .riff-standalone .riff-app {
    album, artist or playlist opens as a gatefold sleeve does: the cover on
    the left page, held there, and the title, the actions and the tracks on
    the right page, which scrolls. */
-@media (max-width: 899px) and (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px) {
+@media (max-width: 899px) and (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px), (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px) {
 
 	.riff-standalone .riff-app-view:has(> .riff-album) {
 		display: grid;

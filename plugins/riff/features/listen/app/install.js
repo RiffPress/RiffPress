@@ -56,6 +56,13 @@ export function installOffer( ctx ) {
 				fall();
 			}
 		}
+		// A phone has no window to give it or media keys to press: it gets its own line on why.
+		const phone =
+			ios || window.matchMedia( '(pointer: coarse)' ).matches;
+		for ( const why of offer.querySelectorAll( '[data-riff-install-why]' ) ) {
+			why.hidden =
+				( why.dataset.riffInstallWhy === 'phone' ) !== phone;
+		}
 		offer.hidden =
 			window.matchMedia(
 				'(display-mode: standalone), (display-mode: window-controls-overlay)'

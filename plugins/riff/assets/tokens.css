@@ -16,7 +16,7 @@
 	--riff-bar-h: 64px;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px))) {
 
 	:root {
 		--riff-bar-h: 72px;
