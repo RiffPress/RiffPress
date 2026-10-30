@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.3.0...riff-sign-in-v0.4.0) (2026-10-30)
+
+
+### Features
+
+* **sign-in:** listeners can stay in the player, with their profile but no dashboard, toolbar or wp-login.php registration form ([#752](https://github.com/RiffPress/RiffPress/issues/752)) ([23fb7a6](https://github.com/RiffPress/RiffPress/commit/23fb7a6b06ea2b46622ac9cba6630978c09dff0b))
+
 ## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.2.0...riff-sign-in-v0.3.0) (2026-10-29)
 
 

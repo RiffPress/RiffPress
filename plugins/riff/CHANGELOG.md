@@ -1,5 +1,27 @@
 # Changelog
 
+## [5.7.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.6.1...riff-v5.7.0) (2026-10-30)
+
+
+### Features
+
+* **player:** an album's artist opens their page from the album's header ([#755](https://github.com/RiffPress/RiffPress/issues/755)) ([dc12780](https://github.com/RiffPress/RiffPress/commit/dc127804be1046665782213149541e8a40f6ad39))
+* **player:** with the Presence API active, a signed-in listener sees who else is playing what under Listening now, and can listen along ([#753](https://github.com/RiffPress/RiffPress/issues/753)) ([099f8e7](https://github.com/RiffPress/RiffPress/commit/099f8e76ca2f83bb7edbfc48b04de067b42f4fc7))
+* **sign-in:** listeners can stay in the player, with their profile but no dashboard, toolbar or wp-login.php registration form ([#752](https://github.com/RiffPress/RiffPress/issues/752)) ([23fb7a6](https://github.com/RiffPress/RiffPress/commit/23fb7a6b06ea2b46622ac9cba6630978c09dff0b))
+
+
+### Bug Fixes
+
+* **app:** on a phone, an artist without a picture shows their initial, the tabs and status bar keep the page from showing past them, a phone on its side is laid out as one at any width, and the install card says why in a phone's terms ([#762](https://github.com/RiffPress/RiffPress/issues/762)) ([7566203](https://github.com/RiffPress/RiffPress/commit/7566203e788c816aa01750abd54bf660e5bbf096))
+* **media:** a track's edit screen no longer splits an artist or album with a comma in its name into two ([#756](https://github.com/RiffPress/RiffPress/issues/756)) ([aa645be](https://github.com/RiffPress/RiffPress/commit/aa645be24cbbd1d828644029bf5ede2e9965063f))
+* **player:** Jump back in no longer shows the Listen page as a post with nothing in it ([#760](https://github.com/RiffPress/RiffPress/issues/760)) ([f9bd891](https://github.com/RiffPress/RiffPress/commit/f9bd891d9146439753ff7bebd6c362ce0a7a1adc))
+
+
+### Performance Improvements
+
+* **player:** a deploy that leaves the drawing code alone keeps every drawn cover's address, so covers stay cached ([#757](https://github.com/RiffPress/RiffPress/issues/757)) ([a87fa8b](https://github.com/RiffPress/RiffPress/commit/a87fa8b0ac47a68cddeca8a752ff6c42187aa3dd))
+* **player:** a drawn cover is kept as a file in uploads once drawn, so pages link to it and it no longer starts WordPress for each request ([#761](https://github.com/RiffPress/RiffPress/issues/761)) ([2f898f8](https://github.com/RiffPress/RiffPress/commit/2f898f8f3d62fbdd3a2624204757bee89cacbe1c))
+
 ## [5.6.1](https://github.com/RiffPress/RiffPress/compare/riff-v5.6.0...riff-v5.6.1) (2026-10-29)
 
 
