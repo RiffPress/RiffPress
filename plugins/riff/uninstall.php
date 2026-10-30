@@ -63,6 +63,13 @@ foreach ( array( 'riff_album', 'riff_artist' ) as $riff_taxonomy ) {
 		wp_delete_term( (int) $riff_term, $riff_taxonomy );
 	}
 }
+// The drawn covers kept in uploads, drawn again by nothing once Riff is gone.
+foreach ( (array) glob( $riff_base . 'riff-art/*', GLOB_ONLYDIR ) as $riff_dir ) {
+	array_map( 'wp_delete_file', (array) glob( $riff_dir . '/*' ) );
+	@rmdir( $riff_dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- uninstall, once.
+}
+@rmdir( $riff_base . 'riff-art' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- uninstall, once.
+delete_option( 'riff_art_stamp' );
 delete_option( 'riff_catalog_backfill' );
 delete_option( 'riff_rewrite' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );

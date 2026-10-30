@@ -205,9 +205,129 @@ class Test_Riff_Art extends Riff_TestCase {
 		// The drawing's version is in the address, so a browser that kept a cover for a day fetches
 		// the new one when Riff draws covers differently.
 		$this->assertMatchesRegularExpression( '/&ver=[0-9a-f]{8}$/', $url );
-		// From what the drawing code says, so a deploy that writes the same files keeps every address.
+		// From what the drawing code says, so a deploy that writes the same files keeps every address,
+		// and from the stamp, which moves when anything a cover draws from does.
 		$dir = RIFF_DIR . 'features/listen/';
-		$this->assertStringEndsWith( '&ver=' . substr( md5( RIFF_VERSION . md5_file( $dir . 'class-cover.php' ) . md5_file( $dir . 'class-art.php' ) ), 0, 8 ), $url );
+		$this->assertStringEndsWith( '&ver=' . substr( md5( RIFF_VERSION . md5_file( $dir . 'class-cover.php' ) . md5_file( $dir . 'class-art.php' ) . get_option( Art::STAMP, '' ) ), 0, 8 ), $url );
+	}
+
+	public function test_a_cover_drawn_once_is_kept_in_uploads_and_linked_from_there(): void {
+		[ $post, $id ] = $this->bare_post();
+		$this->assertStringContainsString( 'riff-art=' . $post, Art::url( $post ), 'not drawn yet, so WordPress draws it' );
+
+		$svg = $this->serve( (string) $post );
+
+		$url = Art::url( $post );
+		$this->assertMatchesRegularExpression( '#/uploads/riff-art/[0-9a-f]{8}/' . $post . '\.svg$#', $url, 'then the web server serves the file' );
+		$this->assertSame( $svg, file_get_contents( $this->path( $url ) ) );
+		$this->assertTrue( Art::drawn( array( array( 'src' => $url ) ) ), 'and it is still a drawn cover' );
+		$this->assertSame( Art::tint( Tracks::from_attachment( $id, $post )['art'] ), Art::tint( array( array( 'src' => $url ) ) ), 'that tints as it did' );
+	}
+
+	public function test_a_change_draws_again_and_keeps_the_cover_a_cached_page_links_to(): void {
+		[ $post ] = $this->bare_post();
+		$this->serve( (string) $post );
+		$before = Art::url( $post );
+
+		wp_update_post(
+			array(
+				'ID'         => $post,
+				'post_title' => 'Morning Sessions',
+			)
+		);
+
+		$this->assertStringContainsString( 'riff-art=' . $post, Art::url( $post ), 'drawn again when next asked for' );
+		$this->assertFileExists( $this->path( $before ), 'the cover a page cached a moment ago links to stays' );
+		$this->assertStringContainsString( 'Morning', $this->serve( (string) $post ) );
+
+		wp_update_post(
+			array(
+				'ID'         => $post,
+				'post_title' => 'Evening Sessions',
+			)
+		);
+		$this->assertFileDoesNotExist( $this->path( $before ), 'and goes with the next change' );
+	}
+
+	public function test_saves_with_nothing_drawn_since_move_the_stamp_once(): void {
+		[ $post ] = $this->bare_post();
+		$this->serve( (string) $post );
+		wp_update_post( array( 'ID' => $post ) );
+		$stamp = get_option( Art::STAMP );
+		wp_update_post( array( 'ID' => $post ) );
+		wp_update_post( array( 'ID' => $post ) );
+		$this->assertSame( $stamp, get_option( Art::STAMP ), 'an import saving many tracks moves it once' );
+	}
+
+	public function test_a_post_that_stops_being_public_takes_every_kept_cover(): void {
+		[ $post, $id ] = $this->bare_post();
+		$album         = (int) wp_get_object_terms( $id, Catalog::ALBUM )[0]->term_id;
+		$this->serve( (string) $post );
+		$this->serve( 'album-' . $album );
+		$kept = array( $this->path( Art::url( $post ) ), $this->path( Art::album( $album )[0]['src'] ) );
+
+		wp_update_post(
+			array(
+				'ID'            => $post,
+				'post_password' => 'secret',
+			)
+		);
+
+		foreach ( $kept as $file ) {
+			$this->assertFileDoesNotExist( $file, 'nothing kept tells a visitor what it held' );
+		}
+		$this->assertNull( Art::shared( (string) $post ) );
+		$this->assertNull( Art::shared( 'album-' . $album ), 'nor what its album holds' );
+	}
+
+	public function test_a_cover_only_a_listener_may_see_is_drawn_for_them_and_kept_nowhere(): void {
+		[ $post, $id ] = $this->bare_post();
+		$album         = (int) wp_get_object_terms( $id, Catalog::ALBUM )[0]->term_id;
+		wp_update_post(
+			array(
+				'ID'          => $post,
+				'post_status' => 'private',
+			)
+		);
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+
+		$this->assertNull( Art::shared( 'album-' . $album ), 'drawn as a visitor sees it, there is nothing' );
+		$this->assertSame( $editor, get_current_user_id(), 'and the editor is signed in again after' );
+		$this->assertStringContainsString( '>Compositions<', (string) Art::draw( 'album-' . $album ), 'drawn for the editor, there is' );
+		$this->assertStringContainsString( 'riff-art=album-' . $album, Art::album( $album )[0]['src'], 'and nothing is kept' );
+	}
+
+	/**
+	 * Draws a cover as ?riff-art does, and keeps it.
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return string The cover.
+	 */
+	private function serve( string $drawn ): string {
+		$svg = (string) Art::shared( $drawn );
+		$this->assertNotSame( '', $svg, "$drawn is drawn" );
+		$keep = new ReflectionMethod( Art::class, 'keep' );
+		$keep->setAccessible( true );
+		$keep->invoke( null, $drawn, $svg );
+		return $svg;
+	}
+
+	/**
+	 * Where a kept cover's address is on disk.
+	 *
+	 * @param string $url The cover's address in uploads.
+	 * @return string
+	 */
+	private function path( string $url ): string {
+		$uploads = wp_upload_dir( null, false );
+		return $uploads['basedir'] . substr( $url, strlen( $uploads['baseurl'] ) );
+	}
+
+	public function tear_down(): void {
+		// Kept covers are files, which the database's rollback leaves behind.
+		Art::redraw( true );
+		parent::tear_down();
 	}
 
 	public function test_a_drawn_cover_tints_its_album_with_its_own_colour(): void {
