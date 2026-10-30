@@ -454,7 +454,12 @@ final class App {
 	 */
 	public static function post_cards( string $page ): string {
 		$cards = '';
-		$posts = array_slice( Library::query()->posts, 0, 12 );
+		$posts = Library::query(
+			array(
+				'posts_per_page' => 12,
+				'no_found_rows'  => true,
+			)
+		)->posts;
 		Library::prime( $posts );
 		foreach ( $posts as $post ) {
 			$cards .= self::card( Library::item( $post ), $page );

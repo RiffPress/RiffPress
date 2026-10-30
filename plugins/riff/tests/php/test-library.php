@@ -103,6 +103,28 @@ class Test_Riff_Library extends Riff_TestCase {
 		$this->assertSame( 1, $parsed, 'for its tracks, its count and its markup' );
 	}
 
+	public function test_a_card_adds_its_tracks_up_once_until_one_of_them_changes(): void {
+		$post  = get_post( $this->post_with_tracks( 2 ) );
+		$built = 0;
+		$count = static function ( $track ) use ( &$built ) {
+			++$built;
+			return $track;
+		};
+		$first = Library::item( $post );
+		add_filter( 'riff_track', $count );
+		$again = Library::item( $post );
+		remove_filter( 'riff_track', $count );
+
+		$this->assertSame( 0, $built, 'the second card builds no tracks' );
+		$this->assertSame( $first, $again );
+
+		$id   = \Riff\Blocks_Source::attachments( $post )[0];
+		$meta = wp_get_attachment_metadata( $id );
+		$this->assertLessThan( 5000, $first['duration'] );
+		wp_update_attachment_metadata( $id, array( 'length' => 5000 ) + $meta );
+		$this->assertGreaterThan( 5000, Library::item( $post )['duration'], 'until a track\'s length changes' );
+	}
+
 	public function test_only_posts_with_media_blocks_are_in_the_library(): void {
 		$with    = $this->post_with_track();
 		$without = self::factory()->post->create( array( 'post_content' => '<!-- wp:paragraph --><p>Words.</p><!-- /wp:paragraph -->' ) );

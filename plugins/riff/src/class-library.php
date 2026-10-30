@@ -276,7 +276,44 @@ final class Library {
 	 * @return array
 	 */
 	public static function item( WP_Post $post ): array {
-		return self::listed( $post, self::tracks( $post ) );
+		return self::listed( $post, self::summary( $post ) );
+	}
+
+	/**
+	 * How many tracks a post holds, how long they last and who they are by, kept in the object
+	 * cache until a post or its meta next changes, so a card doesn't build every track it counts.
+	 * Only for the core blocks, whose tracks are the same whoever asks; another source may list
+	 * tracks by who is asking.
+	 *
+	 * @param WP_Post $post Post.
+	 * @return array `{ count, duration, artist }`.
+	 */
+	private static function summary( WP_Post $post ): array {
+		if ( ! Sources::for_post( $post ) instanceof Blocks_Source ) {
+			return self::summarize( self::tracks( $post ) );
+		}
+		$key  = $post->ID . ':' . md5( $post->post_content ) . ':' . wp_cache_get_last_changed( 'posts' );
+		$kept = wp_cache_get( $key, 'riff' );
+		if ( is_array( $kept ) ) {
+			return $kept;
+		}
+		$summary = self::summarize( self::tracks( $post ) );
+		wp_cache_set( $key, $summary, 'riff', DAY_IN_SECONDS );
+		return $summary;
+	}
+
+	/**
+	 * What a card says of a post's tracks.
+	 *
+	 * @param array[] $tracks Tracks.
+	 * @return array `{ count, duration, artist }`.
+	 */
+	private static function summarize( array $tracks ): array {
+		return array(
+			'count'    => count( $tracks ),
+			'duration' => array_sum( array_map( static fn( $t ) => (float) $t['duration'], $tracks ) ),
+			'artist'   => self::artist( $tracks ),
+		);
 	}
 
 	/**
@@ -300,26 +337,22 @@ final class Library {
 	}
 
 	/**
-	 * A post as the list shows it, from its tracks.
+	 * A post as the list shows it, from what its tracks add up to.
 	 *
-	 * @param WP_Post $post   Post.
-	 * @param array[] $tracks Its tracks.
+	 * @param WP_Post $post    Post.
+	 * @param array   $summary Its tracks' `{ count, duration, artist }`.
 	 * @return array
 	 */
-	private static function listed( WP_Post $post, array $tracks ): array {
-		$duration = 0.0;
-		foreach ( $tracks as $t ) {
-			$duration += (float) $t['duration'];
-		}
+	private static function listed( WP_Post $post, array $summary ): array {
 		$art  = Tracks::art( (int) get_post_thumbnail_id( $post ) );
 		$item = array(
 			'id'       => $post->ID,
 			'title'    => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
 			'url'      => (string) get_permalink( $post ),
-			'artist'   => self::artist( $tracks ),
+			'artist'   => (string) $summary['artist'],
 			'art'      => $art,
-			'count'    => count( $tracks ),
-			'duration' => $duration,
+			'count'    => (int) $summary['count'],
+			'duration' => (float) $summary['duration'],
 		);
 		return Listen\App::item_meta( Listen\Art::item_art( $item, $post ), $post );
 	}
@@ -333,7 +366,7 @@ final class Library {
 	 */
 	public static function post( WP_Post $post ): array {
 		$tracks         = self::tracks( $post );
-		$item           = self::listed( $post, $tracks );
+		$item           = self::listed( $post, self::summarize( $tracks ) );
 		$item['tracks'] = $tracks;
 		$item['html']   = self::html( $post );
 		return $item;
