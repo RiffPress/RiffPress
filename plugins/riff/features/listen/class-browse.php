@@ -12,6 +12,7 @@ use WP_REST_Request;
 use WP_User;
 
 use Riff\Catalog;
+use Riff\Catalog_Rest;
 use Riff\Library;
 use Riff\Tracks;
 
@@ -117,10 +118,10 @@ final class Browse {
 		$list   = $read( self::PLAYLIST );
 		// phpcs:enable
 		if ( ctype_digit( $list ) && (int) $list > 0 ) {
-			return array( 'view' => 'playlist', 'id' => (int) $list, 'search' => '', 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			return array( 'view' => 'playlist', 'id' => (int) $list, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		if ( ctype_digit( $album ) && (int) $album > 0 ) {
-			return array( 'view' => 'album', 'id' => (int) $album, 'search' => '', 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			return array( 'view' => 'album', 'id' => (int) $album, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		if ( ctype_digit( $artist ) && (int) $artist > 0 ) {
 			return array( 'view' => 'artist', 'id' => (int) $artist, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
@@ -345,9 +346,9 @@ final class Browse {
 			case 'library':
 				return Collection::view( $page );
 			case 'playlist':
-				return Playlist_View::view( $page, $current['id'] );
+				return Playlist_View::view( $page, $current['id'], $current['page'] );
 			case 'album':
-				return Album_View::view( $page, $current['id'] );
+				return Album_View::view( $page, $current['id'], $current['page'] );
 			case 'artist':
 				return Artist_View::view( $page, $current['id'], $current['page'] );
 			default:
@@ -387,14 +388,15 @@ final class Browse {
 	 * @param string $route The route, as for get().
 	 * @param array  $args  Its arguments, without the page.
 	 * @param array  $data  The route's response for the page drawn.
-	 * @return array `{ url, page, pages }`.
+	 * @return array `{ url, page, pages, per_page }`.
 	 */
 	public static function more( string $route, array $args, array $data ): array {
 		unset( $args['page'] );
 		return array(
-			'url'   => add_query_arg( $args, rest_url( Library::REST . $route ) ),
-			'page'  => max( 1, (int) $data['page'] ),
-			'pages' => max( 1, (int) $data['pages'] ),
+			'url'      => add_query_arg( $args, rest_url( Library::REST . $route ) ),
+			'page'     => max( 1, (int) $data['page'] ),
+			'pages'    => max( 1, (int) $data['pages'] ),
+			'per_page' => (int) ( $args['per_page'] ?? Catalog_Rest::PER_PAGE ),
 		);
 	}
 
@@ -546,9 +548,12 @@ final class Browse {
 			$numbered ? '#' : '',
 			esc_html__( 'Title', 'riff' )
 		) : '';
+		// A later page of an album numbers on from the pages before it.
+		$start = $numbered && $more ? ( max( 1, (int) $more['page'] ) - 1 ) * (int) ( $more['per_page'] ?? 0 ) : 0;
 		return $head . sprintf(
-			'<div class="riff-album-tracks"%s %s="%s">%s</div>',
+			'<div class="riff-album-tracks"%s%s %s="%s">%s</div>',
 			$numbered ? ' data-riff-numbered' : '',
+			$start > 0 ? sprintf( ' style="counter-reset:riff-track %d"', $start ) : '',
 			$more ? 'data-riff-more' : 'data-riff-tracks',
 			esc_attr( (string) wp_json_encode( $more ? $more : $tracks ) ),
 			$rows

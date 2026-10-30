@@ -18,38 +18,20 @@ defined( 'ABSPATH' ) || exit;
 final class Album_View {
 
 	/**
-	 * The most pages of 100 an album view reads: an album of up to 2,000 tracks shows whole.
-	 */
-	private const ALBUM_PAGES = 20;
-
-	/**
-	 * One album: its name and artist beside Play and Shuffle, then its tracks in order.
+	 * One album: its name and artist beside Play and Shuffle, then its tracks in order, a hundred
+	 * at a time: a box set runs on over its pages, and Play and Shuffle play the whole of it.
 	 *
-	 * @param string $page Listen page.
-	 * @param int    $id   Album term ID.
+	 * @param string $page   Listen page.
+	 * @param int    $id     Album term ID.
+	 * @param int    $number Page of tracks.
 	 * @return string
 	 */
-	public static function view( string $page, int $id ): string {
-		// The whole album, page by page: a box set runs past one page of the route.
-		$data = Browse::get(
-			'/tracks',
-			array(
-				'album'    => $id,
-				'per_page' => 100,
-			)
+	public static function view( string $page, int $id, int $number = 1 ): string {
+		$args = array(
+			'album'    => $id,
+			'per_page' => 100,
 		);
-		$last = min( (int) $data['pages'], self::ALBUM_PAGES );
-		for ( $number = 2; $number <= $last; $number++ ) {
-			$more          = Browse::get(
-				'/tracks',
-				array(
-					'album'    => $id,
-					'per_page' => 100,
-					'page'     => $number,
-				)
-			);
-			$data['items'] = array_merge( $data['items'], $more['items'] );
-		}
+		$data = Browse::get( '/tracks', $args + array( 'page' => $number ) );
 		$term = get_term( $id );
 		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
 			return Albums_View::view( $page, 1 );
@@ -59,7 +41,7 @@ final class Album_View {
 		$by     = $by instanceof \WP_Term ? $by : null;
 		// The artist opens their page, when they have one.
 		$meta = array_values( array_filter( array( $by ? array( $artist, add_query_arg( Browse::ARTIST, (int) $by->term_id, $page ) ) : $artist, Browse::count( (int) $data['total'] ) ) ) );
-		return Browse::list_view( Catalog::name( $term->name ), $meta, $data, __( 'Album', 'riff' ), true, $id ) . self::more_by( $artist, $by, $id, $page );
+		return Browse::list_view( Catalog::name( $term->name ), $meta, $data, __( 'Album', 'riff' ), true, $id, Browse::more( '/tracks', $args, $data ) ) . Browse::next( add_query_arg( Browse::ALBUM, $id, $page ), $data ) . self::more_by( $artist, $by, $id, $page );
 	}
 
 	/**

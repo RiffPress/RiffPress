@@ -206,50 +206,15 @@ export function views( ctx ) {
 		}
 	}
 
-	// Play an album from its cover, from the tracks route, in album order.
-	async function playAlbum( button ) {
-		if ( button.getAttribute( 'aria-busy' ) === 'true' || ! tracksRest ) {
+	// Play an album from its cover, from the tracks route, in album order: its first page, and the
+	// rest as the queue nears its end.
+	function playAlbum( button ) {
+		if ( ! tracksRest ) {
 			return;
 		}
-		const turn = ++ctx.picking;
-		const shownAt = ctx.showing;
-		button.setAttribute( 'aria-busy', 'true' );
-		try {
-			// The whole album, page by page, as the album view lists it: a box set runs past one
-			// page of the route. Twenty pages is 2,000 tracks.
-			const items = [];
-			for ( let n = 1, pages = 1; n <= Math.min( pages, 20 ); n++ ) {
-				const u = new URL( tracksRest, location.href );
-				u.searchParams.set(
-					'album',
-					String( Number( button.dataset.riffAlbum ) )
-				);
-				u.searchParams.set( 'per_page', '100' );
-				u.searchParams.set( 'page', String( n ) );
-				const r = await api.request( u );
-				if ( ! r.ok ) {
-					throw new Error( String( r.status ) );
-				}
-				const data = await r.json();
-				items.push(
-					...( Array.isArray( data.items ) ? data.items : [] )
-				);
-				pages = Number( data.pages ) || 1;
-			}
-			if ( turn !== ctx.picking || shownAt !== ctx.showing ) {
-				return;
-			}
-			untell();
-			if ( items.length ) {
-				api.play( items, 0 );
-			}
-		} catch {
-			if ( turn === ctx.picking && shownAt === ctx.showing ) {
-				tell( playError() );
-			}
-		} finally {
-			button.removeAttribute( 'aria-busy' );
-		}
+		const u = new URL( tracksRest, location.href );
+		u.searchParams.set( 'album', String( Number( button.dataset.riffAlbum ) ) );
+		playAll( button, { url: u.toString() }, false );
 	}
 
 	// Play or shuffle the whole of a list one page of which is showing, from its first page: that

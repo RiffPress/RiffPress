@@ -310,6 +310,27 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'riff-app-library', $html );
 	}
 
+	public function test_a_long_playlist_opens_a_hundred_rows_at_a_time_with_their_places(): void {
+		$id    = $this->made( array_merge( ...array_fill( 0, 84, $this->tracks ) ) );
+		$first = $this->render_at( array( 'riff_playlist' => $id ) );
+
+		$this->assertSame( 100, substr_count( $first, 'data-riff-track="' ), 'a page of rows, of 252' );
+		$this->assertStringContainsString( 'data-riff-places="' . esc_attr( (string) wp_json_encode( range( 0, 99 ) ) ) . '"', $first );
+		$this->assertMatchesRegularExpression( '#<a class="riff-pill" href="[^"]*riff_page=2#', $first, 'a way on to the rest' );
+		$this->assertStringContainsString( 'data-riff-more="', $first, 'a row pressed plays on into the rest' );
+
+		$last = $this->render_at(
+			array(
+				'riff_playlist' => $id,
+				'riff_page'     => 3,
+			)
+		);
+		$this->assertSame( 52, substr_count( $last, 'data-riff-track="' ) );
+		$this->assertStringContainsString( 'data-riff-places="' . esc_attr( (string) wp_json_encode( range( 200, 251 ) ) ) . '"', $last, 'each still its place in the whole' );
+		$this->assertStringNotContainsString( 'riff_page=4', $last );
+		$this->assertStringNotContainsString( 'data-riff-more="', $last, 'nothing after the last page' );
+	}
+
 	public function test_standalone_mode_lists_the_playlist_in_your_library_and_marks_it_open(): void {
 		$id = $this->made( $this->tracks );
 		$this->set_permalink_structure( '/%postname%/' );
