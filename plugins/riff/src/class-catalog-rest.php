@@ -275,7 +275,9 @@ final class Catalog_Rest {
 			$args['s']              = $search;
 			$args['sentence']       = true;
 			$args['search_columns'] = array( 'post_title' );
-			$named                  = self::named( $search );
+			// ElasticPress answers a query that isn't the page's own only when asked to.
+			$args['ep_integrate'] = true;
+			$named                = self::named( $search );
 		}
 
 		$where = self::visible_where();
