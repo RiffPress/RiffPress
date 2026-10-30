@@ -64,6 +64,7 @@ foreach ( array( 'riff_album', 'riff_artist' ) as $riff_taxonomy ) {
 	}
 }
 delete_option( 'riff_catalog_backfill' );
+delete_option( 'riff_catalog_backfill_from' );
 delete_option( 'riff_rewrite' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );
 

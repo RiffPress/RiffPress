@@ -186,6 +186,45 @@ class Test_Riff_Catalog extends Riff_TestCase {
 		}
 	}
 
+	public function test_each_batch_starts_where_the_last_stopped_and_skips_what_is_filed(): void {
+		$ids = array(
+			self::attach( '02 - Underground [underground].mp3' ),
+			self::attach( '03 - Trombone Detritus [detritus].mp3' ),
+			self::attach( '02 - Underground [underground].mp3' ),
+		);
+		foreach ( array( $ids[0], $ids[2] ) as $id ) {
+			delete_post_meta( $id, Catalog::FILED );
+		}
+		delete_option( Catalog::BACKFILL );
+		delete_option( Catalog::BACKFILL_FROM );
+		wp_clear_scheduled_hook( Catalog::BACKFILL );
+
+		$this->assertSame( 1, Catalog::backfill( 1 ) );
+		$this->assertSame( $ids[0], (int) get_option( Catalog::BACKFILL_FROM )['after'] );
+		delete_post_meta( $ids[0], Catalog::FILED );
+
+		$this->assertSame( 1, Catalog::backfill( 5 ), 'the next batch does not look back, and passes over what is filed' );
+		$this->assertSame( '', get_post_meta( $ids[0], Catalog::FILED, true ) );
+		$this->assertSame( Catalog::VERSION, (int) get_post_meta( $ids[2], Catalog::FILED, true ) );
+		$this->assertTrue( Catalog::filed() );
+		$this->assertFalse( get_option( Catalog::BACKFILL_FROM ), 'and the walk is forgotten once it reaches the end' );
+		wp_clear_scheduled_hook( Catalog::BACKFILL );
+	}
+
+	public function test_wp_riff_catalog_files_the_whole_library_from_the_start(): void {
+		require_once __DIR__ . '/class-riff-test-wp-cli.php';
+		WP_CLI::$lines = array();
+		$id            = self::attach( '02 - Underground [underground].mp3' );
+		delete_post_meta( $id, Catalog::FILED );
+		update_option( Catalog::BACKFILL, Catalog::VERSION );
+
+		( new Riff\Cli() )->catalog( array(), array() );
+
+		$this->assertSame( Catalog::VERSION, (int) get_post_meta( $id, Catalog::FILED, true ), 'found though the background filing had finished' );
+		$this->assertSame( 'Filed 1 audio files under their albums and artists.', WP_CLI::$lines[0][1] );
+		wp_clear_scheduled_hook( Catalog::BACKFILL );
+	}
+
 	public function test_the_backfill_is_scheduled_only_until_it_has_finished(): void {
 		delete_option( Catalog::BACKFILL );
 		wp_clear_scheduled_hook( Catalog::BACKFILL );
