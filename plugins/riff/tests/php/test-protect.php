@@ -334,6 +334,25 @@ class Test_Riff_Protect extends Riff_TestCase {
 		);
 	}
 
+	public function test_many_files_are_relinked_in_one_pass_each_where_it_is_the_whole_address(): void {
+		$a = Protect::address( 7 );
+		$b = Protect::address( 8 );
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><audio src="%1$s0"></audio>', $a, $b ),
+			)
+		);
+
+		// File 7's new address is file 8's old one: never replaced a second time.
+		$this->assertSame( 1, Protected_Files::relink_all( array( $a => $b, $b => 'https://cdn.example/8.mp3', '' => 'x' ) ) );
+
+		$this->assertSame(
+			sprintf( '<audio src="%1$s"></audio><audio src="%2$s"></audio><audio src="%3$s0"></audio>', $b, 'https://cdn.example/8.mp3', $a ),
+			get_post_field( 'post_content', $this->post )
+		);
+	}
+
 	public function test_relinking_one_file_leaves_a_file_whose_id_starts_the_same_alone(): void {
 		$longer = Protect::address( $this->track ) . '7';
 		wp_update_post(
