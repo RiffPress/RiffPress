@@ -46,10 +46,12 @@ final class Cli {
 	public function catalog( array $args, array $assoc_args ): void {
 		unset( $args, $assoc_args );
 		$total = 0;
+		// From the start, so a file whose filing was lost is found wherever it is.
+		delete_option( Catalog::BACKFILL );
+		delete_option( Catalog::BACKFILL_FROM );
 		do {
-			$filed  = Catalog::backfill();
-			$total += $filed;
-		} while ( Catalog::BATCH === $filed );
+			$total += Catalog::backfill();
+		} while ( ! Catalog::filed() );
 		WP_CLI::success( sprintf( 'Filed %d audio files under their albums and artists.', $total ) );
 	}
 

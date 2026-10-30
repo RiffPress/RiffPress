@@ -74,6 +74,14 @@ final class Catalog {
 	public const BACKFILL = 'riff_catalog_backfill';
 
 	/**
+	 * The option holding how far the backfill has walked the library, by ID, and at which version,
+	 * so each batch starts where the last stopped rather than looking again at what it filed.
+	 *
+	 * @since 5.7.0
+	 */
+	public const BACKFILL_FROM = 'riff_catalog_backfill_from';
+
+	/**
 	 * Files filed per background run.
 	 *
 	 * @since 4.16.0
@@ -322,54 +330,76 @@ final class Catalog {
 	 * @since 4.16.0
 	 */
 	public static function schedule(): void {
-		if ( (int) get_option( self::BACKFILL ) < self::VERSION && ! wp_next_scheduled( self::BACKFILL ) ) {
+		if ( ! self::filed() && ! wp_next_scheduled( self::BACKFILL ) ) {
 			wp_schedule_single_event( time(), self::BACKFILL );
 		}
 	}
 
 	/**
-	 * Files a batch of audio not yet filed at this version, and runs again until none are left.
+	 * Files the next batch of audio, by ID from where the last batch stopped, skipping what is
+	 * already filed at this version, and runs again until it reaches the end of the library.
 	 *
 	 * @since 4.16.0
+	 * @since 5.7.0 From where the last batch stopped, rather than looking for what is not filed.
 	 *
-	 * @param int $limit How many to file; the batch size by default.
+	 * @param int $limit How many files to look at; the batch size by default.
 	 * @return int How many were filed.
 	 */
 	public static function backfill( int $limit = self::BATCH ): int {
-		$ids = get_posts(
-			array(
-				'post_type'      => 'attachment',
-				'post_mime_type' => 'audio',
-				'post_status'    => 'any',
-				'fields'         => 'ids',
-				'posts_per_page' => $limit,
-				'no_found_rows'  => true,
-				'orderby'        => 'ID',
-				'order'          => 'ASC',
-				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- a background job over files not filed yet.
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array(
-						'key'     => self::FILED,
-						'compare' => 'NOT EXISTS',
-					),
-					array(
-						'key'     => self::FILED,
-						'value'   => self::VERSION,
-						'compare' => '<',
-						'type'    => 'NUMERIC',
-					),
-				),
-			)
-		);
-		foreach ( $ids as $id ) {
-			self::file( (int) $id );
+		global $wpdb;
+		$from  = get_option( self::BACKFILL_FROM );
+		$after = is_array( $from ) && self::VERSION === (int) ( $from['version'] ?? 0 ) ? (int) ( $from['after'] ?? 0 ) : 0;
+		// By the primary key, so a batch costs the same at the end of a large library as at the
+		// start; a query for what is not filed yet would read past everything filed before it.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a background job, walking the library by ID.
+		$ids = array_map( 'intval', (array) $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_mime_type LIKE %s AND post_status NOT IN ( 'trash', 'auto-draft' ) AND ID > %d ORDER BY ID ASC LIMIT %d", 'audio/%', $after, $limit ) ) );
+		// The batch's posts and metadata at once, and its albums and artists counted once, at the end.
+		_prime_post_caches( $ids, false, false );
+		update_meta_cache( 'post', $ids );
+		$counting = ! wp_defer_term_counting();
+		if ( $counting ) {
+			wp_defer_term_counting( true );
+		}
+		$filed = 0;
+		try {
+			foreach ( $ids as $id ) {
+				if ( (int) get_post_meta( $id, self::FILED, true ) < self::VERSION ) {
+					self::file( $id );
+					++$filed;
+				}
+			}
+		} finally {
+			if ( $counting ) {
+				wp_defer_term_counting( false );
+			}
 		}
 		if ( count( $ids ) < $limit ) {
 			update_option( self::BACKFILL, self::VERSION, false );
-		} elseif ( ! wp_next_scheduled( self::BACKFILL ) ) {
-			wp_schedule_single_event( time() + 30, self::BACKFILL );
+			delete_option( self::BACKFILL_FROM );
+		} else {
+			update_option(
+				self::BACKFILL_FROM,
+				array(
+					'version' => self::VERSION,
+					'after'   => (int) end( $ids ),
+				),
+				false
+			);
+			if ( ! wp_next_scheduled( self::BACKFILL ) ) {
+				wp_schedule_single_event( time() + 30, self::BACKFILL );
+			}
 		}
-		return count( $ids );
+		return $filed;
+	}
+
+	/**
+	 * Whether the library is filed at this version.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @return bool
+	 */
+	public static function filed(): bool {
+		return (int) get_option( self::BACKFILL ) >= self::VERSION;
 	}
 }
