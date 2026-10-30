@@ -520,21 +520,22 @@ final class App {
 	 * @since 4.20.0 A heart beside Play and Shuffle, for an album or artist; a playlist's mosaic,
 	 *               and more buttons beside Play and Shuffle.
 	 * @since 4.28.0 A cover drawn in markup.
+	 * @since 5.7.0 The line under it may be parts, each text or `[ text, address ]` for a link.
 	 *
-	 * @param string $title Title.
-	 * @param string $meta  The line under it.
-	 * @param string $kind  What it is, above the title ("Album"), or empty.
-	 * @param string $art   The cover's address, or empty for none.
-	 * @param string $tint  A hex colour from the cover to tint the header with, or empty.
-	 * @param bool   $round Whether the picture is round, as an artist's is.
-	 * @param string $like  What the heart likes, "album" or "artist", or empty for no heart.
-	 * @param int    $id     The album's or artist's term ID, for the heart.
-	 * @param array  $covers Up to four covers for a playlist's mosaic, when there is no art.
-	 * @param string $extra  More buttons after Play and Shuffle, or empty.
-	 * @param string $drawn  A cover drawn in markup, when there is no picture: Liked songs' heart.
+	 * @param string       $title Title.
+	 * @param string|array $meta  The line under it, or its parts.
+	 * @param string       $kind  What it is, above the title ("Album"), or empty.
+	 * @param string       $art   The cover's address, or empty for none.
+	 * @param string       $tint  A hex colour from the cover to tint the header with, or empty.
+	 * @param bool         $round Whether the picture is round, as an artist's is.
+	 * @param string       $like  What the heart likes, "album" or "artist", or empty for no heart.
+	 * @param int          $id     The album's or artist's term ID, for the heart.
+	 * @param array        $covers Up to four covers for a playlist's mosaic, when there is no art.
+	 * @param string       $extra  More buttons after Play and Shuffle, or empty.
+	 * @param string       $drawn  A cover drawn in markup, when there is no picture: Liked songs' heart.
 	 * @return string
 	 */
-	public static function header( string $title, string $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '', string $drawn = '' ): string {
+	public static function header( string $title, string|array $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '', string $drawn = '' ): string {
 		$tint  = (string) sanitize_hex_color( $tint );
 		$heart = in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ? Ui::heart( $like, $id, $title ) : '';
 		$cover = '' !== $art ? '<img src="' . esc_url( $art ) . '" alt="" decoding="async">' : ( '' !== $drawn ? $drawn : Ui::mosaic( $covers ) );
@@ -544,10 +545,26 @@ final class App {
 			'' !== $cover ? '<span class="riff-album-cover">' . $cover . '</span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
 			esc_html( $title ),
-			esc_html( $meta ),
+			self::meta_line( $meta ),
 			'' !== $tint ? ' style="--riff-album-tint:' . esc_attr( $tint ) . '"' : '',
 			Ui::actions( $heart . $extra )
 		);
+	}
+
+	/**
+	 * A header's line, escaped: its parts between dots, each text or a link.
+	 *
+	 * @param string|array $meta The line, or its parts, each text or `[ text, address ]`.
+	 * @return string
+	 */
+	private static function meta_line( string|array $meta ): string {
+		$parts = array();
+		foreach ( (array) $meta as $part ) {
+			$parts[] = is_array( $part )
+				? '<a href="' . esc_url( (string) $part[1] ) . '">' . esc_html( (string) $part[0] ) . '</a>'
+				: esc_html( (string) $part );
+		}
+		return implode( ' · ', $parts );
 	}
 
 	/**

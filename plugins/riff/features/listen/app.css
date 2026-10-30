@@ -1306,6 +1306,17 @@
 	line-height: 1.714;
 }
 
+/* An album's artist, which opens their page. */
+.riff-app .riff-album-meta a {
+	color: var(--riff-app-ink);
+	text-decoration: none;
+}
+
+.riff-app .riff-album-meta a:hover,
+.riff-app .riff-album-meta a:focus-visible {
+	text-decoration: underline;
+}
+
 /* Play and Shuffle carry their icons for standalone mode, which draws them as
    the streaming apps do; elsewhere they are words. */
 .riff-app .riff-album-actions .riff-pill svg,

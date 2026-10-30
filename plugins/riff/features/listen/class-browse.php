@@ -466,15 +466,15 @@ final class Browse {
 	/**
 	 * A heading beside Play and Shuffle, then the tracks as rows.
 	 *
-	 * @param string $title Heading.
-	 * @param string $meta  The line under it.
-	 * @param array  $data  A /tracks response.
+	 * @param string       $title Heading.
+	 * @param string|array $meta  The line under it, or its parts, as App::header() takes it.
+	 * @param array        $data  A /tracks response.
 	 * @return string
-	 * @param string $kind  What it is, above the title, or empty.
-	 * @param bool   $album Whether it is an album: its cover leads, and its tracks are numbered.
-	 * @param int    $id    The album's term ID, for its heart, or 0.
+	 * @param string       $kind  What it is, above the title, or empty.
+	 * @param bool         $album Whether it is an album: its cover leads, and its tracks are numbered.
+	 * @param int          $id    The album's term ID, for its heart, or 0.
 	 */
-	public static function list_view( string $title, string $meta, array $data, string $kind = '', bool $album = false, int $id = 0 ): string {
+	public static function list_view( string $title, string|array $meta, array $data, string $kind = '', bool $album = false, int $id = 0 ): string {
 		if ( ! $data['items'] ) {
 			return Ui::title( $title ) . self::empty_note();
 		}
