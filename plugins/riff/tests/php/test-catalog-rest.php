@@ -328,6 +328,49 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertContains( 'Secret Sessions', wp_list_pluck( $this->get( '/albums' )['items'], 'name' ), 'and again once a post changes' );
 	}
 
+	public function test_after_goes_on_from_where_a_page_ended_by_title_or_newest_first(): void {
+		foreach ( array( 'title', 'added' ) as $order ) {
+			$paged = array();
+			for ( $n = 1; $n <= 3; $n++ ) {
+				$paged = array_merge( $paged, wp_list_pluck( $this->get( '/tracks', array( 'per_page' => 1, 'page' => $n, 'orderby' => $order ) )['items'], 'id' ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			}
+			$walked = array();
+			$after  = '';
+			$steps  = 0;
+			do {
+				$data   = $this->get( '/tracks', array( 'per_page' => 1, 'after' => $after, 'orderby' => $order ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+				$walked = array_merge( $walked, wp_list_pluck( $data['items'], 'id' ) );
+				$after  = $data['next'];
+			} while ( '' !== $after && ++$steps < 10 );
+
+			$this->assertSame( $paged, $walked, "the same tracks in the same order as page after page, by $order" );
+			$this->assertSame( 3, $data['total'] );
+			$this->assertSame( '', $data['next'], 'and no next after the last' );
+		}
+
+		$request = new WP_REST_Request( 'GET', '/riff/v1/tracks' );
+		$request->set_query_params( array( 'after' => 'not-a-cursor' ) );
+		$this->assertSame( 400, rest_do_request( $request )->get_status() );
+	}
+
+	public function test_a_list_counts_its_tracks_once_until_a_post_changes(): void {
+		$counted = 0;
+		$count   = static function ( $sql ) use ( &$counted ) {
+			if ( str_contains( $sql, 'FOUND_ROWS()' ) ) {
+				++$counted;
+			}
+			return $sql;
+		};
+		add_filter( 'query', $count );
+		$this->get( '/tracks' );
+		$this->get( '/tracks', array( 'per_page' => 1, 'page' => 2 ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		remove_filter( 'query', $count );
+
+		$this->assertSame( 1, $counted, 'once for every page' );
+		self::attach( '02 - Underground [underground].mp3' );
+		$this->assertSame( 4, $this->get( '/tracks' )['total'], 'and again once a track is added' );
+	}
+
 	public function test_the_routes_describe_themselves(): void {
 		foreach ( array( '/tracks', '/albums', '/artists' ) as $route ) {
 			$data = rest_do_request( new WP_REST_Request( 'OPTIONS', '/riff/v1' . $route ) )->get_data();
