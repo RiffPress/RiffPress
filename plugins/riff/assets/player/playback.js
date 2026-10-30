@@ -59,7 +59,7 @@ export function playback( P ) {
 			P.turn( m );
 		}
 		P.paint();
-		P.renderQueue();
+		P.renderQueue( { follow: true } );
 		P.tint( largest( t.art ) || t.video?.poster );
 		P.save();
 		/**

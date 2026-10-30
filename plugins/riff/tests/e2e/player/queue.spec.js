@@ -147,6 +147,56 @@ test.describe( 'Player', () => {
 		);
 	} );
 
+	test( 'a long queue is drawn in part, more as it is tabbed or scrolled to, each item saying its place in the whole', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect.poll( () => page.evaluate( () => window.riff.queue().length ) ).toBe( 3 );
+		await page.evaluate( () => {
+			const base = window.riff.queue();
+			window.riff.play(
+				Array.from( { length: 400 }, ( _, i ) => ( { ...base[ i % base.length ], id: 900000 + i, title: `Track ${ i + 1 }` } ) ),
+				0
+			);
+			window.riff.open();
+		} );
+		if ( await page.locator( '.riff-peek' ).isVisible() ) {
+			await page.locator( '.riff-peek' ).click();
+		}
+		const list = page.locator( '.riff-queue-list' );
+		const items = list.locator( 'li' );
+		await expect( items.first() ).toHaveAttribute( 'aria-setsize', '400' );
+		expect( await items.count(), 'not every track at once' ).toBeLessThan( 400 );
+		await expect( list.locator( '[aria-current]' ) ).toContainText( 'Track 1' );
+
+		// Tabbing onto the last item drawn draws what comes after it, and the focus goes on into it.
+		const last = Number( await items.last().getAttribute( 'aria-posinset' ) );
+		await items.last().locator( 'button' ).first().focus();
+		await expect.poll( async () => Number( await items.last().getAttribute( 'aria-posinset' ) ) ).toBeGreaterThan( last );
+		await page.keyboard.press( 'Tab' );
+		await page.keyboard.press( 'Tab' );
+		await expect( list.locator( 'li:focus-within' ) ).toHaveAttribute( 'aria-posinset', String( last + 1 ) );
+		await expect( list.locator( 'li:focus-within .riff-row-title' ) ).toHaveText( `Track ${ last + 1 }` );
+
+		// Scrolled to the end, the rest is drawn, and as much goes from the start; never the item with
+		// the focus, which is moved off first.
+		await page.evaluate( () => document.activeElement.blur() );
+		await expect
+			.poll( async () => {
+				await list.evaluate( ( l ) => {
+					let s = l;
+					while ( s && s.scrollHeight <= s.clientHeight ) {
+						s = s.parentElement;
+					}
+					s.scrollTop = s.scrollHeight;
+				} );
+				return items.last().getAttribute( 'aria-posinset' );
+			} )
+			.toBe( '400' );
+		await expect( items.last().locator( '.riff-row-title' ) ).toHaveText( 'Track 400' );
+		expect( await items.count() ).toBeLessThanOrEqual( 300 );
+	} );
+
 	test( 'up next scrolls with a thin dark scrollbar, not the page\'s light one', async ( {
 		page,
 	} ) => {
