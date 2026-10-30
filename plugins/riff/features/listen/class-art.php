@@ -62,11 +62,19 @@ final class Art {
 	public const STAMP = 'riff_art_stamp';
 
 	/**
-	 * The drawing's version, for this request.
+	 * The option holding when anything a cover draws from last changed, in seconds, so a cover
+	 * drawn from what was there before is not kept.
 	 *
-	 * @var string|null
+	 * @since 5.7.0
 	 */
-	private static $version = null;
+	public const CHANGED = 'riff_art_changed';
+
+	/**
+	 * The drawing's version, for this request, by site.
+	 *
+	 * @var string[]
+	 */
+	private static $version = array();
 
 	/**
 	 * Hooks the query variable and the handler, and what draws the covers again.
@@ -83,6 +91,9 @@ final class Art {
 		add_action( 'save_post', array( self::class, 'saved' ), 10, 2 );
 		add_action( 'post_updated', array( self::class, 'updated' ), 10, 3 );
 		add_action( 'before_delete_post', array( self::class, 'deleting' ) );
+		add_action( 'attachment_updated', array( self::class, 'moved' ), 10, 3 );
+		add_action( 'wp_media_attach_action', array( self::class, 'attached' ), 10, 2 );
+		add_action( 'delete_attachment', array( self::class, 'removed' ) );
 		add_action( 'set_object_terms', array( self::class, 'filed' ), 10, 4 );
 		add_action( 'edited_' . Catalog::ALBUM, array( self::class, 'redraw' ) );
 		add_action( 'delete_' . Catalog::ALBUM, array( self::class, 'redraw' ) );
@@ -329,19 +340,24 @@ final class Art {
 	 * @return string
 	 */
 	private static function version(): string {
-		self::$version = self::$version ?? substr( md5( RIFF_VERSION . (string) md5_file( __DIR__ . '/class-cover.php' ) . (string) md5_file( __FILE__ ) . (string) get_option( self::STAMP, '' ) ), 0, 8 );
-		return self::$version;
+		$site = get_current_blog_id();
+		if ( ! isset( self::$version[ $site ] ) ) {
+			self::$version[ $site ] = substr( md5( RIFF_VERSION . (string) md5_file( __DIR__ . '/class-cover.php' ) . (string) md5_file( __FILE__ ) . (string) get_option( self::STAMP, '' ) ), 0, 8 );
+		}
+		return self::$version[ $site ];
 	}
 
 	/**
-	 * Where a cover is kept, in this drawing's folder, or null without uploads.
+	 * Where a cover is kept, in this drawing's folder, or null where none can be: without uploads,
+	 * or with uploads somewhere a folder can't be listed, as on S3, where a cover that must go
+	 * could not be found to delete.
 	 *
 	 * @param string $drawn A post ID, or album-<term ID>.
 	 * @return array|null `{ path, url }`.
 	 */
 	private static function file( string $drawn ): ?array {
 		$uploads = wp_upload_dir( null, false );
-		if ( ! empty( $uploads['error'] ) || ! preg_match( '/^(album-)?\d+$/', $drawn ) ) {
+		if ( ! empty( $uploads['error'] ) || wp_is_stream( $uploads['basedir'] ) || ! preg_match( '/^(album-)?\d+$/', $drawn ) ) {
 			return null;
 		}
 		$name = self::DIR . '/' . self::version() . '/' . $drawn . '.svg';
@@ -353,20 +369,29 @@ final class Art {
 
 	/**
 	 * Keeps a drawn cover where the next page will link to it. Written whole and then moved into
-	 * place, so the web server never serves half of one.
+	 * place, so the web server never serves half of one; and taken away again when something it
+	 * draws from changed while it was drawn, as the cover is then of what was there before.
 	 *
 	 * @param string $drawn A post ID, or album-<term ID>.
 	 * @param string $svg   The cover.
+	 * @param float  $since When it began to be drawn.
 	 */
-	private static function keep( string $drawn, string $svg ): void {
+	private static function keep( string $drawn, string $svg, float $since ): void {
 		$file = self::file( $drawn );
 		if ( ! $file || ! wp_mkdir_p( dirname( $file['path'] ) ) ) {
 			return;
 		}
 		$part = $file['path'] . '.' . wp_generate_password( 6, false ) . '.part';
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename -- a cover drawn here, written once and moved into place.
-		if ( false !== file_put_contents( $part, $svg ) && ! @rename( $part, $file['path'] ) ) {
+		if ( false === file_put_contents( $part, $svg ) || ! @rename( $part, $file['path'] ) ) {
 			wp_delete_file( $part );
+			return;
+		}
+		// After the file is in place, so a change made while it was written is seen here, or its
+		// redraw() finds the file.
+		wp_cache_delete( self::CHANGED, 'options' );
+		if ( (float) get_option( self::CHANGED, 0 ) >= $since ) {
+			wp_delete_file( $file['path'] );
 		}
 	}
 
@@ -380,17 +405,19 @@ final class Art {
 	 * @param bool $all Whether the folder before goes too.
 	 */
 	public static function redraw( $all = false ): void {
-		$all     = true === $all;
+		$all = true === $all;
+		// Every change, so a cover being drawn from what was there before is not kept.
+		update_option( self::CHANGED, (string) microtime( true ), false );
 		$was     = self::version();
 		$uploads = wp_upload_dir( null, false );
-		$base    = empty( $uploads['error'] ) ? trailingslashit( $uploads['basedir'] ) . self::DIR : '';
+		$base    = empty( $uploads['error'] ) && ! wp_is_stream( $uploads['basedir'] ) ? trailingslashit( $uploads['basedir'] ) . self::DIR : '';
 		// Nothing drawn since the last change has been seen, so there is nothing to draw again: an
 		// import saving a hundred tracks moves the stamp once.
 		if ( ! $all && '' !== $base && ! is_dir( "$base/$was" ) ) {
 			return;
 		}
 		update_option( self::STAMP, wp_generate_password( 8, false ), false );
-		self::$version = null;
+		unset( self::$version[ get_current_blog_id() ] );
 		if ( '' === $base ) {
 			return;
 		}
@@ -405,7 +432,8 @@ final class Art {
 	}
 
 	/**
-	 * A post saved: its cover, and any album with a track in it, may draw differently.
+	 * A post saved: its cover, and any album with a track in it, may draw differently. Only a post
+	 * with tracks, or one that had a cover kept, as every redraw gives every cover a new address.
 	 *
 	 * @since 5.7.0
 	 *
@@ -413,7 +441,72 @@ final class Art {
 	 * @param WP_Post $post    Post.
 	 */
 	public static function saved( $post_id, $post ): void {
-		if ( $post instanceof WP_Post && is_post_type_viewable( $post->post_type ) && ! wp_is_post_revision( $post ) && ! wp_is_post_autosave( $post ) && 'auto-draft' !== $post->post_status ) {
+		if ( $post instanceof WP_Post && is_post_type_viewable( $post->post_type ) && ! wp_is_post_revision( $post ) && ! wp_is_post_autosave( $post ) && 'auto-draft' !== $post->post_status && self::holds( $post ) ) {
+			self::redraw();
+		}
+	}
+
+	/**
+	 * Whether a post has a cover drawn, or tracks a cover draws: in it, attached to it, or kept.
+	 *
+	 * @param WP_Post $post Post.
+	 * @return bool
+	 */
+	private static function holds( WP_Post $post ): bool {
+		$file = self::file( (string) $post->ID );
+		if ( $file && is_file( $file['path'] ) ) {
+			return true;
+		}
+		$attached = get_children(
+			array(
+				'post_parent'    => $post->ID,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'audio',
+				'numberposts'    => 1,
+				'fields'         => 'ids',
+			)
+		);
+		return $attached || Library::tracks( $post );
+	}
+
+	/**
+	 * A track moved to another post, which may be one a visitor can't read.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int     $post_id Attachment ID.
+	 * @param WP_Post $after   The attachment now.
+	 * @param WP_Post $before  The attachment before.
+	 */
+	public static function moved( $post_id, $after, $before ): void {
+		if ( $after instanceof WP_Post && $before instanceof WP_Post && $after->post_parent !== $before->post_parent && wp_attachment_is( 'audio', $after ) ) {
+			self::redraw( true );
+		}
+	}
+
+	/**
+	 * A track attached or detached in the Media Library, which changes its post without saving it.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $action        Attach or detach.
+	 * @param int    $attachment_id Attachment ID.
+	 */
+	public static function attached( $action, $attachment_id ): void {
+		if ( wp_attachment_is( 'audio', (int) $attachment_id ) ) {
+			self::redraw( true );
+		}
+	}
+
+	/**
+	 * A track deleted.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int $post_id Attachment ID.
+	 */
+	public static function removed( $post_id ): void {
+		if ( wp_attachment_is( 'audio', (int) $post_id ) ) {
 			self::redraw();
 		}
 	}
@@ -443,7 +536,7 @@ final class Art {
 	 */
 	public static function deleting( $post_id ): void {
 		$post = get_post( (int) $post_id );
-		if ( $post instanceof WP_Post && ( 'attachment' === $post->post_type || self::open( $post ) ) ) {
+		if ( $post instanceof WP_Post && self::open( $post ) ) {
 			self::redraw( true );
 		}
 	}
@@ -484,7 +577,7 @@ final class Art {
 	 * @param string    $key       Meta key.
 	 */
 	public static function meta( $meta_id, $object_id, $key ): void {
-		if ( in_array( $key, array( '_wp_attachment_metadata', Catalog::ALBUM_ARTIST ), true ) ) {
+		if ( Catalog::ALBUM_ARTIST === $key || ( '_wp_attachment_metadata' === $key && wp_attachment_is( 'audio', (int) $object_id ) ) ) {
 			self::redraw();
 		}
 	}
@@ -534,9 +627,10 @@ final class Art {
 		}
 		$drawn = (string) $wp->query_vars[ self::QUERY ];
 		$cache = 'public, max-age=86400';
+		$since = microtime( true );
 		$svg   = self::shared( $drawn );
 		if ( null !== $svg ) {
-			self::keep( $drawn, $svg );
+			self::keep( $drawn, $svg, $since );
 		} elseif ( is_user_logged_in() ) {
 			// A cover only this listener may see, of an album of private tracks, is drawn for them
 			// and kept nowhere.

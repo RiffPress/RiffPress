@@ -70,6 +70,7 @@ foreach ( (array) glob( $riff_base . 'riff-art/*', GLOB_ONLYDIR ) as $riff_dir )
 }
 @rmdir( $riff_base . 'riff-art' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- uninstall, once.
 delete_option( 'riff_art_stamp' );
+delete_option( 'riff_art_changed' );
 delete_option( 'riff_catalog_backfill' );
 delete_option( 'riff_rewrite' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );

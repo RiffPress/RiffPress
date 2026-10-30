@@ -298,6 +298,75 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertStringContainsString( 'riff-art=album-' . $album, Art::album( $album )[0]['src'], 'and nothing is kept' );
 	}
 
+	public function test_a_cover_drawn_from_what_changed_while_it_was_drawn_is_not_kept(): void {
+		[ $post ] = $this->bare_post();
+		$since    = microtime( true );
+		$svg      = (string) Art::shared( (string) $post );
+		wp_update_post(
+			array(
+				'ID'         => $post,
+				'post_title' => 'Morning Sessions',
+			)
+		);
+		$keep = new ReflectionMethod( Art::class, 'keep' );
+		$keep->setAccessible( true );
+		$keep->invoke( null, (string) $post, $svg, $since );
+
+		$this->assertStringContainsString( 'riff-art=' . $post, Art::url( $post ), 'drawn again from the post as it is now' );
+	}
+
+	public function test_attaching_a_track_in_the_media_library_takes_every_kept_cover(): void {
+		[ $post, $id ] = $this->bare_post();
+		$this->serve( (string) $post );
+		$kept = $this->path( Art::url( $post ) );
+
+		// What Attach and Detach fire, having changed the track's post with SQL of their own.
+		do_action( 'wp_media_attach_action', 'detach', $id, $post );
+
+		$this->assertFileDoesNotExist( $kept );
+	}
+
+	public function test_only_what_a_cover_draws_from_draws_the_covers_again(): void {
+		[ $post ] = $this->bare_post();
+		$this->serve( (string) $post );
+		$stamp = get_option( Art::STAMP );
+
+		$words = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		wp_update_post(
+			array(
+				'ID'         => $words,
+				'post_title' => 'Only words',
+			)
+		);
+		$image = self::attach( 'cover.png', $words );
+		wp_update_attachment_metadata( $image, array( 'width' => 1 ) );
+		$this->assertSame( $stamp, get_option( Art::STAMP ), 'not a post with no tracks, nor an image' );
+
+		wp_update_post(
+			array(
+				'ID'         => $post,
+				'post_title' => 'Morning Sessions',
+			)
+		);
+		$this->assertNotSame( $stamp, get_option( Art::STAMP ), 'a post with tracks' );
+	}
+
+	public function test_nothing_is_kept_where_uploads_are_not_a_folder_that_can_be_listed(): void {
+		[ $post ] = $this->bare_post();
+		// As S3 Uploads does, a stream wrapper of its own.
+		if ( ! in_array( 'riffs3', stream_get_wrappers(), true ) ) {
+			stream_wrapper_register( 'riffs3', get_class( new class() {} ) );
+		}
+		$to = static function ( $dir ) {
+			$dir['basedir'] = 'riffs3://bucket/uploads';
+			return $dir;
+		};
+		add_filter( 'upload_dir', $to );
+		$this->serve( (string) $post );
+		$this->assertStringContainsString( 'riff-art=' . $post, Art::url( $post ), 'a cover that must go could not be found to delete' );
+		remove_filter( 'upload_dir', $to );
+	}
+
 	/**
 	 * Draws a cover as ?riff-art does, and keeps it.
 	 *
@@ -309,7 +378,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertNotSame( '', $svg, "$drawn is drawn" );
 		$keep = new ReflectionMethod( Art::class, 'keep' );
 		$keep->setAccessible( true );
-		$keep->invoke( null, $drawn, $svg );
+		$keep->invoke( null, $drawn, $svg, microtime( true ) );
 		return $svg;
 	}
 
