@@ -251,16 +251,19 @@ final class Art {
 	/**
 	 * A drawn cover's address, with the version of the drawing in it: a browser keeps a cover for a
 	 * day, so when Riff draws covers differently (a new palette, a new layout) the address changes
-	 * and every browser fetches the new one, instead of showing the old for up to a day.
+	 * and every browser fetches the new one, instead of showing the old for up to a day. From what
+	 * the drawing code says, not when its files were written: a deploy writes every file anew, and
+	 * would make every cover a new address, drawn again, with nothing changed.
 	 *
 	 * @since 5.2.3
+	 * @since 5.7.0 From the drawing code's contents, not its files' times.
 	 *
 	 * @param string $drawn A post ID, or album-<term ID>.
 	 * @return string
 	 */
 	private static function address( string $drawn ): string {
 		static $version = null;
-		$version        = $version ?? substr( md5( RIFF_VERSION . (string) filemtime( __DIR__ . '/class-cover.php' ) . (string) filemtime( __FILE__ ) ), 0, 8 );
+		$version        = $version ?? substr( md5( RIFF_VERSION . (string) md5_file( __DIR__ . '/class-cover.php' ) . (string) md5_file( __FILE__ ) ), 0, 8 );
 		return add_query_arg(
 			array(
 				self::QUERY => $drawn,

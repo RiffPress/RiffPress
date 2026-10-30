@@ -205,6 +205,9 @@ class Test_Riff_Art extends Riff_TestCase {
 		// The drawing's version is in the address, so a browser that kept a cover for a day fetches
 		// the new one when Riff draws covers differently.
 		$this->assertMatchesRegularExpression( '/&ver=[0-9a-f]{8}$/', $url );
+		// From what the drawing code says, so a deploy that writes the same files keeps every address.
+		$dir = RIFF_DIR . 'features/listen/';
+		$this->assertStringEndsWith( '&ver=' . substr( md5( RIFF_VERSION . md5_file( $dir . 'class-cover.php' ) . md5_file( $dir . 'class-art.php' ) ), 0, 8 ), $url );
 	}
 
 	public function test_a_drawn_cover_tints_its_album_with_its_own_colour(): void {
