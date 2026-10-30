@@ -140,7 +140,9 @@ final class Protected_Files {
 		 * or on a CDN answers for its own files: true once the copy there is private (or public
 		 * again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an
 		 * answer, a file only on this server is moved into the protected folder, and one kept
-		 * elsewhere is not protected, as moving it would leave it public there.
+		 * elsewhere is not protected, as moving it would leave it public there. Riff can't send a
+		 * file it doesn't have, so a plugin that protects its files signs their addresses through
+		 * riff_protected_url too.
 		 *
 		 * @since 5.7.0
 		 *
