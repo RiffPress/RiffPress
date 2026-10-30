@@ -330,16 +330,41 @@ export function media( P ) {
 		} );
 	}
 
-	// The next track starts downloading halfway through this one, so skipping never waits.
+	// The next track's start is fetched halfway through this one, so skipping never waits: its first
+	// quarter megabyte, into the browser's cache, where the element looks before the network. Not
+	// the whole file on an element of its own, as it was: a listener who stops here never plays it,
+	// and Safari's media loader, which keeps no cache with the page's, would fetch it again. The
+	// element can't take over either: the analyser, AirPlay, Cast and the lock screen are wired to
+	// the one that plays. A file from an origin that doesn't answer CORS can't be asked for a part
+	// of it, so it still warms on an element of its own. Nothing is fetched ahead to save data.
+	const AHEAD = 262144;
+	let warmed = null;
 	function warmNext() {
 		const t = P.queue[ P.order[ P.pos + 1 ] ];
-		if ( ! t || isVideo( t ) || P.preloader?.dataset.id === t.id ) {
+		if (
+			! t ||
+			isVideo( t ) ||
+			warmed === t.id ||
+			navigator.connection?.saveData
+		) {
 			return;
 		}
-		P.preloader = document.createElement( 'audio' );
-		P.preloader.preload = 'auto';
-		P.preloader.dataset.id = t.id;
-		point( P.preloader, t.src );
+		warmed = t.id;
+		if ( foreign( t ) ) {
+			P.preloader = document.createElement( 'audio' );
+			P.preloader.preload = 'auto';
+			point( P.preloader, t.src );
+			return;
+		}
+		P.preloader = null;
+		fetch( t.src, {
+			mode: 'cors',
+			credentials: 'same-origin',
+			headers: { Range: `bytes=0-${ AHEAD - 1 }` },
+		} )
+			// Read through, so the browser keeps it.
+			.then( ( r ) => r.arrayBuffer() )
+			.catch( () => {} );
 	}
 
 	// Back from the back-forward cache: the elements kept their state, the frame loop did not.

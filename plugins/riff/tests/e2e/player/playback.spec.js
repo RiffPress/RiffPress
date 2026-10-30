@@ -70,6 +70,24 @@ test.describe( 'Player', () => {
 		expect( state.time ).toBeGreaterThan( 1.5 );
 	} );
 
+	test( 'halfway through a track the start of the next is fetched, not all of it', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect
+			.poll( async () => ( await audioState( page ) ).paused )
+			.toBe( false );
+		const next = await page.evaluate( () => window.riff.queue()[ 2 ].src );
+		const warmed = page.waitForRequest(
+			( r ) => r.url() === next && r.resourceType() !== 'media'
+		);
+		await page.evaluate( () => {
+			const a = document.querySelector( '.riff-audio' );
+			window.riff.seek( a.duration * 0.6 );
+		} );
+		expect( ( await warmed ).headers().range ).toBe( 'bytes=0-262143' );
+	} );
+
 	test( 'a reload of a long queue keeps the tracks around the one playing', async ( {
 		page,
 	} ) => {
