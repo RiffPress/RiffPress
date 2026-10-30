@@ -86,6 +86,34 @@ test.describe( 'Browse', () => {
 		expect( asked, 'the view was already here' ).toEqual( [] );
 	} );
 
+	test( 'a view is fetched when the pointer rests on its link, not as it passes over', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'a phone has no pointer to rest' );
+		await page.locator( '.riff-app-tab', { hasText: 'Albums' } ).click();
+		const link = page.locator( '.riff-grid .riff-card-link' ).first();
+		await expect( link ).toBeVisible();
+		const album = new URL( await link.getAttribute( 'href' ), page.url() ).searchParams.get(
+			'riff_album'
+		);
+		const asked = [];
+		page.on( 'request', ( r ) => {
+			if ( new URL( r.url() ).searchParams.get( 'riff_album' ) === album ) {
+				asked.push( r.url() );
+			}
+		} );
+		// Passing over: on and off again before the pointer rests.
+		const box = await link.boundingBox();
+		await page.mouse.move( box.x + box.width / 2, box.y + box.height / 2 );
+		await page.mouse.move( 0, 0 );
+		await page.waitForTimeout( 300 );
+		expect( asked, 'passing over fetches nothing' ).toEqual( [] );
+		// Resting on it.
+		await link.hover();
+		await expect.poll( () => asked.length ).toBeGreaterThan( 0 );
+	} );
+
 	test( 'an artist page has their picture, their latest tracks and their albums', async ( {
 		page,
 	} ) => {
