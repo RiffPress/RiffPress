@@ -355,7 +355,7 @@ test( 'the window’s top: the sidebar toggle, back and forward, and room for th
 	await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
 } );
 
-test( 'the window is laid out as Spotify’s: panels in a black frame, home and search in the strip', async () => {
+test( 'the window is laid out in panels in a black frame, home and search in the strip', async () => {
 	const electronApp = await launch();
 	const page = await siteWindow( electronApp );
 	await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
@@ -433,7 +433,7 @@ test( 'the window is laid out as Spotify’s: panels in a black frame, home and 
 	);
 } );
 
-test( 'the login gets a strip of its own for the traffic lights, in Spotify’s layout, and the theme’s pages stay out of the window', async () => {
+test( 'the login gets a strip of its own for the traffic lights, in the desktop layout, and the theme’s pages stay out of the window', async () => {
 	const electronApp = await launch();
 	const page = await siteWindow( electronApp );
 	const listen = page.url();
@@ -474,7 +474,7 @@ test( 'the login gets a strip of its own for the traffic lights, in Spotify’s 
 		await expect( page.locator( '.riff-desktop-strip' ) ).toHaveCount( 0 );
 	}
 
-	// Spotify's login: a #121212 card, "Sign in to" the site, and the amber button.
+	// The login: a #121212 card, "Sign in to" the site, and the amber button.
 	expect(
 		await page.evaluate( () => ( {
 			card: getComputedStyle( document.querySelector( '#login' ) )

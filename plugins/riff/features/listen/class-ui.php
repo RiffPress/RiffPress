@@ -96,8 +96,8 @@ final class Ui {
 	}
 
 	/**
-	 * An album's card. Its line is the album's artist and nothing else, as Spotify, YouTube Music
-	 * and Tidal show an album in a grid; the track count is on the album's own page. An album with
+	 * An album's card. Its line is the album's artist and nothing else, as the streaming apps
+	 * show an album in a grid; the track count is on the album's own page. An album with
 	 * no artist says "Album", so every card has a line of the same height.
 	 *
 	 * @since 4.21.0
@@ -284,7 +284,7 @@ final class Ui {
 				esc_html( (string) $choice['label'] )
 			);
 		}
-		// The sort, as Spotify's library has it: the one in use on a button, the choices under it.
+		// The sort: the one in use on a button, the choices under it.
 		// A details element, so it opens without the script.
 		if ( 'sort' === $kind ) {
 			$current = '';

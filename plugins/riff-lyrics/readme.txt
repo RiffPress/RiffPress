@@ -1,11 +1,11 @@
 === Riff Lyrics ===
 Contributors: joefusco
 Tags: lyrics, music, audio, player
-Requires at least: 7.2
+Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.4.0 =
+* Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
+
 = 1.3.0 =
 * Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf.
 
@@ -35,9 +38,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 1.1.0 =
 * Timed lyrics are read in the formats taggers and players write: LRC with its offset, Enhanced LRC with words that light up as they are sung, WebVTT, and a file's own ID3 SYLT frame on upload.
-
-= 1.0.0 =
-* Captions for a video version, a cover's alt text, a track's language, and the song's transcript; the site's accessibility statement.
-* Riff needs WordPress 7.2, and registers its media fields with the Entity Fields API so the Media Library's views and forms show them.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

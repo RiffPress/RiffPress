@@ -161,7 +161,7 @@ final class Browse {
 			'artists' => array( __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ) ),
 			'tracks'  => array( __( 'Tracks', 'riff' ), add_query_arg( self::VIEW, 'tracks', $page ) ),
 			'posts'   => array( __( 'Posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ) ),
-			// Last, as Spotify's and YouTube Music's: what is the listener's own, under what is the site's.
+			// Last, as the streaming apps have it: what is the listener's own, under what is the site's.
 			'library' => array( __( 'Library', 'riff' ), add_query_arg( self::VIEW, 'library', $page ) ),
 		);
 		// The site's name heads the sidebar, and a phone's top row; as tabs it is hidden. The brand
@@ -186,7 +186,7 @@ final class Browse {
 				esc_html( $label )
 			);
 		}
-		// Your Library under the views, as Spotify's sidebar has it. Only standalone mode's sidebar
+		// Your Library under the views, in the sidebar. Only standalone mode's sidebar
 		// shows it; as tabs there is no room.
 		if ( Standalone::active() ) {
 			$html .= Collection::sidebar( $page, $current ) . Standalone::install_card();
@@ -516,7 +516,7 @@ final class Browse {
 			);
 		}
 		$post = $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- the Listen page again.
-		// Over an album's tracks, the column heads Spotify draws: #, Title and a clock. They only
+		// Over an album's tracks, the usual column heads: #, Title and a clock. They only
 		// label what each row already says, so a screen reader is not told them again.
 		$head = $numbered || $heads ? sprintf(
 			'<div class="riff-tracks-head" aria-hidden="true"><span>%s</span><span>%s</span><svg viewBox="0 0 24 24" focusable="false" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></div>',

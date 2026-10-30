@@ -181,7 +181,7 @@ final class Together {
 	/**
 	 * Where the player shares what it plays, for a listener who may join the room.
 	 *
-	 * @since 5.6.0
+	 * @since 5.7.0
 	 *
 	 * @param array $data The player's data.
 	 * @return array

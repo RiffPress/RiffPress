@@ -72,6 +72,64 @@ class Test_Riff_Media extends Riff_TestCase {
 		$this->assertTrue( has_filter( 'wp_read_audio_metadata', array( Media::class, 'language' ) ) !== false || true, 'hooked in register()' );
 	}
 
+	public function test_a_file_without_id3_keeps_its_tags_under_id3s_names(): void {
+		$read = static fn( array $data, array $kept = array( 'length' => 3 ) ): array => Media::tags( $kept, '/tmp/x.flac', 'flac', $data );
+
+		$flac = $read(
+			array(
+				'tags' => array(
+					'vorbiscomment' => array(
+						'title'       => array( 'Aurora Rising' ),
+						'artist'      => array( 'Airmen of Note' ),
+						'albumartist' => array( 'Various Artists' ),
+						'date'        => array( '2024' ),
+						'tracknumber' => array( '3/9' ),
+						'language'    => array( 'und' ),
+					),
+				),
+			)
+		);
+		$this->assertSame( 'Aurora Rising', $flac['title'] );
+		$this->assertSame( 'Airmen of Note', $flac['artist'] );
+		$this->assertSame( 'Various Artists', $flac['band'], 'albumartist is ID3\'s band, which the catalog files an album under' );
+		$this->assertSame( '2024', $flac['year'] );
+		$this->assertSame( '3/9', $flac['track_number'] );
+		$this->assertArrayNotHasKey( 'language', $flac, 'the language is language()\'s to keep' );
+		$this->assertSame( 3, $flac['length'] );
+
+		$m4a = $read(
+			array(
+				'tags' => array(
+					'quicktime' => array(
+						'album_artist'  => array( 'Band' ),
+						'creation_date' => array( '2024' ),
+						'picture'       => array( array( 'data' => 'binary' ) ),
+					),
+				),
+			)
+		);
+		$this->assertSame(
+			array(
+				'length' => 3,
+				'band'   => 'Band',
+				'year'   => '2024',
+			),
+			$m4a,
+			'a picture is not text'
+		);
+
+		$id3 = array(
+			'id3v2' => array( 'comments' => array( 'title' => array( 'From ID3' ) ) ),
+			'tags'  => array( 'ape' => array( 'title' => array( 'From APE' ) ) ),
+		);
+		$this->assertSame( array( 'length' => 3 ), $read( $id3 ), 'a file with ID3 is WordPress\'s to read' );
+
+		$kept = $read( array( 'tags' => array( 'vorbiscomment' => array( 'title' => array( 'Ours' ) ) ) ), array( 'title' => 'Core\'s' ) );
+		$this->assertSame( 'Core\'s', $kept['title'], 'a tag WordPress kept is left as it is' );
+
+		$this->assertStringNotContainsString( '<script', $read( array( 'tags' => array( 'vorbiscomment' => array( 'title' => array( '<script>x</script>Song' ) ) ) ) )['title'], 'tags are sanitized as WordPress sanitizes ID3\'s' );
+	}
+
 	public function test_only_a_video_attachment_is_kept(): void {
 		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
 		$image = self::attach( 'cover.png' );

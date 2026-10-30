@@ -46,7 +46,7 @@ filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
 ## Areas
 
 The player has places that features fill: **badges**, the pills at the bar's right end and under
-the title in Now Playing; **controls**, buttons beside them; and the **meter**, the music's level
+the title in Now Playing, and on a phone small print between the seek line's times; **controls**, buttons beside them; and the **meter**, the music's level
 each frame, which lights the seek line and moves the playing row's bars. Riff's own features use
 them as any feature would: the quality pill is a badge, and the seek line's glow is a meter
 listener.
@@ -92,3 +92,13 @@ under **Video version**.
 ## Design
 
 On a computer the Listen app is laid out as a desktop streaming app is: back and forward, home and search across the top, the library and the view as panels on black, and the player bar along the bottom with the seek line under the controls. Phones and tablets keep a touch layout. It's all in Riff's ivory, a piano key's cream. [DESIGN.md](../DESIGN.md) has the rest.
+
+## Folding phones and phones on their side
+
+Riff lays out by the screen's shape, never by the device, as WebKit and Apple ask: an iPhone Duo says it is an iPhone, and folds and unfolds while the page is open.
+
+- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: Now Playing is the deck, the record and the arm filling its height on the left and the controls in a strip down the right. Up next opens in that strip, and the deck keeps turning beside it. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Once the record is out, its sleeve stands in a rack at the top of the strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
+- **A short screen that is not upright enough to be a phone** (a folded iPhone Duo's outer screen at 466 by 678) puts Home, Search and Library down the right edge, where iOS keeps its own bars on that screen.
+- **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, the deck fills the left page and the controls the right; stood like a tent, the sleeve and the turntable fill the upper half and the controls the lower, nearer the hand.
+
+`plugins/riff/tests/e2e/player/duo.spec.js` emulates the hinge through Chromium's DevTools protocol.

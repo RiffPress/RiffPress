@@ -1,5 +1,5 @@
 /**
- * The player's areas: the quality pill in the bar and Now Playing, lossless shown as bit depth and rate, and Riff's own features adding badges and controls and hearing the meter.
+ * The player's areas: the quality pill in the bar and Now Playing (small print between the times on a phone), lossless shown as bit depth and rate, and Riff's own features adding badges and controls and hearing the meter.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const path = require( 'node:path' );
@@ -37,6 +37,18 @@ test.describe( 'Player', () => {
 		await expect(
 			page.locator( '.riff-np-quality .riff-quality' )
 		).toHaveText( /^MP3 · \d+ kbps$/ );
+	} );
+
+	test( 'on a phone the quality is small print between the seek line\'s times, not a capsule under the title', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( ! isMobile, 'a wide screen shows the capsule in the bar alone' );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '.riff-np-tier .riff-quality' ) ).toBeVisible();
+		await expect( page.locator( '.riff-np-tier .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
+		await expect( page.locator( '.riff-np-quality' ) ).toBeHidden();
 	} );
 
 	test( 'Riff\'s own features add badges and controls to the player\'s areas, and hear the meter', async ( {

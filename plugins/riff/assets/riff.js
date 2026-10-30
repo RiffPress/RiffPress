@@ -236,7 +236,7 @@ function start() {
 		 * Plays someone else's queue in its order from a point in one of its tracks, to listen
 		 * along with them.
 		 *
-		 * @since 5.6.0
+		 * @since 5.7.0
 		 *
 		 * @param {Object[]} tracks Tracks, in the shape `Tracks::schema()` describes.
 		 * @param {number}   index  The one to play.

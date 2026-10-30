@@ -1,4 +1,4 @@
-/* The first window: Riff's welcome, drawn as Spotify draws its own sign-in and as the site's login
+/* The first window: Riff's welcome, drawn as a desktop app draws its sign-in and as the site's login
    is drawn in the app (site-preload.js): a grey that fades to black, a bold heading, a bold label
    over a square field that rings white when focused, and the amber button. No title bar on a Mac;
    the whole window drags it, and the form does not. Only the field's text can be selected. */

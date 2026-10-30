@@ -1,11 +1,11 @@
 === Riff Sign In ===
 Contributors: joefusco
 Tags: passkeys, login, passwordless, music, player
-Requires at least: 7.2
+Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,11 +21,15 @@ Riff Sign In gives a site's listeners a way in that asks nothing to remember.
 * Listeners are ordinary WordPress users, signed in with the same cookie as everyone else, and new accounts are made only when the site lets anyone register (Settings › General › Membership).
 * Nothing is stored but each passkey's public key, in the user's own meta. The passkeys are on the listener's profile to remove, and in the personal data export and erasure.
 * It meets WCAG 2.2's rule for accessible authentication: no puzzle, no memory test, and the code field takes a paste and the browser's own fill.
+* Listeners can stay in the player: with Settings › General › Listeners on, people who cannot write posts keep their profile but see no dashboard or toolbar, and the registration form at wp-login.php is closed, so the player is the only way to sign up.
 * Codes are limited per address and per network address. Site Health says whether the site's mail reaches anyone; most hosts' own mail does not, so an SMTP plugin is recommended.
 
 Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
+
+= 0.3.0 =
+* Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
 
 = 0.2.0 =
 * Riff Lyrics and Riff Sign In say which Riff they need, Requires Riff in their headers, stay out of the way on an older one, and CI holds each to the hooks it uses.

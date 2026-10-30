@@ -2,7 +2,7 @@
  * remembers. And the sidebar library's chips: which rows show, kept while the sidebar is drawn
  * again. */
 
-// The sidebar's toggle in Spotify's frame: a library (two books and a leaning third), and the
+// The sidebar's toggle in the desktop frame: a library (two books and a leaning third), and the
 // panel with an arrow to close it or to open it.
 const PANEL =
 	'M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v12h3V6H5zm5 0v12h9V6h-9z';
@@ -49,7 +49,7 @@ export function sidebarPanel( ctx ) {
 		app.dataset.sidebar = open ? 'full' : 'mini';
 		const toggle = nav?.querySelector( '.riff-app-collapse' );
 		toggle?.setAttribute( 'aria-expanded', String( open ) );
-		// In Spotify's frame the toggle is a library at rest, and on hover the panel it would close
+		// In the desktop frame the toggle is a library at rest, and on hover the panel it would close
 		// or open (riff.css shows one), named in a tooltip.
 		if ( desktop && toggle ) {
 			if ( ! toggle.dataset.riffDesktop ) {

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Riff Sign In
  * Description: Listeners sign in to Riff with a passkey, or a code sent to their email, from a sheet inside the player; no passwords, and the music keeps playing.
- * Version: 0.2.0
- * Requires at least: 7.2
+ * Version: 0.3.0
+ * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff
  * Requires Riff: 4.31
@@ -22,13 +22,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'RIFF_SIGN_IN_VERSION', '0.2.0' );
+define( 'RIFF_SIGN_IN_VERSION', '0.3.0' );
 define( 'RIFF_SIGN_IN_URL', plugin_dir_url( __FILE__ ) );
 
 require __DIR__ . '/src/class-cbor.php';
 require __DIR__ . '/src/class-passkeys.php';
 require __DIR__ . '/src/class-codes.php';
 require __DIR__ . '/src/class-routes.php';
+require __DIR__ . '/src/class-listeners.php';
 require __DIR__ . '/src/class-sign-in.php';
 
 /*

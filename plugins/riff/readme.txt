@@ -1,10 +1,10 @@
 === Riff Music Player ===
 Contributors: joefusco
 Tags: music, audio, video, player, media
-Requires at least: 7.2
+Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.5.0
+Stable tag: 5.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,6 +119,17 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.6.1 =
+* Fixed: FLAC, Ogg and M4A files keep their tags, so the catalog files them by artist and album.
+
+= 5.6.0 =
+* On an unfolded iPhone Duo or a phone on its side the screen is the turntable, and the record comes out of its sleeve as it opens.
+* Where the screen is the turntable, its deck has start and stop, 33 and 45 and a pitch fader, and the sleeve stands in a rack.
+* With the Presence API active, Riff keeps who is listening to what in a listening room, shared and read through riff/v1/together.
+* Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
+* Fixed: on a phone the quality is small print between the times.
+* Fixed: the tonearm turns with the hand while it is held.
+
 = 5.5.0 =
 * On a phone, Home, Search and Library are tabs along the bottom.
 * The turntable's sleeve puts the record away and plays it again, and its arm is put down on any band of the side, by hand, by two clicks or from the keyboard.
@@ -138,14 +149,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * The quality badge is a capsule pressed into the bar, its words lit in the colour of the file's tier: pale for lossy, green at CD quality and gold past it.
 * The quality capsule reads on the bar's black, its bevel lit from above and a lossy file's words a cooler white.
 * The sleeve lies flat beside the turntable, as on the desk it stands on, apart from its plinth.
-
-= 5.2.4 =
-* Fixed: a drawn cover's address changes when the drawing does, and its title never leaves one word alone.
-
-= 5.2.3 =
-* Fixed: drawn covers no longer use Riff's amber, which is kept for what you press, such as Play.
-* Fixed: the app's manifest names each icon by the size it really is, so a browser does not skip a site icon set without the Customizer's crop.
-* Fixed: Your Library has no Songs chip that left the library: Liked songs is pinned first under Playlists, as the apps file it.
-* Fixed: the Riff block shows the app in the editor as it is on the page, with the app's own stylesheet.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

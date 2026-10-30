@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.2.0...riff-sign-in-v0.3.0) (2026-10-29)
+
+
+### Features
+
+* Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views ([#734](https://github.com/RiffPress/RiffPress/issues/734)) ([2d795af](https://github.com/RiffPress/RiffPress/commit/2d795af263bfdda48427ad1cc6a97ac32215d33c))
+
 ## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.1.1...riff-sign-in-v0.2.0) (2026-10-25)
 
 

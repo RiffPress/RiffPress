@@ -112,7 +112,7 @@ final class Collection {
 	}
 
 	/**
-	 * Your Library in standalone mode's sidebar, as Spotify's is: a head with New playlist, chips,
+	 * Your Library in standalone mode's sidebar: a head with New playlist, chips,
 	 * and a row each for Liked songs, the listener's playlists and the albums and artists they
 	 * liked, newest first, with their artwork.
 	 *
@@ -313,7 +313,7 @@ final class Collection {
 		foreach ( $sorts as $slug => $label ) {
 			$order[] = $choice( $label, self::link( $page, $filter, $slug ), $slug === $sort );
 		}
-		// Spotify's Create: a new playlist, for someone signed in. app.js makes it and opens it.
+		// Create: a new playlist, for someone signed in. app.js makes it and opens it.
 		$create = $account ? '<button type="button" class="riff-pill riff-pill-solid riff-library-create" data-riff-app-action="new-playlist">' . esc_html__( 'New playlist', 'riff' ) . '</button>' : '';
 		return '<div class="riff-library-bar">' . Ui::choices( __( 'Show', 'riff' ), $links ) . Ui::choices( __( 'Sort by', 'riff' ), $order, 'sort' ) . $create . '</div>';
 	}
@@ -437,7 +437,7 @@ final class Collection {
 
 	/**
 	 * Liked songs, a page at a time, as a playlist is drawn: the heart for its cover, whose it is
-	 * and how many, Play and Shuffle, then the songs, each with its cover, under Spotify's column heads.
+	 * and how many, Play and Shuffle, then the songs, each with its cover, under the column heads.
 	 *
 	 * @param string $page    Listen page.
 	 * @param int[]  $ids     Liked track IDs, newest first.

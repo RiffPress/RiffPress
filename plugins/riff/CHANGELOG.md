@@ -1,5 +1,28 @@
 # Changelog
 
+## [5.6.1](https://github.com/RiffPress/RiffPress/compare/riff-v5.6.0...riff-v5.6.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **media:** FLAC, Ogg and M4A files keep their tags, so the catalog files them by artist and album ([#748](https://github.com/RiffPress/RiffPress/issues/748)) ([bdad10a](https://github.com/RiffPress/RiffPress/commit/bdad10ae133a65fd0d151015363e9bc34772ff04))
+
+## [5.6.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.5.0...riff-v5.6.0) (2026-10-29)
+
+
+### Features
+
+* **player:** on an unfolded iPhone Duo or a phone on its side the screen is the turntable, and the record comes out of its sleeve as it opens ([#742](https://github.com/RiffPress/RiffPress/issues/742)) ([9c63e62](https://github.com/RiffPress/RiffPress/commit/9c63e620531f9641262df84d39b514cb311937aa))
+* **player:** where the screen is the turntable, its deck has start and stop, 33 and 45 and a pitch fader, and the sleeve stands in a rack ([#744](https://github.com/RiffPress/RiffPress/issues/744)) ([b72a5ab](https://github.com/RiffPress/RiffPress/commit/b72a5abb0e8ef1005ad2829a7a9d3d961caf48b8))
+* **player:** with the Presence API active, Riff keeps who is listening to what in a listening room, shared and read through riff/v1/together ([#737](https://github.com/RiffPress/RiffPress/issues/737)) ([6031d3c](https://github.com/RiffPress/RiffPress/commit/6031d3c18a21eb31e701dd7ad360a72edfa730a3))
+* Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views ([#734](https://github.com/RiffPress/RiffPress/issues/734)) ([2d795af](https://github.com/RiffPress/RiffPress/commit/2d795af263bfdda48427ad1cc6a97ac32215d33c))
+
+
+### Bug Fixes
+
+* **player:** on a phone the quality is small print between the times ([#740](https://github.com/RiffPress/RiffPress/issues/740)) ([60a5c7b](https://github.com/RiffPress/RiffPress/commit/60a5c7b5134938d9218fe9a9e851fd1b00b2b5eb))
+* **player:** the tonearm turns with the hand while it is held ([#741](https://github.com/RiffPress/RiffPress/issues/741)) ([05494f3](https://github.com/RiffPress/RiffPress/commit/05494f398436fa0ffa3ce0bcb29a9e2f231442c3))
+
 ## [5.5.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.4.0...riff-v5.5.0) (2026-10-27)
 
 
