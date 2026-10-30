@@ -155,14 +155,36 @@ function start() {
 		 */
 		time: () => ( P.track() ? P.el().currentTime || 0 : 0 ),
 		/**
-		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
-		 * through the `riff_now_playing_tabs` filter.
+		 * Adds a panel, or replaces the one with the same id. A panel is its own thing: beside the
+		 * page and Now Playing on a wide screen, opened from its button in the bar, and over
+		 * everything on a phone, opened from its chip in Now Playing. One shows at a time. Riff adds
+		 * Up next (`queue`, order 40) the same way, and Riff Lyrics adds Lyrics (`lyrics`, 30).
 		 *
-		 * @since 4.16.0
+		 * @since 5.8.0
 		 *
-		 * @param {string} id The tab's slug.
+		 * @param {string}                                           id             Lowercase letters, digits and dashes; the panel is `[data-riff-panel="<id>"]`.
+		 * @param {Object}                                           panel          The panel.
+		 * @param {string}                                           panel.label    Its name: its heading, and its button's.
+		 * @param {string}                                           [panel.icon]   Its button's icon, SVG markup from your own code, never from content.
+		 * @param {number}                                           [panel.order]  Where its button sits among the bar's controls, lowest first. Default 50.
+		 * @param {(panel: HTMLElement, track: Object|null) => void} [panel.render] Fills it as it opens and again as the track changes while it is open. The `riff.panel` action says the same.
+		 * @return {() => void} Takes the panel away again.
 		 */
-		tab: ( id ) => P.pickTab( String( id ) ),
+		panel: ( id, panel ) => P.panel( id, panel ),
+		/**
+		 * Opens a panel: `queue` for Up next, or one a plugin added.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {string} id The panel's id.
+		 */
+		openPanel: ( id ) => P.showPanel( String( id ) ),
+		/**
+		 * Closes the panel that is open.
+		 *
+		 * @since 5.8.0
+		 */
+		closePanel: () => P.hidePanel(),
 		/**
 		 * Adds a control to the player's bar, or replaces the one with the same id. Riff adds its
 		 * own the same way: Like (order 10), the badges (20), Up next (40), Play on another device

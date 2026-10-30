@@ -97,8 +97,8 @@ test.describe( 'Player', () => {
 			current: 'Underground (remix)',
 			queue: 3,
 			playing: true,
-			// What docs/javascript.md promises, and nothing more: a member is not taken back once added.
-			members: [ 'close', 'current', 'next', 'on', 'open', 'play', 'playing', 'prev', 'queue', 'seek', 'tab', 'time', 'toggle', 'version' ],
+			// What docs/javascript.md promises, and nothing more.
+			members: [ 'close', 'closePanel', 'control', 'current', 'next', 'on', 'open', 'openPanel', 'panel', 'play', 'playing', 'prev', 'queue', 'seek', 'time', 'toggle', 'version' ],
 		} );
 		await page.evaluate( () => window.riff.next() );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(

@@ -275,40 +275,6 @@ final class Player {
 	}
 
 	/**
-	 * The tabs beside Now Playing: Up next first, then any a plugin adds. Each tab has a panel the
-	 * player shows when the tab is picked; a plugin fills its own panel when the `riff.tab` action
-	 * fires in JavaScript. On a phone the tabs show in the open Up next sheet once there is more
-	 * than one.
-	 *
-	 * @since 4.16.0
-	 *
-	 * @return array[] Tabs keyed by slug, each with a label.
-	 */
-	public static function tabs(): array {
-		$tabs = array(
-			'queue' => array( 'label' => __( 'Up next', 'riff' ) ),
-		);
-		/**
-		 * Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is
-		 * `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always
-		 * comes first and cannot be removed.
-		 *
-		 * @since 4.16.0
-		 *
-		 * @param array[] $tabs Tabs keyed by slug, each with a label.
-		 */
-		$filtered = (array) apply_filters( 'riff_now_playing_tabs', $tabs );
-		foreach ( $filtered as $slug => $tab ) {
-			$slug = sanitize_key( (string) $slug );
-			if ( '' === $slug || 'queue' === $slug || ! is_array( $tab ) || empty( $tab['label'] ) || ! is_string( $tab['label'] ) ) {
-				continue;
-			}
-			$tabs[ $slug ] = array( 'label' => $tab['label'] );
-		}
-		return $tabs;
-	}
-
-	/**
 	 * Renders one chip.
 	 *
 	 * @since 4.0.0
@@ -381,7 +347,8 @@ final class Player {
 			'song'      => '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>',
 			'video'     => '<path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.5 16.5v-9l7 4.5-7 4.5z"/>',
 			'captions'  => '<path d="M19 4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/>',
-			'tab'       => '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>',
+			'queue'     => '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>',
+			'close'     => '<path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>',
 			'volume'    => '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
 			'share'     => '<path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
 			'heart'     => '<path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/>',

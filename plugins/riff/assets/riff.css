@@ -1040,8 +1040,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-np-head,
-.riff-np-body,
-.riff-np-mini {
+.riff-np-body {
 	position: relative;
 }
 
@@ -1100,10 +1099,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	overflow: hidden;
 	clip-path: inset(50%);
 	white-space: nowrap;
-}
-
-.riff-np-mini {
-	display: none;
 }
 
 .riff-np-body {
@@ -1868,81 +1863,62 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	height: 20px;
 }
 
-/* Up next: a handle and the source at the bottom, until it is opened. */
-.riff-queue {
-	position: relative;
-	flex: none;
+/* ---- The panels (registry.js): Up next, and any a plugin adds, one at a
+   time, each its own thing. On a phone a panel covers the screen, Now
+   Playing too, with its name and Close at the top; on a wide screen it
+   stands beside the page and Now Playing, above the bar. */
+.riff-side {
+	position: fixed;
+	inset: 0;
+	z-index: 5;
 	display: flex;
 	flex-direction: column;
-	min-height: 0;
+	padding: var(--riff-safe-t) var(--riff-safe-r) var(--riff-safe-b) var(--riff-safe-l);
+	background: var(--riff-surface);
 }
 
-#riff .riff-peek {
-	display: grid;
-	justify-items: center;
-	gap: 12px;
-	padding: 16px 32px 24px;
-	color: var(--riff-fg-2);
+.riff-side-head {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	height: 56px;
+	padding: 0 8px 0 24px;
+}
+
+#riff .riff-side-title {
+	margin: 0;
+	overflow: hidden;
 	font-size: 16px;
-	font-weight: 500;
-	touch-action: none;
+	font-weight: 700;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
-.riff-handle {
-	display: block;
-	width: 36px;
-	height: 4px;
-	border-radius: 2px;
-	background: rgb(255 255 255 / 0.4);
+/* Focus lands on the name as the panel opens, for a screen reader to say
+   where it is; it is not a control, so no ring round it. */
+#riff .riff-side-title:focus {
+	outline: none;
 }
 
-.riff-tabs,
-.riff-queue-head,
-.riff-queue-list {
-	display: none;
-}
-
-/* Each tab's panel. Up next's holds the queue; a plugin's is empty until its
-   script fills it. A phone shows a panel only in the open sheet. */
+/* Each panel. Up next's holds the queue; a plugin's is empty until its
+   script fills it. */
 .riff-panel {
+	display: flex;
 	flex: 1;
 	flex-direction: column;
 	min-height: 0;
-	display: none;
-}
-
-.riff-panel-queue {
-	display: flex;
-}
-
-.riff-panel[hidden] {
-	display: none;
 }
 
 .riff-panel:not(.riff-panel-queue) {
-	padding: 16px 24px;
+	padding: 8px 24px 24px;
 	overflow-y: auto;
 	overscroll-behavior: contain;
 }
 
-#riff .riff-tab {
-	display: flex;
-	align-items: center;
-	height: 48px;
-	padding: 0 12px;
-	color: var(--riff-fg-2);
-	font-size: 14px;
-	font-weight: 500;
-	text-transform: uppercase;
-}
-
-#riff .riff-tab[aria-selected="true"] {
-	box-shadow: inset 0 -2px 0 var(--riff-fg);
-	color: var(--riff-fg);
-}
-
 .riff-queue-head {
-	padding: 4px 24px 16px;
+	padding: 0 24px 16px;
 	border-bottom: 1px solid var(--riff-line);
 }
 
@@ -2244,87 +2220,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	opacity: 0;
 }
 
-/* Split view: the art shrinks, the controls stay, the list takes the bottom of
-   the screen. */
-.riff-np[data-sheet="half"] .riff-stage {
-	flex: none;
-	height: 34vh;
-	padding: 16px 32px 8px;
-}
-
-.riff-np[data-sheet="half"] .riff-chips {
-	display: none;
-}
-
-.riff-np[data-sheet="half"] .riff-np-seek {
-	margin-top: 12px;
-}
-
-.riff-np[data-sheet="half"] .riff-queue,
-.riff-np[data-sheet="full"] .riff-queue {
-	flex: 1;
-	margin-top: 8px;
-	border-radius: 16px 16px 0 0;
-	background: var(--riff-surface);
-}
-
-.riff-np[data-sheet="half"] .riff-peek span,
-.riff-np[data-sheet="full"] .riff-peek span {
-	display: none;
-}
-
-#riff .riff-np[data-sheet="half"] .riff-peek,
-#riff .riff-np[data-sheet="full"] .riff-peek {
-	padding: 12px 0 8px;
-}
-
-.riff-np[data-sheet="half"] .riff-queue-head,
-.riff-np[data-sheet="full"] .riff-queue-head {
-	display: block;
-}
-
-.riff-np[data-sheet="half"] .riff-queue-list,
-.riff-np[data-sheet="full"] .riff-queue-list {
-	display: block;
-}
-
-.riff-np[data-sheet="half"] .riff-tabs-many,
-.riff-np[data-sheet="full"] .riff-tabs-many {
-	display: flex;
-	padding: 0 12px;
-	border-bottom: 1px solid var(--riff-line);
-}
-
-.riff-np[data-sheet="half"] .riff-panel:not([hidden]),
-.riff-np[data-sheet="full"] .riff-panel:not([hidden]) {
-	display: flex;
-}
-
-/* Full: the player is one row above the sheet. */
-.riff-np[data-sheet="full"] .riff-np-head,
-.riff-np[data-sheet="full"] .riff-stage,
-.riff-np[data-sheet="full"] .riff-np-panel {
-	display: none;
-}
-
-.riff-np[data-sheet="full"] .riff-np-mini {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	flex: none;
-	height: 88px;
-	padding: 0 12px 0 16px;
-}
-
-.riff-np-mini .riff-bar-text {
-	flex: 1;
-}
-
-.riff-thumb-lg {
-	width: 48px;
-	height: 48px;
-}
-
 /* Under #riff, as the reset above for the player's paragraphs is, so the
    toast keeps its own colours, padding and size. */
 #riff .riff-toast {
@@ -2394,10 +2289,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		clip-path: none;
 	}
 
+	/* The track on its own: Up next and the other panels stand beside it. */
 	.riff-np-body {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 392px;
-		gap: 56px;
+		grid-template-columns: minmax(0, 1fr);
 		padding: 0 56px;
 	}
 
@@ -2437,28 +2332,31 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		display: none;
 	}
 
-	.riff-queue {
-		height: 100%;
-		min-height: 0;
+	/* A panel beside the page and Now Playing, above the bar, which the page
+	   and Now Playing make room for. */
+	.riff-side {
+		inset: var(--riff-side-top, 0) 0 calc(var(--riff-bar-h) + var(--riff-safe-b)) auto;
+		width: var(--riff-side-w, 400px);
+		padding: 0 0 0 8px;
+		border-left: 1px solid var(--riff-line);
+		background: var(--riff-bg);
 	}
 
-	#riff .riff-peek {
-		display: none;
+	html.riff-panel-open {
+		--riff-side-w: 400px;
 	}
 
-	.riff-tabs {
-		display: flex;
-		flex: none;
-		border-bottom: 1px solid var(--riff-line);
+	html.riff-panel-open body {
+		margin-right: var(--riff-side-w);
 	}
 
-	.riff-panel:not([hidden]) {
-		display: flex;
+	html.riff-panel-open #riff .riff-np {
+		right: var(--riff-side-w);
 	}
 
 	.riff-queue-head {
 		display: block;
-		margin: 16px 0;
+		margin: 0 16px 16px 16px;
 		padding: 0;
 		border: 0;
 	}
@@ -2538,8 +2436,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* ---- Now Playing on a phone, as YouTube Music lays it out: the art as wide
    as the screen allows, 24px from either edge, with the title, the seek bar
    and the controls lined up under its edges. Everything below the art keeps
-   to what it needs, so the art takes the rest. Closed, Up next is its handle
-   and source only; the queue's head belongs to the open sheet. */
+   to what it needs, so the art takes the rest. Up next and the other panels
+   open from the chips, over it. */
 @media (max-width: 899px) {
 
 	.riff-stage {
@@ -2588,13 +2486,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		text-shadow: none;
 	}
 
-	#riff .riff-peek {
-		gap: 8px;
-		padding: 12px 24px 16px;
-	}
-
-	#riff .riff-np:not([data-sheet="half"], [data-sheet="full"]) .riff-queue-head {
-		display: none;
+	/* The chips are the last row: Up next and the other panels open from
+	   there, over Now Playing. */
+	.riff-np-panel {
+		padding-bottom: 24px;
 	}
 }
 
@@ -2608,7 +2503,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		margin-top: 12px;
 	}
 
-	#riff .riff-peek {
+	.riff-np-panel {
 		padding-bottom: 12px;
 	}
 }
@@ -2658,8 +2553,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 
 	#riff .riff-np-bg,
-	#riff .riff-np-glow,
-	#riff .riff-np-mini {
+	#riff .riff-np-glow {
 		display: none;
 	}
 
@@ -2760,51 +2654,16 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		overflow: visible;
 	}
 
-	#riff .riff-queue {
-		grid-row: 2;
-		grid-column: 2;
-	}
-
-	#riff .riff-np:not([data-sheet="half"], [data-sheet="full"]) .riff-queue-head {
-		display: none;
-	}
-
-	/* Up next and the other tabs open in the controls' strip, never over
-	   the deck: the turntable keeps turning where it is, the player shrinks
-	   to its one row at the strip's top, and the list fills the rest. */
-	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-stage {
-		display: grid;
-		height: auto;
-		padding: 4% 2% 4% 4%;
-	}
-
-	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-head {
-		display: flex;
-	}
-
-	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-panel {
-		display: none;
-	}
-
-	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-mini {
-		display: flex;
-		position: absolute;
-		z-index: 1;
-		top: var(--riff-safe-t);
-		right: var(--riff-safe-r);
-		align-items: center;
-		gap: 12px;
+	/* Up next and the other panels open in the controls' strip, never over
+	   the deck: the turntable keeps turning where it is. */
+	#riff .riff-side {
+		inset: 0 0 0 auto;
 		width: clamp(224px, 30%, 300px);
-		height: 72px;
-		padding: 0 8px 0 12px;
+		padding: var(--riff-safe-t) var(--riff-safe-r) var(--riff-safe-b) 0;
+		background: #181818;
 	}
 
-	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-queue {
-		grid-row: 1 / span 2;
-		margin-top: 72px;
-	}
-
-	#riff .riff-np .riff-queue-head {
+	#riff .riff-queue-head {
 		flex-wrap: wrap;
 		gap: 8px;
 	}
@@ -3040,7 +2899,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		padding-left: 20px;
 	}
 
-	#riff .riff-np:is([data-sheet="half"], [data-sheet="full"]) .riff-np-mini {
+	/* a panel takes the right page */
+	#riff .riff-side {
 		width: env(viewport-segment-width 1 0);
 	}
 }
@@ -3074,10 +2934,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		padding-top: 16px;
 	}
 
-	#riff .riff-queue {
-		grid-area: 2 / 1;
-		align-self: end;
-	}
 
 	#riff .riff-np-head {
 		position: absolute;
@@ -3099,11 +2955,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* Forced colours (Windows contrast themes): the browser replaces backgrounds
-   with its own and drops box shadows, which is how the seek line, a selected
-   tab, a checked mode and the current track are drawn. Each gets the theme's
-   own colours instead: the line in GrayText played through in Highlight, and
-   what is selected or current in Highlight, as the system draws a selection.
-   Outlines and borders survive as they are. */
+   with its own and drops box shadows, which is how the seek line, an open
+   panel's button, a checked mode and the current track are drawn. Each gets
+   the theme's own colours instead: the line in GrayText played through in
+   Highlight, and what is selected or current in Highlight, as the system
+   draws a selection. Outlines and borders survive as they are. */
 @media (forced-colors: active) {
 
 	.riff-line {
@@ -3122,8 +2978,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		display: none;
 	}
 
-	#riff .riff-tab[aria-selected="true"] {
-		border-bottom: 2px solid Highlight;
+	/* the open panel's button in the bar, as a pressed control is drawn */
+	#riff [data-riff-control][aria-pressed="true"] {
+		outline: 2px solid Highlight;
+		outline-offset: -2px;
 	}
 
 	#riff .riff-modes button[aria-checked="true"] {

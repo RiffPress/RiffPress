@@ -69,11 +69,13 @@ for ( const [ index, format ] of FORMATS.entries() ) {
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( index ).click();
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
-		await page.locator( '.riff-bar-info' ).click();
+		// From the bar on a wide screen, from Now Playing on a phone.
 		if ( isMobile ) {
-			await page.locator( '.riff-peek' ).click();
+			await page.locator( '.riff-bar-info' ).click();
+			await page.locator( '[data-riff-chip="lyrics"]' ).click();
+		} else {
+			await page.locator( '[data-riff-control="lyrics"]' ).click();
 		}
-		await page.locator( '.riff-tab[data-riff-tab="lyrics"]' ).click();
 		const lines = page.locator( '[data-riff-panel="lyrics"] .riff-lyrics-synced li' );
 		await expect( lines ).toHaveText( format.texts || [ format.words ? 'One more' : 'One', 'Two', 'Three' ] );
 		if ( format.gap ) {

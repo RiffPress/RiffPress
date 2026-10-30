@@ -3,6 +3,7 @@
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openPanel } = require( '../helpers/panels' );
 const { own } = require( '../helpers/own' );
 const { iosAgent, playerSite } = require( '../helpers/site' );
 
@@ -68,11 +69,7 @@ test.describe( 'Player', () => {
 		const titles = () => page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await expect.poll( titles ).toHaveLength( 3 );
-		await page.evaluate( () => window.riff.open() );
-		// On a phone, Up next is a sheet pulled up from its handle.
-		if ( await page.locator( '.riff-peek' ).isVisible() ) {
-			await page.locator( '.riff-peek' ).click();
-		}
+		await openPanel( page, 'queue' );
 		const list = page.locator( '.riff-queue-list' );
 		await expect( list.locator( 'li' ) ).toHaveCount( 3 );
 
@@ -91,8 +88,8 @@ test.describe( 'Player', () => {
 		await expect( said ).toHaveText( 'Moved to 2 of 3' );
 
 		await list.locator( 'li' ).nth( 1 ).locator( '.riff-more-button' ).click();
-		// The menu opens inside the dialog, where a screen reader kept to it can reach it.
-		await expect( page.locator( '.riff-np .riff-menu' ) ).toBeVisible();
+		// The menu opens inside the panel, where a screen reader kept to it can reach it.
+		await expect( page.locator( '.riff-side .riff-menu' ) ).toBeVisible();
 		await page.locator( '.riff-menu' ).getByRole( 'menuitem', { name: 'Move down' } ).click();
 		await expect.poll( titles ).toEqual( [ 'Intensities in Ten Cities', 'Underground', 'Trombone Detritus' ] );
 
@@ -127,11 +124,8 @@ test.describe( 'Player', () => {
 		page,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await page.locator( '.riff-bar-info' ).click();
+		await openPanel( page, 'queue' );
 		const list = page.locator( '.riff-queue-list' );
-		if ( await page.locator( '.riff-peek' ).isVisible() ) {
-			await page.locator( '.riff-peek' ).click();
-		}
 		await expect( list ).toBeVisible();
 		await expect( list.locator( 'li' ) ).toHaveCount( 3 );
 		await expect( list.locator( '[aria-current]' ) ).toContainText(
@@ -158,11 +152,8 @@ test.describe( 'Player', () => {
 				Array.from( { length: 400 }, ( _, i ) => ( { ...base[ i % base.length ], id: 900000 + i, title: `Track ${ i + 1 }` } ) ),
 				0
 			);
-			window.riff.open();
 		} );
-		if ( await page.locator( '.riff-peek' ).isVisible() ) {
-			await page.locator( '.riff-peek' ).click();
-		}
+		await openPanel( page, 'queue' );
 		const list = page.locator( '.riff-queue-list' );
 		const items = list.locator( 'li' );
 		await expect( items.first() ).toHaveAttribute( 'aria-setsize', '400' );
@@ -214,10 +205,7 @@ test.describe( 'Player', () => {
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
-		await page.locator( '.riff-bar-info' ).click();
-		if ( await page.locator( '.riff-peek' ).isVisible() ) {
-			await page.locator( '.riff-peek' ).click();
-		}
+		await openPanel( page, 'queue' );
 		const bar = page.locator( '.riff-queue-list [aria-current] .riff-row-state i' ).first();
 		await expect( bar ).toBeAttached();
 		// A live reading writes a transform each frame; the keyframes are off while it runs.

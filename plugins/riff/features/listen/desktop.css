@@ -342,6 +342,9 @@ html.riff-desktop .riff-standalone .riff-app {
 	   under the pointer. */
 	html.riff-desktop {
 		--riff-bar-h: 88px;
+
+		/* a panel stands under the strip that drags the window */
+		--riff-side-top: var(--riff-desktop-strip);
 	}
 
 	html.riff-desktop #riff .riff-bar-center {
@@ -360,9 +363,9 @@ html.riff-desktop .riff-standalone .riff-app {
 	}
 
 	/* Now Playing, full screen: on a dark wash of the art's own
-	   colour, the art alone in the middle, and Up next and Lyrics as words at
-	   the top right that open their panel beside it (riff.js keeps
-	   data-riff-drawer). Its top drags the window, clear of the lights. */
+	   colour, the art alone in the middle, with Up next and Lyrics beside it
+	   as panels of their own (riff.css). Its top drags the window, clear of
+	   the lights. */
 	html.riff-desktop #riff .riff-np-bg {
 		display: block;
 		background: linear-gradient(color-mix(in srgb, var(--riff-tint) 45%, #000), color-mix(in srgb, var(--riff-tint) 18%, #000));
@@ -387,11 +390,6 @@ html.riff-desktop .riff-standalone .riff-app {
 	html.riff-desktop #riff .riff-stage {
 		place-content: center;
 		padding: 0 0 48px;
-		transition: padding 0.2s;
-	}
-
-	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-stage {
-		padding-right: 440px;
 	}
 
 	html.riff-desktop #riff .riff-cover,
@@ -412,81 +410,8 @@ html.riff-desktop .riff-standalone .riff-app {
 		box-shadow: none;
 	}
 
-	html.riff-desktop #riff .riff-queue {
-		display: contents;
-	}
-
-	/* The body sits under the head, so the tabs climb into it, to the
-	   left of Captions when a video has them. */
-	html.riff-desktop #riff .riff-np {
-		--riff-np-end: 0px;
-	}
-
-	html.riff-desktop #riff .riff-np:has(.riff-np-end .riff-captions:not([hidden])) {
-		--riff-np-end: 56px;
-	}
-
-	html.riff-desktop #riff .riff-tabs {
-		position: absolute;
-		top: calc(12px - var(--riff-desktop-strip));
-		right: calc(24px + var(--riff-np-end));
-		z-index: 2;
-		gap: 8px;
-		border: 0;
-		-webkit-app-region: no-drag;
-		app-region: no-drag;
-	}
-
-	html.riff-desktop #riff .riff-tab {
-		width: auto;
-		height: 40px;
-		padding: 0 12px;
-		border: 0;
-		box-shadow: none;
-		color: rgb(255 255 255 / 0.7);
-		font-size: 15px;
-		text-transform: none;
-	}
-
-	html.riff-desktop #riff .riff-tab:hover,
-	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-tab[aria-selected="true"] {
-		color: #fff;
-	}
-
-	html.riff-desktop #riff .riff-np:not([data-riff-drawer="open"]) .riff-panel {
-		display: none;
-	}
-
-	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-panel:not([hidden]) {
-		position: absolute;
-		top: 0;
-		right: 24px;
-		width: 400px;
-
-		/* as tall as what it holds, up to the bar */
-		max-height: calc(100% - 24px);
-		padding: 8px;
-		overflow-y: auto;
-		border-radius: 8px;
-		background: rgb(0 0 0 / 0.35);
-	}
-}
-
-/* Too narrow for the record beside the panel: the panel takes the view, as
-   lyrics views do, and the record waits behind it. */
-@media (min-width: 900px) and (max-width: 1199px) {
-
-	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-stage {
-		visibility: hidden;
-		padding-right: 0;
-	}
-
-	html.riff-desktop #riff .riff-np[data-riff-drawer="open"] .riff-panel:not([hidden]) {
-		left: 56px;
-		width: auto;
-		max-width: 720px;
-		margin-inline: auto;
-		right: 56px;
+	html.riff-desktop #riff .riff-side {
+		background: #000;
 	}
 }
 

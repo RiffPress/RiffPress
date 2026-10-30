@@ -31,16 +31,6 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$enabled` | `bool` | Whether to load the player. |
 
-### `riff_now_playing_tabs`
-
-Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always comes first and cannot be removed.
-
-Since 4.16.0. Fires in `plugins/riff/src/class-player.php`.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `$tabs` | `array[]` | Tabs keyed by slug, each with a label. |
-
 ### `riff_protect_storage`
 
 Filters whether the storage a file is kept in elsewhere was made private, when it is protected, or public again, when it isn't. A plugin that keeps uploads in object storage or on a CDN answers for its own files: true once the copy there is private (or public again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an answer, a file only on this server is moved into the protected folder, and one kept elsewhere is not protected, as moving it would leave it public there. Riff can't send a file it doesn't have, so a plugin that protects its files signs their addresses through riff_protected_url too.
@@ -176,6 +166,21 @@ Since 4.0.0. Fires in `plugins/riff/assets/player/media.js`.
 | `detail.track` | `Object` | The track that ended. |
 | `api` | `Object` | `window.riff`. |
 
+#### `riff.panel`
+
+Fires when a panel opens or closes, Up next included, and again for an open panel when the track changes. A panel's script fills it here, or in the `render` it was added with.
+
+Since 5.8.0. Fires in `plugins/riff/assets/player/registry.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.id` | `string` | The panel's id. |
+| `detail.open` | `boolean` | Whether it is open now. |
+| `detail.panel` | `HTMLElement` | The panel, `[data-riff-panel="<id>"]`. |
+| `detail.track` | `Object\|null` | The track playing. |
+| `api` | `Object` | `window.riff`. |
+
 #### `riff.pause`
 
 Fires when the track pauses.
@@ -225,20 +230,6 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 | `detail` | `Object` | The player's state. |
 | `detail.queue` | `Object[]` | The queue in play order. |
 | `detail.track` | `Object\|null` | The track loaded, or null. |
-| `api` | `Object` | `window.riff`. |
-
-#### `riff.tab`
-
-Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
-
-Since 4.16.0. Fires in `plugins/riff/assets/player/now-playing.js`.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `detail` | `Object` | What changed. |
-| `detail.id` | `string` | The tab's slug. |
-| `detail.panel` | `HTMLElement` | The tab's panel, `[data-riff-panel="<slug>"]`. |
-| `detail.track` | `Object\|null` | The track playing. |
 | `api` | `Object` | `window.riff`. |
 
 #### `riff.time`

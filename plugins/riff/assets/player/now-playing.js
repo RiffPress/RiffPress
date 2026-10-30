@@ -1,11 +1,10 @@
 /* Now Playing. A dialog over the page: the page goes inert, Escape and the browser's back close
- * it, and focus goes back where it was. Up next on a phone is a handle peeking at the bottom, then
- * a split view with the art above the list, then the list on its own under a one-row player. The
- * tabs beside it are Up next and any a plugin adds through riff_now_playing_tabs. Its background
- * takes its colour from the artwork, darkened so text stays legible. The record beside the cover
- * is cut as an LP is: a band of grooves for each of the album's tracks, as wide as the track is
- * long. It turns at 33⅓, faster or slower with the music's speed as a turntable's pitch would, and
- * its tonearm tracks the album from the outside in. */
+ * it, and focus goes back where it was. It is the track on its own: Up next and the other panels
+ * are their own things, opened beside it or over it (registry.js). Its background takes its colour
+ * from the artwork, darkened so text stays legible. The record beside the cover is cut as an LP
+ * is: a band of grooves for each of the album's tracks, as wide as the track is long. It turns at
+ * 33⅓, faster or slower with the music's speed as a turntable's pitch would, and its tonearm
+ * tracks the album from the outside in. */
 import { average, hsl, largest, route, time } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
@@ -14,7 +13,7 @@ import { average, hsl, largest, route, time } from 'riff-player/helpers';
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function nowPlaying( P ) {
-	const { root, np, $, $$, queueList, emit } = P;
+	const { root, np, $, $$ } = P;
 
 	let opener = null;
 	function open() {
@@ -112,7 +111,6 @@ export function nowPlaying( P ) {
 		np.removeEventListener( 'transitionend', slidIn );
 		showPage();
 		np.classList.remove( 'is-in' );
-		sheet( 'none' );
 		np.style.removeProperty( 'transform' );
 		root.classList.remove( 'is-open' );
 		for ( const node of document.querySelectorAll( '[data-riff-inert]' ) ) {
@@ -145,100 +143,6 @@ export function nowPlaying( P ) {
 			close( { fromHistory: true } );
 		}
 	} );
-
-	// ---- Up next on a phone. Tap the handle or drag it to move.
-	P.sheetState = 'none';
-	const peek = $( '.riff-peek' );
-	function sheet( to ) {
-		P.sheetState = to;
-		np.dataset.sheet = to;
-		peek.setAttribute( 'aria-expanded', String( to !== 'none' ) );
-		if ( to !== 'none' ) {
-			queueList
-				.querySelector( '[aria-current]' )
-				?.scrollIntoView( { block: 'nearest' } );
-		}
-	}
-
-	// ---- Tabs beside Now Playing. Picking one shows its panel and fires riff.tab, so a plugin
-	// fills its panel when it is seen. The keys follow the ARIA tabs pattern: arrows move and
-	// pick, Home and End jump.
-	const tabs = $$( '.riff-tab' );
-	function pickTab( id, focus = false ) {
-		const tab = tabs.find( ( t ) => t.dataset.riffTab === id );
-		if ( ! tab ) {
-			return;
-		}
-		for ( const t of tabs ) {
-			t.setAttribute( 'aria-selected', String( t === tab ) );
-			t.tabIndex = t === tab ? 0 : -1;
-		}
-		for ( const panel of $$( '[data-riff-panel]' ) ) {
-			panel.hidden = panel.dataset.riffPanel !== id;
-		}
-		if ( focus ) {
-			tab.focus();
-		}
-		/**
-		 * Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a
-		 * tab fills its panel here, and again on `riff.track` while its tab is showing.
-		 *
-		 * @since 4.16.0
-		 *
-		 * @param {Object}      detail       What changed.
-		 * @param {string}      detail.id    The tab's slug.
-		 * @param {HTMLElement} detail.panel The tab's panel, `[data-riff-panel="<slug>"]`.
-		 * @param {Object|null} detail.track The track playing.
-		 * @param {Object}      api          `window.riff`.
-		 */
-		emit( 'tab', {
-			id,
-			panel: $( `[data-riff-panel="${ id }"]` ),
-			track: P.track() || null,
-		} );
-	}
-	// In Riff's desktop app Now Playing is the art on its own, and a tab opens its panel
-	// beside it. Pressed again while its panel is open, the tab closes it.
-	function drawer( tab ) {
-		if ( ! document.documentElement.classList.contains( 'riff-desktop' ) ) {
-			return true;
-		}
-		if (
-			np.dataset.riffDrawer === 'open' &&
-			tab.getAttribute( 'aria-selected' ) === 'true'
-		) {
-			delete np.dataset.riffDrawer;
-			tab.setAttribute( 'aria-expanded', 'false' );
-			return false;
-		}
-		np.dataset.riffDrawer = 'open';
-		for ( const t of tabs ) {
-			t.setAttribute( 'aria-expanded', String( t === tab ) );
-		}
-		return true;
-	}
-	for ( const t of tabs ) {
-		t.addEventListener( 'click', () => {
-			if ( drawer( t ) ) {
-				pickTab( t.dataset.riffTab );
-			}
-		} );
-		t.addEventListener( 'keydown', ( e ) => {
-			const i = tabs.indexOf( t );
-			const back = document.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
-			const ahead = document.dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
-			const to = {
-				[ back ]: ( i - 1 + tabs.length ) % tabs.length,
-				[ ahead ]: ( i + 1 ) % tabs.length,
-				Home: 0,
-				End: tabs.length - 1,
-			}[ e.key ];
-			if ( to !== undefined ) {
-				e.preventDefault();
-				pickTab( tabs[ to ].dataset.riffTab, true );
-			}
-		} );
-	}
 
 	// ---- The background's colour, from the artwork, and the record's label printed on paper of
 	// the cover's own colour, its average: dark words on a light colour, light on a dark one, so
@@ -1183,5 +1087,5 @@ export function nowPlaying( P ) {
 		);
 	}
 
-	return { open, close, sheet, pickTab, tint, groove, deck, turn, halt, held, stopping };
+	return { open, close, tint, groove, deck, turn, halt, held, stopping };
 }

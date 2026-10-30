@@ -529,13 +529,13 @@
 			"url": "https://www.w3.org/TR/cssom-view-1/#dom-element-scrollintoview"
 		},
 		"summary": "Brings the playing track into view when Up next opens.",
-		"how": "When the Up next sheet opens, the current track's item in the list is scrolled into view with `block: nearest`. In the Listen app, after a view swap, the app scrolls to its top only if it had scrolled off above the viewport.",
+		"how": "When the Up next panel opens, the current track's item in the list is scrolled into view with `block: nearest`. In the Listen app, after a view swap, the app scrolls to its top only if it had scrolled off above the viewport.",
 		"why": "A long queue would otherwise open at its top with the playing track somewhere below.",
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/player/now-playing.js",
-				"code": "?.scrollIntoView( { block: 'nearest' } );"
+				"file": "plugins/riff/assets/player/registry.js",
+				"code": "?.scrollIntoView( { block: 'nearest' } ),"
 			},
 			{
 				"file": "plugins/riff/features/listen/app/views.js",

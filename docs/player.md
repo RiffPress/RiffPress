@@ -56,6 +56,25 @@ instead bring its own `element`, as the volume does. The bar is updated in place
 changes and never drawn again, so a control keeps focus while the music plays. An icon is markup
 from the feature's own code. [docs/javascript.md](javascript.md) has the whole of it.
 
+## Panels
+
+Up next is a panel, and so is any a plugin adds, such as Riff Lyrics' Lyrics: each its own thing
+rather than a tab beside Now Playing. A panel is added through `window.riff.panel( id, panel )`
+with a `label`, an `icon` and an `order`, and Riff adds Up next the same way. It gets a button in
+the bar on a wide screen and a chip in Now Playing on a phone. One shows at a time:
+
+- On a wide screen it stands beside the page and Now Playing, above the bar, and both make room
+  for it. Now Playing is then the track on its own, the art in the middle.
+- On a phone it covers everything, Now Playing too, as a dialog with its name and Close at the
+  top.
+- On a touch screen on its side, it opens in the controls' strip, and the turntable keeps
+  turning beside it.
+
+Focus moves to the panel's name as it opens, and Escape or Close hands it back to what opened it.
+A panel is filled by the `render` it was added with, and the `riff.panel` action says when one
+opens, closes, or has a new track while it is open. The one a listener leaves open opens again on
+their next visit, on a wide screen; that choice is kept in the browser, nowhere else.
+
 ## Areas
 
 The player has places Riff's own features fill: **badges**, the pills at the bar's right end and

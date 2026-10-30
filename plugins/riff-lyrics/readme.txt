@@ -9,11 +9,11 @@ Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Own every note, and every word. A Lyrics tab beside Up next in Riff's Now Playing.
+Own every note, and every word. A Lyrics panel beside Riff's player.
 
 == Description ==
 
-Riff Lyrics adds a Lyrics tab next to Up next in Riff's Now Playing, the way streaming apps show the words to the song that is playing.
+Riff Lyrics adds a Lyrics panel to Riff's player, opened from its button in the bar or its chip in Now Playing on a phone, the way streaming apps show the words to the song that is playing.
 
 * The lyrics come from your files. WordPress already reads the lyrics tag in an audio file (ID3 USLT) when you upload it; Riff Lyrics shows them.
 * Timed lyrics follow the music: the line being sung is marked and kept in view, and a tap on a line takes the track there. They are read in the formats taggers and players already write: LRC, with its [offset:] tag; Enhanced LRC, whose words light up as they are sung; WebVTT; and a file's own synchronised lyrics tag (ID3 SYLT), read when the file is uploaded.

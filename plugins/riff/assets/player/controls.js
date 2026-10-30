@@ -38,11 +38,8 @@ export function controls( P ) {
 			} else {
 				P.close();
 			}
-		} else if ( action === 'tab' ) {
-			// A chip for a tab beside Up next, such as Lyrics: the sheet opens on it all the way, the
-			// player a row above it, as words to read along with want the whole screen.
-			P.sheet( 'full' );
-			P.pickTab( button.dataset.riffTab );
+		} else if ( action === 'close-panel' ) {
+			P.hidePanel();
 		} else if ( action === 'dismiss' ) {
 			P.dismiss();
 		} else if ( action === 'captions' ) {
@@ -56,10 +53,6 @@ export function controls( P ) {
 			);
 		} else if ( action === 'close' ) {
 			P.close();
-		} else if ( action === 'queue' ) {
-			P.sheet(
-				{ none: 'half', half: 'full', full: 'none' }[ P.sheetState ]
-			);
 		} else if ( action === 'share' ) {
 			P.feature( 'share' ).then( ( m ) => m?.share() );
 		} else if ( action === 'repeat' ) {

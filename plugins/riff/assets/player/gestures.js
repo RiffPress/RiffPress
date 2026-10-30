@@ -1,14 +1,9 @@
-/* Gestures. Swipe the bar sideways to skip, down to stop; drag Now Playing down to close; drag the
- * Up next handle to open or close the sheet. Loaded on demand, once something plays. Every gesture
- * has a button that does the same (WCAG 2.5.7): Next and Previous, Stop, Close, and the handle. */
+/* Gestures. Swipe the bar sideways to skip, down to stop; drag Now Playing down to close. Loaded
+ * on demand, once something plays. Every gesture has a button that does the same (WCAG 2.5.7):
+ * Next and Previous, Close player, and Close. */
 
 export default function gestures( P ) {
 	const { $, $$, np } = P;
-	const peek = $( '.riff-peek' );
-	const swipedFor = () => {
-		P.swiped = true;
-		setTimeout( () => ( P.swiped = false ), 0 );
-	};
 	drag( $( '.riff-bar-info' ), {
 		move: ( dx, dy, target ) => {
 			if ( Math.abs( dx ) > Math.abs( dy ) ) {
@@ -45,20 +40,6 @@ export default function gestures( P ) {
 			},
 		} );
 	}
-
-	drag( peek, {
-		move: () => {},
-		end: ( dx, dy ) => {
-			if ( Math.abs( dy ) > 10 ) {
-				swipedFor();
-			}
-			if ( dy < -40 ) {
-				P.sheet( P.sheetState === 'none' ? 'half' : 'full' );
-			} else if ( dy > 40 ) {
-				P.sheet( P.sheetState === 'full' ? 'half' : 'none' );
-			}
-		},
-	} );
 
 	function drag( zone, { move, end } ) {
 		let from = null;

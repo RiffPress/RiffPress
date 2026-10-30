@@ -67,10 +67,14 @@ test.describe( 'iPhone Duo', () => {
 		expect( record.x + record.width ).toBeLessThan( panel.x );
 		expect( record.height ).toBeGreaterThan( OPEN.height * 0.6 );
 		await expect( page.locator( '.riff-deck-board .riff-start' ) ).toBeVisible();
-		// Up next opens in the strip; the turntable stays as large as it was.
-		await page.locator( '.riff-peek' ).click();
+		// Up next opens in the strip, from its chip; the turntable stays as large as it was, and in
+		// view.
+		await page.locator( '[data-riff-chip="queue"]' ).click();
 		await expect( page.locator( '.riff-queue-list' ) ).toBeVisible();
-		expect( ( await page.locator( '.riff-record' ).boundingBox() ).height ).toBeCloseTo( record.height, 0 );
+		const side = await page.locator( '.riff-side' ).boundingBox();
+		const after = await page.locator( '.riff-record' ).boundingBox();
+		expect( after.height ).toBeCloseTo( record.height, 0 );
+		expect( after.x + after.width ).toBeLessThanOrEqual( side.x );
 	} );
 
 	test( 'the deck has its own controls: start and stop, the two speeds, and the pitch', async ( { page } ) => {

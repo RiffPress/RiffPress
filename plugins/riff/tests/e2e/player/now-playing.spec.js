@@ -1,11 +1,12 @@
 /**
- * Now Playing: opened from the bar and closed with Escape, the art square and the bar held to its measurements on a wide screen, the art as wide as a phone allows, the Song and Video switch, a contrast theme, and axe.
+ * Now Playing: opened from the bar and closed with Escape, the art on its own, square, and the bar held to its measurements on a wide screen, Up next beside it, the art as wide as a phone allows, the Song and Video switch, a contrast theme, and axe.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 const { own } = require( '../helpers/own' );
 const { AXE_TAGS, systemColours, audioState, playerSite } = require( '../helpers/site' );
+const { openPanel } = require( '../helpers/panels' );
 
 const made = own();
 let postUrl;
@@ -40,7 +41,7 @@ test.describe( 'Player', () => {
 		await expect(
 			page.locator( 'body > :not(#riff):not(script)' ).first()
 		).toHaveAttribute( 'inert', '' );
-		// The page under it stays still: no scrolling behind it, no second scrollbar beside Up next.
+		// The page under it stays still: no scrolling behind it, no second scrollbar beside it.
 		const scrolls = () => page.evaluate( () => getComputedStyle( document.documentElement ).overflowY );
 		expect( await scrolls() ).toBe( 'hidden' );
 		// Once it has slid over the page, the page is neither styled nor painted, and keeps its
@@ -62,9 +63,9 @@ test.describe( 'Player', () => {
 		isMobile,
 	} ) => {
 		test.skip( isMobile, 'the wide layout only' );
-		// Tall enough that the stage could hold more than 640px of art. Beside Up next the stage is
-		// wider than tall, so the sleeve is sized for the sleeve and the turntable side by side, the
-		// record's size, and never past the cap.
+		// Tall enough that the stage could hold more than 640px of art. The stage is wider than tall,
+		// so the sleeve is sized for the sleeve and the turntable side by side, the record's size,
+		// and never past the cap.
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-chevron' ).click();
@@ -83,9 +84,19 @@ test.describe( 'Player', () => {
 				return record.x + record.width > art.x + art.width;
 			} )
 			.toBe( true );
-		const tabs = await page.locator( '.riff-tabs' ).boundingBox();
-		const tab = await page.locator( '.riff-tab' ).first().boundingBox();
-		expect( tab.x ).toBe( tabs.x );
+		// The track on its own: Up next is a panel of its own, closed until its button opens it,
+		// and then beside Now Playing, which makes room for it rather than going under it.
+		await expect( page.locator( '.riff-side' ) ).toBeHidden();
+		const alone = await page.locator( '.riff-np' ).boundingBox();
+		await openPanel( page, 'queue' );
+		await expect( page.locator( '[data-riff-control="queue"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
+		const side = await page.locator( '.riff-side' ).boundingBox();
+		const beside = await page.locator( '.riff-np' ).boundingBox();
+		expect( beside.width ).toBeLessThan( alone.width );
+		expect( beside.x + beside.width ).toBeLessThanOrEqual( side.x + 1 );
+		expect( side.y + side.height ).toBeLessThanOrEqual( ( await page.locator( '.riff-bar' ).boundingBox() ).y + 1 );
+		await page.locator( '[data-riff-control="queue"]' ).click();
+		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		const colors = await page.evaluate( () => ( {
 			repeat: getComputedStyle(
 				document.querySelector(
@@ -119,7 +130,7 @@ test.describe( 'Player', () => {
 		expect( ( await times.nth( 1 ).boundingBox() ).x ).toBeGreaterThan( seek.x + seek.width - 1 );
 	} );
 
-	test( 'on a phone the art is as wide as the screen allows, and closed, Up next is only its handle', async ( {
+	test( 'on a phone the art is as wide as the screen allows, and Up next opens over it from its chip', async ( {
 		page,
 		isMobile,
 	} ) => {
@@ -128,7 +139,7 @@ test.describe( 'Player', () => {
 		await page.locator( '.riff-bar-info' ).click();
 		const cover = page.locator( '.riff-np .riff-cover' );
 		await expect( cover ).toBeVisible();
-		// The queue's head belongs to the open sheet, not under the closed one's handle.
+		// Up next is its own thing, not under the art.
 		await expect( page.locator( '.riff-queue-head' ) ).toBeHidden();
 		// A short phone keeps most of its width for the art, and everything still fits on the
 		// screen once Now Playing has slid up.
@@ -136,8 +147,8 @@ test.describe( 'Player', () => {
 		expect( await cover.evaluate( ( el ) => el.offsetWidth ) ).toBeGreaterThanOrEqual( short.width * 0.6 );
 		await expect
 			.poll( async () => {
-				const peek = await page.locator( '.riff-peek' ).boundingBox();
-				return peek.y + peek.height;
+				const chips = await page.locator( '.riff-np .riff-chips' ).boundingBox();
+				return chips.y + chips.height;
 			} )
 			.toBeLessThanOrEqual( short.height + 1 );
 		// A tall one, as YouTube Music draws it: the art 24px from either edge, the title under its edge.
@@ -146,8 +157,18 @@ test.describe( 'Player', () => {
 		const art = await cover.boundingBox();
 		const title = await page.locator( '.riff-np-title' ).boundingBox();
 		expect( Math.abs( title.x - art.x ) ).toBeLessThanOrEqual( 1 );
-		await page.locator( '.riff-peek' ).click();
+		// Over everything, Now Playing too, as a dialog named for it; Close takes it away and focus
+		// goes back to its chip.
+		await page.locator( '[data-riff-chip="queue"]' ).click();
+		const side = page.locator( '.riff-side' );
+		await expect( side ).toHaveAttribute( 'role', 'dialog' );
+		await expect( side ).toHaveAttribute( 'aria-modal', 'true' );
 		await expect( page.locator( '.riff-queue-head' ) ).toBeVisible();
+		await expect( page.locator( '.riff-side-title' ) ).toBeFocused();
+		expect( await side.boundingBox() ).toEqual( { x: 0, y: 0, width: 390, height: 844 } );
+		await page.getByRole( 'button', { name: 'Close Up next' } ).click();
+		await expect( side ).toBeHidden();
+		await expect( page.locator( '[data-riff-chip="queue"]' ) ).toBeFocused();
 	} );
 
 	test( 'a track with a video switches to it without losing its place', async ( {
@@ -185,7 +206,7 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-modes' ) ).toBeHidden();
 	} );
 
-	test( 'in a contrast theme the seek line, the current track and the open tab still show', async ( { page } ) => {
+	test( 'in a contrast theme the seek line, the current track and an open panel\'s button still show', async ( { page, isMobile } ) => {
 		await page.emulateMedia( { forcedColors: 'active' } );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect( page.locator( '.riff-row' ).nth( 1 ) ).toHaveAttribute( 'data-current', '' );
@@ -199,14 +220,14 @@ test.describe( 'Player', () => {
 		const row = page.locator( '.riff-row' ).nth( 1 );
 		const post = await systemColours( row.locator( '..' ) );
 		await expect( row ).toHaveCSS( 'background-color', post.highlight );
-		await page.evaluate( () => window.riff.open() );
-		// On a phone, the tabs are on the Up next sheet, pulled up from its handle.
-		if ( await page.locator( '.riff-peek' ).isVisible() ) {
-			await page.locator( '.riff-peek' ).click();
+		// A phone's bar has no panel buttons; its panels open from Now Playing's chips.
+		if ( isMobile ) {
+			return;
 		}
-		const tab = page.locator( '#riff .riff-tab[aria-selected="true"]' ).locator( 'visible=true' ).first();
-		await expect( tab ).toHaveCSS( 'border-bottom-style', 'solid' );
-		await expect( tab ).toHaveCSS( 'border-bottom-width', '2px' );
+		await openPanel( page, 'queue' );
+		const button = page.locator( '[data-riff-control="queue"]' );
+		await expect( button ).toHaveCSS( 'outline-style', 'solid' );
+		await expect( button ).toHaveCSS( 'outline-width', '2px' );
 	} );
 
 	test( 'Now Playing has no accessibility violations', async ( { page } ) => {

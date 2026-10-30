@@ -206,43 +206,23 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'strings', $data, 'the modules translate their own strings' );
 	}
 
-	public function test_up_next_is_the_only_tab_until_a_plugin_adds_one(): void {
+	public function test_up_next_is_a_panel_beside_now_playing_and_the_bar_has_no_controls_of_its_own(): void {
 		$this->go_to( home_url( '/' ) );
 		ob_start();
 		Player::markup();
-		$html = ob_get_clean();
+		$html = (string) ob_get_clean();
 
-		$this->assertSame( array( 'queue' ), array_keys( Player::tabs() ) );
-		$this->assertStringContainsString( 'class="riff-tabs" role="tablist"', $html, 'one tab is not "many", so a phone shows no tab row' );
-		$this->assertStringContainsString( 'id="riff-queue-tab" data-riff-tab="queue" aria-controls="riff-panel-queue" aria-selected="true" tabindex="0"', $html );
-		$this->assertSame( 1, substr_count( $html, 'role="tabpanel"' ) );
-	}
-
-	public function test_a_plugin_adds_a_tab_with_an_empty_panel_after_up_next(): void {
-		$this->go_to( home_url( '/' ) );
-		$tabs = static function ( array $tabs ): array {
-			unset( $tabs['queue'] );
-			return array(
-				'lyrics'  => array( 'label' => 'Lyrics <b>' ),
-				'Related' => array( 'label' => 'Related' ),
-				'queue'   => array( 'label' => 'Renamed' ),
-				'nolabel' => array(),
-				'notarr'  => 'Nope',
-			) + $tabs;
-		};
-		add_filter( 'riff_now_playing_tabs', $tabs );
-		ob_start();
-		Player::markup();
-		$html = ob_get_clean();
-		$keys = array_keys( Player::tabs() );
-		remove_filter( 'riff_now_playing_tabs', $tabs );
-
-		$this->assertSame( array( 'queue', 'lyrics', 'related' ), $keys, 'Up next stays first and cannot be removed; slugs are keys; a tab without a label is dropped' );
-		$this->assertStringContainsString( 'class="riff-tabs riff-tabs-many"', $html );
-		$this->assertStringContainsString( '>Up next</button>', $html, 'a plugin cannot rename Up next' );
-		$this->assertStringContainsString( 'id="riff-tab-lyrics" data-riff-tab="lyrics" aria-controls="riff-panel-lyrics" aria-selected="false" tabindex="-1">Lyrics &lt;b&gt;</button>', $html, 'labels are escaped' );
-		$this->assertStringContainsString( '<div class="riff-panel" role="tabpanel" id="riff-panel-lyrics" aria-labelledby="riff-tab-lyrics" data-riff-panel="lyrics" tabindex="0" hidden></div>', $html );
-		$this->assertSame( 3, substr_count( $html, 'role="tabpanel"' ) );
+		$this->assertStringContainsString( '<aside class="riff-side" aria-labelledby="riff-side-title" hidden>', $html, 'one place for the panels, closed until one is opened' );
+		$this->assertStringContainsString( 'data-riff-panel="queue" hidden>', $html );
+		$this->assertStringContainsString( '<ol class="riff-queue-list" id="riff-queue-list"></ol>', $html );
+		$this->assertStringNotContainsString( 'role="tablist"', $html, 'no tabs: each panel is its own' );
+		$this->assertStringNotContainsString( 'riff-peek', $html );
+		// The bar's controls are added from its template through window.riff.control(), Riff's own too.
+		$bar = substr( $html, strpos( $html, '<section class="riff-bar"' ), strpos( $html, '<template class="riff-bar-own">' ) - strpos( $html, '<section class="riff-bar"' ) );
+		$this->assertStringContainsString( '<span class="riff-controls" data-riff-controls></span>', $bar );
+		$this->assertStringNotContainsString( 'data-riff-action="like"', $bar );
+		$this->assertStringNotContainsString( 'data-riff-volume', $bar );
+		$this->assertMatchesRegularExpression( '#<template class="riff-bar-own">.*data-riff-own="badges".*data-riff-own="like".*data-riff-own="cast".*data-riff-own="volume".*data-riff-own="queue-icon".*data-riff-own="open".*</template>#s', $html );
 	}
 
 	public function test_the_accent_comes_from_the_theme(): void {

@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: Riff Lyrics
- * Description: A Lyrics tab beside Up next in Riff's Now Playing, from the lyrics in your audio files or typed into the Media Library.
+ * Description: A Lyrics panel beside Riff's player, from the lyrics in your audio files or typed into the Media Library.
  * Version: 1.4.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff
- * Requires Riff: 4.32
+ * Requires Riff: 5.8
  * Plugin URI: https://riffpress.com/
  * Author: RiffPress Core Team
  * Author URI: https://riffpress.com/

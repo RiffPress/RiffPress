@@ -27,7 +27,8 @@ export function keyboard( P ) {
 		if (
 			e.key === 'Tab' &&
 			! np.hidden &&
-			np.getAttribute( 'aria-modal' ) === 'true'
+			np.getAttribute( 'aria-modal' ) === 'true' &&
+			! P.side?.contains( document.activeElement )
 		) {
 			const inside = [
 				...np.querySelectorAll(

@@ -101,15 +101,38 @@ Returns `number`: Seconds from the start of the track, or 0 with nothing playing
 
 Since 4.32.0.
 
-### `window.riff.tab( id )`
+### `window.riff.panel( id, panel )`
 
-Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added through the `riff_now_playing_tabs` filter.
+Adds a panel, or replaces the one with the same id. A panel is its own thing: beside the page and Now Playing on a wide screen, opened from its button in the bar, and over everything on a phone, opened from its chip in Now Playing. One shows at a time. Riff adds Up next (`queue`, order 40) the same way, and Riff Lyrics adds Lyrics (`lyrics`, 30).
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `id` | `string` | The tab's slug. |
+| `id` | `string` | Lowercase letters, digits and dashes; the panel is `[data-riff-panel="<id>"]`. |
+| `panel` | `Object` | The panel. |
+| `panel.label` | `string` | Its name: its heading, and its button's. |
+| `panel.icon` | `string` | Its button's icon, SVG markup from your own code, never from content. |
+| `panel.order` | `number` | Where its button sits among the bar's controls, lowest first. Default 50. |
+| `panel.render` | `(panel: HTMLElement, track: Object\|null) => void` | Fills it as it opens and again as the track changes while it is open. The `riff.panel` action says the same. |
 
-Since 4.16.0.
+Returns `() => void`: Takes the panel away again.
+
+Since 5.8.0.
+
+### `window.riff.openPanel( id )`
+
+Opens a panel: `queue` for Up next, or one a plugin added.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | The panel's id. |
+
+Since 5.8.0.
+
+### `window.riff.closePanel()`
+
+Closes the panel that is open.
+
+Since 5.8.0.
 
 ### `window.riff.control( id, control )`
 
@@ -154,11 +177,11 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.shortcuts`](hooks.md#riffshortcuts), filter: Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
 - [`riff.track`](hooks.md#rifftrack), filter: Filters one track as a queue is set, after `riff.queue`.
 - [`riff.ended`](hooks.md#riffended), action: Fires when a track plays to its end, before the next one loads.
+- [`riff.panel`](hooks.md#riffpanel), action: Fires when a panel opens or closes, Up next included, and again for an open panel when the track changes. A panel's script fills it here, or in the `render` it was added with.
 - [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.
 - [`riff.play`](hooks.md#riffplay), action: Fires when the track starts or resumes playing.
 - [`riff.queue`](hooks.md#riffqueue), action: Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
 - [`riff.ready`](hooks.md#riffready), action: Fires once the player is set up, its state restored and `window.riff` available.
-- [`riff.tab`](hooks.md#rifftab), action: Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
 - [`riff.time`](hooks.md#rifftime), action: Fires as the track plays, a few times a second, and again after a seek.
 - [`riff.track`](hooks.md#rifftrack), action: Fires when a track is loaded, before it plays.
 
@@ -166,22 +189,24 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 
 Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP; the PHP reference lists every property. The REST API returns the same shape.
 
-## A tab in Now Playing
+## A panel, and a control in the bar
 
-Add a tab beside Up next from PHP with the `riff_now_playing_tabs` filter, then fill its panel when the `riff.tab` action says it is showing, and again on `riff.track` while it is. Riff Lyrics is built this way, on nothing but the public API.
-
-```php
-add_filter( 'riff_now_playing_tabs', function ( array $tabs ): array {
-	$tabs['lyrics'] = array( 'label' => __( 'Lyrics', 'my-plugin' ) );
-	return $tabs;
-} );
-```
+Add a panel with `window.riff.panel()` once the player is ready: it gets a button in the bar on a wide screen and a chip in Now Playing on a phone, and is filled as it opens and again as the track changes. Add a control to the bar with `window.riff.control()`. Riff adds Up next and its own controls the same way, and Riff Lyrics its Lyrics panel, on nothing but the public API.
 
 ```js
-document.addEventListener( 'riff:tab', ( { detail } ) => {
-	if ( detail.id === 'lyrics' ) {
-		showLyrics( detail.panel, detail.track );
-	}
+document.addEventListener( 'riff:ready', () => {
+	window.riff.panel( 'credits', {
+		label: 'Credits',
+		icon: CREDITS_ICON,
+		render: ( panel, track ) => showCredits( panel, track ),
+	} );
+	window.riff.control( 'bookmark', {
+		label: 'Bookmark',
+		icon: BOOKMARK_ICON,
+		order: 65,
+		pressed: ( track ) => isBookmarked( track ),
+		run: ( track ) => toggleBookmark( track ),
+	} );
 } );
 ```
 

@@ -123,18 +123,23 @@ const GUIDE = [
 		text: [ 'Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP; the PHP reference lists every property. The REST API returns the same shape.' ],
 	},
 	{
-		id: 'a-tab',
-		title: 'A tab in Now Playing',
-		text: [ 'Add a tab beside Up next from PHP with the `riff_now_playing_tabs` filter, then fill its panel when the `riff.tab` action says it is showing, and again on `riff.track` while it is. Riff Lyrics is built this way, on nothing but the public API.' ],
+		id: 'a-panel-and-a-control',
+		title: 'A panel, and a control in the bar',
+		text: [ 'Add a panel with `window.riff.panel()` once the player is ready: it gets a button in the bar on a wide screen and a chip in Now Playing on a phone, and is filled as it opens and again as the track changes. Add a control to the bar with `window.riff.control()`. Riff adds Up next and its own controls the same way, and Riff Lyrics its Lyrics panel, on nothing but the public API.' ],
 		code: [
-			[ 'php', `add_filter( 'riff_now_playing_tabs', function ( array $tabs ): array {
-	$tabs['lyrics'] = array( 'label' => __( 'Lyrics', 'my-plugin' ) );
-	return $tabs;
-} );` ],
-			[ 'js', `document.addEventListener( 'riff:tab', ( { detail } ) => {
-	if ( detail.id === 'lyrics' ) {
-		showLyrics( detail.panel, detail.track );
-	}
+			[ 'js', `document.addEventListener( 'riff:ready', () => {
+	window.riff.panel( 'credits', {
+		label: 'Credits',
+		icon: CREDITS_ICON,
+		render: ( panel, track ) => showCredits( panel, track ),
+	} );
+	window.riff.control( 'bookmark', {
+		label: 'Bookmark',
+		icon: BOOKMARK_ICON,
+		order: 65,
+		pressed: ( track ) => isBookmarked( track ),
+		run: ( track ) => toggleBookmark( track ),
+	} );
 } );` ],
 		],
 	},

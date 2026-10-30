@@ -19,10 +19,10 @@ defined( 'ABSPATH' ) || exit;
  *
  * WordPress already reads the lyrics in an audio file's tags (ID3 USLT) on upload and keeps them in
  * the attachment's own metadata as `unsynchronised_lyric`, which the media REST route returns in
- * `media_details`. This shows that field in a Lyrics tab and lets the Media Library edit it, so the
- * plugin stores nothing of its own. Everything it does goes through Riff's documented surface:
- * the `riff_now_playing_tabs` filter, the `riff_before_player` action, and the `riff.tab`,
- * `riff.track` and `riff.time` actions in the player. Timed lyrics follow the music and seek on a
+ * `media_details`. This shows that field in a Lyrics panel and lets the Media Library edit it, so
+ * the plugin stores nothing of its own. Everything it does goes through Riff's documented surface:
+ * the `riff_before_player` action, and in the player `window.riff.panel()` and the `riff.panel`
+ * and `riff.time` actions. Timed lyrics follow the music and seek on a
  * tap, through `window.riff`, in the formats taggers and players already write: LRC (with its
  * `[offset:]` tag and Enhanced LRC's word times) and WebVTT, typed into the field or read from the
  * file's tags, and ID3's own SYLT frame, which getID3 reads on upload but WordPress then drops:
@@ -37,15 +37,9 @@ final class Lyrics {
 	public const KEY = 'unsynchronised_lyric';
 
 	/**
-	 * The tab's slug.
-	 */
-	public const TAB = 'lyrics';
-
-	/**
-	 * Hooks the tab, the field and the script.
+	 * Hooks the field and the script, which adds the panel.
 	 */
 	public static function register(): void {
-		add_filter( 'riff_now_playing_tabs', array( self::class, 'tab' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
@@ -210,18 +204,6 @@ final class Lyrics {
 	}
 
 	/**
-	 * Adds the Lyrics tab after Up next.
-	 *
-	 * @param array $tabs Tabs keyed by slug.
-	 * @return array
-	 */
-	public static function tab( $tabs ) {
-		$tabs              = is_array( $tabs ) ? $tabs : array();
-		$tabs[ self::TAB ] = array( 'label' => __( 'Lyrics', 'riff-lyrics' ) );
-		return $tabs;
-	}
-
-	/**
 	 * Loads the script on pages where Riff's player renders, and nowhere else.
 	 */
 	public static function enqueue(): void {
@@ -231,6 +213,7 @@ final class Lyrics {
 			'window.riffLyrics = ' . wp_json_encode(
 				array(
 					'media' => esc_url_raw( rest_url( 'wp/v2/media/' ) ),
+					'label' => __( 'Lyrics', 'riff-lyrics' ),
 					'none'  => __( 'No lyrics for this track.', 'riff-lyrics' ),
 					'idle'  => __( 'Play something to see its lyrics.', 'riff-lyrics' ),
 					'error' => __( 'The lyrics could not load.', 'riff-lyrics' ),
@@ -296,7 +279,7 @@ final class Lyrics {
 				(int) $post->ID,
 				esc_textarea( $value )
 			),
-			'helps' => __( 'Read from the file when it has lyrics; edit them here. Shown in the Lyrics tab beside Up next.', 'riff-lyrics' ),
+			'helps' => __( 'Read from the file when it has lyrics; edit them here. Shown in the player’s Lyrics panel.', 'riff-lyrics' ),
 		);
 		return $fields;
 	}

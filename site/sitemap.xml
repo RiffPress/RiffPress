@@ -58,7 +58,6 @@
   <url><loc>{{pages_url}}developers/hooks/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_can_play/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_enabled/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}developers/hooks/riff_now_playing_tabs/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_protect_storage/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_protected_send/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_protected_url/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
@@ -70,11 +69,11 @@
   <url><loc>{{pages_url}}developers/hooks/riff.shortcuts/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.track-filter/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.ended/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/riff.panel/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.pause/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.play/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.queue-action/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.ready/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}developers/hooks/riff.tab/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.time/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff.track-action/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>

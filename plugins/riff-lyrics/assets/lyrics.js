@@ -1,7 +1,7 @@
-/* Riff Lyrics: fills the Lyrics tab beside Up next with the lyrics WordPress keeps on the track's
- * file, from the media REST route. It listens to the player's riff:tab, riff:track and riff:time
- * events, which Riff dispatches on its own element for any script, so it needs nothing loaded
- * before it. Timed lyrics follow the music: the line being sung is marked and kept in view, and a
+/* Riff Lyrics: a Lyrics panel, added through window.riff.panel() as Riff adds Up next, filled with
+ * the lyrics WordPress keeps on the track's file, from the media REST route. It adds the panel once
+ * the player is ready, and follows the player's riff:panel and riff:time events, which Riff
+ * dispatches on its own element for any script. Timed lyrics follow the music: the line being sung is marked and kept in view, and a
  * tap on a line seeks to it through window.riff.seek(). They are read in the formats players and
  * taggers already write: LRC, with its [offset:] tag and Enhanced LRC's <mm:ss.xx> word times, whose
  * words light up as they are sung; WebVTT, the web's own timed text; and an ID3 SYLT frame, which
@@ -16,9 +16,11 @@
 	let current = -1;
 	let scrolledAt = 0; // When the listener last scrolled the lyrics by hand.
 
-	const panel = () => document.querySelector( '[data-riff-panel="lyrics"]' );
 	// Until the player starts, window.riff is the #riff element, by its id.
-	const player = () => ( typeof window.riff?.seek === 'function' ? window.riff : null );
+	const player = () => ( typeof window.riff?.panel === 'function' ? window.riff : null );
+	// A page of words, for the panel's button.
+	const BUTTON =
+		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>';
 
 	// The lyrics for a track that is a Media Library file; an empty string for none.
 	function lyricsFor( track ) {
@@ -299,15 +301,27 @@
 		}
 	}
 
-	document.addEventListener( 'riff:tab', ( e ) => {
-		showing = e.detail?.id === 'lyrics';
+	// The panel, with its button in the bar just before Up next, as the words go with the song.
+	function addPanel() {
+		player()?.panel( 'lyrics', {
+			label: config.label || 'Lyrics',
+			icon: BUTTON,
+			order: 30,
+		} );
+	}
+	if ( player() ) {
+		addPanel();
+	} else {
+		document.addEventListener( 'riff:ready', addPanel, { once: true } );
+	}
+	// Filled as it opens and again as the track changes while it is open.
+	document.addEventListener( 'riff:panel', ( e ) => {
+		if ( e.detail?.id !== 'lyrics' ) {
+			return;
+		}
+		showing = !! e.detail.open;
 		if ( showing ) {
 			fill( e.detail.panel, e.detail.track );
-		}
-	} );
-	document.addEventListener( 'riff:track', ( e ) => {
-		if ( showing ) {
-			fill( panel(), e.detail?.track );
 		}
 	} );
 	document.addEventListener( 'riff:time', ( e ) => follow( Number( e.detail?.time ) || 0 ) );

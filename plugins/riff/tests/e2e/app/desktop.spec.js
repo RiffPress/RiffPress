@@ -1,5 +1,5 @@
 /**
- * The desktop app's layout, marked on the document with ?riff_desktop=1: the window does not stretch past its ends, and Now Playing is the art alone with Up next beside it.
+ * The desktop app's layout, marked on the document with ?riff_desktop=1: the window does not stretch past its ends, and Now Playing is the art alone with Up next a panel beside it.
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -100,7 +100,7 @@ test.describe( 'Standalone', () => {
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
 
-		// The art on its own, square and in the middle, and no panel until a tab is pressed: its own
+		// The art on its own, square and in the middle, and no panel until one is opened: its own
 		// box, before the record moves it aside while the track plays.
 		const cover = await page.locator( '.riff-cover' ).evaluate( ( el ) => {
 			const at = el.offsetParent.getBoundingClientRect();
@@ -110,24 +110,28 @@ test.describe( 'Standalone', () => {
 		expect( Math.abs( cover.x + ( cover.width / 2 ) - 720 ) ).toBeLessThanOrEqual( 2 );
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeHidden();
 
-		const upNext = page.locator( '.riff-tab[data-riff-tab="queue"]' );
-		const tab = await upNext.boundingBox();
-		expect( tab.y ).toBeLessThan( 64 );
-		// In the head, the tabs stop short of its own buttons, however many show.
-		const tabs = await page.locator( '.riff-np .riff-tabs' ).boundingBox();
-		for ( const button of await page.locator( '.riff-np-end > .riff-btn:visible' ).all() ) {
-			expect( tabs.x + tabs.width ).toBeLessThanOrEqual( ( await button.boundingBox() ).x - 8 );
-		}
+		// Up next is a panel of its own, from its button in the bar: beside Now Playing, under the
+		// strip that drags the window, and the art stays in the middle of what is left.
+		const upNext = page.locator( '[data-riff-control="queue"]' );
 		await upNext.click();
-		await expect( np ).toHaveAttribute( 'data-riff-drawer', 'open' );
-		await expect( upNext ).toHaveAttribute( 'aria-expanded', 'true' );
+		await expect( upNext ).toHaveAttribute( 'aria-pressed', 'true' );
+		const side = page.locator( '.riff-side' );
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeVisible();
-		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-np' ).analyze() ).violations ).toEqual( [] );
+		const panel = await side.boundingBox();
+		expect( panel.y ).toBeGreaterThanOrEqual( 64 );
+		expect( panel.x + panel.width ).toBeGreaterThan( 1400 );
+		const room = await np.boundingBox();
+		expect( room.x + room.width ).toBeLessThanOrEqual( panel.x + 1 );
+		const middle = await page.locator( '.riff-cover' ).evaluate( ( el ) => {
+			const at = el.offsetParent.getBoundingClientRect();
+			return at.left + el.offsetLeft + ( el.offsetWidth / 2 );
+		} );
+		expect( Math.abs( middle - ( room.x + ( room.width / 2 ) ) ) ).toBeLessThanOrEqual( 2 );
+		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-side' ).analyze() ).violations ).toEqual( [] );
 
 		// Pressed again, it closes; Escape still closes Now Playing.
 		await upNext.click();
-		await expect( np ).not.toHaveAttribute( 'data-riff-drawer', 'open' );
-		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeHidden();
+		await expect( side ).toBeHidden();
 		await page.keyboard.press( 'Escape' );
 		await expect( np ).toBeHidden();
 	} );
