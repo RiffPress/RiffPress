@@ -3,8 +3,9 @@
  * again on each play, pause, track, queue change and seek, and once a minute while it plays to stay
  * in the room. A pause is shared once and then left: the room lets a row go after a few minutes
  * without word, so whoever stops listening drops out without a request on the way out, and a
- * full-page navigation, which resumes on the next page, doesn't flicker out and back. Loaded on
- * demand, when the first track does, and only where the room is. */
+ * full-page navigation, which resumes on the next page, doesn't flicker out and back. Nothing is
+ * shared by a listener who turned sharing off on their profile. Loaded on demand, when the first
+ * track does, and only where the room is. */
 
 export default function together( P ) {
 	const url = P.me?.rest?.together;
@@ -24,6 +25,10 @@ export default function together( P ) {
 	}
 	function send() {
 		clearInterval( stay );
+		// The listener's choice, on their profile.
+		if ( ! P.me.sharing ) {
+			return;
+		}
 		const t = P.track();
 		const id = Number( t?.id );
 		if ( ! Number.isInteger( id ) || id <= 0 ) {

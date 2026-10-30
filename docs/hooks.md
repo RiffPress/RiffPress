@@ -87,6 +87,17 @@ Since 4.0.0. Fires in `plugins/riff/src/class-sources.php`.
 | --- | --- | --- |
 | `$sources` | `Source[]` | Sources. |
 
+### `riff_together_share`
+
+Filters whether a listener who hasn't chosen shares what they play with the site's other listeners. A site where listeners shouldn't see each other unless they ask, a class of children say, returns false.
+
+Since 5.8.0. Fires in `plugins/riff/features/listen/class-together.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$share` | `bool` | Whether they share. Default true. |
+| `$user_id` | `int` | The listener. |
+
 ### `riff_track`
 
 Filters a track before the player reads it.

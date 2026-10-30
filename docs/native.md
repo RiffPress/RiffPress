@@ -24,6 +24,7 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | AI tools and other plugins reading the library or keeping likes and playlists | The Abilities API: Riff registers one ability per `riff/v1` route it answers for, each run as that route's REST request, except the player's own `riff/v1/together`. |
 | A track's artist, album, video version, captions and protection in the Media Library's views and forms | The Entity Fields API (WordPress 7.2; on 7.1 the same fields are on the attachment's edit screen): Riff registers each as a field of the attachment entity, reading and writing a REST field of the same name on `wp/v2/media`, so DataViews shows and edits them beside core's own without a screen of Riff's. |
 | Per-site upload limits on a network | Multisite's `blog_upload_space`. |
+| A listener's choices about how the site behaves for them: the player's single-key shortcuts, and whether they share what they listen to | User options under Personal Options on their profile (`riff_shortcuts`, `riff_together_share`), so on a network each site keeps its own. |
 
 ## Added by Riff, and why
 

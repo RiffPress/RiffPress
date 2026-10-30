@@ -25,6 +25,11 @@ defined( 'ABSPATH' ) || exit;
  * music is now from that and the clock. Tracks are turned back into tracks for each reader, so a
  * listener's track from a post the reader can't read is never shown to them.
  *
+ * Sharing is each listener's choice, under Personal Options on their profile, where WordPress keeps
+ * their other choices about how the site behaves for them. It is on unless they turn it off, or a
+ * site says otherwise through the `riff_together_share` filter; turned off, nothing is sent, and they
+ * leave the room at once.
+ *
  * Only when the Presence API is active and recording. The route is Riff's own, for its player, and
  * not public: it may change with the player.
  */
@@ -52,12 +57,103 @@ final class Together {
 	public const DRIFT = 1.0;
 
 	/**
-	 * Hooks the routes.
+	 * The user option holding a listener's choice: `on` or `off`; absent for the site's default. A
+	 * user option, so on a network each site keeps its own, as likes are kept.
+	 *
+	 * @since 5.8.0
+	 */
+	public const SHARE = 'riff_together_share';
+
+	/**
+	 * Hooks the routes and the profile field.
 	 *
 	 * @since 5.6.0
+	 * @since 5.8.0 And the profile field.
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
+		add_action( 'personal_options', array( self::class, 'field' ) );
+		add_action( 'personal_options_update', array( self::class, 'save' ) );
+		add_action( 'edit_user_profile_update', array( self::class, 'save' ) );
+	}
+
+	/**
+	 * Whether a listener shares what they play: their choice, or the site's default for whoever
+	 * hasn't made one.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $user_id User ID; 0 for a visitor, who never shares.
+	 * @return bool
+	 */
+	public static function shares( int $user_id ): bool {
+		if ( $user_id <= 0 ) {
+			return false;
+		}
+		$choice = get_user_option( self::SHARE, $user_id );
+		if ( 'on' === $choice || 'off' === $choice ) {
+			return 'on' === $choice;
+		}
+		/**
+		 * Filters whether a listener who hasn't chosen shares what they play with the site's other
+		 * listeners. A site where listeners shouldn't see each other unless they ask, a class of
+		 * children say, returns false.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param bool $share   Whether they share. Default true.
+		 * @param int  $user_id The listener.
+		 */
+		return (bool) apply_filters( 'riff_together_share', true, $user_id );
+	}
+
+	/**
+	 * The checkbox under Personal Options, where listening together is available.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param WP_User $user The user being edited.
+	 */
+	public static function field( $user ): void {
+		if ( ! $user instanceof WP_User || ! self::available() ) {
+			return;
+		}
+		?>
+		<tr class="riff-together-share-wrap">
+			<th scope="row"><?php esc_html_e( 'Listening together', 'riff' ); ?></th>
+			<td>
+				<label for="riff_together_share">
+					<input name="riff_together_share" type="checkbox" id="riff_together_share" value="on" <?php checked( self::shares( $user->ID ) ); ?>>
+					<?php esc_html_e( 'Share what I’m listening to with the site’s other listeners', 'riff' ); ?>
+				</label>
+				<?php wp_nonce_field( 'riff_together_share_' . $user->ID, 'riff_together_share_nonce' ); ?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Saves the checkbox when the profile is saved. Turned off, the listener leaves the room at
+	 * once, rather than when their row would have run out.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $user_id The user being saved.
+	 */
+	public static function save( $user_id ): void {
+		$user_id = (int) $user_id;
+		if (
+			! current_user_can( 'edit_user', $user_id ) ||
+			! isset( $_POST['riff_together_share_nonce'] ) ||
+			! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['riff_together_share_nonce'] ) ), 'riff_together_share_' . $user_id )
+		) {
+			return;
+		}
+		$on = isset( $_POST['riff_together_share'] );
+		update_user_option( $user_id, self::SHARE, $on ? 'on' : 'off' );
+		if ( ! $on && self::available() ) {
+			wp_presence_leave( self::ROOM, self::PREFIX . $user_id, array( 'client_prefix' => self::PREFIX ) );
+		}
 	}
 
 	/**
@@ -179,9 +275,11 @@ final class Together {
 	}
 
 	/**
-	 * Where the player shares what it plays, for a listener who may join the room.
+	 * Where the player shares what it plays, for a listener who may join the room, and whether they
+	 * share.
 	 *
 	 * @since 5.7.0
+	 * @since 5.8.0 And whether they share.
 	 *
 	 * @param array $data The player's data.
 	 * @return array
@@ -189,6 +287,7 @@ final class Together {
 	public static function player_data( $data ) {
 		if ( is_array( $data ) && isset( $data['me'] ) && self::available() ) {
 			$data['me']['rest']['together'] = rest_url( Library::REST . '/together' );
+			$data['me']['sharing']          = self::shares( get_current_user_id() );
 		}
 		return $data;
 	}
@@ -247,7 +346,12 @@ final class Together {
 		if ( $index >= count( $queue ) ) {
 			return new WP_Error( 'rest_invalid_param', __( 'The index is past the end of the queue.', 'riff' ), array( 'status' => 400 ) );
 		}
-		$user  = get_current_user_id();
+		$user = get_current_user_id();
+		// A listener who turned sharing off in another tab is taken out, not shared.
+		if ( ! self::shares( $user ) ) {
+			wp_presence_leave( self::ROOM, self::PREFIX . $user, array( 'client_prefix' => self::PREFIX ) );
+			return new WP_Error( 'riff_together_not_sharing', __( 'You aren’t sharing what you listen to.', 'riff' ), array( 'status' => 403 ) );
+		}
 		$state = array(
 			'queue'   => $queue,
 			'index'   => $index,
@@ -386,7 +490,8 @@ final class Together {
 
 	/**
 	 * A row of the room as a listener and what they shared, or null for a row this class didn't
-	 * write: one for each listener, `riff-{user ID}`, naming a track in their queue.
+	 * write: one for each listener, `riff-{user ID}`, naming a track in their queue. A listener
+	 * who no longer shares is not one, whatever their row still says.
 	 *
 	 * @param object $entry A row of the room.
 	 * @return array|null `{ user, state, queue, index }`.
@@ -396,7 +501,7 @@ final class Together {
 		$state = (array) $entry->data;
 		$queue = array_values( array_filter( (array) ( $state['queue'] ?? array() ), 'is_array' ) );
 		$index = (int) ( $state['index'] ?? 0 );
-		if ( ! $user instanceof WP_User || self::PREFIX . $user->ID !== $entry->client_id || ! isset( $queue[ $index ] ) ) {
+		if ( ! $user instanceof WP_User || self::PREFIX . $user->ID !== $entry->client_id || ! isset( $queue[ $index ] ) || ! self::shares( $user->ID ) ) {
 			return null;
 		}
 		return compact( 'user', 'state', 'queue', 'index' );

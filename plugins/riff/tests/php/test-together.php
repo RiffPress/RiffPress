@@ -226,6 +226,38 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertSame( array(), Together::player_data( array() ), 'a visitor\'s player has no account to share from' );
 	}
 
+	public function test_a_listener_who_turns_sharing_off_leaves_the_room_and_sends_nothing(): void {
+		$this->share( $this->host, $this->queue() );
+		$this->assertTrue( Together::shares( $this->host ), 'on until they choose' );
+
+		wp_set_current_user( $this->host );
+		$_POST['riff_together_share_nonce'] = wp_create_nonce( 'riff_together_share_' . $this->host );
+		Together::save( $this->host );
+		unset( $_POST['riff_together_share_nonce'] );
+		$this->assertFalse( Together::shares( $this->host ) );
+		$this->assertSame( array(), wp_get_presence( Together::ROOM, array( 'client_prefix' => 'riff-' . $this->host ) ), 'out of the room at once' );
+
+		$this->assertSame( 403, $this->share( $this->host, $this->queue() )->get_status(), 'a share from a tab opened before is refused' );
+		$this->assertFalse( Together::player_data( array( 'me' => array( 'rest' => array() ) ) )['me']['sharing'], 'and the player is told' );
+	}
+
+	public function test_a_row_left_by_someone_who_no_longer_shares_is_not_shown(): void {
+		$this->share( $this->host, $this->queue() );
+		update_user_option( $this->host, Together::SHARE, 'off' );
+		wp_set_current_user( $this->guest );
+		$this->assertSame( array(), $this->call( 'GET', '/together' )->get_data()['listeners'] );
+		$this->assertSame( 404, $this->call( 'GET', '/together/' . $this->host )->get_status() );
+	}
+
+	public function test_a_site_can_make_sharing_something_a_listener_turns_on(): void {
+		add_filter( 'riff_together_share', '__return_false' );
+		$this->assertFalse( Together::shares( $this->host ), 'off by the site\'s default' );
+		update_user_option( $this->host, Together::SHARE, 'on' );
+		$this->assertTrue( Together::shares( $this->host ), 'on by their own choice' );
+		remove_filter( 'riff_together_share', '__return_false' );
+		$this->assertFalse( Together::shares( 0 ), 'a visitor never shares' );
+	}
+
 	public function test_the_version_says_when_nothing_has_changed(): void {
 		$this->share( $this->host, $this->queue() );
 		wp_set_current_user( $this->guest );

@@ -26,7 +26,9 @@ The rest is what a player should do:
 - On the turntable, tapping the sleeve puts the record away and tapping it again plays it. The arm can be dragged, or clicked and then put down with a second click, onto any point of the side; from the keyboard it is a slider over the side's tracks.
 - With the [Presence API](https://github.com/WordPress/presence-api) active, what a signed-in
   listener plays is shared with the site's other listeners, who see it under Listening now on a
-  Listen page's Home and can press it to play the same queue from the same point.
+  Listen page's Home and can press it to play the same queue from the same point. Each listener
+  turns sharing off under Personal Options on their profile; a site makes it off until turned on
+  with the `riff_together_share` filter.
 - The queue and position are kept for the tab's session. A full-page navigation saves them and
   attempts to resume on the next page; a reload restores the same track paused. A queue of more
   than 500 tracks keeps the 500 around the one playing, in the order they play.
