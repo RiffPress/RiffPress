@@ -114,10 +114,16 @@ final class Catalog_Rest {
 						),
 						'include'  => $include,
 						'orderby'  => array(
-							'description' => __( 'By title, the most recently added first, or in the order include names them. An album is always in album order.', 'riff' ),
+							'description' => __( 'By title, the most recently added first, in the order include names them, or shuffled by seed. An album is in album order unless shuffled.', 'riff' ),
 							'type'        => 'string',
-							'enum'        => array( 'title', 'added', 'include' ),
+							'enum'        => array( 'title', 'added', 'include', 'random' ),
 							'default'     => 'title',
+						),
+						'seed'     => array(
+							'description' => __( 'With orderby random, the shuffle: the same seed deals the same order, so its pages follow on without a track twice.', 'riff' ),
+							'type'        => 'integer',
+							'default'     => 0,
+							'minimum'     => 0,
 						),
 						'page'     => $page,
 						'after'    => array(
@@ -238,6 +244,12 @@ final class Catalog_Rest {
 				'ID'   => 'DESC',
 			);
 		}
+		$seed = 'random' === $request['orderby'] ? absint( $request['seed'] ) : null;
+		if ( null !== $seed ) {
+			// MySQL's RAND() with a seed deals the same order each time it is asked, so page two of
+			// a shuffle is the rest of page one's deal.
+			$args['orderby'] = 'RAND(' . $seed . ')';
+		}
 		$include = array_values( array_filter( array_map( 'intval', (array) $request['include'] ) ) );
 		if ( $include ) {
 			$args['post__in'] = $include;
@@ -279,8 +291,8 @@ final class Catalog_Rest {
 		// By title or newest first, a page goes on from the last one's final track, by title or date
 		// and then ID, rather than counting its way past every track before it; and one more than
 		// the page is read, to know whether another follows. The total is counted on its own, and
-		// kept.
-		$keyset = ! $album && ! $include;
+		// kept. A shuffle has no title or date to go on from, so its pages are counted.
+		$keyset = ! $album && ! $include && null === $seed;
 		$after  = $keyset ? self::cursor( (string) $request['after'] ) : null;
 		if ( $keyset ) {
 			$args['posts_per_page'] = $per_page + 1;
@@ -333,7 +345,8 @@ final class Catalog_Rest {
 			$total = count( $ids );
 			$pages = (int) ceil( $total / $per_page );
 			update_meta_cache( 'post', $ids );
-			$ids = array_slice( self::in_album_order( $ids ), ( $page - 1 ) * $per_page, $per_page );
+			$ids = null === $seed ? self::in_album_order( $ids ) : self::dealt( $ids, $seed );
+			$ids = array_slice( $ids, ( $page - 1 ) * $per_page, $per_page );
 		} else {
 			$posts = array_slice( $query->posts, 0, $per_page );
 			$ids   = wp_list_pluck( $posts, 'ID' );
@@ -741,6 +754,22 @@ final class Catalog_Rest {
 				'total' => 0,
 			)
 		);
+	}
+
+	/**
+	 * An album's tracks shuffled by a seed, the same order for the same seed.
+	 *
+	 * @param int[] $ids  Attachment IDs.
+	 * @param int   $seed The shuffle.
+	 * @return int[]
+	 */
+	private static function dealt( array $ids, int $seed ): array {
+		// Seeded, so each page of the shuffle is cut from the same deal; then seeded afresh, so
+		// nothing after it draws from this sequence.
+		mt_srand( $seed ); // phpcs:ignore WordPress.WP.AlternativeFunctions.rand_seeding_mt_srand -- a repeatable deal is the point.
+		shuffle( $ids );
+		mt_srand(); // phpcs:ignore WordPress.WP.AlternativeFunctions.rand_seeding_mt_srand -- and unseeded again after it.
+		return $ids;
 	}
 
 	/**

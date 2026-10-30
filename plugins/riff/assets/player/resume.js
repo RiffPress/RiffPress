@@ -18,8 +18,7 @@ export function resume( P ) {
 
 	function saveQueue() {
 		const order = P.order.join( ',' );
-		const inside =
-			P.pos >= kept.from && P.pos < kept.from + kept.length;
+		const inside = P.pos >= kept.from && P.pos < kept.from + kept.length;
 		if ( P.queue === kept.queue && order === kept.order && inside ) {
 			return;
 		}
@@ -36,7 +35,13 @@ export function resume( P ) {
 				.map( ( i ) => P.queue[ i ] );
 			saved = { queue: tracks, order: tracks.map( ( _, i ) => i ) };
 		}
-		write( sessionStorage, P.QUEUE, JSON.stringify( { ...saved, from } ) );
+		// Whether what is kept runs to the queue's end, where the rest of a long list follows on.
+		const end = from + saved.order.length >= P.order.length;
+		write(
+			sessionStorage,
+			P.QUEUE,
+			JSON.stringify( { ...saved, from, end } )
+		);
 		kept = {
 			queue: P.queue,
 			order,
@@ -56,6 +61,7 @@ export function resume( P ) {
 			P.STATE,
 			JSON.stringify( {
 				pos: P.pos,
+				more: P.more,
 				mode: P.mode,
 				repeat: P.repeat,
 				shuffle: P.shuffle,
@@ -89,6 +95,13 @@ export function resume( P ) {
 		P.queue = queue.queue;
 		P.order = queue.order;
 		P.pos = pos;
+		// The rest of a long list follows on only from a queue kept to its end.
+		P.more =
+			queue.end !== false &&
+			saved.more?.url &&
+			saved.more.page < saved.more.pages
+				? saved.more
+				: null;
 		P.repeat = [ 'off', 'all', 'one' ].includes( saved.repeat )
 			? saved.repeat
 			: 'off';

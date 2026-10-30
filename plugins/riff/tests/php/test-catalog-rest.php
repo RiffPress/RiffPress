@@ -280,6 +280,49 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertNotSame( $last['id'], $this->get( '/tracks' )['items'][0]['id'], 'by title otherwise' );
 	}
 
+	public function test_a_shuffle_is_dealt_by_its_seed_and_its_pages_follow_on(): void {
+		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		foreach ( range( 1, 30 ) as $n ) {
+			$id = wp_insert_attachment(
+				array(
+					'post_title'     => "Shuffled $n",
+					'post_mime_type' => 'audio/mpeg',
+					'post_status'    => 'inherit',
+				),
+				sprintf( 'shuffled/%02d.mp3', $n ),
+				$post
+			);
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'title'        => "Shuffled $n",
+					'album'        => 'Deck',
+					'track_number' => (string) $n,
+				)
+			);
+		}
+		$album = (int) get_term_by( 'name', 'Deck', Catalog::ALBUM )->term_id;
+		foreach ( array( array(), array( 'album' => $album ) ) as $scope ) {
+			$dealt  = function ( int $seed, int $page ) use ( $scope ): array {
+				$args = $scope + array(
+					'orderby'  => 'random',
+					'seed'     => $seed,
+					'per_page' => 10,
+					'page'     => $page,
+				);
+				return wp_list_pluck( $this->get( '/tracks', $args )['items'], 'id' );
+			};
+			$all    = array_merge( ...array_map( static fn( $n ) => $dealt( 7, $n ), range( 1, $scope ? 3 : 4 ) ) );
+			$listed = wp_list_pluck( $this->get( '/tracks', $scope + array( 'per_page' => 100 ) )['items'], 'id' );
+			$what   = $scope ? 'an album' : 'the library';
+
+			$this->assertCount( count( $listed ), $all, "every track of $what once, across the pages" );
+			$this->assertEqualsCanonicalizing( $listed, $all, "and no other, in $what" );
+			$this->assertSame( $dealt( 7, 2 ), $dealt( 7, 2 ), "the same seed deals $what the same" );
+			$this->assertNotSame( $listed, $all, "in an order of its own, not $what's" );
+		}
+	}
+
 	public function test_paging_and_its_limits(): void {
 		$first = $this->get( '/tracks', array( 'per_page' => 1 ) );
 		$this->assertSame( 3, $first['pages'] );

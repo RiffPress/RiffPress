@@ -68,9 +68,13 @@ export function rows( P ) {
 				P.toggle();
 				return;
 			}
+			// Rows that are one page of a longer list name where the rest is, and the queue goes on
+			// into it.
+			const holder = fig.closest( '[data-riff-more]' );
 			P.setQueue(
 				list.map( ( r ) => r.t ),
-				list.findIndex( ( r ) => r.row === row )
+				list.findIndex( ( r ) => r.row === row ),
+				{ more: holder ? parse( holder.dataset.riffMore ) : null }
 			);
 			if ( t.type === 'video' ) {
 				P.open();

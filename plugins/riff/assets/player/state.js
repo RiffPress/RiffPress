@@ -54,6 +54,7 @@ export function createPlayer( root, data ) {
 		queue: [], // Tracks, in the order they were found.
 		order: [], // Indexes into queue, in the order they play.
 		pos: -1, // Position in order.
+		more: null, // Where the rest of a long list is: { url, page, pages }.
 		mode: 'song', // 'song' or 'video', for tracks that have both.
 		repeat: 'off', // 'off', 'all' or 'one'.
 		shuffle: false,

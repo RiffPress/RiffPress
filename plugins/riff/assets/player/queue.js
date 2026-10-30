@@ -11,7 +11,7 @@ const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 export function queue( P ) {
 	const { api, queueList, emit, filter } = P;
 
-	function setQueue( tracks, index, { play = true, at = 0 } = {} ) {
+	function setQueue( tracks, index, { play = true, at = 0, more = null } = {} ) {
 		stopAll();
 		/**
 		 * Filters the tracks about to become the queue.
@@ -46,6 +46,15 @@ export function queue( P ) {
 		P.queue = tracks;
 		P.order = tracks.map( ( _, i ) => i );
 		P.pos = index;
+		// Where the rest of a long list is, a page at a time, when these are only its first.
+		P.more =
+			more?.url && Number( more.page ) < Number( more.pages )
+				? {
+						url: String( more.url ),
+						page: Number( more.page ),
+						pages: Number( more.pages ),
+				  }
+				: null;
 		if ( P.shuffle ) {
 			reshuffle();
 		}
@@ -136,6 +145,7 @@ export function queue( P ) {
 		}
 		P.order = [ P.order[ P.pos ] ];
 		P.pos = 0;
+		P.more = null;
 		changed( 'clear' );
 		speak( __( 'Queue cleared', 'riff' ) );
 	}
@@ -168,6 +178,44 @@ export function queue( P ) {
 		}
 		P.order = [ current, ...rest ];
 		P.pos = 0;
+	}
+
+	// The next page of a long list, once the track playing is near the end of what the queue has,
+	// added to its end. The list's own route says how many pages it has; a page that does not come
+	// is asked for again with the next track.
+	const NEAR = 10;
+	let fetching = false;
+	async function further() {
+		const more = P.more;
+		if ( ! more || fetching || P.order.length - P.pos > NEAR ) {
+			return;
+		}
+		fetching = true;
+		const was = P.queue;
+		try {
+			const u = new URL( more.url, location.href );
+			u.searchParams.set( 'page', String( more.page + 1 ) );
+			const r = await P.internal.request( u );
+			const data = r.ok ? await r.json() : null;
+			// The queue may have been set anew while the page was on its way; then it is not this one's.
+			if ( ! data || P.queue !== was || P.more !== more ) {
+				return;
+			}
+			more.page++;
+			more.pages = Number( data.pages ) || more.page;
+			if ( more.page >= more.pages ) {
+				P.more = null;
+			}
+			insert(
+				Array.isArray( data.items ) ? data.items : [],
+				P.order.length,
+				'add'
+			);
+		} catch {
+			// Asked again as the next track loads.
+		} finally {
+			fetching = false;
+		}
 	}
 
 	function stopAll() {
@@ -286,7 +334,7 @@ export function queue( P ) {
 
 	// More of the queue, after what is drawn or before it. Past the most kept at once, as many go
 	// from the other end, never the one with the focus.
-	function more( after ) {
+	function drawMore( after ) {
 		const length = P.order.length;
 		if ( after ? drawn.to >= length : drawn.from <= 0 ) {
 			return;
@@ -333,7 +381,7 @@ export function queue( P ) {
 					( entries ) => {
 						for ( const e of entries ) {
 							if ( e.isIntersecting ) {
-								more( e.target === queueList.lastElementChild );
+								drawMore( e.target === queueList.lastElementChild );
 							}
 						}
 					},
@@ -355,9 +403,9 @@ export function queue( P ) {
 	queueList.addEventListener( 'focusin', ( e ) => {
 		const p = Number( e.target.closest( 'li' )?.dataset.pos );
 		if ( p >= drawn.to - 3 ) {
-			more( true );
+			drawMore( true );
 		} else if ( p <= drawn.from + 2 ) {
-			more( false );
+			drawMore( false );
 		}
 	} );
 
@@ -371,7 +419,7 @@ export function queue( P ) {
 				return;
 			}
 			if ( P.pos >= drawn.from && P.pos < drawn.to + STEP ) {
-				more( true );
+				drawMore( true );
 				return;
 			}
 		}
@@ -424,6 +472,7 @@ export function queue( P ) {
 		remove,
 		clear,
 		reshuffle,
+		further,
 		stopAll,
 		moveAndFocus,
 		renderQueue,
