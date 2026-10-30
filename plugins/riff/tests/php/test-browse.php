@@ -364,6 +364,27 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'riff-album-tinted', $html, 'its header is tinted from its cover' );
 	}
 
+	public function test_an_album_names_its_artist_as_a_link_to_their_page(): void {
+		$compositions = $this->album( 'Compositions' );
+		$artist       = (string) get_term_meta( $compositions, 'riff_album_artist', true );
+		$this->assertStringNotContainsString( '<p class="riff-album-meta"><a', $this->render_at( array( Browse::ALBUM => $compositions ) ), 'an artist with no page of their own is only named' );
+
+		// A track by them files them as an artist, with a page.
+		$post  = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$track = self::attach( '05 - Stole Back My Soul [stole-back].mp3', $post );
+		wp_update_attachment_metadata(
+			$track,
+			array(
+				'album'  => 'Encore',
+				'artist' => $artist,
+			)
+		);
+		$term = get_term_by( 'name', $artist, 'riff_artist' );
+		$html = $this->render_at( array( Browse::ALBUM => $compositions ) );
+
+		$this->assertMatchesRegularExpression( '#<p class="riff-album-meta"><a href="[^"]*riff_artist=' . $term->term_id . '">' . preg_quote( esc_html( $artist ), '#' ) . '</a> · #', $html );
+	}
+
 	public function test_an_album_leads_with_its_cover_and_numbers_its_tracks(): void {
 		$html = $this->render_at( array( Browse::ALBUM => $this->album( 'Compositions' ) ) );
 
