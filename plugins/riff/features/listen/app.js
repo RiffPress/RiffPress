@@ -28,6 +28,7 @@ import { installOffer } from 'riff-app/install';
 import { desktopFrame } from 'riff-app/desktop';
 import { search } from 'riff-app/search';
 import { rack } from 'riff-app/rack';
+import { togetherRow } from 'riff-app/together';
 
 export function start( api ) {
 	const app = document.querySelector( '[data-riff-app]' );
@@ -122,6 +123,7 @@ export function start( api ) {
 		installOffer,
 		search,
 		rack,
+		togetherRow,
 	] ) {
 		Object.assign( ctx, module( ctx ) );
 	}
@@ -156,6 +158,11 @@ export function start( api ) {
 			if ( Array.isArray( tracks ) && tracks.length ) {
 				api.play( tracks, 0 );
 			}
+			return;
+		}
+		if ( action?.dataset.riffAppAction === 'listen-along' ) {
+			e.preventDefault();
+			ctx.listenAlong( action );
 			return;
 		}
 		if ( action?.dataset.riffAppAction === 'play-history' ) {
@@ -235,6 +242,7 @@ export function start( api ) {
 	} );
 
 	ctx.home( true );
+	ctx.together();
 	ctx.rackUp();
 	ctx.fade( app );
 	if ( ctx.desktop ) {

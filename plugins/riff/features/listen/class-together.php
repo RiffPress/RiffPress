@@ -179,6 +179,21 @@ final class Together {
 	}
 
 	/**
+	 * Where the player shares what it plays, for a listener who may join the room.
+	 *
+	 * @since 5.6.0
+	 *
+	 * @param array $data The player's data.
+	 * @return array
+	 */
+	public static function player_data( $data ) {
+		if ( is_array( $data ) && isset( $data['me'] ) && self::available() ) {
+			$data['me']['rest']['together'] = rest_url( Library::REST . '/together' );
+		}
+		return $data;
+	}
+
+	/**
 	 * Whether the request may see and join the room: anyone signed in who can read this site, as
 	 * for likes.
 	 *
@@ -330,6 +345,8 @@ final class Together {
 			$listener          = self::listener( $row, $tracks[ $row['index'] ] );
 			$listener['index'] = count( array_filter( array_slice( $tracks, 0, $row['index'] ) ) );
 			$listener['queue'] = array_values( array_filter( $tracks ) );
+			// The server's clock, so the player works out where they are now without trusting its own.
+			$listener['now'] = self::now();
 			return new WP_REST_Response( $listener );
 		}
 		return new WP_Error( 'riff_together_not_listening', __( 'They aren\'t listening to anything you can hear.', 'riff' ), array( 'status' => 404 ) );

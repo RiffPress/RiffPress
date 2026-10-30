@@ -67,6 +67,7 @@ export function views( ctx ) {
 				document.title = title;
 			}
 			ctx.home();
+			ctx.together();
 			ctx.rackUp();
 			ctx.fade( view );
 			if ( bar !== undefined && nav ) {

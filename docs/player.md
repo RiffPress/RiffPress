@@ -24,6 +24,9 @@ The rest is what a player should do:
 - AirPlay and Cast appear when a device is in reach.
 - A swipe on the bar skips, and a drag on Now Playing closes it.
 - On the turntable, tapping the sleeve puts the record away and tapping it again plays it. The arm can be dragged, or clicked and then put down with a second click, onto any point of the side; from the keyboard it is a slider over the side's tracks.
+- With the [Presence API](https://github.com/WordPress/presence-api) active, what a signed-in
+  listener plays is shared with the site's other listeners, who see it under Listening now on a
+  Listen page's Home and can press it to play the same queue from the same point.
 - The queue and position are kept for the tab's session. A full-page navigation saves them and
   attempts to resume on the next page; a reload restores the same track paused.
 
