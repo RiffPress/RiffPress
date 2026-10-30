@@ -72,6 +72,65 @@ final class Tracks {
 	}
 
 	/**
+	 * Loads what building these tracks reads, in a few queries rather than a few for each track:
+	 * the files and the posts they play from, then the posts the files were uploaded to and every
+	 * file those name (artwork, a video version, captions), then what those name in turn, a video's
+	 * poster and its captions. Each with its meta.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int[] $attachments Audio or video attachment IDs.
+	 * @param int[] $posts       The posts they play from, if not the posts they were uploaded to.
+	 */
+	public static function prime( array $attachments, array $posts = array() ): void {
+		$seen = array();
+		$ids  = array_merge( $attachments, $posts );
+		for ( $depth = 0; $depth < 3; $depth++ ) {
+			$ids = array_diff( array_unique( array_filter( array_map( 'intval', $ids ) ) ), $seen );
+			if ( ! $ids ) {
+				return;
+			}
+			self::load( $ids );
+			$seen = array_merge( $seen, $ids );
+			$next = array();
+			foreach ( $ids as $id ) {
+				if ( 'attachment' === get_post_type( $id ) ) {
+					$next[] = get_post_field( 'post_parent', $id );
+				}
+				$next[] = get_post_meta( $id, '_thumbnail_id', true );
+				$next[] = get_post_meta( $id, Media::VIDEO_META, true );
+				$next[] = get_post_meta( $id, Media::CAPTIONS_META, true );
+			}
+			$ids = $next;
+		}
+	}
+
+	/**
+	 * Loads posts of any type or status, and their meta, into the cache: one query for the posts
+	 * not already there, and one for the meta not already there.
+	 *
+	 * @param int[] $ids Post IDs.
+	 */
+	private static function load( array $ids ): void {
+		$missing = array_values( array_filter( $ids, static fn( $id ) => false === wp_cache_get( $id, 'posts' ) ) );
+		if ( $missing ) {
+			get_posts(
+				array(
+					'post__in'               => $missing,
+					'post_type'              => get_post_types(),
+					'post_status'            => get_post_stati(),
+					'numberposts'            => count( $missing ),
+					'orderby'                => 'none',
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+				)
+			);
+		}
+		update_meta_cache( 'post', $ids );
+	}
+
+	/**
 	 * Builds a track from an audio or video attachment.
 	 *
 	 * @since 4.0.0
