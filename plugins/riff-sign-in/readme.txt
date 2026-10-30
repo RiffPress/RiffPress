@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.4.0 =
+* Listeners can stay in the player, with their profile but no dashboard, toolbar or wp-login.php registration form.
+
 = 0.3.0 =
 * Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
 
@@ -39,8 +42,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 = 0.1.0 =
 * Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player.
-
-= 0.1.0 =
-* Riff Sign In: passkeys and email codes for listeners, in a sheet inside the player.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
