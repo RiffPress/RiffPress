@@ -1,7 +1,8 @@
 <?php
 /**
- * Streaming versions made on the server: an MP3 of a song, where ffmpeg is installed, uploaded to
- * the Media Library beside it and set as the version the player streams.
+ * What ffmpeg makes of a song, where the server has it: a streaming version, an MP3 uploaded to
+ * the Media Library beside the song and set as the version the player streams; and its levels,
+ * the loudness over time that a drawn cover puts in its groove.
  *
  * @since 5.8.0
  * @package Riff
@@ -66,6 +67,74 @@ final class Transcode {
 		}
 		$rate = (float) ( $meta['bitrate'] ?? 0 ) / 1000;
 		return $rate <= 0 || $rate > $kbps * 1.25;
+	}
+
+	/**
+	 * The most level digits kept for a song: enough for a groove, small enough to send with every
+	 * track, as the demo albums' are.
+	 *
+	 * @since 5.8.0
+	 */
+	public const LEVELS = 240;
+
+	/**
+	 * Measures a song's levels and keeps them in its metadata as riff_levels, where Tracks reads
+	 * them and the demo albums keep theirs.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $id Audio attachment ID.
+	 * @return string|WP_Error The levels.
+	 */
+	public static function measure( int $id ) {
+		if ( '' === self::ffmpeg() ) {
+			return new WP_Error( 'riff_transcode_ffmpeg', __( 'ffmpeg is not installed on this server, so no levels can be measured here.', 'riff' ) );
+		}
+		$source = (string) get_attached_file( $id );
+		if ( ! str_starts_with( (string) get_post_mime_type( $id ), 'audio/' ) || ! is_file( $source ) ) {
+			return new WP_Error( 'riff_transcode_file', __( 'There is no audio file to measure.', 'riff' ) );
+		}
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_shell_exec -- WP-CLI only, every argument escaped; the samples come back on stdout.
+		$levels = self::envelope( (string) shell_exec( sprintf( '%s -nostdin -v error -i %s -ac 1 -ar 1000 -f u8 - 2>/dev/null', escapeshellarg( self::ffmpeg() ), escapeshellarg( $source ) ) ) );
+		if ( '' === $levels ) {
+			return new WP_Error( 'riff_transcode_ffmpeg', __( 'ffmpeg could not read the file.', 'riff' ) );
+		}
+		$meta                = wp_get_attachment_metadata( $id );
+		$meta                = is_array( $meta ) ? $meta : array();
+		$meta['riff_levels'] = $levels;
+		wp_update_attachment_metadata( $id, $meta );
+		return $levels;
+	}
+
+	/**
+	 * A song's levels from its samples, as the demo albums' are measured (packages/fixtures/
+	 * album.js): one value per hundred samples at 1 kHz, the mean distance from silence, kept at
+	 * most LEVELS of them evenly, and each a digit 0 to 9 by its square root against the loudest,
+	 * so a quiet passage still shows.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param string $pcm Unsigned 8-bit mono samples at 1 kHz.
+	 * @return string Digits, or empty for less than a tenth of a second.
+	 */
+	public static function envelope( string $pcm ): string {
+		$count  = intdiv( strlen( $pcm ), 100 );
+		$values = array();
+		$peak   = 1;
+		for ( $k = 0; $k < $count; $k++ ) {
+			$sum = 0;
+			foreach ( (array) unpack( 'C*', substr( $pcm, $k * 100, 100 ) ) as $byte ) {
+				$sum += abs( (int) $byte - 128 );
+			}
+			$values[ $k ] = $sum / 100;
+			$peak         = max( $peak, $values[ $k ] );
+		}
+		$step = max( 1, (int) ceil( $count / self::LEVELS ) );
+		$out  = '';
+		for ( $k = 0; $k < $count; $k += $step ) {
+			$out .= (string) min( 9, (int) round( 9 * sqrt( $values[ $k ] / $peak ) ) );
+		}
+		return $out;
 	}
 
 	/**

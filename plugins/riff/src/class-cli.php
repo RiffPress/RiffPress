@@ -128,6 +128,62 @@ final class Cli {
 	}
 
 	/**
+	 * Measures songs' levels with ffmpeg: their loudness over time, which a drawn cover puts in its
+	 * groove. Kept in each file's metadata, as the demo albums' are. Without IDs, every song not
+	 * measured yet. Needs ffmpeg on the server.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<id>...]
+	 * : Audio files to measure, by attachment ID, measured or not.
+	 *
+	 * [--force]
+	 * : Measure every song again, not only those without levels.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp riff levels
+	 *     wp riff levels 412 418
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param string[]             $args       Positional arguments.
+	 * @param array<string, mixed> $assoc_args Named arguments.
+	 */
+	public function levels( array $args, array $assoc_args ): void {
+		if ( '' === Transcode::ffmpeg() ) {
+			WP_CLI::error( 'ffmpeg is not installed on this server, so no levels can be measured here.' );
+		}
+		$force = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'force', false );
+		$ids   = array_map( 'intval', $args );
+		if ( ! $ids ) {
+			$ids = array_filter(
+				self::songs(),
+				static function ( int $id ) use ( $force ): bool {
+					$meta = wp_get_attachment_metadata( $id );
+					return ! Media::streamed( $id ) && ( $force || empty( $meta['riff_levels'] ) );
+				}
+			);
+		}
+		$done   = 0;
+		$failed = 0;
+		foreach ( $ids as $id ) {
+			$levels = Transcode::measure( $id );
+			if ( is_wp_error( $levels ) ) {
+				++$failed;
+				WP_CLI::warning( sprintf( '%d: %s: %s', $id, get_the_title( $id ), $levels->get_error_message() ) );
+				continue;
+			}
+			++$done;
+		}
+		if ( $failed ) {
+			WP_CLI::warning( sprintf( '%d songs measured, %d failed.', $done, $failed ) );
+		} else {
+			WP_CLI::success( sprintf( '%d songs measured.', $done ) );
+		}
+	}
+
+	/**
 	 * Every audio file in the Media Library, oldest first, by ID alone.
 	 *
 	 * @return int[]
