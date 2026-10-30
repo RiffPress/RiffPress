@@ -39,6 +39,28 @@ test.describe( 'Player', () => {
 		).toBeHidden();
 	} );
 
+	test( 'rows fetch no music until one is pressed', async ( { page } ) => {
+		const media = [];
+		page.on( 'request', ( r ) => {
+			if ( r.resourceType() === 'media' ) {
+				media.push( r.url() );
+			}
+		} );
+		await page.goto( postUrl, { waitUntil: 'load' } );
+		await expect( page.locator( '.riff-row' ) ).toHaveCount( 3 );
+		// A block's own player left to the browser would have asked for its file while the page
+		// was parsed, before it loaded.
+		expect( media ).toEqual( [] );
+		expect(
+			await page
+				.locator( '.riff-track audio, .riff-track video' )
+				.evaluateAll( ( els ) => els.map( ( m ) => m.readyState ) )
+		).toEqual( [ 0, 0, 0 ] );
+
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect.poll( () => media.length ).toBeGreaterThan( 0 );
+	} );
+
 	test( 'a locked track is listed with a lock that leads to unlocking it, and never queued or played', async ( {
 		page,
 	} ) => {

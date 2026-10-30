@@ -105,6 +105,11 @@ final class Blocks {
 		$tags->set_attribute( 'data-riff-track', wp_json_encode( $track ) );
 		if ( $track['locked'] ) {
 			self::unplayable( $tags );
+		} elseif ( $tags->next_tag( $type ) ) {
+			// The page's one player plays the track, so the block's own player fetches nothing
+			// until it is pressed: left to the browser, each fetches the start of its file, and a
+			// page of rows asks for fifty files before anything plays.
+			$tags->set_attribute( 'preload', 'none' );
 		}
 		return $tags->get_updated_html();
 	}
