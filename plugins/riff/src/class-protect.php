@@ -286,6 +286,55 @@ final class Protect {
 	}
 
 	/**
+	 * Whether the copy a request already has is the file as it is, so a 304 says so, as RFC 9110
+	 * has it: by If-None-Match when it is sent, and by If-Modified-Since only when it isn't.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $none_match If-None-Match header, or empty.
+	 * @param string $since      If-Modified-Since header, or empty.
+	 * @param string $etag       The file's entity tag, quoted.
+	 * @param int    $time       When the file last changed.
+	 * @return bool
+	 */
+	public static function current( string $none_match, string $since, string $etag, int $time ): bool {
+		if ( '' !== trim( $none_match ) ) {
+			if ( '*' === trim( $none_match ) ) {
+				return true;
+			}
+			// Compared weakly, as the RFC asks of If-None-Match.
+			$tags = array_map( static fn( $tag ) => preg_replace( '#^W/#', '', trim( $tag ) ), explode( ',', $none_match ) );
+			return in_array( preg_replace( '#^W/#', '', $etag ), $tags, true );
+		}
+		$when = '' !== trim( $since ) ? strtotime( $since ) : false;
+		return false !== $when && $time <= $when;
+	}
+
+	/**
+	 * Whether a Range may be met, given If-Range: always without one; with an entity tag, only the
+	 * file's own, compared strongly, so a weak one never is; with a date, only exactly when the file
+	 * last changed.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $if_range If-Range header, or empty.
+	 * @param string $etag     The file's entity tag, quoted.
+	 * @param int    $time     When the file last changed.
+	 * @return bool
+	 */
+	public static function ranged( string $if_range, string $etag, int $time ): bool {
+		$if_range = trim( $if_range );
+		if ( '' === $if_range ) {
+			return true;
+		}
+		if ( str_starts_with( $if_range, '"' ) || str_starts_with( $if_range, 'W/' ) ) {
+			return $if_range === $etag;
+		}
+		$when = strtotime( $if_range );
+		return false !== $when && $when === $time;
+	}
+
+	/**
 	 * Sends a file: through the web server when the site says it can, from PHP otherwise.
 	 *
 	 * @param int $id Attachment ID.
@@ -328,11 +377,15 @@ final class Protect {
 			exit;
 		}
 
-		if ( isset( $_SERVER['HTTP_IF_NONE_MATCH'] ) && trim( wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ) ) === $etag ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- compared, never output.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- request headers, compared, never output.
+		$header = static fn( string $name ): string => isset( $_SERVER[ $name ] ) ? trim( (string) wp_unslash( $_SERVER[ $name ] ) ) : '';
+		if ( self::current( $header( 'HTTP_IF_NONE_MATCH' ), $header( 'HTTP_IF_MODIFIED_SINCE' ), $etag, $time ) ) {
 			status_header( 304 );
 			exit;
 		}
-		$range = self::range( isset( $_SERVER['HTTP_RANGE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_RANGE'] ) ) : '', $size );
+		// A range of a file that changed since the player last had it would splice two files: the
+		// whole file instead.
+		$range = self::range( self::ranged( $header( 'HTTP_IF_RANGE' ), $etag, $time ) ? sanitize_text_field( $header( 'HTTP_RANGE' ) ) : '', $size );
 		if ( false === $range ) {
 			status_header( 416 );
 			header( 'Content-Range: bytes */' . $size );
