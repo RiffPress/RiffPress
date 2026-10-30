@@ -49,6 +49,12 @@ final class Playlists {
 	private const PRIVACY_PAGE = 50;
 
 	/**
+	 * How many of a playlist's first tracks are loaded at once for its mosaic: enough for four
+	 * covers when several tracks share one.
+	 */
+	private const COVER_TRACKS = 16;
+
+	/**
 	 * Hooks the post type, the routes and the privacy tools.
 	 *
 	 * @since 4.20.0
@@ -265,6 +271,12 @@ final class Playlists {
 				'suppress_filters' => false,
 			)
 		);
+		// Every playlist's first tracks at once, rather than each playlist's in turn.
+		$first = array();
+		foreach ( $posts as $post ) {
+			$first = array_merge( $first, self::first( self::ids( $post ) ) );
+		}
+		Tracks::prime( $first );
 		return array_map( array( self::class, 'summary' ), $posts );
 	}
 
@@ -277,7 +289,8 @@ final class Playlists {
 	 * @return array
 	 */
 	public static function summary( WP_Post $post ): array {
-		$ids    = self::ids( $post );
+		$ids = self::ids( $post );
+		Tracks::prime( self::first( $ids ) );
 		$covers = array();
 		foreach ( array_unique( $ids ) as $track ) {
 			// Covers come from the tracks the requester can see, as the tracks themselves do.
@@ -301,6 +314,16 @@ final class Playlists {
 			'covers'   => $covers,
 			'modified' => (string) get_post_modified_time( 'c', true, $post ),
 		);
+	}
+
+	/**
+	 * The first of a playlist's tracks, the ones its mosaic is likely to come from.
+	 *
+	 * @param int[] $ids The playlist's track IDs.
+	 * @return int[]
+	 */
+	private static function first( array $ids ): array {
+		return array_slice( array_values( array_unique( $ids ) ), 0, self::COVER_TRACKS );
 	}
 
 	/**
@@ -458,6 +481,8 @@ final class Playlists {
 	 */
 	private static function valid( array $tracks, array $kept = array() ): array {
 		$ok = array();
+		// Each track's file and post in a few queries, not a few for each.
+		Tracks::prime( array_map( 'intval', array_slice( $tracks, 0, self::MAX_TRACKS ) ) );
 		foreach ( $tracks as $track ) {
 			$track = (int) $track;
 			if ( $track > 0 && 'attachment' === get_post_type( $track ) && str_starts_with( (string) get_post_mime_type( $track ), 'audio/' ) && ( in_array( $track, $kept, true ) || Catalog_Rest::visible( $track ) ) ) {

@@ -198,6 +198,25 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertSame( array( $this->tracks[0] ), $this->call( 'POST', "/$id/tracks", array( 'tracks' => array( $this->secret ) ) )->get_data()['ids'], 'nor by adding it after' );
 	}
 
+	public function test_a_list_of_playlists_costs_the_same_queries_however_many_it_holds(): void {
+		$count = static function ( int $user ): int {
+			global $wpdb;
+			wp_cache_flush();
+			$before = $wpdb->num_queries;
+			Playlists::all( $user );
+			return $wpdb->num_queries - $before;
+		};
+		Playlists::create( $this->user, 'One', $this->tracks );
+		$few = $count( $this->user );
+		for ( $i = 0; $i < 4; $i++ ) {
+			Playlists::create( $this->user, 'More ' . $i, array_reverse( $this->tracks ) );
+		}
+		$many = $count( $this->user );
+
+		$this->assertCount( 5, Playlists::all( $this->user ) );
+		$this->assertLessThanOrEqual( $few + 2, $many, 'no queries per playlist' );
+	}
+
 	public function test_a_list_is_the_users_own_most_recently_changed_first(): void {
 		global $wpdb;
 		$first  = $this->made( array( $this->tracks[0] ) );
