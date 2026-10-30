@@ -52,7 +52,8 @@ class Test_Riff_Blocks extends Riff_TestCase {
 		$this->assertSame( 'Underground', $tracks[0]['title'] );
 		$this->assertSame( get_permalink( $post ), $tracks[0]['post']['url'] );
 		$this->assertStringContainsString( 'class="wp-block-audio riff-track"', $html );
-		$this->assertStringContainsString( '<audio controls src=', $html, 'the native player stays' );
+		$this->assertMatchesRegularExpression( '/<audio [^>]*controls src=/', $html, 'the native player stays' );
+		$this->assertMatchesRegularExpression( '/<audio [^>]*preload="none"/', $html, 'and fetches nothing until it is pressed' );
 	}
 
 	/**
@@ -126,9 +127,11 @@ class Test_Riff_Blocks extends Riff_TestCase {
 				'post_content' => sprintf( '<!-- wp:video {"id":%d} --><figure class="wp-block-video"><video controls src="%s"></video></figure><!-- /wp:video -->', $id, wp_get_attachment_url( $id ) ),
 			)
 		);
-		$tracks = $this->tracks( $this->render( $post ) );
+		$html   = $this->render( $post );
+		$tracks = $this->tracks( $html );
 		$this->assertCount( 1, $tracks );
 		$this->assertSame( 'video', $tracks[0]['type'] );
+		$this->assertMatchesRegularExpression( '/<video [^>]*preload="none"/', $html );
 	}
 
 	public function test_a_block_pointing_elsewhere_is_a_track_by_address(): void {

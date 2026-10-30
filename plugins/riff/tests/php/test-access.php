@@ -115,7 +115,7 @@ class Test_Riff_Access extends Riff_TestCase {
 
 		$this->assertStringNotContainsString( (string) wp_get_attachment_url( $this->locked ), $html, 'neither the track nor the native player names the file' );
 		$this->assertStringContainsString( (string) wp_get_attachment_url( $this->open ), $html );
-		$this->assertSame( 1, substr_count( $html, '<audio controls src=' ), 'only the open track keeps its src' );
+		$this->assertSame( 1, preg_match_all( '/<audio [^>]*\bsrc=/', $html ), 'only the open track keeps its src' );
 	}
 
 	public function test_a_locked_playlist_item_leaves_its_file_out_of_the_interactivity_state(): void {
