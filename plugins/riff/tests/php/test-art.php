@@ -378,7 +378,8 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertNotSame( '', $svg, "$drawn is drawn" );
 		$keep = new ReflectionMethod( Art::class, 'keep' );
 		$keep->setAccessible( true );
-		$keep->invoke( null, $drawn, $svg, microtime( true ) );
+		// Drawn after the last change, as the second it is kept to has passed.
+		$keep->invoke( null, $drawn, $svg, (float) get_option( Art::CHANGED, 0 ) + 0.5 );
 		return $svg;
 	}
 

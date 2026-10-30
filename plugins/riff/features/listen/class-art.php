@@ -406,8 +406,10 @@ final class Art {
 	 */
 	public static function redraw( $all = false ): void {
 		$all = true === $all;
-		// Every change, so a cover being drawn from what was there before is not kept.
-		update_option( self::CHANGED, (string) microtime( true ), false );
+		// Every change, so a cover being drawn from what was there before is not kept. To the second
+		// after, which is never early, and the same for every change within it, so a backfill filing
+		// hundreds of tracks writes it once a second rather than for each.
+		update_option( self::CHANGED, (string) ceil( microtime( true ) ), false );
 		$was     = self::version();
 		$uploads = wp_upload_dir( null, false );
 		$base    = empty( $uploads['error'] ) && ! wp_is_stream( $uploads['basedir'] ) ? trailingslashit( $uploads['basedir'] ) . self::DIR : '';
