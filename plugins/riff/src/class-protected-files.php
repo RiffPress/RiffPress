@@ -164,8 +164,8 @@ final class Protected_Files {
 		if ( ! Protect::is( $id ) ) {
 			return true;
 		}
-		$file  = (string) get_attached_file( $id, true );
-		$rel   = (string) get_post_meta( $id, self::META, true );
+		$file = (string) get_attached_file( $id, true );
+		$rel  = (string) get_post_meta( $id, self::META, true );
 		// In the protected folder on this server, or kept elsewhere by the plugin that protected it.
 		$local = ! wp_is_stream( $file ) && str_starts_with( $file, self::dir() . '/' );
 		$to    = $local ? self::free( trailingslashit( wp_upload_dir( null, false )['basedir'] ) . ltrim( $rel, '/' ) ) : '';
@@ -234,23 +234,39 @@ final class Protected_Files {
 	 * @return int Posts changed.
 	 */
 	public static function relink( string $from, string $to ): int {
+		return self::relink_all( array( $from => $to ) );
+	}
+
+	/**
+	 * Replaces many files' addresses at once: a search through every post's content can't use an
+	 * index, so many files moving together, as when Riff is uninstalled, search fifty addresses at a
+	 * time rather than one, and each post is rewritten once, with every address it names.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param array<string,string> $addresses New address by old.
+	 * @return int Posts changed.
+	 */
+	public static function relink_all( array $addresses ): int {
 		global $wpdb;
-		if ( '' === $from || $from === $to ) {
-			return 0;
-		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a search no WP_Query offers, once per change.
-		$ids     = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'attachment' ) AND post_content LIKE %s", '%' . $wpdb->esc_like( $from ) . '%' ) );
-		$changed = 0;
-		foreach ( $ids as $post_id ) {
-			$content = (string) get_post_field( 'post_content', (int) $post_id, 'raw' );
-			$updated = self::replace( $from, $to, $content );
-			if ( $updated === $content ) {
-				continue;
+		$addresses = array_filter( $addresses, static fn( $to, $from ) => '' !== (string) $from && (string) $from !== (string) $to, ARRAY_FILTER_USE_BOTH );
+		$changed   = 0;
+		foreach ( array_chunk( $addresses, 50, true ) as $some ) {
+			$like = implode( ' OR ', array_fill( 0, count( $some ), 'post_content LIKE %s' ) );
+			$args = array_map( static fn( $from ) => '%' . $wpdb->esc_like( (string) $from ) . '%', array_keys( $some ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- a search no WP_Query offers, its placeholders built above.
+			$ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ( 'revision', 'attachment' ) AND ( $like )", $args ) );
+			foreach ( $ids as $post_id ) {
+				$content = (string) get_post_field( 'post_content', (int) $post_id, 'raw' );
+				$updated = self::replace_all( $some, $content );
+				if ( $updated === $content ) {
+					continue;
+				}
+				// Straight to the row: an address changing is not an edit, so no revision and no kses.
+				$wpdb->update( $wpdb->posts, array( 'post_content' => $updated ), array( 'ID' => (int) $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				clean_post_cache( (int) $post_id );
+				++$changed;
 			}
-			// Straight to the row: an address changing is not an edit, so no revision and no kses.
-			$wpdb->update( $wpdb->posts, array( 'post_content' => $updated ), array( 'ID' => (int) $post_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			clean_post_cache( (int) $post_id );
-			++$changed;
 		}
 		return $changed;
 	}
@@ -267,6 +283,25 @@ final class Protected_Files {
 	 * @return string
 	 */
 	public static function replace( string $from, string $to, string $text ): string {
-		return (string) preg_replace( '/' . preg_quote( $from, '/' ) . '(?![0-9])/', addcslashes( $to, '\\$' ), $text );
+		return self::replace_all( array( $from => $to ), $text );
+	}
+
+	/**
+	 * Replaces many addresses in text in one pass, each where it is the whole address, so one
+	 * file's new address is never taken for another's old one.
+	 *
+	 * @param array<string,string> $addresses New address by old.
+	 * @param string               $text      Text.
+	 * @return string
+	 */
+	private static function replace_all( array $addresses, string $text ): string {
+		if ( ! $addresses ) {
+			return $text;
+		}
+		// The longest first, so a shorter address is not found at the start of a longer one.
+		$froms = array_map( 'strval', array_keys( $addresses ) );
+		usort( $froms, static fn( $a, $b ) => strlen( $b ) <=> strlen( $a ) );
+		$pattern = '/(?:' . implode( '|', array_map( static fn( $from ) => preg_quote( $from, '/' ), $froms ) ) . ')(?![0-9])/';
+		return (string) preg_replace_callback( $pattern, static fn( $m ) => (string) $addresses[ $m[0] ], $text );
 	}
 }

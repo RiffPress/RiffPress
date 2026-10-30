@@ -16,7 +16,8 @@ global $wpdb;
 
 // Protected files go back where they were, and the posts that named them are relinked, so nothing
 // points at an address that stops working with the plugin gone.
-$riff_base = trailingslashit( wp_upload_dir( null, false )['basedir'] );
+$riff_base  = trailingslashit( wp_upload_dir( null, false )['basedir'] );
+$riff_moved = array();
 foreach ( get_posts(
 	array(
 		'post_type'      => 'attachment',
@@ -34,20 +35,15 @@ foreach ( get_posts(
 	wp_mkdir_p( dirname( $riff_to ) );
 	if ( is_file( $riff_file ) && @rename( $riff_file, $riff_to ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename
 		update_attached_file( $riff_id, $riff_to );
-		$riff_from = add_query_arg( 'riff-file', $riff_id, home_url( '/' ) );
-		$riff_url  = (string) wp_get_attachment_url( $riff_id );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall, once.
-		$riff_posts = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_content LIKE %s", '%' . $wpdb->esc_like( $riff_from ) . '%' ) );
-		foreach ( $riff_posts as $riff_post ) {
-			$riff_content = (string) get_post_field( 'post_content', (int) $riff_post, 'raw' );
-			// The whole address only, so ?riff-file=12 is not found inside ?riff-file=123.
-			$riff_updated = (string) preg_replace( '/' . preg_quote( $riff_from, '/' ) . '(?![0-9])/', addcslashes( $riff_url, '\\$' ), $riff_content );
-			if ( $riff_updated !== $riff_content ) {
-				$wpdb->update( $wpdb->posts, array( 'post_content' => $riff_updated ), array( 'ID' => (int) $riff_post ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall, once.
-				clean_post_cache( (int) $riff_post );
-			}
-		}
+		$riff_moved[ add_query_arg( 'riff-file', $riff_id, home_url( '/' ) ) ] = (string) wp_get_attachment_url( $riff_id );
 	}
+}
+// Every moved file's posts at once, as a search through every post can't use an index.
+if ( ! empty( $riff_moved ) ) {
+	if ( ! class_exists( 'Riff\Protected_Files' ) ) {
+		require_once __DIR__ . '/src/class-protected-files.php';
+	}
+	Riff\Protected_Files::relink_all( $riff_moved );
 }
 delete_option( 'riff_protected_dir' );
 
