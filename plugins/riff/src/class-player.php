@@ -32,7 +32,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const PLAYER_SECTIONS = array( 'helpers', 'state', 'media', 'rows', 'resume', 'queue', 'playback', 'account', 'paint', 'menu', 'seek', 'now-playing', 'controls', 'keyboard' );
+	public const PLAYER_SECTIONS = array( 'helpers', 'state', 'media', 'registry', 'rows', 'resume', 'queue', 'playback', 'account', 'paint', 'menu', 'seek', 'now-playing', 'controls', 'keyboard' );
 
 	/**
 	 * The player's optional features under assets/player/, imported when first needed.

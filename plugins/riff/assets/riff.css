@@ -265,6 +265,17 @@ div.riff-row-locked {
 	display: none !important;
 }
 
+/* The bar's controls (registry.js): each sits in the bar's end as if it
+   were written there. One that says it doesn't show stays hidden, even
+   where .riff-desk shows the rest. */
+.riff-controls {
+	display: contents;
+}
+
+#riff [data-riff-control][hidden] {
+	display: none !important;
+}
+
 /* A badge is a pill, set at the right end of the
    bar. Riff's own is the quality: format and bit rate for the playing
    track. Centred with the controls. */

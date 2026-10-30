@@ -165,15 +165,14 @@ export function createPlayer( root, data ) {
 	};
 	P.filter = ( name, value, ...args ) =>
 		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
-	// Riff's own features hear of likes and playlists, add to the track menu, fill the player's
-	// areas (badges and controls) and hear the meter, here rather than through wp.hooks, so none
-	// of it is a promise to other plugins yet (docs/player.md, "Areas").
+	// Riff's own features hear of likes and playlists, add to the track menu, fill the badges and
+	// hear the meter, here rather than through wp.hooks, so none of it is a promise to other
+	// plugins yet (docs/player.md, "Areas"). The bar's controls are public: window.riff.control().
 	P.own = {
 		like: new Set(),
 		playlist: new Set(),
 		menu: new Set(),
 		badges: new Set(),
-		controls: new Set(),
 		meter: new Set(),
 	};
 	// Riff's own badge: the playing track's format and rate, through the same area as any other.

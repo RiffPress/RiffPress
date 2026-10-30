@@ -44,13 +44,24 @@ Nothing fires while you type in a field. The single-key shortcuts act only for a
 who can turn them off under Personal Options on their profile (`Shortcuts` in PHP); a visitor has none, and a site can turn them off for everyone with the `riff.shortcuts`
 filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
 
+## The bar's controls
+
+Every control at the bar's right end is added through `window.riff.control( id, control )`, Riff's
+own as any plugin's: Like (order 10), the badges (20), Up next (40), Play on another device (60), the volume (70) and
+Now Playing (80), and Riff Lyrics adds Lyrics (30). A control is a button with a `label`, an `icon`
+and either `run( track, button )` or one of the player's own `action`s; `pressed( track )` and
+`shown( track )` keep it in step with the track, `order` places it, and `wide` keeps it off a
+phone's bar, which holds the track, Play and only what a control asks to keep there. A control can
+instead bring its own `element`, as the volume does. The bar is updated in place as the track
+changes and never drawn again, so a control keeps focus while the music plays. An icon is markup
+from the feature's own code. [docs/javascript.md](javascript.md) has the whole of it.
+
 ## Areas
 
-The player has places that features fill: **badges**, the pills at the bar's right end and under
-the title in Now Playing, and on a phone small print between the seek line's times; **controls**, buttons beside them; and the **meter**, the music's level
-each frame, which lights the seek line and moves the playing row's bars. Riff's own features use
-them as any feature would: the quality pill is a badge, and the seek line's glow is a meter
-listener.
+The player has places Riff's own features fill: **badges**, the pills at the bar's right end and
+under the title in Now Playing, and on a phone small print between the seek line's times; and the
+**meter**, the music's level each frame, which lights the seek line and moves the playing row's
+bars. The quality pill is a badge, and the seek line's glow is a meter listener.
 
 They are internal for now, on the object Riff hands its own Listen app, and not yet on
 `window.riff`: they become public once they have settled. Each works as the track menu does,
@@ -59,12 +70,9 @@ through `listen( name, fn )`:
 | Name | `fn` is called with | and returns |
 | --- | --- | --- |
 | `badges` | the badges so far, and the playing track | the badges, each `{ id, text, label? }` |
-| `controls` | the controls so far, and the playing track | the controls, each `{ id, label, icon?, pressed?, run( track ) }` |
 | `meter` | `{ heat, levels }` each frame while music plays: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
 
-An area is redrawn only when what it holds changes, so a control keeps focus while the track plays,
-and a control's `run` redraws them after it. A control's `icon` is markup from the feature's own
-code.
+The badges are redrawn only when what they hold changes.
 
 ## Addresses
 

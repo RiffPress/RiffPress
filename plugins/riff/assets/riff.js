@@ -17,6 +17,7 @@
 import { parse } from 'riff-player/helpers';
 import { createPlayer } from 'riff-player/state';
 import { media } from 'riff-player/media';
+import { registry } from 'riff-player/registry';
 import { rows } from 'riff-player/rows';
 import { resume } from 'riff-player/resume';
 import { queue } from 'riff-player/queue';
@@ -163,6 +164,27 @@ function start() {
 		 */
 		tab: ( id ) => P.pickTab( String( id ) ),
 		/**
+		 * Adds a control to the player's bar, or replaces the one with the same id. Riff adds its
+		 * own the same way: Like (order 10), the badges (20), Up next (40), Play on another device
+		 * (60), the volume (70) and Now Playing (80); Riff Lyrics adds Lyrics (30).
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {string}                                            id                Lowercase letters, digits and dashes; it names the control in `data-riff-control`.
+		 * @param {Object}                                            control           The control.
+		 * @param {string|((track: Object|null) => string)}           control.label     What it is called, for a screen reader and a pointer's tooltip; or a function of the track.
+		 * @param {string}                                            [control.icon]    Its icon, SVG markup from your own code, never from content.
+		 * @param {number}                                            [control.order]   Where it sits among the others, lowest first. Default 50.
+		 * @param {(track: Object|null, button: HTMLElement) => void} [control.run]     What a press does.
+		 * @param {string}                                            [control.action]  One of the player's own actions instead of `run`, such as `shuffle` or `repeat`.
+		 * @param {(track: Object|null) => boolean}                   [control.pressed] Whether it is pressed, for a control that turns something on and off.
+		 * @param {(track: Object|null) => boolean}                   [control.shown]   Whether it shows. Default always.
+		 * @param {boolean}                                           [control.wide]    Only on a wide screen; a phone's bar keeps to the track, Play and what it needs.
+		 * @param {() => HTMLElement}                                 [control.element] An element of your own in place of a button, which you keep up to date.
+		 * @return {() => void} Takes the control away again.
+		 */
+		control: ( id, control ) => P.control( id, control ),
+		/**
 		 * Listens to one of the player's actions, without `wp-hooks`.
 		 *
 		 * @since 4.0.0
@@ -187,16 +209,17 @@ function start() {
 		/**
 		 * Calls `fn` on a change: `like` with `{ change, kind, id }`, `playlist` with
 		 * `{ change, playlist }`, or `menu` with a track menu's items, track and context, for
-		 * `fn` to return the items. The player's areas work as `menu` does: `badges` is called
-		 * with the badges so far and the track, and returns them, each `{ id, text, label? }`;
-		 * `controls` likewise, each `{ id, label, icon?, pressed?, run( track ) }`. `meter` is
+		 * `fn` to return the items. The badges work as `menu` does: `badges` is called with the
+		 * badges so far and the track, and returns them, each `{ id, text, label? }`. `meter` is
 		 * called each frame while the music plays, with `{ heat, levels }`: the wire's heat, 0 to
-		 * a little over 1, and the three bands, 0 to 1, or null while it cools.
+		 * a little over 1, and the three bands, 0 to 1, or null while it cools. The bar's controls
+		 * are public, through `control()`.
 		 *
 		 * @since 4.23.0
 		 * @since 4.29.0 `badges`, `controls` and `meter`.
+		 * @since 5.8.0 `controls` is `window.riff.control()`.
 		 *
-		 * @param {string}                                 name `like`, `playlist`, `menu`, `badges`, `controls` or `meter`.
+		 * @param {string}                                 name `like`, `playlist`, `menu`, `badges` or `meter`.
 		 * @param {(...args: Object[]) => (Object[]|void)} fn   The listener.
 		 * @return {() => void} Stops listening.
 		 */
@@ -475,6 +498,7 @@ function start() {
 	// every one is in place.
 	for ( const section of [
 		media,
+		registry,
 		rows,
 		resume,
 		queue,

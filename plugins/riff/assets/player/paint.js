@@ -238,25 +238,18 @@ export function paint( P ) {
 		}
 	}
 
-	// The player's areas, from Riff's own listeners (own.badges, own.controls): drawn again only
-	// when what they hold changes, so a control keeps its focus while the track plays on.
+	// The badges, from Riff's own listeners (own.badges): drawn again only when what they hold
+	// changes. The bar's controls are kept in place by the registry, which only updates them, so a
+	// control keeps its focus while the track plays on.
 	let areasKey = '';
 	function areas( t = P.track() ) {
-		const collect = ( name ) =>
-			[ ...own[ name ] ].reduce(
-				( list, fn ) => fn( list, t ) || list,
-				[]
-			);
-		const badges = collect( 'badges' ).filter(
-			( b ) => b && b.id && b.text
+		P.drawControls?.( t );
+		const badges = [ ...own.badges ]
+			.reduce( ( list, fn ) => fn( list, t ) || list, [] )
+			.filter( ( b ) => b && b.id && b.text );
+		const key = JSON.stringify(
+			badges.map( ( b ) => [ b.id, b.text, b.label ] )
 		);
-		const controls = collect( 'controls' ).filter(
-			( c ) => c && c.id && c.label && typeof c.run === 'function'
-		);
-		const key = JSON.stringify( [
-			badges.map( ( b ) => [ b.id, b.text, b.label ] ),
-			controls.map( ( c ) => [ c.id, c.label, c.pressed ] ),
-		] );
 		if ( key === areasKey ) {
 			return;
 		}
@@ -280,30 +273,6 @@ export function paint( P ) {
 						) }</span><span class="riff-app-sr">${ esc( b.label ) }</span>`;
 					}
 					return pill;
-				} )
-			);
-		}
-		for ( const area of $$( '[data-riff-area="controls"]' ) ) {
-			area.replaceChildren(
-				...controls.map( ( c ) => {
-					const button = document.createElement( 'button' );
-					button.type = 'button';
-					button.className = `riff-btn riff-control riff-control-${ c.id }`;
-					button.dataset.riffControl = c.id;
-					button.setAttribute( 'aria-label', c.label );
-					if ( 'pressed' in c ) {
-						button.setAttribute(
-							'aria-pressed',
-							String( !! c.pressed )
-						);
-					}
-					// An icon from Riff's own code, never from the page.
-					button.innerHTML = c.icon || '';
-					button.addEventListener( 'click', () => {
-						c.run( P.track() );
-						areas();
-					} );
-					return button;
 				} )
 			);
 		}

@@ -1,5 +1,5 @@
 /**
- * The player's areas: the quality pill in the bar and Now Playing (small print between the times on a phone), lossless shown as bit depth and rate, and Riff's own features adding badges and controls and hearing the meter.
+ * The player's areas: the quality pill in the bar and Now Playing (small print between the times on a phone), lossless shown as bit depth and rate, Riff's own features adding badges and hearing the meter, and a script adding a control to the bar.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const path = require( 'node:path' );
@@ -51,21 +51,12 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-np-quality' ) ).toBeHidden();
 	} );
 
-	test( 'Riff\'s own features add badges and controls to the player\'s areas, and hear the meter', async ( {
+	test( 'Riff\'s own features add badges to the player\'s areas, and hear the meter', async ( {
 		page,
 	} ) => {
 		await page.evaluate( () => {
 			window.riffHeard = 0;
 			window.riffInternal.listen( 'badges', ( list, t ) => [ ...list, { id: 'e2e', text: t ? 'Live' : '', label: 'Recorded live' } ] );
-			window.riffInternal.listen( 'controls', ( list, t ) => t ? [
-				...list,
-				{
-					id: 'e2e',
-					label: 'Pin',
-					pressed: !! window.riffPinned,
-					run: ( track ) => ( window.riffPinned = track.title ),
-				},
-			] : list );
 			window.riffInternal.listen( 'meter', ( { heat } ) => heat > 0 && window.riffHeard++ );
 		} );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
@@ -78,16 +69,45 @@ test.describe( 'Player', () => {
 		// A badge's label is read in place of its short text, not only shown to a pointer.
 		await expect( end.locator( '.riff-badge-e2e [aria-hidden="true"]' ) ).toHaveText( 'Live' );
 		await expect( end.locator( '.riff-badge-e2e .riff-app-sr' ) ).toHaveText( 'Recorded live' );
-		// The bar's copy is for a wide screen, Now Playing's for a phone, and every copy follows a press.
-		const copies = page.locator( '[data-riff-control="e2e"]' );
-		await expect( copies ).toHaveCount( 2 );
-		await page.locator( '.riff-bar-info' ).click();
-		const pin = page.getByRole( 'button', { name: 'Pin' } ).locator( 'visible=true' ).first();
+	} );
+
+	test( 'a script adds a control to the bar, in its order among Riff\'s own, and it follows the track', async ( {
+		page,
+		isMobile,
+	} ) => {
+		await page.evaluate( () => {
+			window.riffPinned = null;
+			window.riffUnpin = window.riff.control( 'e2e-pin', {
+				label: ( t ) => ( t ? `Pin ${ t.title }` : 'Pin' ),
+				icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg>',
+				order: 65,
+				pressed: ( t ) => !! t && window.riffPinned === t.title,
+				run: ( t ) => ( window.riffPinned = window.riffPinned === t.title ? null : t.title ),
+			} );
+			// A control that asks to stay off a phone's bar.
+			window.riff.control( 'e2e-wide', { label: 'Wide only', icon: '', wide: true, run: () => {} } );
+			// Not a usable control: no name, so nothing is added.
+			window.riff.control( 'e2e-bad', { run: () => {} } );
+		} );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
+		const title = await page.evaluate( () => window.riff.current().title );
+		const pin = page.locator( '[data-riff-control="e2e-pin"]' );
+		await expect( pin ).toHaveCount( 1 );
+		await expect( pin ).toHaveAttribute( 'aria-label', `Pin ${ title }` );
+		await expect( page.locator( '[data-riff-control="e2e-bad"]' ) ).toHaveCount( 0 );
+		// Between Play on another device (60) and the volume (70), as its order says.
+		const order = await page.locator( '[data-riff-controls] > [data-riff-control]' ).evaluateAll( ( els ) => els.map( ( el ) => el.dataset.riffControl ) );
+		expect( order.indexOf( 'e2e-pin' ) ).toBe( order.indexOf( 'cast' ) + 1 );
+		expect( order.indexOf( 'e2e-pin' ) ).toBe( order.indexOf( 'volume' ) - 1 );
 		await expect( pin ).toHaveAttribute( 'aria-pressed', 'false' );
 		await pin.click();
-		await expect( copies.nth( 0 ) ).toHaveAttribute( 'aria-pressed', 'true' );
-		await expect( copies.nth( 1 ) ).toHaveAttribute( 'aria-pressed', 'true' );
-		expect( await page.evaluate( () => window.riffPinned === window.riff.current().title ) ).toBe( true );
+		await expect( pin ).toHaveAttribute( 'aria-pressed', 'true' );
+		expect( await page.evaluate( () => window.riffPinned ) ).toBe( title );
+		await expect( page.locator( '[data-riff-control="e2e-wide"]' ) ).toBeVisible( { visible: ! isMobile } );
+		// Taken away, it leaves the bar.
+		await page.evaluate( () => window.riffUnpin() );
+		await expect( pin ).toHaveCount( 0 );
 	} );
 
 	test( 'a lossless track shows its bit depth and sample rate instead of a bit rate', async ( {

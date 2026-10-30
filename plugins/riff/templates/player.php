@@ -49,19 +49,20 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 		</div>
 		<div class="riff-bar-end">
-			<?php // The heart, on a phone beside Play in the mini player. Shown for a track in the Media Library. ?>
-			<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
-			<?php // The player's areas, filled by Riff's own listeners: badges (the format and bit rate, a pill at the bar's right end) and controls. ?>
-			<span class="riff-area riff-desk" data-riff-area="badges"></span>
-			<span class="riff-area riff-desk" data-riff-area="controls"></span>
-			<?php // Cast and AirPlay, beside the volume, as music apps put "play on another device": both choose where the sound goes. ?>
-			<button type="button" class="riff-btn" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
-			<label class="riff-volume riff-desk">
+			<?php // The controls, each added through window.riff.control(), Riff's own as any other's (registry.js). ?>
+			<span class="riff-controls" data-riff-controls></span>
+		</div>
+		<?php /* Riff's own controls, which registry.js takes from here and adds as any plugin adds one: the heart, shown for a track in the Media Library and on a phone beside Play; the badges, which Riff's own listeners fill, such as the format and bit rate; Cast and AirPlay, as music apps put "play on another device"; the volume; and the caret, a second way into Now Playing that a screen reader is not told of, as the bar's title is the one. */ ?>
+		<template class="riff-bar-own">
+			<span class="riff-area" data-riff-own="badges" data-riff-area="badges"></span>
+			<button type="button" class="riff-btn riff-like" data-riff-own="like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
+			<button type="button" class="riff-btn" data-riff-own="cast" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
+			<label class="riff-volume" data-riff-own="volume">
 				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>" aria-valuetext="<?php esc_attr_e( '100 percent', 'riff' ); ?>">
 				<?php echo Player::icon( 'volume' ); ?>
 			</label>
-			<button type="button" class="riff-btn riff-desk riff-chevron" data-riff-action="open" aria-hidden="true" tabindex="-1"><?php echo Player::icon( 'caret' ); ?></button>
-		</div>
+			<button type="button" class="riff-btn riff-chevron" data-riff-own="open" data-riff-action="open" aria-hidden="true" tabindex="-1"><?php echo Player::icon( 'caret' ); ?></button>
+		</template>
 	</section>
 
 	<div class="riff-np" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Now Playing', 'riff' ); ?>" hidden>
@@ -121,7 +122,6 @@ defined( 'ABSPATH' ) || exit;
 					<h2 class="riff-np-title" data-riff-text="title"></h2>
 					<p class="riff-np-sub" data-riff-text="artist"></p>
 					<p class="riff-np-quality riff-area" data-riff-area="badges"></p>
-					<div class="riff-np-extras riff-area" data-riff-area="controls"></div>
 				</div>
 				<div class="riff-np-seek">
 					<span class="riff-line" aria-hidden="true"><i></i></span>

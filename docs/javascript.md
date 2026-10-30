@@ -111,6 +111,28 @@ Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugi
 
 Since 4.16.0.
 
+### `window.riff.control( id, control )`
+
+Adds a control to the player's bar, or replaces the one with the same id. Riff adds its own the same way: Like (order 10), the badges (20), Up next (40), Play on another device (60), the volume (70) and Now Playing (80); Riff Lyrics adds Lyrics (30).
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | Lowercase letters, digits and dashes; it names the control in `data-riff-control`. |
+| `control` | `Object` | The control. |
+| `control.label` | `string\|((track: Object\|null) => string)` | What it is called, for a screen reader and a pointer's tooltip; or a function of the track. |
+| `control.icon` | `string` | Its icon, SVG markup from your own code, never from content. |
+| `control.order` | `number` | Where it sits among the others, lowest first. Default 50. |
+| `control.run` | `(track: Object\|null, button: HTMLElement) => void` | What a press does. |
+| `control.action` | `string` | One of the player's own actions instead of `run`, such as `shuffle` or `repeat`. |
+| `control.pressed` | `(track: Object\|null) => boolean` | Whether it is pressed, for a control that turns something on and off. |
+| `control.shown` | `(track: Object\|null) => boolean` | Whether it shows. Default always. |
+| `control.wide` | `boolean` | Only on a wide screen; a phone's bar keeps to the track, Play and what it needs. |
+| `control.element` | `() => HTMLElement` | An element of your own in place of a button, which you keep up to date. |
+
+Returns `() => void`: Takes the control away again.
+
+Since 5.8.0.
+
 ### `window.riff.on( name, fn )`
 
 Listens to one of the player's actions, without `wp-hooks`.
