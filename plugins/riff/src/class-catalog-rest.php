@@ -311,7 +311,7 @@ final class Catalog_Rest {
 			$named                  = self::names_holding( $search );
 		}
 
-		$where = self::visible_where();
+		$where = self::visible_where() . self::versions_where();
 		$from  = $after ? self::after_where( $after, $added ) : '';
 		$scope = static function ( string $sql, \WP_Query $query ) use ( $where, $from ): string {
 			if ( ! $query->get( 'riff_catalog' ) ) {
@@ -690,6 +690,17 @@ final class Catalog_Rest {
 		// post behind a password.
 		// Each file's own post, by its key, rather than every public post gathered for each file.
 		return " AND ( {$wpdb->posts}.post_parent = 0 OR EXISTS ( SELECT 1 FROM {$wpdb->posts} pp WHERE pp.ID = {$wpdb->posts}.post_parent AND pp.post_status = 'publish' AND pp.post_password = '' ) )";
+	}
+
+	/**
+	 * SQL leaving out every file that is another's streaming version: the same music as a track
+	 * already listed. Read once for the query, by the meta key's index.
+	 *
+	 * @return string
+	 */
+	private static function versions_where(): string {
+		global $wpdb;
+		return $wpdb->prepare( " AND {$wpdb->posts}.ID NOT IN ( SELECT CAST( sv.meta_value AS UNSIGNED ) FROM {$wpdb->postmeta} sv WHERE sv.meta_key = %s )", Media::STREAM_META );
 	}
 
 	/**

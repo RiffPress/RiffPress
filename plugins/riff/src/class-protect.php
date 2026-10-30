@@ -144,7 +144,11 @@ final class Protect {
 	 * Signs a protected track's file, and its video's, for the visitor the track is written for.
 	 * A track the visitor may not play loses its file after this, in riff_can_play.
 	 *
+	 * The file is the one the track plays: its streaming version when it streams one. An address
+	 * a riff_track filter put in its place, a service's own, say, is left as it is.
+	 *
 	 * @since 4.18.0
+	 * @since 5.8.0 The streaming version's file, and only the file's own address.
 	 *
 	 * @param array $track Track.
 	 * @param int   $id    Attachment ID, or 0.
@@ -156,8 +160,10 @@ final class Protect {
 			return $track;
 		}
 		// Only for a visitor who may read the file's post: the signature skips that check.
-		if ( self::is( $id ) && ! empty( $track['src'] ) && self::readable( $id ) ) {
-			$track['src'] = self::signed( $id );
+		$stream = Media::stream( $id );
+		$file   = $stream ? $stream : $id;
+		if ( self::is( $file ) && ! empty( $track['src'] ) && wp_get_attachment_url( $file ) === $track['src'] && self::readable( $file ) ) {
+			$track['src'] = self::signed( $file );
 		}
 		$video = (int) get_post_meta( $id, Media::VIDEO_META, true );
 		if ( $video && self::is( $video ) && ! empty( $track['video']['src'] ) && self::readable( $video ) ) {

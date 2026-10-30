@@ -1,5 +1,6 @@
 /**
- * The Artwork and Video version pickers on an audio or video file in the Media Library.
+ * The Artwork, Video version, Streaming version and Captions pickers on an audio or video file in
+ * the Media Library.
  *
  * Each picker fills in the address field next to it with the chosen attachment's ID, so saving
  * goes through the same checks as a typed address. In the Media Library's own window a change saves
@@ -73,7 +74,12 @@
 		}
 		const fresh = document.createElement( 'table' );
 		fresh.innerHTML = item;
-		for ( const field of [ 'riff_art', 'riff_video', 'riff_captions' ] ) {
+		for ( const field of [
+			'riff_art',
+			'riff_video',
+			'riff_stream',
+			'riff_captions',
+		] ) {
 			const name = `attachments[${ model.id }][${ field }]`;
 			const next = fresh
 				.querySelector( `[name="${ CSS.escape( name ) }"]` )

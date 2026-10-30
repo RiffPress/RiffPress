@@ -234,8 +234,12 @@ final class Catalog {
 		if ( ! $post instanceof WP_Post || 'attachment' !== $post->post_type || ! str_starts_with( (string) $post->post_mime_type, 'audio/' ) ) {
 			return;
 		}
-		$meta   = $meta ?? wp_get_attachment_metadata( $attachment_id );
-		$meta   = is_array( $meta ) ? $meta : array();
+		$meta = $meta ?? wp_get_attachment_metadata( $attachment_id );
+		$meta = is_array( $meta ) ? $meta : array();
+		// Another song's streaming version is the same music, not a track of its own.
+		if ( Media::streamed( $attachment_id ) ) {
+			$meta = array();
+		}
 		$artist = self::tag( $meta, 'artist' );
 		$album  = self::tag( $meta, 'album' );
 		// The album's own artist when the file names one (the band tag), else the track's.

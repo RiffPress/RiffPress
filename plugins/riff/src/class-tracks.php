@@ -159,9 +159,19 @@ final class Tracks {
 		}
 
 		$video = null;
+		// What plays, and so what its quality says: the file, or a smaller version of it to stream
+		// when the site has one, while the track stays the file, its tags, length and levels.
+		$file = $meta;
 		if ( 'audio' === $type ) {
 			$video_id = (int) get_post_meta( $attachment_id, Media::VIDEO_META, true );
 			$video    = $video_id ? self::video( $video_id, $art ) : null;
+			$stream   = Media::stream( $attachment_id );
+			$version  = $stream ? wp_get_attachment_url( $stream ) : false;
+			if ( $version ) {
+				$src  = $version;
+				$file = wp_get_attachment_metadata( $stream );
+				$file = is_array( $file ) ? $file : array();
+			}
 		}
 
 		return self::filter(
@@ -180,11 +190,11 @@ final class Tracks {
 				// What WordPress read from the file on upload: the container, the bit rate, whether it is
 				// lossless, and for a lossless file its bit depth and sample rate. The player shows them
 				// on every track, the way the streaming services do.
-				'format'   => strtolower( (string) ( $meta['dataformat'] ?? $meta['fileformat'] ?? '' ) ),
-				'bitrate'  => isset( $meta['bitrate'] ) ? (int) round( (float) $meta['bitrate'] / 1000 ) : 0,
-				'lossless' => ! empty( $meta['lossless'] ),
-				'bits'     => (int) ( $meta['bits_per_sample'] ?? 0 ),
-				'rate'     => (int) ( $meta['sample_rate'] ?? 0 ),
+				'format'   => strtolower( (string) ( $file['dataformat'] ?? $file['fileformat'] ?? '' ) ),
+				'bitrate'  => isset( $file['bitrate'] ) ? (int) round( (float) $file['bitrate'] / 1000 ) : 0,
+				'lossless' => ! empty( $file['lossless'] ),
+				'bits'     => (int) ( $file['bits_per_sample'] ?? 0 ),
+				'rate'     => (int) ( $file['sample_rate'] ?? 0 ),
 				// Level data, when something measured it on upload and stored it as riff_levels.
 				'levels'   => isset( $meta['riff_levels'] ) && is_string( $meta['riff_levels'] ) ? $meta['riff_levels'] : '',
 				'art'      => $art,

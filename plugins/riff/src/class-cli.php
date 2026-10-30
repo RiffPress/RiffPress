@@ -56,6 +56,103 @@ final class Cli {
 	}
 
 	/**
+	 * Makes streaming versions of songs with ffmpeg.
+	 *
+	 * Each version is an MP3 without the file's tags, uploaded to the Media Library beside its song
+	 * and set as the song's Streaming version: the player streams it, and the song stays the file
+	 * it is. It goes to the same post as the song, so the same listeners may play it, and is
+	 * protected when the song is. Without IDs, every song that has no version yet and is lossless,
+	 * or of a bit rate well above the version's. Needs ffmpeg on the server.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<id>...]
+	 * : Audio files to make versions of, by attachment ID, whatever their bit rate.
+	 *
+	 * [--bitrate=<kbps>]
+	 * : The versions' bit rate.
+	 * ---
+	 * default: 192
+	 * ---
+	 *
+	 * [--dry-run]
+	 * : List the songs that would get a version, without making any.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp riff transcode
+	 *     wp riff transcode 412 418 --bitrate=256
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param string[]             $args       Positional arguments.
+	 * @param array<string, mixed> $assoc_args Named arguments.
+	 */
+	public function transcode( array $args, array $assoc_args ): void {
+		$dry  = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
+		$kbps = max( 32, (int) ( $assoc_args['bitrate'] ?? Transcode::BITRATE ) );
+		if ( ! $dry && '' === Transcode::ffmpeg() ) {
+			WP_CLI::error( 'ffmpeg is not installed on this server, so no streaming version can be made here.' );
+		}
+		$ids = array_map( 'intval', $args );
+		if ( ! $ids ) {
+			$ids = array_filter(
+				self::songs(),
+				static fn( int $id ): bool => ! Media::stream( $id ) && ! Media::streamed( $id ) && Transcode::worth( $id, $kbps )
+			);
+		}
+		$made   = 0;
+		$failed = 0;
+		foreach ( $ids as $id ) {
+			$title = get_the_title( $id );
+			if ( $dry ) {
+				WP_CLI::log( sprintf( '%d: %s', $id, $title ) );
+				continue;
+			}
+			$version = Transcode::make( $id, $kbps );
+			if ( is_wp_error( $version ) ) {
+				++$failed;
+				WP_CLI::warning( sprintf( '%d: %s: %s', $id, $title, $version->get_error_message() ) );
+				continue;
+			}
+			++$made;
+			WP_CLI::log( sprintf( '%d: %s -> %d', $id, $title, $version ) );
+		}
+		if ( $dry ) {
+			WP_CLI::success( sprintf( 'Dry run. %d songs would get a streaming version.', count( $ids ) ) );
+		} elseif ( $failed ) {
+			WP_CLI::warning( sprintf( '%d streaming versions made, %d failed.', $made, $failed ) );
+		} else {
+			WP_CLI::success( sprintf( '%d streaming versions made.', $made ) );
+		}
+	}
+
+	/**
+	 * Every audio file in the Media Library, oldest first, by ID alone.
+	 *
+	 * @return int[]
+	 */
+	private static function songs(): array {
+		return array_map(
+			'intval',
+			get_posts(
+				array(
+					'post_type'              => 'attachment',
+					'post_mime_type'         => 'audio',
+					'post_status'            => 'inherit',
+					'posts_per_page'         => -1,
+					'fields'                 => 'ids',
+					'orderby'                => 'ID',
+					'order'                  => 'ASC',
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+				)
+			)
+		);
+	}
+
+	/**
 	 * Imports a folder of music into the Media Library.
 	 *
 	 * Each folder that holds audio, the one given and any inside it, becomes an album: its files are

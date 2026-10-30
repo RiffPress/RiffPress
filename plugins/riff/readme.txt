@@ -106,6 +106,10 @@ From the post. Every audio and video block in the post is the queue, in order, s
 
 Yes, if you can use WP-CLI. `wp riff import` with the path to a folder uploads the files to the Media Library and makes one album post for each folder that holds audio. Run it again and it skips what it already imported.
 
+= My files are lossless. Do listeners download all of that? =
+
+Not if you give a song a smaller copy. Choose an MP3 of it as its Streaming version in the Media Library, and the player streams that while the song stays the file you uploaded. Where the server has ffmpeg, `wp riff transcode` makes one for every lossless song.
+
 = Does Riff set cookies or keep personal data? =
 
 A signed-in listener's likes, recently played and playlists are saved to their account, and Tools > Export Personal Data and Erase Personal Data include them. Deleting Riff keeps them, so installing it again brings them back; Erase Personal Data is how to remove one listener's. A visitor's stay in their own browser's storage and are never sent to the site.
