@@ -204,6 +204,7 @@ final class Library {
 	public static function rest_list( WP_REST_Request $request ): WP_REST_Response {
 		$page  = max( 1, (int) $request['page'] );
 		$query = self::query( array( 'paged' => $page ) );
+		self::prime( $query->posts );
 		$items = array();
 		foreach ( $query->posts as $post ) {
 			$items[] = self::item( $post );
@@ -275,7 +276,37 @@ final class Library {
 	 * @return array
 	 */
 	public static function item( WP_Post $post ): array {
-		$tracks   = self::tracks( $post );
+		return self::listed( $post, self::tracks( $post ) );
+	}
+
+	/**
+	 * Loads what listing these posts reads, their tracks' files and artwork among it, in a few
+	 * queries for the whole list rather than a few for each track.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param WP_Post[] $posts Posts.
+	 */
+	public static function prime( array $posts ): void {
+		$posts       = array_filter( $posts, static fn( $post ) => $post instanceof WP_Post );
+		$attachments = array();
+		foreach ( $posts as $post ) {
+			// Only the core blocks say which files they hold before their tracks are built.
+			if ( Sources::for_post( $post ) instanceof Blocks_Source ) {
+				$attachments = array_merge( $attachments, Blocks_Source::attachments( $post ) );
+			}
+		}
+		Tracks::prime( $attachments, wp_list_pluck( $posts, 'ID' ) );
+	}
+
+	/**
+	 * A post as the list shows it, from its tracks.
+	 *
+	 * @param WP_Post $post   Post.
+	 * @param array[] $tracks Its tracks.
+	 * @return array
+	 */
+	private static function listed( WP_Post $post, array $tracks ): array {
 		$duration = 0.0;
 		foreach ( $tracks as $t ) {
 			$duration += (float) $t['duration'];
@@ -301,8 +332,9 @@ final class Library {
 	 * @return array
 	 */
 	public static function post( WP_Post $post ): array {
-		$item           = self::item( $post );
-		$item['tracks'] = self::tracks( $post );
+		$tracks         = self::tracks( $post );
+		$item           = self::listed( $post, $tracks );
+		$item['tracks'] = $tracks;
 		$item['html']   = self::html( $post );
 		return $item;
 	}

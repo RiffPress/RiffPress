@@ -413,6 +413,7 @@ final class App {
 		$cards = '';
 		for ( $n = 1; $n <= $upto; $n++ ) {
 			$posts = 1 === $n ? $query->posts : Library::query( array( 'paged' => $n ) )->posts;
+			Library::prime( $posts );
 			foreach ( array_values( $posts ) as $i => $post ) {
 				$cards .= self::card( Library::item( $post ), $page, 0 === $i && $n > 1 ? $n : 0 );
 			}
@@ -453,7 +454,9 @@ final class App {
 	 */
 	public static function post_cards( string $page ): string {
 		$cards = '';
-		foreach ( array_slice( Library::query()->posts, 0, 12 ) as $post ) {
+		$posts = array_slice( Library::query()->posts, 0, 12 );
+		Library::prime( $posts );
+		foreach ( $posts as $post ) {
 			$cards .= self::card( Library::item( $post ), $page );
 		}
 		return $cards;

@@ -23,6 +23,14 @@ defined( 'ABSPATH' ) || exit;
 final class Blocks_Source implements Source {
 
 	/**
+	 * Posts' blocks as parsed this request, by post and content, so a post asked for its tracks
+	 * and then its markup is parsed once. The most recent few only.
+	 *
+	 * @var array<string, array[]>
+	 */
+	private static array $parsed = array();
+
+	/**
 	 * The id: "blocks".
 	 *
 	 * @since 4.0.0
@@ -54,8 +62,9 @@ final class Blocks_Source implements Source {
 	 * @return array[]
 	 */
 	public function tracks( WP_Post $post ): array {
+		Tracks::prime( self::attachments( $post ), array( $post->ID ) );
 		$tracks = array();
-		foreach ( self::track_blocks( parse_blocks( $post->post_content ) ) as $block ) {
+		foreach ( self::track_blocks( self::blocks( $post ) ) as $block ) {
 			$track = Tracks::from_block( $block, $post->ID );
 			if ( $track ) {
 				$tracks[] = $track;
@@ -78,7 +87,7 @@ final class Blocks_Source implements Source {
 		$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- put back below.
 		setup_postdata( $post );
 		$html = '';
-		foreach ( self::media_blocks( parse_blocks( $post->post_content ) ) as $block ) {
+		foreach ( self::media_blocks( self::blocks( $post ) ) as $block ) {
 			$html .= render_block( $block );
 		}
 		wp_reset_postdata();
@@ -101,6 +110,36 @@ final class Blocks_Source implements Source {
 			'%' . $wpdb->esc_like( '<!-- wp:video' ) . '%',
 			'%' . $wpdb->esc_like( '<!-- wp:playlist' ) . '%'
 		);
+	}
+
+	/**
+	 * The Media Library files the post's track blocks name, in order, so a list of posts can load
+	 * them all at once.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param WP_Post $post Post.
+	 * @return int[] Attachment IDs.
+	 */
+	public static function attachments( WP_Post $post ): array {
+		return array_values( array_filter( array_map( static fn( $block ) => (int) ( $block['attrs']['id'] ?? 0 ), self::track_blocks( self::blocks( $post ) ) ) ) );
+	}
+
+	/**
+	 * The post's blocks, parsed once a request.
+	 *
+	 * @param WP_Post $post Post.
+	 * @return array[]
+	 */
+	private static function blocks( WP_Post $post ): array {
+		$key = $post->ID . ':' . md5( $post->post_content );
+		if ( ! isset( self::$parsed[ $key ] ) ) {
+			if ( count( self::$parsed ) >= 50 ) {
+				array_shift( self::$parsed );
+			}
+			self::$parsed[ $key ] = parse_blocks( $post->post_content );
+		}
+		return self::$parsed[ $key ];
 	}
 
 	/**

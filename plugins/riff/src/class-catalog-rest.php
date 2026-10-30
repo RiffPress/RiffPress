@@ -308,22 +308,11 @@ final class Catalog_Rest {
 			$pages = (int) ceil( $total / $per_page );
 			update_meta_cache( 'post', $ids );
 			$ids = array_slice( self::in_album_order( $ids ), ( $page - 1 ) * $per_page, $per_page );
-			if ( $ids ) {
-				// The page's posts in one query, as the paged query would have loaded them.
-				get_posts(
-					array(
-						'post_type'        => 'attachment',
-						'post_status'      => 'inherit',
-						'post__in'         => $ids,
-						'posts_per_page'   => count( $ids ),
-						'no_found_rows'    => true,
-						'suppress_filters' => false,
-					)
-				);
-			}
 		} else {
 			$ids = wp_list_pluck( $query->posts, 'ID' );
 		}
+		// The page's files, their posts and their artwork in a few queries, not a few for each.
+		Tracks::prime( $ids );
 		$items = array();
 		foreach ( $ids as $id ) {
 			$track = Tracks::from_attachment( (int) $id, (int) get_post_field( 'post_parent', $id ) );
@@ -419,12 +408,7 @@ final class Catalog_Rest {
 				$row->first = isset( $first[ $row->term_id ] ) ? (int) $first[ $row->term_id ]->first : 0;
 			}
 			// Load those tracks, their posts and their meta in a few queries rather than a few per album.
-			$firsts = array_filter( array_map( static fn( $row ) => (int) $row->first, $rows ) );
-			self::prime( $firsts );
-			$parents = array_filter( array_map( static fn( $id ) => (int) get_post_field( 'post_parent', $id ), $firsts ) );
-			self::prime( $parents );
-			$thumbs = array_filter( array_map( static fn( $id ) => (int) get_post_thumbnail_id( $id ), array_merge( $firsts, $parents ) ) );
-			self::prime( $thumbs );
+			Tracks::prime( array_map( static fn( $row ) => (int) $row->first, $rows ) );
 			update_termmeta_cache( array_map( static fn( $row ) => (int) $row->term_id, $rows ) );
 		}
 		$items = array();
@@ -467,27 +451,6 @@ final class Catalog_Rest {
 		$not  = count( $skip ) ? ' AND a.object_id NOT IN (' . implode( ',', array_fill( 0, count( $skip ), '%d' ) ) . ')' : '';
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID, the hidden ones spread in.
 		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT tb.term_id FROM {$wpdb->term_relationships} a INNER JOIN {$wpdb->term_taxonomy} ta ON ta.term_taxonomy_id = a.term_taxonomy_id INNER JOIN {$wpdb->term_relationships} b ON b.object_id = a.object_id INNER JOIN {$wpdb->term_taxonomy} tb ON tb.term_taxonomy_id = b.term_taxonomy_id WHERE ta.taxonomy = %s AND ta.term_id = %d AND tb.taxonomy = %s{$not}", Catalog::ARTIST, $artist, Catalog::ALBUM, ...$skip ) ) );
-	}
-
-	/**
-	 * Loads posts of any type or status, and their meta, into the cache in one query.
-	 *
-	 * @param int[] $ids Post IDs.
-	 */
-	private static function prime( array $ids ): void {
-		if ( $ids ) {
-			get_posts(
-				array(
-					'post__in'               => $ids,
-					'post_type'              => get_post_types(),
-					'post_status'            => get_post_stati(),
-					'numberposts'            => count( $ids ),
-					'orderby'                => 'none',
-					'no_found_rows'          => true,
-					'update_post_term_cache' => false,
-				)
-			);
-		}
 	}
 
 	/**
