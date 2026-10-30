@@ -39,7 +39,28 @@ class Test_Riff_Catalog extends Riff_TestCase {
 			$this->assertTrue( $object->show_in_rest );
 			$this->assertTrue( $object->show_admin_column, 'a column in the Media Library list' );
 			$this->assertFalse( $object->public, 'no archive pages of its own; Listen is where they are browsed' );
+			$this->assertFalse( $object->meta_box_cb, 'no tag box on a track\'s edit screen, which would split a name on its commas' );
 		}
+	}
+
+	public function test_saving_a_track_s_edit_screen_keeps_a_name_with_a_comma_whole(): void {
+		require_once ABSPATH . 'wp-admin/includes/post.php';
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$id = self::attach( '02 - Underground [underground].mp3' );
+
+		edit_post(
+			array(
+				'post_ID'        => $id,
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'audio/mpeg',
+				'post_title'     => 'Underground',
+				'id3_artist'     => 'The Diplomats, U.S. Air Force Band',
+				'id3_album'      => 'Blues Queens, 1920-1925',
+			)
+		);
+
+		$this->assertSame( array( 'The Diplomats, U.S. Air Force Band' ), $this->names( $id, Catalog::ARTIST ) );
+		$this->assertSame( array( 'Blues Queens, 1920-1925' ), $this->names( $id, Catalog::ALBUM ) );
 	}
 
 	public function test_an_upload_is_filed_under_its_album_and_artist_from_its_tags(): void {

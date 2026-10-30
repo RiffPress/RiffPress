@@ -129,6 +129,10 @@ final class Catalog {
 			'show_admin_column'     => true,
 			'show_in_rest'          => true,
 			'hierarchical'          => false,
+			// No box on a track's edit screen: core's tag box splits names on commas, and saves
+			// after the Metadata box, so "Blues Queens, 1920-1925" would become two albums. The
+			// Metadata box's Artist and Album file the track instead.
+			'meta_box_cb'           => false,
 			'query_var'             => false,
 			'rewrite'               => false,
 			'update_count_callback' => '_update_generic_term_count',
