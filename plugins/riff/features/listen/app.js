@@ -246,7 +246,7 @@ export function start( api ) {
 	ctx.rackUp();
 	ctx.fade( app );
 	if ( ctx.desktop ) {
-		desktopFrame( ctx );
+		Object.assign( ctx, desktopFrame( ctx ) );
 	}
 	try {
 		if ( localStorage.getItem( 'riff-sidebar' ) === 'mini' ) {

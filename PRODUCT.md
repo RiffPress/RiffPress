@@ -16,7 +16,7 @@ Riff turns the audio and video already in a site's posts into a player with the 
 
 ## Positioning
 
-Riff is an open-source music player for WordPress. The Media Library is the store: every track is an attachment, read through WordPress's own APIs, and posts are how music is published from it. Riff is the listening surface on top. Where a music library needs something WordPress doesn't have, Riff adds it and records why in `docs/native.md`, so each addition is a candidate for core. Its design follows YouTube Music's current layout and measurements, which is the benchmark listeners already carry in their pocket, in Riff's own amber.
+Riff is an open-source music player for WordPress. The Media Library is the store: every track is an attachment, read through WordPress's own APIs, and posts are how music is published from it. Riff is the listening surface on top. Where a music library needs something WordPress doesn't have, Riff adds it and records why in `docs/native.md`, so each addition is a candidate for core. Its design follows YouTube Music's current layout and measurements, which is the benchmark listeners already carry in their pocket, in Riff's own amber; on a computer the Listen app's frame, its strip across the top above all, is laid out as Spotify's desktop app is.
 
 ## Operating Context
 
