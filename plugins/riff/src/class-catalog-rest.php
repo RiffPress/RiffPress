@@ -480,7 +480,10 @@ final class Catalog_Rest {
 			$include = $include ? $include : array( 0 );
 		}
 		if ( $include ) {
-			$query['include'] = $include;
+			// WordPress drops exclude once include is given, so the terms whose every track is hidden
+			// are taken out of include too; none left is none at all, not every term.
+			$include          = array_values( array_diff( $include, $gone ) );
+			$query['include'] = $include ? $include : array( 0 );
 		}
 		$total = (int) wp_count_terms( $query );
 		$terms = get_terms(

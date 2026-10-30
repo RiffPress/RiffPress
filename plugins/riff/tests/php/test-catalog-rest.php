@@ -81,6 +81,15 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( array(), $this->get( '/tracks', array( 'search' => 'Secret' ) )['items'] );
 	}
 
+	public function test_an_album_a_visitor_cannot_see_is_not_found_by_its_id_either(): void {
+		$secret = (int) wp_get_object_terms( $this->secret, Catalog::ALBUM )[0]->term_id;
+		$data   = $this->get( '/albums', array( 'include' => array( $secret ) ) );
+
+		$this->assertSame( array(), $data['items'], 'not its name, nor a count of nothing' );
+		$this->assertSame( 0, $data['total'] );
+		$this->assertCount( 1, $this->get( '/albums', array( 'include' => array( $secret, (int) wp_get_object_terms( $this->published[0], Catalog::ALBUM )[0]->term_id ) ) )['items'], 'and the rest still are' );
+	}
+
 	public function test_a_track_on_a_password_protected_post_is_hidden_from_visitors(): void {
 		$locked = self::factory()->post->create(
 			array(
