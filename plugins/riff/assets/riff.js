@@ -247,6 +247,27 @@ function start() {
 			P.setQueue( tracks, index, { at: Math.max( 0, Number( at ) || 0 ) } );
 		},
 		/**
+		 * Plays the first page of a long list, and the pages after it as the queue nears its end:
+		 * each from `more.url`, a route that answers `{ items, pages }`, with its `page` set.
+		 *
+		 * @since 5.7.0
+		 *
+		 * @param {Object[]} tracks            The first page, in the shape `Tracks::schema()` describes.
+		 * @param {number}   index             The one to play first.
+		 * @param {Object}   more              Where the rest is.
+		 * @param {string}   more.url          The route, without `page`.
+		 * @param {number}   more.page         The page `tracks` is.
+		 * @param {number}   more.pages        How many pages there are.
+		 * @param {Object}   [options]         Options.
+		 * @param {boolean}  [options.shuffle] `true` or `false` sets shuffle before playing.
+		 */
+		playMore( tracks, index, more, { shuffle: on = null } = {} ) {
+			if ( on !== null ) {
+				P.shuffle = on;
+			}
+			P.setQueue( tracks, index, { more } );
+		},
+		/**
 		 * Adds tracks to the end of the queue, or starts them when nothing is playing.
 		 *
 		 * @since 4.19.0

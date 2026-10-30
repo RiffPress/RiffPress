@@ -16,6 +16,7 @@ export function resume( P ) {
 				queue: P.queue,
 				order: P.order,
 				pos: P.pos,
+				more: P.more,
 				mode: P.mode,
 				repeat: P.repeat,
 				shuffle: P.shuffle,
@@ -45,6 +46,10 @@ export function resume( P ) {
 		P.queue = saved.queue;
 		P.order = saved.order;
 		P.pos = saved.pos;
+		P.more =
+			saved.more?.url && saved.more.page < saved.more.pages
+				? saved.more
+				: null;
 		P.repeat = [ 'off', 'all', 'one' ].includes( saved.repeat )
 			? saved.repeat
 			: 'off';

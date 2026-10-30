@@ -24,6 +24,6 @@ final class Tracks_View {
 	 */
 	public static function view( string $page, int $number ): string {
 		$data = Browse::get( '/tracks', array( 'page' => $number ) );
-		return Browse::list_view( __( 'Tracks', 'riff' ), Browse::count( (int) $data['total'] ), $data ) . Browse::next( add_query_arg( Browse::VIEW, 'tracks', $page ), $data );
+		return Browse::list_view( __( 'Tracks', 'riff' ), Browse::count( (int) $data['total'] ), $data, '', false, 0, Browse::more( '/tracks', array(), $data ) ) . Browse::next( add_query_arg( Browse::VIEW, 'tracks', $page ), $data );
 	}
 }

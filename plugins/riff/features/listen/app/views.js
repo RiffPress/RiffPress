@@ -252,5 +252,57 @@ export function views( ctx ) {
 		}
 	}
 
-	return { show, redraw, loadMore, playCard, playAlbum };
+	// Play or shuffle the whole of a list one page of which is showing, from its first page: that
+	// plays as soon as it arrives, and the player asks for each next one as the queue nears its
+	// end. Shuffled, the route deals the whole list in one order, which its pages follow.
+	async function playAll( button, more, shuffle ) {
+		if ( button.getAttribute( 'aria-busy' ) === 'true' || ! more?.url ) {
+			return;
+		}
+		const turn = ++ctx.picking;
+		const shownAt = ctx.showing;
+		button.setAttribute( 'aria-busy', 'true' );
+		try {
+			const u = new URL( more.url, location.href );
+			u.searchParams.set( 'per_page', '100' );
+			if ( shuffle ) {
+				u.searchParams.set( 'orderby', 'random' );
+				u.searchParams.set(
+					'seed',
+					String( Math.floor( Math.random() * 2147483647 ) )
+				);
+			}
+			u.searchParams.set( 'page', '1' );
+			const r = await api.request( u );
+			if ( ! r.ok ) {
+				throw new Error( String( r.status ) );
+			}
+			const data = await r.json();
+			if ( turn !== ctx.picking || shownAt !== ctx.showing ) {
+				return;
+			}
+			untell();
+			u.searchParams.delete( 'page' );
+			if ( Array.isArray( data.items ) && data.items.length ) {
+				api.playMore(
+					data.items,
+					0,
+					{
+						url: u.toString(),
+						page: 1,
+						pages: Number( data.pages ) || 1,
+					},
+					{ shuffle }
+				);
+			}
+		} catch {
+			if ( turn === ctx.picking && shownAt === ctx.showing ) {
+				tell( playError() );
+			}
+		} finally {
+			button.removeAttribute( 'aria-busy' );
+		}
+	}
+
+	return { show, redraw, loadMore, playCard, playAlbum, playAll };
 }

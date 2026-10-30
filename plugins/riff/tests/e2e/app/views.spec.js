@@ -220,6 +220,53 @@ test.describe( 'App', () => {
 		expect( results.violations ).toEqual( [] );
 	} );
 
+	test( 'Play and Shuffle on Tracks play the whole library, not the page showing', async ( {
+		page,
+	} ) => {
+		await page.goto( `${ pageUrl }?riff_view=tracks` );
+		const holder = page.locator( '.riff-album-tracks' );
+		await expect( holder, 'the list says where it goes on, not every track again' ).toHaveAttribute( 'data-riff-more', /"url"/ );
+		await expect( holder ).not.toHaveAttribute( 'data-riff-tracks', /./ );
+		// As the app asks, signed in.
+		const library = await page.evaluate( async () => {
+			const r = await window.riffInternal.request( '/wp-json/riff/v1/tracks?per_page=100' );
+			return ( await r.json() ).items.map( ( t ) => t.id );
+		} );
+		const queued = () => page.evaluate( () => window.riff.queue().map( ( t ) => t.id ) );
+
+		await page.locator( '[data-riff-app-action="play"]' ).click();
+		await expect.poll( queued ).toEqual( library );
+		await page.locator( '[data-riff-app-action="shuffle"]' ).click();
+		await expect( page.locator( '.riff-bar [data-riff-action="shuffle"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
+		await expect.poll( async () => ( await queued() ).toSorted() ).toEqual( library.toSorted() );
+	} );
+
+	test( 'a queue from a long list takes on its next page as it nears the end', async ( {
+		page,
+	} ) => {
+		const pages = await page.evaluate( async () => {
+			const r = await window.riffInternal.request( '/wp-json/riff/v1/tracks?per_page=1' );
+			const first = await r.json();
+			window.riffInternal.playMore( first.items, 0, {
+				url: '/wp-json/riff/v1/tracks?per_page=1',
+				page: 1,
+				pages: first.pages,
+			} );
+			return first.pages;
+		} );
+		test.skip( pages < 3, 'needs a library of three tracks or more' );
+		const titles = () => page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) );
+		const library = await page.evaluate( async () => {
+			const r = await window.riffInternal.request( '/wp-json/riff/v1/tracks?per_page=100' );
+			return ( await r.json() ).items.map( ( t ) => t.title );
+		} );
+		// The first track loads with nothing after it, so the second page is asked for at once,
+		// and each track after asks for the one after it.
+		await expect.poll( titles ).toEqual( library.slice( 0, 2 ) );
+		await page.evaluate( () => window.riff.next() );
+		await expect.poll( titles ).toEqual( library.slice( 0, 3 ) );
+	} );
+
 	test( 'Play and Shuffle start the post from its header', async ( {
 		page,
 	} ) => {

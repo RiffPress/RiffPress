@@ -74,6 +74,7 @@ export function playback( P ) {
 		 * @param {Object}   api          `window.riff`.
 		 */
 		emit( 'track', { track: t, index: P.pos, queue: api.queue() } );
+		P.further();
 	}
 
 	function toggle() {
@@ -128,6 +129,7 @@ export function playback( P ) {
 		P.queue = [];
 		P.order = [];
 		P.pos = -1;
+		P.more = null;
 		root.hidden = true;
 		// The record back in its sleeve, for the next album's turn.
 		P.deck( false );
