@@ -85,6 +85,19 @@ final class App {
 	}
 
 	/**
+	 * Whether a post is a Listen page: it holds the Listen block, the [riff] shortcode or the
+	 * Listen template.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param WP_Post $post Post.
+	 * @return bool
+	 */
+	public static function holds_app( WP_Post $post ): bool {
+		return Standalone::holds_player( $post ) || has_shortcode( $post->post_content, 'riff' );
+	}
+
+	/**
 	 * Puts the view's name before the page's in the document title.
 	 *
 	 * Each view has its own address, so it has its own title too: a screen reader says it when the
@@ -98,7 +111,7 @@ final class App {
 	 */
 	public static function title_parts( $parts ) {
 		$page = get_queried_object();
-		if ( ! is_array( $parts ) || ! $page instanceof WP_Post || ! ( Standalone::holds_player( $page ) || has_shortcode( $page->post_content, 'riff' ) ) ) {
+		if ( ! is_array( $parts ) || ! $page instanceof WP_Post || ! self::holds_app( $page ) ) {
 			return $parts;
 		}
 		$name = self::view_name();

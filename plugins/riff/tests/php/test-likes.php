@@ -386,6 +386,21 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$this->assertSame( 'A mixtape', $items[0]['post']['title'], 'where it played from, for Jump back in, not the post it was uploaded to' );
 	}
 
+	public function test_history_never_names_a_listen_page_as_where_a_track_played_from(): void {
+		wp_set_current_user( $this->user );
+		$listen = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_title'   => 'Listen',
+				'post_content' => '<!-- wp:riff/app /-->',
+			)
+		);
+		$items  = $this->call( 'POST', '/users/me/history', array( 'items' => array( array( 'id' => $this->tracks[0], 'post' => $listen ) ) ) )->get_data()['items']; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+
+		$this->assertNotSame( $listen, (int) ( $items[0]['post']['id'] ?? 0 ), 'the post it belongs to, as the tracks route has it, not the Listen page it was played on' );
+	}
+
 	public function test_history_keeps_thirty(): void {
 		$plays = array();
 		for ( $i = 1; $i <= 40; $i++ ) {

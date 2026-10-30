@@ -70,11 +70,20 @@ export function homeRows( ctx ) {
 				return;
 			}
 		}
+		// A Listen page is not where a track plays from, though older plays may name this one.
+		const isPage = ( p ) => {
+			const u = new URL( p.url || '', location.href );
+			return (
+				u.origin === ctx.page.origin && u.pathname === ctx.page.pathname
+			);
+		};
 		const played = api
 			.history()
 			.filter( ( t ) => ! known || known.tracks.has( Number( t.id ) ) )
 			.map( ( t ) =>
-				known && t.post?.id && ! known.posts.has( Number( t.post.id ) )
+				t.post?.id &&
+				( isPage( t.post ) ||
+					( known && ! known.posts.has( Number( t.post.id ) ) ) )
 					? { ...t, post: null }
 					: t
 			);

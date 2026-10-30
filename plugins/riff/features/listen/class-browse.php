@@ -500,13 +500,14 @@ final class Browse {
 	 */
 	public static function rows( array $tracks, bool $numbered = false, bool $heads = false ): string {
 		// Each row is rendered as part of the post its track belongs to, so it takes that post's
-		// artwork and names it as where it plays from, as it would in the post itself.
+		// artwork and names it as where it plays from, as it would in the post itself. A track in no
+		// post is rendered in none, as the tracks route has it, not as part of the Listen page.
 		global $post;
 		$listen = $post;
 		$rows   = '';
 		foreach ( $tracks as $track ) {
 			$parent = (int) ( $track['post']['id'] ?? 0 );
-			$post   = $parent ? get_post( $parent ) : $listen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restored below.
+			$post   = $parent ? get_post( $parent ) : null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restored below.
 			$rows  .= do_blocks(
 				sprintf(
 					'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
