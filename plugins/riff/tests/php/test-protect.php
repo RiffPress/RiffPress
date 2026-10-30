@@ -227,6 +227,61 @@ class Test_Riff_Protect extends Riff_TestCase {
 		}
 	}
 
+	public function test_a_file_kept_off_this_server_is_protected_only_by_the_plugin_that_keeps_it(): void {
+		// As WP Offload Media leaves a file once it is copied to the bucket: gone from here.
+		wp_delete_file( (string) get_attached_file( $this->track ) );
+		$this->assertStringContainsString( 'kept off this server', Protect::field( array(), get_post( $this->track ) )['riff_protected']['helps'], 'the Media Library says so' );
+
+		$done = Protected_Files::protect( $this->track );
+		$this->assertWPError( $done, 'not protected: nothing could make the copy elsewhere private' );
+		$this->assertSame( 'riff_protect_storage', $done->get_error_code() );
+		$this->assertFalse( Protect::is( $this->track ) );
+
+		$asked   = array();
+		$storage = static function ( $done, $id, $protect ) use ( &$asked ) {
+			$asked[] = array( $id, $protect );
+			return true;
+		};
+		add_filter( 'riff_protect_storage', $storage, 10, 3 );
+		$from = (string) wp_get_attachment_url( $this->track );
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => '<audio src="' . $from . '"></audio>',
+			)
+		);
+
+		$this->assertTrue( Protected_Files::protect( $this->track ) );
+		$this->assertTrue( Protect::is( $this->track ) );
+		$this->assertStringContainsString( Protect::address( $this->track ), (string) get_post_field( 'post_content', $this->post ), 'posts are relinked' );
+		$this->assertTrue( Protected_Files::unprotect( $this->track ) );
+		$this->assertFalse( Protect::is( $this->track ) );
+		remove_filter( 'riff_protect_storage', $storage );
+
+		$this->assertSame( array( array( $this->track, true ), array( $this->track, false ) ), $asked );
+	}
+
+	public function test_a_file_on_this_server_is_put_back_when_its_storage_elsewhere_refuses(): void {
+		$public = (string) get_attached_file( $this->track );
+		$refuse = static fn() => new WP_Error( 'cdn_down', 'The bucket could not be reached.' );
+		add_filter( 'riff_protect_storage', $refuse );
+		$done = Protected_Files::protect( $this->track );
+		remove_filter( 'riff_protect_storage', $refuse );
+
+		$this->assertWPError( $done );
+		$this->assertSame( 'The bucket could not be reached.', $done->get_error_message(), 'the plugin\'s reason, for the Media Library' );
+		$this->assertFalse( Protect::is( $this->track ) );
+		$this->assertFileExists( $public, 'back where it was, never half protected' );
+		$this->assertSame( $public, (string) get_attached_file( $this->track ) );
+
+		$this->assertTrue( Protected_Files::protect( $this->track ) );
+		add_filter( 'riff_protect_storage', $refuse );
+		$this->assertWPError( Protected_Files::unprotect( $this->track ) );
+		remove_filter( 'riff_protect_storage', $refuse );
+		$this->assertTrue( Protect::is( $this->track ), 'nor half public' );
+		$this->assertFileExists( (string) get_attached_file( $this->track ) );
+	}
+
 	public function test_a_copy_the_player_has_is_current_as_the_rfc_has_it(): void {
 		$etag = '"abc"';
 		$time = strtotime( '2026-10-01 12:00:00 UTC' );

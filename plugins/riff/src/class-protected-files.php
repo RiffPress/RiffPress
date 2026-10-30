@@ -85,20 +85,71 @@ final class Protected_Files {
 			return true;
 		}
 		$type = strtok( (string) get_post_mime_type( $id ), '/' );
-		$file = (string) get_attached_file( $id, true );
-		if ( ( 'audio' !== $type && 'video' !== $type ) || ! is_file( $file ) ) {
+		if ( 'audio' !== $type && 'video' !== $type ) {
 			return new WP_Error( 'riff_protect_file', __( 'Only an audio or video file in the Media Library can be protected.', 'riff' ) );
 		}
-		$from = (string) wp_get_attachment_url( $id );
-		$rel  = self::relative( $file );
-		$to   = self::free( self::dir() . '/' . ltrim( $rel, '/' ) );
-		if ( ! self::move( $file, $to ) ) {
+		$file  = (string) get_attached_file( $id, true );
+		$local = self::local( $file );
+		$from  = (string) wp_get_attachment_url( $id );
+		$rel   = self::relative( $file );
+		$to    = $local ? self::free( self::dir() . '/' . ltrim( $rel, '/' ) ) : '';
+		if ( $local && ! self::move( $file, $to ) ) {
 			return new WP_Error( 'riff_protect_move', __( 'The file could not be moved into the protected folder.', 'riff' ) );
 		}
-		update_attached_file( $id, $to );
+		$done = self::storage( $id, true );
+		if ( true !== $done && ( ! $local || is_wp_error( $done ) ) ) {
+			// Put back, so a file is never half protected.
+			if ( $local ) {
+				self::move( $to, $file );
+			}
+			return is_wp_error( $done ) ? $done : new WP_Error( 'riff_protect_storage', __( 'This file is kept off this server, so moving it would leave it public there. Protecting it needs the plugin that stores it to make it private.', 'riff' ) );
+		}
+		if ( $local ) {
+			update_attached_file( $id, $to );
+		}
 		update_post_meta( $id, self::META, $rel );
 		self::relink( $from, Protect::address( $id ) );
 		return true;
+	}
+
+	/**
+	 * Whether a file is on this server, in a folder the web server can be told to refuse: not in
+	 * object storage through a stream wrapper, as S3 Uploads keeps uploads, and not removed after
+	 * its copy there, as WP Offload Media can.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $file Absolute path.
+	 * @return bool
+	 */
+	public static function local( string $file ): bool {
+		return '' !== $file && ! wp_is_stream( $file ) && is_file( $file );
+	}
+
+	/**
+	 * Asks the plugin that stores a file elsewhere to make it private, or public again.
+	 *
+	 * @param int  $id      Attachment ID.
+	 * @param bool $protect Whether it is being protected.
+	 * @return true|WP_Error|null Null when no plugin keeps it elsewhere.
+	 */
+	private static function storage( int $id, bool $protect ) {
+		/**
+		 * Filters whether the storage a file is kept in elsewhere was made private, when it is
+		 * protected, or public again, when it isn't. A plugin that keeps uploads in object storage
+		 * or on a CDN answers for its own files: true once the copy there is private (or public
+		 * again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an
+		 * answer, a file only on this server is moved into the protected folder, and one kept
+		 * elsewhere is not protected, as moving it would leave it public there.
+		 *
+		 * @since 5.7.0
+		 *
+		 * @param true|WP_Error|null $done    Null, the default: nothing keeps it elsewhere.
+		 * @param int                $id      Attachment ID.
+		 * @param bool               $protect True to make it private, false to make it public again.
+		 */
+		$done = apply_filters( 'riff_protect_storage', null, $id, $protect );
+		return true === $done || is_wp_error( $done ) ? $done : null;
 	}
 
 	/**
@@ -113,14 +164,26 @@ final class Protected_Files {
 		if ( ! Protect::is( $id ) ) {
 			return true;
 		}
-		$file = (string) get_attached_file( $id, true );
-		$rel  = (string) get_post_meta( $id, self::META, true );
-		$to   = self::free( trailingslashit( wp_upload_dir( null, false )['basedir'] ) . ltrim( $rel, '/' ) );
-		if ( ! is_file( $file ) || ! self::move( $file, $to ) ) {
+		$file  = (string) get_attached_file( $id, true );
+		$rel   = (string) get_post_meta( $id, self::META, true );
+		// In the protected folder on this server, or kept elsewhere by the plugin that protected it.
+		$local = ! wp_is_stream( $file ) && str_starts_with( $file, self::dir() . '/' );
+		$to    = $local ? self::free( trailingslashit( wp_upload_dir( null, false )['basedir'] ) . ltrim( $rel, '/' ) ) : '';
+		if ( $local && ( ! is_file( $file ) || ! self::move( $file, $to ) ) ) {
 			return new WP_Error( 'riff_protect_move', __( 'The file could not be moved out of the protected folder.', 'riff' ) );
 		}
+		$done = self::storage( $id, false );
+		if ( true !== $done && ( ! $local || is_wp_error( $done ) ) ) {
+			// Put back, so a file is never half public.
+			if ( $local ) {
+				self::move( $to, $file );
+			}
+			return is_wp_error( $done ) ? $done : new WP_Error( 'riff_protect_storage', __( 'This file is kept off this server. Making it public again needs the plugin that stores it.', 'riff' ) );
+		}
 		$from = Protect::address( $id );
-		update_attached_file( $id, $to );
+		if ( $local ) {
+			update_attached_file( $id, $to );
+		}
 		delete_post_meta( $id, self::META );
 		self::relink( $from, (string) wp_get_attachment_url( $id ) );
 		return true;
