@@ -7,6 +7,7 @@
 
 use Riff\Catalog;
 use Riff\Listen\Together;
+use Riff\Listen\Together_Scenes;
 
 /**
  * Riff\Listen\Together.
@@ -452,6 +453,56 @@ class Test_Riff_Together extends Riff_TestCase {
 		$clock = $this->call( 'GET', '/together/clock' )->get_data();
 		$this->assertLessThanOrEqual( $clock['now'], $clock['received'] );
 		$this->assertEqualsWithDelta( microtime( true ) * 1000, $clock['now'], 5000 );
+	}
+
+	public function test_presence_scenes_plays_a_listener_through_riffs_steps(): void {
+		$steps = apply_filters( 'wp_presence_scene_steps', array() );
+		foreach ( array( 'riffPlay', 'riffPause', 'riffResume', 'riffSkip', 'riffSeek', 'riffStop' ) as $name ) {
+			$this->assertIsCallable( $steps[ $name ]['callback'], $name );
+		}
+		$this->assertContains( RIFF_DIR . 'features/listen/scenes', array_map( 'untrailingslashit', apply_filters( 'wp_presence_scene_libraries', array() ) ) );
+
+		// The post's tracks are its audio blocks, as the player reads them.
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => implode(
+					'',
+					array_map(
+						static fn( $id ) => sprintf( '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="%s"></audio></figure><!-- /wp:audio -->', $id, wp_get_attachment_url( $id ) ),
+						$this->tracks
+					)
+				),
+			)
+		);
+		wp_set_current_user( $this->host );
+		$title = get_the_title( $this->tracks[0] );
+		Together_Scenes::play( null, array( 'text' => $title ) );
+		$was = Together::shared( $this->host );
+		$this->assertSame( $this->tracks[0], $was['queue'][ $was['index'] ]['id'], 'plays the post from the track named' );
+		$this->assertTrue( $was['playing'] );
+
+		Together_Scenes::pause();
+		$this->assertFalse( Together::shared( $this->host )['playing'] );
+		Together_Scenes::resume();
+		$this->assertTrue( Together::shared( $this->host )['playing'] );
+		Together_Scenes::seek( null, array( 'text' => '30' ) );
+		$this->assertSame( 30.0, Together::shared( $this->host )['at'] );
+		Together_Scenes::skip();
+		$was = Together::shared( $this->host );
+		$this->assertSame( $this->tracks[1], $was['queue'][ $was['index'] ]['id'] );
+		$this->assertSame( 0.0, $was['at'] );
+
+		Together_Scenes::stop();
+		$this->assertNull( Together::shared( $this->host ) );
+		$this->expectException( RuntimeException::class );
+		Together_Scenes::pause();
+	}
+
+	public function test_a_scene_naming_a_track_on_no_published_post_fails_its_step(): void {
+		wp_set_current_user( $this->host );
+		$this->expectException( RuntimeException::class );
+		Together_Scenes::play( null, array( 'text' => get_the_title( $this->secret['id'] ) ) );
 	}
 
 	public function test_an_index_past_the_queue_is_refused(): void {

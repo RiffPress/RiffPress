@@ -97,6 +97,7 @@ final class Together {
 		add_action( 'personal_options', array( self::class, 'field' ) );
 		add_action( 'personal_options_update', array( self::class, 'save' ) );
 		add_action( 'edit_user_profile_update', array( self::class, 'save' ) );
+		Together_Scenes::register();
 	}
 
 	/**
