@@ -415,12 +415,12 @@ test( 'the window is laid out in panels in a black frame, home and search in the
 	// The view's panel is a rounded window in a fixed frame, the page scrolling behind it.
 	expect( frame.cut ).toEqual( { radius: '8px', position: 'fixed' } );
 
-	// Home, then search, in the middle of the strip.
+	// Home, then search, one group in the middle of the strip.
 	expect( frame.home.bottom ).toBeLessThanOrEqual( 64 );
 	expect( frame.search.bottom ).toBeLessThanOrEqual( 64 );
 	expect( frame.home.right ).toBeLessThan( frame.search.x );
 	expect(
-		Math.abs( frame.search.x + frame.search.width / 2 - frame.width / 2 )
+		Math.abs( ( frame.home.x + frame.search.right ) / 2 - frame.width / 2 )
 	).toBeLessThanOrEqual( 1 );
 
 	// Home is a button in the strip that still goes home; search still searches.
