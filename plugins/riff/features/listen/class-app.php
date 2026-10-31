@@ -219,7 +219,7 @@ final class App {
 		return sprintf(
 			'<div %s data-riff-app data-riff-rest="%s" data-riff-tracks-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s" data-riff-browse="%s">' .
 			'<nav class="riff-app-bar" aria-label="%s">%s</nav>' .
-			'<div class="riff-app-view" data-riff-app-view>%s</div>%s</div>',
+			'<div class="riff-app-view" data-riff-app-view>%s</div></div>',
 			$wrapper,
 			esc_url( rest_url( Library::REST . '/library' ) ),
 			esc_url( rest_url( Library::REST . '/tracks' ) ),
@@ -229,8 +229,7 @@ final class App {
 			esc_attr( implode( ',', Browse::ARGS ) ),
 			esc_attr__( 'Riff', 'riff' ),
 			Browse::nav( $page, $browse ),
-			$view,
-			Ui::card_template()
+			$view
 		);
 	}
 

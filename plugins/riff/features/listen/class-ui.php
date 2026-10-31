@@ -242,27 +242,6 @@ final class Ui {
 	}
 
 	/**
-	 * The card app.js fills in for a card it adds: every part present, for it to fill or remove.
-	 *
-	 * @since 4.20.0
-	 *
-	 * @return string A template element.
-	 */
-	public static function card_template(): string {
-		return '<template data-riff-card-template>' . self::card(
-			array(
-				'href'  => '#',
-				'class' => 'riff-card-template',
-				'art'   => '#',
-				'play'  => array(
-					'action' => '',
-					'label'  => '',
-				),
-			)
-		) . '</template>';
-	}
-
-	/**
 	 * A row of cards, as Home's: a heading, a Show all link, and the cards, which scroll sideways.
 	 *
 	 * @since 4.18.0
