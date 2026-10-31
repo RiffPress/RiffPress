@@ -28,8 +28,7 @@ jobs:
       - name: Build the plugin folder
         run: |
           set -euo pipefail
-          mkdir -p build/riff
-          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          bash .github/scripts/build-riff.sh
       - name: The version being deployed
         id: version
         run: |

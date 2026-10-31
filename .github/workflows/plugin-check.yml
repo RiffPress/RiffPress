@@ -42,6 +42,11 @@ jobs:
         run: |
           set -euo pipefail
           for p in riff riff-lyrics riff-sign-in; do
+            if [ "$p" = riff ]; then
+              # Riff with its extensions, as a release builds it.
+              bash .github/scripts/build-riff.sh
+              continue
+            fi
             mkdir -p "build/$p"
             rsync -a --exclude-from='.distignore' "./plugins/$p/" "build/$p/"
           done

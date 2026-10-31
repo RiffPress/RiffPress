@@ -58,8 +58,7 @@ jobs:
       - name: Build riff.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff
-          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          bash .github/scripts/build-riff.sh
           (cd build && zip -qr riff.zip riff/)
           # The demo set travels beside the zip, the same selection the Pages workflow publishes, so the
           # preview plays this pull request's recordings rather than whatever main last published.
