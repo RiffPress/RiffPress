@@ -1,9 +1,9 @@
 /* Listening now: who else on the site is playing, as a row on Home. The server draws the row hidden,
  * and only when the Presence API is active and the listener is signed in; this asks the room every
  * fifteen seconds while Home shows it and the page is in view, with the version it last had, so a
- * room where nothing has changed costs the server a lookup and nothing more. Pressing someone plays
- * their queue from where they are now. */
-import { route } from 'riff-app/helpers';
+ * room where nothing has changed costs the server a lookup and nothing more. Pressing someone follows
+ * them: the player plays what they play, where they are, and keeps with them. */
+import { fmt, route } from 'riff-app/helpers';
 
 export function togetherRow( ctx ) {
 	const { api, view, __, tell } = ctx;
@@ -29,6 +29,11 @@ export function togetherRow( ctx ) {
 				href: '',
 				play: { action: 'listen-along', data: { user: l.user.id } },
 				label: l.user.name,
+				says: fmt(
+					/* translators: %s: The listener's name. */
+					__( 'Follow %s', 'riff' ),
+					l.user.name
+				),
 			} )
 		);
 		const into = row.querySelector( '.riff-shelf-row' );
@@ -76,35 +81,29 @@ export function togetherRow( ctx ) {
 	setInterval( ask, EVERY );
 	document.addEventListener( 'visibilitychange', ask );
 
-	// Their queue, from their track, where they are now: where they were, and the time since if
-	// it plays, by the server's clock.
+	// Follows them: the player takes it from here (assets/player/together.js).
 	async function listenAlong( button ) {
 		if ( button.getAttribute( 'aria-busy' ) === 'true' ) {
 			return;
 		}
 		button.setAttribute( 'aria-busy', 'true' );
+		const user = Number( button.dataset.riffUser );
+		const name = listeners.find( ( l ) => l.user.id === user )?.user.name;
+		let followed = false;
 		try {
-			const r = await api.request(
-				route(
-					shelf().dataset.riffTogether,
-					`/${ Number( button.dataset.riffUser ) }`
-				)
-			);
-			if ( ! r.ok ) {
-				throw new Error( String( r.status ) );
-			}
-			const l = await r.json();
-			const at =
-				Number( l.at ) +
-				( l.playing ? ( Number( l.now ) - Number( l.since ) ) / 1000 : 0 );
-			api.playFrom( l.queue, l.index, at );
-		} catch {
+			followed = await api.follow( user, name || '' );
+		} catch ( e ) {
+			// A fault, not their leaving: said where it can be looked into.
+			// eslint-disable-next-line no-console
+			console.error( e );
+		} finally {
+			button.removeAttribute( 'aria-busy' );
+		}
+		if ( ! followed ) {
 			tell(
 				__( 'They have stopped listening, or to something you can’t hear.', 'riff' )
 			);
 			ask();
-		} finally {
-			button.removeAttribute( 'aria-busy' );
 		}
 	}
 

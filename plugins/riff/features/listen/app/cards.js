@@ -29,6 +29,7 @@ export function cards( ctx ) {
 		href,
 		play,
 		label,
+		says = '',
 		data = {},
 		id = '',
 	} ) {
@@ -64,12 +65,14 @@ export function cards( ctx ) {
 		for ( const [ name, value ] of Object.entries( play.data || {} ) ) {
 			button.setAttribute( `data-riff-${ name }`, String( value ) );
 		}
+		// What pressing it does, when that is more than playing what the card shows.
 		button.setAttribute(
 			'aria-label',
-			fmt(
-				/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
-				label
-			)
+			says ||
+				fmt(
+					/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
+					label
+				)
 		);
 		const link = card.querySelector( '.riff-card-link' );
 		link.querySelector( '.riff-card-title' ).textContent = title;

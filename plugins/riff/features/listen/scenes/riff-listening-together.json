@@ -1,0 +1,14 @@
+{
+	"apiVersion": 1,
+	"name": "riff-listening-together",
+	"title": "Listening together",
+	"cast": [ "subscriber" ],
+	"steps": [
+		{ "at": 0, "actor": 1, "step": "riffPlay", "text": "Underground" },
+		{ "at": 30, "actor": 1, "step": "riffPause" },
+		{ "at": 40, "actor": 1, "step": "riffResume" },
+		{ "at": 50, "actor": 1, "step": "riffSkip" },
+		{ "at": 60, "actor": 1, "step": "riffSeek", "text": "30" },
+		{ "at": 75, "actor": 1, "step": "riffStop" }
+	]
+}

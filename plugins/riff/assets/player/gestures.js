@@ -20,6 +20,7 @@ export default function gestures( P ) {
 			P.swiped = Math.abs( dx ) > 10 || Math.abs( dy ) > 10;
 			setTimeout( () => ( P.swiped = false ), 0 );
 			if ( Math.abs( dx ) > 60 && Math.abs( dx ) > Math.abs( dy ) ) {
+				P.press( dx < 0 ? 'next' : 'prev' );
 				if ( dx < 0 ) {
 					P.next();
 				} else {

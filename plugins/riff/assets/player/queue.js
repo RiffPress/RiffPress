@@ -267,9 +267,10 @@ export function queue( P ) {
 				t.duration ? time( t.duration ) : ''
 			}</span>` +
 			'</button>';
-		li.firstElementChild.addEventListener( 'click', () =>
-			p === P.pos ? P.toggle() : P.go( p )
-		);
+		li.firstElementChild.addEventListener( 'click', () => {
+			P.press( 'pick' );
+			return p === P.pos ? P.toggle() : P.go( p );
+		} );
 		// Alt and an arrow moves the track; dragging does too, with a mouse.
 		li.firstElementChild.addEventListener( 'keydown', ( e ) => {
 			if ( e.altKey && ( e.key === 'ArrowUp' || e.key === 'ArrowDown' ) ) {

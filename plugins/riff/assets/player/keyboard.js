@@ -79,17 +79,22 @@ export function keyboard( P ) {
 			( e.key === ' ' && ! target.closest?.( 'button, a, summary' ) ) ||
 			( key === 'k' && ! e.shiftKey )
 		) {
+			P.press( 'toggle' );
 			P.toggle();
 		} else if ( key === 'j' && ! e.shiftKey ) {
+			P.press( 'seek' );
 			m.currentTime = Math.max( 0, m.currentTime - 10 );
 		} else if ( key === 'l' && ! e.shiftKey ) {
+			P.press( 'seek' );
 			m.currentTime = Math.min(
 				m.duration || Infinity,
 				m.currentTime + 10
 			);
 		} else if ( key === 'n' && e.shiftKey ) {
+			P.press( 'next' );
 			P.next();
 		} else if ( key === 'p' && e.shiftKey ) {
+			P.press( 'prev' );
 			P.prev();
 		} else {
 			return;
