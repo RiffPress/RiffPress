@@ -33,6 +33,10 @@ if ( ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) || ( defined( 'WP_DEBUG' ) &&
 	wp_print_inline_script_tag( 'try{var d=new URLSearchParams(location.search).get("riff_desktop");if(d!==null){d==="0"?localStorage.removeItem("riff-desktop"):localStorage.setItem("riff-desktop","1");}if(localStorage.getItem("riff-desktop")){document.documentElement.classList.add("riff-desktop","riff-desktop-inset","riff-desktop-preview");}}catch(e){}' );
 }
 wp_head();
+// The frame standalone.css chose for this window, copied to <html data-riff-frame> once the
+// stylesheets are in and before anything is painted, and again whenever the window changes it,
+// with a riff:frame event. No size is written here: the frame is CSS's.
+wp_print_inline_script_tag( '(function(){var r=document.documentElement,read=function(){var f=getComputedStyle(r).getPropertyValue("--riff-frame").trim()||"tabs";if(r.dataset.riffFrame!==f){r.dataset.riffFrame=f;dispatchEvent(new CustomEvent("riff:frame",{detail:f}));}};read();addEventListener("resize",read);})();' );
 ?>
 </head>
 <body class="riff-standalone">

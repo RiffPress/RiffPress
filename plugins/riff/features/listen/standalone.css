@@ -1,6 +1,33 @@
 /* Standalone mode: the Listen block on its own at app/, in Riff's dark.
    Loaded only there, after app.css. No build step: this file is what ships. */
 
+/* ---- The frame: how standalone mode is laid out, from the window's own size
+   and shape, never the device, in this one place. sidebar: room for the
+   column (17.5rem) beside a view of at least two cards and their gaps,
+   56.25rem in all, the width the layout below already switches at. rail:
+   short and wide, a phone on its side or a folded Duo's outer screen, with
+   less height than the bar, a view and the tabs need, 31.25rem. tabs: the
+   rest. The page's script copies it to <html data-riff-frame> before the
+   first paint (templates/standalone.php), for whatever lays itself out by
+   it. */
+:root {
+	--riff-frame: tabs;
+}
+
+@media (aspect-ratio > 13 / 20) {
+
+	:root {
+		--riff-frame: rail;
+	}
+}
+
+@media (width >= 56.25rem) and (not ((aspect-ratio > 5 / 4) and (height < 31.25rem))) {
+
+	:root {
+		--riff-frame: sidebar;
+	}
+}
+
 /* ---- Standalone mode: the Listen block on its own at app/, in Riff's dark
    look, with no theme around it. */
 .riff-standalone {
