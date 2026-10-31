@@ -1,0 +1,169 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "preferredVersions": {
+    "php": "8.3",
+    "wp": "beta"
+  },
+  "landingPage": "/listen/app/",
+  "login": true,
+  "steps": [
+    {
+      "step": "setSiteOptions",
+      "options": {
+        "blogname": "Riff",
+        "permalink_structure": "/%postname%/"
+      }
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/riff.zip"
+      }
+    },
+    {
+      "step": "mkdir",
+      "path": "/wordpress/wp-content/riff-demo/compositions"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/seed.php",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/seed.php"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/mark.png",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/mark.png"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/albums.json",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/albums.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/base.txt",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/base.txt"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/manifest.json",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/manifest.json"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/cover.png",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/cover.png"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/01 - Intensities in Ten Cities [intensities].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/01%20-%20Intensities%20in%20Ten%20Cities%20%5Bintensities%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/01 - Intensities in Ten Cities [intensities].webm",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/01%20-%20Intensities%20in%20Ten%20Cities%20%5Bintensities%5D.webm"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/02 - Underground [underground].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/02%20-%20Underground%20%5Bunderground%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/03 - Trombone Detritus [detritus].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/03%20-%20Trombone%20Detritus%20%5Bdetritus%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/04 - It's a Brand New Day [new-day].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/04%20-%20It%27s%20a%20Brand%20New%20Day%20%5Bnew-day%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/05 - Stole Back My Soul [stole-back].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/05%20-%20Stole%20Back%20My%20Soul%20%5Bstole-back%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/06 - Sunk in Dars [sunk-in-dars].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/06%20-%20Sunk%20in%20Dars%20%5Bsunk-in-dars%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/07 - Little Dreamer Big Dreams [little-dreamer].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/07%20-%20Little%20Dreamer%20Big%20Dreams%20%5Blittle-dreamer%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/08 - Convergence [convergence].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/08%20-%20Convergence%20%5Bconvergence%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/09 - Hickory and Twine [hickory].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/09%20-%20Hickory%20and%20Twine%20%5Bhickory%5D.mp3"
+      }
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/riff-demo/compositions/10 - Everyday Adventures [everyday].mp3",
+      "data": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/demo/10%20-%20Everyday%20Adventures%20%5Beveryday%5D.mp3"
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require '/wordpress/wp-content/riff-demo/seed.php'; riff_seed_site( '/wordpress/wp-content/riff-demo/mark.png' ); $id = riff_seed( '/wordpress/wp-content/riff-demo/compositions' ); $base = rtrim( trim( (string) file_get_contents( '/wordpress/wp-content/riff-demo/base.txt' ) ), '/' ) . '/'; riff_seed_albums( '/wordpress/wp-content/riff-demo/albums.json', $base ); if ( $id ) { wp_update_post( array( 'ID' => $id, 'post_author' => 1 ) ); } wp_update_user( array( 'ID' => 1, 'display_name' => 'Riff' ) ); update_user_meta( 1, 'show_admin_bar_front', 'false' ); $cat = wp_insert_term( 'Jazz', 'category' ); if ( $id && ! is_wp_error( $cat ) ) { wp_set_post_categories( $id, array( (int) $cat['term_id'] ) ); } wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Listen', 'post_name' => 'listen', 'page_template' => 'listen', 'post_content' => '<!-- wp:riff/app {\"align\":\"full\"} /-->' ) ); flush_rewrite_rules(); ?>"
+    }
+  ]
+}
