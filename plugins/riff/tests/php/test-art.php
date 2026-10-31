@@ -185,7 +185,6 @@ class Test_Riff_Art extends Riff_TestCase {
 
 	public function test_a_cover_title_breaks_evenly_and_never_leaves_one_word_alone(): void {
 		$wrap = new ReflectionMethod( Cover::class, 'wrap' );
-		$wrap->setAccessible( true );
 		$this->assertSame( array( 'Hands Across', 'the Sea' ), $wrap->invoke( null, 'Hands Across the Sea', 14 ) );
 		$this->assertSame( array( 'Carols of', 'the Season' ), $wrap->invoke( null, 'Carols of the Season', 14 ) );
 		$this->assertSame( array( 'Strolling', 'Strings' ), $wrap->invoke( null, 'Strolling Strings', 14 ), 'two words may sit one a line' );
@@ -309,7 +308,6 @@ class Test_Riff_Art extends Riff_TestCase {
 			)
 		);
 		$keep = new ReflectionMethod( Art::class, 'keep' );
-		$keep->setAccessible( true );
 		$keep->invoke( null, (string) $post, $svg, $since );
 
 		$this->assertStringContainsString( 'riff-art=' . $post, Art::url( $post ), 'drawn again from the post as it is now' );
@@ -377,7 +375,6 @@ class Test_Riff_Art extends Riff_TestCase {
 		$svg = (string) Art::shared( $drawn );
 		$this->assertNotSame( '', $svg, "$drawn is drawn" );
 		$keep = new ReflectionMethod( Art::class, 'keep' );
-		$keep->setAccessible( true );
 		// Drawn after the last change, as the second it is kept to has passed.
 		$keep->invoke( null, $drawn, $svg, (float) get_option( Art::CHANGED, 0 ) + 0.5 );
 		return $svg;
