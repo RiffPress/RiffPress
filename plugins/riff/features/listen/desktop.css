@@ -217,13 +217,16 @@ html.riff-desktop .riff-standalone .riff-app {
 	}
 
 	/* Home and search leave the panel for the middle of the strip, as
-	   a round button, then the pill. */
+	   a round button, then the pill, the two centred as one group: the pill's
+	   middle sits half of Home and the gap (48px and 8px) right of the
+	   window's. Back and forward stay at the strip's left end, beside the
+	   window's own controls where it has them. */
 	html.riff-desktop .riff-standalone .riff-app .riff-app-search,
 	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
 		--riff-desktop-search: min(480px, 100vw - 640px);
 		position: fixed;
 		top: 8px;
-		left: 50%;
+		left: calc(50% + 28px);
 		z-index: 3;
 		display: block;
 		width: var(--riff-desktop-search);
@@ -255,7 +258,7 @@ html.riff-desktop .riff-standalone .riff-app {
 	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-home {
 		position: fixed;
 		top: 8px;
-		right: calc(50% + min(480px, 100vw - 640px) / 2 + 8px);
+		right: calc(50% + min(480px, 100vw - 640px) / 2 - 20px);
 		z-index: 3;
 		justify-content: center;
 		width: 48px;
@@ -266,19 +269,6 @@ html.riff-desktop .riff-standalone .riff-app {
 		background: #1f1f1f;
 		-webkit-app-region: no-drag;
 		app-region: no-drag;
-	}
-
-	/* In a browser there are no window controls for back and forward to sit
-	   beside, so they join Home and search in the middle, one group; in the
-	   desktop app, and an installed app with no title bar, they stay at the
-	   strip's left end with the window's own controls. */
-	html.riff-desktop:not(.riff-desktop-inset, .riff-desktop-overlay) .riff-standalone .riff-app-history {
-		position: fixed;
-		top: 8px;
-		right: calc(50% + min(480px, 100vw - 640px) / 2 + 8px + 48px + 12px);
-		z-index: 3;
-		align-items: center;
-		height: 48px;
 	}
 
 	html.riff-desktop .riff-standalone .riff-app .riff-app-home:hover {
