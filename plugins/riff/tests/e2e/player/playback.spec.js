@@ -4,7 +4,7 @@
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
-const { audioState, playerSite } = require( '../helpers/site' );
+const { audioState, playerSite, listen, said } = require( '../helpers/site' );
 
 const made = own();
 let postUrl;
@@ -169,20 +169,6 @@ test.describe( 'Player', () => {
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 		await expect( rows.nth( 1 ) ).toHaveAttribute( 'aria-label', /^Play Underground by/ );
 	} );
-
-	// What the polite live region says, in order, from here on.
-	const listen = ( page ) =>
-		page.evaluate( () => {
-			window.said = [];
-			const region = document.getElementById( 'a11y-speak-polite' );
-			new MutationObserver( () => {
-				const text = region.textContent.replace( /\u00a0/g, '' ).trim();
-				if ( text && text !== window.said.at( -1 ) ) {
-					window.said.push( text );
-				}
-			} ).observe( region, { childList: true, characterData: true, subtree: true } );
-		} );
-	const said = ( page ) => page.evaluate( () => window.said );
 
 	test( 'a track that cannot play is said and marked, and the next is only called playing once it plays', async ( {
 		page,
