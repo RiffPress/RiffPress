@@ -209,12 +209,24 @@ export function start( api ) {
 			return;
 		}
 		if ( action ) {
-			const holder = app.querySelector( '[data-riff-tracks]' );
+			const shuffle = action.dataset.riffAppAction === 'shuffle';
+			// A playlist plays whole, from its route, whichever page of it is showing.
+			const list = app.querySelector( '.riff-playlist-tracks' );
+			if ( list ) {
+				ctx.playPlaylist( Number( list.dataset.riffPlaylist ), shuffle );
+				return;
+			}
+			const holder = app.querySelector(
+				'[data-riff-more], [data-riff-tracks]'
+			);
+			// One page of a longer list plays the whole of it, from the route that drew it.
+			if ( holder?.dataset.riffMore ) {
+				ctx.playAll( action, parse( holder.dataset.riffMore ), shuffle );
+				return;
+			}
 			const tracks = holder ? parse( holder.dataset.riffTracks ) : null;
 			if ( Array.isArray( tracks ) && tracks.length ) {
-				api.play( tracks, 0, {
-					shuffle: action.dataset.riffAppAction === 'shuffle',
-				} );
+				api.play( tracks, 0, { shuffle } );
 			}
 			return;
 		}

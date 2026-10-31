@@ -74,7 +74,11 @@ Any audio or video file WordPress accepts and your listener's browser can play. 
 
 Yes. Make the post private, a draft, or password protected, and its tracks stay out of the Listen page's browsing and search for visitors.
 
-To keep the files themselves private, tick Protected on an audio or video file in the Media Library. Riff moves it into a folder of its own and only sends it to visitors who can read its post. Tools > Site Health tells you if your web server needs a rule to keep that folder closed, and shows the rule. Deleting Riff moves protected files back first.
+To keep the files themselves private, tick Protected on an audio or video file in the Media Library. Riff moves it into a folder of its own and only sends it to visitors who can read its post. Apache and LiteSpeed keep that folder closed with the rule Riff leaves in it. Nginx, which many managed hosts run, ignores that rule: the Protected box and Tools > Site Health say when your server sends the folder to anyone, and you, or your host, add this to the site's Nginx configuration:
+
+`location ~ /riff-protected-[a-z0-9]{20}/ { internal; }`
+
+Deleting Riff moves protected files back first.
 
 Membership and store plugins can decide who may play each track. A locked track stays listed with a lock that leads to your sign-up page. The [developer reference](https://riffpress.com/developers/php/) shows how.
 
@@ -101,6 +105,10 @@ From the post. Every audio and video block in the post is the queue, in order, s
 = Can I add a whole folder of albums at once? =
 
 Yes, if you can use WP-CLI. `wp riff import` with the path to a folder uploads the files to the Media Library and makes one album post for each folder that holds audio. Run it again and it skips what it already imported.
+
+= My files are lossless. Do listeners download all of that? =
+
+Not if you give a song a smaller copy. Choose an MP3 of it as its Streaming version in the Media Library, and the player streams that while the song stays the file you uploaded. Where the server has ffmpeg, `wp riff transcode` makes one for every lossless song.
 
 = Does Riff set cookies or keep personal data? =
 

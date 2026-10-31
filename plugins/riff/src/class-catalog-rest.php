@@ -8,6 +8,7 @@
 
 namespace Riff;
 
+use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -39,6 +40,14 @@ final class Catalog_Rest {
 	public const TERMS_PER_PAGE = 48;
 
 	/**
+	 * The fewest characters a search looks for: one matches nearly every title and name, and would
+	 * read them all to say so.
+	 *
+	 * @since 5.7.0
+	 */
+	private const SEARCH_MIN = 2;
+
+	/**
 	 * Hooks the routes.
 	 *
 	 * @since 4.16.0
@@ -54,7 +63,7 @@ final class Catalog_Rest {
 	 */
 	public static function routes(): void {
 		$search  = array(
-			'description' => __( 'Words to look for: a track matches on its title, artist or album; an album or artist on its name.', 'riff' ),
+			'description' => __( 'Words to look for, at least two characters: a track matches on its title, artist or album; an album or artist on its name.', 'riff' ),
 			'type'        => 'string',
 			'default'     => '',
 		);
@@ -79,6 +88,7 @@ final class Catalog_Rest {
 		 *
 		 * @since 4.16.0
 		 * @since 4.20.0 Takes include, for a list of tracks by ID such as a listener's likes.
+		 * @since 5.7.0 Takes after, and answers with next, to go on from where a page ended.
 		 */
 		register_rest_route(
 			Library::REST,
@@ -104,12 +114,24 @@ final class Catalog_Rest {
 						),
 						'include'  => $include,
 						'orderby'  => array(
-							'description' => __( 'By title, the most recently added first, or in the order include names them. An album is always in album order.', 'riff' ),
+							'description' => __( 'By title, the most recently added first, in the order include names them, or shuffled by seed. An album is in album order unless shuffled.', 'riff' ),
 							'type'        => 'string',
-							'enum'        => array( 'title', 'added', 'include' ),
+							'enum'        => array( 'title', 'added', 'include', 'random' ),
 							'default'     => 'title',
 						),
+						'seed'     => array(
+							'description' => __( 'With orderby random, the shuffle: the same seed deals the same order, so its pages follow on without a track twice.', 'riff' ),
+							'type'        => 'integer',
+							'default'     => 0,
+							'minimum'     => 0,
+						),
 						'page'     => $page,
+						'after'    => array(
+							'description'       => __( 'Where the last page ended, as its next said: the page after it, which stays fast however deep into the library it is. By title or newest first, and not with album or include.', 'riff' ),
+							'type'              => 'string',
+							'default'           => '',
+							'validate_callback' => static fn( $value ) => '' === $value || null !== self::cursor( (string) $value ) ? true : new WP_Error( 'rest_invalid_param', __( 'That is not where a page ended.', 'riff' ), array( 'status' => 400 ) ),
+						),
 						'per_page' => array(
 							'description' => __( 'Tracks per page.', 'riff' ),
 							'type'        => 'integer',
@@ -198,6 +220,10 @@ final class Catalog_Rest {
 		$album    = (int) $request['album'];
 		$artist   = (int) $request['artist'];
 		$search   = trim( (string) $request['search'] );
+		$added    = 'added' === $request['orderby'];
+		if ( self::too_short( $search ) ) {
+			return self::nothing( $page );
+		}
 
 		$args = array(
 			'post_type'        => 'attachment',
@@ -212,11 +238,17 @@ final class Catalog_Rest {
 			'suppress_filters' => false,
 			'riff_catalog'     => true,
 		);
-		if ( 'added' === $request['orderby'] ) {
+		if ( $added ) {
 			$args['orderby'] = array(
 				'date' => 'DESC',
 				'ID'   => 'DESC',
 			);
+		}
+		$seed = 'random' === $request['orderby'] ? absint( $request['seed'] ) : null;
+		if ( null !== $seed ) {
+			// MySQL's RAND() with a seed deals the same order each time it is asked, so page two of
+			// a shuffle is the rest of page one's deal.
+			$args['orderby'] = 'RAND(' . $seed . ')';
 		}
 		$include = array_values( array_filter( array_map( 'intval', (array) $request['include'] ) ) );
 		if ( $include ) {
@@ -256,18 +288,58 @@ final class Catalog_Rest {
 		if ( $tax ) {
 			$args['tax_query'] = $tax; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- the point of the route.
 		}
+		// By title or newest first, a page goes on from the last one's final track, by title or date
+		// and then ID, rather than counting its way past every track before it; and one more than
+		// the page is read, to know whether another follows. The total is counted on its own, and
+		// kept. A shuffle has no title or date to go on from, so its pages are counted.
+		$keyset = ! $album && ! $include && null === $seed;
+		$after  = $keyset ? self::cursor( (string) $request['after'] ) : null;
+		if ( $keyset ) {
+			$args['posts_per_page'] = $per_page + 1;
+			$args['offset']         = $after ? 0 : ( $page - 1 ) * $per_page;
+			$args['no_found_rows']  = true;
+			unset( $args['paged'] );
+		}
 
-		$where = self::visible_where();
-		$match = '' !== $search ? self::search_where( $search ) : '';
-		$scope = static function ( string $sql, \WP_Query $query ) use ( $where, $match ): string {
-			return $query->get( 'riff_catalog' ) ? $sql . $where . $match : $sql;
+		$named = array();
+		if ( '' !== $search ) {
+			// Through WordPress's own search, on the title and as one phrase, as the route has always
+			// matched; so a search plugin that answers WP_Query from an index of its own answers this.
+			$args['s']              = $search;
+			$args['sentence']       = true;
+			$args['search_columns'] = array( 'post_title' );
+			// ElasticPress answers a query that isn't the page's own only when asked to.
+			$args['ep_integrate'] = true;
+			$named                = self::names_holding( $search );
+		}
+
+		$where = self::visible_where() . self::versions_where();
+		$from  = $after ? self::after_where( $after, $added ) : '';
+		$scope = static function ( string $sql, \WP_Query $query ) use ( $where, $from ): string {
+			if ( ! $query->get( 'riff_catalog' ) ) {
+				return $sql;
+			}
+			return $sql . $where . ( $query->get( 'riff_count' ) ? '' : $from );
+		};
+		// Where WordPress searches its own tables, a track also matches by its album's or artist's
+		// name: core's search, which starts " AND (", stands beside the tracks filed under them.
+		$also = static function ( string $sql, \WP_Query $query ) use ( $named ): string {
+			global $wpdb;
+			if ( ! $query->get( 'riff_catalog' ) || '' === $sql || ! $named ) {
+				return $sql;
+			}
+			$in = implode( ',', array_map( 'intval', $named ) );
+			return " AND ( ( 1=1{$sql} ) OR {$wpdb->posts}.ID IN ( SELECT object_id FROM {$wpdb->term_relationships} WHERE term_taxonomy_id IN ( {$in} ) ) )";
 		};
 		add_filter( 'posts_where', $scope, 10, 2 );
+		add_filter( 'posts_search', $also, 10, 2 );
 		$query = new \WP_Query( $args );
+		$total = $keyset ? self::total( $args, $where ) : (int) $query->found_posts;
 		remove_filter( 'posts_where', $scope, 10 );
+		remove_filter( 'posts_search', $also, 10 );
 
-		$total = (int) $query->found_posts;
-		$pages = (int) $query->max_num_pages;
+		$pages = $keyset ? (int) ceil( $total / $per_page ) : (int) $query->max_num_pages;
+		$next  = '';
 		if ( $album ) {
 			// Upload order before title order: a file without a track number keeps its place in
 			// the album as it was added, as an album's files usually are.
@@ -275,23 +347,18 @@ final class Catalog_Rest {
 			$total = count( $ids );
 			$pages = (int) ceil( $total / $per_page );
 			update_meta_cache( 'post', $ids );
-			$ids = array_slice( self::in_album_order( $ids ), ( $page - 1 ) * $per_page, $per_page );
-			if ( $ids ) {
-				// The page's posts in one query, as the paged query would have loaded them.
-				get_posts(
-					array(
-						'post_type'        => 'attachment',
-						'post_status'      => 'inherit',
-						'post__in'         => $ids,
-						'posts_per_page'   => count( $ids ),
-						'no_found_rows'    => true,
-						'suppress_filters' => false,
-					)
-				);
-			}
+			$ids = null === $seed ? self::in_album_order( $ids ) : self::dealt( $ids, $seed );
+			$ids = array_slice( $ids, ( $page - 1 ) * $per_page, $per_page );
 		} else {
-			$ids = wp_list_pluck( $query->posts, 'ID' );
+			$posts = array_slice( $query->posts, 0, $per_page );
+			$ids   = wp_list_pluck( $posts, 'ID' );
+			if ( $keyset && count( $query->posts ) > $per_page ) {
+				$last = end( $posts );
+				$next = self::cursor_for( $added ? (string) $last->post_date : (string) $last->post_title, (int) $last->ID );
+			}
 		}
+		// The page's files, their posts and their artwork in a few queries, not a few for each.
+		Tracks::prime( $ids );
 		$items = array();
 		foreach ( $ids as $id ) {
 			$track = Tracks::from_attachment( (int) $id, (int) get_post_field( 'post_parent', $id ) );
@@ -305,8 +372,83 @@ final class Catalog_Rest {
 				'page'  => $page,
 				'pages' => $pages,
 				'total' => $total,
+				'next'  => $next,
 			)
 		);
+	}
+
+	/**
+	 * How many tracks a list holds, counted without sorting it, and kept until a post or a term
+	 * next changes.
+	 *
+	 * @param array  $args  The list's query.
+	 * @param string $where What limits it, as appended to its WHERE: the requester's and the search's.
+	 * @return int
+	 */
+	private static function total( array $args, string $where ): int {
+		unset( $args['posts_per_page'], $args['offset'], $args['paged'], $args['orderby'], $args['order'] );
+		$key   = 'tracks-total:' . md5( wp_json_encode( $args ) . $where ) . ':' . wp_cache_get_last_changed( 'posts' ) . ':' . wp_cache_get_last_changed( 'terms' );
+		$total = wp_cache_get( $key, 'riff' );
+		if ( false === $total ) {
+			$count = new \WP_Query(
+				array(
+					'fields'                 => 'ids',
+					'posts_per_page'         => 1,
+					'orderby'                => 'none',
+					'no_found_rows'          => false,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+					'riff_count'             => true,
+				) + $args
+			);
+			$total = (int) $count->found_posts;
+			wp_cache_set( $key, $total, 'riff', DAY_IN_SECONDS );
+		}
+		return (int) $total;
+	}
+
+	/**
+	 * Where a page ended, as next gives it: the final track's title, or its date when newest come
+	 * first, and its ID.
+	 *
+	 * @param string $value Title or date.
+	 * @param int    $id    Attachment ID.
+	 * @return string
+	 */
+	private static function cursor_for( string $value, int $id ): string {
+		return rtrim( strtr( base64_encode( (string) wp_json_encode( array( $value, $id ) ) ), '+/', '-_' ), '=' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- an address-safe cursor, not hiding anything.
+	}
+
+	/**
+	 * A cursor read back, or null for one this route didn't give.
+	 *
+	 * @param string $cursor Cursor.
+	 * @return array|null `[ title or date, ID ]`.
+	 */
+	private static function cursor( string $cursor ): ?array {
+		if ( '' === $cursor ) {
+			return null;
+		}
+		$value = json_decode( (string) base64_decode( strtr( $cursor, '-_', '+/' ), true ), true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- the cursor above.
+		if ( ! is_array( $value ) || 2 !== count( $value ) || ! is_string( $value[0] ?? null ) || ! is_int( $value[1] ?? null ) || $value[1] < 1 ) {
+			return null;
+		}
+		return $value;
+	}
+
+	/**
+	 * SQL for the tracks after a cursor, in the list's order.
+	 *
+	 * @param array $after `[ title or date, ID ]`.
+	 * @param bool  $added Whether newest come first, by date.
+	 * @return string
+	 */
+	private static function after_where( array $after, bool $added ): string {
+		global $wpdb;
+		[ $value, $id ] = $after;
+		return $added
+			? $wpdb->prepare( " AND ( {$wpdb->posts}.post_date < %s OR ( {$wpdb->posts}.post_date = %s AND {$wpdb->posts}.ID < %d ) )", $value, $value, $id )
+			: $wpdb->prepare( " AND ( {$wpdb->posts}.post_title > %s OR ( {$wpdb->posts}.post_title = %s AND {$wpdb->posts}.ID > %d ) )", $value, $value, $id );
 	}
 
 	/**
@@ -320,9 +462,11 @@ final class Catalog_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_terms( WP_REST_Request $request, string $taxonomy ): WP_REST_Response {
-		global $wpdb;
 		$page   = max( 1, (int) $request['page'] );
 		$search = trim( (string) $request['search'] );
+		if ( self::too_short( $search ) ) {
+			return self::nothing( $page );
+		}
 
 		// WordPress keeps each term's count of files; only the few tracks a visitor may not see are
 		// subtracted, so a page of albums never has to group the whole library.
@@ -351,7 +495,10 @@ final class Catalog_Rest {
 			$include = $include ? $include : array( 0 );
 		}
 		if ( $include ) {
-			$query['include'] = $include;
+			// WordPress drops exclude once include is given, so the terms whose every track is hidden
+			// are taken out of include too; none left is none at all, not every term.
+			$include          = array_values( array_diff( $include, $gone ) );
+			$query['include'] = $include ? $include : array( 0 );
 		}
 		$total = (int) wp_count_terms( $query );
 		$terms = get_terms(
@@ -360,8 +507,60 @@ final class Catalog_Rest {
 				'offset' => ( $page - 1 ) * self::TERMS_PER_PAGE,
 			)
 		);
-		$terms = is_array( $terms ) ? $terms : array();
-		$rows  = array();
+		return new WP_REST_Response(
+			array(
+				'items' => self::items( $taxonomy, is_array( $terms ) ? $terms : array(), $hidden ),
+				'page'  => $page,
+				'pages' => (int) ceil( $total / self::TERMS_PER_PAGE ),
+				'total' => $total,
+			)
+		);
+	}
+
+	/**
+	 * The albums or artists named, each as /albums or /artists lists it, all at once rather than a
+	 * page at a time: those with no track the requester can see are left out, the rest in no order.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $taxonomy Catalog::ALBUM or Catalog::ARTIST.
+	 * @param int[]  $ids      Term IDs.
+	 * @return array[]
+	 */
+	public static function named( string $taxonomy, array $ids ): array {
+		$ids = array_values( array_filter( array_map( 'intval', $ids ) ) );
+		if ( ! $ids ) {
+			return array();
+		}
+		$hidden = self::hidden_by_term( $taxonomy );
+		// Without the terms whose every track is hidden, in include itself, as WordPress drops
+		// exclude once include is given.
+		$ids = array_values( array_diff( $ids, array_keys( array_filter( $hidden, static fn( $h ) => $h['hidden'] >= $h['count'] ) ) ) );
+		if ( ! $ids ) {
+			return array();
+		}
+		$terms = get_terms(
+			array(
+				'taxonomy'   => $taxonomy,
+				'hide_empty' => true,
+				'include'    => $ids,
+			)
+		);
+		return self::items( $taxonomy, is_array( $terms ) ? $terms : array(), $hidden );
+	}
+
+	/**
+	 * Albums or artists as the routes give them: each counted by the tracks the requester can see,
+	 * and an album with its artist and the cover of its first track the requester can see.
+	 *
+	 * @param string  $taxonomy Catalog::ALBUM or Catalog::ARTIST.
+	 * @param array   $terms    Terms.
+	 * @param array[] $hidden   Hidden tracks by term, from hidden_by_term().
+	 * @return array[]
+	 */
+	private static function items( string $taxonomy, array $terms, array $hidden ): array {
+		global $wpdb;
+		$rows = array();
 		foreach ( $terms as $term ) {
 			$rows[] = (object) array(
 				'term_id' => $term->term_id,
@@ -384,12 +583,7 @@ final class Catalog_Rest {
 				$row->first = isset( $first[ $row->term_id ] ) ? (int) $first[ $row->term_id ]->first : 0;
 			}
 			// Load those tracks, their posts and their meta in a few queries rather than a few per album.
-			$firsts = array_filter( array_map( static fn( $row ) => (int) $row->first, $rows ) );
-			self::prime( $firsts );
-			$parents = array_filter( array_map( static fn( $id ) => (int) get_post_field( 'post_parent', $id ), $firsts ) );
-			self::prime( $parents );
-			$thumbs = array_filter( array_map( static fn( $id ) => (int) get_post_thumbnail_id( $id ), array_merge( $firsts, $parents ) ) );
-			self::prime( $thumbs );
+			Tracks::prime( array_map( static fn( $row ) => (int) $row->first, $rows ) );
 			update_termmeta_cache( array_map( static fn( $row ) => (int) $row->term_id, $rows ) );
 		}
 		$items = array();
@@ -408,14 +602,7 @@ final class Catalog_Rest {
 			}
 			$items[] = $item;
 		}
-		return new WP_REST_Response(
-			array(
-				'items' => $items,
-				'page'  => $page,
-				'pages' => (int) ceil( $total / self::TERMS_PER_PAGE ),
-				'total' => $total,
-			)
-		);
+		return $items;
 	}
 
 	/**
@@ -435,29 +622,9 @@ final class Catalog_Rest {
 	}
 
 	/**
-	 * Loads posts of any type or status, and their meta, into the cache in one query.
-	 *
-	 * @param int[] $ids Post IDs.
-	 */
-	private static function prime( array $ids ): void {
-		if ( $ids ) {
-			get_posts(
-				array(
-					'post__in'               => $ids,
-					'post_type'              => get_post_types(),
-					'post_status'            => get_post_stati(),
-					'numberposts'            => count( $ids ),
-					'orderby'                => 'none',
-					'no_found_rows'          => true,
-					'update_post_term_cache' => false,
-				)
-			);
-		}
-	}
-
-	/**
 	 * The audio files the requester may not see: those uploaded to a post that is unpublished or
-	 * behind a password. Usually a handful; none for someone who can upload files.
+	 * behind a password. Usually a handful; none for someone who can upload files. The same for
+	 * every visitor, so kept in the object cache until a post next changes.
 	 *
 	 * @return int[]
 	 */
@@ -466,8 +633,14 @@ final class Catalog_Rest {
 		if ( current_user_can( 'upload_files' ) ) {
 			return array();
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a narrow lookup with no API.
-		return array_map( 'intval', $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a INNER JOIN {$wpdb->posts} par ON par.ID = a.post_parent WHERE a.post_type = 'attachment' AND a.post_mime_type LIKE 'audio/%' AND ( par.post_status <> 'publish' OR par.post_password <> '' )" ) );
+		$key    = 'hidden:' . wp_cache_get_last_changed( 'posts' );
+		$hidden = wp_cache_get( $key, 'riff' );
+		if ( ! is_array( $hidden ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a narrow lookup with no API, cached above.
+			$hidden = array_map( 'intval', $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a INNER JOIN {$wpdb->posts} par ON par.ID = a.post_parent WHERE a.post_type = 'attachment' AND a.post_mime_type LIKE 'audio/%' AND ( par.post_status <> 'publish' OR par.post_password <> '' )" ) );
+			wp_cache_set( $key, $hidden, 'riff', DAY_IN_SECONDS );
+		}
+		return $hidden;
 	}
 
 	/**
@@ -482,6 +655,13 @@ final class Catalog_Rest {
 		if ( ! $hidden ) {
 			return array();
 		}
+		// Kept until a post or a term next changes, as the hidden files and the terms they are filed
+		// under both come into it.
+		$key  = 'hidden-by-term:' . $taxonomy . ':' . wp_cache_get_last_changed( 'posts' ) . ':' . wp_cache_get_last_changed( 'terms' );
+		$kept = wp_cache_get( $key, 'riff' );
+		if ( is_array( $kept ) ) {
+			return $kept;
+		}
 		$in = implode( ',', array_fill( 0, count( $hidden ), '%d' ) );
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery -- a placeholder for each ID.
 		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_id, tt.count, COUNT(*) AS n FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id WHERE tt.taxonomy = %s AND tr.object_id IN ({$in}) GROUP BY tt.term_id, tt.count", array_merge( array( $taxonomy ), $hidden ) ) );
@@ -492,6 +672,7 @@ final class Catalog_Rest {
 				'count'  => (int) $row->count,
 			);
 		}
+		wp_cache_set( $key, $out, 'riff', DAY_IN_SECONDS );
 		return $out;
 	}
 
@@ -509,7 +690,19 @@ final class Catalog_Rest {
 		// WordPress's own rule for media (WP_REST_Attachments_Controller): a file is public unless the
 		// post it was uploaded to is not, so an unattached file is public. Riff also hides a file on a
 		// post behind a password.
-		return " AND ( {$wpdb->posts}.post_parent = 0 OR {$wpdb->posts}.post_parent IN ( SELECT pp.ID FROM {$wpdb->posts} pp WHERE pp.post_status = 'publish' AND pp.post_password = '' ) )";
+		// Each file's own post, by its key, rather than every public post gathered for each file.
+		return " AND ( {$wpdb->posts}.post_parent = 0 OR EXISTS ( SELECT 1 FROM {$wpdb->posts} pp WHERE pp.ID = {$wpdb->posts}.post_parent AND pp.post_status = 'publish' AND pp.post_password = '' ) )";
+	}
+
+	/**
+	 * SQL leaving out every file that is another's streaming version: the same music as a track
+	 * already listed. Read once for the query, by the meta key's index.
+	 *
+	 * @return string
+	 */
+	private static function versions_where(): string {
+		global $wpdb;
+		return $wpdb->prepare( " AND {$wpdb->posts}.ID NOT IN ( SELECT CAST( sv.meta_value AS UNSIGNED ) FROM {$wpdb->postmeta} sv WHERE sv.meta_key = %s )", Media::STREAM_META );
 	}
 
 	/**
@@ -531,25 +724,65 @@ final class Catalog_Rest {
 	}
 
 	/**
-	 * SQL matching a track's title, artist or album against the search words.
+	 * The albums and artists whose names hold the search words, as term taxonomy IDs, through
+	 * get_terms(), which WordPress caches until a term changes.
 	 *
 	 * @param string $search Words.
-	 * @return string
+	 * @return int[]
 	 */
-	private static function search_where( string $search ): string {
-		global $wpdb;
-		$like = '%' . $wpdb->esc_like( $search ) . '%';
-		return $wpdb->prepare(
-			" AND ( {$wpdb->posts}.post_title LIKE %s OR {$wpdb->posts}.ID IN (
-				SELECT sr.object_id FROM {$wpdb->term_relationships} sr
-				INNER JOIN {$wpdb->term_taxonomy} stt ON stt.term_taxonomy_id = sr.term_taxonomy_id AND stt.taxonomy IN ( %s, %s )
-				INNER JOIN {$wpdb->terms} st ON st.term_id = stt.term_id
-				WHERE st.name LIKE %s ) )",
-			$like,
-			Catalog::ALBUM,
-			Catalog::ARTIST,
-			$like
+	private static function names_holding( string $search ): array {
+		$found = get_terms(
+			array(
+				'taxonomy'   => array( Catalog::ALBUM, Catalog::ARTIST ),
+				'name__like' => $search,
+				'hide_empty' => false,
+				'fields'     => 'tt_ids',
+			)
 		);
+		return is_array( $found ) ? array_map( 'intval', $found ) : array();
+	}
+
+	/**
+	 * Whether a search is too short to look for.
+	 *
+	 * @param string $search Words.
+	 * @return bool
+	 */
+	private static function too_short( string $search ): bool {
+		return '' !== $search && mb_strlen( $search ) < self::SEARCH_MIN;
+	}
+
+	/**
+	 * A page with nothing on it, as a route answers a search too short to look for.
+	 *
+	 * @param int $page The page asked for.
+	 * @return WP_REST_Response
+	 */
+	private static function nothing( int $page ): WP_REST_Response {
+		return new WP_REST_Response(
+			array(
+				'items' => array(),
+				'page'  => $page,
+				'pages' => 0,
+				'total' => 0,
+			)
+		);
+	}
+
+	/**
+	 * An album's tracks shuffled by a seed, the same order for the same seed.
+	 *
+	 * @param int[] $ids  Attachment IDs.
+	 * @param int   $seed The shuffle.
+	 * @return int[]
+	 */
+	private static function dealt( array $ids, int $seed ): array {
+		// Seeded, so each page of the shuffle is cut from the same deal; then seeded afresh, so
+		// nothing after it draws from this sequence.
+		mt_srand( $seed ); // phpcs:ignore WordPress.WP.AlternativeFunctions.rand_seeding_mt_srand -- a repeatable deal is the point.
+		shuffle( $ids );
+		mt_srand(); // phpcs:ignore WordPress.WP.AlternativeFunctions.rand_seeding_mt_srand -- and unseeded again after it.
+		return $ids;
 	}
 
 	/**
@@ -590,6 +823,10 @@ final class Catalog_Rest {
 				'page'  => array( 'type' => 'integer' ),
 				'pages' => array( 'type' => 'integer' ),
 				'total' => array( 'type' => 'integer' ),
+				'next'  => array(
+					'description' => __( 'Where this page ended, to pass as after for the next; empty when this is the last, or for an album or include.', 'riff' ),
+					'type'        => 'string',
+				),
 			),
 		);
 	}

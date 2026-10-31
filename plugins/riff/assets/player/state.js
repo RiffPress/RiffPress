@@ -37,16 +37,24 @@ export function createPlayer( root, data ) {
 		np: $( '.riff-np' ),
 		queueList: $( '.riff-queue-list' ),
 		STATE: 'riff:state',
+		QUEUE: 'riff:queue',
 		// A shared link names its track: ?riff_track={id} on the post's own address.
 		SHARED: 'riff_track',
 		VOLUME: 'riff:volume',
 		CAPTIONS: 'riff:captions',
 		reduce: () =>
 			window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches,
+		// Whether the page is out of sight, so nothing is drawn for no one: hidden, or in the
+		// desktop app, whose window keeps the page "visible" while minimised so the music's timers
+		// run, and says so on <html> instead (site-preload.js).
+		away: () =>
+			document.hidden ||
+			document.documentElement.classList.contains( 'riff-desktop-away' ),
 
 		queue: [], // Tracks, in the order they were found.
 		order: [], // Indexes into queue, in the order they play.
 		pos: -1, // Position in order.
+		more: null, // Where the rest of a long list is: { url, page, pages }.
 		mode: 'song', // 'song' or 'video', for tracks that have both.
 		repeat: 'off', // 'off', 'all' or 'one'.
 		shuffle: false,

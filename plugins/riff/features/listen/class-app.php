@@ -413,6 +413,7 @@ final class App {
 		$cards = '';
 		for ( $n = 1; $n <= $upto; $n++ ) {
 			$posts = 1 === $n ? $query->posts : Library::query( array( 'paged' => $n ) )->posts;
+			Library::prime( $posts );
 			foreach ( array_values( $posts ) as $i => $post ) {
 				$cards .= self::card( Library::item( $post ), $page, 0 === $i && $n > 1 ? $n : 0 );
 			}
@@ -453,7 +454,14 @@ final class App {
 	 */
 	public static function post_cards( string $page ): string {
 		$cards = '';
-		foreach ( array_slice( Library::query()->posts, 0, 12 ) as $post ) {
+		$posts = Library::query(
+			array(
+				'posts_per_page' => 12,
+				'no_found_rows'  => true,
+			)
+		)->posts;
+		Library::prime( $posts );
+		foreach ( $posts as $post ) {
 			$cards .= self::card( Library::item( $post ), $page );
 		}
 		return $cards;
@@ -473,7 +481,7 @@ final class App {
 				'title' => (string) $item['title'],
 				'href'  => self::link( (int) $item['id'], $page ),
 				'sub'   => (string) ( $item['meta'] ?? self::meta( $item ) ),
-				'art'   => $item['art'] ? (string) end( $item['art'] )['src'] : '',
+				'art'   => (array) $item['art'],
 				'id'    => $first ? 'riff-page-' . $first : '',
 				'data'  => array( 'post' => (int) $item['id'] ),
 				'play'  => array(
@@ -517,8 +525,7 @@ final class App {
 		if ( ! $detail['tracks'] ) {
 			return Home_View::view( $page );
 		}
-		$art = $detail['art'] ? end( $detail['art'] )['src'] : '';
-		return self::header( $detail['title'], self::meta( $detail ), '', (string) $art, Art::tint( (array) $detail['art'] ) ) . sprintf(
+		return self::header( $detail['title'], self::meta( $detail ), '', (array) $detail['art'], Art::tint( (array) $detail['art'] ) ) . sprintf(
 			'<div class="riff-album-tracks" data-riff-numbered data-riff-tracks="%s">%s</div>',
 			esc_attr( wp_json_encode( $detail['tracks'] ) ),
 			$detail['html']
@@ -534,11 +541,12 @@ final class App {
 	 *               and more buttons beside Play and Shuffle.
 	 * @since 4.28.0 A cover drawn in markup.
 	 * @since 5.7.0 The line under it may be parts, each text or `[ text, address ]` for a link.
+	 * @since 5.8.0 The cover may be its sizes, which the browser picks from.
 	 *
 	 * @param string       $title Title.
 	 * @param string|array $meta  The line under it, or its parts.
 	 * @param string       $kind  What it is, above the title ("Album"), or empty.
-	 * @param string       $art   The cover's address, or empty for none.
+	 * @param string|array $art   The cover: its sizes, as a track's art list, or one address, or empty for none.
 	 * @param string       $tint  A hex colour from the cover to tint the header with, or empty.
 	 * @param bool         $round Whether the picture is round, as an artist's is.
 	 * @param string       $like  What the heart likes, "album" or "artist", or empty for no heart.
@@ -548,10 +556,14 @@ final class App {
 	 * @param string       $drawn  A cover drawn in markup, when there is no picture: Liked songs' heart.
 	 * @return string
 	 */
-	public static function header( string $title, string|array $meta, string $kind = '', string $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '', string $drawn = '' ): string {
+	public static function header( string $title, string|array $meta, string $kind = '', string|array $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '', string $drawn = '' ): string {
 		$tint  = (string) sanitize_hex_color( $tint );
 		$heart = in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ? Ui::heart( $like, $id, $title ) : '';
-		$cover = '' !== $art ? '<img src="' . esc_url( $art ) . '" alt="" decoding="async">' : ( '' !== $drawn ? $drawn : Ui::mosaic( $covers ) );
+		// The cover at the head of a list is what its page is painted around, so it loads first.
+		Ui::lead( 1 );
+		$cover = array() !== $art && '' !== $art ? Ui::image( is_array( $art ) ? $art : array( array( 'src' => $art ) ), Ui::HEADER_SIZES ) : '';
+		Ui::lead( 0 );
+		$cover = '' !== $cover ? $cover : ( '' !== $drawn ? $drawn : Ui::mosaic( $covers ) );
 		return sprintf(
 			'<header class="riff-album%1$s"%6$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>%7$s</div></header>',
 			( '' !== $cover ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),

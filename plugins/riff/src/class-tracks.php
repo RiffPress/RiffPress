@@ -24,9 +24,11 @@ defined( 'ABSPATH' ) || exit;
 final class Tracks {
 
 	/**
-	 * Image sizes offered as artwork, smallest first. The lock screen picks the size it wants.
+	 * Image sizes offered as artwork, smallest first. The lock screen picks the size it wants, and
+	 * so does a cover's srcset: medium_large is what a card on a phone's sharp screen asks for,
+	 * between medium, too soft there, and large.
 	 */
-	private const ART_SIZES = array( 'thumbnail', 'medium', 'large' );
+	private const ART_SIZES = array( 'thumbnail', 'medium', 'medium_large', 'large' );
 
 	/**
 	 * Tracks kept as IDs, as the current user may see them now: each as it plays from its post,
@@ -72,6 +74,65 @@ final class Tracks {
 	}
 
 	/**
+	 * Loads what building these tracks reads, in a few queries rather than a few for each track:
+	 * the files and the posts they play from, then the posts the files were uploaded to and every
+	 * file those name (artwork, a video version, captions), then what those name in turn, a video's
+	 * poster and its captions. Each with its meta.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int[] $attachments Audio or video attachment IDs.
+	 * @param int[] $posts       The posts they play from, if not the posts they were uploaded to.
+	 */
+	public static function prime( array $attachments, array $posts = array() ): void {
+		$seen = array();
+		$ids  = array_merge( $attachments, $posts );
+		for ( $depth = 0; $depth < 3; $depth++ ) {
+			$ids = array_diff( array_unique( array_filter( array_map( 'intval', $ids ) ) ), $seen );
+			if ( ! $ids ) {
+				return;
+			}
+			self::load( $ids );
+			$seen = array_merge( $seen, $ids );
+			$next = array();
+			foreach ( $ids as $id ) {
+				if ( 'attachment' === get_post_type( $id ) ) {
+					$next[] = get_post_field( 'post_parent', $id );
+				}
+				$next[] = get_post_meta( $id, '_thumbnail_id', true );
+				$next[] = get_post_meta( $id, Media::VIDEO_META, true );
+				$next[] = get_post_meta( $id, Media::CAPTIONS_META, true );
+			}
+			$ids = $next;
+		}
+	}
+
+	/**
+	 * Loads posts of any type or status, and their meta, into the cache: one query for the posts
+	 * not already there, and one for the meta not already there.
+	 *
+	 * @param int[] $ids Post IDs.
+	 */
+	private static function load( array $ids ): void {
+		$missing = array_values( array_filter( $ids, static fn( $id ) => false === wp_cache_get( $id, 'posts' ) ) );
+		if ( $missing ) {
+			get_posts(
+				array(
+					'post__in'               => $missing,
+					'post_type'              => get_post_types(),
+					'post_status'            => get_post_stati(),
+					'numberposts'            => count( $missing ),
+					'orderby'                => 'none',
+					'no_found_rows'          => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+				)
+			);
+		}
+		update_meta_cache( 'post', $ids );
+	}
+
+	/**
 	 * Builds a track from an audio or video attachment.
 	 *
 	 * @since 4.0.0
@@ -98,9 +159,19 @@ final class Tracks {
 		}
 
 		$video = null;
+		// What plays, and so what its quality says: the file, or a smaller version of it to stream
+		// when the site has one, while the track stays the file, its tags, length and levels.
+		$file = $meta;
 		if ( 'audio' === $type ) {
 			$video_id = (int) get_post_meta( $attachment_id, Media::VIDEO_META, true );
 			$video    = $video_id ? self::video( $video_id, $art ) : null;
+			$stream   = Media::stream( $attachment_id );
+			$version  = $stream ? wp_get_attachment_url( $stream ) : false;
+			if ( $version ) {
+				$src  = $version;
+				$file = wp_get_attachment_metadata( $stream );
+				$file = is_array( $file ) ? $file : array();
+			}
 		}
 
 		return self::filter(
@@ -119,11 +190,11 @@ final class Tracks {
 				// What WordPress read from the file on upload: the container, the bit rate, whether it is
 				// lossless, and for a lossless file its bit depth and sample rate. The player shows them
 				// on every track, the way the streaming services do.
-				'format'   => strtolower( (string) ( $meta['dataformat'] ?? $meta['fileformat'] ?? '' ) ),
-				'bitrate'  => isset( $meta['bitrate'] ) ? (int) round( (float) $meta['bitrate'] / 1000 ) : 0,
-				'lossless' => ! empty( $meta['lossless'] ),
-				'bits'     => (int) ( $meta['bits_per_sample'] ?? 0 ),
-				'rate'     => (int) ( $meta['sample_rate'] ?? 0 ),
+				'format'   => strtolower( (string) ( $file['dataformat'] ?? $file['fileformat'] ?? '' ) ),
+				'bitrate'  => isset( $file['bitrate'] ) ? (int) round( (float) $file['bitrate'] / 1000 ) : 0,
+				'lossless' => ! empty( $file['lossless'] ),
+				'bits'     => (int) ( $file['bits_per_sample'] ?? 0 ),
+				'rate'     => (int) ( $file['sample_rate'] ?? 0 ),
 				// Level data, when something measured it on upload and stored it as riff_levels.
 				'levels'   => isset( $meta['riff_levels'] ) && is_string( $meta['riff_levels'] ) ? $meta['riff_levels'] : '',
 				'art'      => $art,
@@ -623,10 +694,15 @@ final class Tracks {
 	}
 
 	/**
-	 * Artwork in every registered size the image has, each with the image's alt text from the
-	 * Media Library, as the Image block takes it.
+	 * Artwork in every registered size the image has, smallest first, each with the image's alt
+	 * text from the Media Library, as the Image block takes it.
+	 *
+	 * A size WordPress didn't make, for an image smaller than it or one uploaded while the size was
+	 * turned off, is the original under that size's name, shrunk only in its numbers. It is offered
+	 * at its own size, so a srcset never takes a large original for a small copy.
 	 *
 	 * @since 4.33.0 Each size carries the image's alt text.
+	 * @since 5.8.0 The original at its own size, in its place by width.
 	 *
 	 * @param int $image_id Image attachment ID, or 0.
 	 * @return array List of { src, sizes, alt }.
@@ -638,10 +714,14 @@ final class Tracks {
 		$art  = array();
 		$seen = array();
 		$alt  = trim( (string) get_post_meta( $image_id, '_wp_attachment_image_alt', true ) );
+		$full = wp_get_attachment_image_src( $image_id, 'full' );
 		foreach ( self::ART_SIZES as $size ) {
 			$image = wp_get_attachment_image_src( $image_id, $size );
 			if ( ! $image || isset( $seen[ $image[0] ] ) ) {
 				continue;
+			}
+			if ( $full && $full[0] === $image[0] ) {
+				$image = $full;
 			}
 			$seen[ $image[0] ] = true;
 			$art[]             = array(
@@ -650,6 +730,7 @@ final class Tracks {
 				'alt'   => $alt,
 			);
 		}
+		usort( $art, static fn( array $a, array $b ): int => (int) $a['sizes'] <=> (int) $b['sizes'] );
 		return $art;
 	}
 

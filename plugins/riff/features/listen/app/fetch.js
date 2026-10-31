@@ -4,6 +4,32 @@
 
 import { route as routed } from 'riff-app/helpers';
 
+// How many answers, and how many views, are remembered: the ones wanted last, so a long session
+// keeps what going back needs and lets the rest go.
+const KEEP = 30;
+// How long the pointer rests on a link before its view is fetched: long enough that a pointer
+// crossing a grid on its way somewhere fetches nothing.
+const INTENT = 80;
+
+// What make() gives for key, remembered in map: from there when it was asked for before, and moved
+// to the end, as the one wanted last; the first is let go once there are more than KEEP. A fetch
+// that fails is forgotten, so the next ask tries again.
+function remember( map, key, make ) {
+	if ( map.has( key ) ) {
+		const kept = map.get( key );
+		map.delete( key );
+		map.set( key, kept );
+		return kept;
+	}
+	const made = make();
+	map.set( key, made );
+	made.catch( () => map.get( key ) === made && map.delete( key ) );
+	if ( map.size > KEEP ) {
+		map.delete( map.keys().next().value );
+	}
+	return made;
+}
+
 export function fetching( ctx ) {
 	const { api, app, nav, rest } = ctx;
 	const cache = new Map();
@@ -19,20 +45,15 @@ export function fetching( ctx ) {
 
 	async function get( path = '', pageNumber = 0 ) {
 		const key = route( path, pageNumber );
-		if ( ! cache.has( key ) ) {
-			cache.set(
-				key,
-				// As whoever is signed in, as the views the server draws are.
-				api.request( key ).then( ( r ) => {
-					if ( ! r.ok ) {
-						throw new Error( String( r.status ) );
-					}
-					return r.json();
-				} )
-			);
-			cache.get( key ).catch( () => cache.delete( key ) );
-		}
-		return cache.get( key );
+		return remember( cache, key, () =>
+			// As whoever is signed in, as the views the server draws are.
+			api.request( key ).then( ( r ) => {
+				if ( ! r.ok ) {
+					throw new Error( String( r.status ) );
+				}
+				return r.json();
+			} )
+		);
 	}
 
 	// Your Library is drawn on the server from the listener's likes. A signed-in listener's are in
@@ -59,38 +80,30 @@ export function fetching( ctx ) {
 	const rendered = new Map();
 	function pageView( href ) {
 		href = fetchable( href );
-		if ( ! rendered.has( href ) ) {
-			rendered.set(
-				href,
-				fetch( href, { headers: { Accept: 'text/html' } } )
-					.then( ( r ) => {
-						if ( ! r.ok ) {
-							throw new Error( String( r.status ) );
-						}
-						return r.text();
-					} )
-					.then( ( text ) => {
-						const doc = new DOMParser().parseFromString(
-							text,
-							'text/html'
-						);
-						const body = doc.querySelector(
-							'[data-riff-app-view]'
-						);
-						if ( ! body ) {
-							throw new Error( 'no view' );
-						}
-						return {
-							view: body.innerHTML,
-							nav: doc.querySelector( '.riff-app-bar' )
-								?.innerHTML,
-							title: doc.title,
-						};
-					} )
-			);
-			rendered.get( href ).catch( () => rendered.delete( href ) );
-		}
-		return rendered.get( href );
+		return remember( rendered, href, () =>
+			fetch( href, { headers: { Accept: 'text/html' } } )
+				.then( ( r ) => {
+					if ( ! r.ok ) {
+						throw new Error( String( r.status ) );
+					}
+					return r.text();
+				} )
+				.then( ( text ) => {
+					const doc = new DOMParser().parseFromString(
+						text,
+						'text/html'
+					);
+					const body = doc.querySelector( '[data-riff-app-view]' );
+					if ( ! body ) {
+						throw new Error( 'no view' );
+					}
+					return {
+						view: body.innerHTML,
+						nav: doc.querySelector( '.riff-app-bar' )?.innerHTML,
+						title: doc.title,
+					};
+				} )
+		);
 	}
 
 	// A view that was drawn is drawn again next time: Your Library after a like, every view after a
@@ -107,14 +120,14 @@ export function fetching( ctx ) {
 		}
 	}
 
-	// ---- Prefetch. A view is fetched as soon as it is likely to be wanted: the pointer reaches its
-	// link, the link takes focus or a finger lands on it, and every tab once the page is idle. A
-	// fetch is remembered for the session, so the click itself finds the view already there.
+	// ---- Prefetch. A view is fetched as soon as it is likely to be wanted: the pointer rests on its
+	// link, the link takes focus or a finger lands on it, and each tab in turn once the page is
+	// idle. A fetch is remembered, so the click itself finds the view already there.
 	function prefetch( href ) {
 		// The view showing too: the server drew it, so going back to it needs its own fetch.
 		const to = ctx.postOf( href );
 		if ( ! to ) {
-			return;
+			return Promise.resolve();
 		}
 		let ahead;
 		if ( to.browse ) {
@@ -125,27 +138,60 @@ export function fetching( ctx ) {
 		} else {
 			ahead = get( '' );
 		}
-		ahead.catch( () => {} );
+		return ahead.catch( () => {} );
 	}
-	const warm = ( e ) => {
+	const link = ( e ) => {
 		const a = e.target.closest?.( 'a[href]' );
-		if ( a && ! a.target && ! a.hasAttribute( 'download' ) ) {
+		return a && ! a.target && ! a.hasAttribute( 'download' ) ? a : null;
+	};
+	const warm = ( e ) => {
+		const a = link( e );
+		if ( a ) {
 			prefetch( a.href );
 		}
 	};
-	app.addEventListener( 'pointerover', warm, { passive: true } );
+	// The pointer, once it rests on a link; a focus or a finger, at once.
+	let aimed = null;
+	let aiming = 0;
+	app.addEventListener(
+		'pointerover',
+		( e ) => {
+			const a = link( e );
+			if ( ! a || a === aimed ) {
+				return;
+			}
+			clearTimeout( aiming );
+			aimed = a;
+			aiming = setTimeout( () => prefetch( a.href ), INTENT );
+		},
+		{ passive: true }
+	);
+	app.addEventListener(
+		'pointerout',
+		( e ) => {
+			if ( aimed && ! aimed.contains( e.relatedTarget ) ) {
+				clearTimeout( aiming );
+				aimed = null;
+			}
+		},
+		{ passive: true }
+	);
 	app.addEventListener( 'focusin', warm );
 	app.addEventListener( 'touchstart', warm, { passive: true } );
+	// The tabs one after another, so the server draws one view at a time beside whatever the
+	// listener asks for; none when the listener has asked to save data.
 	const idle =
 		window.requestIdleCallback || ( ( fn ) => setTimeout( fn, 1200 ) );
-	idle( () => {
-		for ( const tab of nav?.querySelectorAll( 'a[href]' ) || [] ) {
-			// Not a tab this screen hides, as Search is beside a field always in view.
-			if ( tab.getClientRects().length ) {
-				prefetch( tab.href );
+	if ( ! navigator.connection?.saveData ) {
+		idle( async () => {
+			for ( const tab of nav?.querySelectorAll( 'a[href]' ) || [] ) {
+				// Not a tab this screen hides, as Search is beside a field always in view.
+				if ( tab.getClientRects().length ) {
+					await prefetch( tab.href );
+				}
 			}
-		}
-	} );
+		} );
+	}
 
 	return { get, pageView, forget };
 }

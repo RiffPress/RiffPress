@@ -198,6 +198,25 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertSame( array( $this->tracks[0] ), $this->call( 'POST', "/$id/tracks", array( 'tracks' => array( $this->secret ) ) )->get_data()['ids'], 'nor by adding it after' );
 	}
 
+	public function test_a_list_of_playlists_costs_the_same_queries_however_many_it_holds(): void {
+		$count = static function ( int $user ): int {
+			global $wpdb;
+			wp_cache_flush();
+			$before = $wpdb->num_queries;
+			Playlists::all( $user );
+			return $wpdb->num_queries - $before;
+		};
+		Playlists::create( $this->user, 'One', $this->tracks );
+		$few = $count( $this->user );
+		for ( $i = 0; $i < 4; $i++ ) {
+			Playlists::create( $this->user, 'More ' . $i, array_reverse( $this->tracks ) );
+		}
+		$many = $count( $this->user );
+
+		$this->assertCount( 5, Playlists::all( $this->user ) );
+		$this->assertLessThanOrEqual( $few + 2, $many, 'no queries per playlist' );
+	}
+
 	public function test_a_list_is_the_users_own_most_recently_changed_first(): void {
 		global $wpdb;
 		$first  = $this->made( array( $this->tracks[0] ) );
@@ -289,6 +308,27 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertMatchesRegularExpression( '/<a class="riff-app-tab[^"]*" href="[^"]*riff_view=library"[^>]*aria-current="page"/', $html, 'under Your Library' );
 		// Your Library's list is standalone mode's sidebar; a theme's Listen block has tabs.
 		$this->assertStringNotContainsString( 'riff-app-library', $html );
+	}
+
+	public function test_a_long_playlist_opens_a_hundred_rows_at_a_time_with_their_places(): void {
+		$id    = $this->made( array_merge( ...array_fill( 0, 84, $this->tracks ) ) );
+		$first = $this->render_at( array( 'riff_playlist' => $id ) );
+
+		$this->assertSame( 100, substr_count( $first, 'data-riff-track="' ), 'a page of rows, of 252' );
+		$this->assertStringContainsString( 'data-riff-places="' . esc_attr( (string) wp_json_encode( range( 0, 99 ) ) ) . '"', $first );
+		$this->assertMatchesRegularExpression( '#<a class="riff-pill" href="[^"]*riff_page=2#', $first, 'a way on to the rest' );
+		$this->assertStringContainsString( 'data-riff-more="', $first, 'a row pressed plays on into the rest' );
+
+		$last = $this->render_at(
+			array(
+				'riff_playlist' => $id,
+				'riff_page'     => 3,
+			)
+		);
+		$this->assertSame( 52, substr_count( $last, 'data-riff-track="' ) );
+		$this->assertStringContainsString( 'data-riff-places="' . esc_attr( (string) wp_json_encode( range( 200, 251 ) ) ) . '"', $last, 'each still its place in the whole' );
+		$this->assertStringNotContainsString( 'riff_page=4', $last );
+		$this->assertStringNotContainsString( 'data-riff-more="', $last, 'nothing after the last page' );
 	}
 
 	public function test_standalone_mode_lists_the_playlist_in_your_library_and_marks_it_open(): void {

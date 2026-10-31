@@ -1,7 +1,7 @@
 <?php
 /**
- * What Riff adds to the Media Library: artwork for an audio or video file, and a video version for
- * an audio file.
+ * What Riff adds to the Media Library: artwork for an audio or video file, and a video version and
+ * a streaming version for an audio file.
  *
  * @since 4.0.0
  * @package Riff
@@ -24,6 +24,15 @@ final class Media {
 	 * @since 4.0.0
 	 */
 	public const VIDEO_META = '_riff_video';
+
+	/**
+	 * Post meta on an audio attachment holding the ID of a smaller version of it to stream: an MP3
+	 * of a lossless file, say. The player plays it in the file's place, and the file stays the
+	 * original.
+	 *
+	 * @since 5.8.0
+	 */
+	public const STREAM_META = '_riff_stream';
 
 	/**
 	 * Post meta on a video attachment holding the ID of its captions, a WebVTT file in the Media
@@ -227,6 +236,18 @@ final class Media {
 				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
 			)
 		);
+		// Not over REST as meta: a version is set through the riff_stream field, which files it.
+		register_post_meta(
+			'attachment',
+			self::STREAM_META,
+			array(
+				'type'              => 'integer',
+				'single'            => true,
+				'default'           => 0,
+				'sanitize_callback' => array( self::class, 'sanitize_stream' ),
+				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
+			)
+		);
 		register_post_meta(
 			'attachment',
 			self::CAPTIONS_META,
@@ -350,6 +371,80 @@ final class Media {
 	}
 
 	/**
+	 * Keeps only IDs of audio attachments, for a streaming version.
+	 *
+	 * @since 5.8.0
+	 * @param mixed $value Submitted value.
+	 * @return int
+	 */
+	public static function sanitize_stream( $value ): int {
+		$id = absint( $value );
+		return $id && str_starts_with( (string) get_post_mime_type( $id ), 'audio/' ) ? $id : 0;
+	}
+
+	/**
+	 * The version of an audio file the player streams in its place, or 0 to stream the file itself.
+	 * A protected file is never streamed from a version anyone can load.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $id Audio attachment ID.
+	 * @return int
+	 */
+	public static function stream( int $id ): int {
+		$version = self::sanitize_stream( get_post_meta( $id, self::STREAM_META, true ) );
+		if ( ! $version || $version === $id || ( Protect::is( $id ) && ! Protect::is( $version ) ) ) {
+			return 0;
+		}
+		return $version;
+	}
+
+	/**
+	 * Whether an audio file is another's streaming version, and so not a track of its own.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $id Audio attachment ID.
+	 * @return bool
+	 */
+	public static function streamed( int $id ): bool {
+		return (bool) get_posts(
+			array(
+				'post_type'              => 'attachment',
+				'post_status'            => 'any',
+				'fields'                 => 'ids',
+				'posts_per_page'         => 1,
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'meta_key'               => self::STREAM_META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- the key is indexed, and few files have a version.
+				'meta_value'             => (string) $id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- as above.
+			)
+		);
+	}
+
+	/**
+	 * Sets an audio file's streaming version, or removes it with 0. The version is the same music,
+	 * so it is taken off its album and artist; one that is no longer a version is filed again.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $id      Audio attachment ID.
+	 * @param int $version Its streaming version's ID, or 0.
+	 */
+	public static function link_stream( int $id, int $version ): void {
+		$was = (int) get_post_meta( $id, self::STREAM_META, true );
+		if ( $version ) {
+			update_post_meta( $id, self::STREAM_META, $version );
+		} else {
+			delete_post_meta( $id, self::STREAM_META );
+		}
+		foreach ( array_unique( array_filter( array( $was, $version ) ) ) as $file ) {
+			Catalog::file( (int) $file );
+		}
+	}
+
+	/**
 	 * Keeps only IDs of WebVTT attachments, for captions.
 	 *
 	 * @since 4.33.0
@@ -424,7 +519,7 @@ final class Media {
 			);
 			return $fields;
 		}
-		$fields['riff_video'] = array(
+		$fields['riff_video']  = array(
 			'label' => __( 'Video version', 'riff' ),
 			'input' => 'html',
 			'html'  => self::picker(
@@ -441,6 +536,24 @@ final class Media {
 				)
 			),
 			'helps' => __( 'A video from the Media Library, chosen or entered by address or ID. Listeners can switch between the song and the video while it plays.', 'riff' ),
+		);
+		$fields['riff_stream'] = array(
+			'label' => __( 'Streaming version', 'riff' ),
+			'input' => 'html',
+			'html'  => self::picker(
+				$post->ID,
+				'riff_stream',
+				(int) get_post_meta( $post->ID, self::STREAM_META, true ),
+				$errors['riff_stream'] ?? '',
+				array(
+					'type'    => 'audio',
+					'choose'  => __( 'Choose audio', 'riff' ),
+					'replace' => __( 'Replace audio', 'riff' ),
+					'remove'  => __( 'Remove streaming version', 'riff' ),
+					'button'  => __( 'Use as streaming version', 'riff' ),
+				)
+			),
+			'helps' => __( 'A smaller copy of this song from the Media Library, such as an MP3 of a lossless file, chosen or entered by address or ID. Listeners stream it in this file\'s place, and this file stays the original. wp riff transcode makes one.', 'riff' ),
 		);
 		return $fields;
 	}
@@ -549,6 +662,17 @@ final class Media {
 				delete_post_meta( $post_id, self::VIDEO_META );
 			} else {
 				$errors['riff_video'] = __( 'That is not a video in the Media Library, so the video version was not changed.', 'riff' );
+			}
+		}
+		if ( isset( $attachment['riff_stream'] ) ) {
+			$id = self::submitted( $attachment['riff_stream'], array( self::class, 'sanitize_stream' ) );
+			if ( $id === $post_id ) {
+				$id = -1;
+			}
+			if ( $id >= 0 ) {
+				self::link_stream( $post_id, $id );
+			} else {
+				$errors['riff_stream'] = __( 'That is not another audio file in the Media Library, so the streaming version was not changed.', 'riff' );
 			}
 		}
 		if ( isset( $attachment['riff_captions'] ) ) {

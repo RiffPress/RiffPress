@@ -6,6 +6,7 @@
  */
 
 use Riff\Catalog;
+use Riff\Catalog_Rest;
 
 /**
  * Riff\Catalog_Rest.
@@ -80,6 +81,15 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( array(), $this->get( '/tracks', array( 'search' => 'Secret' ) )['items'] );
 	}
 
+	public function test_an_album_a_visitor_cannot_see_is_not_found_by_its_id_either(): void {
+		$secret = (int) wp_get_object_terms( $this->secret, Catalog::ALBUM )[0]->term_id;
+		$data   = $this->get( '/albums', array( 'include' => array( $secret ) ) );
+
+		$this->assertSame( array(), $data['items'], 'not its name, nor a count of nothing' );
+		$this->assertSame( 0, $data['total'] );
+		$this->assertCount( 1, $this->get( '/albums', array( 'include' => array( $secret, (int) wp_get_object_terms( $this->published[0], Catalog::ALBUM )[0]->term_id ) ) )['items'], 'and the rest still are' );
+	}
+
 	public function test_a_track_on_a_password_protected_post_is_hidden_from_visitors(): void {
 		$locked = self::factory()->post->create(
 			array(
@@ -116,6 +126,50 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertSame( 3, $this->get( '/tracks', array( 'search' => 'Airmen' ) )['total'], 'by artist' );
 		$this->assertSame( array( 'Compositions' ), wp_list_pluck( $this->get( '/albums', array( 'search' => 'comp' ) )['items'], 'name' ) );
 		$this->assertSame( array(), $this->get( '/albums', array( 'search' => '%' ) )['items'], 'a wildcard is a character, not a pattern' );
+	}
+
+	public function test_a_track_search_is_wordpress_own_as_one_phrase(): void {
+		$seen = array();
+		$see  = static function ( WP_Query $query ) use ( &$seen ): void {
+			if ( $query->get( 'riff_catalog' ) ) {
+				$seen[] = $query->get( 's' );
+			}
+		};
+		add_action( 'pre_get_posts', $see );
+		$titles = wp_list_pluck( $this->get( '/tracks', array( 'search' => 'Trombone Det' ) )['items'], 'title' );
+		remove_action( 'pre_get_posts', $see );
+
+		$this->assertSame( array( 'Trombone Detritus' ), $titles );
+		$this->assertSame( array( 'Trombone Det' ), array_values( array_unique( $seen ) ), 'every query for it, the page and its count, so a search plugin that answers WP_Query answers it' );
+		$this->assertSame( 0, $this->get( '/tracks', array( 'search' => 'Detritus Trombone' ) )['total'], 'the words as written, together' );
+		$this->assertSame( 0, $this->get( '/tracks', array( 'search' => '%%' ) )['total'], 'a wildcard is a character, not a pattern' );
+	}
+
+	public function test_a_track_search_asks_a_search_plugin_to_answer_it(): void {
+		$asked = array();
+		$see   = static function ( WP_Query $query ) use ( &$asked ): void {
+			if ( $query->get( 'riff_catalog' ) ) {
+				$asked[] = (bool) $query->get( 'ep_integrate' );
+			}
+		};
+		add_action( 'pre_get_posts', $see );
+		$this->get( '/tracks', array( 'search' => 'Trombone' ) );
+		$searched = $asked;
+		$asked    = array();
+		$this->get( '/tracks' );
+		remove_action( 'pre_get_posts', $see );
+
+		$this->assertNotEmpty( $searched );
+		$this->assertNotContains( false, $searched, 'as ElasticPress asks of a query that is not the page\'s own' );
+		$this->assertNotContains( true, $asked, 'and only a search' );
+	}
+
+	public function test_a_search_of_one_character_finds_nothing(): void {
+		foreach ( array( '/tracks', '/albums', '/artists' ) as $route ) {
+			$data = $this->get( $route, array( 'search' => 'o' ) );
+			$this->assertSame( array(), $data['items'], "$route reads nothing for it" );
+			$this->assertSame( 0, $data['total'] );
+		}
 	}
 
 	public function test_an_album_lists_its_tracks_in_album_order(): void {
@@ -245,6 +299,49 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 		$this->assertNotSame( $last['id'], $this->get( '/tracks' )['items'][0]['id'], 'by title otherwise' );
 	}
 
+	public function test_a_shuffle_is_dealt_by_its_seed_and_its_pages_follow_on(): void {
+		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		foreach ( range( 1, 30 ) as $n ) {
+			$id = wp_insert_attachment(
+				array(
+					'post_title'     => "Shuffled $n",
+					'post_mime_type' => 'audio/mpeg',
+					'post_status'    => 'inherit',
+				),
+				sprintf( 'shuffled/%02d.mp3', $n ),
+				$post
+			);
+			wp_update_attachment_metadata(
+				$id,
+				array(
+					'title'        => "Shuffled $n",
+					'album'        => 'Deck',
+					'track_number' => (string) $n,
+				)
+			);
+		}
+		$album = (int) get_term_by( 'name', 'Deck', Catalog::ALBUM )->term_id;
+		foreach ( array( array(), array( 'album' => $album ) ) as $scope ) {
+			$dealt  = function ( int $seed, int $page ) use ( $scope ): array {
+				$args = $scope + array(
+					'orderby'  => 'random',
+					'seed'     => $seed,
+					'per_page' => 10,
+					'page'     => $page,
+				);
+				return wp_list_pluck( $this->get( '/tracks', $args )['items'], 'id' );
+			};
+			$all    = array_merge( ...array_map( static fn( $n ) => $dealt( 7, $n ), range( 1, $scope ? 3 : 4 ) ) );
+			$listed = wp_list_pluck( $this->get( '/tracks', $scope + array( 'per_page' => 100 ) )['items'], 'id' );
+			$what   = $scope ? 'an album' : 'the library';
+
+			$this->assertCount( count( $listed ), $all, "every track of $what once, across the pages" );
+			$this->assertEqualsCanonicalizing( $listed, $all, "and no other, in $what" );
+			$this->assertSame( $dealt( 7, 2 ), $dealt( 7, 2 ), "the same seed deals $what the same" );
+			$this->assertNotSame( $listed, $all, "in an order of its own, not $what's" );
+		}
+	}
+
 	public function test_paging_and_its_limits(): void {
 		$first = $this->get( '/tracks', array( 'per_page' => 1 ) );
 		$this->assertSame( 3, $first['pages'] );
@@ -280,6 +377,104 @@ class Test_Riff_Catalog_Rest extends Riff_TestCase {
 
 		$this->assertCount( 21, $this->get( '/albums' )['items'] );
 		$this->assertLessThanOrEqual( $few + 4, $many, 'no queries per album' );
+	}
+
+	public function test_a_page_of_tracks_costs_the_same_queries_however_many_tracks_and_posts_it_holds(): void {
+		$count = function (): int {
+			global $wpdb;
+			wp_cache_flush();
+			$before = $wpdb->num_queries;
+			$this->get( '/tracks' );
+			return $wpdb->num_queries - $before;
+		};
+		$few   = $count();
+		for ( $i = 0; $i < 12; $i++ ) {
+			$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+			$id   = self::attach( '02 - Underground [underground].mp3', $post );
+			set_post_thumbnail( $id, self::attach( 'cover.png', $post ) );
+		}
+		$many = $count();
+
+		$this->assertSame( 15, $this->get( '/tracks' )['total'] );
+		$this->assertLessThanOrEqual( $few + 4, $many, 'no queries per track, nor per post or cover' );
+	}
+
+	public function test_what_a_visitor_may_not_see_is_looked_up_once_until_a_post_changes(): void {
+		$lookups = 0;
+		$count   = static function ( $sql ) use ( &$lookups ) {
+			if ( str_contains( $sql, 'par.post_password' ) ) {
+				++$lookups;
+			}
+			return $sql;
+		};
+		add_filter( 'query', $count );
+		$this->get( '/albums' );
+		$this->get( '/artists' );
+		$this->get( '/albums', array( 'artist' => 1 ) );
+		remove_filter( 'query', $count );
+
+		$this->assertSame( 1, $lookups, 'once for every list' );
+		$this->assertNotContains( 'Secret Sessions', wp_list_pluck( $this->get( '/albums' )['items'], 'name' ) );
+
+		wp_update_post(
+			array(
+				'ID'          => (int) get_post_field( 'post_parent', $this->secret ),
+				'post_status' => 'publish',
+			)
+		);
+		$this->assertContains( 'Secret Sessions', wp_list_pluck( $this->get( '/albums' )['items'], 'name' ), 'and again once a post changes' );
+	}
+
+	public function test_after_goes_on_from_where_a_page_ended_by_title_or_newest_first(): void {
+		foreach ( array( 'title', 'added' ) as $order ) {
+			$paged = array();
+			for ( $n = 1; $n <= 3; $n++ ) {
+				$paged = array_merge( $paged, wp_list_pluck( $this->get( '/tracks', array( 'per_page' => 1, 'page' => $n, 'orderby' => $order ) )['items'], 'id' ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			}
+			$walked = array();
+			$after  = '';
+			$steps  = 0;
+			do {
+				$data   = $this->get( '/tracks', array( 'per_page' => 1, 'after' => $after, 'orderby' => $order ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+				$walked = array_merge( $walked, wp_list_pluck( $data['items'], 'id' ) );
+				$after  = $data['next'];
+			} while ( '' !== $after && ++$steps < 10 );
+
+			$this->assertSame( $paged, $walked, "the same tracks in the same order as page after page, by $order" );
+			$this->assertSame( 3, $data['total'] );
+			$this->assertSame( '', $data['next'], 'and no next after the last' );
+		}
+
+		$request = new WP_REST_Request( 'GET', '/riff/v1/tracks' );
+		$request->set_query_params( array( 'after' => 'not-a-cursor' ) );
+		$this->assertSame( 400, rest_do_request( $request )->get_status() );
+	}
+
+	public function test_a_list_counts_its_tracks_once_until_a_post_changes(): void {
+		$counted = 0;
+		$count   = static function ( $sql ) use ( &$counted ) {
+			if ( str_contains( $sql, 'FOUND_ROWS()' ) ) {
+				++$counted;
+			}
+			return $sql;
+		};
+		add_filter( 'query', $count );
+		$this->get( '/tracks' );
+		$this->get( '/tracks', array( 'per_page' => 1, 'page' => 2 ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		remove_filter( 'query', $count );
+
+		$this->assertSame( 1, $counted, 'once for every page' );
+		self::attach( '02 - Underground [underground].mp3' );
+		$this->assertSame( 4, $this->get( '/tracks' )['total'], 'and again once a track is added' );
+	}
+
+	public function test_albums_named_come_back_at_once_as_the_route_gives_them(): void {
+		$albums = wp_list_pluck( $this->get( '/albums' )['items'], 'id' );
+		$secret = (int) wp_get_object_terms( $this->secret, Catalog::ALBUM )[0]->term_id;
+
+		$this->assertSame( $this->get( '/albums', array( 'include' => $albums ) )['items'], Catalog_Rest::named( Catalog::ALBUM, $albums ) );
+		$this->assertSame( array(), wp_list_pluck( Catalog_Rest::named( Catalog::ALBUM, array( $secret ) ), 'id' ), 'not one the visitor cannot see' );
+		$this->assertSame( array(), Catalog_Rest::named( Catalog::ARTIST, array() ) );
 	}
 
 	public function test_the_routes_describe_themselves(): void {

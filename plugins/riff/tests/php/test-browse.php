@@ -264,11 +264,11 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( '<h2 class="riff-album-title" tabindex="-1">Compositions</h2>', $html );
 		$this->assertSame( 2, substr_count( $html, 'data-riff-track=' ), 'rows the player takes over' );
 		$this->assertLessThan( strpos( $html, 'Trombone Detritus' ), strpos( $html, 'Underground' ), 'track 2 before track 3' );
-		$this->assertStringContainsString( 'data-riff-tracks="', $html );
+		$this->assertStringContainsString( 'data-riff-more="', $html, 'Play and Shuffle play the album from its route' );
 		$this->assertStringContainsString( 'data-riff-app-action="shuffle"', $html );
 	}
 
-	public function test_an_album_longer_than_a_page_shows_every_track_in_order(): void {
+	public function test_an_album_longer_than_a_page_runs_on_over_its_pages_numbered_on(): void {
 		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
 		foreach ( array_reverse( range( 1, 120 ) ) as $n ) {
 			$id = wp_insert_attachment(
@@ -291,11 +291,29 @@ class Test_Riff_Browse extends Riff_TestCase {
 			);
 		}
 
-		$html = $this->render_at( array( Browse::ALBUM => $this->album( 'Box Set' ) ) );
+		$album = $this->album( 'Box Set' );
+		$first = $this->render_at( array( Browse::ALBUM => $album ) );
+		$rows  = static function ( string $html ): array {
+			preg_match_all( '/data-riff-track="([^"]*)"/', $html, $found );
+			return wp_list_pluck( array_map( static fn( $t ) => json_decode( html_entity_decode( $t ), true ), $found[1] ), 'title' );
+		};
 
-		preg_match( '/data-riff-tracks="([^"]*)"/', $html, $found );
-		$tracks = json_decode( html_entity_decode( $found[1] ?? '' ), true );
-		$this->assertSame( array_map( static fn( $n ) => "Box track $n", range( 1, 120 ) ), wp_list_pluck( (array) $tracks, 'title' ), 'all 120, in order, not the first page alone' );
+		$this->assertSame( array_map( static fn( $n ) => "Box track $n", range( 1, 100 ) ), $rows( $first ), 'the first hundred, in order' );
+		$this->assertMatchesRegularExpression( '#<a class="riff-pill" href="[^"]*riff_album=' . $album . '[^"]*riff_page=2#', str_replace( '&#038;', '&', $first ), 'and a way on to the rest' );
+		preg_match( '/data-riff-more="([^"]*)"/', $first, $found );
+		$more = json_decode( html_entity_decode( $found[1] ?? '' ), true );
+		$this->assertSame( array( 1, 2, 100 ), array( $more['page'], $more['pages'], $more['per_page'] ), 'where Play and Shuffle find the whole album' );
+		$this->assertStringContainsString( 'album=' . $album, $more['url'] );
+
+		$second = $this->render_at(
+			array(
+				Browse::ALBUM => $album,
+				'riff_page'   => 2,
+			)
+		);
+		unset( $_GET['riff_page'] );
+		$this->assertSame( array_map( static fn( $n ) => "Box track $n", range( 101, 120 ) ), $rows( $second ) );
+		$this->assertStringContainsString( 'data-riff-numbered style="counter-reset:riff-track 100"', $second, 'numbered on from 101' );
 	}
 
 	public function test_an_artist_page_has_their_picture_their_latest_tracks_and_their_albums(): void {
@@ -404,7 +422,8 @@ class Test_Riff_Browse extends Riff_TestCase {
 
 		$this->assertStringContainsString( '<header class="riff-album riff-album-has-cover riff-album-tinted" style="--riff-album-tint:#', $html );
 		$this->assertStringContainsString( '<p class="riff-album-kind">Album</p>', $html );
-		$this->assertStringContainsString( '<div class="riff-album-tracks" data-riff-numbered data-riff-tracks=', $html );
+		$this->assertMatchesRegularExpression( '#<span class="riff-album-cover"><img [^>]*sizes="\(max-width: 599px\) 66vw, 300px" alt="" fetchpriority="high"#', $html, 'the cover the page is painted around, first' );
+		$this->assertStringContainsString( '<div class="riff-album-tracks" data-riff-numbered data-riff-more=', $html );
 		$this->assertStringNotContainsString( 'data-riff-numbered', $this->render_at( array( Browse::VIEW => 'tracks' ) ), 'a list of everything shows each track\'s art' );
 	}
 

@@ -25,16 +25,22 @@ defined( 'ABSPATH' ) || exit;
 final class Playlist_View {
 
 	/**
-	 * Renders the view.
+	 * The most rows a page of a playlist draws.
+	 */
+	private const PER_PAGE = 100;
+
+	/**
+	 * Renders the view, a hundred rows at a time.
 	 *
 	 * @since 4.20.0
+	 * @since 5.7.0 A page at a time.
 	 *
-	 * @param string $page The Listen page's address.
-	 * @param int    $id   The playlist's post ID.
+	 * @param string $page   The Listen page's address.
+	 * @param int    $id     The playlist's post ID.
+	 * @param int    $number Page of rows.
 	 * @return string
 	 */
-	public static function view( string $page, int $id ): string {
-		unset( $page );
+	public static function view( string $page, int $id, int $number = 1 ): string {
 		$response = rest_do_request( new WP_REST_Request( 'GET', '/' . Library::REST . '/users/me/playlists/' . $id ) );
 		if ( $response->is_error() ) {
 			return Ui::title( __( 'Playlist', 'riff' ) ) . Ui::empty_note( __( 'This playlist isn’t here. It may have been deleted, or it may be someone else’s.', 'riff' ) );
@@ -53,14 +59,38 @@ final class Playlist_View {
 		if ( ! $list['tracks'] ) {
 			return $html . Ui::empty_note( __( 'Nothing in it yet. Choose Add to playlist in the … menu beside any track.', 'riff' ) );
 		}
+		$pages  = (int) ceil( count( $list['tracks'] ) / self::PER_PAGE );
+		$number = min( max( 1, $number ), $pages );
+		$rows   = array_slice( $list['tracks'], ( $number - 1 ) * self::PER_PAGE, self::PER_PAGE );
+		// A row pressed plays on into the rest of the playlist after this page, from the tracks
+		// route by ID, as many as it gives at once.
+		$rest = array_values( array_unique( array_map( 'intval', wp_list_pluck( array_slice( $list['tracks'], $number * self::PER_PAGE ), 'id' ) ) ) );
+		$more = $rest ? array(
+			'url'   => add_query_arg(
+				array(
+					'include'  => implode( ',', $rest ),
+					'orderby'  => 'include',
+					'per_page' => self::PER_PAGE,
+				),
+				rest_url( Library::REST . '/tracks' )
+			),
+			'page'  => 0,
+			'pages' => (int) ceil( count( $rest ) / self::PER_PAGE ),
+		) : array();
 		// Each row's place in the playlist, for Move and Remove; a track the listener can no longer
 		// see is not drawn, so the places can skip.
 		return $html . sprintf(
 			'<div class="riff-playlist-tracks" data-riff-playlist="%d" data-riff-ids="%s" data-riff-places="%s">%s</div>',
 			(int) $list['id'],
 			esc_attr( (string) wp_json_encode( array_map( 'intval', (array) $list['ids'] ) ) ),
-			esc_attr( (string) wp_json_encode( array_map( 'intval', wp_list_pluck( $list['tracks'], 'index' ) ) ) ),
-			Browse::rows( $list['tracks'] )
+			esc_attr( (string) wp_json_encode( array_map( 'intval', wp_list_pluck( $rows, 'index' ) ) ) ),
+			Browse::rows( $rows, false, false, $more )
+		) . Browse::next(
+			add_query_arg( Browse::PLAYLIST, (int) $list['id'], $page ),
+			array(
+				'page'  => $number,
+				'pages' => $pages,
+			)
 		);
 	}
 

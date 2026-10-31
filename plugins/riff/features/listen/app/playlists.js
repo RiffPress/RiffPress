@@ -22,14 +22,7 @@ export function playlists( ctx ) {
 			return true;
 		}
 		if ( kind === 'play-playlist' ) {
-			api.playlist( id ).then(
-				( p ) => {
-					if ( p.tracks?.length ) {
-						api.play( p.tracks, 0 );
-					}
-				},
-				() => tell( playError() )
-			);
+			playPlaylist( id );
 			return true;
 		}
 		if ( kind === 'rename-playlist' ) {
@@ -70,6 +63,18 @@ export function playlists( ctx ) {
 			return true;
 		}
 		return false;
+	}
+
+	// A playlist, every track of it in its order, repeats and all, or shuffled.
+	function playPlaylist( id, shuffle = false ) {
+		api.playlist( id ).then(
+			( p ) => {
+				if ( p.tracks?.length ) {
+					api.play( p.tracks, 0, { shuffle } );
+				}
+			},
+			() => tell( playError() )
+		);
 	}
 
 	// Renaming: the name becomes a field, Enter or Save keeps it, Escape or Cancel puts it back.
@@ -199,5 +204,5 @@ export function playlists( ctx ) {
 	// A change to a playlist leaves every view drawn before it out of date, its sidebar included.
 	api.listen?.( 'playlist', () => ctx.forget() );
 
-	return { playlistAction };
+	return { playlistAction, playPlaylist };
 }

@@ -12,6 +12,7 @@ use WP_REST_Request;
 use WP_User;
 
 use Riff\Catalog;
+use Riff\Catalog_Rest;
 use Riff\Library;
 use Riff\Tracks;
 
@@ -117,10 +118,10 @@ final class Browse {
 		$list   = $read( self::PLAYLIST );
 		// phpcs:enable
 		if ( ctype_digit( $list ) && (int) $list > 0 ) {
-			return array( 'view' => 'playlist', 'id' => (int) $list, 'search' => '', 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			return array( 'view' => 'playlist', 'id' => (int) $list, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		if ( ctype_digit( $album ) && (int) $album > 0 ) {
-			return array( 'view' => 'album', 'id' => (int) $album, 'search' => '', 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			return array( 'view' => 'album', 'id' => (int) $album, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		if ( ctype_digit( $artist ) && (int) $artist > 0 ) {
 			return array( 'view' => 'artist', 'id' => (int) $artist, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
@@ -345,9 +346,9 @@ final class Browse {
 			case 'library':
 				return Collection::view( $page );
 			case 'playlist':
-				return Playlist_View::view( $page, $current['id'] );
+				return Playlist_View::view( $page, $current['id'], $current['page'] );
 			case 'album':
-				return Album_View::view( $page, $current['id'] );
+				return Album_View::view( $page, $current['id'], $current['page'] );
 			case 'artist':
 				return Artist_View::view( $page, $current['id'], $current['page'] );
 			default:
@@ -376,6 +377,26 @@ final class Browse {
 			'items' => array(),
 			'pages' => 0,
 			'total' => 0,
+		);
+	}
+
+	/**
+	 * Where a list one page of which is drawn goes on: its route with the arguments that drew it,
+	 * the page drawn and how many there are. Play and Shuffle, and a row pressed, play on into
+	 * the pages after it as the queue nears its end.
+	 *
+	 * @param string $route The route, as for get().
+	 * @param array  $args  Its arguments, without the page.
+	 * @param array  $data  The route's response for the page drawn.
+	 * @return array `{ url, page, pages, per_page }`.
+	 */
+	public static function more( string $route, array $args, array $data ): array {
+		unset( $args['page'] );
+		return array(
+			'url'      => add_query_arg( $args, rest_url( Library::REST . $route ) ),
+			'page'     => max( 1, (int) $data['page'] ),
+			'pages'    => max( 1, (int) $data['pages'] ),
+			'per_page' => (int) ( $args['per_page'] ?? Catalog_Rest::PER_PAGE ),
 		);
 	}
 
@@ -473,8 +494,9 @@ final class Browse {
 	 * @param string       $kind  What it is, above the title, or empty.
 	 * @param bool         $album Whether it is an album: its cover leads, and its tracks are numbered.
 	 * @param int          $id    The album's term ID, for its heart, or 0.
+	 * @param array        $more  For one page of a longer list, where it goes on, from more().
 	 */
-	public static function list_view( string $title, string|array $meta, array $data, string $kind = '', bool $album = false, int $id = 0 ): string {
+	public static function list_view( string $title, string|array $meta, array $data, string $kind = '', bool $album = false, int $id = 0, array $more = array() ): string {
 		if ( ! $data['items'] ) {
 			return Ui::title( $title ) . self::empty_note();
 		}
@@ -483,22 +505,23 @@ final class Browse {
 		if ( $album && $id ) {
 			$cover = Art::album_art( $id, $cover );
 		}
-		$art  = $cover ? (string) end( $cover )['src'] : '';
 		$tint = $album ? Art::tint( $cover ) : '';
-		return App::header( $title, $meta, $kind, $art, $tint, false, $id ? 'album' : '', $id ) . self::rows( $data['items'], $album );
+		return App::header( $title, $meta, $kind, $cover, $tint, false, $id ? 'album' : '', $id ) . self::rows( $data['items'], $album, false, $more );
 	}
 
 	/**
 	 * Tracks as the rows a post shows: core audio blocks, which Riff marks and the script turns
 	 * into rows, inside the holder Play and Shuffle read.
 	 *
-	 * @param array $tracks Tracks from the route.
-	 * @return string
+	 * @param array $tracks   Tracks from the route.
 	 * @param bool  $numbered Whether to number the tracks, as an album does.
 	 * @param bool  $heads    Whether to head the rows with the columns' names when they are not
 	 *                        numbered, as Liked songs does: an empty head over the art.
+	 * @param array $more     For one page of a longer list, where it goes on, from more(). Then
+	 *                        Play and Shuffle read the list from there rather than from the page.
+	 * @return string
 	 */
-	public static function rows( array $tracks, bool $numbered = false, bool $heads = false ): string {
+	public static function rows( array $tracks, bool $numbered = false, bool $heads = false, array $more = array() ): string {
 		// Each row is rendered as part of the post its track belongs to, so it takes that post's
 		// artwork and names it as where it plays from, as it would in the post itself. A track in no
 		// post is rendered in none, as the tracks route has it, not as part of the Listen page.
@@ -524,10 +547,14 @@ final class Browse {
 			$numbered ? '#' : '',
 			esc_html__( 'Title', 'riff' )
 		) : '';
+		// A later page of an album numbers on from the pages before it.
+		$start = $numbered && $more ? ( max( 1, (int) $more['page'] ) - 1 ) * (int) ( $more['per_page'] ?? 0 ) : 0;
 		return $head . sprintf(
-			'<div class="riff-album-tracks"%s data-riff-tracks="%s">%s</div>',
+			'<div class="riff-album-tracks"%s%s %s="%s">%s</div>',
 			$numbered ? ' data-riff-numbered' : '',
-			esc_attr( (string) wp_json_encode( $tracks ) ),
+			$start > 0 ? sprintf( ' style="counter-reset:riff-track %d"', $start ) : '',
+			$more ? 'data-riff-more' : 'data-riff-tracks',
+			esc_attr( (string) wp_json_encode( $more ? $more : $tracks ) ),
 			$rows
 		);
 	}

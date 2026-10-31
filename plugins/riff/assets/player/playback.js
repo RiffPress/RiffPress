@@ -59,7 +59,7 @@ export function playback( P ) {
 			P.turn( m );
 		}
 		P.paint();
-		P.renderQueue();
+		P.renderQueue( { follow: true } );
 		P.tint( largest( t.art ) || t.video?.poster );
 		P.save();
 		/**
@@ -74,6 +74,7 @@ export function playback( P ) {
 		 * @param {Object}   api          `window.riff`.
 		 */
 		emit( 'track', { track: t, index: P.pos, queue: api.queue() } );
+		P.further();
 	}
 
 	function toggle() {
@@ -128,6 +129,7 @@ export function playback( P ) {
 		P.queue = [];
 		P.order = [];
 		P.pos = -1;
+		P.more = null;
 		root.hidden = true;
 		// The record back in its sleeve, for the next album's turn.
 		P.deck( false );
@@ -167,9 +169,11 @@ export function playback( P ) {
 	// A phone pauses video when the page goes to the background, and audio keeps going. So the
 	// track moves to audio while hidden and back to video when the page returns.
 	document.addEventListener( 'visibilitychange', () => {
-		if ( ! document.hidden && ! P.el().paused ) {
+		if ( ! P.away() && ! P.el().paused ) {
 			P.glide();
 		}
+		// The filament goes dark while the page is out of sight, and lights again on its return.
+		P.meterSync?.();
 		const t = P.track();
 		if ( ! t || ! t.video ) {
 			return;

@@ -43,6 +43,20 @@ final class Protect {
 	public const TTL = 6 * HOUR_IN_SECONDS;
 
 	/**
+	 * The transient holding whether the protected folder was found open: '1' or '0'.
+	 *
+	 * @since 5.7.0
+	 */
+	public const OPEN = 'riff_protected_open';
+
+	/**
+	 * The cron event that asks the web server whether the protected folder is open.
+	 *
+	 * @since 5.7.0
+	 */
+	public const PROBE = 'riff_protected_probe';
+
+	/**
 	 * Hooks the address, the field, the signing and the Site Health check.
 	 *
 	 * @since 4.18.0
@@ -55,6 +69,7 @@ final class Protect {
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 20, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 20, 2 );
 		add_filter( 'site_status_tests', array( self::class, 'tests' ) );
+		add_action( self::PROBE, array( self::class, 'probe' ) );
 	}
 
 	/**
@@ -129,7 +144,11 @@ final class Protect {
 	 * Signs a protected track's file, and its video's, for the visitor the track is written for.
 	 * A track the visitor may not play loses its file after this, in riff_can_play.
 	 *
+	 * The file is the one the track plays: its streaming version when it streams one. An address
+	 * a riff_track filter put in its place, a service's own, say, is left as it is.
+	 *
 	 * @since 4.18.0
+	 * @since 5.8.0 The streaming version's file, and only the file's own address.
 	 *
 	 * @param array $track Track.
 	 * @param int   $id    Attachment ID, or 0.
@@ -141,8 +160,10 @@ final class Protect {
 			return $track;
 		}
 		// Only for a visitor who may read the file's post: the signature skips that check.
-		if ( self::is( $id ) && ! empty( $track['src'] ) && self::readable( $id ) ) {
-			$track['src'] = self::signed( $id );
+		$stream = Media::stream( $id );
+		$file   = $stream ? $stream : $id;
+		if ( self::is( $file ) && ! empty( $track['src'] ) && wp_get_attachment_url( $file ) === $track['src'] && self::readable( $file ) ) {
+			$track['src'] = self::signed( $file );
 		}
 		$video = (int) get_post_meta( $id, Media::VIDEO_META, true );
 		if ( $video && self::is( $video ) && ! empty( $track['video']['src'] ) && self::readable( $video ) ) {
@@ -228,7 +249,43 @@ final class Protect {
 		if ( ! self::valid( $id, $expires, $signature ) && ! self::can( $id ) ) {
 			self::refuse( 403 );
 		}
+		$to = self::elsewhere( $id );
+		if ( '' !== $to ) {
+			// For this visitor and this once: never kept by a cache along the way.
+			nocache_headers();
+			wp_redirect( $to, 302, 'Riff' ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- a CDN's or storage's own host, given by a plugin, never by the request.
+			exit;
+		}
 		self::send( $id );
+	}
+
+	/**
+	 * Where a protected file is sent from instead of WordPress, when a CDN or storage plugin signs
+	 * an address for it: the visitor has been checked by now, and is sent on to an address that
+	 * works for a while, which the CDN checks and serves from its edge with byte ranges, so no PHP
+	 * worker holds the file while it plays. Empty when no plugin does.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param int $id Attachment ID.
+	 * @return string
+	 */
+	public static function elsewhere( int $id ): string {
+		/**
+		 * Filters the address a protected file is sent from instead of WordPress: a signed address
+		 * on a CDN or in object storage, such as a CloudFront or S3 presigned URL or a Bunny or
+		 * Cloudflare token, that stops working at $expires. Riff has checked that the visitor may
+		 * have the file before it asks, and sends them on with a 302 nothing caches. Empty, the
+		 * default, sends the file as riff_protected_send says.
+		 *
+		 * @since 5.7.0
+		 *
+		 * @param string $url     Signed address, or empty.
+		 * @param int    $id      Attachment ID.
+		 * @param int    $expires When the address should stop working, as a Unix time: an hour on.
+		 */
+		$url = (string) apply_filters( 'riff_protected_url', '', $id, time() + HOUR_IN_SECONDS );
+		return in_array( wp_parse_url( $url, PHP_URL_SCHEME ), array( 'https', 'http' ), true ) ? $url : '';
 	}
 
 	/**
@@ -286,6 +343,55 @@ final class Protect {
 	}
 
 	/**
+	 * Whether the copy a request already has is the file as it is, so a 304 says so, as RFC 9110
+	 * has it: by If-None-Match when it is sent, and by If-Modified-Since only when it isn't.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $none_match If-None-Match header, or empty.
+	 * @param string $since      If-Modified-Since header, or empty.
+	 * @param string $etag       The file's entity tag, quoted.
+	 * @param int    $time       When the file last changed.
+	 * @return bool
+	 */
+	public static function current( string $none_match, string $since, string $etag, int $time ): bool {
+		if ( '' !== trim( $none_match ) ) {
+			if ( '*' === trim( $none_match ) ) {
+				return true;
+			}
+			// Compared weakly, as the RFC asks of If-None-Match.
+			$tags = array_map( static fn( $tag ) => preg_replace( '#^W/#', '', trim( $tag ) ), explode( ',', $none_match ) );
+			return in_array( preg_replace( '#^W/#', '', $etag ), $tags, true );
+		}
+		$when = '' !== trim( $since ) ? strtotime( $since ) : false;
+		return false !== $when && $time <= $when;
+	}
+
+	/**
+	 * Whether a Range may be met, given If-Range: always without one; with an entity tag, only the
+	 * file's own, compared strongly, so a weak one never is; with a date, only exactly when the file
+	 * last changed.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param string $if_range If-Range header, or empty.
+	 * @param string $etag     The file's entity tag, quoted.
+	 * @param int    $time     When the file last changed.
+	 * @return bool
+	 */
+	public static function ranged( string $if_range, string $etag, int $time ): bool {
+		$if_range = trim( $if_range );
+		if ( '' === $if_range ) {
+			return true;
+		}
+		if ( str_starts_with( $if_range, '"' ) || str_starts_with( $if_range, 'W/' ) ) {
+			return $if_range === $etag;
+		}
+		$when = strtotime( $if_range );
+		return false !== $when && $when === $time;
+	}
+
+	/**
 	 * Sends a file: through the web server when the site says it can, from PHP otherwise.
 	 *
 	 * @param int $id Attachment ID.
@@ -328,11 +434,15 @@ final class Protect {
 			exit;
 		}
 
-		if ( isset( $_SERVER['HTTP_IF_NONE_MATCH'] ) && trim( wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ) ) === $etag ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- compared, never output.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- request headers, compared, never output.
+		$header = static fn( string $name ): string => isset( $_SERVER[ $name ] ) ? trim( (string) wp_unslash( $_SERVER[ $name ] ) ) : '';
+		if ( self::current( $header( 'HTTP_IF_NONE_MATCH' ), $header( 'HTTP_IF_MODIFIED_SINCE' ), $etag, $time ) ) {
 			status_header( 304 );
 			exit;
 		}
-		$range = self::range( isset( $_SERVER['HTTP_RANGE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_RANGE'] ) ) : '', $size );
+		// A range of a file that changed since the player last had it would splice two files: the
+		// whole file instead.
+		$range = self::range( self::ranged( $header( 'HTTP_IF_RANGE' ), $etag, $time ) ? sanitize_text_field( $header( 'HTTP_RANGE' ) ) : '', $size );
 		if ( false === $range ) {
 			status_header( 416 );
 			header( 'Content-Range: bytes */' . $size );
@@ -381,6 +491,9 @@ final class Protect {
 		}
 		$error = (string) get_transient( 'riff_protect_error_' . $post->ID );
 		delete_transient( 'riff_protect_error_' . $post->ID );
+		if ( '' === $error && self::is( $post->ID ) && self::open() ) {
+			$error = __( 'The web server still sends this file to anyone who has the protected folder\'s address, as Nginx ignores the rule Riff leaves for Apache. Tools > Site Health shows the rule that closes the folder.', 'riff' );
+		}
 		$fields['riff_protected'] = array(
 			'label' => __( 'Protected', 'riff' ),
 			'input' => 'html',
@@ -391,7 +504,9 @@ final class Protect {
 				esc_html__( 'Only listeners who may play it can load the file', 'riff' ),
 				'' !== $error ? '<p class="riff-pick-error" role="alert">' . esc_html( $error ) . '</p>' : ''
 			),
-			'helps' => __( 'Moves the file into a folder the web server refuses, and serves it through WordPress to whoever can read its post. Posts that link to it are updated.', 'riff' ),
+			'helps' => self::is( $post->ID ) || Protected_Files::local( (string) get_attached_file( $post->ID, true ) )
+				? __( 'Moves the file into a folder the web server refuses, and serves it through WordPress to whoever can read its post. Posts that link to it are updated.', 'riff' )
+				: __( 'This file is kept off this server, so the plugin that stores it has to make it private there; without one that can, it stays public. Riff then serves it to whoever can read its post. Posts that link to it are updated.', 'riff' ),
 		);
 		return $fields;
 	}
@@ -441,6 +556,7 @@ final class Protect {
 	 * @return array Site Health result.
 	 */
 	public static function health(): array {
+		$open   = get_option( Protected_Files::DIR ) && self::probe();
 		$result = array(
 			'label'       => __( 'Riff\'s protected files can only be loaded through WordPress', 'riff' ),
 			'status'      => 'good',
@@ -451,15 +567,30 @@ final class Protect {
 			'description' => '<p>' . esc_html__( 'The web server refuses the protected folder, so a protected file is only served to listeners who may play it.', 'riff' ) . '</p>',
 			'test'        => 'riff_protected_files',
 		);
-		if ( ! get_option( Protected_Files::DIR ) ) {
-			return $result;
+		if ( $open ) {
+			$folder                = (string) wp_parse_url( trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( Protected_Files::dir() ), PHP_URL_PATH );
+			$result['status']      = 'recommended';
+			$result['label']       = __( 'Riff\'s protected files can be loaded directly', 'riff' );
+			$result['description'] = '<p>' . esc_html__( 'The web server sends files from the protected folder to anyone who has their address, so protecting a file only hides that address. On Nginx, add a rule that refuses the folder:', 'riff' ) . '</p><p><code>location ^~ ' . esc_html( $folder ) . '/ { internal; }</code></p>';
 		}
+		return $result;
+	}
+
+	/**
+	 * Whether the web server sends files from the protected folder to anyone, by asking it for one,
+	 * as Nginx does when it ignores the .htaccess Apache reads. Kept for a day, so the Media Library
+	 * can say so without asking again.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @return bool
+	 */
+	public static function probe(): bool {
 		$dir   = Protected_Files::dir();
 		$probe = $dir . '/riff-probe.txt';
 		file_put_contents( $probe, 'riff' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a probe, removed below.
-		$url      = trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( $dir ) . '/riff-probe.txt';
 		$response = wp_remote_get(
-			$url,
+			trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( $dir ) . '/riff-probe.txt',
 			array(
 				'timeout'   => 5,
 				/** This filter is documented in wp-includes/cron.php */
@@ -467,11 +598,24 @@ final class Protect {
 			)
 		);
 		wp_delete_file( $probe );
-		if ( 200 === wp_remote_retrieve_response_code( $response ) && 'riff' === wp_remote_retrieve_body( $response ) ) {
-			$result['status']      = 'recommended';
-			$result['label']       = __( 'Riff\'s protected files can be loaded directly', 'riff' );
-			$result['description'] = '<p>' . esc_html__( 'The web server sends files from the protected folder to anyone who has their address, so protecting a file only hides that address. On Nginx, add a rule that refuses the folder:', 'riff' ) . '</p><p><code>location ^~ ' . esc_html( dirname( (string) wp_parse_url( $url, PHP_URL_PATH ) ) ) . '/ { internal; }</code></p>';
+		$open = 200 === wp_remote_retrieve_response_code( $response ) && 'riff' === wp_remote_retrieve_body( $response );
+		set_transient( self::OPEN, $open ? '1' : '0', DAY_IN_SECONDS );
+		return $open;
+	}
+
+	/**
+	 * Whether the protected folder was found open when last asked. Never asks itself, so the Media
+	 * Library doesn't wait on a request: when nobody has asked for a day, asking is left to cron.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @return bool
+	 */
+	public static function open(): bool {
+		$open = get_transient( self::OPEN );
+		if ( false === $open && ! wp_next_scheduled( self::PROBE ) ) {
+			wp_schedule_single_event( time(), self::PROBE );
 		}
-		return $result;
+		return '1' === $open;
 	}
 }

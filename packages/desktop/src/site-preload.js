@@ -11,6 +11,11 @@
  * On the Listen app it also tells the main process two things the page already shows: the track
  * that is playing, for the Dock menu and a notification, and files dropped on the window, for
  * Import Music…. Neither is visible to the page.
+ *
+ * And it tells the page when the window is minimised or hidden, which the page can't see for
+ * itself: the window keeps background throttling off so the music's timers run, and Chromium then
+ * calls the page visible throughout. `riff-desktop-away` on <html>, with a visibilitychange as the
+ * browser would fire, and the player draws nothing while it is there.
  */
 const { ipcRenderer, webUtils } = require( 'electron' );
 
@@ -423,6 +428,11 @@ if ( document.documentElement ) {
 		}
 	} ).observe( document, { childList: true } );
 }
+
+ipcRenderer.on( 'riff:away', ( event, away ) => {
+	document.documentElement?.classList.toggle( 'riff-desktop-away', away );
+	document.dispatchEvent( new Event( 'visibilitychange' ) );
+} );
 
 window.addEventListener( 'DOMContentLoaded', () => {
 	const css = [];

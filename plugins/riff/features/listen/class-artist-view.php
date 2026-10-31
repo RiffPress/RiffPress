@@ -32,15 +32,12 @@ final class Artist_View {
 	 * @return string
 	 */
 	public static function view( string $page, int $id, int $number ): string {
-		$data = Browse::get(
-			'/tracks',
-			array(
-				'artist'   => $id,
-				'orderby'  => 'added',
-				'per_page' => 10,
-				'page'     => $number,
-			)
+		$args = array(
+			'artist'   => $id,
+			'orderby'  => 'added',
+			'per_page' => 10,
 		);
+		$data = Browse::get( '/tracks', $args + array( 'page' => $number ) );
 		$term = get_term( $id );
 		if ( ! $data['items'] || ! $term instanceof \WP_Term ) {
 			return Artists_View::view( $page, 1 );
@@ -57,15 +54,15 @@ final class Artist_View {
 		// as on their card, in the album's colour.
 		$image = (int) get_term_meta( $id, 'riff_artist_image', true );
 		$art   = $image ? Tracks::art( $image ) : (array) ( $albums['items'][0]['art'] ?? array() );
-		$cover = $art && ! Art::drawn( $art ) ? (string) end( $art )['src'] : '';
-		$mark  = '' === $cover ? '<span class="riff-album-mark" aria-hidden="true">' . esc_html( mb_strtoupper( mb_substr( Catalog::name( $term->name ), 0, 1 ) ) ) . '</span>' : '';
+		$cover = $art && ! Art::drawn( $art ) ? $art : array();
+		$mark  = ! $cover ? '<span class="riff-album-mark" aria-hidden="true">' . esc_html( mb_strtoupper( mb_substr( Catalog::name( $term->name ), 0, 1 ) ) ) . '</span>' : '';
 		$meta  = array( Browse::count( (int) $data['total'] ) );
 		if ( $albums['total'] ) {
 			/* translators: %s: number of albums. */
 			$meta[] = sprintf( _n( '%s album', '%s albums', (int) $albums['total'], 'riff' ), number_format_i18n( (int) $albums['total'] ) );
 		}
 		$html  = App::header( Catalog::name( $term->name ), implode( ' · ', $meta ), __( 'Artist', 'riff' ), $cover, Art::tint( $art ), true, 'artist', $id, array(), '', $mark );
-		$html .= '<h3 class="riff-app-section">' . esc_html__( 'Latest', 'riff' ) . '</h3>' . Browse::rows( $data['items'] ) . Browse::next( add_query_arg( Browse::ARTIST, $id, $page ), $data );
+		$html .= '<h3 class="riff-app-section">' . esc_html__( 'Latest', 'riff' ) . '</h3>' . Browse::rows( $data['items'], false, false, Browse::more( '/tracks', $args, $data ) ) . Browse::next( add_query_arg( Browse::ARTIST, $id, $page ), $data );
 		if ( $albums['items'] ) {
 			$html .= '<h3 class="riff-app-section">' . esc_html__( 'Albums', 'riff' ) . '</h3>' . Browse::album_grid( $albums['items'], $page );
 		}

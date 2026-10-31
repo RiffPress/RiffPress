@@ -5,6 +5,7 @@
  * @package Riff
  */
 
+use Riff\Catalog;
 use Riff\Import;
 use Riff\Media;
 
@@ -174,6 +175,28 @@ class Test_Riff_Import extends Riff_TestCase {
 
 		$this->assertCount( 2, $result['albums'] );
 		$this->assertNotSame( $result['albums'][0]['post'], $result['albums'][1]['post'] );
+	}
+
+	public function test_the_same_file_in_two_folders_of_one_run_is_imported_once(): void {
+		$dir = $this->album_dir( 'label/one', array( '02 - Underground [underground].mp3' ) );
+		mkdir( dirname( $dir ) . '/two' );
+		copy( self::fixture( '02 - Underground [underground].mp3' ), dirname( $dir ) . '/two/02 - Underground [underground].mp3' );
+
+		$result = Import::folder( dirname( $dir ) );
+
+		$this->assertSame( array( '02 - Underground [underground].mp3' ), $result['albums'][0]['imported'] );
+		$this->assertSame( array( '02 - Underground [underground].mp3' ), $result['albums'][1]['skipped'], 'found among what this run imported' );
+		$this->assertCount( 1, $this->tracks() );
+	}
+
+	public function test_an_albums_tracks_are_counted_once_the_run_is_done(): void {
+		$dir = $this->album_dir( 'compositions', array( '02 - Underground [underground].mp3', '03 - Trombone Detritus [detritus].mp3' ) );
+
+		Import::folder( $dir );
+
+		$this->assertFalse( wp_defer_term_counting(), 'counting is not left put off' );
+		$album = wp_get_object_terms( $this->tracks()[0], Catalog::ALBUM )[0];
+		$this->assertSame( 2, (int) get_term( $album->term_id, Catalog::ALBUM )->count );
 	}
 
 	public function test_a_dry_run_lists_the_files_and_imports_nothing(): void {

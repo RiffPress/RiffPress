@@ -1,8 +1,8 @@
 <?php
 /**
- * Removes what Riff stored about the library: the video-version link on audio files, what the
- * import and the catalogue noted on them, the tint taken from each post's cover, and the album
- * and artist terms. The files, their tags
+ * Removes what Riff stored about the library: the video and streaming-version links on audio
+ * files, what the import and the catalogue noted on them, the tint taken from each post's cover,
+ * and the album and artist terms. The files, their tags
  * and their featured images are WordPress's own and stay. So does what listeners made, their
  * playlists, likes and recently played, which would be cumbersome to make again after a reinstall;
  * Tools > Erase Personal Data deletes one listener's.
@@ -16,7 +16,8 @@ global $wpdb;
 
 // Protected files go back where they were, and the posts that named them are relinked, so nothing
 // points at an address that stops working with the plugin gone.
-$riff_base = trailingslashit( wp_upload_dir( null, false )['basedir'] );
+$riff_base  = trailingslashit( wp_upload_dir( null, false )['basedir'] );
+$riff_moved = array();
 foreach ( get_posts(
 	array(
 		'post_type'      => 'attachment',
@@ -34,24 +35,19 @@ foreach ( get_posts(
 	wp_mkdir_p( dirname( $riff_to ) );
 	if ( is_file( $riff_file ) && @rename( $riff_file, $riff_to ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename
 		update_attached_file( $riff_id, $riff_to );
-		$riff_from = add_query_arg( 'riff-file', $riff_id, home_url( '/' ) );
-		$riff_url  = (string) wp_get_attachment_url( $riff_id );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall, once.
-		$riff_posts = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_content LIKE %s", '%' . $wpdb->esc_like( $riff_from ) . '%' ) );
-		foreach ( $riff_posts as $riff_post ) {
-			$riff_content = (string) get_post_field( 'post_content', (int) $riff_post, 'raw' );
-			// The whole address only, so ?riff-file=12 is not found inside ?riff-file=123.
-			$riff_updated = (string) preg_replace( '/' . preg_quote( $riff_from, '/' ) . '(?![0-9])/', addcslashes( $riff_url, '\\$' ), $riff_content );
-			if ( $riff_updated !== $riff_content ) {
-				$wpdb->update( $wpdb->posts, array( 'post_content' => $riff_updated ), array( 'ID' => (int) $riff_post ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall, once.
-				clean_post_cache( (int) $riff_post );
-			}
-		}
+		$riff_moved[ add_query_arg( 'riff-file', $riff_id, home_url( '/' ) ) ] = (string) wp_get_attachment_url( $riff_id );
 	}
+}
+// Every moved file's posts at once, as a search through every post can't use an index.
+if ( ! empty( $riff_moved ) ) {
+	if ( ! class_exists( 'Riff\Protected_Files' ) ) {
+		require_once __DIR__ . '/src/class-protected-files.php';
+	}
+	Riff\Protected_Files::relink_all( $riff_moved );
 }
 delete_option( 'riff_protected_dir' );
 
-foreach ( array( '_riff_protected', '_riff_video', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
+foreach ( array( '_riff_protected', '_riff_video', '_riff_stream', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
 	delete_post_meta_by_key( $riff_key );
 }
 
@@ -72,6 +68,7 @@ foreach ( (array) glob( $riff_base . 'riff-art/*', GLOB_ONLYDIR ) as $riff_dir )
 delete_option( 'riff_art_stamp' );
 delete_option( 'riff_art_changed' );
 delete_option( 'riff_catalog_backfill' );
+delete_option( 'riff_catalog_backfill_from' );
 delete_option( 'riff_rewrite' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );
 

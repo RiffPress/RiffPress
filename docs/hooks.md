@@ -41,6 +41,18 @@ Since 4.16.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$tabs` | `array[]` | Tabs keyed by slug, each with a label. |
 
+### `riff_protect_storage`
+
+Filters whether the storage a file is kept in elsewhere was made private, when it is protected, or public again, when it isn't. A plugin that keeps uploads in object storage or on a CDN answers for its own files: true once the copy there is private (or public again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an answer, a file only on this server is moved into the protected folder, and one kept elsewhere is not protected, as moving it would leave it public there. Riff can't send a file it doesn't have, so a plugin that protects its files signs their addresses through riff_protected_url too.
+
+Since 5.7.0. Fires in `plugins/riff/src/class-protected-files.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$done` | `true\|WP_Error\|null` | Null, the default: nothing keeps it elsewhere. |
+| `$id` | `int` | Attachment ID. |
+| `$protect` | `bool` | True to make it private, false to make it public again. |
+
 ### `riff_protected_send`
 
 Filters how a protected file is handed over: 'php' sends it from PHP; 'x-sendfile' asks Apache's mod_xsendfile or LiteSpeed to send it; 'x-accel-redirect' asks Nginx, which then needs an internal location for the protected folder (see the readme).
@@ -52,6 +64,18 @@ Since 4.18.0. Fires in `plugins/riff/src/class-protect.php`.
 | `$how` | `string` | 'php', 'x-sendfile' or 'x-accel-redirect'. Default 'php'. |
 | `$file` | `string` | Absolute path. |
 | `$id` | `int` | Attachment ID. |
+
+### `riff_protected_url`
+
+Filters the address a protected file is sent from instead of WordPress: a signed address on a CDN or in object storage, such as a CloudFront or S3 presigned URL or a Bunny or Cloudflare token, that stops working at $expires. Riff has checked that the visitor may have the file before it asks, and sends them on with a 302 nothing caches. Empty, the default, sends the file as riff_protected_send says.
+
+Since 5.7.0. Fires in `plugins/riff/src/class-protect.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | Signed address, or empty. |
+| `$id` | `int` | Attachment ID. |
+| `$expires` | `int` | When the address should stop working, as a Unix time: an hour on. |
 
 ### `riff_sources`
 

@@ -204,6 +204,7 @@ final class Library {
 	public static function rest_list( WP_REST_Request $request ): WP_REST_Response {
 		$page  = max( 1, (int) $request['page'] );
 		$query = self::query( array( 'paged' => $page ) );
+		self::prime( $query->posts );
 		$items = array();
 		foreach ( $query->posts as $post ) {
 			$items[] = self::item( $post );
@@ -275,20 +276,83 @@ final class Library {
 	 * @return array
 	 */
 	public static function item( WP_Post $post ): array {
-		$tracks   = self::tracks( $post );
-		$duration = 0.0;
-		foreach ( $tracks as $t ) {
-			$duration += (float) $t['duration'];
+		return self::listed( $post, self::summary( $post ) );
+	}
+
+	/**
+	 * How many tracks a post holds, how long they last and who they are by, kept in the object
+	 * cache until a post or its meta next changes, so a card doesn't build every track it counts.
+	 * Only for the core blocks, whose tracks are the same whoever asks; another source may list
+	 * tracks by who is asking.
+	 *
+	 * @param WP_Post $post Post.
+	 * @return array `{ count, duration, artist }`.
+	 */
+	private static function summary( WP_Post $post ): array {
+		if ( ! Sources::for_post( $post ) instanceof Blocks_Source ) {
+			return self::summarize( self::tracks( $post ) );
 		}
+		$key  = $post->ID . ':' . md5( $post->post_content ) . ':' . wp_cache_get_last_changed( 'posts' );
+		$kept = wp_cache_get( $key, 'riff' );
+		if ( is_array( $kept ) ) {
+			return $kept;
+		}
+		$summary = self::summarize( self::tracks( $post ) );
+		wp_cache_set( $key, $summary, 'riff', DAY_IN_SECONDS );
+		return $summary;
+	}
+
+	/**
+	 * What a card says of a post's tracks.
+	 *
+	 * @param array[] $tracks Tracks.
+	 * @return array `{ count, duration, artist }`.
+	 */
+	private static function summarize( array $tracks ): array {
+		return array(
+			'count'    => count( $tracks ),
+			'duration' => array_sum( array_map( static fn( $t ) => (float) $t['duration'], $tracks ) ),
+			'artist'   => self::artist( $tracks ),
+		);
+	}
+
+	/**
+	 * Loads what listing these posts reads, their tracks' files and artwork among it, in a few
+	 * queries for the whole list rather than a few for each track.
+	 *
+	 * @since 5.7.0
+	 *
+	 * @param WP_Post[] $posts Posts.
+	 */
+	public static function prime( array $posts ): void {
+		$posts       = array_filter( $posts, static fn( $post ) => $post instanceof WP_Post );
+		$attachments = array();
+		foreach ( $posts as $post ) {
+			// Only the core blocks say which files they hold before their tracks are built.
+			if ( Sources::for_post( $post ) instanceof Blocks_Source ) {
+				$attachments = array_merge( $attachments, Blocks_Source::attachments( $post ) );
+			}
+		}
+		Tracks::prime( $attachments, wp_list_pluck( $posts, 'ID' ) );
+	}
+
+	/**
+	 * A post as the list shows it, from what its tracks add up to.
+	 *
+	 * @param WP_Post $post    Post.
+	 * @param array   $summary Its tracks' `{ count, duration, artist }`.
+	 * @return array
+	 */
+	private static function listed( WP_Post $post, array $summary ): array {
 		$art  = Tracks::art( (int) get_post_thumbnail_id( $post ) );
 		$item = array(
 			'id'       => $post->ID,
 			'title'    => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
 			'url'      => (string) get_permalink( $post ),
-			'artist'   => self::artist( $tracks ),
+			'artist'   => (string) $summary['artist'],
 			'art'      => $art,
-			'count'    => count( $tracks ),
-			'duration' => $duration,
+			'count'    => (int) $summary['count'],
+			'duration' => (float) $summary['duration'],
 		);
 		return Listen\App::item_meta( Listen\Art::item_art( $item, $post ), $post );
 	}
@@ -301,8 +365,9 @@ final class Library {
 	 * @return array
 	 */
 	public static function post( WP_Post $post ): array {
-		$item           = self::item( $post );
-		$item['tracks'] = self::tracks( $post );
+		$tracks         = self::tracks( $post );
+		$item           = self::listed( $post, self::summarize( $tracks ) );
+		$item['tracks'] = $tracks;
 		$item['html']   = self::html( $post );
 		return $item;
 	}

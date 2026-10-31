@@ -527,4 +527,16 @@ class Test_Riff_App extends Riff_TestCase {
 			}
 		);
 	}
+
+	public function test_home_asks_for_the_twelve_newest_posts_and_counts_none(): void {
+		$asked = array();
+		$see   = static function ( \WP_Query $query ) use ( &$asked ): void {
+			$asked[] = array( (int) $query->get( 'posts_per_page' ), (bool) $query->get( 'no_found_rows' ) );
+		};
+		add_action( 'pre_get_posts', $see );
+		App::post_cards( home_url( '/listen/' ) );
+		remove_action( 'pre_get_posts', $see );
+
+		$this->assertContains( array( 12, true ), $asked );
+	}
 }
