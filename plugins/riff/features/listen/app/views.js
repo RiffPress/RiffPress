@@ -71,7 +71,27 @@ export function views( ctx ) {
 			ctx.rackUp();
 			ctx.fade( view );
 			if ( bar !== undefined && nav ) {
+				// The search field is drawn again with the sidebar: what was typed into it while
+				// the view came, and the focus and caret, carry over to the new one.
+				const was = nav.querySelector( '.riff-app-search input' );
+				const typing =
+					was &&
+					( was === document.activeElement ||
+						was.value !== was.defaultValue ) && {
+						value: was.value,
+						focused: was === document.activeElement,
+						start: was.selectionStart,
+						end: was.selectionEnd,
+					};
 				nav.innerHTML = bar;
+				const field = typing && nav.querySelector( '.riff-app-search input' );
+				if ( field ) {
+					field.value = typing.value;
+					if ( typing.focused ) {
+						field.focus( { preventScroll: true } );
+						field.setSelectionRange( typing.start, typing.end );
+					}
+				}
 				ctx.sidebar( app.dataset.sidebar !== 'mini', false );
 				ctx.wireSearch();
 				ctx.libraryShow( ctx.shelfKind );
