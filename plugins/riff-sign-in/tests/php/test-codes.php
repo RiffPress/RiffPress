@@ -184,8 +184,10 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		do_action( 'riff_before_player' );
 		$this->assertTrue( wp_script_is( 'riff-sign-in', 'enqueued' ) );
 		$this->assertContains( 'riff-tokens', wp_styles()->registered['riff-sign-in']->deps, 'styled in Riff\'s tokens' );
-		$this->assertStringContainsString( '"signedIn":false', wp_scripts()->get_data( 'riff-sign-in', 'before' )[1] ?? '' );
-		$this->assertStringContainsString( 'riff-sign-in/v1/', wp_scripts()->get_data( 'riff-sign-in', 'before' )[1] ?? '' );
+		// What is printed before the script, wherever in the list WordPress keeps it.
+		$before = implode( "\n", array_filter( (array) wp_scripts()->get_data( 'riff-sign-in', 'before' ) ) );
+		$this->assertStringContainsString( '"signedIn":false', $before );
+		$this->assertStringContainsString( 'riff-sign-in\\/v1\\/', $before, 'its routes, as JSON writes them' );
 	}
 
 	public function test_site_health_recommends_a_mail_service_when_nothing_delivers(): void {
