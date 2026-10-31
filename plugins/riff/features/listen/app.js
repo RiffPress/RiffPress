@@ -71,7 +71,9 @@ export function start( api ) {
 			.split( ',' )
 			.filter( Boolean ),
 		tracksRest: app.dataset.riffTracksRest || '',
-		desktop: document.documentElement.classList.contains( 'riff-desktop' ),
+		// Standalone mode has a frame (templates/standalone.php), and the desktop frame's strip is
+		// built wherever it may show; CSS shows it.
+		desktop: 'riffFrame' in document.documentElement.dataset,
 		__,
 		_n,
 		tell,
