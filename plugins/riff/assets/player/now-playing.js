@@ -669,6 +669,10 @@ export function nowPlaying( P ) {
 		root.toggleAttribute( 'data-riff-cued', on );
 	}
 	function turn( m ) {
+		// A followed host's start is made by Listen Together, when it is due.
+		if ( P.holds( m, true ) ) {
+			return;
+		}
 		clearTimeout( turn.wait );
 		stowing++;
 		const turning = root.dataset.playing === 'true' && root.dataset.riffDeck === 'out' && ! ( 'riffCued' in root.dataset );
@@ -714,6 +718,10 @@ export function nowPlaying( P ) {
 		}
 	}
 	function halt( m ) {
+		// A followed host's stop is made by Listen Together, when it is due.
+		if ( P.holds( m, false ) ) {
+			return;
+		}
 		clearTimeout( turn.wait );
 		if ( 'riffCued' in root.dataset ) {
 			cued( false );
@@ -901,6 +909,7 @@ export function nowPlaying( P ) {
 		}
 	}
 	function stow() {
+		P.press( 'toggle' );
 		const m = P.el();
 		if ( root.dataset.riffDeck !== 'out' ) {
 			turn( m );
@@ -976,6 +985,7 @@ export function nowPlaying( P ) {
 	// The needle down on a band: the track playing moves; another in the queue is loaded there,
 	// playing if the music was. A band whose track is not in the queue leaves the music alone.
 	function land( k, into = 0 ) {
+		P.press( 'seek' );
 		delete tonearm.dataset.riffHeld;
 		if ( root.dataset.riffDeck === 'out' ) {
 			tonearm.dataset.riffDown = '';
@@ -1122,6 +1132,7 @@ export function nowPlaying( P ) {
 	}
 	// The motor pulls the platter to the new speed while it turns; stopped, it starts there.
 	function retune() {
+		P.press( 'speed' );
 		paintDeck();
 		const m = P.el();
 		if ( m.paused || held() || P.ramping ) {

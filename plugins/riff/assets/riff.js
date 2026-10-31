@@ -74,6 +74,7 @@ function start() {
 		 * @param {boolean}  [options.shuffle] `true` or `false` sets shuffle before playing.
 		 */
 		play( tracks, index = 0, { shuffle: on = null } = {} ) {
+			P.press( 'play' );
 			if ( on !== null ) {
 				P.shuffle = on;
 			}
@@ -84,19 +85,19 @@ function start() {
 		 *
 		 * @since 4.0.0
 		 */
-		toggle: () => P.toggle(),
+		toggle: () => ( P.press( 'toggle' ), P.toggle() ),
 		/**
 		 * Skips to the next track.
 		 *
 		 * @since 4.0.0
 		 */
-		next: () => P.next(),
+		next: () => ( P.press( 'next' ), P.next() ),
 		/**
 		 * Goes back a track, or to the start of this one.
 		 *
 		 * @since 4.0.0
 		 */
-		prev: () => P.prev(),
+		prev: () => ( P.press( 'prev' ), P.prev() ),
 		/**
 		 * Moves the current track to a time.
 		 *
@@ -106,6 +107,7 @@ function start() {
 		 */
 		seek( seconds ) {
 			if ( P.track() ) {
+				P.press( 'seek' );
 				P.el().currentTime = Math.max( 0, Number( seconds ) || 0 );
 			}
 		},
@@ -243,6 +245,7 @@ function start() {
 		 * @param {number}   at     Where in it, in seconds.
 		 */
 		playFrom( tracks, index, at ) {
+			P.press( 'play' );
 			P.shuffle = false;
 			P.setQueue( tracks, index, { at: Math.max( 0, Number( at ) || 0 ) } );
 		},
@@ -262,11 +265,26 @@ function start() {
 		 * @param {boolean}  [options.shuffle] `true` or `false` sets shuffle before playing.
 		 */
 		playMore( tracks, index, more, { shuffle: on = null } = {} ) {
+			P.press( 'play' );
 			if ( on !== null ) {
 				P.shuffle = on;
 			}
 			P.setQueue( tracks, index, { more } );
 		},
+		/**
+		 * Follows another listener: plays what they play, where they are in it, and keeps with them
+		 * through their plays, pauses, skips and seeks, until a press of the listener's own.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {number} user   Their user ID.
+		 * @param {string} [name] Their name, for the bar.
+		 * @return {Promise<boolean>} Whether there was anything of theirs to follow.
+		 */
+		follow: ( user, name = '' ) =>
+			P.feature( 'together' ).then( ( m ) =>
+				m?.follow ? m.follow( user, name ) : false
+			),
 		/**
 		 * Adds tracks to the end of the queue, or starts them when nothing is playing.
 		 *

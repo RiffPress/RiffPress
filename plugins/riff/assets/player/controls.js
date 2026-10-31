@@ -27,10 +27,13 @@ export function controls( P ) {
 		}
 		const action = button.dataset.riffAction;
 		if ( action === 'toggle' ) {
+			P.press( 'toggle' );
 			P.toggle();
 		} else if ( action === 'next' ) {
+			P.press( 'next' );
 			P.next();
 		} else if ( action === 'prev' ) {
+			P.press( 'prev' );
 			P.prev();
 		} else if ( action === 'open' ) {
 			if ( P.np.hidden ) {

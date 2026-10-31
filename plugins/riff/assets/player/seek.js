@@ -15,6 +15,7 @@ export function seek( P ) {
 			const m = P.el();
 			const duration = P.durationOf( m );
 			if ( duration ) {
+				P.press( 'seek' );
 				m.currentTime = ( Number( input.value ) / 1000 ) * duration;
 			}
 		};
@@ -59,6 +60,7 @@ export function seek( P ) {
 				duration,
 				Math.max( 0, m.currentTime + ( mirrored ? -way : way ) * 5 )
 			);
+			P.press( 'seek' );
 			m.currentTime = to;
 			input.value = String( Math.round( ( to / duration ) * 1000 ) );
 			P.setProgress( to / duration );

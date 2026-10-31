@@ -129,6 +129,31 @@ class Test_Riff_Together extends Riff_TestCase {
 	}
 
 	/**
+	 * Shares the post's first track with a schedule's own parts, as a host's player does.
+	 *
+	 * @param int   $user    Who.
+	 * @param float $at      Where it is, at `$when`.
+	 * @param bool  $playing Whether it plays from the change on.
+	 * @param bool  $running Whether it plays until the change is due.
+	 * @param int   $when    When `$at` was read, on the server's clock; 0 to leave it out.
+	 * @return WP_REST_Response
+	 */
+	private function share_as( int $user, float $at, bool $playing, bool $running, int $when = 0 ): WP_REST_Response {
+		wp_set_current_user( $user );
+		return $this->call(
+			'POST',
+			'/together',
+			array(
+				'queue'   => $this->queue(),
+				'index'   => 0,
+				'at'      => $at,
+				'playing' => $playing,
+				'running' => $running,
+			) + ( $when ? array( 'when' => $when ) : array() )
+		);
+	}
+
+	/**
 	 * The published post's tracks, as a queue.
 	 *
 	 * @return array[]
@@ -322,6 +347,111 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertSame( 200, $this->call( 'DELETE', '/together' )->get_status() );
 		wp_set_current_user( $this->guest );
 		$this->assertSame( array(), $this->call( 'GET', '/together' )->get_data()['listeners'] );
+	}
+
+	public function test_following_answers_with_where_their_music_is_and_their_queue_only_when_it_changed(): void {
+		$this->share( $this->host, $this->queue(), 1, 30.0 );
+		wp_set_current_user( $this->guest );
+		$first = $this->call( 'POST', '/together/' . $this->host . '/follow' );
+		$this->assertSame( 200, $first->get_status() );
+		$plan = $first->get_data();
+		$this->assertSame( (string) $this->tracks[1], (string) $plan['track']['id'] );
+		$this->assertSame( 1, $plan['index'] );
+		$this->assertSame( 30.0, $plan['at'] );
+		$this->assertCount( 2, $plan['queue'] );
+		$this->assertLessThanOrEqual( $plan['now'], $plan['received'], 'taken before it was answered, for the player\'s clock' );
+		$this->assertMatchesRegularExpression( '/^[0-9a-f]{8}$/', $plan['version'] );
+
+		$again = $this->call( 'POST', '/together/' . $this->host . '/follow', array( 'version' => $plan['version'] ) )->get_data();
+		$this->assertArrayNotHasKey( 'queue', $again, 'asked every second or two, the queue comes only when it changed' );
+		$this->assertSame( $plan['version'], $again['version'] );
+	}
+
+	public function test_the_host_sees_who_follows_them_until_they_stop(): void {
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $this->guest );
+		$this->call( 'POST', '/together/' . $this->host . '/follow' );
+
+		wp_set_current_user( $this->host );
+		$following = $this->call( 'GET', '/together/following' )->get_data()['following'];
+		$this->assertSame( array( 'Guest' ), array_column( $following, 'name' ) );
+
+		wp_set_current_user( $this->guest );
+		$this->assertSame( 200, $this->call( 'DELETE', '/together/' . $this->host . '/follow' )->get_status() );
+		$this->assertSame( array(), Together::followers( $this->host ) );
+	}
+
+	public function test_following_someone_who_stopped_sharing_is_refused_and_leaves_their_session(): void {
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $this->guest );
+		$this->call( 'POST', '/together/' . $this->host . '/follow' );
+		update_user_option( $this->host, Together::SHARE, 'off' );
+
+		$this->assertSame( 404, $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_status() );
+		$this->assertSame( array(), Together::followers( $this->host ), 'not shown as a follower of someone they no longer hear' );
+	}
+
+	public function test_a_track_the_follower_cannot_see_is_never_followed(): void {
+		$this->share( $this->host, array( $this->secret ) );
+		wp_set_current_user( $this->guest );
+		$this->assertSame( 404, $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_status() );
+	}
+
+	public function test_no_one_follows_themself_and_a_visitor_follows_no_one(): void {
+		$this->share( $this->host, $this->queue() );
+		$this->assertSame( 400, $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_status() );
+		wp_set_current_user( 0 );
+		foreach ( array( array( 'POST', '/together/' . $this->host . '/follow' ), array( 'DELETE', '/together/' . $this->host . '/follow' ), array( 'GET', '/together/following' ), array( 'GET', '/together/clock' ) ) as list( $method, $route ) ) {
+			$this->assertSame( 401, $this->call( $method, $route )->get_status(), "$method $route" );
+		}
+	}
+
+	public function test_a_change_by_a_listener_someone_follows_is_due_a_moment_ahead_where_the_music_will_be_then(): void {
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $this->guest );
+		$this->call( 'POST', '/together/' . $this->host . '/follow' );
+
+		// A seek while it plays: the music runs on from 40 until the change is due, LEAD on.
+		$now  = microtime( true ) * 1000;
+		$room = $this->share_as( $this->host, 40.0, true, true, (int) $now )->get_data();
+		$this->assertSame( 1, $room['followers'], 'the host is told someone follows, so it holds its own presses' );
+		$this->assertEqualsWithDelta( $now + Together::LEAD, $room['scheduled']['since'], 250, 'due a moment ahead' );
+		$this->assertEqualsWithDelta( 40.0 + Together::LEAD / 1000, $room['scheduled']['at'], 0.25, 'where the music will be by then' );
+
+		// A start held where it is until it is due.
+		$held = $this->share_as( $this->host, 10.0, true, false )->get_data()['scheduled'];
+		$this->assertSame( 10.0, $held['at'] );
+		$this->assertTrue( $held['playing'] );
+
+		// A stop that lets the music play on until it is due.
+		$stop = $this->share_as( $this->host, 20.0, false, true )->get_data()['scheduled'];
+		$this->assertEqualsWithDelta( 20.0 + Together::LEAD / 1000, $stop['at'], 0.25 );
+		$this->assertFalse( $stop['playing'] );
+
+		// The follower is answered with the change before it is due.
+		wp_set_current_user( $this->guest );
+		$plan = $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_data();
+		$this->assertGreaterThan( $plan['now'], $plan['since'], 'it reaches them before it is due' );
+		$this->assertFalse( $plan['playing'] );
+	}
+
+	public function test_a_listener_no_one_follows_shares_a_change_due_at_once(): void {
+		$room = $this->share_as( $this->host, 40.0, true, true )->get_data();
+		$this->assertSame( 0, $room['followers'] );
+		$this->assertEqualsWithDelta( microtime( true ) * 1000, $room['scheduled']['since'], 250 );
+		$this->assertEqualsWithDelta( 40.0, $room['scheduled']['at'], 0.05 );
+	}
+
+	public function test_a_time_far_from_the_servers_clock_is_not_taken(): void {
+		$room = $this->share_as( $this->host, 5.0, true, true, (int) ( microtime( true ) * 1000 ) - 60000 )->get_data();
+		$this->assertEqualsWithDelta( 5.0, $room['scheduled']['at'], 0.05, 'a minute out is a wrong clock, not a slow request' );
+	}
+
+	public function test_the_clock_says_when_the_request_was_taken_and_answered(): void {
+		wp_set_current_user( $this->guest );
+		$clock = $this->call( 'GET', '/together/clock' )->get_data();
+		$this->assertLessThanOrEqual( $clock['now'], $clock['received'] );
+		$this->assertEqualsWithDelta( microtime( true ) * 1000, $clock['now'], 5000 );
 	}
 
 	public function test_an_index_past_the_queue_is_refused(): void {

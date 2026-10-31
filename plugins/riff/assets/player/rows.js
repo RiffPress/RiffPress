@@ -64,6 +64,7 @@ export function rows( P ) {
 			row.after( heart );
 		}
 		row.addEventListener( 'click', () => {
+			P.press( 'row' );
 			if ( P.track()?.id === t.id && sameQueue() ) {
 				P.toggle();
 				return;
