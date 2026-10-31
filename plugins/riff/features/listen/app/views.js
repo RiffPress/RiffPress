@@ -144,8 +144,10 @@ export function views( ctx ) {
 	// Load more's link: one page further, landing on that page's first card.
 	const moreAddress = ( n ) => `${ ctx.postsAddress( n ) }#riff-page-${ n }`;
 
-	// The next page of the library, after the cards already there. The button is marked busy
-	// rather than disabled, so it keeps focus; the page only advances once one has arrived.
+	// The next page of the library, after the cards already there: the cards the server draws at
+	// the address that shows everything through that page, past the ones on screen, so a card is
+	// drawn in one place only. The button is marked busy rather than disabled, so it keeps focus;
+	// the page only advances once one has arrived.
 	async function loadMore( button ) {
 		const grid = app.querySelector( '.riff-grid' );
 		if ( ! grid || button.getAttribute( 'aria-disabled' ) === 'true' ) {
@@ -155,11 +157,17 @@ export function views( ctx ) {
 		const next = Number( grid.dataset.riffPage ) + 1;
 		button.setAttribute( 'aria-disabled', 'true' );
 		try {
-			const { items, pages } = await ctx.get( '', next );
+			const { view: html } = await ctx.pageView( ctx.postsAddress( next ) );
 			if ( turn !== ctx.showing || ! grid.isConnected ) {
 				return;
 			}
-			grid.insertAdjacentHTML( 'beforeend', ctx.cardsOf( items, next ) );
+			const drawn = document.createElement( 'template' );
+			drawn.innerHTML = html;
+			const items = [
+				...drawn.content.querySelectorAll( '.riff-grid > .riff-card' ),
+			].slice( grid.querySelectorAll( ':scope > .riff-card' ).length );
+			const more = !! drawn.content.querySelector( '.riff-app-more' );
+			grid.append( ...items );
 			grid.dataset.riffPage = String( next );
 			untell();
 			speak(
@@ -175,7 +183,7 @@ export function views( ctx ) {
 			);
 			// The address that renders these same cards, so a reload or a shared link shows them.
 			history.replaceState( history.state, '', ctx.postsAddress( next ) );
-			if ( next >= ( pages || 1 ) ) {
+			if ( ! more ) {
 				// The button goes, so focus moves to the first of the cards it brought.
 				button.closest( '.riff-app-more' )?.remove();
 				document
