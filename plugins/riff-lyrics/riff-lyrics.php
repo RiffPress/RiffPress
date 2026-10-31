@@ -32,13 +32,15 @@ require __DIR__ . '/src/class-lyrics.php';
  * oldest Riff this plugin works with is written once, as Requires Riff above, and checked here: on
  * an older Riff it stays out of the way and tells whoever can update plugins why, rather than
  * half-working. It is the newest @since among the Riff hooks and APIs the plugin uses, which
- * .github/scripts/extension-surface.test.js holds it to.
+ * .github/scripts/extension-surface.test.js holds it to. A local or development site runs ahead of
+ * the last release, Riff's version moving only when it is released, so there it is not held back.
  */
 add_action(
 	'plugins_loaded',
 	static function (): void {
 		$needs = (string) get_file_data( __FILE__, array( 'riff' => 'Requires Riff' ) )['riff'];
-		if ( defined( 'RIFF_VERSION' ) && version_compare( RIFF_VERSION, $needs, '>=' ) ) {
+		$ahead = in_array( wp_get_environment_type(), array( 'local', 'development' ), true );
+		if ( defined( 'RIFF_VERSION' ) && ( $ahead || version_compare( RIFF_VERSION, $needs, '>=' ) ) ) {
 			Riff\Lyrics\Lyrics::register();
 			return;
 		}
