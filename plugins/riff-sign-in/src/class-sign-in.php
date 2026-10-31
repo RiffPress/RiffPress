@@ -321,7 +321,7 @@ final class Sign_In {
 	 * @return array Site Health result.
 	 */
 	public static function health(): array {
-		$delivered = has_filter( 'pre_wp_mail' ) || has_action( 'phpmailer_init' ) || defined( 'SMTP_HOST' );
+		$delivered = has_filter( 'pre_wp_mail' ) || self::mailer() || defined( 'SMTP_HOST' );
 		$result    = array(
 			'label'       => __( 'Riff Sign In sends its codes through a mail service', 'riff-sign-in' ),
 			'status'      => 'good',
@@ -338,6 +338,25 @@ final class Sign_In {
 			$result['description'] = '<p>' . esc_html__( 'Many hosts\' own mail is slow, or never arrives, and a listener waits for a code that does not come. Install an SMTP plugin, or a transactional mail service, so the codes are delivered.', 'riff-sign-in' ) . '</p>';
 		}
 		return $result;
+	}
+
+	/**
+	 * Whether something set up the mailer, as an SMTP plugin does: a phpmailer_init callback other
+	 * than the one multisite always adds to tidy a message's ID, which sends nothing anywhere else.
+	 *
+	 * @return bool
+	 */
+	private static function mailer(): bool {
+		global $wp_filter;
+		$hook = $wp_filter['phpmailer_init'] ?? null;
+		foreach ( $hook ? $hook->callbacks : array() as $callbacks ) {
+			foreach ( $callbacks as $callback ) {
+				if ( 'fix_phpmailer_messageid' !== $callback['function'] ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
 
