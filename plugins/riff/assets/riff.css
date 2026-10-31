@@ -2310,10 +2310,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		max-height: 640px;
 	}
 
-	.riff-video {
-		max-width: 640px;
-	}
-
 	/* The caret in the bar and Escape close it; the page itself has no close
 	   control. */
 	#riff .riff-np-head [data-riff-action="close"] {
