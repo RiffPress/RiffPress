@@ -114,13 +114,16 @@ test.describe( 'Browse', () => {
 		await expect.poll( () => asked.length ).toBeGreaterThan( 0 );
 	} );
 
-	test( 'an artist page has their picture, their latest tracks and their albums', async ( {
+	test( 'an artist page has their picture or their initial, their latest tracks and their albums', async ( {
 		page,
 	} ) => {
 		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
 		await page.locator( '.riff-artists .riff-artist', { hasText: 'Airmen of Note' } ).first().click();
 		await expect( page.locator( '.riff-album-kind' ) ).toHaveText( /Artist/i );
-		await expect( page.locator( '.riff-album-round .riff-album-cover img' ) ).toBeVisible();
+		// The fixture's album has only a cover Riff drew, which a round frame would cut, so the
+		// artist, who has no picture of their own, is their initial.
+		await expect( page.locator( '.riff-album-round .riff-album-mark' ) ).toHaveText( 'A' );
+		await expect( page.locator( '.riff-album-round .riff-album-cover img' ) ).toHaveCount( 0 );
 		await expect( page.locator( '.riff-app-section', { hasText: 'Latest' } ) ).toBeVisible();
 		await expect( page.locator( '.riff-app-section', { hasText: 'Albums' } ) ).toBeVisible();
 		await expect( page.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } ) ).toBeVisible();
