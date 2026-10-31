@@ -124,19 +124,18 @@ const GUIDE = [
 	},
 	{
 		id: 'a-panel-and-a-control',
-		title: 'A panel, and a control in the bar',
-		text: [ 'Add a panel with `window.riff.panel()` once the player is ready: it gets a button in the bar on a wide screen and a chip in Now Playing on a phone, and is filled as it opens and again as the track changes. Add a control to the bar with `window.riff.control()`. Riff adds Up next and its own controls the same way, and Riff Lyrics its Lyrics panel, on nothing but the public API.' ],
+		title: 'A view, and a control in the bar',
+		text: [ 'Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, the turntable, Up next and its own controls the same way, and Riff Lyrics its Lyrics view, on nothing but the public API.' ],
 		code: [
+			[ 'php', `add_action( 'riff_register', function () {
+	riff_register_view( 'credits', array( 'label' => __( 'Credits', 'my-plugin' ), 'icon' => CREDITS_ICON, 'order' => 32 ) );
+	riff_register_control( 'bookmark', array( 'label' => __( 'Bookmark', 'my-plugin' ), 'icon' => BOOKMARK_ICON, 'order' => 65 ) );
+} );` ],
 			[ 'js', `document.addEventListener( 'riff:ready', () => {
-	window.riff.panel( 'credits', {
-		label: 'Credits',
-		icon: CREDITS_ICON,
-		render: ( panel, track ) => showCredits( panel, track ),
+	window.riff.view( 'credits', {
+		render: ( view, track ) => showCredits( view, track ),
 	} );
 	window.riff.control( 'bookmark', {
-		label: 'Bookmark',
-		icon: BOOKMARK_ICON,
-		order: 65,
 		pressed: ( track ) => isBookmarked( track ),
 		run: ( track ) => toggleBookmark( track ),
 	} );

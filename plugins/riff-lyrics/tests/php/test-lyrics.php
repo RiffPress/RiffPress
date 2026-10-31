@@ -29,12 +29,13 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 		return $id;
 	}
 
-	public function test_the_panel_is_added_by_its_script_with_its_name(): void {
+	public function test_the_view_is_registered_on_the_server_beside_the_turntable(): void {
+		$views = Riff\Registry::views( 'screen' );
+		$this->assertArrayHasKey( 'lyrics', $views, 'a screen of Now Playing, registered as Riff registers its own' );
+		$this->assertSame( 'Lyrics', $views['lyrics']['label'] );
+		$this->assertSame( array( 'album', 'turntable', 'lyrics' ), array_keys( $views ), 'its button beside the turntable\'s' );
 		Lyrics::enqueue();
-		$this->assertTrue( wp_script_is( 'riff-lyrics', 'enqueued' ) );
-		$before = implode( '', (array) wp_scripts()->get_data( 'riff-lyrics', 'before' ) );
-		$this->assertStringContainsString( '"label":"Lyrics"', $before, 'the panel and its button take their name from here, translated' );
-		$this->assertFalse( has_filter( 'riff_now_playing_tabs' ), 'no tab: the panel is added through window.riff.panel()' );
+		$this->assertTrue( wp_script_is( 'riff-lyrics', 'enqueued' ), 'and its script fills it' );
 	}
 
 	public function test_wordpress_keeps_the_files_lyrics_and_the_media_route_returns_them(): void {

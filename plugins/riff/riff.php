@@ -46,4 +46,7 @@ spl_autoload_register(
 	}
 );
 
+// The functions other plugins call, such as riff_register_view().
+require RIFF_DIR . 'src/functions.php';
+
 add_action( 'plugins_loaded', array( Riff\Plugin::class, 'boot' ) );

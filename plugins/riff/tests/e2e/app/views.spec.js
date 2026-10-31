@@ -3,6 +3,7 @@
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../helpers/views' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 const { own } = require( '../helpers/own' );
 const { AXE_TAGS, playing, appSite } = require( '../helpers/site' );
@@ -126,12 +127,12 @@ test.describe( 'App', () => {
 		const album = await page.evaluateHandle( () =>
 			document.querySelector( '.riff-album' )
 		);
-		await page.locator( '.riff-bar-info' ).click();
+		await openView( page, 'album' );
 		await expect( page.locator( '.riff-np' ) ).toBeVisible();
 		await page.keyboard.press( 'Escape' );
 		await expect( page.locator( '.riff-np' ) ).toBeHidden();
 		// Focus returns once the close has settled; the view is checked after that.
-		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
+		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toBeFocused();
 		expect(
 			await page.evaluate(
 				( el ) => el === document.querySelector( '.riff-album' ),

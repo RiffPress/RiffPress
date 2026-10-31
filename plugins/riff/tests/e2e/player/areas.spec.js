@@ -4,6 +4,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { FIXTURES, playerSite } = require( '../helpers/site' );
 
@@ -33,7 +34,7 @@ test.describe( 'Player', () => {
 		await expect(
 			page.locator( '.riff-bar-end .riff-quality' )
 		).toHaveText( /^MP3 · \d+ kbps$/ );
-		await page.locator( '.riff-bar-info' ).click();
+		await openView( page, 'album' );
 		await expect(
 			page.locator( '.riff-np-quality .riff-quality' )
 		).toHaveText( /^MP3 · \d+ kbps$/ );
@@ -45,7 +46,7 @@ test.describe( 'Player', () => {
 	} ) => {
 		test.skip( ! isMobile, 'a wide screen shows the capsule in the bar alone' );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
-		await page.locator( '.riff-bar-info' ).click();
+		await openView( page, 'album' );
 		await expect( page.locator( '.riff-np-tier .riff-quality' ) ).toBeVisible();
 		await expect( page.locator( '.riff-np-tier .riff-quality' ) ).toHaveText( /^MP3 · \d+ kbps$/ );
 		await expect( page.locator( '.riff-np-quality' ) ).toBeHidden();
@@ -108,6 +109,34 @@ test.describe( 'Player', () => {
 		// Taken away, it leaves the bar.
 		await page.evaluate( () => window.riffUnpin() );
 		await expect( pin ).toHaveCount( 0 );
+	} );
+
+	test( 'a control registered on the server is in the page before any script, and its script gives it its press by its id', async ( {
+		page,
+		context,
+		baseURL,
+	} ) => {
+		// What riff_register_control() does on the riff_register action (tests/components).
+		await context.addCookies( [ { name: 'riff_test_control', value: '1', url: baseURL } ] );
+		const response = await page.reload();
+		const html = await response.text();
+		expect( html ).toMatch( /data-riff-control="e2e-server" data-riff-order="66" aria-label="Server control"/ );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await page.evaluate( () => {
+			window.riffPressed = 0;
+			window.riff.control( 'e2e-server', {
+				pressed: () => window.riffPressed > 0,
+				run: () => window.riffPressed++,
+			} );
+		} );
+		const control = page.locator( '[data-riff-control="e2e-server"]' );
+		await expect( control ).toHaveCount( 1 );
+		// Between Play on another device (60) and the volume (70), where the server drew it.
+		const order = await page.locator( '[data-riff-controls] > [data-riff-control]' ).evaluateAll( ( els ) => els.map( ( el ) => el.dataset.riffControl ) );
+		expect( order.indexOf( 'e2e-server' ) ).toBe( order.indexOf( 'cast' ) + 1 );
+		await control.click();
+		expect( await page.evaluate( () => window.riffPressed ) ).toBe( 1 );
+		await expect( control ).toHaveAttribute( 'aria-pressed', 'true' );
 	} );
 
 	test( 'a lossless track shows its bit depth and sample rate instead of a bit rate', async ( {

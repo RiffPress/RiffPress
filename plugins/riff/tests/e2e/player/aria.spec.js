@@ -7,7 +7,7 @@
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 const { playerSite } = require( '../helpers/site' );
-const { openPanel } = require( '../helpers/panels' );
+const { openView } = require( '../helpers/views' );
 
 const made = own();
 let postUrl;
@@ -49,20 +49,21 @@ test.describe( 'The tree is the spec', () => {
 		if ( isMobile ) {
 			await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 				- region "Player":
-				  - 'button "Now Playing: Underground by Airmen of Note, United States Air Force Band"'
+				  - text: /Underground/
 				  - button "Pause"
 				  - slider "Track position"
 				  - button "Like Underground"
+				  - button "Album"
 			` );
 			return;
 		}
-		// Now Playing named for the track and heard once (the chevron is out of the tree), the
-		// transport in order with Shuffle a toggle and Repeat its state after its name, the seek
-		// line a slider named Track position with its times beside it, the quality pill as text, the
-		// panels' buttons in their order, the volume as a percentage.
+		// What plays, read and not pressed, the transport in order with Shuffle a toggle and Repeat
+		// its state after its name, the seek line a slider named Track position with its times
+		// beside it, the quality pill as text, the views' buttons in their order, the volume as a
+		// percentage.
 		await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 			- region "Player":
-			  - 'button "Now Playing: Underground by Airmen of Note, United States Air Force Band"'
+			  - text: /Underground/
 			  - button "Shuffle"
 			  - button "Previous"
 			  - button "Pause"
@@ -73,6 +74,8 @@ test.describe( 'The tree is the spec', () => {
 			  - text: /\\d+:\\d\\d/
 			  - button "Like Underground"
 			  - text: MP3 · 128 kbps
+			  - button "Album"
+			  - button "Turntable"
 			  - button "Lyrics"
 			  - button "Up next"
 			  - slider "Volume"
@@ -81,7 +84,7 @@ test.describe( 'The tree is the spec', () => {
 
 	test( 'Up next, a panel of its own', async ( { page, isMobile } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
-		await openPanel( page, 'queue' );
+		await openView( page, 'queue' );
 		// Named for what it holds: beside the page on a wide screen, a dialog over everything on a
 		// phone. Its name is its heading, then Close, then the queue, each row named for what it
 		// plays, with the artist, the playing one offering Pause, and the … after each.
@@ -107,14 +110,16 @@ test.describe( 'The tree is the spec', () => {
 
 	test( 'Now Playing, the track on its own', async ( { page, isMobile } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
-		await page.locator( '.riff-bar-info' ).click();
+		await openView( page, 'album' );
 		await expect( page.locator( '.riff-np' ) ).toBeVisible();
 		await expect( page.locator( '.riff-np' ).getByRole( 'region', { name: 'Up next' } ) ).toHaveCount( 0 );
 		await expect( page.locator( '.riff-np' ).getByRole( 'tablist' ) ).toHaveCount( 0 );
 		if ( isMobile ) {
-			// A phone's panels open from their chips, after Share.
+			// A phone's views open from their chips, after Share.
 			await expect( page.locator( '.riff-np .riff-chips' ) ).toMatchAriaSnapshot( `
 				- button "Share"
+				- button "Album"
+				- button "Turntable"
 				- button "Lyrics"
 				- button "Up next"
 			` );
@@ -135,14 +140,13 @@ test.describe( 'The tree is the spec', () => {
 		await expect( page.locator( '.riff-menu [role="menuitem"]' ).first() ).toBeFocused();
 	} );
 
-	test( 'the Lyrics panel', async ( { page, isMobile } ) => {
+	test( 'the Lyrics view, a screen of Now Playing', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
-		await openPanel( page, 'lyrics' );
-		await expect( page.locator( '.riff-side' ) ).toMatchAriaSnapshot( `
-			- ${ isMobile ? 'dialog' : 'complementary' } "Lyrics":
-			  - heading "Lyrics" [level=2]
-			  - button "Close Lyrics"
+		await openView( page, 'lyrics' );
+		await expect( page.locator( '[data-riff-view="lyrics"]' ) ).toMatchAriaSnapshot( `
+			- region "Lyrics":
 			  - paragraph: No lyrics for this track.
 		` );
+		await expect( page.locator( '[data-riff-view="lyrics"]' ) ).toBeFocused();
 	} );
 } );

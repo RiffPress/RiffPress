@@ -57,9 +57,13 @@ Moves the current track to a time.
 
 Since 4.0.0.
 
-### `window.riff.open()`
+### `window.riff.open( view )`
 
-Opens Now Playing.
+Opens Now Playing, on a view of it when one is named.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `view` | `string` | A screen view's id. Default the album, or the turntable where the whole screen is one or the listener last chose it. |
 
 Since 4.0.0.
 
@@ -101,48 +105,49 @@ Returns `number`: Seconds from the start of the track, or 0 with nothing playing
 
 Since 4.32.0.
 
-### `window.riff.panel( id, panel )`
+### `window.riff.view( id, view )`
 
-Adds a panel, or replaces the one with the same id. A panel is its own thing: beside the page and Now Playing on a wide screen, opened from its button in the bar, and over everything on a phone, opened from its chip in Now Playing. One shows at a time. Riff adds Up next (`queue`, order 40) the same way, and Riff Lyrics adds Lyrics (`lyrics`, 30).
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `id` | `string` | Lowercase letters, digits and dashes; the panel is `[data-riff-panel="<id>"]`. |
-| `panel` | `Object` | The panel. |
-| `panel.label` | `string` | Its name: its heading, and its button's. |
-| `panel.icon` | `string` | Its button's icon, SVG markup from your own code, never from content. |
-| `panel.order` | `number` | Where its button sits among the bar's controls, lowest first. Default 50. |
-| `panel.render` | `(panel: HTMLElement, track: Object\|null) => void` | Fills it as it opens and again as the track changes while it is open. The `riff.panel` action says the same. |
-
-Returns `() => void`: Takes the panel away again.
-
-Since 5.8.0.
-
-### `window.riff.openPanel( id )`
-
-Opens a panel: `queue` for Up next, or one a plugin added.
+Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26), the turntable (`turntable`, 28) and Up next (`queue`, a panel, 40); Riff Lyrics registers Lyrics (`lyrics`, 30).
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `id` | `string` | The panel's id. |
+| `id` | `string` | Lowercase letters, digits and dashes; a screen is `[data-riff-view="<id>"]`, a panel `[data-riff-panel="<id>"]`. |
+| `view` | `Object` | The view. |
+| `view.label` | `string` | Its name: its heading, its button's and its chip's. Needed for one the server didn't register. |
+| `view.icon` | `string` | Its button's icon, SVG markup from your own code, never from content. |
+| `view.order` | `number` | Where its button sits among the bar's controls, lowest first. Default 50. |
+| `view.place` | `string` | `screen`, the default, or `side` for a panel. |
+| `view.render` | `(view: HTMLElement, track: Object\|null) => void` | Fills it as it opens and again as the track changes while it is open. The `riff.view` action says the same. |
+
+Returns `() => void`: Takes away what this gave it, or the view this added.
 
 Since 5.8.0.
 
-### `window.riff.closePanel()`
+### `window.riff.openView( id )`
 
-Closes the panel that is open.
+Opens a view: a screen of Now Playing, or a panel beside the page.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | The view's id: `album`, `turntable`, `queue`, or one a plugin registered. |
+
+Since 5.8.0.
+
+### `window.riff.closeView()`
+
+Closes the panel that is open, or else Now Playing.
 
 Since 5.8.0.
 
 ### `window.riff.control( id, control )`
 
-Adds a control to the player's bar, or replaces the one with the same id. Riff adds its own the same way: Like (order 10), the badges (20), Up next (40), Play on another device (60), the volume (70) and Now Playing (80); Riff Lyrics adds Lyrics (30).
+Gives a control in the player's bar what it does, or adds one the server didn't register. Register a control on the server with `riff_register_control()`, so the page has it before any script; this is for what only the browser knows. Riff's own are Like (order 10), the badges (20), Play on another device (60) and the volume (70).
 
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `id` | `string` | Lowercase letters, digits and dashes; it names the control in `data-riff-control`. |
 | `control` | `Object` | The control. |
-| `control.label` | `string\|((track: Object\|null) => string)` | What it is called, for a screen reader and a pointer's tooltip; or a function of the track. |
+| `control.label` | `string\|((track: Object\|null) => string)` | What it is called, for a screen reader and a pointer's tooltip; or a function of the track. Needed for one the server didn't register. |
 | `control.icon` | `string` | Its icon, SVG markup from your own code, never from content. |
 | `control.order` | `number` | Where it sits among the others, lowest first. Default 50. |
 | `control.run` | `(track: Object\|null, button: HTMLElement) => void` | What a press does. |
@@ -152,7 +157,7 @@ Adds a control to the player's bar, or replaces the one with the same id. Riff a
 | `control.wide` | `boolean` | Only on a wide screen; a phone's bar keeps to the track, Play and what it needs. |
 | `control.element` | `() => HTMLElement` | An element of your own in place of a button, which you keep up to date. |
 
-Returns `() => void`: Takes the control away again.
+Returns `() => void`: Takes away what this gave it, or the control this added.
 
 Since 5.8.0.
 
@@ -177,33 +182,35 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.shortcuts`](hooks.md#riffshortcuts), filter: Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
 - [`riff.track`](hooks.md#rifftrack), filter: Filters one track as a queue is set, after `riff.queue`.
 - [`riff.ended`](hooks.md#riffended), action: Fires when a track plays to its end, before the next one loads.
-- [`riff.panel`](hooks.md#riffpanel), action: Fires when a panel opens or closes, Up next included, and again for an open panel when the track changes. A panel's script fills it here, or in the `render` it was added with.
 - [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.
 - [`riff.play`](hooks.md#riffplay), action: Fires when the track starts or resumes playing.
 - [`riff.queue`](hooks.md#riffqueue), action: Fires when the queue changes while it plays: tracks added to play next or at the end, one moved or removed, or the queue cleared.
 - [`riff.ready`](hooks.md#riffready), action: Fires once the player is set up, its state restored and `window.riff` available.
 - [`riff.time`](hooks.md#rifftime), action: Fires as the track plays, a few times a second, and again after a seek.
 - [`riff.track`](hooks.md#rifftrack), action: Fires when a track is loaded, before it plays.
+- [`riff.view`](hooks.md#riffview), action: Fires when a view opens or closes, Riff's own included, and again for an open view when the track changes. A view's script fills it here, or in the `render` it was given.
 
 ## A track
 
 Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP; the PHP reference lists every property. The REST API returns the same shape.
 
-## A panel, and a control in the bar
+## A view, and a control in the bar
 
-Add a panel with `window.riff.panel()` once the player is ready: it gets a button in the bar on a wide screen and a chip in Now Playing on a phone, and is filled as it opens and again as the track changes. Add a control to the bar with `window.riff.control()`. Riff adds Up next and its own controls the same way, and Riff Lyrics its Lyrics panel, on nothing but the public API.
+Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, the turntable, Up next and its own controls the same way, and Riff Lyrics its Lyrics view, on nothing but the public API.
+
+```php
+add_action( 'riff_register', function () {
+	riff_register_view( 'credits', array( 'label' => __( 'Credits', 'my-plugin' ), 'icon' => CREDITS_ICON, 'order' => 32 ) );
+	riff_register_control( 'bookmark', array( 'label' => __( 'Bookmark', 'my-plugin' ), 'icon' => BOOKMARK_ICON, 'order' => 65 ) );
+} );
+```
 
 ```js
 document.addEventListener( 'riff:ready', () => {
-	window.riff.panel( 'credits', {
-		label: 'Credits',
-		icon: CREDITS_ICON,
-		render: ( panel, track ) => showCredits( panel, track ),
+	window.riff.view( 'credits', {
+		render: ( view, track ) => showCredits( view, track ),
 	} );
 	window.riff.control( 'bookmark', {
-		label: 'Bookmark',
-		icon: BOOKMARK_ICON,
-		order: 65,
 		pressed: ( track ) => isBookmarked( track ),
 		run: ( track ) => toggleBookmark( track ),
 	} );

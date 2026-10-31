@@ -33,20 +33,6 @@ export function paint( P ) {
 		}
 		text( 'title', t?.title || '' );
 		text( 'subtitle', t ? subtitle( t ) : '' );
-		// Named for the track; "dialog pop up" already says it opens. The chevron beside it does
-		// the same and is left out of the tree, so it is heard once.
-		$( '.riff-bar-info' )?.setAttribute(
-			'aria-label',
-			t
-				? fmt(
-						/* translators: The bar's button that opens the Now Playing view. %s: the track, as its title and artist. */ __(
-							'Now Playing: %s',
-							'riff'
-						),
-						P.named( t )
-					)
-				: __( 'Now Playing', 'riff' )
-		);
 		text( 'artist', t ? t.artist || t.post?.title || '' : '' );
 		areas( t );
 		text( 'source', t?.post?.title || '' );

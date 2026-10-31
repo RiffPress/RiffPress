@@ -44,36 +44,78 @@ Nothing fires while you type in a field. The single-key shortcuts act only for a
 who can turn them off under Personal Options on their profile (`Shortcuts` in PHP); a visitor has none, and a site can turn them off for everyone with the `riff.shortcuts`
 filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
 
-## The bar's controls
+## Views
 
-Every control at the bar's right end is added through `window.riff.control( id, control )`, Riff's
-own as any plugin's: Like (order 10), the badges (20), Up next (40), Play on another device (60), the volume (70) and
-Now Playing (80), and Riff Lyrics adds Lyrics (30). A control is a button with a `label`, an `icon`
-and either `run( track, button )` or one of the player's own `action`s; `pressed( track )` and
-`shown( track )` keep it in step with the track, `order` places it, and `wide` keeps it off a
-phone's bar, which holds the track, Play and only what a control asks to keep there. A control can
-instead bring its own `element`, as the volume does. The bar is updated in place as the track
-changes and never drawn again, so a control keeps focus while the music plays. An icon is markup
-from the feature's own code. [docs/javascript.md](javascript.md) has the whole of it.
+Now Playing is a view at a time, each taking the whole screen above the bar, opened from its button
+at the bar's right end, and on a phone from its chip in Now Playing:
 
-## Panels
+- **Album** (`album`): the cover on its own. It is what Now Playing opens to, and its button is on
+  a phone's bar too, as the way in. The track's title and artist at the bar's left are read, not
+  pressed.
+- **Turntable** (`turntable`): the record out on the deck, playing or not, the sleeve beside it
+  where the stage has room, and the record alone, turning in the cover's place, where it has not,
+  as on a phone held upright. It is the listener's to open, as some would rather not have the
+  motion, and Now Playing opens to it again for a listener who last chose it, a choice kept in the
+  browser. An unfolded iPhone Duo always opens to it, as that is what the shape is for.
+- **Lyrics** (`lyrics`), from Riff Lyrics, and any other a plugin registers.
 
-Up next is a panel, and so is any a plugin adds, such as Riff Lyrics' Lyrics: each its own thing
-rather than a tab beside Now Playing. A panel is added through `window.riff.panel( id, panel )`
-with a `label`, an `icon` and an `order`, and Riff adds Up next the same way. It gets a button in
-the bar on a wide screen and a chip in Now Playing on a phone. One shows at a time:
+Pressing the open view's button again, Escape, or Close goes back to the page, and focus goes back
+to the button. The button says whether its view is open (`aria-pressed`).
+
+**Up next** (`queue`) is a panel beside the page rather than a screen, as is any panel a plugin
+registers. One shows at a time:
 
 - On a wide screen it stands beside the page and Now Playing, above the bar, and both make room
-  for it. Now Playing is then the track on its own, the art in the middle.
+  for it.
 - On a phone it covers everything, Now Playing too, as a dialog with its name and Close at the
   top.
 - On a touch screen on its side, it opens in the controls' strip, and the turntable keeps
   turning beside it.
 
 Focus moves to the panel's name as it opens, and Escape or Close hands it back to what opened it.
-A panel is filled by the `render` it was added with, and the `riff.panel` action says when one
-opens, closes, or has a new track while it is open. The one a listener leaves open opens again on
-their next visit, on a wide screen; that choice is kept in the browser, nowhere else.
+The one a listener leaves open opens again on their next visit, on a wide screen; that choice is
+kept in the browser, nowhere else.
+
+## Registering controls and views
+
+The bar's controls and the views are registered on the server, as WordPress registers blocks and
+settings, so the page has every button and every view before any script runs; the browser only
+brings each to life by its id. Riff registers its own the same way, on the `riff_register` action:
+
+```php
+add_action( 'riff_register', function () {
+	riff_register_control( 'sleep', array(
+		'label'  => __( 'Sleep timer', 'my-plugin' ),
+		'icon'   => '<svg viewBox="0 0 24 24">…</svg>',
+		'order'  => 65,
+		'script' => 'my-plugin-sleep', // A script module you register; Riff enqueues it with the player.
+	) );
+	riff_register_view( 'credits', array(
+		'label'  => __( 'Credits', 'my-plugin' ),
+		'icon'   => '<svg viewBox="0 0 24 24">…</svg>',
+		'order'  => 32,
+		'place'  => 'screen', // Or 'side', for a panel beside the page.
+		'render' => fn() => '<p>' . esc_html__( 'Loading…', 'my-plugin' ) . '</p>',
+	) );
+} );
+```
+
+A control's `order` places it among Riff's own: Like (10), the badges (20), the album (26), the
+turntable (28), Lyrics (30), Up next (40), Play on another device (60) and the volume (70). `wide`
+keeps a control's button off a phone's bar, which holds the track, Play, the album and only what a
+control asks to keep there; a view's button is wide unless it says otherwise. A control can bring
+its own markup with `render` in place of a button. An icon is the name of one of Riff's own or SVG,
+and nothing but its shapes is kept. `riff_unregister_control()` and `riff_unregister_view()` take
+one away, Riff's own included.
+
+In the browser, `window.riff.control( id, control )` gives a registered control its `run( track,
+button )`, `pressed( track )`, `label( track )` and `shown( track )`, and
+`window.riff.view( id, view )` gives a registered view its `render( view, track )`, which fills it
+as it opens and again as the track changes while it is open; the `riff.view` action says the same.
+Both also add a control or a view the server didn't register, for what only the browser knows.
+`window.riff.openView( id )` and `closeView()` open and close one. The bar is updated in place as
+the track changes and never drawn again, so a control keeps focus while the music plays.
+[docs/javascript.md](javascript.md) has the whole of it.
 
 ## Areas
 
@@ -125,7 +167,7 @@ On a computer the Listen app is laid out as a desktop streaming app is: back and
 
 Riff lays out by the screen's shape, never by the device, as WebKit and Apple ask: an iPhone Duo says it is an iPhone, and folds and unfolds while the page is open.
 
-- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: Now Playing is the deck, the record and the arm filling its height on the left and the controls in a strip down the right. Up next and the other panels open in that strip, and the deck keeps turning beside it. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Once the record is out, its sleeve stands in a rack at the top of the strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
+- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: Now Playing opens to the Turntable view whatever the listener chose elsewhere, the deck, the record and the arm filling its height on the left and the controls in a strip down the right. Up next and the other panels open in that strip, and the deck keeps turning beside it. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Once the record is out, its sleeve stands in a rack at the top of the strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
 - **A short screen that is not upright enough to be a phone** (a folded iPhone Duo's outer screen at 466 by 678) puts Home, Search and Library down the right edge, where iOS keeps its own bars on that screen.
 - **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, the deck fills the left page and the controls the right; stood like a tent, the sleeve and the turntable fill the upper half and the controls the lower, nearer the hand.
 
@@ -133,7 +175,8 @@ Riff lays out by the screen's shape, never by the device, as WebKit and Apple as
 
 ## The turntable
 
-A site that wants the cover on its own turns the turntable off under **Settings › Media** (Now
-Playing), or with the `riff_turntable` filter. Off, the record never comes out of its sleeve, and a
+The turntable is a view of its own (above). A site that wants the cover on its own registers none:
+it turns the turntable off under **Settings › Media** (Now Playing), or with the `riff_turntable`
+filter. Off, there is no Turntable button or chip, the record never comes out of its sleeve, and a
 touch screen on its side or a folding phone shows the cover beside the controls, with no deck board
 or rack.

@@ -5,7 +5,7 @@
  * is: a band of grooves for each of the album's tracks, as wide as the track is long. It turns at
  * 33⅓, faster or slower with the music's speed as a turntable's pitch would, and its tonearm
  * tracks the album from the outside in. */
-import { average, hsl, largest, route, time } from 'riff-player/helpers';
+import { average, hsl, largest, read, route, time, write } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -16,18 +16,96 @@ export function nowPlaying( P ) {
 	const { root, np, $, $$ } = P;
 
 	let opener = null;
-	function open() {
-		if ( ! P.track() || ! np.hidden ) {
+	// The view showing: the album, the cover on its own, until the listener opens another.
+	P.showing = 'album';
+	const TURNTABLE = 'riff:turntable';
+	const screen = ( id ) => P.views?.get( id )?.place === 'screen';
+
+	// The view Now Playing opens to when none is named: the turntable where the whole screen is
+	// one, as an unfolded iPhone Duo is, since that is what the shape is for; the turntable for a
+	// listener who last chose it; otherwise the album.
+	function opening() {
+		if ( ! P.views?.has( 'turntable' ) ) {
+			return 'album';
+		}
+		if ( shapedAsDeck() ) {
+			return 'turntable';
+		}
+		return read( localStorage, TURNTABLE ) === 'on' ? 'turntable' : 'album';
+	}
+
+	// A view in Now Playing's place: its region shown and the others hidden, or the stage, with
+	// the record out on the deck for the turntable and the cover on its own for the album.
+	function setView( id ) {
+		if ( ! screen( id ) ) {
 			return;
 		}
+		const was = P.showing;
+		const shown = ! np.hidden;
+		P.showing = id;
+		root.dataset.riffView = id;
+		const stage = !! P.views.get( id ).stage;
+		np.dataset.riffScreen = stage ? 'stage' : 'own';
+		for ( const [ other, v ] of P.views ) {
+			if ( v.place === 'screen' && v.el ) {
+				v.el.hidden = other !== id;
+			}
+		}
+		if ( turntable() ) {
+			delete root.dataset.riffTurntable;
+		} else {
+			root.dataset.riffTurntable = 'off';
+		}
+		// The listener's choice of the album or the turntable, kept for the next time.
+		if ( stage && P.views.has( 'turntable' ) && ! shapedAsDeck() ) {
+			write( localStorage, TURNTABLE, id === 'turntable' ? 'on' : 'off' );
+		}
+		roomy.last = undefined;
+		clearTimeout( deck.opening );
+		retune();
+		markRoom();
+		deck( roomy() && ( 'riffTurning' in root.dataset || wholeDeck() ) );
+		if ( shown && was !== id ) {
+			P.viewOpened?.( was, false );
+		}
+		if ( shown ) {
+			P.viewOpened?.( id, true );
+			focusView();
+		}
+		P.drawControls?.();
+	}
+
+	// Focus into the view: its own region, or Now Playing's close button for the stage.
+	function focusView() {
+		const own = P.views?.get( P.showing );
+		( own && ! own.stage && own.el ? own.el : $( '[data-riff-action="close"]' ) )?.focus( {
+			preventScroll: true,
+		} );
+	}
+
+	function open( id ) {
+		if ( ! P.track() ) {
+			return;
+		}
+		if ( ! np.hidden ) {
+			setView( screen( id ) ? id : opening() );
+			return;
+		}
+		// Where the whole screen is a turntable, as an unfolded iPhone Duo is, Now Playing opens to
+		// it, from the album's button too; a view of its own, such as the lyrics, opens as named.
+		const own = screen( id ) && ! P.views.get( id ).stage;
+		const view =
+			! own && shapedAsDeck() && P.views?.has( 'turntable' )
+				? 'turntable'
+				: screen( id ) ? id : opening();
 		// Safari doesn't focus a button on click, so after a click the active element is the body;
-		// focus then goes back to the bar's title, the control that opens Now Playing. So it does
-		// after the chevron, which is out of the tree.
+		// focus then goes back to the view's button in the bar.
 		const active = document.activeElement;
 		opener =
-			active && active !== document.body && ! active.matches( '.riff-chevron' )
+			active && active !== document.body
 				? active
-				: $( '.riff-bar-info' );
+				: $( `[data-riff-control="${ view }"]` ) || $( '[data-riff-control="album"]' );
+		setView( view );
 		np.hidden = false;
 		root.classList.add( 'is-open' );
 		P.syncWakeLock?.();
@@ -54,13 +132,12 @@ export function nowPlaying( P ) {
 				node.dataset.riffInert = '';
 			}
 		}
-		for ( const b of $$( '.riff-chevron' ) ) {
-			b.setAttribute( 'aria-expanded', 'true' );
-		}
 		history.pushState( { ...history.state, riff: 'open' }, '' );
+		P.viewOpened?.( view, true );
+		P.drawControls?.();
 		requestAnimationFrame( () => {
 			np.classList.add( 'is-in' );
-			$( '[data-riff-action="close"]' ).focus( { preventScroll: true } );
+			focusView();
 			if ( P.reduce() ) {
 				hidePage();
 			} else {
@@ -120,9 +197,7 @@ export function nowPlaying( P ) {
 			node.inert = false;
 			node.removeAttribute( 'data-riff-inert' );
 		}
-		for ( const b of $$( '.riff-chevron' ) ) {
-			b.setAttribute( 'aria-expanded', 'false' );
-		}
+		P.viewOpened?.( P.showing, false );
 		const done = () => {
 			np.hidden = true;
 			P.syncWakeLock?.();
@@ -139,6 +214,7 @@ export function nowPlaying( P ) {
 		if ( opener && document.contains( opener ) ) {
 			opener.focus( { preventScroll: true } );
 		}
+		P.drawControls?.();
 	}
 
 	window.addEventListener( 'popstate', () => {
@@ -463,10 +539,12 @@ export function nowPlaying( P ) {
 	// opened the window's shape stands in, so music playing on a computer already has its record
 	// out when Now Playing first opens. Turning the phone, unfolding it or resizing the window
 	// brings the record out or puts it back.
-	// A site that turned the turntable off (Settings › Media) has the cover on its own everywhere.
-	const turntable = P.data.turntable !== false;
+	// The turntable is a view of its own, opened from its button (registry.js); the album, the
+	// cover on its own, is what Now Playing opens to. A site that turned the turntable off
+	// (Settings › Media) registers no such view.
+	const turntable = () => P.showing === 'turntable' && !! P.views?.has( 'turntable' );
 	function roomy() {
-		if ( ! turntable ) {
+		if ( ! turntable() ) {
 			return false;
 		}
 		const cover = $( '.riff-cover' );
@@ -475,19 +553,25 @@ export function nowPlaying( P ) {
 		}
 		return roomy.last ?? window.innerWidth >= window.innerHeight * 1.2;
 	}
-	// Where the whole screen is the turntable (riff.css: an unfolded phone, a phone on its side),
-	// opening it brings the record out whether or not it is playing, as setting a record on the
-	// platter does; elsewhere it comes out only while it turns.
+	// In the turntable's view the record comes out whether or not it is playing, as setting a record
+	// on the platter does. Where the whole screen is the turntable (riff.css: an unfolded phone, a
+	// phone on its side), the deck has its own controls too.
 	const OPENING = 400;
-	const wholeDeck = () =>
-		turntable &&
+	const wholeDeck = turntable;
+	const shapedAsDeck = () =>
+		!! $( '.riff-cover' ) &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
+	const deckScreen = () => turntable() && shapedAsDeck();
+	// Whether the stage has room for the sleeve beside the deck, as riff.css's container query
+	// answers it, for the stylesheet: without it the turntable's view is the record alone.
+	const markRoom = () => root.toggleAttribute( 'data-riff-room', roomy() );
 	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
 		new ResizeObserver( () => {
 			const was = roomy.last;
 			if ( np.hidden || roomy() === was ) {
 				return;
 			}
+			markRoom();
 			clearTimeout( deck.opening );
 			// Onto the deck its speed and pitch hold; off it the music is at its own speed again.
 			retune();
@@ -1012,7 +1096,7 @@ export function nowPlaying( P ) {
 	const RPM = { 33: 100 / 3, 45: 45 };
 	const own = () => ( root.dataset.riffFormat === '7' ? '45' : '33' );
 	function deckRate() {
-		if ( ! $( '.riff-cover' ) || ! wholeDeck() ) {
+		if ( ! deckScreen() ) {
 			return 1;
 		}
 		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( 1 + pitch / 100 );
@@ -1096,5 +1180,5 @@ export function nowPlaying( P ) {
 		);
 	}
 
-	return { open, close, tint, groove, deck, turn, halt, held, stopping };
+	return { open, close, setView, tint, groove, deck, turn, halt, held, stopping };
 }

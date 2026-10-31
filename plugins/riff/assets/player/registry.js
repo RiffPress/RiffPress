@@ -1,15 +1,17 @@
-/* The bar's controls and the panels. Each control is added through window.riff.control(), Riff's
- * own as any plugin's: the heart, the badges, Play on another device, the volume and the way into
- * Now Playing are taken from the bar's template and added here like any other, so none is special
- * to the bar. A control is a button that runs a function or one of the player's own actions, or an
- * element its code brings. Each keeps its place by its order; the bar is only updated as the track
- * changes, never drawn again, so a control keeps its focus and a feature that found its button
- * keeps finding it.
+/* The bar's controls and the views. Both are registered on the server (Riff\Registry, with
+ * riff_register_control() and riff_register_view()) and drawn into the page before any script, Riff's
+ * own as any plugin's; this brings each to life by its id. A control is something in the bar: a
+ * button that runs a function or one of the player's own actions, or an element of its own.
+ * window.riff.control() gives a registered control what it does, or adds one the server didn't
+ * know of. The bar is only updated as the track changes, never drawn again, so a control keeps its
+ * focus and a feature that found its button keeps finding it.
  *
- * A panel is added through window.riff.panel(), Up next as any plugin's, such as Lyrics: its own
- * thing, beside the page and Now Playing on a wide screen, opened from its button in the bar, and
- * over everything on a phone, opened from its chip in Now Playing. One shows at a time, and the
- * one a listener leaves open opens again on their next visit. */
+ * A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a
+ * screen of Now Playing, which takes the whole screen above the bar (the album, the turntable, the
+ * lyrics; now-playing.js shows them), or a panel beside the page, as Up next is. Pressing the
+ * button of the one open goes back to the page. One panel shows at a time, and the one a listener
+ * leaves open opens again on their next visit. window.riff.view() gives a registered view what it
+ * does as it opens, or adds one the server didn't know of. */
 import { read, write } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
@@ -24,17 +26,28 @@ const BESIDE =
 const STRIP =
 	'(pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px)';
 
-// A control's id names it in data-riff-control and in its class.
+// An id names a control in data-riff-control and a view in data-riff-view.
 const ID = /^[a-z][a-z0-9-]*$/;
 
 export function registry( P ) {
-	const { $, root, emit } = P;
+	const { $, $$, root, emit } = P;
 	const holder = $( '[data-riff-controls]' );
 	const controls = new Map();
 	let added = 0;
 
 	// By order, then in the order they were added.
 	const before = ( a, b ) => a.order - b.order || a.added - b.added;
+
+	// What the server drew, each in its place.
+	for ( const el of holder?.querySelectorAll( ':scope > [data-riff-control]' ) || [] ) {
+		controls.set( el.dataset.riffControl, {
+			spec: {},
+			el,
+			order: Number( el.dataset.riffOrder ) || 50,
+			added: added++,
+			server: true,
+		} );
+	}
 
 	function make( id, spec ) {
 		if ( typeof spec.element === 'function' ) {
@@ -48,18 +61,32 @@ export function registry( P ) {
 		}
 		// An icon from the code that added the control, never from the page.
 		button.innerHTML = typeof spec.icon === 'string' ? spec.icon : '';
-		if ( typeof spec.run === 'function' ) {
-			button.addEventListener( 'click', () => {
-				spec.run( P.track() || null, button );
-				draw();
-			} );
-		}
 		return button;
+	}
+
+	// A press runs what the control's script gave it, once wired, whoever drew the button.
+	function wire( entry ) {
+		if ( entry.wired || entry.spec.element ) {
+			return;
+		}
+		entry.wired = true;
+		entry.el.addEventListener( 'click', () => {
+			if ( entry.el.dataset.riffOpens ) {
+				toggle( entry.el.dataset.riffOpens, entry.el );
+			} else if ( typeof entry.spec.run === 'function' ) {
+				entry.spec.run( P.track() || null, entry.el );
+			}
+			draw();
+		} );
 	}
 
 	// What a control says follows the track: its name, whether it is pressed, whether it shows.
 	function draw( t = P.track() ) {
 		for ( const { spec, el } of controls.values() ) {
+			if ( el.dataset.riffOpens ) {
+				el.setAttribute( 'aria-pressed', String( isOpen( el.dataset.riffOpens ) ) );
+				continue;
+			}
 			if ( ! spec.element ) {
 				const label =
 					typeof spec.label === 'function'
@@ -81,20 +108,35 @@ export function registry( P ) {
 				el.hidden = ! spec.shown( t || null );
 			}
 		}
+		for ( const chip of $$( '.riff-chips [data-riff-opens]' ) ) {
+			chip.setAttribute( 'aria-pressed', String( isOpen( chip.dataset.riffOpens ) ) );
+		}
 	}
 
 	function control( id, spec ) {
 		id = String( id );
+		if ( ! ID.test( id ) || ! spec ) {
+			return () => {};
+		}
+		const drawn = controls.get( id );
+		// One the server drew: it keeps its element and its place, and takes what it does from here.
+		if ( drawn?.server && ! spec.element ) {
+			drawn.spec = spec;
+			wire( drawn );
+			draw();
+			return () => {
+				if ( controls.get( id ) === drawn ) {
+					drawn.spec = {};
+				}
+			};
+		}
 		const usable =
-			ID.test( id ) &&
-			spec &&
-			( typeof spec.element === 'function' ||
-				( spec.label &&
-					( typeof spec.run === 'function' || spec.action ) ) );
+			typeof spec.element === 'function' ||
+			( spec.label && ( typeof spec.run === 'function' || spec.action ) );
 		if ( ! usable ) {
 			return () => {};
 		}
-		controls.get( id )?.el.remove();
+		drawn?.el.remove();
 		const el = make( id, spec );
 		if ( ! ( el instanceof HTMLElement ) ) {
 			controls.delete( id );
@@ -115,6 +157,7 @@ export function registry( P ) {
 			.sort( before )
 			.find( ( c ) => before( entry, c ) < 0 );
 		holder.insertBefore( el, next ? next.el : null );
+		wire( entry );
 		draw();
 		return () => {
 			if ( controls.get( id ) === entry ) {
@@ -124,108 +167,213 @@ export function registry( P ) {
 		};
 	}
 
-	// Riff's own, from the bar's template, through the same door.
-	const own = $( '.riff-bar-own' )?.content;
-	const take = ( name ) =>
-		own?.querySelector( `[data-riff-own="${ name }"]` );
-	if ( own ) {
-		control( 'like', { order: 10, element: () => take( 'like' ) } );
-		control( 'badges', {
-			order: 20,
-			wide: true,
-			element: () => take( 'badges' ),
-		} );
-		control( 'cast', { order: 60, element: () => take( 'cast' ) } );
-		control( 'volume', {
-			order: 70,
-			wide: true,
-			element: () => take( 'volume' ),
-		} );
-		control( 'open', {
-			order: 80,
-			wide: true,
-			element: () => take( 'open' ),
-		} );
+	// The server's controls, wired for their buttons; their own scripts give them more.
+	for ( const entry of controls.values() ) {
+		if ( entry.el.matches( 'button' ) && ! entry.el.dataset.riffAction ) {
+			wire( entry );
+		}
 	}
 
-	// ---- The panels.
+	// ---- The views.
 	const PANEL = 'riff:panel';
 	const side = $( '.riff-side' );
 	const title = $( '.riff-side-title' );
 	const shut = $( '.riff-side-close' );
 	const chips = $( '.riff-chips' );
-	const panels = new Map();
+	// Each view: where it opens, whether it is Now Playing's own stage, its region, and what it
+	// does as it opens.
+	const views = new Map();
 	P.side = side;
 	P.panelOpen = null;
 	let opener = null;
 
+	for ( const [ id, v ] of Object.entries( P.data.views || {} ) ) {
+		views.set( id, {
+			label: String( v.label || '' ),
+			place: v.place === 'side' ? 'side' : 'screen',
+			stage: !! v.stage,
+			el:
+				v.place === 'side'
+					? side?.querySelector( `[data-riff-panel="${ id }"]` )
+					: $( `.riff-np [data-riff-view="${ id }"]` ),
+			spec: {},
+		} );
+	}
+	P.views = views;
+
 	const beside = () => window.matchMedia( BESIDE ).matches;
 
-	function panel( id, spec ) {
-		id = String( id );
-		if ( ! ID.test( id ) || ! spec || ! spec.label ) {
-			return () => {};
+	function isOpen( id ) {
+		const v = views.get( id );
+		if ( ! v ) {
+			return false;
 		}
-		panels.get( id )?.forget();
-		let el = side.querySelector( `[data-riff-panel="${ id }"]` );
-		const made = ! el;
-		if ( made ) {
+		return v.place === 'side'
+			? P.panelOpen === id
+			: ! P.np.hidden && P.showing === id;
+	}
+
+	function open( id, from = null ) {
+		const v = views.get( id );
+		if ( ! v ) {
+			return;
+		}
+		if ( v.place === 'side' ) {
+			show( id, { from } );
+		} else {
+			P.open( id );
+		}
+	}
+
+	function close( id ) {
+		const v = views.get( id );
+		if ( v?.place === 'side' ) {
+			hide();
+		} else if ( v ) {
+			P.close();
+		}
+	}
+
+	function toggle( id, from ) {
+		if ( isOpen( id ) ) {
+			close( id );
+		} else {
+			open( id, from );
+		}
+	}
+
+	// A chip opens its view from Now Playing on a phone; Now Playing is already open there.
+	chips?.addEventListener( 'click', ( e ) => {
+		const chip = e.target.closest( '[data-riff-opens]' );
+		if ( chip ) {
+			open( chip.dataset.riffOpens, chip );
+			draw();
+		}
+	} );
+
+	// A view the server didn't draw, from a script: its region, its button and its chip.
+	function adopt( id, spec ) {
+		const place = spec.place === 'side' ? 'side' : 'screen';
+		let el;
+		if ( place === 'side' ) {
 			el = document.createElement( 'div' );
 			el.className = `riff-panel riff-panel-${ id }`;
 			el.dataset.riffPanel = id;
-			el.hidden = true;
+			el.dataset.riffLabel = String( spec.label );
 			side.append( el );
+		} else {
+			el = document.createElement( 'section' );
+			el.className = `riff-view riff-view-${ id }`;
+			el.dataset.riffView = id;
+			el.tabIndex = -1;
+			el.setAttribute( 'aria-label', String( spec.label ) );
+			$( '.riff-stage' ).after( el );
 		}
+		el.hidden = true;
 		const order = Number.isFinite( spec.order ) ? spec.order : 50;
-		// Its button in the bar, on a wide screen.
-		const unbar = control( id, {
-			label: String( spec.label ),
-			icon: spec.icon,
-			order,
-			wide: true,
-			pressed: () => P.panelOpen === id,
-			run: ( t, button ) => toggle( id, button ),
-		} );
-		// Its chip in Now Playing, on a phone, among the others by order.
+		const button = make( id, { icon: spec.icon } );
+		button.dataset.riffOpens = id;
+		button.dataset.riffOrder = String( order );
+		button.setAttribute( 'aria-label', String( spec.label ) );
+		const unbar = control( id, { element: () => button, order, wide: true } );
+		wire( controls.get( id ) );
 		const chip = document.createElement( 'button' );
 		chip.type = 'button';
 		chip.className = 'riff-chip riff-mobile';
 		chip.dataset.riffChip = id;
+		chip.dataset.riffOpens = id;
+		chip.dataset.riffOrder = String( order );
 		chip.innerHTML = typeof spec.icon === 'string' ? spec.icon : '';
 		const words = document.createElement( 'span' );
 		words.textContent = String( spec.label );
 		chip.append( words );
-		chip.addEventListener( 'click', () => show( id, { from: chip } ) );
-		const entry = { spec, el, chip, order, added: added++ };
-		const next = [ ...panels.values() ]
-			.sort( before )
-			.find( ( p ) => before( entry, p ) < 0 );
-		chips?.insertBefore( chip, next ? next.chip : null );
-		entry.forget = () => {
-			if ( panels.get( id ) !== entry ) {
-				return;
-			}
-			if ( P.panelOpen === id ) {
-				hide( { quiet: true } );
-			}
-			panels.delete( id );
-			unbar();
-			chip.remove();
-			if ( made ) {
+		const next = [ ...( chips?.querySelectorAll( '[data-riff-opens]' ) || [] ) ].find(
+			( c ) => ( Number( c.dataset.riffOrder ) || 50 ) > order
+		);
+		chips?.insertBefore( chip, next || null );
+		return {
+			view: { label: String( spec.label ), place, stage: false, el, spec },
+			forget: () => {
+				unbar();
+				chip.remove();
 				el.remove();
-			}
+			},
 		};
-		panels.set( id, entry );
-		reopen();
-		return entry.forget;
 	}
 
-	function toggle( id, from ) {
-		if ( P.panelOpen === id ) {
-			hide();
-		} else {
-			show( id, { from } );
+	function view( id, spec ) {
+		id = String( id );
+		if ( ! ID.test( id ) || ! spec ) {
+			return () => {};
 		}
+		const known = views.get( id );
+		if ( known && ! known.adopted ) {
+			// One the server drew: it takes what it does as it opens from here.
+			known.spec = spec;
+			if ( isOpen( id ) ) {
+				fill( id );
+			}
+			return () => {
+				if ( views.get( id ) === known ) {
+					known.spec = {};
+				}
+			};
+		}
+		if ( ! spec.label ) {
+			return () => {};
+		}
+		known?.forget?.();
+		const { view: made, forget } = adopt( id, spec );
+		made.adopted = true;
+		made.forget = () => {
+			if ( views.get( id ) !== made ) {
+				return;
+			}
+			if ( isOpen( id ) ) {
+				close( id );
+			}
+			views.delete( id );
+			forget();
+		};
+		views.set( id, made );
+		draw();
+		reopen();
+		return made.forget;
+	}
+
+	// A view's content: its own render, then riff.view for anyone listening.
+	function fill( id ) {
+		const v = views.get( id );
+		if ( ! v ) {
+			return;
+		}
+		v.spec.render?.( v.el || P.np, P.track() || null );
+		announce( id, true );
+	}
+
+	function announce( id, isNowOpen ) {
+		const v = views.get( id );
+		/**
+		 * Fires when a view opens or closes, Riff's own included, and again for an open view when
+		 * the track changes. A view's script fills it here, or in the `render` it was given.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {Object}      detail       What changed.
+		 * @param {string}      detail.id    The view's id.
+		 * @param {boolean}     detail.open  Whether it is open now.
+		 * @param {HTMLElement} detail.view  Its region: `[data-riff-view="<id>"]` for a screen of its
+		 *                                   own, `[data-riff-panel="<id>"]` for a panel, and Now
+		 *                                   Playing itself for the album or the turntable.
+		 * @param {Object|null} detail.track The track playing.
+		 * @param {Object}      api          `window.riff`.
+		 */
+		emit( 'view', {
+			id,
+			open: isNowOpen,
+			view: v?.el || P.np,
+			track: P.track() || null,
+		} );
 	}
 
 	// Closing everything else the listener sees takes it out of reach while a phone's panel covers
@@ -249,23 +397,24 @@ export function registry( P ) {
 	}
 
 	function show( id, { from = null, quiet = false } = {} ) {
-		const entry = panels.get( id );
-		if ( ! entry ) {
+		const v = views.get( id );
+		if ( ! v || v.place !== 'side' ) {
 			return;
 		}
 		const was = P.panelOpen;
 		if ( was && was !== id ) {
-			panels.get( was ).el.hidden = true;
-			announce( panels.get( was ), false );
+			announce( was, false );
 		}
-		for ( const p of panels.values() ) {
-			p.el.hidden = p !== entry;
+		for ( const [ other, o ] of views ) {
+			if ( o.place === 'side' && o.el ) {
+				o.el.hidden = other !== id;
+			}
 		}
-		title.textContent = String( entry.spec.label );
+		title.textContent = v.label;
 		shut.setAttribute(
 			'aria-label',
 			/* translators: %s: The panel's name, such as Up next. */
-			__( 'Close %s', 'riff' ).replace( '%s', String( entry.spec.label ) )
+			__( 'Close %s', 'riff' ).replace( '%s', v.label )
 		);
 		if ( ! quiet ) {
 			opener = from || document.activeElement;
@@ -292,17 +441,19 @@ export function registry( P ) {
 			title.focus( { preventScroll: true } );
 		}
 		draw();
-		fill( entry );
+		fill( id );
 	}
 
 	function hide( { quiet = false } = {} ) {
 		const id = P.panelOpen;
-		const entry = panels.get( id );
-		if ( ! entry ) {
+		const v = views.get( id );
+		if ( ! v ) {
 			return;
 		}
 		const within = side.contains( document.activeElement );
-		entry.el.hidden = true;
+		if ( v.el ) {
+			v.el.hidden = true;
+		}
 		side.hidden = true;
 		P.panelOpen = null;
 		document.documentElement.classList.remove( 'riff-panel-open' );
@@ -314,57 +465,31 @@ export function registry( P ) {
 		if ( within ) {
 			const back = [
 				opener,
-				entry.chip,
+				$( `.riff-chips [data-riff-opens="${ id }"]` ),
 				$( `[data-riff-control="${ id }"]` ),
 			].find(
 				( node ) =>
 					node?.isConnected && node.checkVisibility?.() !== false
 			);
-			( back || $( '.riff-bar-info' ) )?.focus();
+			back?.focus();
 		}
 		opener = null;
 		draw();
-		announce( entry, false );
-	}
-
-	// A panel's content: its own render, then riff.panel for anyone listening.
-	function fill( entry ) {
-		entry.spec.render?.( entry.el, P.track() || null );
-		announce( entry, true );
-	}
-
-	function announce( entry, open ) {
-		/**
-		 * Fires when a panel opens or closes, Up next included, and again for an open panel when
-		 * the track changes. A panel's script fills it here, or in the `render` it was added with.
-		 *
-		 * @since 5.8.0
-		 *
-		 * @param {Object}      detail       What changed.
-		 * @param {string}      detail.id    The panel's id.
-		 * @param {boolean}     detail.open  Whether it is open now.
-		 * @param {HTMLElement} detail.panel The panel, `[data-riff-panel="<id>"]`.
-		 * @param {Object|null} detail.track The track playing.
-		 * @param {Object}      api          `window.riff`.
-		 */
-		emit( 'panel', {
-			id: entry.el.dataset.riffPanel,
-			open,
-			panel: entry.el,
-			track: P.track() || null,
-		} );
+		announce( id, false );
 	}
 
 	root.addEventListener( 'riff:track', () => {
-		const entry = panels.get( P.panelOpen );
-		if ( entry ) {
-			fill( entry );
+		if ( P.panelOpen ) {
+			fill( P.panelOpen );
+		}
+		if ( ! P.np.hidden && P.showing ) {
+			fill( P.showing );
 		}
 		reopen();
 	} );
 
 	// Escape closes the panel, and stays with it; on a phone Tab keeps to it.
-	side.addEventListener( 'keydown', ( e ) => {
+	side?.addEventListener( 'keydown', ( e ) => {
 		if ( e.key === 'Escape' && P.panelOpen ) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -407,7 +532,7 @@ export function registry( P ) {
 		if (
 			id &&
 			! P.panelOpen &&
-			panels.has( id ) &&
+			views.get( id )?.place === 'side' &&
 			P.track() &&
 			beside()
 		) {
@@ -415,11 +540,8 @@ export function registry( P ) {
 		}
 	}
 
-	// Up next, Riff's own.
-	panel( 'queue', {
-		label: __( 'Up next', 'riff' ),
-		icon: take( 'queue-icon' )?.innerHTML || '',
-		order: 40,
+	// Up next, Riff's own: the track playing kept in sight as it opens.
+	view( 'queue', {
 		render: ( el ) =>
 			el
 				.querySelector( '[aria-current]' )
@@ -429,8 +551,17 @@ export function registry( P ) {
 	return {
 		control,
 		drawControls: draw,
-		panel,
-		showPanel: ( id ) => show( id ),
+		view,
+		openView: ( id ) => open( String( id ) ),
+		closeView: () => {
+			if ( P.panelOpen ) {
+				hide();
+			} else {
+				P.close();
+			}
+		},
 		hidePanel: ( options ) => hide( options ),
+		viewOpened: ( id, isNowOpen ) =>
+			isNowOpen ? fill( id ) : announce( id, false ),
 	};
 }

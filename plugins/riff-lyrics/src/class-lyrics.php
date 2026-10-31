@@ -19,10 +19,11 @@ defined( 'ABSPATH' ) || exit;
  *
  * WordPress already reads the lyrics in an audio file's tags (ID3 USLT) on upload and keeps them in
  * the attachment's own metadata as `unsynchronised_lyric`, which the media REST route returns in
- * `media_details`. This shows that field in a Lyrics panel and lets the Media Library edit it, so
- * the plugin stores nothing of its own. Everything it does goes through Riff's documented surface:
- * the `riff_before_player` action, and in the player `window.riff.panel()` and the `riff.panel`
- * and `riff.time` actions. Timed lyrics follow the music and seek on a
+ * `media_details`. This shows that field in a Lyrics view of Now Playing, which takes the whole
+ * screen above the bar, and lets the Media Library edit it, so the plugin stores nothing of its
+ * own. Everything it does goes through Riff's documented surface: `riff_register_view()` on the
+ * `riff_register` action, the `riff_before_player` action, and in the player the `riff.view` and
+ * `riff.time` actions. Timed lyrics follow the music and seek on a
  * tap, through `window.riff`, in the formats taggers and players already write: LRC (with its
  * `[offset:]` tag and Enhanced LRC's word times) and WebVTT, typed into the field or read from the
  * file's tags, and ID3's own SYLT frame, which getID3 reads on upload but WordPress then drops:
@@ -37,15 +38,36 @@ final class Lyrics {
 	public const KEY = 'unsynchronised_lyric';
 
 	/**
-	 * Hooks the field and the script, which adds the panel.
+	 * A page of words, the Lyrics view's icon.
+	 */
+	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>';
+
+	/**
+	 * Hooks the view, the field and the script, which fills the view.
 	 */
 	public static function register(): void {
+		add_action( 'riff_register', array( self::class, 'view' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
 		add_action( 'wp_entity_fields_api_init', array( self::class, 'entity_field' ) );
 		add_filter( 'wp_read_audio_metadata', array( self::class, 'synced_from_tags' ), 10, 4 );
+	}
+
+	/**
+	 * The Lyrics view: a screen of Now Playing, its button in the bar beside the turntable's, as the
+	 * words go with the song.
+	 */
+	public static function view(): void {
+		riff_register_view(
+			'lyrics',
+			array(
+				'label' => __( 'Lyrics', 'riff-lyrics' ),
+				'icon'  => self::ICON,
+				'order' => 30,
+			)
+		);
 	}
 
 	/**
@@ -234,9 +256,10 @@ final class Lyrics {
 		wp_enqueue_style( 'riff-lyrics' );
 		wp_add_inline_style(
 			'riff-lyrics',
-			'.riff-lyrics{margin:0;white-space:pre-line;font-size:18px;line-height:1.7}'
+			// The words fill the screen they have: larger as it is, with no width of its own to change at.
+			'.riff-lyrics{margin:0;white-space:pre-line;font-size:clamp(1.125rem,1rem + 1.25vw,2rem);line-height:1.6}'
 			. '.riff-lyrics-note{margin:0;color:var(--riff-fg-2)}'
-			// No lyrics, nothing playing, or none could load: one quiet message in the middle of the panel.
+			// No lyrics, nothing playing, or none could load: one quiet message in the middle of the view.
 			. '.riff-lyrics-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-sizing:border-box;min-height:min(320px,100%);height:100%;padding:32px 24px;text-align:center}'
 			. '#riff .riff-lyrics-empty svg{width:40px;height:40px;fill:currentColor;color:var(--riff-fg-3)}'
 			. '.riff-lyrics-empty .riff-lyrics-note{max-width:24em;color:var(--riff-fg);font-size:16px;font-weight:600;line-height:1.4}'
@@ -279,7 +302,7 @@ final class Lyrics {
 				(int) $post->ID,
 				esc_textarea( $value )
 			),
-			'helps' => __( 'Read from the file when it has lyrics; edit them here. Shown in the player’s Lyrics panel.', 'riff-lyrics' ),
+			'helps' => __( 'Read from the file when it has lyrics; edit them here. Shown in the player’s Lyrics view.', 'riff-lyrics' ),
 		);
 		return $fields;
 	}

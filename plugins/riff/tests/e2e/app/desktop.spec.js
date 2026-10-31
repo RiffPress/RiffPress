@@ -96,7 +96,7 @@ test.describe( 'Standalone', () => {
 		// What the app's preload marks the document with.
 		await page.evaluate( () => document.documentElement.classList.add( 'riff-desktop', 'riff-desktop-inset' ) );
 		await page.locator( '[data-riff-app-action="play"]' ).click();
-		await page.locator( '.riff-bar .riff-chevron' ).click();
+		await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
 

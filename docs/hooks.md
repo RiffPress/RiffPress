@@ -130,6 +130,12 @@ Fires before the player's markup.
 
 Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
+### `riff_register`
+
+Fires once a request, before the player's controls and views are first read: register them here with `riff_register_control()` and `riff_register_view()`, or take one of Riff's own away.
+
+Since 5.8.0. Fires in `plugins/riff/src/class-registry.php`.
+
 ## JavaScript
 
 The player fires these through `wp.hooks` when the page has it. Each action is also dispatched as a `riff:<name>` `CustomEvent` on `#riff` with the same detail, for pages without the WordPress scripts.
@@ -184,21 +190,6 @@ Since 4.0.0. Fires in `plugins/riff/assets/player/media.js`.
 | --- | --- | --- |
 | `detail` | `Object` | What changed. |
 | `detail.track` | `Object` | The track that ended. |
-| `api` | `Object` | `window.riff`. |
-
-#### `riff.panel`
-
-Fires when a panel opens or closes, Up next included, and again for an open panel when the track changes. A panel's script fills it here, or in the `render` it was added with.
-
-Since 5.8.0. Fires in `plugins/riff/assets/player/registry.js`.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `detail` | `Object` | What changed. |
-| `detail.id` | `string` | The panel's id. |
-| `detail.open` | `boolean` | Whether it is open now. |
-| `detail.panel` | `HTMLElement` | The panel, `[data-riff-panel="<id>"]`. |
-| `detail.track` | `Object\|null` | The track playing. |
 | `api` | `Object` | `window.riff`. |
 
 #### `riff.pause`
@@ -278,5 +269,20 @@ Since 4.0.0. Fires in `plugins/riff/assets/player/playback.js`.
 | `detail.track` | `Object` | The track now loaded. |
 | `detail.index` | `number` | Its position in the play order. |
 | `detail.queue` | `Object[]` | The queue in play order. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.view`
+
+Fires when a view opens or closes, Riff's own included, and again for an open view when the track changes. A view's script fills it here, or in the `render` it was given.
+
+Since 5.8.0. Fires in `plugins/riff/assets/player/registry.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.id` | `string` | The view's id. |
+| `detail.open` | `boolean` | Whether it is open now. |
+| `detail.view` | `HTMLElement` | Its region: `[data-riff-view="<id>"]` for a screen of its own, `[data-riff-panel="<id>"]` for a panel, and Now Playing itself for the album or the turntable. |
+| `detail.track` | `Object\|null` | The track playing. |
 | `api` | `Object` | `window.riff`. |
 

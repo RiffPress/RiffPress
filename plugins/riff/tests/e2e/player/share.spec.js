@@ -4,6 +4,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 
 const { FIXTURES } = require( '../helpers/site' );
@@ -103,7 +104,7 @@ test.describe( 'Sharing a track', () => {
 			[ 1, second ],
 		] ) {
 			await page.locator( '.riff-row' ).nth( i ).click();
-			await page.locator( '.riff-bar-info' ).click();
+			await openView( page, 'album' );
 			await page
 				.locator( '.riff-np [data-riff-action="share"]' )
 				.click();
@@ -130,7 +131,7 @@ test.describe( 'Sharing a track', () => {
 		} );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).first().click();
-		await page.locator( '.riff-bar-info' ).click();
+		await openView( page, 'album' );
 		await page.locator( '.riff-np [data-riff-action="share"]' ).click();
 		await expect( page.locator( '.riff-toast' ) ).toBeHidden();
 		expect( await page.evaluate( () => window.copied.length ) ).toBe( 0 );

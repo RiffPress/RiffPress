@@ -2,30 +2,35 @@
 /**
  * Player markup: the docked bar and Now Playing. Hidden until a track is loaded.
  *
- * On a phone, Now Playing is a full screen and a panel such as Up next opens over it; on a wide
- * screen the bar stays, Now Playing is the art on its own, and a panel opens beside the page and
- * Now Playing, from its button in the bar. The wide bar has the seek line under the transport. Controls that appear in more than one place are separate buttons with the same
+ * Now Playing is a view at a time, each taking the whole screen above the bar and opened from its
+ * button at the right of the bar: the album, the cover on its own; the turntable; and any other a
+ * plugin registers, such as the lyrics. Up next is a panel beside the page. The bar's controls and
+ * the views are registered on the server (Riff\Registry) and drawn here, before any script; the
+ * script brings each to life by its id. The wide bar has the seek line under the transport.
+ * Controls that appear in more than one place are separate buttons with the same
  * data-riff-action, and riff.js keeps every copy in step, so no control owns any state.
  *
  * @package Riff
  */
 
 use Riff\Player;
-use Riff\Turntable;
+use Riff\Registry;
 
 defined( 'ABSPATH' ) || exit;
 
-// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Player::icon() returns static SVG shipped with the plugin.
+// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Player::icon() returns static SVG shipped with the plugin, and Registry escapes what it draws.
 ?>
-<div id="riff" class="riff" hidden<?php echo Player::root_style(); ?><?php echo Turntable::on() ? '' : ' data-riff-turntable="off"'; ?>>
+<?php // Now Playing opens to the album, the cover on its own; the turntable is a view of its own (now-playing.js). ?>
+<div id="riff" class="riff" hidden<?php echo Player::root_style(); ?> data-riff-view="album" data-riff-turntable="off">
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
-		<button type="button" class="riff-bar-info" data-riff-action="open" aria-label="<?php esc_attr_e( 'Now Playing', 'riff' ); ?>" aria-haspopup="dialog">
+		<?php // What plays, read and not pressed: the views open from their buttons at the bar's right. ?>
+		<div class="riff-bar-info">
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
 				<span class="riff-title" data-riff-text="title"></span>
 				<span class="riff-sub" data-riff-text="subtitle"></span>
 			</span>
-		</button>
+		</div>
 		<?php // On a wide screen the transport sits in the middle with the seek line under it. ?>
 		<div class="riff-bar-center">
 			<div class="riff-bar-transport">
@@ -49,21 +54,9 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 		</div>
 		<div class="riff-bar-end">
-			<?php // The controls, each added through window.riff.control(), Riff's own as any other's (registry.js). ?>
-			<span class="riff-controls" data-riff-controls></span>
+			<?php // The controls and the views' buttons, each registered on the server, Riff's own as any other's (Riff\Registry). ?>
+			<span class="riff-controls" data-riff-controls><?php echo Registry::bar(); ?></span>
 		</div>
-		<?php /* Riff's own controls, which registry.js takes from here and adds as any plugin adds one: the heart, shown for a track in the Media Library and on a phone beside Play; the badges, which Riff's own listeners fill, such as the format and bit rate; Cast and AirPlay, as music apps put "play on another device"; the volume; and the caret, a second way into Now Playing that a screen reader is not told of, as the bar's title is the one. */ ?>
-		<template class="riff-bar-own">
-			<span class="riff-area" data-riff-own="badges" data-riff-area="badges"></span>
-			<button type="button" class="riff-btn riff-like" data-riff-own="like" data-riff-action="like" aria-label="<?php esc_attr_e( 'Like', 'riff' ); ?>" aria-pressed="false" hidden><?php echo Player::hearts(); ?></button>
-			<button type="button" class="riff-btn" data-riff-own="cast" data-riff-action="cast" aria-label="<?php esc_attr_e( 'Play on another device', 'riff' ); ?>" hidden><?php echo Player::icon( 'cast' ); ?></button>
-			<label class="riff-volume" data-riff-own="volume">
-				<input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="<?php esc_attr_e( 'Volume', 'riff' ); ?>" aria-valuetext="<?php esc_attr_e( '100 percent', 'riff' ); ?>">
-				<?php echo Player::icon( 'volume' ); ?>
-			</label>
-			<i data-riff-own="queue-icon"><?php echo Player::icon( 'queue' ); ?></i>
-			<button type="button" class="riff-btn riff-chevron" data-riff-own="open" data-riff-action="open" aria-hidden="true" tabindex="-1"><?php echo Player::icon( 'caret' ); ?></button>
-		</template>
 	</section>
 
 	<div class="riff-np" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Now Playing', 'riff' ); ?>" hidden>
@@ -92,6 +85,8 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" class="riff-sleeve"><?php esc_html_e( 'Play the record', 'riff' ); ?></button>
 				<video class="riff-video" playsinline preload="metadata"></video>
 			</div>
+			<?php // The screens with a region of their own, such as the lyrics, each in the stage's place while it shows. ?>
+			<?php echo Registry::screens(); ?>
 			<?php /* Where the whole screen is the turntable (riff.css), the deck's own controls on its plinth, as a direct-drive deck has them: start and stop at the front, the two speeds beside it, and the pitch fader at the side, moving the music, the platter, the strobe and the arm together. */ ?>
 			<div class="riff-deck-board" role="group" aria-label="<?php esc_attr_e( 'Turntable', 'riff' ); ?>">
 				<button type="button" class="riff-start" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><span aria-hidden="true"><?php esc_html_e( 'Start · Stop', 'riff' ); ?></span></button>
@@ -130,31 +125,21 @@ defined( 'ABSPATH' ) || exit;
 					<?php foreach ( Player::chips() as $riff_slug => $riff_chip ) : ?>
 						<?php echo Player::control( (string) $riff_slug, $riff_chip, 'riff-chip' ); ?>
 					<?php endforeach; ?>
-					<?php // On a phone, a chip for each panel, such as Up next and Lyrics, which opens it over Now Playing (registry.js); a wide screen has their buttons in the bar. ?>
+					<?php // On a phone, a chip for each view, which opens it from Now Playing; a wide screen has their buttons in the bar. ?>
+					<?php echo Registry::chips(); ?>
 				</div>
 			</div>
 
 		</div>
 	</div>
 
-	<?php /* The panels, each added through window.riff.panel(): Up next, Riff's own, and any a plugin adds, such as Lyrics. One shows at a time, beside the page and Now Playing on a wide screen, over everything on a phone. */ ?>
+	<?php /* The panels beside the page, each a view registered on the server: Up next, Riff's own, and any a plugin adds. One shows at a time, beside the page on a wide screen, over everything on a phone. */ ?>
 	<aside class="riff-side" aria-labelledby="riff-side-title" hidden>
 		<header class="riff-side-head">
 			<h2 class="riff-side-title" id="riff-side-title" tabindex="-1"></h2>
 			<button type="button" class="riff-btn riff-side-close" data-riff-action="close-panel" aria-label="<?php esc_attr_e( 'Close', 'riff' ); ?>"><?php echo Player::icon( 'close' ); ?></button>
 		</header>
-		<div class="riff-panel riff-panel-queue" data-riff-panel="queue" hidden>
-			<header class="riff-queue-head">
-				<div>
-					<p><?php esc_html_e( 'Playing from', 'riff' ); ?></p>
-					<h3 data-riff-text="source"></h3>
-				</div>
-				<button type="button" class="riff-queue-clear" data-riff-action="clear-queue" aria-label="<?php esc_attr_e( 'Clear the queue', 'riff' ); ?>" hidden><?php esc_html_e( 'Clear', 'riff' ); ?></button>
-				<?php // On a phone only: what swiping the bar down does, as a button (WCAG 2.5.7). A computer has no such swipe. ?>
-				<button type="button" class="riff-queue-clear riff-mobile" data-riff-action="dismiss"><?php esc_html_e( 'Close player', 'riff' ); ?></button>
-			</header>
-			<ol class="riff-queue-list" id="riff-queue-list"></ol>
-		</div>
+		<?php echo Registry::panels(); ?>
 	</aside>
 
 	<p class="riff-toast" aria-hidden="true" hidden></p>

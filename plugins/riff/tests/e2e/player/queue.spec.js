@@ -3,7 +3,7 @@
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
-const { openPanel } = require( '../helpers/panels' );
+const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { iosAgent, playerSite } = require( '../helpers/site' );
 
@@ -69,7 +69,7 @@ test.describe( 'Player', () => {
 		const titles = () => page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await expect.poll( titles ).toHaveLength( 3 );
-		await openPanel( page, 'queue' );
+		await openView( page, 'queue' );
 		const list = page.locator( '.riff-queue-list' );
 		await expect( list.locator( 'li' ) ).toHaveCount( 3 );
 
@@ -124,7 +124,7 @@ test.describe( 'Player', () => {
 		page,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await openPanel( page, 'queue' );
+		await openView( page, 'queue' );
 		const list = page.locator( '.riff-queue-list' );
 		await expect( list ).toBeVisible();
 		await expect( list.locator( 'li' ) ).toHaveCount( 3 );
@@ -153,7 +153,7 @@ test.describe( 'Player', () => {
 				0
 			);
 		} );
-		await openPanel( page, 'queue' );
+		await openView( page, 'queue' );
 		const list = page.locator( '.riff-queue-list' );
 		const items = list.locator( 'li' );
 		await expect( items.first() ).toHaveAttribute( 'aria-setsize', '400' );
@@ -205,7 +205,7 @@ test.describe( 'Player', () => {
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
-		await openPanel( page, 'queue' );
+		await openView( page, 'queue' );
 		const bar = page.locator( '.riff-queue-list [aria-current] .riff-row-state i' ).first();
 		await expect( bar ).toBeAttached();
 		// A live reading writes a transform each frame; the keyframes are off while it runs.
@@ -216,7 +216,7 @@ test.describe( 'Player', () => {
 
 	test( 'next, previous, repeat and shuffle', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await page.locator( '.riff-bar-info' ).click();
+		await openView( page, 'album' );
 		await expect( page.locator( '.riff-np' ) ).toBeVisible();
 		const control = ( action ) =>
 			page.locator( `[data-riff-action="${ action }"]:visible` ).first();

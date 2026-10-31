@@ -42,11 +42,14 @@ async function fold( page, size, orientation ) {
 	} );
 }
 
+// Now Playing opened from the album's button, as a listener opens it: unfolded, it opens to the
+// turntable, whatever the listener chose elsewhere, as that is what the shape is for.
 async function nowPlaying( page ) {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await page.locator( '.riff-bar-info' ).click();
+	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
+	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-view', 'turntable' );
 }
 
 test.describe( 'iPhone Duo', () => {

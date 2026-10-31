@@ -1,10 +1,12 @@
 /**
- * Riff Lyrics, end to end: a file whose tags carry lyrics, played in a post, and its Lyrics panel,
- * opened from its button in the bar on a wide screen and from its chip in Now Playing on a phone.
+ * Riff Lyrics, end to end: a file whose tags carry lyrics, played in a post, and its Lyrics view,
+ * which takes the whole screen above the bar, opened from its button in the bar on a wide screen
+ * and from its chip in Now Playing on a phone.
  * Runs in desktop Chromium and at an iPhone's size (see playwright.config.js).
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../../../riff/tests/e2e/helpers/views' );
 const { own } = require( '../../../riff/tests/e2e/helpers/own' );
 
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
@@ -33,22 +35,11 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
-// The Lyrics panel opened as a listener opens it: from the bar on a wide screen, from Now Playing
-// on a phone, where the bar keeps to the track and Play.
-async function openLyrics( page, isMobile ) {
-	if ( isMobile ) {
-		await page.locator( '.riff-bar-info' ).click();
-		await expect( page.locator( '.riff-np' ) ).toBeVisible();
-		await page.locator( '[data-riff-chip="lyrics"]' ).click();
-	} else {
-		await page.locator( '[data-riff-control="lyrics"]' ).click();
-	}
-	const panel = page.locator( '[data-riff-panel="lyrics"]' );
-	await expect( panel ).toBeVisible();
-	return panel;
-}
+// The Lyrics view opened as a listener opens it: from the bar on a wide screen, from Now Playing
+// on a phone, where the bar keeps to the track, Play and the album.
+const openLyrics = ( page ) => openView( page, 'lyrics' );
 
-test( 'the Lyrics panel shows the words from the file, and says so when a track has none', async ( {
+test( 'the Lyrics view shows the words from the file, and says so when a track has none', async ( {
 	page,
 	isMobile,
 } ) => {
@@ -56,27 +47,25 @@ test( 'the Lyrics panel shows the words from the file, and says so when a track 
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	// Signed in, the media route is asked as the account, so a private post's track has its lyrics.
 	const asked = page.waitForRequest( ( r ) => decodeURIComponent( r.url() ).includes( 'wp/v2/media/' ) );
-	const panel = await openLyrics( page, isMobile );
-	await expect( page.locator( '.riff-side-title' ) ).toHaveText( 'Lyrics' );
+	const panel = await openLyrics( page );
+	await expect( panel ).toHaveAttribute( 'aria-label', 'Lyrics' );
+	await expect( page.locator( '.riff-stage' ) ).toBeHidden();
 	if ( ! isMobile ) {
 		await expect( page.locator( '[data-riff-control="lyrics"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
 	}
 	await expect( panel.locator( '.riff-lyrics' ) ).toHaveText( /First line\s+Second line/ );
 	expect( ( await asked ).headers()[ 'x-wp-nonce' ] ).toBeTruthy();
 
-	// The next track has no lyrics; the open panel follows the track.
+	// The next track has no lyrics; the open view follows the track.
 	await page.evaluate( () => window.riff.next() );
 	await expect( panel.locator( '.riff-lyrics-note' ) ).toHaveText( 'No lyrics for this track.' );
 } );
 
-test( 'timed lyrics follow the music, and a tap on a line seeks to it', async ( {
-	page,
-	isMobile,
-} ) => {
+test( 'timed lyrics follow the music, and a tap on a line seeks to it', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 2 ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
-	const panel = await openLyrics( page, isMobile );
+	const panel = await openLyrics( page );
 	const lines = panel.locator( '.riff-lyrics-synced li' );
 	// The lines, without their times, each a button; the blank line is a gap before the third.
 	await expect( lines ).toHaveText( [ 'First line', 'Second line', 'Third line' ] );
@@ -102,14 +91,11 @@ test( 'timed lyrics follow the music, and a tap on a line seeks to it', async ( 
 	await expect( panel.locator( '.riff-lyrics-synced' ) ).toHaveCount( 0 );
 } );
 
-test( 'timed lyrics are text a screen reader reads as a list, with nothing to switch', async ( {
-	page,
-	isMobile,
-} ) => {
+test( 'timed lyrics are text a screen reader reads as a list, with nothing to switch', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 2 ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
-	const panel = await openLyrics( page, isMobile );
+	const panel = await openLyrics( page );
 	await expect( panel.getByRole( 'list' ) ).toBeVisible();
 	await expect( panel.getByRole( 'listitem' ) ).toHaveText( [ 'First line', 'Second line', 'Third line' ] );
 	await expect( panel.getByRole( 'button', { name: /Show as text|Follow the music/ } ) ).toHaveCount( 0 );

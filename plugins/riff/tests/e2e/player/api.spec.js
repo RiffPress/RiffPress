@@ -98,7 +98,7 @@ test.describe( 'Player', () => {
 			queue: 3,
 			playing: true,
 			// What docs/javascript.md promises, and nothing more.
-			members: [ 'close', 'closePanel', 'control', 'current', 'next', 'on', 'open', 'openPanel', 'panel', 'play', 'playing', 'prev', 'queue', 'seek', 'time', 'toggle', 'version' ],
+			members: [ 'close', 'closeView', 'control', 'current', 'next', 'on', 'open', 'openView', 'play', 'playing', 'prev', 'queue', 'seek', 'time', 'toggle', 'version', 'view' ],
 		} );
 		await page.evaluate( () => window.riff.next() );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(

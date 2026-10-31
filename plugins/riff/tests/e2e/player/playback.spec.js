@@ -3,7 +3,7 @@
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
-const { openPanel } = require( '../helpers/panels' );
+const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { audioState, playerSite } = require( '../helpers/site' );
 
@@ -156,7 +156,7 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '#a11y-speak-polite' ) ).toContainText(
 			/^Now playing Underground by Airmen of Note/
 		);
-		await openPanel( page, 'queue' );
+		await openView( page, 'queue' );
 		// Each row of Up next is named with its artist, as a post's rows are, rather than its title
 		// and artist read run together; the playing one offers Pause.
 		const rows = page.locator( '.riff-queue-list li > button:first-child' );

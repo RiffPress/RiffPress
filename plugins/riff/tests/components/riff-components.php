@@ -330,3 +330,23 @@ if ( ! empty( $_COOKIE['riff_test_no_turntable'] ) ) {
  */
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
 add_filter( 'riff_video_first', static fn() => ! empty( $_COOKIE['riff_test_video_first'] ) );
+
+/*
+ * A control registered on the server, as a plugin registers one, while the browser carries the
+ * riff_test_control cookie: the page has it before any script, and its script gives it its press.
+ * Loaded only on the tests site.
+ */
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
+if ( ! empty( $_COOKIE['riff_test_control'] ) ) {
+	add_action(
+		'riff_register',
+		static fn() => riff_register_control(
+			'e2e-server',
+			array(
+				'label' => 'Server control',
+				'icon'  => 'share',
+				'order' => 66,
+			)
+		)
+	);
+}
