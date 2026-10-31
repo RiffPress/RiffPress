@@ -150,6 +150,9 @@ final class Player {
 		// On a Listen page the module is the content. Elsewhere it is the bar at the foot of the
 		// page, which can wait: fetched at low priority and printed in the footer, so it never
 		// competes with the post's own images for the first paint.
+		// On a Listen page the app is a static dependency too, though riff.js still imports it
+		// when it starts: core preloads it and its modules with the player's, in one wave, rather
+		// than each wave asking only once the one before has run. Elsewhere it is never preloaded.
 		wp_enqueue_script_module(
 			'riff',
 			RIFF_URL . 'assets/riff.js',
@@ -158,7 +161,7 @@ final class Player {
 				array(
 					array(
 						'id'     => 'riff-app',
-						'import' => 'dynamic',
+						'import' => $listen ? 'static' : 'dynamic',
 					),
 				)
 			),
