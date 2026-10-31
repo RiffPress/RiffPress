@@ -301,9 +301,9 @@ final class Protected_Files {
 			return $text;
 		}
 		// The longest first, so a shorter address is not found at the start of a longer one.
-		$froms = array_map( 'strval', array_keys( $addresses ) );
-		usort( $froms, static fn( $a, $b ) => strlen( $b ) <=> strlen( $a ) );
-		$pattern = '/(?:' . implode( '|', array_map( static fn( $from ) => preg_quote( $from, '/' ), $froms ) ) . ')(?![0-9])/';
+		$olds = array_map( 'strval', array_keys( $addresses ) );
+		usort( $olds, static fn( $a, $b ) => strlen( $b ) <=> strlen( $a ) );
+		$pattern = '/(?:' . implode( '|', array_map( static fn( $from ) => preg_quote( $from, '/' ), $olds ) ) . ')(?![0-9])/';
 		return (string) preg_replace_callback( $pattern, static fn( $m ) => (string) $addresses[ $m[0] ], $text );
 	}
 }
