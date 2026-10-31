@@ -262,6 +262,43 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertMatchesRegularExpression( '#data-riff-shelf="recent"[^>]*hidden#', $none );
 	}
 
+	public function test_a_visitors_history_is_drawn_by_the_server_leaving_out_what_is_gone(): void {
+		list( $post, $page ) = $this->library_and_page();
+		$track               = (int) get_posts(
+			array(
+				'post_type'   => 'attachment',
+				'post_parent' => $post,
+				'fields'      => 'ids',
+			)
+		)[0];
+		$gone                = self::attach( '03 - Trombone Detritus [detritus].mp3', $post );
+		wp_delete_attachment( $gone, true );
+		do_action( 'rest_api_init' );
+		wp_set_current_user( 0 );
+
+		$request = new WP_REST_Request( 'GET', '/riff/v1/played' );
+		$request->set_query_params(
+			array(
+				// The deleted track first, so the one left keeps its own place in the history.
+				'items' => "$gone:$post,$track:$post,$track:999999",
+				'page'  => get_permalink( $page ),
+			)
+		);
+		$response = rest_do_request( $request );
+		$this->assertSame( 200, $response->get_status() );
+		$data = $response->get_data();
+
+		$this->assertSame( 1, substr_count( $data['jump'], 'class="riff-card' ), 'the post it played from, once' );
+		$this->assertMatchesRegularExpression( '#href="[^"]*riff=' . $post . '"#', $data['jump'] );
+		$this->assertSame( 2, substr_count( $data['recent'], 'class="riff-card' ), 'not the deleted track' );
+		$this->assertStringContainsString( 'data-riff-app-action="play-history" data-riff-index="1"', $data['recent'], 'played by its place in the history' );
+		$this->assertStringContainsString( 'data-riff-index="2"', $data['recent'] );
+		$this->assertStringNotContainsString( 'riff=999999', $data['recent'], 'a post that is gone opens nothing' );
+
+		$request->set_param( 'page', 'https://elsewhere.example/listen/' );
+		$this->assertSame( 400, rest_do_request( $request )->get_status(), 'a card only ever links to this site' );
+	}
+
 	public function test_an_old_link_to_a_later_page_of_posts_still_opens_them(): void {
 		$this->library_of( 25 );
 		$_GET[ App::PAGE_QUERY ] = '2';
