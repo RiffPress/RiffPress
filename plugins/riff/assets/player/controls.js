@@ -14,10 +14,22 @@ export function controls( P ) {
 
 	P.shortcutsOn = P.data.shortcuts === true;
 	P.captionsOn = read( localStorage, P.CAPTIONS ) === 'on';
+	// A song that has a video opens as the video, as the site has it, unless the listener chose
+	// the song, or saves data; a choice of theirs is kept for the next.
+	P.opening = () => {
+		const chosen = read( localStorage, P.MODE );
+		if ( chosen === 'song' || chosen === 'video' ) {
+			return chosen;
+		}
+		return P.data.video !== false && ! navigator.connection?.saveData
+			? 'video'
+			: 'song';
+	};
 
 	root.addEventListener( 'click', ( e ) => {
 		const mode = e.target.closest( '[data-riff-mode]' );
 		if ( mode ) {
+			write( localStorage, P.MODE, mode.dataset.riffMode );
 			P.setMode( mode.dataset.riffMode );
 			return;
 		}

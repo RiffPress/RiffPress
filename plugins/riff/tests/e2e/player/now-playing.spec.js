@@ -171,33 +171,35 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '[data-riff-chip="queue"]' ) ).toBeFocused();
 	} );
 
-	test( 'a track with a video switches to it without losing its place', async ( {
+	test( 'a song with a video opens as the video, the song keeps its place, and the choice is kept', async ( {
 		page,
+		context,
+		baseURL,
 	} ) => {
+		// As on any site but the tests site, where the song comes first (tests/components).
+		await context.addCookies( [ { name: 'riff_test_video_first', value: '1', url: baseURL } ] );
+		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.locator( '.riff-bar-info' ).click();
-		const modes = page.locator( '.riff-modes' );
-		await expect( modes ).toBeVisible();
+		await expect( page.locator( '.riff-modes' ) ).toBeVisible();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'video' );
 		await expect
-			.poll( async () => ( await audioState( page ) ).time )
+			.poll( async () => ( await audioState( page ) ).videoTime )
 			.toBeGreaterThan( 1 );
 		const before = await audioState( page );
-		await page.locator( '[data-riff-mode="video"]' ).click();
-		await expect( page.locator( '#riff' ) ).toHaveAttribute(
-			'data-mode',
-			'video'
-		);
-		await expect
-			.poll( async () => ( await audioState( page ) ).videoPaused )
-			.toBe( false );
-		const after = await audioState( page );
-		expect( after.paused ).toBe( true );
-		expect( after.videoTime ).toBeGreaterThanOrEqual( before.time - 0.5 );
+		expect( before.videoPaused ).toBe( false );
 		await page.locator( '[data-riff-mode="song"]' ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'song' );
 		await expect
 			.poll( async () => ( await audioState( page ) ).paused )
 			.toBe( false );
-		expect( ( await audioState( page ) ).videoPaused ).toBe( true );
+		const after = await audioState( page );
+		expect( after.videoPaused ).toBe( true );
+		expect( after.time ).toBeGreaterThanOrEqual( before.videoTime - 0.5 );
+		// The listener chose the song: the next song with a video opens as the song.
+		await page.keyboard.press( 'Escape' );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'song' );
 	} );
 
 	test( 'a track without a video has no switch', async ( { page } ) => {

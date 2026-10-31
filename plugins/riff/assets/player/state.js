@@ -42,6 +42,8 @@ export function createPlayer( root, data ) {
 		SHARED: 'riff_track',
 		VOLUME: 'riff:volume',
 		CAPTIONS: 'riff:captions',
+		// Song or video, for a song that has both, as the listener last chose it.
+		MODE: 'riff:mode',
 		reduce: () =>
 			window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches,
 		// Whether the page is out of sight, so nothing is drawn for no one: hidden, or in the

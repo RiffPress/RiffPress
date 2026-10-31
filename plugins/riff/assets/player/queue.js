@@ -58,7 +58,7 @@ export function queue( P ) {
 		if ( P.shuffle ) {
 			reshuffle();
 		}
-		P.mode = 'song';
+		P.mode = P.opening();
 		P.load( { play, at } );
 	}
 

@@ -238,6 +238,15 @@ final class Player {
 			'cookiePath' => COOKIEPATH,
 			// A post's tracks, which the record in Now Playing cuts its grooves from.
 			'library'    => rest_url( 'riff/v1/library/' ),
+			/**
+			 * Whether a song that has a video opens as the video. A listener's own choice of the
+			 * song or the video, and a browser that saves data, come first.
+			 *
+			 * @since 5.8.0
+			 *
+			 * @param bool $video True to open as the video, false for the song.
+			 */
+			'video'      => (bool) apply_filters( 'riff_video_first', true ),
 		);
 		// What Riff's own features add for the script: the Listen app's address, the listener's
 		// likes and playlists, whether they have the single-key shortcuts, where they share what
