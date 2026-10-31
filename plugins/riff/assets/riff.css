@@ -284,27 +284,58 @@ div.riff-row-locked {
 	font-variant-numeric: tabular-nums;
 }
 
+/* The tier's colour, as a colour, so a change of tier moves the words
+   and the light under them to the new one rather than switching at once. */
+@property --riff-quality-ink {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #c9d3db;
+}
+
+/* How far the light under the words reaches: low along the lower edge at
+   rest, filling the well under a pointer. */
+@property --riff-quality-lift {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 0%;
+}
+
 /* The quality: a capsule pressed into the bar, its well
-   dark and lit faintly from inside, a bevel catching the light along its
-   lower edge, and the words glowing softly in the colour of the tier
-   (paint.js): pale for a lossy file, green at CD quality, gold past it. */
+   dark at the top and lit from below, as a lamp under smoked glass, a bevel
+   catching the light round its rim, and the words glowing in the colour of
+   the tier (paint.js): pale for a lossy file, green at CD quality, amber past
+   it. */
 .riff-quality {
 	--riff-quality-ink: #c9d3db;
-	height: 40px;
-	padding: 0 18px;
+	height: 42px;
+	padding: 0 22px;
 	border: 2px solid #000;
-	background: radial-gradient(70% 90% at 50% 62%, color-mix(in srgb, var(--riff-quality-ink) 24%, #090c0b), color-mix(in srgb, var(--riff-quality-ink) 7%, #070908) 62%, #040505);
+	background: radial-gradient(calc(70% + var(--riff-quality-lift)) calc(80% + var(--riff-quality-lift)) at 50% 100%, color-mix(in srgb, var(--riff-quality-ink) calc(30% + var(--riff-quality-lift) / 2), #0b0a08), color-mix(in srgb, var(--riff-quality-ink) calc(10% + var(--riff-quality-lift) / 3), #0a0a09) calc(55% + var(--riff-quality-lift) / 2), #080808 92%);
 	box-shadow:
-		inset 0 3px 6px rgb(0 0 0 / 0.8),
-		inset 0 -1px 1px rgb(255 255 255 / 0.05),
-		0 0 0 1px rgb(255 255 255 / 0.1),
-		0 -1px 0 1px rgb(255 255 255 / 0.06),
-		0 2px 4px rgb(0 0 0 / 0.5);
+		inset 0 4px 8px rgb(0 0 0 / 0.85),
+		inset 0 -1px 1px color-mix(in srgb, var(--riff-quality-ink) 18%, transparent),
+		0 0 0 1px rgb(255 255 255 / 0.09),
+		0 -1px 0 1px rgb(255 255 255 / 0.05),
+		0 2px 5px rgb(0 0 0 / 0.55);
 	color: var(--riff-quality-ink);
-	font-size: 13.5px;
-	font-weight: 350;
-	letter-spacing: 0.015em;
-	text-shadow: 0 0 6px color-mix(in srgb, var(--riff-quality-ink) 45%, transparent);
+	font-size: 14px;
+	font-weight: 400;
+	letter-spacing: 0.01em;
+	text-shadow: 0 0 8px color-mix(in srgb, var(--riff-quality-ink) 55%, transparent);
+	transition:
+		--riff-quality-ink 0.4s ease,
+		--riff-quality-lift 0.25s ease;
+}
+
+.riff-quality:hover {
+	--riff-quality-lift: 32%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.riff-quality {
+		transition: none;
+	}
 }
 
 /* a lossy file's capsule is lit less: no glow round its words */
@@ -317,7 +348,7 @@ div.riff-row-locked {
 }
 
 .riff-quality-hires {
-	--riff-quality-ink: #f0c56a;
+	--riff-quality-ink: #f2b844;
 }
 
 .riff-bar-end .riff-area {

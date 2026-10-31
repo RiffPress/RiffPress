@@ -262,15 +262,25 @@ export function paint( P ) {
 		}
 		areasKey = key;
 		for ( const area of $$( '[data-riff-area="badges"]' ) ) {
+			// A badge that stays is the same pill with new words, so its colour moves to the new
+			// tier (riff.css) and the words fade in, rather than a new pill appearing in its place.
+			const was = new Map(
+				[ ...area.children ].map( ( el ) => [ el.dataset.riffBadge, el ] )
+			);
 			area.replaceChildren(
 				...badges.map( ( b ) => {
-					const pill = document.createElement( 'span' );
+					const kept = was.get( b.id );
+					const pill = kept || document.createElement( 'span' );
+					const changed = kept && kept.dataset.riffText !== b.text;
+					pill.dataset.riffBadge = b.id;
+					pill.dataset.riffText = b.text;
 					// The quality pill keeps the class its styles and tests know it by, and is coloured
 					// by its tier.
 					pill.className = `riff-badge riff-badge-${ b.id }${
 						b.id === 'quality' ? ` riff-quality riff-quality-${ P.tier( t ) }` : ''
 					}`;
-					pill.textContent = b.text;
+					pill.removeAttribute( 'title' );
+					pill.innerHTML = `<span>${ esc( b.text ) }</span>`;
 					if ( b.label ) {
 						// The title is for a pointer; the words are for everyone else, read in
 						// place of the short text.
@@ -278,6 +288,15 @@ export function paint( P ) {
 						pill.innerHTML = `<span aria-hidden="true">${ esc(
 							b.text
 						) }</span><span class="riff-app-sr">${ esc( b.label ) }</span>`;
+					}
+					if ( changed && ! P.reduce() ) {
+						pill.firstElementChild.animate(
+							[
+								{ opacity: 0, transform: 'translateY(3px)' },
+								{ opacity: 1, transform: 'none' },
+							],
+							{ duration: 240, easing: 'ease-out' }
+						);
 					}
 					return pill;
 				} )
