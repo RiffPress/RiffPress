@@ -71,7 +71,11 @@ export function start( api ) {
 			.split( ',' )
 			.filter( Boolean ),
 		tracksRest: app.dataset.riffTracksRest || '',
-		desktop: document.documentElement.classList.contains( 'riff-desktop' ),
+		// The frame is built wherever it may show, as a window with a mouse can widen into it; the
+		// document's riff-desktop says when it does (templates/standalone.php).
+		desktop:
+			document.documentElement.classList.contains( 'riff-desktop' ) ||
+			window.matchMedia( '(hover: hover) and (pointer: fine)' ).matches,
 		__,
 		_n,
 		tell,

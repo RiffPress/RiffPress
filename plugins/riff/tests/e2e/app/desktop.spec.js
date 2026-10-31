@@ -34,6 +34,21 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-view' ) ).toHaveCSS( 'border-top-left-radius', '8px' );
 	} );
 
+	test( 'a narrow window with a mouse, as a car\'s screen is, keeps the touch layout without the frame, and gets the frame once it is wide enough', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'A mouse is a computer\'s.' );
+		await page.setViewportSize( { width: 860, height: 500 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+		await expect( page.locator( 'html' ) ).not.toHaveClass( /\briff-desktop\b/ );
+		await expect( page.locator( '.riff-app-titlebar' ) ).toBeHidden();
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-desktop\b/ );
+		await expect( page.locator( '.riff-app-titlebar [data-riff-app-action="back"]' ) ).toBeVisible();
+	} );
+
 	test( 'on a computer the strip has back and forward at its left end, Home and search in its middle and who is listening at its right, reached in that order', async ( {
 		page,
 		isMobile,
