@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.4.0...riff-sign-in-v0.4.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* **sign-in:** the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service ([#766](https://github.com/RiffPress/RiffPress/issues/766)) ([b8c1fd6](https://github.com/RiffPress/RiffPress/commit/b8c1fd6199daf48a5c7ec156d0279f3ab62a16e3))
+
 ## [0.4.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.3.0...riff-sign-in-v0.4.0) (2026-10-30)
 
 

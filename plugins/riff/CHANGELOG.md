@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.8.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.7.0...riff-v5.8.0) (2026-10-31)
+
+
+### Features
+
+* **app:** on a computer the strip across the top has back and forward at its left end, Home and search centred as one group and who is listening at its right, reached by the keyboard in that order ([#763](https://github.com/RiffPress/RiffPress/issues/763)) ([0584f52](https://github.com/RiffPress/RiffPress/commit/0584f5214248828579b730a978a16bb75d34b583))
+* **player:** follow another listener, in time with them, and share what you play only if you choose ([#768](https://github.com/RiffPress/RiffPress/issues/768)) ([5b3e2f5](https://github.com/RiffPress/RiffPress/commit/5b3e2f5819883a30d440e2c6d7b8abe7ab91e59f))
+
+
+### Bug Fixes
+
+* **sign-in:** the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service ([#766](https://github.com/RiffPress/RiffPress/issues/766)) ([b8c1fd6](https://github.com/RiffPress/RiffPress/commit/b8c1fd6199daf48a5c7ec156d0279f3ab62a16e3))
+
+
+### Performance Improvements
+
+* a library of tens of thousands of tracks loads, lists, plays and imports at the pace of a small one ([#765](https://github.com/RiffPress/RiffPress/issues/765)) ([fa0a5f7](https://github.com/RiffPress/RiffPress/commit/fa0a5f7b7d4dd79057d95186da9c9c6e8bff266a))
+* **app:** a first visit to a Listen page loads the app in one wave, and the quality capsule is lit as Tidal's is ([#767](https://github.com/RiffPress/RiffPress/issues/767)) ([71e994e](https://github.com/RiffPress/RiffPress/commit/71e994eff8cd26dc682167f45401a7f958ddeb01))
+
 ## [5.7.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.6.1...riff-v5.7.0) (2026-10-30)
 
 

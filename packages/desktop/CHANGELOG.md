@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.5.0...riff-desktop-v0.6.0) (2026-10-31)
+
+
+### Features
+
+* **app:** on a computer the strip across the top has back and forward at its left end, Home and search centred as one group and who is listening at its right, reached by the keyboard in that order ([#763](https://github.com/RiffPress/RiffPress/issues/763)) ([0584f52](https://github.com/RiffPress/RiffPress/commit/0584f5214248828579b730a978a16bb75d34b583))
+
+
+### Performance Improvements
+
+* a library of tens of thousands of tracks loads, lists, plays and imports at the pace of a small one ([#765](https://github.com/RiffPress/RiffPress/issues/765)) ([fa0a5f7](https://github.com/RiffPress/RiffPress/commit/fa0a5f7b7d4dd79057d95186da9c9c6e8bff266a))
+
 ## [0.5.0](https://github.com/RiffPress/RiffPress/compare/riff-desktop-v0.4.0...riff-desktop-v0.5.0) (2026-10-24)
 
 
