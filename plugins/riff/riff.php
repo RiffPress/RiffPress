@@ -46,4 +46,8 @@ spl_autoload_register(
 	}
 );
 
+// The extensions Riff ships (extensions.json), loaded now, as WordPress is loading plugins, so each
+// is in place before plugins_loaded as if it were installed beside Riff.
+Riff\Extensions::load();
+
 add_action( 'plugins_loaded', array( Riff\Plugin::class, 'boot' ) );

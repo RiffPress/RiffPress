@@ -63,6 +63,8 @@ tests_add_filter(
 				return $dirs;
 			}
 		);
+		// Riff's own extensions are loaded by the tests that need them, so Riff's tests see Riff alone.
+		add_filter( 'riff_extensions', '__return_empty_array' );
 		require dirname( __DIR__, 2 ) . '/riff.php';
 		// The reference extension next to it, tested in the same suite against the same Riff. Only
 		// its class loads here; its own tests hook it in, so Riff's tests see Riff alone.

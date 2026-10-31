@@ -22,6 +22,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// Riff ships this plugin as an extension too (Riff's extensions.json): once loaded, from either,
+// it is not loaded again, as when WordPress activates this copy while Riff's is running.
+if ( defined( 'RIFF_LYRICS_VERSION' ) ) {
+	return;
+}
+
 define( 'RIFF_LYRICS_VERSION', '1.4.0' );
 define( 'RIFF_LYRICS_URL', plugin_dir_url( __FILE__ ) );
 

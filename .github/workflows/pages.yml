@@ -74,8 +74,7 @@ jobs:
       - name: Build riff.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff
-          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          bash .github/scripts/build-riff.sh
           (cd build && zip -qr riff.zip riff/)
           test -f build/riff/riff.php
           find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
