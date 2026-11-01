@@ -1,7 +1,7 @@
 /* The queue: set from a post's rows or a script, changed while it plays (play next, add, move,
  * remove, clear) with the track playing keeping its place so nothing restarts, shuffled, and drawn
  * as Up next. */
-import { fmt, esc, speak, rowArt, time } from 'riff-player/helpers';
+import { fmt, esc, speak, rowArt, time, PAUSE } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -253,9 +253,13 @@ export function queue( P ) {
 		li.innerHTML =
 			'<button type="button">' +
 			rowArt( t ) +
+			// Named as a post's row is, by what it shows; paint() makes the verb Pause on the one playing.
+			`<span class="riff-app-sr riff-row-verb">${ esc(
+				__( 'Play', 'riff' )
+			) }</span>` +
 			`<span class="riff-row-text"><span class="riff-row-title"${ P.langAttr( t ) }>${ esc(
 				t.title
-			) }</span>` +
+			) }</span>${ PAUSE }` +
 			`<span class="riff-row-sub">${ esc(
 				t.artist || t.post?.title || ''
 			) }` +
@@ -264,7 +268,7 @@ export function queue( P ) {
 				: '' ) +
 			'</span></span>' +
 			`<span class="riff-row-time">${
-				t.duration ? time( t.duration ) : ''
+				t.duration ? PAUSE + time( t.duration ) : ''
 			}</span>` +
 			'</button>';
 		li.firstElementChild.addEventListener( 'click', () => {

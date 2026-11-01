@@ -25,11 +25,11 @@ test.describe( 'The tree is the spec', () => {
 	} );
 
 	test( 'a post\'s rows, before anything plays', async ( { page } ) => {
-		// The row is one button named for the track, its text and the film mark inside it; the
+		// The row is one button named by its text after a hidden Play, the film mark inside it; the
 		// heart and the … follow it, each named for the track too.
 		await expect( page.locator( '.wp-block-audio' ).first() ).toMatchAriaSnapshot( `
 			- figure:
-			  - button "Play Intensities in Ten Cities":
+			  - button /^Play Intensities in Ten Cities\\b/:
 			    - text: Intensities in Ten Cities
 			    - img "Video"
 			    - text: /Airmen of Note/
@@ -43,12 +43,12 @@ test.describe( 'The tree is the spec', () => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect.poll( () => page.evaluate( () => window.riff.playing() ) ).toBe( true );
 		await expect( page.locator( '.wp-block-audio' ).nth( 1 ).locator( '.riff-row' ) ).toMatchAriaSnapshot( `
-			- button "Pause Underground"
+			- button /^Pause Underground\\b/
 		` );
 		if ( isMobile ) {
 			await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 				- region "Player":
-				  - 'button "Now Playing: Underground by Airmen of Note, United States Air Force Band"'
+				  - button /^Now Playing\\s*,\\s*Underground\\s*,\\s*Airmen of Note, United States Air Force Band/
 				  - button "Pause"
 				  - slider "Track position"
 				  - button "Like Underground"
@@ -61,7 +61,7 @@ test.describe( 'The tree is the spec', () => {
 		// the volume as a percentage.
 		await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 			- region "Player":
-			  - 'button "Now Playing: Underground by Airmen of Note, United States Air Force Band"'
+			  - button /^Now Playing\\s*,\\s*Underground\\s*,\\s*Airmen of Note, United States Air Force Band/
 			  - button "Shuffle"
 			  - button "Previous"
 			  - button "Pause"
@@ -84,7 +84,7 @@ test.describe( 'The tree is the spec', () => {
 			await page.locator( '.riff-peek' ).click();
 		}
 		// A dialog named Now Playing; Up next is a region with the tabs and the queue, each row
-		// named for what it plays, with the artist, the playing one offering Pause, and the …
+		// named by what it shows after a hidden Play, the playing one offering Pause, and the …
 		// after each.
 		await expect( page.locator( '.riff-np' ) ).toMatchAriaSnapshot( `
 			- dialog "Now Playing":
@@ -98,13 +98,13 @@ test.describe( 'The tree is the spec', () => {
 			      - button "Clear the queue"
 			      - list:
 			        - listitem:
-			          - 'button "Play Intensities in Ten Cities by Airmen of Note, United States Air Force Band"'
+			          - button /^Play Intensities in Ten Cities\\s*,\\s*Airmen of Note, United States Air Force Band/
 			          - button "More options for Intensities in Ten Cities"
 			        - listitem:
-			          - 'button "Pause Underground by Airmen of Note, United States Air Force Band"'
+			          - button /^Pause Underground\\s*,\\s*Airmen of Note, United States Air Force Band/
 			          - button "More options for Underground"
 			        - listitem:
-			          - 'button "Play Trombone Detritus by Airmen of Note, United States Air Force Band"'
+			          - button /^Play Trombone Detritus\\s*,\\s*Airmen of Note, United States Air Force Band/
 			          - button "More options for Trombone Detritus"
 		` );
 	} );

@@ -19,10 +19,12 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div id="riff" class="riff" hidden<?php echo Player::root_style(); ?>>
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
-		<button type="button" class="riff-bar-info" data-riff-action="open" aria-label="<?php esc_attr_e( 'Now Playing', 'riff' ); ?>" aria-haspopup="dialog">
+		<?php // Named by the track it shows, after a word only a screen reader hears; "dialog pop up" already says it opens. The chevron beside it does the same and is left out of the tree, so it is heard once. ?>
+		<button type="button" class="riff-bar-info" data-riff-action="open" aria-haspopup="dialog">
+			<span class="riff-app-sr"><?php esc_html_e( 'Now Playing', 'riff' ); ?>, </span>
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
-				<span class="riff-title" data-riff-text="title"></span>
+				<span class="riff-title" data-riff-text="title"></span><span class="riff-app-sr">, </span>
 				<span class="riff-sub" data-riff-text="subtitle"></span>
 			</span>
 		</button>
@@ -149,8 +151,9 @@ defined( 'ABSPATH' ) || exit;
 
 			<section class="riff-queue" id="riff-queue" aria-labelledby="riff-queue-tab">
 				<?php /* A phone sees a handle and the source; a wide screen sees a tab. Both open the same list. */ ?>
-				<button type="button" class="riff-peek" data-riff-action="queue" aria-expanded="false" aria-controls="riff-queue-list" aria-label="<?php esc_attr_e( 'Up next', 'riff' ); ?>">
+				<button type="button" class="riff-peek" data-riff-action="queue" aria-expanded="false" aria-controls="riff-queue-list">
 					<i class="riff-handle" aria-hidden="true"></i>
+					<span class="riff-app-sr"><?php esc_html_e( 'Up next', 'riff' ); ?>, </span>
 					<span data-riff-text="source"></span>
 				</button>
 				<?php $riff_tabs = Player::tabs(); ?>

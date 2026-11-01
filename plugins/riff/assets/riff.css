@@ -2288,8 +2288,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	background: var(--riff-surface);
 }
 
-.riff-np[data-sheet="half"] .riff-peek span,
-.riff-np[data-sheet="full"] .riff-peek span {
+.riff-np[data-sheet="half"] .riff-peek span:not(.riff-app-sr),
+.riff-np[data-sheet="full"] .riff-peek span:not(.riff-app-sr) {
 	display: none;
 }
 
@@ -3108,7 +3108,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
-/* Words for a screen reader only: a badge's label, the search's count. */
+/* Words for a screen reader only: a badge's label, the search's count, the
+   Play before a row's title and the pauses between what it shows. */
 .riff-app-sr {
 	position: absolute;
 	width: 1px;

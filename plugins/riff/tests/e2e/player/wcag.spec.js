@@ -118,7 +118,7 @@ test( 'nothing plays until the listener presses Play, a reload included (1.4.2)'
 test( 'Now Playing is opened by one button named for the track; the chevron beside it is not heard', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-label', /^Now Playing: Underground by Airmen of Note/ );
+	await expect( page.locator( '.riff-bar-info' ) ).toHaveAccessibleName( /^Now Playing\s*,\s*Underground\s*,\s*Airmen of Note/ );
 	await expect( page.locator( '.riff-bar .riff-chevron' ) ).toHaveAttribute( 'aria-hidden', 'true' );
 	await expect( page.locator( '.riff-bar .riff-chevron' ) ).toHaveAttribute( 'tabindex', '-1' );
 } );
