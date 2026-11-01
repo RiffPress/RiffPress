@@ -48,8 +48,8 @@
     "docs:changelog:check": "node .github/scripts/readme-changelog.js --check"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.47.0",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "@wordpress/e2e-test-utils-playwright": "^3.1.0",
     "@wordpress/env": "^11.16.0",
     "@wordpress/scripts": "^36.1.0",
