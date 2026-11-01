@@ -259,10 +259,10 @@ export function queue( P ) {
 			) }</span>` +
 			`<span class="riff-row-text"><span class="riff-row-title"${ P.langAttr( t ) }>${ esc(
 				t.title
-			) }</span>${ PAUSE }` +
-			`<span class="riff-row-sub">${ esc(
-				t.artist || t.post?.title || ''
-			) }` +
+			) }</span>` +
+			`<span class="riff-row-sub">${
+				t.artist || t.post?.title ? PAUSE : ''
+			}${ esc( t.artist || t.post?.title || '' ) }` +
 			( t.duration
 				? `<span class="riff-row-dot"> • ${ time( t.duration ) }</span>`
 				: '' ) +

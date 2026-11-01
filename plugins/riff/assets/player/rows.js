@@ -116,8 +116,9 @@ export function rows( P ) {
 			`<span class="riff-app-sr riff-row-verb">${ esc( verb ) }</span>` +
 			`<span class="riff-row-text"><span class="riff-row-title"${ langAttr( t ) }>${ esc(
 				t.title
-			) }${ P.videoMark( t ) }</span>${ PAUSE }` +
-			`<span class="riff-row-sub">${ esc(
+			) }${ P.videoMark( t ) }</span>` +
+			// The pause sits inside the line it comes before, so a view that hides that line hides it.
+			`<span class="riff-row-sub">${ subtitle( t ) ? PAUSE : '' }${ esc(
 				subtitle( t )
 			) }</span></span>` +
 			`<span class="riff-row-time">${ t.duration ? PAUSE : '' }${

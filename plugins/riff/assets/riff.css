@@ -2228,7 +2228,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	padding: 0;
 }
 
+/* Positioned, so its hidden words stay inside the list as it scrolls. */
 #riff .riff-queue-list button {
+	position: relative;
 	display: grid;
 	grid-template-columns: 48px minmax(0, 1fr);
 	align-items: center;
