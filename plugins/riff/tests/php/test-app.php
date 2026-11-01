@@ -288,9 +288,9 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertSame( 200, $response->get_status() );
 		$data = $response->get_data();
 
-		$this->assertSame( 1, substr_count( $data['jump'], 'class="riff-card' ), 'the post it played from, once' );
+		$this->assertSame( 1, preg_match_all( '#class="riff-card[ "]#', $data['jump'] ), 'the post it played from, once' );
 		$this->assertMatchesRegularExpression( '#href="[^"]*riff=' . $post . '"#', $data['jump'] );
-		$this->assertSame( 2, substr_count( $data['recent'], 'class="riff-card' ), 'not the deleted track' );
+		$this->assertSame( 2, preg_match_all( '#class="riff-card[ "]#', $data['recent'] ), 'not the deleted track' );
 		$this->assertStringContainsString( 'data-riff-app-action="play-history" data-riff-index="1"', $data['recent'], 'played by its place in the history' );
 		$this->assertStringContainsString( 'data-riff-index="2"', $data['recent'] );
 		$this->assertStringNotContainsString( 'riff=999999', $data['recent'], 'a post that is gone opens nothing' );
@@ -350,6 +350,21 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertStringContainsString( '<div class="riff-card" id="riff-page-2" data-riff-post="' . $posts[0] . '">', $html, 'Load more lands on the first new card' );
 		$this->assertStringContainsString( 'data-riff-page="2" data-riff-pages="2"', $html );
 		$this->assertStringNotContainsString( 'data-riff-app-action="more"', $html, 'the last page' );
+	}
+
+	public function test_load_more_is_given_only_the_page_it_adds(): void {
+		$posts = $this->library_of( 25 );
+		foreach ( array(
+			'2'   => 1,
+			'9'   => 1,
+			'one' => 25,
+		) as $from => $cards ) {
+			$_GET[ App::FROM_QUERY ] = (string) $from;
+			$html                    = $this->library_at( '2' );
+			unset( $_GET[ App::FROM_QUERY ] );
+			$this->assertSame( $cards, substr_count( $html, 'class="riff-card"' ), "from \"$from\"" );
+			$this->assertStringContainsString( 'data-riff-post="' . $posts[0] . '"', $html );
+		}
 	}
 
 	public function test_a_page_past_the_end_or_not_a_page_reads_as_the_nearest_one(): void {
