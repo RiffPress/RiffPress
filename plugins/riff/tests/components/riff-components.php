@@ -32,9 +32,67 @@ add_action(
 	10,
 	3
 );
+// What the e2e suite makes is marked with the spec and project that made it (tests/e2e/helpers/
+// own.js), so a run that stopped before it cleaned up leaves nothing the next run trips over: each
+// spec sweeps its own before it makes anything, and the suite sweeps every spec's as it starts.
+add_action(
+	'init',
+	static function (): void {
+		register_post_meta(
+			'',
+			'_riff_e2e',
+			array(
+				'type'          => 'string',
+				'single'        => true,
+				'show_in_rest'  => true,
+				'auth_callback' => static fn() => current_user_can( 'edit_posts' ),
+			)
+		);
+	}
+);
+
 add_action(
 	'rest_api_init',
 	static function (): void {
+		// Deletes what the suite made: one spec's, or with no spec every spec's. Nothing unmarked.
+		register_rest_route(
+			'riff-test/v1',
+			'/made',
+			array(
+				'methods'             => 'DELETE',
+				'callback'            => static function ( WP_REST_Request $request ) {
+					$spec  = (string) $request['spec'];
+					$found = get_posts(
+						array(
+							'post_type'      => array_values( get_post_types() ),
+							'post_status'    => array_keys( get_post_stati() ),
+							'posts_per_page' => -1,
+							'fields'         => 'ids',
+							'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- a test route, run once per spec.
+								'' === $spec
+									? array(
+										'key'     => '_riff_e2e',
+										'compare' => 'EXISTS',
+									)
+									: array(
+										'key'   => '_riff_e2e',
+										'value' => $spec,
+									),
+							),
+						)
+					);
+					foreach ( $found as $id ) {
+						if ( 'attachment' === get_post_type( $id ) ) {
+							wp_delete_attachment( $id, true );
+						} else {
+							wp_delete_post( $id, true );
+						}
+					}
+					return rest_ensure_response( array( 'deleted' => count( $found ) ) );
+				},
+				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+			)
+		);
 		// Whether anyone may register, which core's settings route does not expose, for the admin.
 		register_rest_route(
 			'riff-test/v1',

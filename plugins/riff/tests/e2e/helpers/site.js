@@ -77,6 +77,33 @@ const playing = ( page ) =>
 	} );
 
 /**
+ * Starts keeping what the polite live region says, in order, from here on. A screen reader hears
+ * each message, though the region may hold the next one by the time a test reads it.
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ * @return {Promise<void>}
+ */
+const listen = ( page ) =>
+	page.evaluate( () => {
+		window.said = [];
+		const region = document.getElementById( 'a11y-speak-polite' );
+		new MutationObserver( () => {
+			const text = region.textContent.replace( /\u00a0/g, '' ).trim();
+			if ( text && text !== window.said.at( -1 ) ) {
+				window.said.push( text );
+			}
+		} ).observe( region, { childList: true, characterData: true, subtree: true } );
+	} );
+
+/**
+ * What the polite live region has said since listen().
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ * @return {Promise<string[]>} The messages, in order.
+ */
+const said = ( page ) => page.evaluate( () => window.said );
+
+/**
  * The player specs' site: a post with three tracks, each with the cover as its artwork and the
  * first with a video version, and the same tracks as one playlist block (WordPress 7.1).
  *
@@ -184,4 +211,4 @@ async function appSite( made, requestUtils ) {
 	return { pageUrl: page.link, postId: post.id, extraId, audioMedia: audio };
 }
 
-module.exports = { FIXTURES, FILES, AXE_TAGS, iosAgent, systemColours, audioState, playing, playerSite, appSite };
+module.exports = { FIXTURES, FILES, AXE_TAGS, iosAgent, systemColours, audioState, playing, listen, said, playerSite, appSite };
