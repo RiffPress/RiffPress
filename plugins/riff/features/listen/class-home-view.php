@@ -221,7 +221,7 @@ final class Home_View {
 	}
 
 	/**
-	 * A played track's cover, in every size it has, as app.js draws it.
+	 * A played track's cover, in every size it has.
 	 *
 	 * @param array $track Track.
 	 * @return array

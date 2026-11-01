@@ -16,9 +16,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Shared components.
  *
- * Every view draws its pieces through these, and app.js draws the cards it adds (Load more,
- * Recently played, Jump back in) from the card template printed once in the block, so a card
- * looks the same however it arrived.
+ * Every view draws its pieces through these, and the cards app.js adds (Load more, Recently
+ * played, Jump back in, Listening now) are drawn here too, so a card looks the same however it
+ * arrived.
  */
 final class Ui {
 

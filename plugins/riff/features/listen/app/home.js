@@ -28,7 +28,7 @@ export function homeRows( ctx ) {
 	};
 
 	// The rows' cards for a history, as the server draws them: { jump, recent }, or null when the
-	// site could not be asked, and the rows stay as they are. Once an answer has come it is kept,
+	// site could not be asked, and a row held for them is hidden. Once an answer has come it is kept,
 	// so a view drawn again fills its rows at once, before it is painted.
 	const drawn = new Map();
 	const arrived = new Map();
@@ -65,13 +65,17 @@ export function homeRows( ctx ) {
 		return drawn.get( key );
 	}
 
-	function home( first = false ) {
-		const played = api.history();
-		const key = played.length
+	// Which history the rows show, as the server writes it into data-riff-played.
+	const keyOf = ( played ) =>
+		played.length
 			? `${ played.length }:${ played[ 0 ].id }:${
 					Number( played[ 0 ].played ) || 0
 				}`
 			: '0';
+
+	function home( first = false ) {
+		const played = api.history();
+		const key = keyOf( played );
 		const fill = ( slug, cards ) => {
 			const shelf = view.querySelector( `[data-riff-shelf="${ slug }"]` );
 			if ( ! shelf || shelf.dataset.riffPlayed === key ) {
@@ -126,8 +130,20 @@ export function homeRows( ctx ) {
 		}
 		cardsFor( played, key ).then( ( cards ) => {
 			// Drawn into the view showing then, if it is still this history's.
+			if ( keyOf( api.history() ) !== key ) {
+				return;
+			}
 			if ( cards ) {
 				show( cards );
+				return;
+			}
+			// The site could not be asked: a row held for these cards goes rather than stay empty,
+			// unmarked, so the next Home asks again.
+			for ( const shelf of shelves ) {
+				if ( shelf.isConnected && shelf.hasAttribute( 'data-riff-skeleton' ) ) {
+					shelf.removeAttribute( 'data-riff-skeleton' );
+					shelf.hidden = true;
+				}
 			}
 		} );
 	}

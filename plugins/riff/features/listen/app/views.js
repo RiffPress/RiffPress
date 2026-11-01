@@ -145,7 +145,7 @@ export function views( ctx ) {
 	const moreAddress = ( n ) => `${ ctx.postsAddress( n ) }#riff-page-${ n }`;
 
 	// The next page of the library, after the cards already there: the cards the server draws at
-	// the address that shows everything through that page, past the ones on screen, so a card is
+	// the address that shows everything through that page, asked for that page alone, so a card is
 	// drawn in one place only. The button is marked busy rather than disabled, so it keeps focus;
 	// the page only advances once one has arrived.
 	async function loadMore( button ) {
@@ -157,7 +157,10 @@ export function views( ctx ) {
 		const next = Number( grid.dataset.riffPage ) + 1;
 		button.setAttribute( 'aria-disabled', 'true' );
 		try {
-			const { view: html } = await ctx.pageView( ctx.postsAddress( next ) );
+			// Only the page being added; the address the listener keeps is the one through it.
+			const only = new URL( ctx.postsAddress( next ) );
+			only.searchParams.set( 'riff_from', String( next ) );
+			const { view: html } = await ctx.pageView( only.toString() );
 			if ( turn !== ctx.showing || ! grid.isConnected ) {
 				return;
 			}
@@ -165,7 +168,7 @@ export function views( ctx ) {
 			drawn.innerHTML = html;
 			const items = [
 				...drawn.content.querySelectorAll( '.riff-grid > .riff-card' ),
-			].slice( grid.querySelectorAll( ':scope > .riff-card' ).length );
+			];
 			const more = !! drawn.content.querySelector( '.riff-app-more' );
 			grid.append( ...items );
 			grid.dataset.riffPage = String( next );
