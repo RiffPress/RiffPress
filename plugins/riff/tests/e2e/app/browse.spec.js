@@ -156,7 +156,7 @@ test.describe( 'Browse', () => {
 		expect( searches.find( ( u ) => /\/albums/.test( u ) ) ).toMatch( /per_page=3/ );
 		await expect( field ).toHaveAttribute( 'aria-expanded', 'true' );
 		await expect( list.locator( '.riff-suggest-top' ) ).toContainText( 'Compositions' );
-		await expect( page.locator( '.riff-app-sr' ) ).toHaveText( /\d+ suggestions?/ );
+		await expect( page.locator( '.riff-app-sr', { hasText: /suggestion/ } ) ).toHaveText( /\d+ suggestions?/ );
 		const results = await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze();
 		expect( results.violations ).toEqual( [] );
 

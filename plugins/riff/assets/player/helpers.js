@@ -168,6 +168,15 @@ export function rowArt( t ) {
 	);
 }
 
+// Words a screen reader hears inside a control and the eye doesn't: the verb before a row's title,
+// and the pauses between its title, its artist and its length. The control is named by what it
+// shows, so a listener speaking what they see can say it.
+export function sr( words ) {
+	return `<span class="riff-app-sr">${ esc( words ) }</span>`;
+}
+
+export const PAUSE = sr( ', ' );
+
 export function smallest( art ) {
 	return art?.[ 0 ]?.src || '';
 }
