@@ -178,7 +178,8 @@ Listeners can install the Listen page's `app/` address as an app of its own. Fro
 ## Video versions
 
 A track with a video version is set in the Media Library: click an audio file and choose a video
-under **Video version**.
+under **Video version**. It opens as the video, unless the listener last chose the song or their
+browser asks to save data; a site makes the song first with the `riff_video_first` filter.
 
 ## Design
 

@@ -59,7 +59,8 @@ export function registry( P ) {
 
 	// A press runs what the control's script gave it, once wired, whoever drew the button.
 	function wire( entry ) {
-		if ( entry.wired || entry.spec.element ) {
+		// An element of a control's own is its own to wire, except a view's button made here.
+		if ( entry.wired || ( entry.spec.element && ! entry.el.dataset.riffOpens ) ) {
 			return;
 		}
 		entry.wired = true;
@@ -210,7 +211,7 @@ export function registry( P ) {
 		}
 		return v.place === 'side'
 			? P.panelOpen === id
-			: ! P.np.hidden && P.showing === id;
+			: root.classList.contains( 'is-open' ) && P.showing === id;
 	}
 
 	function open( id, from = null ) {
@@ -396,6 +397,29 @@ export function registry( P ) {
 		}
 	}
 
+	// Over everything on a phone, so a dialog there with the rest out of reach; beside the page on
+	// a wide screen, and beside the turntable in its strip. Settled again as the screen changes
+	// shape while a panel is open.
+	function settle() {
+		const sheet = where() === 'sheet';
+		if ( sheet ) {
+			side.setAttribute( 'role', 'dialog' );
+			side.setAttribute( 'aria-modal', 'true' );
+		} else {
+			side.removeAttribute( 'role' );
+			side.removeAttribute( 'aria-modal' );
+		}
+		cover( false );
+		if ( sheet ) {
+			cover( true );
+		}
+	}
+	window.addEventListener( 'resize', () => {
+		if ( P.panelOpen ) {
+			settle();
+		}
+	} );
+
 	function show( id, { from = null, quiet = false } = {} ) {
 		const v = views.get( id );
 		if ( ! v || v.place !== 'side' ) {
@@ -423,20 +447,7 @@ export function registry( P ) {
 		P.panelOpen = id;
 		side.hidden = false;
 		document.documentElement.classList.add( 'riff-panel-open' );
-		// Over everything on a phone, so a dialog there; beside the page on a wide screen, and
-		// beside the turntable in its strip.
-		const sheet = where() === 'sheet';
-		if ( sheet ) {
-			side.setAttribute( 'role', 'dialog' );
-			side.setAttribute( 'aria-modal', 'true' );
-		} else {
-			side.removeAttribute( 'role' );
-			side.removeAttribute( 'aria-modal' );
-		}
-		cover( false );
-		if ( sheet ) {
-			cover( true );
-		}
+		settle();
 		if ( ! quiet ) {
 			title.focus( { preventScroll: true } );
 		}

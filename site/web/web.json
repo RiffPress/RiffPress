@@ -497,8 +497,8 @@
 			"url": "https://www.w3.org/TR/cssom-view-1/#dom-window-matchmedia"
 		},
 		"summary": "Reads the same breakpoint and motion preference the stylesheet uses.",
-		"how": "Three queries are read from script. `prefers-reduced-motion` skips the frame loops and the close transition. `(hover: none)` stands in for a touch screen before vibrating. `(min-width: 900px)`, short of a touch screen on its side, decides whether the bar sits beside the dialog and stays live, or under it and goes inert, and whether a panel such as Up next stands beside the page or covers it; on a touch screen on its side, as on an unfolded phone, the dialog covers the bar at any width and a panel opens in the controls' strip.",
-		"why": "The phone and desktop layouts differ in ways CSS alone cannot express, and the script has to agree with the stylesheet about where the line is.",
+		"how": "Two queries are read from script. `prefers-reduced-motion` skips the frame loops and the close transition. `(hover: none)` stands in for a touch screen before vibrating. Where the layout's own line falls (whether the bar stays live beside Now Playing, and whether a panel such as Up next stands beside the page, covers it or opens in a turntable's strip) is not asked again in script: the stylesheet's media queries set a custom property, `--riff-np-covers` and `--riff-side-place`, which the script reads, so the line is written once.",
+		"why": "The phone and desktop layouts differ in ways the script has to know about, and reading the stylesheet's answer keeps the two from drifting apart.",
 		"fallback": null,
 		"where": [
 			{
@@ -508,10 +508,6 @@
 			{
 				"file": "plugins/riff/assets/player/playback.js",
 				"code": "if ( window.matchMedia( '(hover: none)' ).matches ) {"
-			},
-			{
-				"file": "plugins/riff/assets/player/now-playing.js",
-				"code": "const wide = window.matchMedia("
 			}
 		],
 		"shot": {

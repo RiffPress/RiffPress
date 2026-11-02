@@ -96,7 +96,8 @@ export function nowPlaying( P ) {
 		if ( ! P.track() ) {
 			return;
 		}
-		if ( ! np.hidden ) {
+		// Open, and not sliding away: the view changes in place.
+		if ( ! np.hidden && root.classList.contains( 'is-open' ) ) {
 			setView( screen( id ) ? id : opening() );
 			return;
 		}
@@ -115,6 +116,10 @@ export function nowPlaying( P ) {
 				? active
 				: $( `[data-riff-control="${ view }"]` ) || $( '[data-riff-control="album"]' );
 		setView( view );
+		// Opened again while it slid away: it stays.
+		clearTimeout( closing.timer );
+		np.removeEventListener( 'transitionend', closing.done );
+		closing.done = null;
 		np.hidden = false;
 		root.classList.add( 'is-open' );
 		P.syncWakeLock?.();
@@ -123,9 +128,10 @@ export function nowPlaying( P ) {
 		// On a wide screen the dialog opens above the bar and the bar stays the control surface,
 		// unless it is a touch screen on its side, where Now Playing covers the bar as a phone's
 		// does, the turntable or not (riff.css).
-		const wide = window.matchMedia(
-			'(min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px)))'
-		).matches;
+		// Whether it covers the bar, as riff.css lays it out (--riff-np-covers), so the shapes are
+		// written down once.
+		const wide =
+			getComputedStyle( np ).getPropertyValue( '--riff-np-covers' ).trim() === '0';
 		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
 		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
 		// screen the bar beside it is still how the music is controlled.
@@ -193,6 +199,8 @@ export function nowPlaying( P ) {
 		}
 	}
 
+	// Now Playing sliding away: what hides it once it has, which opening it again cancels.
+	const closing = { done: null, timer: 0 };
 	function close( { fromHistory = false } = {} ) {
 		if ( np.hidden ) {
 			return;
@@ -207,15 +215,22 @@ export function nowPlaying( P ) {
 			node.removeAttribute( 'data-riff-inert' );
 		}
 		P.viewOpened?.( P.showing, false );
+		// Hidden once it has slid away, unless it was opened again first.
 		const done = () => {
-			np.hidden = true;
-			P.syncWakeLock?.();
+			clearTimeout( closing.timer );
+			np.removeEventListener( 'transitionend', closing.done );
+			closing.done = null;
+			if ( ! root.classList.contains( 'is-open' ) ) {
+				np.hidden = true;
+				P.syncWakeLock?.();
+			}
 		};
 		if ( P.reduce() ) {
 			done();
 		} else {
+			closing.done = done;
 			np.addEventListener( 'transitionend', done, { once: true } );
-			setTimeout( done, 400 );
+			closing.timer = setTimeout( done, 400 );
 		}
 		if ( ! fromHistory && history.state?.riff === 'open' ) {
 			history.back();

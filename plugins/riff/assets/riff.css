@@ -42,7 +42,7 @@
 
 /* While Now Playing is open the page under it stays still, as in the apps:
    it does not scroll behind the dialog, and its scrollbar does not show
-   beside Up next's. */
+   beside the view's. */
 html:has(#riff.is-open) {
 	overflow: hidden;
 }
@@ -2460,8 +2460,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 @media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px))) {
 
 	/* On a wide screen Now Playing fills the space above the bar, and the bar
-	   keeps the controls. */
+	   keeps the controls; it covers nothing (now-playing.js). */
 	.riff-np {
+		--riff-np-covers: 0;
 		bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
 		padding: 0;
 	}

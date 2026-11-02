@@ -162,7 +162,7 @@ final class Lyrics {
 	}
 
 	/**
-	 * `riff_lyrics` on wp/v2/media: the same lyrics the tab shows, written by whoever may edit the
+	 * `riff_lyrics` on wp/v2/media: the same lyrics the view shows, written by whoever may edit the
 	 * file into the same place WordPress keeps the file's own.
 	 *
 	 * @since 0.4.0
