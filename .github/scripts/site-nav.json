@@ -1,0 +1,61 @@
+{
+	"$comment": "The navigation of riffpress.com and developer.riffpress.com, in one place: site-nav.js stamps it into every page written by hand and site-shell.js into every generated one. Each entry of sections is one link in the header, in this order; its children are its section bar, and a child with children of its own is a group in that bar. href is the page's path on the site as written, before developers-site.js moves developers/ and web/ to their own host. host names that host, for the title. bar: false keeps a page out of the section bar while it still belongs to the section, for its breadcrumbs. ordered gives a group's pages a previous and next link. footer lists each group's links by key, or as label and href for a page off the site.",
+	"sections": [
+		{
+			"key": "home",
+			"label": "Riff",
+			"href": "",
+			"children": [
+				{ "key": "built", "label": "How Riff is built", "href": "built/", "bar": false },
+				{ "key": "accessibility", "label": "Accessibility", "href": "accessibility/", "bar": false }
+			]
+		},
+		{ "key": "add-music", "label": "Add your music", "href": "add-music/" },
+		{ "key": "download", "label": "Download", "href": "download/" },
+		{
+			"key": "developers",
+			"label": "Developers",
+			"href": "developers/",
+			"host": "developers",
+			"children": [
+				{
+					"key": "handbook",
+					"label": "Handbook",
+					"ordered": true,
+					"children": [
+						{ "key": "extensions", "label": "Extensions", "href": "developers/extensions/" },
+						{ "key": "player", "label": "Player", "href": "developers/player/" }
+					]
+				},
+				{
+					"key": "reference",
+					"label": "Reference",
+					"children": [
+						{ "key": "php", "label": "PHP", "href": "developers/php/" },
+						{ "key": "javascript", "label": "JavaScript", "href": "developers/javascript/" },
+						{ "key": "rest", "label": "REST API", "href": "developers/rest/" },
+						{ "key": "css", "label": "CSS", "href": "developers/css/" },
+						{ "key": "hooks", "label": "Hooks", "href": "developers/hooks/", "bar": false }
+					]
+				},
+				{ "key": "web", "label": "Built on the open web", "href": "web/" }
+			]
+		}
+	],
+	"hosts": {
+		"site": "Riff",
+		"developers": "Riff Developer"
+	},
+	"footer": [
+		{ "key": "about", "label": "About", "links": [ "built", "accessibility" ] },
+		{
+			"key": "help",
+			"label": "Help",
+			"links": [
+				{ "label": "Support", "href": "https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md" },
+				{ "label": "Security", "href": "https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md" },
+				{ "label": "GitHub", "href": "https://github.com/RiffPress/RiffPress" }
+			]
+		}
+	]
+}

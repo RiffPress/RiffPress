@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Developers | Riff</title>
+<title>Developers | Riff Developer</title>
 <meta name="description" content="How to extend Riff: every hook documented, a JavaScript API on the player, REST and GraphQL fields, a source interface for your own tracks, and the browser APIs it is built on.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="RiffPress">
 <meta property="og:url" content="{{pages_url}}developers/">
-<meta property="og:title" content="Developers | Riff">
+<meta property="og:title" content="Developers | Riff Developer">
 <meta property="og:description" content="How to extend Riff: every hook documented, a JavaScript API, REST and GraphQL, a source interface, and the browser APIs it is built on.">
 <meta property="og:image" content="{{pages_url}}og/developers.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Developers | Riff">
+<meta property="og:image:alt" content="Developers | Riff Developer">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Developers | Riff">
+<meta name="twitter:title" content="Developers | Riff Developer">
 <meta name="twitter:description" content="How to extend Riff: every hook documented, a JavaScript API, REST and GraphQL, a source interface, and the browser APIs it is built on.">
 <meta name="twitter:image" content="{{pages_url}}og/developers.png">
 <link rel="canonical" href="{{pages_url}}developers/">
@@ -28,9 +28,11 @@
 <link rel="stylesheet" href="../neck.css">
 </head>
 <body data-neck="margin">
+<!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<div class="nav"><div class="wrap"><a class="mark" href="../"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav><a href="../add-music/">Add your music</a><a href="./" aria-current="page">Developers</a><a class="btn" href="../download/">Download</a></nav></div></div>
-<div class="local-nav"><div class="wrap"><a class="local-title" href="../developers/" aria-current="page">Developers</a><nav aria-label="Developers"><a href="../developers/php/">PHP</a><a href="../developers/javascript/">JavaScript</a><a href="../developers/rest/">REST API</a><a href="../developers/css/">CSS</a><a href="../developers/player/">The player</a><a href="../developers/extensions/">Extensions</a><a class="aside-link" href="../web/">Built on the open web</a></nav></div></div>
+<header class="nav"><div class="wrap"><a class="mark" href="../"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/">Download</a><a href="../developers/" aria-current="page">Developers</a></nav></div></header>
+<div class="local-nav"><div class="wrap"><a class="local-title" href="../developers/" aria-current="page">Developers</a><nav aria-label="Developers"><ul><li class="local-group"><span class="local-label">Handbook</span><ul><li><a href="../developers/extensions/">Extensions</a></li><li><a href="../developers/player/">Player</a></li></ul></li><li class="local-group"><span class="local-label">Reference</span><ul><li><a href="../developers/php/">PHP</a></li><li><a href="../developers/javascript/">JavaScript</a></li><li><a href="../developers/rest/">REST API</a></li><li><a href="../developers/css/">CSS</a></li></ul></li><li><a href="../web/">Built on the open web</a></li></ul></nav></div></div>
+<!-- /nav:top -->
 
 <main id="main" class="wrap doc dl">
 <h1>Built to be extended</h1>
@@ -85,7 +87,9 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 }
 </script>
 
-<footer><div class="wrap"><span>Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</span><nav aria-label="Footer"><a href="../accessibility/">Accessibility</a><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a><a href="https://github.com/RiffPress/RiffPress">GitHub</a></nav></div></footer>
+<!-- nav:footer -->
+<footer><div class="wrap"><p class="foot-license">Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</p><nav aria-label="Footer"><div class="foot-group"><p class="foot-label" id="foot-about">About</p><ul aria-labelledby="foot-about"><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li></ul></div><div class="foot-group"><p class="foot-label" id="foot-help">Help</p><ul aria-labelledby="foot-help"><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></div></nav></div></footer>
+<!-- /nav:footer -->
 <script type="module" src="../js/neck.js"></script>
 </body>
 </html>

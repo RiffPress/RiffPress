@@ -17,6 +17,8 @@ echo "pre-commit: handbooks"
 npm run -s docs:handbook:check
 echo "pre-commit: web pages"
 npm run -s docs:web:check
+echo "pre-commit: site navigation"
+npm run -s docs:nav:check
 echo "pre-commit: readme.txt changelogs"
 npm run -s docs:changelog:check
 

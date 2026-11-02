@@ -405,11 +405,9 @@ function phpPage( data ) {
 	body += member( data.shortcode, '[riff]' );
 
 	return referencePage( {
-		title: 'PHP | Riff',
+		title: 'PHP',
 		description: 'Riff\'s PHP surface: every hook, the functions that register the player\'s controls and views, the Source interface for your own tracks, the track schema, the Block Bindings source, the abilities and the Listen block.',
 		url: 'developers/php/',
-		current: 'php',
-		trail: [ [ 'PHP' ] ],
 		h1: '<h1>PHP</h1>',
 		toc: [
 			[ 'hooks', 'Hooks', [ [ 'filters', 'Filters' ], [ 'actions', 'Actions' ] ] ],
@@ -471,11 +469,9 @@ function restPage( data ) {
 	body += '</section>\n';
 
 	return referencePage( {
-		title: 'REST API | Riff',
+		title: 'REST API',
 		description: 'Riff over HTTP: the track on every media item, the library routes, and the WPGraphQL fields.',
 		url: 'developers/rest/',
-		current: 'rest',
-		trail: [ [ 'REST API' ] ],
 		h1: '<h1>REST API</h1>',
 		toc: [ [ 'media', 'The track on media' ], [ 'routes', [ ...new Set( s.routes.map( ( r ) => r.namespace ) ) ].length === 1 ? `Routes in /${ s.routes[ 0 ].namespace }` : 'Routes', toc ], [ 'graphql', 'WPGraphQL' ] ],
 		body,
@@ -511,11 +507,9 @@ function cssPage( data ) {
 }` ) + '</section>\n';
 
 	return referencePage( {
-		title: 'CSS | Riff',
+		title: 'CSS',
 		description: 'The public custom properties of the Riff player and the Listen block, and how a theme sets the accent.',
 		url: 'developers/css/',
-		current: 'css',
-		trail: [ [ 'CSS' ] ],
 		h1: '<h1>CSS</h1>',
 		toc: [ ...groups.map( ( [ id, title ] ) => [ id, title ] ), [ 'the-accent', 'The accent' ] ],
 		body,

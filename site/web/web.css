@@ -139,12 +139,17 @@ code {
 	order: 2;
 }
 
+/* the wordmark and the sections on one row while they fit, the sections
+   under the wordmark when they don't */
 .nav .wrap {
-	height: 72px;
+	min-height: 72px;
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 20px;
+	gap: 0 20px;
+	padding-top: 8px;
+	padding-bottom: 8px;
 }
 
 .mark {
@@ -167,23 +172,34 @@ code {
 
 .nav nav {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 28px;
+	gap: 0 clamp(16px, 3vw, 28px);
 }
 
-.nav nav a:not(.btn) {
+/* each a 44px target, and never broken across two lines */
+.nav nav a {
 	color: var(--ink);
 	text-decoration: none;
 	font-size: 0.9375rem;
+	line-height: 24px;
+	padding: 10px 0;
+	white-space: nowrap;
 	opacity: 0.85;
 	transition: opacity var(--t);
 }
 
-.nav nav a:not(.btn):hover,
-.nav nav a:not(.btn)[aria-current] {
+.nav nav a:hover,
+.nav nav a[aria-current] {
 	opacity: 1;
 	text-decoration: underline;
 	text-underline-offset: 4px;
+}
+
+.nav nav a:focus-visible {
+	outline: 1.5px solid var(--accent);
+	outline-offset: 2px;
+	opacity: 1;
 }
 
 .btn {
@@ -214,24 +230,6 @@ code {
 	outline-offset: -1.5px;
 }
 
-/* Download, as wordpress.org's bar has Get WordPress */
-.nav .btn {
-	border-color: var(--action);
-	background: var(--action);
-	color: var(--on-action);
-}
-
-.nav .btn:hover {
-	border-color: var(--action-hover);
-	background: var(--action-hover);
-	color: var(--on-action);
-}
-
-.nav .btn:focus-visible {
-	box-shadow: inset 0 0 0 3px var(--white);
-	outline-color: var(--accent);
-}
-
 /* marginalia, as wordpress.org sets it: a band of dots before the footer, a
    record cropped into the margin on a wide screen */
 main,
@@ -254,8 +252,13 @@ footer {
 footer .wrap {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 12px 28px;
+	gap: var(--space-4) 28px;
 	justify-content: space-between;
+	align-items: flex-start;
+}
+
+footer p {
+	margin: 0;
 }
 
 footer a {
@@ -264,11 +267,24 @@ footer a {
 	color: var(--white);
 }
 
-/* the footer's links, as wordpress.org's foot has its row of them */
+/* the footer's links in their groups, as wordpress.org's foot has them */
 footer nav {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px 24px;
+	gap: var(--space-3) var(--space-6);
+}
+
+footer .foot-label {
+	margin-bottom: var(--space-1);
+	color: #a39d93;
+}
+
+footer .foot-group ul {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
 /* type */
@@ -449,11 +465,27 @@ figcaption {
 	gap: 20px;
 }
 
-.pager a[rel="prev"]::before {
+.pager a {
+	display: grid;
+	gap: 2px;
+	text-decoration: none;
+}
+
+.pager .pager-dir {
+	color: var(--ink-2);
+	font-size: 0.8125rem;
+}
+
+.pager .pager-name {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.pager a[rel="prev"] .pager-dir::before {
 	content: "← ";
 }
 
-.pager a[rel="next"]::after {
+.pager a[rel="next"] .pager-dir::after {
 	content: " →";
 }
 
@@ -520,10 +552,6 @@ figcaption {
 }
 
 @media (max-width: 640px) {
-
-	.nav nav a:not(.btn) {
-		display: none;
-	}
 
 	figure {
 		padding: 20px;
@@ -870,11 +898,11 @@ figcaption {
 }
 
 .local-nav .wrap {
-	height: 56px;
+	min-height: 56px;
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	justify-content: space-between;
-	gap: 20px;
+	gap: 0 20px;
 }
 
 .local-nav a {
@@ -957,17 +985,62 @@ figcaption {
 }
 
 .local-nav .local-title {
+	flex: none;
 	color: var(--ink);
 	font-size: 1rem;
 	font-weight: 600;
 	margin-left: -8px;
 }
 
+/* beside the section's name while there is room, under it when there is
+   not, and scrolled sideways rather than wrapped; the auto margin sets it
+   at the right only while it fits, so nothing is pushed out of reach */
 .local-nav nav {
+	flex: 1 1 20rem;
+	min-width: 0;
 	display: flex;
-	gap: var(--space-1);
 	overflow-x: auto;
 	white-space: nowrap;
+	scrollbar-width: none;
+}
+
+/* text-wrap on every li would set them wrapping again: a label stays whole */
+.local-nav li,
+.crumbs li {
+	white-space: nowrap;
+	text-wrap: nowrap;
+}
+
+.local-nav ul {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.local-nav nav > ul {
+	margin-left: auto;
+	padding: 10px 0;
+	gap: var(--space-2);
+}
+
+/* a group: its name, quiet, then its pages, a rule between groups */
+.local-nav .local-group {
+	display: flex;
+	align-items: center;
+}
+
+.local-nav nav > ul > li + li {
+	border-left: 1px solid var(--rule);
+	padding-left: var(--space-1);
+}
+
+.local-nav .local-label {
+	color: var(--ink-2);
+	font-size: 0.8125rem;
+	padding: 4px 4px 4px 0;
 }
 
 main h2[id] {
@@ -1002,12 +1075,23 @@ main h2[id] {
 	white-space: nowrap;
 }
 
-.crumbs span {
-	display: inline-block;
+.crumbs ol {
+	display: flex;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* a step with no page of its own, such as Reference, in the links' grey */
+.crumbs li {
+	color: var(--charcoal-4);
+}
+
+.crumbs li[aria-current] {
 	color: var(--ink);
 }
 
-.crumbs span:not(:last-child)::after {
+.crumbs li:not(:last-child)::after {
 	content: "/";
 	color: var(--grey-1);
 	margin: 0 10px;
@@ -1513,20 +1597,6 @@ main h2[id] {
 
 	.reference .code-title {
 		font-size: 20px;
-	}
-
-	.local-nav .wrap {
-		height: auto;
-		padding-top: 12px;
-		padding-bottom: 12px;
-		flex-wrap: wrap;
-		gap: 4px 20px;
-	}
-
-	.local-nav nav {
-		width: 100%;
-		margin-left: -5px;
-		scrollbar-width: none;
 	}
 
 	.member,
