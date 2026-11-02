@@ -30,6 +30,10 @@ function measure( page, region ) {
 			}
 			const style = getComputedStyle( el );
 			const r = el.getBoundingClientRect();
+			// Words only a screen reader hears are clipped to nothing on purpose.
+			if ( style.clipPath === 'inset(50%)' ) {
+				return false;
+			}
 			return style.display !== 'none' && style.visibility !== 'hidden' && r.width > 0 && r.height > 0;
 		};
 		const name = ( el ) => {

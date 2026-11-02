@@ -13,6 +13,8 @@ COSE = "COSE"
 cose = "cose"
 # The turntable maker, whose platter the drawn deck's measurements follow.
 Technics = "Technics"
+# A karaoke game that reads UltraStar's format, named in Riff Sing's readme.
+Performous = "Performous"
 
 [files]
 extend-exclude = [
