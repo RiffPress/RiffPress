@@ -1,10 +1,12 @@
 /**
  * The meter and the filament: a shared file is analysed, the bars on the playing row swing with the music, the seek line lights and cools, and the glow fades before the knob.
+ * The turntable's VU meter and spectrum read the music where Web Audio hears it, only on the Turntable view, and never on an iPhone or with less motion asked for.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
+const { openView } = require( '../helpers/views' );
 const { FIXTURES, FILES, iosAgent, playerSite } = require( '../helpers/site' );
 
 const made = own();
@@ -258,5 +260,93 @@ test.describe( 'Player', () => {
 		expect( glow.shadow ).toBe( 'none' );
 		// Now Playing's seek line is plain white: no bloom tints it.
 		await expect( page.locator( '.riff-np-seek .riff-bloom' ) ).toHaveCount( 0 );
+	} );
+} );
+
+test.describe( 'Turntable meters', () => {
+	// The needle's angle, from its transform, and each band's bar height.
+	const read = ( page ) =>
+		page.evaluate( () => {
+			const needle = document.querySelector( '.riff-vu-needle' );
+			const turned = /rotate\((-?[\d.]+)deg\)/.exec( needle?.style.transform || '' );
+			return {
+				angle: turned ? Number( turned[ 1 ] ) : null,
+				bars: [ ...document.querySelectorAll( '.riff-spectrum i' ) ].map(
+					( bar ) => parseFloat( bar.style.transform.slice( 7 ) ) || 0
+				),
+			};
+		} );
+
+	test( 'on the turntable the needle swings with the music and the spectrum shows where the file stops, and both rest when it pauses', async ( {
+		page,
+	}, testInfo ) => {
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		const root = page.locator( '#riff' );
+		await expect( root ).toHaveAttribute( 'data-live', '' );
+		// The album, the cover on its own, has no meters.
+		await openView( page, 'album' );
+		await expect( root ).not.toHaveAttribute( 'data-riff-meters', '' );
+		await expect( page.locator( '.riff-meters' ) ).toBeHidden();
+		await openView( page, 'turntable' );
+		await expect( root ).toHaveAttribute( 'data-riff-meters', '' );
+		const meters = page.locator( '.riff-meters' );
+		await expect( meters ).toBeVisible();
+		await expect( meters ).toHaveAttribute( 'data-riff-heard', '' );
+		await expect( page.locator( '.riff-spectrum i' ) ).toHaveCount( 31 );
+		// Off its peg at -45°, and the spectrum up from the floor.
+		await expect.poll( async () => ( await read( page ) ).angle ).toBeGreaterThan( -40 );
+		await expect.poll( async () => Math.max( ...( await read( page ) ).bars ) ).toBeGreaterThan( 0.3 );
+		// Past a few Slow seconds, an MP3's top band, at 20 kHz above where its encoder stops,
+		// is lower than the band at 1 kHz.
+		await expect
+			.poll( async () => {
+				const { bars } = await read( page );
+				return bars[ 17 ] - bars[ 30 ];
+			}, { timeout: 8000 } )
+			.toBeGreaterThan( 0.1 );
+		// Paused, the needle falls back to its peg and the bars come down.
+		await page.locator( '.riff-bar [data-riff-action="toggle"]' ).click();
+		await expect.poll( async () => ( await read( page ) ).angle, { timeout: 3000 } ).toBeLessThan( -44 );
+		await expect.poll( async () => Math.max( ...( await read( page ) ).bars ), { timeout: 3000 } ).toBe( 0 );
+		// The meters stay in place while paused, so the deck keeps its size.
+		await expect( root ).toHaveAttribute( 'data-riff-meters', '' );
+	} );
+
+	test( 'with less motion asked for there are no meters', async ( { page }, testInfo ) => {
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
+		await page.emulateMedia( { reducedMotion: 'reduce' } );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await openView( page, 'turntable' );
+		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-meters', '' );
+		await expect( page.locator( '.riff-meters' ) ).toBeHidden();
+	} );
+
+	test( 'a site that turns the turntable off has no meters', async ( { page, context, baseURL }, testInfo ) => {
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
+		await context.addCookies( [ { name: 'riff_test_no_turntable', value: '1', url: baseURL } ] );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await openView( page, 'album' );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
+		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-meters', '' );
+		await expect( page.locator( '.riff-meters' ) ).toBeHidden();
+	} );
+
+	test( 'on an iPhone, where the music does not pass through Web Audio, nothing is drawn', async ( {
+		page,
+	}, testInfo ) => {
+		test.skip( ! iosAgent( testInfo ), 'Only an iPhone keeps the music out of Web Audio.' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await openView( page, 'turntable' );
+		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-meters', '' );
+		await expect( page.locator( '.riff-meters' ) ).toBeHidden();
+		await expect( page.locator( '.riff-meters > *' ) ).toHaveCount( 0 );
 	} );
 } );
