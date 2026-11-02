@@ -4,6 +4,7 @@
   "plugins": [
     "./plugins/riff",
     "./plugins/riff-lyrics",
+    "./plugins/riff-chords",
     "./plugins/riff-sign-in",
     "https://github.com/WordPress/presence-api/releases/download/v0.18.4/presence-api.zip"
   ],
@@ -30,6 +31,7 @@
       "plugins": [
         "./plugins/riff",
         "./plugins/riff-lyrics",
+        "./plugins/riff-chords",
         "./plugins/riff-sign-in",
         "https://github.com/WordPress/presence-api/releases/download/v0.18.4/presence-api.zip",
         "./plugins/riff/tests/components"

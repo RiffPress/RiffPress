@@ -1,5 +1,5 @@
 /**
- * The public surface: window.riff.time() and the riff.time action, and a script listening to the player and reshaping what it plays through wp.hooks and riff:* events.
+ * The public surface: window.riff.time() and the riff.time action, window.riff.speed(), and a script listening to the player and reshaping what it plays through wp.hooks and riff:* events.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -52,6 +52,29 @@ test.describe( 'Player', () => {
 			.toBeGreaterThanOrEqual( 4 );
 		expect( await page.evaluate( () => window.riff.time() ) ).toBeGreaterThanOrEqual( 4 );
 		await page.evaluate( () => window.wp.hooks.removeAction( 'riff.time', 'e2e' ) );
+	} );
+
+	test( 'a script can slow the music down without changing its pitch, for every track after', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		expect( await page.evaluate( () => window.riff.speed() ) ).toBe( 1 );
+		const rate = () =>
+			page.evaluate( () => {
+				const m = [ ...document.querySelectorAll( '#riff audio, #riff video' ) ].find( ( el ) => el.getAttribute( 'src' ) );
+				return { rate: m.playbackRate, pitch: m.preservesPitch !== false };
+			} );
+		expect( await page.evaluate( () => window.riff.speed( 0.75 ) ) ).toBe( 0.75 );
+		await expect.poll( rate ).toEqual( { rate: 0.75, pitch: true } );
+		// Out of range is held to it; anything that is not a speed is ignored.
+		expect( await page.evaluate( () => window.riff.speed( 0.1 ) ) ).toBe( 0.5 );
+		expect( await page.evaluate( () => window.riff.speed( 'fast' ) ) ).toBe( 0.5 );
+		// The next track plays at the same speed, until it is set back.
+		await page.evaluate( () => window.riff.next() );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).not.toHaveText( 'Underground' );
+		await expect.poll( rate ).toEqual( { rate: 0.5, pitch: true } );
+		await page.evaluate( () => window.riff.speed( 1 ) );
+		await expect.poll( rate ).toEqual( { rate: 1, pitch: true } );
 	} );
 
 	test( 'a script can listen to the player and reshape what it plays', async ( {

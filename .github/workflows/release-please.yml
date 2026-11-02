@@ -33,6 +33,8 @@ jobs:
       riff_version: ${{ steps.release.outputs['plugins/riff--version'] }}
       lyrics_release: ${{ steps.release.outputs['plugins/riff-lyrics--release_created'] }}
       lyrics_tag: ${{ steps.release.outputs['plugins/riff-lyrics--tag_name'] }}
+      chords_release: ${{ steps.release.outputs['plugins/riff-chords--release_created'] }}
+      chords_tag: ${{ steps.release.outputs['plugins/riff-chords--tag_name'] }}
       sign_in_release: ${{ steps.release.outputs['plugins/riff-sign-in--release_created'] }}
       sign_in_tag: ${{ steps.release.outputs['plugins/riff-sign-in--tag_name'] }}
       coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
@@ -274,6 +276,43 @@ jobs:
           set -euo pipefail
           gh release upload --clobber "$TAG_NAME" build/riff-lyrics.zip
           bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-lyrics/riff-lyrics.php not-latest
+
+  # Riff Chords' release: its own zip on its own GitHub release, built the way
+  # Riff's is. It is never marked the latest release; that stays Riff's.
+  release-riff-chords:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.chords_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version-file: .php-version
+          coverage: none
+      - name: Build riff-chords.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff-chords
+          rsync -a --exclude-from='.distignore' ./plugins/riff-chords/ build/riff-chords/
+          (cd build && zip -qr riff-chords.zip riff-chords/)
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/riff-chords/riff-chords.php
+          find build/riff-chords -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Attach the zip and publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.chords_tag }}
+        run: |
+          set -euo pipefail
+          gh release upload --clobber "$TAG_NAME" build/riff-chords.zip
+          bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-chords/riff-chords.php not-latest
 
   # Riff Sign In's release: its own zip on its own GitHub release, built the way
   # Riff's is. It is never marked the latest release; that stays Riff's.

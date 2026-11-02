@@ -663,7 +663,24 @@ export function nowPlaying( P ) {
 		P.ramping = false;
 		const to = deckRate();
 		m.playbackRate = m.defaultPlaybackRate = to;
-		m.preservesPitch = m.webkitPreservesPitch = to === 1;
+		// The deck's speed moves the pitch, as a record's does; the listener's own keeps it.
+		m.preservesPitch = m.webkitPreservesPitch = deckOnly() === 1;
+	}
+	// The listener's own speed, from window.riff.speed(): set on both elements, so it holds when
+	// the song hands over to its video and for every track after. While the platter is being
+	// pulled up to speed or wound down, the music settles at the new speed once it gets there.
+	function respeed( rate ) {
+		P.speed = rate;
+		const m = P.el();
+		for ( const other of [ P.audio, P.video ] ) {
+			if ( other !== m ) {
+				other.playbackRate = other.defaultPlaybackRate = deckRate();
+				other.preservesPitch = other.webkitPreservesPitch = deckOnly() === 1;
+			}
+		}
+		if ( ! P.ramping ) {
+			settle( m );
+		}
 	}
 	function cued( on ) {
 		root.toggleAttribute( 'data-riff-cued', on );
@@ -677,7 +694,9 @@ export function nowPlaying( P ) {
 		stowing++;
 		const turning = root.dataset.playing === 'true' && root.dataset.riffDeck === 'out' && ! ( 'riffCued' in root.dataset );
 		const flipping = flip.until > performance.now();
-		if ( ! seen() || ( turning && ! P.ramping && ! flipping ) ) {
+		// At the listener's own speed the music keeps its pitch, which a platter coming up to speed
+		// would bend, so it starts at once.
+		if ( ! seen() || P.speed !== 1 || ( turning && ! P.ramping && ! flipping ) ) {
 			cued( false );
 			settle( m );
 			m.play().catch( P.paint );
@@ -728,7 +747,7 @@ export function nowPlaying( P ) {
 			P.paint();
 			return;
 		}
-		if ( ! seen() || m.paused ) {
+		if ( ! seen() || m.paused || P.speed !== 1 ) {
 			settle( m );
 			m.pause();
 			return;
@@ -1108,11 +1127,15 @@ export function nowPlaying( P ) {
 	// the music plays at its own speed.
 	const RPM = { 33: 100 / 3, 45: 45 };
 	const own = () => ( root.dataset.riffFormat === '7' ? '45' : '33' );
-	function deckRate() {
+	function deckOnly() {
 		if ( ! $( '.riff-cover' ) || ! wholeDeck() ) {
 			return 1;
 		}
 		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( 1 + pitch / 100 );
+	}
+	// The deck's speed times the listener's own (respeed(), above).
+	function deckRate() {
+		return deckOnly() * P.speed;
 	}
 	const board = $( '.riff-deck-board' );
 	const fader = $( '[data-riff-pitch]' );
@@ -1194,5 +1217,5 @@ export function nowPlaying( P ) {
 		);
 	}
 
-	return { open, close, sheet, pickTab, tint, groove, deck, turn, halt, held, stopping };
+	return { open, close, sheet, pickTab, tint, groove, deck, turn, halt, held, stopping, respeed };
 }
