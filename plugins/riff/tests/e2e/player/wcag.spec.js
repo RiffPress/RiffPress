@@ -1,11 +1,12 @@
 /**
  * The WCAG 2.2 criteria a docked player trips on, each as a check: target size (2.5.8), focus not
- * obscured by the bar (2.4.11), audio control (1.4.2), a modal that keeps Tab inside it, and the
- * bar's two Now Playing buttons told apart. Runs in desktop Chromium and at an iPhone's size.
+ * obscured by the bar (2.4.11), audio control (1.4.2), a modal that keeps Tab inside it, a panel
+ * that takes the focus and gives it back, and the bar's two Now Playing buttons told apart. Runs in desktop Chromium and at an iPhone's size.
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
+const { openView } = require( '../helpers/views' );
 
 const { FIXTURES } = require( '../helpers/site' );
 const made = own();
@@ -59,14 +60,12 @@ const targets = ( page, within ) =>
 		return out;
 	}, within );
 
-test( 'every control in the bar and Now Playing is at least 24 by 24 pixels (2.5.8)', async ( { page, isMobile } ) => {
+test( 'every control in the bar, Now Playing and Up next is at least 24 by 24 pixels (2.5.8)', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await page.locator( '.riff-bar-info' ).click();
+	await openView( page, 'album' );
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	if ( isMobile ) {
-		await page.locator( '.riff-peek' ).click();
-	}
+	await openView( page, 'queue' );
 	// A native range is its own control: its thumb is the target, laid out by the browser.
 	const small = ( await targets( page, '#riff' ) ).filter( ( t ) => t.type !== 'range' && ( t.w < 24 || t.h < 24 ) );
 	expect( small, 'controls under 24px' ).toEqual( [] );
@@ -115,19 +114,22 @@ test( 'nothing plays until the listener presses Play, a reload included (1.4.2)'
 	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( false );
 } );
 
-test( 'Now Playing is opened by one button named for the track; the chevron beside it is not heard', async ( { page } ) => {
+test( 'each view is opened by one button named for it, which says whether it is open; what plays is read, not a button', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await expect( page.locator( '.riff-bar-info' ) ).toHaveAccessibleName( /^Now Playing\s*,\s*Underground\s*,\s*Airmen of Note/ );
-	await expect( page.locator( '.riff-bar .riff-chevron' ) ).toHaveAttribute( 'aria-hidden', 'true' );
-	await expect( page.locator( '.riff-bar .riff-chevron' ) ).toHaveAttribute( 'tabindex', '-1' );
+	await expect( page.locator( '.riff-bar-info' ) ).not.toHaveAttribute( 'role', /./ );
+	await expect( page.locator( '.riff-bar-info' ) ).toContainText( 'Underground' );
+	await expect( page.locator( '.riff-bar button[data-riff-opens]' ).first() ).toHaveAccessibleName( 'Album' );
+	await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'false' );
+	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+	await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
 } );
 
 test( 'a modal Now Playing keeps Tab inside it', async ( { page, isMobile } ) => {
 	test.skip( ! isMobile, 'Now Playing is modal only where it covers the bar' );
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await page.locator( '.riff-bar-info' ).click();
+	await openView( page, 'album' );
 	const np = page.locator( '.riff-np' );
 	await expect( np ).toHaveAttribute( 'aria-modal', 'true' );
 	await expect( page.locator( '[data-riff-action="close"]' ) ).toBeFocused();
@@ -137,6 +139,35 @@ test( 'a modal Now Playing keeps Tab inside it', async ( { page, isMobile } ) =>
 	expect( where ).not.toBe( 'outside' );
 	await page.keyboard.press( 'Tab' );
 	await expect( page.locator( '[data-riff-action="close"]' ) ).toBeFocused();
+} );
+
+test( 'a panel takes the focus as it opens, keeps Tab inside it where it covers the screen, and Escape gives the focus back', async ( {
+	page,
+	isMobile,
+} ) => {
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( 0 ).click();
+	await openView( page, 'queue' );
+	const side = page.locator( '.riff-side' );
+	await expect( page.locator( '.riff-side-title' ) ).toBeFocused();
+	if ( isMobile ) {
+		// Over everything, so the rest is out of reach: Shift+Tab from its name comes round inside.
+		await expect( side ).toHaveAttribute( 'aria-modal', 'true' );
+		await expect( page.locator( '.riff-np' ) ).toHaveAttribute( 'inert', '' );
+		await page.keyboard.press( 'Shift+Tab' );
+		expect( await page.evaluate( () => !! document.activeElement?.closest( '.riff-side' ) ) ).toBe( true );
+	} else {
+		// Beside the page, which stays in reach.
+		await expect( side ).not.toHaveAttribute( 'aria-modal', 'true' );
+	}
+	await page.keyboard.press( 'Escape' );
+	await expect( side ).toBeHidden();
+	await expect( page.locator( isMobile ? '[data-riff-chip="queue"]' : '[data-riff-control="queue"]' ) ).toBeFocused();
+	// Escape closed the panel and nothing else.
+	if ( isMobile ) {
+		await expect( page.locator( '.riff-np' ) ).toBeVisible();
+		await expect( page.locator( '.riff-np' ) ).not.toHaveAttribute( 'inert', '' );
+	}
 } );
 
 test( 'Up next tells a screen reader where each track sits in the list', async ( {
@@ -159,10 +190,10 @@ test( 'every dragging movement has a single-pointer alternative (2.5.7)', async 
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	// Swiping the bar sideways skips: Next and Previous, in the bar on a wide screen and in Now
 	// Playing on a phone. Dragging Now Playing down closes it: Close, where it is a sheet; a wide
-	// screen's panel closes from the bar's caret and Escape. Swiping the bar down closes the
+	// screen's view closes from its button in the bar and Escape. Swiping the bar down closes the
 	// player, on a phone: Close player, in Up next's header beside Clear. A wide screen has no
 	// such swipe, and no Close player.
-	await page.locator( '.riff-bar-info' ).click();
+	await openView( page, 'album' );
 	for ( const action of [ 'next', 'prev', isMobile ? 'close' : 'toggle' ] ) {
 		await expect(
 			page.locator( `#riff [data-riff-action="${ action }"]:visible` ).first()
@@ -172,8 +203,8 @@ test( 'every dragging movement has a single-pointer alternative (2.5.7)', async 
 		await expect( page.locator( '#riff [data-riff-action="dismiss"]:visible' ) ).toHaveCount( 0 );
 		return;
 	}
-	// In Up next, opened by its handle: a press, not a drag.
-	await page.locator( '#riff [data-riff-action="queue"]' ).click();
+	// In Up next, opened by its chip: a press, not a drag.
+	await page.locator( '[data-riff-chip="queue"]' ).click();
 	const close = page.locator( '#riff [data-riff-action="dismiss"]' );
 	await expect( close ).toBeVisible();
 	// It says what it does in words, and is named by them (2.5.3).
@@ -230,7 +261,7 @@ test( 'what the track says reaches the player: captions, the language of a title
 	);
 	// The Captions switch sits with the Song or Video switch at the top of Now Playing: hidden
 	// in song mode, shown in video mode, off until pressed, and kept once it is.
-	await page.locator( '.riff-bar-info' ).click();
+	await openView( page, 'album' );
 	const captions = page.locator( '[data-riff-action="captions"]' );
 	await expect( captions ).toBeHidden();
 	await page.locator( '[data-riff-mode="video"]' ).click();

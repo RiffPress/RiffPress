@@ -3,6 +3,7 @@
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { audioState, playerSite, listen, said } = require( '../helpers/site' );
 
@@ -148,18 +149,13 @@ test.describe( 'Player', () => {
 
 	test( 'the first track pressed is announced, and the queue names what each row plays', async ( {
 		page,
-		isMobile,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		// Said where a track starts, so the first press is heard as Next and Previous are.
 		await expect( page.locator( '#a11y-speak-polite' ) ).toContainText(
 			/^Now playing Underground by Airmen of Note/
 		);
-		await page.locator( '.riff-bar-info' ).click();
-		await expect( page.locator( '.riff-np' ) ).toBeVisible();
-		if ( isMobile ) {
-			await page.locator( '.riff-peek' ).click();
-		}
+		await openView( page, 'queue' );
 		// Each row of Up next is named by what it shows, as a post's rows are, with a pause between
 		// the title and the artist rather than the two read run together; the playing one offers Pause.
 		const rows = page.locator( '.riff-queue-list li > button:first-child' );

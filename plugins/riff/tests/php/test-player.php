@@ -39,7 +39,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		Player::markup();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString( '<div id="riff" class="riff" hidden>', $html );
+		$this->assertStringContainsString( '<div id="riff" class="riff" hidden data-riff-showing="album" data-riff-turntable="off">', $html, 'Now Playing opens to the album, the cover on its own' );
 		$this->assertStringContainsString( 'class="riff-audio"', $html );
 		$this->assertStringContainsString( 'class="riff-video"', $html );
 		$this->assertStringContainsString( 'data-riff-wire', $html );
@@ -206,43 +206,55 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'strings', $data, 'the modules translate their own strings' );
 	}
 
-	public function test_up_next_is_the_only_tab_until_a_plugin_adds_one(): void {
+	public function test_a_song_with_a_video_opens_as_the_video_unless_the_site_says_the_song(): void {
+		$data = function (): array {
+			ob_start();
+			Player::markup();
+			preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', (string) ob_get_clean(), $found );
+			return json_decode( $found[1] ?? '', true );
+		};
 		$this->go_to( home_url( '/' ) );
-		ob_start();
-		Player::markup();
-		$html = ob_get_clean();
-
-		$this->assertSame( array( 'queue' ), array_keys( Player::tabs() ) );
-		$this->assertStringContainsString( 'class="riff-tabs" role="tablist"', $html, 'one tab is not "many", so a phone shows no tab row' );
-		$this->assertStringContainsString( 'id="riff-queue-tab" data-riff-tab="queue" aria-controls="riff-panel-queue" aria-selected="true" tabindex="0"', $html );
-		$this->assertSame( 1, substr_count( $html, 'role="tabpanel"' ) );
+		$this->assertTrue( $data()['video'] );
+		add_filter( 'riff_video_first', '__return_false' );
+		$this->assertFalse( $data()['video'] );
+		remove_filter( 'riff_video_first', '__return_false' );
 	}
 
-	public function test_a_plugin_adds_a_tab_with_an_empty_panel_after_up_next(): void {
+	public function test_the_bar_and_the_views_are_drawn_on_the_server_each_by_its_id(): void {
 		$this->go_to( home_url( '/' ) );
-		$tabs = static function ( array $tabs ): array {
-			unset( $tabs['queue'] );
-			return array(
-				'lyrics'  => array( 'label' => 'Lyrics <b>' ),
-				'Related' => array( 'label' => 'Related' ),
-				'queue'   => array( 'label' => 'Renamed' ),
-				'nolabel' => array(),
-				'notarr'  => 'Nope',
-			) + $tabs;
-		};
-		add_filter( 'riff_now_playing_tabs', $tabs );
 		ob_start();
 		Player::markup();
-		$html = ob_get_clean();
-		$keys = array_keys( Player::tabs() );
-		remove_filter( 'riff_now_playing_tabs', $tabs );
+		$html = (string) ob_get_clean();
 
-		$this->assertSame( array( 'queue', 'lyrics', 'related' ), $keys, 'Up next stays first and cannot be removed; slugs are keys; a tab without a label is dropped' );
-		$this->assertStringContainsString( 'class="riff-tabs riff-tabs-many"', $html );
-		$this->assertStringContainsString( '>Up next</button>', $html, 'a plugin cannot rename Up next' );
-		$this->assertStringContainsString( 'id="riff-tab-lyrics" data-riff-tab="lyrics" aria-controls="riff-panel-lyrics" aria-selected="false" tabindex="-1">Lyrics &lt;b&gt;</button>', $html, 'labels are escaped' );
-		$this->assertStringContainsString( '<div class="riff-panel" role="tabpanel" id="riff-panel-lyrics" aria-labelledby="riff-tab-lyrics" data-riff-panel="lyrics" tabindex="0" hidden></div>', $html );
-		$this->assertSame( 3, substr_count( $html, 'role="tabpanel"' ) );
+		// The bar's controls and the views' buttons, in their order, before any script runs.
+		$bar = substr( $html, strpos( $html, '<section class="riff-bar"' ), strpos( $html, '<div class="riff-np"' ) - strpos( $html, '<section class="riff-bar"' ) );
+		$this->assertMatchesRegularExpression( '#data-riff-control="like".*data-riff-control="badges".*data-riff-control="album".*data-riff-control="turntable".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="volume"#s', $bar );
+		$this->assertStringContainsString( 'data-riff-opens="album" data-riff-order="26" aria-label="Album" aria-pressed="false"', $bar, 'a view\'s button says whether it is open' );
+		$this->assertStringContainsString( 'class="riff-btn riff-control riff-control-album" data-riff-control="album"', $bar, 'the album\'s button is on a phone\'s bar too, the way into Now Playing' );
+		$this->assertStringContainsString( '<div class="riff-bar-info">', $bar, 'what plays is read, not pressed' );
+		$this->assertStringNotContainsString( 'riff-chevron', $html, 'no caret: the album\'s button opens Now Playing' );
+		$this->assertStringNotContainsString( '<template', $bar );
+
+		// On a phone, a chip for each view in Now Playing.
+		$this->assertMatchesRegularExpression( '#<div class="riff-chips">.*data-riff-chip="album".*data-riff-chip="turntable".*data-riff-chip="queue"#s', $html );
+
+		// Up next, a panel beside the page, closed until it is opened.
+		$this->assertStringContainsString( '<aside class="riff-side" aria-labelledby="riff-side-title" hidden>', $html );
+		$this->assertStringContainsString( 'data-riff-panel="queue" data-riff-label="Up next" hidden>', $html );
+		$this->assertStringContainsString( '<ol class="riff-queue-list" id="riff-queue-list"></ol>', $html );
+
+		// The script is told what each view is.
+		preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html, $data );
+		$views = json_decode( $data[1] ?? '', true )['views'] ?? array();
+		$this->assertSame(
+			array(
+				'label' => 'Album',
+				'place' => 'screen',
+				'stage' => true,
+			),
+			$views['album'] ?? null
+		);
+		$this->assertSame( 'side', $views['queue']['place'] ?? null );
 	}
 
 	public function test_the_accent_comes_from_the_theme(): void {

@@ -22,9 +22,11 @@ defined( 'ABSPATH' ) || exit;
  * it is kept as the audio attachment's own post meta, `_riff_chords`, registered with
  * register_post_meta(), shown and edited in the Media Library beside the file's other details,
  * and read through the media REST route as `riff_chords`. Everything it does in the player goes
- * through Riff's documented surface: the `riff_now_playing_tabs` filter, the `riff_before_player`
- * action, the `riff.tab`, `riff.track`, `riff.time`, `riff.play` and `riff.pause` actions, and
- * `window.riff`'s `seek()`, `time()`, `playing()` and `speed()`.
+ * through Riff's documented surface: `riff_register_view()` on the `riff_register` action, the
+ * `riff_before_player` action, the `riff.view`, `riff.track`, `riff.time`, `riff.play` and
+ * `riff.pause` actions, and `window.riff`'s `seek()`, `time()`, `playing()` and `speed()`. The
+ * chart is a view of Now Playing, as the lyrics are: it follows the song, so it takes the whole
+ * screen above the bar while it shows.
  */
 final class Chords {
 
@@ -39,17 +41,22 @@ final class Chords {
 	public const FIELD = 'riff_chords';
 
 	/**
-	 * The tab's slug.
+	 * The view's id.
 	 */
-	public const TAB = 'chords';
+	public const VIEW = 'chords';
 
 	/**
-	 * Hooks the meta, the tab, the field and the script.
+	 * A piano's keys, the Chords view's icon.
+	 */
+	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5.5 16h-3v-5.5h.5c.55 0 1-.45 1-1V5h1v7.5c0 .55.45 1 1 1h.5V19zM5 5h2v7.5c0 .55.45 1 1 1h.5V19H5V5zm14 14h-3.5v-5.5h.5c.55 0 1-.45 1-1V5h2v14z"/></svg>';
+
+	/**
+	 * Hooks the meta, the view, the field and the script.
 	 */
 	public static function register(): void {
 		// On init, since the meta's description is translated, and translations load from there.
 		add_action( 'init', array( self::class, 'meta' ) );
-		add_filter( 'riff_now_playing_tabs', array( self::class, 'tab' ) );
+		add_action( 'riff_register', array( self::class, 'view' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
@@ -122,7 +129,7 @@ final class Chords {
 	}
 
 	/**
-	 * `riff_chords` on wp/v2/media: the chart the tab shows, readable wherever the file is, and
+	 * `riff_chords` on wp/v2/media: the chart the view shows, readable wherever the file is, and
 	 * written only by whoever may edit the file.
 	 */
 	public static function rest_field(): void {
@@ -182,15 +189,18 @@ final class Chords {
 	}
 
 	/**
-	 * Adds the Chords tab after Up next, and after Lyrics when it is there.
-	 *
-	 * @param array $tabs Tabs keyed by slug.
-	 * @return array
+	 * The Chords view: a screen of Now Playing, its button in the bar after Lyrics' and before Up
+	 * next's, as the chart follows the song.
 	 */
-	public static function tab( $tabs ) {
-		$tabs              = is_array( $tabs ) ? $tabs : array();
-		$tabs[ self::TAB ] = array( 'label' => __( 'Chords', 'riff-chords' ) );
-		return $tabs;
+	public static function view(): void {
+		riff_register_view(
+			self::VIEW,
+			array(
+				'label' => __( 'Chords', 'riff-chords' ),
+				'icon'  => self::ICON,
+				'order' => 34,
+			)
+		);
 	}
 
 	/**
@@ -260,7 +270,7 @@ final class Chords {
 	}
 
 	/**
-	 * The tab's styles, under #riff as the player's own are, so they win over its button styles.
+	 * The view's styles, under #riff as the player's own are, so they win over its button styles.
 	 *
 	 * @return string
 	 */
@@ -339,7 +349,7 @@ final class Chords {
 				(int) $post->ID,
 				esc_textarea( self::get( $post->ID ) )
 			),
-			'helps' => __( 'A chord chart in ChordPro: [G] before the word the chord falls on, and [mm:ss.xx] before a line or a chord to follow the music. Shown in the Chords tab beside Up next.', 'riff-chords' ),
+			'helps' => __( 'A chord chart in ChordPro: [G] before the word the chord falls on, and [mm:ss.xx] before a line or a chord to follow the music. Shown in the player’s Chords view.', 'riff-chords' ),
 		);
 		return $fields;
 	}

@@ -6,7 +6,7 @@
  */
 
 use Riff\Catalog;
-use Riff\Player;
+use Riff\Registry;
 use Riff\Listen\Together;
 use Riff\Listen\Together_Scenes;
 
@@ -537,13 +537,16 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertSame( array(), $this->call( 'GET', '/together' )->get_data()['listeners'] );
 	}
 
-	public function test_the_together_tab_is_beside_up_next_for_a_listener_and_not_for_a_visitor(): void {
+	public function test_the_together_panel_is_after_up_next_for_a_listener_and_not_for_a_visitor(): void {
 		wp_set_current_user( $this->guest );
-		$this->assertSame( array( 'label' => 'Together' ), Player::tabs()['together'] ?? null );
-		$this->assertSame( 'together', array_key_last( Player::tabs() ), 'after the tabs about the track playing' );
+		$panels = Registry::views( 'side' );
+		$this->assertSame( 'Together', $panels['together']['label'] ?? null, 'a panel beside the page, as it is about who listens, not the track' );
+		$this->assertSame( array( 'queue', 'together' ), array_keys( $panels ), 'after Up next' );
+		$this->assertStringContainsString( 'data-riff-panel="together"', Registry::panels() );
 
+		Registry::reset();
 		wp_set_current_user( 0 );
-		$this->assertArrayNotHasKey( 'together', Player::tabs(), 'a visitor can\'t join the room' );
+		$this->assertArrayNotHasKey( 'together', Registry::views(), 'a visitor can\'t join the room' );
 	}
 
 	public function test_a_follower_sees_who_else_is_with_them_only_if_they_share(): void {

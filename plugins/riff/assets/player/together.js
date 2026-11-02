@@ -15,10 +15,10 @@
  * at the same place. A change that reaches a follower after it was due (a locked phone's slowed
  * timers) is joined once, where the schedule says the music is by then. A press of the follower's
  * own (P.press) stops following. Loaded on demand, when the first track does, a listener follows
- * someone or picks the Together tab, and only where the room is.
+ * someone or opens the Together panel, and only where the room is.
  *
- * The Together tab beside Up next (Together::tab()) shows the session this listener is in: who they
- * follow and who else is with them, with Leave; or who is with them. Outside one, it shows who else
+ * The Together panel beside the page (Together::view(), after Up next) shows the session this
+ * listener is in: who they follow and who else is with them, with Leave; or who is with them. Outside one, it shows who else
  * is listening, each with Follow. */
 
 import { fmt, route } from 'riff-player/helpers';
@@ -354,7 +354,7 @@ export default function together( P ) {
 		if ( following?.user !== user ) {
 			return; // Left while the answer was read.
 		}
-		// Who they are and who else is with them, for the Together tab.
+		// Who they are and who else is with them, for the Together panel.
 		following.name = following.name || String( d.user?.name || '' );
 		following.face = String( d.user?.face || '' );
 		following.with = Array.isArray( d.with ) ? d.with : [];
@@ -497,18 +497,17 @@ export default function together( P ) {
 		}
 	} );
 
-	// ---- The Together tab: the session, or outside one, who else is listening.
-	const TAB = 'together';
-	const ROOM = 15000; // How often the room is asked for while the tab shows it, as Home does.
+	// ---- The Together panel: the session, or outside one, who else is listening.
+	const VIEW = 'together';
+	const ROOM = 15000; // How often the room is asked for while the panel shows it, as Home does.
 	let room = [];
 	let roomVersion = null;
 	let roomTimer = 0;
 	let roomTurn = 0; // The latest ask, so only one goes on asking.
 	let drawn = '';
-	const panel = () => root.querySelector( `[data-riff-panel="${ TAB }"]` );
-	const np = root.querySelector( '.riff-np' );
-	// The tab picked, in Now Playing while it is open.
-	const showing = () => panel()?.hidden === false && np?.hidden === false;
+	const panel = () => root.querySelector( `[data-riff-panel="${ VIEW }"]` );
+	// The panel open beside the page (registry.js).
+	const showing = () => panel()?.hidden === false && P.panelOpen === VIEW;
 	// Their face, or a person where they have none.
 	function face( src ) {
 		const span = document.createElement( 'span' );
@@ -558,7 +557,7 @@ export default function together( P ) {
 		b.addEventListener( 'click', run );
 		return b;
 	}
-	// What the tab shows: drawn again only when that changes, so a button keeps its focus.
+	// What the panel shows: drawn again only when that changes, so a button keeps its focus.
 	function draw() {
 		const into = panel();
 		if ( ! into || into.hidden ) {
@@ -676,12 +675,12 @@ export default function together( P ) {
 			}
 		}
 		into.replaceChildren( box );
-		// A press that changed what the tab shows leaves the focus in it.
+		// A press that changed what the panel shows leaves the focus in it, on its name.
 		if ( had && ! into.contains( document.activeElement ) ) {
-			into.focus();
+			P.side?.querySelector( '.riff-side-title' )?.focus();
 		}
 	}
-	// Who else is listening, while the tab shows it and the page is in view.
+	// Who else is listening, while the panel shows it and the page is in view.
 	async function askRoom() {
 		clearTimeout( roomTimer );
 		const mine = ++roomTurn;
@@ -719,26 +718,27 @@ export default function together( P ) {
 	}
 	function refresh() {
 		P.areas?.();
+		P.drawControls?.();
 		draw();
 		askRoom();
 	}
-	root.addEventListener( 'riff:tab', ( e ) => {
-		if ( e.detail?.id === TAB ) {
+	// Opened, drawn afresh; told again as the track changes while it is open, drawn only where
+	// that changed it, so a button keeps its focus. Closed, it stops asking (askRoom()).
+	let open = false;
+	root.addEventListener( 'riff:view', ( e ) => {
+		if ( e.detail?.id !== VIEW ) {
+			return;
+		}
+		if ( e.detail.open && ! open ) {
 			drawn = '';
+		}
+		open = !! e.detail.open;
+		if ( open ) {
 			draw();
 			askRoom();
 		}
 	} );
-	// Now Playing opened again on the tab: asked again, as it stopped asking while closed.
-	if ( np && typeof MutationObserver === 'function' ) {
-		new MutationObserver( () => {
-			if ( showing() ) {
-				draw();
-				askRoom();
-			}
-		} ).observe( np, { attributes: true, attributeFilter: [ 'hidden' ] } );
-	}
-	// Picked before this loaded.
+	// Opened before this loaded.
 	if ( showing() ) {
 		draw();
 		askRoom();
@@ -797,39 +797,32 @@ export default function together( P ) {
 		}
 		return list;
 	} );
-	own.controls.add( ( list ) => {
-		if ( following ) {
-			return [
-				...list,
-				{
-					id: 'unfollow',
-					label: fmt(
-						/* translators: %s: The listener's name. */
-						__( 'Stop following %s', 'riff' ),
-						following.name
-					),
-					icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41 6.29 6.3-6.3 6.29 1.42 1.42 6.29-6.3 6.3 6.3 1.41-1.42-6.29-6.3 6.29-6.29z"/></svg>',
-					run: () => stop( '', false ),
-				},
-			];
-		}
-		if ( again ) {
-			const { user, name } = again;
-			return [
-				...list,
-				{
-					id: 'follow-again',
-					label: fmt(
-						/* translators: %s: The listener's name. */
-						__( 'Follow %s again', 'riff' ),
-						name
-					),
-					icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>',
-					run: () => follow( user, name ),
-				},
-			];
-		}
-		return list;
+	// In the bar, through the same registration a plugin's control uses: the way out while
+	// following, and the way back in after a press of the listener's own stopped it. Each shows only
+	// while it applies; a phone's bar keeps them, as they are the only way out there.
+	P.control( 'unfollow', {
+		order: 22,
+		label: () =>
+			fmt(
+				/* translators: %s: The listener's name. */
+				__( 'Stop following %s', 'riff' ),
+				following?.name || ''
+			),
+		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41 6.29 6.3-6.3 6.29 1.42 1.42 6.29-6.3 6.3 6.3 1.41-1.42-6.29-6.3 6.29-6.29z"/></svg>',
+		shown: () => !! following,
+		run: () => stop( '', false ),
+	} );
+	P.control( 'follow-again', {
+		order: 22,
+		label: () =>
+			fmt(
+				/* translators: %s: The listener's name. */
+				__( 'Follow %s again', 'riff' ),
+				again?.name || ''
+			),
+		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>',
+		shown: () => ! following && !! again,
+		run: () => again && follow( again.user, again.name ),
 	} );
 
 	// ---- A track's …: Listen along with whoever else is playing it. The room is asked for as a

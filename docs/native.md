@@ -24,6 +24,9 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | AI tools and other plugins reading the library or keeping likes and playlists | The Abilities API: Riff registers one ability per `riff/v1` route it answers for, each run as that route's REST request, except the Listen app's own `riff/v1/played` and `riff/v1/together`. |
 | A track's artist, album, video version, captions and protection in the Media Library's views and forms | The Entity Fields API (WordPress 7.2; on 7.1 the same fields are on the attachment's edit screen): Riff registers each as a field of the attachment entity, reading and writing a REST field of the same name on `wp/v2/media`, so DataViews shows and edits them beside core's own without a screen of Riff's. |
 | Per-site upload limits on a network | Multisite's `blog_upload_space`. |
+| Whether Now Playing shows the turntable | A site option, `riff_turntable`, registered with `register_setting()` on Settings › Media, where WordPress keeps how media is shown, and in the REST settings route; the `riff_turntable` filter decides last. On a network each site keeps its own. |
+| Whether a listener last chose the turntable, or a song's video over the song | The listener's own browser storage, `riff:turntable` and `riff:mode`, as the queue and the volume are kept: a choice about this browser, nothing the site needs. |
+| Which panel a listener left open | The listener's own browser storage, `riff:panel`, as the queue and the volume are kept: a choice about this browser's screen, nothing the site needs. |
 | A listener's choices about how the site behaves for them: the player's single-key shortcuts, and whether they share what they listen to | User options under Personal Options on their profile (`riff_shortcuts`, `riff_together_share`), so on a network each site keeps its own. |
 
 ## Added by Riff, and why

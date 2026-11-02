@@ -18,13 +18,13 @@ Use the demo at https://next.riffpress.com/, or any post with at least three tra
 
 1. Move through the post to the first track. Its row is a button, "Play <title>, <artist> • <album>, <length>"; after it come a heart, "Like <title>", a toggle button, and the …, "More options for <title>".
 2. Press it. You hear "Now playing <title> by <artist>", and the row's button is now "Pause <title>, …".
-3. The bar at the foot of the page is a region named Player. Its first button is "Now Playing, <title>, <artist> • <album>", dialog pop up; then Shuffle, a toggle button; Previous, Pause, Next; "Repeat, off"; the Track position slider; "Like <title>"; and on a computer Volume, "100 percent". The chevron at the end is not a stop: it does what the first button does. The quality pill ("MP3 · 128 kbps") between Like and Volume is text, not a control: Tab passes it, and the VoiceOver cursor (VO + arrows) reads it.
+3. The bar at the foot of the page is a region named Player. It starts with what plays, "<title>, <artist> • <album>", as text, not a button; then Shuffle, a toggle button; Previous, Pause, Next; "Repeat, off"; the Track position slider; "Like <title>"; the views' toggle buttons, Album, Turntable, Lyrics and Up next; and on a computer Volume, "100 percent". The quality pill ("MP3 · 128 kbps") between Like and Volume is text, not a control: Tab passes it, and the VoiceOver cursor (VO + arrows) reads it.
 4. On the Track position slider, press the right arrow. You hear a time, "11 seconds of 8 minutes, 57 seconds", five seconds on from before. Drag it with the screen reader's own gesture: the time keeps being spoken.
 
 ## Now Playing
 
-5. Open Now Playing. On a phone it is a dialog that keeps you inside it; Escape, or the Close button, returns you to the button you opened it from. On a computer it is not modal, and you can move out to the bar and back.
-6. Move through it: Up next and Lyrics as tabs, Clear the queue, then each track as "Play <title>, <artist>, <length>" with "More options" after it, the playing one "Pause …".
+5. Press Album. It says it is pressed, and Now Playing opens. On a phone it is a dialog that keeps you inside it; Escape, or the Close button, returns you to the button you opened it from. On a computer it is not modal, and you can move out to the bar and back.
+6. Press Up next. A panel opens with focus on its heading, "Up next", then Close Up next, Clear the queue, then each track as "Play <title>, <artist> • <album>, <length>" with "More options" after it, the playing one "Pause …". Escape returns you to Up next's button.
 7. Open a row's More options. The first item has focus; the arrows move through Play next, Add to queue, Add to Liked songs, Move up or down, Remove from queue, Go to post; Escape returns you to the … button.
 8. Choose Play next. You hear "<title> plays next". Choose Remove from queue on another. You hear "<title> removed from the queue". Clear the queue. You hear "Queue cleared".
 9. Signed in, open your profile and clear "Keyboard shortcuts in the player" under Personal Options. Back on the post, press K: nothing happens. Turn it on again, then K: the track pauses. Signed out, K does nothing and Shift+N still changes track.
@@ -38,10 +38,10 @@ Use the demo at https://next.riffpress.com/, or any post with at least three tra
 
 ## Lyrics
 
-14. With a track that has lyrics, open the Lyrics tab. The lines are read as a list; a timed line is a button, and pressing it moves the track there.
+14. With a track that has lyrics, press Lyrics in the bar, or its chip in Now Playing on a phone. The lines are read as a list; a timed line is a button, and pressing it moves the track there.
 14a. With a video that has captions, press Video in Now Playing: a Captions button is there, and pressing it shows the captions on the video and says "Captions on".
 
 ## Seeing
 
-15. Windows High Contrast, or the forced-colours setting: the seek line, the current row, the open tab and the pressed buttons are still told apart.
+15. Windows High Contrast, or the forced-colours setting: the seek line, the current row, the open view's button and the other pressed buttons are still told apart.
 16. 400% zoom at 1280 pixels wide: nothing is cut off, nothing scrolls sideways, and every control is still reachable.

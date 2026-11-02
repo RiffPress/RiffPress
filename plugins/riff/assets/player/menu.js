@@ -147,11 +147,13 @@ export function menu( P ) {
 			} )
 		);
 		// The player is hidden until something plays, and the menu would be too; before then it
-		// opens from the page itself. Opened from Now Playing it goes inside the dialog, where a
-		// screen reader kept to it can reach it.
+		// opens from the page itself. Opened from a panel, such as Up next, or from Now Playing, it
+		// goes inside it, where a screen reader kept to it can reach it and nothing stands over it.
 		( root.hidden
 			? document.body
-			: ( ! P.np.hidden && P.np ) || root
+			: button.closest( '.riff-side' ) ||
+			  ( ! P.np.hidden && P.np ) ||
+			  root
 		).append( el );
 		el.hidden = false;
 		const r = button.getBoundingClientRect();

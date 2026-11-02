@@ -4,8 +4,10 @@
  * The arm is set up by Baerwald's alignment, and the platter turns on below the slowest the music
  * plays at: up to speed before the music is heard, and on down to rest after it stops.
  * Runs in desktop Chromium, where the turntable stands; a phone held upright shows the cover alone.
+ * A site that turns the turntable off has the cover alone everywhere.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { playerSite, audioState } = require( '../helpers/site' );
 
@@ -35,7 +37,7 @@ test.describe( 'Turntable', () => {
 		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await page.locator( '.riff-bar-info' ).click();
+		await openView( page, 'turntable' );
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
 	} );
 
@@ -144,5 +146,33 @@ test.describe( 'Turntable', () => {
 		await toggle.click();
 		await expect.poll( platter ).toEqual( [ 'coasting, silent', 'driven, silent', 'coasting, silent', 'driven, heard' ] );
 		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate ) ).toBe( 1 );
+	} );
+} );
+
+test.describe( 'Turntable turned off', () => {
+	test.use( { viewport: { width: 1440, height: 900 } } );
+
+	test( 'a site that turns it off has no turntable to open, and the cover on its own', async ( {
+		page,
+		context,
+		baseURL,
+	}, info ) => {
+		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
+		// What Settings › Media's box does, through the riff_turntable filter (tests/components).
+		await context.addCookies( [ { name: 'riff_test_no_turntable', value: '1', url: baseURL } ] );
+		await page.goto( postUrl );
+		const root = page.locator( '#riff' );
+		await expect( root ).toHaveAttribute( 'data-riff-turntable', 'off' );
+		await expect( page.locator( '[data-riff-control="turntable"]' ) ).toHaveCount( 0 );
+		await expect( page.locator( '[data-riff-chip="turntable"]' ) ).toHaveCount( 0 );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await openView( page, 'album' );
+		await expect( page.locator( '.riff-cover' ) ).toBeVisible();
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		// Playing on a stage with the room for it, and still no record out, no arm and no sleeve.
+		await expect( root ).not.toHaveAttribute( 'data-riff-deck', 'out' );
+		await expect( page.locator( '.riff-record' ) ).toBeHidden();
+		await expect( page.locator( '.riff-mount' ) ).toBeHidden();
+		await expect( page.locator( '.riff-sleeve' ) ).toBeHidden();
 	} );
 } );

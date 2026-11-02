@@ -9,11 +9,11 @@ Stable tag: 0.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A Chords tab beside Up next in Riff's Now Playing: a chord chart that follows the song, and practice controls for playing along.
+A Chords view in Riff's Now Playing: a chord chart that follows the song, and practice controls for playing along.
 
 == Description ==
 
-Riff Chords adds a Chords tab next to Up next in Riff's Now Playing, for lessons, music shops and anyone learning a song by ear.
+Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in the player's bar, for lessons, music shops and anyone learning a song by ear.
 
 * The chart is ChordPro, the format chord sheets are already written in: a chord in square brackets before the word it falls on, such as [G]Here [C]it comes, and directives in braces for the title, key, capo, tempo, comments and the song's parts ({start_of_verse}, {start_of_chorus: Chorus 2}, {start_of_tab} and the rest).
 * The chart follows the music when it has times, written the way LRC times a lyric line: [01:02.50] at the start of a line, and before any chord that falls somewhere else, as in [01:02.50][G]. A line's first chord is played when the line starts, and chords without a time of their own are spread evenly between the times around them.

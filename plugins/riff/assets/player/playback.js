@@ -125,6 +125,8 @@ export function playback( P ) {
 
 	function dismiss() {
 		P.close();
+		// Up next, where Close player is, goes with it; the listener's choice of panel stays.
+		P.hidePanel( { quiet: true } );
 		P.stopAll();
 		P.queue = [];
 		P.order = [];

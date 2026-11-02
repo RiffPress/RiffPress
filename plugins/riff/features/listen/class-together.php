@@ -11,6 +11,7 @@ namespace Riff\Listen;
 use Riff\Catalog;
 use Riff\Library;
 use Riff\Likes_Rest;
+use Riff\Registry;
 use Riff\Tracks;
 use WP_Error;
 use WP_REST_Request;
@@ -31,7 +32,7 @@ defined( 'ABSPATH' ) || exit;
  * moment ahead, LEAD, so it reaches every follower before it is due, and each of them, the host
  * too, makes it at that moment by the server's clock. Nothing is chased or corrected after.
  *
- * Whoever is signed in sees the session they are in under Together in Now Playing: who they follow
+ * Whoever is signed in sees the session they are in in the Together panel beside the page: who they follow
  * and who else is with them, or who is with them, and the way out; and, on an album's page, the
  * faces of whoever is playing from it now.
  *
@@ -92,22 +93,14 @@ final class Together {
 	public const SESSION = 'riff/session:';
 
 	/**
-	 * The slug of the Together tab beside Up next.
-	 *
-	 * @since 5.8.0
-	 */
-	private const TAB = 'together';
-
-	/**
-	 * Hooks the routes, the profile field and the Together tab.
+	 * Hooks the routes, the profile field and the Together panel.
 	 *
 	 * @since 5.6.0
-	 * @since 5.8.0 And the profile field and the Together tab.
+	 * @since 5.8.0 And the profile field and the Together panel.
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
-		// After the tabs other plugins add, such as Lyrics, which are about the track playing.
-		add_filter( 'riff_now_playing_tabs', array( self::class, 'tab' ), 20 );
+		add_action( Registry::HOOK, array( self::class, 'view' ) );
 		add_action( 'personal_options', array( self::class, 'field' ) );
 		add_action( 'personal_options_update', array( self::class, 'save' ) );
 		add_action( 'edit_user_profile_update', array( self::class, 'save' ) );
@@ -194,20 +187,26 @@ final class Together {
 	}
 
 	/**
-	 * The Together tab beside Up next, through Riff's own riff_now_playing_tabs, for a listener who
-	 * may join the room: a visitor, or anyone where the Presence API isn't recording, has none.
+	 * The Together panel beside the page, after Up next, registered as any plugin's view is, for a
+	 * listener who may join the room: a visitor, or anyone where the Presence API isn't recording,
+	 * has none. A panel rather than a screen of Now Playing, as it is about who is listening, not
+	 * the track, and is opened while the page or the album goes on showing.
 	 *
 	 * @since 5.8.0
-	 *
-	 * @param array $tabs The tabs so far.
-	 * @return array
 	 */
-	public static function tab( $tabs ) {
-		if ( ! is_array( $tabs ) || ! self::available() || true !== self::allowed() ) {
-			return $tabs;
+	public static function view(): void {
+		if ( ! self::available() || true !== self::allowed() ) {
+			return;
 		}
-		$tabs[ self::TAB ] = array( 'label' => __( 'Together', 'riff' ) );
-		return $tabs;
+		Registry::register_view(
+			'together',
+			array(
+				'label' => __( 'Together', 'riff' ),
+				'icon'  => 'group',
+				'order' => 45,
+				'place' => 'side',
+			)
+		);
 	}
 
 	/**
@@ -688,7 +687,7 @@ final class Together {
 		if ( (string) $request['version'] === $listener['version'] ) {
 			unset( $listener['queue'] );
 		}
-		// Who else is with them, for the Together tab: only those who share what they play, as no
+		// Who else is with them, for the Together panel: only those who share what they play, as no
 		// one who chose not to is shown to anyone but the listener they follow.
 		$listener['with']     = array_values(
 			array_filter(

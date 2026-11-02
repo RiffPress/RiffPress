@@ -22,9 +22,12 @@ class Test_Riff_Chords extends Riff_TestCase {
 		Chords::meta();
 	}
 
-	public function test_the_tab_comes_after_up_next(): void {
-		$this->assertSame( array( 'queue', 'chords' ), array_keys( Riff\Player::tabs() ) );
-		$this->assertSame( 'Chords', Riff\Player::tabs()['chords']['label'] );
+	public function test_the_view_is_registered_on_the_server_as_a_screen_of_now_playing(): void {
+		$views = Riff\Registry::views( 'screen' );
+		$this->assertArrayHasKey( 'chords', $views, 'a screen of Now Playing, registered as Riff registers its own' );
+		$this->assertSame( 'Chords', $views['chords']['label'] );
+		$this->assertSame( array( 'album', 'turntable', 'chords' ), array_keys( $views ), 'its button after the turntable\'s' );
+		$this->assertArrayNotHasKey( 'chords', Riff\Registry::views( 'side' ) );
 	}
 
 	public function test_audio_gets_a_chords_field_and_images_do_not(): void {

@@ -370,3 +370,41 @@ add_action(
 	},
 	1
 );
+
+/*
+ * A site that turned the turntable off, through the riff_turntable filter as a plugin would, while
+ * the browser carries the riff_test_no_turntable cookie. Loaded only on the tests site.
+ */
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
+if ( ! empty( $_COOKIE['riff_test_no_turntable'] ) ) {
+	add_filter( 'riff_turntable', '__return_false' );
+}
+
+/*
+ * A song with a video opens as the song on the tests site, so the specs of what a song shows, the
+ * record and the filament, play the fixture that has a video too; while the browser carries the
+ * riff_test_video_first cookie it opens as the video, as on any other site. Loaded only on the
+ * tests site.
+ */
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
+add_filter( 'riff_video_first', static fn() => ! empty( $_COOKIE['riff_test_video_first'] ) );
+
+/*
+ * A control registered on the server, as a plugin registers one, while the browser carries the
+ * riff_test_control cookie: the page has it before any script, and its script gives it its press.
+ * Loaded only on the tests site.
+ */
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
+if ( ! empty( $_COOKIE['riff_test_control'] ) ) {
+	add_action(
+		'riff_register',
+		static fn() => riff_register_control(
+			'e2e-server',
+			array(
+				'label' => 'Server control',
+				'icon'  => 'share',
+				'order' => 66,
+			)
+		)
+	);
+}

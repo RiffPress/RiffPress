@@ -46,6 +46,9 @@ spl_autoload_register(
 	}
 );
 
+// The functions other plugins call, such as riff_register_view().
+require RIFF_DIR . 'src/functions.php';
+
 // The extensions Riff ships (extensions.json), loaded now, as WordPress is loading plugins, so each
 // is in place before plugins_loaded as if it were installed beside Riff.
 Riff\Extensions::load();

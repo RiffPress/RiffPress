@@ -212,7 +212,7 @@ class Test_Riff_I18n extends Riff_TestCase {
 		Player::markup();
 		$html = (string) ob_get_clean();
 
-		$this->assertStringContainsString( '⟪Up next⟫', $html );
+		$this->assertStringContainsString( '⟪Now Playing⟫', $html, 'Up next is a panel the script adds, translated there' );
 		$this->assertStringContainsString( '⟪Share⟫', $html );
 	}
 }

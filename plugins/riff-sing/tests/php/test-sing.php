@@ -29,10 +29,12 @@ class Test_Riff_Sing extends Riff_TestCase {
 		return self::attach( '02 - Underground [underground].mp3' );
 	}
 
-	public function test_the_tab_comes_after_up_next(): void {
-		$tabs = Riff\Player::tabs();
-		$this->assertSame( 'queue', array_key_first( $tabs ) );
-		$this->assertSame( 'Sing', $tabs['sing']['label'] );
+	public function test_the_view_is_registered_on_the_server_as_a_screen_of_now_playing(): void {
+		$views = Riff\Registry::views( 'screen' );
+		$this->assertArrayHasKey( 'sing', $views, 'a screen of Now Playing, registered as Riff registers its own' );
+		$this->assertSame( 'Sing', $views['sing']['label'] );
+		$this->assertSame( array( 'album', 'turntable', 'sing' ), array_keys( $views ), 'its button after the turntable\'s' );
+		$this->assertArrayNotHasKey( 'sing', Riff\Registry::views( 'side' ) );
 	}
 
 	public function test_audio_gets_a_melody_field_and_images_do_not(): void {

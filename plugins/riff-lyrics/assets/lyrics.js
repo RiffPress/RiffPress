@@ -1,7 +1,7 @@
-/* Riff Lyrics: fills the Lyrics tab beside Up next with the lyrics WordPress keeps on the track's
- * file, from the media REST route. It listens to the player's riff:tab, riff:track and riff:time
- * events, which Riff dispatches on its own element for any script, so it needs nothing loaded
- * before it. Timed lyrics follow the music: the line being sung is marked and kept in view, and a
+/* Riff Lyrics: a Lyrics view of Now Playing, registered on the server (riff_register_view()) as
+ * Riff registers its own, filled with the lyrics WordPress keeps on the track's file, from the
+ * media REST route. It follows the player's riff:view and riff:time events, which Riff dispatches
+ * on its own element for any script. Timed lyrics follow the music: the line being sung is marked and kept in view, and a
  * tap on a line seeks to it through window.riff.seek(). They are read in the formats players and
  * taggers already write: LRC, with its [offset:] tag and Enhanced LRC's <mm:ss.xx> word times, whose
  * words light up as they are sung; WebVTT, the web's own timed text; and an ID3 SYLT frame, which
@@ -16,7 +16,6 @@
 	let current = -1;
 	let scrolledAt = 0; // When the listener last scrolled the lyrics by hand.
 
-	const panel = () => document.querySelector( '[data-riff-panel="lyrics"]' );
 	// Until the player starts, window.riff is the #riff element, by its id.
 	const player = () => ( typeof window.riff?.seek === 'function' ? window.riff : null );
 
@@ -152,11 +151,11 @@
 			.sort( ( a, b ) => a.time - b.time || a.i - b.i );
 	}
 
-	// A queue of lines under a note: what the empty panel shows, decoration beside its words.
+	// A queue of lines under a note: what the empty view shows, decoration beside its words.
 	const ICON =
 		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/></svg>';
 
-	// The panel with no lyrics in it: its message in the middle, and for someone who can edit the
+	// The view with no lyrics in it: its message in the middle, and for someone who can edit the
 	// Media Library, the way to the track's Lyrics field.
 	function say( where, text, className, id = 0 ) {
 		const box = document.createElement( 'div' );
@@ -219,7 +218,7 @@
 		follow( player()?.time?.() ?? 0 );
 	}
 
-	// Marks the line whose time has come and keeps it in the middle of the panel, unless the
+	// Marks the line whose time has come and keeps it in the middle of the view, unless the
 	// listener has just scrolled the lyrics themselves.
 	function follow( time ) {
 		if ( ! lines.length ) {
@@ -299,15 +298,14 @@
 		}
 	}
 
-	document.addEventListener( 'riff:tab', ( e ) => {
-		showing = e.detail?.id === 'lyrics';
-		if ( showing ) {
-			fill( e.detail.panel, e.detail.track );
+	// The view, filled as it opens and again as the track changes while it is open.
+	document.addEventListener( 'riff:view', ( e ) => {
+		if ( e.detail?.id !== 'lyrics' ) {
+			return;
 		}
-	} );
-	document.addEventListener( 'riff:track', ( e ) => {
+		showing = !! e.detail.open;
 		if ( showing ) {
-			fill( panel(), e.detail?.track );
+			fill( e.detail.view, e.detail.track );
 		}
 	} );
 	document.addEventListener( 'riff:time', ( e ) => follow( Number( e.detail?.time ) || 0 ) );
@@ -316,7 +314,7 @@
 		document.addEventListener(
 			ev,
 			( e ) => {
-				if ( lines.length && e.target.closest?.( '[data-riff-panel="lyrics"]' ) ) {
+				if ( lines.length && e.target.closest?.( '[data-riff-view="lyrics"]' ) ) {
 					scrolledAt = Date.now();
 				}
 			},

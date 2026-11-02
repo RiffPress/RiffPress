@@ -42,6 +42,8 @@ export function createPlayer( root, data ) {
 		SHARED: 'riff_track',
 		VOLUME: 'riff:volume',
 		CAPTIONS: 'riff:captions',
+		// Song or video, for a song that has both, as the listener last chose it.
+		MODE: 'riff:mode',
 		reduce: () =>
 			window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches,
 		// Whether the page is out of sight, so nothing is drawn for no one: hidden, or in the
@@ -166,15 +168,14 @@ export function createPlayer( root, data ) {
 	};
 	P.filter = ( name, value, ...args ) =>
 		hooks ? hooks.applyFilters( `riff.${ name }`, value, ...args ) : value;
-	// Riff's own features hear of likes and playlists, add to the track menu, fill the player's
-	// areas (badges and controls) and hear the meter, here rather than through wp.hooks, so none
-	// of it is a promise to other plugins yet (docs/player.md, "Areas").
+	// Riff's own features hear of likes and playlists, add to the track menu, fill the badges and
+	// hear the meter, here rather than through wp.hooks, so none of it is a promise to other
+	// plugins yet (docs/player.md, "Areas"). The bar's controls are public: window.riff.control().
 	P.own = {
 		like: new Set(),
 		playlist: new Set(),
 		menu: new Set(),
 		badges: new Set(),
-		controls: new Set(),
 		meter: new Set(),
 		// A listener's own press of play, pause, skip, seek or speed, through a control, a key, the
 		// lock screen, the seek line, a row, the turntable or a script, as against what the player

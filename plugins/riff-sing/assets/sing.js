@@ -1,13 +1,14 @@
-/* Riff Sing: fills the Sing tab beside Up next. The song's melody, from the track's Melody field
+/* Riff Sing: fills the Sing view of Now Playing, registered on the server as Riff registers its own
+ * (riff_register_view()). The song's melody, from the track's Melody field
  * through the media REST route, scrolls past as a lane of notes with its words under it; once the
  * listener asks, their voice is drawn against it and each line is scored as it ends.
  *
- * It listens to the player's riff:tab, riff:track, riff:time, riff:play and riff:ended events, which
+ * It listens to the player's riff:view, riff:time, riff:play and riff:ended events, which
  * Riff dispatches on its own element for any script, and reads where the song is through
  * window.riff.time(), so it needs nothing loaded before it but melody.js.
  *
  * The microphone is opened only when the listener presses Sing with the microphone, and closed when
- * they press Stop, leave the tab, close Now Playing or leave the page. Its sound goes to an
+ * they press Stop, leave the view, close Now Playing or leave the page. Its sound goes to an
  * AudioWorklet (pitch.js) that works out the note and passes on nothing but that: no sound is kept,
  * and nothing is sent anywhere. A MIDI instrument or a pitch-to-MIDI microphone, through Web MIDI
  * where the browser has it, gives the note exactly. */
@@ -46,7 +47,6 @@
 		// Storage can be off; the default stands.
 	}
 
-	const panel = () => document.querySelector( '[data-riff-panel="sing"]' );
 	// Until the player starts, window.riff is the #riff element, by its id.
 	const player = () => ( typeof window.riff?.time === 'function' ? window.riff : null );
 	const speak = ( text ) => window.wp?.a11y?.speak?.( text, 'polite' );
@@ -341,9 +341,9 @@
 				},
 				video: false,
 			} );
-			// The tab was left while the browser asked: the microphone is let go at once.
+			// The view was left while the browser asked: the microphone is let go at once.
 			if ( left() ) {
-				throw new DOMException( 'The Sing tab was left', 'AbortError' );
+				throw new DOMException( 'The Sing view was left', 'AbortError' );
 			}
 			const Context = window.AudioContext || window.webkitAudioContext;
 			ctx = new Context();
@@ -357,7 +357,7 @@
 				await ctx.resume().catch( () => {} );
 			}
 			if ( left() ) {
-				throw new DOMException( 'The Sing tab was left', 'AbortError' );
+				throw new DOMException( 'The Sing view was left', 'AbortError' );
 			}
 			node.port.onmessage = ( e ) => {
 				const { hz = 0, clarity = 0 } = e.data || {};
@@ -642,17 +642,17 @@
 		frame = window.requestAnimationFrame( tick );
 	}
 
-	document.addEventListener( 'riff:tab', ( e ) => {
-		showing = e.detail?.id === 'sing';
+	// The view, filled as it opens and again as the track changes while it is open; left, the
+	// microphone is let go.
+	document.addEventListener( 'riff:view', ( e ) => {
+		if ( e.detail?.id !== 'sing' ) {
+			return;
+		}
+		showing = !! e.detail.open;
 		if ( showing ) {
-			show( e.detail.panel, e.detail.track );
+			show( e.detail.view, e.detail.track );
 		} else {
 			end();
-		}
-	} );
-	document.addEventListener( 'riff:track', ( e ) => {
-		if ( showing ) {
-			show( panel(), e.detail?.track );
 		}
 	} );
 	document.addEventListener( 'riff:play', () => loop() );

@@ -32,7 +32,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const PLAYER_SECTIONS = array( 'helpers', 'state', 'media', 'rows', 'resume', 'queue', 'playback', 'account', 'paint', 'menu', 'seek', 'now-playing', 'controls', 'keyboard' );
+	public const PLAYER_SECTIONS = array( 'helpers', 'state', 'media', 'registry', 'rows', 'resume', 'queue', 'playback', 'account', 'paint', 'menu', 'seek', 'now-playing', 'controls', 'keyboard' );
 
 	/**
 	 * The player's optional features under assets/player/, imported when first needed.
@@ -49,6 +49,99 @@ final class Player {
 	public static function register(): void {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
 		add_action( 'wp_footer', array( self::class, 'markup' ), 5 );
+		add_action( Registry::HOOK, array( self::class, 'own' ), 5 );
+	}
+
+	/**
+	 * Riff's own controls and views, registered as any plugin's are: in the bar the heart, the
+	 * badges (the format and bit rate, which Riff's own listeners fill), Play on another device and
+	 * the volume; and the views, the album, the turntable where the site has it, and Up next.
+	 *
+	 * @since 5.8.0
+	 */
+	public static function own(): void {
+		Registry::register_control(
+			'like',
+			array(
+				'label'  => __( 'Like', 'riff' ),
+				'order'  => 10,
+				'render' => static fn() => '<button type="button" class="riff-btn riff-like" data-riff-action="like" aria-label="' . esc_attr__( 'Like', 'riff' ) . '" aria-pressed="false" hidden>' . self::hearts() . '</button>',
+			)
+		);
+		Registry::register_control(
+			'badges',
+			array(
+				'label'  => __( 'Quality', 'riff' ),
+				'order'  => 20,
+				'wide'   => true,
+				'render' => static fn() => '<span class="riff-area" data-riff-area="badges"></span>',
+			)
+		);
+		Registry::register_control(
+			'cast',
+			array(
+				'label'  => __( 'Play on another device', 'riff' ),
+				'order'  => 60,
+				'render' => static fn() => '<button type="button" class="riff-btn" data-riff-action="cast" aria-label="' . esc_attr__( 'Play on another device', 'riff' ) . '" hidden>' . self::icon( 'cast' ) . '</button>',
+			)
+		);
+		Registry::register_control(
+			'volume',
+			array(
+				'label'  => __( 'Volume', 'riff' ),
+				'order'  => 70,
+				'wide'   => true,
+				'render' => static fn() => '<label class="riff-volume"><input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="' . esc_attr__( 'Volume', 'riff' ) . '" aria-valuetext="' . esc_attr__( '100 percent', 'riff' ) . '">' . self::icon( 'volume' ) . '</label>',
+			)
+		);
+		// The album, the cover on its own, is what Now Playing opens to; its button is on a phone's
+		// bar too, as the way into Now Playing.
+		Registry::register_view(
+			'album',
+			array(
+				'label' => __( 'Album', 'riff' ),
+				'icon'  => 'album',
+				'order' => 26,
+				'stage' => true,
+				'wide'  => false,
+			)
+		);
+		if ( Turntable::on() ) {
+			Registry::register_view(
+				'turntable',
+				array(
+					'label' => __( 'Turntable', 'riff' ),
+					'icon'  => 'record',
+					'order' => 28,
+					'stage' => true,
+				)
+			);
+		}
+		Registry::register_view(
+			'queue',
+			array(
+				'label'  => __( 'Up next', 'riff' ),
+				'icon'   => 'queue',
+				'order'  => 40,
+				'place'  => 'side',
+				'render' => array( self::class, 'queue' ),
+			)
+		);
+	}
+
+	/**
+	 * Up next's panel: where the queue plays from, and the queue.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @return string
+	 */
+	public static function queue(): string {
+		return '<header class="riff-queue-head"><div><p>' . esc_html__( 'Playing from', 'riff' ) . '</p><h3 data-riff-text="source"></h3></div>'
+			. '<button type="button" class="riff-queue-clear" data-riff-action="clear-queue" aria-label="' . esc_attr__( 'Clear the queue', 'riff' ) . '" hidden>' . esc_html__( 'Clear', 'riff' ) . '</button>'
+			// On a phone only: what swiping the bar down does, as a button (WCAG 2.5.7). A computer has no such swipe.
+			. '<button type="button" class="riff-queue-clear riff-mobile" data-riff-action="dismiss">' . esc_html__( 'Close player', 'riff' ) . '</button>'
+			. '</header><ol class="riff-queue-list" id="riff-queue-list"></ol>';
 	}
 
 	/**
@@ -182,6 +275,8 @@ final class Player {
 		foreach ( array_merge( self::PLAYER_SECTIONS, self::PLAYER_FEATURES ) as $module ) {
 			wp_set_script_module_translations( 'riff-player/' . $module, 'riff' );
 		}
+		// The modules the registered controls and views name, which bring them to life.
+		Registry::enqueue();
 	}
 
 	/**
@@ -241,11 +336,20 @@ final class Player {
 			'cookiePath' => COOKIEPATH,
 			// A post's tracks, which the record in Now Playing cuts its grooves from.
 			'library'    => rest_url( 'riff/v1/library/' ),
+			/**
+			 * Whether a song that has a video opens as the video. A listener's own choice of the
+			 * song or the video, and a browser that saves data, come first.
+			 *
+			 * @since 5.8.0
+			 *
+			 * @param bool $video True to open as the video, false for the song.
+			 */
+			'video'      => (bool) apply_filters( 'riff_video_first', true ),
 		);
 		// What Riff's own features add for the script: the Listen app's address, the listener's
-		// likes and playlists, whether they have the single-key shortcuts, and where they share what
-		// they play.
-		$data = Listen\Together::player_data( Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) ) );
+		// likes and playlists, whether they have the single-key shortcuts, where they share what
+		// they play, whether the site has turned the turntable off, and the views registered.
+		$data = Registry::player_data( Turntable::player_data( Listen\Together::player_data( Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) ) ) ) );
 		printf(
 			'<script type="application/json" id="riff-data">%s</script>',
 			wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )
@@ -275,40 +379,6 @@ final class Player {
 				'action' => 'share',
 			),
 		);
-	}
-
-	/**
-	 * The tabs beside Now Playing: Up next first, then any a plugin adds. Each tab has a panel the
-	 * player shows when the tab is picked; a plugin fills its own panel when the `riff.tab` action
-	 * fires in JavaScript. On a phone the tabs show in the open Up next sheet once there is more
-	 * than one.
-	 *
-	 * @since 4.16.0
-	 *
-	 * @return array[] Tabs keyed by slug, each with a label.
-	 */
-	public static function tabs(): array {
-		$tabs = array(
-			'queue' => array( 'label' => __( 'Up next', 'riff' ) ),
-		);
-		/**
-		 * Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is
-		 * `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always
-		 * comes first and cannot be removed.
-		 *
-		 * @since 4.16.0
-		 *
-		 * @param array[] $tabs Tabs keyed by slug, each with a label.
-		 */
-		$filtered = (array) apply_filters( 'riff_now_playing_tabs', $tabs );
-		foreach ( $filtered as $slug => $tab ) {
-			$slug = sanitize_key( (string) $slug );
-			if ( '' === $slug || 'queue' === $slug || ! is_array( $tab ) || empty( $tab['label'] ) || ! is_string( $tab['label'] ) ) {
-				continue;
-			}
-			$tabs[ $slug ] = array( 'label' => $tab['label'] );
-		}
-		return $tabs;
 	}
 
 	/**
@@ -384,10 +454,14 @@ final class Player {
 			'song'      => '<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>',
 			'video'     => '<path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.5 16.5v-9l7 4.5-7 4.5z"/>',
 			'captions'  => '<path d="M19 4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/>',
-			'tab'       => '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>',
+			'queue'     => '<path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>',
+			'close'     => '<path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>',
 			'volume'    => '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
 			'share'     => '<path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
 			'heart'     => '<path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/>',
+			'album'     => '<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 5h-3v5.5c0 1.38-1.12 2.5-2.5 2.5S9 14.88 9 13.5s1.12-2.5 2.5-2.5c.57 0 1.08.19 1.5.51V6h4v2z"/>',
+			'group'     => '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>',
+			'record'    => '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>',
 			'hearted'   => '<path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>',
 		);
 

@@ -1,5 +1,5 @@
 /**
- * Riff Sing, end to end: a track with a melody in a post, its Sing tab in Now Playing, and the
+ * Riff Sing, end to end: a track with a melody in a post, its Sing view of Now Playing, and the
  * singing scored. The microphone is a tone the page makes itself (getUserMedia hands back an
  * oscillator at the melody's note), and the MIDI instrument a stand-in the test presses keys on, so
  * the whole path from the AudioWorklet to the score runs with no device and no permission prompt.
@@ -7,6 +7,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../../../riff/tests/e2e/helpers/views' );
 const { own } = require( '../../../riff/tests/e2e/helpers/own' );
 
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
@@ -47,16 +48,13 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
-// The post's first track loaded and paused, and its Sing tab open. Nothing is scored while it is
+// The post's first track loaded and paused, and its Sing view open. Nothing is scored while it is
 // paused, so each test starts the song from the top once it is listening, with go().
 async function open( page ) {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
-	await page.locator( '.riff-bar-info' ).click();
-	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	await page.locator( '.riff-tab[data-riff-tab="sing"]' ).click();
-	return page.locator( '[data-riff-panel="sing"]' );
+	return openView( page, 'sing' );
 }
 
 const go = ( page ) =>
@@ -67,11 +65,11 @@ const go = ( page ) =>
 		}
 	} );
 
-test( 'the Sing tab shows the melody\'s words, says the voice stays on the device, and says so when a track has none', async ( {
+test( 'the Sing view shows the melody\'s words, says the voice stays on the device, and says so when a track has none', async ( {
 	page,
 } ) => {
 	const panel = await open( page );
-	await expect( page.locator( '.riff-tab[data-riff-tab="sing"]' ) ).toHaveAttribute( 'aria-selected', 'true' );
+	await expect( page.locator( '.riff-bar [data-riff-control="sing"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
 	await expect( panel.locator( '.riff-sing-words' ) ).toHaveText( 'La la' );
 	await expect( panel ).toContainText( 'nothing is recorded or sent' );
 	await expect( panel.getByRole( 'button', { name: 'Sing with the microphone' } ) ).toBeVisible();

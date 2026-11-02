@@ -29,9 +29,13 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 		return $id;
 	}
 
-	public function test_the_tab_comes_after_up_next(): void {
-		$this->assertSame( array( 'queue', 'lyrics' ), array_keys( Riff\Player::tabs() ) );
-		$this->assertSame( 'Lyrics', Riff\Player::tabs()['lyrics']['label'] );
+	public function test_the_view_is_registered_on_the_server_beside_the_turntable(): void {
+		$views = Riff\Registry::views( 'screen' );
+		$this->assertArrayHasKey( 'lyrics', $views, 'a screen of Now Playing, registered as Riff registers its own' );
+		$this->assertSame( 'Lyrics', $views['lyrics']['label'] );
+		$this->assertSame( array( 'album', 'turntable', 'lyrics' ), array_keys( $views ), 'its button beside the turntable\'s' );
+		Lyrics::enqueue();
+		$this->assertTrue( wp_script_is( 'riff-lyrics', 'enqueued' ), 'and its script fills it' );
 	}
 
 	public function test_wordpress_keeps_the_files_lyrics_and_the_media_route_returns_them(): void {
@@ -105,6 +109,9 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 	}
 
 	public function test_the_script_loads_only_where_the_player_renders(): void {
+		// A page of its own: a test before this one may have drawn the player already.
+		wp_dequeue_script( 'riff-lyrics' );
+		wp_dequeue_style( 'riff-lyrics' );
 		$this->assertFalse( wp_script_is( 'riff-lyrics', 'enqueued' ) );
 
 		do_action( 'riff_before_player' );

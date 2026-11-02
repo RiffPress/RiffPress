@@ -20,14 +20,15 @@ defined( 'ABSPATH' ) || exit;
  * A track's melody is UltraStar's text format, the open one karaoke games read, kept as post meta on
  * the audio attachment and edited in a Melody field in the Media Library, beside the file's Lyrics.
  * WordPress has nowhere for a song's tune, and post meta is where an attachment keeps what was
- * written about it (docs/native.md). The Sing tab reads it through the media REST route, so a
+ * written about it (docs/native.md). The Sing view reads it through the media REST route, so a
  * visitor sees a melody only for a file that route already shows them.
  *
  * Everything else happens in the browser: the microphone is opened only when the listener asks, its
  * sound is turned into a note by an AudioWorklet on the device, and nothing is recorded or sent.
- * Everything it does with Riff goes through Riff's documented surface: the `riff_now_playing_tabs`
- * filter, the `riff_before_player` action, and the `riff.tab`, `riff.track`, `riff.time`,
- * `riff.play` and `riff.ended` actions with `window.riff` in the player.
+ * Everything it does with Riff goes through Riff's documented surface: `riff_register_view()` on
+ * the `riff_register` action, the `riff_before_player` action, and the `riff.view`, `riff.time`,
+ * `riff.play` and `riff.ended` actions with `window.riff` in the player. Sing is a view of Now
+ * Playing, as the lyrics are: it follows the song, so it takes the whole screen above the bar.
  */
 final class Sing {
 
@@ -42,9 +43,14 @@ final class Sing {
 	public const FIELD = 'riff_sing_melody';
 
 	/**
-	 * The tab's slug.
+	 * The view's id.
 	 */
-	public const TAB = 'sing';
+	public const VIEW = 'sing';
+
+	/**
+	 * A microphone, the Sing view's icon.
+	 */
+	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>';
 
 	/**
 	 * The longest melody kept, in characters: a long song's chart is a few tens of thousands.
@@ -52,11 +58,11 @@ final class Sing {
 	public const MAX = 200000;
 
 	/**
-	 * Hooks the tab, the field and the script.
+	 * Hooks the view, the field and the script.
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'register_meta' ) );
-		add_filter( 'riff_now_playing_tabs', array( self::class, 'tab' ) );
+		add_action( 'riff_register', array( self::class, 'view' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
@@ -137,7 +143,7 @@ final class Sing {
 	}
 
 	/**
-	 * `riff_sing_melody` on wp/v2/media: what the Sing tab reads, and what whoever may edit the file
+	 * `riff_sing_melody` on wp/v2/media: what the Sing view reads, and what whoever may edit the file
 	 * writes.
 	 */
 	public static function rest_field(): void {
@@ -200,15 +206,18 @@ final class Sing {
 	}
 
 	/**
-	 * Adds the Sing tab after the others.
-	 *
-	 * @param array $tabs Tabs keyed by slug.
-	 * @return array
+	 * The Sing view: a screen of Now Playing, its button in the bar after Lyrics' and before Up
+	 * next's, as singing along follows the song.
 	 */
-	public static function tab( $tabs ) {
-		$tabs              = is_array( $tabs ) ? $tabs : array();
-		$tabs[ self::TAB ] = array( 'label' => __( 'Sing', 'riff-sing' ) );
-		return $tabs;
+	public static function view(): void {
+		riff_register_view(
+			self::VIEW,
+			array(
+				'label' => __( 'Sing', 'riff-sing' ),
+				'icon'  => self::ICON,
+				'order' => 32,
+			)
+		);
 	}
 
 	/**
@@ -345,7 +354,7 @@ final class Sing {
 				esc_attr( self::FIELD ),
 				esc_textarea( self::melody( $post->ID ) )
 			),
-			'helps' => __( 'The tune to sing along with, in UltraStar\'s text format: a #BPM: line, then a line per syllable. Shown in the Sing tab beside Up next.', 'riff-sing' ),
+			'helps' => __( 'The tune to sing along with, in UltraStar\'s text format: a #BPM: line, then a line per syllable. Shown in the player’s Sing view.', 'riff-sing' ),
 		);
 		return $fields;
 	}

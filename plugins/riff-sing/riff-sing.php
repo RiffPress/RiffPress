@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: Riff Sing
- * Description: A Sing tab beside Up next in Riff's Now Playing: sing along with the song's melody, from a microphone or a MIDI instrument, and hear how close you came. Your voice never leaves the browser.
+ * Description: A Sing view in Riff's Now Playing: sing along with the song's melody, from a microphone or a MIDI instrument, and hear how close you came. Your voice never leaves the browser.
  * Version: 0.1.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff
- * Requires Riff: 4.32
+ * Requires Riff: 5.8
  * Plugin URI: https://riffpress.com/
  * Author: RiffPress Core Team
  * Author URI: https://riffpress.com/
@@ -32,13 +32,15 @@ require __DIR__ . '/src/class-sing.php';
  * oldest Riff this plugin works with is written once, as Requires Riff above, and checked here: on
  * an older Riff it stays out of the way and tells whoever can update plugins why, rather than
  * half-working. It is the newest @since among the Riff hooks and APIs the plugin uses, which
- * .github/scripts/extension-surface.test.js holds it to.
+ * .github/scripts/extension-surface.test.js holds it to. A local or development site runs ahead of
+ * the last release, Riff's version moving only when it is released, so there it is not held back.
  */
 add_action(
 	'plugins_loaded',
 	static function (): void {
 		$needs = (string) get_file_data( __FILE__, array( 'riff' => 'Requires Riff' ) )['riff'];
-		if ( defined( 'RIFF_VERSION' ) && version_compare( RIFF_VERSION, $needs, '>=' ) ) {
+		$ahead = in_array( wp_get_environment_type(), array( 'local', 'development' ), true );
+		if ( defined( 'RIFF_VERSION' ) && ( $ahead || version_compare( RIFF_VERSION, $needs, '>=' ) ) ) {
 			Riff\Sing\Sing::register();
 			return;
 		}

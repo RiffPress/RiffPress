@@ -14,10 +14,22 @@ export function controls( P ) {
 
 	P.shortcutsOn = P.data.shortcuts === true;
 	P.captionsOn = read( localStorage, P.CAPTIONS ) === 'on';
+	// A song that has a video opens as the video, as the site has it, unless the listener chose
+	// the song, or saves data; a choice of theirs is kept for the next.
+	P.opening = () => {
+		const chosen = read( localStorage, P.MODE );
+		if ( chosen === 'song' || chosen === 'video' ) {
+			return chosen;
+		}
+		return P.data.video !== false && ! navigator.connection?.saveData
+			? 'video'
+			: 'song';
+	};
 
 	root.addEventListener( 'click', ( e ) => {
 		const mode = e.target.closest( '[data-riff-mode]' );
 		if ( mode ) {
+			write( localStorage, P.MODE, mode.dataset.riffMode );
 			P.setMode( mode.dataset.riffMode );
 			return;
 		}
@@ -41,11 +53,8 @@ export function controls( P ) {
 			} else {
 				P.close();
 			}
-		} else if ( action === 'tab' ) {
-			// A chip for a tab beside Up next, such as Lyrics: the sheet opens on it all the way, the
-			// player a row above it, as words to read along with want the whole screen.
-			P.sheet( 'full' );
-			P.pickTab( button.dataset.riffTab );
+		} else if ( action === 'close-panel' ) {
+			P.hidePanel();
 		} else if ( action === 'dismiss' ) {
 			P.dismiss();
 		} else if ( action === 'captions' ) {
@@ -59,10 +68,6 @@ export function controls( P ) {
 			);
 		} else if ( action === 'close' ) {
 			P.close();
-		} else if ( action === 'queue' ) {
-			P.sheet(
-				{ none: 'half', half: 'full', full: 'none' }[ P.sheetState ]
-			);
 		} else if ( action === 'share' ) {
 			P.feature( 'share' ).then( ( m ) => m?.share() );
 		} else if ( action === 'repeat' ) {

@@ -41,16 +41,6 @@ Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
 | --- | --- | --- |
 | `$names` | `string[]` | The names in extensions.json. |
 
-### `riff_now_playing_tabs`
-
-Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always comes first and cannot be removed.
-
-Since 4.16.0. Fires in `plugins/riff/src/class-player.php`.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `$tabs` | `array[]` | Tabs keyed by slug, each with a label. |
-
 ### `riff_protect_storage`
 
 Filters whether the storage a file is kept in elsewhere was made private, when it is protected, or public again, when it isn't. A plugin that keeps uploads in object storage or on a CDN answers for its own files: true once the copy there is private (or public again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an answer, a file only on this server is moved into the protected folder, and one kept elsewhere is not protected, as moving it would leave it public there. Riff can't send a file it doesn't have, so a plugin that protects its files signs their addresses through riff_protected_url too.
@@ -120,6 +110,16 @@ Since 4.0.0. Fires in `plugins/riff/src/class-tracks.php`.
 | `$attachment_id` | `int` | Attachment ID, or 0 for a file outside the Media Library. |
 | `$post_id` | `int` | The post the track appears in, or 0. |
 
+### `riff_turntable`
+
+Filters whether Now Playing shows the record and the turntable. Off, it shows the cover on its own, and a touch screen on its side shows the cover beside the controls.
+
+Since 5.8.0. Fires in `plugins/riff/src/class-turntable.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$on` | `bool` | Whether it shows, from Settings › Media. Default true. |
+
 ### `riff_unlock_url`
 
 Filters where a locked track sends the visitor to unlock it: a sign-up, membership or checkout page.
@@ -133,6 +133,16 @@ Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
 | `$attachment_id` | `int` | Attachment ID, or 0. |
 | `$post_id` | `int` | The post the track appears in, or 0. |
 
+### `riff_video_first`
+
+Whether a song that has a video opens as the video. A listener's own choice of the song or the video, and a browser that saves data, come first.
+
+Since 5.8.0. Fires in `plugins/riff/src/class-player.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$video` | `bool` | True to open as the video, false for the song. |
+
 ## Actions
 
 ### `riff_before_player`
@@ -140,6 +150,12 @@ Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
 Fires before the player's markup.
 
 Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
+
+### `riff_register`
+
+Fires once a request, before the player's controls and views are first read: register them here with `riff_register_control()` and `riff_register_view()`, or take one of Riff's own away.
+
+Since 5.8.0. Fires in `plugins/riff/src/class-registry.php`.
 
 ## JavaScript
 
@@ -248,20 +264,6 @@ Since 4.0.0. Fires in `plugins/riff/assets/riff.js`.
 | `detail.track` | `Object\|null` | The track loaded, or null. |
 | `api` | `Object` | `window.riff`. |
 
-#### `riff.tab`
-
-Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a tab fills its panel here, and again on `riff.track` while its tab is showing.
-
-Since 4.16.0. Fires in `plugins/riff/assets/player/now-playing.js`.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `detail` | `Object` | What changed. |
-| `detail.id` | `string` | The tab's slug. |
-| `detail.panel` | `HTMLElement` | The tab's panel, `[data-riff-panel="<slug>"]`. |
-| `detail.track` | `Object\|null` | The track playing. |
-| `api` | `Object` | `window.riff`. |
-
 #### `riff.time`
 
 Fires as the track plays, a few times a second, and again after a seek.
@@ -288,5 +290,20 @@ Since 4.0.0. Fires in `plugins/riff/assets/player/playback.js`.
 | `detail.track` | `Object` | The track now loaded. |
 | `detail.index` | `number` | Its position in the play order. |
 | `detail.queue` | `Object[]` | The queue in play order. |
+| `api` | `Object` | `window.riff`. |
+
+#### `riff.view`
+
+Fires when a view opens or closes, Riff's own included, and again for an open view when the track changes. A view's script fills it here, or in the `render` it was given.
+
+Since 5.8.0. Fires in `plugins/riff/assets/player/registry.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | What changed. |
+| `detail.id` | `string` | The view's id. |
+| `detail.open` | `boolean` | Whether it is open now. |
+| `detail.view` | `HTMLElement` | Its region: `[data-riff-view="<id>"]` for a screen of its own, `[data-riff-panel="<id>"]` for a panel, and Now Playing itself for the album or the turntable. |
+| `detail.track` | `Object\|null` | The track playing. |
 | `api` | `Object` | `window.riff`. |
 

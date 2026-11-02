@@ -1,8 +1,8 @@
 /**
  * The session, end to end, in two browsers: while the admin plays, another listener sees their face
- * on the album's page and presses it to follow them; Together in Now Playing then lists who they
- * follow, with Leave, and the admin's lists who is with them. Leaving, the follower's tab shows who
- * else is listening, each with Follow.
+ * on the album's page and presses it to follow them; the Together panel beside the page then lists
+ * who they follow, with Leave, and the admin's lists who is with them. Leaving, the follower's panel
+ * shows who else is listening, each with Follow.
  *
  * Needs the Presence API, which .wp-env.json installs on the tests site.
  */
@@ -10,6 +10,7 @@ const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 const { own } = require( '../helpers/own' );
+const { openView } = require( '../helpers/views' );
 const { FIXTURES, AXE_TAGS } = require( '../helpers/site' );
 
 const FILES = [
@@ -75,14 +76,9 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
-// Now Playing on the Together tab.
+// The Together panel, from its button in the bar.
 async function together( page ) {
-	await page.evaluate( () => window.riff.open() );
-	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	await page.locator( '.riff-tab[data-riff-tab="together"]' ).click();
-	const panel = page.locator( '[data-riff-panel="together"]' );
-	await expect( panel ).toBeVisible();
-	return panel;
+	return openView( page, 'together' );
 }
 
 test( 'a listener follows another from the faces on an album, and Together lists the session with Leave', async ( {
@@ -91,7 +87,7 @@ test( 'a listener follows another from the faces on an album, and Together lists
 	baseURL,
 	isMobile,
 } ) => {
-	test.skip( isMobile, 'Two listeners at a computer show it; a phone has the same tab in its sheet.' );
+	test.skip( isMobile, 'Two listeners at a computer show it; a phone has the same panel over the page.' );
 	// The admin plays the first track, from the fixtures' album.
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
@@ -133,7 +129,7 @@ test( 'a listener follows another from the faces on an album, and Together lists
 		.poll( () => guest.evaluate( () => Number( window.riffInternal?.current()?.id ) ) )
 		.toBe( audio[ 0 ].id );
 
-	// The follower's tab: who they follow, and the way out.
+	// The follower's panel: who they follow, and the way out.
 	const mine = await together( guest );
 	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Following admin' );
 	await expect( mine.locator( '.riff-together-person' ) ).toHaveCount( 1 );
@@ -145,19 +141,19 @@ test( 'a listener follows another from the faces on an album, and Together lists
 		( await new AxeBuilder( { page: guest } ).withTags( AXE_TAGS ).include( '[data-riff-panel="together"]' ).analyze() ).violations
 	).toEqual( [] );
 
-	// The admin's tab: who is with them, asked for while they play.
+	// The admin's panel: who is with them, asked for while they play.
 	const theirs = await together( page );
 	await expect( theirs.locator( '.riff-together-head' ) ).toHaveText( 'Listening with you', {
 		timeout: 20000,
 	} );
 	await expect( theirs.locator( '.riff-together-person' ) ).toContainText( GUEST.username );
 
-	// Leaving: out of the session, and the tab shows who else is listening, each with Follow.
+	// Leaving: out of the session, and the panel shows who else is listening, each with Follow.
 	await leave.click();
 	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped following admin/ ) ).toBeVisible();
 	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Listening now' );
 	await expect( mine.getByRole( 'button', { name: 'Follow admin' } ) ).toBeVisible();
-	await expect( mine ).toBeFocused();
+	await expect( guest.locator( '.riff-side-title' ) ).toBeFocused();
 
 	await context.close();
 } );

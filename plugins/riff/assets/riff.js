@@ -17,6 +17,7 @@
 import { parse } from 'riff-player/helpers';
 import { createPlayer } from 'riff-player/state';
 import { media } from 'riff-player/media';
+import { registry } from 'riff-player/registry';
 import { rows } from 'riff-player/rows';
 import { resume } from 'riff-player/resume';
 import { queue } from 'riff-player/queue';
@@ -112,11 +113,15 @@ function start() {
 			}
 		},
 		/**
-		 * Opens Now Playing.
+		 * Opens Now Playing, on a view of it when one is named.
 		 *
 		 * @since 4.0.0
+		 * @since 5.8.0 The view to open it on: `album`, `turntable`, or one a plugin registered.
+		 *
+		 * @param {string} [view] A screen view's id. Default the album, or the turntable where the
+		 *                        whole screen is one or the listener last chose it.
 		 */
-		open: () => P.open(),
+		open: ( view ) => P.open( view === undefined ? undefined : String( view ) ),
 		/**
 		 * Closes Now Playing.
 		 *
@@ -174,14 +179,63 @@ function start() {
 			return P.speed;
 		},
 		/**
-		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
-		 * through the `riff_now_playing_tabs` filter.
+		 * Gives a view what it does as it opens, or adds one the server didn't register. A view is
+		 * opened from its button in the bar, and on a phone from its chip in Now Playing: a screen
+		 * of Now Playing, which takes the whole screen above the bar, or a panel beside the page.
+		 * Register a view on the server with `riff_register_view()`, so the page has it before any
+		 * script; this is for what only the browser knows. Riff's own are the album (`album`,
+		 * order 26), the turntable (`turntable`, 28), Up next (`queue`, a panel, 40) and Together
+		 * (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing
+		 * (`sing`, 32) and Riff Chords Chords (`chords`, 34).
 		 *
-		 * @since 4.16.0
+		 * @since 5.8.0
 		 *
-		 * @param {string} id The tab's slug.
+		 * @param {string}                                          id            Lowercase letters, digits and dashes; a screen is `[data-riff-view="<id>"]`, a panel `[data-riff-panel="<id>"]`.
+		 * @param {Object}                                          view          The view.
+		 * @param {string}                                          [view.label]  Its name: its heading, its button's and its chip's. Needed for one the server didn't register.
+		 * @param {string}                                          [view.icon]   Its button's icon, SVG markup from your own code, never from content.
+		 * @param {number}                                          [view.order]  Where its button sits among the bar's controls, lowest first. Default 50.
+		 * @param {string}                                          [view.place]  `screen`, the default, or `side` for a panel.
+		 * @param {(view: HTMLElement, track: Object|null) => void} [view.render] Fills it as it opens and again as the track changes while it is open. The `riff.view` action says the same.
+		 * @return {() => void} Takes away what this gave it, or the view this added.
 		 */
-		tab: ( id ) => P.pickTab( String( id ) ),
+		view: ( id, view ) => P.view( id, view ),
+		/**
+		 * Opens a view: a screen of Now Playing, or a panel beside the page.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {string} id The view's id: `album`, `turntable`, `queue`, or one a plugin registered.
+		 */
+		openView: ( id ) => P.openView( String( id ) ),
+		/**
+		 * Closes the panel that is open, or else Now Playing.
+		 *
+		 * @since 5.8.0
+		 */
+		closeView: () => P.closeView(),
+		/**
+		 * Gives a control in the player's bar what it does, or adds one the server didn't register.
+		 * Register a control on the server with `riff_register_control()`, so the page has it before
+		 * any script; this is for what only the browser knows. Riff's own are Like (order 10), the
+		 * badges (20), Play on another device (60) and the volume (70).
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {string}                                            id                Lowercase letters, digits and dashes; it names the control in `data-riff-control`.
+		 * @param {Object}                                            control           The control.
+		 * @param {string|((track: Object|null) => string)}           [control.label]   What it is called, for a screen reader and a pointer's tooltip; or a function of the track. Needed for one the server didn't register.
+		 * @param {string}                                            [control.icon]    Its icon, SVG markup from your own code, never from content.
+		 * @param {number}                                            [control.order]   Where it sits among the others, lowest first. Default 50.
+		 * @param {(track: Object|null, button: HTMLElement) => void} [control.run]     What a press does.
+		 * @param {string}                                            [control.action]  One of the player's own actions instead of `run`, such as `shuffle` or `repeat`.
+		 * @param {(track: Object|null) => boolean}                   [control.pressed] Whether it is pressed, for a control that turns something on and off.
+		 * @param {(track: Object|null) => boolean}                   [control.shown]   Whether it shows. Default always.
+		 * @param {boolean}                                           [control.wide]    Only on a wide screen; a phone's bar keeps to the track, Play and what it needs.
+		 * @param {() => HTMLElement}                                 [control.element] An element of your own in place of a button, which you keep up to date.
+		 * @return {() => void} Takes away what this gave it, or the control this added.
+		 */
+		control: ( id, control ) => P.control( id, control ),
 		/**
 		 * Listens to one of the player's actions, without `wp-hooks`.
 		 *
@@ -207,16 +261,17 @@ function start() {
 		/**
 		 * Calls `fn` on a change: `like` with `{ change, kind, id }`, `playlist` with
 		 * `{ change, playlist }`, or `menu` with a track menu's items, track and context, for
-		 * `fn` to return the items. The player's areas work as `menu` does: `badges` is called
-		 * with the badges so far and the track, and returns them, each `{ id, text, label? }`;
-		 * `controls` likewise, each `{ id, label, icon?, pressed?, run( track ) }`. `meter` is
+		 * `fn` to return the items. The badges work as `menu` does: `badges` is called with the
+		 * badges so far and the track, and returns them, each `{ id, text, label? }`. `meter` is
 		 * called each frame while the music plays, with `{ heat, levels }`: the wire's heat, 0 to
-		 * a little over 1, and the three bands, 0 to 1, or null while it cools.
+		 * a little over 1, and the three bands, 0 to 1, or null while it cools. The bar's controls
+		 * are public, through `control()`.
 		 *
 		 * @since 4.23.0
 		 * @since 4.29.0 `badges`, `controls` and `meter`.
+		 * @since 5.8.0 `controls` is `window.riff.control()`.
 		 *
-		 * @param {string}                                 name `like`, `playlist`, `menu`, `badges`, `controls` or `meter`.
+		 * @param {string}                                 name `like`, `playlist`, `menu`, `badges` or `meter`.
 		 * @param {(...args: Object[]) => (Object[]|void)} fn   The listener.
 		 * @return {() => void} Stops listening.
 		 */
@@ -511,6 +566,7 @@ function start() {
 	// every one is in place.
 	for ( const section of [
 		media,
+		registry,
 		rows,
 		resume,
 		queue,
@@ -530,9 +586,9 @@ function start() {
 	P.root.addEventListener( 'riff:track', () => P.feature( 'gestures' ), {
 		once: true,
 	} );
-	// The Together tab, picked before anything has played, loads listening together to fill it.
-	P.root.addEventListener( 'riff:tab', ( e ) => {
-		if ( e.detail?.id === 'together' && P.me?.rest?.together ) {
+	// The Together panel, opened before anything has played, loads listening together to fill it.
+	P.root.addEventListener( 'riff:view', ( e ) => {
+		if ( e.detail?.id === 'together' && e.detail.open && P.me?.rest?.together ) {
 			P.feature( 'together' );
 		}
 	} );

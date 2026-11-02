@@ -123,18 +123,22 @@ const GUIDE = [
 		text: [ 'Every track the player takes or hands back is the shape `Tracks::schema()` describes in PHP; the PHP reference lists every property. The REST API returns the same shape.' ],
 	},
 	{
-		id: 'a-tab',
-		title: 'A tab in Now Playing',
-		text: [ 'Add a tab beside Up next from PHP with the `riff_now_playing_tabs` filter, then fill its panel when the `riff.tab` action says it is showing, and again on `riff.track` while it is. Riff Lyrics is built this way, on nothing but the public API.' ],
+		id: 'a-panel-and-a-control',
+		title: 'A view, and a control in the bar',
+		text: [ 'Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, the turntable, Up next, Together and its own controls the same way, and Riff Lyrics, Riff Sing and Riff Chords their views, on nothing but the public API.' ],
 		code: [
-			[ 'php', `add_filter( 'riff_now_playing_tabs', function ( array $tabs ): array {
-	$tabs['lyrics'] = array( 'label' => __( 'Lyrics', 'my-plugin' ) );
-	return $tabs;
+			[ 'php', `add_action( 'riff_register', function () {
+	riff_register_view( 'credits', array( 'label' => __( 'Credits', 'my-plugin' ), 'icon' => CREDITS_ICON, 'order' => 32 ) );
+	riff_register_control( 'bookmark', array( 'label' => __( 'Bookmark', 'my-plugin' ), 'icon' => BOOKMARK_ICON, 'order' => 65 ) );
 } );` ],
-			[ 'js', `document.addEventListener( 'riff:tab', ( { detail } ) => {
-	if ( detail.id === 'lyrics' ) {
-		showLyrics( detail.panel, detail.track );
-	}
+			[ 'js', `document.addEventListener( 'riff:ready', () => {
+	window.riff.view( 'credits', {
+		render: ( view, track ) => showCredits( view, track ),
+	} );
+	window.riff.control( 'bookmark', {
+		pressed: ( track ) => isBookmarked( track ),
+		run: ( track ) => toggleBookmark( track ),
+	} );
 } );` ],
 		],
 	},

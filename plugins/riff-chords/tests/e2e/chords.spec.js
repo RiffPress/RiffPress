@@ -1,15 +1,16 @@
 /**
  * Riff Chords, end to end: a song with a chord chart typed in through the media REST route, played
- * in a post, and its Chords tab in Now Playing. Runs in desktop Chromium and at an iPhone's size
- * (see playwright.config.js). The recording is one of the public-domain fixtures; the chart is
+ * in a post, and its Chords view of Now Playing, opened from its button in the bar on a wide screen
+ * and from its chip in Now Playing on a phone. Runs in desktop Chromium and at an iPhone's size (see
+ * playwright.config.js). The recording is one of the public-domain fixtures; the chart is
  * placeholder words, not that piece's chords.
  *
- * Riff Chords needs Riff 5.8 (window.riff.speed()), and a checkout's Riff says the version it was
- * last released as until its release pull request moves it on, so until then the plugin stays out
- * of the way and this spec skips; the release pull request's run is where it plays.
+ * Riff Chords needs Riff 5.8 (riff_register_view(), window.riff.speed()); a local site runs it on the
+ * Riff it has, and anywhere else on an older Riff it stays out of the way and this spec skips.
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../../../riff/tests/e2e/helpers/views' );
 const { own } = require( '../../../riff/tests/e2e/helpers/own' );
 
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
@@ -55,23 +56,18 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
-// Plays the row and opens the Chords tab, paused unless asked to keep playing.
+// Plays the row and opens the Chords view, paused unless asked to keep playing.
 async function openChords( page, isMobile, { row = 0, play = false } = {} ) {
 	await page.goto( postUrl );
-	const tab = page.locator( '.riff-tab[data-riff-tab="chords"]' );
-	test.skip( ( await tab.count() ) === 0, 'Riff Chords waits for Riff 5.8' );
+	const button = page.locator( '.riff-bar [data-riff-control="chords"]' );
+	test.skip( ( await button.count() ) === 0, 'Riff Chords waits for Riff 5.8' );
 	await page.locator( '.riff-row' ).nth( row ).click();
 	if ( ! play ) {
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 	}
-	await page.locator( '.riff-bar-info' ).click();
-	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	if ( isMobile ) {
-		await page.locator( '.riff-peek' ).click();
-	}
-	await tab.click();
-	await expect( tab ).toHaveAttribute( 'aria-selected', 'true' );
-	return page.locator( '[data-riff-panel="chords"]' );
+	const view = await openView( page, 'chords' );
+	await expect( button ).toHaveAttribute( 'aria-pressed', 'true' );
+	return view;
 }
 
 test( 'the chart follows the song: the chord being played, its fingering and the next one', async ( {

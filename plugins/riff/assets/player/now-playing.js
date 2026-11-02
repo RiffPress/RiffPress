@@ -1,12 +1,11 @@
 /* Now Playing. A dialog over the page: the page goes inert, Escape and the browser's back close
- * it, and focus goes back where it was. Up next on a phone is a handle peeking at the bottom, then
- * a split view with the art above the list, then the list on its own under a one-row player. The
- * tabs beside it are Up next and any a plugin adds through riff_now_playing_tabs. Its background
- * takes its colour from the artwork, darkened so text stays legible. The record beside the cover
- * is cut as an LP is: a band of grooves for each of the album's tracks, as wide as the track is
- * long. It turns at 33⅓, faster or slower with the music's speed as a turntable's pitch would, and
- * its tonearm tracks the album from the outside in. */
-import { average, hsl, largest, route, time } from 'riff-player/helpers';
+ * it, and focus goes back where it was. It is the track on its own: Up next and the other panels
+ * are their own things, opened beside it or over it (registry.js). Its background takes its colour
+ * from the artwork, darkened so text stays legible. The record beside the cover is cut as an LP
+ * is: a band of grooves for each of the album's tracks, as wide as the track is long. It turns at
+ * 33⅓, faster or slower with the music's speed as a turntable's pitch would, and its tonearm
+ * tracks the album from the outside in. */
+import { average, hsl, largest, read, route, time, write } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -14,51 +13,128 @@ import { average, hsl, largest, route, time } from 'riff-player/helpers';
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function nowPlaying( P ) {
-	const { root, np, $, $$, queueList, emit } = P;
+	const { root, np, $, $$ } = P;
 
 	let opener = null;
-	function open() {
-		if ( ! P.track() || ! np.hidden ) {
+	// The view showing: the album, the cover on its own, until the listener opens another.
+	P.showing = 'album';
+	// Whether the turntable showing was the screen's shape's doing (reshape()), not the listener's.
+	let unfolded = false;
+	const TURNTABLE = 'riff:turntable';
+	const screen = ( id ) => P.views?.get( id )?.place === 'screen';
+
+	// The view Now Playing opens to when none is named: the turntable where the whole screen is
+	// one, as an unfolded iPhone Duo is, since that is what the shape is for; the turntable for a
+	// listener who last chose it; otherwise the album.
+	function opening() {
+		if ( ! P.views?.has( 'turntable' ) ) {
+			return 'album';
+		}
+		if ( shapedAsDeck() ) {
+			return 'turntable';
+		}
+		return read( localStorage, TURNTABLE ) === 'on' ? 'turntable' : 'album';
+	}
+
+	// A view in Now Playing's place: its region shown and the others hidden, or the stage, with
+	// the record out on the deck for the turntable and the cover on its own for the album. Quiet,
+	// for the screen changing shape under it, it keeps the listener's choice and their focus.
+	function setView( id, { quiet = false } = {} ) {
+		if ( ! screen( id ) ) {
 			return;
 		}
+		const was = P.showing;
+		const shown = ! np.hidden;
+		if ( ! quiet ) {
+			unfolded = false;
+		}
+		P.showing = id;
+		root.dataset.riffShowing = id;
+		const stage = !! P.views.get( id ).stage;
+		np.dataset.riffScreen = stage ? 'stage' : 'own';
+		for ( const [ other, v ] of P.views ) {
+			if ( v.place === 'screen' && v.el ) {
+				v.el.hidden = other !== id;
+			}
+		}
+		if ( turntable() ) {
+			delete root.dataset.riffTurntable;
+		} else {
+			root.dataset.riffTurntable = 'off';
+		}
+		// The listener's choice of the album or the turntable, kept for the next time.
+		if ( stage && P.views.has( 'turntable' ) && ! shapedAsDeck() && ! quiet ) {
+			write( localStorage, TURNTABLE, id === 'turntable' ? 'on' : 'off' );
+		}
+		roomy.last = undefined;
+		clearTimeout( deck.opening );
+		// Not a press of the listener's: changing the view doesn't stop following someone.
+		retune( false );
+		markRoom();
+		deck( roomy() && ( 'riffTurning' in root.dataset || wholeDeck() ) );
+		if ( shown && was !== id ) {
+			P.viewOpened?.( was, false );
+		}
+		if ( shown ) {
+			P.viewOpened?.( id, true );
+			if ( ! quiet ) {
+				focusView();
+			}
+		}
+		P.drawControls?.();
+	}
+
+	// Focus into the view: its own region, or Now Playing's close button for the stage.
+	function focusView() {
+		const own = P.views?.get( P.showing );
+		( own && ! own.stage && own.el ? own.el : $( '[data-riff-action="close"]' ) )?.focus( {
+			preventScroll: true,
+		} );
+	}
+
+	function open( id ) {
+		if ( ! P.track() ) {
+			return;
+		}
+		// Open, and not sliding away: the view changes in place.
+		if ( ! np.hidden && root.classList.contains( 'is-open' ) ) {
+			setView( screen( id ) ? id : opening() );
+			return;
+		}
+		// Where the whole screen is a turntable, as an unfolded iPhone Duo is, Now Playing opens to
+		// it, from the album's button too; a view of its own, such as the lyrics, opens as named.
+		const own = screen( id ) && ! P.views.get( id ).stage;
+		const view =
+			! own && shapedAsDeck() && P.views?.has( 'turntable' )
+				? 'turntable'
+				: screen( id ) ? id : opening();
 		// Safari doesn't focus a button on click, so after a click the active element is the body;
-		// focus then goes back to the bar's title, the control that opens Now Playing. So it does
-		// after the chevron, which is out of the tree.
+		// focus then goes back to the view's button in the bar.
 		const active = document.activeElement;
 		opener =
-			active && active !== document.body && ! active.matches( '.riff-chevron' )
+			active && active !== document.body
 				? active
-				: $( '.riff-bar-info' );
+				: $( `[data-riff-control="${ view }"]` ) || $( '[data-riff-control="album"]' );
+		setView( view );
+		// Opened again while it slid away: it stays.
+		clearTimeout( closing.timer );
+		np.removeEventListener( 'transitionend', closing.done );
+		closing.done = null;
 		np.hidden = false;
 		root.classList.add( 'is-open' );
 		P.syncWakeLock?.();
 		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own
 		// bar and toast, which the dialog covers there and which would otherwise still take focus.
 		// On a wide screen the dialog opens above the bar and the bar stays the control surface,
-		// unless the whole screen is the turntable, which covers the bar as a phone's does.
-		const wide = window.matchMedia( '(min-width: 900px)' ).matches && ! wholeDeck();
-		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
-		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
-		// screen the bar beside it is still how the music is controlled.
-		np.setAttribute( 'aria-modal', String( ! wide ) );
-		for ( const node of [ ...document.body.children, ...covered ] ) {
-			if (
-				node &&
-				node !== root &&
-				! node.id.startsWith( 'a11y-speak' ) &&
-				! node.inert
-			) {
-				node.inert = true;
-				node.dataset.riffInert = '';
-			}
-		}
-		for ( const b of $$( '.riff-chevron' ) ) {
-			b.setAttribute( 'aria-expanded', 'true' );
-		}
+		// unless it is a touch screen on its side, where Now Playing covers the bar as a phone's
+		// does, the turntable or not (riff.css).
+		coverPage();
 		history.pushState( { ...history.state, riff: 'open' }, '' );
+		P.viewOpened?.( view, true );
+		P.drawControls?.();
 		requestAnimationFrame( () => {
 			np.classList.add( 'is-in' );
-			$( '[data-riff-action="close"]' ).focus( { preventScroll: true } );
+			focusView();
 			if ( P.reduce() ) {
 				hidePage();
 			} else {
@@ -105,32 +181,72 @@ export function nowPlaying( P ) {
 		}
 	}
 
+	// Whether it covers the bar, as riff.css lays it out (--riff-np-covers), so the shapes are
+	// written down once; asked again as the screen changes shape while it is open.
+	function coverPage() {
+		for ( const node of document.querySelectorAll( '[data-riff-inert]' ) ) {
+			node.inert = false;
+			node.removeAttribute( 'data-riff-inert' );
+		}
+		const wide =
+			getComputedStyle( np ).getPropertyValue( '--riff-np-covers' ).trim() === '0';
+		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
+		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
+		// screen the bar beside it is still how the music is controlled.
+		np.setAttribute( 'aria-modal', String( ! wide ) );
+		for ( const node of [ ...document.body.children, ...covered ] ) {
+			if (
+				node &&
+				node !== root &&
+				! node.id.startsWith( 'a11y-speak' ) &&
+				! node.inert
+			) {
+				node.inert = true;
+				node.dataset.riffInert = '';
+			}
+		}
+	}
+	window.addEventListener( 'resize', () => {
+		if ( root.classList.contains( 'is-open' ) && ! P.panelOpen ) {
+			coverPage();
+		}
+	} );
+
+	// Now Playing sliding away: what hides it once it has, which opening it again cancels.
+	const closing = { done: null, timer: 0 };
 	function close( { fromHistory = false } = {} ) {
-		if ( np.hidden ) {
+		// Closed, or already sliding away (the back button's popstate after a close of its own).
+		if ( np.hidden || ! root.classList.contains( 'is-open' ) ) {
 			return;
 		}
+		clearTimeout( closing.timer );
+		np.removeEventListener( 'transitionend', closing.done );
 		np.removeEventListener( 'transitionend', slidIn );
 		showPage();
 		np.classList.remove( 'is-in' );
-		sheet( 'none' );
 		np.style.removeProperty( 'transform' );
 		root.classList.remove( 'is-open' );
 		for ( const node of document.querySelectorAll( '[data-riff-inert]' ) ) {
 			node.inert = false;
 			node.removeAttribute( 'data-riff-inert' );
 		}
-		for ( const b of $$( '.riff-chevron' ) ) {
-			b.setAttribute( 'aria-expanded', 'false' );
-		}
+		P.viewOpened?.( P.showing, false );
+		// Hidden once it has slid away, unless it was opened again first.
 		const done = () => {
-			np.hidden = true;
-			P.syncWakeLock?.();
+			clearTimeout( closing.timer );
+			np.removeEventListener( 'transitionend', closing.done );
+			closing.done = null;
+			if ( ! root.classList.contains( 'is-open' ) ) {
+				np.hidden = true;
+				P.syncWakeLock?.();
+			}
 		};
 		if ( P.reduce() ) {
 			done();
 		} else {
+			closing.done = done;
 			np.addEventListener( 'transitionend', done, { once: true } );
-			setTimeout( done, 400 );
+			closing.timer = setTimeout( done, 400 );
 		}
 		if ( ! fromHistory && history.state?.riff === 'open' ) {
 			history.back();
@@ -138,6 +254,7 @@ export function nowPlaying( P ) {
 		if ( opener && document.contains( opener ) ) {
 			opener.focus( { preventScroll: true } );
 		}
+		P.drawControls?.();
 	}
 
 	window.addEventListener( 'popstate', () => {
@@ -145,100 +262,6 @@ export function nowPlaying( P ) {
 			close( { fromHistory: true } );
 		}
 	} );
-
-	// ---- Up next on a phone. Tap the handle or drag it to move.
-	P.sheetState = 'none';
-	const peek = $( '.riff-peek' );
-	function sheet( to ) {
-		P.sheetState = to;
-		np.dataset.sheet = to;
-		peek.setAttribute( 'aria-expanded', String( to !== 'none' ) );
-		if ( to !== 'none' ) {
-			queueList
-				.querySelector( '[aria-current]' )
-				?.scrollIntoView( { block: 'nearest' } );
-		}
-	}
-
-	// ---- Tabs beside Now Playing. Picking one shows its panel and fires riff.tab, so a plugin
-	// fills its panel when it is seen. The keys follow the ARIA tabs pattern: arrows move and
-	// pick, Home and End jump.
-	const tabs = $$( '.riff-tab' );
-	function pickTab( id, focus = false ) {
-		const tab = tabs.find( ( t ) => t.dataset.riffTab === id );
-		if ( ! tab ) {
-			return;
-		}
-		for ( const t of tabs ) {
-			t.setAttribute( 'aria-selected', String( t === tab ) );
-			t.tabIndex = t === tab ? 0 : -1;
-		}
-		for ( const panel of $$( '[data-riff-panel]' ) ) {
-			panel.hidden = panel.dataset.riffPanel !== id;
-		}
-		if ( focus ) {
-			tab.focus();
-		}
-		/**
-		 * Fires when a tab beside Now Playing is shown, including Up next. A plugin that added a
-		 * tab fills its panel here, and again on `riff.track` while its tab is showing.
-		 *
-		 * @since 4.16.0
-		 *
-		 * @param {Object}      detail       What changed.
-		 * @param {string}      detail.id    The tab's slug.
-		 * @param {HTMLElement} detail.panel The tab's panel, `[data-riff-panel="<slug>"]`.
-		 * @param {Object|null} detail.track The track playing.
-		 * @param {Object}      api          `window.riff`.
-		 */
-		emit( 'tab', {
-			id,
-			panel: $( `[data-riff-panel="${ id }"]` ),
-			track: P.track() || null,
-		} );
-	}
-	// In Riff's desktop app Now Playing is the art on its own, and a tab opens its panel
-	// beside it. Pressed again while its panel is open, the tab closes it.
-	function drawer( tab ) {
-		if ( ! document.documentElement.classList.contains( 'riff-desktop' ) ) {
-			return true;
-		}
-		if (
-			np.dataset.riffDrawer === 'open' &&
-			tab.getAttribute( 'aria-selected' ) === 'true'
-		) {
-			delete np.dataset.riffDrawer;
-			tab.setAttribute( 'aria-expanded', 'false' );
-			return false;
-		}
-		np.dataset.riffDrawer = 'open';
-		for ( const t of tabs ) {
-			t.setAttribute( 'aria-expanded', String( t === tab ) );
-		}
-		return true;
-	}
-	for ( const t of tabs ) {
-		t.addEventListener( 'click', () => {
-			if ( drawer( t ) ) {
-				pickTab( t.dataset.riffTab );
-			}
-		} );
-		t.addEventListener( 'keydown', ( e ) => {
-			const i = tabs.indexOf( t );
-			const back = document.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
-			const ahead = document.dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
-			const to = {
-				[ back ]: ( i - 1 + tabs.length ) % tabs.length,
-				[ ahead ]: ( i + 1 ) % tabs.length,
-				Home: 0,
-				End: tabs.length - 1,
-			}[ e.key ];
-			if ( to !== undefined ) {
-				e.preventDefault();
-				pickTab( tabs[ to ].dataset.riffTab, true );
-			}
-		} );
-	}
 
 	// ---- The background's colour, from the artwork, and the record's label printed on paper of
 	// the cover's own colour, its average: dark words on a light colour, light on a dark one, so
@@ -617,25 +640,54 @@ export function nowPlaying( P ) {
 	// opened the window's shape stands in, so music playing on a computer already has its record
 	// out when Now Playing first opens. Turning the phone, unfolding it or resizing the window
 	// brings the record out or puts it back.
+	// The turntable is a view of its own, opened from its button (registry.js); the album, the
+	// cover on its own, is what Now Playing opens to. A site that turned the turntable off
+	// (Settings › Media) registers no such view.
+	const turntable = () => P.showing === 'turntable' && !! P.views?.has( 'turntable' );
 	function roomy() {
+		if ( ! turntable() ) {
+			return false;
+		}
 		const cover = $( '.riff-cover' );
 		if ( ! np.hidden && cover ) {
 			roomy.last = getComputedStyle( cover ).getPropertyValue( '--riff-deck' ).trim() === '1';
 		}
 		return roomy.last ?? window.innerWidth >= window.innerHeight * 1.2;
 	}
-	// Where the whole screen is the turntable (riff.css: an unfolded phone, a phone on its side),
-	// opening it brings the record out whether or not it is playing, as setting a record on the
-	// platter does; elsewhere it comes out only while it turns.
+	// In the turntable's view the record comes out whether or not it is playing, as setting a record
+	// on the platter does. Where the whole screen is the turntable (riff.css: an unfolded phone, a
+	// phone on its side), the deck has its own controls too.
 	const OPENING = 400;
-	const wholeDeck = () =>
+	const wholeDeck = turntable;
+	const shapedAsDeck = () =>
+		!! $( '.riff-cover' ) &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
+	const deckScreen = () => turntable() && shapedAsDeck();
+	// Whether the stage has room for the sleeve beside the deck, as riff.css's container query
+	// answers it, for the stylesheet: without it the turntable's view is the record alone.
+	const markRoom = () => root.toggleAttribute( 'data-riff-room', roomy() );
+	// Unfolding the phone, or turning it on its side, while the album shows makes the screen the
+	// turntable, as opening Now Playing there would; folding it again goes back to the album.
+	function reshape() {
+		if ( np.hidden || ! P.views?.has( 'turntable' ) ) {
+			return;
+		}
+		if ( shapedAsDeck() && P.showing === 'album' ) {
+			unfolded = true;
+			setView( 'turntable', { quiet: true } );
+		} else if ( ! shapedAsDeck() && unfolded && P.showing === 'turntable' ) {
+			unfolded = false;
+			setView( 'album', { quiet: true } );
+		}
+	}
 	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
 		new ResizeObserver( () => {
+			reshape();
 			const was = roomy.last;
 			if ( np.hidden || roomy() === was ) {
 				return;
 			}
+			markRoom();
 			clearTimeout( deck.opening );
 			// Onto the deck its speed and pitch hold; off it the music is at its own speed again.
 			retune( false );
@@ -1305,7 +1357,7 @@ export function nowPlaying( P ) {
 	const RPM = { 33: 100 / 3, 45: 45 };
 	const own = () => ( root.dataset.riffFormat === '7' ? '45' : '33' );
 	function deckOnly() {
-		if ( ! $( '.riff-cover' ) || ! wholeDeck() ) {
+		if ( ! deckScreen() ) {
 			return 1;
 		}
 		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( 1 + pitch / 100 );
@@ -1398,5 +1450,5 @@ export function nowPlaying( P ) {
 		);
 	}
 
-	return { open, close, sheet, pickTab, tint, groove, deck, turn, halt, held, stopping, respeed };
+	return { open, close, setView, tint, groove, deck, turn, halt, held, stopping, respeed };
 }

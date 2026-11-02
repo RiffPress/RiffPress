@@ -13,7 +13,7 @@ Sing along with the melody in Riff's Now Playing, from a computer microphone or 
 
 == Description ==
 
-Riff Sing adds a Sing tab next to Up next in Riff's Now Playing, in the spirit of a karaoke game's vocals: the song's melody scrolls past as a lane of notes with its words under it, the singer's voice is drawn as a line against it, and each line gets a gentle score when it ends, made for children singing at home and students on a lessons site rather than a hard grade.
+Riff Sing adds a Sing view to Riff's Now Playing, opened from its button in the player's bar, in the spirit of a karaoke game's vocals: the song's melody scrolls past as a lane of notes with its words under it, the singer's voice is drawn as a line against it, and each line gets a gentle score when it ends, made for children singing at home and students on a lessons site rather than a hard grade.
 
 * Octave doesn't count. A child singing an octave above the recording still matches.
 * How close counts is the singer's choice: within two semitones, one, or a quarter tone.
@@ -24,7 +24,7 @@ Riff Sing adds a Sing tab next to Up next in Riff's Now Playing, in the spirit o
 
 = Privacy =
 
-Your voice never leaves the browser. The microphone opens only when the singer presses Sing with the microphone, after the browser asks them, and closes when they press Stop listening, leave the tab, close Now Playing or leave the page. The note being sung is worked out on the device, in an AudioWorklet, by the YIN pitch method; no sound is recorded, kept or sent anywhere, and Riff Sing has no server side beyond the melody it reads.
+Your voice never leaves the browser. The microphone opens only when the singer presses Sing with the microphone, after the browser asks them, and closes when they press Stop listening, leave the view, close Now Playing or leave the page. The note being sung is worked out on the device, in an AudioWorklet, by the YIN pitch method; no sound is recorded, kept or sent anywhere, and Riff Sing has no server side beyond the melody it reads.
 
 == Changelog ==
 

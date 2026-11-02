@@ -7,6 +7,7 @@
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 // WCAG 2.2 AA, with axe's best practices: what the page is held to.
@@ -174,7 +175,7 @@ test( 'every heart shows one icon, the outline or the filled one, liked or not',
 
 	// Now Playing's own heart shows at a phone's width, where the bar is covered.
 	await page.setViewportSize( { width: 390, height: 844 } );
-	await page.locator( '.riff-bar-info' ).click();
+	await openView( page, 'album' );
 	await check( page.locator( '.riff-np-meta [data-riff-action="like"]' ), 'Now Playing' );
 	await page.keyboard.press( 'Escape' );
 	await page.setViewportSize( { width: 1280, height: 720 } );

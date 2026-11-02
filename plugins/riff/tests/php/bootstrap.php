@@ -106,6 +106,15 @@ if ( function_exists( 'wp_presence_provision_site' ) ) {
 abstract class Riff_TestCase extends WP_UnitTestCase {
 
 	/**
+	 * The player's controls and views are registered once a request; each test is a request of its
+	 * own, so they are registered again for it.
+	 */
+	public function set_up(): void {
+		parent::set_up();
+		Riff\Registry::reset();
+	}
+
+	/**
 	 * The public-domain fixtures, one folder up from the plugin.
 	 *
 	 * @param string $file File name inside packages/fixtures/compositions.

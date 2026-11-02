@@ -1,9 +1,10 @@
-/* Riff Chords: fills the Chords tab beside Up next with the chord chart kept on the track's file,
+/* Riff Chords: fills the Chords view of Now Playing, registered on the server as Riff registers its
+ * own (riff_register_view()), with the chord chart kept on the track's file,
  * from the media REST route, and gives the listener what they need to play along: the chord being
  * played, drawn as a guitar fingering, with the next one; the speed, slower or faster with the
  * pitch kept, through window.riff.speed(); transpose and capo, which change the chords' names and
  * fingerings and not the music; and a loop, from A to B or around one section of the song, through
- * window.riff.seek(). It listens to the player's riff:tab, riff:track, riff:time, riff:play and
+ * window.riff.seek(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
  * riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, loaded before it. */
 ( () => {
@@ -20,7 +21,6 @@
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
 	let duration = 0;
 
-	const panel = () => document.querySelector( '[data-riff-panel="chords"]' );
 	// Until the player starts, window.riff is the #riff element, by its id.
 	const player = () => ( typeof window.riff?.seek === 'function' ? window.riff : null );
 	const canSlow = () => typeof player()?.speed === 'function';
@@ -478,7 +478,7 @@
 	}
 
 	// A new song starts afresh: no loop, no transpose, the chart's own capo, and the music's own
-	// speed if it was this tab that changed it.
+	// speed if it was this view that changed it.
 	function startAfresh( id ) {
 		if ( id === practice.id ) {
 			return;
@@ -528,18 +528,19 @@
 	if ( ! chart ) {
 		return;
 	}
-	document.addEventListener( 'riff:tab', ( e ) => {
-		showing = e.detail?.id === 'chords';
+	// The view, filled as it opens and again as the track changes while it is open.
+	document.addEventListener( 'riff:view', ( e ) => {
+		if ( e.detail?.id !== 'chords' ) {
+			return;
+		}
+		showing = !! e.detail.open;
 		if ( showing ) {
-			load( e.detail.panel, e.detail.track );
+			load( e.detail.view, e.detail.track );
 		}
 	} );
 	document.addEventListener( 'riff:track', ( e ) => {
 		startAfresh( Number( e.detail?.track?.id ) || 0 );
 		duration = 0;
-		if ( showing ) {
-			load( panel(), e.detail?.track );
-		}
 	} );
 	document.addEventListener( 'riff:time', ( e ) => {
 		const time = Number( e.detail?.time ) || 0;
