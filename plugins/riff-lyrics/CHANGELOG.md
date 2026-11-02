@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.4.0...riff-lyrics-v1.5.0) (2026-11-02)
+
+
+### Features
+
+* **extensions:** Riff ships the plugins its manifest names inside itself, each turned on or off from Settings › Riff ([#770](https://github.com/RiffPress/RiffPress/issues/770)) ([cccbfe6](https://github.com/RiffPress/RiffPress/commit/cccbfe6d573997ddcf4e5d5a461382b3cf42934b))
+* **player:** Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone ([#794](https://github.com/RiffPress/RiffPress/issues/794)) ([8e083ce](https://github.com/RiffPress/RiffPress/commit/8e083ced4ea929ad4bf9005598e6a1edcdc34d2c))
+
 ## [1.4.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.3.0...riff-lyrics-v1.4.0) (2026-10-29)
 
 

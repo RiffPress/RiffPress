@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,10 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.5.0 =
+* Riff ships the plugins its manifest names inside itself, each turned on or off from Settings › Riff.
+* Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
+
 = 1.4.0 =
 * Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
 
@@ -35,8 +39,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 1.1.1 =
 * Fixed: no Show as text switch: the timed lines are already text a screen reader reads as a list.
-
-= 1.1.0 =
-* Timed lyrics are read in the formats taggers and players write: LRC with its offset, Enhanced LRC with words that light up as they are sung, WebVTT, and a file's own ID3 SYLT frame on upload.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
