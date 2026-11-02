@@ -103,7 +103,9 @@ final class Together_Scenes {
 	}
 
 	/**
-	 * Plays the post a track is on, from that track.
+	 * Plays the post a track is on, from that track. The track is named as the player shows it,
+	 * which for an upload still named after its file is the title in its tags, or the file's name
+	 * without its number; its attachment title names it too.
 	 *
 	 * @since 5.8.0
 	 *
@@ -118,37 +120,61 @@ final class Together_Scenes {
 				'post_type'        => 'attachment',
 				'post_mime_type'   => 'audio',
 				'post_status'      => 'inherit',
-				'title'            => $title,
+				's'                => $title,
+				'sentence'         => true,
+				'orderby'          => 'ID',
+				'order'            => 'DESC',
+				'numberposts'      => 20,
+				'suppress_filters' => false,
+			)
+		) as $track ) {
+			foreach ( self::posts_with( $track ) as $post ) {
+				$tracks = array_values( array_filter( Library::tracks( $post ), static fn( $t ) => (int) ( $t['id'] ?? 0 ) > 0 ) );
+				foreach ( $tracks as $index => $t ) {
+					if ( $track->ID === (int) $t['id'] && in_array( $title, array( (string) ( $t['title'] ?? '' ), $track->post_title ), true ) ) {
+						$queue = array_map(
+							static fn( $t ) => array(
+								'id'   => (int) $t['id'],
+								'post' => $post->ID,
+							),
+							$tracks
+						);
+						// Held at its start until the change is due, as a host's press is while followed.
+						self::share( $queue, $index, 0.0, true, false );
+						return;
+					}
+				}
+			}
+		}
+		throw new RuntimeException( esc_html( sprintf( 'No track called “%s” on a published post.', $title ) ) );
+	}
+
+	/**
+	 * The published posts a track may be on, newest first: the one it was uploaded to, and any
+	 * whose audio blocks name it, since a track is on a post by its block whatever its parent.
+	 * Each is a candidate; play() keeps one only when the post's tracks include it.
+	 *
+	 * @param WP_Post $track The track.
+	 * @return WP_Post[]
+	 */
+	private static function posts_with( WP_Post $track ): array {
+		$posts  = get_posts(
+			array(
+				'post_type'        => 'post',
+				'post_status'      => 'publish',
+				's'                => '<!-- wp:audio {"id":' . $track->ID,
+				'sentence'         => true,
 				'orderby'          => 'ID',
 				'order'            => 'DESC',
 				'numberposts'      => 10,
 				'suppress_filters' => false,
 			)
-		) as $track ) {
-			$post = get_post( $track->post_parent );
-			if ( ! $post instanceof WP_Post || 'publish' !== $post->post_status ) {
-				continue;
-			}
-			$queue = array_values(
-				array_filter(
-					array_map(
-						static fn( $t ) => array(
-							'id'   => (int) ( $t['id'] ?? 0 ),
-							'post' => $post->ID,
-						),
-						Library::tracks( $post )
-					),
-					static fn( $item ) => $item['id'] > 0
-				)
-			);
-			$index = array_search( $track->ID, array_column( $queue, 'id' ), true );
-			if ( false !== $index ) {
-				// Held at its start until the change is due, as a host's press is while followed.
-				self::share( $queue, (int) $index, 0.0, true, false );
-				return;
-			}
+		);
+		$parent = get_post( $track->post_parent );
+		if ( $parent instanceof WP_Post && 'publish' === $parent->post_status ) {
+			array_unshift( $posts, $parent );
 		}
-		throw new RuntimeException( esc_html( sprintf( 'No track called “%s” on a published post.', $title ) ) );
+		return $posts;
 	}
 
 	/**
