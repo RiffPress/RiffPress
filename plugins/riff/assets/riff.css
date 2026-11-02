@@ -1127,6 +1127,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-np-body {
+
+	/* the space either side of the art and Up next on a wide screen */
+	--riff-np-gutter: 56px;
 	display: flex;
 	flex: 1;
 	flex-direction: column;
@@ -2419,12 +2422,22 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	.riff-np-body {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 392px;
-		gap: 56px;
-		padding: 0 56px;
+		gap: var(--riff-np-gutter);
+		padding: 0 var(--riff-np-gutter);
 	}
 
+	/* The turntable turns, slides and swings on layers of its own, and a
+	   browser that cannot tell where a moving layer will be gives its own
+	   layer to everything painted after it that might overlap, Up next and
+	   its list among them. Painted inside the stage, the moving parts can
+	   overlap nothing beyond it. The stage reaches out over the gutter at
+	   its outer edge and halfway across the gap, its content box where it
+	   was, so a sleeve leaving to the side fades out where it did. */
 	.riff-stage {
-		padding: 0 0 40px;
+		margin-inline: calc(-1 * var(--riff-np-gutter)) calc(-0.5 * var(--riff-np-gutter));
+		padding-block: 0 40px;
+		padding-inline: var(--riff-np-gutter) calc(0.5 * var(--riff-np-gutter));
+		contain: paint;
 		touch-action: auto;
 	}
 
