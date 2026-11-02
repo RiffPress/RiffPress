@@ -120,7 +120,7 @@ test.describe( 'Player', () => {
 			current: 'Underground (remix)',
 			queue: 3,
 			playing: true,
-			// What docs/javascript.md promises, and nothing more.
+			// What docs/javascript.md promises, and nothing more: tab() went with the tabs, before Riff is on WordPress.org.
 			members: [ 'close', 'closeView', 'control', 'current', 'next', 'on', 'open', 'openView', 'play', 'playing', 'prev', 'queue', 'seek', 'speed', 'time', 'toggle', 'version', 'view' ],
 		} );
 		await page.evaluate( () => window.riff.next() );
