@@ -1,9 +1,9 @@
 /**
- * Riff Lyrics is the reference extension, and Riff Chords is built the same way: each may use only
+ * Riff Lyrics is the reference extension, and Riff Sing and Riff Chords are built the same way: each may use only
  * what Riff documents, so a change to Riff that would break a third-party plugin breaks them first.
- * Every Riff hook they hook, every riff: event they listen to and every window.riff member they
- * call must be in the generated references, and their PHP must not reach into Riff's classes. Run
- * by `node --test .github/scripts/*.test.js`.
+ * Every Riff hook they hook, every riff: event they listen to and every window.riff member they call
+ * must be in the generated references, and their PHP must not reach into Riff's classes. Run by
+ * `node --test .github/scripts/*.test.js`.
  */
 const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
@@ -24,9 +24,10 @@ const files = ( dir, ext ) =>
 const HOOKS = read( path.join( ROOT, 'docs', 'hooks.md' ) );
 const JS = read( path.join( ROOT, 'docs', 'javascript.md' ) );
 
-// Each built only on the public API, with its own namespace under Riff\.
+// Each extension by its folder, with the namespace under Riff\ that is its own.
 for ( const [ slug, own ] of [
 	[ 'riff-lyrics', 'Lyrics' ],
+	[ 'riff-sing', 'Sing' ],
 	[ 'riff-chords', 'Chords' ],
 ] ) {
 	const DIR = path.join( ROOT, 'plugins', slug );
@@ -47,6 +48,7 @@ for ( const [ slug, own ] of [
 		for ( const name of events ) {
 			assert.ok( HOOKS.includes( `\`riff.${ name }\`` ), `riff.${ name } is not in docs/hooks.md` );
 		}
+		// window.riff.seek(), or player()?.seek() through the helper each extension keeps.
 		for ( const [ , member ] of SCRIPT.matchAll( /(?:window\.riff|player\(\))\??\.([a-zA-Z]+)/g ) ) {
 			assert.ok( JS.includes( `window.riff.${ member }` ), `window.riff.${ member } is not in docs/javascript.md` );
 		}
@@ -90,7 +92,7 @@ const newer = ( a, b ) => {
 	}
 	return false;
 };
-for ( const slug of [ 'riff-lyrics', 'riff-chords', 'riff-sign-in' ] ) {
+for ( const slug of [ 'riff-lyrics', 'riff-sign-in', 'riff-sing', 'riff-chords' ] ) {
 	test( `${ slug }'s Requires Riff covers every Riff hook and API it uses`, () => {
 		const dir = path.join( ROOT, 'plugins', slug );
 		const header = read( path.join( dir, `${ slug }.php` ) ).match( /^ \* Requires Riff: *(\S+)/m );

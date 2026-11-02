@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    # Five packages release on their own (release-please-config.json), so
+    # Six packages release on their own (release-please-config.json), so
     # each output is read under its package's path.
     outputs:
       riff_release: ${{ steps.release.outputs['plugins/riff--release_created'] }}
@@ -37,6 +37,8 @@ jobs:
       chords_tag: ${{ steps.release.outputs['plugins/riff-chords--tag_name'] }}
       sign_in_release: ${{ steps.release.outputs['plugins/riff-sign-in--release_created'] }}
       sign_in_tag: ${{ steps.release.outputs['plugins/riff-sign-in--tag_name'] }}
+      sing_release: ${{ steps.release.outputs['plugins/riff-sing--release_created'] }}
+      sing_tag: ${{ steps.release.outputs['plugins/riff-sing--tag_name'] }}
       coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
       coverage_tag: ${{ steps.release.outputs['packages/wp-api-coverage--tag_name'] }}
       desktop_release: ${{ steps.release.outputs['packages/desktop--release_created'] }}
@@ -350,6 +352,43 @@ jobs:
           set -euo pipefail
           gh release upload --clobber "$TAG_NAME" build/riff-sign-in.zip
           bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-sign-in/riff-sign-in.php not-latest
+
+  # Riff Sing's release: its own zip on its own GitHub release, built the way
+  # Riff's is. It is never marked the latest release; that stays Riff's.
+  release-riff-sing:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.sing_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version-file: .php-version
+          coverage: none
+      - name: Build riff-sing.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff-sing
+          rsync -a --exclude-from='.distignore' ./plugins/riff-sing/ build/riff-sing/
+          (cd build && zip -qr riff-sing.zip riff-sing/)
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/riff-sing/riff-sing.php
+          find build/riff-sing -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Attach the zip and publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.sing_tag }}
+        run: |
+          set -euo pipefail
+          gh release upload --clobber "$TAG_NAME" build/riff-sing.zip
+          bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-sing/riff-sing.php not-latest
 
   # wp-api-coverage's release: the GitHub release is published, and the
   # package goes to npm as @riffpress/wp-api-coverage. Publishing stays off

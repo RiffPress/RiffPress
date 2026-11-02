@@ -1,6 +1,6 @@
 name: WP Engine
 
-# Deploys riff, riff-lyrics, riff-chords and riff-sign-in from main to a WordPress site on WP Engine, so a real
+# Deploys riff, riff-lyrics, riff-sign-in, riff-sing and riff-chords from main to a WordPress site on WP Engine, so a real
 # host runs every change as soon as it merges. Each plugin is built the way a release zips it, through
 # .distignore, and copied into wp-content/plugins/ over WP Engine's SSH Gateway, removing files the
 # plugin no longer has. Other plugins on the site are left alone.
@@ -57,7 +57,7 @@ jobs:
       - name: Build the plugins
         run: |
           set -euo pipefail
-          for plugin in riff riff-lyrics riff-chords riff-sign-in; do
+          for plugin in riff riff-lyrics riff-sign-in riff-sing riff-chords; do
             mkdir -p "build/$plugin"
             rsync -a --exclude-from='.distignore' "./plugins/$plugin/" "build/$plugin/"
           done
@@ -66,7 +66,7 @@ jobs:
       - name: Smoke-test the build
         run: |
           set -euo pipefail
-          for plugin in riff riff-lyrics riff-chords riff-sign-in; do
+          for plugin in riff riff-lyrics riff-sign-in riff-sing riff-chords; do
             test -f "build/$plugin/$plugin.php"
           done
           find build -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
@@ -112,6 +112,17 @@ jobs:
           WPE_ENV: ${{ vars.WPE_ENV }}
           SRC_PATH: build/riff-sign-in/
           REMOTE_PATH: wp-content/plugins/riff-sign-in/
+          FLAGS: -azvr --inplace --delete --exclude=".*"
+          PHP_LINT: false
+          CACHE_CLEAR: false
+
+      - name: Deploy riff-sing
+        uses: wpengine/github-action-wpe-site-deploy@996a3648a51f37dd54078741f46257fe9610a82c # v3.2.10
+        with:
+          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
+          WPE_ENV: ${{ vars.WPE_ENV }}
+          SRC_PATH: build/riff-sing/
+          REMOTE_PATH: wp-content/plugins/riff-sing/
           FLAGS: -azvr --inplace --delete --exclude=".*"
           PHP_LINT: false
           CACHE_CLEAR: true

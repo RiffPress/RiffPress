@@ -430,6 +430,67 @@ export function nowPlaying( P ) {
 		);
 	}
 
+	// ---- What a hand moves (the record out of its sleeve and turned over, the sleeve set down,
+	// the arm carried), it moves as a hand does: on the minimum-jerk path, x = 10τ³ − 15τ⁴ + 6τ⁵
+	// for τ from 0 to 1 (Flash and Hogan, 1985), which reaching movements follow, setting off and
+	// arriving with neither speed nor acceleration. As an easing, the whole of it or the part from
+	// a to b, drawn with linear() where a browser has it; elsewhere the nearest curve. riff.css has
+	// the whole of it as --riff-hand.
+	const jerk = ( t ) => t * t * t * ( 10 - 15 * t + 6 * t * t );
+	const linear = !! window.CSS?.supports?.( 'animation-timing-function', 'linear(0, 1)' );
+	function hand( a = 0, b = 1 ) {
+		if ( ! linear && a === 0 && b === 1 ) {
+			return 'cubic-bezier(0.5, 0, 0.5, 1)';
+		}
+		if ( ! linear ) {
+			return a === 0 ? 'ease-in' : 'ease-out';
+		}
+		const points = [];
+		for ( let i = 0; i <= 20; i++ ) {
+			points.push( ( ( jerk( a + ( ( b - a ) * i ) / 20 ) - jerk( a ) ) / ( jerk( b ) - jerk( a ) ) ).toFixed( 3 ) );
+		}
+		return `linear(${ points.join( ', ' ) })`;
+	}
+
+	// ---- The record set down on the platter: carried there from the sleeve a few millimetres
+	// above the mat, and let go, it falls those last millimetres under gravity, h = ½gt², so in
+	// t = √(2h/g), 29 ms from 4 mm, and lands with a bounce or two, each keeping a share of the
+	// speed it landed with, until it lies still. Seen from above, its height is its size: a thing h
+	// nearer the eye than the mat, from D away, looks D / (D − h) as large.
+	const FALL = 4;
+	const EYE = 500;
+	const G = 9.81e-3;
+	const KEEP = 0.3;
+	// Falling from rest, the distance grows as t²; rising to a stop, as 1 − (1 − t)². Each is a
+	// cubic Bézier exactly.
+	const FALLING = 'cubic-bezier(0.3333, 0, 0.6667, 0.3333)';
+	const RISING = 'cubic-bezier(0.3333, 0.6667, 0.6667, 1)';
+	function lay() {
+		const record = $( '.riff-record' );
+		const carry = record ? parseFloat( getComputedStyle( record ).transitionDuration ) * 1000 : 0;
+		if ( ! carry || ! seen() ) {
+			return;
+		}
+		const up = ( h ) => ( { transform: `scale(${ ( EYE / ( EYE - h ) ).toFixed( 5 ) })` } );
+		const frames = [
+			{ ...up( 0 ), at: 0, easing: hand() },
+			{ ...up( FALL ), at: carry, easing: FALLING },
+		];
+		let t = carry + Math.sqrt( ( 2 * FALL ) / G );
+		frames.push( { ...up( 0 ), at: t } );
+		for ( let h = FALL * KEEP * KEEP; h > 0.05; h *= KEEP * KEEP ) {
+			const rise = Math.sqrt( ( 2 * h ) / G );
+			frames[ frames.length - 1 ].easing = RISING;
+			frames.push( { ...up( h ), at: t + rise, easing: FALLING } );
+			t += 2 * rise;
+			frames.push( { ...up( 0 ), at: t } );
+		}
+		record.animate(
+			frames.map( ( { at, ...frame } ) => ( { ...frame, offset: at / t } ) ),
+			{ duration: t }
+		);
+	}
+
 	// ---- A new side of the same record: the needle goes back to its rest, the record is turned
 	// over, and the needle drops at the new side's lead-in. The music waits for it (turn()).
 	const FLIP = 850;
@@ -444,10 +505,10 @@ export function nowPlaying( P ) {
 		lift();
 		flip.until = performance.now() + FLIP;
 		record
-			.animate( [ { rotate: 'y 0deg' }, { rotate: 'y 90deg' } ], { duration: 300, delay: 250, easing: 'ease-in' } )
+			.animate( [ { rotate: 'y 0deg' }, { rotate: 'y 90deg' } ], { duration: 300, delay: 250, easing: hand( 0, 0.5 ) } )
 			.finished.then( () => {
 				show();
-				return record.animate( [ { rotate: 'y -90deg' }, { rotate: 'y 0deg' } ], { duration: 300, easing: 'ease-out' } ).finished;
+				return record.animate( [ { rotate: 'y -90deg' }, { rotate: 'y 0deg' } ], { duration: 300, easing: hand( 0.5, 1 ) } ).finished;
 			} )
 			.then( () => {
 				if ( arm && root.dataset.riffDeck === 'out' ) {
@@ -486,7 +547,7 @@ export function nowPlaying( P ) {
 		deck( false );
 		const sleeve = leaving.querySelector( '.riff-record' );
 		const out = getComputedStyle( $( '.riff-record' ) ).translate;
-		const ease = 'cubic-bezier(0.4, 0, 0.2, 1)';
+		const ease = hand();
 		sleeve.animate( [ { translate: out }, { translate: '0 0' } ], { duration: 250, delay: 200, easing: ease, fill: 'both' } );
 		leaving
 			.animate(
@@ -513,9 +574,9 @@ export function nowPlaying( P ) {
 	const FLASHES = 120;
 	function strobe() {
 		const m = P.el();
-		const turning = 'riffTurning' in root.dataset && root.dataset.riffDeck === 'out' && ! P.reduce();
+		const turning = ( 'riffTurning' in root.dataset || coasting !== null ) && root.dataset.riffDeck === 'out' && ! P.reduce();
 		const rpm = root.dataset.riffFormat === '7' ? 45 : 100 / 3;
-		const step = turning ? ( ( rpm / 60 ) * 360 * ( m.playbackRate || 1 ) ) / FLASHES : 0;
+		const step = turning ? ( ( rpm / 60 ) * 360 * ( coasting ?? ( m.playbackRate || 1 ) ) ) / FLASHES : 0;
 		// The rows' dots, round, at their radii on the rim, the platter's radius 100: drawn once, the
 		// two together where the room lights them, and each on its own in the lamp's patch.
 		const ROWS = [ [ 216, 95.7 ], [ 160, 97.9 ] ];
@@ -604,6 +665,7 @@ export function nowPlaying( P ) {
 		}
 		root.dataset.riffDeck = 'out';
 		stand( true );
+		lay();
 		needle();
 		strobe();
 		deck.drop = setTimeout( () => {
@@ -617,21 +679,36 @@ export function nowPlaying( P ) {
 	// ---- Starting and stopping, as a turntable does where the record is seen: Now Playing open on
 	// a song, with motion. To start, the record comes out of its sleeve if it is in it (after a new
 	// album has come in), the needle drops, and only then does the platter start, the music with
-	// it: the platter's speed is the music's, from a crawl up to 33⅓, the pitch rising with it as
-	// a record's does, the platter's turn and the arm's sweep following the same rate. To stop, it
-	// winds down, the pitch falling, and then stops. Moving on to the next track, it keeps turning.
-	// Where the record is not seen, the music starts and stops at once. The browser's own speed
-	// change does the bending (preservesPitch off), on the element's own clock.
+	// it: the platter's speed is the music's, the pitch rising with it as a record's does, the
+	// platter's turn and the arm's sweep following the same rate. To stop, it winds down, the pitch
+	// falling, and then stops. Moving on to the next track, it keeps turning. Where the record is
+	// not seen, the music starts and stops at once. The browser's own speed change does the bending
+	// (preservesPitch off), on the element's own clock.
+	//
+	// The platter moves as a direct-drive deck's does. Its motor pulls with a constant torque, so
+	// its speed rises at a constant rate, in a straight line: from rest to 33⅓ in 0.7 s. Its brake
+	// slows it at a constant rate too, from 33⅓ to rest in 0.9 s. A new speed or pitch while it
+	// turns is the same pull, for as long as the change takes. The music is heard from a crawl up,
+	// as slow as the player lets it go; below that the platter turns with the music silent
+	// (coast()).
 	const ARRIVE = 850;
 	const DROP = 450;
 	const LAND = 250;
 	const CRAWL = 0.3;
+	// In revolutions a minute, each millisecond.
+	const TORQUE = 100 / 3 / 700;
+	const BRAKE = 100 / 3 / 900;
+	// How long the platter takes from one rate to another, the rates as shares of the record's own
+	// speed.
+	const pull = ( from, to ) =>
+		( Math.abs( to - from ) * ( root.dataset.riffFormat === '7' ? 45 : 100 / 3 ) ) / ( to > from ? TORQUE : BRAKE );
 	let ramping = 0;
 	let stowing = 0;
 	const seen = () =>
 		! np.hidden && ! P.away() && ! P.reduce() && P.mode !== 'video' && roomy();
-	function bend( m, to, ms ) {
+	function bend( m, to ) {
 		const from = m.playbackRate || 1;
+		const ms = pull( from, to );
 		const id = ++ramping;
 		P.ramping = true;
 		m.preservesPitch = m.webkitPreservesPitch = false;
@@ -641,13 +718,9 @@ export function nowPlaying( P ) {
 				if ( id !== ramping ) {
 					return done( false );
 				}
-				const k = Math.min( 1, ( now - t0 ) / ms );
-				// Up, a motor pulling the platter to speed, quick and then settling; down, friction,
-				// at an even rate.
-				const eased = to > from ? 1 - ( 1 - k ) * ( 1 - k ) : k;
-				const rate = from + ( to - from ) * eased;
+				const k = ms ? Math.min( 1, ( now - t0 ) / ms ) : 1;
 				if ( k < 1 ) {
-					m.playbackRate = rate;
+					m.playbackRate = from + ( to - from ) * k;
 					requestAnimationFrame( step );
 					return;
 				}
@@ -682,6 +755,50 @@ export function nowPlaying( P ) {
 			settle( m );
 		}
 	}
+
+	// The platter's speed while it turns with the music silent: coming up to a crawl before the
+	// music starts, or on down to rest after it has stopped. Its turn and the strobe follow this
+	// rate in place of the music's (platter()); null while they follow the music.
+	let coasting = null;
+	let coasts = 0;
+	function platter( rate ) {
+		for ( const turns of $$( '.riff-turns' ) ) {
+			for ( const a of turns.getAnimations() ) {
+				a.updatePlaybackRate( rate );
+			}
+		}
+		strobe();
+	}
+	function coast( from, to ) {
+		const id = ++coasts;
+		const ms = pull( from, to );
+		const t0 = performance.now();
+		coasting = from;
+		root.dataset.riffCoasting = '';
+		const step = ( now ) => {
+			if ( id !== coasts ) {
+				return;
+			}
+			const k = ms ? Math.min( 1, ( now - t0 ) / ms ) : 1;
+			coasting = from + ( to - from ) * k;
+			platter( coasting );
+			if ( k < 1 ) {
+				requestAnimationFrame( step );
+			} else if ( ! to ) {
+				release();
+			}
+		};
+		requestAnimationFrame( step );
+	}
+	// The music has the platter again, or the platter has come to rest.
+	function release() {
+		coasts++;
+		coasting = null;
+		delete root.dataset.riffCoasting;
+		platter( P.el().playbackRate || 1 );
+	}
+	const windDown = () => coasting !== null && coast( coasting, 0 );
+
 	function cued( on ) {
 		root.toggleAttribute( 'data-riff-cued', on );
 	}
@@ -691,6 +808,7 @@ export function nowPlaying( P ) {
 			return;
 		}
 		clearTimeout( turn.wait );
+		clearTimeout( turn.spin );
 		stowing++;
 		const turning = root.dataset.playing === 'true' && root.dataset.riffDeck === 'out' && ! ( 'riffCued' in root.dataset );
 		const flipping = flip.until > performance.now();
@@ -698,6 +816,9 @@ export function nowPlaying( P ) {
 		// would bend, so it starts at once.
 		if ( ! seen() || P.speed !== 1 || ( turning && ! P.ramping && ! flipping ) ) {
 			cued( false );
+			if ( coasting !== null ) {
+				release();
+			}
 			settle( m );
 			m.play().catch( P.paint );
 			return;
@@ -720,16 +841,35 @@ export function nowPlaying( P ) {
 		const start = () => {
 			cued( false );
 			if ( P.el() !== m ) {
+				windDown();
 				return;
 			}
 			const from = m.paused ? CRAWL : m.playbackRate;
 			m.playbackRate = from;
 			m.preservesPitch = m.webkitPreservesPitch = false;
 			m.play()
-				.then( () => bend( m, deckRate(), 1100 * Math.abs( deckRate() - from ) ) )
+				.then( () => bend( m, deckRate() ) )
 				.then( ( whole ) => whole && settle( m ) )
-				.catch( P.paint );
+				.catch( () => {
+					// Unless another start has the platter by now.
+					if ( ! held() ) {
+						windDown();
+					}
+					P.paint();
+				} );
 		};
+		if ( m.paused ) {
+			// From rest, the platter is pulled up to a crawl by the moment the stylus is in the
+			// groove, so the music starts there, at the speed the platter has reached. Still turning
+			// as it winds down, it is pulled up from where it is, at once.
+			const up = pull( coasting ?? 0, CRAWL );
+			if ( coasting !== null ) {
+				coast( coasting, CRAWL );
+			} else {
+				turn.spin = setTimeout( () => coast( coasting ?? 0, CRAWL ), Math.max( 0, wait - up ) );
+			}
+			wait = Math.max( wait, up );
+		}
 		if ( wait ) {
 			turn.wait = setTimeout( start, wait );
 		} else {
@@ -742,8 +882,10 @@ export function nowPlaying( P ) {
 			return;
 		}
 		clearTimeout( turn.wait );
+		clearTimeout( turn.spin );
 		if ( 'riffCued' in root.dataset ) {
 			cued( false );
+			windDown();
 			P.paint();
 			return;
 		}
@@ -753,11 +895,13 @@ export function nowPlaying( P ) {
 			return;
 		}
 		halt.going = m;
-		bend( m, CRAWL, 900 * ( m.playbackRate || 1 ) ).then( ( whole ) => {
+		bend( m, CRAWL ).then( ( whole ) => {
 			halt.going = null;
 			if ( whole ) {
 				m.pause();
 				settle( m );
+				// The music stops at a crawl, and the platter turns on down to rest.
+				coast( CRAWL, 0 );
 			}
 		} );
 		P.paint();
@@ -766,8 +910,11 @@ export function nowPlaying( P ) {
 	// controls show what was asked for.
 	const held = () => 'riffCued' in root.dataset;
 
-	// How long the arm takes to come down onto the record (riff.css, the tube's shadow).
-	const LOWER = 300;
+	// How long the cue lever takes to lower the arm onto the record: its silicone damping lets the
+	// arm sink at one even speed, 8 mm a second, from 4 mm up, as a weight sinks through oil once it
+	// has reached the speed the oil allows it, which takes it a millisecond. riff.css draws it with
+	// the shadow under the arm coming in at that one speed.
+	const LOWER = ( 4 / 8 ) * 1000;
 	const stopping = () => !! halt.going && P.ramping;
 
 	// ---- Out of the sleeve once the album plays, and not while a new one is arriving; it stays
@@ -778,7 +925,7 @@ export function nowPlaying( P ) {
 		el.addEventListener( 'playing', () => {
 			if ( el === P.el() ) {
 				root.dataset.riffTurning = '';
-				strobe();
+				release();
 			}
 			if ( ! ( 'riffArriving' in root.dataset ) ) {
 				deck( true );
@@ -791,12 +938,9 @@ export function nowPlaying( P ) {
 			}
 		} );
 		el.addEventListener( 'ratechange', () => {
-			for ( const turns of $$( '.riff-turns' ) ) {
-				for ( const a of turns.getAnimations() ) {
-					a.updatePlaybackRate( el.playbackRate || 1 );
-				}
+			if ( coasting === null ) {
+				platter( el.playbackRate || 1 );
 			}
-			strobe();
 		} );
 		for ( const type of [ 'timeupdate', 'pause', 'playing', 'seeked', 'ratechange' ] ) {
 			el.addEventListener( type, () => needle() );
@@ -807,12 +951,45 @@ export function nowPlaying( P ) {
 	// lead-in to the lead-out, so each angle is one moment of the side
 	// and the arm creeps inward through every track, as a stylus tracking the groove does. The arm
 	// turns on a base just off the record's corner (riff.css): in the record's own width, the base
-	// at (1.05, 0.05), the arm 0.78 long and pointing down at no turn, the centre at (0.5, 0.5). The
-	// turn that puts the stylus at a distance from the centre is found by halving, since the stylus
-	// only comes nearer the centre as the arm turns in.
+	// at (1.05, 0.05), the arm pointing down at no turn, the centre at (0.5, 0.5). The turn that
+	// puts the stylus at a distance from the centre is found by halving, since the stylus only
+	// comes nearer the centre as the arm turns in.
 	const BASE = [ 1.05, 0.05 ];
-	const ARM = 0.78;
 	const REST = -14;
+	// The arm's length and its headshell's angle, set up as a deck's are, by Baerwald's alignment:
+	// no tracking error where the stylus is 66 and 120.9 mm from the spindle. With the stylus r
+	// from the spindle on an arm L long that turns d from it, the arm meets the groove's tangent
+	// at the angle whose sine is (r² + L² − d²) / 2rL, and a headshell turned in by β puts the
+	// stylus along the groove where that sine is sin β: where r² − 2rL·sin β + L² − d² = 0. The
+	// nulls are its two roots, so r₁·r₂ = L² − d² and r₁ + r₂ = 2L·sin β. The base fixes d, so
+	// L = √(d² + r₁r₂) and β = asin((r₁ + r₂) / 2L): with a 12-inch record 302 mm across, d is
+	// 214.6 mm, L 232.5 mm (17.8 mm of overhang past the spindle) and β 23.7°.
+	const MM = 302;
+	const NULLS = [ 66, 120.9 ];
+	const SPAN = Math.hypot( BASE[ 0 ] - 0.5, BASE[ 1 ] - 0.5 ) * MM;
+	const LENGTH = Math.sqrt( SPAN * SPAN + NULLS[ 0 ] * NULLS[ 1 ] );
+	const OFFSET = Math.asin( ( NULLS[ 0 ] + NULLS[ 1 ] ) / ( 2 * LENGTH ) );
+	const ARM = LENGTH / MM;
+	// Drawn to match, in the drawing's units (the record's hundredths, the base at (6, 4)): the
+	// stylus on the line from the base, the headshell turned by β round it, and the tube's S
+	// bending into the headshell's back along its line. The grip runs on to the stylus.
+	function drawArm() {
+		const tube = $( '.riff-arm-tube' );
+		if ( ! tube ) {
+			return;
+		}
+		const at = [ 6, 4 + 100 * ARM ];
+		const along = [ -Math.sin( OFFSET ), Math.cos( OFFSET ) ];
+		const back = ( k ) => [ at[ 0 ] - k * along[ 0 ], at[ 1 ] - k * along[ 1 ] ].map( ( n ) => n.toFixed( 2 ) ).join( ' ' );
+		const path = `M6 -3V4C6 28 8.6 46 8.2 59C8.05 64 ${ back( 11.5 ) } ${ back( 7.5 ) }`;
+		tube.querySelector( '.riff-arm-wand' )?.setAttribute( 'd', path );
+		tube.querySelector( '.riff-arm-grip' )?.setAttribute( 'd', `${ path }L${ back( 0 ) }` );
+		tube.querySelector( '.riff-headshell' )?.setAttribute(
+			'transform',
+			`translate(${ back( 0 ) }) rotate(${ ( ( OFFSET * 180 ) / Math.PI ).toFixed( 2 ) })`
+		);
+	}
+	drawArm();
 	// How far from the centre, as a share of the radius, the groove is once a share of the album
 	// has played: playing time runs evenly across the radius.
 	const groovedAt = ( played ) => LEAD_IN - ( LEAD_IN - leadOut() ) * played;
@@ -854,8 +1031,8 @@ export function nowPlaying( P ) {
 	// The sweep: one animation of the arm's turn across the whole album, its keyframes the angle at
 	// each point of it, its clock held to the music's. It runs on the compositor, so the arm moves
 	// every frame without a line of script, and pauses, seeks and changes speed with the music.
-	// Where the music jumps, a new track or a seek, the arm swings there on its spring (its tube
-	// turns from where the arm was to nothing) rather than leaping.
+	// Where the music jumps, a new track or a seek, the arm is carried there on a hand's path (its
+	// tube turns from where the arm was to nothing) rather than leaping.
 	let sweep = null;
 	let swept = '';
 	const shown = ( arm ) => parseFloat( getComputedStyle( arm ).rotate ) || 0;
@@ -865,7 +1042,7 @@ export function nowPlaying( P ) {
 		}
 		arm.querySelector( '.riff-arm-tube' )?.animate(
 			[ { rotate: `${ ( from - to ).toFixed( 2 ) }deg` }, { rotate: '0deg' } ],
-			{ duration: 600, easing: getComputedStyle( root ).getPropertyValue( '--riff-spring' ).trim() || 'ease-out', composite: 'add' }
+			{ duration: 600, easing: hand(), composite: 'add' }
 		);
 	}
 	function lift() {
@@ -1162,7 +1339,7 @@ export function nowPlaying( P ) {
 			m.defaultPlaybackRate = deckRate();
 			return;
 		}
-		bend( m, deckRate(), 450 ).then( ( whole ) => whole && settle( m ) );
+		bend( m, deckRate() ).then( ( whole ) => whole && settle( m ) );
 	}
 	if ( board ) {
 		board.addEventListener( 'click', ( e ) => {
