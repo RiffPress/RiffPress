@@ -2,8 +2,8 @@
 /**
  * The PHP, REST API and CSS references under /developers/, each read from the code:
  *
- * - PHP: the PHP hooks, the Riff\Source interface and Sources::register() from their docblocks,
- *   the track schema from Tracks::schema(), the Block Bindings source from Bindings::keys(), the
+ * - PHP: the PHP hooks, the public functions in src/functions.php, the Riff\Source interface and
+ *   Sources::register() from their docblocks, the track schema from Tracks::schema(), the Block Bindings source from Bindings::keys(), the
  *   abilities from Abilities::list(), and the Listen block from its block.json.
  * - REST API: the routes, their arguments and response schemas, the REST field on media, and the
  *   WPGraphQL types, from the plugin's own registration code run by surface.php.
@@ -11,7 +11,8 @@
  *   is what makes it public.
  *
  * The pages quote line numbers, so they are built at deploy time from the commit being published.
- * --check fails when something public has no docblock or no @since, or the harness cannot run.
+ * --check fails when something public has no docblock or no @since, a function's @param lines
+ * differ from what it takes, or the harness cannot run.
  *
  * Usage: node .github/scripts/reference-pages.js [--check]
  */
@@ -26,6 +27,8 @@ const PLUGIN = path.join( ROOT, 'plugins', 'riff' );
 const SITE = path.join( ROOT, 'site', 'developers' );
 // The deploy fills {{commit}} with the SHA it publishes, so every link opens the code as deployed.
 const REPO = 'https://github.com/RiffPress/RiffPress/blob/{{commit}}/';
+
+const FUNCTIONS = path.join( PLUGIN, 'src', 'functions.php' );
 
 const rel = ( file ) => path.relative( ROOT, file );
 const source = ( file, line ) => `<a href="${ REPO }${ rel( file ) }#L${ line }">View on GitHub</a>`;
@@ -53,10 +56,95 @@ function functionsIn( file, only = '' ) {
 			arity: m[ 3 ].trim() ? m[ 3 ].split( ',' ).length : 0,
 			file,
 			line: i + 1,
+			block: block ? block.text : '',
 			...hooks.parse( block ? block.text : null ),
 		} );
 	} );
 	return out;
+}
+
+/**
+ * The keys of a parameter documented as WordPress documents an array of arguments: the
+ * `@param array $args {` line, a `@type` line for each key, and a closing `}`.
+ *
+ * @param {string} block Docblock text.
+ * @param {string} name  The parameter, with its `$`.
+ * @return {Array|null} [ { name, type, description } ], or null when it is not documented so.
+ */
+function hashOf( block, name ) {
+	const lines = block.split( '\n' ).map( ( l ) => l.replace( /^\s*\/?\*+\/?\s?/, '' ).replace( /\s*\*\/$/, '' ).trim() );
+	const opens = new RegExp( `^@param\\s+\\S+\\s+${ name.replace( '$', '\\$' ) }\\s*\\{$` );
+	const at = lines.findIndex( ( l ) => opens.test( l ) );
+	if ( at < 0 ) {
+		return null;
+	}
+	const keys = [];
+	keys.description = '';
+	// One level deep: a key that is itself an array of arguments is listed with the words that
+	// open it, and the keys inside it are left to its own documentation.
+	let depth = 1;
+	for ( const line of lines.slice( at + 1 ) ) {
+		if ( line === '}' ) {
+			depth--;
+			if ( ! depth ) {
+				break;
+			}
+			continue;
+		}
+		const m = /^@type\s+(\S+)\s+\$(\w+)\s*(.*?)\s*(\{)?$/.exec( line );
+		if ( m && depth === 1 ) {
+			keys.push( { type: m[ 1 ], name: m[ 2 ], description: m[ 3 ] } );
+			depth += m[ 4 ] ? 1 : 0;
+		} else if ( m && m[ 4 ] ) {
+			depth++;
+		} else if ( line && ( depth === 1 || ( depth === 2 && ! /^@/.test( line ) && keys.length && ! keys[ keys.length - 1 ].nested ) ) ) {
+			if ( depth === 2 ) {
+				keys[ keys.length - 1 ].description = ( keys[ keys.length - 1 ].description + ' ' + line ).trim();
+			} else if ( keys.length ) {
+				keys[ keys.length - 1 ].description += ' ' + line;
+			} else {
+				keys.description = ( keys.description + ' ' + line ).trim();
+			}
+		} else if ( depth === 2 && /^@/.test( line ) && keys.length ) {
+			// Past its opening words, into its own keys.
+			keys[ keys.length - 1 ].nested = true;
+		}
+	}
+	keys.forEach( ( k ) => delete k.nested );
+	return keys;
+}
+
+/**
+ * The name of every function a file declares, however its signature is laid out, so one the
+ * reference cannot read is still counted.
+ *
+ * @param {string} file Absolute path.
+ * @return {string[]} Names.
+ */
+const declared = ( file ) => [ ...fs.readFileSync( file, 'utf8' ).matchAll( /^\s*function\s+&?(\w+)\s*\(/gm ) ].map( ( m ) => m[ 1 ] );
+
+/**
+ * Riff's functions for other plugins: every function in src/functions.php. An array of arguments
+ * that a function documents with `@see Riff\Class::method()` is listed with that method's keys.
+ *
+ * @param {string} file Absolute path.
+ * @return {Array} Declarations, each parameter with its `keys`.
+ */
+function publicFunctions( file = FUNCTIONS ) {
+	return functionsIn( file ).map( ( f ) => {
+		const see = /@see\s+Riff\\(\w+)::(\w+)\(\)/.exec( f.block );
+		const kebab = see ? see[ 1 ].replace( /([a-z0-9])([A-Z])/g, '$1-$2' ).toLowerCase() : '';
+		const target = see && fs.existsSync( path.join( PLUGIN, 'src', `class-${ kebab }.php` ) ) ? functionsIn( path.join( PLUGIN, 'src', `class-${ kebab }.php` ), see[ 2 ] )[ 0 ] : null;
+		return {
+			...f,
+			see: see ? { name: `Riff\\${ see[ 1 ] }::${ see[ 2 ] }()`, found: !! target } : null,
+			params: f.params.map( ( p ) => {
+				const own = hashOf( f.block, p.name );
+				// Documented here, the parameter's words are the hash's own, not its lines run together.
+				return own ? { ...p, description: own.description, keys: own } : { ...p, keys: ( target && hashOf( target.block, p.name ) ) || [] };
+			} ),
+		};
+	} );
 }
 
 /** The docblock above the interface itself. */
@@ -113,6 +201,8 @@ function collect() {
 	const iface = path.join( PLUGIN, 'src', 'interface-source.php' );
 	return {
 		hooks: hooks.pages( hooks.collect().filter( ( h ) => h.lang === 'php' ) ),
+		functions: publicFunctions(),
+		declared: declared( FUNCTIONS ),
 		sourceDoc: interfaceDoc( iface ),
 		sourceMethods: functionsIn( iface ),
 		register: functionsIn( path.join( PLUGIN, 'src', 'class-sources.php' ), 'register' )[ 0 ],
@@ -142,6 +232,32 @@ function problems( data ) {
 			out.push( `${ what } has no summary line` );
 		}
 	};
+	if ( ! data.functions.length ) {
+		out.push( 'src/functions.php has no functions' );
+	}
+	for ( const name of ( data.declared || [] ).filter( ( n ) => ! data.functions.some( ( f ) => f.name === n ) ) ) {
+		out.push( `${ name }() in src/functions.php is not read; keep its signature on one line` );
+	}
+	for ( const f of data.functions ) {
+		need( `${ f.name }()`, f );
+		if ( ! f.documented ) {
+			continue;
+		}
+		if ( f.params.length !== f.arity ) {
+			out.push( `${ f.name }() takes ${ f.arity } parameter${ f.arity === 1 ? '' : 's' } but documents ${ f.params.length } @param` );
+		}
+		if ( f.see && ! f.see.found ) {
+			out.push( `${ f.name }() points to ${ f.see.name }, which is not in src/` );
+		}
+		for ( const p of f.params ) {
+			if ( p.type === 'array' && ! p.keys.length ) {
+				out.push( `${ f.name }() takes ${ p.name } but documents none of its keys, as @type lines here or in the method its @see names` );
+			}
+			for ( const k of p.keys.filter( ( key ) => ! key.description ) ) {
+				out.push( `${ f.name }() documents ${ p.name }['${ k.name }'] with no description` );
+			}
+		}
+	}
 	need( 'The Riff\\Source interface', data.sourceDoc );
 	for ( const m of data.sourceMethods ) {
 		need( `Riff\\Source::${ m.name }()`, m );
@@ -224,7 +340,8 @@ function member( m, title ) {
 		html += m.description.split( '\n\n' ).map( ( p ) => `<p>${ inline( p ) }</p>` ).join( '' );
 	}
 	if ( m.params.length ) {
-		html += '<div class="parameters"><h4>Parameters</h4><dl>' + m.params.map( ( p ) => `<dt><code>${ esc( p.name ) }</code><span class="type">${ esc( p.type ) }</span></dt><dd><div class="desc">${ inline( p.description ) }</div></dd>` ).join( '' ) + '</dl></div>';
+		const keys = ( p ) => ( p.keys?.length ? '<ul class="param-hash">' + p.keys.map( ( k ) => `<li><code>${ esc( k.name ) }</code><span class="type">${ esc( k.type ) }</span><div class="desc">${ inline( k.description ) }</div></li>` ).join( '' ) + '</ul>' : '' );
+		html += '<div class="parameters"><h4>Parameters</h4><dl>' + m.params.map( ( p ) => `<dt><code>${ esc( p.name ) }</code><span class="type">${ esc( p.type ) }</span></dt><dd><div class="desc">${ inline( p.description ) }</div>${ keys( p ) }</dd>` ).join( '' ) + '</dl></div>';
 	}
 	if ( m.returns ) {
 		html += `<div class="parameters"><h4>Return</h4><p><span class="type">${ esc( m.returns.type ) }</span> ${ inline( m.returns.description ) }</p></div>`;
@@ -244,6 +361,18 @@ function phpPage( data ) {
 	body += `<section>${ hooks.h2( 'hooks', 'Hooks' ) }<p>Every filter and action has a page of its own, generated from the docblock above the line it fires on. <a href="../hooks/">All hooks</a>, PHP and JavaScript, are searchable in one list.</p>`;
 	body += `<h3 id="filters" class="is-toc-heading"><a href="#filters">Filters</a></h3>${ table( [ 'Filter', 'Description' ], hookRows( filters ) ) }`;
 	body += `<h3 id="actions" class="is-toc-heading"><a href="#actions">Actions</a></h3>${ table( [ 'Action', 'Description' ], hookRows( actions ) ) }</section>\n`;
+
+	body += `<section>${ hooks.h2( 'functions', 'Functions' ) }<p>The bar's controls and Now Playing's views are registered on the server, as WordPress registers blocks, so the page has every button and every view before any script runs. Register them on the <a href="../hooks/riff_register/"><code>riff_register</code></a> action; Riff registers its own there too, and any of them can be taken away. In the browser, <a href="../javascript/#method-view"><code>window.riff.view()</code></a> and <a href="../javascript/#method-control"><code>window.riff.control()</code></a> give each what it does, by its id. <a href="../player/#registering-controls-and-views">How the player works</a> has the whole of it.</p>`;
+	body += hooks.codeBlock( `add_action( 'riff_register', function () {
+	riff_register_view( 'credits', array(
+		'label' => __( 'Credits', 'my-plugin' ),
+		'icon'  => '<svg viewBox="0 0 24 24">…</svg>',
+		'order' => 32,
+	) );
+} );` ) + '</section>\n';
+	for ( const f of data.functions ) {
+		body += member( f, f.signature.replace( /^function\s+/, '' ) );
+	}
 
 	body += `<section>${ hooks.h2( 'sources', 'Sources' ) }<p>${ inline( data.sourceDoc.summary ) }</p>`;
 	body += data.sourceDoc.description.split( '\n\n' ).filter( Boolean ).map( ( p ) => `<p>${ inline( p ) }</p>` ).join( '' );
@@ -277,13 +406,14 @@ function phpPage( data ) {
 
 	return referencePage( {
 		title: 'PHP | Riff',
-		description: 'Riff\'s PHP surface: every hook, the Source interface for your own tracks, the track schema, the Block Bindings source, the abilities and the Listen block.',
+		description: 'Riff\'s PHP surface: every hook, the functions that register the player\'s controls and views, the Source interface for your own tracks, the track schema, the Block Bindings source, the abilities and the Listen block.',
 		url: 'developers/php/',
 		current: 'php',
 		trail: [ [ 'PHP' ] ],
 		h1: '<h1>PHP</h1>',
 		toc: [
 			[ 'hooks', 'Hooks', [ [ 'filters', 'Filters' ], [ 'actions', 'Actions' ] ] ],
+			[ 'functions', 'Functions', data.functions.map( ( f ) => [ f.name.toLowerCase(), `${ f.name }()` ] ) ],
 			[ 'sources', 'Sources', [ [ 'the-source-interface', 'The Source interface' ] ] ],
 			[ 'track-schema', 'The track schema' ],
 			[ 'block-bindings', 'Block Bindings' ],
@@ -415,7 +545,7 @@ function main() {
 		process.exit( 1 );
 	}
 	if ( process.argv.includes( '--check' ) ) {
-		console.log( `The PHP, REST and CSS references are documented (${ data.sourceMethods.length } Source methods, ${ data.properties.length } custom properties, ${ data.surface.routes.length } routes)` );
+		console.log( `The PHP, REST and CSS references are documented (${ data.functions.length } functions, ${ data.sourceMethods.length } Source methods, ${ data.properties.length } custom properties, ${ data.surface.routes.length } routes)` );
 	}
 }
 
@@ -423,4 +553,4 @@ if ( require.main === module ) {
 	main();
 }
 
-module.exports = { collect, problems, site, customProperties, functionsIn, schemaRows };
+module.exports = { collect, problems, site, customProperties, functionsIn, publicFunctions, declared, hashOf, schemaRows };

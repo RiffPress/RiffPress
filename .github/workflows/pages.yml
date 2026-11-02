@@ -102,6 +102,7 @@ jobs:
           node .github/scripts/hooks-reference.js
           node .github/scripts/js-reference.js
           node .github/scripts/reference-pages.js
+          node .github/scripts/handbook-pages.js
           node .github/scripts/web-pages.js
           cp -R site/. out/
           # No lone last word on a line: each block's last two words joined by a no-break space.

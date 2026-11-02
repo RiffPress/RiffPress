@@ -36,6 +36,8 @@ plugins/riff/languages/
 /site/developers/php/
 /site/developers/rest/
 /site/developers/css/
+/site/developers/player/
+/site/developers/extensions/
 # Built by npm run docs:web, and by the Pages deploy, for the same reason: each page links the lines it
 # quotes. Only its data, its stylesheet and the sitemap are committed.
 /site/web/*

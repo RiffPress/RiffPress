@@ -72,13 +72,22 @@ const foot = ( up ) => `<footer><div class="wrap"><span>Riff is free software fr
 `;
 
 /**
+ * The handbooks, in the order the Developers bar lists them: where each is published under
+ * /developers/, the doc handbook-pages.js builds it from, and its name in the bar.
+ */
+const HANDBOOKS = [
+	{ slug: 'player', file: 'docs/player.md', label: 'The player' },
+	{ slug: 'extensions', file: 'docs/extensions.md', label: 'Extensions' },
+];
+
+/**
  * The Developers bar under the global one, as each developer.wordpress.org section has one: one
- * entry per thing a developer writes or calls, then the background reading. Every page under
- * /developers/ and /web/ carries it.
+ * entry per thing a developer writes or calls, then the handbooks and the background reading.
+ * Every page under /developers/ and /web/ carries it.
  *
  * @param {string} up      Path back to the site root.
  * @param {string} current Which entry this page is under: 'developers', 'php', 'javascript',
- *                         'rest', 'css' or 'web'.
+ *                         'rest', 'css', a handbook's slug ('player', 'extensions') or 'web'.
  * @return {string} HTML.
  */
 function localNav( up, current ) {
@@ -93,6 +102,7 @@ function localNav( up, current ) {
 		[ 'javascript', 'developers/javascript/', 'JavaScript' ],
 		[ 'rest', 'developers/rest/', 'REST API' ],
 		[ 'css', 'developers/css/', 'CSS' ],
+		...HANDBOOKS.map( ( h ) => [ h.slug, `developers/${ h.slug }/`, h.label ] ),
 	]
 		.map( ( [ key, href, label ] ) => `<a href="${ up }${ href }"${ attr( key ) }>${ label }</a>` )
 		.join( '' );
@@ -134,9 +144,10 @@ function crumbs( trail, extra = '' ) {
  * @param {Array}  page.toc         [ id, label, children ] entries for "In this article".
  * @param {string} page.body        The article.
  * @param {string} page.search      HTML for the right of the breadcrumbs.
+ * @param {string} page.edit        Where the page's source is edited, for a page written by hand.
  * @return {string} HTML.
  */
-function referencePage( { title, description, url, current, trail, h1, toc, body, search = '' } ) {
+function referencePage( { title, description, url, current, trail, h1, toc, body, search = '', edit = '' } ) {
 	const depth = url.split( '/' ).filter( Boolean ).length;
 	const up = '../'.repeat( depth );
 	// A long route wraps before one of its slashes, not inside a word.
@@ -147,7 +158,7 @@ function referencePage( { title, description, url, current, trail, h1, toc, body
 	html += `<main id="main" class="wrap reference">
 ${ h1 }
 <div class="with-toc">
-<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p></aside>
+<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p>${ edit ? `<p class="toc-edit"><a href="${ esc( edit ) }">Edit this page on GitHub</a></p>` : '' }</aside>
 <article class="entry">
 ${ body }</article>
 </div>
@@ -162,4 +173,4 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 	return html + foot( up );
 }
 
-module.exports = { esc, inline, head, foot, localNav, crumbs, referencePage };
+module.exports = { esc, inline, head, foot, localNav, crumbs, referencePage, HANDBOOKS };

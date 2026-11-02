@@ -52,6 +52,7 @@ jobs:
           node .github/scripts/hooks-reference.js
           node .github/scripts/js-reference.js
           node .github/scripts/reference-pages.js
+          node .github/scripts/handbook-pages.js
           node .github/scripts/web-pages.js
           mkdir -p build && cp -R site build/site
           node .github/scripts/no-widows.js build/site

@@ -13,6 +13,8 @@ echo "pre-commit: JavaScript reference"
 npm run -s docs:js:check || { echo "pre-commit: run npm run docs"; exit 1; }
 echo "pre-commit: PHP, REST and CSS references"
 npm run -s docs:reference:check
+echo "pre-commit: handbooks"
+npm run -s docs:handbook:check
 echo "pre-commit: web pages"
 npm run -s docs:web:check
 echo "pre-commit: readme.txt changelogs"
