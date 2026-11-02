@@ -32,6 +32,9 @@
 	let ui = null; // The panel's parts while a chart is showing.
 	let session = null; // The open microphone or MIDI access.
 	let starting = false;
+	// Each start, so one the listener walked away from while the browser asked is let go: end()
+	// moves it on, and a start that comes back to a different number releases what it opened.
+	let attempt = 0;
 	let trail = []; // What was sung lately, each { t, note }, for the lane.
 	let frame = 0;
 	let phraseShown = -1;
@@ -118,7 +121,12 @@
 			add.href = config.edit + id;
 			box.append( add );
 		}
+		// Focus on a control that goes stays in the panel, never dropped to the page behind.
+		const had = where.contains( document.activeElement );
 		where.replaceChildren( box );
+		if ( had ) {
+			where.focus();
+		}
 	}
 
 	function button( text, className, onClick ) {
@@ -139,6 +147,14 @@
 
 	// The lane, the words, the score and the controls, for a chart.
 	function build( where ) {
+		// The next song with the panel already up: the lane and the words change, and the controls,
+		// the listening, focus and the last score stay as they are.
+		if ( ui?.root.parentElement === where ) {
+			phraseShown = -1;
+			update();
+			draw();
+			return;
+		}
 		const root = el( 'div', 'riff-sing' );
 		const lane = el( 'div', 'riff-sing-lane' );
 		const canvas = el( 'canvas' );
@@ -221,8 +237,8 @@
 			visible = entries[ entries.length - 1 ].isIntersecting;
 			if ( visible ) {
 				loop();
-			} else if ( session ) {
-				end( config.stopped );
+			} else {
+				end( session ? config.stopped : '' );
 			}
 		} );
 		observer.observe( root );
@@ -302,6 +318,8 @@
 			return;
 		}
 		end();
+		const mine = ++attempt;
+		const left = () => mine !== attempt || ! showing || ! ui;
 		starting = true;
 		update();
 		tell( config.asking, false );
@@ -320,7 +338,7 @@
 				video: false,
 			} );
 			// The tab was left while the browser asked: the microphone is let go at once.
-			if ( ! showing ) {
+			if ( left() ) {
 				throw new DOMException( 'The Sing tab was left', 'AbortError' );
 			}
 			const Context = window.AudioContext || window.webkitAudioContext;
@@ -334,24 +352,31 @@
 			if ( ctx.state === 'suspended' ) {
 				await ctx.resume().catch( () => {} );
 			}
+			if ( left() ) {
+				throw new DOMException( 'The Sing tab was left', 'AbortError' );
+			}
 			node.port.onmessage = ( e ) => {
 				const { hz = 0, clarity = 0 } = e.data || {};
 				heard( hz > 0 && clarity > 0.5 ? melody.midi( hz ) : null );
 			};
 			const track = stream.getAudioTracks()[ 0 ];
 			track?.addEventListener( 'ended', () => end( config.lost ) );
-			session = { kind: 'mic', stream, ctx, node, note: null };
+			session = { kind: 'mic', stream, ctx, node, note: null, device: track?.getSettings?.().deviceId || deviceId };
 			starting = false;
-			await inputs( track?.getSettings?.().deviceId || deviceId );
 			tell( config.listening );
 			loop();
+			// Named now that the browser may say their names; the list can come after the listening.
+			inputs();
 		} catch ( error ) {
 			stream?.getTracks().forEach( ( t ) => t.stop() );
 			ctx?.close().catch( () => {} );
-			starting = false;
-			session = null;
 			const name = error?.name || '';
-			if ( ! showing ) {
+			if ( mine !== attempt ) {
+				// Another start, or an end, has taken over.
+				return;
+			}
+			starting = false;
+			if ( left() ) {
 				tell( '', false );
 			} else if ( name === 'NotAllowedError' || name === 'SecurityError' ) {
 				tell( config.denied );
@@ -367,13 +392,17 @@
 	}
 
 	// The microphones to choose from, named now that the browser may say their names.
-	async function inputs( current ) {
-		if ( ! ui || typeof navigator.mediaDevices.enumerateDevices !== 'function' ) {
+	async function inputs() {
+		if ( ! ui || session?.kind !== 'mic' || typeof navigator.mediaDevices.enumerateDevices !== 'function' ) {
 			return;
 		}
+		const current = session.device;
 		const list = ( await navigator.mediaDevices.enumerateDevices().catch( () => [] ) ).filter(
 			( d ) => d.kind === 'audioinput' && d.deviceId
 		);
+		if ( ! ui ) {
+			return;
+		}
 		ui.input.field.replaceChildren(
 			...list.map( ( d, i ) => {
 				const option = el( 'option', '', d.label || fill( config.unnamed, i + 1 ) );
@@ -382,6 +411,7 @@
 				return option;
 			} )
 		);
+		update();
 	}
 
 	async function startMidi() {
@@ -389,6 +419,7 @@
 			return;
 		}
 		end();
+		const mine = ++attempt;
 		starting = true;
 		update();
 		tell( config.asking, false );
@@ -396,13 +427,18 @@
 		try {
 			access = await navigator.requestMIDIAccess();
 		} catch {
-			starting = false;
-			tell( config.midiDenied );
-			update();
+			if ( mine === attempt ) {
+				starting = false;
+				tell( showing && ui ? config.midiDenied : '' );
+				update();
+			}
+			return;
+		}
+		if ( mine !== attempt ) {
 			return;
 		}
 		starting = false;
-		if ( ! showing ) {
+		if ( ! showing || ! ui ) {
 			update();
 			return;
 		}
@@ -424,11 +460,17 @@
 				bend = ( ( ( ( b << 7 ) | a ) - 8192 ) / 8192 ) * 2;
 			}
 		};
+		let said = '';
 		const bind = () => {
 			access.inputs.forEach( ( input ) => {
 				input.onmidimessage = message;
 			} );
-			tell( access.inputs.size ? config.listeningMidi : config.midiNone );
+			// Said again only when it changes: an output coming and going says nothing.
+			const now = access.inputs.size ? config.listeningMidi : config.midiNone;
+			if ( now !== said ) {
+				said = now;
+				tell( now );
+			}
 		};
 		access.onstatechange = bind;
 		const timer = window.setInterval(
@@ -443,6 +485,11 @@
 
 	// Closes the microphone or lets MIDI go, and says why when there is something to say.
 	function end( why ) {
+		attempt++;
+		if ( starting ) {
+			starting = false;
+			update();
+		}
 		if ( ! session ) {
 			return;
 		}

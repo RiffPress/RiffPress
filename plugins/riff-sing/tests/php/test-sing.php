@@ -50,8 +50,8 @@ class Test_Riff_Sing extends Riff_TestCase {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
 		$id = self::song();
 
-		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_melody' => wp_slash( str_replace( "\n", "\r\n", self::CHART ) . '<script>x</script>' ) ) );
-		$this->assertSame( self::CHART . 'x', Sing::melody( $id ), 'Unix line ends, markup stripped' );
+		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_melody' => wp_slash( str_replace( "\n", "\r\n", self::CHART ) . '<script>alert(1)</script> <b>x</b>' ) ) );
+		$this->assertSame( self::CHART . ' x', Sing::melody( $id ), 'Unix line ends, markup stripped' );
 
 		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_melody' => '' ) );
 		$this->assertSame( '', Sing::melody( $id ) );
@@ -66,6 +66,11 @@ class Test_Riff_Sing extends Riff_TestCase {
 		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_melody' => 'Vandalised' ) );
 
 		$this->assertSame( self::CHART, Sing::melody( $id ) );
+	}
+
+	public function test_a_melody_keeps_what_ultrastar_writes(): void {
+		$chart = "#MP3:My%20Song.mp3\n#BPM:120\n: 0 4 0 I\n: 4 4 2  <3\n: 8 4 4  you";
+		$this->assertSame( $chart, Sing::clean( $chart ), 'a %xx pair, the space that starts a word, and a lone <' );
 	}
 
 	public function test_a_melody_is_kept_to_a_songs_length(): void {
@@ -88,6 +93,8 @@ class Test_Riff_Sing extends Riff_TestCase {
 		$onto = new WP_REST_Request( 'POST', '/wp/v2/media/' . $image );
 		$onto->set_body_params( array( 'riff_sing_melody' => self::CHART ) );
 		$this->assertSame( 400, rest_do_request( $onto )->get_status(), 'nor can one be given one' );
+		$onto->set_body_params( array( 'riff_sing_melody' => '' ) );
+		$this->assertSame( 200, rest_do_request( $onto )->get_status(), 'though an empty one, as a form sends, saves' );
 
 		// What the tab reads, as a visitor.
 		wp_set_current_user( 0 );

@@ -85,12 +85,19 @@ final class Sing {
 	/**
 	 * A typed melody, as plain text: no markup, Unix line ends, no longer than MAX.
 	 *
+	 * Not sanitize_textarea_field(), which drops %xx pairs (a #MP3: file name has them) and then
+	 * collapses every run of spaces, losing the space UltraStar starts a word with, and turns a lone
+	 * `<` (a lyric's "<3") into an entity. Tags go, and the rest is kept as typed.
+	 *
 	 * @param mixed $text What was typed.
 	 * @return string
 	 */
 	public static function clean( $text ): string {
-		$text = str_replace( array( "\r\n", "\r" ), "\n", is_scalar( $text ) ? (string) $text : '' );
-		$text = sanitize_textarea_field( $text );
+		$text = wp_check_invalid_utf8( is_scalar( $text ) ? (string) $text : '' );
+		$text = str_replace( array( "\r\n", "\r" ), "\n", $text );
+		$text = (string) preg_replace( '@<(script|style)[^>]*?>.*?</\1>@si', '', $text );
+		$text = (string) preg_replace( '@</?[a-z][^>]*>@i', '', $text );
+		$text = (string) preg_replace( '/[\x00-\x08\x0B-\x1F\x7F]/', '', $text );
 		return trim( mb_substr( $text, 0, self::MAX ) );
 	}
 
@@ -144,6 +151,10 @@ final class Sing {
 				'update_callback' => static function ( $value, WP_Post $post ) {
 					if ( ! current_user_can( 'edit_post', $post->ID ) ) {
 						return new \WP_Error( 'rest_cannot_edit', __( 'Sorry, you are not allowed to edit this file.', 'riff-sing' ), array( 'status' => rest_authorization_required_code() ) );
+					}
+					// The Media Library's form may send the field's empty value for an image too.
+					if ( ! self::audio( $post->ID ) && '' === trim( (string) $value ) ) {
+						return true;
 					}
 					if ( ! self::audio( $post->ID ) ) {
 						return new \WP_Error( 'rest_invalid_param', __( 'Only an audio file has a melody.', 'riff-sing' ), array( 'status' => 400 ) );

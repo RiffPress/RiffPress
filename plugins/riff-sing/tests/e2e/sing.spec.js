@@ -14,9 +14,10 @@ const made = own();
 let postUrl;
 
 // A at 440 Hz, sung "la" three times: two notes in the first line, one in the second. At 120 BPM an
-// UltraStar beat is an eighth of a second, so the first line runs from 0 to 2 seconds. The space
-// before the second "la" is UltraStar's: it starts a new word.
-const CHART = [ '#TITLE:Test', '#BPM:120', '#GAP:0', ': 0 8 9 La', ': 8 8 9  la', '- 18', ': 24 8 9 la', 'E' ].join( '\n' );
+// UltraStar beat is an eighth of a second, so the first line runs from 0 to 2 seconds and the second
+// from 6 to 7, well after the test has changed key between them. The space before the second "la"
+// is UltraStar's: it starts a new word.
+const CHART = [ '#TITLE:Test', '#BPM:120', '#GAP:0', ': 0 8 9 La', ': 8 8 9  la', '- 40', ': 48 8 9 la', 'E' ].join( '\n' );
 
 test.beforeAll( async ( { requestUtils } ) => {
 	const sung = await made.media(
@@ -114,6 +115,8 @@ test( 'singing the note into the microphone scores the line, and Stop closes it'
 	await expect( panel.locator( '.riff-sing-status' ) ).toHaveText( /^Listening\./ );
 	await go( page );
 	await expect( panel.locator( '.riff-sing-result' ) ).toContainText( 'That line: Brilliant!', { timeout: 15000 } );
+	// Said through WordPress's live region, for someone who can't see the panel.
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'That line: Brilliant!' );
 
 	await panel.getByRole( 'button', { name: 'Stop listening' } ).click();
 	await expect( panel.locator( '.riff-sing-status' ) ).toHaveText( 'Stopped listening.' );
