@@ -92,13 +92,15 @@ test.afterAll( async ( { requestUtils } ) => {
 test( 'a follower keeps within a tenth of a second of the host through a play, pause, skip and seek', async ( {
 	browser,
 	baseURL,
-} ) => {
+}, testInfo ) => {
 	test.skip( ! scenes, 'Presence Scenes is not active on the tests site.' );
 	test.setTimeout( 180000 );
 
-	const run = spawn( 'npx', wp( 'presence', 'scene', 'run', SCENE ), {
-		stdio: 'ignore',
-	} );
+	const run = spawn( 'npx', wp( 'presence', 'scene', 'run', SCENE ) );
+	// What the scene said, each step and any that failed, kept for the report.
+	let said = '';
+	run.stdout.on( 'data', ( d ) => ( said += d ) );
+	run.stderr.on( 'data', ( d ) => ( said += d ) );
 	const context = await browser.newContext( {
 		baseURL,
 		storageState: { cookies: [], origins: [] },
@@ -197,8 +199,14 @@ test( 'a follower keeps within a tenth of a second of the host through a play, p
 				w.at < 32
 		);
 		await settles( ( w ) => w.playing && w.track === String( audio[ 1 ].id ) );
+	} catch ( e ) {
+		// In the log, where a run in Actions can be read.
+		// eslint-disable-next-line no-console
+		console.error( `The scene said:\n${ said }` );
+		throw e;
 	} finally {
 		run.kill();
+		await testInfo.attach( 'scene', { body: said, contentType: 'text/plain' } );
 		await context.close();
 	}
 } );

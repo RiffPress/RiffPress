@@ -125,30 +125,56 @@ final class Together_Scenes {
 				'suppress_filters' => false,
 			)
 		) as $track ) {
-			$post = get_post( $track->post_parent );
-			if ( ! $post instanceof WP_Post || 'publish' !== $post->post_status ) {
-				continue;
-			}
-			$queue = array_values(
-				array_filter(
-					array_map(
-						static fn( $t ) => array(
-							'id'   => (int) ( $t['id'] ?? 0 ),
-							'post' => $post->ID,
+			foreach ( self::posts_with( $track ) as $post ) {
+				$queue = array_values(
+					array_filter(
+						array_map(
+							static fn( $t ) => array(
+								'id'   => (int) ( $t['id'] ?? 0 ),
+								'post' => $post->ID,
+							),
+							Library::tracks( $post )
 						),
-						Library::tracks( $post )
-					),
-					static fn( $item ) => $item['id'] > 0
-				)
-			);
-			$index = array_search( $track->ID, array_column( $queue, 'id' ), true );
-			if ( false !== $index ) {
-				// Held at its start until the change is due, as a host's press is while followed.
-				self::share( $queue, (int) $index, 0.0, true, false );
-				return;
+						static fn( $item ) => $item['id'] > 0
+					)
+				);
+				$index = array_search( $track->ID, array_column( $queue, 'id' ), true );
+				if ( false !== $index ) {
+					// Held at its start until the change is due, as a host's press is while followed.
+					self::share( $queue, (int) $index, 0.0, true, false );
+					return;
+				}
 			}
 		}
 		throw new RuntimeException( esc_html( sprintf( 'No track called “%s” on a published post.', $title ) ) );
+	}
+
+	/**
+	 * The published posts a track may be on, newest first: the one it was uploaded to, and any
+	 * whose audio blocks name it, since a track is on a post by its block whatever its parent.
+	 * Each is a candidate; play() keeps one only when the post's tracks include it.
+	 *
+	 * @param WP_Post $track The track.
+	 * @return WP_Post[]
+	 */
+	private static function posts_with( WP_Post $track ): array {
+		$posts  = get_posts(
+			array(
+				'post_type'        => 'post',
+				'post_status'      => 'publish',
+				's'                => '<!-- wp:audio {"id":' . $track->ID,
+				'sentence'         => true,
+				'orderby'          => 'ID',
+				'order'            => 'DESC',
+				'numberposts'      => 10,
+				'suppress_filters' => false,
+			)
+		);
+		$parent = get_post( $track->post_parent );
+		if ( $parent instanceof WP_Post && 'publish' === $parent->post_status ) {
+			array_unshift( $posts, $parent );
+		}
+		return $posts;
 	}
 
 	/**
