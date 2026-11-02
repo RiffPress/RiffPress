@@ -12,7 +12,7 @@ npm run env:start          # WordPress at http://localhost:8890 (admin / passwor
 npm run seed               # a post with ten public-domain jazz tracks, and one with a video
 ```
 
-Until 7.2 ships, `.wp-env.json` names its current pre-release zip (Beta 1 today; Beta 2 lands 27 October, then the release candidates), and `plugin-check.yml` names the same one. Each new build is a one-line change in those two files, then `npm run env:start` again; the PHPUnit rows and the weekly suite follow `.wp-env.json`, the trunk rows stay on trunk, and the Playground demo asks for `beta`, which is always the newest pre-release. On release day the zip becomes `WordPress/WordPress#7.2`.
+Until 7.2 ships, `.wp-env.json` names its current pre-release zip (Beta 3 today, then the release candidates), and `plugin-check.yml` names the same one. Each new build is a one-line change in those two files, then `npm run env:start` again; the PHPUnit rows and the weekly suite follow `.wp-env.json`, the trunk rows stay on trunk, and the Playground demo asks for `beta`, which is always the newest pre-release. On release day the zip becomes `WordPress/WordPress#7.2`.
 
 The plugin is `plugins/riff/`. It ships plain stylesheets and scripts with no build step, each loaded only where it applies, and the only thing it adds to a page is the player. Keep it that way: transform and opacity animations only, native controls first, every browser feature behind a check.
 
@@ -25,6 +25,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js`, `assets/riff.css` and the files under `features/listen/` are what ships. |
 | `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing. |
 | `plugins/riff-sign-in/` | Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player. |
+| `plugins/riff-sing/` | Riff Sing: a Sing tab in Now Playing, where the melody scrolls past and the singer is scored by pitch, from a microphone or a MIDI instrument. Built like Riff Lyrics, only on the public API. |
 | `packages/desktop/` | The desktop app: a site's Listen library in an Electron window. |
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
