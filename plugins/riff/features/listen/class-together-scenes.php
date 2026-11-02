@@ -103,7 +103,9 @@ final class Together_Scenes {
 	}
 
 	/**
-	 * Plays the post a track is on, from that track.
+	 * Plays the post a track is on, from that track. The track is named as the player shows it,
+	 * which for an upload still named after its file is the title in its tags, or the file's name
+	 * without its number; its attachment title names it too.
 	 *
 	 * @since 5.8.0
 	 *
@@ -118,31 +120,29 @@ final class Together_Scenes {
 				'post_type'        => 'attachment',
 				'post_mime_type'   => 'audio',
 				'post_status'      => 'inherit',
-				'title'            => $title,
+				's'                => $title,
+				'sentence'         => true,
 				'orderby'          => 'ID',
 				'order'            => 'DESC',
-				'numberposts'      => 10,
+				'numberposts'      => 20,
 				'suppress_filters' => false,
 			)
 		) as $track ) {
 			foreach ( self::posts_with( $track ) as $post ) {
-				$queue = array_values(
-					array_filter(
-						array_map(
+				$tracks = array_values( array_filter( Library::tracks( $post ), static fn( $t ) => (int) ( $t['id'] ?? 0 ) > 0 ) );
+				foreach ( $tracks as $index => $t ) {
+					if ( $track->ID === (int) $t['id'] && in_array( $title, array( (string) ( $t['title'] ?? '' ), $track->post_title ), true ) ) {
+						$queue = array_map(
 							static fn( $t ) => array(
-								'id'   => (int) ( $t['id'] ?? 0 ),
+								'id'   => (int) $t['id'],
 								'post' => $post->ID,
 							),
-							Library::tracks( $post )
-						),
-						static fn( $item ) => $item['id'] > 0
-					)
-				);
-				$index = array_search( $track->ID, array_column( $queue, 'id' ), true );
-				if ( false !== $index ) {
-					// Held at its start until the change is due, as a host's press is while followed.
-					self::share( $queue, (int) $index, 0.0, true, false );
-					return;
+							$tracks
+						);
+						// Held at its start until the change is due, as a host's press is while followed.
+						self::share( $queue, $index, 0.0, true, false );
+						return;
+					}
 				}
 			}
 		}
