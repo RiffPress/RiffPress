@@ -4,7 +4,7 @@
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
-const { playing, appSite } = require( '../helpers/site' );
+const { playing, listen, said, appSite } = require( '../helpers/site' );
 
 const made = own();
 let pageUrl;
@@ -40,11 +40,14 @@ test.describe( 'App pages', () => {
 			.poll( async () => ( await playing( page ) ).paused )
 			.toBe( false );
 
+		// The music says what plays, too, in the same region; what matters is that the new page was
+		// said, not that it is still there when the test looks.
+		await listen( page );
 		await page.getByRole( 'link', { name: 'Load more' } ).click();
 		await expect( cards ).toHaveCount( 25 );
 		await expect( page ).toHaveURL( /[?&]riff_page=2$/ );
 		await expect( page.locator( '#riff-page-2 a' ) ).toBeFocused();
-		await expect( page.locator( '#a11y-speak-polite' ) ).toHaveText( '1 more post' );
+		await expect.poll( () => said( page ) ).toContain( '1 more post' );
 		expect( ( await playing( page ) ).paused ).toBe( false );
 
 		// Out to a post and back: the address still asks for both pages.

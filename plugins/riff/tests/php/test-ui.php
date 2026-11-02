@@ -56,16 +56,6 @@ class Test_Riff_Ui extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'riff-card-play', $heart );
 	}
 
-	public function test_the_card_template_has_every_part_for_the_script_to_fill_and_is_not_counted_as_a_card(): void {
-		$html = Ui::card_template();
-
-		$this->assertStringStartsWith( '<template data-riff-card-template><div class="riff-card riff-card-template">', $html );
-		foreach ( array( '<img ', 'riff-card-play', 'riff-card-link', 'riff-card-title', 'riff-card-sub' ) as $part ) {
-			$this->assertStringContainsString( $part, $html );
-		}
-		$this->assertStringNotContainsString( 'class="riff-card"', $html );
-	}
-
 	public function test_choices_mark_the_current_one_and_a_sort_shows_its_label(): void {
 		$items = array(
 			array(

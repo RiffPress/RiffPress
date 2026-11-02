@@ -3,7 +3,7 @@
  * playlist's item; the app calls it again after it swaps a view in, and an element already turned
  * into a row keeps that row. And arriving by a shared link: the track is shown and its row focused,
  * nothing more. */
-import { fmt, esc, parse, subtitle, rowArt, time } from 'riff-player/helpers';
+import { esc, parse, subtitle, rowArt, time, PAUSE } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -48,14 +48,7 @@ export function rows( P ) {
 		const row = document.createElement( 'button' );
 		row.type = 'button';
 		row.className = 'riff-row';
-		row.setAttribute(
-			'aria-label',
-			fmt(
-				/* translators: %s: track title. */ __( 'Play %s', 'riff' ),
-				t.title
-			)
-		);
-		row.innerHTML = rowInner( t );
+		row.innerHTML = rowInner( t, __( 'Play', 'riff' ) );
 		fig.insertBefore( row, fig.firstChild );
 		row.after( P.moreButton( t ) );
 		if ( P.inLibrary( t ) ) {
@@ -92,22 +85,19 @@ export function rows( P ) {
 		if ( t.unlock ) {
 			row.href = t.unlock;
 		}
-		row.setAttribute(
-			'aria-label',
-			fmt(
-				t.unlock
-					? /* translators: %s: track title. */ __(
-							'Unlock %s',
-							'riff'
-						)
-					: /* translators: %s: track title. */ __(
-							'%s is locked',
-							'riff'
-						),
-				t.title
-			)
+		row.innerHTML = rowInner(
+			t,
+			t.unlock
+				? /* translators: Heard before a locked track's title, on the link that unlocks it. */ __(
+						'Unlock',
+						'riff'
+					)
+				: /* translators: Heard before a locked track's title. */ __(
+						'Locked',
+						'riff'
+					),
+			true
 		);
-		row.innerHTML = rowInner( t, true );
 		fig.insertBefore( row, fig.firstChild );
 		return row;
 	}
@@ -119,16 +109,19 @@ export function rows( P ) {
 			: '';
 	P.langAttr = langAttr;
 
-	function rowInner( t, locked = false ) {
+	// A row is named by what it shows, the verb first: Play, then its title, artist and length.
+	function rowInner( t, verb, locked = false ) {
 		return (
 			rowArt( t ) +
+			`<span class="riff-app-sr riff-row-verb">${ esc( verb ) }</span>` +
 			`<span class="riff-row-text"><span class="riff-row-title"${ langAttr( t ) }>${ esc(
 				t.title
 			) }${ P.videoMark( t ) }</span>` +
-			`<span class="riff-row-sub">${ esc(
+			// The pause sits inside the line it comes before, so a view that hides that line hides it.
+			`<span class="riff-row-sub">${ subtitle( t ) ? PAUSE : '' }${ esc(
 				subtitle( t )
 			) }</span></span>` +
-			`<span class="riff-row-time">${
+			`<span class="riff-row-time">${ t.duration ? PAUSE : '' }${
 				locked
 					? '<svg class="riff-row-lock" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>'
 					: ''

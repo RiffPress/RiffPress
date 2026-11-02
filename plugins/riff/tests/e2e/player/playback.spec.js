@@ -4,7 +4,7 @@
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
-const { audioState, playerSite } = require( '../helpers/site' );
+const { audioState, playerSite, listen, said } = require( '../helpers/site' );
 
 const made = own();
 let postUrl;
@@ -41,9 +41,8 @@ test.describe( 'Player', () => {
 			'true'
 		);
 		// Its name says which track Pause is for, among rows that all play something.
-		await expect( page.locator( '.riff-row' ).nth( 1 ) ).toHaveAttribute(
-			'aria-label',
-			'Pause Underground'
+		await expect( page.locator( '.riff-row' ).nth( 1 ) ).toHaveAccessibleName(
+			/^Pause Underground\b/
 		);
 		const session = await page.evaluate( () => ( {
 			title: navigator.mediaSession?.metadata?.title,
@@ -161,28 +160,14 @@ test.describe( 'Player', () => {
 		if ( isMobile ) {
 			await page.locator( '.riff-peek' ).click();
 		}
-		// Each row of Up next is named with its artist, as a post's rows are, rather than its title
-		// and artist read run together; the playing one offers Pause.
+		// Each row of Up next is named by what it shows, as a post's rows are, with a pause between
+		// the title and the artist rather than the two read run together; the playing one offers Pause.
 		const rows = page.locator( '.riff-queue-list li > button:first-child' );
-		await expect( rows.nth( 0 ) ).toHaveAttribute( 'aria-label', /^Play Intensities in Ten Cities by Airmen of Note/ );
-		await expect( rows.nth( 1 ) ).toHaveAttribute( 'aria-label', /^Pause Underground by Airmen of Note/ );
+		await expect( rows.nth( 0 ) ).toHaveAccessibleName( /^Play Intensities in Ten Cities\s*,\s*Airmen of Note/ );
+		await expect( rows.nth( 1 ) ).toHaveAccessibleName( /^Pause Underground\s*,\s*Airmen of Note/ );
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
-		await expect( rows.nth( 1 ) ).toHaveAttribute( 'aria-label', /^Play Underground by/ );
+		await expect( rows.nth( 1 ) ).toHaveAccessibleName( /^Play Underground\s*,/ );
 	} );
-
-	// What the polite live region says, in order, from here on.
-	const listen = ( page ) =>
-		page.evaluate( () => {
-			window.said = [];
-			const region = document.getElementById( 'a11y-speak-polite' );
-			new MutationObserver( () => {
-				const text = region.textContent.replace( /\u00a0/g, '' ).trim();
-				if ( text && text !== window.said.at( -1 ) ) {
-					window.said.push( text );
-				}
-			} ).observe( region, { childList: true, characterData: true, subtree: true } );
-		} );
-	const said = ( page ) => page.evaluate( () => window.said );
 
 	test( 'a track that cannot play is said and marked, and the next is only called playing once it plays', async ( {
 		page,
@@ -198,7 +183,7 @@ test.describe( 'Player', () => {
 		await listen( page );
 		await page.locator( '.riff-row' ).first().click();
 		await expect.poll( () => said( page ) ).toContainEqual( 'Couldn’t play Intensities in Ten Cities.' );
-		await expect( page.locator( '.riff-row' ).first() ).toHaveAttribute( 'aria-description', 'Couldn’t be played' );
+		await expect( page.locator( '.riff-row' ).first() ).toHaveAccessibleName( /Couldn’t be played/ );
 		await expect( page.locator( '.riff-row' ).first().locator( '.riff-row-note' ) ).toBeVisible();
 		await expect.poll( () => said( page ) ).toContainEqual( expect.stringMatching( /^Now playing Underground by/ ) );
 		const heard = await said( page );

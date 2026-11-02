@@ -756,7 +756,9 @@ final class Together {
 		$listeners = array();
 		foreach ( $rows as $i => $row ) {
 			if ( $tracks[ $i ] ) {
-				$listeners[] = self::listener( $row, $tracks[ $i ] );
+				$listener         = self::listener( $row, $tracks[ $i ] );
+				$listener['card'] = self::card( $listener );
+				$listeners[]      = $listener;
 			}
 		}
 		usort( $listeners, static fn( $a, $b ) => array( strtolower( $a['user']['name'] ), $a['user']['id'] ) <=> array( strtolower( $b['user']['name'] ), $b['user']['id'] ) );
@@ -805,6 +807,30 @@ final class Together {
 			'at'      => (float) ( $row['state']['at'] ?? 0 ),
 			'since'   => (int) ( $row['state']['since'] ?? 0 ),
 			'playing' => ! empty( $row['state']['playing'] ),
+		);
+	}
+
+	/**
+	 * A listener's card under Listening now, as Home draws every card: their name over their
+	 * track's cover, and pressing it follows them.
+	 *
+	 * @param array $listener The listener, from listener().
+	 * @return string
+	 */
+	private static function card( array $listener ): string {
+		$name = (string) $listener['user']['name'];
+		return Ui::card(
+			array(
+				'title' => $name,
+				'sub'   => implode( ' · ', array_filter( array( (string) ( $listener['track']['title'] ?? '' ), (string) ( $listener['track']['artist'] ?? '' ) ) ) ),
+				'art'   => (array) ( $listener['track']['art'] ?? array() ),
+				'play'  => array(
+					'action' => 'listen-along',
+					'data'   => array( 'user' => (int) $listener['user']['id'] ),
+					/* translators: %s: the listener's name. */
+					'label'  => sprintf( __( 'Follow %s', 'riff' ), $name ),
+				),
+			)
 		);
 	}
 

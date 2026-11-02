@@ -65,11 +65,11 @@ test.describe( 'The tree is the spec', () => {
 			  - button "Play"
 			  - button "Shuffle"
 			- figure:
-			  - button "Play Underground"
+			  - button /^Play Underground\\b/
 			  - button "Like Underground"
 			  - button "More options for Underground"
 			- figure:
-			  - button "Play Trombone Detritus"
+			  - button /^Play Trombone Detritus\\b/
 			  - button "Like Trombone Detritus"
 			  - button "More options for Trombone Detritus"
 		` );

@@ -49,6 +49,8 @@ module.exports = defineConfig( {
 	...base,
 	testDir: './plugins',
 	testMatch: /tests\/e2e\/.+\.spec\.js$/,
+	// WordPress's own setup, then what an earlier run left on the site swept away.
+	globalSetup: require.resolve( './plugins/riff/tests/e2e/global-setup.js' ),
 	reporter: process.env.CI ? [ [ 'github' ], [ 'list' ] ] : 'list',
 	projects: [
 		{ name: 'chromium', use: { ...base.use } },
