@@ -211,3 +211,28 @@ test( 'refuses addresses that are not a host and a slash, or one host for both',
 		assert.equal( run.status, 1, args.join( ' ' ) );
 	}
 } );
+
+test( 'leaves a code sample alone, and reads stylesheets and modules for the files they need', () => {
+	const sample =
+		'<pre><code>&lt;a href="https://riffpress.com/developers/php/"&gt;</code></pre>';
+	const out = site( {
+		'developers/js/index.html': page( '../../', sample ).replace(
+			'PATH',
+			'developers/js/'
+		),
+		'web/web.css': 'body{font-family:x;src:url(../fonts/inter.woff2)}',
+		'js/neck.js': 'import"./chunks/a.js";',
+	} );
+	const dev = path.join(
+		fs.mkdtempSync( path.join( os.tmpdir(), 'developers-out-' ) ),
+		'dev'
+	);
+	const run = spawnSync( 'node', [ SCRIPT, out, dev, SITE, DEV ], {
+		encoding: 'utf8',
+	} );
+	assert.ok( read( dev, 'js/index.html' ).includes( sample ) );
+	assert.equal( run.status, 1 );
+	assert.match( run.stderr, /4 link\(s\) lead nowhere/ );
+	assert.match( run.stderr, /web\.css: \.\.\/fonts\/inter\.woff2/ );
+	assert.match( run.stderr, /neck\.js: \.\/chunks\/a\.js/ );
+} );

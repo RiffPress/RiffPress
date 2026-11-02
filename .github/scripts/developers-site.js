@@ -25,7 +25,42 @@ const MOVED = [
 ];
 // Files beside the pages that both hosts serve.
 const SHARED = [ 'neck.css', 'neck.svg', 'js', 'fonts', 'icons', 'brand' ];
-const ATTRS = /\b(href|src|content|action|srcset)="([^"]*)"/g;
+const ATTRS = /(\s)(href|src|content|action|srcset)="([^"]*)"/g;
+// A tag, or a block whose text is not markup: its opening tag is read, what is inside it is not.
+const TAGS =
+	/(<(script|style|pre|code|textarea)\b[^>]*>)([\s\S]*?)(<\/\2>)|<[a-z][^>]*>/gi;
+
+/**
+ * The URL attributes of every tag on a page, rewritten, and nothing in its text or code samples.
+ *
+ * @param {string}                           html The page.
+ * @param {function(string, string): string} fn   ( name, value ) => the new value.
+ * @return {string} The page.
+ */
+const rewrite = ( html, fn ) =>
+	html.replace( TAGS, ( m, open, name, inner, close ) => {
+		const tag = ( t ) =>
+			t.replace(
+				ATTRS,
+				( a, sp, n, v ) => `${ sp }${ n }="${ fn( n, v ) }"`
+			);
+		return open ? tag( open ) + inner + close : tag( m );
+	} );
+
+/**
+ * Every URL attribute on a page, as [ name, value ].
+ *
+ * @param {string} html The page.
+ * @return {Array} Pairs.
+ */
+const attributes = ( html ) => {
+	const found = [];
+	rewrite( html, ( n, v ) => {
+		found.push( [ n, v ] );
+		return v;
+	} );
+	return found;
+};
 
 /**
  * Every file under a folder, as paths relative to it with forward slashes.
@@ -162,10 +197,10 @@ function split( { out, dev, site, developers } ) {
 		}
 		const page = pageOf( file );
 		const at = pages.get( page );
-		const html = fs
-			.readFileSync( path.join( out, file ), 'utf8' )
-			.replace( ATTRS, ( m, name, value ) => {
-				const written = each( name, value, ( u ) => {
+		const html = rewrite(
+			fs.readFileSync( path.join( out, file ), 'utf8' ),
+			( name, value ) =>
+				each( name, value, ( u ) => {
 					const rel = onSite( u, page );
 					if ( rel === null ) {
 						return u;
@@ -178,9 +213,8 @@ function split( { out, dev, site, developers } ) {
 					return absolute
 						? developers + where.rel
 						: relative( at, where.rel );
-				} );
-				return `${ name }="${ written }"`;
-			} );
+				} )
+		);
 		fs.writeFileSync( to, html );
 	}
 
@@ -204,14 +238,13 @@ function split( { out, dev, site, developers } ) {
 	for ( const file of walk( out ).filter( ( f ) => f.endsWith( '.html' ) ) ) {
 		const page = pageOf( file );
 		const before = fs.readFileSync( path.join( out, file ), 'utf8' );
-		const html = before.replace( ATTRS, ( m, name, value ) => {
-			const written = each( name, value, ( u ) => {
+		const html = rewrite( before, ( name, value ) =>
+			each( name, value, ( u ) => {
 				const rel = onSite( u, page );
 				const moved = rel === null ? null : moves( rel );
 				return moved === null ? u : developers + moved;
-			} );
-			return `${ name }="${ written }"`;
-		} );
+			} )
+		);
 		if ( html !== before ) {
 			fs.writeFileSync( path.join( out, file ), html );
 		}
@@ -289,7 +322,8 @@ function split( { out, dev, site, developers } ) {
 
 /**
  * Every link between the two outputs that leads nowhere: a page or file that is not there, or a
- * fragment no element on its page carries. Links off the two hosts are left alone.
+ * fragment no element on its page carries. Pages are read for their links, stylesheets for their
+ * url()s and modules for their relative imports, so a shared file left behind fails too. Links off the two hosts are left alone.
  *
  * @param {Object} o            Options, as split() takes them.
  * @param {string} o.out        The site.
@@ -328,14 +362,25 @@ function check( { out, dev, site, developers } ) {
 	const problems = [];
 	for ( const [ host, dir ] of hosts ) {
 		for ( const file of walk( dir ).filter( ( f ) =>
-			f.endsWith( '.html' )
+			/\.(html|css|js)$/.test( f )
 		) ) {
-			const html = fs
-				.readFileSync( path.join( dir, file ), 'utf8' )
-				.replace( /<script\b[\s\S]*?<\/script>/gi, ( m ) =>
-					m.replace( ATTRS, '' )
-				);
-			for ( const [ , name, value ] of html.matchAll( ATTRS ) ) {
+			const text = fs.readFileSync( path.join( dir, file ), 'utf8' );
+			// A page's links; a stylesheet's url()s; a module's relative imports.
+			let refs = attributes( text );
+			if ( file.endsWith( '.css' ) ) {
+				refs = [
+					...text.matchAll( /url\(\s*["']?([^"')]+)["']?\s*\)/g ),
+				].map( ( m ) => [ 'src', m[ 1 ] ] );
+			} else if ( file.endsWith( '.js' ) ) {
+				refs = [
+					...text.matchAll(
+						/(?:\bfrom\s*|\bimport\s*\(?\s*)["'](\.{1,2}\/[^"']+)["']/g
+					),
+				].map( ( m ) => [ 'src', m[ 1 ] ] );
+			}
+			// A page's own address is its folder; a file's is itself.
+			const self = file.endsWith( '.html' ) ? pageOf( file ) : file;
+			for ( const [ name, value ] of refs ) {
 				// A meta's content is only a URL when it reads as one.
 				const urls =
 					name === 'srcset'
@@ -351,7 +396,7 @@ function check( { out, dev, site, developers } ) {
 					) {
 						continue;
 					}
-					const url = new URL( u, host + pageOf( file ) );
+					const url = new URL( u, host + self );
 					const home = hosts.find( ( [ h ] ) =>
 						url.href.startsWith( h )
 					);

@@ -196,7 +196,8 @@ jobs:
             npx --yes wrangler@4 pages project create "$p" --production-branch main 2> /dev/null || true
           done
           # The developers host first, and only once it answers does the site start sending its old
-          # addresses there, so a host that is not set up yet leaves the reference where it was.
+          # addresses there. Until the host is attached this stops the whole site's deploy, so the
+          # reference never redirects to nowhere.
           npx --yes wrangler@4 pages deploy out-developers --project-name "$DEVELOPERS_PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
           if ! curl -fsS -o /dev/null --retry 6 --retry-delay 10 --retry-all-errors "${DEVELOPERS}php/"; then
             echo "::error::${DEVELOPERS} does not answer. Attach it to the $DEVELOPERS_PROJECT project as a custom domain, then run this again."
