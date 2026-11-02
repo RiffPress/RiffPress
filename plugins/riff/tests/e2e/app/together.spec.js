@@ -236,7 +236,7 @@ test( 'a track\'s … offers to listen along with whoever else is playing it', a
 	await expect
 		.poll( () => guest.evaluate( () => Number( window.riffInternal.current()?.id ) ) )
 		.toBe( audio[ 0 ].id );
-	await expect( guest.locator( '#riff' ).getByText( 'With admin' ) ).toBeVisible();
+	await expect( guest.getByRole( 'region', { name: 'Player' } ).getByText( 'With admin', { exact: true } ) ).toBeVisible();
 
 	await context.close();
 } );
