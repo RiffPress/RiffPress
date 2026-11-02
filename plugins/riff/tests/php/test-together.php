@@ -6,6 +6,7 @@
  */
 
 use Riff\Catalog;
+use Riff\Player;
 use Riff\Listen\Together;
 use Riff\Listen\Together_Scenes;
 
@@ -518,5 +519,96 @@ class Test_Riff_Together extends Riff_TestCase {
 		wp_set_presence( Together::ROOM, 'other-' . $this->host, array( 'queue' => $this->queue() ), array( 'user_id' => $this->host ) );
 		wp_set_current_user( $this->guest );
 		$this->assertSame( array(), $this->call( 'GET', '/together' )->get_data()['listeners'] );
+	}
+
+	public function test_the_together_tab_is_beside_up_next_for_a_listener_and_not_for_a_visitor(): void {
+		wp_set_current_user( $this->guest );
+		$this->assertSame( array( 'label' => 'Together' ), Player::tabs()['together'] ?? null );
+		$this->assertSame( 'together', array_key_last( Player::tabs() ), 'after the tabs about the track playing' );
+
+		wp_set_current_user( 0 );
+		$this->assertArrayNotHasKey( 'together', Player::tabs(), 'a visitor can\'t join the room' );
+	}
+
+	public function test_a_follower_sees_who_else_is_with_them_only_if_they_share(): void {
+		$amy  = self::factory()->user->create(
+			array(
+				'role'         => 'subscriber',
+				'display_name' => 'Amy',
+			)
+		);
+		$carl = self::factory()->user->create(
+			array(
+				'role'         => 'subscriber',
+				'display_name' => 'Carl',
+			)
+		);
+		update_user_option( $carl, Together::SHARE, 'off' );
+		$this->share( $this->host, $this->queue() );
+		foreach ( array( $amy, $carl ) as $follower ) {
+			wp_set_current_user( $follower );
+			$this->call( 'POST', '/together/' . $this->host . '/follow' );
+		}
+
+		wp_set_current_user( $this->guest );
+		$plan = $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_data();
+		$this->assertSame( $this->host, $plan['user']['id'], 'who they follow' );
+		$this->assertSame( array( 'Amy' ), array_column( $plan['with'], 'name' ), 'not Carl, who doesn\'t share, nor the guest themself' );
+		$this->assertSame( array( 'id', 'name', 'face' ), array_keys( $plan['with'][0] ), 'a name and a face, nothing of what they play' );
+
+		wp_set_current_user( $this->host );
+		$this->assertSame( array( 'Amy', 'Carl', 'Guest' ), array_column( $this->call( 'GET', '/together/following' )->get_data()['following'], 'name' ), 'the host sees everyone with them, as each was told on following' );
+	}
+
+	public function test_an_album_lists_only_those_playing_from_it(): void {
+		$album = self::factory()->term->create(
+			array(
+				'taxonomy' => Catalog::ALBUM,
+				'name'     => 'Detritus',
+			)
+		);
+		wp_set_object_terms( $this->tracks[1], array( $album ), Catalog::ALBUM );
+		$amy = self::factory()->user->create(
+			array(
+				'role'         => 'subscriber',
+				'display_name' => 'Amy',
+			)
+		);
+		$this->share( $this->host, $this->queue(), 1 );
+		$this->share( $amy, $this->queue(), 0 );
+
+		wp_set_current_user( $this->guest );
+		$room = $this->call( 'GET', '/together', array( 'album' => $album ) )->get_data();
+		$this->assertSame( array( $this->host ), array_map( fn( $l ) => $l['user']['id'], $room['listeners'] ), 'Amy is on another album' );
+		$this->assertCount( 2, $this->call( 'GET', '/together' )->get_data()['listeners'], 'without an album, everyone' );
+		$this->assertSame(
+			array(
+				'version' => $room['version'],
+				'changed' => false,
+			),
+			$this->call(
+				'GET',
+				'/together',
+				array(
+					'album'   => $album,
+					'version' => $room['version'],
+				)
+			)->get_data()
+		);
+		$this->assertSame( 400, $this->call( 'GET', '/together', array( 'album' => 0 ) )->get_status() );
+
+		wp_set_current_user( $this->host );
+		$this->assertSame( array(), $this->call( 'GET', '/together', array( 'album' => $album ) )->get_data()['listeners'], 'no one is shown to themself' );
+	}
+
+	public function test_an_album_shows_where_its_faces_go_only_to_a_listener_who_may_see_them(): void {
+		$album = self::factory()->term->create( array( 'taxonomy' => Catalog::ALBUM ) );
+		wp_set_current_user( $this->guest );
+		$this->assertStringContainsString(
+			'data-riff-together="' . esc_url( add_query_arg( 'album', $album, rest_url( 'riff/v1/together' ) ) ) . '" hidden',
+			Together::faces( $album )
+		);
+		wp_set_current_user( 0 );
+		$this->assertSame( '', Together::faces( $album ), 'a visitor sees no one' );
 	}
 }

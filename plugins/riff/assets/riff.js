@@ -512,6 +512,12 @@ function start() {
 	P.root.addEventListener( 'riff:track', () => P.feature( 'gestures' ), {
 		once: true,
 	} );
+	// The Together tab, picked before anything has played, loads listening together to fill it.
+	P.root.addEventListener( 'riff:tab', ( e ) => {
+		if ( e.detail?.id === 'together' && P.me?.rest?.together ) {
+			P.feature( 'together' );
+		}
+	} );
 
 	P.join();
 	P.mount();

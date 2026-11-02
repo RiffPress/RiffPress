@@ -8,6 +8,7 @@
 
 namespace Riff\Listen;
 
+use Riff\Catalog;
 use Riff\Library;
 use Riff\Likes_Rest;
 use Riff\Tracks;
@@ -29,6 +30,10 @@ defined( 'ABSPATH' ) || exit;
  * Following is a light show's way of keeping time: a change by a listener someone follows is due a
  * moment ahead, LEAD, so it reaches every follower before it is due, and each of them, the host
  * too, makes it at that moment by the server's clock. Nothing is chased or corrected after.
+ *
+ * Whoever is signed in sees the session they are in under Together in Now Playing: who they follow
+ * and who else is with them, or who is with them, and the way out; and, on an album's page, the
+ * faces of whoever is playing from it now.
  *
  * Sharing is each listener's choice, under Personal Options on their profile, where WordPress keeps
  * their other choices about how the site behaves for them. It is on unless they turn it off, or a
@@ -87,13 +92,22 @@ final class Together {
 	public const SESSION = 'riff/session:';
 
 	/**
-	 * Hooks the routes and the profile field.
+	 * The slug of the Together tab beside Up next.
+	 *
+	 * @since 5.8.0
+	 */
+	public const TAB = 'together';
+
+	/**
+	 * Hooks the routes, the profile field and the Together tab.
 	 *
 	 * @since 5.6.0
-	 * @since 5.8.0 And the profile field.
+	 * @since 5.8.0 And the profile field and the Together tab.
 	 */
 	public static function register(): void {
 		add_action( 'rest_api_init', array( self::class, 'routes' ) );
+		// After the tabs other plugins add, such as Lyrics, which are about the track playing.
+		add_filter( 'riff_now_playing_tabs', array( self::class, 'tab' ), 20 );
 		add_action( 'personal_options', array( self::class, 'field' ) );
 		add_action( 'personal_options_update', array( self::class, 'save' ) );
 		add_action( 'edit_user_profile_update', array( self::class, 'save' ) );
@@ -180,6 +194,43 @@ final class Together {
 	}
 
 	/**
+	 * The Together tab beside Up next, through Riff's own riff_now_playing_tabs, for a listener who
+	 * may join the room: a visitor, or anyone where the Presence API isn't recording, has none.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param array $tabs The tabs so far.
+	 * @return array
+	 */
+	public static function tab( $tabs ) {
+		if ( ! is_array( $tabs ) || ! self::available() || true !== self::allowed() ) {
+			return $tabs;
+		}
+		$tabs[ self::TAB ] = array( 'label' => __( 'Together', 'riff' ) );
+		return $tabs;
+	}
+
+	/**
+	 * Where an album's page shows the faces of whoever is playing from it now: hidden until the
+	 * Listen app has asked the room, and only for a listener who may.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param int $album Album term ID.
+	 * @return string
+	 */
+	public static function faces( int $album ): string {
+		if ( $album <= 0 || ! self::available() || true !== self::allowed() ) {
+			return '';
+		}
+		return sprintf(
+			'<span class="riff-album-together" data-riff-together="%s" hidden><span class="riff-album-faces"></span><span class="riff-album-together-label">%s</span></span>',
+			esc_url( add_query_arg( 'album', $album, rest_url( Library::REST . '/together' ) ) ),
+			esc_html__( 'Listening now', 'riff' )
+		);
+	}
+
+	/**
 	 * Whether the Presence API is active and recording on this site.
 	 *
 	 * @since 5.6.0
@@ -202,9 +253,10 @@ final class Together {
 		 * version. Given the version it last had, while no one has arrived, left, changed what they
 		 * share or dropped out, it answers `{ version, changed: false }` without looking up anyone's
 		 * track. POST shares what the listener is playing and answers the same; DELETE stops
-		 * sharing.
+		 * sharing. Given an album, it lists only those playing a track from it.
 		 *
 		 * @since 5.6.0
+		 * @since 5.8.0 The album argument.
 		 */
 		register_rest_route(
 			Library::REST,
@@ -218,6 +270,11 @@ final class Together {
 						'version' => array(
 							'description' => __( 'The room\'s version the player last had, as this route gave it.', 'riff' ),
 							'type'        => 'string',
+						),
+						'album'   => array(
+							'description' => __( 'Only listeners playing a track from this album, by its term ID.', 'riff' ),
+							'type'        => 'integer',
+							'minimum'     => 1,
 						),
 					),
 				),
@@ -307,8 +364,9 @@ final class Together {
 		/**
 		 * POST /riff/v1/together/{user}/follow: follows a listener, and stays following while the
 		 * player asks again each second. Answers with their schedule, as GET /together/{user}
-		 * does, with their queue only when it isn't the version the player has, and with when the
-		 * server took the request and answered it. DELETE stops following.
+		 * does, with their queue only when it isn't the version the player has, with when the
+		 * server took the request and answered it, and with who else follows them and shares what
+		 * they play. DELETE stops following.
 		 *
 		 * @since 5.8.0
 		 */
@@ -425,7 +483,7 @@ final class Together {
 				)
 			);
 		}
-		return new WP_REST_Response( self::room( $entries, $version ) );
+		return new WP_REST_Response( self::room( $entries, $version, (int) $request['album'] ) );
 	}
 
 	/**
@@ -630,6 +688,14 @@ final class Together {
 		if ( (string) $request['version'] === $listener['version'] ) {
 			unset( $listener['queue'] );
 		}
+		// Who else is with them, for the Together tab: only those who share what they play, as no
+		// one who chose not to is shown to anyone but the listener they follow.
+		$listener['with']     = array_values(
+			array_filter(
+				self::followers( $host ),
+				static fn( $person ) => $me !== $person['id'] && self::shares( $person['id'] )
+			)
+		);
 		$listener['received'] = $received;
 		$listener['now']      = self::now();
 		return new WP_REST_Response( $listener );
@@ -741,15 +807,22 @@ final class Together {
 	 *
 	 * @param object[]    $entries The room's rows, from the Presence API.
 	 * @param string|null $version The room's version.
+	 * @param int         $album   An album's term ID, for only those playing a track from it; 0 for all.
 	 * @return array `{ version, changed, listeners }`.
 	 */
-	private static function room( array $entries, ?string $version ): array {
+	private static function room( array $entries, ?string $version, int $album = 0 ): array {
 		$rows = array();
 		foreach ( $entries as $entry ) {
 			$row = self::row( $entry );
 			if ( $row && get_current_user_id() !== $row['user']->ID ) {
 				$rows[] = $row;
 			}
+		}
+		if ( $album > 0 && $rows ) {
+			$on = static fn( $row ) => (int) ( $row['queue'][ $row['index'] ]['id'] ?? 0 );
+			// Everyone's album, looked up at once.
+			update_object_term_cache( array_map( $on, $rows ), 'attachment' );
+			$rows = array_values( array_filter( $rows, static fn( $row ) => is_object_in_term( $on( $row ), Catalog::ALBUM, $album ) ) );
 		}
 		// Everyone's track, looked up at once.
 		$tracks    = Tracks::readable( array_map( static fn( $row ) => $row['queue'][ $row['index'] ], $rows ) );

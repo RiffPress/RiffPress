@@ -31,11 +31,14 @@ The rest is what a player should do:
   second and a half ahead on the server's clock, which each follower has learned once as NTP does;
   it reaches every follower before it is due, they ready it, and everyone, the listener too, makes
   it at that moment. Nothing is corrected after. A press of the follower's own stops following,
-  with Follow again in the bar; the listener sees who is with them. A locked phone or a tab in the
-  background has its timers slowed, so a change can reach it after it was due; it is joined once,
-  where the music is by then, which the player says. Each listener turns sharing off under
-  Personal Options on their profile; a site makes it off until turned on with the
-  `riff_together_share` filter.
+  with Follow again in the bar; the listener sees who is with them. Together, a tab beside Up
+  next, lists who is in the session, with Leave for a follower, and outside one who else is
+  listening, each with Follow; an album's page shows the faces of whoever is playing from it,
+  and pressing one follows them. Other followers see a follower only if that follower shares what
+  they play. A locked phone or a tab in the background has its timers slowed, so a change can
+  reach it after it was due; it is joined once, where the music is by then, which the player
+  says. Each listener turns sharing off under Personal Options on their profile; a site makes it
+  off until turned on with the `riff_together_share` filter.
 - The queue and position are kept for the tab's session. A full-page navigation saves them and
   attempts to resume on the next page; a reload restores the same track paused. A queue of more
   than 500 tracks keeps the 500 around the one playing, in the order they play.
