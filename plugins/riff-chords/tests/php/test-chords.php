@@ -18,6 +18,8 @@ class Test_Riff_Chords extends Riff_TestCase {
 		parent::set_up();
 		// Hooked per test; the suite restores every hook afterwards.
 		Chords::register();
+		// init has run before a test, so the meta is registered here.
+		Chords::meta();
 	}
 
 	public function test_the_tab_comes_after_up_next(): void {

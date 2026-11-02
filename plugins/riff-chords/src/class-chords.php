@@ -47,7 +47,8 @@ final class Chords {
 	 * Hooks the meta, the tab, the field and the script.
 	 */
 	public static function register(): void {
-		self::meta();
+		// On init, since the meta's description is translated, and translations load from there.
+		add_action( 'init', array( self::class, 'meta' ) );
 		add_filter( 'riff_now_playing_tabs', array( self::class, 'tab' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
