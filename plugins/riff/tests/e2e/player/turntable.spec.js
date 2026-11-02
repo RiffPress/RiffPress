@@ -1,6 +1,8 @@
 /**
  * The turntable's parts: the sleeve puts the record away and plays it again, and the arm is put
  * down on any band of the side, by dragging (turning on its base with the hand), by two clicks, or from the keyboard.
+ * The arm is set up by Baerwald's alignment, and the platter turns on below the slowest the music
+ * plays at: up to speed before the music is heard, and on down to rest after it stops.
  * Runs in desktop Chromium, where the turntable stands; a phone held upright shows the cover alone.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -51,6 +53,14 @@ test.describe( 'Turntable', () => {
 		await sleeve.focus();
 		await page.keyboard.press( 'Enter' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
+		// Carried to the platter a few millimetres above the mat, it is let fall onto it.
+		await expect
+			.poll( () =>
+				page.locator( '.riff-record' ).evaluate( ( el ) =>
+					el.getAnimations().some( ( a ) => a.effect.getKeyframes().some( ( k ) => /^scale/.test( k.transform || '' ) ) )
+				)
+			)
+			.toBe( true );
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 		await expect( sleeve ).toHaveText( 'Put the record away' );
 	} );
@@ -98,5 +108,33 @@ test.describe( 'Turntable', () => {
 		await page.mouse.click( record.x + record.width * 0.5, record.y + record.height * 0.7 );
 		await expect( arm ).not.toHaveAttribute( 'data-riff-held', '' );
 		await expect( arm ).toHaveAttribute( 'aria-valuenow', max );
+	} );
+
+	test( 'the arm is set up by Baerwald alignment, beside its anti-skate dial and the target light', async ( { page } ) => {
+		// Nulls at 66 and 120.9 mm, the base 214.6 mm from the spindle: the headshell turned in by 23.7°.
+		await expect( page.locator( '.riff-headshell' ) ).toHaveAttribute( 'transform', /rotate\(23\.70\)$/ );
+		await expect( page.locator( '.riff-antiskate' ) ).toBeVisible();
+		await expect( page.locator( '.riff-target' ) ).toBeVisible();
+	} );
+
+	test( 'the platter turns on its own below a crawl: up to speed before the music is heard, and on to rest after it stops', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await page.evaluate( () => {
+			const root = document.querySelector( '#riff' );
+			const audio = document.querySelector( '.riff-audio' );
+			window.riffPlatter = [];
+			new MutationObserver( () =>
+				window.riffPlatter.push( `${ 'riffCoasting' in root.dataset ? 'coasting' : 'driven' }, ${ audio.paused ? 'silent' : 'heard' }` )
+			).observe( root, { attributeFilter: [ 'data-riff-coasting' ] } );
+		} );
+		const platter = () => page.evaluate( () => window.riffPlatter );
+		const toggle = page.locator( '.riff-bar [data-riff-action="toggle"]' ).first();
+		// Stopped: the music winds down to a crawl and stops, and the platter turns on to rest.
+		await toggle.click();
+		await expect.poll( platter ).toEqual( [ 'coasting, silent', 'driven, silent' ] );
+		// Started: the platter comes up to a crawl, and the music starts there.
+		await toggle.click();
+		await expect.poll( platter ).toEqual( [ 'coasting, silent', 'driven, silent', 'coasting, silent', 'driven, heard' ] );
+		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate ) ).toBe( 1 );
 	} );
 } );
