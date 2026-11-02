@@ -504,6 +504,22 @@ class Test_Riff_Together extends Riff_TestCase {
 		Together_Scenes::pause();
 	}
 
+	public function test_a_scene_plays_a_track_on_a_post_by_its_block_whatever_its_parent(): void {
+		// Uploaded on its own, as the REST API and the Media Library leave it, then put in a post.
+		$track = self::attach( '02 - Underground [underground].mp3' );
+		$post  = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_content' => sprintf( '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="%s"></audio></figure><!-- /wp:audio -->', $track, wp_get_attachment_url( $track ) ),
+			)
+		);
+		wp_set_current_user( $this->host );
+		Together_Scenes::play( null, array( 'text' => get_the_title( $track ) ) );
+		$was = Together::shared( $this->host );
+		$this->assertSame( $track, $was['queue'][ $was['index'] ]['id'] );
+		$this->assertSame( $post, $was['queue'][ $was['index'] ]['post'] );
+	}
+
 	public function test_a_scene_naming_a_track_on_no_published_post_fails_its_step(): void {
 		wp_set_current_user( $this->host );
 		$this->expectException( RuntimeException::class );
