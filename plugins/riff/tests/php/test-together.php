@@ -541,7 +541,7 @@ class Test_Riff_Together extends Riff_TestCase {
 		wp_set_current_user( $this->guest );
 		$panels = Registry::views( 'side' );
 		$this->assertSame( 'Together', $panels['together']['label'] ?? null, 'a panel beside the page, as it is about who listens, not the track' );
-		$this->assertSame( array( 'queue', 'together' ), array_keys( $panels ), 'after Up next' );
+		$this->assertSame( array( 'about', 'queue', 'together' ), array_keys( $panels ), 'after Up next' );
 		$this->assertStringContainsString( 'data-riff-panel="together"', Registry::panels() );
 
 		Registry::reset();

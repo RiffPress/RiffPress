@@ -80,10 +80,10 @@ at the bar's right end, and on a phone from its chip in Now Playing:
 Pressing the open view's button again, Escape, or Close goes back to the page, and focus goes back
 to the button. The button says whether its view is open (`aria-pressed`).
 
-**Up next** (`queue`) is a panel beside the page rather than a screen, as is **Together**
-(`together`), for a signed-in listener where the Presence API is active, and any panel a plugin
-registers: what they hold is about the queue and the people listening, not the song, so they stand
-beside whatever is showing. One shows at a time:
+**Up next** (`queue`) is a panel beside the page rather than a screen, as are **About**
+(`about`), **Together** (`together`), for a signed-in listener where the Presence API is active,
+and any panel a plugin registers: what they hold stands beside whatever is showing, the song's own
+view included. One shows at a time:
 
 - On a wide screen it stands beside the page and Now Playing, above the bar, and both make room
   for it.
@@ -95,6 +95,42 @@ beside whatever is showing. One shows at a time:
 Focus moves to the panel's name as it opens, and Escape or Close hands it back to what opened it.
 The one a listener leaves open opens again on their next visit, on a wide screen; that choice is
 kept in the browser, nowhere else.
+
+## About
+
+About is the track playing: its cover, its title, its artist and its album, and the credits its
+file's own tags carry. The artist and the album link to their pages in the Listen app: on a Listen
+page the app opens them in place, and elsewhere they are the site's Listen page, the oldest
+published one. The credits are what WordPress read from the file on upload, as the media route
+hands them back in `media_details`: the composer, lyricist, conductor, the album's artist where it
+is not the track's, genre, year, label, disc and track number, and copyright. Nothing is fetched
+from anywhere else, and a tag the file lacks is left out; a file outside the Media Library, or one
+the listener may not read, shows the track and no credits.
+
+Its parts are sections, in the order the `riff_about_sections` filter gives them; Riff's own,
+`track` and `credits`, are two of them. A plugin adds one there, which the page draws hidden as
+`[data-riff-about="<id>"]` with its heading and an empty `.riff-about-body`, and fills it on the
+`riff.view` action, as Riff fills its own, showing it when it has something for the track:
+
+```php
+add_filter( 'riff_about_sections', function ( $sections ) {
+	$sections['tour'] = array( 'label' => __( 'On tour', 'my-plugin' ), 'order' => 30 );
+	return $sections;
+} );
+```
+
+```js
+wp.hooks.addAction( 'riff.view', 'my-plugin', ( { id, open, view, track } ) => {
+	const part = id === 'about' && open && view.querySelector( '[data-riff-about="tour"]' );
+	if ( part ) {
+		part.querySelector( '.riff-about-body' ).textContent = datesFor( track );
+		part.hidden = ! part.querySelector( '.riff-about-body' ).textContent;
+	}
+} );
+```
+
+Riff's own sit at 10 (the track) and 20 (the credits). `riff.view` fires as the panel opens and
+again as the track changes while it is open, so a section follows the song.
 
 ## Registering controls and views
 
@@ -121,7 +157,7 @@ add_action( 'riff_register', function () {
 ```
 
 A control's `order` places it among Riff's own: Like (10), the badges (20), the album (26), the
-turntable (28), Lyrics (30), Sing (32), Chords (34), Up next (40), Together (45), Play on another
+turntable (28), Lyrics (30), Sing (32), Chords (34), About (36), Up next (40), Together (45), Play on another
 device (60) and the volume (70). `wide`
 keeps a control's button off a phone's bar, which holds the track, Play, the album and only what a
 control asks to keep there; a view's button is wide unless it says otherwise. A control can bring

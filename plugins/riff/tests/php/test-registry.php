@@ -14,7 +14,7 @@ class Test_Riff_Registry extends Riff_TestCase {
 
 	public function test_riff_registers_its_own_as_any_plugin_does(): void {
 		$this->assertSame( array( 'like', 'badges', 'cast', 'volume' ), array_keys( Registry::controls() ) );
-		$this->assertSame( array( 'album', 'turntable', 'queue' ), array_keys( array_diff_key( Registry::views(), array( 'lyrics' => true ) ) ) );
+		$this->assertSame( array( 'album', 'turntable', 'about', 'queue' ), array_keys( array_diff_key( Registry::views(), array( 'lyrics' => true ) ) ) );
 		$this->assertSame( 1, did_action( Registry::HOOK ), 'riff_register runs once, as they are first read' );
 		Registry::views();
 		$this->assertSame( 1, did_action( Registry::HOOK ) );

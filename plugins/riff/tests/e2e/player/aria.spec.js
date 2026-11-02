@@ -14,6 +14,12 @@ let postUrl;
 
 test.beforeAll( async ( { requestUtils } ) => {
 	( { postUrl } = await playerSite( made, requestUtils ) );
+	// A Listen page, for About's album and artist to link to.
+	await made.page( requestUtils, {
+		title: 'Aria e2e',
+		status: 'publish',
+		content: '<!-- wp:riff/app {"align":"full"} /-->',
+	} );
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
@@ -77,6 +83,7 @@ test.describe( 'The tree is the spec', () => {
 			  - button "Album"
 			  - button "Turntable"
 			  - button "Lyrics"
+			  - button "About"
 			  - button "Up next"
 			  - slider "Volume"
 		` );
@@ -108,6 +115,26 @@ test.describe( 'The tree is the spec', () => {
 		` );
 	} );
 
+	test( 'About, a panel of its own', async ( { page, isMobile } ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await openView( page, 'about' );
+		// Named for what it holds, beside the page or over everything as Up next is: its name, Close,
+		// then the track, its cover left to the title beside it, the title a heading, the artist and
+		// the album links to their pages, and the credits under their own heading, each name beside
+		// what they did.
+		await expect( page.locator( '.riff-side' ) ).toMatchAriaSnapshot( `
+			- ${ isMobile ? 'dialog' : 'complementary' } "About":
+			  - heading "About" [level=2]
+			  - button "Close About"
+			  - heading "Underground" [level=3]
+			  - link "Airmen of Note, United States Air Force Band"
+			  - link "Compositions"
+			  - heading "Credits" [level=3]
+			  - term: Composer
+			  - definition: Tyler Kuebler
+		` );
+	} );
+
 	test( 'Now Playing, the track on its own', async ( { page, isMobile } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await openView( page, 'album' );
@@ -121,6 +148,7 @@ test.describe( 'The tree is the spec', () => {
 				- button "Album"
 				- button "Turntable"
 				- button "Lyrics"
+				- button "About"
 				- button "Up next"
 			` );
 		}

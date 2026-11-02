@@ -35,6 +35,7 @@ final class Plugin {
 		Player::register();
 		Shortcuts::register();
 		Turntable::register();
+		About::register();
 		Library::register();
 		Api::register();
 		Fields::register();

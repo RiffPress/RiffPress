@@ -586,10 +586,14 @@ function start() {
 	P.root.addEventListener( 'riff:track', () => P.feature( 'gestures' ), {
 		once: true,
 	} );
-	// The Together panel, opened before anything has played, loads listening together to fill it.
+	// The Together panel, opened before anything has played, loads listening together to fill it;
+	// the About panel loads what fills it the first time it opens.
 	P.root.addEventListener( 'riff:view', ( e ) => {
 		if ( e.detail?.id === 'together' && e.detail.open && P.me?.rest?.together ) {
 			P.feature( 'together' );
+		}
+		if ( e.detail?.id === 'about' && e.detail.open ) {
+			P.feature( 'about' );
 		}
 	} );
 

@@ -252,6 +252,26 @@ export function start( api ) {
 		}
 		ctx.show( to ).catch( () => {} );
 	} );
+	// A link in a panel beside the page, as About's to an album or an artist, opens here in place,
+	// as the app's own do.
+	document.querySelector( '#riff .riff-side' )?.addEventListener( 'click', ( e ) => {
+		if (
+			e.defaultPrevented ||
+			e.button !== 0 ||
+			e.metaKey ||
+			e.ctrlKey ||
+			e.shiftKey ||
+			e.altKey
+		) {
+			return;
+		}
+		const a = e.target.closest( 'a[href]' );
+		const to = a && ! a.target ? ctx.postOf( a.href ) : null;
+		if ( to ) {
+			e.preventDefault();
+			ctx.show( to ).catch( () => {} );
+		}
+	} );
 
 	ctx.home( true );
 	ctx.together();
