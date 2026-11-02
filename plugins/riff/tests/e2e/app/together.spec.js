@@ -179,3 +179,64 @@ test( 'a follower keeps time with the host through a pause, a play, a skip and a
 
 	await context.close();
 } );
+
+test( 'a track\'s … offers to listen along with whoever else is playing it', async ( {
+	page,
+	browser,
+	baseURL,
+	isMobile,
+} ) => {
+	test.skip( isMobile, 'Two listeners at a computer show it; the menu is the same on a phone.' );
+	test.setTimeout( 90000 );
+	// The admin plays the first track.
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( 0 ).click();
+	await expect.poll( () => page.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
+
+	const context = await browser.newContext( {
+		baseURL,
+		storageState: { cookies: [], origins: [] },
+	} );
+	const guest = await context.newPage();
+	await guest.goto( '/wp-login.php' );
+	await guest.locator( '#user_login' ).fill( GUEST.username );
+	await guest.locator( '#user_pass' ).fill( GUEST.password );
+	await guest.locator( '#wp-submit' ).click();
+	await guest.waitForURL( /wp-admin/ );
+
+	// The guest plays the other track, which loads listening together.
+	await guest.goto( postUrl );
+	await guest.locator( '.riff-row' ).nth( 1 ).click();
+	await expect.poll( () => guest.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
+
+	const along = guest.getByRole( 'menuitem', { name: 'Listen along with admin' } );
+	const more = guest.locator( '.wp-block-audio' ).nth( 0 ).locator( '.riff-more-button' );
+	// Coming to the … asks who is listening; the menu after that offers them. The admin's share
+	// leaves a moment after their play, so a first ask may find no one yet.
+	await expect( async () => {
+		await guest.keyboard.press( 'Escape' );
+		await more.hover();
+		await guest.waitForTimeout( 500 );
+		await more.click();
+		await expect( along ).toBeVisible( { timeout: 1000 } );
+	} ).toPass( { timeout: 45000 } );
+	// Before Go to post, which leaves the page.
+	await expect( guest.locator( '.riff-menu [role="menuitem"]' ).last() ).toHaveText( 'Go to post' );
+
+	// Not on a track no one else is playing.
+	await guest.keyboard.press( 'Escape' );
+	await guest.locator( '.wp-block-audio' ).nth( 1 ).locator( '.riff-more-button' ).click();
+	await expect( guest.getByRole( 'menuitem', { name: 'Go to post' } ) ).toBeVisible();
+	await expect( along ).toHaveCount( 0 );
+	await guest.keyboard.press( 'Escape' );
+
+	// Pressing it follows them, onto their track.
+	await more.click();
+	await along.click();
+	await expect
+		.poll( () => guest.evaluate( () => Number( window.riffInternal.current()?.id ) ) )
+		.toBe( audio[ 0 ].id );
+	await expect( guest.locator( '#riff' ).getByText( 'With admin' ) ).toBeVisible();
+
+	await context.close();
+} );
