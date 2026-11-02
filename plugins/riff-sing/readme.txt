@@ -29,6 +29,10 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 == Changelog ==
 
 = 0.1.0 =
+* Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
+* Riff Sing: sing along with the melody in Now Playing, scored by pitch from a microphone or a MIDI instrument.
+
+= 0.1.0 =
 * Riff Sing: a Sing tab beside Up next, where the melody scrolls past and each line is scored by how close the singer comes, from a microphone or a MIDI instrument.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
