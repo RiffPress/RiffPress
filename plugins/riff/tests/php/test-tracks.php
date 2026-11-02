@@ -335,10 +335,10 @@ class Test_Riff_Tracks extends Riff_TestCase {
 
 		$meta = (array) wp_get_attachment_metadata( $id );
 		foreach ( array(
-			'2'     => 2,
-			'1/2'   => 1,
+			'2'      => 2,
+			'1/2'    => 1,
 			' 3 / 4' => 3,
-			'side'  => 0,
+			'side'   => 0,
 		) as $tag => $disc ) {
 			$meta['part_of_a_set'] = (string) $tag;
 			wp_update_attachment_metadata( $id, $meta );
