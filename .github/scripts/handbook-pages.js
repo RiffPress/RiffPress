@@ -18,6 +18,7 @@
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const { esc, referencePage, HANDBOOKS } = require( './site-shell.js' );
+const nav = require( './site-nav.js' );
 const hooks = require( './hooks-reference.js' );
 
 const ROOT = path.resolve( __dirname, '..', '..' );
@@ -437,16 +438,17 @@ function build( list = HANDBOOKS ) {
 		}
 	}
 
+	const listed = new Set( [ ...nav.entries().values() ].map( ( e ) => e.node.href ) );
 	const out = new Map();
 	for ( const h of parsed ) {
 		out.set(
 			path.join( SITE, h.slug, 'index.html' ),
 			referencePage( {
-				title: `${ h.title || h.label } | Riff`,
+				title: h.title || h.label,
 				description: h.description || h.label,
 				url: `developers/${ h.slug }/`,
-				current: h.slug,
-				trail: [ [ h.title || h.label ] ],
+				// One site-nav.json doesn't list yet sits under Handbook; site-nav.js --check fails on it.
+				...( listed.has( `developers/${ h.slug }/` ) ? {} : { under: 'handbook', label: h.label } ),
 				h1: h.h1 || `<h1>${ esc( h.label ) }</h1>`,
 				toc: h.toc,
 				body: `<div class="handbook">\n${ h.html }</div>\n`,

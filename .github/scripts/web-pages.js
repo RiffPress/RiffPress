@@ -31,9 +31,9 @@ const SPEC_HOSTS = [
 ];
 const shell = require( './site-shell.js' );
 const hooksReference = require( './hooks-reference.js' );
-const { esc, inline, foot, localNav, crumbs } = shell;
-const head = ( title, description, url, depth ) =>
-	shell.head( title, description, url, depth, `${ depth === 2 ? '../' : '' }web.css`, 'developers' ) + localNav( '../'.repeat( depth ), 'web' );
+const { esc, inline, foot, pager } = shell;
+const head = ( title, description, url, depth, label = '' ) =>
+	shell.head( title, description, url, depth, `${ depth === 2 ? '../' : '' }web.css`, { label } );
 
 const SHOTS = {
 	'phone-now-playing': { wide: false, alt: 'Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls' },
@@ -84,8 +84,7 @@ function sidebar( entries, current, depth ) {
 function page( e, i, entries ) {
 	const prev = entries[ i - 1 ];
 	const next = entries[ i + 1 ];
-	let html = head( `${ e.name } | Riff`, e.summary, `web/${ e.slug }/`, 2 );
-	html += crumbs( [ [ 'Built on the open web', '../' ], [ e.name ] ] );
+	let html = head( e.name, e.summary, `web/${ e.slug }/`, 2, e.name );
 	html += `<div class="wrap layout">
 <main id="main">
 <h1>${ esc( e.name ) }</h1>
@@ -106,8 +105,7 @@ function page( e, i, entries ) {
 	html += `</ul>
 <p class="fine">Links open the source at the commit this page was published from.</p>
 <p class="fine">Specification: <a href="${ esc( e.spec.url ) }">${ esc( e.spec.name ) }</a>. Reference: <a href="${ esc( e.mdn ) }">${ esc( e.name ) } on MDN</a>.</p>
-<nav class="pager" aria-label="Previous and next">${ prev ? `<a rel="prev" href="../${ prev.slug }/">${ esc( prev.name ) }</a>` : '<span></span>' }${ next ? `<a rel="next" href="../${ next.slug }/">${ esc( next.name ) }</a>` : '<span></span>' }</nav>
-</main>
+${ pager( prev && [ prev.name, `../${ prev.slug }/` ], next && [ next.name, `../${ next.slug }/` ] ) }</main>
 ${ sidebar( entries, e.slug, 2 ) }
 </div>
 `;
@@ -115,7 +113,7 @@ ${ sidebar( entries, e.slug, 2 ) }
 }
 
 function index( entries ) {
-	let html = head( 'Built on the open web | Riff', 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.', 'web/', 1 );
+	let html = head( 'Built on the open web', 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.', 'web/', 1 );
 	html += `<main id="main" class="wrap index">
 <h1>Built on the open web</h1>
 <p class="lede">Every browser API and CSS feature the player uses, and what each one is for.</p>
@@ -208,35 +206,43 @@ function build() {
 	return files;
 }
 
-const check = process.argv.includes( '--check' );
-const files = build();
-let stale = 0;
-for ( const [ file, content ] of files ) {
-	// Only the sitemap is committed; the pages are checked by building them, above.
-	if ( check && file !== SITEMAP ) {
-		continue;
-	}
-	const current = fs.existsSync( file ) ? fs.readFileSync( file, 'utf8' ) : null;
-	if ( current === content ) {
-		continue;
-	}
-	stale++;
-	if ( check ) {
-		console.error( `${ path.relative( ROOT, file ) } is out of date; run npm run docs:web` );
-	} else {
-		fs.mkdirSync( path.dirname( file ), { recursive: true } );
-		fs.writeFileSync( file, content );
-	}
-}
-// Pages whose entry was removed.
-for ( const entry of check ? [] : fs.readdirSync( DIR, { withFileTypes: true } ) ) {
-	const file = path.join( DIR, entry.name, 'index.html' );
-	if ( entry.isDirectory() && ! files.has( file ) ) {
+function main() {
+	const check = process.argv.includes( '--check' );
+	const files = build();
+	let stale = 0;
+	for ( const [ file, content ] of files ) {
+		// Only the sitemap is committed; the pages are checked by building them, above.
+		if ( check && file !== SITEMAP ) {
+			continue;
+		}
+		const current = fs.existsSync( file ) ? fs.readFileSync( file, 'utf8' ) : null;
+		if ( current === content ) {
+			continue;
+		}
 		stale++;
-		fs.rmSync( path.join( DIR, entry.name ), { recursive: true } );
+		if ( check ) {
+			console.error( `${ path.relative( ROOT, file ) } is out of date; run npm run docs:web` );
+		} else {
+			fs.mkdirSync( path.dirname( file ), { recursive: true } );
+			fs.writeFileSync( file, content );
+		}
 	}
+	// Pages whose entry was removed.
+	for ( const entry of check ? [] : fs.readdirSync( DIR, { withFileTypes: true } ) ) {
+		const file = path.join( DIR, entry.name, 'index.html' );
+		if ( entry.isDirectory() && ! files.has( file ) ) {
+			stale++;
+			fs.rmSync( path.join( DIR, entry.name ), { recursive: true } );
+		}
+	}
+	if ( check && stale ) {
+		process.exit( 1 );
+	}
+	console.log( check ? `site/web's quotes are all in place (${ files.size - 2 } pages)` : `site/web written (${ files.size - 2 } pages)` );
 }
-if ( check && stale ) {
-	process.exit( 1 );
+
+if ( require.main === module ) {
+	main();
 }
-console.log( check ? `site/web's quotes are all in place (${ files.size - 2 } pages)` : `site/web written (${ files.size - 2 } pages)` );
+
+module.exports = { build };

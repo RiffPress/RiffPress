@@ -453,7 +453,7 @@ function check( { out, dev, site, developers } ) {
 	return [ ...new Set( problems ) ];
 }
 
-module.exports = { split, check, relative };
+module.exports = { split, check, relative, MOVED };
 
 if ( require.main === module ) {
 	const [ out, dev, site, developers ] = process.argv.slice( 2 );

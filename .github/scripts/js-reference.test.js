@@ -93,6 +93,6 @@ test( 'every member of the real window.riff is documented, and the page lists ea
 	for ( const m of list ) {
 		assert.ok( html.includes( `id="${ m.kind }-${ m.name.toLowerCase() }"` ), m.name );
 	}
-	assert.match( html, /<a href="\.\.\/\.\.\/developers\/javascript\/" aria-current="true">JavaScript<\/a>/ );
+	assert.match( html, /<a href="\.\.\/\.\.\/developers\/javascript\/" aria-current="page">JavaScript<\/a>/ );
 	assert.match( html, />PHP<\/a>.*>JavaScript<\/a>.*>REST API<\/a>.*>CSS<\/a>.*>Built on the open web<\/a>/, 'the bar lists every language, then the background reading' );
 } );

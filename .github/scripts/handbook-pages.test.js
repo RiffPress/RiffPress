@@ -59,7 +59,7 @@ test( 'every handbook is drawn from its doc, with nothing the check refuses', ()
 	assert.match( player, /<h1>How the player works<\/h1>/ );
 	assert.match( player, /<h2 id="registering-controls-and-views" class="is-toc-heading">/ );
 	assert.match( player, /<li><a href="#registering-controls-and-views">Registering controls and views<\/a><\/li>/ );
-	assert.match( player, /aria-current="true">The player<\/a>/ );
+	assert.match( player, /aria-current="page">Player<\/a>/ );
 	assert.match( player, /href="https:\/\/github\.com\/RiffPress\/RiffPress\/edit\/main\/docs\/player\.md">Edit this page on GitHub/ );
 	// A link to another file opens it at the commit published.
 	assert.match( player, /href="https:\/\/github\.com\/RiffPress\/RiffPress\/blob\/\{\{commit\}\}\/DESIGN\.md"/ );

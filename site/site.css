@@ -133,12 +133,17 @@ a:hover {
 	order: 2;
 }
 
+/* the wordmark and the sections on one row while they fit, the sections
+   under the wordmark when they don't */
 .nav .wrap {
-	height: 72px;
+	min-height: 72px;
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 20px;
+	gap: 0 20px;
+	padding-top: 8px;
+	padding-bottom: 8px;
 }
 
 .mark {
@@ -161,44 +166,34 @@ a:hover {
 
 .nav nav {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 28px;
+	gap: 0 clamp(16px, 3vw, 28px);
 }
 
-.nav nav a:not(.btn) {
+/* each a 44px target, and never broken across two lines */
+.nav nav a {
 	color: var(--ink);
 	text-decoration: none;
 	font-size: 0.9375rem;
+	line-height: 24px;
+	padding: 10px 0;
+	white-space: nowrap;
 	opacity: 0.85;
 	transition: opacity var(--t);
 }
 
-.nav nav a:not(.btn):hover,
-.nav nav a:not(.btn)[aria-current] {
+.nav nav a:hover,
+.nav nav a[aria-current] {
 	opacity: 1;
 	text-decoration: underline;
 	text-underline-offset: 4px;
 }
 
-/* Download, as wordpress.org's bar has Get WordPress */
-.nav .btn {
-	padding: 7px 12px;
-	border-color: var(--action);
-	background: var(--action);
-	color: var(--on-action);
-	font-size: 0.875rem;
-	line-height: 1.714;
-}
-
-.nav .btn:hover {
-	border-color: var(--action-hover);
-	background: var(--action-hover);
-	color: var(--on-action);
-}
-
-.nav .btn:focus-visible {
-	box-shadow: inset 0 0 0 3px var(--white);
-	outline-color: var(--accent);
+.nav nav a:focus-visible {
+	outline: 1.5px solid var(--accent);
+	outline-offset: 2px;
+	opacity: 1;
 }
 
 /* the section bar: under the global one, then on top once that has scrolled
@@ -680,8 +675,13 @@ footer {
 footer .wrap {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 12px 28px;
+	gap: var(--space-4) 28px;
 	justify-content: space-between;
+	align-items: flex-start;
+}
+
+footer p {
+	margin: 0;
 }
 
 footer a {
@@ -690,11 +690,24 @@ footer a {
 	color: var(--white);
 }
 
-/* the footer's links, as wordpress.org's foot has its row of them */
+/* the footer's links in their groups, as wordpress.org's foot has them */
 footer nav {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px 24px;
+	gap: var(--space-3) var(--space-6);
+}
+
+footer .foot-label {
+	margin-bottom: var(--space-1);
+	color: #a39d93;
+}
+
+footer .foot-group ul {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
 @media (max-width: 900px) {
@@ -703,13 +716,6 @@ footer nav {
 		grid-template-columns: repeat(3, 1fr);
 		gap: 10px;
 		max-width: 24rem;
-	}
-}
-
-@media (max-width: 640px) {
-
-	.nav nav a:not(.btn) {
-		display: none;
 	}
 }
 

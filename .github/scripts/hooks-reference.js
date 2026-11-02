@@ -15,7 +15,7 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { esc, inline, head, foot, localNav, crumbs } = require( './site-shell.js' );
+const { esc, inline, head, foot, pager } = require( './site-shell.js' );
 
 const ROOT = path.resolve( __dirname, '..', '..' );
 const PLUGIN = path.join( ROOT, 'plugins', 'riff' );
@@ -439,7 +439,11 @@ function codeBlock( code, first ) {
 	return `<pre class="wp-block-code numbered"><code>${ rows.join( '\n' ) }</code></pre>`;
 }
 
-function hookPage( p ) {
+function hookPage( p, all = [ p ] ) {
+	// Previous and next: the hooks of its language, in the order the index lists them.
+	const kin = Object.values( KIND ).flatMap( ( name ) => all.filter( ( q ) => q.lang === p.lang && group( q ) === name ) );
+	const prev = kin[ kin.indexOf( p ) - 1 ];
+	const next = kin[ kin.indexOf( p ) + 1 ];
 	const summary = p.summary || `The ${ p.name } hook.`;
 	const toc = [];
 	let body = `<section class="summary"><p>${ inline( summary ) }</p>`;
@@ -503,17 +507,15 @@ function hookPage( p ) {
 	body += '</tbody></table></section>\n';
 
 	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ label }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
-	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() } | Riff`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', 'developers' );
-	// A hook sits under its language: PHP / Hooks / riff_enabled, or JavaScript / Hooks / riff.track.
-	const lang = p.lang === 'js' ? [ 'javascript', 'JavaScript', '#actions-and-filters' ] : [ 'php', 'PHP', '#hooks' ];
-	html += localNav( '../../../', lang[ 0 ] );
-	html += crumbs( [ [ lang[ 1 ], `../../${ lang[ 0 ] }/` ], [ 'Hooks', `../../${ lang[ 0 ] }/${ lang[ 2 ] }` ], [ p.name ] ], searchForm( '../' ) );
+	// A hook sits under its language: Developers / Reference / PHP / riff_enabled, or JavaScript for riff.track.
+	const lang = p.lang === 'js' ? 'javascript' : 'php';
+	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() }`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', { under: lang, label: p.name, search: searchForm( '../' ) } );
 	html += `<main id="main" class="wrap reference">
 <h1 class="code-title">${ signature( p ) }</h1>
 <div class="with-toc">
 <aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p></aside>
 <article class="entry">
-${ body }</article>
+${ body }${ pager( prev && [ prev.name, `../${ prev.slug }/` ], next && [ next.name, `../${ next.slug }/` ] ) }</article>
 </div>
 </main>
 <script>
@@ -527,10 +529,8 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 }
 
 function indexPage( list ) {
-	let html = head( 'Hooks | Riff', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css', 'developers' );
-	html += localNav( '../../', '' );
-	// Developers / Hooks, so the search sits at the bar's right, as on every hook's own page.
-	html += crumbs( [ [ 'Developers', '../' ], [ 'Hooks' ] ], searchForm( './' ) );
+	// Developers / Reference / Hooks, the search at their right, as on every hook's own page.
+	let html = head( 'Hooks', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css', { search: searchForm( './' ) } );
 	html += `<main id="main" class="wrap reference hooks-index">
 <h1>Hooks</h1>
 <p class="intro">Every filter and action Riff fires, in PHP and in the player. Each page is generated from the docblock above the line the hook fires on, at the commit this site was published from. A hook keeps its name and parameters within a major version.</p>
@@ -588,7 +588,7 @@ function site( hooks ) {
 	const out = new Map();
 	out.set( path.join( SITE, 'index.html' ), indexPage( list ) );
 	for ( const p of list ) {
-		out.set( path.join( SITE, p.slug, 'index.html' ), hookPage( p ) );
+		out.set( path.join( SITE, p.slug, 'index.html' ), hookPage( p, list ) );
 	}
 	return out;
 }

@@ -47,7 +47,7 @@ test( 'the plugin\'s PHP, REST and CSS surface is documented, and each page says
 	assert.match( rest, /GET \/riff\/v1\/library\/\{id\}/ );
 	assert.match( css, /--riff-accent<\/a><code>#f2eadb<\/code>/ );
 	for ( const [ html, label ] of [ [ php, 'PHP' ], [ rest, 'REST API' ], [ css, 'CSS' ] ] ) {
-		assert.match( html, new RegExp( `aria-current="true">${ label }</a>` ), `${ label } is current in the bar` );
+		assert.match( html, new RegExp( `aria-current="page">${ label }</a>` ), `${ label } is current in the bar` );
 	}
 } );
 
