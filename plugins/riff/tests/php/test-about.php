@@ -102,8 +102,8 @@ class Test_Riff_About extends Riff_TestCase {
 		wp_update_attachment_metadata( $id, wp_get_attachment_metadata( $id ) );
 
 		$request = new WP_REST_Request( 'GET', '/wp/v2/media/' . $id );
-		$request->set_param( '_fields', 'media_details,_links,_embedded' );
-		$data = rest_get_server()->response_to_data( rest_do_request( $request ), array( 'wp:term' ) );
+		$request->set_param( '_fields', 'media_details,riff_albums,riff_artists' );
+		$data = rest_get_server()->response_to_data( rest_do_request( $request ), false );
 
 		$tags = $data['media_details'] ?? array();
 		$this->assertSame( 'Tyler Kuebler', $tags['composer'] ?? null, 'the composer, as WordPress read it on upload' );
@@ -112,10 +112,13 @@ class Test_Riff_About extends Riff_TestCase {
 		$this->assertSame( 'Public domain — U.S. Government work', $tags['copyright_message'] ?? null );
 		$this->assertSame( '2', (string) ( $tags['track_number'] ?? '' ) );
 
-		$terms = array_merge( ...array_values( $data['_embedded']['wp:term'] ?? array() ) );
-		$names = array_column( $terms, 'name', 'taxonomy' );
-		$this->assertSame( 'Compositions', $names['riff_album'] ?? null, 'the album it is filed under, with its ID' );
-		$artists = array_column( array_filter( $terms, static fn( $term ) => 'riff_artist' === $term['taxonomy'] ), 'name' );
-		$this->assertContains( 'Airmen of Note, United States Air Force Band', $artists );
+		// The IDs it is filed under, named through Riff's own routes, as WordPress's are closed.
+		$named = static function ( string $route, array $ids ): array {
+			$request = new WP_REST_Request( 'GET', '/riff/v1/' . $route );
+			$request->set_param( 'include', $ids );
+			return array_column( rest_do_request( $request )->get_data()['items'] ?? array(), 'name' );
+		};
+		$this->assertSame( array( 'Compositions' ), $named( 'albums', (array) ( $data['riff_albums'] ?? array() ) ), 'the album it is filed under' );
+		$this->assertContains( 'Airmen of Note, United States Air Force Band', $named( 'artists', (array) ( $data['riff_artists'] ?? array() ) ) );
 	}
 }

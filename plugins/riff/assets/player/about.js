@@ -3,8 +3,8 @@
  * hidden, in the order the riff_about_sections filter gives; this fills Riff's two. `track` is the
  * cover, the title, and the artist and the album, each a link to its page in the Listen app.
  * `credits` is what the file's own tags say about who made it, as WordPress read them on upload and
- * the media route hands them back in media_details; the album and artist the file is filed under
- * come with them, from the same answer. Nothing is fetched from anywhere else, and a tag the file
+ * the media route hands them back in media_details; the albums and artists the file is filed under
+ * come from the same answer by ID, named through riff/v1. Nothing is fetched from anywhere else, and a tag the file
  * lacks is left out, so a track with none shows no credits at all. Loaded the first time the panel
  * opens. */
 import { fmt, largest } from 'riff-player/helpers';
@@ -40,8 +40,28 @@ export default function about( P ) {
 		[ __( 'Copyright', 'riff' ), [ 'copyright_message', 'copyright' ] ],
 	];
 
-	// What the media route has on a Media Library file: its tags, and the album and artist terms it
-	// is filed under. Null for a file outside the library, or one this listener may not read.
+	// What the media route has on a Media Library file: its tags, and the IDs of the albums and
+	// artists it is filed under, named through Riff's own routes, since WordPress's term routes for
+	// them are closed (Catalog_REST). Null for a file outside the library, or one this listener may
+	// not read.
+	const known = ( route, ids ) => {
+		if ( ! data.catalog || ! ids.length ) {
+			return Promise.resolve( [] );
+		}
+		const url = new URL( route, data.catalog );
+		for ( const id of ids ) {
+			url.searchParams.append( 'include[]', String( id ) );
+		}
+		return P.internal
+			.request( url )
+			.then( ( r ) => ( r.ok ? r.json() : null ) )
+			.then( ( d ) => ( Array.isArray( d?.items ) ? d.items : [] ) )
+			.catch( () => [] );
+	};
+	const ids = ( list ) =>
+		( Array.isArray( list ) ? list : [] )
+			.map( Number )
+			.filter( ( n ) => Number.isInteger( n ) && n > 0 );
 	function details( t ) {
 		const id = Number( t?.id );
 		if ( ! data.media || ! Number.isInteger( id ) || id <= 0 ) {
@@ -49,27 +69,23 @@ export default function about( P ) {
 		}
 		if ( ! cache.has( id ) ) {
 			const url = new URL( String( id ), data.media );
-			// media_details is built only when asked for by that name; the terms come embedded,
-			// which needs the links asked for too.
-			url.searchParams.set( '_fields', 'media_details,_links,_embedded' );
-			url.searchParams.set( '_embed', 'wp:term' );
+			// media_details is built only when asked for by that name.
+			url.searchParams.set( '_fields', 'media_details,riff_albums,riff_artists' );
 			const asked = P.internal
 				.request( url )
 				.then( ( r ) => ( r.ok ? r.json() : null ) )
-				.then( ( answer ) => {
-					const terms = (
-						answer?._embedded?.[ 'wp:term' ] || []
-					).flat();
-					return {
-						tags: answer?.media_details || {},
-						albums: terms.filter(
-							( term ) => term?.taxonomy === 'riff_album'
-						),
-						artists: terms.filter(
-							( term ) => term?.taxonomy === 'riff_artist'
-						),
-					};
-				} )
+				.then( ( answer ) =>
+					answer
+						? Promise.all( [
+								known( 'albums', ids( answer.riff_albums ) ),
+								known( 'artists', ids( answer.riff_artists ) ),
+						  ] ).then( ( [ albums, artists ] ) => ( {
+								tags: answer.media_details || {},
+								albums,
+								artists,
+						  } ) )
+						: null
+				)
 				.catch( () => null );
 			asked.then( ( found ) => found || cache.delete( id ) );
 			cache.set( id, asked );

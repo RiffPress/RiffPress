@@ -55,8 +55,7 @@ test.describe( 'About', () => {
 			- term: Composer
 			- definition: Tyler Kuebler
 			- term: Album artist
-			- definition:
-			  - link "The Airmen of Note"
+			- definition: The Airmen of Note
 			- term: Genre
 			- definition: Jazz
 			- term: Year

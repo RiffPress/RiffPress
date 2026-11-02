@@ -31,8 +31,9 @@ test( 'the album in About opens its page in the app, in place, with the music ca
 		.click();
 	await page.locator( '[data-riff-app-action="play"]' ).click();
 	await expect.poll( async () => ( await playing( page ) ).paused ).toBe( false );
-	await page.goBack();
-	await expect( page ).toHaveURL( /riff_view=albums/ );
+	// Away from the album, in the app, so the link has somewhere to take the listener.
+	await page.locator( '.riff-app-tab', { hasText: 'Home' } ).click();
+	await expect( page ).not.toHaveURL( /riff_album=/ );
 
 	// Marked, so a page loaded afresh would show.
 	await page.evaluate( () => ( window.riffStayed = true ) );

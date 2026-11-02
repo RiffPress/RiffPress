@@ -160,11 +160,13 @@ final class About {
 			return $data;
 		}
 		$data['about'] = array(
-			'media'  => esc_url_raw( rest_url( 'wp/v2/media/' ) ),
+			'media'   => esc_url_raw( rest_url( 'wp/v2/media/' ) ),
+			// Where the albums and artists a file is filed under are named.
+			'catalog' => esc_url_raw( rest_url( 'riff/v1/' ) ),
 			// On a Listen page the app's own page is the one, and the script reads it there.
-			'listen' => Player::listen_page() ? '' : self::listen(),
-			'album'  => Listen\Browse::ALBUM,
-			'artist' => Listen\Browse::ARTIST,
+			'listen'  => Player::listen_page() ? '' : self::listen(),
+			'album'   => Listen\Browse::ALBUM,
+			'artist'  => Listen\Browse::ARTIST,
 		);
 		return $data;
 	}
