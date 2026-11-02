@@ -1,5 +1,35 @@
 # Changelog
 
+## [5.8.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.7.0...riff-v5.8.0) (2026-11-02)
+
+
+### Features
+
+* a track says which disc of a set it is on, from the file's tags ([#785](https://github.com/RiffPress/RiffPress/issues/785)) ([83257cc](https://github.com/RiffPress/RiffPress/commit/83257cc637dd25d3f8284865268f42dd2c472d3b))
+* **app:** on a computer the strip across the top has back and forward at its left end, Home and search centred as one group and who is listening at its right, reached by the keyboard in that order ([#763](https://github.com/RiffPress/RiffPress/issues/763)) ([0584f52](https://github.com/RiffPress/RiffPress/commit/0584f5214248828579b730a978a16bb75d34b583))
+* **extensions:** Riff ships the plugins its manifest names inside itself, each turned on or off from Settings › Riff ([#770](https://github.com/RiffPress/RiffPress/issues/770)) ([cccbfe6](https://github.com/RiffPress/RiffPress/commit/cccbfe6d573997ddcf4e5d5a461382b3cf42934b))
+* **player:** a track's … menu offers to listen along with whoever else is playing it ([#793](https://github.com/RiffPress/RiffPress/issues/793)) ([9e6e14f](https://github.com/RiffPress/RiffPress/commit/9e6e14f3f712cad874cab003809bfd2aa4ca33ed))
+* **player:** follow another listener, in time with them, and share what you play only if you choose ([#768](https://github.com/RiffPress/RiffPress/issues/768)) ([5b3e2f5](https://github.com/RiffPress/RiffPress/commit/5b3e2f5819883a30d440e2c6d7b8abe7ab91e59f))
+* **player:** Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone ([#794](https://github.com/RiffPress/RiffPress/issues/794)) ([8e083ce](https://github.com/RiffPress/RiffPress/commit/8e083ced4ea929ad4bf9005598e6a1edcdc34d2c))
+* **player:** the turntable's arm is set up by Baerwald alignment, and its platter, record and arm move by their physics ([#786](https://github.com/RiffPress/RiffPress/issues/786)) ([b16cb73](https://github.com/RiffPress/RiffPress/commit/b16cb73c50a6ea0cc1ed7b915e9afca9fabe6331))
+* **player:** Together in Now Playing lists who is in the session, with Leave, and an album's page shows who is playing from it ([#783](https://github.com/RiffPress/RiffPress/issues/783)) ([d7e4507](https://github.com/RiffPress/RiffPress/commit/d7e45075899bbbeebfc9742fbc18a424c91bbb7e))
+* Riff Chords, a chord chart that follows the song, with practice controls to slow it down, loop a part, transpose and set a capo ([#787](https://github.com/RiffPress/RiffPress/issues/787)) ([1d0f16b](https://github.com/RiffPress/RiffPress/commit/1d0f16ba519ed5c1486bb9cd8d05e26c535b7243))
+* Riff Sing: sing along with the melody in Now Playing, scored by pitch from a microphone or a MIDI instrument ([#788](https://github.com/RiffPress/RiffPress/issues/788)) ([a649855](https://github.com/RiffPress/RiffPress/commit/a649855959bd3717ff7b0a7144ca9caa9b3eeb28))
+
+
+### Bug Fixes
+
+* **player:** a row, an Up next item, the bar's track and the Up next handle are named by the words they show ([#780](https://github.com/RiffPress/RiffPress/issues/780)) ([391bc25](https://github.com/RiffPress/RiffPress/commit/391bc25ecfa140bae47fe90a39bc53b1bb110416))
+* **sign-in:** the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service ([#766](https://github.com/RiffPress/RiffPress/issues/766)) ([b8c1fd6](https://github.com/RiffPress/RiffPress/commit/b8c1fd6199daf48a5c7ec156d0279f3ab62a16e3))
+* **together:** a scene finds the track it names, and a follower who starts behind the host catches up ([#792](https://github.com/RiffPress/RiffPress/issues/792)) ([602d06c](https://github.com/RiffPress/RiffPress/commit/602d06c482047686571cdfcbf2d2eeeb235bfdb9))
+
+
+### Performance Improvements
+
+* a library of tens of thousands of tracks loads, lists, plays and imports at the pace of a small one ([#765](https://github.com/RiffPress/RiffPress/issues/765)) ([fa0a5f7](https://github.com/RiffPress/RiffPress/commit/fa0a5f7b7d4dd79057d95186da9c9c6e8bff266a))
+* **app:** a first visit to a Listen page loads the app in one wave, and the quality capsule is lit as Tidal's is ([#767](https://github.com/RiffPress/RiffPress/issues/767)) ([71e994e](https://github.com/RiffPress/RiffPress/commit/71e994eff8cd26dc682167f45401a7f958ddeb01))
+* **player:** the turntable's moving parts no longer give Up next layers of its own, and the filament rests while nothing it lights is in sight ([#782](https://github.com/RiffPress/RiffPress/issues/782)) ([5e1239b](https://github.com/RiffPress/RiffPress/commit/5e1239bde46768670960a5f2534bbb80d73456b4))
+
 ## [5.7.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.6.1...riff-v5.7.0) (2026-10-30)
 
 
