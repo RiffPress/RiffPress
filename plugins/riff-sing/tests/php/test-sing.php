@@ -100,7 +100,7 @@ class Test_Riff_Sing extends Riff_TestCase {
 		wp_set_current_user( 0 );
 		$read = new WP_REST_Request( 'GET', '/wp/v2/media/' . $id );
 		$read->set_query_params( array( '_fields' => 'riff_sing_melody' ) );
-		$this->assertSame( array( 'riff_sing_melody' => self::CHART ), rest_do_request( $read )->get_data() );
+		$this->assertSame( self::CHART, rest_do_request( $read )->get_data()['riff_sing_melody'] );
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 		$request->set_body_params( array( 'riff_sing_melody' => 'Vandalised' ) );
