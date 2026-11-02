@@ -121,7 +121,7 @@ test.describe( 'Player', () => {
 			queue: 3,
 			playing: true,
 			// What docs/javascript.md promises, and nothing more: a member is not taken back once added.
-			members: [ 'close', 'current', 'next', 'on', 'open', 'play', 'playing', 'prev', 'queue', 'seek', 'tab', 'time', 'toggle', 'version' ],
+			members: [ 'close', 'current', 'next', 'on', 'open', 'play', 'playing', 'prev', 'queue', 'seek', 'speed', 'tab', 'time', 'toggle', 'version' ],
 		} );
 		await page.evaluate( () => window.riff.next() );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(
