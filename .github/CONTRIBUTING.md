@@ -12,7 +12,7 @@ npm run env:start          # WordPress at http://localhost:8890 (admin / passwor
 npm run seed               # a post with ten public-domain jazz tracks, and one with a video
 ```
 
-Until 7.2 ships, `.wp-env.json` names its current pre-release zip (Beta 1 today; Beta 2 lands 27 October, then the release candidates), and `plugin-check.yml` names the same one. Each new build is a one-line change in those two files, then `npm run env:start` again; the PHPUnit rows and the weekly suite follow `.wp-env.json`, the trunk rows stay on trunk, and the Playground demo asks for `beta`, which is always the newest pre-release. On release day the zip becomes `WordPress/WordPress#7.2`.
+Until 7.2 ships, `.wp-env.json` names its current pre-release zip (Beta 3 today, then the release candidates), and `plugin-check.yml` names the same one. Each new build is a one-line change in those two files, then `npm run env:start` again; the PHPUnit rows and the weekly suite follow `.wp-env.json`, the trunk rows stay on trunk, and the Playground demo asks for `beta`, which is always the newest pre-release. On release day the zip becomes `WordPress/WordPress#7.2`.
 
 The plugin is `plugins/riff/`. It ships plain stylesheets and scripts with no build step, each loaded only where it applies, and the only thing it adds to a page is the player. Keep it that way: transform and opacity animations only, native controls first, every browser feature behind a check.
 
@@ -23,8 +23,10 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | Path | What it is |
 | --- | --- |
 | `plugins/riff/` | The WordPress plugin. No build step: `assets/riff.js`, `assets/riff.css` and the files under `features/listen/` are what ships. |
-| `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics tab in Now Playing. |
+| `plugins/riff-lyrics/` | Riff Lyrics, the reference extension: a Lyrics view of Now Playing. |
+| `plugins/riff-chords/` | Riff Chords: a chord chart that follows the song in a Chords view of Now Playing, with practice controls. Built the way Riff Lyrics is. |
 | `plugins/riff-sign-in/` | Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player. |
+| `plugins/riff-sing/` | Riff Sing: a Sing view of Now Playing, where the melody scrolls past and the singer is scored by pitch, from a microphone or a MIDI instrument. Built like Riff Lyrics, only on the public API. |
 | `packages/desktop/` | The desktop app: a site's Listen library in an Electron window. |
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
@@ -49,7 +51,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 
 ## The reference extension
 
-`plugins/riff-lyrics/` is Riff Lyrics, a real plugin built only on Riff's documented public API: the hooks in `docs/hooks.md`, `window.riff` in `docs/javascript.md`, and REST. `.github/scripts/extension-surface.test.js` fails if it hooks anything undocumented or reaches into Riff's classes. When a feature needs something Riff doesn't offer, add it to Riff as a documented extension point, not as a shortcut in the plugin. wp-env loads both plugins, and PHPUnit, Plugin Check and e2e cover both.
+`plugins/riff-lyrics/` is Riff Lyrics, a real plugin built only on Riff's documented public API: the hooks in `docs/hooks.md`, `window.riff` in `docs/javascript.md`, and REST. `.github/scripts/extension-surface.test.js` fails if it, or Riff Sing or Riff Chords, built the same way, hooks anything undocumented or reaches into Riff's classes. When a feature needs something Riff doesn't offer, add it to Riff as a documented extension point, not as a shortcut in the plugin. wp-env loads every plugin in `plugins/`, and PHPUnit, Plugin Check and e2e cover each.
 
 ## Running checks
 
@@ -94,7 +96,7 @@ Nothing else needs editing: the deploy bundles every streamed album into one `de
 
 `npm run pot` writes the translation template to `plugins/riff/languages/riff.pot` (wp-env must be running). It is generated, not committed: the Plugin Check job builds it into the zip, and translations come from translate.wordpress.org.
 
-Every string uses the `riff` text domain, and Riff Lyrics uses `riff-lyrics`. PHPCS fails a string with a missing or wrong domain, and `.github/scripts/text-domain-check.sh` runs in the same job to show that check still catches one. The player's JavaScript translates its own strings with `__()` and `_n()` from `wp.i18n`, from WordPress's script module translations, so a new string the script shows is a literal `__( '…', 'riff' )` call in the module. `plugins/riff/tests/php/test-i18n.php` checks that every view of the Listen app comes out translated and that each module's translations reach the page.
+Every string uses the `riff` text domain, and each plugin beside it its own slug, such as `riff-lyrics`. PHPCS fails a string with a missing or wrong domain, and `.github/scripts/text-domain-check.sh` runs in the same job to show that check still catches one. The player's JavaScript translates its own strings with `__()` and `_n()` from `wp.i18n`, from WordPress's script module translations, so a new string the script shows is a literal `__( '…', 'riff' )` call in the module. `plugins/riff/tests/php/test-i18n.php` checks that every view of the Listen app comes out translated and that each module's translations reach the page.
 
 ## Releases
 

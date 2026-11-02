@@ -155,10 +155,10 @@ test.describe( 'First run', () => {
 			.context()
 			.addCookies( [ { name: NO_MUSIC, value: '1', url: baseURL } ] );
 
-		// A plugin that requires Riff (Riff Sign In, Riff Lyrics) keeps WordPress from offering
+		// A plugin that requires Riff (Riff Sign In, Riff Lyrics, Riff Sing, Riff Chords) keeps WordPress from offering
 		// Deactivate on Riff's row while it is active, so those step aside first and come back.
 		const dependents = ( await requestUtils.rest( { path: '/wp/v2/plugins' } ) )
-			.filter( ( p ) => p.status === 'active' && /^riff-(lyrics|sign-in)\//.test( p.plugin ) )
+			.filter( ( p ) => p.status === 'active' && /^riff-(lyrics|sign-in|sing|chords)\//.test( p.plugin ) )
 			.map( ( p ) => p.plugin );
 		for ( const plugin of dependents ) {
 			await requestUtils.rest( { method: 'PUT', path: `/wp/v2/plugins/${ plugin }`, data: { status: 'inactive' } } );

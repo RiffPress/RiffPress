@@ -1435,6 +1435,74 @@
 	color: var(--riff-app-accent);
 }
 
+/* Beside an album's Play and Shuffle, the faces of whoever is playing from it
+   now, each following them when pressed, as the Listening now row does. */
+.riff-app .riff-album-together {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.riff-app .riff-album-together[hidden] {
+	display: none;
+}
+
+.riff-app .riff-album-faces {
+	display: inline-flex;
+	flex-wrap: wrap;
+}
+
+.riff-app .riff-album-face {
+	all: unset;
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.riff-app .riff-album-face svg,
+.riff-app .riff-album-face img {
+	grid-area: 1 / 1;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: var(--riff-app-surface);
+	box-shadow: 0 0 0 2px var(--riff-app-bg);
+}
+
+.riff-app .riff-album-face svg {
+	padding: 6px;
+	box-sizing: border-box;
+	fill: var(--riff-app-ink-2);
+}
+
+.riff-app .riff-album-face img {
+	object-fit: cover;
+}
+
+.riff-app .riff-album-face:hover svg,
+.riff-app .riff-album-face:hover img {
+	box-shadow: 0 0 0 2px var(--riff-app-accent);
+}
+
+.riff-app .riff-album-face:focus-visible {
+	outline: 2px solid var(--riff-app-accent);
+	outline-offset: 2px;
+}
+
+.riff-app .riff-album-face[aria-busy="true"] {
+	opacity: 0.6;
+}
+
+.riff-app .riff-album-together-label {
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+}
+
 /* Your Library: chips to narrow it, a sort, then one grid with Liked songs
    pinned first, as the apps lay theirs out. */
 .riff-library-bar {

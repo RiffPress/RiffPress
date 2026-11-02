@@ -16,7 +16,7 @@ async function openView( page, id ) {
 	const stage = id === 'album' || id === 'turntable';
 	const view = stage
 		? page.locator( '.riff-np' )
-		: page.locator( `[data-riff-view="${ id }"], [data-riff-panel="${ id }"]` );
+		: page.locator( `.riff-np [data-riff-view="${ id }"], .riff-side [data-riff-panel="${ id }"]` );
 	const button = page.locator( `.riff-bar [data-riff-control="${ id }"]` );
 	if ( ( await button.getAttribute( 'aria-pressed' ) ) !== 'true' ) {
 		if ( await button.isVisible() ) {

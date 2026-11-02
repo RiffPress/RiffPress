@@ -125,7 +125,7 @@ const GUIDE = [
 	{
 		id: 'a-panel-and-a-control',
 		title: 'A view, and a control in the bar',
-		text: [ 'Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, the turntable, Up next and its own controls the same way, and Riff Lyrics its Lyrics view, on nothing but the public API.' ],
+		text: [ 'Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, the turntable, Up next, Together and its own controls the same way, and Riff Lyrics, Riff Sing and Riff Chords their views, on nothing but the public API.' ],
 		code: [
 			[ 'php', `add_action( 'riff_register', function () {
 	riff_register_view( 'credits', array( 'label' => __( 'Credits', 'my-plugin' ), 'icon' => CREDITS_ICON, 'order' => 32 ) );

@@ -6,7 +6,9 @@
  */
 
 use Riff\Catalog;
+use Riff\Registry;
 use Riff\Listen\Together;
+use Riff\Listen\Together_Scenes;
 
 /**
  * Riff\Listen\Together.
@@ -129,6 +131,31 @@ class Test_Riff_Together extends Riff_TestCase {
 	}
 
 	/**
+	 * Shares the post's first track with a schedule's own parts, as a host's player does.
+	 *
+	 * @param int   $user    Who.
+	 * @param float $at      Where it is, at `$when`.
+	 * @param bool  $playing Whether it plays from the change on.
+	 * @param bool  $running Whether it plays until the change is due.
+	 * @param int   $when    When `$at` was read, on the server's clock; 0 to leave it out.
+	 * @return WP_REST_Response
+	 */
+	private function share_as( int $user, float $at, bool $playing, bool $running, int $when = 0 ): WP_REST_Response {
+		wp_set_current_user( $user );
+		return $this->call(
+			'POST',
+			'/together',
+			array(
+				'queue'   => $this->queue(),
+				'index'   => 0,
+				'at'      => $at,
+				'playing' => $playing,
+				'running' => $running,
+			) + ( $when ? array( 'when' => $when ) : array() )
+		);
+	}
+
+	/**
 	 * The published post's tracks, as a queue.
 	 *
 	 * @return array[]
@@ -166,6 +193,10 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertEqualsWithDelta( microtime( true ) * 1000, $listener['since'], 5000, 'stamped with the server\'s time' );
 		$this->assertArrayNotHasKey( 'queue', $listener, 'the room lists tracks, not queues' );
 		$this->assertArrayNotHasKey( 'levels', $listener['track'] );
+		// Their card, drawn here as every card is, for Home's Listening now.
+		$this->assertStringStartsWith( '<div class="riff-card"', $listener['card'] );
+		$this->assertStringContainsString( 'data-riff-app-action="listen-along" data-riff-user="' . $this->host . '"', $listener['card'] );
+		$this->assertStringContainsString( esc_html( get_userdata( $this->host )->display_name ), $listener['card'] );
 	}
 
 	public function test_listeners_are_listed_by_name_with_their_tracks_looked_up_at_once(): void {
@@ -224,6 +255,38 @@ class Test_Riff_Together extends Riff_TestCase {
 		$data = Together::player_data( array( 'me' => array( 'rest' => array() ) ) );
 		$this->assertSame( rest_url( 'riff/v1/together' ), $data['me']['rest']['together'] );
 		$this->assertSame( array(), Together::player_data( array() ), 'a visitor\'s player has no account to share from' );
+	}
+
+	public function test_a_listener_who_turns_sharing_off_leaves_the_room_and_sends_nothing(): void {
+		$this->share( $this->host, $this->queue() );
+		$this->assertTrue( Together::shares( $this->host ), 'on until they choose' );
+
+		wp_set_current_user( $this->host );
+		$_POST['riff_together_share_nonce'] = wp_create_nonce( 'riff_together_share_' . $this->host );
+		Together::save( $this->host );
+		unset( $_POST['riff_together_share_nonce'] );
+		$this->assertFalse( Together::shares( $this->host ) );
+		$this->assertSame( array(), wp_get_presence( Together::ROOM, array( 'client_prefix' => 'riff-' . $this->host ) ), 'out of the room at once' );
+
+		$this->assertSame( 403, $this->share( $this->host, $this->queue() )->get_status(), 'a share from a tab opened before is refused' );
+		$this->assertFalse( Together::player_data( array( 'me' => array( 'rest' => array() ) ) )['me']['sharing'], 'and the player is told' );
+	}
+
+	public function test_a_row_left_by_someone_who_no_longer_shares_is_not_shown(): void {
+		$this->share( $this->host, $this->queue() );
+		update_user_option( $this->host, Together::SHARE, 'off' );
+		wp_set_current_user( $this->guest );
+		$this->assertSame( array(), $this->call( 'GET', '/together' )->get_data()['listeners'] );
+		$this->assertSame( 404, $this->call( 'GET', '/together/' . $this->host )->get_status() );
+	}
+
+	public function test_a_site_can_make_sharing_something_a_listener_turns_on(): void {
+		add_filter( 'riff_together_share', '__return_false' );
+		$this->assertFalse( Together::shares( $this->host ), 'off by the site\'s default' );
+		update_user_option( $this->host, Together::SHARE, 'on' );
+		$this->assertTrue( Together::shares( $this->host ), 'on by their own choice' );
+		remove_filter( 'riff_together_share', '__return_false' );
+		$this->assertFalse( Together::shares( 0 ), 'a visitor never shares' );
 	}
 
 	public function test_the_version_says_when_nothing_has_changed(): void {
@@ -292,6 +355,161 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertSame( array(), $this->call( 'GET', '/together' )->get_data()['listeners'] );
 	}
 
+	public function test_following_answers_with_where_their_music_is_and_their_queue_only_when_it_changed(): void {
+		$this->share( $this->host, $this->queue(), 1, 30.0 );
+		wp_set_current_user( $this->guest );
+		$first = $this->call( 'POST', '/together/' . $this->host . '/follow' );
+		$this->assertSame( 200, $first->get_status() );
+		$plan = $first->get_data();
+		$this->assertSame( (string) $this->tracks[1], (string) $plan['track']['id'] );
+		$this->assertSame( 1, $plan['index'] );
+		$this->assertSame( 30.0, $plan['at'] );
+		$this->assertCount( 2, $plan['queue'] );
+		$this->assertLessThanOrEqual( $plan['now'], $plan['received'], 'taken before it was answered, for the player\'s clock' );
+		$this->assertMatchesRegularExpression( '/^[0-9a-f]{8}$/', $plan['version'] );
+
+		$again = $this->call( 'POST', '/together/' . $this->host . '/follow', array( 'version' => $plan['version'] ) )->get_data();
+		$this->assertArrayNotHasKey( 'queue', $again, 'asked every second or two, the queue comes only when it changed' );
+		$this->assertSame( $plan['version'], $again['version'] );
+	}
+
+	public function test_the_host_sees_who_follows_them_until_they_stop(): void {
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $this->guest );
+		$this->call( 'POST', '/together/' . $this->host . '/follow' );
+
+		wp_set_current_user( $this->host );
+		$following = $this->call( 'GET', '/together/following' )->get_data()['following'];
+		$this->assertSame( array( 'Guest' ), array_column( $following, 'name' ) );
+
+		wp_set_current_user( $this->guest );
+		$this->assertSame( 200, $this->call( 'DELETE', '/together/' . $this->host . '/follow' )->get_status() );
+		$this->assertSame( array(), Together::followers( $this->host ) );
+	}
+
+	public function test_following_someone_who_stopped_sharing_is_refused_and_leaves_their_session(): void {
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $this->guest );
+		$this->call( 'POST', '/together/' . $this->host . '/follow' );
+		update_user_option( $this->host, Together::SHARE, 'off' );
+
+		$this->assertSame( 404, $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_status() );
+		$this->assertSame( array(), Together::followers( $this->host ), 'not shown as a follower of someone they no longer hear' );
+	}
+
+	public function test_a_track_the_follower_cannot_see_is_never_followed(): void {
+		$this->share( $this->host, array( $this->secret ) );
+		wp_set_current_user( $this->guest );
+		$this->assertSame( 404, $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_status() );
+	}
+
+	public function test_no_one_follows_themself_and_a_visitor_follows_no_one(): void {
+		$this->share( $this->host, $this->queue() );
+		$this->assertSame( 400, $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_status() );
+		wp_set_current_user( 0 );
+		foreach ( array( array( 'POST', '/together/' . $this->host . '/follow' ), array( 'DELETE', '/together/' . $this->host . '/follow' ), array( 'GET', '/together/following' ), array( 'GET', '/together/clock' ) ) as list( $method, $route ) ) {
+			$this->assertSame( 401, $this->call( $method, $route )->get_status(), "$method $route" );
+		}
+	}
+
+	public function test_a_change_by_a_listener_someone_follows_is_due_a_moment_ahead_where_the_music_will_be_then(): void {
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $this->guest );
+		$this->call( 'POST', '/together/' . $this->host . '/follow' );
+
+		// A seek while it plays: the music runs on from 40 until the change is due, LEAD on.
+		$now  = microtime( true ) * 1000;
+		$room = $this->share_as( $this->host, 40.0, true, true, (int) $now )->get_data();
+		$this->assertSame( 1, $room['followers'], 'the host is told someone follows, so it holds its own presses' );
+		$this->assertEqualsWithDelta( $now + Together::LEAD, $room['scheduled']['since'], 250, 'due a moment ahead' );
+		$this->assertEqualsWithDelta( 40.0 + Together::LEAD / 1000, $room['scheduled']['at'], 0.25, 'where the music will be by then' );
+
+		// A start held where it is until it is due.
+		$held = $this->share_as( $this->host, 10.0, true, false )->get_data()['scheduled'];
+		$this->assertSame( 10.0, $held['at'] );
+		$this->assertTrue( $held['playing'] );
+
+		// A stop that lets the music play on until it is due.
+		$stop = $this->share_as( $this->host, 20.0, false, true )->get_data()['scheduled'];
+		$this->assertEqualsWithDelta( 20.0 + Together::LEAD / 1000, $stop['at'], 0.25 );
+		$this->assertFalse( $stop['playing'] );
+
+		// The follower is answered with the change before it is due.
+		wp_set_current_user( $this->guest );
+		$plan = $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_data();
+		$this->assertGreaterThan( $plan['now'], $plan['since'], 'it reaches them before it is due' );
+		$this->assertFalse( $plan['playing'] );
+	}
+
+	public function test_a_listener_no_one_follows_shares_a_change_due_at_once(): void {
+		$room = $this->share_as( $this->host, 40.0, true, true )->get_data();
+		$this->assertSame( 0, $room['followers'] );
+		$this->assertEqualsWithDelta( microtime( true ) * 1000, $room['scheduled']['since'], 250 );
+		$this->assertEqualsWithDelta( 40.0, $room['scheduled']['at'], 0.05 );
+	}
+
+	public function test_a_time_far_from_the_servers_clock_is_not_taken(): void {
+		$room = $this->share_as( $this->host, 5.0, true, true, (int) ( microtime( true ) * 1000 ) - 60000 )->get_data();
+		$this->assertEqualsWithDelta( 5.0, $room['scheduled']['at'], 0.05, 'a minute out is a wrong clock, not a slow request' );
+	}
+
+	public function test_the_clock_says_when_the_request_was_taken_and_answered(): void {
+		wp_set_current_user( $this->guest );
+		$clock = $this->call( 'GET', '/together/clock' )->get_data();
+		$this->assertLessThanOrEqual( $clock['now'], $clock['received'] );
+		$this->assertEqualsWithDelta( microtime( true ) * 1000, $clock['now'], 5000 );
+	}
+
+	public function test_presence_scenes_plays_a_listener_through_riffs_steps(): void {
+		$steps = apply_filters( 'wp_presence_scene_steps', array() );
+		foreach ( array( 'riffPlay', 'riffPause', 'riffResume', 'riffSkip', 'riffSeek', 'riffStop' ) as $name ) {
+			$this->assertIsCallable( $steps[ $name ]['callback'], $name );
+		}
+		$this->assertContains( RIFF_DIR . 'features/listen/scenes', array_map( 'untrailingslashit', apply_filters( 'wp_presence_scene_libraries', array() ) ) );
+
+		// The post's tracks are its audio blocks, as the player reads them.
+		wp_update_post(
+			array(
+				'ID'           => $this->post,
+				'post_content' => implode(
+					'',
+					array_map(
+						static fn( $id ) => sprintf( '<!-- wp:audio {"id":%d} --><figure class="wp-block-audio"><audio controls src="%s"></audio></figure><!-- /wp:audio -->', $id, wp_get_attachment_url( $id ) ),
+						$this->tracks
+					)
+				),
+			)
+		);
+		wp_set_current_user( $this->host );
+		$title = get_the_title( $this->tracks[0] );
+		Together_Scenes::play( null, array( 'text' => $title ) );
+		$was = Together::shared( $this->host );
+		$this->assertSame( $this->tracks[0], $was['queue'][ $was['index'] ]['id'], 'plays the post from the track named' );
+		$this->assertTrue( $was['playing'] );
+
+		Together_Scenes::pause();
+		$this->assertFalse( Together::shared( $this->host )['playing'] );
+		Together_Scenes::resume();
+		$this->assertTrue( Together::shared( $this->host )['playing'] );
+		Together_Scenes::seek( null, array( 'text' => '30' ) );
+		$this->assertSame( 30.0, Together::shared( $this->host )['at'] );
+		Together_Scenes::skip();
+		$was = Together::shared( $this->host );
+		$this->assertSame( $this->tracks[1], $was['queue'][ $was['index'] ]['id'] );
+		$this->assertSame( 0.0, $was['at'] );
+
+		Together_Scenes::stop();
+		$this->assertNull( Together::shared( $this->host ) );
+		$this->expectException( RuntimeException::class );
+		Together_Scenes::pause();
+	}
+
+	public function test_a_scene_naming_a_track_on_no_published_post_fails_its_step(): void {
+		wp_set_current_user( $this->host );
+		$this->expectException( RuntimeException::class );
+		Together_Scenes::play( null, array( 'text' => get_the_title( $this->secret['id'] ) ) );
+	}
+
 	public function test_an_index_past_the_queue_is_refused(): void {
 		$this->assertSame( 400, $this->share( $this->host, $this->queue(), 2 )->get_status() );
 	}
@@ -301,5 +519,99 @@ class Test_Riff_Together extends Riff_TestCase {
 		wp_set_presence( Together::ROOM, 'other-' . $this->host, array( 'queue' => $this->queue() ), array( 'user_id' => $this->host ) );
 		wp_set_current_user( $this->guest );
 		$this->assertSame( array(), $this->call( 'GET', '/together' )->get_data()['listeners'] );
+	}
+
+	public function test_the_together_panel_is_after_up_next_for_a_listener_and_not_for_a_visitor(): void {
+		wp_set_current_user( $this->guest );
+		$panels = Registry::views( 'side' );
+		$this->assertSame( 'Together', $panels['together']['label'] ?? null, 'a panel beside the page, as it is about who listens, not the track' );
+		$this->assertSame( array( 'queue', 'together' ), array_keys( $panels ), 'after Up next' );
+		$this->assertStringContainsString( 'data-riff-panel="together"', Registry::panels() );
+
+		Registry::reset();
+		wp_set_current_user( 0 );
+		$this->assertArrayNotHasKey( 'together', Registry::views(), 'a visitor can\'t join the room' );
+	}
+
+	public function test_a_follower_sees_who_else_is_with_them_only_if_they_share(): void {
+		$amy  = self::factory()->user->create(
+			array(
+				'role'         => 'subscriber',
+				'display_name' => 'Amy',
+			)
+		);
+		$carl = self::factory()->user->create(
+			array(
+				'role'         => 'subscriber',
+				'display_name' => 'Carl',
+			)
+		);
+		update_user_option( $carl, Together::SHARE, 'off' );
+		$this->share( $this->host, $this->queue() );
+		foreach ( array( $amy, $carl ) as $follower ) {
+			wp_set_current_user( $follower );
+			$this->call( 'POST', '/together/' . $this->host . '/follow' );
+		}
+
+		wp_set_current_user( $this->guest );
+		$plan = $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_data();
+		$this->assertSame( $this->host, $plan['user']['id'], 'who they follow' );
+		$this->assertSame( array( 'Amy' ), array_column( $plan['with'], 'name' ), 'not Carl, who doesn\'t share, nor the guest themself' );
+		$this->assertSame( array( 'id', 'name', 'face' ), array_keys( $plan['with'][0] ), 'a name and a face, nothing of what they play' );
+
+		wp_set_current_user( $this->host );
+		$this->assertSame( array( 'Amy', 'Carl', 'Guest' ), array_column( $this->call( 'GET', '/together/following' )->get_data()['following'], 'name' ), 'the host sees everyone with them, as each was told on following' );
+	}
+
+	public function test_an_album_lists_only_those_playing_from_it(): void {
+		$album = self::factory()->term->create(
+			array(
+				'taxonomy' => Catalog::ALBUM,
+				'name'     => 'Detritus',
+			)
+		);
+		wp_set_object_terms( $this->tracks[1], array( $album ), Catalog::ALBUM );
+		$amy = self::factory()->user->create(
+			array(
+				'role'         => 'subscriber',
+				'display_name' => 'Amy',
+			)
+		);
+		$this->share( $this->host, $this->queue(), 1 );
+		$this->share( $amy, $this->queue(), 0 );
+
+		wp_set_current_user( $this->guest );
+		$room = $this->call( 'GET', '/together', array( 'album' => $album ) )->get_data();
+		$this->assertSame( array( $this->host ), array_map( fn( $l ) => $l['user']['id'], $room['listeners'] ), 'Amy is on another album' );
+		$this->assertCount( 2, $this->call( 'GET', '/together' )->get_data()['listeners'], 'without an album, everyone' );
+		$this->assertSame(
+			array(
+				'version' => $room['version'],
+				'changed' => false,
+			),
+			$this->call(
+				'GET',
+				'/together',
+				array(
+					'album'   => $album,
+					'version' => $room['version'],
+				)
+			)->get_data()
+		);
+		$this->assertSame( 400, $this->call( 'GET', '/together', array( 'album' => 0 ) )->get_status() );
+
+		wp_set_current_user( $this->host );
+		$this->assertSame( array(), $this->call( 'GET', '/together', array( 'album' => $album ) )->get_data()['listeners'], 'no one is shown to themself' );
+	}
+
+	public function test_an_album_shows_where_its_faces_go_only_to_a_listener_who_may_see_them(): void {
+		$album = self::factory()->term->create( array( 'taxonomy' => Catalog::ALBUM ) );
+		wp_set_current_user( $this->guest );
+		$this->assertStringContainsString(
+			'data-riff-together="' . esc_url( add_query_arg( 'album', $album, rest_url( 'riff/v1/together' ) ) ) . '" hidden',
+			Together::faces( $album )
+		);
+		wp_set_current_user( 0 );
+		$this->assertSame( '', Together::faces( $album ), 'a visitor sees no one' );
 	}
 }

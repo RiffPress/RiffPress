@@ -68,6 +68,8 @@ foreach ( (array) glob( $riff_base . 'riff-art/*', GLOB_ONLYDIR ) as $riff_dir )
 delete_option( 'riff_art_stamp' );
 delete_option( 'riff_art_changed' );
 delete_option( 'riff_turntable' );
+delete_option( 'riff_extensions' );
+delete_site_option( 'riff_extensions_network' );
 delete_option( 'riff_catalog_backfill' );
 delete_option( 'riff_catalog_backfill_from' );
 delete_option( 'riff_rewrite' );

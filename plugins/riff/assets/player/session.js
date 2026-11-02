@@ -44,19 +44,24 @@ export default function session( P ) {
 
 	if ( 'mediaSession' in navigator ) {
 		const actions = {
-			play: () => P.turn( P.el() ),
-			pause: () => P.halt( P.el() ),
-			previoustrack: () => P.prev(),
-			nexttrack: () => P.next(),
-			seekbackward: ( d ) =>
-				( P.el().currentTime = Math.max(
+			play: () => ( P.press( 'play' ), P.turn( P.el() ) ),
+			pause: () => ( P.press( 'pause' ), P.halt( P.el() ) ),
+			previoustrack: () => ( P.press( 'prev' ), P.prev() ),
+			nexttrack: () => ( P.press( 'next' ), P.next() ),
+			seekbackward: ( d ) => {
+				P.press( 'seek' );
+				P.el().currentTime = Math.max(
 					0,
 					P.el().currentTime - ( d.seekOffset || 10 )
-				) ),
-			seekforward: ( d ) =>
-				( P.el().currentTime =
-					P.el().currentTime + ( d.seekOffset || 10 ) ),
+				);
+			},
+			seekforward: ( d ) => {
+				P.press( 'seek' );
+				P.el().currentTime =
+					P.el().currentTime + ( d.seekOffset || 10 );
+			},
 			seekto: ( d ) => {
+				P.press( 'seek' );
 				if ( d.fastSeek && 'fastSeek' in P.el() ) {
 					P.el().fastSeek( d.seekTime );
 				} else {

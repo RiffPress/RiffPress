@@ -60,6 +60,7 @@ export function createPlayer( root, data ) {
 		mode: 'song', // 'song' or 'video', for tracks that have both.
 		repeat: 'off', // 'off', 'all' or 'one'.
 		shuffle: false,
+		speed: 1, // The listener's own speed, its pitch kept (window.riff.speed()).
 		seeking: false,
 		backgrounded: false, // Video handed to audio because the page went to the background.
 		preloader: null,
@@ -176,6 +177,13 @@ export function createPlayer( root, data ) {
 		menu: new Set(),
 		badges: new Set(),
 		meter: new Set(),
+		// A listener's own press of play, pause, skip, seek or speed, through a control, a key, the
+		// lock screen, the seek line, a row, the turntable or a script, as against what the player
+		// does on its own: told before the press acts. Listen Together stops following on one.
+		press: new Set(),
+		// Asked before the music starts (true) or stops (false): one that answers true makes the
+		// change itself, as Listen Together does for a host someone follows, when it is due.
+		hold: new Set(),
 	};
 	// Riff's own badge: the playing track's format and rate, through the same area as any other.
 	P.own.badges.add( ( list, t ) => {
@@ -184,6 +192,8 @@ export function createPlayer( root, data ) {
 	} );
 	P.tell = ( name, detail ) =>
 		P.own[ name ].forEach( ( fn ) => fn( detail ) );
+	P.press = ( kind ) => P.tell( 'press', kind );
+	P.holds = ( m, start ) => [ ...P.own.hold ].some( ( fn ) => fn( m, start ) );
 
 	// A notice: shown in the player, and said through WordPress's live regions. The player is
 	// hidden until something plays, and its toast is inert while Now Playing covers it on a phone.

@@ -105,8 +105,8 @@ final class Registry {
 			_doing_it_wrong( __METHOD__, esc_html__( 'A control needs an id of lowercase letters, digits and dashes, and a label or its own markup.', 'riff' ), '5.8.0' );
 			return false;
 		}
-		$args['order']           = (int) $args['order'];
-		$args['added']           = ++self::$added;
+		$args['order']         = (int) $args['order'];
+		$args['added']         = ++self::$added;
 		self::$controls[ $id ] = $args;
 		return true;
 	}
@@ -174,9 +174,9 @@ final class Registry {
 			_doing_it_wrong( __METHOD__, esc_html__( 'A view needs a label, and an id of lowercase letters, digits and dashes that no control has.', 'riff' ), '5.8.0' );
 			return false;
 		}
-		$args['place']        = 'side' === $args['place'] ? 'side' : 'screen';
-		$args['order']        = (int) $args['order'];
-		$args['added']        = ++self::$added;
+		$args['place']      = 'side' === $args['place'] ? 'side' : 'screen';
+		$args['order']      = (int) $args['order'];
+		$args['added']      = ++self::$added;
 		self::$views[ $id ] = $args;
 		return true;
 	}

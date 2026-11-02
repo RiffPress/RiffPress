@@ -384,12 +384,15 @@ html.riff-desktop .riff-standalone .riff-app {
 
 	html.riff-desktop #riff .riff-np-body {
 		grid-template-columns: minmax(0, 1fr);
-		padding: 0 56px;
+		padding: 0 var(--riff-np-gutter);
 	}
 
+	/* reaching out over both gutters, as on the web (riff.css), its content
+	   box where it was */
 	html.riff-desktop #riff .riff-stage {
 		place-content: center;
-		padding: 0 0 48px;
+		margin-inline: calc(-1 * var(--riff-np-gutter));
+		padding: 0 var(--riff-np-gutter) 48px;
 	}
 
 	html.riff-desktop #riff .riff-cover,

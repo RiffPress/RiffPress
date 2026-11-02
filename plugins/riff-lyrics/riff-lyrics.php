@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Riff Lyrics
- * Description: A Lyrics panel beside Riff's player, from the lyrics in your audio files or typed into the Media Library.
+ * Description: A Lyrics view in Riff's Now Playing, from the lyrics in your audio files or typed into the Media Library.
  * Version: 1.4.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
@@ -21,6 +21,12 @@
 // phpcs:set WordPress.WP.I18n text_domain[] riff-lyrics
 
 defined( 'ABSPATH' ) || exit;
+
+// Riff ships this plugin as an extension too (Riff's extensions.json): once loaded, from either,
+// it is not loaded again, as when WordPress activates this copy while Riff's is running.
+if ( defined( 'RIFF_LYRICS_VERSION' ) ) {
+	return;
+}
 
 define( 'RIFF_LYRICS_VERSION', '1.4.0' );
 define( 'RIFF_LYRICS_URL', plugin_dir_url( __FILE__ ) );

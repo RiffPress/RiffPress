@@ -1,10 +1,12 @@
 {
-  "core": "https://wordpress.org/wordpress-7.2-beta1.zip",
+  "core": "https://wordpress.org/wordpress-7.2-beta3.zip",
   "phpVersion": "8.2",
   "plugins": [
     "./plugins/riff",
     "./plugins/riff-lyrics",
+    "./plugins/riff-chords",
     "./plugins/riff-sign-in",
+    "./plugins/riff-sing",
     "https://github.com/WordPress/presence-api/releases/download/v0.18.4/presence-api.zip"
   ],
   "port": 8890,
@@ -30,7 +32,9 @@
       "plugins": [
         "./plugins/riff",
         "./plugins/riff-lyrics",
+        "./plugins/riff-chords",
         "./plugins/riff-sign-in",
+        "./plugins/riff-sing",
         "https://github.com/WordPress/presence-api/releases/download/v0.18.4/presence-api.zip",
         "./plugins/riff/tests/components"
       ]

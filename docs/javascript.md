@@ -105,9 +105,21 @@ Returns `number`: Seconds from the start of the track, or 0 with nothing playing
 
 Since 4.32.0.
 
+### `window.riff.speed( rate )`
+
+How fast the music plays, with its pitch kept where the browser can keep it (`preservesPitch`): slower to learn a part, faster to skim. Given a rate, from 0.5 to 2, it sets it, and the speed holds for every track until it is set again. On the turntable it is multiplied by the deck's own speed and pitch.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `rate` | `number` | The speed to set, 1 for the music's own. Leave it out to read it. |
+
+Returns `number`: The speed now.
+
+Since 5.8.0.
+
 ### `window.riff.view( id, view )`
 
-Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26), the turntable (`turntable`, 28) and Up next (`queue`, a panel, 40); Riff Lyrics registers Lyrics (`lyrics`, 30).
+Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26), the turntable (`turntable`, 28), Up next (`queue`, a panel, 40) and Together (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing (`sing`, 32) and Riff Chords Chords (`chords`, 34).
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -196,7 +208,7 @@ Every track the player takes or hands back is the shape `Tracks::schema()` descr
 
 ## A view, and a control in the bar
 
-Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, the turntable, Up next and its own controls the same way, and Riff Lyrics its Lyrics view, on nothing but the public API.
+Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, the turntable, Up next, Together and its own controls the same way, and Riff Lyrics, Riff Sing and Riff Chords their views, on nothing but the public API.
 
 ```php
 add_action( 'riff_register', function () {

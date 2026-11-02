@@ -246,7 +246,14 @@ class Test_Riff_Player extends Riff_TestCase {
 		// The script is told what each view is.
 		preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html, $data );
 		$views = json_decode( $data[1] ?? '', true )['views'] ?? array();
-		$this->assertSame( array( 'label' => 'Album', 'place' => 'screen', 'stage' => true ), $views['album'] ?? null );
+		$this->assertSame(
+			array(
+				'label' => 'Album',
+				'place' => 'screen',
+				'stage' => true,
+			),
+			$views['album'] ?? null
+		);
 		$this->assertSame( 'side', $views['queue']['place'] ?? null );
 	}
 

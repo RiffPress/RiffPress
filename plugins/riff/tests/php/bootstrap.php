@@ -63,18 +63,28 @@ tests_add_filter(
 				return $dirs;
 			}
 		);
+		// Riff's own extensions are loaded by the tests that need them, so Riff's tests see Riff alone.
+		add_filter( 'riff_extensions', '__return_empty_array' );
 		require dirname( __DIR__, 2 ) . '/riff.php';
 		// The reference extension next to it, tested in the same suite against the same Riff. Only
 		// its class loads here; its own tests hook it in, so Riff's tests see Riff alone.
 		define( 'RIFF_LYRICS_VERSION', 'test' );
 		define( 'RIFF_LYRICS_URL', 'http://example.org/wp-content/plugins/riff-lyrics/' );
 		require dirname( __DIR__, 3 ) . '/riff-lyrics/src/class-lyrics.php';
+		// Riff Chords, built the same way: its class, hooked by its own tests.
+		define( 'RIFF_CHORDS_VERSION', 'test' );
+		define( 'RIFF_CHORDS_URL', 'http://example.org/wp-content/plugins/riff-chords/' );
+		require dirname( __DIR__, 3 ) . '/riff-chords/src/class-chords.php';
 		// Riff Sign In the same way: its classes, hooked by each test that needs them.
 		define( 'RIFF_SIGN_IN_VERSION', '0.0.0' );
 		define( 'RIFF_SIGN_IN_URL', 'http://example.org/wp-content/plugins/riff-sign-in/' );
 		foreach ( array( 'cbor', 'passkeys', 'codes', 'routes', 'listeners', 'sign-in' ) as $riff_sign_in_class ) {
 			require dirname( __DIR__, 3 ) . "/riff-sign-in/src/class-{$riff_sign_in_class}.php";
 		}
+		// Riff Sing the same way as Riff Lyrics.
+		define( 'RIFF_SING_VERSION', 'test' );
+		define( 'RIFF_SING_URL', 'http://example.org/wp-content/plugins/riff-sing/' );
+		require dirname( __DIR__, 3 ) . '/riff-sing/src/class-sing.php';
 		// The Presence API, where wp-env installs it, for listening together; its tests skip without it.
 		if ( is_readable( WP_PLUGIN_DIR . '/presence-api/presence-api.php' ) ) {
 			require WP_PLUGIN_DIR . '/presence-api/presence-api.php';

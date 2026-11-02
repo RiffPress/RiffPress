@@ -92,7 +92,7 @@ test.describe( 'Player', () => {
 		await expect( locked ).toHaveCount( 1 );
 		await expect( locked ).toContainText( 'Members Only' );
 		await expect( locked ).toHaveAttribute( 'href', 'https://example.org/join/' );
-		await expect( locked ).toHaveAttribute( 'aria-label', 'Unlock Members Only' );
+		await expect( locked ).toHaveAccessibleName( /^Unlock Members Only\b/ );
 		await expect( locked.locator( '.riff-row-lock' ) ).toBeVisible();
 
 		await page.locator( 'button.riff-row' ).first().click();

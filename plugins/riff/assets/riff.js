@@ -75,6 +75,7 @@ function start() {
 		 * @param {boolean}  [options.shuffle] `true` or `false` sets shuffle before playing.
 		 */
 		play( tracks, index = 0, { shuffle: on = null } = {} ) {
+			P.press( 'play' );
 			if ( on !== null ) {
 				P.shuffle = on;
 			}
@@ -85,19 +86,19 @@ function start() {
 		 *
 		 * @since 4.0.0
 		 */
-		toggle: () => P.toggle(),
+		toggle: () => ( P.press( 'toggle' ), P.toggle() ),
 		/**
 		 * Skips to the next track.
 		 *
 		 * @since 4.0.0
 		 */
-		next: () => P.next(),
+		next: () => ( P.press( 'next' ), P.next() ),
 		/**
 		 * Goes back a track, or to the start of this one.
 		 *
 		 * @since 4.0.0
 		 */
-		prev: () => P.prev(),
+		prev: () => ( P.press( 'prev' ), P.prev() ),
 		/**
 		 * Moves the current track to a time.
 		 *
@@ -107,6 +108,7 @@ function start() {
 		 */
 		seek( seconds ) {
 			if ( P.track() ) {
+				P.press( 'seek' );
 				P.el().currentTime = Math.max( 0, Number( seconds ) || 0 );
 			}
 		},
@@ -159,13 +161,32 @@ function start() {
 		 */
 		time: () => ( P.track() ? P.el().currentTime || 0 : 0 ),
 		/**
+		 * How fast the music plays, with its pitch kept where the browser can keep it
+		 * (`preservesPitch`): slower to learn a part, faster to skim. Given a rate, from 0.5 to 2,
+		 * it sets it, and the speed holds for every track until it is set again. On the turntable
+		 * it is multiplied by the deck's own speed and pitch.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {number} [rate] The speed to set, 1 for the music's own. Leave it out to read it.
+		 * @return {number} The speed now.
+		 */
+		speed( rate ) {
+			const r = Number( rate );
+			if ( rate !== undefined && Number.isFinite( r ) && r > 0 ) {
+				P.respeed( Math.min( 2, Math.max( 0.5, r ) ) );
+			}
+			return P.speed;
+		},
+		/**
 		 * Gives a view what it does as it opens, or adds one the server didn't register. A view is
 		 * opened from its button in the bar, and on a phone from its chip in Now Playing: a screen
 		 * of Now Playing, which takes the whole screen above the bar, or a panel beside the page.
 		 * Register a view on the server with `riff_register_view()`, so the page has it before any
 		 * script; this is for what only the browser knows. Riff's own are the album (`album`,
-		 * order 26), the turntable (`turntable`, 28) and Up next (`queue`, a panel, 40); Riff Lyrics
-		 * registers Lyrics (`lyrics`, 30).
+		 * order 26), the turntable (`turntable`, 28), Up next (`queue`, a panel, 40) and Together
+		 * (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing
+		 * (`sing`, 32) and Riff Chords Chords (`chords`, 34).
 		 *
 		 * @since 5.8.0
 		 *
@@ -297,6 +318,7 @@ function start() {
 		 * @param {number}   at     Where in it, in seconds.
 		 */
 		playFrom( tracks, index, at ) {
+			P.press( 'play' );
 			P.shuffle = false;
 			P.setQueue( tracks, index, { at: Math.max( 0, Number( at ) || 0 ) } );
 		},
@@ -316,11 +338,26 @@ function start() {
 		 * @param {boolean}  [options.shuffle] `true` or `false` sets shuffle before playing.
 		 */
 		playMore( tracks, index, more, { shuffle: on = null } = {} ) {
+			P.press( 'play' );
 			if ( on !== null ) {
 				P.shuffle = on;
 			}
 			P.setQueue( tracks, index, { more } );
 		},
+		/**
+		 * Follows another listener: plays what they play, where they are in it, and keeps with them
+		 * through their plays, pauses, skips and seeks, until a press of the listener's own.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {number} user   Their user ID.
+		 * @param {string} [name] Their name, for the bar.
+		 * @return {Promise<boolean>} Whether there was anything of theirs to follow.
+		 */
+		follow: ( user, name = '' ) =>
+			P.feature( 'together' ).then( ( m ) =>
+				m?.follow ? m.follow( user, name ) : false
+			),
 		/**
 		 * Adds tracks to the end of the queue, or starts them when nothing is playing.
 		 *
@@ -548,6 +585,12 @@ function start() {
 	P.feature( 'cast' );
 	P.root.addEventListener( 'riff:track', () => P.feature( 'gestures' ), {
 		once: true,
+	} );
+	// The Together panel, opened before anything has played, loads listening together to fill it.
+	P.root.addEventListener( 'riff:view', ( e ) => {
+		if ( e.detail?.id === 'together' && e.detail.open && P.me?.rest?.together ) {
+			P.feature( 'together' );
+		}
 	} );
 
 	P.join();

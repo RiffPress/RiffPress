@@ -2,12 +2,12 @@
  * the art, the modes, repeat and shuffle, the rows in the post and the items of Up next, the
  * hearts, the progress and the player's areas. */
 import {
-	fmt,
 	subtitle,
 	time,
 	smallest,
 	largest,
 	esc,
+	PAUSE,
 } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
@@ -17,6 +17,14 @@ const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function paint( P ) {
 	const { root, $, $$, queueList, own } = P;
+
+	// The hidden word a row's name starts with, Play or Pause; the rest is what the row shows.
+	function verb( row, word ) {
+		const said = row.querySelector( '.riff-row-verb' );
+		if ( said && said.textContent !== word ) {
+			said.textContent = word;
+		}
+	}
 
 	function paintAll() {
 		const t = P.track();
@@ -79,43 +87,24 @@ export function paint( P ) {
 			const current = !! t && rt.id === t.id && P.sameQueue();
 			row.toggleAttribute( 'data-current', current );
 			row.dataset.playing = current && playing ? 'true' : 'false';
-			row.setAttribute(
-				'aria-label',
-				current && playing
-					? fmt(
-							/* translators: %s: track title. */ __(
-								'Pause %s',
-								'riff'
-							),
-							rt.title
-						)
-					: fmt(
-							/* translators: %s: track title. */ __(
-								'Play %s',
-								'riff'
-							),
-							rt.title
-						)
+			verb(
+				row,
+				current && playing ? __( 'Pause', 'riff' ) : __( 'Play', 'riff' )
 			);
-			// A track that could not be played says so in words under its title, and to a screen
-			// reader after its name.
+			// A track that could not be played says so in words under its title, which are part of
+			// the row's name, so a screen reader hears them too.
 			const failed = P.failed.has( rt.id );
-			const why = __( 'Couldn’t be played', 'riff' );
 			row.toggleAttribute( 'data-failed', failed );
 			let note = row.querySelector( '.riff-row-note' );
 			if ( failed && ! note ) {
 				note = document.createElement( 'span' );
 				note.className = 'riff-row-note';
-				note.textContent = why;
+				note.innerHTML =
+					PAUSE + esc( __( 'Couldn’t be played', 'riff' ) );
 				row.querySelector( '.riff-row-text' )?.append( note );
 			}
 			if ( note ) {
 				note.hidden = ! failed;
-			}
-			if ( failed ) {
-				row.setAttribute( 'aria-description', why );
-			} else {
-				row.removeAttribute( 'aria-description' );
 			}
 		}
 		for ( const li of queueList.children ) {
@@ -127,26 +116,11 @@ export function paint( P ) {
 				li.firstElementChild.removeAttribute( 'aria-current' );
 			}
 			li.dataset.playing = current && playing ? 'true' : 'false';
-			// Named as a post's rows are, with the artist, since the title and the artist would
-			// otherwise be read run together; the playing one offers Pause.
-			const qt = P.queue[ P.order[ Number( li.dataset.pos ) ] ];
-			if ( qt ) {
-				li.firstElementChild.setAttribute(
-					'aria-label',
-					fmt(
-						current && playing
-							? /* translators: %s: the track, as its title and artist. */ __(
-									'Pause %s',
-									'riff'
-								)
-							: /* translators: %s: the track, as its title and artist. */ __(
-									'Play %s',
-									'riff'
-								),
-						P.named( qt )
-					)
-				);
-			}
+			// Named as a post's rows are, by what they show; the playing one offers Pause.
+			verb(
+				li.firstElementChild,
+				current && playing ? __( 'Pause', 'riff' ) : __( 'Play', 'riff' )
+			);
 		}
 		P.paintHearts();
 		progress();
@@ -241,15 +215,25 @@ export function paint( P ) {
 		}
 		areasKey = key;
 		for ( const area of $$( '[data-riff-area="badges"]' ) ) {
+			// A badge that stays is the same pill with new words, so its colour moves to the new
+			// tier (riff.css) and the words fade in, rather than a new pill appearing in its place.
+			const was = new Map(
+				[ ...area.children ].map( ( el ) => [ el.dataset.riffBadge, el ] )
+			);
 			area.replaceChildren(
 				...badges.map( ( b ) => {
-					const pill = document.createElement( 'span' );
+					const kept = was.get( b.id );
+					const pill = kept || document.createElement( 'span' );
+					const changed = kept && kept.dataset.riffText !== b.text;
+					pill.dataset.riffBadge = b.id;
+					pill.dataset.riffText = b.text;
 					// The quality pill keeps the class its styles and tests know it by, and is coloured
 					// by its tier.
 					pill.className = `riff-badge riff-badge-${ b.id }${
 						b.id === 'quality' ? ` riff-quality riff-quality-${ P.tier( t ) }` : ''
 					}`;
-					pill.textContent = b.text;
+					pill.removeAttribute( 'title' );
+					pill.innerHTML = `<span>${ esc( b.text ) }</span>`;
 					if ( b.label ) {
 						// The title is for a pointer; the words are for everyone else, read in
 						// place of the short text.
@@ -257,6 +241,15 @@ export function paint( P ) {
 						pill.innerHTML = `<span aria-hidden="true">${ esc(
 							b.text
 						) }</span><span class="riff-app-sr">${ esc( b.label ) }</span>`;
+					}
+					if ( changed && ! P.reduce() ) {
+						pill.firstElementChild.animate(
+							[
+								{ opacity: 0, transform: 'translateY(3px)' },
+								{ opacity: 1, transform: 'none' },
+							],
+							{ duration: 240, easing: 'ease-out' }
+						);
 					}
 					return pill;
 				} )

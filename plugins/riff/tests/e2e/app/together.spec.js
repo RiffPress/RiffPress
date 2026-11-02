@@ -1,6 +1,7 @@
 /**
  * Listening together, end to end, in two browsers: what the admin plays shows on another listener's
- * Home under Listening now, and pressing it plays the admin's queue from where they are.
+ * Home under Listening now; pressing it follows them, and each change the admin makes reaches the
+ * follower before it is due and is made by both when it is.
  *
  * Needs the Presence API, which .wp-env.json installs on the tests site.
  */
@@ -72,17 +73,37 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
-test( 'what one listener plays shows on another\'s Home, and pressing it listens along', async ( {
+// Both players at one moment, by each page's clock, which on one machine is one clock: the
+// follower's time less where the host's music is by then.
+async function apart( host, guest ) {
+	const [ h, g ] = await Promise.all(
+		[ host, guest ].map( ( p ) =>
+			p.evaluate( () => ( {
+				time: window.riffInternal.time(),
+				wall: performance.timeOrigin + performance.now(),
+				playing: window.riffInternal.playing(),
+				id: Number( window.riffInternal.current()?.id ),
+			} ) )
+		)
+	);
+	const moved = h.playing ? ( g.wall - h.wall ) / 1000 : 0;
+	return { host: h, guest: g, off: g.time - ( h.time + moved ) };
+}
+
+// Longer than Together::LEAD and a follower's wait between asks, so a change has been made.
+const MADE = 3500;
+
+test( 'a follower keeps time with the host through a pause, a play, a skip and a seek, each made when it is due', async ( {
 	page,
 	browser,
 	baseURL,
+	isMobile,
 } ) => {
-	// The admin plays the second track.
+	test.skip( isMobile, 'Two listeners at a computer show it; the timing is the same on a phone.' );
+	// The admin plays the first track.
 	await page.goto( postUrl );
-	await page.locator( '.riff-row' ).nth( 1 ).click();
+	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await expect.poll( () => page.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
-	// A seek is shared too.
-	await page.evaluate( () => window.riffInternal.seek( 20 ) );
 
 	const context = await browser.newContext( {
 		baseURL,
@@ -104,17 +125,57 @@ test( 'what one listener plays shows on another\'s Home, and pressing it listens
 	} ).toPass();
 	await expect( row.locator( '.riff-shelf-title' ) ).toHaveText( 'Listening now' );
 	await expect( card.locator( '.riff-card-title' ) ).toHaveText( 'admin' );
-	await expect( card.locator( '.riff-card-sub' ) ).toContainText( 'Trombone Detritus' );
+	await expect( card.locator( '.riff-card-sub' ) ).toContainText( 'Underground' );
 
 	await card.hover();
 	await card.locator( '.riff-card-play' ).click();
 	await expect
 		.poll( () => guest.evaluate( () => Number( window.riffInternal?.current()?.id ) ) )
-		.toBe( audio[ 1 ].id );
-	// Where the admin is, past their seek, not the start of the track.
-	await expect
-		.poll( () => guest.evaluate( () => window.riffInternal.time() ) )
-		.toBeGreaterThan( 20 );
+		.toBe( audio[ 0 ].id );
+	await expect.poll( () => guest.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
+	// Joined where the host's music was by then, which a start takes a moment to reach.
+	expect( Math.abs( ( await apart( page, guest ) ).off ) ).toBeLessThan( 0.5 );
+
+	// The host sees who is with them, which is when their presses wait for the moment too.
+	await expect( page.locator( '#riff' ).getByText( /with you/ ).first() ).toBeVisible( {
+		timeout: 20000,
+	} );
+	await page.waitForTimeout( 1500 ); // The server's clock, learned.
+
+	// A pause: both stop at the same place.
+	await page.evaluate( () => window.riffInternal.toggle() );
+	await page.waitForTimeout( MADE );
+	let now = await apart( page, guest );
+	expect( now.host.playing ).toBe( false );
+	expect( now.guest.playing ).toBe( false );
+	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+
+	// A play: both start at the same moment, from there.
+	await page.evaluate( () => window.riffInternal.toggle() );
+	await page.waitForTimeout( MADE );
+	now = await apart( page, guest );
+	expect( now.host.playing ).toBe( true );
+	expect( now.guest.playing ).toBe( true );
+	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+
+	// A skip: both start the next track together, from its start.
+	await page.evaluate( () => window.riffInternal.next() );
+	await page.waitForTimeout( MADE );
+	now = await apart( page, guest );
+	expect( now.host.id ).toBe( audio[ 1 ].id );
+	expect( now.guest.id ).toBe( audio[ 1 ].id );
+	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+
+	// A seek: the host's music runs on from there, and the follower meets it when it is due.
+	await page.evaluate( () => window.riffInternal.seek( 60 ) );
+	await page.waitForTimeout( MADE );
+	now = await apart( page, guest );
+	expect( now.host.time ).toBeGreaterThan( 60 );
+	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+
+	// A press of the follower's own is theirs: they stop following.
+	await guest.evaluate( () => window.riffInternal.toggle() );
+	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped following admin/ ) ).toBeVisible();
 
 	await context.close();
 } );

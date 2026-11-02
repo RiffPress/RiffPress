@@ -295,27 +295,58 @@ div.riff-row-locked {
 	font-variant-numeric: tabular-nums;
 }
 
+/* The tier's colour, as a colour, so a change of tier moves the words
+   and the light under them to the new one rather than switching at once. */
+@property --riff-quality-ink {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #c9d3db;
+}
+
+/* How far the light under the words reaches: low along the lower edge at
+   rest, filling the well under a pointer. */
+@property --riff-quality-lift {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 0%;
+}
+
 /* The quality: a capsule pressed into the bar, its well
-   dark and lit faintly from inside, a bevel catching the light along its
-   lower edge, and the words glowing softly in the colour of the tier
-   (paint.js): pale for a lossy file, green at CD quality, gold past it. */
+   dark at the top and lit from below, as a lamp under smoked glass, a bevel
+   catching the light round its rim, and the words glowing in the colour of
+   the tier (paint.js): pale for a lossy file, green at CD quality, amber past
+   it. */
 .riff-quality {
 	--riff-quality-ink: #c9d3db;
-	height: 40px;
-	padding: 0 18px;
+	height: 42px;
+	padding: 0 22px;
 	border: 2px solid #000;
-	background: radial-gradient(70% 90% at 50% 62%, color-mix(in srgb, var(--riff-quality-ink) 24%, #090c0b), color-mix(in srgb, var(--riff-quality-ink) 7%, #070908) 62%, #040505);
+	background: radial-gradient(calc(70% + var(--riff-quality-lift)) calc(80% + var(--riff-quality-lift)) at 50% 100%, color-mix(in srgb, var(--riff-quality-ink) calc(30% + var(--riff-quality-lift) / 2), #0b0a08), color-mix(in srgb, var(--riff-quality-ink) calc(10% + var(--riff-quality-lift) / 3), #0a0a09) calc(55% + var(--riff-quality-lift) / 2), #080808 92%);
 	box-shadow:
-		inset 0 3px 6px rgb(0 0 0 / 0.8),
-		inset 0 -1px 1px rgb(255 255 255 / 0.05),
-		0 0 0 1px rgb(255 255 255 / 0.1),
-		0 -1px 0 1px rgb(255 255 255 / 0.06),
-		0 2px 4px rgb(0 0 0 / 0.5);
+		inset 0 4px 8px rgb(0 0 0 / 0.85),
+		inset 0 -1px 1px color-mix(in srgb, var(--riff-quality-ink) 18%, transparent),
+		0 0 0 1px rgb(255 255 255 / 0.09),
+		0 -1px 0 1px rgb(255 255 255 / 0.05),
+		0 2px 5px rgb(0 0 0 / 0.55);
 	color: var(--riff-quality-ink);
-	font-size: 13.5px;
-	font-weight: 350;
-	letter-spacing: 0.015em;
-	text-shadow: 0 0 6px color-mix(in srgb, var(--riff-quality-ink) 45%, transparent);
+	font-size: 14px;
+	font-weight: 400;
+	letter-spacing: 0.01em;
+	text-shadow: 0 0 8px color-mix(in srgb, var(--riff-quality-ink) 55%, transparent);
+	transition:
+		--riff-quality-ink 0.4s ease,
+		--riff-quality-lift 0.25s ease;
+}
+
+.riff-quality:hover {
+	--riff-quality-lift: 32%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.riff-quality {
+		transition: none;
+	}
 }
 
 /* a lossy file's capsule is lit less: no glow round its words */
@@ -328,7 +359,7 @@ div.riff-row-locked {
 }
 
 .riff-quality-hires {
-	--riff-quality-ink: #f0c56a;
+	--riff-quality-ink: #f2b844;
 }
 
 .riff-bar-end .riff-area {
@@ -816,9 +847,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	.riff-bar {
 		display: grid;
 
-		/* The end column keeps room for its controls; the track's column gives
-		   way and its text trims, instead of running under the transport. */
-		grid-template-columns: minmax(0, 1fr) clamp(320px, 40%, 640px) minmax(max-content, 1fr);
+		/* The end column keeps room for its controls, up to half the bar; the
+		   track's column gives way and its text trims, instead of running under
+		   the transport. With more views and controls than half the bar holds,
+		   the end scrolls along, and focus brings each into sight. */
+		grid-template-columns: minmax(0, 1fr) clamp(320px, 40%, 640px) fit-content(50%);
 		gap: 16px;
 		padding: 0 4px var(--riff-safe-b) 16px;
 	}
@@ -852,14 +885,21 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 	.riff-bar-end {
 		justify-content: flex-end;
+
+		/* at the end, but from the start where it scrolls, so nothing is
+		   out of reach */
+		justify-content: safe flex-end;
 		gap: 8px;
+		min-width: 0;
+		height: 100%;
 		padding-right: 8px;
+		overflow-x: auto;
+		scrollbar-width: none;
 	}
 
 	#riff .riff-bar-info {
 		justify-content: flex-start;
 		gap: 16px;
-		cursor: pointer;
 	}
 
 	.riff-bar-text {
@@ -1093,6 +1133,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-np-body {
+
+	/* the space either side of the art on a wide screen */
+	--riff-np-gutter: 56px;
 	display: flex;
 	flex: 1;
 	flex-direction: column;
@@ -1172,24 +1215,27 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		repeating-radial-gradient(circle, #141414 0 1px, #1c1c1c 1px 3px),
 		#111;
 	box-shadow: 0 12px 40px rgb(0 0 0 / 0.45);
-	transition: translate 0.75s var(--riff-spring), scale 0.75s var(--riff-spring);
+	transition: translate 0.75s var(--riff-hand), scale 0.75s var(--riff-hand);
 
 	/* moved and turned on the GPU, its grooves and label drawn
-	   once rather than at every step */
-	will-change: translate, scale;
+	   once rather than at every step; its transform is its height
+	   above the mat as it is set down (now-playing.js) */
+	will-change: translate, scale, transform;
 }
 
-/* The way a record and its sleeve move: a spring, quick away and settling
-   with the slightest give, as a thing with weight does, drawn with linear()
-   where a browser has it and a curve where it has not. */
+/* The way a record, its sleeve and the arm move: carried by a hand, on the
+   minimum-jerk path reaching movements follow, x = 10t³ − 15t⁴ + 6t⁵,
+   setting off and arriving with neither speed nor acceleration
+   (now-playing.js, hand()). Drawn with linear() where a browser has it;
+   elsewhere the cubic Bézier within 1% of it. */
 #riff {
-	--riff-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--riff-hand: cubic-bezier(0.5, 0, 0.5, 1);
 }
 
 @supports (transition-timing-function: linear(0, 1)) {
 
 	#riff {
-		--riff-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.2%, 1);
+		--riff-hand: linear(0, 0.001, 0.009, 0.027, 0.058, 0.104, 0.163, 0.235, 0.317, 0.407, 0.5, 0.593, 0.683, 0.765, 0.837, 0.896, 0.942, 0.973, 0.991, 0.999, 1);
 	}
 }
 
@@ -1314,7 +1360,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 .riff-cover {
 	position: relative;
-	transition: translate 0.75s var(--riff-spring) 0.08s, scale 0.75s var(--riff-spring) 0.08s;
+	transition: translate 0.75s var(--riff-hand) 0.08s, scale 0.75s var(--riff-hand) 0.08s;
 	will-change: translate, scale;
 }
 
@@ -1529,17 +1575,85 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	rotate: -14deg;
 }
 
+/* The anti-skate dial beside the arm's base, between it and the platter: a
+   knob 21 mm across (7 of the record's hundredths), its scale of 0 to 6
+   round three quarters of its rim, set at 1.5, as for a stylus tracking at
+   1.5 g. Clear of the counterweight wherever the arm turns. */
+.riff-antiskate {
+	position: absolute;
+	z-index: 1;
+	top: -2%;
+	left: 93.5%;
+	width: 7cqi;
+	height: 7cqi;
+	border-radius: 50%;
+	background:
+		radial-gradient(circle closest-side, #3b3b3b 0 56%, #262626 58% 64%, transparent 66%),
+		conic-gradient(transparent 0 160deg, #181818 160deg 200deg, transparent 200deg),
+		repeating-conic-gradient(from -136deg, #8a8a8a 0 2deg, transparent 2deg 45deg),
+		#181818;
+	box-shadow: 0 0.4cqi 0.8cqi rgb(0 0 0 / 0.5), inset 0 0.2cqi 0 rgb(255 255 255 / 0.06);
+	translate: -50% -50%;
+}
+
+/* its pointer, from the middle out: 1.5 of 6 on a scale starting 135°
+   left of the top, 45° a step */
+.riff-antiskate::after {
+	content: "";
+	position: absolute;
+	top: 24%;
+	left: calc(50% - 0.25cqi);
+	width: 0.5cqi;
+	height: 26%;
+	border-radius: 0.25cqi;
+	background: #cfcfcf;
+	transform-origin: 50% 100%;
+	rotate: -67.5deg;
+}
+
+/* The pop-up target light by the platter, at its front: a housing 15 mm
+   across, raised, with its lamp lit while a record is out, as a deck's is
+   to see the stylus by in a dark room. */
+.riff-target {
+	position: absolute;
+	z-index: 1;
+	top: 97%;
+	left: 101%;
+	width: 5cqi;
+	height: 5cqi;
+	border-radius: 50%;
+	background: radial-gradient(circle at 40% 35%, #5e5e5e, #2a2a2a 60%, #1a1a1a);
+	box-shadow: 0 0.8cqi 1.2cqi rgb(0 0 0 / 0.6), inset 0 0.2cqi 0 rgb(255 255 255 / 0.1);
+	translate: -50% -50%;
+}
+
+.riff-target::after {
+	content: "";
+	position: absolute;
+	inset: 30%;
+	border-radius: 50%;
+	background: #fff3dc;
+	box-shadow: 0 0 1.6cqi 0.4cqi rgb(255 225 180 / 0.3);
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+#riff[data-riff-deck="out"] .riff-target::after {
+	opacity: 1;
+}
+
 /* The platter turns at 33⅓, or 45 for a single, while the music sounds
    (now-playing.js marks it turning), and its speed is the music's: coming
    up to speed and winding down, the rate the music bends through is the
-   rate it turns at. */
+   rate it turns at. Below the slowest the music plays at, it turns on its
+   own, the music silent (now-playing.js marks it coasting). */
 .riff-turns {
 	animation: riff-turn var(--riff-turn) linear infinite;
 	animation-play-state: paused;
 	will-change: rotate;
 }
 
-#riff[data-riff-deck="out"][data-riff-turning] .riff-turns {
+#riff[data-riff-deck="out"]:is([data-riff-turning], [data-riff-coasting]) .riff-turns {
 	animation-play-state: running;
 }
 
@@ -1581,8 +1695,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* The tonearm, on its base just off the record's corner (now-playing.js
    works its angles from this place and length), its counterweight behind the
    base and its headshell angled, as a pivoted arm's is so the stylus sits
-   along the groove. At rest on its post until the needle drops; paused, it
-   lifts. Sized by the record, so it scales with it. */
+   along the groove: its length and the angle are Baerwald's alignment
+   (now-playing.js), which draws the tube and the headshell. At rest on
+   its post until the needle drops; paused, it lifts. Sized by the record,
+   so it scales with it. */
 .riff-arm {
 	position: absolute;
 	top: 5%;
@@ -1590,7 +1706,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	width: 0;
 	height: 0;
 	rotate: -14deg;
-	transition: rotate 0.6s var(--riff-spring);
+	transition: rotate 0.6s var(--riff-hand);
 	will-change: rotate;
 }
 
@@ -1608,15 +1724,24 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* The base stands on the deck and never moves. The arm, lifted, rides a
-   little above the record, which from above shows as its shadow falling
-   further from it; lowered, the shadow comes in under it. */
+   little above the record, which from above shows as a second shadow, cast
+   further off as the arm is higher: the arm's own shape, darkened and
+   softened once, moved and faded rather than redrawn. The cue lever lifts
+   it quickly; lowered, it sinks through the lever's silicone damping at
+   one even speed (now-playing.js, LOWER), so the shadow comes in under it
+   in a straight line. */
 #riff .riff-arm-base {
 	filter: drop-shadow(0 0.6cqi 0.8cqi rgb(0 0 0 / 0.5));
 }
 
 #riff .riff-arm-tube {
 	filter: drop-shadow(0 0.5cqi 0.6cqi rgb(0 0 0 / 0.55));
-	transition: filter 0.3s;
+}
+
+#riff .riff-arm-lift {
+	opacity: 0;
+	filter: brightness(0) blur(0.6px);
+	transition: translate 0.5s linear, opacity 0.5s linear;
 }
 
 /* The needle drops once the record is out (now-playing.js marks it down);
@@ -1653,8 +1778,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 2px;
 }
 
-#riff[data-riff-deck="out"]:is(:not([data-riff-turning], [data-riff-cued]), :has(.riff-arm[data-riff-held])) .riff-arm-tube {
-	filter: drop-shadow(0.8cqi 2.4cqi 1.4cqi rgb(0 0 0 / 0.4));
+#riff[data-riff-deck="out"]:is(:not([data-riff-turning], [data-riff-cued]), :has(.riff-arm[data-riff-held])) .riff-arm-lift {
+	opacity: 0.4;
+	translate: 0.8px 2.4px;
+	transition-duration: 0.15s;
+	transition-timing-function: ease-out;
 }
 
 #riff[data-mode="video"] .riff-record {
@@ -1683,7 +1811,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 #riff[data-riff-arriving] :is(.riff-cover, .riff-record) {
-	animation: riff-arrive 0.4s 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	animation: riff-arrive 0.4s 0.65s var(--riff-hand) both;
 }
 
 @keyframes riff-arrive {
@@ -1700,8 +1828,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	.riff-cover,
 	.riff-deck-part,
 	.riff-arm,
-	.riff-arm-tube,
-	#riff .riff-mount::before {
+	#riff .riff-arm-lift,
+	#riff .riff-mount::before,
+	#riff .riff-target::after {
 		transition: none;
 	}
 
@@ -1912,6 +2041,96 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	padding: 8px 24px 24px;
 	overflow-y: auto;
 	overscroll-behavior: contain;
+}
+
+/* The Together panel: who is in the session, or who else is listening. */
+#riff .riff-together-head {
+	margin: 0 0 8px;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.riff-together-list {
+	margin: 0 0 16px;
+	padding: 0;
+	list-style: none;
+}
+
+#riff .riff-together-person {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	min-height: 64px;
+	margin: 0;
+}
+
+#riff .riff-together-face {
+	position: relative;
+	flex: none;
+	display: grid;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	overflow: hidden;
+	background: var(--riff-hover);
+}
+
+#riff .riff-together-face svg,
+#riff .riff-together-face img {
+	grid-area: 1 / 1;
+	width: 100%;
+	height: 100%;
+}
+
+#riff .riff-together-face svg {
+	padding: 8px;
+	box-sizing: border-box;
+	fill: var(--riff-fg-2);
+}
+
+#riff .riff-together-face img {
+	object-fit: cover;
+}
+
+#riff .riff-together-text {
+	flex: 1;
+	display: grid;
+	min-width: 0;
+}
+
+#riff .riff-together-name,
+#riff .riff-together-sub {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#riff .riff-together-name {
+	font-size: 16px;
+}
+
+#riff .riff-together-sub,
+#riff .riff-together-none {
+	color: var(--riff-fg-2);
+	font-size: 14px;
+}
+
+#riff .riff-together-none {
+	text-wrap: pretty;
+}
+
+#riff .riff-together-button {
+	flex: none;
+	min-height: 44px;
+	padding: 0 16px;
+	border: 1px solid var(--riff-line);
+	border-radius: 999px;
+	color: var(--riff-fg);
+	font-size: 14px;
+}
+
+#riff .riff-together-button:hover {
+	background: var(--riff-hover);
 }
 
 .riff-queue-head {
@@ -2181,7 +2400,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	padding: 0;
 }
 
+/* Positioned, so its hidden words stay inside the list as it scrolls. */
 #riff .riff-queue-list button {
+	position: relative;
 	display: grid;
 	grid-template-columns: 48px minmax(0, 1fr);
 	align-items: center;
@@ -2290,11 +2511,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	.riff-np-body {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		padding: 0 56px;
+		padding: 0 var(--riff-np-gutter);
 	}
 
+	/* The turntable turns, slides and swings on layers of its own, and a
+	   browser that cannot tell where a moving layer will be gives its own
+	   layer to everything painted after it that might overlap. Painted
+	   inside the stage, the moving parts can overlap nothing beyond it. The
+	   stage reaches out over both gutters, its content box where it was, so
+	   a sleeve leaving to the side fades out where it did. */
 	.riff-stage {
-		padding: 0 0 40px;
+		margin-inline: calc(-1 * var(--riff-np-gutter));
+		padding-block: 0 40px;
+		padding-inline: var(--riff-np-gutter);
+		contain: paint;
 		touch-action: auto;
 	}
 
@@ -2651,7 +2881,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 
 	#riff .riff-stage > .riff-cover {
-		transition: translate 0.75s var(--riff-spring) 0.08s, scale 0.75s var(--riff-spring) 0.08s, opacity 0.4s 0.45s;
+		transition: translate 0.75s var(--riff-hand) 0.08s, scale 0.75s var(--riff-hand) 0.08s, opacity 0.4s 0.45s;
 	}
 
 	#riff[data-riff-deck="out"] .riff-stage > .riff-record {
@@ -2985,9 +3215,16 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		right: 0;
 		left: 0;
 	}
+
+	/* a folding phone part open: what the shape is for, the turntable
+	   (now-playing.js) */
+	#riff .riff-np .riff-stage > .riff-cover {
+		--riff-deck-screen: 1;
+	}
 }
 
-/* Words for a screen reader only: a badge's label, the search's count. */
+/* Words for a screen reader only: a badge's label, the search's count, the
+   Play before a row's title and the pauses between what it shows. */
 .riff-app-sr {
 	position: absolute;
 	width: 1px;

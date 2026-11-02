@@ -23,10 +23,26 @@ The rest is what a player should do:
 - Media Session gives the lock screen its metadata and controls.
 - AirPlay and Cast appear when a device is in reach.
 - A swipe on the bar skips, and a drag on Now Playing closes it.
+- A script can slow the music down or speed it up with `window.riff.speed()`, as Riff Chords'
+  practice controls do. The pitch is kept (`preservesPitch`), the speed holds from track to track,
+  and on the turntable it is multiplied by the deck's own; while it is not 1 the platter starts and
+  stops at once rather than winding, since winding would bend the pitch.
 - On the turntable, tapping the sleeve puts the record away and tapping it again plays it. The arm can be dragged, or clicked and then put down with a second click, onto any point of the side; from the keyboard it is a slider over the side's tracks.
 - With the [Presence API](https://github.com/WordPress/presence-api) active, what a signed-in
   listener plays is shared with the site's other listeners, who see it under Listening now on a
-  Listen page's Home and can press it to play the same queue from the same point.
+  Listen page's Home and can press it to follow them. Following keeps time as cars in a light
+  show do: while someone follows a listener, each of their plays, pauses, skips and seeks is due a
+  second and a half ahead on the server's clock, which each follower has learned once as NTP does;
+  it reaches every follower before it is due, they ready it, and everyone, the listener too, makes
+  it at that moment. Nothing is corrected after. A press of the follower's own stops following,
+  with Follow again in the bar; the listener sees who is with them. Together, a panel beside the
+  page after Up next, lists who is in the session, with Leave for a follower, and outside one who else is
+  listening, each with Follow; an album's page shows the faces of whoever is playing from it,
+  and pressing one follows them. Other followers see a follower only if that follower shares what
+  they play. A locked phone or a tab in the background has its timers slowed, so a change can
+  reach it after it was due; it is joined once, where the music is by then, which the player
+  says. Each listener turns sharing off under Personal Options on their profile; a site makes it
+  off until turned on with the `riff_together_share` filter.
 - The queue and position are kept for the tab's session. A full-page navigation saves them and
   attempts to resume on the next page; a reload restores the same track paused. A queue of more
   than 500 tracks keeps the 500 around the one playing, in the order they play.
@@ -57,13 +73,17 @@ at the bar's right end, and on a phone from its chip in Now Playing:
   as on a phone held upright. It is the listener's to open, as some would rather not have the
   motion, and Now Playing opens to it again for a listener who last chose it, a choice kept in the
   browser. An unfolded iPhone Duo always opens to it, as that is what the shape is for.
-- **Lyrics** (`lyrics`), from Riff Lyrics, and any other a plugin registers.
+- **Lyrics** (`lyrics`), from Riff Lyrics; **Sing** (`sing`), from Riff Sing; **Chords**
+  (`chords`), from Riff Chords; and any other a plugin registers. Each follows the song playing,
+  so each is a screen of Now Playing rather than a panel.
 
 Pressing the open view's button again, Escape, or Close goes back to the page, and focus goes back
 to the button. The button says whether its view is open (`aria-pressed`).
 
-**Up next** (`queue`) is a panel beside the page rather than a screen, as is any panel a plugin
-registers. One shows at a time:
+**Up next** (`queue`) is a panel beside the page rather than a screen, as is **Together**
+(`together`), for a signed-in listener where the Presence API is active, and any panel a plugin
+registers: what they hold is about the queue and the people listening, not the song, so they stand
+beside whatever is showing. One shows at a time:
 
 - On a wide screen it stands beside the page and Now Playing, above the bar, and both make room
   for it.
@@ -101,7 +121,8 @@ add_action( 'riff_register', function () {
 ```
 
 A control's `order` places it among Riff's own: Like (10), the badges (20), the album (26), the
-turntable (28), Lyrics (30), Up next (40), Play on another device (60) and the volume (70). `wide`
+turntable (28), Lyrics (30), Sing (32), Chords (34), Up next (40), Together (45), Play on another
+device (60) and the volume (70). `wide`
 keeps a control's button off a phone's bar, which holds the track, Play, the album and only what a
 control asks to keep there; a view's button is wide unless it says otherwise. A control can bring
 its own markup with `render` in place of a button. An icon is the name of one of Riff's own or SVG,
@@ -131,7 +152,7 @@ through `listen( name, fn )`:
 | Name | `fn` is called with | and returns |
 | --- | --- | --- |
 | `badges` | the badges so far, and the playing track | the badges, each `{ id, text, label? }` |
-| `meter` | `{ heat, levels }` each frame while music plays: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
+| `meter` | `{ heat, levels }` each frame while music plays and the bar, Now Playing or the playing row is in sight: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
 
 The badges are redrawn only when what they hold changes.
 

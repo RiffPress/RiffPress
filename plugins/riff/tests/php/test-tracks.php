@@ -328,4 +328,23 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		wp_update_attachment_metadata( $id, $meta );
 		$this->assertSame( '01234567899876543210', Tracks::from_attachment( $id )['levels'] );
 	}
+
+	public function test_the_disc_of_a_set_comes_from_the_files_tags(): void {
+		$id = self::attach( '02 - Underground [underground].mp3' );
+		$this->assertSame( 0, Tracks::from_attachment( $id )['disc'], 'the fixture names no disc' );
+
+		$meta = (array) wp_get_attachment_metadata( $id );
+		foreach ( array(
+			'2'      => 2,
+			'1/2'    => 1,
+			' 3 / 4' => 3,
+			'side'   => 0,
+		) as $tag => $disc ) {
+			$meta['part_of_a_set'] = (string) $tag;
+			wp_update_attachment_metadata( $id, $meta );
+			$this->assertSame( $disc, Tracks::from_attachment( $id )['disc'], "part_of_a_set \"{$tag}\"" );
+		}
+		$this->assertSame( 0, Tracks::normalize( array( 'disc' => -1 ) )['disc'] );
+		$this->assertArrayHasKey( 'disc', Tracks::schema()['properties'] );
+	}
 }

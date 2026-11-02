@@ -32,9 +32,19 @@
 			"component": "riff-lyrics",
 			"initial-version": "0.1.0"
 		},
+		"plugins/riff-chords": {
+			"package-name": "riff-chords",
+			"component": "riff-chords",
+			"initial-version": "0.1.0"
+		},
 		"plugins/riff-sign-in": {
 			"package-name": "riff-sign-in",
 			"component": "riff-sign-in",
+			"initial-version": "0.1.0"
+		},
+		"plugins/riff-sing": {
+			"package-name": "riff-sing",
+			"component": "riff-sing",
 			"initial-version": "0.1.0"
 		},
 		"packages/wp-api-coverage": {

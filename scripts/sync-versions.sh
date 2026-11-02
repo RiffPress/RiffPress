@@ -13,9 +13,17 @@
 #   - plugins/riff-lyrics/riff-lyrics.php plugin header and `RIFF_LYRICS_VERSION`
 #   - plugins/riff-lyrics/readme.txt `Stable tag:`, `Tested up to:` and its changelog
 #
+# riff-chords (plugins/riff-chords):
+#   - plugins/riff-chords/riff-chords.php plugin header and `RIFF_CHORDS_VERSION`
+#   - plugins/riff-chords/readme.txt `Stable tag:`, `Tested up to:` and its changelog
+#
 # riff-sign-in (plugins/riff-sign-in):
 #   - plugins/riff-sign-in/riff-sign-in.php plugin header and `RIFF_SIGN_IN_VERSION`
 #   - plugins/riff-sign-in/readme.txt `Stable tag:`, `Tested up to:` and its changelog
+#
+# riff-sing (plugins/riff-sing):
+#   - plugins/riff-sing/riff-sing.php plugin header and `RIFF_SING_VERSION`
+#   - plugins/riff-sing/readme.txt `Stable tag:`, `Tested up to:` and its changelog
 #
 # wp-api-coverage (packages/wp-api-coverage):
 #   - packages/wp-api-coverage/package.json and its package-lock.json entry
@@ -49,8 +57,8 @@ command -v npm >/dev/null 2>&1 || { echo "npm is required to run scripts/sync-ve
 
 ONLY=${1:-all}
 case "$ONLY" in
-	all | riff | riff-lyrics | riff-sign-in | wp-api-coverage | riff-desktop) ;;
-	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, riff-sign-in, wp-api-coverage or riff-desktop" >&2; exit 1 ;;
+	all | riff | riff-lyrics | riff-sign-in | riff-sing | riff-chords | wp-api-coverage | riff-desktop) ;;
+	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, riff-sign-in, riff-sing, riff-chords, wp-api-coverage or riff-desktop" >&2; exit 1 ;;
 esac
 
 # A package's version, or nothing for one that has never been released: it is
@@ -122,6 +130,17 @@ if [[ "$ONLY" == all || "$ONLY" == riff-lyrics ]]; then
 	fi
 fi
 
+if [[ "$ONLY" == all || "$ONLY" == riff-chords ]]; then
+	CHORDS_VERSION=$(manifest_version plugins/riff-chords)
+	if [[ -n "$CHORDS_VERSION" ]]; then
+		sync_plugin plugins/riff-chords/riff-chords.php RIFF_CHORDS_VERSION plugins/riff-chords/readme.txt "$CHORDS_VERSION"
+		node .github/scripts/readme-changelog.js riff-chords
+		echo "Synced Riff Chords to ${CHORDS_VERSION}"
+	else
+		echo "Riff Chords has not been released yet; nothing to sync"
+	fi
+fi
+
 if [[ "$ONLY" == all || "$ONLY" == riff-sign-in ]]; then
 	SIGN_IN_VERSION=$(manifest_version plugins/riff-sign-in)
 	if [[ -n "$SIGN_IN_VERSION" ]]; then
@@ -130,6 +149,17 @@ if [[ "$ONLY" == all || "$ONLY" == riff-sign-in ]]; then
 		echo "Synced Riff Sign In to ${SIGN_IN_VERSION}"
 	else
 		echo "Riff Lyrics has not been released yet; nothing to sync"
+	fi
+fi
+
+if [[ "$ONLY" == all || "$ONLY" == riff-sing ]]; then
+	SING_VERSION=$(manifest_version plugins/riff-sing)
+	if [[ -n "$SING_VERSION" ]]; then
+		sync_plugin plugins/riff-sing/riff-sing.php RIFF_SING_VERSION plugins/riff-sing/readme.txt "$SING_VERSION"
+		node .github/scripts/readme-changelog.js riff-sing
+		echo "Synced Riff Sing to ${SING_VERSION}"
+	else
+		echo "Riff Sing has not been released yet; nothing to sync"
 	fi
 fi
 

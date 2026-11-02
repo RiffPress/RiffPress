@@ -262,6 +262,43 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertMatchesRegularExpression( '#data-riff-shelf="recent"[^>]*hidden#', $none );
 	}
 
+	public function test_a_visitors_history_is_drawn_by_the_server_leaving_out_what_is_gone(): void {
+		list( $post, $page ) = $this->library_and_page();
+		$track               = (int) get_posts(
+			array(
+				'post_type'   => 'attachment',
+				'post_parent' => $post,
+				'fields'      => 'ids',
+			)
+		)[0];
+		$gone                = self::attach( '03 - Trombone Detritus [detritus].mp3', $post );
+		wp_delete_attachment( $gone, true );
+		do_action( 'rest_api_init' );
+		wp_set_current_user( 0 );
+
+		$request = new WP_REST_Request( 'GET', '/riff/v1/played' );
+		$request->set_query_params(
+			array(
+				// The deleted track first, so the one left keeps its own place in the history.
+				'items' => "$gone:$post,$track:$post,$track:999999",
+				'page'  => get_permalink( $page ),
+			)
+		);
+		$response = rest_do_request( $request );
+		$this->assertSame( 200, $response->get_status() );
+		$data = $response->get_data();
+
+		$this->assertSame( 1, preg_match_all( '#class="riff-card[ "]#', $data['jump'] ), 'the post it played from, once' );
+		$this->assertMatchesRegularExpression( '#href="[^"]*riff=' . $post . '"#', $data['jump'] );
+		$this->assertSame( 2, preg_match_all( '#class="riff-card[ "]#', $data['recent'] ), 'not the deleted track' );
+		$this->assertStringContainsString( 'data-riff-app-action="play-history" data-riff-index="1"', $data['recent'], 'played by its place in the history' );
+		$this->assertStringContainsString( 'data-riff-index="2"', $data['recent'] );
+		$this->assertStringNotContainsString( 'riff=999999', $data['recent'], 'a post that is gone opens nothing' );
+
+		$request->set_param( 'page', 'https://elsewhere.example/listen/' );
+		$this->assertSame( 400, rest_do_request( $request )->get_status(), 'a card only ever links to this site' );
+	}
+
 	public function test_an_old_link_to_a_later_page_of_posts_still_opens_them(): void {
 		$this->library_of( 25 );
 		$_GET[ App::PAGE_QUERY ] = '2';
@@ -313,6 +350,21 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->assertStringContainsString( '<div class="riff-card" id="riff-page-2" data-riff-post="' . $posts[0] . '">', $html, 'Load more lands on the first new card' );
 		$this->assertStringContainsString( 'data-riff-page="2" data-riff-pages="2"', $html );
 		$this->assertStringNotContainsString( 'data-riff-app-action="more"', $html, 'the last page' );
+	}
+
+	public function test_load_more_is_given_only_the_page_it_adds(): void {
+		$posts = $this->library_of( 25 );
+		foreach ( array(
+			'2'   => 1,
+			'9'   => 1,
+			'one' => 25,
+		) as $from => $cards ) {
+			$_GET[ App::FROM_QUERY ] = (string) $from;
+			$html                    = $this->library_at( '2' );
+			unset( $_GET[ App::FROM_QUERY ] );
+			$this->assertSame( $cards, substr_count( $html, 'class="riff-card"' ), "from \"$from\"" );
+			$this->assertStringContainsString( 'data-riff-post="' . $posts[0] . '"', $html );
+		}
 	}
 
 	public function test_a_page_past_the_end_or_not_a_page_reads_as_the_nearest_one(): void {

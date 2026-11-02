@@ -5,10 +5,10 @@
  * row stays hidden, so nothing appears above what is already there. A view drawn by show() fills
  * every row before it is painted.
  *
- * A visitor's history is what this browser kept of each track as it played, so it can name a post
- * or a file the site has since deleted; such a card would show a broken cover and open nothing.
- * Once per page, the tracks and the posts it names are asked of the site, and what is gone is left
- * out. A signed-in listener's comes from the account, which the server already checks. */
+ * A visitor's history is what this browser kept of each track as it played. Its cards are drawn by
+ * the server, at riff/v1/played, as a signed-in listener's are, so a track or a post the site has
+ * since deleted, and the Listen page itself, are left out there; asked once for each history, and
+ * kept. */
 
 export function homeRows( ctx ) {
 	const { api, view } = ctx;
@@ -26,72 +26,56 @@ export function homeRows( ctx ) {
 		}
 		return u.toString();
 	};
-	const ids = ( r ) =>
-		r.ok ? r.json() : Promise.reject( new Error( String( r.status ) ) );
 
-	// What of the history still exists: { tracks, posts } as sets of IDs, or null when the site could
-	// not be asked, in which case nothing is left out.
-	let still;
-	function check() {
-		if ( still === undefined ) {
-			const played = api.history();
-			const trackIds = [ ...new Set( played.map( ( t ) => Number( t.id ) ).filter( Boolean ) ) ];
-			const postIds = [ ...new Set( played.map( ( t ) => Number( t.post?.id ) ).filter( Boolean ) ) ];
-			still =
-				! ctx.tracksRest || ! trackIds.length
-					? Promise.resolve( null )
-					: Promise.all( [
-							api
-								.request( routeTo( '/riff/v1/tracks', { include: trackIds.join( ',' ), per_page: '100' } ) )
-								.then( ids )
-								.then( ( d ) => new Set( ( d.items || [] ).map( ( t ) => Number( t.id ) ) ) ),
-							postIds.length
-								? api
-										.request( routeTo( '/wp/v2/search', { include: postIds.join( ',' ), per_page: '100', _fields: 'id' } ) )
-										.then( ids )
-										.then( ( d ) => new Set( d.map( ( p ) => Number( p.id ) ) ) )
-								: Promise.resolve( new Set() ),
-						] )
-							.then( ( [ tracks, posts ] ) => ( { tracks, posts } ) )
-							.catch( () => null );
+	// The rows' cards for a history, as the server draws them: { jump, recent }, or null when the
+	// site could not be asked, and a row held for them is hidden. Once an answer has come it is kept,
+	// so a view drawn again fills its rows at once, before it is painted.
+	const drawn = new Map();
+	const arrived = new Map();
+	function cardsFor( played, key ) {
+		if ( ! drawn.has( key ) ) {
+			const items = played
+				.map(
+					( t ) =>
+						`${ Number( t.id ) || 0 }:${ Number( t.post?.id ) || 0 }`
+				)
+				.join( ',' );
+			drawn.set(
+				key,
+				api
+					.request(
+						routeTo( '/riff/v1/played', {
+							items,
+							page: ctx.page.href,
+						} )
+					)
+					.then( ( r ) => ( r.ok ? r.json() : null ) )
+					.catch( () => null )
+					.then( ( cards ) => {
+						if ( cards ) {
+							arrived.set( key, cards );
+						} else {
+							// Asked again next time.
+							drawn.delete( key );
+						}
+						return cards;
+					} )
+			);
 		}
-		return still;
+		return drawn.get( key );
 	}
-	let known = null; // The answer, once it has come.
 
-	function home( first = false ) {
-		if ( known === null && still === undefined ) {
-			check().then( ( answer ) => {
-				known = answer || false;
-				// Drawn again with what is gone left out; until then a held row stays held.
-				home( first );
-			} );
-			if ( first ) {
-				return;
-			}
-		}
-		// A Listen page is not where a track plays from, though older plays may name this one.
-		const isPage = ( p ) => {
-			const u = new URL( p.url || '', location.href );
-			return (
-				u.origin === ctx.page.origin && u.pathname === ctx.page.pathname
-			);
-		};
-		const played = api
-			.history()
-			.filter( ( t ) => ! known || known.tracks.has( Number( t.id ) ) )
-			.map( ( t ) =>
-				t.post?.id &&
-				( isPage( t.post ) ||
-					( known && ! known.posts.has( Number( t.post.id ) ) ) )
-					? { ...t, post: null }
-					: t
-			);
-		const key = played.length
+	// Which history the rows show, as the server writes it into data-riff-played.
+	const keyOf = ( played ) =>
+		played.length
 			? `${ played.length }:${ played[ 0 ].id }:${
 					Number( played[ 0 ].played ) || 0
 				}`
 			: '0';
+
+	function home( first = false ) {
+		const played = api.history();
+		const key = keyOf( played );
 		const fill = ( slug, cards ) => {
 			const shelf = view.querySelector( `[data-riff-shelf="${ slug }"]` );
 			if ( ! shelf || shelf.dataset.riffPlayed === key ) {
@@ -115,55 +99,53 @@ export function homeRows( ctx ) {
 			ctx.fade( row );
 			shelf.hidden = false;
 		};
-		const posts = [];
-		for ( const t of played ) {
-			if (
-				t.post?.id &&
-				! posts.some( ( p ) => p.post.id === t.post.id )
-			) {
-				posts.push( t );
+		if ( ! played.length ) {
+			fill( 'jump', '' );
+			fill( 'recent', '' );
+			return;
+		}
+		const show = ( cards ) => {
+			fill( 'jump', cards.jump );
+			fill( 'recent', cards.recent );
+			// Your Library offers somewhere to start until there is something played to show
+			// instead.
+			const offer = view.querySelector( '[data-riff-shelf="start"]' );
+			if ( offer && cards.recent ) {
+				offer.hidden = true;
 			}
+		};
+		if ( arrived.has( key ) ) {
+			show( arrived.get( key ) );
+			return;
 		}
-		fill(
-			'jump',
-			posts
-				.slice( 0, 12 )
-				.map( ( t ) =>
-					ctx.makeCard( {
-						art: t.art,
-						title: t.post.title,
-						sub: t.artist,
-						href: ctx.addressOf( t.post.id ),
-						play: {
-							action: 'play-card',
-							data: { post: Number( t.post.id ) },
-						},
-						label: t.post.title,
-					} )
-				)
-				.join( '' )
-		);
-		fill(
-			'recent',
-			played
-				.slice( 0, 20 )
-				.map( ( t, i ) =>
-					ctx.makeCard( {
-						art: t.art,
-						title: t.title,
-						sub: t.artist,
-						href: t.post?.id ? ctx.addressOf( t.post.id ) : '',
-						play: { action: 'play-history', data: { index: i } },
-						label: t.title,
-					} )
-				)
-				.join( '' )
-		);
-		// Your Library offers somewhere to start until there is something played to show instead.
-		const offer = view.querySelector( '[data-riff-shelf="start"]' );
-		if ( offer && played.length ) {
-			offer.hidden = true;
+		// Rows the server drew from this same history, as it draws a signed-in listener's, need
+		// nothing asked.
+		const shelves = [ 'jump', 'recent' ]
+			.map( ( slug ) =>
+				view.querySelector( `[data-riff-shelf="${ slug }"]` )
+			)
+			.filter( Boolean );
+		if ( shelves.every( ( s ) => s.dataset.riffPlayed === key ) ) {
+			return;
 		}
+		cardsFor( played, key ).then( ( cards ) => {
+			// Drawn into the view showing then, if it is still this history's.
+			if ( keyOf( api.history() ) !== key ) {
+				return;
+			}
+			if ( cards ) {
+				show( cards );
+				return;
+			}
+			// The site could not be asked: a row held for these cards goes rather than stay empty,
+			// unmarked, so the next Home asks again.
+			for ( const shelf of shelves ) {
+				if ( shelf.isConnected && shelf.hasAttribute( 'data-riff-skeleton' ) ) {
+					shelf.removeAttribute( 'data-riff-skeleton' );
+					shelf.hidden = true;
+				}
+			}
+		} );
 	}
 
 	return { home };

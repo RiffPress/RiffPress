@@ -31,6 +31,16 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$enabled` | `bool` | Whether to load the player. |
 
+### `riff_extensions`
+
+Filters the extensions Riff loads, by name: a host can leave one out, or name another plugin it has placed in Riff's extensions/ folder.
+
+Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$names` | `string[]` | The names in extensions.json. |
+
 ### `riff_protect_storage`
 
 Filters whether the storage a file is kept in elsewhere was made private, when it is protected, or public again, when it isn't. A plugin that keeps uploads in object storage or on a CDN answers for its own files: true once the copy there is private (or public again), or a WP_Error to say why it couldn't be, which the Media Library shows. Without an answer, a file only on this server is moved into the protected folder, and one kept elsewhere is not protected, as moving it would leave it public there. Riff can't send a file it doesn't have, so a plugin that protects its files signs their addresses through riff_protected_url too.
@@ -76,6 +86,17 @@ Since 4.0.0. Fires in `plugins/riff/src/class-sources.php`.
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `$sources` | `Source[]` | Sources. |
+
+### `riff_together_share`
+
+Filters whether a listener who hasn't chosen shares what they play with the site's other listeners. A site where listeners shouldn't see each other unless they ask, a class of children say, returns false.
+
+Since 5.8.0. Fires in `plugins/riff/features/listen/class-together.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$share` | `bool` | Whether they share. Default true. |
+| `$user_id` | `int` | The listener. |
 
 ### `riff_track`
 
