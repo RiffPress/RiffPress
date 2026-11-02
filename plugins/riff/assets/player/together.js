@@ -688,6 +688,16 @@ export default function together( P ) {
 		if ( ! showing() || following || followers.length || document.hidden ) {
 			return;
 		}
+		await learnRoom();
+		if ( mine !== roomTurn ) {
+			return;
+		}
+		draw();
+		roomTimer = setTimeout( askRoom, ROOM );
+	}
+	let roomAt = 0; // When the room was last asked for.
+	async function learnRoom() {
+		roomAt = Date.now();
 		try {
 			// With the version it last had, so a room where nothing changed costs a lookup.
 			const r = await send(
@@ -706,11 +716,6 @@ export default function together( P ) {
 		} catch {
 			// Asked again in a moment.
 		}
-		if ( mine !== roomTurn ) {
-			return;
-		}
-		draw();
-		roomTimer = setTimeout( askRoom, ROOM );
 	}
 	function refresh() {
 		P.areas?.();
@@ -825,6 +830,54 @@ export default function together( P ) {
 			];
 		}
 		return list;
+	} );
+
+	// ---- A track's …: Listen along with whoever else is playing it. The room is asked for as a
+	// pointer comes to a … or it takes the focus, when it is older than the tab would let it be,
+	// so the menu opens on who is playing now without the player asking all the time.
+	const more = ( e ) => {
+		if (
+			e.target instanceof Element &&
+			e.target.closest( '.riff-more-button' ) &&
+			! following &&
+			! document.hidden &&
+			Date.now() - roomAt > ROOM
+		) {
+			learnRoom();
+		}
+	};
+	document.addEventListener( 'pointerover', more );
+	document.addEventListener( 'focusin', more );
+	own.menu.add( ( list, t ) => {
+		if ( following ) {
+			return list;
+		}
+		const along = room
+			.filter( ( l ) => String( l.track?.id ) === String( t.id ) )
+			.map( ( l ) => ( {
+				id: `listen-along-${ l.user.id }`,
+				label: fmt(
+					/* translators: %s: The listener's name. */
+					__( 'Listen along with %s', 'riff' ),
+					l.user.name
+				),
+				run: async () => {
+					if ( ! ( await follow( l.user.id, l.user.name ) ) ) {
+						P.toast(
+							__(
+								'They have stopped listening, or to something you can’t hear.',
+								'riff'
+							)
+						);
+						learnRoom();
+					}
+				},
+			} ) );
+		// Before Go to post, which leaves the page.
+		const at = list.findIndex( ( i ) => i.id === 'post' );
+		return at < 0
+			? [ ...list, ...along ]
+			: [ ...list.slice( 0, at ), ...along, ...list.slice( at ) ];
 	} );
 
 	for ( const name of [ 'play', 'pause', 'track', 'queue' ] ) {
