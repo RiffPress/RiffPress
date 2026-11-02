@@ -412,6 +412,10 @@ export function registry( P ) {
 		cover( false );
 		if ( sheet ) {
 			cover( true );
+			// Become a sheet with focus left on the page behind it: focus comes into it.
+			if ( ! side.contains( document.activeElement ) ) {
+				title.focus( { preventScroll: true } );
+			}
 		}
 	}
 	window.addEventListener( 'resize', () => {

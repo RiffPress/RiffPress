@@ -128,25 +128,7 @@ export function nowPlaying( P ) {
 		// On a wide screen the dialog opens above the bar and the bar stays the control surface,
 		// unless it is a touch screen on its side, where Now Playing covers the bar as a phone's
 		// does, the turntable or not (riff.css).
-		// Whether it covers the bar, as riff.css lays it out (--riff-np-covers), so the shapes are
-		// written down once.
-		const wide =
-			getComputedStyle( np ).getPropertyValue( '--riff-np-covers' ).trim() === '0';
-		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
-		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
-		// screen the bar beside it is still how the music is controlled.
-		np.setAttribute( 'aria-modal', String( ! wide ) );
-		for ( const node of [ ...document.body.children, ...covered ] ) {
-			if (
-				node &&
-				node !== root &&
-				! node.id.startsWith( 'a11y-speak' ) &&
-				! node.inert
-			) {
-				node.inert = true;
-				node.dataset.riffInert = '';
-			}
-		}
+		coverPage();
 		history.pushState( { ...history.state, riff: 'open' }, '' );
 		P.viewOpened?.( view, true );
 		P.drawControls?.();
@@ -199,12 +181,46 @@ export function nowPlaying( P ) {
 		}
 	}
 
+	// Whether it covers the bar, as riff.css lays it out (--riff-np-covers), so the shapes are
+	// written down once; asked again as the screen changes shape while it is open.
+	function coverPage() {
+		for ( const node of document.querySelectorAll( '[data-riff-inert]' ) ) {
+			node.inert = false;
+			node.removeAttribute( 'data-riff-inert' );
+		}
+		const wide =
+			getComputedStyle( np ).getPropertyValue( '--riff-np-covers' ).trim() === '0';
+		const covered = wide ? [] : [ $( '.riff-bar' ), $( '.riff-toast' ) ];
+		// Modal only where it covers the bar: a screen reader keeps to a modal dialog, and on a wide
+		// screen the bar beside it is still how the music is controlled.
+		np.setAttribute( 'aria-modal', String( ! wide ) );
+		for ( const node of [ ...document.body.children, ...covered ] ) {
+			if (
+				node &&
+				node !== root &&
+				! node.id.startsWith( 'a11y-speak' ) &&
+				! node.inert
+			) {
+				node.inert = true;
+				node.dataset.riffInert = '';
+			}
+		}
+	}
+	window.addEventListener( 'resize', () => {
+		if ( root.classList.contains( 'is-open' ) && ! P.panelOpen ) {
+			coverPage();
+		}
+	} );
+
 	// Now Playing sliding away: what hides it once it has, which opening it again cancels.
 	const closing = { done: null, timer: 0 };
 	function close( { fromHistory = false } = {} ) {
-		if ( np.hidden ) {
+		// Closed, or already sliding away (the back button's popstate after a close of its own).
+		if ( np.hidden || ! root.classList.contains( 'is-open' ) ) {
 			return;
 		}
+		clearTimeout( closing.timer );
+		np.removeEventListener( 'transitionend', closing.done );
 		np.removeEventListener( 'transitionend', slidIn );
 		showPage();
 		np.classList.remove( 'is-in' );
