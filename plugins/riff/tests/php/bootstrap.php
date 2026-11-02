@@ -71,6 +71,10 @@ tests_add_filter(
 		define( 'RIFF_LYRICS_VERSION', 'test' );
 		define( 'RIFF_LYRICS_URL', 'http://example.org/wp-content/plugins/riff-lyrics/' );
 		require dirname( __DIR__, 3 ) . '/riff-lyrics/src/class-lyrics.php';
+		// Riff Chords, built the same way: its class, hooked by its own tests.
+		define( 'RIFF_CHORDS_VERSION', 'test' );
+		define( 'RIFF_CHORDS_URL', 'http://example.org/wp-content/plugins/riff-chords/' );
+		require dirname( __DIR__, 3 ) . '/riff-chords/src/class-chords.php';
 		// Riff Sign In the same way: its classes, hooked by each test that needs them.
 		define( 'RIFF_SIGN_IN_VERSION', '0.0.0' );
 		define( 'RIFF_SIGN_IN_URL', 'http://example.org/wp-content/plugins/riff-sign-in/' );

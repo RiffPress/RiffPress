@@ -3,7 +3,7 @@
  *
  * - chromium: desktop Chromium, every spec.
  * - mobile-chromium: Chromium with an iPhone 14's viewport, touch and user agent, for the player
- *   and Listen folders and Riff Lyrics. It is a phone-sized layout, not Safari: the player sees an iPhone user
+ *   and Listen folders, Riff Lyrics and Riff Chords. It is a phone-sized layout, not Safari: the player sees an iPhone user
  *   agent and keeps audio off Web Audio, as it does on a real iPhone, but the engine is Chromium.
  * - webkit: desktop WebKit, the engine under Safari, for the tests tagged `@smoke`. It shows that
  *   playback and Now Playing work in WebKit; it says nothing about iOS background playback, lock
@@ -61,10 +61,10 @@ module.exports = defineConfig( {
 				...devices[ 'iPhone 14' ],
 				defaultBrowserType: 'chromium',
 			},
-			// The specs written for both widths: the player, the Listen app and Riff Lyrics. The rest of
+			// The specs written for both widths: the player, the Listen app, Riff Lyrics and Riff Chords. The rest of
 			// the app folder (likes, playlists, first run, the layout checks) is desktop only.
 			testMatch:
-				/tests\/e2e\/player\/(rows|queue|now-playing|playback|meter|areas|keyboard|seek|api|wcag)\.spec\.js$|tests\/e2e\/app\/(views|browse|standalone|install|menus|desktop|requests|pages)\.spec\.js$|tests\/e2e\/lyrics\.spec\.js$/,
+				/tests\/e2e\/player\/(rows|queue|now-playing|playback|meter|areas|keyboard|seek|api|wcag)\.spec\.js$|tests\/e2e\/app\/(views|browse|standalone|install|menus|desktop|requests|pages)\.spec\.js$|tests\/e2e\/(lyrics|chords)\.spec\.js$/,
 		},
 		{
 			name: 'webkit',

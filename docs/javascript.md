@@ -101,6 +101,18 @@ Returns `number`: Seconds from the start of the track, or 0 with nothing playing
 
 Since 4.32.0.
 
+### `window.riff.speed( rate )`
+
+How fast the music plays, with its pitch kept where the browser can keep it (`preservesPitch`): slower to learn a part, faster to skim. Given a rate, from 0.5 to 2, it sets it, and the speed holds for every track until it is set again. On the turntable it is multiplied by the deck's own speed and pitch.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `rate` | `number` | The speed to set, 1 for the music's own. Leave it out to read it. |
+
+Returns `number`: The speed now.
+
+Since 5.8.0.
+
 ### `window.riff.tab( id )`
 
 Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added through the `riff_now_playing_tabs` filter.

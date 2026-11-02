@@ -58,6 +58,7 @@ export function createPlayer( root, data ) {
 		mode: 'song', // 'song' or 'video', for tracks that have both.
 		repeat: 'off', // 'off', 'all' or 'one'.
 		shuffle: false,
+		speed: 1, // The listener's own speed, its pitch kept (window.riff.speed()).
 		seeking: false,
 		backgrounded: false, // Video handed to audio because the page went to the background.
 		preloader: null,
