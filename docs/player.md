@@ -69,7 +69,7 @@ through `listen( name, fn )`:
 | --- | --- | --- |
 | `badges` | the badges so far, and the playing track | the badges, each `{ id, text, label? }` |
 | `controls` | the controls so far, and the playing track | the controls, each `{ id, label, icon?, pressed?, run( track ) }` |
-| `meter` | `{ heat, levels }` each frame while music plays: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
+| `meter` | `{ heat, levels }` each frame while music plays and the bar, Now Playing or the playing row is in sight: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
 
 An area is redrawn only when what it holds changes, so a control keeps focus while the track plays,
 and a control's `run` redraws them after it. A control's `icon` is markup from the feature's own
