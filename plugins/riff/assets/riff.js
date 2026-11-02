@@ -184,7 +184,8 @@ function start() {
 		 * of Now Playing, which takes the whole screen above the bar, or a panel beside the page.
 		 * Register a view on the server with `riff_register_view()`, so the page has it before any
 		 * script; this is for what only the browser knows. Riff's own are the album (`album`,
-		 * order 26), the turntable (`turntable`, 28), Up next (`queue`, a panel, 40) and Together
+		 * order 26), the turntable (`turntable`, 28), About (`about`, a panel, 36), Up next (`queue`,
+		 * a panel, 40) and Together
 		 * (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing
 		 * (`sing`, 32) and Riff Chords Chords (`chords`, 34).
 		 *
