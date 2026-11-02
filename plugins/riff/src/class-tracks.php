@@ -17,8 +17,8 @@ defined( 'ABSPATH' ) || exit;
  * Track data.
  *
  * A track is an array with these keys, the same shape the player keeps in its queue:
- * id (string), src, type ('audio' or 'video'), title, artist, album, year (0 when unknown), duration (seconds, 0 when
- * unknown), lang (the title's language, or empty), art (list of { src, sizes, alt }), captions (list of
+ * id (string), src, type ('audio' or 'video'), title, artist, album, year (0 when unknown), disc (the disc of a set the
+ * file's tags put it on, 0 when they don't say), duration (seconds, 0 when unknown), lang (the title's language, or empty), art (list of { src, sizes, alt }), captions (list of
  * { src, label, srclang, kind } for a video), video ({ src, poster, captions } or null), and post ({ title, url }).
  */
 final class Tracks {
@@ -185,6 +185,10 @@ final class Tracks {
 				'artist'   => isset( $meta['artist'] ) ? (string) $meta['artist'] : '',
 				'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
 				'year'     => isset( $meta['year'] ) && is_numeric( $meta['year'] ) ? (int) $meta['year'] : 0,
+				// The disc of a set, from the file's tags: an MP3's part-of-a-set frame, which WordPress
+				// keeps on upload as part_of_a_set, and a FLAC, Ogg or M4A file's disc number, which
+				// Media::tags() keeps under the same name. Written as a number or as "1/2", disc 1 of 2.
+				'disc'     => self::disc( $meta['part_of_a_set'] ?? '' ),
 				'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
 				// The language the file's tags name, which Media::language() keeps on upload, so a
 				// title in another script can say what it is.
@@ -292,6 +296,7 @@ final class Tracks {
 				'album'    => '',
 				'lang'     => '',
 				'year'     => 0,
+				'disc'     => 0,
 				'duration' => 0,
 				'format'   => '',
 				'bitrate'  => 0,
@@ -421,6 +426,10 @@ final class Tracks {
 					'type'        => 'integer',
 					'description' => __( 'The year from the file\'s tags, or 0.', 'riff' ),
 				),
+				'disc'     => array(
+					'type'        => 'integer',
+					'description' => __( 'Which disc of a set the track is on, from the file\'s disc number tag (1 for "1/2"), or 0 when the tags do not say.', 'riff' ),
+				),
 				'duration' => array(
 					'type'        => 'number',
 					'description' => __( 'Seconds, 0 when unknown.', 'riff' ),
@@ -543,6 +552,7 @@ final class Tracks {
 		$track['album']    = (string) ( $track['album'] ?? '' );
 		$track['lang']     = Media::language_code( (string) ( $track['lang'] ?? '' ) );
 		$track['year']     = max( 0, (int) ( $track['year'] ?? 0 ) );
+		$track['disc']     = max( 0, (int) ( $track['disc'] ?? 0 ) );
 		$track['duration'] = (float) max( 0, (float) ( $track['duration'] ?? 0 ) );
 		$track['format']   = strtolower( (string) ( $track['format'] ?? '' ) );
 		$track['bitrate']  = max( 0, (int) ( $track['bitrate'] ?? 0 ) );
@@ -565,6 +575,17 @@ final class Tracks {
 		$track['locked'] = ! empty( $track['locked'] );
 		$track['unlock'] = is_string( $track['unlock'] ?? null ) ? $track['unlock'] : '';
 		return $track;
+	}
+
+	/**
+	 * The disc a file's tags put it on: the first number of "1/2" or "1", or 0.
+	 *
+	 * @param mixed $tag The part_of_a_set tag, as getID3 read it.
+	 * @return int
+	 */
+	private static function disc( $tag ): int {
+		$tag = is_array( $tag ) ? reset( $tag ) : $tag;
+		return is_scalar( $tag ) && preg_match( '/^\s*(\d+)/', (string) $tag, $m ) ? (int) $m[1] : 0;
 	}
 
 	/**
