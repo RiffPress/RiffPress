@@ -6,7 +6,7 @@ const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
-const { collect, problems, site, customProperties, schemaRows } = require( './reference-pages.js' );
+const { collect, problems, site, customProperties, publicFunctions, declared, hashOf, schemaRows } = require( './reference-pages.js' );
 
 test( 'only a custom property with a docblock is public', () => {
 	const file = path.join( fs.mkdtempSync( path.join( os.tmpdir(), 'riff-css-' ) ), 'riff.css' );
@@ -58,4 +58,74 @@ test( 'the check refuses an undocumented Source method and a property without @s
 	const found = problems( data );
 	assert.ok( found.some( ( p ) => /Riff\\Source::id\(\) has no docblock/.test( p ) ) );
 	assert.ok( found.some( ( p ) => /--riff-x has no @since/.test( p ) ) );
+} );
+
+test( 'an array of arguments is read as WordPress documents one, with a @type line per key', () => {
+	const block = `/**
+	 * @param array $args {
+	 *     The view.
+	 *
+	 *     @type string $label Its name.
+	 *     @type int    $order Where it sits,
+	 *                         lowest first.
+	 * }
+	 */`;
+	assert.deepEqual( hashOf( block, '$args' ), [
+		{ type: 'string', name: 'label', description: 'Its name.' },
+		{ type: 'int', name: 'order', description: 'Where it sits, lowest first.' },
+	] );
+	assert.equal( hashOf( block, '$id' ), null );
+} );
+
+test( 'the public functions are listed with the keys of the arguments their @see names', () => {
+	const data = collect();
+	const names = data.functions.map( ( f ) => f.name );
+	for ( const name of [ 'riff_register_view', 'riff_register_control', 'riff_unregister_view', 'riff_unregister_control' ] ) {
+		assert.ok( names.includes( name ), `${ name } is listed` );
+	}
+	const view = data.functions.find( ( f ) => f.name === 'riff_register_view' );
+	assert.ok( view.params.find( ( p ) => p.name === '$args' ).keys.some( ( k ) => k.name === 'place' ) );
+	const php = [ ...site( data ).values() ][ 0 ];
+	assert.match( php, /<section class="member" id="riff_register_view"><h3 class="code-title member-title"><a href="#riff_register_view">riff_register_view\( string \$id, array \$args = array\(\) \): bool<\/a>/ );
+	assert.match( php, /<li><a href="#functions">Functions<\/a><ul><li><a href="#riff_register_control">riff_register_control\(\)<\/a>/ );
+} );
+
+test( 'the check refuses a function with no docblock, a missing @param, or arguments with no keys', () => {
+	const file = path.join( fs.mkdtempSync( path.join( os.tmpdir(), 'riff-functions-' ) ), 'functions.php' );
+	fs.writeFileSync( file, `<?php
+function riff_bare( string $id ): bool {
+	return true;
+}
+
+/**
+ * Short of a parameter.
+ *
+ * @since 5.8.0
+ *
+ * @param string $id The id.
+ * @return bool
+ */
+function riff_short( string $id, array $args = array() ): bool {
+	return true;
+}
+
+/**
+ * Arguments, and nothing to say what they hold.
+ *
+ * @since 5.8.0
+ *
+ * @param array $args The arguments.
+ */
+function riff_keyless( array $args ): void {
+}
+` );
+	const data = collect();
+	fs.appendFileSync( file, 'function riff_wrapped(\n\tstring $id\n): bool {\n\treturn true;\n}\n' );
+	data.functions = publicFunctions( file );
+	data.declared = declared( file );
+	const found = problems( data ).join( '\n' );
+	assert.match( found, /riff_wrapped\(\) in src\/functions\.php is not read/ );
+	assert.match( found, /riff_bare\(\) has no docblock/ );
+	assert.match( found, /riff_short\(\) takes 2 parameters but documents 1 @param/ );
+	assert.match( found, /riff_keyless\(\) takes \$args but documents none of its keys/ );
 } );

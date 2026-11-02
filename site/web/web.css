@@ -1607,6 +1607,36 @@ main h2[id] {
 	margin-top: 20px;
 }
 
+/* the handbooks: a doc from the repository as a page, its sections apart as
+   the reference's are and its lists spaced as the download page's */
+.handbook > h2:not(:first-child) {
+	margin-top: 50px;
+}
+
+.handbook ul,
+.handbook ol {
+	margin: 0 0 16px;
+	padding-left: 1.4em;
+}
+
+.handbook li {
+	margin: 0 0 8px;
+}
+
+.handbook li::marker {
+	color: var(--ink-2);
+}
+
+.handbook .code-table {
+	margin: 0 0 16px;
+}
+
+/* a long selector or path in the running text breaks rather than widen the
+   page */
+.handbook :not(pre) > code {
+	overflow-wrap: anywhere;
+}
+
 /* ---- the pages: a title, then the article with "In this article" beside it,
    as wordpress.org's documentation is laid out */
 .doc {
