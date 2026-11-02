@@ -44,7 +44,7 @@ There's nothing to configure and no settings screen. Riff adds one script, one s
 
 = For developers =
 
-Riff has documented hooks, a JavaScript API, REST routes, WPGraphQL fields and CSS custom properties, and lets other plugins add their own source of tracks. The [developer reference](https://riffpress.com/developers/) covers all of it, generated from the plugin's own code, and says what stays stable between versions.
+Riff has documented hooks, a JavaScript API, REST routes, WPGraphQL fields and CSS custom properties, and lets other plugins add their own source of tracks. The [developer reference](https://developers.riffpress.com/) covers all of it, generated from the plugin's own code, and says what stays stable between versions.
 
 == External services ==
 
@@ -80,7 +80,7 @@ To keep the files themselves private, tick Protected on an audio or video file i
 
 Deleting Riff moves protected files back first.
 
-Membership and store plugins can decide who may play each track. A locked track stays listed with a lock that leads to your sign-up page. The [developer reference](https://riffpress.com/developers/php/) shows how.
+Membership and store plugins can decide who may play each track. A locked track stays listed with a lock that leads to your sign-up page. The [developer reference](https://developers.riffpress.com/php/) shows how.
 
 = Does it work with my theme? =
 
