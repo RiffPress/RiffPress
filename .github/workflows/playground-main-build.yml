@@ -45,8 +45,7 @@ jobs:
       - name: Build riff.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff
-          rsync -a --exclude-from='.distignore' ./plugins/riff/ build/riff/
+          bash .github/scripts/build-riff.sh
           (cd build && zip -qr riff.zip riff/)
 
       # A `.distignore` that drifts out of step with the plugin's requires installs fine and then fatals.

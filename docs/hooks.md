@@ -31,6 +31,16 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 | --- | --- | --- |
 | `$enabled` | `bool` | Whether to load the player. |
 
+### `riff_extensions`
+
+Filters the extensions Riff loads, by name: a host can leave one out, or name another plugin it has placed in Riff's extensions/ folder.
+
+Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$names` | `string[]` | The names in extensions.json. |
+
 ### `riff_now_playing_tabs`
 
 Filters the tabs beside Now Playing. Add a tab by slug with a label; its panel is `[data-riff-panel="<slug>"]`, empty until your script fills it. Up next, `queue`, always comes first and cannot be removed.
