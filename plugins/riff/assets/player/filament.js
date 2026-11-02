@@ -19,6 +19,8 @@ export default function filament( P ) {
 	let samples = null;
 	let bins = null;
 	let meterRaf = 0;
+	// The loop is parked, not stopped, while nothing it lights is in sight: see seen().
+	let parked = false;
 	let breath = null;
 	let bars = [];
 	let cooling = false;
@@ -180,6 +182,9 @@ export default function filament( P ) {
 	// Three bars per place the current track is shown: the row in the post and the item in Up
 	// next. Each place's bars take the three bands in turn. Only the places on screen are written,
 	// and only by a step the eye could see: each write restyles the bar and its neighbours.
+	// The lines and the glow are watched too, so that when none of them and no place is in sight
+	// (the bar hidden, Now Playing closed, the row scrolled away) the loop parks until one is.
+	// Hidden is out of sight as well: a hidden element never intersects.
 	const onScreen = new Set();
 	const watch =
 		'IntersectionObserver' in window
@@ -187,8 +192,20 @@ export default function filament( P ) {
 				for ( const e of entries ) {
 					onScreen[ e.isIntersecting ? 'add' : 'delete' ]( e.target );
 				}
+				wake();
 			} )
 			: null;
+	let places = [];
+	heated.forEach( ( spot ) => watch?.observe( spot.node ) );
+	const seen = () => ! watch || onScreen.size > 0;
+	function wake() {
+		if ( parked && seen() ) {
+			parked = false;
+			lastTick = 0;
+			meterRaf = requestAnimationFrame( tick );
+		}
+	}
+	const looping = () => meterRaf || parked;
 	own.meter.add( ( { levels } ) => {
 		if ( ! levels ) {
 			return;
@@ -212,10 +229,15 @@ export default function filament( P ) {
 				'.riff-row[data-current] .riff-row-state i, .riff-queue-list [aria-current] .riff-row-state i'
 			),
 		];
-		if ( watch ) {
-			watch.disconnect();
-			onScreen.clear();
-			new Set( found.map( ( bar ) => bar.parentNode ) ).forEach( ( place ) => watch.observe( place ) );
+		const next = [ ...new Set( found.map( ( bar ) => bar.parentNode ) ) ];
+		// Watched anew only when the places change, as each paint asks again.
+		if ( watch && ( next.length !== places.length || next.some( ( place, k ) => place !== places[ k ] ) ) ) {
+			for ( const place of places ) {
+				watch.unobserve( place );
+				onScreen.delete( place );
+			}
+			places = next;
+			places.forEach( ( place ) => watch.observe( place ) );
 		}
 		return found;
 	};
@@ -225,6 +247,19 @@ export default function filament( P ) {
 			? Math.min( 0.1, ( now - lastTick ) / 1000 )
 			: 0.016;
 		lastTick = now;
+		// Nothing it lights is in sight: the loop parks, and the observer wakes it. A wire cooling
+		// unseen is dark by the time it is seen again.
+		if ( ! seen() ) {
+			meterRaf = 0;
+			if ( cooling ) {
+				cooling = false;
+				heat = 0;
+				hear( 0 );
+			} else {
+				parked = true;
+			}
+			return;
+		}
 		if ( cooling ) {
 			advance( 0, dt );
 			hear( heat );
@@ -250,7 +285,7 @@ export default function filament( P ) {
 
 	// Cut the current: the loop keeps running with no drive until the wire is dark.
 	function meterStop() {
-		if ( ! meterRaf && ! breath ) {
+		if ( ! looping() && ! breath ) {
 			return;
 		}
 		breath?.cancel();
@@ -264,12 +299,14 @@ export default function filament( P ) {
 		if ( P.reduce() || P.away() ) {
 			cancelAnimationFrame( meterRaf );
 			meterRaf = 0;
+			parked = false;
 			heat = 0;
 			hear( 0 );
 			return;
 		}
 		cooling = true;
 		if ( ! meterRaf ) {
+			parked = false;
 			lastTick = 0;
 			meterRaf = requestAnimationFrame( tick );
 		}
@@ -280,6 +317,7 @@ export default function filament( P ) {
 		if ( P.reduce() ) {
 			cancelAnimationFrame( meterRaf );
 			meterRaf = 0;
+			parked = false;
 			hear( 0.25 );
 			return;
 		}
@@ -287,6 +325,7 @@ export default function filament( P ) {
 		if ( ! P.analyser || P.el() !== audio || ! wire ) {
 			cancelAnimationFrame( meterRaf );
 			meterRaf = 0;
+			parked = false;
 			heat = 0.5;
 			hear( heat );
 			breath = heart.animate(
@@ -302,6 +341,7 @@ export default function filament( P ) {
 		root.dataset.live = '';
 		bars = rest( liveBars() );
 		if ( ! meterRaf ) {
+			parked = false;
 			lastTick = 0;
 			meterRaf = requestAnimationFrame( tick );
 		}
@@ -327,9 +367,9 @@ export default function filament( P ) {
 	function meterSync() {
 		const t = P.track();
 		if ( t && ! P.el().paused && ! P.away() ) {
-			if ( ( ! meterRaf || cooling ) && ! breath ) {
+			if ( ( ! looping() || cooling ) && ! breath ) {
 				meterStart();
-			} else if ( meterRaf ) {
+			} else if ( looping() ) {
 				bars = barsFor === t ? liveBars() : rest( liveBars() );
 			}
 			barsFor = t;

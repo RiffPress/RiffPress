@@ -25,10 +25,9 @@ test.describe( 'App requests', () => {
 		new RegExp( `riff/v1/library/${ id }(?:$|[?&/])` ).test(
 			decodeURIComponent( url.toString() )
 		);
-	const secondPage = ( url ) => {
-		const u = decodeURIComponent( url.toString() );
-		return /riff\/v1\/library(?:$|[?&])/.test( u ) && /[?&]page=2/.test( u );
-	};
+	// The posts the server draws through the second page, which Load more takes its cards from.
+	const secondPage = ( url ) =>
+		/[?&]riff_page=2(?:$|[&#])/.test( decodeURIComponent( url.toString() ) );
 
 	// Something playing, and the library drawn by the app, with Load more.
 	test.beforeEach( async ( { page } ) => {

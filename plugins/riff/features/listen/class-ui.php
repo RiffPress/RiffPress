@@ -16,9 +16,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Shared components.
  *
- * Every view draws its pieces through these, and app.js draws the cards it adds (Load more,
- * Recently played, Jump back in) from the card template printed once in the block, so a card
- * looks the same however it arrived.
+ * Every view draws its pieces through these, and the cards app.js adds (Load more, Recently
+ * played, Jump back in, Listening now) are drawn here too, so a card looks the same however it
+ * arrived.
  */
 final class Ui {
 
@@ -239,27 +239,6 @@ final class Ui {
 			return $img( $covers[0] );
 		}
 		return '<span class="riff-mosaic">' . implode( '', array_map( $img, array_slice( $covers, 0, 4 ) ) ) . '</span>';
-	}
-
-	/**
-	 * The card app.js fills in for a card it adds: every part present, for it to fill or remove.
-	 *
-	 * @since 4.20.0
-	 *
-	 * @return string A template element.
-	 */
-	public static function card_template(): string {
-		return '<template data-riff-card-template>' . self::card(
-			array(
-				'href'  => '#',
-				'class' => 'riff-card-template',
-				'art'   => '#',
-				'play'  => array(
-					'action' => '',
-					'label'  => '',
-				),
-			)
-		) . '</template>';
 	}
 
 	/**

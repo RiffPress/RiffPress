@@ -30,7 +30,7 @@ test.describe( 'The tree is the spec', () => {
 		await expect( page.locator( '.wp-block-audio' ).first() ).toMatchAriaSnapshot( `
 			- figure:
 			  - button /^Play Intensities in Ten Cities\\b/:
-			    - text: Intensities in Ten Cities
+			    - text: /Intensities in Ten Cities/
 			    - img "Video"
 			    - text: /Airmen of Note/
 			  - button "Like Intensities in Ten Cities"

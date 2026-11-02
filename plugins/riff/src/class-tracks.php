@@ -58,7 +58,9 @@ final class Tracks {
 		);
 		$response = rest_do_request( $request );
 		$found    = $response->is_error() ? array() : array_column( (array) ( $response->get_data()['items'] ?? array() ), null, 'id' );
-		$tracks   = array();
+		// The posts each was played from, in one go rather than one at a time below.
+		self::prime( $ids, array_map( static fn( $item ) => (int) ( $item['post'] ?? 0 ), $items ) );
+		$tracks = array();
 		foreach ( $items as $key => $item ) {
 			$track = $found[ (string) ( $item['id'] ?? '' ) ] ?? null;
 			$post  = get_post( (int) ( $item['post'] ?? 0 ) );

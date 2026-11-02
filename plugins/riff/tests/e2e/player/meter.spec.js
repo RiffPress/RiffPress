@@ -190,6 +190,49 @@ test.describe( 'Player', () => {
 		await expect( riff ).toHaveAttribute( 'data-live', '' );
 	} );
 
+	test( 'the filament rests while nothing it lights is in sight, and lights again when something is', async ( {
+		page,
+	}, testInfo ) => {
+		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.reload();
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
+		// The bar and the playing row out of sight, Now Playing closed: nothing the wire lights is
+		// seen. What the loop writes to the bar's line, read for a second and a half once the
+		// observer has had a frame to say so.
+		const sight = ( shown ) =>
+			page.evaluate( ( on ) => {
+				for ( const node of document.querySelectorAll( '.riff-bar, .riff-row[data-current]' ) ) {
+					node.style.display = on ? '' : 'none';
+				}
+			}, shown );
+		const written = () =>
+			page.evaluate(
+				() =>
+					new Promise( ( resolve ) => {
+						const line = document.querySelector( '.riff-bar-seek .riff-line' );
+						const seen = new Set();
+						setTimeout( () => {
+							const every = setInterval(
+								() => seen.add( line.style.getPropertyValue( '--riff-heat' ) ),
+								50
+							);
+							setTimeout( () => {
+								clearInterval( every );
+								resolve( seen.size );
+							}, 1500 );
+						}, 300 );
+					} )
+			);
+		await sight( false );
+		expect( await written() ).toBe( 1 );
+		// The music plays on: only the drawing rests.
+		expect( await page.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
+		await sight( true );
+		await expect.poll( written ).toBeGreaterThan( 1 );
+	} );
+
 	test( 'the glow fades out before the knob instead of ending in a square edge', async ( {
 		page,
 	} ) => {
