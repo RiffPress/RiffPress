@@ -69,8 +69,8 @@ class Test_Riff_Sing extends Riff_TestCase {
 	}
 
 	public function test_a_melody_keeps_what_ultrastar_writes(): void {
-		$chart = "#MP3:My%20Song.mp3\n#BPM:120\n: 0 4 0 I\n: 4 4 2  <3\n: 8 4 4  you";
-		$this->assertSame( $chart, Sing::clean( $chart ), 'a %xx pair, the space that starts a word, and a lone <' );
+		$chart = "#MP3:My%20Song.mp3\n#BPM:120\n: 0 4 0 I\n: 4 4 2  <3\n: 8 4 4  <oh\n: 12 4 4 ->";
+		$this->assertSame( $chart, Sing::clean( $chart ), 'a %xx pair, the space that starts a word, and a lone < or > on different lines' );
 	}
 
 	public function test_a_melody_is_kept_to_a_songs_length(): void {

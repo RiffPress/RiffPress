@@ -96,7 +96,7 @@ final class Sing {
 		$text = wp_check_invalid_utf8( is_scalar( $text ) ? (string) $text : '' );
 		$text = str_replace( array( "\r\n", "\r" ), "\n", $text );
 		$text = (string) preg_replace( '@<(script|style)[^>]*?>.*?</\1>@si', '', $text );
-		$text = (string) preg_replace( '@</?[a-z][^>]*>@i', '', $text );
+		$text = (string) preg_replace( '@</?[a-z][^>\n]*>@i', '', $text );
 		$text = (string) preg_replace( '/[\x00-\x08\x0B-\x1F\x7F]/', '', $text );
 		return trim( mb_substr( $text, 0, self::MAX ) );
 	}

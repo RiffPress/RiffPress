@@ -190,7 +190,11 @@
 		const intro = el( 'p', 'riff-sing-note', config.intro || '' );
 		const privacy = el( 'p', 'riff-sing-note', config.private || '' );
 		root.append( lane, words, result, controls, status, intro, privacy );
+		const had = where.contains( document.activeElement );
 		where.replaceChildren( root );
+		if ( had ) {
+			where.focus();
+		}
 		ui = { root, canvas, words, result, mic, midi, stop, input, status, colors: null };
 		phraseShown = -1;
 		watch( root );
