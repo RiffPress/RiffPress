@@ -138,6 +138,30 @@ function blocks( markdown ) {
 	const out = [];
 	const problems = [];
 	const listItem = /^([-*]|\d+\.) +(.*)$/;
+	// Every line outside code, wherever it falls in a block, is held to the subset: what the pages
+	// would draw wrong is refused, not drawn.
+	const refused = [
+		[ /^\s*>/, 'a quote' ],
+		[ /^\s*<[a-zA-Z/!]/, 'HTML' ],
+		[ /!\[[^\]]*\]\(/, 'an image' ],
+		[ /^\s+(```|~~~)|^~~~/, 'code fenced other than with ``` at the start of a line' ],
+		[ /^#{5,}/, 'a heading below ####' ],
+		[ /^\s*\d+\) /, 'a list numbered with )' ],
+		[ /^\t/, 'a line indented with a tab' ],
+		[ /\]\[[^\]]*\]|^\s*\[[^\]]+\]:\s/, 'a reference-style link' ],
+		[ /\]\([^)\s]+\s+["'(]/, 'a link with a title' ],
+	];
+	let fenced = false;
+	lines.forEach( ( line, i ) => {
+		if ( /^```/.test( line ) ) {
+			fenced = ! fenced;
+			return;
+		}
+		const hit = ! fenced && refused.find( ( [ re ] ) => re.test( line ) );
+		if ( hit ) {
+			problems.push( `line ${ i + 1 }: ${ hit[ 1 ] }, which the pages don't draw` );
+		}
+	} );
 	for ( let i = 0; i < lines.length; ) {
 		const line = lines[ i ];
 		const at = `line ${ i + 1 }`;
@@ -196,6 +220,9 @@ function blocks( markdown ) {
 		}
 		if ( listItem.test( line ) ) {
 			const ordered = /^\d/.test( line );
+			if ( ordered && ! /^1\./.test( line ) ) {
+				problems.push( `${ at }: a list numbered from other than 1, which the pages would number from 1` );
+			}
 			const items = [];
 			while ( i < lines.length ) {
 				const m = listItem.exec( lines[ i ] );
@@ -215,6 +242,9 @@ function blocks( markdown ) {
 					);
 					items[ items.length - 1 ].push( lines[ i ].trim() );
 				} else {
+					if ( lines[ i ].trim() ) {
+						problems.push( `line ${ i + 1 }: a line after a list item that isn't indented, which the pages would draw as a paragraph of its own` );
+					}
 					break;
 				}
 				i++;
@@ -333,7 +363,7 @@ function build( list = HANDBOOKS ) {
 				path.posix.join( path.posix.dirname( h.file ), file )
 			);
 			const named = ( name ) =>
-				words === path.posix.basename( file ) ? esc( name ) : words;
+				[ file, path.posix.basename( file ), to ].includes( words ) ? esc( name ) : words;
 			if ( pages.has( to ) ) {
 				if ( frag && ! pages.get( to ).ids.has( frag ) ) {
 					problems.push(

@@ -46,7 +46,7 @@ test( 'the blocks the docs are written in: headings, wrapped lists, tables and c
 } );
 
 test( 'Markdown the pages would not draw is refused, not dropped', () => {
-	for ( const md of [ '> A quote.', '<details>', '![A picture](a.png)', '- A list\n  - inside a list', '---', 'Underlined\n===' ] ) {
+	for ( const md of [ '> A quote.', '<details>', '![A picture](a.png)', '- A list\n  - inside a list', '---', 'Underlined\n===', 'One line,\n> then a quote.', '- An item\nlazily continued.', '- An item\n\t\twith a tab.', '- An item\n  ```js\n  code\n  ```', '##### Deep', '~~~\ncode\n~~~', '1) One', '3. Three', '[a][b]', '[a](u "t")' ] ) {
 		assert.ok( blocks( md ).problems.length, md );
 	}
 } );
@@ -66,6 +66,8 @@ test( 'every handbook is drawn from its doc, with nothing the check refuses', ()
 	const extensions = pages.get( path.join( ROOT, 'site', 'developers', 'extensions', 'index.html' ) );
 	// A link to a doc the reference mirrors goes to the reference, by its name.
 	assert.match( extensions, /<a href="\.\.\/hooks\/">Hooks<\/a>, <a href="\.\.\/javascript\/">JavaScript<\/a>/ );
+	// So do words that are the doc's path.
+	assert.match( player, /<a href="\.\.\/javascript\/">JavaScript<\/a>/ );
 } );
 
 test( 'a link to a file, a heading or a hook that is not there fails the check', () => {

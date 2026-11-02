@@ -79,17 +79,38 @@ function hashOf( block, name ) {
 		return null;
 	}
 	const keys = [];
+	keys.description = '';
+	// One level deep: a key that is itself an array of arguments is listed with the words that
+	// open it, and the keys inside it are left to its own documentation.
+	let depth = 1;
 	for ( const line of lines.slice( at + 1 ) ) {
 		if ( line === '}' ) {
-			break;
+			depth--;
+			if ( ! depth ) {
+				break;
+			}
+			continue;
 		}
-		const m = /^@type\s+(\S+)\s+\$(\w+)\s*(.*)$/.exec( line );
-		if ( m ) {
+		const m = /^@type\s+(\S+)\s+\$(\w+)\s*(.*?)\s*(\{)?$/.exec( line );
+		if ( m && depth === 1 ) {
 			keys.push( { type: m[ 1 ], name: m[ 2 ], description: m[ 3 ] } );
-		} else if ( line && keys.length ) {
-			keys[ keys.length - 1 ].description += ' ' + line;
+			depth += m[ 4 ] ? 1 : 0;
+		} else if ( m && m[ 4 ] ) {
+			depth++;
+		} else if ( line && ( depth === 1 || ( depth === 2 && ! /^@/.test( line ) && keys.length && ! keys[ keys.length - 1 ].nested ) ) ) {
+			if ( depth === 2 ) {
+				keys[ keys.length - 1 ].description = ( keys[ keys.length - 1 ].description + ' ' + line ).trim();
+			} else if ( keys.length ) {
+				keys[ keys.length - 1 ].description += ' ' + line;
+			} else {
+				keys.description = ( keys.description + ' ' + line ).trim();
+			}
+		} else if ( depth === 2 && /^@/.test( line ) && keys.length ) {
+			// Past its opening words, into its own keys.
+			keys[ keys.length - 1 ].nested = true;
 		}
 	}
+	keys.forEach( ( k ) => delete k.nested );
 	return keys;
 }
 
@@ -117,7 +138,11 @@ function publicFunctions( file = FUNCTIONS ) {
 		return {
 			...f,
 			see: see ? { name: `Riff\\${ see[ 1 ] }::${ see[ 2 ] }()`, found: !! target } : null,
-			params: f.params.map( ( p ) => ( { ...p, keys: hashOf( f.block, p.name ) || ( target && hashOf( target.block, p.name ) ) || [] } ) ),
+			params: f.params.map( ( p ) => {
+				const own = hashOf( f.block, p.name );
+				// Documented here, the parameter's words are the hash's own, not its lines run together.
+				return own ? { ...p, description: own.description, keys: own } : { ...p, keys: ( target && hashOf( target.block, p.name ) ) || [] };
+			} ),
 		};
 	} );
 }

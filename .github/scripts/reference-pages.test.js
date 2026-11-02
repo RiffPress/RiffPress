@@ -70,7 +70,24 @@ test( 'an array of arguments is read as WordPress documents one, with a @type li
 	 *                         lowest first.
 	 * }
 	 */`;
-	assert.deepEqual( hashOf( block, '$args' ), [
+	assert.equal( hashOf( block, '$args' ).description, 'The view.' );
+	const nested = hashOf( `/**
+	 * @param array $args {
+	 *     Optional. The arguments.
+	 *
+	 *     @type array  $inner {
+	 *         What it holds.
+	 *
+	 *         @type int $deep Not listed here.
+	 *     }
+	 *     @type string $after Still read.
+	 * }
+	 */`, '$args' );
+	assert.deepEqual( [ ...nested ], [
+		{ type: 'array', name: 'inner', description: 'What it holds.' },
+		{ type: 'string', name: 'after', description: 'Still read.' },
+	] );
+	assert.deepEqual( [ ...hashOf( block, '$args' ) ], [
 		{ type: 'string', name: 'label', description: 'Its name.' },
 		{ type: 'int', name: 'order', description: 'Where it sits, lowest first.' },
 	] );
