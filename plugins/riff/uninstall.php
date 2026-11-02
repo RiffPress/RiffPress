@@ -73,6 +73,7 @@ delete_site_option( 'riff_extensions_network' );
 delete_option( 'riff_catalog_backfill' );
 delete_option( 'riff_catalog_backfill_from' );
 delete_option( 'riff_rewrite' );
+delete_transient( 'riff_listen_page' );
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );
 
 // Who dismissed the first-run notice: a user option, so its key carries the site's table prefix.

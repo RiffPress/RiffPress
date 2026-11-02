@@ -2135,6 +2135,86 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	background: var(--riff-hover);
 }
 
+/* The About panel (about.js): the track, its cover as wide as the panel,
+   its title, and its artist and album as links to their pages; then each
+   section under its heading, the credits as names beside what they did. */
+.riff-about {
+	display: grid;
+	gap: 24px;
+}
+
+#riff .riff-about-body {
+	display: grid;
+	gap: 4px;
+	min-width: 0;
+}
+
+#riff .riff-about-cover {
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	aspect-ratio: 1;
+	margin-bottom: 12px;
+	border-radius: 8px;
+	object-fit: cover;
+}
+
+#riff .riff-about-heading {
+	margin: 0 0 8px;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+#riff .riff-about-title {
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 1.25;
+	overflow-wrap: anywhere;
+	text-wrap: balance;
+}
+
+#riff .riff-about-artist,
+#riff .riff-about-album {
+	justify-self: start;
+	color: var(--riff-fg-2);
+	font-size: 16px;
+	line-height: 1.5;
+}
+
+#riff .riff-about a {
+	color: inherit;
+	text-decoration: none;
+}
+
+#riff .riff-about a:hover {
+	color: var(--riff-fg);
+	text-decoration: underline;
+}
+
+#riff .riff-about a:focus-visible {
+	outline: 2px solid var(--riff-fg);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+.riff-about-credits {
+	display: grid;
+	gap: 12px;
+	margin: 0;
+}
+
+.riff-about-credits dt {
+	color: var(--riff-fg-2);
+	font-size: 14px;
+}
+
+.riff-about-credits dd {
+	margin: 0;
+	font-size: 16px;
+	overflow-wrap: anywhere;
+	text-wrap: pretty;
+}
+
 .riff-queue-head {
 	padding: 0 24px 16px;
 	border-bottom: 1px solid var(--riff-line);

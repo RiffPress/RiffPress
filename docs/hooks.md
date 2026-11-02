@@ -6,6 +6,18 @@ The same reference, a page per hook, is on the site under Developers, PHP and Ja
 
 ## Filters
 
+### `riff_about_sections`
+
+Filters the sections of the About panel, Riff's own included: `track`, the cover, the title and the artist and album, and `credits`, what the file's tags say about who made it.
+
+Each section is drawn into the panel, hidden, as `[data-riff-about="<id>"]`, with its heading and an empty `.riff-about-body`. Its script fills the body and shows the section on the `riff.view` action, when its `id` is `about`; a section with nothing to say for the track playing stays hidden.
+
+Since 5.9.0. Fires in `plugins/riff/src/class-about.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$sections` | `array[]` | By id (lowercase letters, digits and dashes), each with a `label`, its heading, or empty for none; an `order`, lowest first; and an optional `render`, a callable given the id that returns the body's markup as the page is drawn. |
+
 ### `riff_can_play`
 
 Filters whether the current visitor may play a track.
