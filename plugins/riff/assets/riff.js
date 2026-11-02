@@ -156,6 +156,24 @@ function start() {
 		 */
 		time: () => ( P.track() ? P.el().currentTime || 0 : 0 ),
 		/**
+		 * How fast the music plays, with its pitch kept where the browser can keep it
+		 * (`preservesPitch`): slower to learn a part, faster to skim. Given a rate, from 0.5 to 2,
+		 * it sets it, and the speed holds for every track until it is set again. On the turntable
+		 * it is multiplied by the deck's own speed and pitch.
+		 *
+		 * @since 5.8.0
+		 *
+		 * @param {number} [rate] The speed to set, 1 for the music's own. Leave it out to read it.
+		 * @return {number} The speed now.
+		 */
+		speed( rate ) {
+			const r = Number( rate );
+			if ( rate !== undefined && Number.isFinite( r ) && r > 0 ) {
+				P.respeed( Math.min( 2, Math.max( 0.5, r ) ) );
+			}
+			return P.speed;
+		},
+		/**
 		 * Shows one of the tabs beside Now Playing: `queue` for Up next, or a slug a plugin added
 		 * through the `riff_now_playing_tabs` filter.
 		 *
