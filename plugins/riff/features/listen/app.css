@@ -1270,8 +1270,9 @@
 
 /* The cover leads, as on an album page in the apps. */
 .riff-album-cover {
+	--riff-album-cover-max: 240px;
 	flex: none;
-	width: clamp(160px, 22vw, 240px);
+	width: clamp(160px, 22vw, var(--riff-album-cover-max));
 	aspect-ratio: 1;
 	overflow: hidden;
 	border-radius: 6px;

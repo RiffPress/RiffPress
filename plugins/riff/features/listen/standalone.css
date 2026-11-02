@@ -447,15 +447,40 @@ html.has-riff .riff-standalone .riff-app {
 		grid-template-columns: auto minmax(0, 1fr);
 		align-items: end;
 		gap: 0 24px;
-		container-type: inline-size;
+	}
+
+	/* A header too narrow for its title beside the cover, as when Up next or
+	   About narrows the page on a smaller window, stacks them: the cover, then
+	   the title and the rest under it. */
+	@container (inline-size < 22em) {
+
+		.riff-standalone .riff-album {
+			grid-template-areas:
+				"cover"
+				"kind"
+				"title"
+				"meta"
+				"actions";
+			grid-template-rows: auto;
+			grid-template-columns: minmax(0, 1fr);
+			gap: 16px;
+		}
+
+		.riff-standalone .riff-album .riff-album-cover {
+			width: min(100%, var(--riff-album-cover-max));
+		}
 	}
 
 	.riff-standalone .riff-album-text {
 		display: contents;
 	}
 
+	/* The cover, like the title, is sized to the page it heads (the view is
+	   the container), not the window, so it gives way when Up next or About
+	   narrows the page. */
 	.riff-standalone .riff-album-cover {
 		grid-area: cover;
+		width: clamp(96px, 30cqi, var(--riff-album-cover-max));
 	}
 
 	.riff-standalone .riff-album-kind {
@@ -466,12 +491,12 @@ html.has-riff .riff-standalone .riff-app {
 		grid-area: meta;
 	}
 
-	/* The title is sized to the header, not the window, so it still fits a
-	   word to a line when Up next or About narrows the page beside them. */
+	/* The title is sized to the page it heads, not the window, so it still
+	   fits a word to a line when Up next or About narrows the page. */
 	.riff-standalone .riff-app .riff-album-title {
 		grid-area: title;
 		margin: 4px 0 8px;
-		font-size: clamp(40px, 7cqi, 88px);
+		font-size: clamp(28px, 7cqi, 88px);
 		font-weight: 800;
 		line-height: 1.05;
 		letter-spacing: -0.04em;
@@ -570,6 +595,7 @@ html.has-riff .riff-standalone .riff-app {
 	.riff-standalone .riff-app-view {
 		grid-column: 2;
 		min-width: 0;
+		container-type: inline-size;
 		padding: clamp(32px, 4vw, 56px) clamp(24px, 4vw, 64px) 48px;
 	}
 }
