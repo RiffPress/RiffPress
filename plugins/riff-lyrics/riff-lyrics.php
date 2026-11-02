@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Riff Lyrics
  * Description: A Lyrics view in Riff's Now Playing, from the lyrics in your audio files or typed into the Media Library.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff
@@ -28,7 +28,7 @@ if ( defined( 'RIFF_LYRICS_VERSION' ) ) {
 	return;
 }
 
-define( 'RIFF_LYRICS_VERSION', '1.4.0' );
+define( 'RIFF_LYRICS_VERSION', '1.5.0' );
 define( 'RIFF_LYRICS_URL', plugin_dir_url( __FILE__ ) );
 
 require __DIR__ . '/src/class-lyrics.php';
