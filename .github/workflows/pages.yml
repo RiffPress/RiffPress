@@ -1,14 +1,19 @@
 name: Pages
 
-# Publishes the landing page to Cloudflare Pages at riffpress.com, and with it everything the live demo
-# needs: riff.zip built from main, blueprint.json, the seed script and the demo audio, all with URLs stamped
-# by commit so caches never serve an old build. blueprint.json names those files relative to itself; this
+# Publishes the landing page to Cloudflare Pages at riffpress.com, the developer reference to its own
+# project at developer.riffpress.com, and with them everything the live demo needs: riff.zip built
+# from main, blueprint.json, the seed script and the demo audio, all with URLs stamped by commit so
+# caches never serve an old build. blueprint.json names those files relative to itself; this
 # workflow resolves them against the site's address. GitHub Pages keeps serving a one-line redirect at the
 # old address, so links to it still land.
 #
+# The site is built as one, with /developers/ and /web/ in it, and developers-site.js then moves those
+# pages to the developer host, leaves a 301 at each old address, and fails the deploy on a link
+# between the two that leads nowhere.
+#
 # Needs two repository secrets, CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID,
-# and takes the address from the SITE_URL repository variable when set. The custom domain is attached
-# to the project in the Cloudflare dashboard, which writes the DNS record itself.
+# and takes the addresses from the SITE_URL and DEVELOPER_URL repository variables when set. Each
+# custom domain is attached to its project in the Cloudflare dashboard, which writes the DNS record itself.
 # Runs on every push to main; the weekly run catches commits that do not start push workflows.
 
 on:
@@ -28,7 +33,9 @@ concurrency:
 
 env:
   PROJECT: riffpress
+  DEVELOPER_PROJECT: riffpress-developer
   SITE_URL: ${{ vars.SITE_URL || 'https://riffpress.com/' }}
+  DEVELOPER_URL: ${{ vars.DEVELOPER_URL || 'https://developer.riffpress.com/' }}
 
 jobs:
   deploy:
@@ -43,6 +50,7 @@ jobs:
       url: ${{ env.SITE_URL }}
     outputs:
       base: ${{ steps.site.outputs.base }}
+      developers: ${{ steps.site.outputs.developers }}
       version: ${{ steps.site.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -165,21 +173,36 @@ jobs:
           # A stable address for the demo: /demo always sends to Playground with the current stamped
           # blueprint, so nothing outside this deploy has to know the stamp.
           printf '/demo https://playground.wordpress.net/?mode=seamless&blueprint-url=%sblueprint.json?v=%s 302\n' "$BASE" "$V" > out/_redirects
+          # The developer reference to its own host, with a redirect from each old address after /demo's.
+          DEV=$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
+          [[ "$DEV" =~ ^https://[^/]+/$ ]] || { echo "::error::Unexpected developers URL: $DEV"; exit 1; }
+          node .github/scripts/developers-site.js out out-developers "$BASE" "$DEV"
           cat out/_redirects
-          ls -la out out/demo
-          { echo "base=$BASE"; echo "version=$V"; } >> "$GITHUB_OUTPUT"
+          ls -la out out/demo out-developers
+          { echo "base=$BASE"; echo "developers=$DEV"; echo "version=$V"; } >> "$GITHUB_OUTPUT"
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DEVELOPERS: ${{ steps.site.outputs.developers }}
         run: |
           set -euo pipefail
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             echo "::error::Set the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets."
             exit 1
           fi
-          # Creating the project fails harmlessly once it exists.
-          npx --yes wrangler@4 pages project create "$PROJECT" --production-branch main 2> /dev/null || true
+          # Creating a project fails harmlessly once it exists.
+          for p in "$PROJECT" "$DEVELOPER_PROJECT"; do
+            npx --yes wrangler@4 pages project create "$p" --production-branch main 2> /dev/null || true
+          done
+          # The developer host first, and only once it answers does the site start sending its old
+          # addresses there. Until the host is attached this stops the whole site's deploy, so the
+          # reference never redirects to nowhere.
+          npx --yes wrangler@4 pages deploy out-developers --project-name "$DEVELOPER_PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
+          if ! curl -fsS -o /dev/null --retry 6 --retry-delay 10 --retry-all-errors "${DEVELOPERS}php/"; then
+            echo "::error::${DEVELOPERS} does not answer. Attach it to the $DEVELOPER_PROJECT project as a custom domain, then run this again."
+            exit 1
+          fi
           npx --yes wrangler@4 pages deploy out --project-name "$PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
       # The deploy reports success whether or not the demo can load what it names. Ask for each file the
       # way Playground will, from another origin, so a dead URL fails here instead of on a visitor.
