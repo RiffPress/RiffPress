@@ -302,6 +302,7 @@ export default function together( P ) {
 			P.setQueue( following.queue, plan.index, { play: false } );
 		}
 		const m = P.el();
+		m.playbackRate = m.defaultPlaybackRate || 1;
 		const to = target( plan );
 		const playing = ! m.paused && ! m.ended;
 		if (
@@ -383,7 +384,41 @@ export default function together( P ) {
 		if ( key !== following.made ) {
 			following.made = key;
 			arrange( plan );
+		} else {
+			keep( plan );
 		}
+	}
+
+	// On each ask, once a change has been made: where the music is against the schedule. Starting
+	// takes an audio element a moment the schedule doesn't wait for, so a follower can sit a few
+	// hundred milliseconds behind. A small difference is closed by playing a little faster or slower,
+	// which keeps the pitch and no one hears; one too large for that seeks.
+	const NUDGE = 0.05; // At most this much faster or slower.
+	const FAR = 1; // Seconds off before a seek does it instead.
+	function keep( plan ) {
+		const m = P.el();
+		if (
+			! plan.playing ||
+			until( plan.since ) > 0 ||
+			! sameTrack( plan ) ||
+			m.paused ||
+			m.seeking ||
+			P.ramping
+		) {
+			return;
+		}
+		const base = m.defaultPlaybackRate || 1;
+		const off = m.currentTime - target( plan );
+		if ( Math.abs( off ) > FAR ) {
+			m.playbackRate = base;
+			m.currentTime = target( plan );
+			return;
+		}
+		// Closed over about five seconds, then left alone within half of THERE.
+		m.playbackRate =
+			Math.abs( off ) < THERE / 2
+				? base
+				: base * ( 1 - Math.max( -NUDGE, Math.min( NUDGE, off / 5 ) ) );
 	}
 
 	async function follow( user, name = '' ) {
@@ -441,6 +476,8 @@ export default function together( P ) {
 		following = null;
 		clearInterval( asking );
 		clearTimeout( due );
+		// Back to the listener's own speed, whatever keep() had it at.
+		P.el().playbackRate = P.el().defaultPlaybackRate || 1;
 		send( `/${ user }/follow`, 'DELETE' ).catch( () => {} ); // Their session lets the row go.
 		again = offerAgain ? { user, name } : null;
 		if ( message ) {
