@@ -56,3 +56,22 @@ test( 'every workflow that builds Riff builds it with the script', () => {
 		);
 	}
 } );
+
+test( "inside Riff an extension's strings are in Riff's text domain", () => {
+	const dest = fs.mkdtempSync( path.join( os.tmpdir(), 'riff-build-' ) );
+	try {
+		execFileSync( 'bash', [ path.join( root, '.github/scripts/build-riff.sh' ), dest ] );
+		for ( const name of manifest.extensions ) {
+			const dir = path.join( dest, 'riff', 'extensions', name );
+			const php = fs
+				.readdirSync( dir, { recursive: true } )
+				.filter( ( f ) => f.endsWith( '.php' ) )
+				.map( ( f ) => fs.readFileSync( path.join( dir, f ), 'utf8' ) )
+				.join( '\n' );
+			assert.ok( ! php.includes( `, '${ name }' )` ), `${ name }: no string in its own domain` );
+			assert.match( php, / \* Text Domain: riff\n/ );
+		}
+	} finally {
+		fs.rmSync( dest, { recursive: true, force: true } );
+	}
+} );

@@ -33,4 +33,16 @@ for name in $names; do
 	fi
 	mkdir -p "$dest/riff/extensions/$name"
 	rsync -a --delete --exclude-from="$root/.distignore" "$root/plugins/$name/" "$dest/riff/extensions/$name/"
+	# Inside Riff its strings are Riff's, since WordPress.org translates a plugin under its own slug
+	# alone. Only the text domain changes: the last argument of a translation call, and the header
+	# and PHPCS lines that name it. The same word as a handle, a key or a class is left alone.
+	find "$dest/riff/extensions/$name" -name '*.php' -print0 | xargs -0 perl -pi -e "
+		s/, '\Q$name\E' \)/, 'riff' )/g;
+		s/^( \* Text Domain:\s*)\Q$name\E/\${1}riff/;
+		s/^(\/\/ phpcs:set WordPress\.WP\.I18n text_domain\[\] )\Q$name\E/\${1}riff/;
+	"
+	if grep -rnE "(__|_e|_x|_n|_nx)\(.*'$name' \)" --include='*.php' "$dest/riff/extensions/$name" >&2; then
+		echo "extensions.json: $name still has strings in its own text domain" >&2
+		exit 1
+	fi
 done

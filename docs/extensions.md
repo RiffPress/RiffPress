@@ -12,7 +12,7 @@ An extension is a plugin that ships inside Riff. Each one lives in this reposito
 }
 ```
 
-A release builds Riff with `.github/scripts/build-riff.sh`, which copies each one named into `riff/extensions/<name>/`, through `.distignore`, as it copies Riff. Every workflow that builds or deploys Riff uses that script. A checkout of the repository has no `extensions/` folder, and Riff finds each extension beside it, in `plugins/<name>/`, so nothing is kept twice.
+A release builds Riff with `.github/scripts/build-riff.sh`, which copies each one named into `riff/extensions/<name>/`, through `.distignore`, as it copies Riff, and moves its strings into Riff's `riff` text domain, since WordPress.org translates a plugin under its own slug alone; its handles, keys and classes keep their names. Every workflow that builds or deploys Riff uses that script. A checkout of the repository has no `extensions/` folder, and Riff finds each extension beside it, in `plugins/<name>/`, so nothing is kept twice.
 
 Riff Sign In is never an extension. It is installed on its own, by whoever runs the site.
 
