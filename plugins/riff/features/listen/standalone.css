@@ -447,6 +447,7 @@ html.has-riff .riff-standalone .riff-app {
 		grid-template-columns: auto minmax(0, 1fr);
 		align-items: end;
 		gap: 0 24px;
+		container-type: inline-size;
 	}
 
 	.riff-standalone .riff-album-text {
@@ -465,10 +466,12 @@ html.has-riff .riff-standalone .riff-app {
 		grid-area: meta;
 	}
 
+	/* The title is sized to the header, not the window, so it still fits a
+	   word to a line when Up next or About narrows the page beside them. */
 	.riff-standalone .riff-app .riff-album-title {
 		grid-area: title;
 		margin: 4px 0 8px;
-		font-size: clamp(40px, 5.5vw, 88px);
+		font-size: clamp(40px, 7cqi, 88px);
 		font-weight: 800;
 		line-height: 1.05;
 		letter-spacing: -0.04em;
