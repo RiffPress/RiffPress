@@ -16,6 +16,11 @@ export default function filament( P ) {
 		/iP(hone|ad|od)/.test( navigator.userAgent ) ||
 		( navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 );
 	P.analyser = null;
+	// The turntable's VU meter and spectrum read the music where it passes through Web Audio, so
+	// they are loaded only where it can (meters.js).
+	if ( ! isIOS && window.AudioContext ) {
+		P.feature( 'meters' );
+	}
 	let samples = null;
 	let bins = null;
 	let meterRaf = 0;

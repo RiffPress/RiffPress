@@ -1207,8 +1207,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 50%;
 
 	/* by its radius: the label, then smooth dead wax to the lead-out groove,
-	   the grooves in a band for each track on the side playing
-	   (--riff-bands, from now-playing.js), and a smooth lead-in rim from 97% */
+	   the grooves in a band for each track on the side playing, lighter
+	   where it is loud (--riff-bands, from now-playing.js), and a smooth
+	   lead-in rim from 97% */
 	background:
 		var(--riff-bands, linear-gradient(transparent, transparent)),
 		radial-gradient(circle closest-side, #0c0c0c 0 var(--riff-label-edge), #161616 var(--riff-label-edge) var(--riff-lead-out), transparent var(--riff-lead-out) 97%, #161616 97%),
@@ -2841,7 +2842,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* The turntable turned off (Settings › Media, now-playing.js): the cover on
    its own, where the record would have come out of it onto the deck, and
    on a touch screen on its side the cover beside the controls. */
-#riff[data-riff-turntable="off"] :is(.riff-record, .riff-deck-part, .riff-sleeve, .riff-deck-board, .riff-rack) {
+#riff[data-riff-turntable="off"] :is(.riff-record, .riff-deck-part, .riff-sleeve, .riff-deck-board, .riff-rack, .riff-meters) {
 	display: none !important;
 }
 
@@ -2886,6 +2887,139 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 #riff[data-riff-showing="turntable"][data-playing="true"]:not([data-riff-room]) .riff-turns {
 	animation-play-state: running;
+}
+
+/* The turntable's meters (meters.js): a VU meter and a one-third-octave
+   spectrum in a row under the deck, while the Turntable view shows and the
+   music passes through Web Audio. Their row is kept from the moment the
+   view opens, so the deck keeps its size when the music first plays and
+   they are drawn; the stage takes what is left. On a phone it sits between
+   the record and the title; on a wide screen it is the view's last row,
+   under the deck; on a touch screen on its side, at the foot of the
+   controls' strip. The needle and the bars move by transform alone. */
+.riff-meters {
+	display: none;
+}
+
+#riff[data-riff-meters] .riff-meters {
+	display: flex;
+	flex: none;
+	grid-area: 2 / 1;
+	gap: 16px;
+	box-sizing: border-box;
+	width: min(100%, 640px);
+	height: 56px;
+	height: clamp(44px, 9dvh, 72px);
+	margin-inline: auto;
+	padding: 0 24px 16px;
+	color: var(--riff-accent);
+	opacity: 0;
+	transition: opacity 0.4s;
+}
+
+#riff[data-riff-meters] .riff-meters[data-riff-heard] {
+	opacity: 1;
+}
+
+#riff[data-riff-meters] .riff-np-body {
+	grid-template-rows: minmax(0, 1fr) auto;
+}
+
+/* the VU meter: its face as wide as the scale's arc, the needle's pivot
+   below it (meters.js draws the scale from the same numbers) */
+.riff-vu {
+	position: relative;
+	flex: none;
+	height: 100%;
+	aspect-ratio: 100 / 56;
+	overflow: hidden;
+	border-radius: 4px;
+	background: rgb(255 255 255 / 0.03);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+#riff .riff-vu svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.riff-vu-scale,
+.riff-vu-over {
+	fill: none;
+	stroke: currentcolor;
+	stroke-linecap: round;
+}
+
+.riff-vu-scale {
+	stroke-opacity: 0.4;
+	stroke-width: 0.8;
+}
+
+.riff-vu-over {
+	stroke-width: 1.6;
+}
+
+.riff-vu text {
+	fill: currentcolor;
+	fill-opacity: 0.45;
+	font-size: 8px;
+	letter-spacing: 0.1em;
+	text-anchor: middle;
+}
+
+.riff-vu-needle {
+	position: absolute;
+	bottom: calc(-10 / 56 * 100%);
+	left: calc(50% - 0.75px);
+	width: 1.5px;
+	height: calc(54 / 56 * 100%);
+	border-radius: 1px;
+	background: currentcolor;
+	transform: rotate(-45deg);
+	transform-origin: 50% 100%;
+	will-change: transform;
+}
+
+/* the spectrum: a bar for each third of an octave, 20 Hz to 20 kHz, on a
+   faint baseline with three frequencies under it */
+.riff-spectrum {
+	position: relative;
+	display: flex;
+	flex: 1;
+	gap: 2px;
+	min-width: 0;
+	padding-bottom: 14px;
+}
+
+.riff-spectrum::after {
+	content: "";
+	position: absolute;
+	right: 0;
+	bottom: 13px;
+	left: 0;
+	height: 1px;
+	background: currentcolor;
+	opacity: 0.15;
+}
+
+.riff-spectrum i {
+	flex: 1;
+	border-radius: 1px 1px 0 0;
+	background: currentcolor;
+	opacity: 0.4;
+	transform: scaleY(0);
+	transform-origin: 50% 100%;
+	will-change: transform;
+}
+
+.riff-spectrum small {
+	position: absolute;
+	bottom: 0;
+	color: var(--riff-fg-3);
+	font-size: 10px;
+	line-height: 1;
+	translate: -50% 0;
 }
 
 /* The screen as a turntable: a touch screen wider than it is tall and no
@@ -3009,6 +3143,16 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		margin: 8px 0 0;
 		padding: 0;
 		overflow: visible;
+	}
+
+	/* the meters at the foot of the controls' strip */
+	#riff[data-riff-meters] .riff-meters {
+		grid-area: 2 / 2;
+		width: auto;
+		height: 48px;
+		height: clamp(40px, 10dvh, 56px);
+		margin: 0;
+		padding: 0 20px 8px 8px;
 	}
 
 	/* Up next and the other panels open in the controls' strip, never over
@@ -3273,7 +3417,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		padding-top: 0;
 	}
 
-	#riff .riff-np-body {
+	#riff .riff-np-body,
+	#riff[data-riff-meters] .riff-np-body {
 		display: grid;
 		grid-template-rows: env(viewport-segment-height 0 0) env(viewport-segment-height 0 1);
 		grid-template-columns: minmax(0, 1fr);
@@ -3290,6 +3435,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		grid-area: 2 / 1;
 		align-self: start;
 		padding-top: 16px;
+	}
+
+	/* no row of their own between the halves and the controls */
+	#riff[data-riff-meters] .riff-meters {
+		display: none;
 	}
 
 

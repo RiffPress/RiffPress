@@ -46,6 +46,19 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertMatchesRegularExpression( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html );
 	}
 
+	public function test_the_turntable_meters_have_an_empty_place_under_the_stage_that_only_web_audio_fills(): void {
+		$this->go_to( home_url( '/' ) );
+		ob_start();
+		Player::markup();
+		$html = (string) ob_get_clean();
+
+		// Empty, and nothing to a screen reader: meters.js draws them where the music passes through Web Audio.
+		$this->assertStringContainsString( '<div class="riff-meters" aria-hidden="true"></div>', $html );
+		$this->assertLessThan( strpos( $html, 'class="riff-meters"' ), strpos( $html, 'class="riff-stage"' ), 'under the deck' );
+		$this->assertLessThan( strpos( $html, 'class="riff-np-panel"' ), strpos( $html, 'class="riff-meters"' ), 'above the title on a phone' );
+		$this->assertContains( 'meters', Player::PLAYER_FEATURES, 'loaded only when the filament finds Web Audio' );
+	}
+
 	public function test_assets_are_enqueued_with_a_cache_key_that_follows_the_file(): void {
 		$this->go_to( home_url( '/' ) );
 		Player::enqueue();
