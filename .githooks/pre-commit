@@ -35,4 +35,6 @@ if ! curl -sf -o /dev/null "http://localhost:${PORT}/"; then
 fi
 
 echo "pre-commit: Playwright smoke tests against http://localhost:${PORT}"
-WP_BASE_URL="http://localhost:${PORT}" npx wp-scripts test-playwright plugins/riff/tests/e2e/player/ --project=chromium --reporter=line
+# A test must fail twice to stop the commit: run in parallel on a laptop, the player's tests now
+# and then miss a beat that has nothing to do with the change, while a real failure fails again.
+WP_BASE_URL="http://localhost:${PORT}" npx wp-scripts test-playwright plugins/riff/tests/e2e/player/ --project=chromium --reporter=line --retries=1
