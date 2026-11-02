@@ -1198,8 +1198,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 50%;
 
 	/* by its radius: the label, then smooth dead wax to the lead-out groove,
-	   the grooves in a band for each track on the side playing
-	   (--riff-bands, from now-playing.js), and a smooth lead-in rim from 97% */
+	   the grooves in a band for each track on the side playing, lighter
+	   where it is loud (--riff-bands, from now-playing.js), and a smooth
+	   lead-in rim from 97% */
 	background:
 		var(--riff-bands, linear-gradient(transparent, transparent)),
 		radial-gradient(circle closest-side, #0c0c0c 0 var(--riff-label-edge), #161616 var(--riff-label-edge) var(--riff-lead-out), transparent var(--riff-lead-out) 97%, #161616 97%),

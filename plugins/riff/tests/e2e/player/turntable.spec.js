@@ -146,3 +146,36 @@ test.describe( 'Turntable', () => {
 		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate ) ).toBe( 1 );
 	} );
 } );
+
+test.describe( 'Turntable, from what the files say', () => {
+	test.use( { viewport: { width: 1440, height: 900 } } );
+
+	test( 'discs from the tags are records of their own, and the grooves are lighter where the music is loud', async ( { page }, info ) => {
+		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
+		// The fixtures carry no disc numbers and no measured loudness, so the album's track list
+		// says them: the first track on disc 1, the other two on disc 2, the first loud at its end.
+		await page.route(
+			( url ) => decodeURIComponent( url.href ).includes( 'riff/v1/library/' ),
+			async ( route ) => {
+				const response = await route.fetch();
+				const post = await response.json();
+				( post.tracks || [] ).forEach( ( track, k ) => {
+					track.disc = k ? 2 : 1;
+					track.levels = k ? '' : '0000000099';
+				} );
+				await route.fulfill( { response, json: post } );
+			}
+		);
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
+		// Disc 1 is one track, so the first side of its record holds it alone.
+		await expect( page.locator( '.riff-label small' ) ).toHaveText( 'A · 33⅓' );
+		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'aria-valuemax', '1' );
+		await expect
+			.poll( () => page.locator( '.riff-record' ).evaluate( ( el ) => el.style.getPropertyValue( '--riff-bands' ) ) )
+			.toContain( 'rgb(255 255 255 / 0.060)' );
+	} );
+} );

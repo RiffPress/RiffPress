@@ -284,18 +284,19 @@ export function nowPlaying( P ) {
 	// an album and kept. A release of one or two tracks and ten minutes at most is a 7-inch single
 	// at 45, a track a side. Anything longer is LPs at 33⅓: sides of 24 minutes at most, as an LP
 	// side holds before its grooves crowd, each as near the same length as the album's order
-	// allows, two to a record, A and B on the first, C and D on the second. Until the track list
-	// arrives the record has plain grooves.
+	// allows, two to a record, A and B on the first, C and D on the second. Where the files' tags
+	// say which disc of a set each track is on, and name more than one, each disc is a record of
+	// its own (or more, should it run longer than two sides hold), its sides worked out from its
+	// own tracks, so no side runs from one disc onto the next. Until the track list arrives the
+	// record has plain grooves.
 	const SIDE = 24 * 60;
-	function press( lengths ) {
+	function split( lengths, at, start, count ) {
 		const length = lengths.reduce( ( a, b ) => a + b, 0 );
-		const single = lengths.length <= 2 && length <= 600;
-		const count = single ? lengths.length : Math.max( 1, Math.ceil( length / SIDE ) );
 		const sides = [];
 		let from = 0;
-		let start = 0;
+		let into = 0;
 		for ( let k = 0; k < count; k++ ) {
-			const target = ( length - start ) / ( count - k );
+			const target = ( length - into ) / ( count - k );
 			let to = from;
 			let side = 0;
 			// A track joins the side while the side, with half of it, is within the side's share,
@@ -306,10 +307,43 @@ export function nowPlaying( P ) {
 			) {
 				side += lengths[ to++ ];
 			}
-			sides.push( { from, to, start, length: side, name: String.fromCharCode( 65 + k ) } );
+			if ( to > from ) {
+				sides.push( { from: at + from, to: at + to, start: start + into, length: side } );
+			}
 			from = to;
-			start += side;
+			into += side;
 		}
+		return sides;
+	}
+	function press( lengths, discs = [] ) {
+		const length = lengths.reduce( ( a, b ) => a + b, 0 );
+		const single = lengths.length <= 2 && length <= 600;
+		const named = discs.length === lengths.length && discs.every( ( d ) => d > 0 ) && new Set( discs ).size > 1;
+		// The runs of tracks on one disc, in the album's order; the whole album as one, where the
+		// tags don't say.
+		const runs = [];
+		for ( let k = 0; k < lengths.length; k++ ) {
+			if ( k && named && discs[ k ] === discs[ k - 1 ] ) {
+				runs[ runs.length - 1 ].to = k + 1;
+			} else if ( ! k || named ) {
+				runs.push( { from: k, to: k + 1 } );
+			} else {
+				runs[ 0 ].to = k + 1;
+			}
+		}
+		const sides = [];
+		let start = 0;
+		let record = 0;
+		for ( const run of runs ) {
+			const part = lengths.slice( run.from, run.to );
+			const span = part.reduce( ( a, b ) => a + b, 0 );
+			const count = single ? part.length : Math.max( 1, Math.ceil( span / SIDE ) );
+			const pressed = split( part, run.from, start, count );
+			pressed.forEach( ( s, k ) => sides.push( { ...s, record: record + Math.floor( k / 2 ) } ) );
+			record += Math.ceil( pressed.length / 2 );
+			start += span;
+		}
+		sides.forEach( ( s, k ) => ( s.name = String.fromCharCode( 65 + k ) ) );
 		return { format: single ? '7' : '12', sides };
 	}
 
@@ -329,6 +363,7 @@ export function nowPlaying( P ) {
 	function groove( t ) {
 		const album = t?.post?.id || null;
 		if ( album !== playing ) {
+			stopRunout();
 			if ( playing !== null ) {
 				change();
 			}
@@ -362,7 +397,8 @@ export function nowPlaying( P ) {
 					lengths,
 					starts,
 					length,
-					...press( lengths ),
+					levels: tracks.map( ( q ) => ( typeof q.levels === 'string' ? q.levels : '' ) ),
+					...press( lengths, tracks.map( ( q ) => Number( q.disc ) || 0 ) ),
 				} );
 				if ( playing === album ) {
 					place( P.track() );
@@ -381,10 +417,15 @@ export function nowPlaying( P ) {
 	function place( t ) {
 		const album = albums.get( playing );
 		const next = sideOf( t );
+		// Moved on while the stylus rides the run-out: the side still up is the one it was in.
+		if ( runout.until ) {
+			side = runout.from;
+			stopRunout();
+		}
 		const show = () => {
 			root.dataset.riffFormat = album?.format || '12';
 			strobe();
-			cut( next ? album.lengths.slice( next.from, next.to ) : [] );
+			cut( next );
 			label( next );
 			needle();
 			bands();
@@ -394,13 +435,24 @@ export function nowPlaying( P ) {
 			show();
 			return;
 		}
-		const sameRecord = Math.floor( album.sides.indexOf( side ) / 2 ) === Math.floor( album.sides.indexOf( next ) / 2 );
+		const sameRecord = side.record === next.record;
+		const was = side;
 		side = next;
-		if ( sameRecord ) {
-			flip( show );
+		const over = () => {
+			if ( sameRecord ) {
+				flip( show );
+			} else {
+				change();
+				show();
+			}
+		};
+		// Played to its end, the side leaves the stylus in its run-out first.
+		if ( performance.now() - ended < 1500 && seen() && 'riffDown' in ( $( '.riff-arm' )?.dataset || {} ) ) {
+			ended = 0;
+			runout.from = was;
+			runout( over );
 		} else {
-			change();
-			show();
+			over();
 		}
 	}
 	// The label says the side and the speed, and lists the side's tracks as a pressed label does:
@@ -428,6 +480,99 @@ export function nowPlaying( P ) {
 				return li;
 			} )
 		);
+	}
+
+	// ---- The run-out. A side played to its end leaves the stylus to the lead-out groove, which
+	// carries it in across the dead wax in half a turn to the locked groove, a closed ring it rides
+	// until the arm is lifted. The ring's join clicks once a turn, the same click each time, since
+	// it is the same groove: 1.8 s apart at 33⅓. Two turns of it, and then the arm goes back and the
+	// record is turned over or changed. Only where the record is seen, and only where the music
+	// passes through Web Audio (filament.js), as the click is played there; elsewhere the arm still
+	// rides the run-out, in silence. The platter turns on at the music's last speed meanwhile, the
+	// music over, and is braked once the arm is lifted.
+	const LOCKED = 1.06;
+	let ended = 0;
+	// Noted before media.js loads the next track on the same event: a capturing listener on the
+	// element itself is called before the others there.
+	for ( const el of [ P.audio, P.video ] ) {
+		el.addEventListener( 'ended', () => ( ended = performance.now() ), true );
+	}
+	function runout( then ) {
+		const arm = $( '.riff-arm' );
+		const m = P.el();
+		const rate = m.playbackRate || 1;
+		const once = 60000 / ( ( root.dataset.riffFormat === '7' ? 45 : 100 / 3 ) * rate );
+		const id = ++runout.id;
+		runout.until = performance.now() + once * 2.5;
+		coast( rate, rate );
+		sweep?.pause();
+		runout.anim = arm.animate(
+			[ { rotate: `${ angle( 1 ).toFixed( 2 ) }deg` }, { rotate: `${ angle( LOCKED ).toFixed( 2 ) }deg` } ],
+			{ duration: once / 2, easing: 'ease-in', fill: 'forwards' }
+		);
+		// Woken once the ended event is through: filament.js suspends the context on it, after this.
+		const ctx = P.analyser?.context;
+		setTimeout( () =>
+			ctx?.resume()
+				.then( () => {
+					if ( id === runout.id ) {
+						click( ctx, once / 2 - 50 );
+						click( ctx, once * 1.5 - 50 );
+					}
+				} )
+				.catch( () => {} )
+		);
+		runout.done = setTimeout( () => {
+			if ( id !== runout.id ) {
+				return;
+			}
+			runout.until = 0;
+			if ( ctx && P.el().paused ) {
+				ctx.suspend().catch( () => {} );
+			}
+			windDown();
+			then();
+		}, once * 2.5 );
+	}
+	runout.id = 0;
+	runout.until = 0;
+	// A side changed some other way while the stylus rides the run-out: it is lifted from there.
+	function stopRunout() {
+		if ( ! runout.until ) {
+			return;
+		}
+		runout.id++;
+		runout.until = 0;
+		clearTimeout( runout.done );
+		runout.anim?.cancel();
+		runout.anim = null;
+		// The platter, turning on for the run-out, is braked; music that starts takes it first.
+		windDown();
+	}
+	// The click: the groove's join under the stylus, a tick of a millisecond and a half over a
+	// low thump of the cartridge, soft. Drawn once, from a fixed sequence, so every turn is the
+	// same click, as every turn is the same groove.
+	function click( ctx, after ) {
+		if ( ! click.sound || click.sound.sampleRate !== ctx.sampleRate ) {
+			const rate = ctx.sampleRate;
+			const sound = ctx.createBuffer( 1, Math.round( rate * 0.03 ), rate );
+			const data = sound.getChannelData( 0 );
+			let seed = 7;
+			for ( let n = 0; n < data.length; n++ ) {
+				seed = ( seed * 1103515245 + 12345 ) % 2147483648;
+				const s = n / rate;
+				data[ n ] =
+					( ( seed / 1073741824 - 1 ) * Math.exp( -s / 0.0015 ) ) / 2 +
+					Math.sin( 2 * Math.PI * 70 * s ) * Math.exp( -s / 0.006 );
+			}
+			click.sound = sound;
+		}
+		const source = ctx.createBufferSource();
+		const gain = ctx.createGain();
+		source.buffer = click.sound;
+		gain.gain.value = 0.12;
+		source.connect( gain ).connect( ctx.destination );
+		source.start( ctx.currentTime + after / 1000 );
 	}
 
 	// ---- What a hand moves (the record out of its sleeve and turned over, the sleeve set down,
@@ -653,6 +798,7 @@ export function nowPlaying( P ) {
 		const arm = $( '.riff-arm' );
 		clearTimeout( deck.drop );
 		if ( ! out || ! roomy() ) {
+			stopRunout();
 			delete root.dataset.riffDeck;
 			delete arm?.dataset.riffDown;
 			lift();
@@ -793,6 +939,13 @@ export function nowPlaying( P ) {
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
 		stowing++;
+		// The stylus is in the run-out: the record is seen to once it has been lifted from there.
+		if ( runout.until > performance.now() && seen() ) {
+			cued( true );
+			P.paint();
+			turn.wait = setTimeout( () => turn( m ), runout.until - performance.now() + 20 );
+			return;
+		}
 		const turning = root.dataset.playing === 'true' && root.dataset.riffDeck === 'out' && ! ( 'riffCued' in root.dataset );
 		const flipping = flip.until > performance.now();
 		if ( ! seen() || ( turning && ! P.ramping && ! flipping ) ) {
@@ -842,9 +995,10 @@ export function nowPlaying( P ) {
 		if ( m.paused ) {
 			// From rest, the platter is pulled up to a crawl by the moment the stylus is in the
 			// groove, so the music starts there, at the speed the platter has reached. Still turning
-			// as it winds down, it is pulled up from where it is, at once.
+			// as it winds down, it is pulled up from where it is, at once, unless the record is
+			// being turned over or changed meanwhile.
 			const up = pull( coasting ?? 0, CRAWL );
-			if ( coasting !== null ) {
+			if ( coasting !== null && ! flipping && ! ( 'riffArriving' in root.dataset ) ) {
 				coast( coasting, CRAWL );
 			} else {
 				turn.spin = setTimeout( () => coast( coasting ?? 0, CRAWL ), Math.max( 0, wait - up ) );
@@ -1033,14 +1187,16 @@ export function nowPlaying( P ) {
 			sweep.cancel();
 			swing( arm, from, REST );
 		}
+		runout.anim?.cancel();
+		runout.anim = null;
 		sweep = null;
 		swept = '';
 	}
 	function needle() {
 		const arm = $( '.riff-arm' );
 		const w = where();
-		// In the hand, it is where the hand holds it.
-		if ( ! arm || ! w || 'riffHeld' in arm.dataset ) {
+		// In the hand, it is where the hand holds it; in the run-out, where the groove takes it.
+		if ( ! arm || ! w || 'riffHeld' in arm.dataset || runout.until ) {
 			return;
 		}
 		if ( P.reduce() || ! ( 'riffDown' in arm.dataset ) ) {
@@ -1349,26 +1505,62 @@ export function nowPlaying( P ) {
 		paintDeck();
 	}
 
-	function cut( lengths ) {
+	// The side's grooves: a glossy ring between each of its tracks, and, where something has measured
+	// a track's loudness (its levels, a digit from 0 to 9 for each moment of it), the band lighter
+	// where the music is loud, as a cut groove is: a loud passage swings the stylus wider, so its
+	// walls catch more of the light. At most 24 shades a track, each at the radius its moment is
+	// cut at, so a side's gradient stays a few hundred stops.
+	function cut( on ) {
 		const record = $( '.riff-record' );
+		const album = albums.get( playing );
+		const lengths = on && album ? album.lengths.slice( on.from, on.to ) : [];
 		const whole = lengths.reduce( ( a, b ) => a + b, 0 );
-		if ( ! record || lengths.length < 2 || ! whole ) {
+		if ( ! record || ! whole ) {
 			record?.style.removeProperty( '--riff-bands' );
 			return;
 		}
-		const stops = [];
-		let played = 0;
-		for ( const length of lengths.slice( 0, -1 ) ) {
-			played += length;
-			const at = 100 * groovedAt( played / whole );
-			stops.unshift(
-				`transparent ${ ( at - 0.35 ).toFixed( 2 ) }%, rgb(255 255 255 / 0.09) ${ ( at - 0.35 ).toFixed( 2 ) }% ${ ( at + 0.35 ).toFixed( 2 ) }%, transparent ${ ( at + 0.35 ).toFixed( 2 ) }%`
+		const pc = ( share ) => `${ ( 100 * groovedAt( share ) ).toFixed( 2 ) }%`;
+		const layers = [];
+		if ( lengths.length > 1 ) {
+			const stops = [];
+			let played = 0;
+			for ( const length of lengths.slice( 0, -1 ) ) {
+				played += length;
+				const at = 100 * groovedAt( played / whole );
+				stops.unshift(
+					`transparent ${ ( at - 0.35 ).toFixed( 2 ) }%, rgb(255 255 255 / 0.09) ${ ( at - 0.35 ).toFixed( 2 ) }% ${ ( at + 0.35 ).toFixed( 2 ) }%, transparent ${ ( at + 0.35 ).toFixed( 2 ) }%`
+				);
+			}
+			layers.push( `radial-gradient(circle closest-side, ${ stops.join( ', ' ) })` );
+		}
+		// From the lead-out outwards, as a gradient's stops run: the side's last moment first.
+		const shades = [];
+		let into = whole;
+		for ( let k = lengths.length - 1; k >= 0; k-- ) {
+			into -= lengths[ k ];
+			const levels = album.levels?.[ on.from + k ] || '';
+			if ( ! levels ) {
+				shades.push( `transparent ${ pc( ( into + lengths[ k ] ) / whole ) } ${ pc( into / whole ) }` );
+				continue;
+			}
+			const n = Math.min( 24, levels.length );
+			for ( let j = n - 1; j >= 0; j-- ) {
+				// The loudest of the moments this shade stands for.
+				const part = levels.slice( Math.floor( ( j * levels.length ) / n ), Math.floor( ( ( j + 1 ) * levels.length ) / n ) );
+				const loud = Math.max( ...[ ...part ].map( Number ) ) / 9;
+				shades.push( `rgb(255 255 255 / ${ ( 0.06 * loud ).toFixed( 3 ) }) ${ pc( ( into + ( ( j + 0.5 ) * lengths[ k ] ) / n ) / whole ) }` );
+			}
+		}
+		if ( shades.some( ( shade ) => shade.startsWith( 'rgb' ) ) ) {
+			layers.push(
+				`radial-gradient(circle closest-side, transparent ${ pc( 1 ) }, ${ shades.join( ', ' ) }, transparent ${ pc( 0 ) })`
 			);
 		}
-		record.style.setProperty(
-			'--riff-bands',
-			`radial-gradient(circle closest-side, ${ stops.join( ', ' ) })`
-		);
+		if ( layers.length ) {
+			record.style.setProperty( '--riff-bands', layers.join( ', ' ) );
+		} else {
+			record.style.removeProperty( '--riff-bands' );
+		}
 	}
 
 	return { open, close, sheet, pickTab, tint, groove, deck, turn, halt, held, stopping };
