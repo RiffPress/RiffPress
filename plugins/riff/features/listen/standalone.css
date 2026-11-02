@@ -449,6 +449,12 @@ html.has-riff .riff-standalone .riff-app {
 		gap: 0 24px;
 	}
 
+	/* A header without a cover, as the Tracks view's, has no gap where the
+	   cover would be, so its title lines up with Play and the list. */
+	.riff-standalone .riff-album:not(.riff-album-has-cover) {
+		column-gap: 0;
+	}
+
 	/* A header too narrow for its title beside the cover, as when Up next or
 	   About narrows the page on a smaller window, stacks them: the cover, then
 	   the title and the rest under it. */

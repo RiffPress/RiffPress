@@ -229,6 +229,21 @@ test.describe( 'Standalone', () => {
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 	} );
 
+	test( 'on a wide screen a header without a cover, as Tracks\', lines its title up with Play and the list', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'A phone stacks the header on its own layout.' );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=tracks' );
+		const header = page.locator( '.riff-album' );
+		await expect( header.locator( '.riff-album-cover' ) ).toHaveCount( 0 );
+		const left = await page.evaluate( () => {
+			const x = ( s ) => Math.round( document.querySelector( s ).getBoundingClientRect().left );
+			return [ x( '.riff-album-title' ), x( '.riff-album-meta' ), x( '.riff-album-actions' ), x( '.riff-album-tracks' ) ];
+		} );
+		expect( new Set( left ).size ).toBe( 1 );
+	} );
+
 	test( 'a card in a row shows its focus ring above and below, where the row\'s scroll would clip it', async ( {
 		page,
 	} ) => {
