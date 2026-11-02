@@ -236,7 +236,7 @@ test.describe( 'Standalone', () => {
 		test.skip( isMobile, 'A phone stacks the header on its own layout.' );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=tracks' );
 		const header = page.locator( '.riff-album' );
-		await expect( header.locator( '.riff-album-cover' ) ).toHaveCount( 0 );
+		await expect( header ).not.toHaveClass( /riff-album-has-cover/ );
 		const left = await page.evaluate( () => {
 			const x = ( s ) => Math.round( document.querySelector( s ).getBoundingClientRect().left );
 			return [ x( '.riff-album-title' ), x( '.riff-album-meta' ), x( '.riff-album-actions' ), x( '.riff-album-tracks' ) ];
