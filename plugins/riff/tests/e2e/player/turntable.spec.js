@@ -40,6 +40,8 @@ test.describe( 'Turntable', () => {
 	} );
 
 	test( 'the sleeve puts the record away, and plays it again', async ( { page } ) => {
+		// With motion, so the record is seen set down.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		const root = page.locator( '#riff' );
 		const sleeve = page.locator( '.riff-sleeve' );
 		await expect( sleeve ).toHaveText( 'Put the record away' );
@@ -122,6 +124,8 @@ test.describe( 'Turntable', () => {
 	} );
 
 	test( 'the platter turns on its own below a crawl: up to speed before the music is heard, and on to rest after it stops', async ( { page } ) => {
+		// With motion: without it the music starts and stops at once.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 		await page.evaluate( () => {
 			const root = document.querySelector( '#riff' );
