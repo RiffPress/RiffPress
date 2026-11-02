@@ -50,17 +50,21 @@ test.describe( 'Turntable', () => {
 		await expect( sleeve ).toHaveText( 'Play the record' );
 		// The arm goes with the record: nothing to reach while it is away.
 		await expect( page.locator( '.riff-mount' ) ).toHaveAttribute( 'inert', '' );
+		// Carried to the platter a few millimetres above the mat, it is let fall onto it: kept as it
+		// is asked for, since the fall is over in under a second.
+		await page.locator( '.riff-record' ).evaluate( ( el ) => {
+			const animate = el.animate.bind( el );
+			el.animate = ( frames, options ) => {
+				if ( Array.isArray( frames ) && frames.some( ( k ) => /^scale/.test( k.transform || '' ) ) ) {
+					window.riffLaid = true;
+				}
+				return animate( frames, options );
+			};
+		} );
 		await sleeve.focus();
 		await page.keyboard.press( 'Enter' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
-		// Carried to the platter a few millimetres above the mat, it is let fall onto it.
-		await expect
-			.poll( () =>
-				page.locator( '.riff-record' ).evaluate( ( el ) =>
-					el.getAnimations().some( ( a ) => a.effect.getKeyframes().some( ( k ) => /^scale/.test( k.transform || '' ) ) )
-				)
-			)
-			.toBe( true );
+		await expect.poll( () => page.evaluate( () => !! window.riffLaid ) ).toBe( true );
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 		await expect( sleeve ).toHaveText( 'Put the record away' );
 	} );

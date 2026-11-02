@@ -832,15 +832,23 @@ export function nowPlaying( P ) {
 				.then( () => bend( m, deckRate() ) )
 				.then( ( whole ) => whole && settle( m ) )
 				.catch( () => {
-					windDown();
+					// Unless another start has the platter by now.
+					if ( ! held() ) {
+						windDown();
+					}
 					P.paint();
 				} );
 		};
 		if ( m.paused ) {
 			// From rest, the platter is pulled up to a crawl by the moment the stylus is in the
-			// groove, so the music starts there, at the speed the platter has reached.
+			// groove, so the music starts there, at the speed the platter has reached. Still turning
+			// as it winds down, it is pulled up from where it is, at once.
 			const up = pull( coasting ?? 0, CRAWL );
-			turn.spin = setTimeout( () => coast( coasting ?? 0, CRAWL ), Math.max( 0, wait - up ) );
+			if ( coasting !== null ) {
+				coast( coasting, CRAWL );
+			} else {
+				turn.spin = setTimeout( () => coast( coasting ?? 0, CRAWL ), Math.max( 0, wait - up ) );
+			}
 			wait = Math.max( wait, up );
 		}
 		if ( wait ) {
