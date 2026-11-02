@@ -120,10 +120,16 @@ test.describe( 'Browse', () => {
 		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
 		await page.locator( '.riff-artists .riff-artist', { hasText: 'Airmen of Note' } ).first().click();
 		await expect( page.locator( '.riff-album-kind' ) ).toHaveText( /Artist/i );
-		// The fixture's album has only a cover Riff drew, which a round frame would cut, so the
-		// artist, who has no picture of their own, is their initial.
-		await expect( page.locator( '.riff-album-round .riff-album-mark' ) ).toHaveText( 'A' );
-		await expect( page.locator( '.riff-album-round .riff-album-cover img' ) ).toHaveCount( 0 );
+		// No picture of their own: their newest album's cover, or where that is only a cover Riff
+		// drew, which a round frame would cut, their initial. Which the fixture's album has depends
+		// on whether an earlier spec gave it artwork.
+		const round = page.locator( '.riff-album-round' );
+		await expect( round.locator( '.riff-album-cover img, .riff-album-mark' ) ).toHaveCount( 1 );
+		if ( ( await round.locator( '.riff-album-mark' ).count() ) > 0 ) {
+			await expect( round.locator( '.riff-album-mark' ) ).toHaveText( 'A' );
+		} else {
+			await expect( round.locator( '.riff-album-cover img' ) ).toBeVisible();
+		}
 		await expect( page.locator( '.riff-app-section', { hasText: 'Latest' } ) ).toBeVisible();
 		await expect( page.locator( '.riff-app-section', { hasText: 'Albums' } ) ).toBeVisible();
 		await expect( page.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } ) ).toBeVisible();

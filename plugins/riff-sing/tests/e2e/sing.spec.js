@@ -89,7 +89,7 @@ test( 'a microphone that isn\'t allowed says how to allow it, and nothing is lis
 	} );
 	const panel = await open( page );
 	await panel.getByRole( 'button', { name: 'Sing with the microphone' } ).click();
-	await expect( panel.locator( '.riff-sing-status' ) ).toContainText( 'The microphone wasn’t allowed' );
+	await expect( panel.locator( '.riff-sing-status' ) ).toContainText( 'The microphone wasn\'t allowed' );
 	await expect( panel.getByRole( 'button', { name: 'Sing with the microphone' } ) ).toBeVisible();
 	await expect( panel.getByRole( 'button', { name: 'Stop listening' } ) ).toBeHidden();
 } );

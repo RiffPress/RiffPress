@@ -72,7 +72,7 @@ for ( const [ index, format ] of FORMATS.entries() ) {
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 		// From the bar on a wide screen, from Now Playing on a phone.
 		await openView( page, 'lyrics' );
-		const lines = page.locator( '[data-riff-view="lyrics"] .riff-lyrics-synced li' );
+		const lines = page.locator( '.riff-np [data-riff-view="lyrics"] .riff-lyrics-synced li' );
 		await expect( lines ).toHaveText( format.texts || [ format.words ? 'One more' : 'One', 'Two', 'Three' ] );
 		if ( format.gap ) {
 			await expect( lines.nth( format.gap ) ).toHaveClass( /riff-lyrics-gap/ );
@@ -81,10 +81,10 @@ for ( const [ index, format ] of FORMATS.entries() ) {
 		for ( const [ i, time ] of format.times.entries() ) {
 			await seek( time + 0.15 );
 			await expect( lines.nth( i ) ).toHaveAttribute( 'aria-current', 'true' );
-			await expect( page.locator( '[data-riff-view="lyrics"] [aria-current]' ) ).toHaveCount( 1 );
+			await expect( page.locator( '.riff-np [data-riff-view="lyrics"] [aria-current]' ) ).toHaveCount( 1 );
 			await seek( Math.max( 0, time - 0.2 ) );
 			if ( i === 0 ) {
-				await expect( page.locator( '[data-riff-view="lyrics"] [aria-current]' ) ).toHaveCount( 0 );
+				await expect( page.locator( '.riff-np [data-riff-view="lyrics"] [aria-current]' ) ).toHaveCount( 0 );
 			} else {
 				await expect( lines.nth( i - 1 ) ).toHaveAttribute( 'aria-current', 'true' );
 			}

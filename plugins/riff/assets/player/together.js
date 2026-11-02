@@ -676,6 +676,7 @@ export default function together( P ) {
 	}
 	function refresh() {
 		P.areas?.();
+		P.drawControls?.();
 		draw();
 		askRoom();
 	}
@@ -754,39 +755,32 @@ export default function together( P ) {
 		}
 		return list;
 	} );
-	own.controls.add( ( list ) => {
-		if ( following ) {
-			return [
-				...list,
-				{
-					id: 'unfollow',
-					label: fmt(
-						/* translators: %s: The listener's name. */
-						__( 'Stop following %s', 'riff' ),
-						following.name
-					),
-					icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41 6.29 6.3-6.3 6.29 1.42 1.42 6.29-6.3 6.3 6.3 1.41-1.42-6.29-6.3 6.29-6.29z"/></svg>',
-					run: () => stop( '', false ),
-				},
-			];
-		}
-		if ( again ) {
-			const { user, name } = again;
-			return [
-				...list,
-				{
-					id: 'follow-again',
-					label: fmt(
-						/* translators: %s: The listener's name. */
-						__( 'Follow %s again', 'riff' ),
-						name
-					),
-					icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>',
-					run: () => follow( user, name ),
-				},
-			];
-		}
-		return list;
+	// In the bar, through the same registration a plugin's control uses: the way out while
+	// following, and the way back in after a press of the listener's own stopped it. Each shows only
+	// while it applies; a phone's bar keeps them, as they are the only way out there.
+	P.control( 'unfollow', {
+		order: 22,
+		label: () =>
+			fmt(
+				/* translators: %s: The listener's name. */
+				__( 'Stop following %s', 'riff' ),
+				following?.name || ''
+			),
+		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41 6.29 6.3-6.3 6.29 1.42 1.42 6.29-6.3 6.3 6.3 1.41-1.42-6.29-6.3 6.29-6.29z"/></svg>',
+		shown: () => !! following,
+		run: () => stop( '', false ),
+	} );
+	P.control( 'follow-again', {
+		order: 22,
+		label: () =>
+			fmt(
+				/* translators: %s: The listener's name. */
+				__( 'Follow %s again', 'riff' ),
+				again?.name || ''
+			),
+		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>',
+		shown: () => ! following && !! again,
+		run: () => again && follow( again.user, again.name ),
 	} );
 
 	for ( const name of [ 'play', 'pause', 'track', 'queue' ] ) {

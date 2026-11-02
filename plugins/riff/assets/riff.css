@@ -1992,8 +1992,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* ---- The panels (registry.js): Up next, and any a plugin adds, one at a
    time, each its own thing. On a phone a panel covers the screen, Now
    Playing too, with its name and Close at the top; on a wide screen it
-   stands beside the page and Now Playing, above the bar. */
+   stands beside the page and Now Playing, above the bar. Where it stands
+   is said once, here, for registry.js: a sheet, beside or in the strip. */
 .riff-side {
+	--riff-side-place: sheet;
 	position: fixed;
 	inset: 0;
 	z-index: 5;
@@ -2558,6 +2560,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	/* A panel beside the page and Now Playing, above the bar, which the page
 	   and Now Playing make room for. */
 	.riff-side {
+		--riff-side-place: beside;
 		inset: var(--riff-side-top, 0) 0 calc(var(--riff-bar-h) + var(--riff-safe-b)) auto;
 		width: var(--riff-side-w, 400px);
 		padding: 0 0 0 8px;
@@ -2791,16 +2794,16 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    deck, as on a phone held upright (now-playing.js marks the room the stage's
    container query finds): the record alone in the cover's place, turning
    while the music plays. */
-#riff[data-riff-view="turntable"]:not([data-riff-room]) .riff-stage > .riff-cover {
+#riff[data-riff-showing="turntable"]:not([data-riff-room]) .riff-stage > .riff-cover {
 	opacity: 0;
 }
 
-#riff[data-riff-view="turntable"]:not([data-riff-room]) .riff-stage > .riff-record {
+#riff[data-riff-showing="turntable"]:not([data-riff-room]) .riff-stage > .riff-record {
 	translate: none;
 	scale: 1;
 }
 
-#riff[data-riff-view="turntable"][data-playing="true"]:not([data-riff-room]) .riff-turns {
+#riff[data-riff-showing="turntable"][data-playing="true"]:not([data-riff-room]) .riff-turns {
 	animation-play-state: running;
 }
 
@@ -2930,6 +2933,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	/* Up next and the other panels open in the controls' strip, never over
 	   the deck: the turntable keeps turning where it is. */
 	#riff .riff-side {
+		--riff-side-place: strip;
 		inset: 0 0 0 auto;
 		width: clamp(224px, 30%, 300px);
 		padding: var(--riff-safe-t) var(--riff-safe-r) var(--riff-safe-b) 0;

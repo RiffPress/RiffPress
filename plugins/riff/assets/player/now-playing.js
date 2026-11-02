@@ -49,7 +49,7 @@ export function nowPlaying( P ) {
 			unfolded = false;
 		}
 		P.showing = id;
-		root.dataset.riffView = id;
+		root.dataset.riffShowing = id;
 		const stage = !! P.views.get( id ).stage;
 		np.dataset.riffScreen = stage ? 'stage' : 'own';
 		for ( const [ other, v ] of P.views ) {

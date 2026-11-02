@@ -50,7 +50,7 @@ async function nowPlaying( page, view = 'turntable' ) {
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-view', view );
+	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', view );
 }
 
 test.describe( 'iPhone Duo', () => {
@@ -127,10 +127,10 @@ test.describe( 'iPhone Duo', () => {
 		await expect( root ).not.toHaveAttribute( 'data-riff-deck', 'out' );
 		// Unfolded, the screen is the turntable; folded again, the album.
 		await page.setViewportSize( OPEN );
-		await expect( root ).toHaveAttribute( 'data-riff-view', 'turntable' );
+		await expect( root ).toHaveAttribute( 'data-riff-showing', 'turntable' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
 		await page.setViewportSize( FOLDED );
-		await expect( root ).toHaveAttribute( 'data-riff-view', 'album' );
+		await expect( root ).toHaveAttribute( 'data-riff-showing', 'album' );
 		await expect( root ).not.toHaveAttribute( 'data-riff-deck', 'out' );
 		await expect( page.locator( '.riff-cover' ) ).toBeVisible();
 	} );
@@ -153,7 +153,7 @@ test.describe( 'iPhone Duo', () => {
 		await page.setViewportSize( upright );
 		await nowPlaying( page, 'album' );
 		await fold( page, upright, 'horizontal' );
-		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-view', 'turntable' );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', 'turntable' );
 		const half = upright.height / 2 - 8;
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
 		const record = await page.locator( '.riff-record' ).boundingBox();

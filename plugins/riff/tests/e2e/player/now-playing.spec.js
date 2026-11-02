@@ -98,11 +98,11 @@ test.describe( 'Player', () => {
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await page.evaluate( () => window.riff.open() );
-		await expect( root ).toHaveAttribute( 'data-riff-view', 'turntable' );
+		await expect( root ).toHaveAttribute( 'data-riff-showing', 'turntable' );
 		await openView( page, 'album' );
 		await page.keyboard.press( 'Escape' );
 		await page.evaluate( () => window.riff.open() );
-		await expect( root ).toHaveAttribute( 'data-riff-view', 'album' );
+		await expect( root ).toHaveAttribute( 'data-riff-showing', 'album' );
 	} );
 
 	test( 'on a wide screen the art stays square and the bar keeps its measurements', async ( {

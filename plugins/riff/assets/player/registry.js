@@ -19,13 +19,6 @@ import { read, write } from 'riff-player/helpers';
 // English they are written in.
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
-// Where a panel stands beside the page (riff.css), and where it opens in the controls' strip of a
-// touch screen on its side, beside the turntable; anywhere else it covers the screen.
-const BESIDE =
-	'(min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px)))';
-const STRIP =
-	'(pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px)';
-
 // An id names a control in data-riff-control and a view in data-riff-view.
 const ID = /^[a-z][a-z0-9-]*$/;
 
@@ -201,7 +194,14 @@ export function registry( P ) {
 	}
 	P.views = views;
 
-	const beside = () => window.matchMedia( BESIDE ).matches;
+	// Where a panel stands, as riff.css lays it out (--riff-side-place): beside the page, in the
+	// controls' strip of a touch screen on its side, beside the turntable, or over everything as a
+	// sheet. Read from the stylesheet, so the shapes are written down once.
+	const where = () =>
+		side
+			? getComputedStyle( side ).getPropertyValue( '--riff-side-place' ).trim()
+			: 'sheet';
+	const beside = () => where() === 'beside';
 
 	function isOpen( id ) {
 		const v = views.get( id );
@@ -425,7 +425,7 @@ export function registry( P ) {
 		document.documentElement.classList.add( 'riff-panel-open' );
 		// Over everything on a phone, so a dialog there; beside the page on a wide screen, and
 		// beside the turntable in its strip.
-		const sheet = ! beside() && ! window.matchMedia( STRIP ).matches;
+		const sheet = where() === 'sheet';
 		if ( sheet ) {
 			side.setAttribute( 'role', 'dialog' );
 			side.setAttribute( 'aria-modal', 'true' );

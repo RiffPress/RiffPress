@@ -39,7 +39,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		Player::markup();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString( '<div id="riff" class="riff" hidden data-riff-view="album" data-riff-turntable="off">', $html, 'Now Playing opens to the album, the cover on its own' );
+		$this->assertStringContainsString( '<div id="riff" class="riff" hidden data-riff-showing="album" data-riff-turntable="off">', $html, 'Now Playing opens to the album, the cover on its own' );
 		$this->assertStringContainsString( 'class="riff-audio"', $html );
 		$this->assertStringContainsString( 'class="riff-video"', $html );
 		$this->assertStringContainsString( 'data-riff-wire', $html );

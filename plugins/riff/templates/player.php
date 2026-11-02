@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Player::icon() returns static SVG shipped with the plugin, and Registry escapes what it draws.
 ?>
 <?php // Now Playing opens to the album, the cover on its own; the turntable is a view of its own (now-playing.js). ?>
-<div id="riff" class="riff" hidden<?php echo Player::root_style(); ?> data-riff-view="album" data-riff-turntable="off">
+<div id="riff" class="riff" hidden<?php echo Player::root_style(); ?> data-riff-showing="album" data-riff-turntable="off">
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
 		<?php // What plays, read and not pressed: the views open from their buttons at the bar's right. ?>
 		<div class="riff-bar-info">

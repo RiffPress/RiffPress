@@ -30,7 +30,7 @@ async function openView( page, id ) {
 	}
 	await expect( view ).toBeVisible();
 	if ( stage ) {
-		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-view', id );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', id );
 	}
 	return view;
 }
