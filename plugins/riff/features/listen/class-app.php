@@ -53,6 +53,13 @@ final class App {
 	public const PAGE_QUERY = 'riff_page';
 
 	/**
+	 * The query argument that leaves out the pages before it, for Load more, which already has them.
+	 *
+	 * @since 5.8.0
+	 */
+	public const FROM_QUERY = 'riff_from';
+
+	/**
 	 * Hooks the block and the shortcode.
 	 *
 	 * @since 4.0.0
@@ -219,7 +226,7 @@ final class App {
 		return sprintf(
 			'<div %s data-riff-app data-riff-rest="%s" data-riff-tracks-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s" data-riff-browse="%s">' .
 			'<nav class="riff-app-bar" aria-label="%s">%s</nav>' .
-			'<div class="riff-app-view" data-riff-app-view>%s</div>%s</div>',
+			'<div class="riff-app-view" data-riff-app-view>%s</div></div>',
 			$wrapper,
 			esc_url( rest_url( Library::REST . '/library' ) ),
 			esc_url( rest_url( Library::REST . '/tracks' ) ),
@@ -229,8 +236,7 @@ final class App {
 			esc_attr( implode( ',', Browse::ARGS ) ),
 			esc_attr__( 'Riff', 'riff' ),
 			Browse::nav( $page, $browse ),
-			$view,
-			Ui::card_template()
+			$view
 		);
 	}
 
@@ -367,13 +373,15 @@ final class App {
 	}
 
 	/**
-	 * How many pages of the library the address asks for: 1 unless ?riff_page says more.
+	 * How many pages of the library the address asks for: 1 unless ?riff_page says more. Or, with
+	 * ?riff_from, the page to start at.
 	 *
+	 * @param string $arg Which argument to read.
 	 * @return int
 	 */
-	private static function requested_pages(): int {
+	private static function requested_pages( string $arg = self::PAGE_QUERY ): int {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which page to show; nothing changes.
-		$raw = isset( $_GET[ self::PAGE_QUERY ] ) ? sanitize_text_field( wp_unslash( $_GET[ self::PAGE_QUERY ] ) ) : '';
+		$raw = isset( $_GET[ $arg ] ) ? sanitize_text_field( wp_unslash( $_GET[ $arg ] ) ) : '';
 		return ctype_digit( $raw ) ? max( 1, (int) $raw ) : 1;
 	}
 
@@ -410,8 +418,10 @@ final class App {
 		}
 		$pages = max( 1, (int) $query->max_num_pages );
 		$upto  = min( self::requested_pages(), $pages );
+		// Load more asks only for the page it adds, so each press costs one page, not all of them.
+		$from  = min( self::requested_pages( self::FROM_QUERY ), $upto );
 		$cards = '';
-		for ( $n = 1; $n <= $upto; $n++ ) {
+		for ( $n = $from; $n <= $upto; $n++ ) {
 			$posts = 1 === $n ? $query->posts : Library::query( array( 'paged' => $n ) )->posts;
 			Library::prime( $posts );
 			foreach ( array_values( $posts ) as $i => $post ) {

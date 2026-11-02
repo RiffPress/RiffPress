@@ -3,7 +3,7 @@
  * fifteen seconds while Home shows it and the page is in view, with the version it last had, so a
  * room where nothing has changed costs the server a lookup and nothing more. Pressing someone follows
  * them: the player plays what they play, where they are, and keeps with them. */
-import { fmt, route } from 'riff-app/helpers';
+import { route } from 'riff-app/helpers';
 
 export function togetherRow( ctx ) {
 	const { api, view, __, tell } = ctx;
@@ -19,23 +19,8 @@ export function togetherRow( ctx ) {
 		if ( ! row ) {
 			return;
 		}
-		const cards = listeners.map( ( l ) =>
-			ctx.makeCard( {
-				art: l.track.art,
-				title: l.user.name,
-				sub: [ l.track.title, l.track.artist ]
-					.filter( Boolean )
-					.join( ' · ' ),
-				href: '',
-				play: { action: 'listen-along', data: { user: l.user.id } },
-				label: l.user.name,
-				says: fmt(
-					/* translators: %s: The listener's name. */
-					__( 'Follow %s', 'riff' ),
-					l.user.name
-				),
-			} )
-		);
+		// Each listener's card, as the server draws every card.
+		const cards = listeners.map( ( l ) => String( l.card || '' ) );
 		const into = row.querySelector( '.riff-shelf-row' );
 		into.innerHTML = cards.join( '' );
 		ctx.fade( into );

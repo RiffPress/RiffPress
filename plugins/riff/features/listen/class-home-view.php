@@ -8,10 +8,13 @@
 
 namespace Riff\Listen;
 
+use WP_Error;
 use WP_REST_Request;
+use WP_REST_Response;
 
 use Riff\Library;
 use Riff\Likes_Rest;
+use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -19,9 +22,101 @@ defined( 'ABSPATH' ) || exit;
  * Home: rows that scroll sideways, as the apps open. What was played draws here too, so nothing
  * moves once the page is up: a signed-in listener's from their account, and a visitor's as rows
  * of empty cards the script fills in place, when the player's cookie says their browser has a
- * history. Your Library borrows the Recently played row.
+ * history, with cards drawn here from what the browser kept, at riff/v1/played. Your Library
+ * borrows the Recently played row.
  */
 final class Home_View {
+
+	/**
+	 * The most of a browser's history drawn at once: what the player keeps.
+	 */
+	private const PLAYED_MAX = 50;
+
+	/**
+	 * Hooks the route.
+	 *
+	 * @since 5.8.0
+	 */
+	public static function register(): void {
+		add_action( 'rest_api_init', array( self::class, 'routes' ) );
+	}
+
+	/**
+	 * GET /riff/v1/played: a visitor's Jump back in and Recently played, drawn as a signed-in
+	 * listener's are, from what their browser kept: each track played, newest first, as its
+	 * attachment and the post it played from. What the site no longer has, or the visitor may not
+	 * see, is left out. Riff's own, for the Listen app, and not public: it may change with the app.
+	 *
+	 * @since 5.8.0
+	 */
+	public static function routes(): void {
+		register_rest_route(
+			Library::REST,
+			'/played',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( self::class, 'rest_played' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'items' => array(
+						'description' => __( 'Tracks played, newest first, each as its attachment ID and the post it played from, or 0: 12:34,15:0.', 'riff' ),
+						'type'        => 'string',
+						'required'    => true,
+						'pattern'     => '^\\d+:\\d+(,\\d+:\\d+)*$',
+					),
+					'page'  => array(
+						'description' => __( 'The Listen page the cards link to.', 'riff' ),
+						'type'        => 'string',
+						'format'      => 'uri',
+						'required'    => true,
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * GET /played.
+	 *
+	 * @since 5.8.0
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function rest_played( WP_REST_Request $request ) {
+		// Only this site's own Listen page, so a card never links anywhere else.
+		$page = wp_validate_redirect( (string) $request['page'], '' );
+		if ( '' === $page ) {
+			return new WP_Error( 'rest_invalid_param', __( 'That is not a page of this site.', 'riff' ), array( 'status' => 400 ) );
+		}
+		$items = array();
+		foreach ( array_slice( explode( ',', (string) $request['items'] ), 0, self::PLAYED_MAX ) as $pair ) {
+			[ $id, $post ] = array_map( 'intval', explode( ':', $pair ) );
+			$items[]       = array(
+				'id'   => $id,
+				'post' => $post,
+			);
+		}
+		// Each with its place in the browser's history, which Recently played's buttons play by.
+		$played = array();
+		foreach ( Tracks::readable( $items ) as $i => $track ) {
+			if ( ! $track ) {
+				continue;
+			}
+			// A post it can't be shown from, or the Listen page itself, is no post to jump back into.
+			if ( (int) ( $track['post']['id'] ?? 0 ) !== $items[ $i ]['post'] ) {
+				$track['post'] = null;
+			}
+			$track['index'] = $i;
+			$played[]       = $track;
+		}
+		return new WP_REST_Response(
+			array(
+				'jump'   => self::jump_cards( $played, $page ),
+				'recent' => self::recent_cards( $played, $page ),
+			)
+		);
+	}
 
 	/**
 	 * Home: rows that scroll sideways, as the apps open.
@@ -126,7 +221,7 @@ final class Home_View {
 	}
 
 	/**
-	 * A played track's cover, in every size it has, as app.js draws it.
+	 * A played track's cover, in every size it has.
 	 *
 	 * @param array $track Track.
 	 * @return array
@@ -136,13 +231,25 @@ final class Home_View {
 	}
 
 	/**
-	 * Jump back in: the posts last played from, each once, as app.js draws it.
+	 * Jump back in: the posts last played from, each once.
 	 *
 	 * @param array[] $played Tracks played, newest first.
 	 * @param string  $page   Listen page.
 	 * @return string
 	 */
 	private static function jump_shelf( array $played, string $page ): string {
+		$cards = self::jump_cards( $played, $page );
+		return Ui::shelf( 'jump', __( 'Jump back in', 'riff' ), '', $cards, '' === $cards, 'div', array( 'played' => self::played_key( $played ) ) );
+	}
+
+	/**
+	 * Jump back in's cards.
+	 *
+	 * @param array[] $played Tracks played, newest first.
+	 * @param string  $page   Listen page.
+	 * @return string
+	 */
+	private static function jump_cards( array $played, string $page ): string {
 		$cards = '';
 		$seen  = array();
 		foreach ( $played as $track ) {
@@ -167,17 +274,30 @@ final class Home_View {
 				)
 			);
 		}
-		return Ui::shelf( 'jump', __( 'Jump back in', 'riff' ), '', $cards, '' === $cards, 'div', array( 'played' => self::played_key( $played ) ) );
+		return $cards;
 	}
 
 	/**
-	 * Recently played: the tracks themselves, as app.js draws them.
+	 * Recently played: the tracks themselves.
 	 *
 	 * @param array[] $played Tracks played, newest first.
 	 * @param string  $page   Listen page.
 	 * @return string
 	 */
 	private static function recent_shelf( array $played, string $page ): string {
+		$cards = self::recent_cards( $played, $page );
+		return Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', $cards, '' === $cards, 'div', array( 'played' => self::played_key( $played ) ) );
+	}
+
+	/**
+	 * Recently played's cards, each playing its track by its place in the history, which is its
+	 * index here unless what was before it was left out.
+	 *
+	 * @param array[] $played Tracks played, newest first.
+	 * @param string  $page   Listen page.
+	 * @return string
+	 */
+	private static function recent_cards( array $played, string $page ): string {
 		$cards = '';
 		foreach ( array_slice( $played, 0, 20 ) as $i => $track ) {
 			$post   = (int) ( $track['post']['id'] ?? 0 );
@@ -190,13 +310,13 @@ final class Home_View {
 					'art'   => self::played_art( $track ),
 					'play'  => array(
 						'action' => 'play-history',
-						'data'   => array( 'index' => $i ),
+						'data'   => array( 'index' => (int) ( $track['index'] ?? $i ) ),
 						/* translators: %s: track or post title. */
 						'label'  => sprintf( __( 'Play %s', 'riff' ), $title ),
 					),
 				)
 			);
 		}
-		return Ui::shelf( 'recent', __( 'Recently played', 'riff' ), '', $cards, '' === $cards, 'div', array( 'played' => self::played_key( $played ) ) );
+		return $cards;
 	}
 }

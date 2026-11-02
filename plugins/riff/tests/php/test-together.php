@@ -192,6 +192,10 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertEqualsWithDelta( microtime( true ) * 1000, $listener['since'], 5000, 'stamped with the server\'s time' );
 		$this->assertArrayNotHasKey( 'queue', $listener, 'the room lists tracks, not queues' );
 		$this->assertArrayNotHasKey( 'levels', $listener['track'] );
+		// Their card, drawn here as every card is, for Home's Listening now.
+		$this->assertStringStartsWith( '<div class="riff-card"', $listener['card'] );
+		$this->assertStringContainsString( 'data-riff-app-action="listen-along" data-riff-user="' . $this->host . '"', $listener['card'] );
+		$this->assertStringContainsString( esc_html( get_userdata( $this->host )->display_name ), $listener['card'] );
 	}
 
 	public function test_listeners_are_listed_by_name_with_their_tracks_looked_up_at_once(): void {

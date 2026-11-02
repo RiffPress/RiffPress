@@ -45,5 +45,6 @@ final class Plugin {
 		Listen\Art::register();
 		Listen\First_Run::register();
 		Listen\Together::register();
+		Listen\Home_View::register();
 	}
 }
