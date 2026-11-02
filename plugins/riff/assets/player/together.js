@@ -51,8 +51,14 @@ export default function together( P ) {
 	// only make a click.
 	const THERE = 0.05;
 
-	const send = ( path, method = 'GET', body = null ) =>
-		fetch( route( url, path ), {
+	const withQuery = ( u, query ) => {
+		for ( const [ k, v ] of Object.entries( query ) ) {
+			u.searchParams.set( k, v );
+		}
+		return u;
+	};
+	const send = ( path, method = 'GET', body = null, query = {} ) =>
+		fetch( withQuery( route( url, path ), query ), {
 			method,
 			credentials: 'same-origin',
 			headers: {
@@ -344,6 +350,9 @@ export default function together( P ) {
 			return; // Asked again on the next tick.
 		}
 		const d = await r.json();
+		if ( following?.user !== user ) {
+			return; // Left while the answer was read.
+		}
 		// Who they are and who else is with them, for the Together tab.
 		following.name = following.name || String( d.user?.name || '' );
 		following.face = String( d.user?.face || '' );
@@ -455,11 +464,14 @@ export default function together( P ) {
 	const TAB = 'together';
 	const ROOM = 15000; // How often the room is asked for while the tab shows it, as Home does.
 	let room = [];
+	let roomVersion = null;
 	let roomTimer = 0;
 	let roomTurn = 0; // The latest ask, so only one goes on asking.
 	let drawn = '';
 	const panel = () => root.querySelector( `[data-riff-panel="${ TAB }"]` );
-	const showing = () => panel()?.hidden === false;
+	const np = root.querySelector( '.riff-np' );
+	// The tab picked, in Now Playing while it is open.
+	const showing = () => panel()?.hidden === false && np?.hidden === false;
 	// Their face, or a person where they have none.
 	function face( src ) {
 		const span = document.createElement( 'span' );
@@ -535,8 +547,20 @@ export default function together( P ) {
 						.filter( Boolean )
 						.join( ' · ' ),
 			  } ) );
-		const key = JSON.stringify( [ following?.user || 0, followers.length, people ] );
+		// Who is shown, without what they play: a listener moving on to their next track changes
+		// only that line, in place, so a button keeps its focus.
+		const key = JSON.stringify( [
+			following?.user || 0,
+			followers.length,
+			people.map( ( p ) => [ p.id, p.name, p.face ] ),
+		] );
 		if ( key === drawn ) {
+			into.querySelectorAll( '.riff-together-person' ).forEach( ( li, i ) => {
+				const sub = li.querySelector( '.riff-together-sub' );
+				if ( sub && people[ i ]?.sub && sub.textContent !== people[ i ].sub ) {
+					sub.textContent = people[ i ].sub;
+				}
+			} );
 			return;
 		}
 		const had = into.contains( document.activeElement );
@@ -628,10 +652,19 @@ export default function together( P ) {
 			return;
 		}
 		try {
-			const r = await send( '' );
+			// With the version it last had, so a room where nothing changed costs a lookup.
+			const r = await send(
+				'',
+				'GET',
+				null,
+				roomVersion ? { version: roomVersion } : {}
+			);
 			if ( r.ok ) {
 				const d = await r.json();
-				room = Array.isArray( d.listeners ) ? d.listeners : [];
+				roomVersion = d.version ?? null;
+				if ( d.changed !== false ) {
+					room = Array.isArray( d.listeners ) ? d.listeners : [];
+				}
 			}
 		} catch {
 			// Asked again in a moment.
@@ -654,6 +687,15 @@ export default function together( P ) {
 			askRoom();
 		}
 	} );
+	// Now Playing opened again on the tab: asked again, as it stopped asking while closed.
+	if ( np && typeof MutationObserver === 'function' ) {
+		new MutationObserver( () => {
+			if ( showing() ) {
+				draw();
+				askRoom();
+			}
+		} ).observe( np, { attributes: true, attributeFilter: [ 'hidden' ] } );
+	}
 	// Picked before this loaded.
 	if ( showing() ) {
 		draw();

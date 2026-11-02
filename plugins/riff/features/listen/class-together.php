@@ -96,7 +96,7 @@ final class Together {
 	 *
 	 * @since 5.8.0
 	 */
-	public const TAB = 'together';
+	private const TAB = 'together';
 
 	/**
 	 * Hooks the routes, the profile field and the Together tab.
