@@ -85,6 +85,8 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" class="riff-sleeve"><?php esc_html_e( 'Play the record', 'riff' ); ?></button>
 				<video class="riff-video" playsinline preload="metadata"></video>
 			</div>
+			<?php // The turntable's VU meter and spectrum, under the deck, drawn by meters.js where the music passes through Web Audio, and only while the Turntable view shows. ?>
+			<div class="riff-meters" aria-hidden="true"></div>
 			<?php // The screens with a region of their own, such as the lyrics, each in the stage's place while it shows. ?>
 			<?php echo Registry::screens(); ?>
 			<?php /* Where the whole screen is the turntable (riff.css), the deck's own controls on its plinth, as a direct-drive deck has them: start and stop at the front, the two speeds beside it, and the pitch fader at the side, moving the music, the platter, the strobe and the arm together. */ ?>

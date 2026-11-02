@@ -197,7 +197,16 @@ Riff lays out by the screen's shape, never by the device, as WebKit and Apple as
 
 ## The turntable
 
-The turntable is a view of its own (above). A site that wants the cover on its own registers none:
+The turntable is a view of its own (above). Under the deck it has a VU meter and a spectrum
+(`assets/player/meters.js`), read from the music where it passes through Web Audio, as it does
+everywhere but an iPhone. The VU meter is IEC 60268-17's: a needle on the rectified signal that
+reaches 99% of a steady tone's reading in 300 ms and passes it by about 1%, with 0 VU a sine at
+-14 dBFS, the loudness the streaming services play at. The spectrum is 31 one-third-octave bands
+from 20 Hz to 20 kHz, each averaged over IEC 61672's Slow second, so a lossy file shows where its
+encoder stopped: a 128 kbps MP3 has nothing above about 16 kHz. Their row is kept from the moment
+the view opens, so the deck doesn't change size when the music first plays and they are drawn.
+Neither is shown with the video, for a listener who asks for less motion, or for a file from
+another origin that doesn't share over CORS, which Web Audio can't hear. A site that wants the cover on its own registers none:
 it turns the turntable off under **Settings › Media** (Now Playing), or with the `riff_turntable`
 filter. Off, there is no Turntable button or chip, the record never comes out of its sleeve, and a
 touch screen on its side or a folding phone shows the cover beside the controls, with no deck board
