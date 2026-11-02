@@ -638,7 +638,7 @@ export function nowPlaying( P ) {
 			}
 			clearTimeout( deck.opening );
 			// Onto the deck its speed and pitch hold; off it the music is at its own speed again.
-			retune();
+			retune( false );
 			if ( roomy.last && wholeDeck() && ! P.reduce() ) {
 				// Opened: the sleeve settles at the deck's edge first, then the record slides out of it.
 				deck.opening = setTimeout( () => deck( roomy() ), OPENING );
@@ -1307,9 +1307,13 @@ export function nowPlaying( P ) {
 		fader.setAttribute( 'aria-valuetext', `${ readout }%` );
 		board.querySelector( 'output' ).textContent = readout;
 	}
-	// The motor pulls the platter to the new speed while it turns; stopped, it starts there.
-	function retune() {
-		P.press( 'speed' );
+	// The motor pulls the platter to the new speed while it turns; stopped, it starts there. A
+	// listener's own turn of the speed or the pitch is a press; the deck coming or going as the
+	// stage changes shape is not, so opening Now Playing doesn't stop following someone.
+	function retune( pressed = true ) {
+		if ( pressed ) {
+			P.press( 'speed' );
+		}
 		paintDeck();
 		const m = P.el();
 		if ( m.paused || held() || P.ramping ) {

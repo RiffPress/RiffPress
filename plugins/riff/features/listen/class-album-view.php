@@ -13,7 +13,8 @@ use Riff\Catalog;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Its name and artist beside Play and Shuffle, then its tracks in order, then more by the artist.
+ * Its name and artist beside Play and Shuffle, and the faces of whoever is playing from it now, then
+ * its tracks in order, then more by the artist.
  */
 final class Album_View {
 
@@ -41,7 +42,7 @@ final class Album_View {
 		$by     = $by instanceof \WP_Term ? $by : null;
 		// The artist opens their page, when they have one.
 		$meta = array_values( array_filter( array( $by ? array( $artist, add_query_arg( Browse::ARTIST, (int) $by->term_id, $page ) ) : $artist, Browse::count( (int) $data['total'] ) ) ) );
-		return Browse::list_view( Catalog::name( $term->name ), $meta, $data, __( 'Album', 'riff' ), true, $id, Browse::more( '/tracks', $args, $data ) ) . Browse::next( add_query_arg( Browse::ALBUM, $id, $page ), $data ) . self::more_by( $artist, $by, $id, $page );
+		return Browse::list_view( Catalog::name( $term->name ), $meta, $data, __( 'Album', 'riff' ), true, $id, Browse::more( '/tracks', $args, $data ), Together::faces( $id ) ) . Browse::next( add_query_arg( Browse::ALBUM, $id, $page ), $data ) . self::more_by( $artist, $by, $id, $page );
 	}
 
 	/**

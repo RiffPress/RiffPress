@@ -1,24 +1,35 @@
-/* Listening now: who else on the site is playing, as a row on Home. The server draws the row hidden,
- * and only when the Presence API is active and the listener is signed in; this asks the room every
- * fifteen seconds while Home shows it and the page is in view, with the version it last had, so a
- * room where nothing has changed costs the server a lookup and nothing more. Pressing someone follows
- * them: the player plays what they play, where they are, and keeps with them. */
-import { route } from 'riff-app/helpers';
+/* Listening now: who else on the site is playing, as a row on Home and as faces on an album's page,
+ * of whoever is playing from it. The server draws each hidden, and only when the Presence API is
+ * active and the listener is signed in; this asks the room every fifteen seconds while the view
+ * shows one and the page is in view, with the version it last had, so a room where nothing has
+ * changed costs the server a lookup and nothing more. Pressing someone follows them: the player plays
+ * what they play, where they are, and keeps with them. */
+import { fmt, route } from 'riff-app/helpers';
+
+// A person, where a listener has no face.
+const NO_FACE =
+	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
 
 export function togetherRow( ctx ) {
 	const { api, view, __, tell } = ctx;
 	const EVERY = 15000;
 	let version = null;
 	let listeners = [];
-	let asking = false;
+	let asking = 0; // The ask in flight, by its turn; 0 for none.
+	let turn = 0;
+	// The address the room was last asked at: Home's, or one album's, each with its own listeners.
+	let from = '';
 
-	const shelf = () => view.querySelector( '[data-riff-shelf="together"]' );
+	const spot = () => view.querySelector( '[data-riff-together]' );
 
-	function draw() {
-		const row = shelf();
-		if ( ! row ) {
-			return;
-		}
+	const follows = ( name ) =>
+		fmt(
+			/* translators: %s: The listener's name. */
+			__( 'Follow %s', 'riff' ),
+			name
+		);
+
+	function shelf( row ) {
 		// Each listener's card, as the server draws every card.
 		const cards = listeners.map( ( l ) => String( l.card || '' ) );
 		const into = row.querySelector( '.riff-shelf-row' );
@@ -27,19 +38,76 @@ export function togetherRow( ctx ) {
 		row.hidden = ! cards.length;
 	}
 
-	async function ask() {
-		const row = shelf();
-		if ( ! row || asking || document.hidden ) {
+	// An album's faces, each a button that follows them. Drawn again only when who is there changes,
+	// so a face keeps its focus.
+	function faces( holder ) {
+		const into = holder.querySelector( '.riff-album-faces' );
+		const key = JSON.stringify( listeners.map( ( l ) => l.user ) );
+		if ( into.dataset.riffDrawn !== key ) {
+			into.dataset.riffDrawn = key;
+			into.replaceChildren(
+				...listeners.map( ( l ) => {
+					const b = document.createElement( 'button' );
+					b.type = 'button';
+					b.className = 'riff-album-face';
+					b.dataset.riffAppAction = 'listen-along';
+					b.dataset.riffUser = String( l.user.id );
+					b.setAttribute( 'aria-label', follows( l.user.name ) );
+					b.title = follows( l.user.name );
+					b.innerHTML = NO_FACE;
+					if ( l.user.face ) {
+						const img = document.createElement( 'img' );
+						img.alt = '';
+						img.addEventListener( 'error', () => img.remove(), {
+							once: true,
+						} );
+						img.src = l.user.face;
+						b.append( img );
+					}
+					return b;
+				} )
+			);
+		}
+		holder.hidden = ! listeners.length;
+	}
+
+	function draw() {
+		const holder = spot();
+		if ( ! holder || holder.dataset.riffTogether !== from ) {
 			return;
 		}
-		asking = true;
+		if ( holder.dataset.riffShelf ) {
+			shelf( holder );
+		} else {
+			faces( holder );
+		}
+	}
+
+	async function ask() {
+		const holder = spot();
+		if ( ! holder || document.hidden ) {
+			return;
+		}
+		const at = holder.dataset.riffTogether;
+		// One ask at a time, unless the view has moved on to another room's address.
+		if ( asking && at === from ) {
+			return;
+		}
+		if ( at !== from ) {
+			from = at;
+			version = null;
+			listeners = [];
+		}
+		const mine = ++turn;
+		asking = mine;
 		try {
-			const u = route( row.dataset.riffTogether );
+			const u = route( at );
 			if ( version ) {
 				u.searchParams.set( 'version', version );
 			}
 			const r = await api.request( u );
-			if ( r.ok ) {
+			// Another view's answer, once that view has gone, is left.
+			if ( r.ok && at === from ) {
 				const room = await r.json();
 				version = room.version;
 				if ( room.changed !== false ) {
@@ -51,14 +119,17 @@ export function togetherRow( ctx ) {
 		} catch {
 			// Asked again on the next tick.
 		} finally {
-			asking = false;
+			if ( asking === mine ) {
+				asking = 0;
+			}
 		}
 		draw();
 	}
 
-	// Home drawn again, by show() or a quiet redraw, gets the row as it was and is asked at once.
+	// A view drawn again, by show() or a quiet redraw, gets its listeners as they were and is asked
+	// at once.
 	function together() {
-		if ( shelf() ) {
+		if ( spot() ) {
 			draw();
 			ask();
 		}

@@ -495,8 +495,9 @@ final class Browse {
 	 * @param bool         $album Whether it is an album: its cover leads, and its tracks are numbered.
 	 * @param int          $id    The album's term ID, for its heart, or 0.
 	 * @param array        $more  For one page of a longer list, where it goes on, from more().
+	 * @param string       $extra More after Play and Shuffle, as App::header() takes it.
 	 */
-	public static function list_view( string $title, string|array $meta, array $data, string $kind = '', bool $album = false, int $id = 0, array $more = array() ): string {
+	public static function list_view( string $title, string|array $meta, array $data, string $kind = '', bool $album = false, int $id = 0, array $more = array(), string $extra = '' ): string {
 		if ( ! $data['items'] ) {
 			return Ui::title( $title ) . self::empty_note();
 		}
@@ -506,7 +507,7 @@ final class Browse {
 			$cover = Art::album_art( $id, $cover );
 		}
 		$tint = $album ? Art::tint( $cover ) : '';
-		return App::header( $title, $meta, $kind, $cover, $tint, false, $id ? 'album' : '', $id ) . self::rows( $data['items'], $album, false, $more );
+		return App::header( $title, $meta, $kind, $cover, $tint, false, $id ? 'album' : '', $id, array(), $extra ) . self::rows( $data['items'], $album, false, $more );
 	}
 
 	/**

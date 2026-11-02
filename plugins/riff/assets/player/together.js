@@ -14,8 +14,12 @@
  * for the same moment. Nothing is chased or corrected after: from then on each plays on its own,
  * at the same place. A change that reaches a follower after it was due (a locked phone's slowed
  * timers) is joined once, where the schedule says the music is by then. A press of the follower's
- * own (P.press) stops following. Loaded on demand, when the first track does or a listener follows
- * someone, and only where the room is. */
+ * own (P.press) stops following. Loaded on demand, when the first track does, a listener follows
+ * someone or picks the Together tab, and only where the room is.
+ *
+ * The Together tab beside Up next (Together::tab()) shows the session this listener is in: who they
+ * follow and who else is with them, with Leave; or who is with them. Outside one, it shows who else
+ * is listening, each with Follow. */
 
 import { fmt, route } from 'riff-player/helpers';
 
@@ -47,8 +51,14 @@ export default function together( P ) {
 	// only make a click.
 	const THERE = 0.05;
 
-	const send = ( path, method = 'GET', body = null ) =>
-		fetch( route( url, path ), {
+	const withQuery = ( u, query ) => {
+		for ( const [ k, v ] of Object.entries( query ) ) {
+			u.searchParams.set( k, v );
+		}
+		return u;
+	};
+	const send = ( path, method = 'GET', body = null, query = {} ) =>
+		fetch( withQuery( route( url, path ), query ), {
 			method,
 			credentials: 'same-origin',
 			headers: {
@@ -178,7 +188,7 @@ export default function together( P ) {
 				hear( now.length );
 				if ( JSON.stringify( now ) !== JSON.stringify( followers ) ) {
 					followers = now;
-					P.areas?.();
+					refresh();
 				}
 			} )
 			.catch( () => {} ); // Asked again in a moment.
@@ -340,6 +350,14 @@ export default function together( P ) {
 			return; // Asked again on the next tick.
 		}
 		const d = await r.json();
+		if ( following?.user !== user ) {
+			return; // Left while the answer was read.
+		}
+		// Who they are and who else is with them, for the Together tab.
+		following.name = following.name || String( d.user?.name || '' );
+		following.face = String( d.user?.face || '' );
+		following.with = Array.isArray( d.with ) ? d.with : [];
+		draw();
 		if ( Array.isArray( d.queue ) ) {
 			following.queue = d.queue;
 			following.version = d.version;
@@ -380,6 +398,8 @@ export default function together( P ) {
 		following = {
 			user: id,
 			name: String( name ),
+			face: '',
+			with: [],
 			version: '',
 			queue: null,
 			plan: null,
@@ -393,11 +413,11 @@ export default function together( P ) {
 		await ask();
 		if ( ! following?.plan ) {
 			following = null;
-			P.areas?.();
+			refresh();
 			return false;
 		}
 		asking = setInterval( ask, ASK );
-		P.areas?.();
+		refresh();
 		P.toast(
 			fmt(
 				/* translators: %s: The listener's name. */
@@ -426,7 +446,7 @@ export default function together( P ) {
 		if ( message ) {
 			P.toast( fmt( message, name ) );
 		}
-		P.areas?.();
+		refresh();
 		share();
 	}
 
@@ -435,7 +455,252 @@ export default function together( P ) {
 		if ( ! document.hidden && following ) {
 			ask();
 		}
+		if ( ! document.hidden ) {
+			askRoom();
+		}
 	} );
+
+	// ---- The Together tab: the session, or outside one, who else is listening.
+	const TAB = 'together';
+	const ROOM = 15000; // How often the room is asked for while the tab shows it, as Home does.
+	let room = [];
+	let roomVersion = null;
+	let roomTimer = 0;
+	let roomTurn = 0; // The latest ask, so only one goes on asking.
+	let drawn = '';
+	const panel = () => root.querySelector( `[data-riff-panel="${ TAB }"]` );
+	const np = root.querySelector( '.riff-np' );
+	// The tab picked, in Now Playing while it is open.
+	const showing = () => panel()?.hidden === false && np?.hidden === false;
+	// Their face, or a person where they have none.
+	function face( src ) {
+		const span = document.createElement( 'span' );
+		span.className = 'riff-together-face';
+		span.innerHTML =
+			'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+		if ( src ) {
+			const img = document.createElement( 'img' );
+			img.alt = '';
+			img.loading = 'lazy';
+			img.addEventListener( 'error', () => img.remove(), { once: true } );
+			img.src = src;
+			span.append( img );
+		}
+		return span;
+	}
+	function person( { name, face: src, sub = '' }, action = null ) {
+		const li = document.createElement( 'li' );
+		li.className = 'riff-together-person';
+		li.append( face( src ) );
+		const text = document.createElement( 'span' );
+		text.className = 'riff-together-text';
+		const who = document.createElement( 'span' );
+		who.className = 'riff-together-name';
+		who.textContent = name;
+		text.append( who );
+		if ( sub ) {
+			const what = document.createElement( 'span' );
+			what.className = 'riff-together-sub';
+			what.textContent = sub;
+			text.append( what );
+		}
+		li.append( text );
+		if ( action ) {
+			li.append( action );
+		}
+		return li;
+	}
+	function button( text, label, run ) {
+		const b = document.createElement( 'button' );
+		b.type = 'button';
+		b.className = 'riff-together-button';
+		b.textContent = text;
+		if ( label ) {
+			b.setAttribute( 'aria-label', label );
+		}
+		b.addEventListener( 'click', run );
+		return b;
+	}
+	// What the tab shows: drawn again only when that changes, so a button keeps its focus.
+	function draw() {
+		const into = panel();
+		if ( ! into || into.hidden ) {
+			return;
+		}
+		const people = following
+			? [
+					{
+						id: following.user,
+						name: following.name,
+						face: following.face,
+						sub: __( 'Choosing the music', 'riff' ),
+					},
+					...following.with,
+			  ]
+			: followers.length
+			? followers
+			: room.map( ( l ) => ( {
+					id: l.user.id,
+					name: l.user.name,
+					face: l.user.face,
+					sub: [ l.track?.title, l.track?.artist ]
+						.filter( Boolean )
+						.join( ' · ' ),
+			  } ) );
+		// Who is shown, without what they play: a listener moving on to their next track changes
+		// only that line, in place, so a button keeps its focus.
+		const key = JSON.stringify( [
+			following?.user || 0,
+			followers.length,
+			people.map( ( p ) => [ p.id, p.name, p.face ] ),
+		] );
+		if ( key === drawn ) {
+			into.querySelectorAll( '.riff-together-person' ).forEach( ( li, i ) => {
+				const sub = li.querySelector( '.riff-together-sub' );
+				if ( sub && people[ i ]?.sub && sub.textContent !== people[ i ].sub ) {
+					sub.textContent = people[ i ].sub;
+				}
+			} );
+			return;
+		}
+		const had = into.contains( document.activeElement );
+		drawn = key;
+		const box = document.createElement( 'div' );
+		box.className = 'riff-together';
+		const head = document.createElement( 'h3' );
+		head.className = 'riff-together-head';
+		const list = document.createElement( 'ul' );
+		list.className = 'riff-together-list';
+		if ( following ) {
+			head.textContent = fmt(
+				/* translators: %s: The listener's name. */
+				__( 'Following %s', 'riff' ),
+				following.name
+			);
+			for ( const p of people ) {
+				list.append( person( p ) );
+			}
+			box.append(
+				head,
+				list,
+				button( __( 'Leave', 'riff' ), '', () =>
+					stop(
+						/* translators: %s: The listener's name. */
+						__( 'You stopped following %s.', 'riff' ),
+						false
+					)
+				)
+			);
+		} else if ( followers.length ) {
+			head.textContent = __( 'Listening with you', 'riff' );
+			for ( const p of people ) {
+				list.append( person( p ) );
+			}
+			box.append( head, list );
+		} else {
+			head.textContent = __( 'Listening now', 'riff' );
+			box.append( head );
+			for ( const p of people ) {
+				list.append(
+					person(
+						p,
+						button(
+							__( 'Follow', 'riff' ),
+							fmt(
+								/* translators: %s: The listener's name. */
+								__( 'Follow %s', 'riff' ),
+								p.name
+							),
+							async () => {
+								if ( ! ( await follow( p.id, p.name ) ) ) {
+									P.toast(
+										__(
+											'They have stopped listening, or to something you can’t hear.',
+											'riff'
+										)
+									);
+									askRoom();
+								}
+							}
+						)
+					)
+				);
+			}
+			if ( people.length ) {
+				box.append( list );
+			} else {
+				const none = document.createElement( 'p' );
+				none.className = 'riff-together-none';
+				none.textContent = __(
+					'No one else is listening right now. When someone is, you can follow them here and hear what they play as they play it.',
+					'riff'
+				);
+				box.append( none );
+			}
+		}
+		into.replaceChildren( box );
+		// A press that changed what the tab shows leaves the focus in it.
+		if ( had && ! into.contains( document.activeElement ) ) {
+			into.focus();
+		}
+	}
+	// Who else is listening, while the tab shows it and the page is in view.
+	async function askRoom() {
+		clearTimeout( roomTimer );
+		const mine = ++roomTurn;
+		if ( ! showing() || following || followers.length || document.hidden ) {
+			return;
+		}
+		try {
+			// With the version it last had, so a room where nothing changed costs a lookup.
+			const r = await send(
+				'',
+				'GET',
+				null,
+				roomVersion ? { version: roomVersion } : {}
+			);
+			if ( r.ok ) {
+				const d = await r.json();
+				roomVersion = d.version ?? null;
+				if ( d.changed !== false ) {
+					room = Array.isArray( d.listeners ) ? d.listeners : [];
+				}
+			}
+		} catch {
+			// Asked again in a moment.
+		}
+		if ( mine !== roomTurn ) {
+			return;
+		}
+		draw();
+		roomTimer = setTimeout( askRoom, ROOM );
+	}
+	function refresh() {
+		P.areas?.();
+		draw();
+		askRoom();
+	}
+	root.addEventListener( 'riff:tab', ( e ) => {
+		if ( e.detail?.id === TAB ) {
+			drawn = '';
+			draw();
+			askRoom();
+		}
+	} );
+	// Now Playing opened again on the tab: asked again, as it stopped asking while closed.
+	if ( np && typeof MutationObserver === 'function' ) {
+		new MutationObserver( () => {
+			if ( showing() ) {
+				draw();
+				askRoom();
+			}
+		} ).observe( np, { attributes: true, attributeFilter: [ 'hidden' ] } );
+	}
+	// Picked before this loaded.
+	if ( showing() ) {
+		draw();
+		askRoom();
+	}
 
 	// ---- The bar: who the follower is with, and the way out; or who is with the host.
 	own.badges.add( ( list ) => {
