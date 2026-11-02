@@ -1,18 +1,18 @@
 name: Pages
 
 # Publishes the landing page to Cloudflare Pages at riffpress.com, the developer reference to its own
-# project at developers.riffpress.com, and with them everything the live demo needs: riff.zip built
+# project at developer.riffpress.com, and with them everything the live demo needs: riff.zip built
 # from main, blueprint.json, the seed script and the demo audio, all with URLs stamped by commit so
 # caches never serve an old build. blueprint.json names those files relative to itself; this
 # workflow resolves them against the site's address. GitHub Pages keeps serving a one-line redirect at the
 # old address, so links to it still land.
 #
 # The site is built as one, with /developers/ and /web/ in it, and developers-site.js then moves those
-# pages to the developers host, leaves a 301 at each old address, and fails the deploy on a link
+# pages to the developer host, leaves a 301 at each old address, and fails the deploy on a link
 # between the two that leads nowhere.
 #
 # Needs two repository secrets, CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID,
-# and takes the addresses from the SITE_URL and DEVELOPERS_URL repository variables when set. Each
+# and takes the addresses from the SITE_URL and DEVELOPER_URL repository variables when set. Each
 # custom domain is attached to its project in the Cloudflare dashboard, which writes the DNS record itself.
 # Runs on every push to main; the weekly run catches commits that do not start push workflows.
 
@@ -33,9 +33,9 @@ concurrency:
 
 env:
   PROJECT: riffpress
-  DEVELOPERS_PROJECT: riffpress-developers
+  DEVELOPER_PROJECT: riffpress-developer
   SITE_URL: ${{ vars.SITE_URL || 'https://riffpress.com/' }}
-  DEVELOPERS_URL: ${{ vars.DEVELOPERS_URL || 'https://developers.riffpress.com/' }}
+  DEVELOPER_URL: ${{ vars.DEVELOPER_URL || 'https://developer.riffpress.com/' }}
 
 jobs:
   deploy:
@@ -174,7 +174,7 @@ jobs:
           # blueprint, so nothing outside this deploy has to know the stamp.
           printf '/demo https://playground.wordpress.net/?mode=seamless&blueprint-url=%sblueprint.json?v=%s 302\n' "$BASE" "$V" > out/_redirects
           # The developer reference to its own host, with a redirect from each old address after /demo's.
-          DEV=$(printf '%s' "$DEVELOPERS_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
+          DEV=$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
           [[ "$DEV" =~ ^https://[^/]+/$ ]] || { echo "::error::Unexpected developers URL: $DEV"; exit 1; }
           node .github/scripts/developers-site.js out out-developers "$BASE" "$DEV"
           cat out/_redirects
@@ -192,15 +192,15 @@ jobs:
             exit 1
           fi
           # Creating a project fails harmlessly once it exists.
-          for p in "$PROJECT" "$DEVELOPERS_PROJECT"; do
+          for p in "$PROJECT" "$DEVELOPER_PROJECT"; do
             npx --yes wrangler@4 pages project create "$p" --production-branch main 2> /dev/null || true
           done
-          # The developers host first, and only once it answers does the site start sending its old
+          # The developer host first, and only once it answers does the site start sending its old
           # addresses there. Until the host is attached this stops the whole site's deploy, so the
           # reference never redirects to nowhere.
-          npx --yes wrangler@4 pages deploy out-developers --project-name "$DEVELOPERS_PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
+          npx --yes wrangler@4 pages deploy out-developers --project-name "$DEVELOPER_PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
           if ! curl -fsS -o /dev/null --retry 6 --retry-delay 10 --retry-all-errors "${DEVELOPERS}php/"; then
-            echo "::error::${DEVELOPERS} does not answer. Attach it to the $DEVELOPERS_PROJECT project as a custom domain, then run this again."
+            echo "::error::${DEVELOPERS} does not answer. Attach it to the $DEVELOPER_PROJECT project as a custom domain, then run this again."
             exit 1
           fi
           npx --yes wrangler@4 pages deploy out --project-name "$PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true

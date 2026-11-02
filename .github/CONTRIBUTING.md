@@ -31,7 +31,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
 | `apps/ios/` | Reserved for the native app. |
-| `site/` | [riffpress.com](https://riffpress.com/) and, from its `developers/` and `web/` pages, [developers.riffpress.com](https://developers.riffpress.com/), both published to Cloudflare Pages by `pages.yml`. |
+| `site/` | [riffpress.com](https://riffpress.com/) and, from its `developers/` and `web/` pages, [developer.riffpress.com](https://developer.riffpress.com/), both published to Cloudflare Pages by `pages.yml`. |
 | `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |
 
 | File | What it covers |

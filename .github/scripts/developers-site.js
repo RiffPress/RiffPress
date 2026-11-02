@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Splits the assembled site in two for its two hosts: the developer reference (/developers/ and
- * the /web/ pages, Built on the open web) goes to its own host, developers.riffpress.com, and
+ * the /web/ pages, Built on the open web) goes to its own host, developer.riffpress.com, and
  * riffpress.com keeps everything else, with a 301 from each old address to the new one.
  *
  * The sources stay one site: site/ is written, generated and previewed as riffpress.com with
@@ -17,7 +17,7 @@
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
-// What moves, as [ path on the site, path on the developers host ]. web/web.css stays as well:
+// What moves, as [ path on the site, path on the developer host ]. web/web.css stays as well:
 // every page of the site is styled by it.
 const MOVED = [
 	[ 'developers/', '' ],
@@ -101,9 +101,9 @@ const relative = ( from, to ) =>
  *
  * @param {Object} o            Options.
  * @param {string} o.out        The assembled site, changed in place.
- * @param {string} o.dev        Where the developers host's files go.
+ * @param {string} o.dev        Where the developer host's files go.
  * @param {string} o.site       The site's address, ending in a slash.
- * @param {string} o.developers The developers host's address, ending in a slash.
+ * @param {string} o.developers The developer host's address, ending in a slash.
  * @return {{ moved: string[], problems: string[] }} The pages moved, and every broken link.
  */
 function split( { out, dev, site, developers } ) {
@@ -123,7 +123,7 @@ function split( { out, dev, site, developers } ) {
 		throw new Error( `no developers/index.html in ${ out }` );
 	}
 
-	// A path on the site, where the developers host now serves it, or null if it stays.
+	// A path on the site, where the developer host now serves it, or null if it stays.
 	const moves = ( rel ) => {
 		const bare = rel.replace( /[?#].*$/, '' );
 		const tail = rel.slice( bare.length );
@@ -136,7 +136,7 @@ function split( { out, dev, site, developers } ) {
 		}
 		return null;
 	};
-	// A path on the site from the developers host: moved, shared, or back on the site.
+	// A path on the site from the developer host: moved, shared, or back on the site.
 	const fromDev = ( rel ) => {
 		const moved = moves( rel );
 		if ( moved !== null ) {
@@ -180,7 +180,7 @@ function split( { out, dev, site, developers } ) {
 						.join( ',' )
 				: fn( value );
 
-	// The developers host: the pages, the files beside them, the shared files.
+	// The developer host: the pages, the files beside them, the shared files.
 	fs.rmSync( dev, { recursive: true, force: true } );
 	for ( const file of files ) {
 		const target = SHARED.includes( file.split( '/' )[ 0 ] )
@@ -327,9 +327,9 @@ function split( { out, dev, site, developers } ) {
  *
  * @param {Object} o            Options, as split() takes them.
  * @param {string} o.out        The site.
- * @param {string} o.dev        The developers host.
+ * @param {string} o.dev        The developer host.
  * @param {string} o.site       The site's address.
- * @param {string} o.developers The developers host's address.
+ * @param {string} o.developers The developer host's address.
  * @return {string[]} Problems, as "file: url".
  */
 function check( { out, dev, site, developers } ) {

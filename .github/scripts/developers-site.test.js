@@ -10,7 +10,7 @@ const { split, relative } = require( './developers-site.js' );
 
 const SCRIPT = path.join( __dirname, 'developers-site.js' );
 const SITE = 'https://riffpress.com/';
-const DEV = 'https://developers.riffpress.com/';
+const DEV = 'https://developer.riffpress.com/';
 
 const page = ( up, body ) => `<!doctype html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -99,7 +99,7 @@ test( 'moves /developers/ to the root of its host and /web/ under it, with their
 	const php = read( dev, 'php/index.html' );
 	assert.match(
 		php,
-		/rel="canonical" href="https:\/\/developers\.riffpress\.com\/php\/"/
+		/rel="canonical" href="https:\/\/developer\.riffpress\.com\/php\/"/
 	);
 	assert.match( php, /href="\.\.\/web\/web\.css\?v=abc"/ );
 	assert.match( php, /href="\.\.\/web\/">Web/ );
@@ -115,7 +115,7 @@ test( 'moves /developers/ to the root of its host and /web/ under it, with their
 	assert.match( read( dev, 'web/index.html' ), /href="\.\.\/php\/#hooks"/ );
 	assert.match(
 		read( dev, 'robots.txt' ),
-		/Sitemap: https:\/\/developers\.riffpress\.com\/sitemap\.xml/
+		/Sitemap: https:\/\/developer\.riffpress\.com\/sitemap\.xml/
 	);
 } );
 
@@ -130,13 +130,13 @@ test( 'the site keeps its stylesheet, points at the new host, and redirects each
 	const index = read( out, 'index.html' );
 	assert.match(
 		index,
-		/href="https:\/\/developers\.riffpress\.com\/php\/#hooks"/
+		/href="https:\/\/developer\.riffpress\.com\/php\/#hooks"/
 	);
-	assert.match( index, /href="https:\/\/developers\.riffpress\.com\/web\/"/ );
+	assert.match( index, /href="https:\/\/developer\.riffpress\.com\/web\/"/ );
 	assert.match( index, /href="web\/web\.css\?v=abc"/ );
 	assert.match(
 		read( out, '404.html' ),
-		/href="https:\/\/developers\.riffpress\.com\/"/
+		/href="https:\/\/developer\.riffpress\.com\/"/
 	);
 	const redirects = read( out, '_redirects' ).split( '\n' );
 	assert.equal(
@@ -145,22 +145,22 @@ test( 'the site keeps its stylesheet, points at the new host, and redirects each
 	);
 	assert.ok(
 		redirects.includes(
-			'/developers/php/ https://developers.riffpress.com/php/ 301'
+			'/developers/php/ https://developer.riffpress.com/php/ 301'
 		)
 	);
 	assert.ok(
 		redirects.includes(
-			'/developers/php https://developers.riffpress.com/php/ 301'
+			'/developers/php https://developer.riffpress.com/php/ 301'
 		)
 	);
 	assert.ok(
 		redirects.includes(
-			'/web/has/ https://developers.riffpress.com/web/has/ 301'
+			'/web/has/ https://developer.riffpress.com/web/has/ 301'
 		)
 	);
 	assert.equal(
 		redirects.filter( Boolean ).at( -1 ),
-		'/developers/* https://developers.riffpress.com/:splat 301'
+		'/developers/* https://developer.riffpress.com/:splat 301'
 	);
 	// Not web/*: the stylesheet would leave with it.
 	assert.ok( ! redirects.some( ( l ) => l.startsWith( '/web/*' ) ) );
@@ -171,7 +171,7 @@ test( 'the site keeps its stylesheet, points at the new host, and redirects each
 	assert.doesNotMatch( read( out, 'sitemap.xml' ), /developers|web\/has/ );
 	assert.match(
 		read( dev, 'sitemap.xml' ),
-		/<loc>https:\/\/developers\.riffpress\.com\/php\/<\/loc>[\s\S]*<loc>https:\/\/developers\.riffpress\.com\/web\/has\/<\/loc>/
+		/<loc>https:\/\/developer\.riffpress\.com\/php\/<\/loc>[\s\S]*<loc>https:\/\/developer\.riffpress\.com\/web\/has\/<\/loc>/
 	);
 } );
 
@@ -201,7 +201,7 @@ test( 'refuses addresses that are not a host and a slash, or one host for both',
 	for ( const args of [
 		[ SITE, SITE ],
 		[ 'riffpress.com', DEV ],
-		[ SITE, 'https://developers.riffpress.com' ],
+		[ SITE, 'https://developer.riffpress.com' ],
 	] ) {
 		const run = spawnSync(
 			'node',
