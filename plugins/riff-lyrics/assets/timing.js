@@ -1,7 +1,7 @@
 /* The timing Riff Lyrics, Riff Chords and Riff Sing share: a time read as LRC, ChordPro and WebVTT
  * write it, and the song followed as the player plays it. A lyric line and a chord are marked by
- * the same rule, a moment before their time; Riff Sing reads where the song is and hears riff:time
- * through it, and marks its syllables at their own time. Each format's own grammar stays with the
+ * the same rule, a moment before their time; Riff Sing's lane reads where the song is and hears
+ * riff:time through it, and marks its syllables at their own time. Each format's own grammar stays with the
  * plugin that reads it.
  *
  * The extensions' own, not Riff's API. This file is Riff Lyrics'; Riff Chords and Riff Sing each
