@@ -449,6 +449,12 @@ html.has-riff .riff-standalone .riff-app {
 		gap: 0 24px;
 	}
 
+	/* A header without a cover, as the Tracks view's, has no gap where the
+	   cover would be, so its title lines up with Play and the list. */
+	.riff-standalone .riff-album:not(.riff-album-has-cover) {
+		column-gap: 0;
+	}
+
 	/* A header too narrow for its title beside the cover, as when Up next or
 	   About narrows the page on a smaller window, stacks them: the cover, then
 	   the title and the rest under it. */
@@ -463,11 +469,16 @@ html.has-riff .riff-standalone .riff-app {
 				"actions";
 			grid-template-rows: auto;
 			grid-template-columns: minmax(0, 1fr);
-			gap: 16px;
+			gap: 0;
 		}
 
+		/* The cover keeps the space under it, so a header without one, as the
+		   Tracks view's, starts at the top; it is half the page wide, so it
+		   doesn't swing from full width to a third as the page widens past
+		   where the two sit side by side. */
 		.riff-standalone .riff-album .riff-album-cover {
-			width: min(100%, var(--riff-album-cover-max));
+			width: clamp(96px, 50cqi, var(--riff-album-cover-max));
+			margin-bottom: 16px;
 		}
 	}
 
