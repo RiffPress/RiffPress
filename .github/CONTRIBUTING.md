@@ -55,9 +55,9 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 
 ## Working on several branches at once
 
-`npm run wt -- new fix/the-thing` makes a worktree in `.claude/worktrees/` on a new branch from `origin/main` and pushes it. It links the main checkout's `node_modules` and `vendor`, and writes a `.wp-env.override.json` with a pair of ports from 8900 up, so `npm run wt -- env` in it starts a WordPress of its own that serves that worktree's code, seeded like the main one. The pre-commit hook then tests the branch you're committing, not whatever the main checkout has. A worktree made any other way gets the same with `npm run wt -- setup`, which the hook runs for you.
+`npm run wt -- new fix/the-thing` makes a worktree in `.claude/worktrees/` on a new branch from `origin/main` and pushes it. It links the main checkout's `node_modules` and installs its own `vendor`. `npm run wt -- env` in it writes a `.wp-env.override.json` with a pair of ports from 8900 up and starts a WordPress of its own that serves that worktree's code, both sites seeded. The pre-commit hook then tests the branch you're committing, not whatever the main checkout has, and stops in a worktree that has no site yet. A worktree made any other way gets `node_modules` and `vendor` with `npm run wt -- setup`, which the hook runs for you.
 
-`npm run wt -- list` shows each worktree's branch, ports, uncommitted and unpushed work and pull request. `npm run wt -- prune` lists the worktrees whose pull request merged or closed and that have nothing uncommitted or unpushed; `--yes` removes them, their branch and their wp-env.
+`npm run wt -- list` shows each worktree's branch, ports, uncommitted and unpushed work and pull request. `npm run wt -- prune` lists the worktrees whose pull request merged or closed with every commit they hold, and that have nothing uncommitted, unpushed or ignored that nothing rebuilds (a music library in `tests/`, `.claude/settings.local.json`, an `.env`); `--yes` removes them, their branch and their wp-env.
 
 ## Running checks
 
