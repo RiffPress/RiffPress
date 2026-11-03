@@ -26,7 +26,7 @@ defined( 'ABSPATH' ) || exit;
  * `riff_register` action, the `riff_before_player` action and the `riff_track` filter, the
  * `riff.view`, `riff.track`, `riff.time`, `riff.play` and `riff.pause` actions, the `riff.menu`
  * filter, and `window.riff`'s `seek()`, `time()`, `playing()`, `speed()`, `shortcut()`,
- * `current()`, `next()`, `play()` and `openView()`. The chart is a view of Now Playing, as the
+ * `current()`, `queue()`, `play()` and `openView()`. The chart is a view of Now Playing, as the
  * lyrics are: it follows the song, so it takes the whole screen above the bar while it shows.
  */
 final class Chords {

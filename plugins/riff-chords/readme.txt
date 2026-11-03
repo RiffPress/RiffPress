@@ -23,7 +23,7 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 * Transpose and capo change the chords' names and fingerings, not the music. A piano has no capo, so with Piano chosen the chords are named as they sound.
 * The loop, the speed and transpose have keys, which act while the Chords view shows a chart: A sets where the loop starts, then where it ends, then clears it, and pressed again before the music is past the start, moves the start; S and F slow the song down and speed it up; D and U transpose it down and up. They are single-key shortcuts like Riff's own, on and off with them on the listener's profile.
 * A tap on a line, or on a part's name, takes the song there.
-* Practice this, in the ⋯ menu of a track with a chart, plays it and opens the Chords view on it. It plays next and is skipped to, so the queue is kept as it was.
+* Practice this, in the ⋯ menu of a track with a chart, plays it and opens the Chords view on it. A track already in the queue is played from its place there; with shuffle on, the tracks after it are shuffled again, and a long list keeps only what has loaded. Any other track plays on its own.
 * The chart is typed into a Chords field on the audio file in the Media Library, kept as the file's own meta and read through the media REST route, so visitors see a chart only for files that route already shows them.
 
 It is built only on Riff's documented public API, as Riff Lyrics is.
