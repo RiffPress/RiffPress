@@ -62,6 +62,75 @@ test.describe( 'Player', () => {
 		expect( await page.evaluate( () => window.riffQueueChanges ) ).toEqual( [ 'next', 'add' ] );
 	} );
 
+	test( 'a plugin adds to the track menu with the riff.menu filter, on a row and in Up next', async ( {
+		page,
+	} ) => {
+		await page.evaluate( () => {
+			window.riffMenuSeen = [];
+			window.wp.hooks.addFilter( 'riff.menu', 'e2e', ( items, track, context ) => {
+				window.riffMenuSeen.push( {
+					where: context.where,
+					row: !! context.element?.matches?.( '[data-riff-track]' ),
+					index: context.index,
+					ids: items.map( ( i ) => i.id ),
+				} );
+				const practice = {
+					id: 'e2e-practice',
+					label: 'Practice this',
+					run: () => ( window.riffPractised = track.title ),
+				};
+				// Between two of Riff's own: where it goes is the plugin's to choose.
+				const at = items.findIndex( ( i ) => i.id === 'add' );
+				return [
+					...items.slice( 0, at ),
+					practice,
+					...items.slice( at ),
+					{ id: 'e2e-broken', label: 'Does nothing' },
+					{ id: 'e2e-link', label: 'Read about it', href: '#about-it' },
+				];
+			} );
+		} );
+		const menu = page.locator( '.riff-menu' );
+		const more = page.locator( '.riff-row' ).nth( 1 ).locator( '.riff-more-button' );
+		await more.click();
+		const items = menu.getByRole( 'menuitem' );
+		await expect( items.nth( 0 ) ).toHaveText( 'Play next' );
+		await expect( items.nth( 1 ) ).toHaveText( 'Practice this' );
+		await expect( items.nth( 2 ) ).toHaveText( 'Add to queue' );
+		// One with neither run nor href is left out; one with href is a link.
+		await expect( menu.getByRole( 'menuitem', { name: 'Does nothing' } ) ).toHaveCount( 0 );
+		await expect( menu.getByRole( 'menuitem', { name: 'Read about it' } ) ).toHaveAttribute( 'href', '#about-it' );
+		await items.nth( 1 ).click();
+		await expect( menu ).toBeHidden();
+		await expect( more ).toBeFocused();
+		expect( await page.evaluate( () => window.riffPractised ) ).toBe( 'Trombone Detritus' );
+		const row = ( await page.evaluate( () => window.riffMenuSeen ) ).at( -1 );
+		expect( row ).toMatchObject( { where: 'row', row: true } );
+		expect( row.ids.slice( 0, 2 ) ).toEqual( [ 'next', 'add' ] );
+
+		// In Up next, the context says where the track is in the queue.
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect.poll( () => page.evaluate( () => window.riff.queue().length ) ).toBe( 3 );
+		await openView( page, 'queue' );
+		const third = page.locator( '.riff-queue-list li' ).nth( 2 ).locator( '.riff-more-button' );
+		await third.click();
+		await expect( menu.getByRole( 'menuitem', { name: 'Practice this' } ) ).toBeVisible();
+		const queued = ( await page.evaluate( () => window.riffMenuSeen ) ).at( -1 );
+		expect( queued ).toMatchObject( { where: 'queue', index: 2 } );
+		expect( queued.ids ).toContain( 'remove' );
+		await page.keyboard.press( 'Escape' );
+
+		// A filter that returns something other than a list leaves Riff's own menu as it was.
+		await page.evaluate( () => {
+			window.wp.hooks.removeFilter( 'riff.menu', 'e2e' );
+			window.wp.hooks.addFilter( 'riff.menu', 'e2e', () => null );
+		} );
+		await third.click();
+		await expect( menu.getByRole( 'menuitem', { name: 'Play next' } ) ).toBeVisible();
+		await page.keyboard.press( 'Escape' );
+		await page.evaluate( () => window.wp.hooks.removeFilter( 'riff.menu', 'e2e' ) );
+	} );
+
 	test( 'Up next reorders by keyboard and its menu, removes a track, and clears', async ( {
 		page,
 		isMobile,

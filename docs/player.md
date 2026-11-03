@@ -174,6 +174,34 @@ Both also add a control or a view the server didn't register, for what only the 
 the track changes and never drawn again, so a control keeps focus while the music plays.
 [docs/javascript.md](javascript.md) has the whole of it.
 
+## The track menu
+
+The ⋯ beside every row and every track in Up next opens the track menu. A plugin adds its own
+items with the `riff.menu` filter, from a script that depends on `wp-hooks`. Each item is
+`{ id, label, run }`, or `{ id, label, href }` for a link, and the menu shows the items in the
+order the filter returns them. Riff's own come first, each only where it applies: `next`, `add`,
+`like`, `playlist`, and in Up next `up`, `down` and `remove`. Go to post, `post`, is last, as it
+leaves the page, so an item that stays goes before it:
+
+```js
+wp.hooks.addFilter( 'riff.menu', 'my-plugin', ( items, track, context ) => {
+	const practice = {
+		id: 'my-plugin-practice',
+		label: __( 'Practice this', 'my-plugin' ),
+		run: () => startPractice( track ),
+	};
+	const at = items.findIndex( ( item ) => item.id === 'post' );
+	return at < 0
+		? [ ...items, practice ]
+		: [ ...items.slice( 0, at ), practice, ...items.slice( at ) ];
+} );
+```
+
+`context` says where the menu was opened: `where` is `row`, with the row as `element`, or `queue`,
+with the track's place in the queue as `index`. The label is plain text. `run` is called once the
+menu has closed and focus is back on the ⋯. An item with no label, or with neither `run` nor
+`href`, is left out. [docs/hooks.md](hooks.md#riffmenu) has the reference.
+
 ## Areas
 
 The player has places Riff's own features fill: **badges**, the pills at the bar's right end and
@@ -182,7 +210,7 @@ under the title in Now Playing, and on a phone small print between the seek line
 bars. The quality pill is a badge, and the seek line's glow is a meter listener.
 
 They are internal for now, on the object Riff hands its own Listen app, and not yet on
-`window.riff`: they become public once they have settled. Each works as the track menu does,
+`window.riff`: they become public once they have settled, as the track menu has. Each works
 through `listen( name, fn )`:
 
 | Name | `fn` is called with | and returns |

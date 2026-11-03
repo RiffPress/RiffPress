@@ -190,6 +190,7 @@ Since 4.0.0.
 
 Each change of state is announced twice with the same detail: through `wp.hooks` as `riff.<name>`, for scripts that depend on `wp-hooks`, and as a `riff:<name>` `CustomEvent` on `#riff` that bubbles, for everything else. The filters run only through `wp.hooks`.
 
+- [`riff.menu`](hooks.md#riffmenu), filter: Filters the items of the track menu, the … beside every row and every track in Up next.
 - [`riff.queue`](hooks.md#riffqueue), filter: Filters the tracks about to become the queue.
 - [`riff.shortcuts`](hooks.md#riffshortcuts), filter: Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
 - [`riff.track`](hooks.md#rifftrack), filter: Filters one track as a queue is set, after `riff.queue`.
