@@ -139,6 +139,41 @@ test( 'a part loops: past its end the song goes back to its start', async ( { pa
 	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeGreaterThan( 4.2 );
 } );
 
+test( 'a count-in at the chart\'s tempo: the loop\'s last bar is counted out, and the music plays on into A', async ( {
+	page,
+	isMobile,
+} ) => {
+	const panel = await openChords( page, isMobile, { play: true } );
+	const countIn = panel.getByRole( 'button', { name: 'Count in' } );
+	const beat = panel.locator( '.riff-chords-count' );
+	// Not offered on an iPhone, as the iPhone-sized project presents itself, where Riff keeps the
+	// music out of Web Audio.
+	if ( /iP(hone|ad|od)/.test( await page.evaluate( () => navigator.userAgent ) ) ) {
+		await expect( panel.locator( '.riff-chords-count-in' ) ).toBeHidden();
+		return;
+	}
+	// Off until it is turned on.
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
+	await countIn.click();
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'true' );
+	await panel.getByRole( 'button', { name: 'Loop Verse' } ).click();
+	// The bar before B at four seconds is four beats at 90 BPM, from 1.33 seconds.
+	await page.evaluate( () => window.riff.seek( 1.5 ) );
+	await expect( beat ).toHaveText( /^[2-4]$/ );
+	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( true );
+	// It comes round to A without stopping, and the count is done.
+	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeLessThan( 1 );
+	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( true );
+	await expect( beat ).toBeEmpty();
+
+	// Turned off, the next round goes by without a count.
+	await countIn.click();
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
+	await page.evaluate( () => window.riff.seek( 2.5 ) );
+	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeLessThan( 1 );
+	await expect( beat ).toBeEmpty();
+} );
+
 test( 'the chords are drawn for a ukulele or a piano, and this browser keeps the choice', async ( {
 	page,
 	isMobile,

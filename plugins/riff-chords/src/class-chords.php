@@ -231,6 +231,7 @@ final class Chords {
 					'loop'        => __( 'Loop', 'riff-chords' ),
 					'loopFrom'    => __( 'Loop from here', 'riff-chords' ),
 					'loopTo'      => __( 'Loop to here', 'riff-chords' ),
+					'countIn'     => __( 'Count in', 'riff-chords' ),
 					/* translators: %s: a section of the song, such as Chorus. */
 					'loopSection' => __( 'Loop %s', 'riff-chords' ),
 					/* translators: %s: the chord that comes next, such as Am. */
@@ -317,9 +318,11 @@ final class Chords {
 			. '.riff-chords-value{min-width:3em;color:var(--riff-fg);font-size:14px;font-variant-numeric:tabular-nums;text-align:center}'
 			. '#riff .riff-chords-tools [hidden]{display:none}'
 			. '.riff-chords-instrument{display:flex;align-items:center;gap:4px}'
-			. '#riff .riff-chords-step,#riff .riff-chords-ab,#riff .riff-chords-pick,#riff .riff-chords-loop-toggle,#riff .riff-chords-loop-section{all:unset;box-sizing:border-box;min-width:44px;height:44px;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-line);color:var(--riff-fg);cursor:pointer;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:44px;text-align:center}'
-			. '#riff .riff-chords-step:hover,#riff .riff-chords-ab:hover,#riff .riff-chords-pick:hover,#riff .riff-chords-loop-toggle:hover,#riff .riff-chords-loop-section:hover{background:var(--riff-hover)}'
-			. '#riff .riff-chords-loop-toggle[aria-pressed="true"],#riff .riff-chords-pick[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
+			. '#riff .riff-chords-step,#riff .riff-chords-ab,#riff .riff-chords-pick,#riff .riff-chords-loop-toggle,#riff .riff-chords-count-in,#riff .riff-chords-loop-section{all:unset;box-sizing:border-box;min-width:44px;height:44px;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-line);color:var(--riff-fg);cursor:pointer;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:44px;text-align:center}'
+			. '#riff .riff-chords-step:hover,#riff .riff-chords-ab:hover,#riff .riff-chords-pick:hover,#riff .riff-chords-loop-toggle:hover,#riff .riff-chords-count-in:hover,#riff .riff-chords-loop-section:hover{background:var(--riff-hover)}'
+			// The count-in's beat, counted out beside it, its room kept between counts so nothing moves.
+			. '.riff-chords-count{min-width:1.5em;color:var(--riff-accent);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;text-align:center}'
+			. '#riff .riff-chords-loop-toggle[aria-pressed="true"],#riff .riff-chords-pick[aria-pressed="true"],#riff .riff-chords-count-in[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
 			. '#riff .riff-chords-tools button:disabled{cursor:default;opacity:.4}'
 			. '#riff .riff-chords-tools button:focus-visible,#riff .riff-chords-chart button:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px}'
 			// The chart: each section under its name, each line its chords over its words.
