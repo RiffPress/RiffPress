@@ -2,7 +2,8 @@
 /**
  * Readies a pull request's site for its preview: fills the placeholders the Pages workflow fills
  * for the live site ({{pages_url}}, {{version}}, {{stable}}, {{commit}}) with the preview's own,
- * so its "Try the demo" opens the pull request's Playground, and keeps it out of search engines.
+ * and keeps it out of search engines. Its demo buttons open the live demo, which runs main; the
+ * pull request's own demo is the Playground link in its preview comment.
  * Runs from the base branch on files the pull request built, so it only reads and rewrites text:
  * it follows no links and runs nothing from them.
  *
