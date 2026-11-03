@@ -38,6 +38,12 @@ if ( ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) || ( defined( 'WP_DEBUG' ) &&
 	wp_print_inline_script_tag( 'try{var d=new URLSearchParams(location.search).get("riff_desktop");if(d!==null){d==="0"?localStorage.removeItem("riff-desktop"):localStorage.setItem("riff-desktop","1");}if(localStorage.getItem("riff-desktop")){document.documentElement.classList.add("riff-desktop","riff-desktop-app","riff-desktop-inset","riff-desktop-preview");}}catch(e){}' );
 }
 wp_head();
+// The frame standalone.css chose for this window, copied to <html data-riff-frame> once the
+// stylesheets are in and before anything is painted, and again whenever the window changes it,
+// with a riff:frame event. The desktop frame shows where it is sidebar, and always in Riff's desktop
+// app or installed with the window's controls over the page: the document is then riff-frame.
+// No size is written here: the frame is CSS's.
+wp_print_inline_script_tag( '(function(){var r=document.documentElement,read=function(){var f=getComputedStyle(r).getPropertyValue("--riff-frame").trim()||"tabs";r.classList.toggle("riff-frame",f==="sidebar"||r.classList.contains("riff-desktop")||r.classList.contains("riff-desktop-overlay"));if(r.dataset.riffFrame!==f){r.dataset.riffFrame=f;dispatchEvent(new CustomEvent("riff:frame",{detail:f}));}};read();addEventListener("resize",read);matchMedia("(display-mode: window-controls-overlay)").addEventListener("change",read);})();' );
 ?>
 </head>
 <body class="riff-standalone">

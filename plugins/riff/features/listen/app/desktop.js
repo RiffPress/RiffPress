@@ -1,6 +1,7 @@
-/* Riff's desktop app marks the document riff-desktop, and so does a computer in standalone mode. There
- * is no browser bar to lean on, so a strip across the top holds back and forward at its left end,
- * Home and search in the middle and who is listening at its right (desktop.css). Back and forward
+/* The desktop frame, where the document is riff-frame: Riff's desktop app at any width, and standalone
+ * mode where the window has room for the sidebar (templates/standalone.php). A strip across the top
+ * holds back and forward at its left end, Home and search in the middle and who is listening at its
+ * right (desktop.css). Back and forward
  * come first in the app; on a wide window Home, search and who is listening come first in the
  * sidebar's markup, in that order, so the keyboard reaches the strip left to right before the
  * library. The server draws the sidebar again with each view, so frame() puts them there each time.
@@ -9,7 +10,8 @@ import { esc } from 'riff-app/helpers';
 
 export function desktopFrame( ctx ) {
 	const { app, nav, __ } = ctx;
-	const wide = window.matchMedia( '(min-width: 900px)' );
+	// The frame standalone.css chose for the window, never a width of its own.
+	const wide = () => document.documentElement.dataset.riffFrame === 'sidebar';
 
 	const icon = ( d ) =>
 		`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="${ d }"/></svg>`;
@@ -60,7 +62,7 @@ export function desktopFrame( ctx ) {
 		}
 		// Moving what has the focus loses it, as a window crosses the width while the field is in use.
 		const held = document.activeElement;
-		if ( wide.matches ) {
+		if ( wide() ) {
 			nav.prepend( ...[ home, search, who ].filter( Boolean ) );
 		} else {
 			const brand = nav.querySelector( ':scope > .riff-app-brand' );
@@ -75,7 +77,7 @@ export function desktopFrame( ctx ) {
 	}
 
 	frame();
-	wide.addEventListener( 'change', frame );
+	window.addEventListener( 'riff:frame', frame );
 	ctx.sidebar( app.dataset.sidebar !== 'mini', false );
 	return { frame };
 }

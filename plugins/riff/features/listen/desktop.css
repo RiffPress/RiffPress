@@ -1,10 +1,12 @@
-/* The desktop frame: the document is riff-desktop in Riff's desktop app and
-   on a computer in standalone mode. Loaded with standalone.css. No build
-   step: this file is what ships. */
+/* The desktop frame: the document is riff-frame in Riff's desktop app, and in
+   standalone mode where the frame is sidebar. Loaded with standalone.css. No
+   build step: this file is what ships. */
 
-/* ---- The desktop frame, on a computer: the document is riff-desktop in Riff's
-   desktop app, and in a browser or an installed web app with a mouse or a
-   trackpad (templates/standalone.php). A strip across the top holds a back
+/* ---- The desktop frame: the document is riff-frame in Riff's desktop app at
+   any width, as its strip is how the window is dragged, and installed with
+   the window's controls over the page; in a browser, where the window has
+   room for the sidebar (--riff-frame, standalone.css), whatever points at it
+   (templates/standalone.php). A strip across the top holds a back
    and forward pair over the app's history and the sidebar's toggle. In the
    desktop app on a Mac it is riff-desktop-inset too: the window has no title
    bar, the strip drags the window, and its left end is the traffic lights'.
@@ -13,7 +15,7 @@
 	display: none;
 }
 
-html.riff-desktop {
+html.riff-frame {
 
 	/* The desktop frame: a strip across the top, and panels 8px apart, with 8px
 	   corners, on black. */
@@ -22,19 +24,19 @@ html.riff-desktop {
 	--riff-desktop-gap: 8px;
 }
 
-html.riff-desktop .riff-standalone,
-html.riff-desktop:has(body.riff-standalone) {
+html.riff-frame .riff-standalone,
+html.riff-frame:has(body.riff-standalone) {
 	background: #000;
 }
 
 /* An app's window does not stretch past its ends. On a Mac's trackpad the
    page would, and the view would slide inside its frame, showing its square
    top edge under the frame's round corners. */
-html.riff-desktop:has(body.riff-standalone) {
+html.riff-frame:has(body.riff-standalone) {
 	overscroll-behavior: none;
 }
 
-html.riff-desktop .riff-standalone .riff-app-titlebar {
+html.riff-frame .riff-standalone .riff-app-titlebar {
 	position: fixed;
 	top: 0;
 	right: 0;
@@ -61,8 +63,8 @@ html.riff-desktop-overlay .riff-standalone .riff-app-titlebar {
 	app-region: drag;
 }
 
-html.riff-desktop.riff-desktop-overlay .riff-standalone .riff-app .riff-app-account,
-html.riff-desktop.riff-desktop-overlay .riff-standalone .riff-app .riff-app-signin {
+html.riff-frame.riff-desktop-overlay .riff-standalone .riff-app .riff-app-account,
+html.riff-frame.riff-desktop-overlay .riff-standalone .riff-app .riff-app-signin {
 	right: calc(16px + var(--riff-desktop-controls));
 }
 
@@ -72,15 +74,15 @@ html.riff-desktop-inset .riff-standalone .riff-app-titlebar {
 	app-region: drag;
 }
 
-html.riff-desktop .riff-standalone .riff-app-history {
+html.riff-frame .riff-standalone .riff-app-history {
 	display: flex;
 	gap: 4px;
 	-webkit-app-region: no-drag;
 	app-region: no-drag;
 }
 
-html.riff-desktop .riff-standalone .riff-app-history button,
-html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
+html.riff-frame .riff-standalone .riff-app-history button,
+html.riff-frame .riff-standalone .riff-app .riff-app-collapse {
 	display: grid;
 	place-items: center;
 	width: 32px;
@@ -95,47 +97,47 @@ html.riff-desktop .riff-standalone .riff-app .riff-app-collapse {
 	app-region: no-drag;
 }
 
-html.riff-desktop .riff-standalone .riff-app-history button:hover:not(:disabled),
-html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:hover {
+html.riff-frame .riff-standalone .riff-app-history button:hover:not(:disabled),
+html.riff-frame .riff-standalone .riff-app .riff-app-collapse:hover {
 	color: var(--riff-app-ink);
 }
 
-html.riff-desktop .riff-standalone .riff-app-history button:focus-visible,
-html.riff-desktop .riff-standalone .riff-app .riff-app-collapse:focus-visible {
+html.riff-frame .riff-standalone .riff-app-history button:focus-visible,
+html.riff-frame .riff-standalone .riff-app .riff-app-collapse:focus-visible {
 	outline: 2px solid var(--riff-app-accent);
 	outline-offset: 0;
 }
 
-html.riff-desktop .riff-standalone .riff-app-history button:disabled {
+html.riff-frame .riff-standalone .riff-app-history button:disabled {
 	opacity: 0.4;
 	cursor: default;
 }
 
-html.riff-desktop .riff-standalone .riff-app-history svg {
+html.riff-frame .riff-standalone .riff-app-history svg {
 	width: 24px;
 	height: 24px;
 }
 
-html.riff-desktop .riff-standalone .riff-app .riff-app-collapse svg {
+html.riff-frame .riff-standalone .riff-app .riff-app-collapse svg {
 	width: 20px;
 	height: 20px;
 }
 
 /* A library at rest; over the panel's head, the panel it would close, or
    open when it is a rail. */
-html.riff-desktop .riff-standalone .riff-app-collapse-close,
-html.riff-desktop .riff-standalone .riff-app-collapse-open,
-html.riff-desktop .riff-standalone .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-rest {
+html.riff-frame .riff-standalone .riff-app-collapse-close,
+html.riff-frame .riff-standalone .riff-app-collapse-open,
+html.riff-frame .riff-standalone .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-rest {
 	display: none;
 }
 
-html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-close,
-html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-open {
+html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-close,
+html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand:is(:hover, :focus-within) .riff-app-collapse-open {
 	display: inline;
 }
 
 /* A narrow window: the tabs start under the strip. */
-html.riff-desktop .riff-standalone .riff-app {
+html.riff-frame .riff-standalone .riff-app {
 	padding-top: var(--riff-desktop-strip);
 }
 
@@ -144,7 +146,7 @@ html.riff-desktop .riff-standalone .riff-app {
 	/* The library and the view are panels in a black frame. The page still
 	   scrolls as a whole, so the view's panel is a window cut in a fixed black
 	   frame (the ::after below), and the view scrolls behind it. */
-	html.riff-desktop .riff-standalone .riff-app {
+	html.riff-frame .riff-standalone .riff-app {
 
 		/* The panels' colour, over the one the page sets inline, so the
 		   surfaces and lines are mixed from it. */
@@ -157,15 +159,15 @@ html.riff-desktop .riff-standalone .riff-app {
 	}
 
 	/* Over the bar, the panels end at its edge; the bar is black too. */
-	html.riff-desktop.has-riff .riff-standalone .riff-app {
+	html.riff-frame.has-riff .riff-standalone .riff-app {
 		--riff-desktop-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
 	}
 
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] {
+	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] {
 		--riff-desktop-side: 72px;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app::after {
+	html.riff-frame .riff-standalone .riff-app::after {
 		content: "";
 		position: fixed;
 		top: var(--riff-desktop-strip);
@@ -178,8 +180,8 @@ html.riff-desktop .riff-standalone .riff-app {
 		pointer-events: none;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app-bar,
-	html.riff-desktop.has-riff .riff-standalone .riff-app-bar {
+	html.riff-frame .riff-standalone .riff-app-bar,
+	html.riff-frame.has-riff .riff-standalone .riff-app-bar {
 		top: var(--riff-desktop-strip);
 		height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
 		margin-top: var(--riff-desktop-strip);
@@ -189,13 +191,13 @@ html.riff-desktop .riff-standalone .riff-app {
 		background: var(--riff-app-bg);
 	}
 
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
+	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-bar {
 		padding: 12px 4px;
 	}
 
 	/* The panel's head: the toggle, then the
 	   site's name. */
-	html.riff-desktop .riff-standalone .riff-app-brand {
+	html.riff-frame .riff-standalone .riff-app-brand {
 		gap: 8px;
 		margin: 0 0 8px;
 		padding: 0 4px;
@@ -203,15 +205,15 @@ html.riff-desktop .riff-standalone .riff-app {
 		font-size: 16px;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand {
+	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand {
 		padding: 0;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab {
+	html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab {
 		min-height: 40px;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-tab svg {
+	html.riff-frame .riff-standalone .riff-app .riff-app-tab svg {
 		width: 24px;
 		height: 24px;
 	}
@@ -221,8 +223,8 @@ html.riff-desktop .riff-standalone .riff-app {
 	   middle sits half of Home and the gap (48px and 8px) right of the
 	   window's. Back and forward stay at the strip's left end, beside the
 	   window's own controls where it has them. */
-	html.riff-desktop .riff-standalone .riff-app .riff-app-search,
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
+	html.riff-frame .riff-standalone .riff-app .riff-app-search,
+	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
 		--riff-desktop-search: min(480px, 100vw - 640px);
 		position: fixed;
 		top: 8px;
@@ -236,7 +238,7 @@ html.riff-desktop .riff-standalone .riff-app {
 		app-region: no-drag;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-search input {
+	html.riff-frame .riff-standalone .riff-app .riff-app-search input {
 		min-height: 48px;
 		padding: 0 16px 0 48px;
 		border: 0;
@@ -245,17 +247,17 @@ html.riff-desktop .riff-standalone .riff-app {
 		font-size: 16px;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-search input:hover {
+	html.riff-frame .riff-standalone .riff-app .riff-app-search input:hover {
 		background-color: #2a2a2a;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-search input:focus-visible {
+	html.riff-frame .riff-standalone .riff-app .riff-app-search input:focus-visible {
 		outline: 2px solid var(--riff-app-ink);
 		outline-offset: 0;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-home,
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-home {
+	html.riff-frame .riff-standalone .riff-app .riff-app-home,
+	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-home {
 		position: fixed;
 		top: 8px;
 		right: calc(50% + min(480px, 100vw - 640px) / 2 - 20px);
@@ -271,18 +273,18 @@ html.riff-desktop .riff-standalone .riff-app {
 		app-region: no-drag;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-home:hover {
+	html.riff-frame .riff-standalone .riff-app .riff-app-home:hover {
 		background: #2a2a2a;
 		color: var(--riff-app-ink);
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-home[aria-current="page"] {
+	html.riff-frame .riff-standalone .riff-app .riff-app-home[aria-current="page"] {
 		background: #1f1f1f;
 		color: var(--riff-app-ink);
 	}
 
 	/* Its label stays for a screen reader; the clip hides it. */
-	html.riff-desktop .riff-standalone .riff-app .riff-app-home span {
+	html.riff-frame .riff-standalone .riff-app .riff-app-home span {
 		position: absolute;
 		width: 1px;
 		height: 1px;
@@ -290,15 +292,15 @@ html.riff-desktop .riff-standalone .riff-app {
 		white-space: nowrap;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app-name {
+	html.riff-frame .riff-standalone .riff-app-name {
 		display: block;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-name {
+	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-name {
 		display: none;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app-view {
+	html.riff-frame .riff-standalone .riff-app-view {
 		align-self: stretch;
 		min-height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
 		box-sizing: border-box;
@@ -311,15 +313,15 @@ html.riff-desktop .riff-standalone .riff-app {
 		background: var(--riff-app-bg);
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-account,
-	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
+	html.riff-frame .riff-standalone .riff-app .riff-app-account,
+	html.riff-frame .riff-standalone .riff-app .riff-app-signin {
 		top: 12px;
 		right: 16px;
 		-webkit-app-region: no-drag;
 		app-region: no-drag;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-signin {
+	html.riff-frame .riff-standalone .riff-app .riff-app-signin {
 		top: 12px;
 		min-height: 40px;
 		height: 40px;
@@ -327,12 +329,12 @@ html.riff-desktop .riff-standalone .riff-app {
 		font-size: 15px;
 	}
 
-	html.riff-desktop .riff-standalone .riff-app .riff-app-account summary {
+	html.riff-frame .riff-standalone .riff-app .riff-app-account summary {
 		width: 40px;
 		height: 40px;
 	}
 
-	html.riff-desktop #riff .riff-bar {
+	html.riff-frame #riff .riff-bar {
 		border-top: 0;
 		background: #000;
 	}
@@ -340,25 +342,25 @@ html.riff-desktop .riff-standalone .riff-app {
 	/* The bar at a desktop app's height, the controls and the line with room
 	   between them, and the line 4px with round ends that holds its weight
 	   under the pointer. */
-	html.riff-desktop {
+	html.riff-frame {
 		--riff-bar-h: 88px;
 
 		/* a panel stands under the strip that drags the window */
 		--riff-side-top: var(--riff-desktop-strip);
 	}
 
-	html.riff-desktop #riff .riff-bar-center {
+	html.riff-frame #riff .riff-bar-center {
 		gap: 8px;
 	}
 
-	html.riff-desktop #riff .riff-bar-seek .riff-line {
+	html.riff-frame #riff .riff-bar-seek .riff-line {
 		top: 6px;
 		height: 4px;
 		border-radius: 2px;
 	}
 
-	html.riff-desktop #riff .riff-bar-seek:hover .riff-line,
-	html.riff-desktop #riff[data-seeking] .riff-bar-seek .riff-line {
+	html.riff-frame #riff .riff-bar-seek:hover .riff-line,
+	html.riff-frame #riff[data-seeking] .riff-bar-seek .riff-line {
 		transform: none;
 	}
 
@@ -366,38 +368,38 @@ html.riff-desktop .riff-standalone .riff-app {
 	   colour, the art alone in the middle, with Up next and Lyrics beside it
 	   as panels of their own (riff.css). Its top drags the window, clear of
 	   the lights. */
-	html.riff-desktop #riff .riff-np-bg {
+	html.riff-frame #riff .riff-np-bg {
 		display: block;
 		background: linear-gradient(color-mix(in srgb, var(--riff-tint) 45%, #000), color-mix(in srgb, var(--riff-tint) 18%, #000));
 	}
 
-	html.riff-desktop #riff .riff-np-head {
+	html.riff-frame #riff .riff-np-head {
 		height: var(--riff-desktop-strip);
 		-webkit-app-region: drag;
 		app-region: drag;
 	}
 
-	html.riff-desktop #riff .riff-np-head button {
+	html.riff-frame #riff .riff-np-head button {
 		-webkit-app-region: no-drag;
 		app-region: no-drag;
 	}
 
-	html.riff-desktop #riff .riff-np-body {
+	html.riff-frame #riff .riff-np-body {
 		grid-template-columns: minmax(0, 1fr);
 		padding: 0 var(--riff-np-gutter);
 	}
 
 	/* reaching out over both gutters, as on the web (riff.css), its content
 	   box where it was */
-	html.riff-desktop #riff .riff-stage {
+	html.riff-frame #riff .riff-stage {
 		place-content: center;
 		margin-inline: calc(-1 * var(--riff-np-gutter));
 		padding: 0 var(--riff-np-gutter) 48px;
 	}
 
-	html.riff-desktop #riff .riff-cover,
-	html.riff-desktop #riff .riff-record,
-	html.riff-desktop #riff .riff-deck-part {
+	html.riff-frame #riff .riff-cover,
+	html.riff-frame #riff .riff-record,
+	html.riff-frame #riff .riff-deck-part {
 		width: min(640px, 100%, 64vh);
 		max-width: none;
 		height: auto;
@@ -409,18 +411,18 @@ html.riff-desktop .riff-standalone .riff-app {
 		box-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
 	}
 
-	html.riff-desktop #riff .riff-deck-part {
+	html.riff-frame #riff .riff-deck-part {
 		box-shadow: none;
 	}
 
-	html.riff-desktop #riff .riff-side {
+	html.riff-frame #riff .riff-side {
 		background: #000;
 	}
 
 	/* Up next, About or another panel narrows the frame beside it, as the
 	   body makes room for it. The frame is a container, so what it holds
 	   answers to the width left over rather than to the window's. */
-	html.riff-desktop .riff-standalone-main {
+	html.riff-frame .riff-standalone-main {
 		container: riff-frame / inline-size;
 	}
 
@@ -436,22 +438,22 @@ html.riff-desktop .riff-standalone .riff-app {
 	   meanwhile, as there is nothing for it to open. */
 	@container riff-frame (inline-size < 50em) {
 
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) {
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) {
 			--riff-desktop-side: 72px;
 		}
 
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-bar {
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-bar {
 			padding: 12px 4px;
 		}
 
-		html.riff-desktop .riff-standalone .riff-app .riff-app-brand,
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-library-head,
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-library-chips,
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-install {
+		html.riff-frame .riff-standalone .riff-app .riff-app-brand,
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-library-head,
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-library-chips,
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-install {
 			display: none;
 		}
 
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab:not(.riff-app-home) {
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab:not(.riff-app-home) {
 			flex-direction: column;
 			justify-content: center;
 			gap: 4px;
@@ -460,13 +462,13 @@ html.riff-desktop .riff-standalone .riff-app {
 			font-size: 10px;
 		}
 
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-item {
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-item {
 			justify-content: center;
 		}
 
 		/* The names stay for a screen reader, as on the rail the listener
 		   folds. */
-		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-item-text {
+		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-item-text {
 			display: block;
 			position: absolute;
 			overflow: hidden;
@@ -482,13 +484,13 @@ html.riff-desktop .riff-standalone .riff-app {
    that scrolls away with it, bold titles, and denser cards, each a panel
    that lights on hover with its cover's corners rounded; the title stays
    white. */
-html.riff-desktop .riff-standalone .riff-app-view {
+html.riff-frame .riff-standalone .riff-app-view {
 	background:
 		linear-gradient(color-mix(in srgb, var(--riff-app-accent) 12%, var(--riff-app-bg)), var(--riff-app-bg) 320px)
 		var(--riff-app-bg);
 }
 
-html.riff-desktop .riff-standalone .riff-app-title {
+html.riff-frame .riff-standalone .riff-app-title {
 	margin-bottom: 24px;
 	font-family: var(--riff-app-font);
 	font-size: 32px;
@@ -496,54 +498,54 @@ html.riff-desktop .riff-standalone .riff-app-title {
 	letter-spacing: -0.02em;
 }
 
-html.riff-desktop .riff-standalone .riff-grid {
+html.riff-frame .riff-standalone .riff-grid {
 	grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
 	gap: 0;
 	margin: 0 -12px;
 }
 
-html.riff-desktop .riff-standalone .riff-app .riff-shelf-row:has(> .riff-card) {
+html.riff-frame .riff-standalone .riff-app .riff-shelf-row:has(> .riff-card) {
 	grid-auto-columns: clamp(164px, 15vw, 200px);
 	gap: 0;
 	margin: -6px -12px -2px;
 }
 
-html.riff-desktop .riff-standalone .riff-app .riff-card {
+html.riff-frame .riff-standalone .riff-app .riff-card {
 	padding: 12px;
 	border-radius: 8px;
 	transition: background-color 0.2s;
 }
 
-html.riff-desktop .riff-standalone .riff-app .riff-card:hover {
+html.riff-frame .riff-standalone .riff-app .riff-card:hover {
 	background: rgb(255 255 255 / 0.07);
 }
 
 /* on the shelf a record is its own highlight, and casts its own shadow */
-html.riff-desktop .riff-standalone .riff-app .riff-rack .riff-card {
+html.riff-frame .riff-standalone .riff-app .riff-rack .riff-card {
 	padding: 0;
 	background: none;
 }
 
-html.riff-desktop .riff-standalone .riff-rack .riff-card:hover .riff-card-art {
+html.riff-frame .riff-standalone .riff-rack .riff-card:hover .riff-card-art {
 	box-shadow: none;
 }
 
-html.riff-desktop .riff-standalone .riff-card:not(.riff-card-artist) .riff-card-art {
+html.riff-frame .riff-standalone .riff-card:not(.riff-card-artist) .riff-card-art {
 	border-radius: 6px;
 }
 
-html.riff-desktop .riff-standalone .riff-card:hover .riff-card-art {
+html.riff-frame .riff-standalone .riff-card:hover .riff-card-art {
 	box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
 }
 
-html.riff-desktop .riff-standalone .riff-card:hover .riff-card-title {
+html.riff-frame .riff-standalone .riff-card:hover .riff-card-title {
 	color: inherit;
 	text-decoration: none;
 }
 
 /* The bar: a white round Play, and the track in smaller type.
    The seek line keeps Riff's filament. */
-html.riff-desktop #riff .riff-bar .riff-play {
+html.riff-frame #riff .riff-bar .riff-play {
 	display: grid;
 	place-items: center;
 	width: 32px;
@@ -554,21 +556,21 @@ html.riff-desktop #riff .riff-bar .riff-play {
 	transition: transform 0.1s;
 }
 
-html.riff-desktop #riff .riff-bar .riff-play:hover {
+html.riff-frame #riff .riff-bar .riff-play:hover {
 	transform: scale(1.06);
 }
 
-html.riff-desktop #riff .riff-bar .riff-play svg {
+html.riff-frame #riff .riff-bar .riff-play svg {
 	width: 20px;
 	height: 20px;
 }
 
-html.riff-desktop #riff .riff-bar .riff-title {
+html.riff-frame #riff .riff-bar .riff-title {
 	font-size: 14px;
 	line-height: 1.4;
 }
 
-html.riff-desktop #riff .riff-bar .riff-sub {
+html.riff-frame #riff .riff-bar .riff-sub {
 	font-size: 12px;
 	line-height: 1.4;
 }

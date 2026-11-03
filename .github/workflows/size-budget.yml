@@ -7,6 +7,8 @@ name: Size budget
 # long titles, missing covers and names in every script (#446).
 on:
   pull_request:
+    # A draft waits, as CI's wp-env jobs do; marking it ready runs it.
+    types: [ opened, synchronize, reopened, ready_for_review ]
     paths:
       - 'plugins/riff/src/**'
       - 'plugins/riff/features/**'
@@ -23,6 +25,7 @@ permissions:
 jobs:
   budget:
     name: 5,000 tracks on MySQL
+    if: ${{ ! github.event.pull_request.draft }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
