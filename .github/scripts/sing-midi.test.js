@@ -252,6 +252,36 @@ test( 'the track with the lyrics is the voice, however it is named and whatever 
 	assert.deepEqual( chart.phrases[ 0 ].notes.map( ( n ) => n.midi ), [ 60, 62, 64 ] );
 } );
 
+test( 'lyrics typed onto the wrong track still find the voice their syllables fall on', () => {
+	const chart = read(
+		file( [
+			track( [ name( 'Piano' ), ...note( 0, 3 * PPQ, 48 ), lyric( 0, 'Oh' ), lyric( PPQ, 'my' ), lyric( 2 * PPQ, 'love' ) ] ),
+			track( [ name( 'Voice' ), ...tune( [ 60, 62, 64 ] ) ] ),
+		] )
+	);
+	assert.deepEqual( chart.phrases[ 0 ].notes.map( ( n ) => `${ n.midi }:${ n.text }` ), [ '60:Oh ', '62:my ', '64:love ' ] );
+} );
+
+test( 'a repeated note\'s note off a little late is the note before\'s', () => {
+	const chart = read(
+		file( [
+			track( [
+				name( 'Voice' ),
+				{ tick: 0, data: [ 0x90, 60, 100 ] },
+				{ tick: PPQ, data: [ 0x90, 60, 100 ] },
+				{ tick: PPQ + 10, data: [ 0x80, 60, 64 ] },
+				{ tick: 2 * PPQ, data: [ 0x80, 60, 64 ] },
+			] ),
+		] )
+	);
+	assert.deepEqual( strip( chart ), [
+		[
+			[ 0, 0.5, 60, '' ],
+			[ 0.5, 1, 60, '' ],
+		],
+	] );
+} );
+
 test( 'a note off that never came costs only that note', () => {
 	const chart = read(
 		file( [

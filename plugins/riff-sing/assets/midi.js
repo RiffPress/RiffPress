@@ -5,7 +5,9 @@
  * Only what a melody needs is read: the tempo map, each track's name, its notes and its lyrics.
  *
  * Each channel of each track is a part, so a file with every instrument on one track has them apart.
- * The vocal part is on the track that carries the lyrics, the channel most of them start notes of.
+ * The vocal part is on the track that carries the lyrics, the channel most of them start notes of,
+ * unless a part elsewhere has more of them start its notes, as when they were typed onto another
+ * track.
  * In a karaoke (.kar) file, whose words are text events on a track of their own, it is the part
  * most of them start notes of. With no words, it is the first part on a track named for a voice
  * (Vocals, Voice, Melody, or a choir's Soprano and the like), or failing that the first that isn't
@@ -106,31 +108,26 @@
 
 	// The notes a track plays, each from its note on to its note off, one at a time: a voice sings
 	// one note, so a note that starts while another sounds ends the one before.
-	function melodyOf( track ) {
-		// Each key's notes still sounding, oldest first, and a note off ends the oldest: a repeated
-		// note whose note on comes before the last one's note off at the same tick is kept. A note on
-		// later than one still sounding ends it, so a note off that never came costs only that note.
+	function melodyOf( track, slack ) {
+		// Each key's notes still sounding, oldest first. A note off just after the newest of them
+		// started, within `slack`, is the one before's, written a little late or at the same tick as
+		// the next note on; later than that it is the newest's, and any before it never had one, so
+		// each ends where the next began.
 		const open = new Map();
-		// The notes a note on ended that way, by key, whose own note offs, at that same tick, are
-		// still to come and end nothing more.
-		const ended = new Map();
 		const notes = [];
 		for ( const e of track.notes ) {
 			const id = e.channel * 128 + e.key;
-			let sounding = open.get( id ) || [];
-			const early = ended.get( id );
+			const sounding = open.get( id ) || [];
+			open.set( id, sounding );
 			if ( e.on ) {
-				if ( sounding.length && sounding[ sounding.length - 1 ] < e.tick ) {
-					sounding.forEach( ( from ) => notes.push( { from, to: e.tick, key: e.key } ) );
-					ended.set( id, { tick: e.tick, count: sounding.length } );
-					sounding = [];
-				}
 				sounding.push( e.tick );
-				open.set( id, sounding );
-			} else if ( early?.tick === e.tick && early.count > 0 ) {
-				early.count--;
-			} else if ( sounding.length ) {
+			} else if ( sounding.length > 1 && e.tick - sounding[ sounding.length - 1 ] <= slack ) {
 				notes.push( { from: sounding.shift(), to: e.tick, key: e.key } );
+			} else if ( sounding.length ) {
+				sounding.forEach( ( from, i ) =>
+					notes.push( { from, to: sounding[ i + 1 ] ?? e.tick, key: e.key } )
+				);
+				sounding.length = 0;
 			}
 		}
 		notes.sort( ( x, y ) => x.from - y.from || y.key - x.key );
@@ -180,6 +177,9 @@
 		// of the clock, not beats, so its tempo is fixed.
 		const smpte = division & 0x8000;
 		const perQuarter = smpte ? 0 : division || 480;
+		// How late a repeated note's note off may come and still be the note before's: an eighth of
+		// a beat, or of a second by the SMPTE clock.
+		const overlap = smpte ? ( ( 256 - ( division >> 8 ) ) * ( division & 0xff || 1 ) ) / 8 : perQuarter / 8;
 		const tempos = tracks.flatMap( ( t ) => t.tempos ).sort( ( x, y ) => x.tick - y.tick );
 		const seconds = ( tick ) => {
 			if ( smpte ) {
@@ -214,7 +214,7 @@
 								// above the voice's range, which aren't sung.
 								( e ) => e.channel === channel && ( e.key < 96 || ! ROCK_BAND.test( t.name ) )
 							),
-						} ),
+						}, overlap ),
 					} ) )
 			)
 			.filter( ( s ) => s.notes.length );
@@ -246,10 +246,13 @@
 		const singing = sung.filter( ( s ) => s.track.lyrics.length );
 		const best = ( list ) => [ ...list ].sort( ( x, y ) => near( y ) - near( x ) )[ 0 ];
 		let chosen;
-		if ( singing.length ) {
-			chosen = best( singing );
-		} else if ( words.length ) {
-			chosen = best( sung );
+		if ( words.length ) {
+			// The lyrics' own track wins a tie, as when another part doubles the tune; a part on
+			// another track wins only where more of the lyrics fall on its notes, as when they were
+			// typed onto the wrong track.
+			const own = singing.length ? best( singing ) : null;
+			const any = best( sung );
+			chosen = own && near( own ) >= near( any ) ? own : any;
 		} else {
 			chosen = sung.find( ( s ) => VOCAL.test( s.track.name ) ) || sung[ 0 ];
 		}
