@@ -257,13 +257,14 @@ final class Sing {
 			'attachment',
 			self::MIDI_FIELD,
 			array(
-				// The MIDI file's address, for the Sing view to fetch, when whoever asks may see it.
+				// The MIDI file's address, for the Sing view to fetch, when whoever asks may see it: a
+				// visitor when the media route shows it to anyone, someone signed in when they may read it.
 				'get_callback'    => static function ( array $item ): ?string {
 					if ( ! self::audio( (int) $item['id'] ) ) {
 						return null;
 					}
 					$midi = self::midi( (int) $item['id'] );
-					return $midi && current_user_can( 'read_post', $midi ) ? (string) wp_get_attachment_url( $midi ) : '';
+					return $midi && ( is_post_publicly_viewable( $midi ) || current_user_can( 'read_post', $midi ) ) ? (string) wp_get_attachment_url( $midi ) : '';
 				},
 				'update_callback' => static function ( $value, WP_Post $post ) {
 					if ( ! current_user_can( 'edit_post', $post->ID ) ) {

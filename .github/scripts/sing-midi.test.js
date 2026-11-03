@@ -161,6 +161,60 @@ test( 'one voice at a time: a chord gives its top note, an overlap ends the note
 	] );
 } );
 
+test( 'a reset message first, running status across a lyric and Latin-1 words are read as files write them', () => {
+	// A General MIDI reset (sysex) before anything, as score programs start a file.
+	const reset = { tick: 0, data: [ 0xf0, 0x05, 0x7e, 0x7f, 0x09, 0x01, 0xf7 ] };
+	// The second note leaves its status out, after a lyric, as some sequencers write it.
+	const running = [
+		{ tick: 0, data: [ 0x90, 60, 100 ] },
+		{ tick: PPQ, data: [ 0x90, 60, 0 ] },
+		meta( PPQ, 0x05, [ 0x4e, 0xe9 ] ), // "Né" in Latin-1.
+		{ tick: PPQ, data: [ 62, 64 ] },
+	];
+	const chart = read( file( [ track( [ reset, name( 'Voice' ), ...running ] ) ] ) );
+	assert.deepEqual( strip( chart ), [
+		[
+			[ 0, 0.5, 60, '' ],
+		],
+	] );
+	// The second note never ends, so only the first is sung; its lyric is read all the same.
+	const ended = read( file( [ track( [ reset, name( 'Voice' ), ...running, { tick: 2 * PPQ, data: [ 62, 0 ] } ] ) ] ) );
+	assert.deepEqual( ended.phrases[ 0 ].notes.map( ( n ) => [ n.start, n.midi, n.text ] ), [
+		[ 0, 60, '' ],
+		[ 0.5, 62, 'Né ' ],
+	] );
+} );
+
+test( 'a file with every part on one track finds the voice by the channel its lyrics fall on', () => {
+	const chart = read(
+		file( [
+			track( [
+				// Piano on channel 2, a beat behind the voice; bass on channel 3 under it; drums.
+				...tune( [ 72, 74, 76 ] ).map( ( e ) => ( { tick: e.tick + PPQ / 2, data: [ e.data[ 0 ] | 2, ...e.data.slice( 1 ) ] } ) ),
+				...note( 0, 3 * PPQ, 36, { channel: 3 } ),
+				...note( 0, PPQ, 42, { channel: 9 } ),
+				...tune( [ 60, 62, 64 ] ),
+				lyric( 0, 'Do' ),
+				lyric( PPQ, 're' ),
+				lyric( 2 * PPQ, 'mi' ),
+			] ),
+		] )
+	);
+	assert.deepEqual( chart.phrases[ 0 ].notes.map( ( n ) => `${ n.midi }:${ n.text }` ), [ '60:Do ', '62:re ', '64:mi ' ] );
+} );
+
+test( 'a sax isn\'t a voice, and a comment isn\'t a lyric', () => {
+	const chart = read(
+		file( [
+			track( [ tempo( 0, 120 ), words( 0, 'Created with a score program' ) ] ),
+			track( [ name( 'Alto Sax' ), ...note( 0, PPQ, 70 ) ] ),
+			track( [ name( 'Vocals' ), ...note( 0, PPQ, 60 ) ] ),
+		] )
+	);
+	assert.deepEqual( strip( chart ), [ [ [ 0, 0.5, 60, '' ] ] ] );
+	assert.equal( read( file( [ track( [ name( 'Tenor' ), ...note( 0, PPQ, 55 ) ] ), track( [ name( 'Piano' ), ...note( 0, PPQ, 48 ) ] ) ] ) ).low, 55, 'a choir\'s tenor is' );
+} );
+
 test( 'the voice read from a MIDI file is scored as an UltraStar chart is', () => {
 	const chart = read( file( [ track( [ name( 'Vocals' ), ...tune() ] ) ] ) );
 	const s = scorer( chart );

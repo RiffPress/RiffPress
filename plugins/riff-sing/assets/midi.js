@@ -4,10 +4,11 @@
  * text: phrases of notes, each with its start and end in seconds, its MIDI note and its syllable.
  * Only what a melody needs is read: the tempo map, each track's name, its notes and its lyrics.
  *
- * The vocal track is the first one named for a voice (Vocals, Voice, Melody, Soprano and the like);
- * failing that, the one whose notes start where the lyrics fall; failing that, the first track with
- * notes that isn't drums. Its words are its own lyric events, or a words-only track's, as a karaoke
- * (.kar) file keeps them. A phrase ends where the lyrics start a new line (`/` or `\`), or where
+ * Each channel of each track is a part, so a file with every instrument on one track has them apart.
+ * The vocal part is the first on a track named for a voice (Vocals, Voice, Melody, or a choir's
+ * Soprano and the like); failing that, the one whose notes start where the lyrics fall; failing that,
+ * the first that isn't drums. Its words are its track's lyric events, or a karaoke (.kar) file's
+ * text events on its track of words; any other text event is a comment and is left out. A phrase ends where the lyrics start a new line (`/` or `\`), or where
  * the melody rests for two beats when they don't say.
  *
  * Loaded as a classic script before sing.js, which reads it from window.riffSingMidi; Node's tests
@@ -16,14 +17,17 @@
 	// The most notes read, as melody.js reads, and the largest file: a song's is a few tens of KB.
 	const MAX_NOTES = 5000;
 	const MAX_BYTES = 2 * 1024 * 1024;
-	const VOCAL = /\b(vocals?|voices?|vox|singer|sing|melody|lyrics?|soprano|alto|tenor|baritone)\b/i;
+	// A track named for a voice: anything vocal, or a choir's part on its own, not a tenor sax.
+	const VOCAL = /\b(vocals?|voices?|vox|singer|sing|melody|lyrics?)\b|^\s*(soprano|alto|tenor|baritone)s?\s*\d*\s*$/i;
+	// A karaoke file's track of words, whose text events are its lyrics.
+	const WORDS = /\b(words|lyrics?|karaoke)\b/i;
 
 	const text = ( bytes ) => {
 		try {
 			return new TextDecoder( 'utf-8', { fatal: true } ).decode( bytes );
 		} catch {
 			// Older karaoke files are Latin-1.
-			return String.fromCharCode( ...bytes );
+			return new TextDecoder( 'latin1' ).decode( bytes );
 		}
 	};
 
@@ -32,7 +36,7 @@
 		const out = { name: '', notes: [], lyrics: [], texts: [], tempos: [] };
 		let p = from;
 		let tick = 0;
-		let status = 0;
+		let status = 0; // The running status: the last channel message's, which the next may leave out.
 		const vlq = () => {
 			let v = 0;
 			for ( let i = 0; i < 4 && p < to; i++ ) {
@@ -49,10 +53,10 @@
 			if ( p >= to ) {
 				break;
 			}
-			if ( b[ p ] & 0x80 ) {
-				status = b[ p++ ];
-			}
-			if ( status === 0xff ) {
+			// Meta and system exclusive events say their own status, and leave the running one as it
+			// was, as lenient readers do: some files carry it on across a lyric.
+			if ( b[ p ] === 0xff ) {
+				p++;
 				const type = b[ p++ ];
 				const length = vlq();
 				const data = b.subarray( p, Math.min( to, p + length ) );
@@ -68,13 +72,16 @@
 				} else if ( type === 0x2f ) {
 					break;
 				}
-				status = 0;
 				continue;
 			}
-			if ( status === 0xf0 || status === 0xf7 ) {
-				p += vlq();
-				status = 0;
+			if ( b[ p ] === 0xf0 || b[ p ] === 0xf7 ) {
+				p++;
+				const length = vlq();
+				p += length;
 				continue;
+			}
+			if ( b[ p ] & 0x80 ) {
+				status = b[ p++ ];
 			}
 			if ( ! status ) {
 				// Data with no status before it: the file is broken from here.
@@ -177,14 +184,32 @@
 			return s + ( ( tick - at ) * us ) / perQuarter / 1e6;
 		};
 
-		const sung = tracks.map( ( t ) => ( { track: t, notes: melodyOf( t ) } ) ).filter(
-			// Channel 10 is drums.
-			( s ) => s.notes.length && ! s.track.notes.every( ( e ) => e.channel === 9 )
-		);
-		// Karaoke files keep their words as text events, with @ lines for the song's details.
-		const wordsOf = ( t ) =>
-			t.lyrics.length ? t.lyrics : t.texts.filter( ( e ) => ! e.text.startsWith( '@' ) );
-		const words = tracks.map( wordsOf ).find( ( w ) => w.length ) || [];
+		// Each channel of each track is a part that could be the voice, as a file with every
+		// instrument on one track (format 0) has them. Channel 10 is drums.
+		const sung = tracks
+			.flatMap( ( t ) =>
+				[ ...new Set( t.notes.map( ( e ) => e.channel ) ) ]
+					.filter( ( channel ) => channel !== 9 )
+					.map( ( channel ) => ( {
+						track: t,
+						notes: melodyOf( { notes: t.notes.filter( ( e ) => e.channel === channel ) } ),
+					} ) )
+			)
+			.filter( ( s ) => s.notes.length );
+		// Karaoke files keep their words as text events, with @ lines for the song's details, on a
+		// track usually named Words. Anywhere else a text event is a comment, such as a copyright.
+		const karaoke = tracks.some( ( t ) => WORDS.test( t.name ) || t.texts.some( ( e ) => e.text.startsWith( '@' ) ) );
+		const wordsOf = ( t ) => {
+			if ( t.lyrics.length ) {
+				return t.lyrics;
+			}
+			return karaoke ? t.texts.filter( ( e ) => ! e.text.startsWith( '@' ) ) : [];
+		};
+		const words =
+			[ ...tracks ]
+				.sort( ( x, y ) => WORDS.test( y.name ) - WORDS.test( x.name ) )
+				.map( wordsOf )
+				.find( ( w ) => w.length ) || [];
 		const near = ( s ) => {
 			const starts = new Set( s.notes.map( ( n ) => n.from ) );
 			return words.filter( ( w ) => starts.has( w.tick ) ).length;
