@@ -214,7 +214,9 @@ test( 'a duet has a lane for each singer, each on a MIDI input of their own and 
 	await go( page );
 	await expect( ada.locator( '.riff-sing-result' ) ).toContainText( 'That line: Brilliant!', { timeout: 15000 } );
 	await expect( bo.locator( '.riff-sing-result' ) ).toContainText( 'That line: Keep going.' );
-	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( /(Ada|Bo): That line/ );
+	// Both lines end at once, and both are said: one announcement, not the second over the first.
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Ada: That line' );
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Bo: That line' );
 
 	await ada.getByRole( 'button', { name: 'Stop listening' } ).click();
 	await expect( ada.getByRole( 'button', { name: 'Use a MIDI instrument' } ) ).toBeVisible();

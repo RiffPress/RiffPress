@@ -318,8 +318,8 @@ final class Sing {
 			. '#riff .riff-sing,#riff .riff-sing-part{display:flex;flex-direction:column;gap:12px}'
 			// A duet's two singers side by side where there is room for both, one above the other
 			// where there isn't, their lanes lower on a short screen so more of both is in view.
-			. '#riff .riff-sing.is-duet{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:24px}'
-			. '#riff .riff-sing.is-duet>:not(.riff-sing-part){grid-column:1/-1}'
+			. '#riff .riff-sing-singers{display:flex;flex-wrap:wrap;gap:24px}'
+			. '#riff .riff-sing-singers>.riff-sing-part{flex:1 1 20rem;min-width:0}'
 			. '#riff .riff-sing.is-duet .riff-sing-lane{height:clamp(80px,16svh,160px)}'
 			. '#riff .riff-sing-singer{color:var(--riff-fg);font-size:16px;font-weight:600}'
 			. '#riff .riff-sing p{margin:0}'

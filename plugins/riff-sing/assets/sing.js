@@ -189,6 +189,7 @@
 				part.session.port = id;
 				part.session.chosen = true;
 				part.session.held.length = 0;
+				part.session.bend = 0;
 			}
 		} );
 		controls.append( mic, keys, stop, input.wrap, port.wrap );
@@ -243,7 +244,9 @@
 			ui: null,
 		} ) );
 		const root = el( 'div', `riff-sing${ duet() ? ' is-duet' : '' }` );
-		root.append( ...parts.map( lane ) );
+		const row = el( 'div', 'riff-sing-singers' );
+		row.append( ...parts.map( lane ) );
+		root.append( row );
 		const level = select( config.level, 'riff-sing-level', ( value ) => {
 			tolerance = Number( value ) || 100;
 			parts.forEach( ( part ) => ( part.scorer.tolerance = tolerance ) );
@@ -555,7 +558,13 @@
 				// The first singer the first input, the second the second, while there are two, and
 				// again as inputs come and go, until the singer chooses one.
 				s.chosen = s.chosen && keys.includes( s.port );
-				s.port = keys[ Math.min( part.index, keys.length - 1 ) ] || '';
+				const port = keys[ Math.min( part.index, keys.length - 1 ) ] || '';
+				// A key held on the input left behind would never be let go.
+				if ( port !== s.port ) {
+					s.port = port;
+					s.held.length = 0;
+					s.bend = 0;
+				}
 			}
 			const field = part.ui?.port.field;
 			if ( field && duet() ) {
