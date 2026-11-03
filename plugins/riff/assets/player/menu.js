@@ -21,11 +21,10 @@ export function menu( P ) {
 	// WordPress's own external icon (@wordpress/icons), filled, after a link that opens a new window.
 	const EXTERNAL =
 		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M19.5 4.5h-7V6h4.44l-5.97 5.97 1.06 1.06L18 7.06v4.44h1.5v-7Zm-13 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3H17v3a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h3V5.5h-3Z"/></svg>';
-	// The items that leave for a post, which in a window of its own (Riff's desktop app, or the
-	// Listen app installed) open in a new one rather than take the app's place; in a browser's tab,
-	// where back comes home, they stay links like any other. Kept here, not on the item, so the
-	// riff.menu filter's items keep the shape it documents.
-	const away = new WeakSet();
+	// Go to post, in a window of its own (Riff's desktop app, or the Listen app installed), opens a
+	// new one rather than take the app's place; in a browser's tab, where back comes home, it stays
+	// a link like any other. Known by its id and the track's post, not by a mark on the item, so it
+	// is found still in a copy a riff.menu filter returns, and the items keep their documented shape.
 	const ownWindow = () =>
 		document.documentElement.classList.contains( 'riff-desktop-app' ) ||
 		window.matchMedia(
@@ -113,13 +112,11 @@ export function menu( P ) {
 			}
 		}
 		if ( t.post?.url ) {
-			const post = {
+			items.push( {
 				id: 'post',
 				label: __( 'Go to post', 'riff' ),
 				href: t.post.url,
-			};
-			away.add( post );
-			items.push( post );
+			} );
 		}
 		const context =
 			at === undefined
@@ -178,7 +175,12 @@ export function menu( P ) {
 				item.setAttribute( 'role', 'menuitem' );
 				item.tabIndex = -1;
 				item.textContent = i.label;
-				if ( i.href && elsewhere && away.has( i ) ) {
+				if (
+					elsewhere &&
+					i.id === 'post' &&
+					t?.post?.url &&
+					i.href === t.post.url
+				) {
 					item.target = '_blank';
 					item.rel = 'noopener';
 					// Said as core says it, after the label, with WordPress's icon to see.
