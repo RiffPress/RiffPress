@@ -1,6 +1,32 @@
 /* Standalone mode: the Listen block on its own at app/, in Riff's dark.
    Loaded only there, after app.css. No build step: this file is what ships. */
 
+/* ---- The frame: how standalone mode is laid out, sidebar, rail or tabs, in
+   this one place, with the very conditions the layout below switches at, so
+   the two never disagree. The page's script copies it to
+   <html data-riff-frame> before the first paint (templates/standalone.php),
+   and the desktop frame, the strip and its panels, shows only where it is
+   sidebar. Below 900px that is never, whatever points at the window; a
+   short, wide screen is sidebar with a mouse and rail by touch, as the
+   layout is. */
+:root {
+	--riff-frame: tabs;
+}
+
+@media (max-width: 899px) and (min-aspect-ratio: 13 / 20), (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px) {
+
+	:root {
+		--riff-frame: rail;
+	}
+}
+
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px))) {
+
+	:root {
+		--riff-frame: sidebar;
+	}
+}
+
 /* ---- Standalone mode: the Listen block on its own at app/, in Riff's dark
    look, with no theme around it. */
 .riff-standalone {
@@ -757,7 +783,7 @@ html.has-riff .riff-standalone .riff-app {
 
 	/* There is no sidebar to fold, the desktop app's narrow window included. */
 	.riff-standalone .riff-app .riff-app-collapse,
-	html.riff-desktop .riff-standalone .riff-app .riff-app-brand .riff-app-collapse {
+	html.riff-frame .riff-standalone .riff-app .riff-app-brand .riff-app-collapse {
 		display: none;
 	}
 

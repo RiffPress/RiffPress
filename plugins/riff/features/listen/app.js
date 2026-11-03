@@ -71,11 +71,9 @@ export function start( api ) {
 			.split( ',' )
 			.filter( Boolean ),
 		tracksRest: app.dataset.riffTracksRest || '',
-		// The frame is built wherever it may show, as a window with a mouse can widen into it; the
-		// document's riff-desktop says when it does (templates/standalone.php).
-		desktop:
-			document.documentElement.classList.contains( 'riff-desktop' ) ||
-			window.matchMedia( '(hover: hover) and (pointer: fine)' ).matches,
+		// Standalone mode has a frame (templates/standalone.php), and the desktop frame's strip is
+		// built wherever it may show; CSS shows it.
+		desktop: 'riffFrame' in document.documentElement.dataset,
 		__,
 		_n,
 		tell,
