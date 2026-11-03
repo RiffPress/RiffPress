@@ -46,7 +46,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | [docs/accessibility.md](../docs/accessibility.md) | What the page is to a screen reader, what is said and when, and what a new control needs. |
 | [SUPPORT.md](SUPPORT.md), [SECURITY.md](../SECURITY.md) | Supported versions, the API promise, and reporting a vulnerability. |
 
-`.wp-env.override.json` moves the ports when another wp-env holds them. The local site has no mail, so Riff Sign In's codes go to its log instead (`packages/dev/sign-in-codes.php`): run `npx wp-env logs development` and sign in with the code or the link it prints. For the demo built from `main`, open the `preview-main` blueprint: `https://playground.wordpress.net/?mode=seamless&blueprint-url=https://raw.githubusercontent.com/RiffPress/RiffPress/preview-main/blueprint.json`
+`.wp-env.override.json` moves the ports when another wp-env holds them. The local site has no mail, so Riff Sign In's codes go to its log instead (`packages/dev/sign-in-codes.php`): run `npx wp-env logs development` and sign in with the code or the link it prints. The demo built from `main` is [next.riffpress.com](https://next.riffpress.com/listen/app/); a pull request's own demo is the Playground link in its preview comment
 
 ## The reference extension
 

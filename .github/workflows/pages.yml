@@ -171,9 +171,8 @@ jobs:
           /blueprint.json
             Cache-Control: no-cache
           HEADERS
-          # A stable address for the demo: /demo always sends to Playground with the current stamped
-          # blueprint, so nothing outside this deploy has to know the stamp.
-          printf '/demo https://playground.wordpress.net/?mode=seamless&blueprint-url=%sblueprint.json?v=%s 302\n' "$BASE" "$V" > out/_redirects
+          # A stable address for the demo: /demo sends to the live demo site, which runs main.
+          printf '/demo https://next.riffpress.com/listen/app/ 302\n' > out/_redirects
           # The developer reference to its own host, with a redirect from each old address after /demo's.
           DEV=$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
           [[ "$DEV" =~ ^https://[^/]+/$ ]] || { echo "::error::Unexpected developers URL: $DEV"; exit 1; }
