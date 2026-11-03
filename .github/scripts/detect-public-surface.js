@@ -441,8 +441,8 @@ module.exports.ownConstants = ownConstants;
 module.exports.MARKER = MARKER;
 
 // CLI: `node detect-public-surface.js <base-ref> <head-ref>`. Reads both trees
-// through git rather than the working directory; only this script and the
-// hooks reference it requires come from the checkout.
+// through git rather than the working directory; only these scripts and what
+// they require come from the checkout.
 // Writes `count` to $GITHUB_OUTPUT and the comment body to comment.md.
 if ( require.main === module ) {
 	const { execFileSync } = require( 'node:child_process' );

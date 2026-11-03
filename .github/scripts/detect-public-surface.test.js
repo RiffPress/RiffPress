@@ -470,7 +470,6 @@ test( "a new filter() or emit() in the player is new surface, an existing one is
 		'js-action:riff.liked',
 		'js-filter:riff.menu',
 	] );
-	assert.deepEqual( newSurfaces( base, base ), [] );
 } );
 
 test( 'a wrapper call and wp.hooks with the full name are the one surface', () => {
@@ -482,6 +481,7 @@ test( 'a wrapper call and wp.hooks with the full name are the one surface', () =
 		"filter( 'menu', items );",
 		'plugins/riff/assets/player/menu.js'
 	);
+	assert.deepEqual( ids( head ), ids( base ) );
 	assert.deepEqual( newSurfaces( base, head ), [] );
 } );
 

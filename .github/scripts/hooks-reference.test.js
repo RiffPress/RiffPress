@@ -133,7 +133,7 @@ test( 'finds the player\'s JavaScript actions and filters under riff.<name>', ()
 	assert.equal( hooksIn( file ).length, 2, 'Array.prototype.filter is not a hook' );
 } );
 
-test( 'reads P.filter() and P.emit() as the same wrappers, with all their arguments', () => {
+test( 'reads P.filter() and P.emit() as the same wrappers', () => {
 	const [ filter ] = hooksIn( tmpJs( "P.filter( 'menu', items, track, context );" ) );
 	assert.equal( filter.name, 'riff.menu' );
 	assert.equal( filter.type, 'filter' );
