@@ -67,6 +67,10 @@
 				tags[ header[ 1 ].toUpperCase() ] = header[ 2 ].trim();
 				continue;
 			}
+			// A blank line says nothing, and among the headers must not end them before #RELATIVE.
+			if ( ! bare ) {
+				continue;
+			}
 			if ( ! beat ) {
 				const bpm = number( tags.BPM );
 				if ( ! ( bpm > 0 ) ) {

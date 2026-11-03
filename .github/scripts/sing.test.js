@@ -172,6 +172,8 @@ test( 'a relative chart counts each line from where the break before it says, an
 		three.phrases.map( ( p ) => p.start ),
 		[ 0, 8 * 0.125, 14 * 0.125 ]
 	);
+	// A blank line among the headers doesn't end them before #RELATIVE is read.
+	assert.equal( parse( '#BPM:120\n\n#RELATIVE:yes\n: 0 4 0 a\n- 4 8\n: 0 4 0 b\nE' ).phrases[ 1 ].start, 1 );
 	// The same lines read as absolute beats would all start together.
 	assert.equal( parse( '#BPM:120\n: 0 4 0 a\n- 4 8\n: 0 4 0 b\nE' ).phrases[ 1 ].start, 0 );
 } );
