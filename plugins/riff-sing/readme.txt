@@ -19,7 +19,7 @@ Riff Sing adds a Sing view to Riff's Now Playing, opened from its button in the 
 * How close counts is the singer's choice: within two semitones, one, or a quarter tone.
 * A computer or USB microphone works through the browser, with a choice of input once it is allowed. Echo cancellation stays on so the speakers don't count as singing; headphones work best.
 * A MIDI keyboard, or a microphone that sends MIDI notes, works where the browser has Web MIDI (Chrome and Edge; not Safari yet), with exact notes and no guessing.
-* The melody is UltraStar's text format, the open format karaoke games such as UltraStar Deluxe and Performous read: a line per syllable, with its start, length and pitch. Paste it into the Melody field of the track's audio file in the Media Library.
+* The melody is UltraStar's text format, the open format karaoke games such as UltraStar Deluxe and Performous read: a line per syllable, with its start, length and pitch, its beats counted from the start of the song or, in a chart marked #RELATIVE:yes, from the start of each line. Paste it into the Melody field of the track's audio file in the Media Library.
 * Visitors see a melody only for files the media REST route already shows them.
 
 = Privacy =

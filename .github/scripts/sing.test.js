@@ -137,11 +137,45 @@ test( 'an UltraStar chart is read into phrases of notes with their times in seco
 	assert.equal( chart.high, 72, 'the range leaves freestyle out' );
 } );
 
-test( 'what can\'t be read is null: no BPM, a relative chart, no notes', () => {
+test( 'what can\'t be read is null: no BPM, no notes', () => {
 	assert.equal( parse( ': 0 4 0 Do' ), null );
-	assert.equal( parse( '#BPM:120\n#RELATIVE:yes\n: 0 4 0 Do\n- 4 4\n: 0 4 0 Do' ), null );
 	assert.equal( parse( '#BPM:120\nE' ), null );
 	assert.equal( parse( '' ), null );
+} );
+
+// The scale again, its beats counted from the start of each line: the second line's break falls 18
+// beats in and its count starts 20 beats on, where the absolute chart has Sol.
+const RELATIVE = `#TITLE:Scale
+#BPM:120
+#GAP:500
+#RELATIVE:yes
+: 0 4 0 Do
+: 4 4 2 Re
+: 8 4 4 Mi
+* 12 4 5 Fa
+- 18 20
+: 0 4 7 Sol
+: 4 4 9 La
+F 8 4 11 Ti
+: 12 4 12 Do
+E
+`;
+
+test( 'a relative chart counts each line from where the break before it says, and comes out as the absolute one', () => {
+	const strip = ( chart ) => chart.phrases.map( ( p ) => p.notes.map( ( n ) => [ n.start, n.end, n.midi, n.text ] ) );
+	const chart = parse( RELATIVE );
+	assert.deepEqual( strip( chart ), strip( parse( SCALE ) ) );
+	assert.equal( chart.phrases[ 1 ].start, 0.5 + 20 * 0.125 );
+	// Offsets add up line after line, and a break with one number starts the next line where it falls.
+	const three = parse( '#BPM:120\n#RELATIVE:yes\n: 0 4 0 a\n- 4 8\n: 0 4 0 b\n- 6\n: 0 4 0 c\nE' );
+	assert.deepEqual(
+		three.phrases.map( ( p ) => p.start ),
+		[ 0, 8 * 0.125, 14 * 0.125 ]
+	);
+	// A blank line among the headers doesn't end them before #RELATIVE is read.
+	assert.equal( parse( '#BPM:120\n\n#RELATIVE:yes\n: 0 4 0 a\n- 4 8\n: 0 4 0 b\nE' ).phrases[ 1 ].start, 1 );
+	// The same lines read as absolute beats would all start together.
+	assert.equal( parse( '#BPM:120\n: 0 4 0 a\n- 4 8\n: 0 4 0 b\nE' ).phrases[ 1 ].start, 0 );
 } );
 
 test( 'a decimal comma, a tilde, a duet and Windows line ends are read as UltraStar writes them', () => {

@@ -5,6 +5,9 @@
  * beats and its pitch in semitones from middle C, and a line break (`-`) between phrases. It is
  * typed or pasted into the track's Melody field in the Media Library.
  *
+ * Beats count from the start of the song, or, in a chart marked #RELATIVE:yes, from the start of
+ * the line: there a break says, after when it falls, how many beats on the next line starts.
+ *
  * The scorer takes what was sung, one frame at a time (a time in the song, and a pitch as a MIDI
  * note number, or null for silence), and gives each phrase a score from 0 to 1 when it ends. Octave
  * doesn't count, as in Rock Band: a child singing an octave above the recording still matches.
@@ -15,7 +18,8 @@
 	// Note lines: the kind, start and length in beats, pitch, then the syllable after one space.
 	// `:` is a note, `*` a golden one, `F` freestyle (not scored), `R` and `G` rap (not scored).
 	const NOTE = /^([:*FRG])\s*(-?\d+)\s+(\d+)\s+(-?\d+)(?: (.*))?$/;
-	const BREAK = /^-\s*(-?\d+)/;
+	// A break, when it falls, and in a relative chart how far on the next line's beats start.
+	const BREAK = /^-\s*(-?\d+)(?:\s+(-?\d+))?/;
 	const HEADER = /^#([A-Z0-9]+):(.*)$/i;
 	// The longest chart read: a song is a few thousand notes at the very most.
 	const MAX_NOTES = 5000;
@@ -28,7 +32,7 @@
 	 * @param {string} text The chart.
 	 * @return {{title: string, artist: string, phrases: Object[], low: number, high: number}|null}
 	 *         The chart, each phrase with its notes and their times in seconds, or null when it
-	 *         can't be read: no BPM, a relative chart, or no notes.
+	 *         can't be read: no BPM, or no notes.
 	 */
 	function parse( text ) {
 		const tags = {};
@@ -51,6 +55,8 @@
 			.split( /\r?\n/ );
 		let beat = 0; // Seconds per beat, once #BPM is read.
 		let gap = 0;
+		let relative = false;
+		let offset = 0; // In a relative chart, the beat the current line's count starts from.
 		for ( const raw of lines ) {
 			// A syllable may end in the space that ends its word, so a note keeps its trailing spaces;
 			// the other lines are read without theirs.
@@ -61,10 +67,13 @@
 				tags[ header[ 1 ].toUpperCase() ] = header[ 2 ].trim();
 				continue;
 			}
+			// A blank line says nothing, and among the headers must not end them before #RELATIVE.
+			if ( ! bare ) {
+				continue;
+			}
 			if ( ! beat ) {
 				const bpm = number( tags.BPM );
-				if ( ! ( bpm > 0 ) || /^yes$/i.test( tags.RELATIVE || '' ) ) {
-					// Relative charts restart their beats each line; rare, and left out for now.
+				if ( ! ( bpm > 0 ) ) {
 					if ( /^[:*FRG-]/.test( bare ) ) {
 						return null;
 					}
@@ -73,6 +82,7 @@
 				// UltraStar's BPM counts quarter beats: a beat is a quarter of 60 / BPM seconds.
 				beat = 60 / bpm / 4;
 				gap = ( number( tags.GAP ) || 0 ) / 1000;
+				relative = /^yes$/i.test( tags.RELATIVE || '' );
 			}
 			if ( /^P\s*\d/i.test( bare ) ) {
 				close();
@@ -85,8 +95,13 @@
 			if ( skipping ) {
 				continue;
 			}
-			if ( BREAK.test( bare ) ) {
+			const gone = bare.match( BREAK );
+			if ( gone ) {
 				close();
+				// Without its second number, the next line counts from where the break falls.
+				if ( relative ) {
+					offset += Number( gone[ 2 ] ?? gone[ 1 ] );
+				}
 				continue;
 			}
 			const m = line.replace( /^\s+/, '' ).match( NOTE );
@@ -94,7 +109,7 @@
 				continue;
 			}
 			const [ , kind, start, length, pitch, syllable = '' ] = m;
-			const at = gap + Number( start ) * beat;
+			const at = gap + ( offset + Number( start ) ) * beat;
 			notes.push( {
 				start: at,
 				end: at + Math.max( 1, Number( length ) ) * beat,
