@@ -1,8 +1,10 @@
 /* The timing Riff Lyrics, Riff Chords and Riff Sing share: a time read as LRC, ChordPro and WebVTT
- * write it, and the song followed as the player plays it. A lyric line and a chord are marked by
- * the same rule, a moment before their time; Riff Sing's lane reads where the song is and hears
- * riff:time through it, and marks its syllables at their own time. Each format's own grammar stays with the
- * plugin that reads it.
+ * write it, timed lyrics read as Riff Lyrics shows them, and the song followed as the player plays
+ * it. A lyric line and a chord are marked by the same rule, a moment before their time; Riff Sing's
+ * lane reads where the song is and hears riff:time through it, and marks its syllables at their own
+ * time, or, where the track has timed lyrics too, the words as Riff Lyrics times them. LRC and
+ * WebVTT are read here, as two of the plugins read them; ChordPro's and UltraStar's grammar stay
+ * with the plugin that reads each.
  *
  * The extensions' own, not Riff's API. This file is Riff Lyrics'; Riff Chords and Riff Sing each
  * carry a copy, which .github/scripts/timing.test.js keeps the same. Each plugin loads its own copy
@@ -59,6 +61,109 @@
 			i++;
 		}
 		return i;
+	}
+
+	// A line's timestamps, [mm:ss.xx] or [mm:ss], one or more at its start, as LRC writes them;
+	// LRC's tag lines ([ar:...], [ti:...]) are not lyrics.
+	const STAMPS = /^\s*((?:\[\d{1,3}:\d{1,2}(?:\.\d{1,3})?\]\s*)+)(.*)$/;
+	const EACH = /\[(\d{1,3}:\d{1,2}(?:\.\d{1,3})?)\]/g;
+	const TAG = /^\s*\[[a-z]+:[^\]]*\]\s*$/i;
+	// [offset:+250]: milliseconds the whole file is early by, so every line is shown that much sooner.
+	const OFFSET = /^\s*\[offset:\s*([+-]?\d+)\s*\]\s*$/im;
+	// Enhanced LRC's word times inside a line: <mm:ss.xx>word.
+	const WORD = /<(\d{1,3}:\d{1,2}(?:\.\d{1,3})?)>/g;
+	// A WebVTT cue's timing line: [hh:]mm:ss.ttt --> [hh:]mm:ss.ttt, then any settings.
+	const CUE = /^\s*((?:\d+:)?\d{1,2}:\d{2}\.\d{3})\s+-->\s+((?:\d+:)?\d{1,2}:\d{2}\.\d{3})/;
+
+	// A line's words with their times, when Enhanced LRC gives them, and the line's text without them.
+	function words( text, offset ) {
+		const marks = [ ...text.matchAll( WORD ) ];
+		if ( ! marks.length ) {
+			return { text, words: null };
+		}
+		const out = [];
+		marks.forEach( ( m, i ) => {
+			const end = marks[ i + 1 ]?.index ?? text.length;
+			const word = text.slice( m.index + m[ 0 ].length, end );
+			if ( word.trim() ) {
+				out.push( { time: seconds( m[ 1 ] ) - offset, text: word } );
+			}
+		} );
+		const lead = text.slice( 0, marks[ 0 ].index );
+		if ( lead.trim() ) {
+			out.unshift( { time: null, text: lead } );
+		}
+		return { text: text.replace( WORD, '' ).replace( /\s+/g, ' ' ).trim(), words: out };
+	}
+
+	// WebVTT: each cue is a line, at the time it starts; a pause of two seconds or more is a gap.
+	function vtt( text ) {
+		const out = [];
+		const blocks = text.replace( /\r/g, '' ).split( /\n\s*\n/ );
+		let end = 0;
+		for ( const block of blocks ) {
+			const rows = block.split( '\n' );
+			const i = rows.findIndex( ( row ) => CUE.test( row ) );
+			if ( i < 0 ) {
+				continue;
+			}
+			const [ , from, to ] = rows[ i ].match( CUE );
+			const said = rows
+				.slice( i + 1 )
+				.join( ' ' )
+				.replace( /[<>]/g, '' )
+				.trim();
+			const time = seconds( from );
+			out.push( { time, text: said, gap: out.length > 0 && time - end >= 2, words: null } );
+			end = seconds( to );
+		}
+		return out.length ? out.map( ( line, n ) => ( { ...line, i: n } ) ) : null;
+	}
+
+	/**
+	 * Timed lyrics, as Riff Lyrics shows them: LRC, with its [offset:] tag and Enhanced LRC's
+	 * <mm:ss.xx> word times, or WebVTT. A blank line is a gap before the next; a line without a time
+	 * among timed ones is shown with the one before it; a chorus line carrying every time it is sung
+	 * is a line for each, in the order they are heard.
+	 *
+	 * @param {string} text The lyrics, as the track's Lyrics field has them.
+	 * @return {Array<{time: number, text: string, words: Array<{time: number|null, text: string}>|null, gap: boolean, i: number}>|null}
+	 *         The lines in time order, or null when none has a time.
+	 */
+	function lyrics( text ) {
+		text = String( text ?? '' );
+		if ( /^\uFEFF?WEBVTT/.test( text ) ) {
+			return vtt( text );
+		}
+		const out = [];
+		let synced = false;
+		let gap = false;
+		let last = 0;
+		const offset = Number( text.match( OFFSET )?.[ 1 ] || 0 ) / 1000;
+		for ( const raw of text.split( /\r?\n/ ) ) {
+			if ( TAG.test( raw ) ) {
+				continue;
+			}
+			if ( ! raw.trim() ) {
+				gap = out.length > 0;
+				continue;
+			}
+			const m = raw.match( STAMPS );
+			if ( ! m ) {
+				out.push( { time: last, ...words( raw.trim(), offset ), gap } );
+			} else {
+				synced = true;
+				for ( const s of m[ 1 ].matchAll( EACH ) ) {
+					last = Math.max( 0, seconds( s[ 1 ] ) - offset );
+					out.push( { time: last, ...words( m[ 2 ].trim(), offset ), gap } );
+				}
+			}
+			gap = false;
+		}
+		if ( ! synced ) {
+			return null;
+		}
+		return out.map( ( line, i ) => ( { ...line, i } ) ).sort( ( a, b ) => a.time - b.time || a.i - b.i );
 	}
 
 	// Until the player starts, window.riff is the #riff element, by its id.
@@ -135,5 +240,5 @@
 		return box;
 	}
 
-	scope.riffTiming = { seconds, stamp, due, at, now, listen, scrolling, centre };
+	scope.riffTiming = { seconds, stamp, due, at, lyrics, now, listen, scrolling, centre };
 } )( globalThis );

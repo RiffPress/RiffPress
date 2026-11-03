@@ -2,9 +2,10 @@
 
 /*
  * The timing Riff Lyrics, Riff Chords and Riff Sing share (plugins/riff-lyrics/assets/timing.js):
- * times read as LRC, ChordPro and WebVTT write them, and the song followed as the player plays it.
- * Each of the three carries the same file, so Lyrics and Chords mark a line and a chord by the same
- * rule; the first test keeps the copies the same. Run by `node --test .github/scripts/*.test.js`.
+ * times read as LRC, ChordPro and WebVTT write them, timed lyrics read as Riff Lyrics shows them,
+ * and the song followed as the player plays it. Each of the three carries the same file, so Lyrics
+ * and Chords mark a line and a chord by the same rule, and Sing shows Lyrics' words at Lyrics'
+ * times; the first test keeps the copies the same. Run by `node --test .github/scripts/*.test.js`.
  */
 const { test } = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
@@ -94,6 +95,53 @@ test( 'the thing being played is the last whose time has come', () => {
 	assert.equal( timing.at( lines, 4.9 ), 2 );
 	assert.equal( timing.at( lines, 60 ), 3, 'the last, to the end' );
 	assert.equal( timing.at( [], 3 ), -1, 'nothing to follow' );
+} );
+
+test( 'timed lyrics are read as LRC writes them, with its offset, its tags and Enhanced LRC\'s word times', () => {
+	const { timing } = load();
+	const lines = timing.lyrics(
+		[ '[ar:Someone]', '[offset:+500]', '[00:02.00]<00:02.00>One <00:03.00>two', '', '[00:10.00][00:04.00]Again', 'Held over' ].join( '\n' )
+	);
+	assert.deepEqual(
+		lines.map( ( { time, text, gap } ) => [ time, text, gap ] ),
+		[
+			[ 1.5, 'One two', false ],
+			[ 3.5, 'Again', true ],
+			[ 3.5, 'Held over', false ],
+			[ 9.5, 'Again', true ],
+		],
+		'shown half a second sooner, a chorus line at each of its times, in the order they are heard, and a line with no time with the last time before it'
+	);
+	assert.deepEqual( lines[ 0 ].words, [
+		{ time: 1.5, text: 'One ' },
+		{ time: 2.5, text: 'two' },
+	] );
+	assert.equal( lines[ 1 ].words, null, 'a line with no word times' );
+	assert.deepEqual(
+		timing.lyrics( '[00:01.00]Lead <00:02.00>word' )[ 0 ].words,
+		[
+			{ time: null, text: 'Lead ' },
+			{ time: 2, text: 'word' },
+		],
+		'what comes before the first word time has none'
+	);
+} );
+
+test( 'timed lyrics are read as WebVTT writes them; untimed ones, or none, are not timed', () => {
+	const { timing } = load();
+	const cues = timing.lyrics( 'WEBVTT\n\n00:01.000 --> 00:02.000\nFirst\n\n00:05.000 --> 00:06.000\nSecond' );
+	assert.deepEqual(
+		cues.map( ( { time, text, gap } ) => [ time, text, gap ] ),
+		[
+			[ 1, 'First', false ],
+			[ 5, 'Second', true ],
+		],
+		'a pause of two seconds or more is a gap'
+	);
+	assert.equal( timing.lyrics( 'Words with\nno times' ), null );
+	assert.equal( timing.lyrics( '' ), null );
+	assert.equal( timing.lyrics( undefined ), null, 'no field, as when Riff Lyrics isn\'t active' );
+	assert.equal( timing.lyrics( 'WEBVTT\n\nNo cues' ), null );
 } );
 
 test( 'where the song is: the player\'s time, or 0 until it starts', () => {

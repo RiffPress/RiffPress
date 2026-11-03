@@ -1,13 +1,14 @@
 /* Riff Lyrics: a Lyrics view of Now Playing, registered on the server (riff_register_view()) as
  * Riff registers its own, filled with the lyrics WordPress keeps on the track's file, from the
  * media REST route. It follows the player's riff:view and riff:time events, which Riff dispatches
- * on its own element for any script. Timed lyrics follow the music, through timing.js, which Riff Chords and Riff Sing share: the
- * line being sung is marked and kept in view, and a
- * tap on a line seeks to it through window.riff.seek(). They are read in the formats players and
- * taggers already write: LRC, with its [offset:] tag and Enhanced LRC's <mm:ss.xx> word times, whose
- * words light up as they are sung; WebVTT, the web's own timed text; and an ID3 SYLT frame, which
- * the plugin turns into LRC when the file is uploaded. The lines are text, read as a list, so
- * they are the song's transcript as they stand (WCAG 1.2.1 and 1.2.2). */
+ * on its own element for any script. Timed lyrics follow the music, through timing.js, which Riff
+ * Chords and Riff Sing share: the line being sung is marked and kept in view, and a tap on a line
+ * seeks to it through window.riff.seek(). timing.js reads them too, so Riff Sing shows the same
+ * words at the same times, in the formats players and taggers already write: LRC, with its
+ * [offset:] tag and Enhanced LRC's <mm:ss.xx> word times, whose words light up as they are sung;
+ * WebVTT, the web's own timed text; and an ID3 SYLT frame, which the plugin turns into LRC when the
+ * file is uploaded. The lines are text, read as a list, so they are the song's transcript as they
+ * stand (WCAG 1.2.1 and 1.2.2). */
 ( () => {
 	const config = window.riffLyrics || {};
 	const timing = window.riffTiming; // timing.js, loaded before it.
@@ -56,103 +57,6 @@
 		return cache.get( id );
 	}
 
-	// A line's timestamps, [mm:ss.xx] or [mm:ss], one or more at its start, as LRC writes them;
-	// LRC's tag lines ([ar:...], [ti:...]) are not lyrics.
-	const STAMPS = /^\s*((?:\[\d{1,3}:\d{1,2}(?:\.\d{1,3})?\]\s*)+)(.*)$/;
-	const STAMP = /\[(\d{1,3}:\d{1,2}(?:\.\d{1,3})?)\]/g;
-	const TAG = /^\s*\[[a-z]+:[^\]]*\]\s*$/i;
-	// [offset:+250]: milliseconds the whole file is early by, so every line is shown that much sooner.
-	const OFFSET = /^\s*\[offset:\s*([+-]?\d+)\s*\]\s*$/im;
-	// Enhanced LRC's word times inside a line: <mm:ss.xx>word.
-	const WORD = /<(\d{1,3}:\d{1,2}(?:\.\d{1,3})?)>/g;
-	// A WebVTT cue's timing line: [hh:]mm:ss.ttt --> [hh:]mm:ss.ttt, then any settings.
-	const CUE = /^\s*((?:\d+:)?\d{1,2}:\d{2}\.\d{3})\s+-->\s+((?:\d+:)?\d{1,2}:\d{2}\.\d{3})/;
-
-	// A line's words with their times, when Enhanced LRC gives them, and the line's text without them.
-	function words( text, offset ) {
-		const marks = [ ...text.matchAll( WORD ) ];
-		if ( ! marks.length ) {
-			return { text, words: null };
-		}
-		const out = [];
-		marks.forEach( ( m, i ) => {
-			const end = marks[ i + 1 ]?.index ?? text.length;
-			const word = text.slice( m.index + m[ 0 ].length, end );
-			if ( word.trim() ) {
-				out.push( { time: timing.seconds( m[ 1 ] ) - offset, text: word } );
-			}
-		} );
-		const lead = text.slice( 0, marks[ 0 ].index );
-		if ( lead.trim() ) {
-			out.unshift( { time: null, text: lead } );
-		}
-		return { text: text.replace( WORD, '' ).replace( /\s+/g, ' ' ).trim(), words: out };
-	}
-
-	// WebVTT: each cue is a line, at the time it starts; a pause of two seconds or more is a gap.
-	function parseVtt( text ) {
-		const out = [];
-		const blocks = text.replace( /\r/g, '' ).split( /\n\s*\n/ );
-		let end = 0;
-		for ( const block of blocks ) {
-			const rows = block.split( '\n' );
-			const at = rows.findIndex( ( row ) => CUE.test( row ) );
-			if ( at < 0 ) {
-				continue;
-			}
-			const [ , from, to ] = rows[ at ].match( CUE );
-			const said = rows
-				.slice( at + 1 )
-				.join( ' ' )
-				.replace( /[<>]/g, '' )
-				.trim();
-			const time = timing.seconds( from );
-			out.push( { time, text: said, gap: out.length > 0 && time - end >= 2, words: null } );
-			end = timing.seconds( to );
-		}
-		return out.length ? out.map( ( line, i ) => ( { ...line, i } ) ) : null;
-	}
-
-	// The lines with their times, or null when none has one. A blank line is a gap before the next;
-	// a line without a time among timed ones is shown with the one before it.
-	function parse( text ) {
-		if ( /^\uFEFF?WEBVTT/.test( text ) ) {
-			return parseVtt( text );
-		}
-		const out = [];
-		let synced = false;
-		let gap = false;
-		let last = 0;
-		const offset = Number( text.match( OFFSET )?.[ 1 ] || 0 ) / 1000;
-		for ( const raw of text.split( /\r?\n/ ) ) {
-			if ( TAG.test( raw ) ) {
-				continue;
-			}
-			if ( ! raw.trim() ) {
-				gap = out.length > 0;
-				continue;
-			}
-			const m = raw.match( STAMPS );
-			if ( ! m ) {
-				out.push( { time: last, ...words( raw.trim(), offset ), gap } );
-			} else {
-				synced = true;
-				for ( const s of m[ 1 ].matchAll( STAMP ) ) {
-					last = Math.max( 0, timing.seconds( s[ 1 ] ) - offset );
-					out.push( { time: last, ...words( m[ 2 ].trim(), offset ), gap } );
-				}
-			}
-			gap = false;
-		}
-		if ( ! synced ) {
-			return null;
-		}
-		// A chorus line can carry every time it is sung: the lines are shown in the order they are heard.
-		return out
-			.map( ( line, i ) => ( { ...line, i } ) )
-			.sort( ( a, b ) => a.time - b.time || a.i - b.i );
-	}
-
 	// A queue of lines under a note: what the empty view shows, decoration beside its words.
 	const ICON =
 		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/></svg>';
@@ -180,7 +84,7 @@
 	function show( where, text ) {
 		lines = [];
 		current = -1;
-		const synced = parse( text );
+		const synced = timing.lyrics( text );
 		if ( ! synced ) {
 			say( where, text, 'riff-lyrics' );
 			return;

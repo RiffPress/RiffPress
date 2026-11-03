@@ -41,6 +41,11 @@ function midiFile() {
 	] );
 }
 let duetUrl;
+let timedUrl;
+
+// Riff Lyrics' timed lyrics for the CHART's track, other words than the chart's so the two are told
+// apart: Enhanced LRC's word times on the first line, a plain timed line for the second.
+const LRC = [ '[00:00.00]<00:00.00>Sing <00:01.00>along', '[00:06.00]Once more' ].join( '\n' );
 
 // A duet: Ada sings A over the first two seconds while Bo sings E, each a line of two notes.
 const DUET = [
@@ -122,6 +127,24 @@ test.beforeAll( async ( { requestUtils } ) => {
 			content: block( duet ),
 		} )
 	).link;
+
+	// A track with both a melody and Riff Lyrics' timed lyrics.
+	const timed = await made.media(
+		requestUtils,
+		path.join( FIXTURES, 'compositions', '06 - Sunk in Dars [sunk-in-dars].mp3' )
+	);
+	await requestUtils.rest( {
+		method: 'POST',
+		path: `/wp/v2/media/${ timed.id }`,
+		data: { riff_sing_melody: CHART, riff_lyrics: LRC },
+	} );
+	timedUrl = (
+		await made.post( requestUtils, {
+			title: `Riff Sing timed lyrics e2e ${ Date.now() }`,
+			status: 'publish',
+			content: block( timed ),
+		} )
+	).link;
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
@@ -160,6 +183,38 @@ test( 'the Sing view shows the melody\'s words, says the voice stays on the devi
 	await expect( panel.locator( '.riff-sing-message' ) ).toHaveText( 'No melody for this track yet.' );
 	// Signed in as someone who can edit the Media Library: the way to the track's Melody field.
 	await expect( panel.getByRole( 'link', { name: 'Add a melody' } ) ).toHaveAttribute( 'href', /post\.php\?action=edit&post=\d+/ );
+} );
+
+test( 'a track with Riff Lyrics\' timed lyrics shows its words at Riff Lyrics\' times, and the melody\'s without them', async ( {
+	page,
+} ) => {
+	const panel = await open( page, timedUrl );
+	const words = panel.locator( '.riff-sing-words' );
+	await expect( words ).toHaveText( 'Sing along' );
+	// At the start the first word has come and the second, a second on, not yet.
+	await expect( words.locator( '.is-sung' ) ).toHaveText( 'Sing' );
+	await page.evaluate( () => window.riff.seek( 1.5 ) );
+	await expect( words.locator( '.is-sung' ) ).toHaveCount( 2 );
+	// The second line, at its own time rather than the melody's: the chart's next line is at six too,
+	// but its word is "la".
+	await page.evaluate( () => window.riff.seek( 6.5 ) );
+	await expect( words ).toHaveText( 'Once more' );
+	await expect( words.locator( '.is-sung' ) ).toHaveText( 'Once more' );
+
+	// Riff Lyrics not active: the media route has no riff_lyrics, and the melody's own words show.
+	await page.route( /\/wp\/v2\/media\/\d+/, async ( route ) => {
+		const url = new URL( route.request().url() );
+		const fields = url.searchParams.get( '_fields' );
+		if ( fields ) {
+			url.searchParams.set( '_fields', fields.replace( /,?riff_lyrics/, '' ) );
+		}
+		await route.continue( { url: url.toString() } );
+	} );
+	const without = await open( page, timedUrl );
+	// The tab's session brings the song back where it was left, so it is taken back to the start.
+	await page.evaluate( () => window.riff.seek( 0 ) );
+	await expect( without.locator( '.riff-sing-words' ) ).toHaveText( 'La la' );
+	await expect( without.locator( '.is-sung' ) ).toHaveText( 'La' );
 } );
 
 test( 'a track whose melody is a MIDI file sings its voice track\'s words', async ( { page } ) => {

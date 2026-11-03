@@ -3,6 +3,10 @@
  * through the media REST route, scrolls past as a lane of notes with its words under it; once the
  * listener asks, their voice is drawn against it and each line is scored as it ends. A duet has a
  * lane for each of its two singers, each with its own microphone or MIDI input and its own score.
+ * Where Riff Lyrics is active and the track has timed lyrics, the words under a lone singer's lane
+ * are Riff Lyrics' lines at Riff Lyrics' times, read from its riff_lyrics field on the same media
+ * route; without them, or in a duet, whose lyrics don't say who sings which line, they are the
+ * melody's own syllables.
  *
  * It listens to the player's riff:view, riff:time, riff:play and riff:ended events, which
  * Riff dispatches on its own element for any script, and reads where the song is through
@@ -94,7 +98,8 @@
 	const nameOf = ( part ) => part.name || fill( config.singer, part.index + 1 );
 
 	// The chart for a track that is a Media Library file: its typed melody, or failing that its
-	// MIDI file's vocal track. An empty string for none, null for one that can't be read.
+	// MIDI file's vocal track, with the track's timed lyrics, where Riff Lyrics gives them, as its
+	// `lyrics`. An empty string for none, null for one that can't be read.
 	function melodyFor( track ) {
 		const id = Number( track?.id );
 		if ( ! Number.isInteger( id ) || id <= 0 ) {
@@ -102,7 +107,8 @@
 		}
 		if ( ! cache.has( id ) ) {
 			const url = new URL( String( id ), config.media );
-			url.searchParams.set( '_fields', 'riff_sing_melody,riff_sing_midi' );
+			// riff_lyrics is Riff Lyrics' field, and left out by the route when it isn't active.
+			url.searchParams.set( '_fields', 'riff_sing_melody,riff_sing_midi,riff_lyrics' );
 			const asked = fetch( url, {
 				credentials: 'same-origin',
 				headers: {
@@ -117,9 +123,16 @@
 					return r.json();
 				} )
 				.then( ( data ) => {
+					const timed = timing.lyrics( data?.riff_lyrics );
+					const withWords = ( found ) => {
+						if ( found && timed ) {
+							found.lyrics = timed;
+						}
+						return found;
+					};
 					const text = String( data?.riff_sing_melody || '' );
 					if ( text.trim() ) {
-						return melody.parse( text );
+						return withWords( melody.parse( text ) );
 					}
 					const file = String( data?.riff_sing_midi || '' );
 					if ( ! file || ! window.riffSingMidi ) {
@@ -132,7 +145,7 @@
 							}
 							return r.arrayBuffer();
 						} )
-						.then( ( bytes ) => window.riffSingMidi.read( bytes ) );
+						.then( ( bytes ) => withWords( window.riffSingMidi.read( bytes ) ) );
 				} );
 			asked.catch( () => cache.delete( id ) );
 			cache.set( id, asked );
@@ -215,7 +228,7 @@
 		const status = el( 'p', 'riff-sing-status' );
 		box.append( strip, words, result, controls, status );
 		part.ui = { box, singer, canvas, words, result, controls, mic, midi: keys, stop, input, port, status, colors: null };
-		part.phraseShown = -1;
+		part.phraseShown = null;
 		named( part );
 		return box;
 	}
@@ -239,7 +252,7 @@
 				part.chart = singers[ i ];
 				part.scorer = melody.scorer( singers[ i ], { tolerance } );
 				part.trail = [];
-				part.phraseShown = -1;
+				part.phraseShown = null;
 				named( part );
 				update( part );
 			} );
@@ -259,7 +272,7 @@
 			// end() moves it on, and a start that comes back to a different number releases it.
 			attempt: 0,
 			trail: [], // What was sung lately, each { t, note }, for the lane.
-			phraseShown: -1,
+			phraseShown: null,
 			ui: null,
 		} ) );
 		const root = el( 'div', `riff-sing${ duet() ? ' is-duet' : '' }` );
@@ -691,8 +704,29 @@
 		parts.forEach( ( part ) => end( part, part.session ? why : '' ) );
 	}
 
-	// The words of the line being sung, or the next one, the syllable being sung marked.
+	// The words of the line being sung, or the next one, what is being sung marked: the melody's
+	// syllables, or for a lone singer, Riff Lyrics' line, its words lit as Riff Lyrics lights them.
 	function lyric( part, time ) {
+		const lines = ! duet() && chart.lyrics;
+		if ( lines ) {
+			// The line Riff Lyrics marks, or before the first, the first.
+			const i = Math.max( 0, timing.at( lines, time ) );
+			if ( i !== part.phraseShown ) {
+				part.phraseShown = i;
+				const line = lines[ i ];
+				part.ui.words.replaceChildren(
+					...( line.words || [ { time: line.time, text: line.text } ] ).map( ( w ) => {
+						const span = el( 'span', 'riff-sing-syllable', w.text );
+						span.when = w.time;
+						return span;
+					} )
+				);
+			}
+			for ( const span of part.ui.words.children ) {
+				span.classList.toggle( 'is-sung', span.when !== null && timing.due( span.when, time ) );
+			}
+			return;
+		}
 		const { phrases } = part.chart;
 		const i = phrases.findIndex( ( p ) => time < p.end );
 		if ( i !== part.phraseShown ) {
@@ -700,13 +734,13 @@
 			part.ui.words.replaceChildren(
 				...( phrases[ i ]?.notes || [] ).map( ( n ) => {
 					const span = el( 'span', 'riff-sing-syllable', n.text );
-					span.note = n;
+					span.when = n.start;
 					return span;
 				} )
 			);
 		}
 		for ( const span of part.ui.words.children ) {
-			span.classList.toggle( 'is-sung', span.note.start <= time );
+			span.classList.toggle( 'is-sung', span.when !== null && span.when <= time );
 		}
 	}
 
