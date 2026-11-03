@@ -19,7 +19,8 @@ defined( 'ABSPATH' ) || exit;
  * gets none, and the Shift shortcuts, which a slip does not press, still work for everyone. A
  * signed-in listener has them, and turns them off under Personal Options on their profile, where
  * WordPress keeps their other choices about how the site behaves for them. The choice is a user
- * option, so on a network each site keeps its own, as likes are kept.
+ * option, so on a network each site keeps its own, as likes are kept. A plugin's keys, registered
+ * with `riff_register_shortcut()`, are listed there beside Riff's and turned off with them.
  */
 final class Shortcuts {
 
@@ -72,6 +73,19 @@ final class Shortcuts {
 					<input name="riff_shortcuts" type="checkbox" id="riff_shortcuts" value="on" <?php checked( self::on( $user->ID ) ); ?>>
 					<?php esc_html_e( 'Play and pause with Space or K, and skip back and ahead with J and L', 'riff' ); ?>
 				</label>
+				<?php
+				// A plugin's keys, registered with riff_register_shortcut(), are single-key shortcuts
+				// too, on and off with Riff's own.
+				$more = Registry::shortcuts();
+				if ( $more ) :
+					?>
+					<p class="description" id="riff-shortcuts-more"><?php esc_html_e( 'It turns off these keys too, which the site’s plugins add:', 'riff' ); ?></p>
+					<ul class="riff-shortcuts-more" aria-labelledby="riff-shortcuts-more">
+						<?php foreach ( $more as $shortcut ) : ?>
+							<li><kbd><?php echo esc_html( mb_strtoupper( $shortcut['key'] ) ); ?></kbd> <?php echo esc_html( $shortcut['label'] ); ?></li>
+						<?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
 				<?php wp_nonce_field( 'riff_shortcuts_' . $user->ID, 'riff_shortcuts_nonce' ); ?>
 			</td>
 		</tr>

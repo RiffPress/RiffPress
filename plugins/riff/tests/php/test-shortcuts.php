@@ -53,6 +53,32 @@ class Test_Riff_Shortcuts extends Riff_TestCase {
 	}
 
 	/**
+	 * A plugin's keys are listed under Riff's, where the one checkbox turns them all off.
+	 */
+	public function test_the_profile_lists_a_plugins_keys_with_riffs(): void {
+		$user = self::factory()->user->get_object_by_id( self::factory()->user->create() );
+		ob_start();
+		Shortcuts::field( $user );
+		$this->assertStringNotContainsString( 'riff-shortcuts-more', (string) ob_get_clean(), 'nothing to list without one' );
+
+		add_action(
+			Riff\Registry::HOOK,
+			static fn() => riff_register_shortcut(
+				'loop',
+				array(
+					'key'   => 'o',
+					'label' => 'Loop <the> section',
+				)
+			)
+		);
+		Riff\Registry::reset();
+		ob_start();
+		Shortcuts::field( $user );
+		$html = (string) ob_get_clean();
+		$this->assertStringContainsString( '<li><kbd>O</kbd> Loop &lt;the&gt; section</li>', $html );
+	}
+
+	/**
 	 * Another user cannot change someone's choice.
 	 */
 	public function test_only_someone_who_can_edit_the_user_saves_it(): void {

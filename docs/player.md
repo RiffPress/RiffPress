@@ -60,6 +60,30 @@ Nothing fires while you type in a field. The single-key shortcuts act only for a
 who can turn them off under Personal Options on their profile (`Shortcuts` in PHP); a visitor has none, and a site can turn them off for everyone with the `riff.shortcuts`
 filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
 
+A plugin adds keys of its own the same way it adds a control: it registers each on the server, on
+the `riff_register` action, so the profile lists it under Riff's, and gives it what it does in the
+browser by its id:
+
+```php
+add_action( 'riff_register', function () {
+	riff_register_shortcut( 'loop', array(
+		'key'   => 'o', // One character: a letter acts without Shift, whatever its case.
+		'label' => __( 'Loop the section', 'my-plugin' ),
+	) );
+} );
+```
+
+```js
+window.riff.shortcut( 'loop', ( track, event ) => toggleLoop( track ) );
+```
+
+A plugin's key is a single-key shortcut, so it keeps their rules: nothing while the listener types
+in a field or holds Ctrl, Alt or Command, nothing until a track is loaded, and nothing for a
+visitor, for a listener who turned the shortcuts off, or where the `riff.shortcuts` filter turns
+them off. The profile's one checkbox turns Riff's and every plugin's off together. Riff's own
+letters, K, J, L, N and P, and Space are not a plugin's to take, nor is a key another plugin has;
+`riff_register_shortcut()` refuses one, and returns `false`.
+
 ## Views
 
 Now Playing is a view at a time, each taking the whole screen above the bar, opened from its button
