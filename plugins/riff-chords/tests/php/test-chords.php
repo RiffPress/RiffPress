@@ -52,6 +52,19 @@ class Test_Riff_Chords extends Riff_TestCase {
 		$this->assertTrue( apply_filters( 'riff_track', array( 'id' => (string) $charted ), $charted, 0 )['chords'] ?? false );
 		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => (string) $plain ), $plain, 0 ) );
 		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => '' ), 0, 0 ), 'nor a file outside the Media Library' );
+
+		// A file in a draft is not a visitor's to read through the media route, so neither is its chart.
+		$draft = self::factory()->post->create( array( 'post_status' => 'draft' ) );
+		wp_update_post(
+			array(
+				'ID'          => $charted,
+				'post_parent' => $draft,
+			)
+		);
+		wp_set_current_user( 0 );
+		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => (string) $charted ), $charted, 0 ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertTrue( apply_filters( 'riff_track', array( 'id' => (string) $charted ), $charted, 0 )['chords'] ?? false, 'but an editor\'s' );
 	}
 
 	public function test_audio_gets_a_chords_field_and_images_do_not(): void {
