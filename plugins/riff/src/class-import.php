@@ -20,6 +20,10 @@ defined( 'ABSPATH' ) || exit;
  * tracks become attachments, and a post with one audio block per track publishes them. A cover
  * image in the folder becomes the album's artwork, and a video with the same name as a track
  * becomes that track's video version. Running it again skips every file it has already imported.
+ *
+ * A zip of an album, or of a folder of albums, is unpacked by core's unzip_file() into a folder of
+ * its own and imported the same way, whether it is given to `wp riff import` or uploaded to the
+ * Media Library.
  */
 final class Import {
 
@@ -59,6 +63,208 @@ final class Import {
 	public const FOLDER = '_riff_import_folder';
 
 	/**
+	 * The background job that imports a zip uploaded to the Media Library, by its attachment ID.
+	 *
+	 * @since 5.9.0
+	 */
+	public const ZIP_JOB = 'riff_import_zip';
+
+	/**
+	 * How many times its own size a zip may unpack to. Music hardly compresses, so a real album
+	 * unpacks to little more than it holds; a zip that unpacks to far more is built to fill a disk.
+	 *
+	 * @since 5.9.0
+	 */
+	public const ZIP_RATIO = 10;
+
+	/**
+	 * Hooks the import of a zip uploaded to the Media Library.
+	 *
+	 * @since 5.9.0
+	 */
+	public static function register(): void {
+		add_action( 'add_attachment', array( self::class, 'on_upload' ) );
+		add_action( self::ZIP_JOB, array( self::class, 'uploaded_zip' ) );
+	}
+
+	/**
+	 * Queues a zip uploaded to the Media Library, by someone who can write posts, to be imported.
+	 *
+	 * Only a zip uploaded to the Media Library itself: one uploaded to a post, as a File block's
+	 * download, is attached to that post and left as it is. The import runs in the background, as
+	 * an album can take longer to add than an upload is given.
+	 *
+	 * @since 5.9.0
+	 *
+	 * @param int $id Attachment ID.
+	 */
+	public static function on_upload( int $id ): void {
+		$post = get_post( $id );
+		if ( ! $post || 0 !== (int) $post->post_parent || ! self::is_zip( $id ) || ! current_user_can( 'edit_posts' ) ) {
+			return;
+		}
+		wp_schedule_single_event( time(), self::ZIP_JOB, array( $id ) );
+	}
+
+	/**
+	 * Imports a zip uploaded to the Media Library, as the person who uploaded it, into draft album
+	 * posts for them to publish. The zip stays in the Media Library, attached to its album's post,
+	 * so the Media Library shows where it went; one that holds no audio stays as it was.
+	 *
+	 * @since 5.9.0
+	 *
+	 * @param int $id Attachment ID.
+	 * @return array|WP_Error|null The import's report, as zip() gives it, or null when there was nothing to import.
+	 */
+	public static function uploaded_zip( int $id ) {
+		$post = get_post( $id );
+		if ( ! $post || 'attachment' !== $post->post_type || 0 !== (int) $post->post_parent || ! self::is_zip( $id ) ) {
+			return null;
+		}
+		$author = (int) $post->post_author;
+		$file   = get_attached_file( $id );
+		if ( ! $author || ! user_can( $author, 'edit_posts' ) || ! $file ) {
+			return null;
+		}
+		$previous = get_current_user_id();
+		wp_set_current_user( $author );
+		try {
+			$result = self::zip( $file, array( 'status' => 'draft' ) );
+		} finally {
+			wp_set_current_user( $previous );
+		}
+		if ( ! is_wp_error( $result ) ) {
+			foreach ( $result['albums'] as $album ) {
+				if ( $album['post'] ) {
+					wp_update_post(
+						array(
+							'ID'          => $id,
+							'post_parent' => $album['post'],
+						)
+					);
+					break;
+				}
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * Whether an attachment is a zip.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return bool
+	 */
+	private static function is_zip( int $id ): bool {
+		return in_array( get_post_mime_type( $id ), array( 'application/zip', 'application/x-zip-compressed', 'application/x-zip' ), true );
+	}
+
+	/**
+	 * Imports a zip, unpacked by core's unzip_file() into a folder of its own, as folder() imports
+	 * a folder. The folder is removed afterwards, whatever happened. What is in a zip is its
+	 * maker's choice, so core keeps its paths inside the folder, folder() reads only the files it
+	 * looks for, and a zip that would unpack to far more than it holds or than the disk has room
+	 * for, or that holds a file larger than PHP's memory can unpack, is refused before unpacking.
+	 *
+	 * @since 5.9.0
+	 *
+	 * @param string $file A zip on the server.
+	 * @param array  $args Optional. As for folder().
+	 * @return array{albums: array<int, array{folder: string, post: int, imported: string[], skipped: string[], failed: array<string, string>}>}|WP_Error
+	 */
+	public static function zip( string $file, array $args = array() ) {
+		global $wp_filesystem;
+		$file = realpath( $file );
+		if ( ! $file || ! is_file( $file ) || ! is_readable( $file ) ) {
+			return new WP_Error( 'riff_import_zip', __( 'That zip does not exist or cannot be read.', 'riff' ) );
+		}
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		if ( ! WP_Filesystem() || ! $wp_filesystem ) {
+			return new WP_Error( 'riff_import_zip', __( 'WordPress cannot write files on this server without asking for its FTP details, so the zip cannot be unpacked.', 'riff' ) );
+		}
+		$fits = self::fits( $file );
+		if ( is_wp_error( $fits ) ) {
+			return $fits;
+		}
+
+		$to    = get_temp_dir() . 'riff-zip-' . wp_generate_password( 20, false );
+		$clean = static function () use ( $to ): void {
+			global $wp_filesystem;
+			if ( $wp_filesystem && $wp_filesystem->is_dir( $to ) ) {
+				$wp_filesystem->delete( $to, true );
+			}
+		};
+		// Removed at the end of the request too, should it end before the import does.
+		register_shutdown_function( $clean );
+		$limit = static function ( $pre, $zip, $dir, $dirs, $required ) use ( $file ) {
+			unset( $zip, $dir, $dirs );
+			// unzip_file() counts what the zip unpacks to, doubled and a tenth more, as the space it needs.
+			$unpacked = (float) $required / 2.1;
+			if ( $unpacked > (float) filesize( $file ) * self::ZIP_RATIO ) {
+				return new WP_Error( 'riff_import_zip', __( 'That zip unpacks to far more than it holds, so it was not unpacked.', 'riff' ) );
+			}
+			$free = function_exists( 'disk_free_space' ) ? @disk_free_space( get_temp_dir() ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- false where the host turns it off.
+			if ( $free && $unpacked > $free ) {
+				return new WP_Error( 'riff_import_zip', __( 'There is not enough disk space to unpack that zip.', 'riff' ) );
+			}
+			return $pre;
+		};
+		add_filter( 'pre_unzip_file', $limit, 10, 5 );
+		try {
+			$unzipped = unzip_file( $file, $to );
+			remove_filter( 'pre_unzip_file', $limit, 10 );
+			if ( is_wp_error( $unzipped ) ) {
+				return 'riff_import_zip' === $unzipped->get_error_code() ? $unzipped : new WP_Error(
+					'riff_import_zip',
+					/* translators: %s: Why WordPress could not unpack the zip. */
+					sprintf( __( 'The zip could not be unpacked: %s', 'riff' ), $unzipped->get_error_message() )
+				);
+			}
+			return self::folder( $to, array_merge( $args, array( 'as' => $file ) ) );
+		} finally {
+			remove_filter( 'pre_unzip_file', $limit, 10 );
+			$clean();
+		}
+	}
+
+	/**
+	 * Refuses a zip holding a file larger than unzip_file() can unpack: core's ZipArchive path reads
+	 * each file whole into memory, and a file larger than PHP's memory would end the request.
+	 *
+	 * @param string $file The zip.
+	 * @return true|WP_Error
+	 */
+	private static function fits( string $file ) {
+		/** This filter is documented in wp-admin/includes/file.php */
+		if ( ! class_exists( 'ZipArchive', false ) || ! apply_filters( 'unzip_file_use_ziparchive', true ) ) {
+			return true;
+		}
+		$zip = new \ZipArchive();
+		if ( true !== $zip->open( $file ) ) {
+			// unzip_file() says why.
+			return true;
+		}
+		$largest = 0;
+		$count   = $zip->count();
+		for ( $i = 0; $i < $count; $i++ ) {
+			$stat    = $zip->statIndex( $i );
+			$largest = max( $largest, is_array( $stat ) ? (int) $stat['size'] : 0 );
+		}
+		$zip->close();
+		// As much as unzip_file() asks for.
+		wp_raise_memory_limit( 'admin' );
+		$limit = wp_convert_hr_to_bytes( (string) ini_get( 'memory_limit' ) );
+		if ( $limit > 0 && $largest > $limit - memory_get_usage() ) {
+			return new WP_Error(
+				'riff_import_zip',
+				/* translators: %s: A file size, such as 300 MB. */
+				sprintf( __( 'A file in that zip is too large to unpack here (%s). Unpack it and import the folder instead.', 'riff' ), size_format( $largest ) )
+			);
+		}
+		return true;
+	}
+
+	/**
 	 * Imports a folder, and every folder inside it that holds audio, as albums.
 	 *
 	 * @since 4.16.0
@@ -69,6 +275,10 @@ final class Import {
 	 *
 	 *     @type string $status  Status for new album posts. Default 'publish'.
 	 *     @type bool   $dry_run Report what would be imported without importing it. Default false.
+	 *     @type string $as      What the folder is known by in place of its path, such as the zip it
+	 *                           was unpacked from: what the report names, what an album is called
+	 *                           when its tags don't say, and how its post is found again. Default
+	 *                           the folder's path.
 	 * }
 	 * @return array{albums: array<int, array{folder: string, post: int, imported: string[], skipped: string[], failed: array<string, string>}>}|WP_Error
 	 */
@@ -82,8 +292,10 @@ final class Import {
 			array(
 				'status'  => 'publish',
 				'dry_run' => false,
+				'as'      => '',
 			)
 		);
+		$as = '' !== (string) $args['as'] ? (string) $args['as'] : $dir;
 
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -100,7 +312,7 @@ final class Import {
 		$albums = array();
 		try {
 			foreach ( self::album_folders( $dir ) as $folder ) {
-				$albums[] = self::album( $folder, $args, $known );
+				$albums[] = self::album( $folder, $as . substr( $folder, strlen( $dir ) ), $args, $known );
 				// What WordPress keeps in memory of each album's posts, which a run of thousands of
 				// files would otherwise hold to its end.
 				wp_cache_flush_runtime();
@@ -161,13 +373,14 @@ final class Import {
 	 * Imports one album folder.
 	 *
 	 * @param string $dir   Folder.
+	 * @param string $name  What it is known by, from folder().
 	 * @param array  $args  Arguments from folder().
 	 * @param array  $known Files imported before, from imported(), with each file this one adds.
 	 * @return array{folder: string, post: int, imported: string[], skipped: string[], failed: array<string, string>}
 	 */
-	private static function album( string $dir, array $args, array &$known ): array {
+	private static function album( string $dir, string $name, array $args, array &$known ): array {
 		$report = array(
-			'folder'   => $dir,
+			'folder'   => $name,
 			'post'     => 0,
 			'imported' => array(),
 			'skipped'  => array(),
@@ -222,7 +435,7 @@ final class Import {
 		}
 		remove_filter( 'upload_mimes', $mimes );
 
-		$report['post'] = self::post( $dir, $ids, $cover, (string) $args['status'] );
+		$report['post'] = self::post( $name, $ids, $cover, (string) $args['status'] );
 		return $report;
 	}
 
@@ -369,7 +582,7 @@ final class Import {
 	 * The album's post: made with one audio block per track, or, when this folder was imported
 	 * before, the new tracks added to the end of it.
 	 *
-	 * @param string $dir    Folder.
+	 * @param string $dir    What the folder is known by, from folder().
 	 * @param int[]  $ids    Tracks imported this time, in order.
 	 * @param int    $cover  Cover attachment ID, or 0.
 	 * @param string $status Status for a new post.
@@ -411,7 +624,7 @@ final class Import {
 		$album   = is_array( $meta ) ? trim( (string) ( $meta['album'] ?? '' ) ) : '';
 		$post_id = wp_insert_post(
 			array(
-				'post_title'   => '' !== $album ? $album : ucwords( str_replace( array( '-', '_' ), ' ', basename( $dir ) ) ),
+				'post_title'   => '' !== $album ? $album : ucwords( str_replace( array( '-', '_' ), ' ', (string) preg_replace( '/\.zip$/i', '', wp_basename( $dir ) ) ) ),
 				'post_status'  => in_array( $status, array( 'publish', 'draft', 'private' ), true ) ? $status : 'publish',
 				'post_content' => $blocks,
 			),

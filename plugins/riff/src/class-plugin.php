@@ -25,6 +25,7 @@ final class Plugin {
 		Media::register();
 		Protect::register();
 		Catalog::register();
+		Import::register();
 		Catalog_Rest::register();
 		Likes::register();
 		Likes_Rest::register();

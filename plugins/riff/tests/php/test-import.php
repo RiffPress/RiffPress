@@ -48,6 +48,40 @@ class Test_Riff_Import extends Riff_TestCase {
 	}
 
 	/**
+	 * A zip under a fresh temporary folder.
+	 *
+	 * @param array<string, string> $entries Each entry's name in the zip, and the fixture file it
+	 *                                       holds, or its contents when no fixture has that name.
+	 * @return string The zip.
+	 */
+	private function zip_of( array $entries ): string {
+		$root = sys_get_temp_dir() . '/riff-import-' . wp_generate_password( 8, false );
+		mkdir( $root );
+		$this->dirs[] = $root;
+		$file         = $root . '/Compositions.zip';
+		$zip          = new ZipArchive();
+		$zip->open( $file, ZipArchive::CREATE );
+		foreach ( $entries as $name => $source ) {
+			if ( is_file( self::fixture( $source ) ) ) {
+				$zip->addFile( self::fixture( $source ), $name );
+			} else {
+				$zip->addFromString( $name, $source );
+			}
+		}
+		$zip->close();
+		return $file;
+	}
+
+	/**
+	 * The folders zip() unpacks into, left in the temporary folder.
+	 *
+	 * @return string[]
+	 */
+	private function unpacked(): array {
+		return (array) glob( get_temp_dir() . 'riff-zip-*' );
+	}
+
+	/**
 	 * Removes a folder and everything in it.
 	 *
 	 * @param string $dir Folder.
@@ -211,6 +245,136 @@ class Test_Riff_Import extends Riff_TestCase {
 
 	public function test_a_folder_that_does_not_exist_is_an_error(): void {
 		$this->assertWPError( Import::folder( '/no/such/folder' ) );
+	}
+
+	public function test_a_zip_is_imported_as_its_folder_would_be_and_unpacked_nowhere_after(): void {
+		$before = $this->unpacked();
+		$zip    = $this->zip_of(
+			array(
+				'Compositions/02 - Underground [underground].mp3' => '02 - Underground [underground].mp3',
+				'Compositions/cover.png'                         => 'cover.png',
+				'Compositions/notes.txt'                         => 'liner notes',
+				'__MACOSX/Compositions/._cover.png'              => 'resource fork',
+			)
+		);
+
+		$result = Import::zip( $zip );
+
+		$this->assertIsArray( $result );
+		$this->assertCount( 1, $result['albums'] );
+		$album = $result['albums'][0];
+		$this->assertSame( array( '02 - Underground [underground].mp3' ), $album['imported'] );
+		$this->assertSame( realpath( $zip ) . '/Compositions', $album['folder'], 'named by the zip, not where it was unpacked' );
+		$this->assertGreaterThan( 0, (int) get_post_thumbnail_id( $album['post'] ), 'the cover in the zip is the artwork' );
+		$this->assertCount( 1, $this->tracks(), 'only the audio is imported; the notes and the resource fork are not' );
+		$this->assertSame( $before, $this->unpacked(), 'the folder it was unpacked into is gone' );
+	}
+
+	public function test_a_zip_imported_again_finds_its_album_and_imports_nothing_twice(): void {
+		$zip   = $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) );
+		$first = Import::zip( $zip );
+
+		$again = Import::zip( $zip );
+
+		$this->assertSame( array( '02 - Underground [underground].mp3' ), $again['albums'][0]['skipped'] );
+		$this->assertSame( $first['albums'][0]['post'], $again['albums'][0]['post'], 'the same post, found by the zip' );
+		$this->assertCount( 1, $this->tracks() );
+		$this->assertCount( 1, get_posts( array( 'post_status' => 'any' ) ) );
+	}
+
+	public function test_files_at_the_top_of_a_zip_are_named_by_the_zip(): void {
+		$zip = $this->zip_of( array( 'Broken.mp3' => 'not audio at all' ) );
+
+		$album = Import::zip( $zip )['albums'][0];
+
+		$this->assertSame( realpath( $zip ), $album['folder'] );
+		$this->assertArrayHasKey( 'Broken.mp3', $album['failed'] );
+	}
+
+	public function test_a_zip_cannot_write_outside_the_folder_it_is_unpacked_into(): void {
+		$before = $this->unpacked();
+		$name   = 'riff-escaped-' . wp_generate_password( 8, false ) . '.php';
+		$zip    = $this->zip_of(
+			array(
+				'../' . $name                      => '<?php echo "escaped";',
+				'../../' . $name                   => '<?php echo "escaped";',
+				'02 - Underground [underground].mp3' => '02 - Underground [underground].mp3',
+			)
+		);
+
+		$result = Import::zip( $zip );
+
+		$this->assertIsArray( $result );
+		$this->assertFileDoesNotExist( get_temp_dir() . $name );
+		$this->assertFileDoesNotExist( dirname( get_temp_dir() ) . '/' . $name );
+		$this->assertSame( array( '02 - Underground [underground].mp3' ), $result['albums'][0]['imported'], 'the rest is imported' );
+		$this->assertSame( $before, $this->unpacked() );
+	}
+
+	public function test_a_zip_that_unpacks_to_far_more_than_it_holds_is_refused(): void {
+		$before = $this->unpacked();
+		$zip    = $this->zip_of( array( '01 - Silence.wav' => str_repeat( "\0", 4 * MB_IN_BYTES ) ) );
+
+		$result = Import::zip( $zip );
+
+		$this->assertWPError( $result );
+		$this->assertSame( 'riff_import_zip', $result->get_error_code() );
+		$this->assertCount( 0, $this->tracks() );
+		$this->assertSame( $before, $this->unpacked() );
+	}
+
+	public function test_a_file_that_is_not_a_zip_is_an_error(): void {
+		$dir = $this->album_dir( 'compositions', array( '02 - Underground [underground].mp3' ) );
+
+		$this->assertWPError( Import::zip( $dir . '/02 - Underground [underground].mp3' ) );
+		$this->assertWPError( Import::zip( '/no/such/file.zip' ) );
+		$this->assertCount( 0, $this->tracks() );
+	}
+
+	public function test_a_zip_uploaded_to_the_media_library_is_imported_in_the_background_as_a_draft(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+
+		$this->assertNotFalse( wp_next_scheduled( Import::ZIP_JOB, array( $id ) ), 'queued, not imported during the upload' );
+		$this->assertCount( 0, $this->tracks() );
+
+		wp_set_current_user( 0 );
+		$result = Import::uploaded_zip( $id );
+
+		$this->assertIsArray( $result );
+		$post = get_post( $result['albums'][0]['post'] );
+		$this->assertSame( 'draft', $post->post_status, 'a draft, for the person who uploaded it to publish' );
+		$this->assertSame( $editor, (int) $post->post_author );
+		$this->assertCount( 1, $this->tracks() );
+		$this->assertSame( $post->ID, (int) get_post( $id )->post_parent, 'the zip stays, attached to its album' );
+		$this->assertSame( 0, get_current_user_id(), 'the job puts back who was signed in' );
+	}
+
+	public function test_a_zip_uploaded_to_a_post_or_by_someone_who_cannot_write_posts_is_left_alone(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$post     = self::factory()->post->create();
+		$download = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ), $post );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$theirs = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+
+		$this->assertFalse( wp_next_scheduled( Import::ZIP_JOB, array( $download ) ), 'a File block\'s download stays a download' );
+		$this->assertFalse( wp_next_scheduled( Import::ZIP_JOB, array( $theirs ) ) );
+		$this->assertNull( Import::uploaded_zip( $download ) );
+		$this->assertNull( Import::uploaded_zip( $theirs ) );
+		$this->assertCount( 0, $this->tracks() );
+	}
+
+	public function test_wp_riff_import_takes_a_zip(): void {
+		require_once __DIR__ . '/class-riff-test-wp-cli.php';
+		WP_CLI::$lines = array();
+		$zip           = $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) );
+
+		( new Riff\Cli() )->import( array( $zip ), array() );
+
+		$this->assertSame( array( 'log', 'success' ), array_column( WP_CLI::$lines, 0 ) );
+		$this->assertSame( '1 albums: 1 tracks imported, 0 skipped, 0 failed.', WP_CLI::$lines[1][1] );
+		$this->assertSame( 'publish', get_post_status( get_posts()[0] ) );
 	}
 
 	public function test_wp_riff_import_reports_each_album_and_a_summary(): void {

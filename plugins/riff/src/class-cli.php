@@ -209,19 +209,19 @@ final class Cli {
 	}
 
 	/**
-	 * Imports a folder of music into the Media Library.
+	 * Imports a folder of music, or a zip of one, into the Media Library.
 	 *
 	 * Each folder that holds audio, the one given and any inside it, becomes an album: its files are
 	 * added to the Media Library the way an upload is, so WordPress reads their tags and artwork,
 	 * and a post with one audio block per track publishes them. A cover, folder or front image in
 	 * the folder becomes the album's artwork, and a video named like a track becomes its video
 	 * version. Running it again skips what it has already imported and adds new tracks to the
-	 * album's post.
+	 * album's post. A zip is unpacked into a temporary folder, imported the same way, and removed.
 	 *
 	 * ## OPTIONS
 	 *
-	 * <folder>
-	 * : The folder on the server to import.
+	 * <path>
+	 * : The folder on the server to import, or a zip of it.
 	 *
 	 * [--status=<status>]
 	 * : Status for new album posts.
@@ -240,21 +240,22 @@ final class Cli {
 	 *
 	 *     wp riff import ~/Music/Floating\ Points
 	 *     wp riff import /srv/music --status=draft
+	 *     wp riff import ~/Downloads/album.zip
 	 *
 	 * @since 4.16.0
+	 * @since 5.9.0 Takes a zip.
 	 *
 	 * @param string[]             $args       Positional arguments.
 	 * @param array<string, mixed> $assoc_args Named arguments.
 	 */
 	public function import( array $args, array $assoc_args ): void {
-		$dry    = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
-		$result = Import::folder(
-			(string) $args[0],
-			array(
-				'status'  => (string) ( $assoc_args['status'] ?? 'publish' ),
-				'dry_run' => $dry,
-			)
+		$dry     = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
+		$path    = (string) $args[0];
+		$options = array(
+			'status'  => (string) ( $assoc_args['status'] ?? 'publish' ),
+			'dry_run' => $dry,
 		);
+		$result  = is_file( $path ) ? Import::zip( $path, $options ) : Import::folder( $path, $options );
 		if ( is_wp_error( $result ) ) {
 			WP_CLI::error( $result->get_error_message() );
 		}
@@ -274,7 +275,7 @@ final class Cli {
 			}
 		}
 		if ( ! $result['albums'] ) {
-			WP_CLI::warning( 'No audio found in that folder.' );
+			WP_CLI::warning( is_file( $path ) ? 'No audio found in that zip.' : 'No audio found in that folder.' );
 			return;
 		}
 		$summary = sprintf( '%d albums: %d tracks imported, %d skipped, %d failed.', count( $result['albums'] ), $counts['imported'], $counts['skipped'], $counts['failed'] );
