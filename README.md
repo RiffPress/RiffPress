@@ -21,6 +21,18 @@ Riff needs WordPress 7.1 and PHP 8.1. There is nothing to configure. On WordPres
 
 Riff's [PHP, JavaScript, REST and CSS reference](https://developer.riffpress.com/) is the whole public API, and [Riff Lyrics](plugins/riff-lyrics/) is built on nothing else. To work on Riff itself, start with [CONTRIBUTING](.github/CONTRIBUTING.md).
 
+## What Riff finds in WordPress
+
+Building a music library on the Media Library turns up places where WordPress falls short, some of them long known. Riff works around each one and writes it down in [docs/native.md](docs/native.md) with its core ticket, so the workaround can go once core fixes it.
+
+| Core ticket | What Riff ran into |
+|---|---|
+| [#66417](https://core.trac.wordpress.org/ticket/66417), reported while building Riff | A FLAC, Ogg or M4A file's tags are read and then dropped, because WordPress keeps only ID3, so those files arrive with no title, artist or album. |
+| [#17255](https://core.trac.wordpress.org/ticket/17255) | Every upload is a public file, whatever post it belongs to. |
+| [#55950](https://core.trac.wordpress.org/ticket/55950) | No passkeys, and no way to sign in without a password. |
+| [#59510](https://core.trac.wordpress.org/ticket/59510), [#61900](https://core.trac.wordpress.org/ticket/61900) | No way to stop core printing the title and viewport tags on a page that prints its own. |
+| [#61728](https://core.trac.wordpress.org/ticket/61728) | No stable block supports for border and typography, after Gutenberg reverted them. |
+
 ## Licence
 
 Riff is GPL-2.0-or-later.
