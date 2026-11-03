@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.0.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.0.0...riff-v6.0.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **player:** a view's button shows only for a track it has something for, and an open view gives way to one without ([#873](https://github.com/RiffPress/RiffPress/issues/873)) ([33d83b2](https://github.com/RiffPress/RiffPress/commit/33d83b2bb1e4b34d06ce488e03e3a214d06fa6c5))
+* **player:** the turntable's needle drops onto the record when its view opens as the music starts ([#872](https://github.com/RiffPress/RiffPress/issues/872)) ([54748a0](https://github.com/RiffPress/RiffPress/commit/54748a035a49ccbd0dd5e9661a74d73a7b487dc4))
+
 ## [6.0.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.9.0...riff-v6.0.0) (2026-11-03)
 
 
