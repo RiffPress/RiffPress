@@ -252,9 +252,9 @@ class Test_Riff_Import extends Riff_TestCase {
 		$zip    = $this->zip_of(
 			array(
 				'Compositions/02 - Underground [underground].mp3' => '02 - Underground [underground].mp3',
-				'Compositions/cover.png'                         => 'cover.png',
-				'Compositions/notes.txt'                         => 'liner notes',
-				'__MACOSX/Compositions/._cover.png'              => 'resource fork',
+				'Compositions/cover.png'            => 'cover.png',
+				'Compositions/notes.txt'            => 'liner notes',
+				'__MACOSX/Compositions/._cover.png' => 'resource fork',
 			)
 		);
 
@@ -296,8 +296,8 @@ class Test_Riff_Import extends Riff_TestCase {
 		$name   = 'riff-escaped-' . wp_generate_password( 8, false ) . '.php';
 		$zip    = $this->zip_of(
 			array(
-				'../' . $name                      => '<?php echo "escaped";',
-				'../../' . $name                   => '<?php echo "escaped";',
+				'../' . $name                        => '<?php echo "escaped";',
+				'../../' . $name                     => '<?php echo "escaped";',
 				'02 - Underground [underground].mp3' => '02 - Underground [underground].mp3',
 			)
 		);
