@@ -20,6 +20,6 @@
 | `mark.png` | The app icon's tile, 512px, for the README and the site |
 | `avatar.png` | The GitHub organisation's old picture, the *ff* alone |
 | `dots.svg` | wordpress.org's dots, between sections |
-| `../../packages/desktop/resources/icon.svg` | The app icon, on Apple's icon grid |
+| `icon.svg` | The app icon, on Apple's icon grid |
 
 EB Garamond is © 2017 The EB Garamond Project Authors, and Bravura © Steinberg Media Technologies GmbH. Both are under the SIL Open Font License 1.1 (`../fonts/eb-garamond-OFL.txt`, `bravura-OFL.txt`), which covers outlines drawn from them for a logo.

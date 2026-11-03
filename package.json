@@ -16,7 +16,6 @@
     "env:start": "wp-env start",
     "env:stop": "wp-env stop",
     "env:clean": "wp-env clean all",
-    "desktop": "node packages/desktop/scripts/dev.js",
     "site:js": "node .github/scripts/site-js.js",
     "albums": "node packages/fixtures/albums.js",
     "seed": "wp-env run cli wp eval-file wp-content/riff/packages/fixtures/seed.php",

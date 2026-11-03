@@ -212,8 +212,8 @@ items with the `riff.menu` filter, from a script that depends on `wp-hooks`. Eac
 order the filter returns them. The filter is handed Riff's own, in order, each only where it
 applies: `next`, `add`, `like`, `playlist`, in Up next `up`, `down` and `remove`, and Go to post,
 `post`, with what Riff's own features add, as Listen along, among them. Go to post leaves the
-page, so an item that stays goes before it. In a window of its own, Riff's desktop app or the
-Listen app installed, it opens the post in a new window instead, so the app stays where it was,
+page, so an item that stays goes before it. In a window of its own, the Listen app installed, it
+opens the post in a new window instead, so the app stays where it was,
 with WordPress's external icon after it and core's "(opens in a new tab)" for a screen reader:
 
 ```js
@@ -270,7 +270,7 @@ these:
 - Create a WordPress page and add the Riff block.
 - Put `[riff]` in a page's content.
 
-Listeners can install the Listen page's `app/` address as an app of its own. From their second visit Riff offers it, with the browser's own Install where there is one (Chrome and Edge) and the steps where there is not (Safari's Add to Dock and Add to Home Screen). Installed from Chrome or Edge on a computer it has no title bar and is laid out as the desktop app is. Its name and icon are the site's, so set a site icon under **Settings › General**.
+Listeners can install the Listen page's `app/` address as an app of its own. From their second visit Riff offers it, with the browser's own Install where there is one (Chrome and Edge) and the steps where there is not (Safari's Add to Dock and Add to Home Screen). Installed from Chrome or Edge on a computer it has no title bar, and its strip across the top is the window's title bar. Its name and icon are the site's, so set a site icon under **Settings › General**.
 
 ## Video versions
 

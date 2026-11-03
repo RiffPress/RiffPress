@@ -116,9 +116,6 @@ async function play( page ) {
 
 async function desktop( browser ) {
 	const context = await browser.newContext( { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: 'dark' } );
-	// The desktop layout follows a fine pointer, which headless Chromium does not report; mark it
-	// on the document as the desktop app's own tests do.
-	await context.addInitScript( () => document.documentElement.classList.add( 'riff-desktop' ) );
 	const page = await context.newPage();
 	await play( page );
 	await page.goto( `${ BASE }/listen/app/?riff_view=albums` );

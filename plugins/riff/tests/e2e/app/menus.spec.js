@@ -96,8 +96,7 @@ test.describe( 'Standalone', () => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
 		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
-		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-desktop\b/ );
-		await expect( page.locator( 'html' ) ).not.toHaveClass( /\briff-desktop-app\b/ );
+		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-frame\b/ );
 		await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
 		const item = page.locator( '.riff-menu:not([hidden])' ).getByRole( 'menuitem', { name: /^Go to post/ } );
 		await expect( item ).toHaveAccessibleName( 'Go to post' );
@@ -105,7 +104,7 @@ test.describe( 'Standalone', () => {
 		await expect( item.locator( 'svg' ) ).toHaveCount( 0 );
 	} );
 
-	test( 'Go to post opens the post in a new window in the desktop app and installed, with WordPress\'s icon and the words a screen reader needs', async ( {
+	test( 'Go to post opens the post in a new window in the installed app, with WordPress\'s icon and the words a screen reader needs', async ( {
 		context,
 	} ) => {
 		const app = pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`;
@@ -140,21 +139,6 @@ test.describe( 'Standalone', () => {
 			expect( fill ).toBe( color );
 			return item;
 		};
-
-		// Riff's desktop app: its preload marks <html> as the parser makes it, before the page's
-		// scripts run (site-preload.js). The tests site has no WP_DEBUG, so ?riff_desktop=1 is not
-		// there to do it.
-		const desktop = await open( () =>
-			new MutationObserver( ( records, observer ) => {
-				if ( document.documentElement ) {
-					observer.disconnect();
-					document.documentElement.classList.add( 'riff-desktop' );
-				}
-			} ).observe( document, { childList: true } )
-		);
-		await expect( desktop.locator( 'html' ) ).toHaveClass( /\briff-desktop-app\b/ );
-		await newWindow( desktop );
-		await desktop.close();
 
 		// Installed as an app of its own. Chromium's emulation has no display-mode, so the page is
 		// told it the way it asks.

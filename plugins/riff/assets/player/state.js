@@ -46,12 +46,8 @@ export function createPlayer( root, data ) {
 		MODE: 'riff:mode',
 		reduce: () =>
 			window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches,
-		// Whether the page is out of sight, so nothing is drawn for no one: hidden, or in the
-		// desktop app, whose window keeps the page "visible" while minimised so the music's timers
-		// run, and says so on <html> instead (site-preload.js).
-		away: () =>
-			document.hidden ||
-			document.documentElement.classList.contains( 'riff-desktop-away' ),
+		// Whether the page is out of sight, so nothing is drawn for no one.
+		away: () => document.hidden,
 
 		queue: [], // Tracks, in the order they were found.
 		order: [], // Indexes into queue, in the order they play.
