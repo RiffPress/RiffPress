@@ -67,7 +67,8 @@
 				tags[ header[ 1 ].toUpperCase() ] = header[ 2 ].trim();
 				continue;
 			}
-			// A blank line says nothing, and among the headers must not end them before #RELATIVE.
+			// A blank line says nothing, and among the headers doesn't end them: a #GAP or #RELATIVE
+			// after one still counts.
 			if ( ! bare ) {
 				continue;
 			}

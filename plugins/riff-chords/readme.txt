@@ -17,7 +17,7 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 
 * The chart is ChordPro, the format chord sheets are already written in: a chord in square brackets before the word it falls on, such as [G]Here [C]it comes, and directives in braces for the title, key, capo, tempo, comments and the song's parts ({start_of_verse}, {start_of_chorus: Chorus 2}, {start_of_tab} and the rest).
 * The chart follows the music when it has times, written the way LRC times a lyric line: [01:02.50] at the start of a line, and before any chord that falls somewhere else, as in [01:02.50][G]. A line's first chord is played when the line starts, and chords without a time of their own are spread evenly between the times around them.
-* The chord being played is drawn as a guitar fingering, with the next chord beside it. A chart without times shows every chord in it instead.
+* The chord being played is drawn as a guitar or ukulele fingering, or on a piano's keys, with the next chord beside it. A chart without times shows every chord in it instead. The instrument is chosen in the Chords view, and the listener's browser remembers it.
 * Slow the song down, or speed it up, from 50% to 150%, and its pitch stays where it was.
 * Loop a part: A where it starts and B where it ends, or Loop beside a part's name. For a chart with a {tempo}, Count in gives a bar of clicks at that tempo before the loop goes round again; it is off until it is turned on.
 * Transpose and capo change the chords' names and fingerings, not the music.
