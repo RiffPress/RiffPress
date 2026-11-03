@@ -240,7 +240,8 @@ function start() {
 		/**
 		 * Gives a keyboard shortcut registered on the server with `riff_register_shortcut()` what
 		 * it does. It follows Riff's own single-key shortcuts: it acts only while a track is
-		 * loaded, never while the listener types in a field or holds Ctrl, Alt or Command, and
+		 * loaded, never while the listener types in a field or holds Ctrl, Alt or Command (except
+		 * for a mark their keyboard types with AltGr or Option, as `[` on a German one), and
 		 * only where those are on, for a signed-in listener who has not turned them off on their
 		 * profile, unless the `riff.shortcuts` filter turns them off. A key the server didn't
 		 * register does nothing, since the profile lists every key there is.

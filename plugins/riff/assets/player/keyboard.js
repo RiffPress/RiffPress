@@ -30,13 +30,14 @@ export function keyboard( P ) {
 		};
 	}
 
-	// The plugin's shortcut a key press is for: a letter without Shift, whatever its case, or
-	// another character as it was typed.
+	// The plugin's shortcut a key press is for: a letter without Shift or any other key held,
+	// whatever its case, or another character as it was typed.
 	function pluginKey( e ) {
 		const key = e.key.toLowerCase();
 		if (
 			[ ...key ].length !== 1 ||
-			( key !== e.key.toUpperCase() && e.shiftKey )
+			( key !== e.key.toUpperCase() &&
+				( e.shiftKey || e.altKey || e.ctrlKey ) )
 		) {
 			return null;
 		}
@@ -44,13 +45,14 @@ export function keyboard( P ) {
 	}
 
 	document.addEventListener( 'keydown', ( e ) => {
-		if (
-			! P.track() ||
-			e.defaultPrevented ||
-			e.ctrlKey ||
-			e.metaKey ||
-			e.altKey
-		) {
+		// AltGr, which Windows reports as Ctrl and Alt, and Option on a Mac type the marks on many
+		// keyboards, [ and ] on a German one among them: such a press can only be a plugin's mark.
+		const typed =
+			! e.metaKey &&
+			( e.getModifierState?.( 'AltGraph' ) ||
+				( e.altKey && ! e.ctrlKey ) );
+		const chord = e.ctrlKey || e.metaKey || e.altKey;
+		if ( ! P.track() || e.defaultPrevented || ( chord && ! typed ) ) {
 			return;
 		}
 		if ( e.key === 'Escape' && ! np.hidden ) {
@@ -62,6 +64,7 @@ export function keyboard( P ) {
 		// last control hands focus to the browser's own chrome before coming round.
 		if (
 			e.key === 'Tab' &&
+			! chord &&
 			! np.hidden &&
 			np.getAttribute( 'aria-modal' ) === 'true' &&
 			! P.side?.contains( document.activeElement )
@@ -114,7 +117,14 @@ export function keyboard( P ) {
 		if ( ! P.shortcutsOn && ! e.shiftKey ) {
 			return;
 		}
-		if (
+		// A plugin's key is a single-key shortcut, Shift or not, so it is off where Riff's are.
+		const run = P.shortcutsOn && pluginKey( e );
+		if ( chord && ! run ) {
+			return;
+		}
+		if ( run ) {
+			run( P.track(), e );
+		} else if (
 			( e.key === ' ' && ! target.closest?.( 'button, a, summary' ) ) ||
 			( key === 'k' && ! e.shiftKey )
 		) {
@@ -136,12 +146,7 @@ export function keyboard( P ) {
 			P.press( 'prev' );
 			P.prev();
 		} else {
-			// A plugin's key is a single-key shortcut, Shift or not, so it is off where Riff's are.
-			const run = P.shortcutsOn && pluginKey( e );
-			if ( ! run ) {
-				return;
-			}
-			run( P.track(), e );
+			return;
 		}
 		e.preventDefault();
 	} );

@@ -80,7 +80,9 @@ window.riff.shortcut( 'loop', ( track, event ) => toggleLoop( track ) );
 A plugin's key is a single-key shortcut, so it keeps their rules: nothing while the listener types
 in a field or holds Ctrl, Alt or Command, nothing until a track is loaded, and nothing for a
 visitor, for a listener who turned the shortcuts off, or where the `riff.shortcuts` filter turns
-them off. The profile's one checkbox turns Riff's and every plugin's off together. Riff's own
+them off. A mark the keyboard types with AltGr or Option, as `[` on a German one, still counts,
+as that is the only way to type it there. The profile's one checkbox turns Riff's and every
+plugin's off together. Riff's own
 letters, K, J, L, N and P, and Space are not a plugin's to take, nor is a key another plugin has;
 `riff_register_shortcut()` refuses one, and returns `false`.
 
@@ -205,10 +207,10 @@ the track changes and never drawn again, so a control keeps focus while the musi
 The ⋯ beside every row and every track in Up next opens the track menu. A plugin adds its own
 items with the `riff.menu` filter, from a script that depends on `wp-hooks`. Each item is
 `{ id, label, run }`, or `{ id, label, href }` for a link, and the menu shows the items in the
-order the filter returns them. Riff's own come first, each only where it applies: `next`, `add`,
-`like`, `playlist`, in Up next `up`, `down` and `remove`, and Go to post, `post`, with what Riff's
-own features add, as Listen along, among them. Go to post leaves the page, so an item that stays
-goes before it:
+order the filter returns them. The filter is handed Riff's own, in order, each only where it
+applies: `next`, `add`, `like`, `playlist`, in Up next `up`, `down` and `remove`, and Go to post,
+`post`, with what Riff's own features add, as Listen along, among them. Go to post leaves the
+page, so an item that stays goes before it:
 
 ```js
 wp.hooks.addFilter( 'riff.menu', 'my-plugin', ( items, track, context ) => {

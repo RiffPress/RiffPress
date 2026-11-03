@@ -123,7 +123,7 @@ test.describe( 'Player', () => {
 		const cookie = { name: 'riff_test_shortcut', value: '1', url: baseURL };
 		await context.addCookies( [ cookie ] );
 		await page.goto( '/wp-admin/profile.php' );
-		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li' ) ).toHaveText( [ 'O Say hello' ] );
+		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li' ) ).toHaveText( [ 'O Say hello', '] Say goodbye' ] );
 
 		// What a plugin's script does, by the key's id: given the track and the key press.
 		const give = async ( p ) => {
@@ -145,7 +145,16 @@ test.describe( 'Player', () => {
 		// A letter acts without Shift; Riff keeps Shift for its own, and the music plays on.
 		await page.keyboard.press( 'Shift+O' );
 		await page.keyboard.press( 'Control+o' );
+		await page.keyboard.press( 'Alt+o' );
 		expect( await pressed( page ) ).toHaveLength( 1 );
+		// A mark typed with Alt, as AltGr or Option types [ and ] on a German keyboard, still counts;
+		// with Ctrl alone it doesn't.
+		await page.evaluate( () =>
+			window.riff.shortcut( 'e2e-mark', ( track, event ) => window.riffKeys.push( event.key ) )
+		);
+		await page.keyboard.press( 'Control+]' );
+		await page.keyboard.press( 'Alt+]' );
+		await expect.poll( () => pressed( page ) ).toEqual( [ 'Underground o', ']' ] );
 		expect( ( await audioState( page ) ).paused ).toBe( false );
 
 		// Not while typing.
@@ -167,12 +176,12 @@ test.describe( 'Player', () => {
 		await page.evaluate( () =>
 			window.wp.hooks.removeFilter( 'riff.shortcuts', 'test' )
 		);
-		expect( await pressed( page ) ).toHaveLength( 1 );
+		expect( await pressed( page ) ).toHaveLength( 2 );
 
 		// Taken away, it does nothing; the key is still the plugin's, so Riff doesn't act on it.
 		await page.evaluate( () => window.riffStopKey() );
 		await page.keyboard.press( 'o' );
-		expect( await pressed( page ) ).toHaveLength( 1 );
+		expect( await pressed( page ) ).toHaveLength( 2 );
 
 		// A visitor has no single-key shortcuts, so none of a plugin's either.
 		const visitor = await browser.newContext( { storageState: { cookies: [], origins: [] } } );
