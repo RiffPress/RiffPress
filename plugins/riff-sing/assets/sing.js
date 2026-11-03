@@ -44,8 +44,10 @@
 	} catch {
 		// Storage can be off; the default stands.
 	}
-	// Web MIDI, asked for once and shared by the singers who use it, each listening to an input.
+	// Web MIDI, asked for once and shared by the singers who use it, each listening to an input; and
+	// the browser's answer while it is still coming, so two singers starting at once share it too.
 	let midi = null;
+	let askingMidi = null;
 
 	// Until the player starts, window.riff is the #riff element, by its id.
 	const player = () => ( typeof window.riff?.time === 'function' ? window.riff : null );
@@ -153,10 +155,10 @@
 	// so their two Sing buttons are told apart.
 	function lane( part ) {
 		const box = el( 'div', 'riff-sing-part' );
+		const singer = el( 'p', 'riff-sing-singer' );
 		if ( duet() ) {
 			box.setAttribute( 'role', 'group' );
-			box.setAttribute( 'aria-label', nameOf( part ) );
-			box.append( el( 'p', 'riff-sing-singer', nameOf( part ) ) );
+			box.append( singer );
 		}
 		const strip = el( 'div', 'riff-sing-lane' );
 		const canvas = el( 'canvas' );
@@ -179,9 +181,18 @@
 		controls.append( mic, keys, stop, input.wrap, port.wrap );
 		const status = el( 'p', 'riff-sing-status' );
 		box.append( strip, words, result, controls, status );
-		part.ui = { box, canvas, words, result, controls, mic, midi: keys, stop, input, port, status, colors: null };
+		part.ui = { box, singer, canvas, words, result, controls, mic, midi: keys, stop, input, port, status, colors: null };
 		part.phraseShown = -1;
+		named( part );
 		return box;
+	}
+
+	// A duet's group and its heading say the singer's name, again when the next duet names others.
+	function named( part ) {
+		if ( duet() && part.ui ) {
+			part.ui.box.setAttribute( 'aria-label', nameOf( part ) );
+			part.ui.singer.textContent = nameOf( part );
+		}
 	}
 
 	// The lanes, the words, the scores and the controls, for a chart.
@@ -196,12 +207,14 @@
 				part.scorer = melody.scorer( singers[ i ], { tolerance } );
 				part.trail = [];
 				part.phraseShown = -1;
+				named( part );
 				update( part );
 			} );
 			draw();
 			return;
 		}
-		endAll();
+		// From one singer to two, or back: the lanes are new, so the listening stops and says so.
+		endAll( config.stopped );
 		parts = singers.map( ( singer, index ) => ( {
 			index,
 			name: singer.name || '',
@@ -383,16 +396,18 @@
 		let stream = null;
 		let ctx = null;
 		try {
-			// A duet's second singer starts on a microphone the first isn't using, where there is one.
+			// A duet's second singer starts on a microphone the first isn't using, where there is one:
+			// another device, not the first's under another name, such as the browser's default.
 			let device = deviceId;
 			if ( ! device && duet() ) {
-				const taken = parts.map( ( p ) => p.session?.kind === 'mic' && p.session.device ).filter( Boolean );
+				const taken = parts.map( ( p ) => p.session?.kind === 'mic' && p.session.group ).filter( Boolean );
 				const list = taken.length
 					? await navigator.mediaDevices.enumerateDevices?.().catch( () => [] )
 					: [];
 				device =
-					( list || [] ).find( ( d ) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default' && ! taken.includes( d.deviceId ) )
-						?.deviceId || '';
+					( list || [] ).find(
+						( d ) => d.kind === 'audioinput' && d.deviceId && d.groupId && ! taken.includes( d.groupId )
+					)?.deviceId || '';
 			}
 			stream = await navigator.mediaDevices.getUserMedia( {
 				audio: {
@@ -429,7 +444,8 @@
 			};
 			const track = stream.getAudioTracks()[ 0 ];
 			track?.addEventListener( 'ended', () => end( part, config.lost ) );
-			part.session = { kind: 'mic', stream, ctx, node, note: null, device: track?.getSettings?.().deviceId || device };
+			const settings = track?.getSettings?.() || {};
+			part.session = { kind: 'mic', stream, ctx, node, note: null, device: settings.deviceId || device, group: settings.groupId || '' };
 			part.starting = false;
 			tell( part, config.listening );
 			loop();
@@ -559,8 +575,12 @@
 		tell( part, config.asking, false );
 		let access = midi?.access;
 		try {
-			access ||= await navigator.requestMIDIAccess();
+			if ( ! access ) {
+				askingMidi ||= navigator.requestMIDIAccess();
+				access = await askingMidi;
+			}
 		} catch {
+			askingMidi = null;
 			if ( mine === part.attempt ) {
 				part.starting = false;
 				tell( part, showing && parts.includes( part ) ? config.midiDenied : '' );
@@ -615,6 +635,7 @@
 					input.onmidimessage = null;
 				} );
 				midi = null;
+				askingMidi = null;
 			}
 		}
 		if ( why ) {

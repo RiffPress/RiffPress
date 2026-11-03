@@ -89,7 +89,7 @@
 				gap = ( number( tags.GAP ) || 0 ) / 1000;
 				relative = /^yes$/i.test( tags.RELATIVE || '' );
 			}
-			const part = bare.match( /^P\s*(\d+)$/i );
+			const part = bare.match( /^P\s*(\d+)/i );
 			if ( part ) {
 				into.forEach( close );
 				const n = Number( part[ 1 ] );

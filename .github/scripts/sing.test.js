@@ -225,6 +225,8 @@ test( 'a duet is read as two singers, each with their own lines, a P3 line both 
 	assert.equal( solo.singers.length, 1, 'a chart with no P lines is one singer' );
 	assert.equal( solo.singers[ 0 ].name, '' );
 	assert.equal( parse( '#BPM:120\nP1\nF 0 4 0 a\nP2\n: 0 4 0 b\nE' ).singers.length, 1, 'a singer with nothing scored has no lane' );
+	const colons = parse( '#BPM:120\nP1:\n: 0 4 0 a\nP2:\n: 0 4 7 b\nE' );
+	assert.deepEqual( colons.singers.map( ( who ) => who.low ), [ 60, 67 ], 'a part line written P1: is read as P1' );
 } );
 
 test( 'each singer of a duet is scored on their own', () => {
