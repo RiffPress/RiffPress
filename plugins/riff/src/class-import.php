@@ -131,7 +131,7 @@ final class Import {
 		}
 		// The upload's own time limit would end an album part way, with no post for its tracks.
 		if ( function_exists( 'set_time_limit' ) ) {
-			set_time_limit( 0 );
+			set_time_limit( 0 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- a background import, lifted as core lifts it for an upgrade.
 		}
 		$previous = get_current_user_id();
 		wp_set_current_user( $author );
