@@ -45,10 +45,12 @@ export function keyboard( P ) {
 	}
 
 	document.addEventListener( 'keydown', ( e ) => {
-		// AltGr, which Windows reports as Ctrl and Alt, and Option on a Mac type the marks on many
-		// keyboards, [ and ] on a German one among them: such a press can only be a plugin's mark.
+		// AltGr, which Windows reports as Ctrl and Alt, and Alt or Option type the marks on many
+		// keyboards, [ and ] on a German one among them: such a press, of a character and not of
+		// Escape, Tab or an arrow, can only be a plugin's mark.
 		const typed =
 			! e.metaKey &&
+			[ ...e.key ].length === 1 &&
 			( e.getModifierState?.( 'AltGraph' ) ||
 				( e.altKey && ! e.ctrlKey ) );
 		const chord = e.ctrlKey || e.metaKey || e.altKey;
@@ -64,7 +66,6 @@ export function keyboard( P ) {
 		// last control hands focus to the browser's own chrome before coming round.
 		if (
 			e.key === 'Tab' &&
-			! chord &&
 			! np.hidden &&
 			np.getAttribute( 'aria-modal' ) === 'true' &&
 			! P.side?.contains( document.activeElement )
