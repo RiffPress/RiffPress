@@ -25,7 +25,12 @@
 	// The count-in, off until the listener turns it on: its clicks and timers while a bar is counted,
 	// and where the music was when they were set going.
 	const count = { on: false, audio: null, clicks: [], timers: [], cued: null };
-	const Sound = window.AudioContext;
+	// Not on an iPhone or iPad, where Riff keeps the music out of Web Audio, since a sound made
+	// beside it there can be muted by the ringer switch and can stop it on the lock screen.
+	const Sound =
+		/iP(hone|ad|od)/.test( navigator.userAgent ) || ( navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 )
+			? null
+			: window.AudioContext;
 	let duration = 0;
 
 	// The instrument the chords are drawn for, which the listener chooses and this browser keeps.
@@ -544,6 +549,7 @@
 		}
 		cue( time );
 		if ( loop.last < loop.b && time >= loop.b ) {
+			stopCount();
 			player()?.seek( loop.a );
 			loop.last = loop.a;
 			return;
@@ -603,20 +609,24 @@
 		const gap = 60 / bpm;
 		const bar = beats();
 		const from = loop.b - bar * gap;
-		if ( count.cued !== null ) {
-			if ( time < count.cued - 0.25 || time > loop.b + 0.25 ) {
+		const rate = canSlow() ? player().speed() : 1;
+		// A count set going is kept only while the music is where its clicks expect: a seek, a
+		// stall, a change of speed or a B moved calls it off, and it is cued again from there.
+		if ( count.cued ) {
+			const expected = count.cued.time + ( count.audio.currentTime - count.cued.at ) * rate;
+			if ( Math.abs( time - expected ) > 0.2 || rate !== count.cued.rate || loop.b !== count.cued.b ) {
 				stopCount();
 			}
 			return;
 		}
-		// Not on a hidden page, nor with the sound held up by the system, either of which would leave
-		// the clicks out of time with the music.
-		if ( time < from || time >= loop.b || document.hidden || sound()?.state !== 'running' ) {
+		// Cued a moment before the bar, so its first click is never missed between two looks at the
+		// music. Not on a hidden page, nor with the sound held up by the system, either of which
+		// would leave the clicks out of time with the music.
+		if ( time < from - 0.15 || time >= loop.b || document.hidden || sound()?.state !== 'running' ) {
 			return;
 		}
-		const rate = canSlow() ? player().speed() : 1;
 		const now = count.audio.currentTime;
-		count.cued = time;
+		count.cued = { time, at: now, rate, b: loop.b };
 		try {
 			for ( let n = 0; n < bar; n++ ) {
 				const wait = ( from + n * gap - time ) / rate;
