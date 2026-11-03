@@ -24,7 +24,7 @@
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
 	// The count-in, off until the listener turns it on: its clicks and timers while a bar is counted,
 	// and where the music was when they were set going.
-	const count = { on: false, audio: null, clicks: [], timers: [], cued: null };
+	const count = { on: false, audio: null, clicks: [], timers: [], cued: null, held: null };
 	// Not on an iPhone or iPad, where Riff keeps the music out of Web Audio, since a sound made
 	// beside it there can be muted by the ringer switch and can stop it on the lock screen.
 	const Sound =
@@ -616,9 +616,16 @@
 			const expected = count.cued.time + ( count.audio.currentTime - count.cued.at ) * rate;
 			if ( Math.abs( time - expected ) > 0.2 || rate !== count.cued.rate || loop.b !== count.cued.b ) {
 				stopCount();
+				count.held = time;
 			}
 			return;
 		}
+		// Called off where the music stands still, buffering or slow to seek, it waits for the music
+		// to move before it counts again, rather than clicking the same beat over and over.
+		if ( count.held !== null && Math.abs( time - count.held ) < 0.05 ) {
+			return;
+		}
+		count.held = null;
 		// Cued a moment before the bar, so its first click is never missed between two looks at the
 		// music. Not on a hidden page, nor with the sound held up by the system, either of which
 		// would leave the clicks out of time with the music.
