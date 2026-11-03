@@ -265,15 +265,15 @@ final class Chords {
 					'fingering'   => __( '%1$s, from the low string: %2$s', 'riff-chords' ),
 					/* translators: 1: a chord, such as G; 2: the fret for each string from the G string, such as "open, 2, 3, 2". */
 					'ukeFrets'    => __( '%1$s, from the G string: %2$s', 'riff-chords' ),
-					/* translators: 1: a chord, such as G7; 2: the notes of its keys, such as "G, B, D, F". */
-					'pianoKeys'   => __( '%1$s, on the keys %2$s', 'riff-chords' ),
+					/* translators: 1: a chord, such as G7; 2: its notes, such as "G, B, D, F". */
+					'pianoKeys'   => __( '%1$s, its notes %2$s', 'riff-chords' ),
 					'open'        => _x( 'open', 'a string played without a finger on it', 'riff-chords' ),
 					'muted'       => _x( 'not played', 'a guitar string', 'riff-chords' ),
 					'instrument'  => __( 'Instrument', 'riff-chords' ),
 					'instruments' => array(
 						'guitar'  => __( 'Guitar', 'riff-chords' ),
 						'ukulele' => __( 'Ukulele', 'riff-chords' ),
-						'piano'   => __( 'Piano', 'riff-chords' ),
+						'piano'   => _x( 'Piano', 'the instrument', 'riff-chords' ),
 					),
 					'sections'    => array(
 						'verse'  => __( 'Verse', 'riff-chords' ),
@@ -317,8 +317,10 @@ final class Chords {
 			// A piano's two octaves, wider than a fretboard is tall.
 			. '#riff .riff-chords-shape svg.riff-chords-keys{width:112px;height:52px}'
 			. '#riff .riff-chords-now > .riff-chords-shape svg.riff-chords-keys{width:148px;height:69px}'
-			. '.riff-chords-piano-key{fill:var(--riff-bg);stroke:var(--riff-fg-3);stroke-width:1}'
-			. '.riff-chords-piano-key.is-black{fill:var(--riff-fg-3)}'
+			// A piano's keys are white and black whatever the theme, each dot the other colour.
+			. '.riff-chords-piano-key{fill:#f5f5f5;stroke:#1c1c1c;stroke-width:.6}'
+			. '.riff-chords-piano-key.is-black,.riff-chords-keys .riff-chords-dot{fill:#1c1c1c}'
+			. '.riff-chords-keys .riff-chords-dot.is-black{fill:#f5f5f5}'
 			. '.riff-chords-string,.riff-chords-fret{stroke:var(--riff-fg-3);stroke-width:1}'
 			. '.riff-chords-nut{stroke:var(--riff-fg);stroke-width:3}'
 			. '.riff-chords-dot{fill:var(--riff-accent)}'

@@ -223,6 +223,9 @@
 	}
 
 	// ---- Keys, for a piano: the chord's notes stacked up from its root, within two octaves from C.
+	const LETTERS = [ 'C', 'D', 'E', 'F', 'G', 'A', 'B' ];
+	// How many letters above the root each interval is written: a second one, a third two, and so on.
+	const DEGREE = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 7: 4, 10: 6, 11: 6 };
 	const INTERVALS = {
 		'': [ 0, 4, 7 ],
 		m: [ 0, 3, 7 ],
@@ -238,7 +241,8 @@
 	 *
 	 * @param {string} name The chord, as it is to be played.
 	 * @return {Array<{key: number, note: string}>|null} Each key, in semitones up from the lower C,
-	 *     with its note's name, spelled with flats in a chord that reads in flats.
+	 *     with its note's name, spelled as the chord is: a third on the letter two up from the root's,
+	 *     so C7's seventh is Bb and C#'s third E#.
 	 */
 	function keys( name ) {
 		const c = read( name );
@@ -246,8 +250,17 @@
 		if ( ! steps ) {
 			return null;
 		}
-		const names = c.flat || flatKey( name ) ? FLATS : SHARPS;
-		return steps.map( ( s ) => ( { key: c.root + s, note: names[ ( c.root + s ) % 12 ] } ) );
+		const root = LETTERS.indexOf( String( name ).trim()[ 0 ] );
+		return steps.map( ( s ) => {
+			const letter = LETTERS[ ( root + DEGREE[ s ] ) % 7 ];
+			const off = ( ( ( c.root + s - PITCH[ letter ] ) % 12 ) + 18 ) % 12 - 6;
+			// A double sharp or flat is read as the plain note it is: G#maj7's seventh is G, not F##.
+			const note =
+				Math.abs( off ) > 1
+					? ( c.flat ? FLATS : SHARPS )[ ( c.root + s ) % 12 ]
+					: letter + ( off > 0 ? '#' : off < 0 ? 'b' : '' );
+			return { key: c.root + s, note };
+		} );
 	}
 
 	// ---- The chart.
