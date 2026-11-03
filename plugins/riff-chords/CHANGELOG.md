@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-chords-v0.1.0...riff-chords-v0.2.0) (2026-11-03)
+
+
+### Features
+
+* **chords:** a count-in at the chart's tempo over a loop's last bar, off until it is turned on ([#840](https://github.com/RiffPress/RiffPress/issues/840)) ([d3f4ef3](https://github.com/RiffPress/RiffPress/commit/d3f4ef3537ee7f1f8887c44d311e219b98e03d99))
+* **chords:** keys for the loop, the speed and transpose, A, S and F, D and U, while the Chords view shows a chart ([#849](https://github.com/RiffPress/RiffPress/issues/849)) ([9fe8131](https://github.com/RiffPress/RiffPress/commit/9fe81310bd5961de8c20e4c126935aa2fe9af3b5))
+* **chords:** Practice this in a track's menu, for a track with a chart, plays it and opens the Chords view on it ([#850](https://github.com/RiffPress/RiffPress/issues/850)) ([36e9980](https://github.com/RiffPress/RiffPress/commit/36e998088452e7be84db0fefda51f4af71c51a03))
+* **chords:** ukulele fingerings and a piano's keys beside the guitar's, chosen in the Chords view and kept in the listener's browser ([#839](https://github.com/RiffPress/RiffPress/issues/839)) ([4bb5928](https://github.com/RiffPress/RiffPress/commit/4bb592894cdcf64b3c2d47a3ea7273a0647df662))
+
+
+### Bug Fixes
+
+* **chords:** a piano names each note as its chord spells it and draws its keys white and black on any theme, and the key line is the key the song sounds in ([#846](https://github.com/RiffPress/RiffPress/issues/846)) ([23b183e](https://github.com/RiffPress/RiffPress/commit/23b183e036427d0ce961e27611663a8dc51ca92e))
+* **chords:** Practice this keeps the queue's order, shuffle and later pages, and is offered only for a chart the visitor can read ([#851](https://github.com/RiffPress/RiffPress/issues/851)) ([3a98318](https://github.com/RiffPress/RiffPress/commit/3a9831833e1b561a7fde12da65f05cbfa3575b32))
+* **chords:** Practice this plays a track already in the queue from its place, and isn't offered for a track with nothing to play ([#852](https://github.com/RiffPress/RiffPress/issues/852)) ([bd4b11a](https://github.com/RiffPress/RiffPress/commit/bd4b11af0d8e0a129102301d0465d92a65cb3890))
+
 ## 0.1.0 (2026-11-02)
 
 

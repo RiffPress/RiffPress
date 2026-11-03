@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,15 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 It is built only on Riff's documented public API, as Riff Lyrics is.
 
 == Changelog ==
+
+= 0.2.0 =
+* A count-in at the chart's tempo over a loop's last bar, off until it is turned on.
+* Keys for the loop, the speed and transpose, A, S and F, D and U, while the Chords view shows a chart.
+* Practice this in a track's menu, for a track with a chart, plays it and opens the Chords view on it.
+* Ukulele fingerings and a piano's keys beside the guitar's, chosen in the Chords view and kept in the listener's browser.
+* Fixed: a piano names each note as its chord spells it and draws its keys white and black on any theme, and the key line is the key the song sounds in.
+* Fixed: Practice this keeps the queue's order, shuffle and later pages, and is offered only for a chart the visitor can read.
+* Fixed: Practice this plays a track already in the queue from its place, and isn't offered for a track with nothing to play.
 
 = 0.1.0 =
 * Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.

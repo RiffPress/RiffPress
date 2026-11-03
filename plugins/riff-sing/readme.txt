@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,12 @@ Riff Sing adds a Sing view to Riff's Now Playing, opened from its button in the 
 Your voice never leaves the browser. The microphone opens only when the singer presses Sing with the microphone, after the browser asks them, and closes when they press Stop listening, leave the view, close Now Playing or leave the page. The note being sung is worked out on the device, in an AudioWorklet, by the YIN pitch method; no sound is recorded, kept or sent anywhere, and Riff Sing has no server side beyond the melody it reads.
 
 == Changelog ==
+
+= 0.2.0 =
+* An UltraStar chart written in relative beats (#RELATIVE:yes) is read, each line counted from where the break before it says.
+* An UltraStar duet sings in two lanes, each singer scored on their own from a microphone or a MIDI input of their own.
+* The melody can be a MIDI file's vocal track, named in the audio file's Melody file field, so a chart can come from a score.
+* Fixed: a #GAP after a blank line among a chart's headers is read, so the melody starts where it says.
 
 = 0.1.0 =
 * Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
