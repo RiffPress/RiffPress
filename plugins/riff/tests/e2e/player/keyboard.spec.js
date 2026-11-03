@@ -123,7 +123,9 @@ test.describe( 'Player', () => {
 		const cookie = { name: 'riff_test_shortcut', value: '1', url: baseURL };
 		await context.addCookies( [ cookie ] );
 		await page.goto( '/wp-admin/profile.php' );
-		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li' ) ).toHaveText( [ 'O Say hello', '] Say goodbye' ] );
+		// Listed with whatever keys the site's other plugins, such as Riff Chords, add.
+		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li', { hasText: 'Say hello' } ) ).toHaveText( 'O Say hello' );
+		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li', { hasText: 'Say goodbye' } ) ).toHaveText( '] Say goodbye' );
 
 		// What a plugin's script does, by the key's id: given the track and the key press.
 		const give = async ( p ) => {

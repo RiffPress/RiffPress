@@ -5,7 +5,7 @@
  * playwright.config.js). The recording is one of the public-domain fixtures; the chart is
  * placeholder words, not that piece's chords.
  *
- * Riff Chords needs Riff 5.9 (riff_register_view(), the riff.menu filter); a local site runs it on the
+ * Riff Chords needs Riff 5.9 (riff_register_view(), window.riff.shortcut(), the riff.menu filter); a local site runs it on the
  * Riff it has, and anywhere else on an older Riff it stays out of the way and this spec skips.
  */
 const path = require( 'node:path' );
@@ -122,6 +122,53 @@ test( 'slower keeps the pitch, and a new song is back at its own speed', async (
 	// The next track has no chart; an admin is shown the way to its field.
 	await expect( panel.locator( '.riff-chords-note' ) ).toHaveText( 'No chords for this track.' );
 	await expect( panel.getByRole( 'link', { name: 'Add chords' } ) ).toHaveAttribute( 'href', /post\.php\?action=edit&post=\d+/ );
+} );
+
+test( 'the practice controls have keys: A for the loop, S and F for the speed, D and U to transpose', async ( {
+	page,
+	isMobile,
+} ) => {
+	const panel = await openChords( page, isMobile );
+	const chords = panel.locator( '.riff-chords-chart .riff-chords-chord' );
+	await expect( chords ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
+	await page.keyboard.press( 'u' );
+	await page.keyboard.press( 'u' );
+	await expect( chords ).toHaveText( [ 'A', 'D', 'E', 'F#m', 'G' ] );
+	await page.keyboard.press( 'd' );
+	await page.keyboard.press( 'd' );
+	await expect( chords ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
+
+	await page.keyboard.press( 's' );
+	await page.keyboard.press( 's' );
+	await page.keyboard.press( 'f' );
+	await expect( panel.locator( '[data-riff-chords="speed"] output' ) ).toHaveText( '95%' );
+	expect( await page.evaluate( () => window.riff.speed() ) ).toBe( 0.95 );
+
+	// One key for the loop: A, then B, then no loop.
+	const ab = panel.locator( '.riff-chords-ab' );
+	const toggle = panel.locator( '.riff-chords-loop-toggle' );
+	await page.evaluate( () => window.riff.seek( 1 ) );
+	await page.keyboard.press( 'a' );
+	await expect( ab ).toHaveText( [ 'A 0:01', 'B' ] );
+	await page.evaluate( () => window.riff.seek( 3 ) );
+	await page.keyboard.press( 'a' );
+	await expect( ab ).toHaveText( [ 'A 0:01', 'B 0:03' ] );
+	await expect( toggle ).toHaveAttribute( 'aria-pressed', 'true' );
+	await page.keyboard.press( 'a' );
+	await expect( ab ).toHaveText( [ 'A', 'B' ] );
+	await expect( toggle ).toHaveAttribute( 'aria-pressed', 'false' );
+
+	// With the view closed there is nothing to see them change, so they change nothing, and the
+	// letter is left to the page.
+	await page.evaluate( () => {
+		window.riff.closeView();
+		window.riffKeyTaken = null;
+		document.addEventListener( 'keydown', ( e ) => ( window.riffKeyTaken = e.defaultPrevented ) );
+	} );
+	await page.keyboard.press( 'u' );
+	expect( await page.evaluate( () => window.riffKeyTaken ) ).toBe( false );
+	await page.evaluate( () => window.riff.openView( 'chords' ) );
+	await expect( chords ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
 } );
 
 test( 'Practice this, in the menu of a track with a chart, opens the Chords view on it', async ( { page } ) => {

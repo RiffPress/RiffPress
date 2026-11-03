@@ -5,6 +5,8 @@
  * speed, slower or faster with the pitch kept, through window.riff.speed(); transpose and, on a
  * guitar or ukulele, capo, which change the chords' names and fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(), with a count-in, a bar of clicks at the chart's tempo, before it goes round.
+ * Each practice control has a key too, registered on the server (riff_register_shortcut()) and
+ * given what it does with window.riff.shortcut() while the view shows a chart.
  * A track with a chart has Practice this in its ⋯ menu, through the riff.menu filter, which plays it
  * and opens the view on it.
  * It listens to the player's riff:view, riff:track, riff:time, riff:play and riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
@@ -67,6 +69,7 @@
 		b.addEventListener( 'click', run );
 		return b;
 	};
+	const speak = ( text ) => window.wp?.a11y?.speak?.( String( text || '' ), 'polite' );
 	const clock = ( s ) => {
 		const whole = Math.max( 0, Math.floor( s ) );
 		return `${ Math.floor( whole / 60 ) }:${ String( whole % 60 ).padStart( 2, '0' ) }`;
@@ -256,10 +259,32 @@
 		group.paint = () => {
 			out.textContent = read();
 		};
+		group.down = down.run;
+		group.up = up.run;
 		return group;
 	}
 
 	let tools = null;
+	// The keys, registered on the server so the listener's profile lists them, are given what they
+	// do only while the view shows a chart, where what they change can be seen; the rest of the
+	// time the letters are the page's, for find as you type and anything else. Speed's are left
+	// out where the player cannot change it.
+	let unbind = [];
+	function bindKeys() {
+		unbindKeys();
+		if ( ! showing || ! tools || typeof player()?.shortcut !== 'function' ) {
+			return;
+		}
+		for ( const [ id, run ] of Object.entries( tools.keys ) ) {
+			if ( run ) {
+				unbind.push( player().shortcut( id, () => ( run(), paintTools() ) ) );
+			}
+		}
+	}
+	function unbindKeys() {
+		unbind.forEach( ( off ) => off() );
+		unbind = [];
+	}
 	function practiceTools() {
 		const box = el( 'div', 'riff-chords-tools' );
 		box.setAttribute( 'role', 'group' );
@@ -316,15 +341,14 @@
 		const looper = el( 'div', 'riff-chords-loop' );
 		looper.setAttribute( 'role', 'group' );
 		looper.setAttribute( 'aria-label', config.loop || '' );
-		const a = button( 'riff-chords-ab', 'A', config.loopFrom, () => {
+		const from = () => {
 			loop.a = player()?.time() ?? 0;
 			if ( loop.b !== null && loop.b <= loop.a + 0.5 ) {
 				loop.b = null;
 				loop.on = false;
 			}
-			paintTools();
-		} );
-		const b = button( 'riff-chords-ab', 'B', config.loopTo, () => {
+		};
+		const to = () => {
 			const at = player()?.time() ?? 0;
 			if ( loop.a !== null && at > loop.a + 0.5 ) {
 				loop.b = at;
@@ -332,8 +356,9 @@
 				loop.last = at;
 				watch();
 			}
-			paintTools();
-		} );
+		};
+		const a = button( 'riff-chords-ab', 'A', config.loopFrom, () => ( from(), paintTools() ) );
+		const b = button( 'riff-chords-ab', 'B', config.loopTo, () => ( to(), paintTools() ) );
 		const toggle = button( 'riff-chords-loop-toggle', config.loop, '', () => {
 			loop.on = ! loop.on && loop.a !== null && loop.b !== null;
 			if ( ! loop.on ) {
@@ -373,6 +398,35 @@
 			counter.setAttribute( 'aria-pressed', String( count.on ) );
 		};
 		box.beat = beat;
+		// What the keys do (riff_register_shortcut()), the same as the buttons. The loop's one key
+		// sets A, then B, then clears the loop, and says which, as there is no button under focus
+		// to say it.
+		const speed = steppers.find( ( s ) => s.dataset.riffChords === 'speed' );
+		const transpose = steppers.find( ( s ) => s.dataset.riffChords === 'transpose' );
+		box.keys = {
+			'chords-slower': speed?.down,
+			'chords-faster': speed?.up,
+			'chords-down': transpose.down,
+			'chords-up': transpose.up,
+			'chords-loop': () => {
+				if ( loop.a !== null && loop.b !== null ) {
+					Object.assign( loop, { a: null, b: null, on: false } );
+					cancelAnimationFrame( loop.frame );
+					stopCount();
+					speak( config.loopOff );
+				} else if ( loop.a === null ) {
+					from();
+					speak( fill( config.loopFromAt, clock( loop.a ) ) );
+				} else {
+					to();
+					// Not yet past A, it starts again from here.
+					if ( loop.b === null ) {
+						from();
+					}
+					speak( loop.b === null ? fill( config.loopFromAt, clock( loop.a ) ) : fill( config.loopOn, clock( loop.a ), clock( loop.b ) ) );
+				}
+			},
+		};
 		return box;
 	}
 
@@ -519,6 +573,7 @@
 		current = -1;
 		paintTools();
 		follow( timing.now() );
+		bindKeys();
 	}
 
 	// Marks the chord being played, and keeps its line in the middle of the chart, unless the
@@ -704,6 +759,7 @@
 		const mine = ++turn;
 		song = null;
 		tools = null;
+		unbindKeys();
 		current = -1;
 		if ( ! track ) {
 			say( where, config.idle || '' );
@@ -770,6 +826,8 @@
 		showing = !! e.detail.open;
 		if ( showing ) {
 			load( e.detail.view, e.detail.track );
+		} else {
+			unbindKeys();
 		}
 	} );
 	document.addEventListener( 'riff:track', ( e ) => {
