@@ -30,6 +30,21 @@ class Test_Riff_Chords extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'chords', Riff\Registry::views( 'side' ) );
 	}
 
+	public function test_the_practice_keys_are_registered_so_the_profile_lists_them(): void {
+		Riff\Registry::reset();
+		$keys = wp_list_pluck( Riff\Registry::shortcuts(), 'key' );
+		$this->assertSame(
+			array(
+				'chords-loop'   => 'a',
+				'chords-slower' => 's',
+				'chords-faster' => 'f',
+				'chords-down'   => 'd',
+				'chords-up'     => 'u',
+			),
+			$keys
+		);
+	}
+
 	public function test_audio_gets_a_chords_field_and_images_do_not(): void {
 		$id = self::attach( '02 - Underground [underground].mp3' );
 		update_post_meta( $id, Chords::KEY, self::CHART );

@@ -22,11 +22,11 @@ defined( 'ABSPATH' ) || exit;
  * it is kept as the audio attachment's own post meta, `_riff_chords`, registered with
  * register_post_meta(), shown and edited in the Media Library beside the file's other details,
  * and read through the media REST route as `riff_chords`. Everything it does in the player goes
- * through Riff's documented surface: `riff_register_view()` on the `riff_register` action, the
- * `riff_before_player` action, the `riff.view`, `riff.track`, `riff.time`, `riff.play` and
- * `riff.pause` actions, and `window.riff`'s `seek()`, `time()`, `playing()` and `speed()`. The
- * chart is a view of Now Playing, as the lyrics are: it follows the song, so it takes the whole
- * screen above the bar while it shows.
+ * through Riff's documented surface: `riff_register_view()` and `riff_register_shortcut()` on the
+ * `riff_register` action, the `riff_before_player` action, the `riff.view`, `riff.track`,
+ * `riff.time`, `riff.play` and `riff.pause` actions, and `window.riff`'s `seek()`, `time()`,
+ * `playing()`, `speed()` and `shortcut()`. The chart is a view of Now Playing, as the lyrics are:
+ * it follows the song, so it takes the whole screen above the bar while it shows.
  */
 final class Chords {
 
@@ -57,6 +57,7 @@ final class Chords {
 		// On init, since the meta's description is translated, and translations load from there.
 		add_action( 'init', array( self::class, 'meta' ) );
 		add_action( 'riff_register', array( self::class, 'view' ) );
+		add_action( 'riff_register', array( self::class, 'shortcuts' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
@@ -204,12 +205,36 @@ final class Chords {
 	}
 
 	/**
+	 * The practice controls' keys, listed on the listener's profile with Riff's own and acting while
+	 * the Chords view shows a chart. Letters, as every layout has them where it has Riff's J, K and
+	 * L, chosen for what they do: A for the loop's A and B, S slower, F faster, D down and U up.
+	 */
+	public static function shortcuts(): void {
+		$keys = array(
+			'chords-loop'   => array( 'a', __( 'Loop from here, then to here, then stop looping, in the Chords view', 'riff-chords' ) ),
+			'chords-slower' => array( 's', __( 'Slower, in the Chords view', 'riff-chords' ) ),
+			'chords-faster' => array( 'f', __( 'Faster, in the Chords view', 'riff-chords' ) ),
+			'chords-down'   => array( 'd', __( 'Transpose down a semitone, in the Chords view', 'riff-chords' ) ),
+			'chords-up'     => array( 'u', __( 'Transpose up a semitone, in the Chords view', 'riff-chords' ) ),
+		);
+		foreach ( $keys as $id => list( $key, $label ) ) {
+			riff_register_shortcut(
+				$id,
+				array(
+					'key'   => $key,
+					'label' => $label,
+				)
+			);
+		}
+	}
+
+	/**
 	 * Loads the scripts on pages where Riff's player renders, and nowhere else.
 	 */
 	public static function enqueue(): void {
 		wp_enqueue_script( 'riff-chords-timing', RIFF_CHORDS_URL . 'assets/timing.js', array(), RIFF_CHORDS_VERSION, true );
 		wp_enqueue_script( 'riff-chords-chart', RIFF_CHORDS_URL . 'assets/chart.js', array( 'riff-chords-timing' ), RIFF_CHORDS_VERSION, true );
-		wp_enqueue_script( 'riff-chords', RIFF_CHORDS_URL . 'assets/chords.js', array( 'riff-chords-timing', 'riff-chords-chart' ), RIFF_CHORDS_VERSION, true );
+		wp_enqueue_script( 'riff-chords', RIFF_CHORDS_URL . 'assets/chords.js', array( 'riff-chords-timing', 'riff-chords-chart', 'wp-a11y' ), RIFF_CHORDS_VERSION, true );
 		wp_add_inline_script(
 			'riff-chords',
 			'window.riffChords = ' . wp_json_encode(
@@ -232,6 +257,11 @@ final class Chords {
 					'loopFrom'    => __( 'Loop from here', 'riff-chords' ),
 					'loopTo'      => __( 'Loop to here', 'riff-chords' ),
 					'countIn'     => __( 'Count in', 'riff-chords' ),
+					/* translators: %s: where the loop starts, such as 1:05. */
+					'loopFromAt'  => __( 'Loop from %s', 'riff-chords' ),
+					/* translators: 1: where the loop starts, such as 1:05; 2: where it ends, such as 1:20. */
+					'loopOn'      => __( 'Looping from %1$s to %2$s', 'riff-chords' ),
+					'loopOff'     => __( 'Loop cleared', 'riff-chords' ),
 					/* translators: %s: a section of the song, such as Chorus. */
 					'loopSection' => __( 'Loop %s', 'riff-chords' ),
 					/* translators: %s: the chord that comes next, such as Am. */

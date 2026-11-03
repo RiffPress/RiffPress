@@ -5,6 +5,8 @@
  * pitch kept, through window.riff.speed(); transpose and capo, which change the chords' names and
  * fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(), with a count-in, a bar of clicks at the chart's tempo, before it goes round.
+ * Each practice control has a key too, registered on the server (riff_register_shortcut()) and
+ * given what it does with window.riff.shortcut() once the player is ready.
  * It listens to the player's riff:view, riff:track, riff:time, riff:play and riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
  * Sing, both loaded before it. */
@@ -65,6 +67,7 @@
 		b.addEventListener( 'click', run );
 		return b;
 	};
+	const speak = ( text ) => window.wp?.a11y?.speak?.( String( text || '' ), 'polite' );
 	const clock = ( s ) => {
 		const whole = Math.max( 0, Math.floor( s ) );
 		return `${ Math.floor( whole / 60 ) }:${ String( whole % 60 ).padStart( 2, '0' ) }`;
@@ -252,6 +255,8 @@
 		group.paint = () => {
 			out.textContent = read();
 		};
+		group.down = down.run;
+		group.up = up.run;
 		return group;
 	}
 
@@ -312,15 +317,14 @@
 		const looper = el( 'div', 'riff-chords-loop' );
 		looper.setAttribute( 'role', 'group' );
 		looper.setAttribute( 'aria-label', config.loop || '' );
-		const a = button( 'riff-chords-ab', 'A', config.loopFrom, () => {
+		const from = () => {
 			loop.a = player()?.time() ?? 0;
 			if ( loop.b !== null && loop.b <= loop.a + 0.5 ) {
 				loop.b = null;
 				loop.on = false;
 			}
-			paintTools();
-		} );
-		const b = button( 'riff-chords-ab', 'B', config.loopTo, () => {
+		};
+		const to = () => {
 			const at = player()?.time() ?? 0;
 			if ( loop.a !== null && at > loop.a + 0.5 ) {
 				loop.b = at;
@@ -328,8 +332,9 @@
 				loop.last = at;
 				watch();
 			}
-			paintTools();
-		} );
+		};
+		const a = button( 'riff-chords-ab', 'A', config.loopFrom, () => ( from(), paintTools() ) );
+		const b = button( 'riff-chords-ab', 'B', config.loopTo, () => ( to(), paintTools() ) );
 		const toggle = button( 'riff-chords-loop-toggle', config.loop, '', () => {
 			loop.on = ! loop.on && loop.a !== null && loop.b !== null;
 			if ( ! loop.on ) {
@@ -369,6 +374,35 @@
 			counter.setAttribute( 'aria-pressed', String( count.on ) );
 		};
 		box.beat = beat;
+		// What the keys do (riff_register_shortcut()), the same as the buttons. The loop's one key
+		// sets A, then B, then clears the loop, and says which, as there is no button under focus
+		// to say it.
+		const speed = steppers.find( ( s ) => s.dataset.riffChords === 'speed' );
+		const transpose = steppers.find( ( s ) => s.dataset.riffChords === 'transpose' );
+		box.keys = {
+			'chords-slower': speed?.down,
+			'chords-faster': speed?.up,
+			'chords-down': transpose.down,
+			'chords-up': transpose.up,
+			'chords-loop': () => {
+				if ( loop.a !== null && loop.b !== null ) {
+					Object.assign( loop, { a: null, b: null, on: false } );
+					cancelAnimationFrame( loop.frame );
+					stopCount();
+					speak( config.loopOff );
+				} else if ( loop.a === null ) {
+					from();
+					speak( fill( config.loopFromAt, clock( loop.a ) ) );
+				} else {
+					to();
+					// Not yet past A, it starts again from here.
+					if ( loop.b === null ) {
+						from();
+					}
+					speak( loop.b === null ? fill( config.loopFromAt, clock( loop.a ) ) : fill( config.loopOn, clock( loop.a ), clock( loop.b ) ) );
+				}
+			},
+		};
 		return box;
 	}
 
@@ -726,6 +760,27 @@
 	if ( ! chart ) {
 		return;
 	}
+	// The keys, registered on the server so the listener's profile lists them, act while the view
+	// shows a chart, where what they change can be seen. window.riff is the #riff element until
+	// the player is ready.
+	let keyed = false;
+	const keys = () => {
+		if ( keyed || typeof window.riff?.shortcut !== 'function' ) {
+			return;
+		}
+		keyed = true;
+		for ( const id of [ 'chords-loop', 'chords-slower', 'chords-faster', 'chords-down', 'chords-up' ] ) {
+			window.riff.shortcut( id, () => {
+				const run = showing && song && tools?.keys[ id ];
+				if ( run ) {
+					run();
+					paintTools();
+				}
+			} );
+		}
+	};
+	keys();
+	document.addEventListener( 'riff:ready', keys );
 	// The view, filled as it opens and again as the track changes while it is open.
 	document.addEventListener( 'riff:view', ( e ) => {
 		if ( e.detail?.id !== 'chords' ) {
