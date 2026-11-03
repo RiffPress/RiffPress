@@ -187,9 +187,13 @@ function start() {
 		 * order 26), the turntable (`turntable`, 28), About (`about`, a panel, 36), Up next (`queue`,
 		 * a panel, 40) and Together
 		 * (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing
-		 * (`sing`, 32) and Riff Chords Chords (`chords`, 34).
+		 * (`sing`, 32) and Riff Chords Chords (`chords`, 34). A view with nothing for a track says so
+		 * with `shown`: its button and chip hide while that track plays, and if it is open when the
+		 * track changes to one, a screen goes back to the one the listener came from, or to what Now
+		 * Playing opens to, and a panel closes.
 		 *
 		 * @since 5.8.0
+		 * @since 6.1.0 `view.shown`.
 		 *
 		 * @param {string}                                          id            Lowercase letters, digits and dashes; a screen is `[data-riff-view="<id>"]`, a panel `[data-riff-panel="<id>"]`.
 		 * @param {Object}                                          view          The view.
@@ -198,6 +202,7 @@ function start() {
 		 * @param {number}                                          [view.order]  Where its button sits among the bar's controls, lowest first. Default 50.
 		 * @param {string}                                          [view.place]  `screen`, the default, or `side` for a panel.
 		 * @param {(view: HTMLElement, track: Object|null) => void} [view.render] Fills it as it opens and again as the track changes while it is open. The `riff.view` action says the same.
+		 * @param {(track: Object|null) => boolean}                 [view.shown]  Whether it has something for the track, so its button and chip show. Default always.
 		 * @return {() => void} Takes away what this gave it, or the view this added.
 		 */
 		view: ( id, view ) => P.view( id, view ),

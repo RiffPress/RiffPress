@@ -119,7 +119,7 @@ Since 5.8.0.
 
 ### `window.riff.view( id, view )`
 
-Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26), the turntable (`turntable`, 28), About (`about`, a panel, 36), Up next (`queue`, a panel, 40) and Together (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing (`sing`, 32) and Riff Chords Chords (`chords`, 34).
+Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26), the turntable (`turntable`, 28), About (`about`, a panel, 36), Up next (`queue`, a panel, 40) and Together (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing (`sing`, 32) and Riff Chords Chords (`chords`, 34). A view with nothing for a track says so with `shown`: its button and chip hide while that track plays, and if it is open when the track changes to one, a screen goes back to the one the listener came from, or to what Now Playing opens to, and a panel closes.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -130,6 +130,7 @@ Gives a view what it does as it opens, or adds one the server didn't register. A
 | `view.order` | `number` | Where its button sits among the bar's controls, lowest first. Default 50. |
 | `view.place` | `string` | `screen`, the default, or `side` for a panel. |
 | `view.render` | `(view: HTMLElement, track: Object\|null) => void` | Fills it as it opens and again as the track changes while it is open. The `riff.view` action says the same. |
+| `view.shown` | `(track: Object\|null) => boolean` | Whether it has something for the track, so its button and chip show. Default always. |
 
 Returns `() => void`: Takes away what this gave it, or the view this added.
 

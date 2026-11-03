@@ -39,7 +39,7 @@ test.afterAll( async ( { requestUtils } ) => {
 // on a phone, where the bar keeps to the track, Play and the album.
 const openLyrics = ( page ) => openView( page, 'lyrics' );
 
-test( 'the Lyrics view shows the words from the file, and says so when a track has none', async ( {
+test( 'the Lyrics view shows the words from the file, and gives way to a track without them', async ( {
 	page,
 	isMobile,
 } ) => {
@@ -56,9 +56,15 @@ test( 'the Lyrics view shows the words from the file, and says so when a track h
 	await expect( panel.locator( '.riff-lyrics' ) ).toHaveText( /First line\s+Second line/ );
 	expect( ( await asked ).headers()[ 'x-wp-nonce' ] ).toBeTruthy();
 
-	// The next track has no lyrics; the open view follows the track.
+	// The next track has no lyrics: the view closes back to Now Playing's own, and its button
+	// and chip go until a track with words.
 	await page.evaluate( () => window.riff.next() );
-	await expect( panel.locator( '.riff-lyrics-note' ) ).toHaveText( 'No lyrics for this track.' );
+	await expect( panel ).toBeHidden();
+	await expect( page.locator( '.riff-np' ) ).toBeVisible();
+	await expect( page.locator( '.riff-bar [data-riff-control="lyrics"]' ) ).toBeHidden();
+	await expect( page.locator( '.riff-chips [data-riff-chip="lyrics"]' ) ).toBeHidden();
+	await page.evaluate( () => window.riff.next() );
+	await expect( page.locator( isMobile ? '.riff-chips [data-riff-chip="lyrics"]' : '.riff-bar [data-riff-control="lyrics"]' ) ).toBeVisible();
 } );
 
 test( 'timed lyrics follow the music, and a tap on a line seeks to it', async ( { page } ) => {

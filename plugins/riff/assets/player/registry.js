@@ -11,8 +11,10 @@
  * lyrics; now-playing.js shows them), or a panel beside the page, as Up next is. Pressing the
  * button of the one open goes back to the page. One panel shows at a time, and the one a listener
  * leaves open opens again on their next visit. window.riff.view() gives a registered view what it
- * does as it opens, or adds one the server didn't know of. */
-import { read, write } from 'riff-player/helpers';
+ * does as it opens, or adds one the server didn't know of. A view can say it has nothing for a
+ * track (its shown()): its button and chip hide while that track plays, and if it is open as the
+ * track changes it gives way. */
+import { fmt, read, speak, write } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -78,6 +80,7 @@ export function registry( P ) {
 	function draw( t = P.track() ) {
 		for ( const { spec, el } of controls.values() ) {
 			if ( el.dataset.riffOpens ) {
+				el.hidden = ! fits( el.dataset.riffOpens, t );
 				el.setAttribute( 'aria-pressed', String( isOpen( el.dataset.riffOpens ) ) );
 				continue;
 			}
@@ -103,6 +106,7 @@ export function registry( P ) {
 			}
 		}
 		for ( const chip of $$( '.riff-chips [data-riff-opens]' ) ) {
+			chip.hidden = ! fits( chip.dataset.riffOpens, t );
 			chip.setAttribute( 'aria-pressed', String( isOpen( chip.dataset.riffOpens ) ) );
 		}
 	}
@@ -194,6 +198,16 @@ export function registry( P ) {
 		} );
 	}
 	P.views = views;
+	// The screen showing before the one open now, while Now Playing stayed open, and the one that
+	// just gave way: where a view with nothing for the next track goes back to.
+	let came = null;
+	let left = null;
+
+	// Whether a view has something for a track: what its script says (shown()), or yes.
+	function fits( id, t = P.track() ) {
+		const shown = views.get( id )?.spec.shown;
+		return typeof shown !== 'function' || !! shown( t || null );
+	}
 
 	// Where a panel stands, as riff.css lays it out (--riff-side-place): beside the page, in the
 	// controls' strip of a touch screen on its side, beside the turntable, or over everything as a
@@ -311,12 +325,14 @@ export function registry( P ) {
 		if ( known && ! known.adopted ) {
 			// One the server drew: it takes what it does as it opens from here.
 			known.spec = spec;
+			draw();
 			if ( isOpen( id ) ) {
-				fill( id );
+				settleView( id );
 			}
 			return () => {
 				if ( views.get( id ) === known ) {
 					known.spec = {};
+					draw();
 				}
 			};
 		}
@@ -341,6 +357,47 @@ export function registry( P ) {
 		reopen();
 		return made.forget;
 	}
+
+	// An open view, as the track changes or its script arrives: filled for the track, or, with
+	// nothing for it, closed. A screen goes back to the one the listener came from, when that has
+	// something for the track, or else to what Now Playing opens to; a panel closes. Focus that was
+	// in it, or on its button, now hidden, goes where a view's opening puts it; focus anywhere else
+	// stays. Either way the listener hears which closed.
+	function settleView( id ) {
+		if ( fits( id ) ) {
+			fill( id );
+			return;
+		}
+		const v = views.get( id );
+		const active = document.activeElement;
+		const lost =
+			! active ||
+			active === document.body ||
+			!! v.el?.contains( active ) ||
+			active.dataset?.riffOpens === id;
+		if ( v.place === 'side' ) {
+			hide();
+			if ( lost && ! side.contains( document.activeElement ) ) {
+				$$( '.riff-play' )
+					.find( ( node ) => node.checkVisibility?.() !== false )
+					?.focus( { preventScroll: true } );
+			}
+		} else {
+			P.open( came && came !== id && screenOf( came ) && fits( came ) ? came : undefined );
+			if ( ! lost && active.isConnected ) {
+				active.focus( { preventScroll: true } );
+			} else if ( ! document.activeElement || document.activeElement === document.body ) {
+				// Where the view showing has nowhere of its own to take focus, as the album on a
+				// wide screen, its button in the bar.
+				[ $( `[data-riff-control="${ P.showing }"]` ), $( '.riff-play' ) ]
+					.find( ( node ) => node && ! node.hidden && node.checkVisibility?.() !== false )
+					?.focus( { preventScroll: true } );
+			}
+		}
+		/* translators: %s: A view's name, such as Lyrics. */
+		speak( fmt( __( '%s closed', 'riff' ), v.label ) );
+	}
+	const screenOf = ( id ) => views.get( id )?.place === 'screen';
 
 	// A view's content: its own render, then riff.view for anyone listening.
 	function fill( id ) {
@@ -476,12 +533,14 @@ export function registry( P ) {
 		if ( ! quiet ) {
 			write( localStorage, PANEL, '' );
 		}
-		// Focus goes back to what opened it, or to its button in the bar.
+		// Focus goes back to what opened it, or to its button in the bar, or, with those hidden
+		// (the panel had nothing for the track), to Play.
 		if ( within ) {
 			const back = [
 				opener,
 				$( `.riff-chips [data-riff-opens="${ id }"]` ),
 				$( `[data-riff-control="${ id }"]` ),
+				...$$( '.riff-play' ),
 			].find(
 				( node ) =>
 					node?.isConnected && node.checkVisibility?.() !== false
@@ -495,9 +554,12 @@ export function registry( P ) {
 
 	root.addEventListener( 'riff:track', () => {
 		if ( P.panelOpen ) {
-			fill( P.panelOpen );
+			settleView( P.panelOpen );
 		}
-		if ( ! P.np.hidden && P.showing ) {
+		if ( isOpen( P.showing ) ) {
+			settleView( P.showing );
+		} else if ( ! P.np.hidden && P.showing && fits( P.showing ) ) {
+			// Sliding away: still filled, as it is still in sight.
 			fill( P.showing );
 		}
 		reopen();
@@ -549,6 +611,7 @@ export function registry( P ) {
 			! P.panelOpen &&
 			views.get( id )?.place === 'side' &&
 			P.track() &&
+			fits( id ) &&
 			beside()
 		) {
 			show( id, { quiet: true } );
@@ -576,7 +639,21 @@ export function registry( P ) {
 			}
 		},
 		hidePanel: ( options ) => hide( options ),
-		viewOpened: ( id, isNowOpen ) =>
-			isNowOpen ? fill( id ) : announce( id, false ),
+		viewOpened: ( id, isNowOpen ) => {
+			if ( screenOf( id ) ) {
+				if ( isNowOpen ) {
+					came = left !== id ? left : null;
+					left = null;
+				} else {
+					// Left for another while Now Playing stays open, or with Now Playing closing.
+					left = root.classList.contains( 'is-open' ) ? id : null;
+				}
+			}
+			if ( isNowOpen ) {
+				fill( id );
+			} else {
+				announce( id, false );
+			}
+		},
 	};
 }

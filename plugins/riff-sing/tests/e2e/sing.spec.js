@@ -180,10 +180,16 @@ test( 'the Sing view shows the melody\'s words, says the voice stays on the devi
 	// Drawn for the eye; the words and the scores are the text.
 	await expect( panel.locator( 'canvas' ) ).toHaveAttribute( 'aria-hidden', 'true' );
 
+	// The next track has no melody: the view gives way to Now Playing's own, and the button goes.
+	const button = page.locator( '.riff-bar [data-riff-control="sing"]' );
 	await page.evaluate( () => window.riff.next() );
-	await expect( panel.locator( '.riff-sing-message' ) ).toHaveText( 'No melody for this track yet.' );
-	// Signed in as someone who can edit the Media Library: the way to the track's Melody field.
-	await expect( panel.getByRole( 'link', { name: 'Add a melody' } ) ).toHaveAttribute( 'href', /post\.php\?action=edit&post=\d+/ );
+	await expect( panel ).toBeHidden();
+	await expect( page.locator( '.riff-np' ) ).toBeVisible();
+	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', /^(album|turntable)$/ );
+	await expect( button ).toBeHidden();
+	await page.evaluate( () => window.riff.prev() );
+	await expect( button ).toBeVisible();
+	await expect( button ).toHaveAttribute( 'aria-pressed', 'false' );
 } );
 
 test( 'a track with Riff Lyrics\' timed lyrics shows its words at Riff Lyrics\' times, and the melody\'s without them', async ( {

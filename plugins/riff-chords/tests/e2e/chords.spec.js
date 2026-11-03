@@ -119,9 +119,33 @@ test( 'slower keeps the pitch, and a new song is back at its own speed', async (
 	expect( await page.evaluate( () => window.riff.speed() ) ).toBe( 0.9 );
 	await page.evaluate( () => window.riff.next() );
 	await expect.poll( () => page.evaluate( () => window.riff.speed() ) ).toBe( 1 );
-	// The next track has no chart; an admin is shown the way to its field.
-	await expect( panel.locator( '.riff-chords-note' ) ).toHaveText( 'No chords for this track.' );
-	await expect( panel.getByRole( 'link', { name: 'Add chords' } ) ).toHaveAttribute( 'href', /post\.php\?action=edit&post=\d+/ );
+} );
+
+test( 'the Chords button shows only for a track with a chart, and the open view gives way to one without', async ( {
+	page,
+	isMobile,
+} ) => {
+	const panel = await openChords( page, isMobile );
+	const button = page.locator( '.riff-bar [data-riff-control="chords"]' );
+	const chip = page.locator( '.riff-chips [data-riff-chip="chords"]' );
+	// The next track has no chart: the view closes back to Now Playing's own, and its button and
+	// chip go. Focus, on the button or in the view, moves to what shows instead.
+	await page.evaluate( () => window.riff.next() );
+	await expect( panel ).toBeHidden();
+	await expect( page.locator( '.riff-np' ) ).toBeVisible();
+	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', /^(album|turntable)$/ );
+	await expect( button ).toBeHidden();
+	await expect( chip ).toBeHidden();
+	await expect.poll( () => page.evaluate( () => document.activeElement !== document.body ) ).toBe( true );
+	await expect( page.locator( ':focus' ) ).toBeVisible();
+	// Back on the charted one, it is there again.
+	await page.evaluate( () => window.riff.prev() );
+	await expect.poll( () => page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Underground' );
+	await expect( isMobile ? chip : button ).toBeVisible();
+	// A row pressed: the plain one hides it, from the page too.
+	await page.evaluate( () => window.riff.closeView() );
+	await page.locator( '.riff-row' ).nth( 1 ).click();
+	await expect( button ).toBeHidden();
 } );
 
 test( 'the practice controls have keys: A for the loop, S and F for the speed, D and U to transpose', async ( {

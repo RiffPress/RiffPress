@@ -875,6 +875,13 @@
 			endAll();
 		}
 	} );
+	// The Sing button only for a track the server marked as having a melody (riff_track).
+	const fit = () => player()?.view( 'sing', { shown: ( track ) => !! track?.melody } );
+	if ( player() ) {
+		fit();
+	} else {
+		document.addEventListener( 'riff:ready', fit, { once: true } );
+	}
 	document.addEventListener( 'riff:play', () => loop() );
 	// A seek while paused moves the lane too.
 	timing.listen( () => {
