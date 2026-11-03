@@ -79,7 +79,9 @@ for ( const [ slug, own ] of [
 // generated references.
 const since = ( doc, heading ) => {
 	const at = doc.indexOf( heading );
-	const m = at < 0 ? null : doc.slice( at, at + 1200 ).match( /Since (\d+\.\d+(?:\.\d+)?)/ );
+	// Its own section, up to the next heading: a member with many options runs long.
+	const end = at < 0 ? -1 : doc.indexOf( '\n#', at + heading.length );
+	const m = at < 0 ? null : doc.slice( at, end < 0 ? undefined : end ).match( /Since (\d+\.\d+(?:\.\d+)?)/ );
 	return m ? m[ 1 ] : null;
 };
 const newer = ( a, b ) => {

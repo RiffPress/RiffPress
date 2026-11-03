@@ -104,6 +104,10 @@ at the bar's right end, and on a phone from its chip in Now Playing:
 - **Lyrics** (`lyrics`), from Riff Lyrics; **Sing** (`sing`), from Riff Sing; **Chords**
   (`chords`), from Riff Chords; and any other a plugin registers. Each follows the song playing,
   so each is a screen of Now Playing rather than a panel.
+  Each shows its button only for a track it has something for: words, a melody, a chart, which
+  each plugin marks on the track through the `riff_track` filter (`lyrics`, `melody`, `chords`).
+  Open when the next track has none, the view closes back to the one the listener came from, or
+  to what Now Playing opens to, and the listener hears it close.
 
 Pressing the open view's button again, Escape, or Close goes back to the page, and focus goes back
 to the button. The button says whether its view is open (`aria-pressed`).
@@ -198,7 +202,9 @@ one away, Riff's own included.
 In the browser, `window.riff.control( id, control )` gives a registered control its `run( track,
 button )`, `pressed( track )`, `label( track )` and `shown( track )`, and
 `window.riff.view( id, view )` gives a registered view its `render( view, track )`, which fills it
-as it opens and again as the track changes while it is open; the `riff.view` action says the same.
+as it opens and again as the track changes while it is open; the `riff.view` action says the same. A view's `shown( track )` says whether it has
+anything for the track: while it says no, its button and chip hide, and an open view gives way as
+above.
 Both also add a control or a view the server didn't register, for what only the browser knows.
 `window.riff.openView( id )` and `closeView()` open and close one. The bar is updated in place as
 the track changes and never drawn again, so a control keeps focus while the music plays.

@@ -834,6 +834,13 @@
 			unbindKeys();
 		}
 	} );
+	// The Chords button only for a track the server marked as having a chart.
+	const fit = () => player()?.view( 'chords', { shown: ( track ) => !! track?.chords } );
+	if ( player() ) {
+		fit();
+	} else {
+		document.addEventListener( 'riff:ready', fit, { once: true } );
+	}
 	document.addEventListener( 'riff:track', ( e ) => {
 		startAfresh( Number( e.detail?.track?.id ) || 0 );
 		duration = 0;

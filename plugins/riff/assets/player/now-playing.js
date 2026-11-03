@@ -255,9 +255,12 @@ export function nowPlaying( P ) {
 		if ( ! fromHistory && history.state?.riff === 'open' ) {
 			history.back();
 		}
-		if ( opener && document.contains( opener ) ) {
-			opener.focus( { preventScroll: true } );
-		}
+		// The button that opened it, or, hidden since (its view had nothing for the next track),
+		// the button of the view showing.
+		const back = [ opener, $( `[data-riff-control="${ P.showing }"]` ) ].find(
+			( node ) => node && document.contains( node ) && ! node.hidden
+		);
+		back?.focus( { preventScroll: true } );
 		P.drawControls?.();
 	}
 

@@ -82,7 +82,6 @@ test.describe( 'The tree is the spec', () => {
 			  - text: MP3 · 128 kbps
 			  - button "Album"
 			  - button "Turntable"
-			  - button "Lyrics"
 			  - button "About"
 			  - button "Up next"
 			  - slider "Volume"
@@ -147,7 +146,6 @@ test.describe( 'The tree is the spec', () => {
 				- button "Share"
 				- button "Album"
 				- button "Turntable"
-				- button "Lyrics"
 				- button "About"
 				- button "Up next"
 			` );
@@ -168,13 +166,10 @@ test.describe( 'The tree is the spec', () => {
 		await expect( page.locator( '.riff-menu [role="menuitem"]' ).first() ).toBeFocused();
 	} );
 
-	test( 'the Lyrics view, a screen of Now Playing', async ( { page } ) => {
+	test( 'a view with nothing for the track has no button', async ( { page } ) => {
+		// Riff Lyrics' view, for a track whose file has no words: not in the bar, nor among the chips.
 		await page.locator( '.riff-row' ).nth( 1 ).click();
-		await openView( page, 'lyrics' );
-		await expect( page.locator( '.riff-np [data-riff-view="lyrics"]' ) ).toMatchAriaSnapshot( `
-			- region "Lyrics":
-			  - paragraph: No lyrics for this track.
-		` );
-		await expect( page.locator( '.riff-np [data-riff-view="lyrics"]' ) ).toBeFocused();
+		await expect( page.locator( '.riff-bar [data-riff-control="about"]' ) ).toBeAttached();
+		await expect( page.getByRole( 'button', { name: 'Lyrics', exact: true } ) ).toHaveCount( 0 );
 	} );
 } );

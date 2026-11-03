@@ -189,5 +189,12 @@
 			fill( e.detail.view, e.detail.track );
 		}
 	} );
+	// The Lyrics button only for a track the server marked as having words (riff_track).
+	const fit = () => player()?.view( 'lyrics', { shown: ( track ) => !! track?.lyrics } );
+	if ( player() ) {
+		fit();
+	} else {
+		document.addEventListener( 'riff:ready', fit, { once: true } );
+	}
 	timing.listen( follow );
 } )();

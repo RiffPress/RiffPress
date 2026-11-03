@@ -83,6 +83,7 @@ final class Sing {
 		add_action( 'init', array( self::class, 'register_meta' ) );
 		add_action( 'riff_register', array( self::class, 'view' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
+		add_filter( 'riff_track', array( self::class, 'track' ), 10, 2 );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
@@ -207,6 +208,35 @@ final class Sing {
 	 */
 	private static function audio( int $id ): bool {
 		return 'attachment' === get_post_type( $id ) && self::song( (string) get_post_mime_type( $id ) );
+	}
+
+	/**
+	 * Marks a track whose file has a melody, `melody: true`, so the Sing view's button shows only
+	 * for a track it can sing along with: only where the media route would hand the visitor that
+	 * melody, as a file in a draft or private post is not theirs to read, and a MIDI melody only
+	 * where its file is theirs to read too.
+	 *
+	 * @param array $track         The track.
+	 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
+	 * @return array
+	 */
+	public static function track( $track, $attachment_id ) {
+		$id = (int) $attachment_id;
+		if ( ! is_array( $track ) || $id <= 0 || ! self::audio( $id ) ) {
+			return $track;
+		}
+		$midi = self::midi( $id );
+		$has  = '' !== self::melody( $id ) || ( $midi && ( is_post_publicly_viewable( $midi ) || current_user_can( 'read_post', $midi ) ) );
+		if ( ! $has ) {
+			return $track;
+		}
+		static $media = null;
+		$post         = get_post( $id );
+		$media      ??= new \WP_REST_Attachments_Controller( 'attachment' );
+		if ( $post instanceof WP_Post && $media->check_read_permission( $post ) ) {
+			$track['melody'] = true;
+		}
+		return $track;
 	}
 
 	/**
