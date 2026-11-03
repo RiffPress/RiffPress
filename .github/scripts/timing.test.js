@@ -138,6 +138,7 @@ test( 'timed lyrics are read as WebVTT writes them; untimed ones, or none, are n
 		],
 		'a pause of two seconds or more is a gap'
 	);
+	assert.equal( timing.lyrics( '\n WEBVTT\n\n00:01.000 --> 00:02.000\nFirst' )[ 0 ].text, 'First', 'a tag that starts with a blank line' );
 	assert.equal( timing.lyrics( 'Words with\nno times' ), null );
 	assert.equal( timing.lyrics( '' ), null );
 	assert.equal( timing.lyrics( undefined ), null, 'no field, as when Riff Lyrics isn\'t active' );

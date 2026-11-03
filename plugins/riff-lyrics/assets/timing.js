@@ -131,7 +131,8 @@
 	 *         The lines in time order, or null when none has a time.
 	 */
 	function lyrics( text ) {
-		text = String( text ?? '' );
+		// Trimmed, as a file's own tag can start with a blank line before WEBVTT.
+		text = String( text ?? '' ).trim();
 		if ( /^\uFEFF?WEBVTT/.test( text ) ) {
 			return vtt( text );
 		}
