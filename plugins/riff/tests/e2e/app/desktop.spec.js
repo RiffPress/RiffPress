@@ -34,7 +34,7 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-view' ) ).toHaveCSS( 'border-top-left-radius', '8px' );
 	} );
 
-	test( 'a narrow window with a mouse, as a car\'s screen is, keeps the touch layout without the frame, and gets the frame once it is wide enough', async ( {
+	test( 'a window with a mouse but no room for the sidebar, as a car\'s screen is, keeps the touch layout without the frame, and gains the frame once it widens', async ( {
 		page,
 		isMobile,
 	} ) => {
@@ -42,11 +42,15 @@ test.describe( 'Standalone', () => {
 		await page.setViewportSize( { width: 860, height: 500 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
 		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
-		await expect( page.locator( 'html' ) ).not.toHaveClass( /\briff-desktop\b/ );
+		const html = page.locator( 'html' );
+		await expect( html ).not.toHaveAttribute( 'data-riff-frame', 'sidebar' );
+		await expect( html ).not.toHaveClass( /\briff-frame\b/ );
 		await expect( page.locator( '.riff-app-titlebar' ) ).toBeHidden();
-		await page.setViewportSize( { width: 1440, height: 900 } );
-		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-desktop\b/ );
+		await page.setViewportSize( { width: 1180, height: 680 } );
+		await expect( html ).toHaveAttribute( 'data-riff-frame', 'sidebar' );
 		await expect( page.locator( '.riff-app-titlebar [data-riff-app-action="back"]' ) ).toBeVisible();
+		await page.setViewportSize( { width: 860, height: 500 } );
+		await expect( page.locator( '.riff-app-titlebar' ) ).toBeHidden();
 	} );
 
 	test( 'on a computer the strip has back and forward at its left end, Home and search in its middle and who is listening at its right, reached in that order', async ( {
@@ -56,8 +60,9 @@ test.describe( 'Standalone', () => {
 		test.skip( isMobile, 'The strip is a computer\'s.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
-		// A mouse marks the document before the app starts, as standalone.php does.
-		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-desktop\b/ );
+		// A window with room for the sidebar is in the desktop frame, whatever points at it.
+		await expect( page.locator( 'html' ) ).toHaveAttribute( 'data-riff-frame', 'sidebar' );
+		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-frame\b/ );
 		const back = page.locator( '.riff-app-titlebar [data-riff-app-action="back"]' );
 		const forward = page.locator( '.riff-app-titlebar [data-riff-app-action="forward"]' );
 		const home = page.locator( '.riff-app-bar .riff-app-home' );
