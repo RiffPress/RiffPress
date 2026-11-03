@@ -52,7 +52,7 @@
 ### Performance Improvements
 
 * a library of tens of thousands of tracks loads, lists, plays and imports at the pace of a small one ([#765](https://github.com/RiffPress/RiffPress/issues/765)) ([fa0a5f7](https://github.com/RiffPress/RiffPress/commit/fa0a5f7b7d4dd79057d95186da9c9c6e8bff266a))
-* **app:** a first visit to a Listen page loads the app in one wave, and the quality capsule is lit as Tidal's is ([#767](https://github.com/RiffPress/RiffPress/issues/767)) ([71e994e](https://github.com/RiffPress/RiffPress/commit/71e994eff8cd26dc682167f45401a7f958ddeb01))
+* **app:** a first visit to a Listen page loads the app in one wave, and the quality capsule is lit ([#767](https://github.com/RiffPress/RiffPress/issues/767)) ([71e994e](https://github.com/RiffPress/RiffPress/commit/71e994eff8cd26dc682167f45401a7f958ddeb01))
 * **player:** the turntable's moving parts no longer give Up next layers of its own, and the filament rests while nothing it lights is in sight ([#782](https://github.com/RiffPress/RiffPress/issues/782)) ([5e1239b](https://github.com/RiffPress/RiffPress/commit/5e1239bde46768670960a5f2534bbb80d73456b4))
 
 ## [5.7.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.6.1...riff-v5.7.0) (2026-10-30)

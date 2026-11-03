@@ -38,7 +38,7 @@ Add the Riff block to a page, and it becomes your Listen page: every album as a 
 
 Upload your tracks to the Media Library and they're on your Listen page, filed under their album and artist from the tags in the files, with their titles and artwork. Put an album in a post when you want to write about it. If an album has no cover, Riff draws one: a record with one groove per track.
 
-There's nothing to configure and no settings screen. Riff adds one script, one stylesheet, two fields on media (Artwork and Video version), and the Riff block.
+There's nothing to configure. Riff adds its fields on media (Artwork, Video version, Streaming version and Protected), the Riff block, and Settings › Riff, where the features it ships with, such as Lyrics, are turned on or off.
 
 [RiffPress.com](https://riffpress.com/) has a live demo with nine albums that runs in your browser, with nothing to install. [Add your music](https://riffpress.com/add-music/) walks through putting your first album online, starting from nothing.
 
@@ -48,7 +48,7 @@ Riff has documented hooks, a JavaScript API, REST routes, WPGraphQL fields and C
 
 == External services ==
 
-Riff sends no data to RiffPress or to anyone else, it loads no scripts, fonts or styles from another server, and it has no tracking or analytics. Its fonts and icons are bundled in the plugin.
+Riff sends nothing to RiffPress, has no tracking or analytics, and loads no scripts, fonts or styles from another server. The one outside service it uses is Gravatar, below. Its fonts, Inter, Roboto and EB Garamond under the SIL Open Font License, and its icons, from Google's Material Icons under the Apache License 2.0, are bundled in the plugin.
 
 The Listen page shows a signed-in listener's picture with WordPress's own avatars. When avatars are on (Settings, Discussion, Show Avatars), WordPress loads that picture from Gravatar, a service run by Automattic, sending a hash of the listener's email address. So that a listener without a Gravatar sees their initial rather than a grey silhouette, your site also asks Gravatar, at most once a day per listener, whether that hash has a picture. Gravatar's terms: https://gravatar.com/terms. Its privacy policy: https://automattic.com/privacy/. Turn avatars off and Riff shows the listener's initial instead, and nothing is sent to Gravatar.
 
@@ -159,7 +159,7 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service.
 * Fixed: a scene finds the track it names, and a follower who starts behind the host catches up.
 * Faster: a library of tens of thousands of tracks loads, lists, plays and imports at the pace of a small one.
-* Faster: a first visit to a Listen page loads the app in one wave, and the quality capsule is lit as Tidal's is.
+* Faster: a first visit to a Listen page loads the app in one wave, and the quality capsule is lit.
 * Faster: the turntable's moving parts no longer give Up next layers of its own, and the filament rests while nothing it lights is in sight.
 
 = 5.7.0 =
