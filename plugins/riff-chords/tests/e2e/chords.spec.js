@@ -157,7 +157,7 @@ test( 'the chords are drawn for a ukulele or a piano, and this browser keeps the
 
 	// A piano has no capo to set.
 	await instrument.getByRole( 'button', { name: 'Piano' } ).click();
-	await expect( now.getByRole( 'img' ) ).toHaveAttribute( 'aria-label', 'D, on the keys D, F#, A' );
+	await expect( now.getByRole( 'img' ) ).toHaveAttribute( 'aria-label', 'D, its notes D, F#, A' );
 	await expect( now.locator( '.riff-chords-dot' ) ).toHaveCount( 3 );
 	await expect( panel.locator( '[data-riff-chords="capo"]' ) ).toBeHidden();
 

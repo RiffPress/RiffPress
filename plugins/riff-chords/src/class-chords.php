@@ -245,8 +245,8 @@ final class Chords {
 					'fingering'   => __( '%1$s, from the low string: %2$s', 'riff-chords' ),
 					/* translators: 1: a chord, such as G; 2: the fret for each string from the G string, such as "open, 2, 3, 2". */
 					'ukeFrets'    => __( '%1$s, from the G string: %2$s', 'riff-chords' ),
-					/* translators: 1: a chord, such as G7; 2: the notes of its keys, such as "G, B, D, F". */
-					'pianoKeys'   => __( '%1$s, on the keys %2$s', 'riff-chords' ),
+					/* translators: 1: a chord, such as G7; 2: its notes, such as "G, B, D, F". */
+					'pianoKeys'   => __( '%1$s, its notes %2$s', 'riff-chords' ),
 					'open'        => _x( 'open', 'a string played without a finger on it', 'riff-chords' ),
 					'muted'       => _x( 'not played', 'a guitar string', 'riff-chords' ),
 					'instrument'  => __( 'Instrument', 'riff-chords' ),

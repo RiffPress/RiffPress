@@ -204,7 +204,7 @@
 			const height = key.white ? 45 : 28;
 			draw( 'rect', { x: key.x, y: 0.5, width, height, rx: 1, class: `riff-chords-piano-key${ key.white ? '' : ' is-black' }` } );
 			if ( pressed.has( key.k ) ) {
-				draw( 'circle', { cx: key.x + width / 2, cy: height - 5, r: 2.2, class: `riff-chords-dot${ key.white ? '' : ' is-black' }` } );
+				draw( 'circle', { cx: key.x + width / 2, cy: height - 5, r: key.white ? 2.2 : 1.5, class: `riff-chords-dot${ key.white ? '' : ' is-black' }` } );
 			}
 		}
 		return svg;
