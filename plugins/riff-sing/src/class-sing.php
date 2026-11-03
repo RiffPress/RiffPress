@@ -394,6 +394,11 @@ final class Sing {
 			'unsupported'   => __( 'This browser can\'t listen to a microphone or a MIDI instrument here.', 'riff-sing' ),
 			'midiDenied'    => __( 'MIDI wasn\'t allowed.', 'riff-sing' ),
 			'midiNone'      => __( 'No MIDI instrument is connected yet. Connect one and play.', 'riff-sing' ),
+			'midiInput'     => __( 'MIDI input', 'riff-sing' ),
+			/* translators: %s: a number, for a MIDI input the browser gives no name. */
+			'unnamedMidi'   => __( 'MIDI input %s', 'riff-sing' ),
+			/* translators: %s: 1 or 2, for a duet's singer the chart gives no name. */
+			'singer'        => __( 'Singer %s', 'riff-sing' ),
 			'grades'        => array(
 				'great' => __( 'Brilliant!', 'riff-sing' ),
 				'good'  => __( 'Lovely singing.', 'riff-sing' ),
@@ -447,7 +452,13 @@ final class Sing {
 			'#riff .riff-sing-lane{--sing-note:var(--riff-fg-3);--sing-hit:var(--riff-fg);--sing-gold:var(--riff-accent);--sing-voice:var(--riff-accent);--sing-line:var(--riff-line);position:relative;height:160px;margin:0 -8px;border-radius:8px;background:var(--riff-hover)}'
 			. '#riff .riff-sing-lane canvas{display:block;width:100%;height:100%}'
 			. '@media (forced-colors:active){#riff .riff-sing-lane{--sing-note:GrayText;--sing-hit:CanvasText;--sing-gold:CanvasText;--sing-voice:Highlight;--sing-line:CanvasText;border:1px solid CanvasText}}'
-			. '#riff .riff-sing{display:flex;flex-direction:column;gap:12px}'
+			. '#riff .riff-sing,#riff .riff-sing-part{display:flex;flex-direction:column;gap:12px}'
+			// A duet's two singers side by side where there is room for both, one above the other
+			// where there isn't, their lanes lower on a short screen so more of both is in view.
+			. '#riff .riff-sing-singers{display:flex;flex-wrap:wrap;gap:24px}'
+			. '#riff .riff-sing-singers>.riff-sing-part{flex:1 1 20rem;min-width:0}'
+			. '#riff .riff-sing.is-duet .riff-sing-lane{height:clamp(80px,16svh,160px)}'
+			. '#riff .riff-sing-singer{color:var(--riff-fg);font-size:16px;font-weight:600}'
 			. '#riff .riff-sing p{margin:0}'
 			. '#riff .riff-sing-words{min-height:1.5em;font-size:20px;font-weight:600;line-height:1.5;color:var(--riff-fg-2)}'
 			// The syllables already sung in the foreground, as Riff Lyrics lights its words.
