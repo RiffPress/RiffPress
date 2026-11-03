@@ -1,16 +1,13 @@
-/* The desktop frame: the document is riff-frame in Riff's desktop app, and in
-   standalone mode where the frame is sidebar. Loaded with standalone.css. No
-   build step: this file is what ships. */
+/* The desktop frame: the document is riff-frame in standalone mode where the
+   frame is sidebar. Loaded with standalone.css. No build step: this file is
+   what ships. */
 
-/* ---- The desktop frame: the document is riff-frame in Riff's desktop app at
-   any width, as its strip is how the window is dragged, and installed with
-   the window's controls over the page; in a browser, where the window has
-   room for the sidebar (--riff-frame, standalone.css), whatever points at it
-   (templates/standalone.php). A strip across the top holds a back
-   and forward pair over the app's history and the sidebar's toggle. In the
-   desktop app on a Mac it is riff-desktop-inset too: the window has no title
-   bar, the strip drags the window, and its left end is the traffic lights'.
-   Internal to the app; not for themes. */
+/* ---- The desktop frame: the document is riff-frame where the window has
+   room for the sidebar (--riff-frame, standalone.css), whatever points at it,
+   and installed with the window's controls over the page at any width, as
+   its strip is how that window is dragged (templates/standalone.php). A strip
+   across the top holds a back and forward pair over the app's history and
+   the sidebar's toggle. Internal to the app; not for themes. */
 .riff-app-titlebar {
 	display: none;
 }
@@ -66,12 +63,6 @@ html.riff-desktop-overlay .riff-standalone .riff-app-titlebar {
 html.riff-frame.riff-desktop-overlay .riff-standalone .riff-app .riff-app-account,
 html.riff-frame.riff-desktop-overlay .riff-standalone .riff-app .riff-app-signin {
 	right: calc(16px + var(--riff-desktop-controls));
-}
-
-html.riff-desktop-inset .riff-standalone .riff-app-titlebar {
-	padding-left: 84px;
-	-webkit-app-region: drag;
-	app-region: drag;
 }
 
 html.riff-frame .riff-standalone .riff-app-history {
@@ -339,9 +330,9 @@ html.riff-frame .riff-standalone .riff-app {
 		background: #000;
 	}
 
-	/* The bar at a desktop app's height, the controls and the line with room
-	   between them, and the line 4px with round ends that holds its weight
-	   under the pointer. */
+	/* The bar at a desktop streaming app's height, the controls and the line
+	   with room between them, and the line 4px with round ends that holds its
+	   weight under the pointer. */
 	html.riff-frame {
 		--riff-bar-h: 88px;
 
@@ -366,8 +357,8 @@ html.riff-frame .riff-standalone .riff-app {
 
 	/* Now Playing, full screen: on a dark wash of the art's own
 	   colour, the art alone in the middle, with Up next and Lyrics beside it
-	   as panels of their own (riff.css). Its top drags the window, clear of
-	   the lights. */
+	   as panels of their own (riff.css). Its top drags an installed app's
+	   window. */
 	html.riff-frame #riff .riff-np-bg {
 		display: block;
 		background: linear-gradient(color-mix(in srgb, var(--riff-tint) 45%, #000), color-mix(in srgb, var(--riff-tint) 18%, #000));
@@ -574,19 +565,3 @@ html.riff-frame #riff .riff-bar .riff-sub {
 	font-size: 12px;
 	line-height: 1.4;
 }
-
-/* Trying the layout in a browser (templates/standalone.php, with SCRIPT_DEBUG
-   or WP_DEBUG on): where the traffic lights would be. */
-html.riff-desktop-preview .riff-standalone .riff-app-titlebar::before {
-	content: "";
-	position: absolute;
-	top: 26px;
-	left: 20px;
-	width: 52px;
-	height: 12px;
-	background:
-		radial-gradient(circle 6px at 6px 6px, #ff5f57 98%, transparent) no-repeat,
-		radial-gradient(circle 6px at 26px 6px, #febc2e 98%, transparent) no-repeat,
-		radial-gradient(circle 6px at 46px 6px, #28c840 98%, transparent) no-repeat;
-}
-

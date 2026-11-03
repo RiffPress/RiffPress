@@ -1,5 +1,5 @@
 /**
- * The desktop app's layout, marked on the document with ?riff_desktop=1: the window does not stretch past its ends, and Now Playing is the art alone with Up next a panel beside it.
+ * The desktop frame, standalone mode where the window has room for the sidebar: the window does not stretch past its ends, and Now Playing is the art alone with Up next a panel beside it.
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -19,45 +19,17 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
-/**
- * Marks the document as Riff's desktop app's preload does (packages/desktop/src/site-preload.js),
- * as soon as the parser makes <html> and before the page's own scripts run.
- *
- * @param {import('@playwright/test').Page} page    The page.
- * @param {string[]}                        classes The classes the app adds.
- */
-const asTheApp = ( page, classes ) =>
-	page.addInitScript( ( names ) => {
-		const mark = () => document.documentElement.classList.add( ...names );
-		if ( document.documentElement ) {
-			mark();
-		} else {
-			new MutationObserver( ( records, observer ) => {
-				if ( document.documentElement ) {
-					observer.disconnect();
-					mark();
-				}
-			} ).observe( document, { childList: true } );
-		}
-	}, classes );
-
 test.describe( 'Standalone', () => {
-	test( 'in the desktop app the window does not stretch past its ends, and the view keeps its round corners', async ( {
+	test( 'in the desktop frame the window does not stretch past its ends, and the view keeps its round corners', async ( {
 		page,
 		isMobile,
 	} ) => {
-		test.skip( isMobile, 'The desktop app\'s layout is for a wide window.' );
-		// What the app's preload marks the document with, before the page is parsed.
-		await asTheApp( page, [ 'riff-desktop' ] );
+		test.skip( isMobile, 'The desktop frame is for a wide window.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
 		// A trackpad's stretch past the top would slide the view in its frame and show a square edge.
 		await expect( page.locator( 'html' ) ).toHaveCSS( 'overscroll-behavior-y', 'none' );
 		await expect( page.locator( '.riff-app-view' ) ).toHaveCSS( 'border-top-left-radius', '8px' );
-		// The app is in the desktop frame at any width, the window's size aside.
-		await page.setViewportSize( { width: 860, height: 500 } );
-		await expect( page.locator( 'html' ) ).not.toHaveAttribute( 'data-riff-frame', 'sidebar' );
-		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-frame\b/ );
 	} );
 
 	test( 'a window with a mouse but no room for the sidebar, as a car\'s screen is, keeps the touch layout without the frame, and gains the frame once it widens', async ( {
@@ -132,14 +104,12 @@ test.describe( 'Standalone', () => {
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app-titlebar' ).include( '.riff-app-bar' ).analyze() ).violations ).toEqual( [] );
 	} );
 
-	test( 'in the desktop app, Now Playing is the art alone, and Up next opens beside it', async ( {
+	test( 'in the desktop frame, Now Playing is the art alone, and Up next opens beside it', async ( {
 		page,
 		isMobile,
 	} ) => {
-		test.skip( isMobile, 'The desktop app\'s layout is for a wide window.' );
+		test.skip( isMobile, 'The desktop frame is for a wide window.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
-		// What the app's preload marks the document with, before the page is parsed.
-		await asTheApp( page, [ 'riff-desktop', 'riff-desktop-inset' ] );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
 		await page.locator( '[data-riff-app-action="play"]' ).click();
 		await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
@@ -157,7 +127,7 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeHidden();
 
 		// Up next is a panel of its own, from its button in the bar: beside Now Playing, under the
-		// strip that drags the window, and the art stays in the middle of what is left.
+		// strip, and the art stays in the middle of what is left.
 		const upNext = page.locator( '[data-riff-control="queue"]' );
 		await upNext.click();
 		await expect( upNext ).toHaveAttribute( 'aria-pressed', 'true' );

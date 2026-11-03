@@ -17,9 +17,9 @@ defined( 'ABSPATH' ) || exit;
  *
  * Any page that holds the Riff block, or uses the Listen template, gets a second address, its own
  * address plus app/, where the block renders in a document of Riff's own: Riff's dark look, none of
- * the theme's markup, styles or scripts, and a web app manifest, so a browser can install it and
- * the desktop app can load it. It is still WordPress: the visitor's login, the REST routes, and
- * other plugins' hooks on wp_head and wp_footer all work as on any page.
+ * the theme's markup, styles or scripts, and a web app manifest, so a browser can install it. It
+ * is still WordPress: the visitor's login, the REST routes, and other plugins' hooks on wp_head
+ * and wp_footer all work as on any page.
  */
 final class Standalone {
 
@@ -221,7 +221,7 @@ final class Standalone {
 			'start_url'        => $start,
 			'scope'            => $start,
 			// Installed from Chrome or Edge on a computer, the window has no title bar and the app's
-			// own strip runs around the window's controls, as the desktop app's does.
+			// own strip runs around the window's controls.
 			'display_override' => array( 'window-controls-overlay' ),
 			'display'          => 'standalone',
 			'background_color' => self::BACKGROUND,

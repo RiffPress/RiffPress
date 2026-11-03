@@ -8,10 +8,6 @@ node_modules/
 /.claude/settings.local.json
 build/
 artifacts/
-# The desktop app's build, and the profile and renamed Electron npm run desktop keeps.
-packages/desktop/dist/
-packages/desktop/.profile/
-packages/desktop/.dev/
 test-results/
 playwright-report/
 .phpcs.cache
@@ -30,8 +26,6 @@ undefined/
 !site/covers/*.png
 !site/og/*.png
 !plugins/riff/features/listen/icons/*.png
-!packages/desktop/resources/*.png
-!packages/desktop/src/connect/*.png
 # Generated at build time by npm run pot; translations come from translate.wordpress.org.
 plugins/riff/languages/
 !tests/fixtures/**/*.png

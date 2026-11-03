@@ -51,11 +51,6 @@
 			"package-name": "wp-api-coverage",
 			"component": "wp-api-coverage",
 			"initial-version": "0.1.0"
-		},
-		"packages/desktop": {
-			"package-name": "riff-desktop",
-			"component": "riff-desktop",
-			"initial-version": "0.1.0"
 		}
 	}
 }

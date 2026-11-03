@@ -781,7 +781,7 @@ html.has-riff .riff-standalone .riff-app {
 		font-weight: 700;
 	}
 
-	/* There is no sidebar to fold, the desktop app's narrow window included. */
+	/* There is no sidebar to fold, an installed app's narrow window included. */
 	.riff-standalone .riff-app .riff-app-collapse,
 	html.riff-frame .riff-standalone .riff-app .riff-app-brand .riff-app-collapse {
 		display: none;
