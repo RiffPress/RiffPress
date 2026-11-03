@@ -706,11 +706,16 @@
 
 	// The words of the line being sung, or the next one, what is being sung marked: the melody's
 	// syllables, or for a lone singer, Riff Lyrics' line, its words lit as Riff Lyrics lights them.
+	// LRC gives a line no end, so a timed line is shown until the next one's time, unless it is an
+	// empty one, LRC's mark for a break, which shows the line after it, waiting to be sung.
 	function lyric( part, time ) {
 		const lines = ! duet() && chart.lyrics;
 		if ( lines ) {
 			// The line Riff Lyrics marks, or before the first, the first.
-			const i = Math.max( 0, timing.at( lines, time ) );
+			let i = Math.max( 0, timing.at( lines, time ) );
+			while ( ! lines[ i ].text && i + 1 < lines.length ) {
+				i++;
+			}
 			if ( i !== part.phraseShown ) {
 				part.phraseShown = i;
 				const line = lines[ i ];

@@ -44,8 +44,9 @@ let duetUrl;
 let timedUrl;
 
 // Riff Lyrics' timed lyrics for the CHART's track, other words than the chart's so the two are told
-// apart: Enhanced LRC's word times on the first line, a plain timed line for the second.
-const LRC = [ '[00:00.00]<00:00.00>Sing <00:01.00>along', '[00:06.00]Once more' ].join( '\n' );
+// apart: Enhanced LRC's word times on the first line, an empty line for a break at three seconds,
+// and a plain timed line for the second.
+const LRC = [ '[00:00.00]<00:00.00>Sing <00:01.00>along', '[00:03.00]', '[00:06.00]Once more' ].join( '\n' );
 
 // A duet: Ada sings A over the first two seconds while Bo sings E, each a line of two notes.
 const DUET = [
@@ -195,6 +196,10 @@ test( 'a track with Riff Lyrics\' timed lyrics shows its words at Riff Lyrics\' 
 	await expect( words.locator( '.is-sung' ) ).toHaveText( 'Sing' );
 	await page.evaluate( () => window.riff.seek( 1.5 ) );
 	await expect( words.locator( '.is-sung' ) ).toHaveCount( 2 );
+	// In the break the next line waits, not yet sung.
+	await page.evaluate( () => window.riff.seek( 4 ) );
+	await expect( words ).toHaveText( 'Once more' );
+	await expect( words.locator( '.is-sung' ) ).toHaveCount( 0 );
 	// The second line, at its own time rather than the melody's: the chart's next line is at six too,
 	// but its word is "la".
 	await page.evaluate( () => window.riff.seek( 6.5 ) );
