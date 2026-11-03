@@ -195,9 +195,13 @@ export function nowPlaying( P ) {
 		// screen the bar beside it is still how the music is controlled.
 		np.setAttribute( 'aria-modal', String( ! wide ) );
 		for ( const node of [ ...document.body.children, ...covered ] ) {
+			// The track menu is left alone, as the panels leave it: opened from the page before
+			// anything played, it sits in the body, and it moves into Up next or Now Playing when
+			// opened there, taking an inert set here with it.
 			if (
 				node &&
 				node !== root &&
+				! node.classList.contains( 'riff-menu' ) &&
 				! node.id.startsWith( 'a11y-speak' ) &&
 				! node.inert
 			) {
