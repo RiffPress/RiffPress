@@ -365,6 +365,50 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertCount( 0, $this->tracks() );
 	}
 
+	public function test_a_zip_uploaded_by_the_same_name_never_adds_to_someone_elses_album(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+		$first = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+		$album = Import::uploaded_zip( $first )['albums'][0]['post'];
+		// The editor tidies up: the zip goes, and its path in uploads is free again.
+		wp_delete_attachment( $first, true );
+
+		$author = self::factory()->user->create( array( 'role' => 'author' ) );
+		wp_set_current_user( $author );
+		$second = self::factory()->attachment->create_upload_object( $this->zip_of( array( '03 - Trombone Detritus [detritus].mp3' => '03 - Trombone Detritus [detritus].mp3' ) ) );
+		$theirs = Import::uploaded_zip( $second )['albums'][0]['post'];
+
+		$this->assertNotSame( $album, $theirs, 'an album of its own' );
+		$this->assertSame( $author, (int) get_post( $theirs )->post_author );
+		$this->assertSame( 1, substr_count( get_post_field( 'post_content', $album ), '<!-- wp:audio' ), 'the editor\'s album is as it was' );
+	}
+
+	public function test_a_zip_imported_by_someone_leaves_a_video_they_cannot_edit_as_it_was(): void {
+		$dir   = $this->album_dir(
+			'compositions',
+			array(
+				'01 - Intensities in Ten Cities [intensities].mp3',
+				'01 - Intensities in Ten Cities [intensities].webm',
+			)
+		);
+		Import::folder( $dir );
+		$video = (int) get_post_meta( $this->tracks()[0], Media::VIDEO_META, true );
+		$title = get_the_title( $video );
+		$this->assertGreaterThan( 0, $video );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$zip = $this->zip_of(
+			array(
+				'Theirs.mp3'  => '02 - Underground [underground].mp3',
+				'Theirs.webm' => '01 - Intensities in Ten Cities [intensities].webm',
+			)
+		);
+		Import::zip( $zip, array( 'status' => 'draft' ) );
+
+		$this->assertSame( $title, get_the_title( $video ), 'not retitled by someone who cannot edit it' );
+		$this->assertSame( $video, (int) get_post_meta( $this->tracks()[1], Media::VIDEO_META, true ), 'their track still names it as its video' );
+	}
+
 	public function test_wp_riff_import_takes_a_zip(): void {
 		require_once __DIR__ . '/class-riff-test-wp-cli.php';
 		WP_CLI::$lines = array();
