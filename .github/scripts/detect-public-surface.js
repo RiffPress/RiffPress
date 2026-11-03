@@ -246,10 +246,11 @@ const JS_RULES = [
 	],
 ];
 
-// The player fires most of its hooks through its own wrappers, `emit( 'menu' )`
-// for the `riff.menu` action and `filter( 'menu' )` for the filter, which add
-// the prefix. The hooks reference reads them with the same expression, and only
-// in the player's scripts, where those names mean the wrappers.
+// The player fires its hooks through its own wrappers, `emit( 'queue' )` for
+// the `riff.queue` action and `filter( 'menu' )` for the `riff.menu` filter,
+// which add the prefix. The hooks reference reads them with the same
+// expression, and only in the player's scripts, where those names mean the
+// wrappers.
 const PLAYER_RULES = [
 	[
 		JS_HOOK,
@@ -440,7 +441,8 @@ module.exports.ownConstants = ownConstants;
 module.exports.MARKER = MARKER;
 
 // CLI: `node detect-public-surface.js <base-ref> <head-ref>`. Reads both trees
-// through git, never the working directory, so the head is never checked out.
+// through git rather than the working directory; only this script and the
+// hooks reference it requires come from the checkout.
 // Writes `count` to $GITHUB_OUTPUT and the comment body to comment.md.
 if ( require.main === module ) {
 	const { execFileSync } = require( 'node:child_process' );
