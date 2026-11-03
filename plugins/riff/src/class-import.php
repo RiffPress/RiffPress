@@ -236,7 +236,7 @@ final class Import {
 	 */
 	private static function fits( string $file ) {
 		/** This filter is documented in wp-admin/includes/file.php */
-		if ( ! class_exists( 'ZipArchive', false ) || ! apply_filters( 'unzip_file_use_ziparchive', true ) ) {
+		if ( ! class_exists( 'ZipArchive', false ) || ! apply_filters( 'unzip_file_use_ziparchive', true ) ) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's own filter, applied as unzip_file() does.
 			return true;
 		}
 		$zip = new \ZipArchive();
@@ -295,7 +295,7 @@ final class Import {
 				'as'      => '',
 			)
 		);
-		$as = '' !== (string) $args['as'] ? (string) $args['as'] : $dir;
+		$as   = '' !== (string) $args['as'] ? (string) $args['as'] : $dir;
 
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
