@@ -30,6 +30,15 @@ class Test_Riff_Chords extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'chords', Riff\Registry::views( 'side' ) );
 	}
 
+	public function test_a_track_whose_file_has_a_chart_is_marked_for_the_track_menu(): void {
+		$charted = self::attach( '02 - Underground [underground].mp3' );
+		update_post_meta( $charted, Chords::KEY, self::CHART );
+		$plain = self::attach( '03 - Trombone Detritus [detritus].mp3' );
+		$this->assertTrue( apply_filters( 'riff_track', array( 'id' => (string) $charted ), $charted, 0 )['chords'] ?? false );
+		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => (string) $plain ), $plain, 0 ) );
+		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => '' ), 0, 0 ), 'nor a file outside the Media Library' );
+	}
+
 	public function test_audio_gets_a_chords_field_and_images_do_not(): void {
 		$id = self::attach( '02 - Underground [underground].mp3' );
 		update_post_meta( $id, Chords::KEY, self::CHART );

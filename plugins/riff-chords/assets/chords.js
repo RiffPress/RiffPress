@@ -4,10 +4,12 @@
  * played, drawn as a guitar or ukulele fingering or on a piano's keys, with the next one; the
  * speed, slower or faster with the pitch kept, through window.riff.speed(); transpose and, on a
  * guitar or ukulele, capo, which change the chords' names and fingerings and not the music; and a loop, from A to B or around one section of the song, through
- * window.riff.seek(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
- * riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
+ * window.riff.seek(), with a count-in, a bar of clicks at the chart's tempo, before it goes round.
+ * A track with a chart has Practice this in its ⋯ menu, through the riff.menu filter, which plays it
+ * and opens the view on it.
+ * It listens to the player's riff:view, riff:track, riff:time, riff:play and riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
- * Sing, both loaded before it. */
+ * Sing; chart.js and timing.js are loaded before it. */
 ( () => {
 	const config = window.riffChords || {};
 	const chart = window.riffChordsChart;
@@ -22,6 +24,15 @@
 	// The listener's choices for the song showing; a new song starts afresh.
 	const practice = { id: 0, steps: 0, capo: 0, capoFor: 0, slowed: false };
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
+	// The count-in, off until the listener turns it on: its clicks and timers while a bar is counted,
+	// and where the music was when they were set going.
+	const count = { on: false, audio: null, clicks: [], timers: [], cued: null, held: null };
+	// Not on an iPhone or iPad, where Riff keeps the music out of Web Audio, since a sound made
+	// beside it there can be muted by the ringer switch and can stop it on the lock screen.
+	const Sound =
+		/iP(hone|ad|od)/.test( navigator.userAgent ) || ( navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 )
+			? null
+			: window.AudioContext;
 	let duration = 0;
 
 	// The instrument the chords are drawn for, which the listener chooses and this browser keeps.
@@ -325,11 +336,27 @@
 		} );
 		const toggle = button( 'riff-chords-loop-toggle', config.loop, '', () => {
 			loop.on = ! loop.on && loop.a !== null && loop.b !== null;
+			if ( ! loop.on ) {
+				stopCount();
+			}
 			loop.last = player()?.time() ?? 0;
 			watch();
 			paintTools();
 		} );
-		looper.append( a, b, toggle );
+		// Count in: before the loop goes round, a bar of clicks at the chart's tempo, for a chart
+		// that gives one, in a browser that can make the sound.
+		const counter = button( 'riff-chords-count-in', config.countIn, '', () => {
+			count.on = ! count.on;
+			if ( count.on ) {
+				sound();
+			} else {
+				stopCount();
+			}
+			paintTools();
+		} );
+		const beat = el( 'span', 'riff-chords-count' );
+		beat.setAttribute( 'aria-hidden', 'true' );
+		looper.append( a, b, toggle, counter, beat );
 		box.append( looper );
 		box.paint = () => {
 			steppers.forEach( ( s ) => s.paint() );
@@ -341,7 +368,11 @@
 			b.disabled = loop.a === null;
 			toggle.disabled = loop.a === null || loop.b === null;
 			toggle.setAttribute( 'aria-pressed', String( loop.on ) );
+			counter.hidden = ! Sound || ! tempo();
+			beat.hidden = counter.hidden;
+			counter.setAttribute( 'aria-pressed', String( count.on ) );
 		};
+		box.beat = beat;
 		return box;
 	}
 
@@ -520,12 +551,118 @@
 		if ( ! loop.on || loop.a === null || loop.b === null ) {
 			return;
 		}
+		cue( time );
 		if ( loop.last < loop.b && time >= loop.b ) {
+			stopCount();
 			player()?.seek( loop.a );
 			loop.last = loop.a;
 			return;
 		}
 		loop.last = time;
+	}
+
+	// ---- The count-in: the loop's last bar before B counted out in clicks at the chart's tempo, the
+	// first of the bar higher, so the music comes round to A on the beat after the last, as a
+	// drummer counts a band back in. The music plays on under it; nothing is stopped or held. The
+	// clicks are made in the browser, with Web Audio, and timed on its clock from where the music
+	// is, at the speed it plays.
+	const tempo = () => {
+		const bpm = parseFloat( song?.read.meta.tempo );
+		return bpm >= 20 && bpm <= 400 ? bpm : 0;
+	};
+	// The beats in a bar, from the chart's time signature ({time: 3/4}), or four.
+	const beats = () => {
+		const n = parseInt( String( song?.read.meta.time || '' ).split( '/' )[ 0 ], 10 );
+		return n >= 1 && n <= 12 ? n : 4;
+	};
+	// The sound, made on the listener's tap, as a browser asks before a page plays one.
+	function sound() {
+		try {
+			count.audio ||= Sound ? new Sound() : null;
+			count.audio?.resume()?.catch( () => {} );
+		} catch {}
+		return count.audio;
+	}
+	function click( at, first ) {
+		const audio = count.audio;
+		const tone = audio.createOscillator();
+		const level = audio.createGain();
+		tone.type = 'triangle';
+		tone.frequency.value = first ? 1760 : 1320;
+		level.gain.setValueAtTime( 0.0001, at );
+		level.gain.exponentialRampToValueAtTime( 0.4, at + 0.003 );
+		level.gain.exponentialRampToValueAtTime( 0.0001, at + 0.08 );
+		tone.connect( level );
+		level.connect( audio.destination );
+		tone.start( at );
+		tone.stop( at + 0.1 );
+		count.clicks.push( tone );
+	}
+	function showBeat( n ) {
+		if ( tools?.beat ) {
+			tools.beat.textContent = n ? String( n ) : '';
+		}
+	}
+	// Sets the bar's clicks going once the music is inside it, and calls them off if it leaves it:
+	// a seek back before it, or on past B. A loop shorter than a bar counts the beats that fit.
+	function cue( time ) {
+		const bpm = tempo();
+		if ( ! count.on || ! bpm || ! player()?.playing() ) {
+			return;
+		}
+		const gap = 60 / bpm;
+		const bar = beats();
+		const from = loop.b - bar * gap;
+		const rate = canSlow() ? player().speed() : 1;
+		// A count set going is kept only while the music is where its clicks expect: a seek, a
+		// stall, a change of speed or a B moved calls it off, and it is cued again from there.
+		if ( count.cued ) {
+			const expected = count.cued.time + ( count.audio.currentTime - count.cued.at ) * rate;
+			if ( Math.abs( time - expected ) > 0.2 || rate !== count.cued.rate || loop.b !== count.cued.b ) {
+				stopCount();
+				count.held = time;
+			}
+			return;
+		}
+		// Called off where the music stands still, buffering or slow to seek, it waits for the music
+		// to move before it counts again, rather than clicking the same beat over and over.
+		if ( count.held !== null && Math.abs( time - count.held ) < 0.05 ) {
+			return;
+		}
+		count.held = null;
+		// Cued a moment before the bar, so its first click is never missed between two looks at the
+		// music. Not on a hidden page, nor with the sound held up by the system, either of which
+		// would leave the clicks out of time with the music.
+		if ( time < from - 0.15 || time >= loop.b || document.hidden || sound()?.state !== 'running' ) {
+			return;
+		}
+		const now = count.audio.currentTime;
+		count.cued = { time, at: now, rate, b: loop.b };
+		try {
+			for ( let n = 0; n < bar; n++ ) {
+				const wait = ( from + n * gap - time ) / rate;
+				if ( wait < -0.02 ) {
+					continue;
+				}
+				click( now + Math.max( 0, wait ), n === 0 );
+				count.timers.push( setTimeout( () => showBeat( n + 1 ), Math.max( 0, wait ) * 1000 ) );
+			}
+		} catch {}
+		count.timers.push( setTimeout( stopCount, ( ( loop.b - time ) / rate + 0.1 ) * 1000 ) );
+	}
+	// Calls a count off: the bar over, the music paused or moved out of it, the loop or the count
+	// turned off, or the song changed.
+	function stopCount() {
+		count.cued = null;
+		count.timers.forEach( clearTimeout );
+		count.timers = [];
+		for ( const tone of count.clicks ) {
+			try {
+				tone.stop();
+			} catch {}
+		}
+		count.clicks = [];
+		showBeat( 0 );
 	}
 	function watch() {
 		cancelAnimationFrame( loop.frame );
@@ -557,6 +694,7 @@
 		practice.slowed = false;
 		Object.assign( loop, { a: null, b: null, on: false, last: 0 } );
 		cancelAnimationFrame( loop.frame );
+		stopCount();
 	}
 
 	async function load( where, track ) {
@@ -592,6 +730,38 @@
 	if ( ! chart ) {
 		return;
 	}
+	// Practice this, in the ⋯ menu of a track the server marked as having a chart (riff_track): the
+	// Chords view, on that track. One playing already stays where it is; one in the queue is
+	// played from its place there, so the queue is kept; any other is played on its own.
+	function practiceOn( track, context ) {
+		const p = player();
+		if ( ! p ) {
+			return;
+		}
+		const id = String( track.id );
+		if ( String( p.current()?.id ?? '' ) !== id ) {
+			const queue = p.queue();
+			const at =
+				context?.where === 'queue' && String( queue[ context.index ]?.id ) === id
+					? context.index
+					: queue.findIndex( ( t ) => String( t?.id ) === id );
+			if ( at < 0 ) {
+				p.play( [ track ] );
+			} else {
+				p.play( queue, at );
+			}
+		}
+		p.openView( 'chords' );
+	}
+	window.wp?.hooks?.addFilter( 'riff.menu', 'riff-chords', ( items, track, context ) => {
+		if ( ! track?.chords || ! Array.isArray( items ) ) {
+			return items;
+		}
+		const item = { id: 'riff-chords-practice', label: config.practiceOn, run: () => practiceOn( track, context ) };
+		// Before Go to post, which leaves the page.
+		const at = items.findIndex( ( i ) => i?.id === 'post' );
+		return at < 0 ? [ ...items, item ] : [ ...items.slice( 0, at ), item, ...items.slice( at ) ];
+	} );
 	// The view, filled as it opens and again as the track changes while it is open.
 	document.addEventListener( 'riff:view', ( e ) => {
 		if ( e.detail?.id !== 'chords' ) {
@@ -612,5 +782,8 @@
 		follow( time );
 	} );
 	document.addEventListener( 'riff:play', watch );
-	document.addEventListener( 'riff:pause', () => cancelAnimationFrame( loop.frame ) );
+	document.addEventListener( 'riff:pause', () => {
+		cancelAnimationFrame( loop.frame );
+		stopCount();
+	} );
 } )();

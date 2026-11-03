@@ -5,7 +5,7 @@
  * playwright.config.js). The recording is one of the public-domain fixtures; the chart is
  * placeholder words, not that piece's chords.
  *
- * Riff Chords needs Riff 5.8 (riff_register_view(), window.riff.speed()); a local site runs it on the
+ * Riff Chords needs Riff 5.9 (riff_register_view(), the riff.menu filter); a local site runs it on the
  * Riff it has, and anywhere else on an older Riff it stays out of the way and this spec skips.
  */
 const path = require( 'node:path' );
@@ -60,7 +60,7 @@ test.afterAll( async ( { requestUtils } ) => {
 async function openChords( page, isMobile, { row = 0, play = false } = {} ) {
 	await page.goto( postUrl );
 	const button = page.locator( '.riff-bar [data-riff-control="chords"]' );
-	test.skip( ( await button.count() ) === 0, 'Riff Chords waits for Riff 5.8' );
+	test.skip( ( await button.count() ) === 0, 'Riff Chords waits for Riff 5.9' );
 	await page.locator( '.riff-row' ).nth( row ).click();
 	if ( ! play ) {
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
@@ -124,6 +124,40 @@ test( 'slower keeps the pitch, and a new song is back at its own speed', async (
 	await expect( panel.getByRole( 'link', { name: 'Add chords' } ) ).toHaveAttribute( 'href', /post\.php\?action=edit&post=\d+/ );
 } );
 
+test( 'Practice this, in the menu of a track with a chart, opens the Chords view on it', async ( { page } ) => {
+	await page.goto( postUrl );
+	test.skip( ( await page.locator( '.riff-bar [data-riff-control="chords"]' ).count() ) === 0, 'Riff Chords waits for Riff 5.9' );
+	const menu = page.locator( '.riff-menu' );
+	const more = ( n ) => page.locator( '.riff-track' ).nth( n ).locator( '.riff-more-button' );
+	// None for the track without a chart.
+	await more( 1 ).click();
+	await expect( menu.getByRole( 'menuitem', { name: 'Play next' } ) ).toBeVisible();
+	await expect( menu.getByRole( 'menuitem', { name: 'Practice this' } ) ).toHaveCount( 0 );
+	await page.keyboard.press( 'Escape' );
+
+	// Before anything plays, from the row: the track plays, with its chords.
+	await more( 0 ).click();
+	const names = await menu.getByRole( 'menuitem' ).allTextContents();
+	expect( names.indexOf( 'Practice this' ) ).toBe( names.indexOf( 'Go to post' ) - 1 );
+	await menu.getByRole( 'menuitem', { name: 'Practice this' } ).click();
+	const view = page.locator( '.riff-np [data-riff-view="chords"]' );
+	await expect( view ).toBeVisible();
+	await expect( view.locator( '.riff-chords-chart .riff-chords-chord' ) ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
+	expect( await page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Underground' );
+
+	// With the album playing from the other track, the queue is kept and the charted one played from its place in it.
+	await page.evaluate( () => window.riff.closeView() );
+	await page.locator( '.riff-row' ).nth( 1 ).click();
+	await expect.poll( () => page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Trombone Detritus' );
+	const queue = await page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) );
+	await page.evaluate( () => window.riff.closeView() );
+	await more( 0 ).click();
+	await menu.getByRole( 'menuitem', { name: 'Practice this' } ).click();
+	await expect( view ).toBeVisible();
+	await expect.poll( () => page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Underground' );
+	expect( await page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) ) ).toEqual( queue );
+} );
+
 test( 'a part loops: past its end the song goes back to its start', async ( { page, isMobile } ) => {
 	const panel = await openChords( page, isMobile, { play: true } );
 	await panel.getByRole( 'button', { name: 'Loop Verse' } ).click();
@@ -137,6 +171,41 @@ test( 'a part loops: past its end the song goes back to its start', async ( { pa
 	await expect( panel.locator( '.riff-chords-loop-toggle' ) ).toHaveAttribute( 'aria-pressed', 'false' );
 	await page.evaluate( () => window.riff.seek( 3.5 ) );
 	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeGreaterThan( 4.2 );
+} );
+
+test( 'a count-in at the chart\'s tempo: the loop\'s last bar is counted out, and the music plays on into A', async ( {
+	page,
+	isMobile,
+} ) => {
+	const panel = await openChords( page, isMobile, { play: true } );
+	const countIn = panel.getByRole( 'button', { name: 'Count in' } );
+	const beat = panel.locator( '.riff-chords-count' );
+	// Not offered on an iPhone, as the iPhone-sized project presents itself, where Riff keeps the
+	// music out of Web Audio.
+	if ( /iP(hone|ad|od)/.test( await page.evaluate( () => navigator.userAgent ) ) ) {
+		await expect( panel.locator( '.riff-chords-count-in' ) ).toBeHidden();
+		return;
+	}
+	// Off until it is turned on.
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
+	await countIn.click();
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'true' );
+	await panel.getByRole( 'button', { name: 'Loop Verse' } ).click();
+	// The bar before B at four seconds is four beats at 90 BPM, from 1.33 seconds.
+	await page.evaluate( () => window.riff.seek( 1.5 ) );
+	await expect( beat ).toHaveText( /^[2-4]$/ );
+	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( true );
+	// It comes round to A without stopping, and the count is done.
+	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeLessThan( 1 );
+	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( true );
+	await expect( beat ).toBeEmpty();
+
+	// Turned off, the next round goes by without a count.
+	await countIn.click();
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
+	await page.evaluate( () => window.riff.seek( 2.5 ) );
+	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeLessThan( 1 );
+	await expect( beat ).toBeEmpty();
 } );
 
 test( 'the chords are drawn for a ukulele or a piano, and this browser keeps the choice', async ( {
