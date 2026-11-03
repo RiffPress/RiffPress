@@ -84,7 +84,8 @@
 <p>Make the post private, a draft, or password protected, and its tracks stay off the Listen page for visitors until you publish it.</p>
 
 <h2 id="many">Many albums at once</h2>
-<p>If you have a folder per album and your host gives you <a href="https://wp-cli.org/">WP-CLI</a>, <code>wp riff import</code> with the path to the folder uploads everything and gives each album a post. A cover image in the folder becomes the artwork. Run it again and it skips what it already imported; add <code>--dry-run</code> to see what it would do first.</p>
+<p>Most albums arrive as a zip. Upload the zip to the <kbd>Media Library</kbd>, as you would any file, and Riff unpacks it in the background and gives each album in it a draft post, ready to publish. A cover image beside the tracks becomes the artwork.</p>
+<p>If you have a folder per album and your host gives you <a href="https://wp-cli.org/">WP-CLI</a>, <code>wp riff import</code> with the path to the folder, or to a zip, uploads everything and gives each album a published post. Run it again and it skips what it already imported; add <code>--dry-run</code> to see what it would do first.</p>
 
 <div class="aside">Stuck? <a href="https://github.com/RiffPress/RiffPress/issues">Open an issue</a> and say what you tried. If something here is wrong or unclear, that is a bug in this page too.</div>
 </article>
