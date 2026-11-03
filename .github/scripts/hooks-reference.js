@@ -24,13 +24,20 @@ const SITE = path.join( ROOT, 'site', 'developers', 'hooks' );
 // The JavaScript hooks fire through emit() and filter() in the player, which prefix the name: in
 // its entry and in its sections under assets/player/.
 const PLAYER = path.join( PLUGIN, 'assets', 'riff.js' );
+const PLAYER_DIR = path.join( PLUGIN, 'assets', 'player' );
+// A call to either, bare as the player destructures them or as P.emit() and P.filter(), with a
+// literal name; an array's own .filter() is not one. The public surface check reads hooks with it.
+const JS_HOOK = /(?<![\w.])(?:P\.)?(emit|filter)\(\s*'([a-z0-9_]+)'/g;
 // The deploy fills {{commit}} with the SHA it publishes, so every link opens the code as deployed.
 const REPO = 'https://github.com/RiffPress/RiffPress/blob/{{commit}}/';
+
+// Folders no reference reads from: tests, and what a package manager or a build put there.
+const SKIPPED = [ 'tests', 'node_modules', 'vendor', 'build' ];
 
 function files( dir, ext ) {
 	const out = [];
 	for ( const entry of fs.readdirSync( dir, { withFileTypes: true } ) ) {
-		if ( [ 'tests', 'node_modules', 'vendor', 'build' ].includes( entry.name ) ) {
+		if ( SKIPPED.includes( entry.name ) ) {
 			continue;
 		}
 		const full = path.join( dir, entry.name );
@@ -148,7 +155,7 @@ function hooksIn( file ) {
 	const lines = src.split( '\n' );
 	const js = file.endsWith( '.js' );
 	const re = js
-		? /(?<![\w.])(emit|filter)\(\s*'([a-z0-9_]+)'/g
+		? JS_HOOK
 		: /(?<![\w>:$])(apply_filters_deprecated|do_action_deprecated|apply_filters|do_action)\(\s*'([a-z0-9_]+)'/g;
 	const found = [];
 	const claimed = new Map();
@@ -158,7 +165,7 @@ function hooksIn( file ) {
 			continue;
 		}
 		const line = src.slice( 0, m.index ).split( '\n' ).length - 1;
-		const open = m.index + m[ 1 ].length;
+		const open = m.index + m[ 0 ].indexOf( '(' );
 		const { args, end } = callArgs( src, open );
 		const last = src.slice( 0, end ).split( '\n' ).length - 1;
 		const action = js ? m[ 1 ] === 'emit' : m[ 1 ].startsWith( 'do_action' );
@@ -265,7 +272,7 @@ function parse( block ) {
 
 /** Every hook, in the order the reference lists them: PHP, then JavaScript; filters, then actions. */
 function collect() {
-	const hooks = [ ...files( PLUGIN, '.php' ), PLAYER, ...files( path.join( PLUGIN, 'assets', 'player' ), '.js' ) ].flatMap( hooksIn );
+	const hooks = [ ...files( PLUGIN, '.php' ), PLAYER, ...files( PLAYER_DIR, '.js' ) ].flatMap( hooksIn );
 	const rank = ( h ) => ( h.lang === 'php' ? 0 : 2 ) + ( h.type === 'filter' ? 0 : 1 );
 	hooks.sort( ( a, b ) => rank( a ) - rank( b ) || a.name.localeCompare( b.name ) || a.file.localeCompare( b.file ) || a.line - b.line );
 	// A JavaScript name can be both an action and a filter (riff.track is), so its page says which.
@@ -628,4 +635,21 @@ if ( require.main === module ) {
 	main();
 }
 
-module.exports = { cell, hooksIn, parse, render, collect, pages, problems, site, callArgs, docblockAbove, codeBlock, h2, top };
+/**
+ * Whether a file is one whose emit() and filter() calls fire riff.* hooks: the player's entry, or
+ * a script under assets/player/ that collect() reads.
+ *
+ * @param {string} file Path from the repository root.
+ * @return {boolean} True for the player's scripts.
+ */
+function isPlayer( file ) {
+	const full = path.join( ROOT, file );
+	if ( full === PLAYER ) {
+		return true;
+	}
+	// Only the folders below assets/player/ count: a checkout inside one named tests is still read.
+	const below = path.relative( PLAYER_DIR, full ).split( path.sep );
+	return '..' !== below[ 0 ] && full.endsWith( '.js' ) && ! below.some( ( dir ) => SKIPPED.includes( dir ) );
+}
+
+module.exports = { JS_HOOK, isPlayer, cell, hooksIn, parse, render, collect, pages, problems, site, callArgs, docblockAbove, codeBlock, h2, top };

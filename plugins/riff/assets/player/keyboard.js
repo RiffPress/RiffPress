@@ -30,13 +30,17 @@ export function keyboard( P ) {
 		};
 	}
 
-	// The plugin's shortcut a key press is for: a letter without Shift, whatever its case, or
-	// another character as it was typed.
+	// The plugin's shortcut a key press is for: a letter without Shift or any other key held,
+	// whatever its case, or another character as it was typed.
 	function pluginKey( e ) {
 		const key = e.key.toLowerCase();
 		if (
 			[ ...key ].length !== 1 ||
-			( key !== e.key.toUpperCase() && e.shiftKey )
+			( key !== e.key.toUpperCase() &&
+				( e.shiftKey ||
+					e.altKey ||
+					e.ctrlKey ||
+					e.getModifierState?.( 'AltGraph' ) ) )
 		) {
 			return null;
 		}
@@ -44,13 +48,17 @@ export function keyboard( P ) {
 	}
 
 	document.addEventListener( 'keydown', ( e ) => {
-		if (
-			! P.track() ||
-			e.defaultPrevented ||
-			e.ctrlKey ||
-			e.metaKey ||
-			e.altKey
-		) {
+		// AltGr types the marks on many keyboards, [ and ] as AltGr+8 and 9 on a German one, and
+		// Windows reports it as Ctrl and Alt. Where the browser says AltGr made the character, the
+		// press can only be a plugin's mark. Alt and Option alone stay the browser's and the
+		// system's: which character a key types without them is the layout's, and a page can't
+		// know it.
+		const typed =
+			! e.metaKey &&
+			[ ...e.key ].length === 1 &&
+			!! e.getModifierState?.( 'AltGraph' );
+		const chord = e.ctrlKey || e.metaKey || e.altKey;
+		if ( ! P.track() || e.defaultPrevented || ( chord && ! typed ) ) {
 			return;
 		}
 		if ( e.key === 'Escape' && ! np.hidden ) {
@@ -114,7 +122,14 @@ export function keyboard( P ) {
 		if ( ! P.shortcutsOn && ! e.shiftKey ) {
 			return;
 		}
-		if (
+		// A plugin's key is a single-key shortcut, Shift or not, so it is off where Riff's are.
+		const run = P.shortcutsOn && pluginKey( e );
+		if ( chord && ! run ) {
+			return;
+		}
+		if ( run ) {
+			run( P.track(), e );
+		} else if (
 			( e.key === ' ' && ! target.closest?.( 'button, a, summary' ) ) ||
 			( key === 'k' && ! e.shiftKey )
 		) {
@@ -136,12 +151,7 @@ export function keyboard( P ) {
 			P.press( 'prev' );
 			P.prev();
 		} else {
-			// A plugin's key is a single-key shortcut, Shift or not, so it is off where Riff's are.
-			const run = P.shortcutsOn && pluginKey( e );
-			if ( ! run ) {
-				return;
-			}
-			run( P.track(), e );
+			return;
 		}
 		e.preventDefault();
 	} );

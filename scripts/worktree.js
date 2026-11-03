@@ -3,17 +3,19 @@
  * Worktrees that work like the main checkout, so several people or agents can work on Riff at once.
  *
  * A worktree made with plain `git worktree add` has no node_modules or vendor, so the pre-commit
- * hook can't lint, and its wp-env would want the main checkout's ports. This gives each worktree
- * the main checkout's node_modules and vendor as links, and ports of its own in a gitignored
- * `.wp-env.override.json`, which wp-env, the hook and the Playwright config already read. wp-env
+ * hook can't lint, and its wp-env would want the main checkout's ports. This links the main
+ * checkout's node_modules into each worktree and installs its vendor (a link would point outside
+ * what wp-env mounts, so PHPUnit in the container couldn't follow it), and `env` gives it ports of
+ * its own in a gitignored `.wp-env.override.json`, which wp-env, the hook and the Playwright config
+ * already read. wp-env
  * keys its containers by the config's path, so `npm run wt -- env` in a worktree starts a site of
  * its own, mounting that worktree's code, and its suite tests that branch rather than whatever the
  * main checkout has checked out.
  *
  * Usage:
  *   npm run wt -- new <branch>   A worktree in .claude/worktrees/ on a new branch from origin/main, pushed.
- *   npm run wt -- setup          Links and ports for the worktree you're in (made by any tool).
- *   npm run wt -- env            Start this worktree's own wp-env and seed its tests site.
+ *   npm run wt -- setup          node_modules and vendor for the worktree you're in (made by any tool).
+ *   npm run wt -- env            Ports of its own, then start this worktree's wp-env and seed both sites.
  *   npm run wt -- list           Every worktree: branch, ports, uncommitted, unpushed, pull request.
  *   npm run wt -- prune [--yes]  Remove worktrees whose pull request merged or closed, with nothing
  *                                uncommitted or unpushed, and their wp-env. Lists only, without --yes.
@@ -37,7 +39,7 @@ const tryGit = ( args, cwd ) => {
 // The main checkout is the one whose .git is the common directory every worktree shares.
 const MAIN = path.dirname( path.resolve( git( [ 'rev-parse', '--git-common-dir' ] ) ) );
 const HOME = path.join( MAIN, '.claude', 'worktrees' );
-const SHARED = [ 'node_modules', 'vendor' ];
+const SHARED = [ 'node_modules' ];
 
 // The main checkout keeps 8890/8891. Worktrees take a pair from here up, found from the path so a
 // worktree keeps its ports across restarts, and moved on past any port something else holds.
@@ -48,12 +50,14 @@ const free = ( port ) =>
 	new Promise( ( resolve ) => {
 		const server = net.createServer();
 		server.once( 'error', () => resolve( false ) );
-		server.listen( port, '127.0.0.1', () => server.close( () => resolve( true ) ) );
+		// No host: the wildcard address, where Docker Desktop publishes ports. macOS lets a listen on
+		// 127.0.0.1 succeed beside one of those, so asking there would hand out a port in use.
+		server.listen( port, () => server.close( () => resolve( true ) ) );
 	} );
 
 const takenByWorktrees = () => {
 	const taken = new Set();
-	for ( const { dir } of worktrees() ) {
+	for ( const { dir } of [ { dir: MAIN }, ...worktrees() ] ) {
 		const ports = readOverride( dir );
 		if ( ports.port ) {
 			taken.add( ports.port );
@@ -108,12 +112,28 @@ async function setup( dir ) {
 			fs.symlinkSync( path.relative( dir, path.join( MAIN, name ) ), link );
 		}
 	}
+	const vendor = path.join( dir, 'vendor' );
+	// An earlier setup linked vendor too; inside the container that link leads nowhere.
+	if ( fs.lstatSync( vendor, { throwIfNoEntry: false } )?.isSymbolicLink() ) {
+		fs.unlinkSync( vendor );
+	}
+	if ( ! fs.existsSync( vendor ) ) {
+		const result = spawnSync( 'composer', [ 'install', '--quiet', '--no-interaction' ], { cwd: dir, stdio: 'inherit' } );
+		if ( result.status !== 0 ) {
+			throw new Error( 'composer install failed' );
+		}
+	}
+	console.log( `${ dir }: node_modules linked, vendor installed` );
+}
+
+// Ports only for a worktree that runs a site, so worktrees that never start one don't use up the pool.
+async function claimPorts( dir ) {
 	const override = readOverride( dir );
 	if ( ! override.port || ! override.testsPort ) {
 		Object.assign( override, await pickPorts( dir ) );
 		fs.writeFileSync( path.join( dir, '.wp-env.override.json' ), JSON.stringify( override, null, '\t' ) + '\n' );
 	}
-	console.log( `${ dir }: node_modules and vendor linked, wp-env on ${ override.port } and tests on ${ override.testsPort }` );
+	return override;
 }
 
 async function create( branch ) {
@@ -138,7 +158,9 @@ function start( dir ) {
 		}
 	};
 	npx( [ 'wp-env', 'start' ] );
-	npx( [ 'wp-env', 'run', 'tests-cli', 'wp', 'eval-file', 'wp-content/riff/packages/fixtures/seed.php' ] );
+	for ( const container of [ 'cli', 'tests-cli' ] ) {
+		npx( [ 'wp-env', 'run', container, 'wp', 'eval-file', 'wp-content/riff/packages/fixtures/seed.php' ] );
+	}
 	const { port, testsPort } = readOverride( dir );
 	console.log( `site http://localhost:${ port }, tests http://localhost:${ testsPort }` );
 }
@@ -147,13 +169,14 @@ function prs() {
 	try {
 		const out = execFileSync(
 			'gh',
-			[ 'pr', 'list', '--state', 'all', '--limit', '500', '--json', 'number,headRefName,headRefOid,state' ],
+			[ 'pr', 'list', '--state', 'all', '--limit', '500', '--json', 'number,headRefName,headRefOid,state,isCrossRepository' ],
 			{ cwd: MAIN, encoding: 'utf8', stdio: [ 'ignore', 'pipe', 'ignore' ] }
 		);
 		const map = new Map();
 		// Newest first, so a branch name reused later keeps its latest pull request.
 		for ( const pr of JSON.parse( out ) ) {
-			if ( ! map.has( pr.headRefName ) ) {
+			// A fork's branch can share a name with one here and is never this worktree's.
+			if ( ! pr.isCrossRepository && ! map.has( pr.headRefName ) ) {
 				map.set( pr.headRefName, pr );
 			}
 		}
@@ -161,6 +184,14 @@ function prs() {
 	} catch {
 		return new Map();
 	}
+}
+
+// Ignored files remove --force would take with it that nothing rebuilds: a personal music library
+// in tests/ (AGENTS.md), Claude Code's per-person settings, local env files.
+const PRECIOUS = /^!! (tests\/|\.claude\/settings\.local\.json|\.env)/;
+function ignoredOwn( dir ) {
+	const out = tryGit( [ 'status', '--porcelain', '--ignored', '--untracked-files=normal' ], dir );
+	return out ? out.split( '\n' ).filter( ( line ) => PRECIOUS.test( line ) ).length : 0;
 }
 
 function describe( w, pulls ) {
@@ -186,9 +217,14 @@ function describe( w, pulls ) {
 	if ( pr && head === pr.headRefOid ) {
 		unpushed = 0;
 	}
+	// A branch name reused after an old pull request merged would match that pull request; only
+	// a worktree whose every commit the pull request had is done with it.
+	const covered = Boolean( pr ) && tryGit( [ 'merge-base', '--is-ancestor', 'HEAD', pr.headRefOid ], w.dir ) !== null;
 	return {
 		...w,
 		missing: dirty === null,
+		covered,
+		ignored: ignoredOwn( w.dir ),
 		dirty: dirty ? dirty.split( '\n' ).length : 0,
 		unpushed,
 		pushed: Boolean( upstream ),
@@ -207,6 +243,9 @@ function list() {
 		if ( w.dirty ) {
 			notes.push( `${ w.dirty } uncommitted` );
 		}
+		if ( w.ignored ) {
+			notes.push( `${ w.ignored } ignored to keep` );
+		}
 		if ( ! w.pushed && w.unpushed ) {
 			notes.push( `never pushed, ${ w.unpushed } commits` );
 		} else if ( w.unpushed ) {
@@ -221,11 +260,15 @@ function list() {
 }
 
 function prune( yes ) {
-	git( [ 'worktree', 'prune' ], MAIN );
 	const pulls = prs();
 	const done = worktrees()
 		.map( ( x ) => describe( x, pulls ) )
-		.filter( ( w ) => w.pr && w.pr.state !== 'OPEN' && ! w.dirty && ! w.unpushed && ! w.locked );
+		.filter( ( w ) => w.pr && w.pr.state !== 'OPEN' && w.covered && ! w.dirty && ! w.unpushed && ! w.ignored && ! w.locked );
+	if ( yes ) {
+		// Forget worktrees whose folder is gone. Not on a dry run: a folder on a drive that isn't
+		// mounted looks gone too.
+		git( [ 'worktree', 'prune' ], MAIN );
+	}
 	if ( ! done.length ) {
 		console.log( 'nothing to prune' );
 		return;
@@ -253,10 +296,12 @@ async function main() {
 		case 'new':
 			return create( rest[ 0 ] );
 		case 'setup':
-			return setup( rest[ 0 ] ? path.resolve( rest[ 0 ] ) : here );
+			// npm runs scripts from the package root; INIT_CWD is where it was run from.
+			return setup( rest[ 0 ] ? path.resolve( process.env.INIT_CWD || process.cwd(), rest[ 0 ] ) : here );
 		case 'env':
 			if ( path.resolve( here ) !== MAIN ) {
 				await setup( here );
+				await claimPorts( here );
 			}
 			return start( here );
 		case 'list':

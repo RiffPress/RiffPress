@@ -133,6 +133,16 @@ test( 'finds the player\'s JavaScript actions and filters under riff.<name>', ()
 	assert.equal( hooksIn( file ).length, 2, 'Array.prototype.filter is not a hook' );
 } );
 
+test( 'reads P.filter() and P.emit() as the same wrappers', () => {
+	const [ filter ] = hooksIn( tmpJs( "P.filter( 'menu', items, track, context );" ) );
+	assert.equal( filter.name, 'riff.menu' );
+	assert.equal( filter.type, 'filter' );
+	assert.equal( filter.arity, 3 );
+	const [ action ] = hooksIn( tmpJs( "P.emit( 'liked', { id } );" ) );
+	assert.equal( action.name, 'riff.liked' );
+	assert.equal( action.type, 'action' );
+} );
+
 test( 'counts the arguments a PHP hook passes, through nested calls and strings', () => {
 	const file = tmp( `<?php
 		/**

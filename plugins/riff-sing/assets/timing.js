@@ -1,13 +1,14 @@
 /* The timing Riff Lyrics, Riff Chords and Riff Sing share: a time read as LRC, ChordPro and WebVTT
- * write it, and the song followed as the player plays it, so a line, a chord and a syllable are
- * marked at the same moment and one can take its timing from another. Each format's own grammar
- * stays with the plugin that reads it.
+ * write it, and the song followed as the player plays it. A lyric line and a chord are marked by
+ * the same rule, a moment before their time; Riff Sing's lane reads where the song is and hears
+ * riff:time through it, and marks its syllables at their own time. Each format's own grammar stays with the
+ * plugin that reads it.
  *
  * The extensions' own, not Riff's API. This file is Riff Lyrics'; Riff Chords and Riff Sing each
  * carry a copy, which .github/scripts/timing.test.js keeps the same. Each plugin loads its own copy
  * just before its scripts, and they read window.riffTiming as they load, so a copy another plugin
- * loads later doesn't change theirs. Node's tests require it and read the same object from
- * globalThis. */
+ * loads later doesn't change theirs. Node's tests run it with a window of their own as globalThis,
+ * and read riffTiming from that. */
 ( ( scope ) => {
 	// A time in brackets, as LRC writes it and ChordPro borrows: mm:ss or mm:ss.xx.
 	const STAMP = /^\d{1,3}:\d{1,2}(?:\.\d{1,3})?$/;
