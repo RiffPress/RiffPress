@@ -278,7 +278,7 @@ browser asks to save data; a site makes the song first with the `riff_video_firs
 
 ## Design
 
-In a window with room for the sidebar the Listen app is laid out as a desktop streaming app is: back and forward, home and search across the top, the library and the view as panels on black, and the player bar along the bottom with the seek line under the controls. A narrower window keeps the touch layout, whatever points at it, so a phone, a tablet and a car's screen are laid out alike. The choice is made once, from the window's size and shape, in `standalone.css` (`--riff-frame`). It's all in Riff's ivory, a piano key's cream. [DESIGN.md](../DESIGN.md) has the rest.
+In a window with room for the sidebar the Listen app is laid out as a desktop streaming app is: back and forward, home and search across the top, the library and the view as panels on black, and the player bar along the bottom with the seek line under the controls. A narrower window keeps the touch layout, whatever points at it, so a car's screen is laid out as a phone is. The choice is made once, in `standalone.css` (`--riff-frame`), and the page's script reads it from there. It's all in Riff's ivory, a piano key's cream. [DESIGN.md](../DESIGN.md) has the rest.
 
 ## Folding phones and phones on their side
 

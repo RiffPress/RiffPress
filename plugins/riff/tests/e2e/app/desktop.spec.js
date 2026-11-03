@@ -19,19 +19,45 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
+/**
+ * Marks the document as Riff's desktop app's preload does (packages/desktop/src/site-preload.js),
+ * as soon as the parser makes <html> and before the page's own scripts run.
+ *
+ * @param {import('@playwright/test').Page} page    The page.
+ * @param {string[]}                        classes The classes the app adds.
+ */
+const asTheApp = ( page, classes ) =>
+	page.addInitScript( ( names ) => {
+		const mark = () => document.documentElement.classList.add( ...names );
+		if ( document.documentElement ) {
+			mark();
+		} else {
+			new MutationObserver( ( records, observer ) => {
+				if ( document.documentElement ) {
+					observer.disconnect();
+					mark();
+				}
+			} ).observe( document, { childList: true } );
+		}
+	}, classes );
+
 test.describe( 'Standalone', () => {
 	test( 'in the desktop app the window does not stretch past its ends, and the view keeps its round corners', async ( {
 		page,
 		isMobile,
 	} ) => {
 		test.skip( isMobile, 'The desktop app\'s layout is for a wide window.' );
+		// What the app's preload marks the document with, before the page is parsed.
+		await asTheApp( page, [ 'riff-desktop' ] );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
-		// What the app's preload marks the document with.
-		await page.evaluate( () => document.documentElement.classList.add( 'riff-desktop' ) );
 		// A trackpad's stretch past the top would slide the view in its frame and show a square edge.
 		await expect( page.locator( 'html' ) ).toHaveCSS( 'overscroll-behavior-y', 'none' );
 		await expect( page.locator( '.riff-app-view' ) ).toHaveCSS( 'border-top-left-radius', '8px' );
+		// The app is in the desktop frame at any width, the window's size aside.
+		await page.setViewportSize( { width: 860, height: 500 } );
+		await expect( page.locator( 'html' ) ).not.toHaveAttribute( 'data-riff-frame', 'sidebar' );
+		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-frame\b/ );
 	} );
 
 	test( 'a window with a mouse but no room for the sidebar, as a car\'s screen is, keeps the touch layout without the frame, and gains the frame once it widens', async ( {
@@ -112,9 +138,9 @@ test.describe( 'Standalone', () => {
 	} ) => {
 		test.skip( isMobile, 'The desktop app\'s layout is for a wide window.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
+		// What the app's preload marks the document with, before the page is parsed.
+		await asTheApp( page, [ 'riff-desktop', 'riff-desktop-inset' ] );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
-		// What the app's preload marks the document with.
-		await page.evaluate( () => document.documentElement.classList.add( 'riff-desktop', 'riff-desktop-inset' ) );
 		await page.locator( '[data-riff-app-action="play"]' ).click();
 		await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
 		const np = page.locator( '.riff-np' );
