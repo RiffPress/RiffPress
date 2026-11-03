@@ -1,5 +1,23 @@
 # Changelog
 
+## [6.0.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.9.0...riff-v6.0.0) (2026-11-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Riff drops its desktop app, and the Listen app installed from the browser is its one app ([#865](https://github.com/RiffPress/RiffPress/issues/865))
+
+### Features
+
+* Riff drops its desktop app, and the Listen app installed from the browser is its one app ([#865](https://github.com/RiffPress/RiffPress/issues/865)) ([f870eda](https://github.com/RiffPress/RiffPress/commit/f870eda798843d09caceed9a6c976c207bf30c29))
+
+
+### Bug Fixes
+
+* **app:** standalone mode is laid out as sidebar, rail or tabs from one choice in its stylesheet, and the desktop frame shows where it is sidebar rather than wherever there is a mouse ([#858](https://github.com/RiffPress/RiffPress/issues/858)) ([28cb4f0](https://github.com/RiffPress/RiffPress/commit/28cb4f0897a054df038e90607d4882b69fcdb403))
+* **player:** a song pressed in a list that opens as its video opens Now Playing on the picture and plays ([#859](https://github.com/RiffPress/RiffPress/issues/859)) ([f16aa4b](https://github.com/RiffPress/RiffPress/commit/f16aa4b0c9880a4dd6193c441cdf2a95d6f0db93))
+* **player:** Go to post opens a new window in the desktop app and the installed Listen app ([#860](https://github.com/RiffPress/RiffPress/issues/860)) ([5226ccf](https://github.com/RiffPress/RiffPress/commit/5226ccfd23e6c05d288255e85b0f6302714e2d04))
+
 ## [5.9.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.8.0...riff-v5.9.0) (2026-11-03)
 
 

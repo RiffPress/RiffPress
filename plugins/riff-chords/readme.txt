@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,10 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 It is built only on Riff's documented public API, as Riff Lyrics is.
 
 == Changelog ==
+
+= 0.3.0 =
+* A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
+* Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
 
 = 0.2.0 =
 * A count-in at the chart's tempo over a loop's last bar, off until it is turned on.
