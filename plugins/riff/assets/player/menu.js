@@ -1,6 +1,6 @@
 /* The track menu: … beside every row and every track in Up next. Riff's own features add to it
- * through internal.listen( 'menu' ): the Listen app a playlist's own items, Listen together its
- * Listen along. Any plugin adds to it through the riff.menu filter, which runs last. */
+ * through own.menu: the Listen app a playlist's own items (internal.listen( 'menu' )), Listen
+ * together its Listen along. Any plugin adds to it through the riff.menu filter, which runs last. */
 import { fmt } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
@@ -129,14 +129,20 @@ export function menu( P ) {
 		 *
 		 * @since 5.9.0
 		 *
-		 * @param {Object[]}     items           The items, each `{ id, label, run, href }`: `id` names it, `label` is what the listener reads, `run()` is called when it is picked, after the menu closes, and `href`, in place of `run`, makes it a link.
-		 * @param {Object}       track           The track the menu is for, in the shape `Tracks::schema()` describes.
-		 * @param {Object}       context         Where the menu was opened.
-		 * @param {string}       context.where   `row`, a row on the page, or `queue`, a track in Up next.
-		 * @param {Element|null} context.element For a row, its element, `[data-riff-track]`.
-		 * @param {number}       context.index   For Up next, the track's place in the queue, from 0.
+		 * @param {Object[]} items         The items, each `{ id, label, run, href }`: `id` names it, `label` is what the listener reads, `run()` is called when it is picked, after the menu closes, and `href`, in place of `run`, makes it a link.
+		 * @param {Object}   track         The track the menu is for, in the shape `Tracks::schema()` describes.
+		 * @param {Object}   context       Where the menu was opened.
+		 * @param {string}   context.where `row`, a row on the page, or `queue`, a track in Up next.
+		 * @param {number}   context.index For Up next, the track's place in the queue, from 0.
 		 */
-		const all = filter( 'menu', ours, t, context );
+		const all = filter(
+			'menu',
+			ours,
+			t,
+			at === undefined
+				? { where: 'row' }
+				: { where: 'queue', index: at }
+		);
 		return Array.isArray( all ) ? all : ours;
 	}
 

@@ -70,7 +70,6 @@ test.describe( 'Player', () => {
 			window.wp.hooks.addFilter( 'riff.menu', 'e2e', ( items, track, context ) => {
 				window.riffMenuSeen.push( {
 					where: context.where,
-					row: !! context.element?.matches?.( '[data-riff-track]' ),
 					index: context.index,
 					ids: items.map( ( i ) => i.id ),
 				} );
@@ -91,7 +90,7 @@ test.describe( 'Player', () => {
 			} );
 		} );
 		const menu = page.locator( '.riff-menu' );
-		const more = page.locator( '.riff-row' ).nth( 1 ).locator( '.riff-more-button' );
+		const more = page.locator( '.riff-track' ).nth( 1 ).locator( '.riff-more-button' );
 		await more.click();
 		const items = menu.getByRole( 'menuitem' );
 		await expect( items.nth( 0 ) ).toHaveText( 'Play next' );
@@ -105,7 +104,7 @@ test.describe( 'Player', () => {
 		await expect( more ).toBeFocused();
 		expect( await page.evaluate( () => window.riffPractised ) ).toBe( 'Trombone Detritus' );
 		const row = ( await page.evaluate( () => window.riffMenuSeen ) ).at( -1 );
-		expect( row ).toMatchObject( { where: 'row', row: true } );
+		expect( row ).toMatchObject( { where: 'row' } );
 		expect( row.ids.slice( 0, 2 ) ).toEqual( [ 'next', 'add' ] );
 
 		// In Up next, the context says where the track is in the queue.

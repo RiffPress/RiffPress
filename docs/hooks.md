@@ -189,7 +189,6 @@ Since 5.9.0. Fires in `plugins/riff/assets/player/menu.js`.
 | `track` | `Object` | The track the menu is for, in the shape `Tracks::schema()` describes. |
 | `context` | `Object` | Where the menu was opened. |
 | `context.where` | `string` | `row`, a row on the page, or `queue`, a track in Up next. |
-| `context.element` | `Element\|null` | For a row, its element, `[data-riff-track]`. |
 | `context.index` | `number` | For Up next, the track's place in the queue, from 0. |
 
 #### `riff.queue`
