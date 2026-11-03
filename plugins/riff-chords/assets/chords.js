@@ -5,7 +5,7 @@
  * speed, slower or faster with the pitch kept, through window.riff.speed(); transpose and, on a
  * guitar or ukulele, capo, which change the chords' names and fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(), with a count-in, a bar of clicks at the chart's tempo, before it goes round.
- * Each practice control has a key too, registered on the server (riff_register_shortcut()) and
+ * The loop, the speed and transpose have keys too, registered on the server (riff_register_shortcut()) and
  * given what it does with window.riff.shortcut() while the view shows a chart.
  * A track with a chart has Practice this in its ⋯ menu, through the riff.menu filter, which plays it
  * and opens the view on it.

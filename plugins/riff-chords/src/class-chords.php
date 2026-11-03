@@ -213,7 +213,7 @@ final class Chords {
 	 */
 	public static function shortcuts(): void {
 		$keys = array(
-			'chords-loop'   => array( 'a', __( 'Loop from here, then to here, then stop looping, in the Chords view', 'riff-chords' ) ),
+			'chords-loop'   => array( 'a', __( 'Set the loop’s start, then its end, then clear it, in the Chords view', 'riff-chords' ) ),
 			'chords-slower' => array( 's', __( 'Slower, in the Chords view', 'riff-chords' ) ),
 			'chords-faster' => array( 'f', __( 'Faster, in the Chords view', 'riff-chords' ) ),
 			'chords-down'   => array( 'd', __( 'Transpose down a semitone, in the Chords view', 'riff-chords' ) ),
