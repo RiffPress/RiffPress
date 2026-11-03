@@ -416,6 +416,62 @@ html.riff-desktop .riff-standalone .riff-app {
 	html.riff-desktop #riff .riff-side {
 		background: #000;
 	}
+
+	/* Up next, About or another panel narrows the frame beside it, as the
+	   body makes room for it. The frame is a container, so what it holds
+	   answers to the width left over rather than to the window's. */
+	html.riff-desktop .riff-standalone-main {
+		container: riff-frame / inline-size;
+	}
+
+	/* A frame too narrow for the full library and a page of tracks beside it
+	   (the library's 280px and about 32em for a row's title, length and
+	   actions), as a window around 1024px wide with a panel open, folds the
+	   library to its rail, as the music apps do. The listener's own choice
+	   is kept: closing the panel, or a wider window, unfolds it again. The
+	   toggle steps aside meanwhile, as there is nothing for it to open. */
+	@container riff-frame (inline-size < 50em) {
+
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) {
+			--riff-desktop-side: 72px;
+		}
+
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-bar {
+			padding: 12px 4px;
+		}
+
+		html.riff-desktop .riff-standalone .riff-app .riff-app-brand,
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-library-head,
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-library-chips,
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-install {
+			display: none;
+		}
+
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab:not(.riff-app-home) {
+			flex-direction: column;
+			justify-content: center;
+			gap: 4px;
+			min-height: 72px;
+			padding: 0;
+			font-size: 10px;
+		}
+
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-item {
+			justify-content: center;
+		}
+
+		/* The names stay for a screen reader, as on the rail the listener
+		   folds. */
+		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-item-text {
+			display: block;
+			position: absolute;
+			overflow: hidden;
+			width: 1px;
+			height: 1px;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+	}
 }
 
 /* A view in the frame: a wash of the accent at the top of the view
