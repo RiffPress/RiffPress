@@ -252,9 +252,9 @@ class Test_Riff_Import extends Riff_TestCase {
 		$zip    = $this->zip_of(
 			array(
 				'Compositions/02 - Underground [underground].mp3' => '02 - Underground [underground].mp3',
-				'Compositions/cover.png'                         => 'cover.png',
-				'Compositions/notes.txt'                         => 'liner notes',
-				'__MACOSX/Compositions/._cover.png'              => 'resource fork',
+				'Compositions/cover.png'            => 'cover.png',
+				'Compositions/notes.txt'            => 'liner notes',
+				'__MACOSX/Compositions/._cover.png' => 'resource fork',
 			)
 		);
 
@@ -296,8 +296,8 @@ class Test_Riff_Import extends Riff_TestCase {
 		$name   = 'riff-escaped-' . wp_generate_password( 8, false ) . '.php';
 		$zip    = $this->zip_of(
 			array(
-				'../' . $name                      => '<?php echo "escaped";',
-				'../../' . $name                   => '<?php echo "escaped";',
+				'../' . $name                        => '<?php echo "escaped";',
+				'../../' . $name                     => '<?php echo "escaped";',
 				'02 - Underground [underground].mp3' => '02 - Underground [underground].mp3',
 			)
 		);
@@ -384,7 +384,7 @@ class Test_Riff_Import extends Riff_TestCase {
 	}
 
 	public function test_a_zip_imported_by_someone_leaves_a_video_they_cannot_edit_as_it_was(): void {
-		$dir   = $this->album_dir(
+		$dir = $this->album_dir(
 			'compositions',
 			array(
 				'01 - Intensities in Ten Cities [intensities].mp3',

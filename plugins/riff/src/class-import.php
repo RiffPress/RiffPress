@@ -311,7 +311,7 @@ final class Import {
 				'as'      => '',
 			)
 		);
-		$as = '' !== (string) $args['as'] ? (string) $args['as'] : $dir;
+		$as   = '' !== (string) $args['as'] ? (string) $args['as'] : $dir;
 
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
