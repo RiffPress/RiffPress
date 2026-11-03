@@ -51,7 +51,19 @@
 
 	// Until the player starts, window.riff is the #riff element, by its id.
 	const player = () => ( typeof window.riff?.time === 'function' ? window.riff : null );
-	const speak = ( text ) => window.wp?.a11y?.speak?.( text, 'polite' );
+	// What is said at one moment is said together: the live region keeps only the last thing put in
+	// it, so a duet's two singers ending a line at once, or the song's end, would lose all but one.
+	let saying = [];
+	let sayTimer = 0;
+	const speak = ( text ) => {
+		saying.push( text );
+		sayTimer ||= window.setTimeout( () => {
+			const all = saying.join( ' ' );
+			saying = [];
+			sayTimer = 0;
+			window.wp?.a11y?.speak?.( all, 'polite' );
+		}, 100 );
+	};
 	// %1$s, %2$s and %s in a translated string, and %% as a percent sign.
 	const fill = ( template, ...args ) => {
 		let n = 0;
@@ -175,6 +187,7 @@
 		const port = select( config.midiInput, 'riff-sing-port', ( id ) => {
 			if ( part.session?.kind === 'midi' ) {
 				part.session.port = id;
+				part.session.chosen = true;
 				part.session.held.length = 0;
 			}
 		} );
@@ -538,8 +551,10 @@
 			if ( s?.kind !== 'midi' ) {
 				return;
 			}
-			if ( duet() && ( ! s.port || ! keys.includes( s.port ) ) ) {
-				// The first singer the first input, the second the second, while there are two.
+			if ( duet() && ( ! s.chosen || ! keys.includes( s.port ) ) ) {
+				// The first singer the first input, the second the second, while there are two, and
+				// again as inputs come and go, until the singer chooses one.
+				s.chosen = s.chosen && keys.includes( s.port );
 				s.port = keys[ Math.min( part.index, keys.length - 1 ) ] || '';
 			}
 			const field = part.ui?.port.field;
