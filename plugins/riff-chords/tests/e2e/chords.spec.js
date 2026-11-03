@@ -146,6 +146,12 @@ test( 'a count-in at the chart\'s tempo: the loop\'s last bar is counted out, an
 	const panel = await openChords( page, isMobile, { play: true } );
 	const countIn = panel.getByRole( 'button', { name: 'Count in' } );
 	const beat = panel.locator( '.riff-chords-count' );
+	// Not offered on an iPhone, as the iPhone-sized project presents itself, where Riff keeps the
+	// music out of Web Audio.
+	if ( /iP(hone|ad|od)/.test( await page.evaluate( () => navigator.userAgent ) ) ) {
+		await expect( panel.locator( '.riff-chords-count-in' ) ).toBeHidden();
+		return;
+	}
 	// Off until it is turned on.
 	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
 	await countIn.click();
