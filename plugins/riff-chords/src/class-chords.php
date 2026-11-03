@@ -23,10 +23,11 @@ defined( 'ABSPATH' ) || exit;
  * register_post_meta(), shown and edited in the Media Library beside the file's other details,
  * and read through the media REST route as `riff_chords`. Everything it does in the player goes
  * through Riff's documented surface: `riff_register_view()` on the `riff_register` action, the
- * `riff_before_player` action, the `riff.view`, `riff.track`, `riff.time`, `riff.play` and
- * `riff.pause` actions, and `window.riff`'s `seek()`, `time()`, `playing()` and `speed()`. The
- * chart is a view of Now Playing, as the lyrics are: it follows the song, so it takes the whole
- * screen above the bar while it shows.
+ * `riff_before_player` action and the `riff_track` filter, the `riff.view`, `riff.track`,
+ * `riff.time`, `riff.play` and `riff.pause` actions, the `riff.menu` filter, and `window.riff`'s
+ * `seek()`, `time()`, `playing()`, `speed()`, `current()`, `queue()`, `play()` and `openView()`.
+ * The chart is a view of Now Playing, as the lyrics are: it follows the song, so it takes the
+ * whole screen above the bar while it shows.
  */
 final class Chords {
 
@@ -58,6 +59,7 @@ final class Chords {
 		add_action( 'init', array( self::class, 'meta' ) );
 		add_action( 'riff_register', array( self::class, 'view' ) );
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
+		add_filter( 'riff_track', array( self::class, 'track' ), 10, 2 );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 10, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
@@ -204,12 +206,28 @@ final class Chords {
 	}
 
 	/**
+	 * Marks a track whose file has a chart, `chords: true`, so the track menu offers Practice this
+	 * for it without asking the server first. The meta is read from the cache WordPress fills as
+	 * the file's details are read.
+	 *
+	 * @param array $track         The track.
+	 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
+	 * @return array
+	 */
+	public static function track( $track, $attachment_id ) {
+		if ( is_array( $track ) && (int) $attachment_id > 0 && '' !== self::get( (int) $attachment_id ) ) {
+			$track['chords'] = true;
+		}
+		return $track;
+	}
+
+	/**
 	 * Loads the scripts on pages where Riff's player renders, and nowhere else.
 	 */
 	public static function enqueue(): void {
 		wp_enqueue_script( 'riff-chords-timing', RIFF_CHORDS_URL . 'assets/timing.js', array(), RIFF_CHORDS_VERSION, true );
 		wp_enqueue_script( 'riff-chords-chart', RIFF_CHORDS_URL . 'assets/chart.js', array( 'riff-chords-timing' ), RIFF_CHORDS_VERSION, true );
-		wp_enqueue_script( 'riff-chords', RIFF_CHORDS_URL . 'assets/chords.js', array( 'riff-chords-timing', 'riff-chords-chart' ), RIFF_CHORDS_VERSION, true );
+		wp_enqueue_script( 'riff-chords', RIFF_CHORDS_URL . 'assets/chords.js', array( 'riff-chords-timing', 'riff-chords-chart', 'wp-hooks' ), RIFF_CHORDS_VERSION, true );
 		wp_add_inline_script(
 			'riff-chords',
 			'window.riffChords = ' . wp_json_encode(
@@ -219,6 +237,7 @@ final class Chords {
 					'idle'        => __( 'Play something to see its chords.', 'riff-chords' ),
 					'error'       => __( 'The chords could not load.', 'riff-chords' ),
 					'practice'    => __( 'Practice', 'riff-chords' ),
+					'practiceOn'  => __( 'Practice this', 'riff-chords' ),
 					'speed'       => __( 'Speed', 'riff-chords' ),
 					'slower'      => __( 'Slower', 'riff-chords' ),
 					'faster'      => __( 'Faster', 'riff-chords' ),
