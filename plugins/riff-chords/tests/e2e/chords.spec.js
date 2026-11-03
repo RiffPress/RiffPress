@@ -138,3 +138,41 @@ test( 'a part loops: past its end the song goes back to its start', async ( { pa
 	await page.evaluate( () => window.riff.seek( 3.5 ) );
 	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeGreaterThan( 4.2 );
 } );
+
+test( 'the chords are drawn for a ukulele or a piano, and this browser keeps the choice', async ( {
+	page,
+	isMobile,
+} ) => {
+	const panel = await openChords( page, isMobile );
+	await page.evaluate( () => window.riff.seek( 2.5 ) );
+	const now = panel.locator( '.riff-chords-now' );
+	await expect( now.locator( '.riff-chords-name' ) ).toHaveText( 'D' );
+	const instrument = panel.getByRole( 'group', { name: 'Instrument' } );
+	await expect( instrument.getByRole( 'button', { name: 'Guitar' } ) ).toHaveAttribute( 'aria-pressed', 'true' );
+
+	await instrument.getByRole( 'button', { name: 'Ukulele' } ).click();
+	await expect( instrument.getByRole( 'button', { name: 'Ukulele' } ) ).toHaveAttribute( 'aria-pressed', 'true' );
+	await expect( now.getByRole( 'img' ) ).toHaveAttribute( 'aria-label', 'D, from the G string: 2, 2, 2, open' );
+	await expect( now.locator( '.riff-chords-string' ) ).toHaveCount( 4 );
+
+	// A piano has no capo to set.
+	await instrument.getByRole( 'button', { name: 'Piano' } ).click();
+	await expect( now.getByRole( 'img' ) ).toHaveAttribute( 'aria-label', 'D, on the keys D, F#, A' );
+	await expect( now.locator( '.riff-chords-dot' ) ).toHaveCount( 3 );
+	await expect( panel.locator( '[data-riff-chords="capo"]' ) ).toBeHidden();
+
+	// Back on the page later, the piano is still chosen.
+	const again = await openChords( page, isMobile );
+	await expect( again.getByRole( 'group', { name: 'Instrument' } ).getByRole( 'button', { name: 'Piano' } ) ).toHaveAttribute( 'aria-pressed', 'true' );
+	await expect( again.locator( '.riff-chords-piano-key' ).first() ).toBeVisible();
+} );
+
+test( 'on a piano, a capo moves nothing: the chords are named as they sound', async ( { page, isMobile } ) => {
+	const panel = await openChords( page, isMobile );
+	await panel.getByRole( 'button', { name: 'Capo up a fret' } ).click();
+	await panel.getByRole( 'button', { name: 'Capo up a fret' } ).click();
+	const chords = panel.locator( '.riff-chords-chart .riff-chords-chord' );
+	await expect( chords ).toHaveText( [ 'F', 'Bb', 'C', 'Dm', 'Eb' ] );
+	await panel.getByRole( 'group', { name: 'Instrument' } ).getByRole( 'button', { name: 'Piano' } ).click();
+	await expect( chords ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
+} );

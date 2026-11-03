@@ -197,6 +197,59 @@
 		return best ? best.f : null;
 	}
 
+	// ---- Fingerings for a ukulele in standard tuning, G C E A with the G above middle C: the shape
+	// a ukulele chord chart gives for each root, by pitch class from C, written G string first.
+	// .github/scripts/riff-chords.test.js checks each sounds only its chord's notes.
+	const UKULELE = {
+		'': [ '0003', '1114', '2220', '0331', '4442', '2010', '3121', '0232', '5343', '2100', '3211', '4322' ],
+		m: [ '0333', '1104', '2210', '3321', '0432', '1013', '2120', '0231', '1342', '2000', '3111', '4222' ],
+		7: [ '0001', '1112', '2223', '3334', '1202', '2313', '3424', '0212', '1323', '0100', '1211', '2322' ],
+		m7: [ '3333', '1102', '2213', '3324', '0202', '1313', '2424', '0211', '1322', '0000', '1111', '2222' ],
+		maj7: [ '0002', '1113', '2224', '3335', '1302', '2413', '3524', '0222', '1333', '1100', '3210', '3322' ],
+		sus2: [ '0233', '1344', '2200', '3311', '4422', '0013', '1124', '0230', '1341', '2452', '3011', '4122' ],
+		sus4: [ '0013', '1124', '0230', '1341', '2452', '3011', '4122', '0233', '1344', '2200', '3311', '4422' ],
+	};
+
+	/**
+	 * Where to put the fingers for a chord on a ukulele, or null when there is no diagram for it.
+	 *
+	 * @param {string} name The chord, as it is to be played.
+	 * @return {Array<number>|null} Frets, G string first; 0 is open.
+	 */
+	function ukulele( name ) {
+		const c = read( name );
+		const shapes = c ? UKULELE[ QUALITY[ c.suffix ] ] : undefined;
+		return shapes ? frets( shapes[ c.root ] ) : null;
+	}
+
+	// ---- Keys, for a piano: the chord's notes stacked up from its root, within two octaves from C.
+	const INTERVALS = {
+		'': [ 0, 4, 7 ],
+		m: [ 0, 3, 7 ],
+		7: [ 0, 4, 7, 10 ],
+		m7: [ 0, 3, 7, 10 ],
+		maj7: [ 0, 4, 7, 11 ],
+		sus2: [ 0, 2, 7 ],
+		sus4: [ 0, 5, 7 ],
+	};
+
+	/**
+	 * The keys a chord is played on, or null when there is no diagram for it.
+	 *
+	 * @param {string} name The chord, as it is to be played.
+	 * @return {Array<{key: number, note: string}>|null} Each key, in semitones up from the lower C,
+	 *     with its note's name, spelled with flats in a chord that reads in flats.
+	 */
+	function keys( name ) {
+		const c = read( name );
+		const steps = c ? INTERVALS[ QUALITY[ c.suffix ] ] : undefined;
+		if ( ! steps ) {
+			return null;
+		}
+		const names = c.flat || flatKey( name ) ? FLATS : SHARPS;
+		return steps.map( ( s ) => ( { key: c.root + s, note: names[ ( c.root + s ) % 12 ] } ) );
+	}
+
 	// ---- The chart.
 	const DIRECTIVE = /^\s*\{\s*([a-z_]+)(?:\s*[:\s]\s*(.*?))?\s*\}\s*$/i;
 	const ALIAS = {
@@ -376,5 +429,5 @@
 		return { meta, sections, chords, timed: chords.length > 0 };
 	}
 
-	window.riffChordsChart = { parse, read, transpose, shape, flatKey };
+	window.riffChordsChart = { parse, read, transpose, shape, ukulele, keys, flatKey };
 } )();

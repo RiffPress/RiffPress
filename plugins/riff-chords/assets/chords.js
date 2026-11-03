@@ -1,7 +1,7 @@
 /* Riff Chords: fills the Chords view of Now Playing, registered on the server as Riff registers its
  * own (riff_register_view()), with the chord chart kept on the track's file,
  * from the media REST route, and gives the listener what they need to play along: the chord being
- * played, drawn as a guitar fingering, with the next one; the speed, slower or faster with the
+ * played, drawn as a guitar or ukulele fingering or on a piano's keys, with the next one; the speed, slower or faster with the
  * pitch kept, through window.riff.speed(); transpose and capo, which change the chords' names and
  * fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
@@ -23,6 +23,14 @@
 	const practice = { id: 0, steps: 0, capo: 0, capoFor: 0, slowed: false };
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
 	let duration = 0;
+
+	// The instrument the chords are drawn for, which the listener chooses and this browser keeps.
+	const INSTRUMENTS = [ 'guitar', 'ukulele', 'piano' ];
+	const KEPT = 'riff-chords:instrument';
+	let instrument = 'guitar';
+	try {
+		instrument = INSTRUMENTS.includes( localStorage.getItem( KEPT ) ) ? localStorage.getItem( KEPT ) : 'guitar';
+	} catch {}
 
 	// Until the player starts, window.riff is the #riff element, by its id.
 	const player = () => ( typeof window.riff?.seek === 'function' ? window.riff : null );
@@ -81,12 +89,13 @@
 		}
 		return cache.get( id );
 	}
-
 	// ---- Names and fingerings, moved for transpose and capo. The chart's chords are fingered as
 	// written with its own capo ({capo: 2}); a capo moved from there, or the song transposed, moves
-	// the fingering by the difference, and the key is spelled for where the song now is.
+	// the fingering by the difference, and the key is spelled for where the song now is. A piano has
+	// no capo, so for one the chords are named as they sound.
 	const chartCapo = () => Math.max( 0, Math.min( 11, parseInt( song?.read.meta.capo, 10 ) || 0 ) );
-	const shift = () => practice.steps - ( practice.capo - chartCapo() );
+	const capoOn = () => ( instrument === 'piano' ? 0 : practice.capo );
+	const shift = () => practice.steps - ( capoOn() - chartCapo() );
 	const firstChord = () => song?.chords[ 0 ]?.piece.chord || '';
 	const keyNow = () => {
 		const key = song?.read.meta.key || firstChord();
@@ -98,30 +107,20 @@
 	};
 	const named = ( chord ) => chart.transpose( chord, shift(), shapesKey() );
 
-	// A chord's fingering as a diagram: six strings, four frets, a dot where each finger goes, and
-	// above the nut an o for an open string and an x for one not played. Its name says the same in
-	// words, low string first.
+	// A chord as a diagram for the instrument chosen: its fingering on a guitar or a ukulele, or
+	// its keys on a piano. Its name says the same in words.
 	const SVG = 'http://www.w3.org/2000/svg';
 	function diagram( name ) {
-		const frets = chart.shape( name );
 		const fig = el( 'figure', 'riff-chords-shape' );
-		if ( ! frets ) {
-			fig.append( el( 'figcaption', 'riff-chords-shape-none', fill( config.noShape, name ) ) );
-			return fig;
-		}
+		const svg = instrument === 'piano' ? keyboard( name ) : fretboard( name );
+		fig.append( svg || el( 'figcaption', 'riff-chords-shape-none', fill( config.noShape, name ) ) );
+		return fig;
+	}
+	function drawing( viewBox, label ) {
 		const svg = document.createElementNS( SVG, 'svg' );
-		const fretted = frets.filter( ( f ) => f );
-		const base = fretted.length && Math.max( ...fretted ) > 4 ? Math.min( ...fretted ) : 1;
-		svg.setAttribute( 'viewBox', '-14 0 74 66' );
+		svg.setAttribute( 'viewBox', viewBox );
 		svg.setAttribute( 'role', 'img' );
-		svg.setAttribute(
-			'aria-label',
-			fill(
-				config.fingering,
-				name,
-				frets.map( ( f ) => ( f === null ? config.muted : f === 0 ? config.open : String( f ) ) ).join( ', ' )
-			)
-		);
+		svg.setAttribute( 'aria-label', label );
 		const draw = ( tag, attrs, text ) => {
 			const node = document.createElementNS( SVG, tag );
 			for ( const [ k, v ] of Object.entries( attrs ) ) {
@@ -132,12 +131,33 @@
 			}
 			svg.append( node );
 		};
-		const x = ( string ) => 5 + string * 10;
-		for ( let s = 0; s < 6; s++ ) {
-			draw( 'line', { x1: x( s ), y1: 14, x2: x( s ), y2: 62, class: 'riff-chords-string' } );
+		return { svg, draw };
+	}
+
+	// A fingering: a line for each of the instrument's strings, four frets, a dot where each finger
+	// goes, and above the nut an o for an open string and an x for one not played. Its name gives
+	// the frets from a guitar's low string, or from a ukulele's G string.
+	function fretboard( name ) {
+		const uke = instrument === 'ukulele';
+		const frets = uke ? chart.ukulele( name ) : chart.shape( name );
+		if ( ! frets ) {
+			return null;
 		}
+		const wide = ( frets.length - 1 ) * 10;
+		const fretted = frets.filter( ( f ) => f );
+		const base = fretted.length && Math.max( ...fretted ) > 4 ? Math.min( ...fretted ) : 1;
+		const { svg, draw } = drawing(
+			`-14 0 ${ wide + 24 } 66`,
+			fill(
+				uke ? config.ukeFrets : config.fingering,
+				name,
+				frets.map( ( f ) => ( f === null ? config.muted : f === 0 ? config.open : String( f ) ) ).join( ', ' )
+			)
+		);
+		const x = ( string ) => 5 + string * 10;
+		frets.forEach( ( _, s ) => draw( 'line', { x1: x( s ), y1: 14, x2: x( s ), y2: 62, class: 'riff-chords-string' } ) );
 		for ( let f = 0; f <= 4; f++ ) {
-			draw( 'line', { x1: 5, y1: 14 + f * 12, x2: 55, y2: 14 + f * 12, class: f === 0 && base === 1 ? 'riff-chords-nut' : 'riff-chords-fret' } );
+			draw( 'line', { x1: 5, y1: 14 + f * 12, x2: 5 + wide, y2: 14 + f * 12, class: f === 0 && base === 1 ? 'riff-chords-nut' : 'riff-chords-fret' } );
 		}
 		if ( base > 1 ) {
 			draw( 'text', { x: -2, y: 24, 'text-anchor': 'end', class: 'riff-chords-base' }, String( base ) );
@@ -151,8 +171,41 @@
 				draw( 'circle', { cx: x( s ), cy: 14 + ( f - base + 0.5 ) * 12, r: 3.8, class: 'riff-chords-dot' } );
 			}
 		} );
-		fig.append( svg );
-		return fig;
+		return svg;
+	}
+
+	// The keys: two octaves from C, with the chord's notes, stacked up from its root, filled in. Its
+	// name gives the notes.
+	const WHITE = [ 0, 2, 4, 5, 7, 9, 11 ];
+	function keyboard( name ) {
+		const down = chart.keys( name );
+		if ( ! down ) {
+			return null;
+		}
+		const { svg, draw } = drawing( '0 0 99 46', fill( config.pianoKeys, name, down.map( ( k ) => k.note ).join( ', ' ) ) );
+		svg.classList.add( 'riff-chords-keys' );
+		const pressed = new Set( down.map( ( k ) => k.key ) );
+		const white = [];
+		const black = [];
+		for ( let k = 0; k < 24; k++ ) {
+			const octave = Math.floor( k / 12 ) * 7;
+			const at = WHITE.indexOf( k % 12 );
+			const key = { k, white: at >= 0 };
+			// A black key sits across the line after the white key below it.
+			key.x = key.white ? 0.5 + ( octave + at ) * 7 : 0.5 + ( octave + WHITE.indexOf( ( k % 12 ) - 1 ) + 1 ) * 7 - 2.25;
+			( key.white ? white : black ).push( key );
+		}
+		// The white keys first, so the black ones sit over them; a dot on each key the chord plays,
+		// as a fingering has one where each finger goes.
+		for ( const key of [ ...white, ...black ] ) {
+			const width = key.white ? 7 : 4.5;
+			const height = key.white ? 45 : 28;
+			draw( 'rect', { x: key.x, y: 0.5, width, height, rx: 1, class: `riff-chords-piano-key${ key.white ? '' : ' is-black' }` } );
+			if ( pressed.has( key.k ) ) {
+				draw( 'circle', { cx: key.x + width / 2, cy: height - 5, r: 2.2, class: 'riff-chords-dot' } );
+			}
+		}
+		return svg;
 	}
 
 	// ---- The panel's parts.
@@ -227,6 +280,25 @@
 			)
 		);
 		box.append( ...steppers );
+		const capo = steppers.at( -1 );
+		// The instrument the chords are drawn for, one of three, kept for the next visit.
+		const picker = el( 'div', 'riff-chords-instrument' );
+		picker.setAttribute( 'role', 'group' );
+		picker.setAttribute( 'aria-label', config.instrument || '' );
+		picker.append( el( 'span', 'riff-chords-label', config.instrument ) );
+		const picks = INSTRUMENTS.map( ( id ) => {
+			const pick = button( 'riff-chords-pick', config.instruments?.[ id ] || id, '', () => {
+				instrument = id;
+				try {
+					localStorage.setItem( KEPT, id );
+				} catch {}
+				paintTools();
+			} );
+			pick.dataset.riffChordsInstrument = id;
+			return pick;
+		} );
+		picker.append( ...picks );
+		box.prepend( picker );
 		// The loop: A where it starts, B where it ends, and Loop to turn it on and off.
 		const looper = el( 'div', 'riff-chords-loop' );
 		looper.setAttribute( 'role', 'group' );
@@ -259,6 +331,9 @@
 		box.append( looper );
 		box.paint = () => {
 			steppers.forEach( ( s ) => s.paint() );
+			// A piano has no capo.
+			capo.hidden = instrument === 'piano';
+			picks.forEach( ( p ) => p.setAttribute( 'aria-pressed', String( p.dataset.riffChordsInstrument === instrument ) ) );
 			a.textContent = loop.a === null ? 'A' : `A ${ clock( loop.a ) }`;
 			b.textContent = loop.b === null ? 'B' : `B ${ clock( loop.b ) }`;
 			b.disabled = loop.a === null;

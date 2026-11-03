@@ -243,8 +243,18 @@ final class Chords {
 					'noShape'     => __( 'No diagram for %s', 'riff-chords' ),
 					/* translators: 1: a chord, such as G; 2: the fret for each string from the lowest, such as "3, 2, open, open, open, 3". */
 					'fingering'   => __( '%1$s, from the low string: %2$s', 'riff-chords' ),
-					'open'        => _x( 'open', 'a guitar string played without a finger on it', 'riff-chords' ),
+					/* translators: 1: a chord, such as G; 2: the fret for each string from the G string, such as "open, 2, 3, 2". */
+					'ukeFrets'    => __( '%1$s, from the G string: %2$s', 'riff-chords' ),
+					/* translators: 1: a chord, such as G7; 2: the notes of its keys, such as "G, B, D, F". */
+					'pianoKeys'   => __( '%1$s, on the keys %2$s', 'riff-chords' ),
+					'open'        => _x( 'open', 'a string played without a finger on it', 'riff-chords' ),
 					'muted'       => _x( 'not played', 'a guitar string', 'riff-chords' ),
+					'instrument'  => __( 'Instrument', 'riff-chords' ),
+					'instruments' => array(
+						'guitar'  => __( 'Guitar', 'riff-chords' ),
+						'ukulele' => __( 'Ukulele', 'riff-chords' ),
+						'piano'   => __( 'Piano', 'riff-chords' ),
+					),
 					'sections'    => array(
 						'verse'  => __( 'Verse', 'riff-chords' ),
 						'chorus' => __( 'Chorus', 'riff-chords' ),
@@ -284,6 +294,11 @@ final class Chords {
 			. '#riff .riff-chords-shape{flex:none;margin:0;color:var(--riff-fg);text-align:center}'
 			. '#riff .riff-chords-shape svg{display:block;width:74px;height:66px;overflow:visible}'
 			. '#riff .riff-chords-now > .riff-chords-shape svg{width:96px;height:86px}'
+			// A piano's two octaves, wider than a fretboard is tall.
+			. '#riff .riff-chords-shape svg.riff-chords-keys{width:112px;height:52px}'
+			. '#riff .riff-chords-now > .riff-chords-shape svg.riff-chords-keys{width:148px;height:69px}'
+			. '.riff-chords-piano-key{fill:var(--riff-bg);stroke:var(--riff-fg-3);stroke-width:1}'
+			. '.riff-chords-piano-key.is-black{fill:var(--riff-fg-3)}'
 			. '.riff-chords-string,.riff-chords-fret{stroke:var(--riff-fg-3);stroke-width:1}'
 			. '.riff-chords-nut{stroke:var(--riff-fg);stroke-width:3}'
 			. '.riff-chords-dot{fill:var(--riff-accent)}'
@@ -300,9 +315,11 @@ final class Chords {
 			. '.riff-chords-stepper,.riff-chords-loop{display:flex;align-items:center;gap:4px}'
 			. '.riff-chords-label{margin-right:4px;color:var(--riff-fg-2);font-size:12px;font-weight:500;text-transform:uppercase}'
 			. '.riff-chords-value{min-width:3em;color:var(--riff-fg);font-size:14px;font-variant-numeric:tabular-nums;text-align:center}'
-			. '#riff .riff-chords-step,#riff .riff-chords-ab,#riff .riff-chords-loop-toggle,#riff .riff-chords-loop-section{all:unset;box-sizing:border-box;min-width:44px;height:44px;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-line);color:var(--riff-fg);cursor:pointer;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:44px;text-align:center}'
-			. '#riff .riff-chords-step:hover,#riff .riff-chords-ab:hover,#riff .riff-chords-loop-toggle:hover,#riff .riff-chords-loop-section:hover{background:var(--riff-hover)}'
-			. '#riff .riff-chords-loop-toggle[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
+			. '#riff .riff-chords-tools [hidden]{display:none}'
+			. '.riff-chords-instrument{display:flex;align-items:center;gap:4px}'
+			. '#riff .riff-chords-step,#riff .riff-chords-ab,#riff .riff-chords-pick,#riff .riff-chords-loop-toggle,#riff .riff-chords-loop-section{all:unset;box-sizing:border-box;min-width:44px;height:44px;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-line);color:var(--riff-fg);cursor:pointer;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:44px;text-align:center}'
+			. '#riff .riff-chords-step:hover,#riff .riff-chords-ab:hover,#riff .riff-chords-pick:hover,#riff .riff-chords-loop-toggle:hover,#riff .riff-chords-loop-section:hover{background:var(--riff-hover)}'
+			. '#riff .riff-chords-loop-toggle[aria-pressed="true"],#riff .riff-chords-pick[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
 			. '#riff .riff-chords-tools button:disabled{cursor:default;opacity:.4}'
 			. '#riff .riff-chords-tools button:focus-visible,#riff .riff-chords-chart button:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px}'
 			// The chart: each section under its name, each line its chords over its words.
