@@ -4,9 +4,8 @@
  * played, drawn as a guitar or ukulele fingering or on a piano's keys, with the next one; the speed, slower or faster with the
  * pitch kept, through window.riff.speed(); transpose and capo, which change the chords' names and
  * fingerings and not the music; and a loop, from A to B or around one section of the song, through
- * window.riff.seek(), with a count-in at the chart's tempo before it goes round, paused and played
- * again through window.riff.toggle(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
- * riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
+ * window.riff.seek(), with a count-in, a bar of clicks at the chart's tempo, before it goes round.
+ * It listens to the player's riff:view, riff:track, riff:time, riff:play and riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
  * Sing, both loaded before it. */
 ( () => {
@@ -23,10 +22,9 @@
 	// The listener's choices for the song showing; a new song starts afresh.
 	const practice = { id: 0, steps: 0, capo: 0, capoFor: 0, slowed: false };
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
-	// The count-in, off until the listener turns it on: its clicks and timers while it counts.
-	// `waiting` while the stop it asked for has yet to land; `undo` when the count was called off
-	// before it did, so the music plays on once it has.
-	const count = { on: false, audio: null, clicks: [], timers: [], waiting: false, undo: false };
+	// The count-in, off until the listener turns it on: its clicks and timers while a bar is counted,
+	// and where the music was when they were set going.
+	const count = { on: false, audio: null, clicks: [], timers: [], cued: null };
 	const Sound = window.AudioContext;
 	let duration = 0;
 
@@ -329,8 +327,8 @@
 		} );
 		const toggle = button( 'riff-chords-loop-toggle', config.loop, '', () => {
 			loop.on = ! loop.on && loop.a !== null && loop.b !== null;
-			if ( ! loop.on && counting() ) {
-				resume();
+			if ( ! loop.on ) {
+				stopCount();
 			}
 			loop.last = player()?.time() ?? 0;
 			watch();
@@ -342,9 +340,8 @@
 			count.on = ! count.on;
 			if ( count.on ) {
 				sound();
-			} else if ( counting() ) {
-				// Turned off mid-count, the music goes on from A now.
-				resume();
+			} else {
+				stopCount();
 			}
 			paintTools();
 		} );
@@ -545,22 +542,20 @@
 		if ( ! loop.on || loop.a === null || loop.b === null ) {
 			return;
 		}
-		if ( counting() ) {
-			return; // resume() picks up from where the music is when the bar is out.
-		}
+		cue( time );
 		if ( loop.last < loop.b && time >= loop.b ) {
+			player()?.seek( loop.a );
 			loop.last = loop.a;
-			if ( ! countIn() ) {
-				player()?.seek( loop.a );
-			}
 			return;
 		}
 		loop.last = time;
 	}
 
-	// ---- The count-in: when the loop comes round, the music stops at A, a bar of clicks plays at
-	// the chart's tempo, slowed or sped as the music is, the first of the bar higher, and the music
-	// starts again on the beat after the last. The clicks are made in the browser, with Web Audio.
+	// ---- The count-in: the loop's last bar before B counted out in clicks at the chart's tempo, the
+	// first of the bar higher, so the music comes round to A on the beat after the last, as a
+	// drummer counts a band back in. The music plays on under it; nothing is stopped or held. The
+	// clicks are made in the browser, with Web Audio, and timed on its clock from where the music
+	// is, at the speed it plays.
 	const tempo = () => {
 		const bpm = parseFloat( song?.read.meta.tempo );
 		return bpm >= 20 && bpm <= 400 ? bpm : 0;
@@ -570,7 +565,6 @@
 		const n = parseInt( String( song?.read.meta.time || '' ).split( '/' )[ 0 ], 10 );
 		return n >= 1 && n <= 12 ? n : 4;
 	};
-	const counting = () => count.waiting || count.timers.length > 0;
 	// The sound, made on the listener's tap, as a browser asks before a page plays one.
 	function sound() {
 		try {
@@ -599,75 +593,46 @@
 			tools.beat.textContent = n ? String( n ) : '';
 		}
 	}
-	// The loop has come round: the music is asked to stop, and the bar counts from when it has. A stop
-	// can take a moment to land, slowing to a halt on the turntable or held for those listening
-	// together, so nothing is counted, and the music not moved, until riff:pause says it has.
-	function countIn() {
-		const p = player();
-		// Not on a hidden page, whose timers run late and whose music may not be let start again,
-		// nor with the sound held up by the system, which would leave the clicks out of time.
-		if ( ! count.on || ! tempo() || ! p?.playing() || document.hidden || sound()?.state !== 'running' ) {
-			return false;
-		}
-		count.waiting = true;
-		count.undo = false;
-		// A stop that never lands, well past the longest a held one takes: the loop goes round as it
-		// would without a count.
-		count.timers.push( setTimeout( () => count.waiting && ( stopCount(), player()?.seek( loop.a ) ), 6000 ) );
-		p.toggle();
-		return true;
-	}
-	// The stop has landed: back to A, and the bar counted out from now.
-	function stopped() {
-		if ( ! count.waiting ) {
+	// Sets the bar's clicks going once the music is inside it, and calls them off if it leaves it:
+	// a seek back before it, or on past B. A loop shorter than a bar counts the beats that fit.
+	function cue( time ) {
+		const bpm = tempo();
+		if ( ! count.on || ! bpm || ! player()?.playing() ) {
 			return;
 		}
-		const undo = count.undo;
-		stopCount();
-		const p = player();
-		p?.seek( loop.a );
-		loop.last = loop.a;
-		if ( undo || ! p ) {
-			p?.toggle();
-			return;
-		}
-		const gap = 60 / ( tempo() * ( canSlow() ? p.speed() : 1 ) );
+		const gap = 60 / bpm;
 		const bar = beats();
-		try {
-			const start = count.audio.currentTime + 0.05;
-			for ( let n = 0; n < bar; n++ ) {
-				click( start + n * gap, n === 0 );
-				count.timers.push( setTimeout( () => showBeat( n + 1 ), ( 0.05 + n * gap ) * 1000 ) );
+		const from = loop.b - bar * gap;
+		if ( count.cued !== null ) {
+			if ( time < count.cued - 0.25 || time > loop.b + 0.25 ) {
+				stopCount();
 			}
-		} catch {
-			resume();
 			return;
 		}
-		count.timers.push( setTimeout( resume, ( 0.05 + bar * gap ) * 1000 ) );
+		// Not on a hidden page, nor with the sound held up by the system, either of which would leave
+		// the clicks out of time with the music.
+		if ( time < from || time >= loop.b || document.hidden || sound()?.state !== 'running' ) {
+			return;
+		}
+		const rate = canSlow() ? player().speed() : 1;
+		const now = count.audio.currentTime;
+		count.cued = time;
+		try {
+			for ( let n = 0; n < bar; n++ ) {
+				const wait = ( from + n * gap - time ) / rate;
+				if ( wait < -0.02 ) {
+					continue;
+				}
+				click( now + Math.max( 0, wait ), n === 0 );
+				count.timers.push( setTimeout( () => showBeat( n + 1 ), Math.max( 0, wait ) * 1000 ) );
+			}
+		} catch {}
+		count.timers.push( setTimeout( stopCount, ( ( loop.b - time ) / rate + 0.1 ) * 1000 ) );
 	}
-	// The count over, or called off: the music plays again from where it stopped, A, or from
-	// wherever the listener moved it to while it counted. Called off before the stop has landed,
-	// it plays on once it does.
-	function resume() {
-		if ( count.waiting ) {
-			count.undo = true;
-			return;
-		}
-		stopCount();
-		const p = player();
-		if ( ! p ) {
-			return;
-		}
-		loop.last = p.time();
-		if ( ! p.playing() ) {
-			p.toggle();
-		}
-	}
-	// Stops a count under way: the loop turned off, the song changed, or the music played again
-	// by the listener before the bar was out.
+	// Calls a count off: the bar over, the music paused or moved out of it, the loop or the count
+	// turned off, or the song changed.
 	function stopCount() {
-		count.waiting = false;
-		count.undo = false;
+		count.cued = null;
 		count.timers.forEach( clearTimeout );
 		count.timers = [];
 		for ( const tone of count.clicks ) {
@@ -763,12 +728,9 @@
 		check( time );
 		follow( time );
 	} );
-	document.addEventListener( 'riff:play', () => {
-		stopCount();
-		watch();
-	} );
+	document.addEventListener( 'riff:play', watch );
 	document.addEventListener( 'riff:pause', () => {
 		cancelAnimationFrame( loop.frame );
-		stopped();
+		stopCount();
 	} );
 } )();

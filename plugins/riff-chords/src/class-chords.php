@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
  * and read through the media REST route as `riff_chords`. Everything it does in the player goes
  * through Riff's documented surface: `riff_register_view()` on the `riff_register` action, the
  * `riff_before_player` action, the `riff.view`, `riff.track`, `riff.time`, `riff.play` and
- * `riff.pause` actions, and `window.riff`'s `seek()`, `time()`, `playing()`, `toggle()` and `speed()`. The
+ * `riff.pause` actions, and `window.riff`'s `seek()`, `time()`, `playing()` and `speed()`. The
  * chart is a view of Now Playing, as the lyrics are: it follows the song, so it takes the whole
  * screen above the bar while it shows.
  */
