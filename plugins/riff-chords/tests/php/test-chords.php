@@ -30,6 +30,43 @@ class Test_Riff_Chords extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'chords', Riff\Registry::views( 'side' ) );
 	}
 
+	public function test_the_practice_keys_are_registered_so_the_profile_lists_them(): void {
+		Riff\Registry::reset();
+		$keys = wp_list_pluck( Riff\Registry::shortcuts(), 'key' );
+		$this->assertSame(
+			array(
+				'chords-loop'   => 'a',
+				'chords-slower' => 's',
+				'chords-faster' => 'f',
+				'chords-down'   => 'd',
+				'chords-up'     => 'u',
+			),
+			$keys
+		);
+	}
+
+	public function test_a_track_whose_file_has_a_chart_is_marked_for_the_track_menu(): void {
+		$charted = self::attach( '02 - Underground [underground].mp3' );
+		update_post_meta( $charted, Chords::KEY, self::CHART );
+		$plain = self::attach( '03 - Trombone Detritus [detritus].mp3' );
+		$this->assertTrue( apply_filters( 'riff_track', array( 'id' => (string) $charted ), $charted, 0 )['chords'] ?? false );
+		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => (string) $plain ), $plain, 0 ) );
+		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => '' ), 0, 0 ), 'nor a file outside the Media Library' );
+
+		// A file in a draft is not a visitor's to read through the media route, so neither is its chart.
+		$draft = self::factory()->post->create( array( 'post_status' => 'draft' ) );
+		wp_update_post(
+			array(
+				'ID'          => $charted,
+				'post_parent' => $draft,
+			)
+		);
+		wp_set_current_user( 0 );
+		$this->assertArrayNotHasKey( 'chords', apply_filters( 'riff_track', array( 'id' => (string) $charted ), $charted, 0 ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertTrue( apply_filters( 'riff_track', array( 'id' => (string) $charted ), $charted, 0 )['chords'] ?? false, 'but an editor\'s' );
+	}
+
 	public function test_audio_gets_a_chords_field_and_images_do_not(): void {
 		$id = self::attach( '02 - Underground [underground].mp3' );
 		update_post_meta( $id, Chords::KEY, self::CHART );

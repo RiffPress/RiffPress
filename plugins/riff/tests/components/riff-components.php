@@ -418,13 +418,22 @@ if ( ! empty( $_COOKIE['riff_test_control'] ) ) {
 if ( ! empty( $_COOKIE['riff_test_shortcut'] ) ) {
 	add_action(
 		'riff_register',
-		static fn() => riff_register_shortcut(
-			'e2e-key',
-			array(
-				'key'   => 'o',
-				'label' => 'Say hello',
-			)
-		)
+		static function (): void {
+			riff_register_shortcut(
+				'e2e-key',
+				array(
+					'key'   => 'o',
+					'label' => 'Say hello',
+				)
+			);
+			riff_register_shortcut(
+				'e2e-mark',
+				array(
+					'key'   => ']',
+					'label' => 'Say goodbye',
+				)
+			);
+		}
 	);
 }
 

@@ -104,7 +104,7 @@ From the post. Every audio and video block in the post is the queue, in order, s
 
 = Can I add a whole folder of albums at once? =
 
-Yes. Upload a zip of an album, or of several, to the Media Library, and Riff unpacks it in the background and makes a draft album post for each folder in it that holds audio, for you to publish. With WP-CLI, `wp riff import` with the path to a folder or a zip does the same, and publishes the posts. Run either again and it skips what it already imported.
+Yes. Upload a zip of an album, or of several, to the Media Library, and Riff unpacks it in the background and makes a draft album post for each folder in it that holds audio, for you to publish, and attaches the zip to it. A zip it cannot import, such as one on a server whose PHP has no zip extension, stays unattached. With WP-CLI, `wp riff import` with the path to a folder or a zip does the same, and publishes the posts. Run either again and it skips what it already imported.
 
 = My files are lossless. Do listeners download all of that? =
 

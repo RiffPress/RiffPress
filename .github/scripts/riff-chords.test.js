@@ -109,6 +109,11 @@ test( 'a piano diagram is the chord stacked up from its root, spelled for its ke
 	assert.deepEqual( chart.keys( 'F7' ).map( ( k ) => k.note ), [ 'F', 'A', 'C', 'Eb' ] );
 	assert.deepEqual( chart.keys( 'F#m' ).map( ( k ) => k.note ), [ 'F#', 'A', 'C#' ] );
 	assert.deepEqual( chart.keys( 'Bbsus4' ).map( ( k ) => k.note ), [ 'Bb', 'Eb', 'F' ] );
+	assert.deepEqual( chart.keys( 'C7' ).map( ( k ) => k.note ), [ 'C', 'E', 'G', 'Bb' ] );
+	assert.deepEqual( chart.keys( 'Cm7' ).map( ( k ) => k.note ), [ 'C', 'Eb', 'G', 'Bb' ] );
+	assert.deepEqual( chart.keys( 'C#' ).map( ( k ) => k.note ), [ 'C#', 'E#', 'G#' ] );
+	assert.deepEqual( chart.keys( 'Fsus4' ).map( ( k ) => k.note ), [ 'F', 'Bb', 'C' ] );
+	assert.deepEqual( chart.keys( 'G#maj7' ).map( ( k ) => k.note ), [ 'G#', 'B#', 'D#', 'G' ] );
 	for ( const root of ROOTS ) {
 		for ( const [ quality, { may } ] of Object.entries( QUALITIES ) ) {
 			const down = chart.keys( root + quality );

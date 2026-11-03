@@ -5,8 +5,9 @@
  *
  * It listens to the player's riff:view, riff:time, riff:play and riff:ended events, which
  * Riff dispatches on its own element for any script, and reads where the song is through
- * window.riff.time(), the last two through timing.js, which it shares with Riff Lyrics and
- * Riff Chords; it needs nothing loaded before it but that, melody.js and midi.js.
+ * window.riff.time(). riff:time and the lane's time come through timing.js, which it shares with
+ * Riff Lyrics and Riff Chords; it needs nothing loaded before it but timing.js, melody.js, midi.js
+ * and wp-a11y.
  *
  * The microphone is opened only when the listener presses Sing with the microphone, and closed when
  * they press Stop, leave the view, close Now Playing or leave the page. Its sound goes to an

@@ -483,7 +483,7 @@ final class Sing {
 		if ( ! $post instanceof WP_Post || ! self::song( (string) $post->post_mime_type ) ) {
 			return $fields;
 		}
-		$fields[ self::FIELD ] = array(
+		$fields[ self::FIELD ]      = array(
 			'label' => __( 'Melody', 'riff-sing' ),
 			'input' => 'html',
 			'html'  => sprintf(
