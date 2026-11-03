@@ -59,7 +59,11 @@ export function rows( P ) {
 		row.addEventListener( 'click', () => {
 			P.press( 'row' );
 			if ( P.track()?.id === t.id && sameQueue() ) {
+				const resumes = P.el().paused;
 				P.toggle();
+				if ( resumes && P.isVideo() ) {
+					P.open();
+				}
 				return;
 			}
 			// Rows that are one page of a longer list name where the rest is, and the queue goes on
@@ -70,7 +74,9 @@ export function rows( P ) {
 				list.findIndex( ( r ) => r.row === row ),
 				{ more: holder ? parse( holder.dataset.riffMore ) : null }
 			);
-			if ( t.type === 'video' ) {
+			// A video is played to be seen, and so is a song that opens as its video (P.opening()):
+			// its picture is in Now Playing, which opens on it. A song played as the song stays here.
+			if ( P.isVideo() ) {
 				P.open();
 			}
 		} );
