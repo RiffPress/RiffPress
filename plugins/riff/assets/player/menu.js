@@ -183,6 +183,14 @@ export function menu( P ) {
 			  ( ! P.np.hidden && P.np ) ||
 			  root
 		).append( el );
+		// Opened from the page before anything played, it was one of the page's own children, which
+		// Now Playing makes inert while it covers them on a phone; inside the player it is not.
+		if ( el.parentElement !== document.body && el.inert ) {
+			el.inert = false;
+			el.removeAttribute( 'data-riff-inert' );
+			el.removeAttribute( 'data-riff-covered' );
+			el.style.removeProperty( 'contain-intrinsic-height' );
+		}
 		el.hidden = false;
 		const r = button.getBoundingClientRect();
 		const w = el.offsetWidth;
