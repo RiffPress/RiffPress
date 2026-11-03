@@ -431,10 +431,9 @@ html.riff-desktop .riff-standalone .riff-app {
 	   and the frame's gaps would leave the page under 31em, where a row's
 	   title starts giving way to its number, length and actions. Folding
 	   gives the page the library's room at once, so just under 50em it is
-	   wider than just over. The listener's own
-	   choice is kept: closing the panel, or a wider window, unfolds it
-	   again. The toggle steps aside meanwhile, as there is nothing for it to
-	   open. */
+	   wider than just over. The listener's own choice is kept: closing the
+	   panel, or a wider window, unfolds it again. The toggle steps aside
+	   meanwhile, as there is nothing for it to open. */
 	@container riff-frame (inline-size < 50em) {
 
 		html.riff-desktop .riff-standalone .riff-app:not([data-sidebar="mini"]) {
