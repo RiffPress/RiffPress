@@ -37,7 +37,10 @@ export function keyboard( P ) {
 		if (
 			[ ...key ].length !== 1 ||
 			( key !== e.key.toUpperCase() &&
-				( e.shiftKey || e.altKey || e.ctrlKey ) )
+				( e.shiftKey ||
+					e.altKey ||
+					e.ctrlKey ||
+					e.getModifierState?.( 'AltGraph' ) ) )
 		) {
 			return null;
 		}
