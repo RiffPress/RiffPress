@@ -164,6 +164,7 @@ test( 'a count-in at the chart\'s tempo: the loop stops at its start, counts a b
 	// Turned off while it counts, the music plays on from A at once.
 	await page.evaluate( () => window.riff.seek( 3.5 ) );
 	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 5000 } ).toBe( false );
+	await expect( panel.locator( '.riff-chords-count' ) ).toHaveText( /^[1-4]$/ );
 	await countIn.click();
 	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
 	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 1000 } ).toBe( true );

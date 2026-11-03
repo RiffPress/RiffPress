@@ -24,7 +24,9 @@
 	const practice = { id: 0, steps: 0, capo: 0, capoFor: 0, slowed: false };
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
 	// The count-in, off until the listener turns it on: its clicks and timers while it counts.
-	const count = { on: false, audio: null, clicks: [], timers: [] };
+	// `waiting` while the stop it asked for has yet to land; `undo` when the count was called off
+	// before it did, so the music plays on once it has.
+	const count = { on: false, audio: null, clicks: [], timers: [], waiting: false, undo: false };
 	const Sound = window.AudioContext;
 	let duration = 0;
 
@@ -493,7 +495,7 @@
 		const n = parseInt( String( song?.read.meta.time || '' ).split( '/' )[ 0 ], 10 );
 		return n >= 1 && n <= 12 ? n : 4;
 	};
-	const counting = () => count.timers.length > 0;
+	const counting = () => count.waiting || count.timers.length > 0;
 	// The sound, made on the listener's tap, as a browser asks before a page plays one.
 	function sound() {
 		try {
@@ -522,18 +524,40 @@
 			tools.beat.textContent = n ? String( n ) : '';
 		}
 	}
+	// The loop has come round: the music is asked to stop, and the bar counts from when it has. A stop
+	// can take a moment to land, slowing to a halt on the turntable or held for those listening
+	// together, so nothing is counted, and the music not moved, until riff:pause says it has.
 	function countIn() {
-		const bpm = tempo();
 		const p = player();
 		// Not on a hidden page, whose timers run late and whose music may not be let start again,
 		// nor with the sound held up by the system, which would leave the clicks out of time.
-		if ( ! count.on || ! bpm || ! p?.playing() || document.hidden || sound()?.state !== 'running' ) {
+		if ( ! count.on || ! tempo() || ! p?.playing() || document.hidden || sound()?.state !== 'running' ) {
 			return false;
 		}
-		const gap = 60 / ( bpm * ( canSlow() ? p.speed() : 1 ) );
+		count.waiting = true;
+		count.undo = false;
+		// A stop that never lands, well past the longest a held one takes: the loop goes round as it
+		// would without a count.
+		count.timers.push( setTimeout( () => count.waiting && ( stopCount(), player()?.seek( loop.a ) ), 6000 ) );
+		p.toggle();
+		return true;
+	}
+	// The stop has landed: back to A, and the bar counted out from now.
+	function stopped() {
+		if ( ! count.waiting ) {
+			return;
+		}
+		const undo = count.undo;
+		stopCount();
+		const p = player();
+		p?.seek( loop.a );
+		loop.last = loop.a;
+		if ( undo || ! p ) {
+			p?.toggle();
+			return;
+		}
+		const gap = 60 / ( tempo() * ( canSlow() ? p.speed() : 1 ) );
 		const bar = beats();
-		// The bar is set going before the music stops, so nothing can stop it and leave the music
-		// paused with no count to start it again.
 		try {
 			const start = count.audio.currentTime + 0.05;
 			for ( let n = 0; n < bar; n++ ) {
@@ -541,27 +565,23 @@
 				count.timers.push( setTimeout( () => showBeat( n + 1 ), ( 0.05 + n * gap ) * 1000 ) );
 			}
 		} catch {
-			stopCount();
-			return false;
+			resume();
+			return;
 		}
 		count.timers.push( setTimeout( resume, ( 0.05 + bar * gap ) * 1000 ) );
-		p.toggle();
-		p.seek( loop.a );
-		return true;
 	}
-	// The count over, or cut short: the music plays again from A. A pause that was slow to land, on
-	// the turntable or held for those listening together, may have left it just past B, so from
-	// there it goes back to A; from anywhere else the listener moved it to while it counted, it
-	// plays on from there, and the loop waits for it to come round, as it does after any seek.
+	// The count over, or called off: the music plays again from where it stopped, A, or from
+	// wherever the listener moved it to while it counted. Called off before the stop has landed,
+	// it plays on once it does.
 	function resume() {
+		if ( count.waiting ) {
+			count.undo = true;
+			return;
+		}
 		stopCount();
 		const p = player();
 		if ( ! p ) {
 			return;
-		}
-		const at = p.time();
-		if ( loop.on && loop.a !== null && loop.b !== null && at > loop.b - 0.5 && at < loop.b + 2 ) {
-			p.seek( loop.a );
 		}
 		loop.last = p.time();
 		if ( ! p.playing() ) {
@@ -571,6 +591,8 @@
 	// Stops a count under way: the loop turned off, the song changed, or the music played again
 	// by the listener before the bar was out.
 	function stopCount() {
+		count.waiting = false;
+		count.undo = false;
 		count.timers.forEach( clearTimeout );
 		count.timers = [];
 		for ( const tone of count.clicks ) {
@@ -670,5 +692,8 @@
 		stopCount();
 		watch();
 	} );
-	document.addEventListener( 'riff:pause', () => cancelAnimationFrame( loop.frame ) );
+	document.addEventListener( 'riff:pause', () => {
+		cancelAnimationFrame( loop.frame );
+		stopped();
+	} );
 } )();
