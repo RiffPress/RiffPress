@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.5.0...riff-lyrics-v1.6.0) (2026-11-03)
+
+
+### Features
+
+* **sing:** a track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times ([#855](https://github.com/RiffPress/RiffPress/issues/855)) ([e5ac358](https://github.com/RiffPress/RiffPress/commit/e5ac3588d9195112c0f810f1568bd20c9ad27fc1))
+
+
+### Bug Fixes
+
+* **sing:** through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed ([#857](https://github.com/RiffPress/RiffPress/issues/857)) ([404a7a1](https://github.com/RiffPress/RiffPress/commit/404a7a14c57fa3bdf45111e4f599624d7a11df51))
+
 ## [1.5.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.4.0...riff-lyrics-v1.5.0) (2026-11-02)
 
 
