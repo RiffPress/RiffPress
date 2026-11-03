@@ -23,11 +23,11 @@ defined( 'ABSPATH' ) || exit;
  * register_post_meta(), shown and edited in the Media Library beside the file's other details,
  * and read through the media REST route as `riff_chords`. Everything it does in the player goes
  * through Riff's documented surface: `riff_register_view()` and `riff_register_shortcut()` on the
- * `riff_register` action, the `riff_before_player` action and the `riff_track` filter, the `riff.view`, `riff.track`,
- * `riff.time`, `riff.play` and `riff.pause` actions, the `riff.menu` filter, and `window.riff`'s
- * `seek()`, `time()`, `playing()`, `speed()`, `shortcut()`, `current()`, `queue()`, `play()` and `openView()`.
- * The chart is a view of Now Playing, as the lyrics are: it follows the song, so it takes the
- * whole screen above the bar while it shows.
+ * `riff_register` action, the `riff_before_player` action and the `riff_track` filter, the
+ * `riff.view`, `riff.track`, `riff.time`, `riff.play` and `riff.pause` actions, the `riff.menu`
+ * filter, and `window.riff`'s `seek()`, `time()`, `playing()`, `speed()`, `shortcut()`,
+ * `current()`, `next()`, `play()` and `openView()`. The chart is a view of Now Playing, as the
+ * lyrics are: it follows the song, so it takes the whole screen above the bar while it shows.
  */
 final class Chords {
 
@@ -232,15 +232,23 @@ final class Chords {
 
 	/**
 	 * Marks a track whose file has a chart, `chords: true`, so the track menu offers Practice this
-	 * for it without asking the server first. The meta is read from the cache WordPress fills as
-	 * the file's details are read.
+	 * for it without asking the server first: only where the media route would hand the visitor
+	 * that chart, as a file in a draft or private post is not theirs to read. The meta is read
+	 * from the cache WordPress fills as the file's details are read.
 	 *
 	 * @param array $track         The track.
 	 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
 	 * @return array
 	 */
 	public static function track( $track, $attachment_id ) {
-		if ( is_array( $track ) && (int) $attachment_id > 0 && '' !== self::get( (int) $attachment_id ) ) {
+		$id = (int) $attachment_id;
+		if ( ! is_array( $track ) || $id <= 0 || '' === self::get( $id ) ) {
+			return $track;
+		}
+		static $media = null;
+		$post         = get_post( $id );
+		$media      ??= new \WP_REST_Attachments_Controller( 'attachment' );
+		if ( $post instanceof WP_Post && $media->check_read_permission( $post ) ) {
 			$track['chords'] = true;
 		}
 		return $track;

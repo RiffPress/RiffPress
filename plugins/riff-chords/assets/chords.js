@@ -787,33 +787,31 @@
 		return;
 	}
 	// Practice this, in the ⋯ menu of a track the server marked as having a chart (riff_track): the
-	// Chords view, on that track. One playing already stays where it is; one in the queue is
-	// played from its place there, so the queue is kept; any other is played on its own.
-	function practiceOn( track, context ) {
+	// Chords view, on that track. One playing already stays where it is. Any other plays now
+	// through Riff's own Play next and a skip to it, so the queue is kept as it was, its order,
+	// shuffled or not, and the pages of a long list still to come; with nothing loaded, it plays
+	// on its own.
+	function practiceOn( track, playNext ) {
 		const p = player();
 		if ( ! p ) {
 			return;
 		}
-		const id = String( track.id );
-		if ( String( p.current()?.id ?? '' ) !== id ) {
-			const queue = p.queue();
-			const at =
-				context?.where === 'queue' && String( queue[ context.index ]?.id ) === id
-					? context.index
-					: queue.findIndex( ( t ) => String( t?.id ) === id );
-			if ( at < 0 ) {
-				p.play( [ track ] );
+		if ( String( p.current()?.id ?? '' ) !== String( track.id ) ) {
+			if ( p.current() && playNext ) {
+				playNext();
+				p.next();
 			} else {
-				p.play( queue, at );
+				p.play( [ track ] );
 			}
 		}
 		p.openView( 'chords' );
 	}
-	window.wp?.hooks?.addFilter( 'riff.menu', 'riff-chords', ( items, track, context ) => {
+	window.wp?.hooks?.addFilter( 'riff.menu', 'riff-chords', ( items, track ) => {
 		if ( ! track?.chords || ! Array.isArray( items ) ) {
 			return items;
 		}
-		const item = { id: 'riff-chords-practice', label: config.practiceOn, run: () => practiceOn( track, context ) };
+		const next = items.find( ( i ) => i?.id === 'next' )?.run;
+		const item = { id: 'riff-chords-practice', label: config.practiceOn, run: () => practiceOn( track, next ) };
 		// Before Go to post, which leaves the page.
 		const at = items.findIndex( ( i ) => i?.id === 'post' );
 		return at < 0 ? [ ...items, item ] : [ ...items.slice( 0, at ), item, ...items.slice( at ) ];

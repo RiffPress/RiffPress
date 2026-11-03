@@ -192,7 +192,8 @@ test( 'Practice this, in the menu of a track with a chart, opens the Chords view
 	await expect( view.locator( '.riff-chords-chart .riff-chords-chord' ) ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
 	expect( await page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Underground' );
 
-	// With the album playing from the other track, the queue is kept and the charted one played from its place in it.
+	// With the album playing from the other track, the charted one plays next and is skipped to, the
+	// queue otherwise as it was.
 	await page.evaluate( () => window.riff.closeView() );
 	await page.locator( '.riff-row' ).nth( 1 ).click();
 	await expect.poll( () => page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Trombone Detritus' );
@@ -202,7 +203,7 @@ test( 'Practice this, in the menu of a track with a chart, opens the Chords view
 	await menu.getByRole( 'menuitem', { name: 'Practice this' } ).click();
 	await expect( view ).toBeVisible();
 	await expect.poll( () => page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Underground' );
-	expect( await page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) ) ).toEqual( queue );
+	expect( await page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) ) ).toEqual( [ ...queue, 'Underground' ] );
 } );
 
 test( 'a part loops: past its end the song goes back to its start', async ( { page, isMobile } ) => {
