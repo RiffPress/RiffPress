@@ -1,5 +1,6 @@
-/* The track menu: … beside every row and every track in Up next. The Listen app adds a playlist's
- * own items through internal.listen( 'menu' ). */
+/* The track menu: … beside every row and every track in Up next. Riff's own features add to it
+ * through own.menu: the Listen app a playlist's own items (internal.listen( 'menu' )), Listen
+ * together its Listen along. Any plugin adds to it through the riff.menu filter, which runs last. */
 import { fmt } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
@@ -8,7 +9,7 @@ import { fmt } from 'riff-player/helpers';
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function menu( P ) {
-	const { root, data, me, own } = P;
+	const { root, data, me, own, filter } = P;
 	const el = document.createElement( 'div' );
 	el.className = 'riff-menu';
 	el.setAttribute( 'role', 'menu' );
@@ -112,10 +113,37 @@ export function menu( P ) {
 						element: button?.closest( '[data-riff-track]' ) || null,
 					}
 				: { where: 'queue', index: at };
-		return [ ...own.menu ].reduce(
+		const ours = [ ...own.menu ].reduce(
 			( list, fn ) => fn( list, t, context ),
 			items
 		);
+		/**
+		 * Filters the items of the track menu, the … beside every row and every track in Up next.
+		 *
+		 * Return the items with yours added where they belong: the menu shows them in the order
+		 * given. Riff's own are, in order, `next` (Play next), `add` (Add to queue), `like`,
+		 * `playlist`, then in Up next `up`, `down` and `remove`, then `post` (Go to post), each
+		 * only where it applies, with what Riff's own features add, such as Listen along, among
+		 * them; find one by its `id` rather than its place. An item with neither `run` nor
+		 * `href`, or with no `label`, is left out.
+		 *
+		 * @since 5.9.0
+		 *
+		 * @param {Object[]} items         The items, each `{ id, label, run, href }`: `id` names it, `label` is what the listener reads, `run()` is called when it is picked, after the menu closes, and `href`, in place of `run`, makes it a link.
+		 * @param {Object}   track         The track the menu is for, in the shape `Tracks::schema()` describes.
+		 * @param {Object}   context       Where the menu was opened.
+		 * @param {string}   context.where `row`, a row on the page, or `queue`, a track in Up next.
+		 * @param {number}   context.index For Up next, the track's place in the queue, from 0.
+		 */
+		const all = filter(
+			'menu',
+			ours,
+			t,
+			at === undefined
+				? { where: 'row' }
+				: { where: 'queue', index: at }
+		);
+		return Array.isArray( all ) ? all : ours;
 	}
 
 	function openMenu( button, t, at, list = null ) {

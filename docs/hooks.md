@@ -175,6 +175,22 @@ The player fires these through `wp.hooks` when the page has it. Each action is a
 
 ### JavaScript filters
 
+#### `riff.menu`
+
+Filters the items of the track menu, the … beside every row and every track in Up next.
+
+Return the items with yours added where they belong: the menu shows them in the order given. Riff's own are, in order, `next` (Play next), `add` (Add to queue), `like`, `playlist`, then in Up next `up`, `down` and `remove`, then `post` (Go to post), each only where it applies, with what Riff's own features add, such as Listen along, among them; find one by its `id` rather than its place. An item with neither `run` nor `href`, or with no `label`, is left out.
+
+Since 5.9.0. Fires in `plugins/riff/assets/player/menu.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `items` | `Object[]` | The items, each `{ id, label, run, href }`: `id` names it, `label` is what the listener reads, `run()` is called when it is picked, after the menu closes, and `href`, in place of `run`, makes it a link. |
+| `track` | `Object` | The track the menu is for, in the shape `Tracks::schema()` describes. |
+| `context` | `Object` | Where the menu was opened. |
+| `context.where` | `string` | `row`, a row on the page, or `queue`, a track in Up next. |
+| `context.index` | `number` | For Up next, the track's place in the queue, from 0. |
+
 #### `riff.queue`
 
 Filters the tracks about to become the queue.
