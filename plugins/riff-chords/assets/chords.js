@@ -97,10 +97,11 @@
 	const capoOn = () => ( instrument === 'piano' ? 0 : practice.capo );
 	const shift = () => practice.steps - ( capoOn() - chartCapo() );
 	const firstChord = () => song?.chords[ 0 ]?.piece.chord || '';
-	// The key the chords are in, which on a piano, named as they sound, is the key they are named in.
+	// The key the song sounds in, whatever it is played on: the chart's key is written for its own
+	// capo, as its chords are, so it sounds that many frets up, and transpose moves it from there.
 	const keyNow = () => {
 		const key = song?.read.meta.key || firstChord();
-		return key ? chart.transpose( key, instrument === 'piano' ? shift() : practice.steps ) : '';
+		return key ? chart.transpose( key, practice.steps + chartCapo() ) : '';
 	};
 	const shapesKey = () => {
 		const key = song?.read.meta.key || firstChord();
