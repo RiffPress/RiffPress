@@ -277,8 +277,9 @@ final class Sing {
 	 * Loads the script on pages where Riff's player renders, and nowhere else.
 	 */
 	public static function enqueue(): void {
+		wp_enqueue_script( 'riff-sing-timing', RIFF_SING_URL . 'assets/timing.js', array(), RIFF_SING_VERSION, true );
 		wp_enqueue_script( 'riff-sing-melody', RIFF_SING_URL . 'assets/melody.js', array(), RIFF_SING_VERSION, true );
-		wp_enqueue_script( 'riff-sing', RIFF_SING_URL . 'assets/sing.js', array( 'riff-sing-melody', 'wp-a11y' ), RIFF_SING_VERSION, true );
+		wp_enqueue_script( 'riff-sing', RIFF_SING_URL . 'assets/sing.js', array( 'riff-sing-timing', 'riff-sing-melody', 'wp-a11y' ), RIFF_SING_VERSION, true );
 		wp_add_inline_script(
 			'riff-sing',
 			'window.riffSing = ' . wp_json_encode(

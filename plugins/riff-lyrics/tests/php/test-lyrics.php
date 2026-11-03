@@ -117,6 +117,7 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 		do_action( 'riff_before_player' );
 
 		$this->assertTrue( wp_script_is( 'riff-lyrics', 'enqueued' ) );
+		$this->assertTrue( wp_script_is( 'riff-lyrics-timing', 'enqueued' ), 'the timing it follows the song with comes with it' );
 		$this->assertStringContainsString( 'wp\/v2\/media\/', wp_scripts()->get_inline_script_data( 'riff-lyrics', 'before' ) );
 	}
 

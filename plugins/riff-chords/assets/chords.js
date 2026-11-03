@@ -6,16 +6,19 @@
  * fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
  * riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
- * chart.js, loaded before it. */
+ * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
+ * Sing, both loaded before it. */
 ( () => {
 	const config = window.riffChords || {};
 	const chart = window.riffChordsChart;
+	const timing = window.riffTiming; // timing.js, loaded before it.
 	const cache = new Map();
 	let showing = false;
 	let turn = 0; // So a slow answer for an earlier track cannot replace the current one's.
 	let song = null; // The chart showing: { id, read, chords: [{ time, piece, el, line }] }.
 	let current = -1;
-	let scrolledAt = 0; // When the listener last scrolled the chart by hand.
+	// A wheel or a finger on the chart is the listener's scrolling, which the following gives way to.
+	const scrolled = timing.scrolling( ( target ) => song && target.closest?.( '.riff-chords-chart' ) );
 	// The listener's choices for the song showing; a new song starts afresh.
 	const practice = { id: 0, steps: 0, capo: 0, capoFor: 0, slowed: false };
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
@@ -407,7 +410,7 @@
 		};
 		current = -1;
 		paintTools();
-		follow( player()?.time?.() ?? 0 );
+		follow( timing.now() );
 	}
 
 	// Marks the chord being played, and keeps its line in the middle of the chart, unless the
@@ -416,10 +419,7 @@
 		if ( ! song?.read.timed ) {
 			return;
 		}
-		let i = -1;
-		while ( i + 1 < song.chords.length && song.chords[ i + 1 ].time <= time + 0.05 ) {
-			i++;
-		}
+		const i = timing.at( song.chords, time );
 		if ( i === current ) {
 			return;
 		}
@@ -431,22 +431,9 @@
 		now?.el.classList.add( 'is-current' );
 		now?.row.setAttribute( 'aria-current', 'true' );
 		paintNow();
-		if ( now && showing && Date.now() - scrolledAt > 4000 && now.row !== was?.row ) {
-			centre( now.row );
+		if ( now && showing && ! scrolled() && now.row !== was?.row ) {
+			timing.centre( now.row, now.row.closest( '.riff-chords-chart' ) );
 		}
-	}
-
-	function centre( row ) {
-		const box = row.closest( '.riff-chords-chart' );
-		if ( ! box || box.scrollHeight <= box.clientHeight ) {
-			return;
-		}
-		const line = row.getBoundingClientRect();
-		const view = box.getBoundingClientRect();
-		box.scrollTo( {
-			top: box.scrollTop + ( line.top - view.top ) - ( view.height - line.height ) / 2,
-			behavior: matchMedia( '(prefers-reduced-motion: reduce)' ).matches ? 'auto' : 'smooth',
-		} );
 	}
 
 	// ---- The loop: when the music crosses B it goes back to A. Watched every frame while it plays,
@@ -542,24 +529,11 @@
 		startAfresh( Number( e.detail?.track?.id ) || 0 );
 		duration = 0;
 	} );
-	document.addEventListener( 'riff:time', ( e ) => {
-		const time = Number( e.detail?.time ) || 0;
-		duration = Number( e.detail?.duration ) || duration;
+	timing.listen( ( time, detail ) => {
+		duration = Number( detail.duration ) || duration;
 		check( time );
 		follow( time );
 	} );
 	document.addEventListener( 'riff:play', watch );
 	document.addEventListener( 'riff:pause', () => cancelAnimationFrame( loop.frame ) );
-	// A wheel or a finger on the chart is the listener's scrolling, which the following gives way to.
-	for ( const ev of [ 'wheel', 'touchmove' ] ) {
-		document.addEventListener(
-			ev,
-			( e ) => {
-				if ( song && e.target.closest?.( '.riff-chords-chart' ) ) {
-					scrolledAt = Date.now();
-				}
-			},
-			{ passive: true }
-		);
-	}
 } )();

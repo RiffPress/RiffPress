@@ -226,10 +226,11 @@ final class Lyrics {
 	}
 
 	/**
-	 * Loads the script on pages where Riff's player renders, and nowhere else.
+	 * Loads the scripts on pages where Riff's player renders, and nowhere else.
 	 */
 	public static function enqueue(): void {
-		wp_enqueue_script( 'riff-lyrics', RIFF_LYRICS_URL . 'assets/lyrics.js', array(), RIFF_LYRICS_VERSION, true );
+		wp_enqueue_script( 'riff-lyrics-timing', RIFF_LYRICS_URL . 'assets/timing.js', array(), RIFF_LYRICS_VERSION, true );
+		wp_enqueue_script( 'riff-lyrics', RIFF_LYRICS_URL . 'assets/lyrics.js', array( 'riff-lyrics-timing' ), RIFF_LYRICS_VERSION, true );
 		wp_add_inline_script(
 			'riff-lyrics',
 			'window.riffLyrics = ' . wp_json_encode(

@@ -1,7 +1,8 @@
 /* Riff Lyrics: a Lyrics view of Now Playing, registered on the server (riff_register_view()) as
  * Riff registers its own, filled with the lyrics WordPress keeps on the track's file, from the
  * media REST route. It follows the player's riff:view and riff:time events, which Riff dispatches
- * on its own element for any script. Timed lyrics follow the music: the line being sung is marked and kept in view, and a
+ * on its own element for any script. Timed lyrics follow the music, through timing.js, which Riff Chords and Riff Sing share: the
+ * line being sung is marked and kept in view, and a
  * tap on a line seeks to it through window.riff.seek(). They are read in the formats players and
  * taggers already write: LRC, with its [offset:] tag and Enhanced LRC's <mm:ss.xx> word times, whose
  * words light up as they are sung; WebVTT, the web's own timed text; and an ID3 SYLT frame, which
@@ -9,12 +10,16 @@
  * they are the song's transcript as they stand (WCAG 1.2.1 and 1.2.2). */
 ( () => {
 	const config = window.riffLyrics || {};
+	const timing = window.riffTiming; // timing.js, loaded before it.
 	const cache = new Map();
 	let showing = false;
 	let turn = 0; // So a slow answer for an earlier track cannot replace the current one's.
 	let lines = []; // The synced lines showing, each { time, el }, in time order.
 	let current = -1;
-	let scrolledAt = 0; // When the listener last scrolled the lyrics by hand.
+	// A wheel or a finger on the lyrics is the listener's scrolling, which the following gives way to.
+	const scrolled = timing.scrolling(
+		( target ) => lines.length && target.closest?.( '[data-riff-view="lyrics"]' )
+	);
 
 	// Until the player starts, window.riff is the #riff element, by its id.
 	const player = () => ( typeof window.riff?.seek === 'function' ? window.riff : null );
@@ -54,17 +59,14 @@
 	// A line's timestamps, [mm:ss.xx] or [mm:ss], one or more at its start, as LRC writes them;
 	// LRC's tag lines ([ar:...], [ti:...]) are not lyrics.
 	const STAMPS = /^\s*((?:\[\d{1,3}:\d{1,2}(?:\.\d{1,3})?\]\s*)+)(.*)$/;
-	const STAMP = /\[(\d{1,3}):(\d{1,2}(?:\.\d{1,3})?)\]/g;
+	const STAMP = /\[(\d{1,3}:\d{1,2}(?:\.\d{1,3})?)\]/g;
 	const TAG = /^\s*\[[a-z]+:[^\]]*\]\s*$/i;
 	// [offset:+250]: milliseconds the whole file is early by, so every line is shown that much sooner.
 	const OFFSET = /^\s*\[offset:\s*([+-]?\d+)\s*\]\s*$/im;
 	// Enhanced LRC's word times inside a line: <mm:ss.xx>word.
-	const WORD = /<(\d{1,3}):(\d{1,2}(?:\.\d{1,3})?)>/g;
+	const WORD = /<(\d{1,3}:\d{1,2}(?:\.\d{1,3})?)>/g;
 	// A WebVTT cue's timing line: [hh:]mm:ss.ttt --> [hh:]mm:ss.ttt, then any settings.
 	const CUE = /^\s*((?:\d+:)?\d{1,2}:\d{2}\.\d{3})\s+-->\s+((?:\d+:)?\d{1,2}:\d{2}\.\d{3})/;
-
-	const seconds = ( stamp ) =>
-		stamp.split( ':' ).reduce( ( total, part ) => total * 60 + Number( part ), 0 );
 
 	// A line's words with their times, when Enhanced LRC gives them, and the line's text without them.
 	function words( text, offset ) {
@@ -77,7 +79,7 @@
 			const end = marks[ i + 1 ]?.index ?? text.length;
 			const word = text.slice( m.index + m[ 0 ].length, end );
 			if ( word.trim() ) {
-				out.push( { time: Number( m[ 1 ] ) * 60 + Number( m[ 2 ] ) - offset, text: word } );
+				out.push( { time: timing.seconds( m[ 1 ] ) - offset, text: word } );
 			}
 		} );
 		const lead = text.slice( 0, marks[ 0 ].index );
@@ -104,9 +106,9 @@
 				.join( ' ' )
 				.replace( /[<>]/g, '' )
 				.trim();
-			const time = seconds( from );
+			const time = timing.seconds( from );
 			out.push( { time, text: said, gap: out.length > 0 && time - end >= 2, words: null } );
-			end = seconds( to );
+			end = timing.seconds( to );
 		}
 		return out.length ? out.map( ( line, i ) => ( { ...line, i } ) ) : null;
 	}
@@ -136,7 +138,7 @@
 			} else {
 				synced = true;
 				for ( const s of m[ 1 ].matchAll( STAMP ) ) {
-					last = Math.max( 0, Number( s[ 1 ] ) * 60 + Number( s[ 2 ] ) - offset );
+					last = Math.max( 0, timing.seconds( s[ 1 ] ) - offset );
 					out.push( { time: last, ...words( m[ 2 ].trim(), offset ), gap } );
 				}
 			}
@@ -215,7 +217,7 @@
 			return { time: line.time, el: li, words: sung };
 		} );
 		where.replaceChildren( list );
-		follow( player()?.time?.() ?? 0 );
+		follow( timing.now() );
 	}
 
 	// Marks the line whose time has come and keeps it in the middle of the view, unless the
@@ -224,12 +226,9 @@
 		if ( ! lines.length ) {
 			return;
 		}
-		let i = -1;
-		while ( i + 1 < lines.length && lines[ i + 1 ].time <= time + 0.05 ) {
-			i++;
-		}
+		const i = timing.at( lines, time );
 		for ( const w of lines[ i ]?.words || [] ) {
-			w.el.classList.toggle( 'is-sung', w.time <= time + 0.05 );
+			w.el.classList.toggle( 'is-sung', timing.due( w.time, time ) );
 		}
 		if ( i === current ) {
 			return;
@@ -243,31 +242,9 @@
 			return;
 		}
 		lines[ i ].el.setAttribute( 'aria-current', 'true' );
-		if ( showing && Date.now() - scrolledAt > 4000 ) {
-			centre( lines[ i ].el );
+		if ( showing && ! scrolled() ) {
+			timing.centre( lines[ i ].el );
 		}
-	}
-
-	function centre( el ) {
-		let box = el.parentElement;
-		while (
-			box &&
-			! (
-				box.scrollHeight > box.clientHeight &&
-				/auto|scroll/.test( getComputedStyle( box ).overflowY )
-			)
-		) {
-			box = box.parentElement;
-		}
-		if ( ! box ) {
-			return;
-		}
-		const line = el.getBoundingClientRect();
-		const view = box.getBoundingClientRect();
-		box.scrollTo( {
-			top: box.scrollTop + ( line.top - view.top ) - ( view.height - line.height ) / 2,
-			behavior: matchMedia( '(prefers-reduced-motion: reduce)' ).matches ? 'auto' : 'smooth',
-		} );
 	}
 
 	async function fill( where, track ) {
@@ -308,17 +285,5 @@
 			fill( e.detail.view, e.detail.track );
 		}
 	} );
-	document.addEventListener( 'riff:time', ( e ) => follow( Number( e.detail?.time ) || 0 ) );
-	// A wheel or a finger on the lyrics is the listener's scrolling, which the following gives way to.
-	for ( const ev of [ 'wheel', 'touchmove' ] ) {
-		document.addEventListener(
-			ev,
-			( e ) => {
-				if ( lines.length && e.target.closest?.( '[data-riff-view="lyrics"]' ) ) {
-					scrolledAt = Date.now();
-				}
-			},
-			{ passive: true }
-		);
-	}
+	timing.listen( follow );
 } )();
