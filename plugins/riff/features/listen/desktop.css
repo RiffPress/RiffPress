@@ -426,7 +426,8 @@ html.riff-desktop .riff-standalone .riff-app {
 
 	/* A frame too narrow for the full library and a page of tracks beside it
 	   (the library's 280px and about 32em for a row's title, length and
-	   actions), as a window around 1024px wide with a panel open, folds the
+	   actions; a container query can't read --riff-desktop-side, so the sum
+	   is written out), as a window around 1024px wide with a panel open, folds the
 	   library to its rail, as the music apps do. The listener's own choice
 	   is kept: closing the panel, or a wider window, unfolds it again. The
 	   toggle steps aside meanwhile, as there is nothing for it to open. */
