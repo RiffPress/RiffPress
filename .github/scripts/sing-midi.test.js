@@ -40,6 +40,17 @@ function track( events ) {
 	data.push( 0, 0xff, 0x2f, 0 );
 	return [ ...bytes( 'MTrk' ), ...u32( data.length ), ...data ];
 }
+// A track's events written exactly in the order given, for an order the sort in track() would change.
+function bytesOf( events ) {
+	const data = [];
+	let at = 0;
+	for ( const e of events ) {
+		data.push( ...vlq( e.tick - at ), ...e.data );
+		at = e.tick;
+	}
+	data.push( 0, 0xff, 0x2f, 0 );
+	return [ ...bytes( 'MTrk' ), ...u32( data.length ), ...data ];
+}
 const file = ( tracks, division = PPQ ) =>
 	new Uint8Array( [
 		...bytes( 'MThd' ),
@@ -213,6 +224,42 @@ test( 'a sax isn\'t a voice, and a comment isn\'t a lyric', () => {
 	);
 	assert.deepEqual( strip( chart ), [ [ [ 0, 0.5, 60, '' ] ] ] );
 	assert.equal( read( file( [ track( [ name( 'Tenor' ), ...note( 0, PPQ, 55 ) ] ), track( [ name( 'Piano' ), ...note( 0, PPQ, 48 ) ] ) ] ) ).low, 55, 'a choir\'s tenor is' );
+} );
+
+test( 'a repeated note is kept when its note on comes before the last one\'s note off', () => {
+	// Each note on written before the note off of the one before it, at the same tick.
+	const events = [ 0, 1, 2 ].flatMap( ( i ) => [
+		lyric( i * PPQ, 'abc'[ i ] ),
+		{ tick: i * PPQ, data: [ 0x90, 60, 100 ] },
+		...( i ? [ { tick: i * PPQ, data: [ 0x80, 60, 64 ] } ] : [] ),
+	] );
+	events.push( { tick: 3 * PPQ, data: [ 0x80, 60, 64 ] } );
+	const chart = read( file( [ track( [ name( 'Voice' ) ] ), [ ...bytesOf( events ) ] ] ) );
+	assert.deepEqual( chart.phrases[ 0 ].notes.map( ( n ) => [ n.start, n.end, n.text ] ), [
+		[ 0, 0.5, 'a ' ],
+		[ 0.5, 1, 'b ' ],
+		[ 1, 1.5, 'c ' ],
+	] );
+} );
+
+test( 'where the lyrics fall outranks a name, and a Rock Band chart\'s markers aren\'t sung', () => {
+	// One track named for the song, bass on channel 1 before the voice on channel 0.
+	const titled = read(
+		file( [
+			track( [
+				name( 'Unchained Melody' ),
+				...note( 0, 3 * PPQ, 36, { channel: 1 } ),
+				...tune( [ 60, 62 ] ),
+				lyric( 0, 'Oh' ),
+				lyric( PPQ, 'my' ),
+			] ),
+		] )
+	);
+	assert.deepEqual( titled.phrases[ 0 ].notes.map( ( n ) => n.midi ), [ 60, 62 ] );
+	// A phrase marker (105) over the phrase, as PART VOCALS has it.
+	const band = read( file( [ track( [ name( 'PART VOCALS' ), ...note( 0, 2 * PPQ, 105 ), ...tune( [ 60, 62 ] ) ] ) ] ) );
+	assert.deepEqual( band.phrases[ 0 ].notes.map( ( n ) => n.midi ), [ 60, 62 ] );
+	assert.equal( band.high, 62 );
 } );
 
 test( 'the voice read from a MIDI file is scored as an UltraStar chart is', () => {

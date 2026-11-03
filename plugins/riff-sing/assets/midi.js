@@ -5,11 +5,12 @@
  * Only what a melody needs is read: the tempo map, each track's name, its notes and its lyrics.
  *
  * Each channel of each track is a part, so a file with every instrument on one track has them apart.
- * The vocal part is the first on a track named for a voice (Vocals, Voice, Melody, or a choir's
- * Soprano and the like); failing that, the one whose notes start where the lyrics fall; failing that,
- * the first that isn't drums. Its words are its track's lyric events, or a karaoke (.kar) file's
- * text events on its track of words; any other text event is a comment and is left out. A phrase ends where the lyrics start a new line (`/` or `\`), or where
- * the melody rests for two beats when they don't say.
+ * With lyrics, the vocal part is the one most of them start notes of, a part on a track named for a
+ * voice (Vocals, Voice, Melody, or a choir's Soprano and the like) winning a tie; without, it is the
+ * first part named for a voice, or failing that the first that isn't drums. Its words are its
+ * track's lyric events, or a karaoke (.kar) file's text events on its track of words; any other
+ * text event is a comment and is left out. A phrase ends where the lyrics start a new line (`/` or
+ * `\`), and where the melody rests for two beats.
  *
  * Loaded as a classic script before sing.js, which reads it from window.riffSingMidi; Node's tests
  * require it and read the same object from globalThis. */
@@ -19,6 +20,8 @@
 	const MAX_BYTES = 2 * 1024 * 1024;
 	// A track named for a voice: anything vocal, or a choir's part on its own, not a tenor sax.
 	const VOCAL = /\b(vocals?|voices?|vox|singer|sing|melody|lyrics?)\b|^\s*(soprano|alto|tenor|baritone)s?\s*\d*\s*$/i;
+	// A Rock Band chart's vocal tracks.
+	const ROCK_BAND = /^(PART VOCALS|HARM\d)$/;
 	// A karaoke file's track of words, whose text events are its lyrics.
 	const WORDS = /\b(words|lyrics?|karaoke)\b/i;
 
@@ -104,17 +107,18 @@
 	// The notes a track plays, each from its note on to its note off, one at a time: a voice sings
 	// one note, so a note that starts while another sounds ends the one before.
 	function melodyOf( track ) {
+		// Each key's notes still sounding, oldest first: a note off ends the oldest, so a repeated
+		// note whose note on comes before the last one's note off at the same tick is kept.
 		const open = new Map();
 		const notes = [];
 		for ( const e of track.notes ) {
 			const id = e.channel * 128 + e.key;
+			const sounding = open.get( id ) || [];
 			if ( e.on ) {
-				if ( ! open.has( id ) ) {
-					open.set( id, e.tick );
-				}
-			} else if ( open.has( id ) ) {
-				notes.push( { from: open.get( id ), to: e.tick, key: e.key } );
-				open.delete( id );
+				sounding.push( e.tick );
+				open.set( id, sounding );
+			} else if ( sounding.length ) {
+				notes.push( { from: sounding.shift(), to: e.tick, key: e.key } );
 			}
 		}
 		notes.sort( ( x, y ) => x.from - y.from || y.key - x.key );
@@ -192,13 +196,22 @@
 					.filter( ( channel ) => channel !== 9 )
 					.map( ( channel ) => ( {
 						track: t,
-						notes: melodyOf( { notes: t.notes.filter( ( e ) => e.channel === channel ) } ),
+						notes: melodyOf( {
+							notes: t.notes.filter(
+								// A Rock Band chart's vocals mark its phrases and percussion with notes
+								// above the voice's range, which aren't sung.
+								( e ) => e.channel === channel && ( e.key < 96 || ! ROCK_BAND.test( t.name ) )
+							),
+						} ),
 					} ) )
 			)
 			.filter( ( s ) => s.notes.length );
 		// Karaoke files keep their words as text events, with @ lines for the song's details, on a
 		// track usually named Words. Anywhere else a text event is a comment, such as a copyright.
-		const karaoke = tracks.some( ( t ) => WORDS.test( t.name ) || t.texts.some( ( e ) => e.text.startsWith( '@' ) ) );
+		const wordy = ( t ) => WORDS.test( t.name ) && ! t.notes.length;
+		const karaoke = tracks.some(
+			( t ) => ( WORDS.test( t.name ) && ! t.notes.length ) || t.texts.some( ( e ) => e.text.startsWith( '@' ) )
+		);
 		const wordsOf = ( t ) => {
 			if ( t.lyrics.length ) {
 				return t.lyrics;
@@ -207,17 +220,20 @@
 		};
 		const words =
 			[ ...tracks ]
-				.sort( ( x, y ) => WORDS.test( y.name ) - WORDS.test( x.name ) )
+				.sort( ( x, y ) => wordy( y ) - wordy( x ) )
 				.map( wordsOf )
 				.find( ( w ) => w.length ) || [];
 		const near = ( s ) => {
 			const starts = new Set( s.notes.map( ( n ) => n.from ) );
 			return words.filter( ( w ) => starts.has( w.tick ) ).length;
 		};
-		const chosen =
-			sung.find( ( s ) => VOCAL.test( s.track.name ) ) ||
-			( words.length && [ ...sung ].sort( ( x, y ) => near( y ) - near( x ) )[ 0 ] ) ||
-			sung[ 0 ];
+		// Where the lyrics fall says more than a name, which may be the song's title or a synth's
+		// patch: with words, the part most of them start notes of, a voice's name breaking a tie;
+		// without, the first part named for a voice.
+		const named = ( s ) => Number( VOCAL.test( s.track.name ) );
+		const chosen = words.length
+			? [ ...sung ].sort( ( x, y ) => near( y ) - near( x ) || named( y ) - named( x ) )[ 0 ]
+			: sung.find( named ) || sung[ 0 ];
 		if ( ! chosen ) {
 			return null;
 		}
@@ -228,7 +244,6 @@
 		// karaoke file starts each word with a space; otherwise a syllable ending in a hyphen runs on
 		// into the next, and any other ends its word.
 		const spaced = lyrics.some( ( l ) => /^ /.test( l.text ) );
-		const lines = lyrics.some( ( l ) => /^[/\\]|[\r\n]$/.test( l.text ) );
 		const slack = smpte ? 0 : perQuarter / 16;
 		const phrases = [];
 		let notes = [];
@@ -265,7 +280,7 @@
 				said += ' ';
 			}
 			const rest = previous ? n.from - previous.to : 0;
-			if ( breaks || ( ! lines && previous && ( smpte ? seconds( rest ) >= 1 : rest >= 2 * perQuarter ) ) ) {
+			if ( breaks || ( previous && ( smpte ? seconds( rest ) >= 1 : rest >= 2 * perQuarter ) ) ) {
 				close();
 			}
 			notes.push( {
