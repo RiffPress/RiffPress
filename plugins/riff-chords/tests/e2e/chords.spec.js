@@ -138,3 +138,24 @@ test( 'a part loops: past its end the song goes back to its start', async ( { pa
 	await page.evaluate( () => window.riff.seek( 3.5 ) );
 	await expect.poll( () => page.evaluate( () => window.riff.time() ), { timeout: 5000 } ).toBeGreaterThan( 4.2 );
 } );
+
+test( 'a count-in at the chart\'s tempo: the loop stops at its start, counts a bar, and plays on', async ( {
+	page,
+	isMobile,
+} ) => {
+	const panel = await openChords( page, isMobile, { play: true } );
+	const countIn = panel.getByRole( 'button', { name: 'Count in' } );
+	// Off until it is turned on.
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
+	await countIn.click();
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'true' );
+	await panel.getByRole( 'button', { name: 'Loop Verse' } ).click();
+	await page.evaluate( () => window.riff.seek( 3.5 ) );
+	// Past B the music stops at A and the bar is counted out: four beats at 90 BPM, 2.7 seconds.
+	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 5000 } ).toBe( false );
+	expect( await page.evaluate( () => window.riff.time() ) ).toBeLessThan( 0.5 );
+	await expect( panel.locator( '.riff-chords-count' ) ).toHaveText( /^[1-4]$/ );
+	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 5000 } ).toBe( true );
+	await expect( panel.locator( '.riff-chords-count' ) ).toBeEmpty();
+	await expect.poll( () => page.evaluate( () => window.riff.time() ) ).toBeGreaterThan( 0 );
+} );

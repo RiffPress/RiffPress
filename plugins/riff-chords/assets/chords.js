@@ -4,7 +4,8 @@
  * played, drawn as a guitar fingering, with the next one; the speed, slower or faster with the
  * pitch kept, through window.riff.speed(); transpose and capo, which change the chords' names and
  * fingerings and not the music; and a loop, from A to B or around one section of the song, through
- * window.riff.seek(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
+ * window.riff.seek(), with a count-in at the chart's tempo before it goes round, paused and played
+ * again through window.riff.toggle(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
  * riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
  * Sing, both loaded before it. */
@@ -22,6 +23,9 @@
 	// The listener's choices for the song showing; a new song starts afresh.
 	const practice = { id: 0, steps: 0, capo: 0, capoFor: 0, slowed: false };
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
+	// The count-in, off until the listener turns it on: its clicks and timers while it counts.
+	const count = { on: false, audio: null, clicks: [], timers: [] };
+	const Sound = window.AudioContext || window.webkitAudioContext;
 	let duration = 0;
 
 	// Until the player starts, window.riff is the #riff element, by its id.
@@ -251,11 +255,30 @@
 		} );
 		const toggle = button( 'riff-chords-loop-toggle', config.loop, '', () => {
 			loop.on = ! loop.on && loop.a !== null && loop.b !== null;
+			if ( ! loop.on && counting() ) {
+				stopCount();
+				player()?.toggle();
+			}
 			loop.last = player()?.time() ?? 0;
 			watch();
 			paintTools();
 		} );
-		looper.append( a, b, toggle );
+		// Count in: before the loop goes round, a bar of clicks at the chart's tempo, for a chart
+		// that gives one, in a browser that can make the sound.
+		const counter = button( 'riff-chords-count-in', config.countIn, '', () => {
+			count.on = ! count.on;
+			if ( count.on ) {
+				sound();
+			} else if ( counting() ) {
+				// Turned off mid-count, the music goes on from A now.
+				stopCount();
+				player()?.toggle();
+			}
+			paintTools();
+		} );
+		const beat = el( 'span', 'riff-chords-count' );
+		beat.setAttribute( 'aria-hidden', 'true' );
+		looper.append( a, b, toggle, counter, beat );
 		box.append( looper );
 		box.paint = () => {
 			steppers.forEach( ( s ) => s.paint() );
@@ -264,7 +287,10 @@
 			b.disabled = loop.a === null;
 			toggle.disabled = loop.a === null || loop.b === null;
 			toggle.setAttribute( 'aria-pressed', String( loop.on ) );
+			counter.hidden = ! Sound || ! tempo();
+			counter.setAttribute( 'aria-pressed', String( count.on ) );
 		};
+		box.beat = beat;
 		return box;
 	}
 
@@ -443,12 +469,96 @@
 		if ( ! loop.on || loop.a === null || loop.b === null ) {
 			return;
 		}
+		if ( counting() ) {
+			return;
+		}
 		if ( loop.last < loop.b && time >= loop.b ) {
-			player()?.seek( loop.a );
 			loop.last = loop.a;
+			if ( ! countIn() ) {
+				player()?.seek( loop.a );
+			}
 			return;
 		}
 		loop.last = time;
+	}
+
+	// ---- The count-in: when the loop comes round, the music stops at A, a bar of clicks plays at
+	// the chart's tempo, slowed or sped as the music is, the first of the bar higher, and the music
+	// starts again on the beat after the last. The clicks are made in the browser, with Web Audio.
+	const tempo = () => {
+		const bpm = parseFloat( song?.read.meta.tempo );
+		return bpm >= 20 && bpm <= 400 ? bpm : 0;
+	};
+	// The beats in a bar, from the chart's time signature ({time: 3/4}), or four.
+	const beats = () => {
+		const n = parseInt( String( song?.read.meta.time || '' ).split( '/' )[ 0 ], 10 );
+		return n >= 1 && n <= 12 ? n : 4;
+	};
+	const counting = () => count.timers.length > 0;
+	// The sound, made on the listener's tap, as a browser asks before a page plays one.
+	function sound() {
+		try {
+			count.audio ||= Sound ? new Sound() : null;
+			count.audio?.resume()?.catch( () => {} );
+		} catch {}
+		return count.audio;
+	}
+	function click( at, first ) {
+		const audio = count.audio;
+		const tone = audio.createOscillator();
+		const level = audio.createGain();
+		tone.type = 'triangle';
+		tone.frequency.value = first ? 1760 : 1320;
+		level.gain.setValueAtTime( 0.0001, at );
+		level.gain.exponentialRampToValueAtTime( 0.4, at + 0.003 );
+		level.gain.exponentialRampToValueAtTime( 0.0001, at + 0.08 );
+		tone.connect( level ).connect( audio.destination );
+		tone.start( at );
+		tone.stop( at + 0.1 );
+		count.clicks.push( tone );
+	}
+	function showBeat( n ) {
+		if ( tools?.beat ) {
+			tools.beat.textContent = n ? String( n ) : '';
+		}
+	}
+	function countIn() {
+		const bpm = tempo();
+		const p = player();
+		if ( ! count.on || ! bpm || ! p?.playing() || ! sound() ) {
+			return false;
+		}
+		const gap = 60 / ( bpm * ( canSlow() ? p.speed() : 1 ) );
+		const bar = beats();
+		p.toggle();
+		p.seek( loop.a );
+		const start = count.audio.currentTime + 0.05;
+		for ( let n = 0; n < bar; n++ ) {
+			click( start + n * gap, n === 0 );
+			count.timers.push( setTimeout( () => showBeat( n + 1 ), ( 0.05 + n * gap ) * 1000 ) );
+		}
+		count.timers.push(
+			setTimeout( () => {
+				stopCount();
+				if ( ! player()?.playing() ) {
+					player()?.toggle();
+				}
+			}, ( 0.05 + bar * gap ) * 1000 )
+		);
+		return true;
+	}
+	// Stops a count under way: the loop turned off, the song changed, or the music played again
+	// by the listener before the bar was out.
+	function stopCount() {
+		count.timers.forEach( clearTimeout );
+		count.timers = [];
+		for ( const tone of count.clicks ) {
+			try {
+				tone.stop();
+			} catch {}
+		}
+		count.clicks = [];
+		showBeat( 0 );
 	}
 	function watch() {
 		cancelAnimationFrame( loop.frame );
@@ -480,6 +590,7 @@
 		practice.slowed = false;
 		Object.assign( loop, { a: null, b: null, on: false, last: 0 } );
 		cancelAnimationFrame( loop.frame );
+		stopCount();
 	}
 
 	async function load( where, track ) {
@@ -534,6 +645,9 @@
 		check( time );
 		follow( time );
 	} );
-	document.addEventListener( 'riff:play', watch );
+	document.addEventListener( 'riff:play', () => {
+		stopCount();
+		watch();
+	} );
 	document.addEventListener( 'riff:pause', () => cancelAnimationFrame( loop.frame ) );
 } )();

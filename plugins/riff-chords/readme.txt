@@ -19,7 +19,7 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 * The chart follows the music when it has times, written the way LRC times a lyric line: [01:02.50] at the start of a line, and before any chord that falls somewhere else, as in [01:02.50][G]. A line's first chord is played when the line starts, and chords without a time of their own are spread evenly between the times around them.
 * The chord being played is drawn as a guitar fingering, with the next chord beside it. A chart without times shows every chord in it instead.
 * Slow the song down, or speed it up, from 50% to 150%, and its pitch stays where it was.
-* Loop a part: A where it starts and B where it ends, or Loop beside a part's name.
+* Loop a part: A where it starts and B where it ends, or Loop beside a part's name. For a chart with a {tempo}, Count in gives a bar of clicks at that tempo before the loop goes round again; it is off until it is turned on.
 * Transpose and capo change the chords' names and fingerings, not the music.
 * A tap on a line, or on a part's name, takes the song there.
 * The chart is typed into a Chords field on the audio file in the Media Library, kept as the file's own meta and read through the media REST route, so visitors see a chart only for files that route already shows them.
