@@ -852,8 +852,8 @@ export function nowPlaying( P ) {
 	// The record out of its sleeve or back in it; out, the needle drops once it has come clear.
 	function deck( out ) {
 		const arm = $( '.riff-arm' );
-		clearTimeout( deck.drop );
 		if ( ! out || ! roomy() ) {
+			clearTimeout( deck.drop );
 			stopRunout();
 			delete root.dataset.riffDeck;
 			delete arm?.dataset.riffDown;
@@ -862,6 +862,8 @@ export function nowPlaying( P ) {
 			stand( false );
 			return;
 		}
+		// Already out, the needle is down or on its way: asked again before it lands (opening the
+		// view as the music starts asks twice), the drop under way is the one that lands it.
 		if ( root.dataset.riffDeck === 'out' ) {
 			return;
 		}
