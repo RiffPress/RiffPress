@@ -1,5 +1,7 @@
 'use strict';
 
+const { JS_HOOK, isPlayer } = require( './hooks-reference.js' );
+
 // A hook, route, constant, CLI command, or browser global is a promise:
 // once a site depends on one, renaming it breaks that site. This flags the pull
 // request that adds one and names the ones with nothing written above them.
@@ -244,6 +246,20 @@ const JS_RULES = [
 	],
 ];
 
+// The player fires most of its hooks through its own wrappers, `emit( 'menu' )`
+// for the `riff.menu` action and `filter( 'menu' )` for the filter, which add
+// the prefix. The hooks reference reads them with the same expression, and only
+// in the player's scripts, where those names mean the wrappers.
+const PLAYER_RULES = [
+	[
+		JS_HOOK,
+		( m ) =>
+			`${ 'filter' === m[ 1 ] ? 'js-filter' : 'js-action' }:riff.${
+				m[ 2 ]
+			}`,
+	],
+];
+
 // `@access private` in PHP per core's standards, `@private` in JS.
 const PRIVATE = /@(?:private\b|access\s+private\b)/;
 
@@ -332,7 +348,7 @@ function findSurfaces( source, path, own = ownConstants( [ source ] ) ) {
 	if ( path.endsWith( '.php' ) ) {
 		rules = PHP_RULES;
 	} else if ( path.endsWith( '.js' ) ) {
-		rules = JS_RULES;
+		rules = isPlayer( path ) ? [ ...JS_RULES, ...PLAYER_RULES ] : JS_RULES;
 	}
 
 	// A constant is only a promise if a site can set it.

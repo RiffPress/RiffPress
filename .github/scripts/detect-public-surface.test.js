@@ -254,6 +254,50 @@ test( 'reads wp.hooks calls', () => {
 	] );
 } );
 
+// The player's wrappers add the `riff.` prefix, so a call to one is the public
+// hook it fires.
+const player = ( source, path = 'plugins/riff/assets/player/menu.js' ) =>
+	ids( findSurfaces( source, path ) );
+
+test( "reads the player's filter() and emit() as the riff.* hooks they fire", () => {
+	assert.deepEqual(
+		player( "const all = filter(\n\t'menu',\n\tours,\n\tt\n);" ),
+		[ 'js-filter:riff.menu' ]
+	);
+	assert.deepEqual( player( "emit( 'queue', { queue } );" ), [
+		'js-action:riff.queue',
+	] );
+	assert.deepEqual( player( "P.filter( 'menu', items );" ), [
+		'js-filter:riff.menu',
+	] );
+	assert.deepEqual(
+		player( "emit( 'ready', {} );", 'plugins/riff/assets/riff.js' ),
+		[ 'js-action:riff.ready' ]
+	);
+} );
+
+test( "an array's filter() is not a hook, nor a wrapper outside the player", () => {
+	assert.deepEqual( player( "list.filter( 'menu' );" ), [] );
+	assert.deepEqual(
+		player( "filter( 'menu', x );", 'plugins/riff/assets/admin.js' ),
+		[]
+	);
+} );
+
+test( 'a docblock above the wrapper documents the hook', () => {
+	const [ hook ] = findSurfaces(
+		`/**
+		 * Filters the keys the player answers.
+		 */
+		const keys = filter( 'shortcuts', defaults );`,
+		'plugins/riff/assets/player/keyboard.js'
+	);
+	assert.deepEqual( hook, {
+		id: 'js-filter:riff.shortcuts',
+		documented: true,
+	} );
+} );
+
 test( 'reads the extension API global', () => {
 	assert.deepEqual( js( 'window.riff = riff;' ), [
 		'js-global:window.riff',
@@ -397,6 +441,35 @@ test( 'a hook moved to another file is not new', () => {
 	// The identifier carries no path, so both sides collapse to the same entry.
 	const base = findSurfaces( "apply_filters( 'a', 1 );", 'includes/one.php' );
 	const head = findSurfaces( "apply_filters( 'a', 1 );", 'includes/two.php' );
+	assert.deepEqual( newSurfaces( base, head ), [] );
+} );
+
+test( "a new filter() or emit() in the player is new surface, an existing one isn't", () => {
+	const at = 'plugins/riff/assets/player/queue.js';
+	const base = findSurfaces(
+		"filter( 'queue', tracks ); emit( 'queue', {} );",
+		at
+	);
+	const head = findSurfaces(
+		"filter( 'queue', tracks ); emit( 'queue', {} ); filter( 'menu', items ); emit( 'liked', {} );",
+		at
+	);
+	assert.deepEqual( ids( newSurfaces( base, head ) ), [
+		'js-action:riff.liked',
+		'js-filter:riff.menu',
+	] );
+	assert.deepEqual( newSurfaces( base, base ), [] );
+} );
+
+test( 'a wrapper call and wp.hooks with the full name are the one surface', () => {
+	const base = findSurfaces(
+		"wp.hooks.applyFilters( 'riff.menu', items );",
+		'plugins/riff/assets/app.js'
+	);
+	const head = findSurfaces(
+		"filter( 'menu', items );",
+		'plugins/riff/assets/player/menu.js'
+	);
 	assert.deepEqual( newSurfaces( base, head ), [] );
 } );
 
