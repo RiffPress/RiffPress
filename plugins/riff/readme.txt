@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.8.0
+Stable tag: 5.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,23 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 5.9.0 =
+* A zip of an album imports as its folder does, from wp riff import or uploaded to the Media Library.
+* Keys for the loop, the speed and transpose, A, S and F, D and U, while the Chords view shows a chart.
+* A plugin adds its own items to the track menu with the riff.menu filter.
+* A plugin adds its own keyboard shortcuts with riff_register_shortcut() and window.riff.shortcut(), which follow Riff's single-key rules.
+* An about panel beside the page shows the track playing, its artist and album linked to their pages and the credits its file's tags carry, and a plugin adds a section to it with riff_about_sections.
+* The turntable presses discs from the tags, cuts grooves from the loudness, clicks in the run-out, and has a VU meter and a spectrum.
+* The developer reference moves to developer.riffpress.com, and its old addresses on riffpress.com redirect there.
+* Fixed: an uploaded zip's albums are its uploader's own, it changes no video they can't edit, and a zip ZipArchive can't read whole is refused rather than inflated by PclZip.
+* Fixed: a narrow window with a mouse, as a car's screen is, keeps the touch layout without the desktop frame laid over it.
+* Fixed: a header without a cover, as the Tracks view's, starts at the top and lines up with Play and the list, and a stacked cover is half the page wide.
+* Fixed: an album, artist or playlist header too narrow for its title beside the cover stacks them, and its cover is sized to the page as its title is.
+* Fixed: an album's title is sized to its header, so it stays whole when Up next or About narrows the page.
+* Fixed: on a computer, a panel that leaves the page too little room beside the library folds the library to its rail, so an album's rows keep their titles.
+* Fixed: a mark typed with AltGr, as [ on a German keyboard, reaches a plugin's shortcut.
+* Fixed: a track menu first opened before anything played still answers in Up next on a phone.
+
 = 5.8.0 =
 * A track says which disc of a set it is on, from the file's tags.
 * On a computer the strip across the top has back and forward at its left end, Home and search centred as one group and who is listening at its right, reached by the keyboard in that order.
@@ -165,15 +182,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
 * Fixed: on a phone the quality is small print between the times.
 * Fixed: the tonearm turns with the hand while it is held.
-
-= 5.5.0 =
-* On a phone, Home, Search and Library are tabs along the bottom.
-* The turntable's sleeve puts the record away and plays it again, and its arm is put down on any band of the side, by hand, by two clicks or from the keyboard.
-* Fixed: on a phone an album opens as the apps open one.
-* Fixed: on a phone the cards stand two to a row.
-* Fixed: on a phone Now Playing's art is as wide as the screen allows.
-* Faster: once Now Playing has slid over the page, the page under it is neither styled nor painted, keeping its height and its place, until Now Playing starts to close.
-* Faster: the run-out etching's layer is the record's square whatever its text, so it is painted once and only turned.
-* Faster: the seek line's bloom fades in from the line's start on a still frame and out before the knob on the glow that slides, so neither fade is repainted as the music plays.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
