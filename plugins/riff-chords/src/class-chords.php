@@ -253,7 +253,7 @@ final class Chords {
 					'instruments' => array(
 						'guitar'  => __( 'Guitar', 'riff-chords' ),
 						'ukulele' => __( 'Ukulele', 'riff-chords' ),
-						'piano'   => __( 'Piano', 'riff-chords' ),
+						'piano'   => _x( 'Piano', 'the instrument', 'riff-chords' ),
 					),
 					'sections'    => array(
 						'verse'  => __( 'Verse', 'riff-chords' ),
@@ -297,8 +297,10 @@ final class Chords {
 			// A piano's two octaves, wider than a fretboard is tall.
 			. '#riff .riff-chords-shape svg.riff-chords-keys{width:112px;height:52px}'
 			. '#riff .riff-chords-now > .riff-chords-shape svg.riff-chords-keys{width:148px;height:69px}'
-			. '.riff-chords-piano-key{fill:var(--riff-bg);stroke:var(--riff-fg-3);stroke-width:1}'
-			. '.riff-chords-piano-key.is-black{fill:var(--riff-fg-3)}'
+			// A piano's keys are white and black whatever the theme, each dot the other colour.
+			. '.riff-chords-piano-key{fill:#f5f5f5;stroke:#1c1c1c;stroke-width:.6}'
+			. '.riff-chords-piano-key.is-black,.riff-chords-keys .riff-chords-dot{fill:#1c1c1c}'
+			. '.riff-chords-keys .riff-chords-dot.is-black{fill:#f5f5f5}'
 			. '.riff-chords-string,.riff-chords-fret{stroke:var(--riff-fg-3);stroke-width:1}'
 			. '.riff-chords-nut{stroke:var(--riff-fg);stroke-width:3}'
 			. '.riff-chords-dot{fill:var(--riff-accent)}'
