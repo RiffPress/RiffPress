@@ -212,7 +212,9 @@ items with the `riff.menu` filter, from a script that depends on `wp-hooks`. Eac
 order the filter returns them. The filter is handed Riff's own, in order, each only where it
 applies: `next`, `add`, `like`, `playlist`, in Up next `up`, `down` and `remove`, and Go to post,
 `post`, with what Riff's own features add, as Listen along, among them. Go to post leaves the
-page, so an item that stays goes before it:
+page, so an item that stays goes before it. In a window of its own, Riff's desktop app or the
+Listen app installed, it opens the post in a new window instead, so the app stays where it was,
+with WordPress's external icon after it and core's "(opens in a new tab)" for a screen reader:
 
 ```js
 wp.hooks.addFilter( 'riff.menu', 'my-plugin', ( items, track, context ) => {

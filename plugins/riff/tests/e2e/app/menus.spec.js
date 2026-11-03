@@ -87,4 +87,77 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-account' ) ).not.toHaveAttribute( 'open' );
 		await expect( page.locator( '.riff-app-account summary' ) ).toBeFocused();
 	} );
+
+	test( 'Go to post opens a new window in the desktop app and installed, with the icon and the words a screen reader needs, and is a plain link in a tab', async ( {
+		context,
+	} ) => {
+		const app = pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`;
+		// The app in a page of its own, with what marks its window before its scripts run.
+		const open = async ( before ) => {
+			const page = await context.newPage();
+			await page.addInitScript( before );
+			await page.goto( app );
+			await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+			await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
+			return page;
+		};
+		const postItem = ( page, name = /^Go to post/ ) =>
+			page.locator( '.riff-menu:not([hidden])' ).getByRole( 'menuitem', { name } );
+		const newWindow = async ( page ) => {
+			const item = postItem( page, /Go to post.*opens in a new tab/ );
+			await expect( item ).toHaveAccessibleName( 'Go to post (opens in a new tab)' );
+			await expect( item ).toHaveAttribute( 'target', '_blank' );
+			await expect( item ).toHaveAttribute( 'rel', 'noopener' );
+			await expect( item.locator( 'svg[aria-hidden="true"]' ) ).toBeVisible();
+			// The icon is the words' size and colour.
+			const [ icon, words ] = await item.evaluate( ( el ) =>
+				[ el.querySelector( 'svg' ), el ].map( ( one ) => {
+					const style = getComputedStyle( one );
+					return { color: style.color, size: style.fontSize };
+				} )
+			);
+			expect( icon ).toEqual( words );
+			return item;
+		};
+
+		// A browser's tab, where the frame is drawn too: a link that takes the tab, as it always was.
+		const tab = await open( () => {} );
+		await expect( tab.locator( 'html' ) ).not.toHaveClass( /\briff-desktop-app\b/ );
+		await expect( postItem( tab ) ).toHaveAccessibleName( 'Go to post' );
+		await expect( postItem( tab ) ).not.toHaveAttribute( 'target' );
+		await expect( postItem( tab ).locator( 'svg' ) ).toHaveCount( 0 );
+		await tab.close();
+
+		// Riff's desktop app: its preload marks <html> as the parser makes it, before the page's
+		// scripts run (site-preload.js). The tests site has no WP_DEBUG, so ?riff_desktop=1 is not
+		// there to do it.
+		const desktop = await open( () =>
+			new MutationObserver( ( records, observer ) => {
+				if ( document.documentElement ) {
+					observer.disconnect();
+					document.documentElement.classList.add( 'riff-desktop' );
+				}
+			} ).observe( document, { childList: true } )
+		);
+		await expect( desktop.locator( 'html' ) ).toHaveClass( /\briff-desktop-app\b/ );
+		await newWindow( desktop );
+		await desktop.close();
+
+		// Installed as an app of its own. Chromium's emulation has no display-mode, so the page is
+		// told it the way it asks.
+		const installed = await open( () => {
+			const real = window.matchMedia.bind( window );
+			window.matchMedia = ( query ) =>
+				real( /display-mode:\s*standalone/.test( query ) ? 'all' : query );
+		} );
+		const item = await newWindow( installed );
+		// Pressed, the post opens in a new window and the app stays where it was.
+		const here = installed.url();
+		const [ opened ] = await Promise.all( [ context.waitForEvent( 'page' ), item.click() ] );
+		await opened.waitForLoadState();
+		expect( opened.url() ).not.toContain( '/app/' );
+		expect( installed.url() ).toBe( here );
+		await opened.close();
+		await installed.close();
+	} );
 } );

@@ -193,6 +193,33 @@ test( 'a link to another site opens in the browser and leaves the window where i
 	expect( electronApp.windows() ).toHaveLength( 1 );
 } );
 
+test( 'a track’s Go to post opens the post in the browser, and the window stays on the app', async () => {
+	const electronApp = await launch();
+	const page = await siteWindow( electronApp );
+	await electronApp.evaluate( ( { shell } ) => {
+		globalThis.opened = [];
+		shell.openExternal = async ( url ) => globalThis.opened.push( url );
+	} );
+	await page.goto( `${ page.url().split( '?' )[ 0 ] }?riff=${ postId }` );
+	await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+	const here = page.url();
+
+	await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
+	const item = page
+		.locator( '.riff-menu:not([hidden])' )
+		.getByRole( 'menuitem', { name: 'Go to post (opens in a new tab)' } );
+	await expect( item ).toHaveAttribute( 'target', '_blank' );
+	const post = await item.getAttribute( 'href' );
+	// Through the page, as above: the app never lets a navigation start for Playwright to wait on.
+	await item.evaluate( ( el ) => el.click() );
+
+	await expect
+		.poll( () => electronApp.evaluate( () => globalThis.opened ) )
+		.toEqual( [ post ] );
+	expect( page.url() ).toBe( here );
+	expect( electronApp.windows() ).toHaveLength( 1 );
+} );
+
 test( 'the site and a WordPress login survive a relaunch', async () => {
 	let electronApp = await launch();
 	let page = await siteWindow( electronApp );
