@@ -787,31 +787,37 @@
 		return;
 	}
 	// Practice this, in the ⋯ menu of a track the server marked as having a chart (riff_track): the
-	// Chords view, on that track. One playing already stays where it is. Any other plays now
-	// through Riff's own Play next and a skip to it, so the queue is kept as it was, its order,
-	// shuffled or not, and the pages of a long list still to come; with nothing loaded, it plays
-	// on its own.
-	function practiceOn( track, playNext ) {
+	// Chords view, on that track. One playing already stays where it is. One in the queue is
+	// played from its place there with window.riff.play(), the only public way to move within
+	// it, which sets the queue again: shuffled, the tracks after it are dealt again, and a long
+	// list keeps only what has loaded. Any other plays on its own, as a row's own press replaces
+	// the queue with its list.
+	function practiceOn( track, context ) {
 		const p = player();
 		if ( ! p ) {
 			return;
 		}
-		if ( String( p.current()?.id ?? '' ) !== String( track.id ) ) {
-			if ( p.current() && playNext ) {
-				playNext();
-				p.next();
-			} else {
+		const id = String( track.id );
+		if ( String( p.current()?.id ?? '' ) !== id ) {
+			const queue = p.queue();
+			const at =
+				context?.where === 'queue' && String( queue[ context.index ]?.id ) === id
+					? context.index
+					: queue.findIndex( ( t ) => String( t?.id ) === id );
+			if ( at < 0 ) {
 				p.play( [ track ] );
+			} else {
+				p.play( queue, at );
 			}
 		}
 		p.openView( 'chords' );
 	}
-	window.wp?.hooks?.addFilter( 'riff.menu', 'riff-chords', ( items, track ) => {
-		if ( ! track?.chords || ! Array.isArray( items ) ) {
+	// Not for a track with nothing to play, a locked one among them.
+	window.wp?.hooks?.addFilter( 'riff.menu', 'riff-chords', ( items, track, context ) => {
+		if ( ! track?.chords || ! track.src || ! Array.isArray( items ) ) {
 			return items;
 		}
-		const next = items.find( ( i ) => i?.id === 'next' )?.run;
-		const item = { id: 'riff-chords-practice', label: config.practiceOn, run: () => practiceOn( track, next ) };
+		const item = { id: 'riff-chords-practice', label: config.practiceOn, run: () => practiceOn( track, context ) };
 		// Before Go to post, which leaves the page.
 		const at = items.findIndex( ( i ) => i?.id === 'post' );
 		return at < 0 ? [ ...items, item ] : [ ...items.slice( 0, at ), item, ...items.slice( at ) ];
