@@ -30,7 +30,7 @@ Branch every pull request from `main`, never from another open pull request's br
 
 ## Worktrees
 
-Work in a worktree, never by switching branches in the main checkout: someone else may be using it. `npm run wt -- new <branch>` makes one in `.claude/worktrees/`, from `origin/main`, pushed at once so it's never only on one disk. Claude Code's own worktrees (`isolation: "worktree"`, `--worktree`) get the same links from `.claude/settings.json`, and the pre-commit hook gives them their ports. Each worktree has wp-env ports of its own in its `.wp-env.override.json`, and `npm run wt -- env` starts a site that serves that worktree's code, so its suite tests its own branch. `npm run wt -- list` shows every worktree with its pull request and what's unpushed; `npm run wt -- prune` removes the ones whose pull request is done.
+Work in a worktree, never by switching branches in the main checkout: someone else may be using it. `npm run wt -- new <branch>` makes one in `.claude/worktrees/`, from `origin/main`, pushed at once so it's never only on one disk. Claude Code's own worktrees (`isolation: "worktree"`, `--worktree`) link `node_modules` from `.claude/settings.json`, and the pre-commit hook installs their `vendor`. `npm run wt -- env` gives a worktree wp-env ports of its own in its `.wp-env.override.json` and starts a site that serves that worktree's code, so its suite tests its own branch; the hook won't run the suite in a worktree without one. `npm run wt -- list` shows every worktree with its pull request and what's unpushed; `npm run wt -- prune` removes the ones whose pull request is done.
 
 ## Before a commit
 

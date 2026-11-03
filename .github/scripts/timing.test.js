@@ -3,8 +3,8 @@
 /*
  * The timing Riff Lyrics, Riff Chords and Riff Sing share (plugins/riff-lyrics/assets/timing.js):
  * times read as LRC, ChordPro and WebVTT write them, and the song followed as the player plays it.
- * Each of the three carries the same file, so they mark a line, a chord and a syllable at the same
- * moment; the first test keeps the copies the same. Run by `node --test .github/scripts/*.test.js`.
+ * Each of the three carries the same file, so Lyrics and Chords mark a line and a chord by the same
+ * rule; the first test keeps the copies the same. Run by `node --test .github/scripts/*.test.js`.
  */
 const { test } = require( 'node:test' );
 const assert = require( 'node:assert/strict' );

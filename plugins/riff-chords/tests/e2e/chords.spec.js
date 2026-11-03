@@ -5,7 +5,7 @@
  * playwright.config.js). The recording is one of the public-domain fixtures; the chart is
  * placeholder words, not that piece's chords.
  *
- * Riff Chords needs Riff 5.9 (riff_register_view(), window.riff.shortcut()); a local site runs it on the
+ * Riff Chords needs Riff 5.9 (riff_register_view(), window.riff.shortcut(), the riff.menu filter); a local site runs it on the
  * Riff it has, and anywhere else on an older Riff it stays out of the way and this spec skips.
  */
 const path = require( 'node:path' );
@@ -171,6 +171,40 @@ test( 'the practice controls have keys: A for the loop, S and F for the speed, D
 	await expect( chords ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
 } );
 
+test( 'Practice this, in the menu of a track with a chart, opens the Chords view on it', async ( { page } ) => {
+	await page.goto( postUrl );
+	test.skip( ( await page.locator( '.riff-bar [data-riff-control="chords"]' ).count() ) === 0, 'Riff Chords waits for Riff 5.9' );
+	const menu = page.locator( '.riff-menu' );
+	const more = ( n ) => page.locator( '.riff-track' ).nth( n ).locator( '.riff-more-button' );
+	// None for the track without a chart.
+	await more( 1 ).click();
+	await expect( menu.getByRole( 'menuitem', { name: 'Play next' } ) ).toBeVisible();
+	await expect( menu.getByRole( 'menuitem', { name: 'Practice this' } ) ).toHaveCount( 0 );
+	await page.keyboard.press( 'Escape' );
+
+	// Before anything plays, from the row: the track plays, with its chords.
+	await more( 0 ).click();
+	const names = await menu.getByRole( 'menuitem' ).allTextContents();
+	expect( names.indexOf( 'Practice this' ) ).toBe( names.indexOf( 'Go to post' ) - 1 );
+	await menu.getByRole( 'menuitem', { name: 'Practice this' } ).click();
+	const view = page.locator( '.riff-np [data-riff-view="chords"]' );
+	await expect( view ).toBeVisible();
+	await expect( view.locator( '.riff-chords-chart .riff-chords-chord' ) ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
+	expect( await page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Underground' );
+
+	// With the album playing from the other track, the queue is kept and the charted one played from its place in it.
+	await page.evaluate( () => window.riff.closeView() );
+	await page.locator( '.riff-row' ).nth( 1 ).click();
+	await expect.poll( () => page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Trombone Detritus' );
+	const queue = await page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) );
+	await page.evaluate( () => window.riff.closeView() );
+	await more( 0 ).click();
+	await menu.getByRole( 'menuitem', { name: 'Practice this' } ).click();
+	await expect( view ).toBeVisible();
+	await expect.poll( () => page.evaluate( () => window.riff.current()?.title ) ).toBe( 'Underground' );
+	expect( await page.evaluate( () => window.riff.queue().map( ( t ) => t.title ) ) ).toEqual( queue );
+} );
+
 test( 'a part loops: past its end the song goes back to its start', async ( { page, isMobile } ) => {
 	const panel = await openChords( page, isMobile, { play: true } );
 	await panel.getByRole( 'button', { name: 'Loop Verse' } ).click();
@@ -239,7 +273,7 @@ test( 'the chords are drawn for a ukulele or a piano, and this browser keeps the
 
 	// A piano has no capo to set.
 	await instrument.getByRole( 'button', { name: 'Piano' } ).click();
-	await expect( now.getByRole( 'img' ) ).toHaveAttribute( 'aria-label', 'D, on the keys D, F#, A' );
+	await expect( now.getByRole( 'img' ) ).toHaveAttribute( 'aria-label', 'D, its notes D, F#, A' );
 	await expect( now.locator( '.riff-chords-dot' ) ).toHaveCount( 3 );
 	await expect( panel.locator( '[data-riff-chords="capo"]' ) ).toBeHidden();
 

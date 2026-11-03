@@ -1,15 +1,17 @@
 /* Riff Chords: fills the Chords view of Now Playing, registered on the server as Riff registers its
  * own (riff_register_view()), with the chord chart kept on the track's file,
  * from the media REST route, and gives the listener what they need to play along: the chord being
- * played, drawn as a guitar or ukulele fingering or on a piano's keys, with the next one; the speed, slower or faster with the
- * pitch kept, through window.riff.speed(); transpose and capo, which change the chords' names and
- * fingerings and not the music; and a loop, from A to B or around one section of the song, through
+ * played, drawn as a guitar or ukulele fingering or on a piano's keys, with the next one; the
+ * speed, slower or faster with the pitch kept, through window.riff.speed(); transpose and, on a
+ * guitar or ukulele, capo, which change the chords' names and fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(), with a count-in, a bar of clicks at the chart's tempo, before it goes round.
  * Each practice control has a key too, registered on the server (riff_register_shortcut()) and
  * given what it does with window.riff.shortcut() while the view shows a chart.
+ * A track with a chart has Practice this in its ⋯ menu, through the riff.menu filter, which plays it
+ * and opens the view on it.
  * It listens to the player's riff:view, riff:track, riff:time, riff:play and riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
- * Sing, both loaded before it. */
+ * Sing; chart.js and timing.js are loaded before it. */
 ( () => {
 	const config = window.riffChords || {};
 	const chart = window.riffChordsChart;
@@ -109,9 +111,11 @@
 	const capoOn = () => ( instrument === 'piano' ? 0 : practice.capo );
 	const shift = () => practice.steps - ( capoOn() - chartCapo() );
 	const firstChord = () => song?.chords[ 0 ]?.piece.chord || '';
+	// The key the song sounds in, whatever it is played on: the chart's key is written for its own
+	// capo, as its chords are, so it sounds that many frets up, and transpose moves it from there.
 	const keyNow = () => {
 		const key = song?.read.meta.key || firstChord();
-		return key ? chart.transpose( key, practice.steps ) : '';
+		return key ? chart.transpose( key, practice.steps + chartCapo() ) : '';
 	};
 	const shapesKey = () => {
 		const key = song?.read.meta.key || firstChord();
@@ -214,7 +218,7 @@
 			const height = key.white ? 45 : 28;
 			draw( 'rect', { x: key.x, y: 0.5, width, height, rx: 1, class: `riff-chords-piano-key${ key.white ? '' : ' is-black' }` } );
 			if ( pressed.has( key.k ) ) {
-				draw( 'circle', { cx: key.x + width / 2, cy: height - 5, r: 2.2, class: 'riff-chords-dot' } );
+				draw( 'circle', { cx: key.x + width / 2, cy: height - 5, r: key.white ? 2.2 : 1.5, class: `riff-chords-dot${ key.white ? '' : ' is-black' }` } );
 			}
 		}
 		return svg;
@@ -782,6 +786,38 @@
 	if ( ! chart ) {
 		return;
 	}
+	// Practice this, in the ⋯ menu of a track the server marked as having a chart (riff_track): the
+	// Chords view, on that track. One playing already stays where it is; one in the queue is
+	// played from its place there, so the queue is kept; any other is played on its own.
+	function practiceOn( track, context ) {
+		const p = player();
+		if ( ! p ) {
+			return;
+		}
+		const id = String( track.id );
+		if ( String( p.current()?.id ?? '' ) !== id ) {
+			const queue = p.queue();
+			const at =
+				context?.where === 'queue' && String( queue[ context.index ]?.id ) === id
+					? context.index
+					: queue.findIndex( ( t ) => String( t?.id ) === id );
+			if ( at < 0 ) {
+				p.play( [ track ] );
+			} else {
+				p.play( queue, at );
+			}
+		}
+		p.openView( 'chords' );
+	}
+	window.wp?.hooks?.addFilter( 'riff.menu', 'riff-chords', ( items, track, context ) => {
+		if ( ! track?.chords || ! Array.isArray( items ) ) {
+			return items;
+		}
+		const item = { id: 'riff-chords-practice', label: config.practiceOn, run: () => practiceOn( track, context ) };
+		// Before Go to post, which leaves the page.
+		const at = items.findIndex( ( i ) => i?.id === 'post' );
+		return at < 0 ? [ ...items, item ] : [ ...items.slice( 0, at ), item, ...items.slice( at ) ];
+	} );
 	// The view, filled as it opens and again as the track changes while it is open.
 	document.addEventListener( 'riff:view', ( e ) => {
 		if ( e.detail?.id !== 'chords' ) {

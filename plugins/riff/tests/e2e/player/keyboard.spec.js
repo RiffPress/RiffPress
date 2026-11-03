@@ -125,6 +125,7 @@ test.describe( 'Player', () => {
 		await page.goto( '/wp-admin/profile.php' );
 		// Listed with whatever keys the site's other plugins, such as Riff Chords, add.
 		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li', { hasText: 'Say hello' } ) ).toHaveText( 'O Say hello' );
+		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li', { hasText: 'Say goodbye' } ) ).toHaveText( '] Say goodbye' );
 
 		// What a plugin's script does, by the key's id: given the track and the key press.
 		const give = async ( p ) => {
@@ -146,7 +147,22 @@ test.describe( 'Player', () => {
 		// A letter acts without Shift; Riff keeps Shift for its own, and the music plays on.
 		await page.keyboard.press( 'Shift+O' );
 		await page.keyboard.press( 'Control+o' );
+		await page.keyboard.press( 'Alt+o' );
 		expect( await pressed( page ) ).toHaveLength( 1 );
+		// A mark AltGr typed counts: ] is AltGr+9 on a German keyboard, which Windows reports as Ctrl
+		// and Alt. Ctrl, Alt or Option without AltGr, which may be a browser's own shortcut, doesn't.
+		await page.evaluate( () =>
+			window.riff.shortcut( 'e2e-mark', ( track, event ) => window.riffKeys.push( event.code ) )
+		);
+		await page.keyboard.press( 'Control+]' );
+		await page.keyboard.press( 'Alt+]' );
+		await page.evaluate( () => {
+			const press = ( init ) =>
+				document.body.dispatchEvent( new KeyboardEvent( 'keydown', { key: ']', bubbles: true, cancelable: true, ...init } ) );
+			press( { code: 'Digit9', ctrlKey: true, altKey: true, modifierAltGraph: true } );
+			press( { code: 'Digit6', altKey: true } );
+		} );
+		await expect.poll( () => pressed( page ) ).toEqual( [ 'Underground o', 'Digit9' ] );
 		expect( ( await audioState( page ) ).paused ).toBe( false );
 
 		// Not while typing.
@@ -168,12 +184,12 @@ test.describe( 'Player', () => {
 		await page.evaluate( () =>
 			window.wp.hooks.removeFilter( 'riff.shortcuts', 'test' )
 		);
-		expect( await pressed( page ) ).toHaveLength( 1 );
+		expect( await pressed( page ) ).toHaveLength( 2 );
 
 		// Taken away, it does nothing; the key is still the plugin's, so Riff doesn't act on it.
 		await page.evaluate( () => window.riffStopKey() );
 		await page.keyboard.press( 'o' );
-		expect( await pressed( page ) ).toHaveLength( 1 );
+		expect( await pressed( page ) ).toHaveLength( 2 );
 
 		// A visitor has no single-key shortcuts, so none of a plugin's either.
 		const visitor = await browser.newContext( { storageState: { cookies: [], origins: [] } } );

@@ -20,9 +20,10 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 * The chord being played is drawn as a guitar or ukulele fingering, or on a piano's keys, with the next chord beside it. A chart without times shows every chord in it instead. The instrument is chosen in the Chords view, and the listener's browser remembers it.
 * Slow the song down, or speed it up, from 50% to 150%, and its pitch stays where it was.
 * Loop a part: A where it starts and B where it ends, or Loop beside a part's name. For a chart with a {tempo}, Count in clicks out the last bar before B at that tempo, as many beats as its {time} gives (four without one), so a player knows when the loop comes round; the music plays on under it, and it is off until it is turned on.
-* Transpose and capo change the chords' names and fingerings, not the music.
+* Transpose and capo change the chords' names and fingerings, not the music. A piano has no capo, so with Piano chosen the chords are named as they sound.
 * Each practice control has a key, which acts while the Chords view shows a chart: A sets where the loop starts, then where it ends, then clears it; S and F slow the song down and speed it up; D and U transpose it down and up. They are single-key shortcuts like Riff's own, on and off with them on the listener's profile.
 * A tap on a line, or on a part's name, takes the song there.
+* Practice this, in the ⋯ menu of a track with a chart, plays it and opens the Chords view on it. A track already in the queue is played from its place there, so the queue is kept.
 * The chart is typed into a Chords field on the audio file in the Media Library, kept as the file's own meta and read through the media REST route, so visitors see a chart only for files that route already shows them.
 
 It is built only on Riff's documented public API, as Riff Lyrics is.
