@@ -18,6 +18,18 @@ export function menu( P ) {
 	let menuFor = null;
 	const DOTS =
 		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>';
+	// WordPress's own external icon (@wordpress/icons), filled, after a link that opens a new window.
+	const EXTERNAL =
+		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M19.5 4.5h-7V6h4.44l-5.97 5.97 1.06 1.06L18 7.06v4.44h1.5v-7Zm-13 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3H17v3a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h3V5.5h-3Z"/></svg>';
+	// Go to post, in a window of its own (Riff's desktop app, or the Listen app installed), opens a
+	// new one rather than take the app's place; in a browser's tab, where back comes home, it stays
+	// a link like any other. Known by its id and the track's post, not by a mark on the item, so it
+	// is found still in a copy a riff.menu filter returns, and the items keep their documented shape.
+	const ownWindow = () =>
+		document.documentElement.classList.contains( 'riff-desktop-app' ) ||
+		window.matchMedia(
+			'(display-mode: standalone), (display-mode: window-controls-overlay)'
+		).matches;
 
 	function menuItems( t, at, button ) {
 		const items = [
@@ -151,6 +163,7 @@ export function menu( P ) {
 		const items = ( list || menuItems( t, at, button ) || [] ).filter(
 			( i ) => i && i.label && ( typeof i.run === 'function' || i.href )
 		);
+		const elsewhere = ownWindow();
 		el.replaceChildren(
 			...items.map( ( i ) => {
 				const item = document.createElement( i.href ? 'a' : 'button' );
@@ -162,6 +175,21 @@ export function menu( P ) {
 				item.setAttribute( 'role', 'menuitem' );
 				item.tabIndex = -1;
 				item.textContent = i.label;
+				if (
+					elsewhere &&
+					i.id === 'post' &&
+					t?.post?.url &&
+					i.href === t.post.url
+				) {
+					item.target = '_blank';
+					item.rel = 'noopener';
+					// Said as core says it, after the label, with WordPress's icon to see.
+					const sr = document.createElement( 'span' );
+					sr.className = 'riff-app-sr';
+					sr.textContent = ` ${ __( '(opens in a new tab)', 'riff' ) }`;
+					item.append( sr );
+					item.insertAdjacentHTML( 'beforeend', EXTERNAL );
+				}
 				item.addEventListener( 'click', ( e ) => {
 					if ( i.run ) {
 						e.preventDefault();

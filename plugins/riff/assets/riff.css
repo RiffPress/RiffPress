@@ -2408,6 +2408,18 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
+/* A link that opens a new window, as Go to post does in a window of its own:
+   WordPress's external icon after the words, their size and colour. */
+.riff-menu > a > svg,
+#riff .riff-menu > a > svg {
+	display: inline-block;
+	flex: none;
+	width: 1.25em;
+	height: 1.25em;
+	margin-inline-start: 0.25em;
+	vertical-align: -0.3em;
+}
+
 #riff .riff-queue-head {
 	display: flex;
 	align-items: flex-end;

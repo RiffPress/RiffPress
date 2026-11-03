@@ -87,4 +87,90 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-account' ) ).not.toHaveAttribute( 'open' );
 		await expect( page.locator( '.riff-app-account summary' ) ).toBeFocused();
 	} );
+
+	test( 'in a wide browser tab, where the desktop frame is drawn too, Go to post is a plain link that takes the tab', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'The frame is a computer\'s.' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
+		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-desktop\b/ );
+		await expect( page.locator( 'html' ) ).not.toHaveClass( /\briff-desktop-app\b/ );
+		await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
+		const item = page.locator( '.riff-menu:not([hidden])' ).getByRole( 'menuitem', { name: /^Go to post/ } );
+		await expect( item ).toHaveAccessibleName( 'Go to post' );
+		await expect( item ).not.toHaveAttribute( 'target' );
+		await expect( item.locator( 'svg' ) ).toHaveCount( 0 );
+	} );
+
+	test( 'Go to post opens the post in a new window in the desktop app and installed, with WordPress\'s icon and the words a screen reader needs', async ( {
+		context,
+	} ) => {
+		const app = pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`;
+		// The app in a page of its own, with what marks its window before its scripts run.
+		const open = async ( before ) => {
+			const page = await context.newPage();
+			await page.addInitScript( before );
+			await page.goto( app );
+			await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+			await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
+			return page;
+		};
+		const newWindow = async ( page ) => {
+			const item = page
+				.locator( '.riff-menu:not([hidden])' )
+				.getByRole( 'menuitem', { name: /Go to post.*opens in a new tab/ } );
+			await expect( item ).toHaveAccessibleName( 'Go to post (opens in a new tab)' );
+			await expect( item ).toHaveAttribute( 'target', '_blank' );
+			await expect( item ).toHaveAttribute( 'rel', 'noopener' );
+			await expect( item.locator( 'svg[aria-hidden="true"]' ) ).toBeVisible();
+			// The icon is drawn in the words' colour, a little taller than their letters.
+			const { height, fill, size, color } = await item.evaluate( ( el ) => {
+				const icon = el.querySelector( 'svg' );
+				return {
+					height: icon.getBoundingClientRect().height,
+					fill: getComputedStyle( icon ).fill,
+					size: parseFloat( getComputedStyle( el ).fontSize ),
+					color: getComputedStyle( el ).color,
+				};
+			} );
+			expect( height ).toBeCloseTo( size * 1.25, 0 );
+			expect( fill ).toBe( color );
+			return item;
+		};
+
+		// Riff's desktop app: its preload marks <html> as the parser makes it, before the page's
+		// scripts run (site-preload.js). The tests site has no WP_DEBUG, so ?riff_desktop=1 is not
+		// there to do it.
+		const desktop = await open( () =>
+			new MutationObserver( ( records, observer ) => {
+				if ( document.documentElement ) {
+					observer.disconnect();
+					document.documentElement.classList.add( 'riff-desktop' );
+				}
+			} ).observe( document, { childList: true } )
+		);
+		await expect( desktop.locator( 'html' ) ).toHaveClass( /\briff-desktop-app\b/ );
+		await newWindow( desktop );
+		await desktop.close();
+
+		// Installed as an app of its own. Chromium's emulation has no display-mode, so the page is
+		// told it the way it asks.
+		const installed = await open( () => {
+			const real = window.matchMedia.bind( window );
+			window.matchMedia = ( query ) =>
+				real( /display-mode:\s*standalone/.test( query ) ? 'all' : query );
+		} );
+		const item = await newWindow( installed );
+		const post = await item.getAttribute( 'href' );
+		// Pressed, the post opens in a new window and the app stays where it was.
+		const here = installed.url();
+		const [ opened ] = await Promise.all( [ context.waitForEvent( 'page' ), item.click() ] );
+		await expect( opened ).toHaveURL( post );
+		expect( installed.url() ).toBe( here );
+		await opened.close();
+		await installed.close();
+	} );
 } );
