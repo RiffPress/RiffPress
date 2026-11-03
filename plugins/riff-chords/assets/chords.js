@@ -9,7 +9,7 @@
  * and opens the view on it.
  * It listens to the player's riff:view, riff:track, riff:time, riff:play and riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
- * Sing, both loaded before it. */
+ * Sing; chart.js and timing.js are loaded before it. */
 ( () => {
 	const config = window.riffChords || {};
 	const chart = window.riffChordsChart;
