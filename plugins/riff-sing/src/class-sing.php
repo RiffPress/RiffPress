@@ -23,6 +23,10 @@ defined( 'ABSPATH' ) || exit;
  * written about it (docs/native.md). The Sing view reads it through the media REST route, so a
  * visitor sees a melody only for a file that route already shows them.
  *
+ * Or the melody is a MIDI file's vocal track, for a chart that comes from a score: the MIDI file is
+ * uploaded to the Media Library like any other, and the audio file's Melody file field names it.
+ * The typed melody, when there is one, comes first.
+ *
  * Everything else happens in the browser: the microphone is opened only when the listener asks, its
  * sound is turned into a note by an AudioWorklet on the device, and nothing is recorded or sent.
  * Everything it does with Riff goes through Riff's documented surface: `riff_register_view()` on
@@ -41,6 +45,21 @@ final class Sing {
 	 * The REST and Media Library field's name.
 	 */
 	public const FIELD = 'riff_sing_melody';
+
+	/**
+	 * The attachment meta key for the MIDI file, by its ID.
+	 */
+	public const MIDI_KEY = '_riff_sing_midi';
+
+	/**
+	 * The REST and Media Library field's name for the MIDI file.
+	 */
+	public const MIDI_FIELD = 'riff_sing_midi';
+
+	/**
+	 * What WordPress and browsers call a MIDI file's type.
+	 */
+	private const MIDI_TYPES = array( 'audio/midi', 'audio/mid', 'audio/x-midi' );
 
 	/**
 	 * The view's id.
@@ -86,6 +105,54 @@ final class Sing {
 				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
 			)
 		);
+		register_post_meta(
+			'attachment',
+			self::MIDI_KEY,
+			array(
+				'type'              => 'integer',
+				'single'            => true,
+				'default'           => 0,
+				'sanitize_callback' => static fn( $value ) => self::is_midi( absint( $value ) ) ? absint( $value ) : 0,
+				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
+			)
+		);
+	}
+
+	/**
+	 * Whether an attachment is a MIDI file.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return bool
+	 */
+	private static function is_midi( int $id ): bool {
+		return $id > 0 && 'attachment' === get_post_type( $id ) && in_array( (string) get_post_mime_type( $id ), self::MIDI_TYPES, true );
+	}
+
+	/**
+	 * A file's MIDI melody, the MIDI file's attachment ID, or 0 for none.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return int
+	 */
+	public static function midi( int $id ): int {
+		$midi = (int) get_post_meta( $id, self::MIDI_KEY, true );
+		return self::is_midi( $midi ) ? $midi : 0;
+	}
+
+	/**
+	 * The MIDI file a typed address or ID names: its attachment ID, 0 for nothing typed, or null for
+	 * something that isn't a MIDI file in the Media Library.
+	 *
+	 * @param mixed $value What was typed: an attachment ID or the file's address.
+	 * @return int|null
+	 */
+	private static function find_midi( $value ): ?int {
+		$value = trim( is_scalar( $value ) ? (string) $value : '' );
+		if ( '' === $value || '0' === $value ) {
+			return 0;
+		}
+		$id = ctype_digit( $value ) ? (int) $value : attachment_url_to_postid( esc_url_raw( $value ) );
+		return self::is_midi( $id ) ? $id : null;
 	}
 
 	/**
@@ -139,7 +206,18 @@ final class Sing {
 	 * @return bool
 	 */
 	private static function audio( int $id ): bool {
-		return 'attachment' === get_post_type( $id ) && str_starts_with( (string) get_post_mime_type( $id ), 'audio/' );
+		return 'attachment' === get_post_type( $id ) && self::song( (string) get_post_mime_type( $id ) );
+	}
+
+	/**
+	 * Whether a file of this type is a song to sing along with: audio, but not a MIDI file, which
+	 * holds a melody rather than having one.
+	 *
+	 * @param string $mime The file's type.
+	 * @return bool
+	 */
+	private static function song( string $mime ): bool {
+		return str_starts_with( $mime, 'audio/' ) && ! in_array( $mime, self::MIDI_TYPES, true );
 	}
 
 	/**
@@ -175,6 +253,57 @@ final class Sing {
 				),
 			)
 		);
+		register_rest_field(
+			'attachment',
+			self::MIDI_FIELD,
+			array(
+				// The MIDI file's address, for the Sing view to fetch, when whoever asks may see it: a
+				// visitor when the media route shows it to anyone, someone signed in when they may read it.
+				'get_callback'    => static function ( array $item ): ?string {
+					if ( ! self::audio( (int) $item['id'] ) ) {
+						return null;
+					}
+					$midi = self::midi( (int) $item['id'] );
+					return $midi && ( is_post_publicly_viewable( $midi ) || current_user_can( 'read_post', $midi ) ) ? (string) wp_get_attachment_url( $midi ) : '';
+				},
+				'update_callback' => static function ( $value, WP_Post $post ) {
+					if ( ! current_user_can( 'edit_post', $post->ID ) ) {
+						return new \WP_Error( 'rest_cannot_edit', __( 'Sorry, you are not allowed to edit this file.', 'riff-sing' ), array( 'status' => rest_authorization_required_code() ) );
+					}
+					$midi = self::find_midi( $value );
+					if ( ! self::audio( $post->ID ) && 0 === $midi ) {
+						return true;
+					}
+					if ( ! self::audio( $post->ID ) ) {
+						return new \WP_Error( 'rest_invalid_param', __( 'Only an audio file has a melody.', 'riff-sing' ), array( 'status' => 400 ) );
+					}
+					if ( null === $midi ) {
+						return new \WP_Error( 'rest_invalid_param', __( 'That isn\'t a MIDI file in the Media Library.', 'riff-sing' ), array( 'status' => 400 ) );
+					}
+					self::write_midi( $post->ID, $midi );
+					return true;
+				},
+				'schema'          => array(
+					'description' => __( 'The MIDI file whose vocal track is the melody when there is no UltraStar text: its address when read, and its address or ID when written.', 'riff-sing' ),
+					'type'        => array( 'string', 'integer', 'null' ),
+					'context'     => array( 'view', 'edit' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Names a file's MIDI melody, or removes it for 0.
+	 *
+	 * @param int $id   Attachment ID.
+	 * @param int $midi The MIDI file's attachment ID, or 0.
+	 */
+	private static function write_midi( int $id, int $midi ): void {
+		if ( $midi ) {
+			update_post_meta( $id, self::MIDI_KEY, $midi );
+		} else {
+			delete_post_meta( $id, self::MIDI_KEY );
+		}
 	}
 
 	/**
@@ -198,6 +327,13 @@ final class Sing {
 						'control' => 'textarea',
 						'rows'    => 6,
 					),
+					'enableSorting' => false,
+					'filterBy'      => false,
+				),
+				array(
+					'id'            => self::MIDI_FIELD,
+					'type'          => 'text',
+					'label'         => __( 'Melody file', 'riff-sing' ),
 					'enableSorting' => false,
 					'filterBy'      => false,
 				),
@@ -284,7 +420,8 @@ final class Sing {
 	public static function enqueue(): void {
 		wp_enqueue_script( 'riff-sing-timing', RIFF_SING_URL . 'assets/timing.js', array(), RIFF_SING_VERSION, true );
 		wp_enqueue_script( 'riff-sing-melody', RIFF_SING_URL . 'assets/melody.js', array(), RIFF_SING_VERSION, true );
-		wp_enqueue_script( 'riff-sing', RIFF_SING_URL . 'assets/sing.js', array( 'riff-sing-timing', 'riff-sing-melody', 'wp-a11y' ), RIFF_SING_VERSION, true );
+		wp_enqueue_script( 'riff-sing-midi', RIFF_SING_URL . 'assets/midi.js', array(), RIFF_SING_VERSION, true );
+		wp_enqueue_script( 'riff-sing', RIFF_SING_URL . 'assets/sing.js', array( 'riff-sing-timing', 'riff-sing-melody', 'riff-sing-midi', 'wp-a11y' ), RIFF_SING_VERSION, true );
 		wp_add_inline_script(
 			'riff-sing',
 			'window.riffSing = ' . wp_json_encode(
@@ -354,10 +491,10 @@ final class Sing {
 	 * @return array
 	 */
 	public static function field( $fields, $post ) {
-		if ( ! $post instanceof WP_Post || ! str_starts_with( (string) $post->post_mime_type, 'audio/' ) ) {
+		if ( ! $post instanceof WP_Post || ! self::song( (string) $post->post_mime_type ) ) {
 			return $fields;
 		}
-		$fields[ self::FIELD ] = array(
+		$fields[ self::FIELD ]      = array(
 			'label' => __( 'Melody', 'riff-sing' ),
 			'input' => 'html',
 			'html'  => sprintf(
@@ -367,6 +504,18 @@ final class Sing {
 				esc_textarea( self::melody( $post->ID ) )
 			),
 			'helps' => __( 'The tune to sing along with, in UltraStar\'s text format: a #BPM: line, then a line per syllable. Shown in the player’s Sing view.', 'riff-sing' ),
+		);
+		$midi                       = self::midi( $post->ID );
+		$fields[ self::MIDI_FIELD ] = array(
+			'label' => __( 'Melody file', 'riff-sing' ),
+			'input' => 'html',
+			'html'  => sprintf(
+				'<input type="text" class="text" name="attachments[%1$d][%2$s]" id="attachments-%1$d-%2$s" value="%3$s" />',
+				(int) $post->ID,
+				esc_attr( self::MIDI_FIELD ),
+				esc_attr( $midi ? (string) wp_get_attachment_url( $midi ) : '' )
+			),
+			'helps' => __( 'Or a MIDI file (.mid) from the Media Library, by its address or ID: its vocal track is the tune when the Melody field is empty, timed from the start of the song.', 'riff-sing' ),
 		);
 		return $fields;
 	}
@@ -380,10 +529,19 @@ final class Sing {
 	 */
 	public static function save( $post, $attachment ) {
 		$id = (int) ( $post['ID'] ?? 0 );
-		if ( ! $id || ! isset( $attachment[ self::FIELD ] ) || ! current_user_can( 'edit_post', $id ) || ! self::audio( $id ) ) {
+		if ( ! $id || ! current_user_can( 'edit_post', $id ) || ! self::audio( $id ) ) {
 			return $post;
 		}
-		self::write( $id, wp_unslash( (string) $attachment[ self::FIELD ] ) );
+		if ( isset( $attachment[ self::FIELD ] ) ) {
+			self::write( $id, wp_unslash( (string) $attachment[ self::FIELD ] ) );
+		}
+		if ( isset( $attachment[ self::MIDI_FIELD ] ) ) {
+			$midi = self::find_midi( wp_unslash( $attachment[ self::MIDI_FIELD ] ) );
+			// Something that isn't a MIDI file in the Media Library leaves what was named as it was.
+			if ( null !== $midi ) {
+				self::write_midi( $id, $midi );
+			}
+		}
 		return $post;
 	}
 }

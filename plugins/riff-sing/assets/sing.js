@@ -7,7 +7,8 @@
  * It listens to the player's riff:view, riff:time, riff:play and riff:ended events, which
  * Riff dispatches on its own element for any script, and reads where the song is through
  * window.riff.time(). riff:time and the lane's time come through timing.js, which it shares with
- * Riff Lyrics and Riff Chords; it needs nothing loaded before it but timing.js, melody.js and wp-a11y.
+ * Riff Lyrics and Riff Chords; it needs nothing loaded before it but timing.js, melody.js, midi.js
+ * and wp-a11y.
  *
  * The microphone is opened only when the listener presses Sing with the microphone, and closed when
  * they press Stop, leave the view, close Now Playing or leave the page. Its sound goes to an
@@ -92,7 +93,8 @@
 	// A singer's name, as the chart gives it or by their number.
 	const nameOf = ( part ) => part.name || fill( config.singer, part.index + 1 );
 
-	// The melody for a track that is a Media Library file; an empty string for none.
+	// The chart for a track that is a Media Library file: its typed melody, or failing that its
+	// MIDI file's vocal track. An empty string for none, null for one that can't be read.
 	function melodyFor( track ) {
 		const id = Number( track?.id );
 		if ( ! Number.isInteger( id ) || id <= 0 ) {
@@ -100,7 +102,7 @@
 		}
 		if ( ! cache.has( id ) ) {
 			const url = new URL( String( id ), config.media );
-			url.searchParams.set( '_fields', 'riff_sing_melody' );
+			url.searchParams.set( '_fields', 'riff_sing_melody,riff_sing_midi' );
 			const asked = fetch( url, {
 				credentials: 'same-origin',
 				headers: {
@@ -114,7 +116,24 @@
 					}
 					return r.json();
 				} )
-				.then( ( data ) => String( data?.riff_sing_melody || '' ) );
+				.then( ( data ) => {
+					const text = String( data?.riff_sing_melody || '' );
+					if ( text.trim() ) {
+						return melody.parse( text );
+					}
+					const file = String( data?.riff_sing_midi || '' );
+					if ( ! file || ! window.riffSingMidi ) {
+						return '';
+					}
+					return fetch( file, { credentials: 'same-origin' } )
+						.then( ( r ) => {
+							if ( ! r.ok ) {
+								throw new Error( String( r.status ) );
+							}
+							return r.arrayBuffer();
+						} )
+						.then( ( bytes ) => window.riffSingMidi.read( bytes ) );
+				} );
 			asked.catch( () => cache.delete( id ) );
 			cache.set( id, asked );
 		}
@@ -344,15 +363,15 @@
 			return;
 		}
 		try {
-			const text = await melodyFor( track );
+			const found = await melodyFor( track );
 			if ( mine !== turn ) {
 				return;
 			}
-			if ( ! text.trim() ) {
+			if ( found === '' ) {
 				say( where, config.none, Number( track.id ) );
 				return;
 			}
-			chart = melody.parse( text );
+			chart = found;
 			if ( ! chart ) {
 				say( where, config.broken, Number( track.id ) );
 				return;

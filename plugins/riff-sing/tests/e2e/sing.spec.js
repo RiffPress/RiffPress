@@ -13,6 +13,33 @@ const { own } = require( '../../../riff/tests/e2e/helpers/own' );
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
 const made = own();
 let postUrl;
+let midiUrl;
+
+// A MIDI file as a score program writes one: a track named Voice, three A4 crotchets at the default
+// 120 BPM with a lyric on each, made here byte by byte.
+function midiFile() {
+	const vlq = ( n ) => ( n > 127 ? [ ( n >> 7 ) | 0x80, n & 0x7f ] : [ n ] );
+	const text = ( type, at, s ) => [ ...vlq( at ), 0xff, type, s.length, ...Buffer.from( s ) ];
+	const events = [ ...text( 0x03, 0, 'Voice' ) ];
+	[ 'Sing', 'a', 'long' ].forEach( ( word, i ) => {
+		events.push( ...text( 0x05, i ? 240 : 0, word ), 0, 0x90, 69, 100, ...vlq( 240 ), 0x80, 69, 64 );
+	} );
+	events.push( 0, 0xff, 0x2f, 0 );
+	const u32 = ( n ) => [ n >>> 24, ( n >> 16 ) & 0xff, ( n >> 8 ) & 0xff, n & 0xff ];
+	return Buffer.from( [
+		...Buffer.from( 'MThd' ),
+		...u32( 6 ),
+		0,
+		0,
+		0,
+		1,
+		1,
+		224,
+		...Buffer.from( 'MTrk' ),
+		...u32( events.length ),
+		...events,
+	] );
+}
 let duetUrl;
 
 // A duet: Ada sings A over the first two seconds while Bo sings E, each a line of two notes.
@@ -59,6 +86,25 @@ test.beforeAll( async ( { requestUtils } ) => {
 		content: block( sung ) + block( plain ),
 	} );
 	postUrl = post.link;
+
+	// A track whose melody is a MIDI file's voice, in a post of its own.
+	const midi = await made.media( requestUtils, { name: 'riff-sing-e2e.mid', mimeType: 'audio/midi', buffer: midiFile() } );
+	const scored = await made.media(
+		requestUtils,
+		path.join( FIXTURES, 'compositions', '04 - It\'s a Brand New Day [new-day].mp3' )
+	);
+	await requestUtils.rest( {
+		method: 'POST',
+		path: `/wp/v2/media/${ scored.id }`,
+		data: { riff_sing_midi: midi.id },
+	} );
+	midiUrl = (
+		await made.post( requestUtils, {
+			title: `Riff Sing MIDI e2e ${ Date.now() }`,
+			status: 'publish',
+			content: block( scored ),
+		} )
+	).link;
 
 	const duet = await made.media(
 		requestUtils,
@@ -114,6 +160,12 @@ test( 'the Sing view shows the melody\'s words, says the voice stays on the devi
 	await expect( panel.locator( '.riff-sing-message' ) ).toHaveText( 'No melody for this track yet.' );
 	// Signed in as someone who can edit the Media Library: the way to the track's Melody field.
 	await expect( panel.getByRole( 'link', { name: 'Add a melody' } ) ).toHaveAttribute( 'href', /post\.php\?action=edit&post=\d+/ );
+} );
+
+test( 'a track whose melody is a MIDI file sings its voice track\'s words', async ( { page } ) => {
+	const panel = await open( page, midiUrl );
+	await expect( panel.locator( '.riff-sing-words' ) ).toHaveText( 'Sing a long' );
+	await expect( panel.getByRole( 'button', { name: 'Sing with the microphone' } ) ).toBeVisible();
 } );
 
 test( 'a microphone that isn\'t allowed says how to allow it, and nothing is listening', async ( { page } ) => {

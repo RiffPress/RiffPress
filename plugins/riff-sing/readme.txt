@@ -20,6 +20,7 @@ Riff Sing adds a Sing view to Riff's Now Playing, opened from its button in the 
 * A computer or USB microphone works through the browser, with a choice of input once it is allowed. Echo cancellation stays on so the speakers don't count as singing; headphones work best.
 * A MIDI keyboard, or a microphone that sends MIDI notes, works where the browser has Web MIDI (Chrome and Edge; not Safari yet), with exact notes and no guessing.
 * The melody is UltraStar's text format, the open format karaoke games such as UltraStar Deluxe and Performous read: a line per syllable, with its start, length and pitch, its beats counted from the start of the song or, in a chart marked #RELATIVE:yes, from the start of each line. Paste it into the Melody field of the track's audio file in the Media Library.
+* Or the melody comes from a score: upload its MIDI file (.mid) to the Media Library and name it in the audio file's Melody file field. Its vocal track, the one its lyrics fall on or else the one named for a voice, is the tune, with the lyrics the file carries, timed from the start of the song. The player fetches the file, so where uploads are served from another host, as an offload plugin does, that host has to allow it (CORS).
 * A duet's two singers (UltraStar's P1 and P2, and P3 for the lines both sing) each get a lane of their own and are scored on their own, one microphone each or a MIDI input each.
 * Visitors see a melody only for files the media REST route already shows them.
 

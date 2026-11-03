@@ -119,6 +119,73 @@ class Test_Riff_Sing extends Riff_TestCase {
 		$this->assertArrayNotHasKey( Sing::KEY, (array) $meta, 'one way in and out: the riff_sing_melody field' );
 	}
 
+	/**
+	 * A MIDI file in the Media Library, as WordPress files an upload of one.
+	 */
+	private static function midi_file(): int {
+		return self::factory()->attachment->create_object(
+			array(
+				'file'           => 'tune.mid',
+				'post_mime_type' => 'audio/midi',
+				'post_title'     => 'Tune',
+			)
+		);
+	}
+
+	public function test_a_midi_file_is_named_by_address_or_id_as_the_melody_and_only_a_midi_file(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id   = self::song();
+		$midi = self::midi_file();
+		$url  = wp_get_attachment_url( $midi );
+
+		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_midi' => $url ) );
+		$this->assertSame( $midi, Sing::midi( $id ), 'by its address' );
+		$fields = apply_filters( 'attachment_fields_to_edit', array(), get_post( $id ) );
+		$this->assertStringContainsString( 'value="' . esc_attr( $url ) . '"', $fields['riff_sing_midi']['html'] );
+
+		$image = self::attach( 'cover.png' );
+		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_midi' => (string) $image ) );
+		$this->assertSame( $midi, Sing::midi( $id ), 'an image is no melody, and what was named stays' );
+
+		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_midi' => '' ) );
+		$this->assertSame( 0, Sing::midi( $id ) );
+		$this->assertFalse( metadata_exists( 'post', $id, Sing::MIDI_KEY ) );
+
+		apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_midi' => (string) $midi ) );
+		$this->assertSame( $midi, Sing::midi( $id ), 'by its ID' );
+
+		$this->assertArrayNotHasKey( 'riff_sing_midi', apply_filters( 'attachment_fields_to_edit', array(), get_post( $midi ) ), 'a MIDI file holds a melody and has none of its own' );
+		$this->assertArrayNotHasKey( 'riff_sing_melody', apply_filters( 'attachment_fields_to_edit', array(), get_post( $midi ) ) );
+	}
+
+	public function test_the_midi_file_is_a_rest_field_visitors_read_by_its_address(): void {
+		$GLOBALS['wp_rest_server'] = null;
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		do_action( 'rest_api_init' );
+		$id      = self::song();
+		$midi    = self::midi_file();
+		$request = new WP_REST_Request( 'POST', '/wp/v2/media/' . $id );
+		$request->set_body_params( array( 'riff_sing_midi' => $midi ) );
+		$this->assertSame( 200, rest_do_request( $request )->get_status() );
+		$this->assertSame( $midi, Sing::midi( $id ) );
+
+		$request->set_body_params( array( 'riff_sing_midi' => self::attach( 'cover.png' ) ) );
+		$this->assertSame( 400, rest_do_request( $request )->get_status(), 'only a MIDI file' );
+		$this->assertSame( $midi, Sing::midi( $id ) );
+
+		wp_set_current_user( 0 );
+		$read = new WP_REST_Request( 'GET', '/wp/v2/media/' . $id );
+		$read->set_query_params( array( '_fields' => 'riff_sing_melody,riff_sing_midi' ) );
+		$data = rest_do_request( $read )->get_data();
+		$this->assertSame( wp_get_attachment_url( $midi ), $data['riff_sing_midi'], 'the address, for the Sing view to fetch' );
+		$this->assertSame( '', $data['riff_sing_melody'] );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$request->set_body_params( array( 'riff_sing_midi' => '' ) );
+		$this->assertContains( rest_do_request( $request )->get_status(), array( 401, 403 ) );
+		$this->assertSame( $midi, Sing::midi( $id ) );
+	}
+
 	public function test_the_script_loads_only_where_the_player_renders_and_says_where_its_worklet_is(): void {
 		$this->assertFalse( wp_script_is( 'riff-sing', 'enqueued' ) );
 
@@ -127,6 +194,7 @@ class Test_Riff_Sing extends Riff_TestCase {
 		$this->assertTrue( wp_script_is( 'riff-sing', 'enqueued' ) );
 		$this->assertTrue( wp_script_is( 'riff-sing-melody', 'enqueued' ), 'its melody reader with it' );
 		$this->assertTrue( wp_script_is( 'riff-sing-timing', 'enqueued' ), 'and the timing it follows the song with' );
+		$this->assertTrue( wp_script_is( 'riff-sing-midi', 'enqueued' ), 'and its MIDI reader' );
 		$this->assertContains( 'riff-tokens', wp_styles()->registered['riff-sing']->deps );
 		$data = wp_scripts()->get_inline_script_data( 'riff-sing', 'before' );
 		$this->assertStringContainsString( 'wp\/v2\/media\/', $data );
