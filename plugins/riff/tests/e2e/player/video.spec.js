@@ -16,6 +16,7 @@ const TEST = path.join( __dirname, '..', '..', '..', '..', '..', 'packages', 'fi
 const made = own();
 let postUrl;
 let pageUrl;
+let albumUrl;
 // Each project's titles are its own, as the projects share the tests site and its albums.
 let withVideo;
 let songOnly;
@@ -58,6 +59,15 @@ test.beforeAll( async ( { requestUtils }, testInfo ) => {
 		content: '<!-- wp:riff/app {"align":"full"} /-->',
 	} );
 	pageUrl = listen.link;
+	// The album the tone's tags name, opened by its address, wherever it falls in the Albums grid.
+	const albums = await requestUtils.rest( {
+		path: '/wp/v2/riff_albums',
+		params: { search: 'Test Pattern', per_page: 100 },
+	} );
+	const album = albums.find( ( term ) => term.name === 'Test Pattern' );
+	const url = new URL( pageUrl );
+	url.searchParams.set( 'riff_album', String( album.id ) );
+	albumUrl = url.href;
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
@@ -65,15 +75,16 @@ test.afterAll( async ( { requestUtils } ) => {
 } );
 
 /**
- * Whether the picture is showing in Now Playing and playing.
+ * Whether the picture is showing in Now Playing and playing on from where it was.
  *
- * @param {import('@playwright/test').Page} page Page.
+ * @param {import('@playwright/test').Page} page   Page.
+ * @param {number}                          [from] Where the video was, in seconds.
  */
-async function seesTheVideo( page ) {
+async function seesTheVideo( page, from = 0 ) {
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
 	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'video' );
 	await expect( page.locator( '.riff-video' ) ).toBeVisible();
-	await expect.poll( async () => ( await audioState( page ) ).videoTime ).toBeGreaterThan( 1 );
+	await expect.poll( async () => ( await audioState( page ) ).videoTime ).toBeGreaterThan( from + 1 );
 	const now = await audioState( page );
 	expect( now.videoPaused ).toBe( false );
 	expect( now.paused ).toBe( true );
@@ -110,19 +121,14 @@ test.describe( 'A song with a video version', () => {
 			await page.locator( '.riff-row', { hasText: withVideo } ).click();
 			await expect.poll( async () => ( await audioState( page ) ).videoPaused ).toBe( true );
 			await expect( page.locator( '.riff-np' ) ).toBeHidden();
+			const paused = ( await audioState( page ) ).videoTime;
 			await page.locator( '.riff-row', { hasText: withVideo } ).click();
-			await seesTheVideo( page );
+			await seesTheVideo( page, paused );
 		} );
 
 		test( 'pressed in the Listen app\'s album, opens Now Playing on the video and plays it', async ( { page } ) => {
-			await page.goto( pageUrl );
-			await page.locator( '.riff-app-tab', { hasText: 'Albums' } ).click();
-			await page
-				.locator( '.riff-card[data-riff-album]', { hasText: 'Test Pattern' } )
-				.first()
-				.locator( '.riff-card-link' )
-				.click();
-			await expect( page ).toHaveURL( /riff_album=\d+/ );
+			await page.goto( albumUrl );
+			await expect( page.locator( '.riff-album-title' ) ).toHaveText( 'Test Pattern' );
 			await page.locator( '.riff-album-tracks .riff-row', { hasText: withVideo } ).click();
 			await seesTheVideo( page );
 		} );
