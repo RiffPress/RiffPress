@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.0.0
+Stable tag: 6.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.0.1 =
+* Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
+* Fixed: the turntable's needle drops onto the record when its view opens as the music starts.
+
 = 6.0.0 =
 * Riff drops its desktop app, and the Listen app installed from the browser is its one app.
 * Fixed: standalone mode is laid out as sidebar, rail or tabs from one choice in its stylesheet, and the desktop frame shows where it is sidebar rather than wherever there is a mouse.
@@ -177,8 +181,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: Jump back in no longer shows the Listen page as a post with nothing in it.
 * Faster: a deploy that leaves the drawing code alone keeps every drawn cover's address, so covers stay cached.
 * Faster: a drawn cover is kept as a file in uploads once drawn, so pages link to it and it no longer starts WordPress for each request.
-
-= 5.6.1 =
-* Fixed: FLAC, Ogg and M4A files keep their tags, so the catalog files them by artist and album.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

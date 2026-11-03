@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,9 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 It is built only on Riff's documented public API, as Riff Lyrics is.
 
 == Changelog ==
+
+= 0.3.1 =
+* Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
 
 = 0.3.0 =
 * A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
