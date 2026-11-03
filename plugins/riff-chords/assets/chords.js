@@ -6,7 +6,7 @@
  * fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(), with a count-in, a bar of clicks at the chart's tempo, before it goes round.
  * Each practice control has a key too, registered on the server (riff_register_shortcut()) and
- * given what it does with window.riff.shortcut() once the player is ready.
+ * given what it does with window.riff.shortcut() while the view shows a chart.
  * It listens to the player's riff:view, riff:track, riff:time, riff:play and riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
  * Sing, both loaded before it. */
@@ -261,6 +261,26 @@
 	}
 
 	let tools = null;
+	// The keys, registered on the server so the listener's profile lists them, are given what they
+	// do only while the view shows a chart, where what they change can be seen; the rest of the
+	// time the letters are the page's, for find as you type and anything else. Speed's are left
+	// out where the player cannot change it.
+	let unbind = [];
+	function bindKeys() {
+		unbindKeys();
+		if ( ! showing || ! tools || typeof player()?.shortcut !== 'function' ) {
+			return;
+		}
+		for ( const [ id, run ] of Object.entries( tools.keys ) ) {
+			if ( run ) {
+				unbind.push( player().shortcut( id, () => ( run(), paintTools() ) ) );
+			}
+		}
+	}
+	function unbindKeys() {
+		unbind.forEach( ( off ) => off() );
+		unbind = [];
+	}
 	function practiceTools() {
 		const box = el( 'div', 'riff-chords-tools' );
 		box.setAttribute( 'role', 'group' );
@@ -549,6 +569,7 @@
 		current = -1;
 		paintTools();
 		follow( timing.now() );
+		bindKeys();
 	}
 
 	// Marks the chord being played, and keeps its line in the middle of the chart, unless the
@@ -734,6 +755,7 @@
 		const mine = ++turn;
 		song = null;
 		tools = null;
+		unbindKeys();
 		current = -1;
 		if ( ! track ) {
 			say( where, config.idle || '' );
@@ -760,27 +782,6 @@
 	if ( ! chart ) {
 		return;
 	}
-	// The keys, registered on the server so the listener's profile lists them, act while the view
-	// shows a chart, where what they change can be seen. window.riff is the #riff element until
-	// the player is ready.
-	let keyed = false;
-	const keys = () => {
-		if ( keyed || typeof window.riff?.shortcut !== 'function' ) {
-			return;
-		}
-		keyed = true;
-		for ( const id of [ 'chords-loop', 'chords-slower', 'chords-faster', 'chords-down', 'chords-up' ] ) {
-			window.riff.shortcut( id, () => {
-				const run = showing && song && tools?.keys[ id ];
-				if ( run ) {
-					run();
-					paintTools();
-				}
-			} );
-		}
-	};
-	keys();
-	document.addEventListener( 'riff:ready', keys );
 	// The view, filled as it opens and again as the track changes while it is open.
 	document.addEventListener( 'riff:view', ( e ) => {
 		if ( e.detail?.id !== 'chords' ) {
@@ -789,6 +790,8 @@
 		showing = !! e.detail.open;
 		if ( showing ) {
 			load( e.detail.view, e.detail.track );
+		} else {
+			unbindKeys();
 		}
 	} );
 	document.addEventListener( 'riff:track', ( e ) => {

@@ -158,9 +158,15 @@ test( 'the practice controls have keys: A for the loop, S and F for the speed, D
 	await expect( ab ).toHaveText( [ 'A', 'B' ] );
 	await expect( toggle ).toHaveAttribute( 'aria-pressed', 'false' );
 
-	// With the view closed there is nothing to see them change, so they change nothing.
-	await page.evaluate( () => window.riff.closeView() );
+	// With the view closed there is nothing to see them change, so they change nothing, and the
+	// letter is left to the page.
+	await page.evaluate( () => {
+		window.riff.closeView();
+		window.riffKeyTaken = null;
+		document.addEventListener( 'keydown', ( e ) => ( window.riffKeyTaken = e.defaultPrevented ) );
+	} );
 	await page.keyboard.press( 'u' );
+	expect( await page.evaluate( () => window.riffKeyTaken ) ).toBe( false );
 	await page.evaluate( () => window.riff.openView( 'chords' ) );
 	await expect( chords ).toHaveText( [ 'G', 'C', 'D', 'Em', 'F' ] );
 } );
