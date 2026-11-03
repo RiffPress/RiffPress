@@ -20,7 +20,7 @@ Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in 
 * The chord being played is drawn as a guitar or ukulele fingering, or on a piano's keys, with the next chord beside it. A chart without times shows every chord in it instead. The instrument is chosen in the Chords view, and the listener's browser remembers it.
 * Slow the song down, or speed it up, from 50% to 150%, and its pitch stays where it was.
 * Loop a part: A where it starts and B where it ends, or Loop beside a part's name.
-* Transpose and capo change the chords' names and fingerings, not the music.
+* Transpose and capo change the chords' names and fingerings, not the music. A piano has no capo, so with Piano chosen the chords are named as they sound.
 * A tap on a line, or on a part's name, takes the song there.
 * The chart is typed into a Chords field on the audio file in the Media Library, kept as the file's own meta and read through the media REST route, so visitors see a chart only for files that route already shows them.
 

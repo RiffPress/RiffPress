@@ -1,9 +1,9 @@
 /* Riff Chords: fills the Chords view of Now Playing, registered on the server as Riff registers its
  * own (riff_register_view()), with the chord chart kept on the track's file,
  * from the media REST route, and gives the listener what they need to play along: the chord being
- * played, drawn as a guitar or ukulele fingering or on a piano's keys, with the next one; the speed, slower or faster with the
- * pitch kept, through window.riff.speed(); transpose and capo, which change the chords' names and
- * fingerings and not the music; and a loop, from A to B or around one section of the song, through
+ * played, drawn as a guitar or ukulele fingering or on a piano's keys, with the next one; the
+ * speed, slower or faster with the pitch kept, through window.riff.speed(); transpose and, on a
+ * guitar or ukulele, capo, which change the chords' names and fingerings and not the music; and a loop, from A to B or around one section of the song, through
  * window.riff.seek(). It listens to the player's riff:view, riff:track, riff:time, riff:play and
  * riff:pause events, which Riff dispatches on its own element for any script. The chart is read by
  * chart.js, and the song followed through timing.js, which it shares with Riff Lyrics and Riff
@@ -97,9 +97,10 @@
 	const capoOn = () => ( instrument === 'piano' ? 0 : practice.capo );
 	const shift = () => practice.steps - ( capoOn() - chartCapo() );
 	const firstChord = () => song?.chords[ 0 ]?.piece.chord || '';
+	// The key the chords are in, which on a piano, named as they sound, is the key they are named in.
 	const keyNow = () => {
 		const key = song?.read.meta.key || firstChord();
-		return key ? chart.transpose( key, practice.steps ) : '';
+		return key ? chart.transpose( key, instrument === 'piano' ? shift() : practice.steps ) : '';
 	};
 	const shapesKey = () => {
 		const key = song?.read.meta.key || firstChord();
@@ -202,7 +203,7 @@
 			const height = key.white ? 45 : 28;
 			draw( 'rect', { x: key.x, y: 0.5, width, height, rx: 1, class: `riff-chords-piano-key${ key.white ? '' : ' is-black' }` } );
 			if ( pressed.has( key.k ) ) {
-				draw( 'circle', { cx: key.x + width / 2, cy: height - 5, r: 2.2, class: 'riff-chords-dot' } );
+				draw( 'circle', { cx: key.x + width / 2, cy: height - 5, r: 2.2, class: `riff-chords-dot${ key.white ? '' : ' is-black' }` } );
 			}
 		}
 		return svg;
