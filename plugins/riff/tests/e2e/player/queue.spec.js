@@ -102,7 +102,7 @@ test.describe( 'Player', () => {
 		await items.nth( 1 ).click();
 		await expect( menu ).toBeHidden();
 		await expect( more ).toBeFocused();
-		expect( await page.evaluate( () => window.riffPractised ) ).toBe( 'Trombone Detritus' );
+		expect( await page.evaluate( () => window.riffPractised ) ).toBe( 'Underground' );
 		const row = ( await page.evaluate( () => window.riffMenuSeen ) ).at( -1 );
 		expect( row ).toMatchObject( { where: 'row' } );
 		expect( row.ids.slice( 0, 2 ) ).toEqual( [ 'next', 'add' ] );
