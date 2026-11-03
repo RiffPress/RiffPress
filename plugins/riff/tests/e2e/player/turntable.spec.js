@@ -147,6 +147,44 @@ test.describe( 'Turntable', () => {
 		await expect.poll( platter ).toEqual( [ 'coasting, silent', 'driven, silent', 'coasting, silent', 'driven, heard' ] );
 		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate ) ).toBe( 1 );
 	} );
+
+	test( 'opened as the music starts, the needle drops onto the record, and the music winds down and comes up to speed under it', async ( { page } ) => {
+		// With motion from the start: the record comes out and the needle drops only with it.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await openView( page, 'turntable' );
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		const arm = page.locator( '.riff-arm' );
+		// Not at its rest, -14°, off the record: down in the groove, turned in over it.
+		await expect( arm ).toHaveAttribute( 'data-riff-down', '' );
+		await expect.poll( () => arm.evaluate( ( el ) => parseFloat( getComputedStyle( el ).rotate ) ) ).toBeGreaterThan( 0 );
+		// The music's speed, each frame from here on.
+		await page.evaluate( () => {
+			const audio = document.querySelector( '.riff-audio' );
+			window.riffRates = [];
+			const sample = () => {
+				window.riffRates.push( { rate: audio.playbackRate, heard: ! audio.paused } );
+				requestAnimationFrame( sample );
+			};
+			sample();
+		} );
+		const heard = () => page.evaluate( () => window.riffRates.filter( ( s ) => s.heard ).map( ( s ) => s.rate ) );
+		const toggle = page.locator( '.riff-bar [data-riff-action="toggle"]' ).first();
+		// Stopped: heard slowing below its own speed before it falls silent.
+		await toggle.click();
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( true );
+		expect( Math.min( ...( await heard() ) ) ).toBeLessThan( 0.5 );
+		// Started: heard from a crawl, rising to its own speed.
+		await page.evaluate( () => ( window.riffRates = [] ) );
+		await toggle.click();
+		await expect.poll( async () => ( await heard() ).includes( 1 ) ).toBe( true );
+		const up = await heard();
+		expect( up[ 0 ] ).toBeLessThan( 0.5 );
+		expect( up.some( ( r ) => r > 0.5 && r < 1 ) ).toBe( true );
+		// And the arm is still on the record.
+		expect( await arm.evaluate( ( el ) => parseFloat( getComputedStyle( el ).rotate ) ) ).toBeGreaterThan( 0 );
+	} );
 } );
 
 test.describe( 'Turntable turned off', () => {
