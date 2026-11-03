@@ -131,7 +131,7 @@ test.describe( 'A song with a video version', () => {
 			await page.goto( postUrl );
 			await page.locator( '.riff-row', { hasText: songOnly } ).click();
 			await hearsTheSong( page );
-		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+			await expect( page.locator( '.riff-np' ) ).toBeHidden();
 		} );
 	} );
 
