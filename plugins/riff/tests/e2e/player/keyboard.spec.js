@@ -147,9 +147,8 @@ test.describe( 'Player', () => {
 		await page.keyboard.press( 'Control+o' );
 		await page.keyboard.press( 'Alt+o' );
 		expect( await pressed( page ) ).toHaveLength( 1 );
-		// A mark the modifier typed counts: ] is AltGr+9 on a German keyboard, which Windows reports
-		// as Ctrl and Alt, and Option+6 on a German Mac. Ctrl, or Alt on the ] key itself, as a
-		// browser's own shortcut would be, doesn't.
+		// A mark AltGr typed counts: ] is AltGr+9 on a German keyboard, which Windows reports as Ctrl
+		// and Alt. Ctrl, Alt or Option without AltGr, which may be a browser's own shortcut, doesn't.
 		await page.evaluate( () =>
 			window.riff.shortcut( 'e2e-mark', ( track, event ) => window.riffKeys.push( event.code ) )
 		);
@@ -161,7 +160,7 @@ test.describe( 'Player', () => {
 			press( { code: 'Digit9', ctrlKey: true, altKey: true, modifierAltGraph: true } );
 			press( { code: 'Digit6', altKey: true } );
 		} );
-		await expect.poll( () => pressed( page ) ).toEqual( [ 'Underground o', 'Digit9', 'Digit6' ] );
+		await expect.poll( () => pressed( page ) ).toEqual( [ 'Underground o', 'Digit9' ] );
 		expect( ( await audioState( page ) ).paused ).toBe( false );
 
 		// Not while typing.
@@ -183,12 +182,12 @@ test.describe( 'Player', () => {
 		await page.evaluate( () =>
 			window.wp.hooks.removeFilter( 'riff.shortcuts', 'test' )
 		);
-		expect( await pressed( page ) ).toHaveLength( 3 );
+		expect( await pressed( page ) ).toHaveLength( 2 );
 
 		// Taken away, it does nothing; the key is still the plugin's, so Riff doesn't act on it.
 		await page.evaluate( () => window.riffStopKey() );
 		await page.keyboard.press( 'o' );
-		expect( await pressed( page ) ).toHaveLength( 3 );
+		expect( await pressed( page ) ).toHaveLength( 2 );
 
 		// A visitor has no single-key shortcuts, so none of a plugin's either.
 		const visitor = await browser.newContext( { storageState: { cookies: [], origins: [] } } );

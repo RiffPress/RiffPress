@@ -80,9 +80,10 @@ window.riff.shortcut( 'loop', ( track, event ) => toggleLoop( track ) );
 A plugin's key is a single-key shortcut, so it keeps their rules: nothing while the listener types
 in a field or holds Ctrl, Alt or Command, nothing until a track is loaded, and nothing for a
 visitor, for a listener who turned the shortcuts off, or where the `riff.shortcuts` filter turns
-them off. A mark that AltGr or Option typed still counts, as that is how many keyboards type one:
-`[` is AltGr+8 on a German keyboard and Option+5 on a German Mac. Alt on a key that types its own
-character, as Alt+1 or Alt+] on an American one, stays the browser's, and a letter never counts. The profile's one
+them off. A mark typed with AltGr still counts where the browser reports AltGr, as that is how
+many keyboards type one: `[` is AltGr+8 on a German keyboard. Alt and Option alone never do, as
+they are the browser's and the system's, so a Mac with a German layout, which types `[` with
+Option, can't reach a plugin's `[`; a letter or a digit is a key every keyboard types on its own. The profile's one
 checkbox turns Riff's and every plugin's off together. Riff's own letters, K, J, L, N and P, and
 Space are not a plugin's to take, nor is a key another plugin has; `riff_register_shortcut()`
 refuses one, and returns `false`.

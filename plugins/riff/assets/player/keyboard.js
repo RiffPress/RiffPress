@@ -48,20 +48,15 @@ export function keyboard( P ) {
 	}
 
 	document.addEventListener( 'keydown', ( e ) => {
-		// AltGr, which Windows reports as Ctrl and Alt, and Option on a Mac type the marks on many
-		// keyboards: [ and ] are AltGr+8 and 9 on a German one, Option+5 and 6 on a German Mac.
-		// Such a press can only be a plugin's mark, and only when the modifier made the character:
-		// AltGr, or Alt on a digit or a letter key that typed something other than its own. Alt+1
-		// stays the browser's, as does Alt with Escape, Tab or an arrow.
-		const bare = /^(?:Digit|Key)(.)$/.exec( e.code || '' )?.[ 1 ];
+		// AltGr types the marks on many keyboards, [ and ] as AltGr+8 and 9 on a German one, and
+		// Windows reports it as Ctrl and Alt. Where the browser says AltGr made the character, the
+		// press can only be a plugin's mark. Alt and Option alone stay the browser's and the
+		// system's: which character a key types without them is the layout's, and a page can't
+		// know it.
 		const typed =
 			! e.metaKey &&
 			[ ...e.key ].length === 1 &&
-			( e.getModifierState?.( 'AltGraph' ) ||
-				( e.altKey &&
-					! e.ctrlKey &&
-					!! bare &&
-					e.key.toLowerCase() !== bare.toLowerCase() ) );
+			!! e.getModifierState?.( 'AltGraph' );
 		const chord = e.ctrlKey || e.metaKey || e.altKey;
 		if ( ! P.track() || e.defaultPrevented || ( chord && ! typed ) ) {
 			return;
