@@ -43,7 +43,7 @@ wp_head();
 // with a riff:frame event. The desktop frame shows where it is sidebar, and always in Riff's desktop
 // app or installed with the window's controls over the page: the document is then riff-frame.
 // No size is written here: the frame is CSS's.
-wp_print_inline_script_tag( '(function(){var r=document.documentElement,read=function(){var f=getComputedStyle(r).getPropertyValue("--riff-frame").trim()||"tabs";r.classList.toggle("riff-frame",f==="sidebar"||r.classList.contains("riff-desktop")||r.classList.contains("riff-desktop-overlay"));if(r.dataset.riffFrame!==f){r.dataset.riffFrame=f;dispatchEvent(new CustomEvent("riff:frame",{detail:f}));}};read();addEventListener("resize",read);matchMedia("(display-mode: window-controls-overlay)").addEventListener("change",read);})();' );
+wp_print_inline_script_tag( '(function(){var r=document.documentElement,read=function(){var f=getComputedStyle(r).getPropertyValue("--riff-frame").trim()||"tabs";r.classList.toggle("riff-frame",f==="sidebar"||r.classList.contains("riff-desktop-app")||r.classList.contains("riff-desktop-overlay"));if(r.dataset.riffFrame!==f){r.dataset.riffFrame=f;dispatchEvent(new CustomEvent("riff:frame",{detail:f}));}};read();addEventListener("resize",read);matchMedia("(display-mode: window-controls-overlay)").addEventListener("change",read);})();' );
 ?>
 </head>
 <body class="riff-standalone">
