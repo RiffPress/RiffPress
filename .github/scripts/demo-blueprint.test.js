@@ -227,7 +227,9 @@ test( 'the landing page takes its own address from the Pages build', () => {
 		html,
 		/property="og:image" content="\{\{pages_url\}\}og\/home\.png"/
 	);
-	assert.match( html, /blueprint-url=\{\{pages_url\}\}blueprint\.json/ );
+	// Its demo buttons open the live demo, which runs main; Playground is for a pull request's own.
+	assert.match( html, /href="https:\/\/next\.riffpress\.com\/listen\/app\/"[^>]*>Open the demo</ );
+	assert.doesNotMatch( html, /playground\.wordpress\.net/ );
 } );
 
 test( 'every human-facing link names the same landing page', () => {
