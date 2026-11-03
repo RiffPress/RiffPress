@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.6.1 =
+* Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
+
 = 1.6.0 =
 * A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
 * Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
@@ -37,8 +40,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 1.3.0 =
 * Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf.
-
-= 1.2.0 =
-* Riff Lyrics and Riff Sign In say which Riff they need, Requires Riff in their headers, stay out of the way on an older one, and CI holds each to the hooks it uses.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

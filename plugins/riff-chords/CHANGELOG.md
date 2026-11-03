@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/RiffPress/RiffPress/compare/riff-chords-v0.3.0...riff-chords-v0.3.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **player:** a view's button shows only for a track it has something for, and an open view gives way to one without ([#873](https://github.com/RiffPress/RiffPress/issues/873)) ([33d83b2](https://github.com/RiffPress/RiffPress/commit/33d83b2bb1e4b34d06ce488e03e3a214d06fa6c5))
+
 ## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-chords-v0.2.0...riff-chords-v0.3.0) (2026-11-03)
 
 
