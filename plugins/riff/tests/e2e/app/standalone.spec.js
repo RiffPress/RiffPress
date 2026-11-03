@@ -1,5 +1,5 @@
 /**
- * Standalone mode, at the page's app/ address: an album page tinted from its cover, a playlist post, the sidebar on a wide screen and tabs on a phone, pills, the wide album header, the sidebar's rail, a contrast theme, and the app on its own without the theme.
+ * Standalone mode, at the page's app/ address: an album page tinted from its cover, a playlist post, the sidebar on a wide screen and tabs on a phone, pills, the wide album header, the sidebar's rail, folded too while a panel leaves the page too little room, a contrast theme, and the app on its own without the theme.
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -7,6 +7,7 @@ const AxeBuilder = require( '@axe-core/playwright' ).default;
 const { own } = require( '../helpers/own' );
 const { expectTidy } = require( '../helpers/tidy' );
 const { AXE_TAGS, systemColours, playing, appSite } = require( '../helpers/site' );
+const { openView } = require( '../helpers/views' );
 
 const made = own();
 let pageUrl;
@@ -300,6 +301,46 @@ test.describe( 'Standalone', () => {
 		await toggle.click();
 		expect( await width() ).toBeGreaterThan( 200 );
 		await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
+	} );
+
+	test( 'a panel that leaves too little room beside the library folds it to its rail, so an album\'s rows keep their titles (#827)', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'a phone has tabs, and a panel covers the screen' );
+		await page.setViewportSize( { width: 1024, height: 768 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=albums' );
+		await page
+			.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } )
+			.first()
+			.locator( '.riff-card-link' )
+			.click();
+		await page.locator( '[data-riff-app-action="play"]' ).click();
+		await expect.poll( async () => ( await playing( page ) ).paused ).toBe( false );
+		const width = async () => ( await page.locator( '.riff-app-bar' ).boundingBox() ).width;
+		const toggle = page.locator( '.riff-app-collapse' );
+		await expect( toggle ).toBeVisible();
+		expect( await width() ).toBeGreaterThan( 200 );
+
+		await openView( page, 'about' );
+		await expect.poll( width ).toBeLessThan( 100 );
+		// Folded by the room left, not by the listener: there is nothing for the toggle to open.
+		await expect( toggle ).toBeHidden();
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'true' );
+		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeVisible();
+		// A row's title has the room the number, the length and the menu leave it: about a sixth of the
+		// list before, with the library open beside the page.
+		const share = await page.evaluate( () => {
+			const list = document.querySelector( '.riff-album-tracks' ).getBoundingClientRect().width;
+			const title = document.querySelector( '.riff-album-tracks .riff-row-title' ).getBoundingClientRect().width;
+			return title / list;
+		} );
+		expect( share ).toBeGreaterThan( 0.4 );
+
+		// Closed, the library opens again as the listener left it.
+		await page.locator( '.riff-bar [data-riff-control="about"]' ).click();
+		await expect.poll( width ).toBeGreaterThan( 200 );
+		await expect( toggle ).toBeVisible();
 	} );
 
 	test( 'in a contrast theme the current view and a focused account link still show', async ( {
