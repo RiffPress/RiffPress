@@ -220,14 +220,14 @@ test( 'no workflow, blueprint, or landing page hardcodes a Pages address', () =>
 	assert.deepEqual( hits, [] );
 } );
 
-test( 'the landing page takes its own address from the Pages build', () => {
+test( 'the landing page takes its own address from the Pages build and links to the live demo', () => {
 	const html = read( 'site/index.html' );
 	assert.match( html, /<link rel="canonical" href="\{\{pages_url\}\}">/ );
 	assert.match(
 		html,
 		/property="og:image" content="\{\{pages_url\}\}og\/home\.png"/
 	);
-	assert.match( html, /blueprint-url=\{\{pages_url\}\}blueprint\.json/ );
+	assert.match( html, /href="https:\/\/next\.riffpress\.com\/listen\/app\/"/ );
 } );
 
 test( 'every human-facing link names the same landing page', () => {
