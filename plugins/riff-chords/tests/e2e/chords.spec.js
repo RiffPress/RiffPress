@@ -157,5 +157,15 @@ test( 'a count-in at the chart\'s tempo: the loop stops at its start, counts a b
 	await expect( panel.locator( '.riff-chords-count' ) ).toHaveText( /^[1-4]$/ );
 	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 5000 } ).toBe( true );
 	await expect( panel.locator( '.riff-chords-count' ) ).toBeEmpty();
+	// From A, inside the loop.
 	await expect.poll( () => page.evaluate( () => window.riff.time() ) ).toBeGreaterThan( 0 );
+	expect( await page.evaluate( () => window.riff.time() ) ).toBeLessThan( 3 );
+
+	// Turned off while it counts, the music plays on from A at once.
+	await page.evaluate( () => window.riff.seek( 3.5 ) );
+	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 5000 } ).toBe( false );
+	await countIn.click();
+	await expect( countIn ).toHaveAttribute( 'aria-pressed', 'false' );
+	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 1000 } ).toBe( true );
+	expect( await page.evaluate( () => window.riff.time() ) ).toBeLessThan( 1 );
 } );

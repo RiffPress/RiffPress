@@ -25,7 +25,7 @@
 	const loop = { a: null, b: null, on: false, last: 0, frame: 0 };
 	// The count-in, off until the listener turns it on: its clicks and timers while it counts.
 	const count = { on: false, audio: null, clicks: [], timers: [] };
-	const Sound = window.AudioContext || window.webkitAudioContext;
+	const Sound = window.AudioContext;
 	let duration = 0;
 
 	// Until the player starts, window.riff is the #riff element, by its id.
@@ -256,8 +256,7 @@
 		const toggle = button( 'riff-chords-loop-toggle', config.loop, '', () => {
 			loop.on = ! loop.on && loop.a !== null && loop.b !== null;
 			if ( ! loop.on && counting() ) {
-				stopCount();
-				player()?.toggle();
+				resume();
 			}
 			loop.last = player()?.time() ?? 0;
 			watch();
@@ -271,8 +270,7 @@
 				sound();
 			} else if ( counting() ) {
 				// Turned off mid-count, the music goes on from A now.
-				stopCount();
-				player()?.toggle();
+				resume();
 			}
 			paintTools();
 		} );
@@ -288,6 +286,7 @@
 			toggle.disabled = loop.a === null || loop.b === null;
 			toggle.setAttribute( 'aria-pressed', String( loop.on ) );
 			counter.hidden = ! Sound || ! tempo();
+			beat.hidden = counter.hidden;
 			counter.setAttribute( 'aria-pressed', String( count.on ) );
 		};
 		box.beat = beat;
@@ -470,7 +469,7 @@
 			return;
 		}
 		if ( counting() ) {
-			return;
+			return; // resume() picks up from where the music is when the bar is out.
 		}
 		if ( loop.last < loop.b && time >= loop.b ) {
 			loop.last = loop.a;
@@ -512,7 +511,8 @@
 		level.gain.setValueAtTime( 0.0001, at );
 		level.gain.exponentialRampToValueAtTime( 0.4, at + 0.003 );
 		level.gain.exponentialRampToValueAtTime( 0.0001, at + 0.08 );
-		tone.connect( level ).connect( audio.destination );
+		tone.connect( level );
+		level.connect( audio.destination );
 		tone.start( at );
 		tone.stop( at + 0.1 );
 		count.clicks.push( tone );
@@ -525,27 +525,48 @@
 	function countIn() {
 		const bpm = tempo();
 		const p = player();
-		if ( ! count.on || ! bpm || ! p?.playing() || ! sound() ) {
+		// Not on a hidden page, whose timers run late and whose music may not be let start again,
+		// nor with the sound held up by the system, which would leave the clicks out of time.
+		if ( ! count.on || ! bpm || ! p?.playing() || document.hidden || sound()?.state !== 'running' ) {
 			return false;
 		}
 		const gap = 60 / ( bpm * ( canSlow() ? p.speed() : 1 ) );
 		const bar = beats();
+		// The bar is set going before the music stops, so nothing can stop it and leave the music
+		// paused with no count to start it again.
+		try {
+			const start = count.audio.currentTime + 0.05;
+			for ( let n = 0; n < bar; n++ ) {
+				click( start + n * gap, n === 0 );
+				count.timers.push( setTimeout( () => showBeat( n + 1 ), ( 0.05 + n * gap ) * 1000 ) );
+			}
+		} catch {
+			stopCount();
+			return false;
+		}
+		count.timers.push( setTimeout( resume, ( 0.05 + bar * gap ) * 1000 ) );
 		p.toggle();
 		p.seek( loop.a );
-		const start = count.audio.currentTime + 0.05;
-		for ( let n = 0; n < bar; n++ ) {
-			click( start + n * gap, n === 0 );
-			count.timers.push( setTimeout( () => showBeat( n + 1 ), ( 0.05 + n * gap ) * 1000 ) );
-		}
-		count.timers.push(
-			setTimeout( () => {
-				stopCount();
-				if ( ! player()?.playing() ) {
-					player()?.toggle();
-				}
-			}, ( 0.05 + bar * gap ) * 1000 )
-		);
 		return true;
+	}
+	// The count over, or cut short: the music plays again from A. A pause that was slow to land, on
+	// the turntable or held for those listening together, may have left it just past B, so from
+	// there it goes back to A; from anywhere else the listener moved it to while it counted, it
+	// plays on from there, and the loop waits for it to come round, as it does after any seek.
+	function resume() {
+		stopCount();
+		const p = player();
+		if ( ! p ) {
+			return;
+		}
+		const at = p.time();
+		if ( loop.on && loop.a !== null && loop.b !== null && at > loop.b - 0.5 && at < loop.b + 2 ) {
+			p.seek( loop.a );
+		}
+		loop.last = p.time();
+		if ( ! p.playing() ) {
+			p.toggle();
+		}
 	}
 	// Stops a count under way: the loop turned off, the song changed, or the music played again
 	// by the listener before the bar was out.

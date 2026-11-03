@@ -303,8 +303,8 @@ final class Chords {
 			. '.riff-chords-value{min-width:3em;color:var(--riff-fg);font-size:14px;font-variant-numeric:tabular-nums;text-align:center}'
 			. '#riff .riff-chords-step,#riff .riff-chords-ab,#riff .riff-chords-loop-toggle,#riff .riff-chords-count-in,#riff .riff-chords-loop-section{all:unset;box-sizing:border-box;min-width:44px;height:44px;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-line);color:var(--riff-fg);cursor:pointer;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:44px;text-align:center}'
 			. '#riff .riff-chords-step:hover,#riff .riff-chords-ab:hover,#riff .riff-chords-loop-toggle:hover,#riff .riff-chords-count-in:hover,#riff .riff-chords-loop-section:hover{background:var(--riff-hover)}'
-			. '#riff .riff-chords-tools [hidden],.riff-chords-count:empty{display:none}'
-			// The count-in's beat, counted out beside it.
+			. '#riff .riff-chords-tools [hidden]{display:none}'
+			// The count-in's beat, counted out beside it, its room kept between counts so nothing moves.
 			. '.riff-chords-count{min-width:1.5em;color:var(--riff-accent);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;text-align:center}'
 			. '#riff .riff-chords-loop-toggle[aria-pressed="true"],#riff .riff-chords-count-in[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
 			. '#riff .riff-chords-tools button:disabled{cursor:default;opacity:.4}'
