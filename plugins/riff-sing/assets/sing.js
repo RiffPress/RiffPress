@@ -5,7 +5,8 @@
  *
  * It listens to the player's riff:view, riff:time, riff:play and riff:ended events, which
  * Riff dispatches on its own element for any script, and reads where the song is through
- * window.riff.time(), so it needs nothing loaded before it but melody.js.
+ * window.riff.time(), the last two through timing.js, which it shares with Riff Lyrics and
+ * Riff Chords; it needs nothing loaded before it but that and melody.js.
  *
  * The microphone is opened only when the listener presses Sing with the microphone, and closed when
  * they press Stop, leave the view, close Now Playing or leave the page. Its sound goes to an
@@ -15,6 +16,7 @@
 ( () => {
 	const config = window.riffSing || {};
 	const melody = window.riffSingMelody;
+	const timing = window.riffTiming; // timing.js, loaded before it.
 	if ( ! melody ) {
 		return;
 	}
@@ -553,7 +555,7 @@
 		if ( ! ui || ! chart || ! showing ) {
 			return;
 		}
-		const now = player()?.time() ?? 0;
+		const now = timing.now();
 		lyric( now );
 		const { canvas } = ui;
 		const w = canvas.clientWidth;
@@ -657,7 +659,7 @@
 	} );
 	document.addEventListener( 'riff:play', () => loop() );
 	// A seek while paused moves the lane too.
-	document.addEventListener( 'riff:time', () => {
+	timing.listen( () => {
 		if ( ! frame ) {
 			draw();
 		}

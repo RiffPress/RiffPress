@@ -207,8 +207,9 @@ final class Chords {
 	 * Loads the scripts on pages where Riff's player renders, and nowhere else.
 	 */
 	public static function enqueue(): void {
-		wp_enqueue_script( 'riff-chords-chart', RIFF_CHORDS_URL . 'assets/chart.js', array(), RIFF_CHORDS_VERSION, true );
-		wp_enqueue_script( 'riff-chords', RIFF_CHORDS_URL . 'assets/chords.js', array( 'riff-chords-chart' ), RIFF_CHORDS_VERSION, true );
+		wp_enqueue_script( 'riff-chords-timing', RIFF_CHORDS_URL . 'assets/timing.js', array(), RIFF_CHORDS_VERSION, true );
+		wp_enqueue_script( 'riff-chords-chart', RIFF_CHORDS_URL . 'assets/chart.js', array( 'riff-chords-timing' ), RIFF_CHORDS_VERSION, true );
+		wp_enqueue_script( 'riff-chords', RIFF_CHORDS_URL . 'assets/chords.js', array( 'riff-chords-timing', 'riff-chords-chart' ), RIFF_CHORDS_VERSION, true );
 		wp_add_inline_script(
 			'riff-chords',
 			'window.riffChords = ' . wp_json_encode(

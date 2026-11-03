@@ -108,6 +108,7 @@ class Test_Riff_Chords extends Riff_TestCase {
 
 		$this->assertTrue( wp_script_is( 'riff-chords', 'enqueued' ) );
 		$this->assertTrue( wp_script_is( 'riff-chords-chart', 'enqueued' ), 'the chart reader comes with it' );
+		$this->assertTrue( wp_script_is( 'riff-chords-timing', 'enqueued' ), 'and the timing both read' );
 		$config = wp_scripts()->get_inline_script_data( 'riff-chords', 'before' );
 		$this->assertStringContainsString( 'wp\/v2\/media\/', $config );
 		$this->assertStringNotContainsString( '"edit"', $config, 'a visitor is not shown the way to the field' );

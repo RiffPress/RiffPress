@@ -12,10 +12,13 @@ const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
-const FILE = path.join( __dirname, '..', '..', 'plugins', 'riff-chords', 'assets', 'chart.js' );
-// A classic script that sets window.riffChordsChart, run here as the browser runs it.
+const ASSETS = path.join( __dirname, '..', '..', 'plugins', 'riff-chords', 'assets' );
+const FILE = path.join( ASSETS, 'chart.js' );
+// A classic script that sets window.riffChordsChart, run here as the browser runs it, after the
+// timing.js it reads times with.
 const load = () => {
 	const window = {};
+	new Function( 'globalThis', fs.readFileSync( path.join( ASSETS, 'timing.js' ), 'utf8' ) )( window );
 	new Function( 'window', fs.readFileSync( FILE, 'utf8' ) )( window );
 	return window.riffChordsChart;
 };

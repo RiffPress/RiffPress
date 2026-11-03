@@ -10,6 +10,7 @@
  * without a time of its own is played when the line starts; the others without one are spread
  * evenly between the chords around them whose times are known. */
 ( () => {
+	const timing = window.riffTiming; // timing.js, loaded before it.
 	// Pitch classes, by name; flats and sharps both read.
 	const PITCH = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 	const SHARPS = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
@@ -20,10 +21,7 @@
 	const FLAT_MINOR = new Set( [ 2, 7, 0, 5, 10 ] );
 
 	const CHORD = /^([A-G])([#b]?)([^/\s]*)(?:\/([A-G])([#b]?))?$/;
-	const TIME = /^\d{1,3}:\d{1,2}(?:\.\d{1,3})?$/;
 
-	const seconds = ( stamp ) =>
-		stamp.split( ':' ).reduce( ( total, part ) => total * 60 + Number( part ), 0 );
 	const pc = ( letter, accidental ) =>
 		( PITCH[ letter ] + ( accidental === '#' ? 1 : 0 ) - ( accidental === 'b' ? 1 : 0 ) + 12 ) % 12;
 
@@ -310,8 +308,8 @@
 					continue;
 				}
 				const inside = m[ 1 ].trim();
-				if ( TIME.test( inside ) ) {
-					const at = seconds( inside );
+				const at = timing.stamp( inside );
+				if ( at !== null ) {
 					if ( ! line.pieces.length && line.time === null ) {
 						line.time = at;
 					} else {

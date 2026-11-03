@@ -126,6 +126,7 @@ class Test_Riff_Sing extends Riff_TestCase {
 
 		$this->assertTrue( wp_script_is( 'riff-sing', 'enqueued' ) );
 		$this->assertTrue( wp_script_is( 'riff-sing-melody', 'enqueued' ), 'its melody reader with it' );
+		$this->assertTrue( wp_script_is( 'riff-sing-timing', 'enqueued' ), 'and the timing it follows the song with' );
 		$this->assertContains( 'riff-tokens', wp_styles()->registered['riff-sing']->deps );
 		$data = wp_scripts()->get_inline_script_data( 'riff-sing', 'before' );
 		$this->assertStringContainsString( 'wp\/v2\/media\/', $data );
