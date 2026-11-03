@@ -90,9 +90,9 @@ final class Import {
 	/**
 	 * Queues a zip uploaded to the Media Library, by someone who can write posts, to be imported.
 	 *
-	 * Only a zip uploaded to the Media Library itself: one uploaded to a post, as a File block's
-	 * download, is attached to that post and left as it is. The import runs in the background, as
-	 * an album can take longer to add than an upload is given.
+	 * Only a zip attached to no post: one uploaded to a post, as a File block's download, is
+	 * attached to that post and left as it is. The import runs in the background, given as long
+	 * as it takes, since an album can take longer to add than an upload is given.
 	 *
 	 * @since 5.9.0
 	 *
@@ -109,7 +109,10 @@ final class Import {
 	/**
 	 * Imports a zip uploaded to the Media Library, as the person who uploaded it, into draft album
 	 * posts for them to publish. The zip stays in the Media Library, attached to its album's post,
-	 * so the Media Library shows where it went; one that holds no audio stays as it was.
+	 * so the Media Library shows where it went; one that holds no audio stays as it was. Its
+	 * albums are its own, found by the zip's attachment, so a zip uploaded again, as a new file,
+	 * skips the tracks already imported and puts any new ones in a draft of their own, and never
+	 * adds to a post its uploader did not make.
 	 *
 	 * @since 5.9.0
 	 *
@@ -126,10 +129,22 @@ final class Import {
 		if ( ! $author || ! user_can( $author, 'edit_posts' ) || ! $file ) {
 			return null;
 		}
+		// The upload's own time limit would end an album part way, with no post for its tracks.
+		if ( function_exists( 'set_time_limit' ) ) {
+			set_time_limit( 0 );
+		}
 		$previous = get_current_user_id();
 		wp_set_current_user( $author );
 		try {
-			$result = self::zip( $file, array( 'status' => 'draft' ) );
+			$result = self::zip(
+				$file,
+				array(
+					'status' => 'draft',
+					// The attachment, which no other upload can be: a path is free again once its
+					// file is deleted, and another upload by the same name would find this album.
+					'as'     => dirname( $file ) . '/' . $id . '/' . wp_basename( $file ),
+				)
+			);
 		} finally {
 			wp_set_current_user( $previous );
 		}
@@ -163,8 +178,8 @@ final class Import {
 	 * Imports a zip, unpacked by core's unzip_file() into a folder of its own, as folder() imports
 	 * a folder. The folder is removed afterwards, whatever happened. What is in a zip is its
 	 * maker's choice, so core keeps its paths inside the folder, folder() reads only the files it
-	 * looks for, and a zip that would unpack to far more than it holds or than the disk has room
-	 * for, or that holds a file larger than PHP's memory can unpack, is refused before unpacking.
+	 * looks for, and fits() refuses a zip that would fill the disk or PHP's memory before it is
+	 * unpacked. An album's post is found again by the zip's path, unless `as` names it otherwise.
 	 *
 	 * @since 5.9.0
 	 *
@@ -196,61 +211,62 @@ final class Import {
 		};
 		// Removed at the end of the request too, should it end before the import does.
 		register_shutdown_function( $clean );
-		$limit = static function ( $pre, $zip, $dir, $dirs, $required ) use ( $file ) {
-			unset( $zip, $dir, $dirs );
-			// unzip_file() counts what the zip unpacks to, doubled and a tenth more, as the space it needs.
-			$unpacked = (float) $required / 2.1;
-			if ( $unpacked > (float) filesize( $file ) * self::ZIP_RATIO ) {
-				return new WP_Error( 'riff_import_zip', __( 'That zip unpacks to far more than it holds, so it was not unpacked.', 'riff' ) );
-			}
-			$free = function_exists( 'disk_free_space' ) ? @disk_free_space( get_temp_dir() ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- false where the host turns it off.
-			if ( $free && $unpacked > $free ) {
-				return new WP_Error( 'riff_import_zip', __( 'There is not enough disk space to unpack that zip.', 'riff' ) );
-			}
-			return $pre;
-		};
-		add_filter( 'pre_unzip_file', $limit, 10, 5 );
+		// ZipArchive, which fits() measured the zip with: core's PclZip fallback inflates every
+		// file into memory before anything can look at what it holds.
+		add_filter( 'unzip_file_use_ziparchive', '__return_true', PHP_INT_MAX );
 		try {
 			$unzipped = unzip_file( $file, $to );
-			remove_filter( 'pre_unzip_file', $limit, 10 );
+			remove_filter( 'unzip_file_use_ziparchive', '__return_true', PHP_INT_MAX );
 			if ( is_wp_error( $unzipped ) ) {
-				return 'riff_import_zip' === $unzipped->get_error_code() ? $unzipped : new WP_Error(
+				return new WP_Error(
 					'riff_import_zip',
 					/* translators: %s: Why WordPress could not unpack the zip. */
 					sprintf( __( 'The zip could not be unpacked: %s', 'riff' ), $unzipped->get_error_message() )
 				);
 			}
-			return self::folder( $to, array_merge( $args, array( 'as' => $file ) ) );
+			$as = '' !== (string) ( $args['as'] ?? '' ) ? (string) $args['as'] : $file;
+			return self::folder( $to, array_merge( $args, array( 'as' => $as ) ) );
 		} finally {
-			remove_filter( 'pre_unzip_file', $limit, 10 );
+			remove_filter( 'unzip_file_use_ziparchive', '__return_true', PHP_INT_MAX );
 			$clean();
 		}
 	}
 
 	/**
-	 * Refuses a zip holding a file larger than unzip_file() can unpack: core's ZipArchive path reads
-	 * each file whole into memory, and a file larger than PHP's memory would end the request.
+	 * Refuses a zip before it is unpacked when it is not one ZipArchive can read whole, when it
+	 * would unpack to far more than it holds or than the disk has free, or when it holds a file
+	 * larger than PHP's memory has left: core's ZipArchive path reads each file whole into memory,
+	 * and a file larger than that would end the request rather than say why. The sizes are the
+	 * ones the zip declares, which ZipArchive holds each file to as it unpacks it.
 	 *
 	 * @param string $file The zip.
 	 * @return true|WP_Error
 	 */
 	private static function fits( string $file ) {
-		/** This filter is documented in wp-admin/includes/file.php */
-		if ( ! class_exists( 'ZipArchive', false ) || ! apply_filters( 'unzip_file_use_ziparchive', true ) ) {
-			return true;
+		if ( ! class_exists( 'ZipArchive', false ) ) {
+			return new WP_Error( 'riff_import_zip', __( 'This server\'s PHP has no zip extension, so the zip cannot be unpacked safely. Unpack it and import the folder instead.', 'riff' ) );
 		}
 		$zip = new \ZipArchive();
-		if ( true !== $zip->open( $file ) ) {
-			// unzip_file() says why.
-			return true;
+		if ( true !== $zip->open( $file, \ZipArchive::CHECKCONS ) ) {
+			return new WP_Error( 'riff_import_zip', __( 'That is not a zip that can be unpacked.', 'riff' ) );
 		}
+		$total   = 0;
 		$largest = 0;
 		$count   = $zip->count();
 		for ( $i = 0; $i < $count; $i++ ) {
 			$stat    = $zip->statIndex( $i );
-			$largest = max( $largest, is_array( $stat ) ? (int) $stat['size'] : 0 );
+			$size    = is_array( $stat ) ? (int) $stat['size'] : 0;
+			$total  += $size;
+			$largest = max( $largest, $size );
 		}
 		$zip->close();
+		if ( $total > (float) filesize( $file ) * self::ZIP_RATIO ) {
+			return new WP_Error( 'riff_import_zip', __( 'That zip unpacks to far more than it holds, so it was not unpacked.', 'riff' ) );
+		}
+		$free = function_exists( 'disk_free_space' ) ? @disk_free_space( get_temp_dir() ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- false where the host turns it off.
+		if ( $free && $total > $free ) {
+			return new WP_Error( 'riff_import_zip', __( 'There is not enough disk space to unpack that zip.', 'riff' ) );
+		}
 		// As much as unzip_file() asks for.
 		wp_raise_memory_limit( 'admin' );
 		$limit = wp_convert_hr_to_bytes( (string) ini_get( 'memory_limit' ) );
@@ -564,6 +580,12 @@ final class Import {
 			if ( is_wp_error( $video_id ) || ! $video_id ) {
 				return;
 			}
+			update_post_meta( $id, Media::VIDEO_META, $video_id );
+			// A video imported before is someone's: a person importing changes only one they may
+			// edit. With no one signed in, as from WP-CLI, the import is the site's own.
+			if ( get_current_user_id() && ! current_user_can( 'edit_post', $video_id ) ) {
+				return;
+			}
 			wp_update_post(
 				array(
 					'ID'         => $video_id,
@@ -573,7 +595,6 @@ final class Import {
 			if ( $cover && ! has_post_thumbnail( $video_id ) ) {
 				set_post_thumbnail( $video_id, $cover );
 			}
-			update_post_meta( $id, Media::VIDEO_META, $video_id );
 			return;
 		}
 	}
