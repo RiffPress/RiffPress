@@ -181,9 +181,64 @@ test( 'a relative chart counts each line from where the break before it says, an
 
 test( 'a decimal comma, a tilde, a duet and Windows line ends are read as UltraStar writes them', () => {
 	const chart = parse( '#BPM:240,5\r\n#GAP:0\r\nP1 \r\n: 0 2 0 Ah \r\n: 2 2 2 ~\r\nP2\r\n: 0 2 7 Oh\r\nE' );
-	assert.equal( chart.phrases.length, 1, 'only the first singer' );
+	assert.equal( chart.phrases.length, 1, 'the chart\'s own lines are the first singer\'s' );
+	assert.equal( chart.singers[ 1 ].phrases[ 0 ].notes[ 0 ].text, 'Oh', 'and the second\'s are their own' );
 	assert.deepEqual( chart.phrases[ 0 ].notes.map( ( n ) => n.text ), [ 'Ah ', '' ], 'the space that ends a word is kept' );
 	assert.ok( Math.abs( chart.phrases[ 0 ].notes[ 1 ].start - ( 2 * 60 ) / 240.5 / 4 ) < 1e-9 );
+} );
+
+// Two singers taking turns, then singing a line together (P3), each in a relative chart's own count.
+const DUET = `#TITLE:Duet
+#BPM:120
+#GAP:0
+#RELATIVE:yes
+#P1:Ada
+#P2:Bo
+P1
+: 0 4 0 Do
+- 8 16
+: 0 4 4 Mi
+P2
+: 8 4 7 Sol
+- 12 32
+P3
+: 0 4 12 Do
+E
+`;
+
+test( 'a duet is read as two singers, each with their own lines, a P3 line both of theirs', () => {
+	const chart = parse( DUET );
+	assert.equal( chart.singers.length, 2 );
+	const [ ada, bo ] = chart.singers;
+	assert.equal( ada.name, 'Ada' );
+	assert.equal( bo.name, 'Bo' );
+	const lines = ( who ) => who.phrases.map( ( p ) => p.notes.map( ( n ) => [ n.start, n.midi ] ) );
+	// Ada's count moves 16 beats at her break, Bo's 32 at his: P3's line falls where each is.
+	assert.deepEqual( lines( ada ), [ [ [ 0, 60 ] ], [ [ 2, 64 ] ], [ [ 2, 72 ] ] ] );
+	assert.deepEqual( lines( bo ), [ [ [ 1, 67 ] ], [ [ 4, 72 ] ] ] );
+	assert.equal( ada.low, 60 );
+	assert.equal( bo.low, 67 );
+	assert.notEqual( ada.phrases[ 2 ].notes[ 0 ], bo.phrases[ 1 ].notes[ 0 ], 'a note both sing is scored for each apart' );
+	assert.equal( chart.phrases, ada.phrases, 'the chart\'s own lines are the first singer\'s' );
+
+	const solo = parse( SCALE );
+	assert.equal( solo.singers.length, 1, 'a chart with no P lines is one singer' );
+	assert.equal( solo.singers[ 0 ].name, '' );
+	assert.equal( parse( '#BPM:120\nP1\nF 0 4 0 a\nP2\n: 0 4 0 b\nE' ).singers.length, 1, 'a singer with nothing scored has no lane' );
+} );
+
+test( 'each singer of a duet is scored on their own', () => {
+	const chart = parse( DUET );
+	const [ ada, bo ] = chart.singers.map( ( who ) => scorer( who ) );
+	for ( let t = 0; t < 5; t += 0.025 ) {
+		// Ada sings every note; Bo is silent.
+		ada.add( t, ada.note( t )?.midi ?? null );
+		bo.add( t, null );
+	}
+	ada.finish();
+	bo.finish();
+	assert.ok( ada.total() > 0.95 );
+	assert.ok( bo.total() < 0.01 );
 } );
 
 test( 'cents leave the octave out', () => {
