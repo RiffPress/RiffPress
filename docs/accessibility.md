@@ -28,6 +28,7 @@ Everything that changes without the listener's focus being on it is spoken throu
 | A playlist renamed or deleted | "Renamed <name>", "<name> deleted" |
 | Riff Sing: a line of the melody ends while someone sings | "That line: Lovely singing. 72% in tune." |
 | Riff Sing: the microphone or MIDI starts, stops, isn't allowed or goes away | its status, such as "Listening. Play the song and sing along; headphones work best." |
+| Riff Sing, a duet: either of the above, for one of its two singers | the same, after the singer's name: "Singer 2: That line: Brilliant! 90% in tune." What both singers are told at one moment, as when a line they sing together ends, is said as one announcement. Each singer's lane and controls are a group named for them. |
 
 A change the listener made with focus on the control is not repeated: the control's own state (`aria-pressed`, the row's new name) says it.
 

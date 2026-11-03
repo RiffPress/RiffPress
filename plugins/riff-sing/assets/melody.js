@@ -8,6 +8,9 @@
  * Beats count from the start of the song, or, in a chart marked #RELATIVE:yes, from the start of
  * the line: there a break says, after when it falls, how many beats on the next line starts.
  *
+ * A duet gives each singer's lines after a P1 or P2 line, and lines both sing after P3, each singer
+ * keeping their own count; #P1: and #P2: name them.
+ *
  * The scorer takes what was sung, one frame at a time (a time in the song, and a pitch as a MIDI
  * note number, or null for silence), and gives each phrase a score from 0 to 1 when it ends. Octave
  * doesn't count, as in Rock Band: a child singing an octave above the recording still matches.
@@ -30,25 +33,27 @@
 	 * Reads an UltraStar chart.
 	 *
 	 * @param {string} text The chart.
-	 * @return {{title: string, artist: string, phrases: Object[], low: number, high: number}|null}
+	 * @return {{title: string, artist: string, phrases: Object[], low: number, high: number, singers: Object[]}|null}
 	 *         The chart, each phrase with its notes and their times in seconds, or null when it
-	 *         can't be read: no BPM, or no notes.
+	 *         can't be read: no BPM, or no notes. `singers` has each singer's own phrases, low and
+	 *         high and name: one, or a duet's two; the chart's own phrases are the first's.
 	 */
 	function parse( text ) {
 		const tags = {};
-		const phrases = [];
-		let notes = [];
+		// Each singer's phrases, the notes of the line being read, and in a relative chart where
+		// their count starts: one singer, or a duet's two.
+		const singers = [ 0, 1 ].map( () => ( { phrases: [], notes: [], offset: 0 } ) );
+		let into = [ singers[ 0 ] ]; // Whose lines these are: P1's, P2's, or with P3 both.
 		let count = 0;
-		let skipping = false; // A duet's second singer, P2, until P1 comes back.
-		const close = () => {
-			if ( notes.length ) {
-				phrases.push( {
-					start: notes[ 0 ].start,
-					end: notes[ notes.length - 1 ].end,
-					notes,
+		const close = ( who ) => {
+			if ( who.notes.length ) {
+				who.phrases.push( {
+					start: who.notes[ 0 ].start,
+					end: who.notes[ who.notes.length - 1 ].end,
+					notes: who.notes,
 				} );
 			}
-			notes = [];
+			who.notes = [];
 		};
 		const lines = String( text || '' )
 			.replace( /^\uFEFF/, '' )
@@ -56,7 +61,6 @@
 		let beat = 0; // Seconds per beat, once #BPM is read.
 		let gap = 0;
 		let relative = false;
-		let offset = 0; // In a relative chart, the beat the current line's count starts from.
 		for ( const raw of lines ) {
 			// A syllable may end in the space that ends its word, so a note keeps its trailing spaces;
 			// the other lines are read without theirs.
@@ -85,56 +89,75 @@
 				gap = ( number( tags.GAP ) || 0 ) / 1000;
 				relative = /^yes$/i.test( tags.RELATIVE || '' );
 			}
-			if ( /^P\s*\d/i.test( bare ) ) {
-				close();
-				skipping = ! /^P\s*1$/i.test( bare );
+			const part = bare.match( /^P\s*(\d+)/i );
+			if ( part ) {
+				into.forEach( close );
+				const n = Number( part[ 1 ] );
+				// P3 is a line both sing; a singer past the second has no lane, so is left out.
+				into = n === 3 ? singers : singers.slice( n - 1, n );
 				continue;
 			}
 			if ( /^E\b/.test( bare ) ) {
 				break;
 			}
-			if ( skipping ) {
-				continue;
-			}
 			const gone = bare.match( BREAK );
 			if ( gone ) {
-				close();
-				// Without its second number, the next line counts from where the break falls.
-				if ( relative ) {
-					offset += Number( gone[ 2 ] ?? gone[ 1 ] );
+				for ( const who of into ) {
+					close( who );
+					// Without its second number, the next line counts from where the break falls.
+					if ( relative ) {
+						who.offset += Number( gone[ 2 ] ?? gone[ 1 ] );
+					}
 				}
 				continue;
 			}
 			const m = line.replace( /^\s+/, '' ).match( NOTE );
-			if ( ! m || ++count > MAX_NOTES ) {
+			if ( ! m || ! into.length || ++count > MAX_NOTES ) {
 				continue;
 			}
 			const [ , kind, start, length, pitch, syllable = '' ] = m;
-			const at = gap + ( offset + Number( start ) ) * beat;
-			notes.push( {
-				start: at,
-				end: at + Math.max( 1, Number( length ) ) * beat,
-				// UltraStar's 0 is middle C, MIDI's 60.
-				midi: Number( pitch ) + 60,
-				golden: kind === '*',
-				// Freestyle and rap are spoken or free, so they are shown but not scored.
-				free: kind === 'F' || kind === 'R' || kind === 'G',
-				// A tilde carries the syllable before it over another note.
-				text: syllable.replace( /~/g, '' ),
-			} );
+			for ( const who of into ) {
+				const at = gap + ( who.offset + Number( start ) ) * beat;
+				who.notes.push( {
+					start: at,
+					end: at + Math.max( 1, Number( length ) ) * beat,
+					// UltraStar's 0 is middle C, MIDI's 60.
+					midi: Number( pitch ) + 60,
+					golden: kind === '*',
+					// Freestyle and rap are spoken or free, so they are shown but not scored.
+					free: kind === 'F' || kind === 'R' || kind === 'G',
+					// A tilde carries the syllable before it over another note.
+					text: syllable.replace( /~/g, '' ),
+				} );
+			}
 		}
-		close();
-		phrases.sort( ( a, b ) => a.start - b.start );
-		const all = phrases.flatMap( ( p ) => p.notes ).filter( ( n ) => ! n.free );
-		if ( ! all.length ) {
+		// Each singer with something to sing, named as the chart names them.
+		const sung = singers
+			.map( ( who, i ) => {
+				close( who );
+				who.phrases.sort( ( a, b ) => a.start - b.start );
+				const all = who.phrases.flatMap( ( p ) => p.notes ).filter( ( n ) => ! n.free );
+				return all.length
+					? {
+							name: tags[ `P${ i + 1 }` ] || tags[ `DUETSINGERP${ i + 1 }` ] || '',
+							phrases: who.phrases,
+							low: Math.min( ...all.map( ( n ) => n.midi ) ),
+							high: Math.max( ...all.map( ( n ) => n.midi ) ),
+					  }
+					: null;
+			} )
+			.filter( Boolean );
+		if ( ! sung.length ) {
 			return null;
 		}
 		return {
 			title: tags.TITLE || '',
 			artist: tags.ARTIST || '',
-			phrases,
-			low: Math.min( ...all.map( ( n ) => n.midi ) ),
-			high: Math.max( ...all.map( ( n ) => n.midi ) ),
+			// The first singer's, as one singer's chart has it.
+			phrases: sung[ 0 ].phrases,
+			low: sung[ 0 ].low,
+			high: sung[ 0 ].high,
+			singers: sung,
 		};
 	}
 

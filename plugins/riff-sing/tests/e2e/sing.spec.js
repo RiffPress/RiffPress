@@ -13,6 +13,23 @@ const { own } = require( '../../../riff/tests/e2e/helpers/own' );
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
 const made = own();
 let postUrl;
+let duetUrl;
+
+// A duet: Ada sings A over the first two seconds while Bo sings E, each a line of two notes.
+const DUET = [
+	'#TITLE:Duet',
+	'#BPM:120',
+	'#GAP:0',
+	'#P1:Ada',
+	'#P2:Bo',
+	'P1',
+	': 0 8 9 La',
+	': 8 8 9  la',
+	'P2',
+	': 0 8 4 Oh',
+	': 8 8 4  oh',
+	'E',
+].join( '\n' );
 
 // A at 440 Hz, sung "la" three times: two notes in the first line, one in the second. At 120 BPM an
 // UltraStar beat is an eighth of a second, so the first line runs from 0 to 2 seconds and the second
@@ -42,6 +59,23 @@ test.beforeAll( async ( { requestUtils } ) => {
 		content: block( sung ) + block( plain ),
 	} );
 	postUrl = post.link;
+
+	const duet = await made.media(
+		requestUtils,
+		path.join( FIXTURES, 'compositions', '05 - Stole Back My Soul [stole-back].mp3' )
+	);
+	await requestUtils.rest( {
+		method: 'POST',
+		path: `/wp/v2/media/${ duet.id }`,
+		data: { riff_sing_melody: DUET },
+	} );
+	duetUrl = (
+		await made.post( requestUtils, {
+			title: `Riff Sing duet e2e ${ Date.now() }`,
+			status: 'publish',
+			content: block( duet ),
+		} )
+	).link;
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
@@ -50,8 +84,8 @@ test.afterAll( async ( { requestUtils } ) => {
 
 // The post's first track loaded and paused, and its Sing view open. Nothing is scored while it is
 // paused, so each test starts the song from the top once it is listening, with go().
-async function open( page ) {
-	await page.goto( postUrl );
+async function open( page, url = postUrl ) {
+	await page.goto( url );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 	return openView( page, 'sing' );
@@ -144,4 +178,47 @@ test( 'a MIDI key an octave down still matches, and a wrong one doesn\'t', async
 		window.riffSingTestKey( [ 0x90, 59, 100 ] );
 	} );
 	await expect( panel.locator( '.riff-sing-result' ) ).toContainText( 'That line: Keep going.', { timeout: 15000 } );
+} );
+
+test( 'a duet has a lane for each singer, each on a MIDI input of their own and scored on their own', async ( { page } ) => {
+	await page.addInitScript( () => {
+		const one = { name: 'Keys', onmidimessage: null };
+		const two = { name: 'Pads', onmidimessage: null };
+		window.riffSingTestKey = ( input, data ) =>
+			( input === 1 ? one : two ).onmidimessage?.( { data: new Uint8Array( data ) } );
+		navigator.requestMIDIAccess = async () => ( {
+			inputs: new Map( [
+				[ 'one', one ],
+				[ 'two', two ],
+			] ),
+			outputs: new Map(),
+			onstatechange: null,
+		} );
+	} );
+	const panel = await open( page, duetUrl );
+	const ada = panel.getByRole( 'group', { name: 'Ada' } );
+	const bo = panel.getByRole( 'group', { name: 'Bo' } );
+	await expect( ada.locator( '.riff-sing-words' ) ).toHaveText( 'La la' );
+	await expect( bo.locator( '.riff-sing-words' ) ).toHaveText( 'Oh oh' );
+
+	await ada.getByRole( 'button', { name: 'Use a MIDI instrument' } ).click();
+	await bo.getByRole( 'button', { name: 'Use a MIDI instrument' } ).click();
+	await expect( ada.locator( '.riff-sing-status' ) ).toHaveText( 'Listening to your MIDI instrument.' );
+	await expect( bo.locator( '.riff-sing-status' ) ).toHaveText( 'Listening to your MIDI instrument.' );
+	// The first singer on the first input, the second on the second.
+	await expect( ada.getByLabel( 'MIDI input' ) ).toHaveValue( 'one' );
+	await expect( bo.getByLabel( 'MIDI input' ) ).toHaveValue( 'two' );
+
+	// Ada's A on her keys; nothing from Bo's.
+	await page.evaluate( () => window.riffSingTestKey( 1, [ 0x90, 69, 100 ] ) );
+	await go( page );
+	await expect( ada.locator( '.riff-sing-result' ) ).toContainText( 'That line: Brilliant!', { timeout: 15000 } );
+	await expect( bo.locator( '.riff-sing-result' ) ).toContainText( 'That line: Keep going.' );
+	// Both lines end at once, and both are said: one announcement, not the second over the first.
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Ada: That line' );
+	await expect( page.locator( '#a11y-speak-polite' ) ).toContainText( 'Bo: That line' );
+
+	await ada.getByRole( 'button', { name: 'Stop listening' } ).click();
+	await expect( ada.getByRole( 'button', { name: 'Use a MIDI instrument' } ) ).toBeVisible();
+	await expect( bo.getByRole( 'button', { name: 'Stop listening' } ) ).toBeVisible();
 } );
