@@ -88,7 +88,24 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-account summary' ) ).toBeFocused();
 	} );
 
-	test( 'Go to post opens a new window in the desktop app and installed, with the icon and the words a screen reader needs, and is a plain link in a tab', async ( {
+	test( 'in a wide browser tab, where the desktop frame is drawn too, Go to post is a plain link that takes the tab', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'The frame is a computer\'s.' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
+		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-desktop\b/ );
+		await expect( page.locator( 'html' ) ).not.toHaveClass( /\briff-desktop-app\b/ );
+		await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
+		const item = page.locator( '.riff-menu:not([hidden])' ).getByRole( 'menuitem', { name: /^Go to post/ } );
+		await expect( item ).toHaveAccessibleName( 'Go to post' );
+		await expect( item ).not.toHaveAttribute( 'target' );
+		await expect( item.locator( 'svg' ) ).toHaveCount( 0 );
+	} );
+
+	test( 'Go to post opens the post in a new window in the desktop app and installed, with WordPress\'s icon and the words a screen reader needs', async ( {
 		context,
 	} ) => {
 		const app = pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`;
@@ -101,32 +118,28 @@ test.describe( 'Standalone', () => {
 			await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
 			return page;
 		};
-		const postItem = ( page, name = /^Go to post/ ) =>
-			page.locator( '.riff-menu:not([hidden])' ).getByRole( 'menuitem', { name } );
 		const newWindow = async ( page ) => {
-			const item = postItem( page, /Go to post.*opens in a new tab/ );
+			const item = page
+				.locator( '.riff-menu:not([hidden])' )
+				.getByRole( 'menuitem', { name: /Go to post.*opens in a new tab/ } );
 			await expect( item ).toHaveAccessibleName( 'Go to post (opens in a new tab)' );
 			await expect( item ).toHaveAttribute( 'target', '_blank' );
 			await expect( item ).toHaveAttribute( 'rel', 'noopener' );
 			await expect( item.locator( 'svg[aria-hidden="true"]' ) ).toBeVisible();
-			// The icon is the words' size and colour.
-			const [ icon, words ] = await item.evaluate( ( el ) =>
-				[ el.querySelector( 'svg' ), el ].map( ( one ) => {
-					const style = getComputedStyle( one );
-					return { color: style.color, size: style.fontSize };
-				} )
-			);
-			expect( icon ).toEqual( words );
+			// The icon is drawn in the words' colour, a little taller than their letters.
+			const { height, fill, size, color } = await item.evaluate( ( el ) => {
+				const icon = el.querySelector( 'svg' );
+				return {
+					height: icon.getBoundingClientRect().height,
+					fill: getComputedStyle( icon ).fill,
+					size: parseFloat( getComputedStyle( el ).fontSize ),
+					color: getComputedStyle( el ).color,
+				};
+			} );
+			expect( height ).toBeCloseTo( size * 1.25, 0 );
+			expect( fill ).toBe( color );
 			return item;
 		};
-
-		// A browser's tab, where the frame is drawn too: a link that takes the tab, as it always was.
-		const tab = await open( () => {} );
-		await expect( tab.locator( 'html' ) ).not.toHaveClass( /\briff-desktop-app\b/ );
-		await expect( postItem( tab ) ).toHaveAccessibleName( 'Go to post' );
-		await expect( postItem( tab ) ).not.toHaveAttribute( 'target' );
-		await expect( postItem( tab ).locator( 'svg' ) ).toHaveCount( 0 );
-		await tab.close();
 
 		// Riff's desktop app: its preload marks <html> as the parser makes it, before the page's
 		// scripts run (site-preload.js). The tests site has no WP_DEBUG, so ?riff_desktop=1 is not
@@ -151,11 +164,11 @@ test.describe( 'Standalone', () => {
 				real( /display-mode:\s*standalone/.test( query ) ? 'all' : query );
 		} );
 		const item = await newWindow( installed );
+		const post = await item.getAttribute( 'href' );
 		// Pressed, the post opens in a new window and the app stays where it was.
 		const here = installed.url();
 		const [ opened ] = await Promise.all( [ context.waitForEvent( 'page' ), item.click() ] );
-		await opened.waitForLoadState();
-		expect( opened.url() ).not.toContain( '/app/' );
+		await expect( opened ).toHaveURL( post );
 		expect( installed.url() ).toBe( here );
 		await opened.close();
 		await installed.close();

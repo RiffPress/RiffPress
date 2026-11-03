@@ -193,7 +193,9 @@ test( 'a link to another site opens in the browser and leaves the window where i
 	expect( electronApp.windows() ).toHaveLength( 1 );
 } );
 
-test( 'a track’s Go to post opens the post in the browser, and the window stays on the app', async () => {
+// The browser got the post before Go to post asked for a new window too (will-navigate); this
+// keeps the new window's request going there rather than to a bare window of the app's.
+test( 'a track’s Go to post is a new window’s link, and opens the post in the browser with the window left on the app', async () => {
 	const electronApp = await launch();
 	const page = await siteWindow( electronApp );
 	await electronApp.evaluate( ( { shell } ) => {
