@@ -18,7 +18,9 @@
  * Run: npm run docs:shots
  *   RIFF_SHOTS_URL   the site, default http://localhost:8890
  *   RIFF_SHOTS_POST  the album post's path, default /compositions/
- *   RIFF_SHOTS_TRACK the row to play, counted from 0, default 0
+ *   RIFF_SHOTS_TRACK the row to play, counted from 0, default 1: Underground, which has no video
+ *                    version, so a phone keeps the post on screen and Now Playing shows no Song and
+ *                    Video switch
  *   RIFF_SHOTS_LYRICS a sung album's post, for its lyrics, default /christmas-with-the-chorus/
  *   RIFF_SHOTS_USER  and RIFF_SHOTS_PASSWORD, for the editor's pictures, default wp-env's admin / password
  */
@@ -31,7 +33,7 @@ const SITE = path.join( ROOT, 'site' );
 const FIXTURES = path.join( ROOT, 'packages', 'fixtures' );
 const BASE = ( process.env.RIFF_SHOTS_URL || 'http://localhost:8890' ).replace( /\/$/, '' );
 const POST = process.env.RIFF_SHOTS_POST || '/compositions/';
-const TRACK = Number( process.env.RIFF_SHOTS_TRACK || 0 );
+const TRACK = Number( process.env.RIFF_SHOTS_TRACK || 1 );
 const LYRICS = process.env.RIFF_SHOTS_LYRICS || '/christmas-with-the-chorus/';
 const LYRICS_AT = 26;
 const USER = process.env.RIFF_SHOTS_USER || 'admin';
@@ -133,15 +135,16 @@ async function desktop( browser ) {
 	}
 	await page.waitForTimeout( 1500 );
 	await save( page, 'desktop-album', true );
-	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
-	await page.locator( '.riff-np' ).waitFor();
-	await save( page, 'desktop-now-playing', true );
+
+	// Now Playing from the bar's Turntable: the sleeve set down beside the turntable.
 	await page.locator( '.riff-bar [data-riff-control="turntable"]' ).click();
+	await page.locator( '.riff-np' ).waitFor();
+	await page.waitForTimeout( 1500 );
+	await save( page, 'desktop-now-playing', true );
 
 	// The turntable on its own, close: its plinth, which reaches beyond the record behind the arm
 	// and above it (riff.css), and a margin of the stage round it, as wide on the left as the gap
 	// to the sleeve allows, so the site can fade the edges into a ground of the same colour.
-	await page.waitForTimeout( 1500 );
 	const deck = await page.locator( '.riff-plinth' ).boundingBox();
 	const sleeve = await page.locator( '.riff-cover' ).boundingBox();
 	const pad = 24;
