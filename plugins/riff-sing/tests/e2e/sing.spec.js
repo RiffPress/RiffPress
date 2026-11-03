@@ -13,6 +13,33 @@ const { own } = require( '../../../riff/tests/e2e/helpers/own' );
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
 const made = own();
 let postUrl;
+let midiUrl;
+
+// A MIDI file as a score program writes one: a track named Voice, three A4 crotchets at the default
+// 120 BPM with a lyric on each, made here byte by byte.
+function midiFile() {
+	const vlq = ( n ) => ( n > 127 ? [ ( n >> 7 ) | 0x80, n & 0x7f ] : [ n ] );
+	const text = ( type, at, s ) => [ ...vlq( at ), 0xff, type, s.length, ...Buffer.from( s ) ];
+	const events = [ ...text( 0x03, 0, 'Voice' ) ];
+	[ 'Sing', 'a', 'long' ].forEach( ( word, i ) => {
+		events.push( ...text( 0x05, i ? 240 : 0, word ), 0, 0x90, 69, 100, ...vlq( 240 ), 0x80, 69, 64 );
+	} );
+	events.push( 0, 0xff, 0x2f, 0 );
+	const u32 = ( n ) => [ n >>> 24, ( n >> 16 ) & 0xff, ( n >> 8 ) & 0xff, n & 0xff ];
+	return Buffer.from( [
+		...Buffer.from( 'MThd' ),
+		...u32( 6 ),
+		0,
+		0,
+		0,
+		1,
+		1,
+		224,
+		...Buffer.from( 'MTrk' ),
+		...u32( events.length ),
+		...events,
+	] );
+}
 
 // A at 440 Hz, sung "la" three times: two notes in the first line, one in the second. At 120 BPM an
 // UltraStar beat is an eighth of a second, so the first line runs from 0 to 2 seconds and the second
@@ -42,6 +69,25 @@ test.beforeAll( async ( { requestUtils } ) => {
 		content: block( sung ) + block( plain ),
 	} );
 	postUrl = post.link;
+
+	// A track whose melody is a MIDI file's voice, in a post of its own.
+	const midi = await made.media( requestUtils, { name: 'riff-sing-e2e.mid', mimeType: 'audio/midi', buffer: midiFile() } );
+	const scored = await made.media(
+		requestUtils,
+		path.join( FIXTURES, 'compositions', '04 - It\'s a Brand New Day [new-day].mp3' )
+	);
+	await requestUtils.rest( {
+		method: 'POST',
+		path: `/wp/v2/media/${ scored.id }`,
+		data: { riff_sing_midi: midi.id },
+	} );
+	midiUrl = (
+		await made.post( requestUtils, {
+			title: `Riff Sing MIDI e2e ${ Date.now() }`,
+			status: 'publish',
+			content: block( scored ),
+		} )
+	).link;
 } );
 
 test.afterAll( async ( { requestUtils } ) => {
@@ -50,8 +96,8 @@ test.afterAll( async ( { requestUtils } ) => {
 
 // The post's first track loaded and paused, and its Sing view open. Nothing is scored while it is
 // paused, so each test starts the song from the top once it is listening, with go().
-async function open( page ) {
-	await page.goto( postUrl );
+async function open( page, url = postUrl ) {
+	await page.goto( url );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 	return openView( page, 'sing' );
@@ -80,6 +126,12 @@ test( 'the Sing view shows the melody\'s words, says the voice stays on the devi
 	await expect( panel.locator( '.riff-sing-message' ) ).toHaveText( 'No melody for this track yet.' );
 	// Signed in as someone who can edit the Media Library: the way to the track's Melody field.
 	await expect( panel.getByRole( 'link', { name: 'Add a melody' } ) ).toHaveAttribute( 'href', /post\.php\?action=edit&post=\d+/ );
+} );
+
+test( 'a track whose melody is a MIDI file sings its voice track\'s words', async ( { page } ) => {
+	const panel = await open( page, midiUrl );
+	await expect( panel.locator( '.riff-sing-words' ) ).toHaveText( 'Sing a long' );
+	await expect( panel.getByRole( 'button', { name: 'Sing with the microphone' } ) ).toBeVisible();
 } );
 
 test( 'a microphone that isn\'t allowed says how to allow it, and nothing is listening', async ( { page } ) => {
