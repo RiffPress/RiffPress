@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-sing-v0.1.0...riff-sing-v0.2.0) (2026-11-03)
+
+
+### Features
+
+* **sing:** an UltraStar chart written in relative beats (#RELATIVE:yes) is read, each line counted from where the break before it says ([#830](https://github.com/RiffPress/RiffPress/issues/830)) ([296a1f1](https://github.com/RiffPress/RiffPress/commit/296a1f1086fae640f83ad4f444dad5cd73582cc7))
+* **sing:** an UltraStar duet sings in two lanes, each singer scored on their own from a microphone or a MIDI input of their own ([#842](https://github.com/RiffPress/RiffPress/issues/842)) ([8f12142](https://github.com/RiffPress/RiffPress/commit/8f12142ebeddbc512d5c809204d9ed3163cf7623))
+* **sing:** the melody can be a MIDI file's vocal track, named in the audio file's Melody file field, so a chart can come from a score ([#836](https://github.com/RiffPress/RiffPress/issues/836)) ([f79e280](https://github.com/RiffPress/RiffPress/commit/f79e280e89ca8ae152c1c0890ccd0775b4d5e9c3))
+
+
+### Bug Fixes
+
+* **sing:** a #GAP after a blank line among a chart's headers is read, so the melody starts where it says ([#837](https://github.com/RiffPress/RiffPress/issues/837)) ([181728c](https://github.com/RiffPress/RiffPress/commit/181728c2775492346d06aad697dcad68c83acd1e))
+
 ## 0.1.0 (2026-11-02)
 
 

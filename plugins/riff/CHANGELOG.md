@@ -1,5 +1,30 @@
 # Changelog
 
+## [5.9.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.8.0...riff-v5.9.0) (2026-11-03)
+
+
+### Features
+
+* a zip of an album imports as its folder does, from wp riff import or uploaded to the Media Library ([#833](https://github.com/RiffPress/RiffPress/issues/833)) ([7847d73](https://github.com/RiffPress/RiffPress/commit/7847d73d66515f3200de01f38f5c9f58ced7072a))
+* **chords:** keys for the loop, the speed and transpose, A, S and F, D and U, while the Chords view shows a chart ([#849](https://github.com/RiffPress/RiffPress/issues/849)) ([9fe8131](https://github.com/RiffPress/RiffPress/commit/9fe81310bd5961de8c20e4c126935aa2fe9af3b5))
+* **player:** a plugin adds its own items to the track menu with the riff.menu filter ([#831](https://github.com/RiffPress/RiffPress/issues/831)) ([566f6a9](https://github.com/RiffPress/RiffPress/commit/566f6a91c0a30e4d4860c16dba9c0f3b1eeef200))
+* **player:** a plugin adds its own keyboard shortcuts with riff_register_shortcut() and window.riff.shortcut(), which follow Riff's single-key rules ([#838](https://github.com/RiffPress/RiffPress/issues/838)) ([e393623](https://github.com/RiffPress/RiffPress/commit/e393623bf964371dd5502e21524dfcf1915c6b5b))
+* **player:** an about panel beside the page shows the track playing, its artist and album linked to their pages and the credits its file's tags carry, and a plugin adds a section to it with riff_about_sections ([#799](https://github.com/RiffPress/RiffPress/issues/799)) ([9b430a8](https://github.com/RiffPress/RiffPress/commit/9b430a83f86529fa921ced219cb64ab2cfe26cb1))
+* **player:** the turntable presses discs from the tags, cuts grooves from the loudness, clicks in the run-out, and has a VU meter and a spectrum ([#797](https://github.com/RiffPress/RiffPress/issues/797)) ([94e5565](https://github.com/RiffPress/RiffPress/commit/94e5565362db59bc44d5f00c6eb69418d554e0a3))
+* **site:** the developer reference moves to developer.riffpress.com, and its old addresses on riffpress.com redirect there ([#800](https://github.com/RiffPress/RiffPress/issues/800)) ([3e5f6d6](https://github.com/RiffPress/RiffPress/commit/3e5f6d6ebfd366048931fdfd735eb4b3e439a416))
+
+
+### Bug Fixes
+
+* an uploaded zip's albums are its uploader's own, it changes no video they can't edit, and a zip ZipArchive can't read whole is refused rather than inflated by PclZip ([#844](https://github.com/RiffPress/RiffPress/issues/844)) ([bf0b38d](https://github.com/RiffPress/RiffPress/commit/bf0b38d17fbd59992d22ea869eb6065d6fa6d2d7))
+* **app:** a narrow window with a mouse, as a car's screen is, keeps the touch layout without the desktop frame laid over it ([#854](https://github.com/RiffPress/RiffPress/issues/854)) ([49cd3cd](https://github.com/RiffPress/RiffPress/commit/49cd3cd19e1ea17cd669cb54b8ae3b1d3d496681))
+* **listen:** a header without a cover, as the Tracks view's, starts at the top and lines up with Play and the list, and a stacked cover is half the page wide ([#829](https://github.com/RiffPress/RiffPress/issues/829)) ([6c5bc42](https://github.com/RiffPress/RiffPress/commit/6c5bc420021304b14421a4aba7bc7ccf2336e0ed))
+* **listen:** an album, artist or playlist header too narrow for its title beside the cover stacks them, and its cover is sized to the page as its title is ([#828](https://github.com/RiffPress/RiffPress/issues/828)) ([e7ae786](https://github.com/RiffPress/RiffPress/commit/e7ae7868daf996a3c83e3407bd949ceedffd9c82))
+* **listen:** an album's title is sized to its header, so it stays whole when Up next or About narrows the page ([#826](https://github.com/RiffPress/RiffPress/issues/826)) ([866f75a](https://github.com/RiffPress/RiffPress/commit/866f75a21481c072fce3d9efef19b0ca89ea8711))
+* **listen:** on a computer, a panel that leaves the page too little room beside the library folds the library to its rail, so an album's rows keep their titles ([#835](https://github.com/RiffPress/RiffPress/issues/835)) ([15a1186](https://github.com/RiffPress/RiffPress/commit/15a11861922e559fb47b20206a1662da97394574))
+* **player:** a mark typed with AltGr, as [ on a German keyboard, reaches a plugin's shortcut ([#841](https://github.com/RiffPress/RiffPress/issues/841)) ([b6a2134](https://github.com/RiffPress/RiffPress/commit/b6a21343d328531bf6918e7886d391ce1174c661))
+* **player:** a track menu first opened before anything played still answers in Up next on a phone ([#847](https://github.com/RiffPress/RiffPress/issues/847)) ([aca9b93](https://github.com/RiffPress/RiffPress/commit/aca9b93489fdbb1d15b68e66166d2b78e220b3e3))
+
 ## [5.8.0](https://github.com/RiffPress/RiffPress/compare/riff-v5.7.0...riff-v5.8.0) (2026-11-02)
 
 
