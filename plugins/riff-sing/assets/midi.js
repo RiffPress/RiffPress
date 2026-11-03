@@ -5,12 +5,12 @@
  * Only what a melody needs is read: the tempo map, each track's name, its notes and its lyrics.
  *
  * Each channel of each track is a part, so a file with every instrument on one track has them apart.
- * With lyrics, the vocal part is the one most of them start notes of, a part on a track named for a
- * voice (Vocals, Voice, Melody, or a choir's Soprano and the like) winning a tie; without, it is the
- * first part named for a voice, or failing that the first that isn't drums. Its words are its
- * track's lyric events, or a karaoke (.kar) file's text events on its track of words; any other
- * text event is a comment and is left out. A phrase ends where the lyrics start a new line (`/` or
- * `\`), and where the melody rests for two beats.
+ * The vocal part is on the track that carries the lyrics, the channel most of them start notes of.
+ * In a karaoke (.kar) file, whose words are text events on a track of their own, it is the part
+ * most of them start notes of. With no words, it is the first part on a track named for a voice
+ * (Vocals, Voice, Melody, or a choir's Soprano and the like), or failing that the first that isn't
+ * drums. Any other text event is a comment and is left out. A phrase ends where the lyrics start a
+ * new line (`/` or `\`), and where the melody rests for two beats.
  *
  * Loaded as a classic script before sing.js, which reads it from window.riffSingMidi; Node's tests
  * require it and read the same object from globalThis. */
@@ -107,16 +107,28 @@
 	// The notes a track plays, each from its note on to its note off, one at a time: a voice sings
 	// one note, so a note that starts while another sounds ends the one before.
 	function melodyOf( track ) {
-		// Each key's notes still sounding, oldest first: a note off ends the oldest, so a repeated
-		// note whose note on comes before the last one's note off at the same tick is kept.
+		// Each key's notes still sounding, oldest first, and a note off ends the oldest: a repeated
+		// note whose note on comes before the last one's note off at the same tick is kept. A note on
+		// later than one still sounding ends it, so a note off that never came costs only that note.
 		const open = new Map();
+		// The notes a note on ended that way, by key, whose own note offs, at that same tick, are
+		// still to come and end nothing more.
+		const ended = new Map();
 		const notes = [];
 		for ( const e of track.notes ) {
 			const id = e.channel * 128 + e.key;
-			const sounding = open.get( id ) || [];
+			let sounding = open.get( id ) || [];
+			const early = ended.get( id );
 			if ( e.on ) {
+				if ( sounding.length && sounding[ sounding.length - 1 ] < e.tick ) {
+					sounding.forEach( ( from ) => notes.push( { from, to: e.tick, key: e.key } ) );
+					ended.set( id, { tick: e.tick, count: sounding.length } );
+					sounding = [];
+				}
 				sounding.push( e.tick );
 				open.set( id, sounding );
+			} else if ( early?.tick === e.tick && early.count > 0 ) {
+				early.count--;
 			} else if ( sounding.length ) {
 				notes.push( { from: sounding.shift(), to: e.tick, key: e.key } );
 			}
@@ -227,13 +239,20 @@
 			const starts = new Set( s.notes.map( ( n ) => n.from ) );
 			return words.filter( ( w ) => starts.has( w.tick ) ).length;
 		};
-		// Where the lyrics fall says more than a name, which may be the song's title or a synth's
-		// patch: with words, the part most of them start notes of, a voice's name breaking a tie;
-		// without, the first part named for a voice.
-		const named = ( s ) => Number( VOCAL.test( s.track.name ) );
-		const chosen = words.length
-			? [ ...sung ].sort( ( x, y ) => near( y ) - near( x ) || named( y ) - named( x ) )[ 0 ]
-			: sung.find( named ) || sung[ 0 ];
+		// A file writes its lyrics on the track whose part sings them, so that track is the voice,
+		// its channels choosing among themselves by where the lyrics fall. A karaoke file keeps
+		// them on a track of their own, so there every part is matched against them. With no words
+		// at all, the voice is the first part named for one.
+		const singing = sung.filter( ( s ) => s.track.lyrics.length );
+		const best = ( list ) => [ ...list ].sort( ( x, y ) => near( y ) - near( x ) )[ 0 ];
+		let chosen;
+		if ( singing.length ) {
+			chosen = best( singing );
+		} else if ( words.length ) {
+			chosen = best( sung );
+		} else {
+			chosen = sung.find( ( s ) => VOCAL.test( s.track.name ) ) || sung[ 0 ];
+		}
 		if ( ! chosen ) {
 			return null;
 		}

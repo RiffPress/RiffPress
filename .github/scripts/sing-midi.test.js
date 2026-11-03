@@ -242,6 +242,40 @@ test( 'a repeated note is kept when its note on comes before the last one\'s not
 	] );
 } );
 
+test( 'the track with the lyrics is the voice, however it is named and whatever doubles it', () => {
+	const chart = read(
+		file( [
+			track( [ name( 'Flute' ), ...tune( [ 72, 74, 76 ] ) ] ),
+			track( [ name( 'Unchained' ), ...tune( [ 60, 62, 64 ] ), lyric( 0, 'Oh' ), lyric( PPQ, 'my' ), lyric( 2 * PPQ, 'love' ) ] ),
+		] )
+	);
+	assert.deepEqual( chart.phrases[ 0 ].notes.map( ( n ) => n.midi ), [ 60, 62, 64 ] );
+} );
+
+test( 'a note off that never came costs only that note', () => {
+	const chart = read(
+		file( [
+			track( [
+				name( 'Voice' ),
+				{ tick: 0, data: [ 0x90, 60, 100 ] },
+				...[ 2, 6, 10 ].flatMap( ( beat ) => [ ...note( beat * PPQ, PPQ, 60 ), lyric( beat * PPQ, `x${ beat }` ) ] ),
+			] ),
+		] )
+	);
+	assert.deepEqual(
+		chart.phrases.map( ( p ) => p.notes.map( ( n ) => [ n.start, n.end, n.text ] ) ),
+		// The stuck note runs on to the next, and the rests between the rest still end their phrases.
+		[
+			[
+				[ 0, 1, '' ],
+				[ 1, 1.5, 'x2 ' ],
+			],
+			[ [ 3, 3.5, 'x6 ' ] ],
+			[ [ 5, 5.5, 'x10 ' ] ],
+		]
+	);
+} );
+
 test( 'where the lyrics fall outranks a name, and a Rock Band chart\'s markers aren\'t sung', () => {
 	// One track named for the song, bass on channel 1 before the voice on channel 0.
 	const titled = read(
