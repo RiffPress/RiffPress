@@ -4,7 +4,8 @@
  * Riff Chords' reading of a chart (plugins/riff-chords/assets/chart.js): ChordPro with LRC's times,
  * chords moved for transpose and capo, and the fingering it draws for each. Every fingering, on a
  * guitar in standard tuning, must sound only its chord's notes, and its root and the note that
- * makes it what it is (the third, or the second or fourth of a sus chord). The charts here are
+ * makes it what it is (the third, or the second or fourth of a sus chord); so must every ukulele
+ * fingering, in G C E A, and a piano's keys are the chord's notes. The charts here are
  * placeholder words, not songs. Run by `node --test .github/scripts/*.test.js`.
  */
 const { test } = require( 'node:test' );
@@ -67,6 +68,55 @@ test( 'the shapes a guitarist learns first are the open ones', () => {
 	assert.deepEqual( chart.shape( 'Am' ), [ null, 0, 2, 2, 1, 0 ] );
 	assert.deepEqual( chart.shape( 'F' ), [ 1, 3, 3, 2, 1, 1 ] );
 	assert.deepEqual( chart.shape( 'Bm' ), [ null, 2, 4, 4, 3, 2 ] );
+} );
+
+// A ukulele in standard tuning, G string first: G4, C4, E4, A4.
+const UKULELE = [ 7, 0, 4, 9 ];
+
+test( 'every chord a ukulele diagram is drawn for sounds only its notes, with its root and its third', () => {
+	for ( const root of ROOTS ) {
+		for ( const [ quality, { may, must } ] of Object.entries( QUALITIES ) ) {
+			const name = root + quality;
+			const frets = chart.ukulele( name );
+			assert.ok( Array.isArray( frets ) && frets.length === 4, `${ name } has a ukulele diagram` );
+			assert.ok( frets.every( ( f ) => Number.isInteger( f ) ), `${ name } plays every string` );
+			const sounded = frets.map( ( f, i ) => ( UKULELE[ i ] + f - PC[ root ] + 24 ) % 12 );
+			assert.deepEqual( sounded.filter( ( i ) => ! may.includes( i ) ), [], `${ name } (${ frets.join( '' ) }) sounds a note not in the chord` );
+			for ( const i of must ) {
+				assert.ok( sounded.includes( i ), `${ name } (${ frets.join( '' ) }) is missing ${ i } semitones above its root` );
+			}
+			const fretted = frets.filter( ( f ) => f );
+			assert.ok( ! fretted.length || Math.max( ...fretted ) - Math.min( ...fretted ) <= 3, `${ name } fits under a hand` );
+		}
+	}
+} );
+
+test( 'the ukulele shapes are the ones its chord charts give', () => {
+	assert.deepEqual( chart.ukulele( 'C' ), [ 0, 0, 0, 3 ] );
+	assert.deepEqual( chart.ukulele( 'G' ), [ 0, 2, 3, 2 ] );
+	assert.deepEqual( chart.ukulele( 'Am' ), [ 2, 0, 0, 0 ] );
+	assert.deepEqual( chart.ukulele( 'F' ), [ 2, 0, 1, 0 ] );
+	assert.deepEqual( chart.ukulele( 'D7' ), [ 2, 2, 2, 3 ] );
+	assert.deepEqual( chart.ukulele( 'Bb' ), [ 3, 2, 1, 1 ] );
+	assert.deepEqual( chart.ukulele( 'D/F#' ), chart.ukulele( 'D' ), 'a slash chord is fingered as its chord' );
+	assert.equal( chart.ukulele( 'Cadd9' ), null );
+	assert.equal( chart.ukulele( 'N.C.' ), null );
+} );
+
+test( 'a piano diagram is the chord stacked up from its root, spelled for its key', () => {
+	assert.deepEqual( chart.keys( 'C' ), [ { key: 0, note: 'C' }, { key: 4, note: 'E' }, { key: 7, note: 'G' } ] );
+	assert.deepEqual( chart.keys( 'Bmaj7' ).map( ( k ) => k.key ), [ 11, 15, 18, 22 ] );
+	assert.deepEqual( chart.keys( 'F7' ).map( ( k ) => k.note ), [ 'F', 'A', 'C', 'Eb' ] );
+	assert.deepEqual( chart.keys( 'F#m' ).map( ( k ) => k.note ), [ 'F#', 'A', 'C#' ] );
+	assert.deepEqual( chart.keys( 'Bbsus4' ).map( ( k ) => k.note ), [ 'Bb', 'Eb', 'F' ] );
+	for ( const root of ROOTS ) {
+		for ( const [ quality, { may } ] of Object.entries( QUALITIES ) ) {
+			const down = chart.keys( root + quality );
+			assert.deepEqual( down.map( ( k ) => k.key - PC[ root ] ), may, `${ root + quality } is its notes from the root` );
+			assert.ok( down.every( ( k ) => k.key >= 0 && k.key < 24 ), `${ root + quality } fits on two octaves` );
+		}
+	}
+	assert.equal( chart.keys( 'Cadd9' ), null );
 } );
 
 test( 'a chord with no diagram, or not a chord, has none', () => {
