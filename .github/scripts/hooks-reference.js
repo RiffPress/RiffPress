@@ -31,10 +31,13 @@ const JS_HOOK = /(?<![\w.])(?:P\.)?(emit|filter)\(\s*'([a-z0-9_]+)'/g;
 // The deploy fills {{commit}} with the SHA it publishes, so every link opens the code as deployed.
 const REPO = 'https://github.com/RiffPress/RiffPress/blob/{{commit}}/';
 
+// Folders no reference reads from: tests, and what a package manager or a build put there.
+const SKIPPED = [ 'tests', 'node_modules', 'vendor', 'build' ];
+
 function files( dir, ext ) {
 	const out = [];
 	for ( const entry of fs.readdirSync( dir, { withFileTypes: true } ) ) {
-		if ( [ 'tests', 'node_modules', 'vendor', 'build' ].includes( entry.name ) ) {
+		if ( SKIPPED.includes( entry.name ) ) {
 			continue;
 		}
 		const full = path.join( dir, entry.name );
@@ -641,7 +644,12 @@ if ( require.main === module ) {
  */
 function isPlayer( file ) {
 	const full = path.join( ROOT, file );
-	return full === PLAYER || ( full.startsWith( PLAYER_DIR + path.sep ) && full.endsWith( '.js' ) && ! full.split( path.sep ).includes( 'tests' ) );
+	if ( full === PLAYER ) {
+		return true;
+	}
+	// Only the folders below assets/player/ count: a checkout inside one named tests is still read.
+	const below = path.relative( PLAYER_DIR, full ).split( path.sep );
+	return '..' !== below[ 0 ] && full.endsWith( '.js' ) && ! below.some( ( dir ) => SKIPPED.includes( dir ) );
 }
 
 module.exports = { JS_HOOK, isPlayer, cell, hooksIn, parse, render, collect, pages, problems, site, callArgs, docblockAbove, codeBlock, h2, top };

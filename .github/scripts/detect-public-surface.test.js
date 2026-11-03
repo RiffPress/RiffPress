@@ -278,6 +278,18 @@ test( "reads the player's filter() and emit() as the riff.* hooks they fire", ()
 
 test( "an array's filter() is not a hook, nor a wrapper outside the player", () => {
 	assert.deepEqual( player( "list.filter( 'menu' );" ), [] );
+	assert.deepEqual( player( "api.P.filter( 'menu' );" ), [] );
+	assert.deepEqual(
+		player(
+			"filter( 'menu', x );",
+			'plugins/riff/assets/player/tests/menu.js'
+		),
+		[]
+	);
+	assert.deepEqual(
+		player( "filter( 'menu', x );", 'plugins/riff/assets/playerish.js' ),
+		[]
+	);
 	assert.deepEqual(
 		player( "filter( 'menu', x );", 'plugins/riff/assets/admin.js' ),
 		[]
