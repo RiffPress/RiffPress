@@ -53,6 +53,13 @@ final class Registry {
 	private static $views = array();
 
 	/**
+	 * Keyboard shortcuts by id, in the order they were registered.
+	 *
+	 * @var array[]
+	 */
+	private static $shortcuts = array();
+
+	/**
 	 * Whether `riff_register` has run this request.
 	 *
 	 * @var bool
@@ -199,6 +206,69 @@ final class Registry {
 	}
 
 	/**
+	 * Registers a key a plugin's script acts on, or replaces the shortcut with the same id. It
+	 * follows Riff's own single-key shortcuts: it does nothing while the listener types in a field,
+	 * it is listed with them under Personal Options on the listener's profile, and it is off
+	 * wherever they are off, for a visitor, for a listener who turned them off, and through the
+	 * `riff.shortcuts` filter.
+	 *
+	 * @since 5.9.0
+	 *
+	 * @param string $id   Lowercase letters, digits and dashes; `window.riff.shortcut()` gives it
+	 *                     what it does by this id.
+	 * @param array  $args {
+	 *     The shortcut.
+	 *
+	 *     @type string $key   One character, as the key types it: a letter, which acts without
+	 *                         Shift whatever its case, a digit, or a mark such as `[` or `+`. Not
+	 *                         a space, and not one of Riff's own letters, K, J, L, N and P, nor a
+	 *                         key another shortcut has.
+	 *     @type string $label What it does, as the profile lists it beside the key.
+	 * }
+	 * @return bool Whether it was registered.
+	 */
+	public static function register_shortcut( string $id, array $args = array() ): bool {
+		self::ready();
+		$args  = wp_parse_args(
+			$args,
+			array(
+				'key'   => '',
+				'label' => '',
+			)
+		);
+		$key   = mb_strtolower( (string) $args['key'] );
+		$taken = array_diff_key( wp_list_pluck( self::$shortcuts, 'key' ), array( $id => true ) );
+		if (
+			! preg_match( self::ID, $id ) ||
+			'' === (string) $args['label'] ||
+			1 !== mb_strlen( $key ) ||
+			'' === trim( $key ) ||
+			in_array( $key, array( 'k', 'j', 'l', 'n', 'p' ), true ) ||
+			in_array( $key, $taken, true )
+		) {
+			_doing_it_wrong( __METHOD__, esc_html__( 'A shortcut needs an id of lowercase letters, digits and dashes, a label, and one key that is not a space and that neither Riff nor another shortcut has.', 'riff' ), '5.9.0' );
+			return false;
+		}
+		self::$shortcuts[ $id ] = array(
+			'key'   => $key,
+			'label' => (string) $args['label'],
+		);
+		return true;
+	}
+
+	/**
+	 * The keyboard shortcuts plugins registered, in the order they were registered.
+	 *
+	 * @since 5.9.0
+	 *
+	 * @return array[] By id, each its `key` and `label`.
+	 */
+	public static function shortcuts(): array {
+		self::ready();
+		return self::$shortcuts;
+	}
+
+	/**
 	 * The controls, in their order.
 	 *
 	 * @since 5.8.0
@@ -230,9 +300,10 @@ final class Registry {
 	 * @since 5.8.0
 	 */
 	public static function reset(): void {
-		self::$controls = array();
-		self::$views    = array();
-		self::$ready    = false;
+		self::$controls  = array();
+		self::$views     = array();
+		self::$shortcuts = array();
+		self::$ready     = false;
 	}
 
 	/**
@@ -246,7 +317,8 @@ final class Registry {
 		/**
 		 * Fires once a request, before the player's controls and views are first read: register
 		 * them here with `riff_register_control()` and `riff_register_view()`, or take one of
-		 * Riff's own away.
+		 * Riff's own away. A plugin's keyboard shortcuts are registered here too, with
+		 * `riff_register_shortcut()`.
 		 *
 		 * @since 5.8.0
 		 */
@@ -445,7 +517,8 @@ final class Registry {
 	}
 
 	/**
-	 * What the player's script needs of each view: its place, and whether it is the stage.
+	 * What the player's script needs of each view, its place and whether it is the stage, and the
+	 * key of each shortcut.
 	 *
 	 * @since 5.8.0
 	 *
@@ -463,6 +536,10 @@ final class Registry {
 				'place' => $view['place'],
 				'stage' => (bool) $view['stage'],
 			);
+		}
+		$data['keys'] = array();
+		foreach ( self::shortcuts() as $id => $shortcut ) {
+			$data['keys'][ $id ] = $shortcut['key'];
 		}
 		return $data;
 	}

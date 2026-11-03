@@ -238,6 +238,21 @@ function start() {
 		 */
 		control: ( id, control ) => P.control( id, control ),
 		/**
+		 * Gives a keyboard shortcut registered on the server with `riff_register_shortcut()` what
+		 * it does. It follows Riff's own single-key shortcuts: it acts only while a track is
+		 * loaded, never while the listener types in a field or holds Ctrl, Alt or Command, and
+		 * only where those are on, for a signed-in listener who has not turned them off on their
+		 * profile, unless the `riff.shortcuts` filter turns them off. A key the server didn't
+		 * register does nothing, since the profile lists every key there is.
+		 *
+		 * @since 5.9.0
+		 *
+		 * @param {string}                                        id  The shortcut's id, as it was registered.
+		 * @param {(track: Object, event: KeyboardEvent) => void} run What the key does, given the track loaded and the key press.
+		 * @return {() => void} Takes it away again.
+		 */
+		shortcut: ( id, run ) => P.shortcut( id, run ),
+		/**
 		 * Listens to one of the player's actions, without `wp-hooks`.
 		 *
 		 * @since 4.0.0

@@ -102,6 +102,112 @@ class Test_Riff_Registry extends Riff_TestCase {
 		$this->assertFalse( riff_register_view( 'like', array( 'label' => 'Like' ) ), 'a view may not take a control\'s id' );
 	}
 
+	public function test_a_plugin_registers_a_shortcut_and_the_player_is_told_its_key(): void {
+		$this->assertSame( array(), Registry::shortcuts(), 'Riff registers none of its own here' );
+		add_action(
+			Registry::HOOK,
+			static function () {
+				riff_register_shortcut(
+					'loop',
+					array(
+						'key'   => 'O',
+						'label' => 'Loop the section',
+					)
+				);
+				riff_register_shortcut(
+					'faster',
+					array(
+						'key'   => ']',
+						'label' => 'Faster',
+					)
+				);
+			}
+		);
+		Registry::reset();
+		$this->assertSame(
+			array(
+				'loop'   => array(
+					'key'   => 'o',
+					'label' => 'Loop the section',
+				),
+				'faster' => array(
+					'key'   => ']',
+					'label' => 'Faster',
+				),
+			),
+			Registry::shortcuts(),
+			'a letter is kept lowercase, as it acts whatever its case'
+		);
+		$this->assertSame(
+			array(
+				'loop'   => 'o',
+				'faster' => ']',
+			),
+			Registry::player_data( array() )['keys']
+		);
+		$this->assertTrue(
+			riff_register_shortcut(
+				'loop',
+				array(
+					'key'   => 'o',
+					'label' => 'Loop',
+				)
+			),
+			'a shortcut may keep its own key as it is replaced'
+		);
+	}
+
+	public function test_a_shortcut_needs_a_key_of_its_own(): void {
+		$this->setExpectedIncorrectUsage( 'Riff\Registry::register_shortcut' );
+		$this->assertTrue(
+			riff_register_shortcut(
+				'loop',
+				array(
+					'key'   => 'o',
+					'label' => 'Loop',
+				)
+			)
+		);
+		foreach (
+			array(
+				'no label'                => array( 'key' => 'q' ),
+				'no key'                  => array( 'label' => 'X' ),
+				'two characters'          => array(
+					'key'   => 'qq',
+					'label' => 'X',
+				),
+				'a space'                 => array(
+					'key'   => ' ',
+					'label' => 'X',
+				),
+				'Riff\'s K'               => array(
+					'key'   => 'K',
+					'label' => 'X',
+				),
+				'Riff\'s N'               => array(
+					'key'   => 'n',
+					'label' => 'X',
+				),
+				'another\'s O, uppercase' => array(
+					'key'   => 'O',
+					'label' => 'X',
+				),
+			) as $why => $args
+		) {
+			$this->assertFalse( riff_register_shortcut( 'other', $args ), $why );
+		}
+		$this->assertFalse(
+			riff_register_shortcut(
+				'Not An Id',
+				array(
+					'key'   => 'q',
+					'label' => 'X',
+				)
+			)
+		);
+		$this->assertSame( array( 'loop' ), array_keys( Registry::shortcuts() ) );
+	}
+
 	/**
 	 * The script modules the page prints.
 	 *

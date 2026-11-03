@@ -165,7 +165,7 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
 ### `riff_register`
 
-Fires once a request, before the player's controls and views are first read: register them here with `riff_register_control()` and `riff_register_view()`, or take one of Riff's own away.
+Fires once a request, before the player's controls and views are first read: register them here with `riff_register_control()` and `riff_register_view()`, or take one of Riff's own away. A plugin's keyboard shortcuts are registered here too, with `riff_register_shortcut()`.
 
 Since 5.8.0. Fires in `plugins/riff/src/class-registry.php`.
 
@@ -190,9 +190,9 @@ Since 4.0.0. Fires in `plugins/riff/assets/player/queue.js`.
 
 #### `riff.shortcuts`
 
-Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
+Filters whether the single-key shortcuts (Space, K, J, L and plugins' keys) act on a key press.
 
-Return `false` to turn them off, which WCAG 2.1.4 asks to be possible.
+Return `false` to turn them off, which WCAG 2.1.4 asks to be possible. It turns off the keys plugins register with `riff_register_shortcut()` too.
 
 Since 4.0.1. Fires in `plugins/riff/assets/player/keyboard.js`.
 

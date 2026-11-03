@@ -173,6 +173,19 @@ Returns `() => void`: Takes away what this gave it, or the control this added.
 
 Since 5.8.0.
 
+### `window.riff.shortcut( id, run )`
+
+Gives a keyboard shortcut registered on the server with `riff_register_shortcut()` what it does. It follows Riff's own single-key shortcuts: it acts only while a track is loaded, never while the listener types in a field or holds Ctrl, Alt or Command, and only where those are on, for a signed-in listener who has not turned them off on their profile, unless the `riff.shortcuts` filter turns them off. A key the server didn't register does nothing, since the profile lists every key there is.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | The shortcut's id, as it was registered. |
+| `run` | `(track: Object, event: KeyboardEvent) => void` | What the key does, given the track loaded and the key press. |
+
+Returns `() => void`: Takes it away again.
+
+Since 5.9.0.
+
 ### `window.riff.on( name, fn )`
 
 Listens to one of the player's actions, without `wp-hooks`.
@@ -191,7 +204,7 @@ Since 4.0.0.
 Each change of state is announced twice with the same detail: through `wp.hooks` as `riff.<name>`, for scripts that depend on `wp-hooks`, and as a `riff:<name>` `CustomEvent` on `#riff` that bubbles, for everything else. The filters run only through `wp.hooks`.
 
 - [`riff.queue`](hooks.md#riffqueue), filter: Filters the tracks about to become the queue.
-- [`riff.shortcuts`](hooks.md#riffshortcuts), filter: Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
+- [`riff.shortcuts`](hooks.md#riffshortcuts), filter: Filters whether the single-key shortcuts (Space, K, J, L and plugins' keys) act on a key press.
 - [`riff.track`](hooks.md#rifftrack), filter: Filters one track as a queue is set, after `riff.queue`.
 - [`riff.ended`](hooks.md#riffended), action: Fires when a track plays to its end, before the next one loads.
 - [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.

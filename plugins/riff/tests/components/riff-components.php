@@ -410,6 +410,25 @@ if ( ! empty( $_COOKIE['riff_test_control'] ) ) {
 }
 
 /*
+ * A keyboard shortcut registered on the server, as a plugin registers one, while the browser
+ * carries the riff_test_shortcut cookie: listed on the profile with Riff's own, and given what it
+ * does by the spec's script. Loaded only on the tests site.
+ */
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
+if ( ! empty( $_COOKIE['riff_test_shortcut'] ) ) {
+	add_action(
+		'riff_register',
+		static fn() => riff_register_shortcut(
+			'e2e-key',
+			array(
+				'key'   => 'o',
+				'label' => 'Say hello',
+			)
+		)
+	);
+}
+
+/*
  * A section of the About panel added as a plugin adds one, through the riff_about_sections filter,
  * while the browser carries the riff_test_about_section cookie: drawn hidden before any script, in
  * its order between the track and the credits, for the spec's script to fill. Loaded only on the

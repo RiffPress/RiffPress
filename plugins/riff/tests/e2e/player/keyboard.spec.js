@@ -114,6 +114,78 @@ test.describe( 'Player', () => {
 			.toBe( true );
 	} );
 
+	test( 'a plugin\'s key follows Riff\'s: listed on the profile, not while typing, and off where Riff\'s are', async ( {
+		page,
+		context,
+		browser,
+		baseURL,
+	} ) => {
+		const cookie = { name: 'riff_test_shortcut', value: '1', url: baseURL };
+		await context.addCookies( [ cookie ] );
+		await page.goto( '/wp-admin/profile.php' );
+		await expect( page.locator( '.riff-shortcuts-wrap .riff-shortcuts-more li' ) ).toHaveText( [ 'O Say hello' ] );
+
+		// What a plugin's script does, by the key's id: given the track and the key press.
+		const give = async ( p ) => {
+			await p.goto( postUrl );
+			await p.locator( '.riff-row' ).nth( 1 ).click();
+			await expect.poll( async () => ( await audioState( p ) ).time ).toBeGreaterThan( 0.5 );
+			await p.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
+			await p.evaluate( () => {
+				window.riffKeys = [];
+				window.riffStopKey = window.riff.shortcut( 'e2e-key', ( track, event ) =>
+					window.riffKeys.push( `${ track.title } ${ event.key }` )
+				);
+			} );
+		};
+		const pressed = ( p ) => p.evaluate( () => window.riffKeys );
+		await give( page );
+		await page.keyboard.press( 'o' );
+		await expect.poll( () => pressed( page ) ).toEqual( [ 'Underground o' ] );
+		// A letter acts without Shift; Riff keeps Shift for its own, and the music plays on.
+		await page.keyboard.press( 'Shift+O' );
+		await page.keyboard.press( 'Control+o' );
+		expect( await pressed( page ) ).toHaveLength( 1 );
+		expect( ( await audioState( page ) ).paused ).toBe( false );
+
+		// Not while typing.
+		await page.evaluate( () => {
+			const field = document.createElement( 'input' );
+			field.id = 'riff-e2e-field';
+			document.body.append( field );
+		} );
+		await page.locator( '#riff-e2e-field' ).focus();
+		await page.keyboard.press( 'o' );
+		await expect( page.locator( '#riff-e2e-field' ) ).toHaveValue( 'o' );
+		await page.locator( 'body' ).click( { position: { x: 5, y: 5 } } );
+
+		// Off with Riff's own, through the riff.shortcuts filter.
+		await page.evaluate( () =>
+			window.wp.hooks.addFilter( 'riff.shortcuts', 'test', () => false )
+		);
+		await page.keyboard.press( 'o' );
+		await page.evaluate( () =>
+			window.wp.hooks.removeFilter( 'riff.shortcuts', 'test' )
+		);
+		expect( await pressed( page ) ).toHaveLength( 1 );
+
+		// Taken away, it does nothing; the key is still the plugin's, so Riff doesn't act on it.
+		await page.evaluate( () => window.riffStopKey() );
+		await page.keyboard.press( 'o' );
+		expect( await pressed( page ) ).toHaveLength( 1 );
+
+		// A visitor has no single-key shortcuts, so none of a plugin's either.
+		const visitor = await browser.newContext( { storageState: { cookies: [], origins: [] } } );
+		await visitor.addCookies( [ cookie ] );
+		const other = await visitor.newPage();
+		await give( other );
+		await other.keyboard.press( 'o' );
+		await other.keyboard.press( 'Shift+N' );
+		await expect.poll( () => other.evaluate( () => window.riff.current().title ) ).not.toBe( 'Underground' );
+		expect( await pressed( other ) ).toEqual( [] );
+		await visitor.close();
+	} );
+
 	test( 'the keyboard plays, pauses and seeks', { tag: '@smoke' }, async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await expect

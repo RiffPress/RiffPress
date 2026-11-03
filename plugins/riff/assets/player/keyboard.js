@@ -2,10 +2,46 @@
  * track. Nothing fires while typing, and Space leaves buttons and links alone. Escape closes Now
  * Playing from anywhere, a field included. The single-key shortcuts act only for a signed-in
  * listener who has not turned them off on their profile, and a site can turn them off through the
- * riff.shortcuts filter, which is what WCAG 2.1.4 asks of them; the Shift ones act for everyone. */
+ * riff.shortcuts filter, which is what WCAG 2.1.4 asks of them; the Shift ones act for everyone.
+ * A plugin's keys (riff_register_shortcut(), window.riff.shortcut()) are single-key shortcuts too. */
 
 export function keyboard( P ) {
 	const { np, filter } = P;
+	// A plugin's keys, registered on the server (riff_register_shortcut()) so the profile lists
+	// them, by key; window.riff.shortcut() gives each what it does, by id.
+	const keys = new Map(
+		Object.entries( P.data.keys || {} ).map( ( [ id, key ] ) => [
+			String( key ),
+			id,
+		] )
+	);
+	const runs = new Map();
+
+	function shortcut( id, run ) {
+		id = String( id );
+		if ( typeof run !== 'function' ) {
+			return () => {};
+		}
+		runs.set( id, run );
+		return () => {
+			if ( runs.get( id ) === run ) {
+				runs.delete( id );
+			}
+		};
+	}
+
+	// The plugin's shortcut a key press is for: a letter without Shift, whatever its case, or
+	// another character as it was typed.
+	function pluginKey( e ) {
+		const key = e.key.toLowerCase();
+		if (
+			[ ...key ].length !== 1 ||
+			( key !== e.key.toUpperCase() && e.shiftKey )
+		) {
+			return null;
+		}
+		return runs.get( keys.get( key ) ) || null;
+	}
 
 	document.addEventListener( 'keydown', ( e ) => {
 		if (
@@ -58,11 +94,13 @@ export function keyboard( P ) {
 				'input, textarea, select, [contenteditable=""], [contenteditable="true"]'
 			) ||
 			/**
-			 * Filters whether the single-key shortcuts (Space, K, J, L) act on a key press.
+			 * Filters whether the single-key shortcuts (Space, K, J, L and plugins' keys) act on a key press.
 			 *
-			 * Return `false` to turn them off, which WCAG 2.1.4 asks to be possible.
+			 * Return `false` to turn them off, which WCAG 2.1.4 asks to be possible. It turns off
+			 * the keys plugins register with `riff_register_shortcut()` too.
 			 *
 			 * @since 4.0.1
+			 * @since 5.9.0 Plugins' keys too.
 			 *
 			 * @param {boolean}       enabled Whether the shortcuts act. Default true.
 			 * @param {KeyboardEvent} event   The key press.
@@ -98,10 +136,15 @@ export function keyboard( P ) {
 			P.press( 'prev' );
 			P.prev();
 		} else {
-			return;
+			// A plugin's key is a single-key shortcut, Shift or not, so it is off where Riff's are.
+			const run = P.shortcutsOn && pluginKey( e );
+			if ( ! run ) {
+				return;
+			}
+			run( P.track(), e );
 		}
 		e.preventDefault();
 	} );
 
-	return {};
+	return { shortcut };
 }
