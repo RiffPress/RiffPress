@@ -28,6 +28,10 @@ Put the disclosure there and nowhere else. No `Co-Authored-By` or session traile
 
 Branch every pull request from `main`, never from another open pull request's branch. Pull requests are squash-merged, so the commit a stacked branch sits on never reaches `main`, and the stacked pull request conflicts with the very change it was built on. When one change needs another, wait for it to merge, then branch.
 
+## Worktrees
+
+Work in a worktree, never by switching branches in the main checkout: someone else may be using it. `npm run wt -- new <branch>` makes one in `.claude/worktrees/`, from `origin/main`, pushed at once so it's never only on one disk. Claude Code's own worktrees (`isolation: "worktree"`, `--worktree`) get the same links from `.claude/settings.json`, and the pre-commit hook gives them their ports. Each worktree has wp-env ports of its own in its `.wp-env.override.json`, and `npm run wt -- env` starts a site that serves that worktree's code, so its suite tests its own branch. `npm run wt -- list` shows every worktree with its pull request and what's unpushed; `npm run wt -- prune` removes the ones whose pull request is done.
+
 ## Before a commit
 
 The Playwright suite runs from the pre-commit hook against the local wp-env site, and again in Actions on the pull request. Do not skip the hook for changes under `plugins/`. Docs and site changes may skip it with `RIFF_SKIP_E2E=1`.

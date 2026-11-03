@@ -1,5 +1,11 @@
 vendor/
 node_modules/
+# A worktree links these to the main checkout's (npm run wt), and a link is not a folder to the rules above.
+/vendor
+/node_modules
+# Worktrees made by npm run wt and by Claude Code, and Claude Code's own per-person settings.
+/.claude/worktrees/
+/.claude/settings.local.json
 build/
 artifacts/
 # The desktop app's build, and the profile and renamed Electron npm run desktop keeps.
