@@ -5,6 +5,12 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
+# A worktree gets the main checkout's node_modules and vendor, and ports of its own, so the lint
+# runs and the suite tests this branch rather than whatever the main checkout has.
+if [[ "$(git rev-parse --git-dir)" != "$(git rev-parse --git-common-dir)" ]]; then
+	node scripts/worktree.js setup >/dev/null
+fi
+
 echo "pre-commit: lint"
 npm run -s lint
 echo "pre-commit: hooks reference"
@@ -30,7 +36,12 @@ fi
 PORT=$(node -e 'try { console.log( require( "./.wp-env.override.json" ).testsPort || 8891 ) } catch { console.log( 8891 ) }')
 if ! curl -sf -o /dev/null "http://localhost:${PORT}/"; then
 	echo "pre-commit: the wp-env tests site is not answering on port ${PORT}."
-	echo "           npm run env:start, then commit again (or RIFF_SKIP_E2E=1 to commit without the suite)."
+	if [[ "$(git rev-parse --git-dir)" != "$(git rev-parse --git-common-dir)" ]]; then
+		echo "           This worktree has a site of its own: npm run wt -- env, then commit again."
+	else
+		echo "           npm run env:start, then commit again."
+	fi
+	echo "           RIFF_SKIP_E2E=1 commits without the suite, for docs and site changes only."
 	exit 1
 fi
 

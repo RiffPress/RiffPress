@@ -53,6 +53,12 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 
 `plugins/riff-lyrics/` is Riff Lyrics, a real plugin built only on Riff's documented public API: the hooks in `docs/hooks.md`, `window.riff` in `docs/javascript.md`, and REST. `.github/scripts/extension-surface.test.js` fails if it, or Riff Sing or Riff Chords, built the same way, hooks anything undocumented or reaches into Riff's classes. When a feature needs something Riff doesn't offer, add it to Riff as a documented extension point, not as a shortcut in the plugin. wp-env loads every plugin in `plugins/`, and PHPUnit, Plugin Check and e2e cover each.
 
+## Working on several branches at once
+
+`npm run wt -- new fix/the-thing` makes a worktree in `.claude/worktrees/` on a new branch from `origin/main` and pushes it. It links the main checkout's `node_modules` and `vendor`, and writes a `.wp-env.override.json` with a pair of ports from 8900 up, so `npm run wt -- env` in it starts a WordPress of its own that serves that worktree's code, seeded like the main one. The pre-commit hook then tests the branch you're committing, not whatever the main checkout has. A worktree made any other way gets the same with `npm run wt -- setup`, which the hook runs for you.
+
+`npm run wt -- list` shows each worktree's branch, ports, uncommitted and unpushed work and pull request. `npm run wt -- prune` lists the worktrees whose pull request merged or closed and that have nothing uncommitted or unpushed; `--yes` removes them, their branch and their wp-env.
+
 ## Running checks
 
 ```bash

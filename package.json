@@ -9,7 +9,8 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks",
+    "prepare": "git config core.hooksPath .githooks && git config push.autoSetupRemote true && git config fetch.prune true && git config rerere.enabled true",
+    "wt": "node scripts/worktree.js",
     "doctor": "node scripts/doctor.js",
     "postinstall": "node .github/scripts/patch-wp-env.js",
     "env:start": "wp-env start",
