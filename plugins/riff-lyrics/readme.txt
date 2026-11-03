@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,10 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.6.0 =
+* A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
+* Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
+
 = 1.5.0 =
 * Riff ships the plugins its manifest names inside itself, each turned on or off from Settings › Riff.
 * Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
@@ -36,8 +40,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 1.2.0 =
 * Riff Lyrics and Riff Sign In say which Riff they need, Requires Riff in their headers, stay out of the way on an older one, and CI holds each to the hooks it uses.
-
-= 1.1.1 =
-* Fixed: no Show as text switch: the timed lines are already text a screen reader reads as a list.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

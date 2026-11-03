@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 5.9.0
+Stable tag: 6.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,12 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.0.0 =
+* Riff drops its desktop app, and the Listen app installed from the browser is its one app.
+* Fixed: standalone mode is laid out as sidebar, rail or tabs from one choice in its stylesheet, and the desktop frame shows where it is sidebar rather than wherever there is a mouse.
+* Fixed: a song pressed in a list that opens as its video opens Now Playing on the picture and plays.
+* Fixed: Go to post opens a new window in the desktop app and the installed Listen app.
+
 = 5.9.0 =
 * A zip of an album imports as its folder does, from wp riff import or uploaded to the Media Library.
 * Keys for the loop, the speed and transpose, A, S and F, D and U, while the Chords view shows a chart.
@@ -174,13 +180,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 5.6.1 =
 * Fixed: FLAC, Ogg and M4A files keep their tags, so the catalog files them by artist and album.
-
-= 5.6.0 =
-* On an unfolded iPhone Duo or a phone on its side the screen is the turntable, and the record comes out of its sleeve as it opens.
-* Where the screen is the turntable, its deck has start and stop, 33 and 45 and a pitch fader, and the sleeve stands in a rack.
-* With the Presence API active, Riff keeps who is listening to what in a listening room, shared and read through riff/v1/together.
-* Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
-* Fixed: on a phone the quality is small print between the times.
-* Fixed: the tonearm turns with the hand while it is held.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

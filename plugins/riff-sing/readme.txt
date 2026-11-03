@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,10 @@ Riff Sing adds a Sing view to Riff's Now Playing, opened from its button in the 
 Your voice never leaves the browser. The microphone opens only when the singer presses Sing with the microphone, after the browser asks them, and closes when they press Stop listening, leave the view, close Now Playing or leave the page. The note being sung is worked out on the device, in an AudioWorklet, by the YIN pitch method; no sound is recorded, kept or sent anywhere, and Riff Sing has no server side beyond the melody it reads.
 
 == Changelog ==
+
+= 0.3.0 =
+* A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
+* Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
 
 = 0.2.0 =
 * An UltraStar chart written in relative beats (#RELATIVE:yes) is read, each line counted from where the break before it says.
