@@ -42,13 +42,13 @@ async function fold( page, size, orientation ) {
 	} );
 }
 
-// Now Playing opened from the album's button, as a listener opens it, with motion: the album,
+// Now Playing opened from the bar, as a listener opens it, with motion: the album,
 // which is the turntable where Now Playing is wider than tall and the cover where it is upright.
 async function nowPlaying( page ) {
 	await page.emulateMedia( { reducedMotion: 'no-preference' } );
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+	await page.locator( '.riff-bar-info' ).click();
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
 	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', 'album' );
 }

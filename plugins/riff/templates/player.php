@@ -2,9 +2,9 @@
 /**
  * Player markup: the docked bar and Now Playing. Hidden until a track is loaded.
  *
- * Now Playing is a view at a time, each taking the whole screen above the bar and opened from its
- * button at the right of the bar: the album, the cover where Now Playing is portrait and the
- * turntable where it is landscape; and any other a plugin registers, such as the lyrics. Up next is a panel beside the page. The bar's controls and
+ * Now Playing is a view at a time, each taking the whole screen above the bar: the album, which the
+ * bar itself opens, the cover where Now Playing is portrait and the
+ * turntable where it is landscape; and any other a plugin registers, such as the lyrics, from its button at the right of the bar. Up next is a panel beside the page. The bar's controls and
  * the views are registered on the server (Riff\Registry) and drawn here, before any script; the
  * script brings each to life by its id. The wide bar has the seek line under the transport.
  * Controls that appear in more than one place are separate buttons with the same
@@ -23,14 +23,15 @@ defined( 'ABSPATH' ) || exit;
 <?php // Now Playing opens to the album: the cover, or the turntable where Now Playing is landscape (now-playing.js). ?>
 <div id="riff" class="riff" hidden<?php echo Player::root_style(); ?> data-riff-showing="album" data-riff-turntable="off">
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
-		<?php // What plays, read and not pressed: the views open from their buttons at the bar's right. ?>
-		<div class="riff-bar-info">
+		<?php // What plays, which opens Now Playing, as a tap anywhere on the bar but its controls does (controls.js). Named by the track after a word only a screen reader hears; "dialog pop up" says it opens. ?>
+		<button type="button" class="riff-bar-info" data-riff-action="open" aria-haspopup="dialog" aria-expanded="false">
+			<span class="riff-app-sr"><?php esc_html_e( 'Now Playing', 'riff' ); ?>, </span>
 			<span class="riff-thumb"><img data-riff-art alt="" decoding="async" hidden></span>
 			<span class="riff-bar-text">
 				<span class="riff-title" data-riff-text="title"></span><span class="riff-app-sr">, </span>
 				<span class="riff-sub" data-riff-text="subtitle"></span>
 			</span>
-		</div>
+		</button>
 		<?php // On a wide screen the transport sits in the middle with the seek line under it. ?>
 		<div class="riff-bar-center">
 			<div class="riff-bar-transport">

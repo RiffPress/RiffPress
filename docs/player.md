@@ -22,7 +22,7 @@ The rest is what a player should do:
 
 - Media Session gives the lock screen its metadata and controls.
 - AirPlay and Cast appear when a device is in reach.
-- A swipe on the bar skips, and a drag on Now Playing closes it.
+- A press on the bar opens Now Playing, a swipe on it skips, and a drag on Now Playing closes it.
 - A script can slow the music down or speed it up with `window.riff.speed()`, as Riff Chords'
   practice controls do. The pitch is kept (`preservesPitch`), the speed holds from track to track,
   and on the turntable it is multiplied by the deck's own; while it is not 1 the platter starts and
@@ -90,8 +90,11 @@ refuses one, and returns `false`.
 
 ## Views
 
-Now Playing is a view at a time, each taking the whole screen above the bar, opened from its button
-at the bar's right end, and on a phone from its chip in Now Playing:
+Now Playing is a view at a time, each taking the whole screen above the bar. A press anywhere on
+the bar but one of its controls opens it on the album, on a phone or a computer, in a post or the Listen
+app alike; the track at the bar's left is that press's button, for a keyboard and a screen reader
+(`aria-expanded` says whether Now Playing is open). Every other view opens from its button at the
+bar's right end, and on a phone from its chip in Now Playing:
 
 - **Album** (`album`): the record, shown as Now Playing's shape suits it. Where Now Playing is
   upright, as on a phone held upright, it is the cover on its own; where it is wider than tall, as
@@ -99,8 +102,9 @@ at the bar's right end, and on a phone from its chip in Now Playing:
   out on the deck, playing or not, with the sleeve beside it. A container query on Now Playing
   (`riff.css`) decides, so turning the phone or resizing the window changes it as it happens. A
   listener who asks for less motion, and a site that turns the turntable off, get the cover in
-  every shape. It is what Now Playing opens to, and its button is on a phone's bar too, as the way
-  in. The track's title and artist at the bar's left are read, not pressed. The turntable was
+  every shape. It is what Now Playing opens to, and as the stage it has no button in the bar: the bar
+  opens it, goes back to it from another view, and closes it from it. Its chip in Now Playing
+  goes back to it too. The turntable was
   once a view of its own, `turntable`, with its own button and the listener's choice of it kept
   in the browser (`riff:turntable`). That id is gone: `window.riff.open( 'turntable' )` opens Now
   Playing on the album, and `openView( 'turntable' )` does nothing.
@@ -113,7 +117,7 @@ at the bar's right end, and on a phone from its chip in Now Playing:
   to what Now Playing opens to, and the listener hears it close.
 
 Pressing the open view's button again, Escape, or Close goes back to the page, and focus goes back
-to the button. The button says whether its view is open (`aria-pressed`).
+to the button, or to the bar's track for the album. The button says whether its view is open (`aria-pressed`).
 
 **Up next** (`queue`) is a panel beside the page rather than a screen, as are **About**
 (`about`), **Together** (`together`), for a signed-in listener where the Presence API is active,
@@ -193,11 +197,12 @@ add_action( 'riff_register', function () {
 } );
 ```
 
-A control's `order` places it among Riff's own: Like (10), the badges (20), the album (26),
+A control's `order` places it among Riff's own: Like (10), the badges (20),
 Lyrics (30), Sing (32), Chords (34), About (36), Up next (40), Together (45), Play on another
 device (60) and the volume (70). `wide`
-keeps a control's button off a phone's bar, which holds the track, Play, the album and only what a
-control asks to keep there; a view's button is wide unless it says otherwise. A control can bring
+keeps a control's button off a phone's bar, which holds the track, Play and only what a
+control asks to keep there; a view's button is wide unless it says otherwise. A view that is the
+stage (`stage`) has no button in the bar, which opens it itself. A control can bring
 its own markup with `render` in place of a button. An icon is the name of one of Riff's own or SVG,
 and nothing but its shapes is kept. `riff_unregister_control()` and `riff_unregister_view()` take
 one away, Riff's own included.

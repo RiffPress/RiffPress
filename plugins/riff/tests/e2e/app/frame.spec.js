@@ -112,7 +112,7 @@ test.describe( 'Standalone', () => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
 		await page.locator( '[data-riff-app-action="play"]' ).click();
-		await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+		await page.locator( '.riff-bar-info' ).click();
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
 
