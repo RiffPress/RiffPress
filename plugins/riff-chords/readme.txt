@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.3.1
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,9 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 
 == Changelog ==
 
+= 0.4.0 =
+* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
+
 = 0.3.1 =
 * Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
 
@@ -50,8 +53,5 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 * Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
 * Riff Chords, a chord chart that follows the song, with practice controls to slow it down, loop a part, transpose and set a capo.
 * Fixed: the chart's meta is registered on init, so WordPress no longer warns that Riff Chords loads its translations too early.
-
-= 0.1.0 =
-* Riff Chords: a chord chart that follows the song, with its fingerings, and practice controls to slow it down, loop a part, transpose and set a capo.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

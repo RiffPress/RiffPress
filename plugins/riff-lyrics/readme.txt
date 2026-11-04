@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.6.1
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.7.0 =
+* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
+
 = 1.6.1 =
 * Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
 
@@ -37,8 +40,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 1.4.0 =
 * Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
-
-= 1.3.0 =
-* Now Playing is a record in its sleeve, cut to the album's tracks and turned at 33⅓, its tonearm tracking the album, and the Albums view can stand as a shelf.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.3.1
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,9 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 == Changelog ==
 
+= 0.4.0 =
+* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
+
 = 0.3.1 =
 * Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
 
@@ -47,8 +50,5 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 = 0.1.0 =
 * Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
 * Riff Sing: sing along with the melody in Now Playing, scored by pitch from a microphone or a MIDI instrument.
-
-= 0.1.0 =
-* Riff Sing: a Sing tab beside Up next, where the melody scrolls past and each line is scored by how close the singer comes, from a microphone or a MIDI instrument.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
