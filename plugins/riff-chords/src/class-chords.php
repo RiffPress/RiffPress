@@ -398,6 +398,8 @@ final class Chords {
 			. '#riff .riff-chords-line.is-tab{font-family:ui-monospace,monospace;font-size:13px;white-space:pre}'
 			. '#riff .riff-chords-seek{all:unset;display:block;box-sizing:border-box;width:100%;padding:2px 0;cursor:pointer}'
 			. '#riff .riff-chords-seek:hover,#riff [aria-current] > .riff-chords-seek{color:var(--riff-fg)}'
+			// A line is pressed to seek, and still read and copied: it selects as the page around it does, where riff-tokens keeps a button's text from selecting.
+			. '#riff .riff-chords-seek{-webkit-user-select:auto!important;user-select:auto!important}'
 			. '.riff-chords-piece{display:inline-flex;flex-direction:column;vertical-align:bottom}'
 			. '.riff-chords-chord{min-height:1.4em;padding-right:.4em;color:var(--riff-accent);font-size:14px;font-weight:700;white-space:nowrap}'
 			. '.riff-chords-chord.is-current{border-radius:4px;background:var(--riff-accent);color:var(--riff-bg)}'

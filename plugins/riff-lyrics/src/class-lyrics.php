@@ -303,6 +303,8 @@ final class Lyrics {
 			. '#riff .riff-lyrics-synced li.riff-lyrics-gap{margin-top:1.2em}'
 			. '#riff .riff-lyrics-line{all:unset;display:block;box-sizing:border-box;width:100%;padding:3px 0;cursor:pointer;color:var(--riff-fg-2);font:inherit;font-weight:500;transition:color .2s}'
 			. '#riff .riff-lyrics-line:hover{color:var(--riff-fg)}'
+			// A line is pressed to seek, and still read and copied: it selects as the page around it does, where riff-tokens keeps a button's text from selecting.
+			. '#riff .riff-lyrics-line{-webkit-user-select:auto!important;user-select:auto!important}'
 			. '#riff .riff-lyrics-line:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px;border-radius:4px}'
 			. '#riff [aria-current] > .riff-lyrics-line{color:var(--riff-fg);font-weight:700}'
 			// Enhanced LRC: in the line being sung, the words still to come wait in the quieter colour.

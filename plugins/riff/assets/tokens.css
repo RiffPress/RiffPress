@@ -1,5 +1,6 @@
 /* Riff's design tokens: every custom property Riff documents, with its
-   default, and nothing else. riff.css and every Riff extension list this
+   default, and the one rule every surface shares: that a control's text is
+   not selected. riff.css and every Riff extension list this
    stylesheet, riff-tokens, as a dependency and use these names rather than
    copying values, so a theme or a block style that sets them reaches all of
    them at once. A docblock is what makes a property public; site/developers/css
@@ -167,4 +168,27 @@
 	 * @since 4.14.0
 	 */
 	--riff-app-heading-font: "Riff Garamond", "EB Garamond", garamond, georgia, serif;
+}
+
+/* A control is pressed, not read: a tap, a long-press or a double-click on a
+   button in the player, a view, a panel, the Listen block, a post's rows or
+   an extension's own never paints its label blue. So too the parts that act
+   as buttons or are dragged: the bar, which is swiped; Now Playing's head and
+   stage, which are dragged down to close and hold the cover, the record and
+   the turntable's arm; the sliders and their times; the chips, pills, tabs
+   and switches. Important, as each button is first reset with `all: unset`,
+   which would otherwise undo it. What is there to be read and copied keeps
+   its text: a row's track, in a post or in Up next, is left to the page
+   around it (auto), so it selects wherever the page does. An extension whose
+   buttons hold text to read does the same in its own stylesheet, as Riff
+   Lyrics does for its lines and Riff Chords for its chart's. */
+:where(#riff, .riff-app, .riff-tracks, .riff-track, .riff-signin) :is(button, [role="button"], [role="slider"], [role="radio"], input[type="range"]),
+:where(#riff, .riff-app) :is(.riff-bar, .riff-np-head, .riff-stage, .riff-bar-seek, .riff-np-seek, .riff-np-times, .riff-volume, .riff-pitch, .riff-chips, .riff-chip, .riff-chip-link, .riff-pill, .riff-modes, .riff-speeds, .riff-app-tab, .riff-sort-link) {
+	-webkit-user-select: none !important;
+	user-select: none !important;
+}
+
+:where(#riff, .riff-app, .riff-tracks, .riff-track) :is(.riff-row, .riff-queue-list li > button:first-child) {
+	-webkit-user-select: auto !important;
+	user-select: auto !important;
 }
