@@ -25,7 +25,7 @@ import { playlists } from 'riff-app/playlists';
 import { homeRows } from 'riff-app/home';
 import { sidebarPanel } from 'riff-app/sidebar';
 import { installOffer } from 'riff-app/install';
-import { desktopFrame } from 'riff-app/desktop';
+import { appFrame } from 'riff-app/frame';
 import { search } from 'riff-app/search';
 import { rack } from 'riff-app/rack';
 import { togetherRow } from 'riff-app/together';
@@ -71,9 +71,9 @@ export function start( api ) {
 			.split( ',' )
 			.filter( Boolean ),
 		tracksRest: app.dataset.riffTracksRest || '',
-		// Standalone mode has a frame (templates/standalone.php), and the desktop frame's strip is
+		// Standalone mode has a frame (templates/standalone.php), and the frame's strip is
 		// built wherever it may show; CSS shows it.
-		desktop: 'riffFrame' in document.documentElement.dataset,
+		framed: 'riffFrame' in document.documentElement.dataset,
 		__,
 		_n,
 		tell,
@@ -279,8 +279,8 @@ export function start( api ) {
 	ctx.together();
 	ctx.rackUp();
 	ctx.fade( app );
-	if ( ctx.desktop ) {
-		Object.assign( ctx, desktopFrame( ctx ) );
+	if ( ctx.framed ) {
+		Object.assign( ctx, appFrame( ctx ) );
 	}
 	try {
 		if ( localStorage.getItem( 'riff-sidebar' ) === 'mini' ) {
