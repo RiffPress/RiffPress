@@ -2,8 +2,8 @@
  * The screen as a turntable: on a touch screen wider than it is tall and no taller than a phone,
  * as an unfolded iPhone Duo (890 by 626) and a phone on its side are, Now Playing is the deck
  * itself; folding back to a phone's shape puts the record back in its sleeve. Folded part way,
- * where the browser reports the fold, nothing lands in the crease: a book's two pages, or a tent's
- * two halves. The fold is emulated with Chromium's DevTools protocol, so this runs in desktop
+ * where the browser reports the fold, nothing lands in the crease: a book's two pages, the deck on
+ * the left, or a tent's two halves, upright, so the cover above. The fold is emulated with Chromium's DevTools protocol, so this runs in desktop
  * Chromium only, as a touch screen.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -42,15 +42,15 @@ async function fold( page, size, orientation ) {
 	} );
 }
 
-// Now Playing opened from the album's button, as a listener opens it: unfolded, it opens to the
-// turntable, whatever the listener chose elsewhere, as that is what the shape is for; folded, to
-// the album.
-async function nowPlaying( page, view = 'turntable' ) {
+// Now Playing opened from the album's button, as a listener opens it, with motion: the album,
+// which is the turntable where Now Playing is wider than tall and the cover where it is upright.
+async function nowPlaying( page ) {
+	await page.emulateMedia( { reducedMotion: 'no-preference' } );
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', view );
+	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', 'album' );
 }
 
 test.describe( 'iPhone Duo', () => {
@@ -122,16 +122,17 @@ test.describe( 'iPhone Duo', () => {
 
 	test( 'opening brings the record out of its sleeve, and closing puts it back', async ( { page } ) => {
 		await page.setViewportSize( FOLDED );
-		await nowPlaying( page, 'album' );
+		await nowPlaying( page );
 		const root = page.locator( '#riff' );
 		await expect( root ).not.toHaveAttribute( 'data-riff-deck', 'out' );
-		// Unfolded, the screen is the turntable; folded again, the album.
+		await expect( root ).toHaveAttribute( 'data-riff-turntable', 'off' );
+		// Unfolded, the album is the turntable; folded again, the cover.
 		await page.setViewportSize( OPEN );
-		await expect( root ).toHaveAttribute( 'data-riff-showing', 'turntable' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
 		await page.setViewportSize( FOLDED );
 		await expect( root ).toHaveAttribute( 'data-riff-showing', 'album' );
 		await expect( root ).not.toHaveAttribute( 'data-riff-deck', 'out' );
+		await expect( root ).toHaveAttribute( 'data-riff-turntable', 'off' );
 		await expect( page.locator( '.riff-cover' ) ).toBeVisible();
 	} );
 
@@ -148,17 +149,18 @@ test.describe( 'iPhone Duo', () => {
 		expect( panel.x ).toBeGreaterThanOrEqual( half + 16 );
 	} );
 
-	test( 'stood like a tent, the turntable is in the upper half and the controls in the lower', async ( { page } ) => {
+	test( 'stood like a tent, upright, the cover is in the upper half and the controls in the lower', async ( { page } ) => {
 		const upright = { width: OPEN.height, height: OPEN.width };
 		await page.setViewportSize( upright );
-		await nowPlaying( page, 'album' );
+		await nowPlaying( page );
 		await fold( page, upright, 'horizontal' );
-		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', 'turntable' );
 		const half = upright.height / 2 - 8;
-		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
-		const record = await page.locator( '.riff-record' ).boundingBox();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-turntable', 'off' );
+		await expect.poll( async () => {
+			const cover = await page.locator( '.riff-cover' ).boundingBox();
+			return cover.y + cover.height;
+		} ).toBeLessThanOrEqual( half );
 		const play = await page.locator( '.riff-np-panel [data-riff-action="toggle"]' ).boundingBox();
-		expect( record.y + record.height ).toBeLessThanOrEqual( half );
 		expect( play.y ).toBeGreaterThanOrEqual( half + 16 );
 	} );
 } );

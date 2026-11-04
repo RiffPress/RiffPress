@@ -57,7 +57,7 @@ final class Lyrics {
 	}
 
 	/**
-	 * The Lyrics view: a screen of Now Playing, its button in the bar beside the turntable's, as the
+	 * The Lyrics view: a screen of Now Playing, its button in the bar beside the album's, as the
 	 * words go with the song.
 	 */
 	public static function view(): void {

@@ -33,7 +33,7 @@ class Test_Riff_Sing extends Riff_TestCase {
 		$views = Riff\Registry::views( 'screen' );
 		$this->assertArrayHasKey( 'sing', $views, 'a screen of Now Playing, registered as Riff registers its own' );
 		$this->assertSame( 'Sing', $views['sing']['label'] );
-		$this->assertSame( array( 'album', 'turntable', 'sing' ), array_keys( $views ), 'its button after the turntable\'s' );
+		$this->assertSame( array( 'album', 'sing' ), array_keys( $views ), 'its button after the album\'s' );
 		$this->assertArrayNotHasKey( 'sing', Riff\Registry::views( 'side' ) );
 	}
 

@@ -136,8 +136,8 @@ async function desktop( browser ) {
 	await page.waitForTimeout( 1500 );
 	await save( page, 'desktop-album', true );
 
-	// Now Playing from the bar's Turntable: the sleeve set down beside the turntable.
-	await page.locator( '.riff-bar [data-riff-control="turntable"]' ).click();
+	// Now Playing from the bar's Album, wide: the sleeve set down beside the turntable.
+	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await page.waitForTimeout( 1500 );
 	await save( page, 'desktop-now-playing', true );

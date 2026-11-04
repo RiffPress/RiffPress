@@ -5,7 +5,7 @@
  * is: a band of grooves for each of the album's tracks, as wide as the track is long. It turns at
  * 33⅓, faster or slower with the music's speed as a turntable's pitch would, and its tonearm
  * tracks the album from the outside in. */
-import { average, hsl, largest, read, route, time, write } from 'riff-player/helpers';
+import { average, hsl, largest, route, time } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -16,38 +16,19 @@ export function nowPlaying( P ) {
 	const { root, np, $, $$ } = P;
 
 	let opener = null;
-	// The view showing: the album, the cover on its own, until the listener opens another.
+	// The view showing: the album, the stage, until the listener opens another.
 	P.showing = 'album';
-	// Whether the turntable showing was the screen's shape's doing (reshape()), not the listener's.
-	let unfolded = false;
-	const TURNTABLE = 'riff:turntable';
 	const screen = ( id ) => P.views?.get( id )?.place === 'screen';
 
-	// The view Now Playing opens to when none is named: the turntable where the whole screen is
-	// one, as an unfolded iPhone Duo is, since that is what the shape is for; the turntable for a
-	// listener who last chose it; otherwise the album.
-	function opening() {
-		if ( ! P.views?.has( 'turntable' ) ) {
-			return 'album';
-		}
-		if ( shapedAsDeck() ) {
-			return 'turntable';
-		}
-		return read( localStorage, TURNTABLE ) === 'on' ? 'turntable' : 'album';
-	}
-
-	// A view in Now Playing's place: its region shown and the others hidden, or the stage, with
-	// the record out on the deck for the turntable and the cover on its own for the album. Quiet,
-	// for the screen changing shape under it, it keeps the listener's choice and their focus.
-	function setView( id, { quiet = false } = {} ) {
+	// A view in Now Playing's place: its region shown and the others hidden, or the stage for the
+	// album, the record out on the deck where Now Playing is landscape and the cover on its own
+	// where it is portrait (roomy()).
+	function setView( id ) {
 		if ( ! screen( id ) ) {
 			return;
 		}
 		const was = P.showing;
 		const shown = ! np.hidden;
-		if ( ! quiet ) {
-			unfolded = false;
-		}
 		P.showing = id;
 		root.dataset.riffShowing = id;
 		const stage = !! P.views.get( id ).stage;
@@ -56,15 +37,6 @@ export function nowPlaying( P ) {
 			if ( v.place === 'screen' && v.el ) {
 				v.el.hidden = other !== id;
 			}
-		}
-		if ( turntable() ) {
-			delete root.dataset.riffTurntable;
-		} else {
-			root.dataset.riffTurntable = 'off';
-		}
-		// The listener's choice of the album or the turntable, kept for the next time.
-		if ( stage && P.views.has( 'turntable' ) && ! shapedAsDeck() && ! quiet ) {
-			write( localStorage, TURNTABLE, id === 'turntable' ? 'on' : 'off' );
 		}
 		roomy.last = undefined;
 		clearTimeout( deck.opening );
@@ -77,9 +49,7 @@ export function nowPlaying( P ) {
 		}
 		if ( shown ) {
 			P.viewOpened?.( id, true );
-			if ( ! quiet ) {
-				focusView();
-			}
+			focusView();
 		}
 		P.drawControls?.();
 	}
@@ -98,16 +68,10 @@ export function nowPlaying( P ) {
 		}
 		// Open, and not sliding away: the view changes in place.
 		if ( ! np.hidden && root.classList.contains( 'is-open' ) ) {
-			setView( screen( id ) ? id : opening() );
+			setView( screen( id ) ? id : 'album' );
 			return;
 		}
-		// Where the whole screen is a turntable, as an unfolded iPhone Duo is, Now Playing opens to
-		// it, from the album's button too; a view of its own, such as the lyrics, opens as named.
-		const own = screen( id ) && ! P.views.get( id ).stage;
-		const view =
-			! own && shapedAsDeck() && P.views?.has( 'turntable' )
-				? 'turntable'
-				: screen( id ) ? id : opening();
+		const view = screen( id ) ? id : 'album';
 		// Safari doesn't focus a button on click, so after a click the active element is the body;
 		// focus then goes back to the view's button in the bar.
 		const active = document.activeElement;
@@ -785,17 +749,16 @@ export function nowPlaying( P ) {
 		} );
 	}
 
-	// The turntable stands only on a stage wider than it is tall, as on a computer or an unfolded
-	// phone; on a phone held upright the cover is shown alone, at full size, and the record stays
-	// in its sleeve. riff.css's container query says which, so the two never disagree; while Now
-	// Playing is closed its stage has no size, so the last answer holds, and before it has ever
-	// opened the window's shape stands in, so music playing on a computer already has its record
-	// out when Now Playing first opens. Turning the phone, unfolding it or resizing the window
-	// brings the record out or puts it back.
-	// The turntable is a view of its own, opened from its button (registry.js); the album, the
-	// cover on its own, is what Now Playing opens to. A site that turned the turntable off
-	// (Settings › Media) registers no such view.
-	const turntable = () => P.showing === 'turntable' && !! P.views?.has( 'turntable' );
+	// The album is the cover on its own where Now Playing is portrait, as on a phone held upright,
+	// and the turntable where it is landscape, as on a phone on its side or a computer's window.
+	// riff.css's container query on Now Playing says which (--riff-deck), so the two never
+	// disagree; while Now Playing is closed it has no size, so the last answer holds, and before it
+	// has ever opened the window's shape stands in, so music playing on a computer already has its
+	// record out when Now Playing first opens. Turning the phone, unfolding it or resizing the
+	// window brings the record out or puts it back. A site that turned the turntable off (Settings ›
+	// Media), and a listener who asks for less motion, have the cover in every shape.
+	const turntable = () =>
+		P.showing === 'album' && P.data.turntable !== false && ! P.reduce();
 	function roomy() {
 		if ( ! turntable() ) {
 			return false;
@@ -804,52 +767,47 @@ export function nowPlaying( P ) {
 		if ( ! np.hidden && cover ) {
 			roomy.last = getComputedStyle( cover ).getPropertyValue( '--riff-deck' ).trim() === '1';
 		}
-		return roomy.last ?? window.innerWidth >= window.innerHeight * 1.2;
+		return roomy.last ?? window.innerWidth > window.innerHeight;
 	}
-	// In the turntable's view the record comes out whether or not it is playing, as setting a record
-	// on the platter does. Where the whole screen is the turntable (riff.css: an unfolded phone, a
-	// phone on its side), the deck has its own controls too.
+	// Where the turntable shows, the record comes out whether or not it is playing, as setting a
+	// record on the platter does. Where the whole screen is the turntable (riff.css: an unfolded
+	// phone, a phone on its side), the deck has its own controls too.
 	const OPENING = 400;
 	const wholeDeck = turntable;
 	const shapedAsDeck = () =>
 		!! $( '.riff-cover' ) &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
-	const deckScreen = () => turntable() && shapedAsDeck();
-	// Whether the stage has room for the sleeve beside the deck, as riff.css's container query
-	// answers it, for the stylesheet: without it the turntable's view is the record alone.
-	const markRoom = () => root.toggleAttribute( 'data-riff-room', roomy() );
-	// Unfolding the phone, or turning it on its side, while the album shows makes the screen the
-	// turntable, as opening Now Playing there would; folding it again goes back to the album.
-	function reshape() {
-		if ( np.hidden || ! P.views?.has( 'turntable' ) ) {
-			return;
-		}
-		if ( shapedAsDeck() && P.showing === 'album' ) {
-			unfolded = true;
-			setView( 'turntable', { quiet: true } );
-		} else if ( ! shapedAsDeck() && unfolded && P.showing === 'turntable' ) {
-			unfolded = false;
-			setView( 'album', { quiet: true } );
+	const deckScreen = () => roomy() && shapedAsDeck();
+	// For the stylesheet: off, the cover on its own, with no record, deck or meters.
+	function markRoom() {
+		if ( roomy() ) {
+			delete root.dataset.riffTurntable;
+		} else {
+			root.dataset.riffTurntable = 'off';
 		}
 	}
 	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
-		new ResizeObserver( () => {
-			reshape();
-			const was = roomy.last;
-			if ( np.hidden || roomy() === was ) {
+		const reroom = () => {
+			// What the stylesheet was told, against what the shape and the listener ask for now.
+			const was = ! ( 'riffTurntable' in root.dataset );
+			const now = roomy();
+			if ( np.hidden || now === was ) {
 				return;
 			}
 			markRoom();
 			clearTimeout( deck.opening );
 			// Onto the deck its speed and pitch hold; off it the music is at its own speed again.
 			retune( false );
-			if ( roomy.last && wholeDeck() && ! P.reduce() ) {
+			if ( now ) {
 				// Opened: the sleeve settles at the deck's edge first, then the record slides out of it.
 				deck.opening = setTimeout( () => deck( roomy() ), OPENING );
 				return;
 			}
-			deck( roomy.last && ( 'riffTurning' in root.dataset || wholeDeck() ) );
-		} ).observe( $( '.riff-stage' ) );
+			deck( false );
+		};
+		new ResizeObserver( reroom ).observe( $( '.riff-stage' ) );
+		// Asking for less motion puts the record away; asking for it again brings it out.
+		window.matchMedia( '(prefers-reduced-motion: reduce)' ).addEventListener?.( 'change', reroom );
 	}
 
 	// The record out of its sleeve or back in it; out, the needle drops once it has come clear.

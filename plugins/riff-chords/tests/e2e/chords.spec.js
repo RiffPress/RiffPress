@@ -133,7 +133,7 @@ test( 'the Chords button shows only for a track with a chart, and the open view 
 	await page.evaluate( () => window.riff.next() );
 	await expect( panel ).toBeHidden();
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', /^(album|turntable)$/ );
+	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', 'album' );
 	await expect( button ).toBeHidden();
 	await expect( chip ).toBeHidden();
 	await expect.poll( () => page.evaluate( () => document.activeElement !== document.body ) ).toBe( true );

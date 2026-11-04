@@ -31,20 +31,21 @@ class Test_Riff_Turntable extends Riff_TestCase {
 		);
 	}
 
-	public function test_it_is_a_view_until_the_site_turns_it_off(): void {
+	public function test_it_is_the_album_until_the_site_turns_it_off(): void {
 		$this->assertTrue( Turntable::on(), 'absent, it shows' );
 		$on = $this->player();
-		$this->assertTrue( $on['data']['views']['turntable']['stage'] ?? false, 'a view of its own, on Now Playing\'s stage' );
-		$this->assertStringContainsString( 'data-riff-control="turntable"', $on['html'], 'its button in the bar' );
-		$this->assertMatchesRegularExpression( '#<div id="riff" class="riff" hidden[^>]* data-riff-turntable="off">#', $on['html'], 'off until the listener opens it: the album is what Now Playing opens to' );
+		$this->assertTrue( $on['data']['views']['album']['stage'] ?? false, 'the album, on Now Playing\'s stage' );
+		$this->assertArrayNotHasKey( 'turntable', $on['data']['views'], 'not a view of its own' );
+		$this->assertArrayNotHasKey( 'turntable', $on['data'], 'and the script is not told it is off' );
+		$this->assertStringNotContainsString( 'data-riff-control="turntable"', $on['html'], 'nor a button of its own' );
+		$this->assertMatchesRegularExpression( '#<div id="riff" class="riff" hidden[^>]* data-riff-turntable="off">#', $on['html'], 'the cover until the script finds Now Playing wide' );
 
 		update_option( Turntable::OPTION, false );
 		Registry::reset();
 		$this->assertFalse( Turntable::on() );
 		$off = $this->player();
 		$this->assertFalse( $off['data']['turntable'], 'the script is told' );
-		$this->assertArrayNotHasKey( 'turntable', $off['data']['views'], 'and there is no such view' );
-		$this->assertStringNotContainsString( 'data-riff-control="turntable"', $off['html'], 'nor its button' );
+		$this->assertTrue( $off['data']['views']['album']['stage'] ?? false, 'and the album is still there, the cover' );
 	}
 
 	public function test_a_plugin_turns_it_off_with_the_filter(): void {

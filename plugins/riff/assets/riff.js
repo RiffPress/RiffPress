@@ -116,10 +116,9 @@ function start() {
 		 * Opens Now Playing, on a view of it when one is named.
 		 *
 		 * @since 4.0.0
-		 * @since 5.8.0 The view to open it on: `album`, `turntable`, or one a plugin registered.
+		 * @since 5.8.0 The view to open it on: `album`, or one a plugin registered.
 		 *
-		 * @param {string} [view] A screen view's id. Default the album, or the turntable where the
-		 *                        whole screen is one or the listener last chose it.
+		 * @param {string} [view] A screen view's id. Default the album.
 		 */
 		open: ( view ) => P.open( view === undefined ? undefined : String( view ) ),
 		/**
@@ -184,7 +183,8 @@ function start() {
 		 * of Now Playing, which takes the whole screen above the bar, or a panel beside the page.
 		 * Register a view on the server with `riff_register_view()`, so the page has it before any
 		 * script; this is for what only the browser knows. Riff's own are the album (`album`,
-		 * order 26), the turntable (`turntable`, 28), About (`about`, a panel, 36), Up next (`queue`,
+		 * order 26; the cover, or the turntable where Now Playing is landscape), About (`about`, a
+		 * panel, 36), Up next (`queue`,
 		 * a panel, 40) and Together
 		 * (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing
 		 * (`sing`, 32) and Riff Chords Chords (`chords`, 34). A view with nothing for a track says so
@@ -211,7 +211,7 @@ function start() {
 		 *
 		 * @since 5.8.0
 		 *
-		 * @param {string} id The view's id: `album`, `turntable`, `queue`, or one a plugin registered.
+		 * @param {string} id The view's id: `album`, `queue`, or one a plugin registered.
 		 */
 		openView: ( id ) => P.openView( String( id ) ),
 		/**

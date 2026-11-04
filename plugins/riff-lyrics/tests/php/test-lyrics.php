@@ -33,7 +33,7 @@ class Test_Riff_Lyrics extends Riff_TestCase {
 		$views = Riff\Registry::views( 'screen' );
 		$this->assertArrayHasKey( 'lyrics', $views, 'a screen of Now Playing, registered as Riff registers its own' );
 		$this->assertSame( 'Lyrics', $views['lyrics']['label'] );
-		$this->assertSame( array( 'album', 'turntable', 'lyrics' ), array_keys( $views ), 'its button beside the turntable\'s' );
+		$this->assertSame( array( 'album', 'lyrics' ), array_keys( $views ), 'its button beside the album\'s' );
 		Lyrics::enqueue();
 		$this->assertTrue( wp_script_is( 'riff-lyrics', 'enqueued' ), 'and its script fills it' );
 	}

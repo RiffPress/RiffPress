@@ -7,7 +7,7 @@
  * focus and a feature that found its button keeps finding it.
  *
  * A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a
- * screen of Now Playing, which takes the whole screen above the bar (the album, the turntable, the
+ * screen of Now Playing, which takes the whole screen above the bar (the album, the
  * lyrics; now-playing.js shows them), or a panel beside the page, as Up next is. Pressing the
  * button of the one open goes back to the page. One panel shows at a time, and the one a listener
  * leaves open opens again on their next visit. window.riff.view() gives a registered view what it
@@ -422,7 +422,7 @@ export function registry( P ) {
 		 * @param {boolean}     detail.open  Whether it is open now.
 		 * @param {HTMLElement} detail.view  Its region: `[data-riff-view="<id>"]` for a screen of its
 		 *                                   own, `[data-riff-panel="<id>"]` for a panel, and Now
-		 *                                   Playing itself for the album or the turntable.
+		 *                                   Playing itself for the album.
 		 * @param {Object|null} detail.track The track playing.
 		 * @param {Object}      api          `window.riff`.
 		 */

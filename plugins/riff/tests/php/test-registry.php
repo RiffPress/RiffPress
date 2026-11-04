@@ -14,7 +14,7 @@ class Test_Riff_Registry extends Riff_TestCase {
 
 	public function test_riff_registers_its_own_as_any_plugin_does(): void {
 		$this->assertSame( array( 'like', 'badges', 'cast', 'volume' ), array_keys( Registry::controls() ) );
-		$this->assertSame( array( 'album', 'turntable', 'about', 'queue' ), array_keys( array_diff_key( Registry::views(), array( 'lyrics' => true ) ) ) );
+		$this->assertSame( array( 'album', 'about', 'queue' ), array_keys( array_diff_key( Registry::views(), array( 'lyrics' => true ) ) ) );
 		$this->assertSame( 1, did_action( Registry::HOOK ), 'riff_register runs once, as they are first read' );
 		Registry::views();
 		$this->assertSame( 1, did_action( Registry::HOOK ) );
@@ -46,7 +46,7 @@ class Test_Riff_Registry extends Riff_TestCase {
 		);
 
 		$bar = Registry::bar();
-		$this->assertMatchesRegularExpression( '#data-riff-control="turntable".*data-riff-control="credits".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="sleep".*data-riff-control="volume"#s', $bar, 'each by its order' );
+		$this->assertMatchesRegularExpression( '#data-riff-control="album".*data-riff-control="credits".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="sleep".*data-riff-control="volume"#s', $bar, 'each by its order' );
 		$this->assertStringContainsString( '<button type="button" class="riff-btn riff-control riff-control-sleep" data-riff-control="sleep" data-riff-order="65" aria-label="Sleep timer"><svg', $bar );
 		$this->assertStringNotContainsString( '<script', $bar, 'an icon is SVG and nothing more' );
 		$this->assertStringContainsString( '<path d="M4 4h16v16H4z"', $bar );
@@ -77,14 +77,14 @@ class Test_Riff_Registry extends Riff_TestCase {
 		add_action(
 			Registry::HOOK,
 			static function () {
-				riff_unregister_view( 'turntable' );
+				riff_unregister_view( 'queue' );
 				riff_unregister_control( 'volume' );
 			},
 			20
 		);
-		$this->assertArrayNotHasKey( 'turntable', Registry::views() );
+		$this->assertArrayNotHasKey( 'queue', Registry::views() );
 		$this->assertArrayNotHasKey( 'volume', Registry::controls() );
-		$this->assertStringNotContainsString( 'data-riff-control="turntable"', Registry::bar() );
+		$this->assertStringNotContainsString( 'data-riff-control="queue"', Registry::bar() );
 	}
 
 	public function test_a_panel_beside_the_page_is_drawn_with_its_name(): void {

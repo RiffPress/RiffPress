@@ -185,7 +185,7 @@ test( 'the Sing view shows the melody\'s words, says the voice stays on the devi
 	await page.evaluate( () => window.riff.next() );
 	await expect( panel ).toBeHidden();
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
-	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', /^(album|turntable)$/ );
+	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', 'album' );
 	await expect( button ).toBeHidden();
 	await page.evaluate( () => window.riff.prev() );
 	await expect( button ).toBeVisible();
