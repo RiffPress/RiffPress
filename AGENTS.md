@@ -38,7 +38,7 @@ The Playwright suite runs from the pre-commit hook against the local wp-env site
 
 ## Before a pull request
 
-Show the change working (the test, the build, a screenshot against the design), then run `/code-review` on the diff, or have a subagent review it with fresh context, against [REVIEW.md](REVIEW.md). For anything under `plugins/riff-sign-in/` or a REST route, run `/security-review` too. Stop after three rounds: if review keeps finding the same kind of problem, rethink the approach instead of patching it again. When a reviewer keeps flagging something that isn't wrong, add it to Not bugs below; when it keeps missing something, add it to REVIEW.md.
+Show the change working (the test, the build, a screenshot against the design), then run `/code-review` on the diff, or have a subagent review it with fresh context, against [REVIEW.md](REVIEW.md). For anything under `plugins/riff-sign-in/` or a REST route, run `/security-review` too. Review once: fix what that pass finds, then push once and open the pull request, with no second round. If it finds the change built the wrong way, rethink the approach rather than patching it. When a reviewer keeps flagging something that isn't wrong, add it to Not bugs below; when it keeps missing something, add it to REVIEW.md.
 
 ## Merging
 
