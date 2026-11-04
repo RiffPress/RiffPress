@@ -64,7 +64,7 @@ module.exports = defineConfig( {
 			// The specs written for both widths: the player, the Listen app, Riff Lyrics and Riff Chords. The rest of
 			// the app folder (likes, playlists, first run, the layout checks) is desktop only.
 			testMatch:
-				/tests\/e2e\/player\/(rows|queue|now-playing|playback|meter|areas|keyboard|seek|api|wcag|video)\.spec\.js$|tests\/e2e\/app\/(views|browse|standalone|install|menus|desktop|requests|pages)\.spec\.js$|tests\/e2e\/(lyrics|chords)\.spec\.js$/,
+				/tests\/e2e\/player\/(rows|queue|now-playing|playback|meter|areas|keyboard|seek|api|wcag|video|select)\.spec\.js$|tests\/e2e\/app\/(views|browse|standalone|install|menus|desktop|requests|pages)\.spec\.js$|tests\/e2e\/(lyrics|chords)\.spec\.js$/,
 		},
 		{
 			name: 'webkit',
