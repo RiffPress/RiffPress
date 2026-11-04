@@ -1,5 +1,5 @@
 /**
- * The desktop frame, standalone mode where the window has room for the sidebar: the window does not stretch past its ends, and Now Playing is the art alone with Up next a panel beside it.
+ * The frame, standalone mode where the window has room for the sidebar: the window does not stretch past its ends, and Now Playing is the art alone with Up next a panel beside it.
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -20,11 +20,11 @@ test.afterAll( async ( { requestUtils } ) => {
 } );
 
 test.describe( 'Standalone', () => {
-	test( 'in the desktop frame the window does not stretch past its ends, and the view keeps its round corners', async ( {
+	test( 'in the frame the window does not stretch past its ends, and the view keeps its round corners', async ( {
 		page,
 		isMobile,
 	} ) => {
-		test.skip( isMobile, 'The desktop frame is for a wide window.' );
+		test.skip( isMobile, 'The frame is for a wide window.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
 		// A trackpad's stretch past the top would slide the view in its frame and show a square edge.
@@ -58,7 +58,7 @@ test.describe( 'Standalone', () => {
 		test.skip( isMobile, 'The strip is a computer\'s.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
-		// A window with room for the sidebar is in the desktop frame, whatever points at it.
+		// A window with room for the sidebar is in the frame, whatever points at it.
 		await expect( page.locator( 'html' ) ).toHaveAttribute( 'data-riff-frame', 'sidebar' );
 		await expect( page.locator( 'html' ) ).toHaveClass( /\briff-frame\b/ );
 		const back = page.locator( '.riff-app-titlebar [data-riff-app-action="back"]' );
@@ -104,15 +104,15 @@ test.describe( 'Standalone', () => {
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app-titlebar' ).include( '.riff-app-bar' ).analyze() ).violations ).toEqual( [] );
 	} );
 
-	test( 'in the desktop frame, Now Playing is the art alone, and Up next opens beside it', async ( {
+	test( 'in the frame, Now Playing is the art alone, and Up next opens beside it', async ( {
 		page,
 		isMobile,
 	} ) => {
-		test.skip( isMobile, 'The desktop frame is for a wide window.' );
+		test.skip( isMobile, 'The frame is for a wide window.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
 		await page.locator( '[data-riff-app-action="play"]' ).click();
-		await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+		await page.locator( '.riff-bar-info' ).click();
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
 

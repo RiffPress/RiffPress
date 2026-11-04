@@ -75,10 +75,10 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertTrue( wp_style_is( 'riff', 'enqueued' ), 'the player, on every page' );
 		$this->assertFalse( wp_style_is( 'riff-app', 'enqueued' ), 'the Listen app, not on a plain page' );
 		$this->assertFalse( wp_style_is( 'riff-standalone', 'enqueued' ) );
-		$this->assertFalse( wp_style_is( 'riff-desktop', 'enqueued' ) );
+		$this->assertFalse( wp_style_is( 'riff-frame', 'enqueued' ) );
 		$this->assertSame( array( 'riff' ), wp_styles()->registered['riff-app']->deps, 'the app builds on the player' );
 		$this->assertSame( array( 'riff-app' ), wp_styles()->registered['riff-standalone']->deps );
-		$this->assertSame( array( 'riff-standalone' ), wp_styles()->registered['riff-desktop']->deps );
+		$this->assertSame( array( 'riff-standalone' ), wp_styles()->registered['riff-frame']->deps );
 		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'features/listen/app.css' ), wp_styles()->registered['riff-app']->ver );
 		$module = wp_script_modules()->get_registered( 'riff' );
 		$this->assertSame( 'low', $module['fetchpriority'], 'the bar at the foot of a post can wait' );
@@ -95,7 +95,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->go_to( get_permalink( $listen ) );
 		Player::enqueue();
 		$this->assertTrue( wp_style_is( 'riff-app', 'enqueued' ), 'the Listen app, on the page that holds the block' );
-		$this->assertFalse( wp_style_is( 'riff-desktop', 'enqueued' ), 'but not standalone mode' );
+		$this->assertFalse( wp_style_is( 'riff-frame', 'enqueued' ), 'but not standalone mode' );
 		$module = wp_script_modules()->get_registered( 'riff' );
 		$this->assertSame( 'auto', $module['fetchpriority'], 'where the app is the content, it is not held back' );
 		$this->assertFalse( $module['in_footer'] );
@@ -107,7 +107,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		wp_styles()->queue = array();
 		$this->go_to( \Riff\Listen\Standalone::url( $listen ) );
 		Player::enqueue();
-		$this->assertTrue( wp_style_is( 'riff-desktop', 'enqueued' ), 'standalone mode and the desktop frame, under app/' );
+		$this->assertTrue( wp_style_is( 'riff-frame', 'enqueued' ), 'standalone mode and the frame, under app/' );
 		$this->assertTrue( wp_style_is( 'riff-app', 'enqueued' ) );
 	}
 
@@ -241,11 +241,12 @@ class Test_Riff_Player extends Riff_TestCase {
 
 		// The bar's controls and the views' buttons, in their order, before any script runs.
 		$bar = substr( $html, strpos( $html, '<section class="riff-bar"' ), strpos( $html, '<div class="riff-np"' ) - strpos( $html, '<section class="riff-bar"' ) );
-		$this->assertMatchesRegularExpression( '#data-riff-control="like".*data-riff-control="badges".*data-riff-control="album".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="volume"#s', $bar );
-		$this->assertStringContainsString( 'data-riff-opens="album" data-riff-order="26" aria-label="Album" aria-pressed="false"', $bar, 'a view\'s button says whether it is open' );
-		$this->assertStringContainsString( 'class="riff-btn riff-control riff-control-album" data-riff-control="album"', $bar, 'the album\'s button is on a phone\'s bar too, the way into Now Playing' );
-		$this->assertStringContainsString( '<div class="riff-bar-info">', $bar, 'what plays is read, not pressed' );
-		$this->assertStringNotContainsString( 'riff-chevron', $html, 'no caret: the album\'s button opens Now Playing' );
+		$this->assertMatchesRegularExpression( '#data-riff-control="like".*data-riff-control="badges".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="volume"#s', $bar );
+		$this->assertStringContainsString( 'data-riff-opens="queue" data-riff-order="40" aria-label="Up next" aria-pressed="false"', $bar, 'a view\'s button says whether it is open' );
+		$this->assertStringNotContainsString( 'data-riff-control="album"', $bar, 'the album, the stage, has no button: the bar itself opens it' );
+		$this->assertStringContainsString( '<button type="button" class="riff-bar-info" data-riff-action="open" aria-haspopup="dialog" aria-expanded="false">', $bar, 'what plays is the way into Now Playing' );
+		$this->assertStringContainsString( 'data-riff-chip="album"', $html, 'its chip in Now Playing comes back to it from another view' );
+		$this->assertStringNotContainsString( 'riff-chevron', $html, 'no caret: the bar opens Now Playing' );
 		$this->assertStringNotContainsString( '<template', $bar );
 
 		// On a phone, a chip for each view in Now Playing.

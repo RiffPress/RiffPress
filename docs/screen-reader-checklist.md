@@ -18,7 +18,7 @@ Use the demo at https://next.riffpress.com/, or any post with at least three tra
 
 1. Move through the post to the first track. Its row is a button, "Play <title>, <artist> • <album>, <length>"; after it come a heart, "Like <title>", a toggle button, and the …, "More options for <title>".
 2. Press it. You hear "Now playing <title> by <artist>", and the row's button is now "Pause <title>, …".
-3. The bar at the foot of the page is a region named Player. It starts with what plays, "<title>, <artist> • <album>", as text, not a button; then Shuffle, a toggle button; Previous, Pause, Next; "Repeat, off"; the Track position slider; "Like <title>"; the views' toggle buttons, Album, Lyrics and Up next; and on a computer Volume, "100 percent". The quality pill ("MP3 · 128 kbps") between Like and Volume is text, not a control: Tab passes it, and the VoiceOver cursor (VO + arrows) reads it.
+3. The bar at the foot of the page is a region named Player. It starts with what plays, a button, "Now Playing, <title>, <artist> • <album>", a dialog pop up, collapsed until Now Playing opens and expanded while it is; then Shuffle, a toggle button; Previous, Pause, Next; "Repeat, off"; the Track position slider; "Like <title>"; the views' toggle buttons, Lyrics and Up next; and on a computer Volume, "100 percent". The quality pill ("MP3 · 128 kbps") between Like and Volume is text, not a control: Tab passes it, and the VoiceOver cursor (VO + arrows) reads it.
 4. On the Track position slider, press the right arrow. You hear a time, "11 seconds of 8 minutes, 57 seconds", five seconds on from before. Drag it with the screen reader's own gesture: the time keeps being spoken.
 
 ## Now Playing

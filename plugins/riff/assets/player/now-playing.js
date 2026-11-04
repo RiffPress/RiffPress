@@ -78,7 +78,7 @@ export function nowPlaying( P ) {
 		opener =
 			active && active !== document.body
 				? active
-				: $( `[data-riff-control="${ view }"]` ) || $( '[data-riff-control="album"]' );
+				: $( `[data-riff-control="${ view }"]` ) || $( '.riff-bar-info' );
 		setView( view );
 		// Opened again while it slid away: it stays.
 		clearTimeout( closing.timer );

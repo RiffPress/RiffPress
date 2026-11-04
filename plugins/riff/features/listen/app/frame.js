@@ -1,14 +1,14 @@
-/* The desktop frame, where the document is riff-frame: standalone mode where the window has room
+/* The frame, where the document is riff-frame: standalone mode where the window has room
  * for the sidebar, and installed with the window's controls over the page
  * (templates/standalone.php). A strip across the top holds back and forward at its left end, Home
- * and search in the middle and who is listening at its right (desktop.css). Back and forward come
+ * and search in the middle and who is listening at its right (frame.css). Back and forward come
  * first in the app; on a wide window Home, search and who is listening come first in the
  * sidebar's markup, in that order, so the keyboard reaches the strip left to right before the
  * library. The server draws the sidebar again with each view, so frame() puts them there each time.
  * Internal to the app, not an extension point. */
 import { esc } from 'riff-app/helpers';
 
-export function desktopFrame( ctx ) {
+export function appFrame( ctx ) {
 	const { app, nav, __ } = ctx;
 	// The frame standalone.css chose for the window, never a width of its own.
 	const wide = () => document.documentElement.dataset.riffFrame === 'sidebar';

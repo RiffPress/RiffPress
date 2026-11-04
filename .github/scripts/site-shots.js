@@ -136,8 +136,8 @@ async function desktop( browser ) {
 	await page.waitForTimeout( 1500 );
 	await save( page, 'desktop-album', true );
 
-	// Now Playing from the bar's Album, wide: the sleeve set down beside the turntable.
-	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+	// Now Playing from the bar, wide: the sleeve set down beside the turntable.
+	await page.locator( '.riff-bar-info' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await page.waitForTimeout( 1500 );
 	await save( page, 'desktop-now-playing', true );
@@ -175,7 +175,7 @@ async function phone( browser, devices ) {
 	// The post's tracks, from the line above the first row: the rows are what the picture is of.
 	await page.evaluate( () => window.scrollTo( 0, document.querySelector( '.riff-row' ).getBoundingClientRect().top + window.scrollY - 100 ) );
 	await save( page, 'phone-post', false );
-	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+	await page.locator( '.riff-bar-info' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await save( page, 'phone-now-playing', false );
 	await page.locator( '[data-riff-chip="queue"]' ).click();
@@ -187,7 +187,7 @@ async function phone( browser, devices ) {
 	await page.locator( '.riff-bar' ).waitFor();
 	await page.evaluate( ( at ) => window.riff.seek( at ), LYRICS_AT );
 	await page.waitForTimeout( 1500 );
-	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+	await page.locator( '.riff-bar-info' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await page.locator( '[data-riff-chip="lyrics"]' ).click();
 	await save( page, 'phone-lyrics', false );

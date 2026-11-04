@@ -1,6 +1,7 @@
 /**
- * A view opened as a listener opens it: from its button in the bar, and on a phone, whose bar keeps
- * to the track, Play and the album's button, from its chip in Now Playing.
+ * A view opened as a listener opens it: the album, Now Playing's own, from the bar itself; any other
+ * from its button in the bar, and on a phone, whose bar keeps to the track and Play, from its chip
+ * in Now Playing.
  */
 const { expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
@@ -17,20 +18,30 @@ async function openView( page, id ) {
 	const view = stage
 		? page.locator( '.riff-np' )
 		: page.locator( `.riff-np [data-riff-view="${ id }"], .riff-side [data-riff-panel="${ id }"]` );
-	const button = page.locator( `.riff-bar [data-riff-control="${ id }"]` );
-	if ( ( await button.getAttribute( 'aria-pressed' ) ) !== 'true' ) {
-		if ( await button.isVisible() ) {
-			await button.click();
-		} else {
-			if ( await page.locator( '.riff-np' ).isHidden() ) {
-				await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+	const root = page.locator( '#riff' );
+	const open = async () =>
+		( await root.getAttribute( 'class' ) ).split( ' ' ).includes( 'is-open' ) &&
+		( await root.getAttribute( 'data-riff-showing' ) ) === id;
+	if ( stage ) {
+		if ( ! ( await open() ) ) {
+			await page.locator( '.riff-bar-info' ).click();
+		}
+	} else {
+		const button = page.locator( `.riff-bar [data-riff-control="${ id }"]` );
+		if ( ( await button.getAttribute( 'aria-pressed' ) ) !== 'true' ) {
+			if ( await button.isVisible() ) {
+				await button.click();
+			} else {
+				if ( await page.locator( '.riff-np' ).isHidden() ) {
+					await page.locator( '.riff-bar-info' ).click();
+				}
+				await page.locator( `.riff-chips [data-riff-chip="${ id }"]` ).click();
 			}
-			await page.locator( `.riff-chips [data-riff-chip="${ id }"]` ).click();
 		}
 	}
 	await expect( view ).toBeVisible();
 	if ( stage ) {
-		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-showing', id );
+		await expect( root ).toHaveAttribute( 'data-riff-showing', id );
 	}
 	return view;
 }

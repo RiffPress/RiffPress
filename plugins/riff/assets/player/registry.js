@@ -6,10 +6,11 @@
  * know of. The bar is only updated as the track changes, never drawn again, so a control keeps its
  * focus and a feature that found its button keeps finding it.
  *
- * A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a
- * screen of Now Playing, which takes the whole screen above the bar (the album, the
- * lyrics; now-playing.js shows them), or a panel beside the page, as Up next is. Pressing the
- * button of the one open goes back to the page. One panel shows at a time, and the one a listener
+ * A view is opened from its button in the bar, and on a phone from its chip in Now Playing (the
+ * album, the stage, from the bar itself, which has no button for it): a screen of Now Playing,
+ * which takes the whole screen above the bar (the album, the lyrics; now-playing.js shows them),
+ * or a panel beside the page, as Up next is. Pressing the button of the one open goes back to the
+ * page. One panel shows at a time, and the one a listener
  * leaves open opens again on their next visit. window.riff.view() gives a registered view what it
  * does as it opens, or adds one the server didn't know of. A view can say it has nothing for a
  * track (its shown()): its button and chip hide while that track plays, and if it is open as the
@@ -105,6 +106,10 @@ export function registry( P ) {
 				el.hidden = ! spec.shown( t || null );
 			}
 		}
+		$( '.riff-bar-info' )?.setAttribute(
+			'aria-expanded',
+			String( root.classList.contains( 'is-open' ) )
+		);
 		for ( const chip of $$( '.riff-chips [data-riff-opens]' ) ) {
 			chip.hidden = ! fits( chip.dataset.riffOpens, t );
 			chip.setAttribute( 'aria-pressed', String( isOpen( chip.dataset.riffOpens ) ) );
@@ -388,8 +393,8 @@ export function registry( P ) {
 				active.focus( { preventScroll: true } );
 			} else if ( ! document.activeElement || document.activeElement === document.body ) {
 				// Where the view showing has nowhere of its own to take focus, as the album on a
-				// wide screen, its button in the bar.
-				[ $( `[data-riff-control="${ P.showing }"]` ), $( '.riff-play' ) ]
+				// wide screen, its button in the bar, or the bar's track for the album.
+				[ $( `[data-riff-control="${ P.showing }"]` ), $( '.riff-bar-info' ), $( '.riff-play' ) ]
 					.find( ( node ) => node && ! node.hidden && node.checkVisibility?.() !== false )
 					?.focus( { preventScroll: true } );
 			}

@@ -1,8 +1,8 @@
-/* The desktop frame: the document is riff-frame in standalone mode where the
+/* The frame: the document is riff-frame in standalone mode where the
    frame is sidebar. Loaded with standalone.css. No build step: this file is
    what ships. */
 
-/* ---- The desktop frame: the document is riff-frame where the window has
+/* ---- The frame: the document is riff-frame where the window has
    room for the sidebar (--riff-frame, standalone.css), whatever points at it,
    and installed with the window's controls over the page at any width, as
    its strip is how that window is dragged (templates/standalone.php). A strip
@@ -14,11 +14,11 @@
 
 html.riff-frame {
 
-	/* The desktop frame: a strip across the top, and panels 8px apart, with 8px
+	/* The frame: a strip across the top, and panels 8px apart, with 8px
 	   corners, on black. */
-	--riff-desktop-strip: 64px;
-	--riff-desktop-side: 280px;
-	--riff-desktop-gap: 8px;
+	--riff-frame-strip: 64px;
+	--riff-frame-side: 280px;
+	--riff-frame-gap: 8px;
 }
 
 html.riff-frame .riff-standalone,
@@ -42,7 +42,7 @@ html.riff-frame .riff-standalone .riff-app-titlebar {
 	display: flex;
 	align-items: center;
 	box-sizing: border-box;
-	height: var(--riff-desktop-strip);
+	height: var(--riff-frame-strip);
 	padding-left: 16px;
 	background: #000;
 }
@@ -50,19 +50,19 @@ html.riff-frame .riff-standalone .riff-app-titlebar {
 /* Installed from Chrome or Edge with no title bar: the strip drags the
    window and keeps clear of its controls, wherever the system puts them, the
    traffic lights at the left or the buttons at the right. */
-html.riff-desktop-overlay .riff-standalone {
-	--riff-desktop-controls: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+html.riff-frame-overlay .riff-standalone {
+	--riff-frame-controls: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
 }
 
-html.riff-desktop-overlay .riff-standalone .riff-app-titlebar {
+html.riff-frame-overlay .riff-standalone .riff-app-titlebar {
 	padding-left: max(16px, calc(env(titlebar-area-x, 0px) + 8px));
 	-webkit-app-region: drag;
 	app-region: drag;
 }
 
-html.riff-frame.riff-desktop-overlay .riff-standalone .riff-app .riff-app-account,
-html.riff-frame.riff-desktop-overlay .riff-standalone .riff-app .riff-app-signin {
-	right: calc(16px + var(--riff-desktop-controls));
+html.riff-frame.riff-frame-overlay .riff-standalone .riff-app .riff-app-account,
+html.riff-frame.riff-frame-overlay .riff-standalone .riff-app .riff-app-signin {
+	right: calc(16px + var(--riff-frame-controls));
 }
 
 html.riff-frame .riff-standalone .riff-app-history {
@@ -129,7 +129,7 @@ html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-brand:
 
 /* A narrow window: the tabs start under the strip. */
 html.riff-frame .riff-standalone .riff-app {
-	padding-top: var(--riff-desktop-strip);
+	padding-top: var(--riff-frame-strip);
 }
 
 @media (min-width: 900px) {
@@ -142,29 +142,29 @@ html.riff-frame .riff-standalone .riff-app {
 		/* The panels' colour, over the one the page sets inline, so the
 		   surfaces and lines are mixed from it. */
 		--riff-app-bg: #121212 !important;
-		--riff-desktop-bottom: var(--riff-desktop-gap);
-		grid-template-columns: var(--riff-desktop-side) minmax(0, 1fr);
-		column-gap: var(--riff-desktop-gap);
-		padding: 0 var(--riff-desktop-gap);
+		--riff-frame-bottom: var(--riff-frame-gap);
+		grid-template-columns: var(--riff-frame-side) minmax(0, 1fr);
+		column-gap: var(--riff-frame-gap);
+		padding: 0 var(--riff-frame-gap);
 		background: #000;
 	}
 
 	/* Over the bar, the panels end at its edge; the bar is black too. */
 	html.riff-frame.has-riff .riff-standalone .riff-app {
-		--riff-desktop-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
+		--riff-frame-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
 	}
 
 	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] {
-		--riff-desktop-side: 72px;
+		--riff-frame-side: 72px;
 	}
 
 	html.riff-frame .riff-standalone .riff-app::after {
 		content: "";
 		position: fixed;
-		top: var(--riff-desktop-strip);
-		right: var(--riff-desktop-gap);
-		bottom: var(--riff-desktop-bottom);
-		left: calc(var(--riff-desktop-side) + 2 * var(--riff-desktop-gap));
+		top: var(--riff-frame-strip);
+		right: var(--riff-frame-gap);
+		bottom: var(--riff-frame-bottom);
+		left: calc(var(--riff-frame-side) + 2 * var(--riff-frame-gap));
 		z-index: 1;
 		border-radius: 8px;
 		box-shadow: 0 0 0 100vmax #000;
@@ -173,9 +173,9 @@ html.riff-frame .riff-standalone .riff-app {
 
 	html.riff-frame .riff-standalone .riff-app-bar,
 	html.riff-frame.has-riff .riff-standalone .riff-app-bar {
-		top: var(--riff-desktop-strip);
-		height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
-		margin-top: var(--riff-desktop-strip);
+		top: var(--riff-frame-strip);
+		height: calc(100dvh - var(--riff-frame-strip) - var(--riff-frame-bottom));
+		margin-top: var(--riff-frame-strip);
 		padding: 12px 8px;
 		border: 0;
 		border-radius: 8px;
@@ -216,13 +216,13 @@ html.riff-frame .riff-standalone .riff-app {
 	   window's own controls where it has them. */
 	html.riff-frame .riff-standalone .riff-app .riff-app-search,
 	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
-		--riff-desktop-search: min(480px, 100vw - 640px);
+		--riff-frame-search: min(480px, 100vw - 640px);
 		position: fixed;
 		top: 8px;
 		left: calc(50% + 28px);
 		z-index: 3;
 		display: block;
-		width: var(--riff-desktop-search);
+		width: var(--riff-frame-search);
 		margin: 0;
 		transform: translateX(-50%);
 		-webkit-app-region: no-drag;
@@ -293,9 +293,9 @@ html.riff-frame .riff-standalone .riff-app {
 
 	html.riff-frame .riff-standalone .riff-app-view {
 		align-self: stretch;
-		min-height: calc(100dvh - var(--riff-desktop-strip) - var(--riff-desktop-bottom));
+		min-height: calc(100dvh - var(--riff-frame-strip) - var(--riff-frame-bottom));
 		box-sizing: border-box;
-		margin-top: var(--riff-desktop-strip);
+		margin-top: var(--riff-frame-strip);
 		padding: 24px clamp(16px, 2.5vw, 32px) 48px;
 
 		/* The frame's corners, on the view too, so anything that moves it in
@@ -337,7 +337,7 @@ html.riff-frame .riff-standalone .riff-app {
 		--riff-bar-h: 88px;
 
 		/* a panel stands under the strip that drags the window */
-		--riff-side-top: var(--riff-desktop-strip);
+		--riff-side-top: var(--riff-frame-strip);
 	}
 
 	html.riff-frame #riff .riff-bar-center {
@@ -365,7 +365,7 @@ html.riff-frame .riff-standalone .riff-app {
 	}
 
 	html.riff-frame #riff .riff-np-head {
-		height: var(--riff-desktop-strip);
+		height: var(--riff-frame-strip);
 		-webkit-app-region: drag;
 		app-region: drag;
 	}
@@ -420,7 +420,7 @@ html.riff-frame .riff-standalone .riff-app {
 	/* A frame too narrow for the full library and a page of tracks beside it,
 	   as a window around 1024px wide with a panel open, folds the library to
 	   its rail, as the music apps do. Under 50em the full library (its 280px,
-	   written out because a container query can't read --riff-desktop-side)
+	   written out because a container query can't read --riff-frame-side)
 	   and the frame's gaps would leave the page under 31em, where a row's
 	   title starts giving way to its number, length and actions. Folding
 	   gives the page the library's room at once, so just under 50em it is
@@ -430,7 +430,7 @@ html.riff-frame .riff-standalone .riff-app {
 	@container riff-frame (inline-size < 50em) {
 
 		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) {
-			--riff-desktop-side: 72px;
+			--riff-frame-side: 72px;
 		}
 
 		html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-bar {

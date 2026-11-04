@@ -116,7 +116,7 @@ async function screenshots( browser ) {
 	await page.locator( '.riff-bar' ).waitFor();
 	await page.evaluate( () => window.scrollTo( 0, 0 ) );
 	await save( page, 1 );
-	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+	await page.locator( '.riff-bar-info' ).click();
 	await page.locator( '.riff-np' ).waitFor();
 	await save( page, 2 );
 

@@ -132,7 +132,7 @@ test.describe( 'App', () => {
 		await page.keyboard.press( 'Escape' );
 		await expect( page.locator( '.riff-np' ) ).toBeHidden();
 		// Focus returns once the close has settled; the view is checked after that.
-		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toBeFocused();
+		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
 		expect(
 			await page.evaluate(
 				( el ) => el === document.querySelector( '.riff-album' ),

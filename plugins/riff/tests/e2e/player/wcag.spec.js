@@ -114,15 +114,16 @@ test( 'nothing plays until the listener presses Play, a reload included (1.4.2)'
 	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( false );
 } );
 
-test( 'each view is opened by one button named for it, which says whether it is open; what plays is read, not a button', async ( { page } ) => {
+test( 'what plays is the button that opens Now Playing, and says whether it is open', async ( { page } ) => {
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
-	await expect( page.locator( '.riff-bar-info' ) ).not.toHaveAttribute( 'role', /./ );
-	await expect( page.locator( '.riff-bar-info' ) ).toContainText( 'Underground' );
-	await expect( page.locator( '.riff-bar button[data-riff-opens]' ).first() ).toHaveAccessibleName( 'Album' );
-	await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'false' );
-	await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
-	await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
+	const info = page.locator( '.riff-bar-info' );
+	await expect( info ).toHaveRole( 'button' );
+	await expect( info ).toHaveAccessibleName( /^Now Playing, .*Underground/ );
+	await expect( info ).toHaveAttribute( 'aria-haspopup', 'dialog' );
+	await expect( info ).toHaveAttribute( 'aria-expanded', 'false' );
+	await info.click();
+	await expect( info ).toHaveAttribute( 'aria-expanded', 'true' );
 } );
 
 test( 'a modal Now Playing keeps Tab inside it', async ( { page, isMobile } ) => {

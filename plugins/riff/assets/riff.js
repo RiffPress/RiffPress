@@ -179,7 +179,8 @@ function start() {
 		},
 		/**
 		 * Gives a view what it does as it opens, or adds one the server didn't register. A view is
-		 * opened from its button in the bar, and on a phone from its chip in Now Playing: a screen
+		 * opened from its button in the bar, and on a phone from its chip in Now Playing (the album,
+		 * the stage, has no button: the bar itself opens it): a screen
 		 * of Now Playing, which takes the whole screen above the bar, or a panel beside the page.
 		 * Register a view on the server with `riff_register_view()`, so the page has it before any
 		 * script; this is for what only the browser knows. Riff's own are the album (`album`,

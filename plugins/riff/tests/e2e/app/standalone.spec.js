@@ -288,7 +288,7 @@ test.describe( 'Standalone', () => {
 		await toggle.click();
 		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'false' );
 		expect( await width() ).toBeLessThan( 100 );
-		// The desktop frame keeps search in the strip across the top, open sidebar or not.
+		// The frame keeps search in the strip across the top, open sidebar or not.
 		await expect( page.locator( '.riff-app-search' ) ).toBeVisible();
 		await expect( page.locator( '.riff-app-tab', { hasText: 'Albums' } ) ).toBeVisible();
 

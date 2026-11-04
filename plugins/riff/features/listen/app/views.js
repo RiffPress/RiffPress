@@ -96,7 +96,7 @@ export function views( ctx ) {
 				ctx.wireSearch();
 				ctx.libraryShow( ctx.shelfKind );
 				ctx.installShow();
-				// The desktop frame's strip, in the order it is seen.
+				// The frame's strip, in the order it is seen.
 				ctx.frame?.();
 			}
 		};
