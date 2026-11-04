@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.0.1
+Stable tag: 6.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.1.0 =
+* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
+
 = 6.0.1 =
 * Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
 * Fixed: the turntable's needle drops onto the record when its view opens as the music starts.
@@ -171,15 +174,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Faster: a library of tens of thousands of tracks loads, lists, plays and imports at the pace of a small one.
 * Faster: a first visit to a Listen page loads the app in one wave, and the quality capsule is lit.
 * Faster: the turntable's moving parts no longer give Up next layers of its own, and the filament rests while nothing it lights is in sight.
-
-= 5.7.0 =
-* An album's artist opens their page from the album's header.
-* With the Presence API active, a signed-in listener sees who else is playing what under Listening now, and can listen along.
-* Listeners can stay in the player, with their profile but no dashboard, toolbar or wp-login.php registration form.
-* Fixed: on a phone, an artist without a picture shows their initial, the tabs and status bar keep the page from showing past them, a phone on its side is laid out as one at any width, and the install card says why in a phone's terms.
-* Fixed: a track's edit screen no longer splits an artist or album with a comma in its name into two.
-* Fixed: Jump back in no longer shows the Listen page as a post with nothing in it.
-* Faster: a deploy that leaves the drawing code alone keeps every drawn cover's address, so covers stay cached.
-* Faster: a drawn cover is kept as a file in uploads once drawn, so pages link to it and it no longer starts WordPress for each request.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
