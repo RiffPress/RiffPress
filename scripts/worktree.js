@@ -112,6 +112,13 @@ async function setup( dir ) {
 			fs.symlinkSync( path.relative( dir, path.join( MAIN, name ) ), link );
 		}
 	}
+	// A relative hooks path is read from each worktree's own checkout. An absolute one into the main
+	// checkout runs whatever pre-commit that checkout has out, so a worktree's commit runs another
+	// branch's hook, one that may predate this setup and leave vendor uninstalled.
+	const hooks = tryGit( [ 'config', 'core.hooksPath' ], MAIN );
+	if ( hooks && path.isAbsolute( hooks ) && path.resolve( hooks ) === path.join( MAIN, '.githooks' ) ) {
+		git( [ 'config', 'core.hooksPath', '.githooks' ], MAIN );
+	}
 	const vendor = path.join( dir, 'vendor' );
 	// An earlier setup linked vendor too; inside the container that link leads nowhere.
 	if ( fs.lstatSync( vendor, { throwIfNoEntry: false } )?.isSymbolicLink() ) {
