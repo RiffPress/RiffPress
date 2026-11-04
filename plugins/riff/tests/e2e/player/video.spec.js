@@ -127,6 +127,99 @@ test.describe( 'A song with a video version', () => {
 			await seesTheVideo( page );
 		} );
 
+		test( 'the album\'s button follows what Now Playing shows: the video, the song, a song with none', async ( { page }, testInfo ) => {
+			const button = page.locator( '.riff-bar [data-riff-control="album"]' );
+			const quality = page.locator( '#riff .riff-quality' );
+			await page.goto( postUrl );
+			await page.locator( '.riff-row', { hasText: withVideo } ).click();
+			await seesTheVideo( page );
+			await expect( button ).toHaveAccessibleName( 'Video' );
+			await expect( button.locator( 'svg path' ) ).toHaveAttribute( 'd', /^M20 4H4/ );
+			await expect( button ).toHaveAttribute( 'aria-pressed', 'true' );
+			// The song's format and rate describe its file, not the picture.
+			await expect( quality ).toHaveCount( 0 );
+			// The switch may have faded with the video playing untouched; a move brings it back.
+			await page.mouse.move( 5, 5 );
+			await page.locator( '[data-riff-mode="song"]' ).click();
+			await hearsTheSong( page );
+			await expect( button ).toHaveAccessibleName( 'Album' );
+			await expect( button.locator( 'svg path' ) ).toHaveAttribute( 'd', /^M19 3H5/ );
+			await expect( quality.first() ).toBeAttached();
+			await page.locator( '[data-riff-mode="video"]' ).click();
+			await expect( button ).toHaveAccessibleName( 'Video' );
+			// On to the song with no video: the album again, while the switch is still on Video.
+			await page.keyboard.press( 'Shift+N' );
+			await expect( page.locator( '#riff [data-riff-text="title"]' ).first() ).toHaveText( songOnly );
+			await expect( button ).toHaveAccessibleName( 'Album' );
+			await expect( button.locator( 'svg path' ) ).toHaveAttribute( 'd', /^M19 3H5/ );
+			await expect( quality.first() ).toBeAttached();
+			// Pressed, it still closes Now Playing, where the bar is beside it.
+			if ( testInfo.project.name !== 'mobile-chromium' ) {
+				await button.click();
+				await expect( page.locator( '.riff-np' ) ).toBeHidden();
+			}
+		} );
+
+		test( 'the switch and the bar fade while the video plays untouched, and come back at once', async ( { page } ) => {
+			const root = page.locator( '#riff' );
+			await page.goto( postUrl );
+			await page.locator( '.riff-row', { hasText: withVideo } ).click();
+			await seesTheVideo( page );
+			await expect( root ).toHaveAttribute( 'data-riff-idle', '', { timeout: 6000 } );
+			await expect
+				.poll( () => page.locator( '.riff-modes' ).evaluate( ( el ) => getComputedStyle( el ).opacity ) )
+				.toBe( '0' );
+			// Any move brings them back, at once.
+			await page.mouse.move( 40, 40 );
+			await expect( root ).not.toHaveAttribute( 'data-riff-idle', '', { timeout: 100 } );
+			await expect( root ).toHaveAttribute( 'data-riff-idle', '', { timeout: 6000 } );
+			await page.keyboard.press( 'Shift' );
+			await expect( root ).not.toHaveAttribute( 'data-riff-idle', '', { timeout: 100 } );
+			// Never while paused.
+			await page.evaluate( () => document.querySelector( '.riff-video' ).pause() );
+			await page.waitForTimeout( 4000 );
+			await expect( root ).not.toHaveAttribute( 'data-riff-idle', '' );
+		} );
+
+		test( 'the switch and the bar stay while focus or the pointer is in them', async ( { page }, testInfo ) => {
+			// On a phone Now Playing covers the bar, and the switch is the one to keep.
+			const kept = testInfo.project.name === 'mobile-chromium' ? '.riff-modes' : '.riff-bar';
+			const root = page.locator( '#riff' );
+			await page.goto( postUrl );
+			await page.locator( '.riff-row', { hasText: withVideo } ).click();
+			await seesTheVideo( page );
+			// Keyboard focus holds them; a key first, so the focus is the keyboard's.
+			await page.keyboard.press( 'Shift' );
+			await page.locator( `${ kept } button:visible` ).first().focus();
+			await page.waitForTimeout( 4000 );
+			await expect( root ).not.toHaveAttribute( 'data-riff-idle', '' );
+			// The test pattern is twelve seconds long: back to its start, so it is still playing.
+			const rewind = () => page.evaluate( () => ( document.querySelector( '.riff-video' ).currentTime = 0 ) );
+			await rewind();
+			await page.evaluate( () => document.activeElement.blur() );
+			await expect( root ).toHaveAttribute( 'data-riff-idle', '', { timeout: 6000 } );
+			await rewind();
+			// The pointer moved onto it: faded, it takes no events, so Playwright's hover() would wait.
+			const box = await page.locator( kept ).boundingBox();
+			await page.mouse.move( box.x + box.width / 2, box.y + box.height / 2 );
+			// and moved again once it is back, so the browser sees it over the bar.
+			await page.mouse.move( box.x + box.width / 2 + 2, box.y + box.height / 2, { steps: 3 } );
+			await page.waitForTimeout( 4000 );
+			await expect( root ).not.toHaveAttribute( 'data-riff-idle', '' );
+			expect( ( await audioState( page ) ).videoPaused ).toBe( false );
+		} );
+
+		test( 'with less motion asked for, the switch and the bar go without a fade', async ( { page } ) => {
+			await page.emulateMedia( { reducedMotion: 'reduce' } );
+			await page.goto( postUrl );
+			await page.locator( '.riff-row', { hasText: withVideo } ).click();
+			await seesTheVideo( page );
+			await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-idle', '', { timeout: 6000 } );
+			expect(
+				await page.locator( '.riff-modes' ).evaluate( ( el ) => getComputedStyle( el ).opacity )
+			).toBe( '0' );
+		} );
+
 		test( 'a song with no video plays with the list where it was', async ( { page } ) => {
 			await page.goto( postUrl );
 			await page.locator( '.riff-row', { hasText: songOnly } ).click();

@@ -4,17 +4,12 @@
  * section calls another through it (P.paint(), P.load()) and none has to be loaded before the rest.
  * Mutable state lives on P, never in a section's closure, so a feature loaded later sees the same
  * queue the rest does. */
-import { fmt, spoken, speak } from 'riff-player/helpers';
+import { fmt, spoken, speak, FILM } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
 // English they are written in.
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
-
-// A track with a video version carries a small film mark after its title, where the eye already
-// is, instead of a pill competing with the time on the row's right edge.
-const FILM =
-	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.5 16.5v-9l7 4.5-7 4.5z"/></svg>';
 
 export function createPlayer( root, data ) {
 	const $ = ( sel ) => root.querySelector( sel );
@@ -181,9 +176,11 @@ export function createPlayer( root, data ) {
 		// change itself, as Listen Together does for a host someone follows, when it is due.
 		hold: new Set(),
 	};
-	// Riff's own badge: the playing track's format and rate, through the same area as any other.
+	// Riff's own badge: the playing track's format and rate, through the same area as any other. It
+	// describes the song's file, so it is left out while a song plays as its video version; a video
+	// of its own, a video block's, is described by its own file.
 	P.own.badges.add( ( list, t ) => {
-		const line = P.quality( t );
+		const line = P.mode === 'video' && t?.video ? '' : P.quality( t );
 		return line ? [ ...list, { id: 'quality', text: line } ] : list;
 	} );
 	P.tell = ( name, detail ) =>

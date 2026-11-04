@@ -14,7 +14,7 @@
  * does as it opens, or adds one the server didn't know of. A view can say it has nothing for a
  * track (its shown()): its button and chip hide while that track plays, and if it is open as the
  * track changes it gives way. */
-import { fmt, read, speak, write } from 'riff-player/helpers';
+import { fmt, read, speak, write, FILM } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -82,6 +82,7 @@ export function registry( P ) {
 			if ( el.dataset.riffOpens ) {
 				el.hidden = ! fits( el.dataset.riffOpens, t );
 				el.setAttribute( 'aria-pressed', String( isOpen( el.dataset.riffOpens ) ) );
+				staged( el, t );
 				continue;
 			}
 			if ( ! spec.element ) {
@@ -108,6 +109,38 @@ export function registry( P ) {
 		for ( const chip of $$( '.riff-chips [data-riff-opens]' ) ) {
 			chip.hidden = ! fits( chip.dataset.riffOpens, t );
 			chip.setAttribute( 'aria-pressed', String( isOpen( chip.dataset.riffOpens ) ) );
+			staged( chip, t );
+		}
+	}
+
+	// The stage's button and chip say what the stage shows: the album, as the server drew them, or
+	// the video, with the film icon and its name, while the track plays as its video. Only their
+	// icon and words change, in place, so the bar doesn't shift and focus stays on the button.
+	const asDrawn = new WeakMap();
+	function staged( el, t ) {
+		if ( ! views.get( el.dataset.riffOpens )?.stage ) {
+			return;
+		}
+		const words = el.querySelector( ':scope > span' );
+		if ( ! asDrawn.has( el ) ) {
+			asDrawn.set( el, {
+				icon: el.querySelector( ':scope > svg' )?.outerHTML || '',
+				label: words ? words.textContent : el.getAttribute( 'aria-label' ),
+			} );
+		}
+		const video = !! t && P.isVideo?.( t );
+		if ( el.dataset.riffStaged === ( video ? 'video' : 'album' ) ) {
+			return;
+		}
+		el.dataset.riffStaged = video ? 'video' : 'album';
+		const was = asDrawn.get( el );
+		const label = video ? __( 'Video', 'riff' ) : was.label;
+		el.querySelector( ':scope > svg' )?.remove();
+		el.insertAdjacentHTML( 'afterbegin', video ? FILM : was.icon );
+		if ( words ) {
+			words.textContent = label;
+		} else {
+			el.setAttribute( 'aria-label', label );
 		}
 	}
 

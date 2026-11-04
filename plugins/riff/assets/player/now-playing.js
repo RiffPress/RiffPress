@@ -52,6 +52,7 @@ export function nowPlaying( P ) {
 			focusView();
 		}
 		P.drawControls?.();
+		P.wakeControls?.();
 	}
 
 	// Focus into the view: its own region, or Now Playing's close button for the stage.
@@ -96,6 +97,7 @@ export function nowPlaying( P ) {
 		history.pushState( { ...history.state, riff: 'open' }, '' );
 		P.viewOpened?.( view, true );
 		P.drawControls?.();
+		P.wakeControls?.();
 		requestAnimationFrame( () => {
 			np.classList.add( 'is-in' );
 			focusView();
@@ -226,6 +228,7 @@ export function nowPlaying( P ) {
 		);
 		back?.focus( { preventScroll: true } );
 		P.drawControls?.();
+		P.wakeControls?.();
 	}
 
 	window.addEventListener( 'popstate', () => {
@@ -1608,6 +1611,63 @@ export function nowPlaying( P ) {
 			record.style.removeProperty( '--riff-bands' );
 		}
 	}
+
+	// ---- While a video plays in Now Playing, the Song and Video switch and the bar fade away after
+	// a stretch with nothing from the listener, as a video player's controls do; any pointer move,
+	// key, touch or focus brings them back at once. They stay while the video is paused, while a
+	// panel is open beside it, while keyboard focus is in them and while a mouse is over them, so
+	// focus is never under a hidden bar and nothing is reached by hovering alone. Focus a click or
+	// tap leaves on a button, and the hover a tap leaves behind, don't hold them: the next key
+	// wakes them before it acts. Fullscreen is the browser's own. riff.css fades them,
+	// or, where less motion is asked for, shows and hides them at once.
+	// Three seconds: time to reach for a control after the last move, and soon enough that the
+	// picture is left clear.
+	const IDLE = 3000;
+	const bar = $( '.riff-bar' );
+	const modes = $( '.riff-modes' );
+	let idle = 0;
+	let mouse = false;
+	const watching = () =>
+		! np.hidden &&
+		root.classList.contains( 'is-open' ) &&
+		! P.panelOpen &&
+		!! P.views?.get( P.showing )?.stage &&
+		!! P.isVideo?.() &&
+		! P.video.paused;
+	const focused = ( el ) => el.contains( document.activeElement ) && document.activeElement.matches( ':focus-visible' );
+	const inUse = () => [ bar, modes ].some( ( el ) => el && ( focused( el ) || ( mouse && el.matches( ':hover' ) ) ) );
+	document.addEventListener(
+		'pointermove',
+		( e ) => {
+			mouse = e.pointerType === 'mouse';
+		},
+		{ capture: true, passive: true }
+	);
+	function rest() {
+		if ( ! watching() ) {
+			return;
+		}
+		if ( inUse() ) {
+			idle = setTimeout( rest, IDLE );
+		} else {
+			root.dataset.riffIdle = '';
+		}
+	}
+	function wake() {
+		clearTimeout( idle );
+		delete root.dataset.riffIdle;
+		if ( watching() ) {
+			idle = setTimeout( rest, IDLE );
+		}
+	}
+	for ( const ev of [ 'pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'focusin' ] ) {
+		document.addEventListener( ev, wake, { capture: true, passive: true } );
+	}
+	for ( const ev of [ 'play', 'pause', 'ended' ] ) {
+		P.video.addEventListener( ev, wake );
+	}
+	root.addEventListener( 'riff:track', wake );
+	P.wakeControls = wake;
 
 	return { open, close, setView, tint, groove, deck, turn, halt, held, stopping, respeed };
 }

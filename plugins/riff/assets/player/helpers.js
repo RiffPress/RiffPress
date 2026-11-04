@@ -177,6 +177,13 @@ export function sr( words ) {
 
 export const PAUSE = sr( ', ' );
 
+// The film icon, the Song and Video switch's own (Player::icon( 'video' )): the small mark
+// after the title of a track with a video version, where the eye already is, instead of a pill
+// competing with the time on the row's right edge; and the album's button while Now Playing shows
+// the video.
+export const FILM =
+	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.5 16.5v-9l7 4.5-7 4.5z"/></svg>';
+
 export function smallest( art ) {
 	return art?.[ 0 ]?.src || '';
 }

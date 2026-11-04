@@ -289,6 +289,13 @@ browser asks to save data; a site makes the song first with the `riff_video_firs
 Pressed in a post or the Listen app, a track that opens as its video opens Now Playing on the
 picture and plays, as a video block's track does; one that opens as the song plays where it is.
 
+While Now Playing shows the video, the album's button in the bar shows the film icon and is named
+Video, and the song's format and bit rate leave the badges, as they describe the song's file. While
+the video plays, the Song and Video switch and the bar fade away after three seconds with no pointer
+movement, key, touch or focus, and any of those brings them back at once. They stay while the video
+is paused, while focus is in them and while the pointer is over them; with less motion asked for
+they go without the fade, and the browser's own fullscreen is left as it is.
+
 ## Design
 
 In a window with room for the sidebar the Listen app is laid out as a desktop streaming app is: back and forward, home and search across the top, the library and the view as panels on black, and the player bar along the bottom with the seek line under the controls. A narrower window keeps the touch layout, whatever points at it, so a car's screen is laid out as a phone is. The choice is made once, in `standalone.css` (`--riff-frame`), and the page's script reads it from there. It's all in Riff's ivory, a piano key's cream. [DESIGN.md](../DESIGN.md) has the rest.
