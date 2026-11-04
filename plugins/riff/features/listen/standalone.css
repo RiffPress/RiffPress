@@ -5,7 +5,7 @@
    this one place, with the very conditions the layout below switches at, so
    the two never disagree. The page's script copies it to
    <html data-riff-frame> before the first paint (templates/standalone.php),
-   and the desktop frame, the strip and its panels, shows only where it is
+   and the frame, the strip and its panels, shows only where it is
    sidebar. Below 900px that is never, whatever points at the window; a
    short, wide screen is sidebar with a mouse and rail by touch, as the
    layout is. */
