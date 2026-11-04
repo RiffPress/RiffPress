@@ -110,7 +110,8 @@ const checks = [
 		name: 'Git hooks wired (pre-commit lint and tests)',
 		found: run( 'git', [ 'config', 'core.hooksPath' ] ),
 		get ok() {
-			return !! this.found && path.resolve( root, this.found ) === path.join( root, '.githooks' );
+			// Relative, so each worktree runs its own branch's hooks rather than the main checkout's.
+			return this.found === '.githooks';
 		},
 		fix: () => 'npm install (its prepare script sets core.hooksPath)',
 	},
