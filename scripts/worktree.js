@@ -117,7 +117,7 @@ async function setup( dir ) {
 	// branch's hook, one that may predate this setup and leave vendor uninstalled.
 	const hooks = tryGit( [ 'config', 'core.hooksPath' ], MAIN );
 	if ( hooks && path.isAbsolute( hooks ) && path.resolve( hooks ) === path.join( MAIN, '.githooks' ) ) {
-		git( [ 'config', 'core.hooksPath', '.githooks' ], MAIN );
+		tryGit( [ 'config', 'core.hooksPath', '.githooks' ], MAIN );
 	}
 	const vendor = path.join( dir, 'vendor' );
 	// An earlier setup linked vendor too; inside the container that link leads nowhere.
