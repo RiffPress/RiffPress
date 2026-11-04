@@ -1,0 +1,36 @@
+name: WordPress release day
+
+# Riff ships on the day WordPress ships a major release. Four times a day, so a release in any time
+# zone is seen the same day, this compares the current WordPress release with Riff's Tested up to
+# and, when a new major is out, opens one issue with the release-day checklist (core-release.js).
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: core-release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check for a new WordPress major
+    if: github.repository == 'RiffPress/RiffPress'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Open the release-day issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/core-release.js
