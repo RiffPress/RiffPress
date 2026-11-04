@@ -72,6 +72,48 @@ test.describe( 'About', () => {
 		expect( results.violations ).toEqual( [] );
 	} );
 
+	test( 'beside the album it leaves the cover to the stage and shows it all at once, and keeps up as the window changes shape', async ( { page, isMobile } ) => {
+		test.skip( isMobile, 'A panel beside Now Playing is a wide screen\'s.' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await openView( page, 'album' );
+		const panel = await openView( page, 'about' );
+		const title = page.locator( '.riff-side-title' );
+		await expect( title ).toBeFocused();
+		// Every credit the file has, so the panel is as full as this track makes it.
+		await expect( panel.locator( 'dl.riff-about-credits dt' ) ).toHaveCount( 6 );
+		const cover = panel.locator( '.riff-about-cover' );
+		const fits = () => panel.evaluate( ( el ) => el.scrollHeight <= el.clientHeight );
+
+		// Beside the turntable, the same picture once is enough, and nothing needs scrolling to.
+		await expect( cover ).toBeHidden();
+		await expect.poll( fits ).toBe( true );
+		// Each credit's name and what they did on one line.
+		const [ term, definition ] = await panel.locator( 'dl.riff-about-credits > div' ).first().locator( 'dt, dd' ).evaluateAll( ( els ) => els.map( ( el ) => el.getBoundingClientRect().top ) );
+		expect( Math.abs( term - definition ) ).toBeLessThan( 1 );
+
+		// Turned upright, where the panel covers Now Playing, the cover leads it again.
+		await page.setViewportSize( { width: 820, height: 1180 } );
+		await expect( cover ).toBeVisible();
+		await expect.poll( fits ).toBe( true );
+
+		// And back, with the focus where it was.
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await expect( cover ).toBeHidden();
+		await expect.poll( fits ).toBe( true );
+		await expect( title ).toBeFocused();
+
+		// With Now Playing closed, beside the page, the panel is where the cover is.
+		await page.evaluate( () => window.riff.close() );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		await expect( cover ).toBeVisible();
+		await expect.poll( fits ).toBe( true );
+		// At a shorter window too, the cover leading it.
+		await page.setViewportSize( { width: 1440, height: 800 } );
+		await expect( cover ).toBeVisible();
+		await expect.poll( fits ).toBe( true );
+	} );
+
 	test( 'follows the track as it changes while it is open', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		const panel = await openView( page, 'about' );
