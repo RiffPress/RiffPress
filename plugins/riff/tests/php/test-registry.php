@@ -46,7 +46,7 @@ class Test_Riff_Registry extends Riff_TestCase {
 		);
 
 		$bar = Registry::bar();
-		$this->assertMatchesRegularExpression( '#data-riff-control="album".*data-riff-control="credits".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="sleep".*data-riff-control="volume"#s', $bar, 'each by its order' );
+		$this->assertMatchesRegularExpression( '#data-riff-control="like".*data-riff-control="credits".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="sleep".*data-riff-control="volume"#s', $bar, 'each by its order' );
 		$this->assertStringContainsString( '<button type="button" class="riff-btn riff-control riff-control-sleep" data-riff-control="sleep" data-riff-order="65" aria-label="Sleep timer"><svg', $bar );
 		$this->assertStringNotContainsString( '<script', $bar, 'an icon is SVG and nothing more' );
 		$this->assertStringContainsString( '<path d="M4 4h16v16H4z"', $bar );

@@ -55,21 +55,20 @@ test.describe( 'The tree is the spec', () => {
 		if ( isMobile ) {
 			await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 				- region "Player":
-				  - text: /Underground/
+				  - button /^Now Playing, Underground/
 				  - button "Pause"
 				  - slider "Track position"
 				  - button "Like Underground"
-				  - button "Album"
 			` );
 			return;
 		}
-		// What plays, read and not pressed, the transport in order with Shuffle a toggle and Repeat
+		// What plays, the button that opens Now Playing, the transport in order with Shuffle a toggle and Repeat
 		// its state after its name, the seek line a slider named Track position with its times
 		// beside it, the quality pill as text, the views' buttons in their order, the volume as a
 		// percentage.
 		await expect( page.locator( '.riff-bar' ) ).toMatchAriaSnapshot( `
 			- region "Player":
-			  - text: /Underground/
+			  - button /^Now Playing, Underground/
 			  - button "Shuffle"
 			  - button "Previous"
 			  - button "Pause"
@@ -80,7 +79,6 @@ test.describe( 'The tree is the spec', () => {
 			  - text: /\\d+:\\d\\d/
 			  - button "Like Underground"
 			  - text: MP3 · 128 kbps
-			  - button "Album"
 			  - button "About"
 			  - button "Up next"
 			  - slider "Volume"

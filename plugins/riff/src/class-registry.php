@@ -152,7 +152,8 @@ final class Registry {
 	 *     @type string   $place  `screen` to take the whole screen above the bar, as Now Playing
 	 *                            does; `side` for a panel beside the page. Default `screen`.
 	 *     @type bool     $stage  For a screen that is Now Playing's own stage, the track's art or
-	 *                            its record, rather than a region of its own. Default false.
+	 *                            its record, rather than a region of its own, with no button in
+	 *                            the bar, which opens it itself. Default false.
 	 *     @type bool     $wide   Its button only on a wide screen; on a phone its chip in Now
 	 *                            Playing opens it. Default true.
 	 *     @type callable $render Markup for its region as the page is drawn; the script fills it
@@ -398,6 +399,10 @@ final class Registry {
 			$items[] = array( $control['order'], $control['added'], self::control( $id, $control ) );
 		}
 		foreach ( self::views() as $id => $view ) {
+			// The stage, what Now Playing opens to, has no button of its own: the bar itself opens it.
+			if ( $view['stage'] ) {
+				continue;
+			}
 			$items[] = array( $view['order'], $view['added'], self::button( $id, $view ) );
 		}
 		usort( $items, static fn( $a, $b ) => array( $a[0], $a[1] ) <=> array( $b[0], $b[1] ) );

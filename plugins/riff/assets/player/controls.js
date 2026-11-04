@@ -10,7 +10,7 @@ import { read, write } from 'riff-player/helpers';
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function controls( P ) {
-	const { root } = P;
+	const { root, $ } = P;
 
 	P.shortcutsOn = P.data.shortcuts === true;
 	P.captionsOn = read( localStorage, P.CAPTIONS ) === 'on';
@@ -33,7 +33,14 @@ export function controls( P ) {
 			P.setMode( mode.dataset.riffMode );
 			return;
 		}
-		const button = e.target.closest( '[data-riff-action]' );
+		// A press on the bar itself, anywhere but one of its controls, is a press of its track,
+		// which opens Now Playing: the track is the real button, for a keyboard.
+		const bare =
+			e.target.closest( '.riff-bar' ) &&
+			! e.target.closest( 'button, a, input, label, [data-riff-control], .riff-bar-seek' );
+		const button = bare
+			? $( '.riff-bar-info' )
+			: e.target.closest( '[data-riff-action]' );
 		if ( ! button || P.swiped ) {
 			return;
 		}
@@ -48,7 +55,8 @@ export function controls( P ) {
 			P.press( 'prev' );
 			P.prev();
 		} else if ( action === 'open' ) {
-			if ( P.np.hidden ) {
+			// Open on another view, the bar goes back to the album; on the album, it closes.
+			if ( P.np.hidden || ! root.classList.contains( 'is-open' ) || P.showing !== 'album' ) {
 				P.open();
 			} else {
 				P.close();

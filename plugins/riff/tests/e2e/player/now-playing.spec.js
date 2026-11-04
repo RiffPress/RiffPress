@@ -24,21 +24,21 @@ test.describe( 'Player', () => {
 		await page.goto( postUrl );
 	} );
 
-	test( 'the album\'s button opens Now Playing, which closes with Escape and returns focus', { tag: '@smoke' }, async ( {
+	test( 'the bar opens Now Playing, which closes with Escape and returns focus', { tag: '@smoke' }, async ( {
 		page,
 		isMobile,
 	} ) => {
 		await page.locator( '.riff-row' ).nth( 0 ).click();
-		// What plays, at the bar's left, is read and not pressed.
-		await page.locator( '.riff-bar-info' ).click();
-		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		// The bar is the way in, as standalone's is: no button of the album's own.
+		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveCount( 0 );
+		await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-expanded', 'false' );
 		await openView( page, 'album' );
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
 		// The album, the cover on its own: with less motion asked for, as the suite asks, in every
 		// shape.
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-turntable', 'off' );
-		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
+		await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-expanded', 'true' );
 		// Modal on a phone, where it covers the bar; beside the bar on a wide screen, where the bar
 		// is still how the music is controlled.
 		await expect( np ).toHaveAttribute( 'aria-modal', isMobile ? 'true' : 'false' );
@@ -61,12 +61,33 @@ test.describe( 'Player', () => {
 		await expect( np ).toBeHidden();
 		await expect( page.locator( '[data-riff-covered]' ) ).toHaveCount( 0 );
 		expect( await height(), 'the page is as tall as it was' ).toBe( tall );
-		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toBeFocused();
-		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'false' );
+		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
+		await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-expanded', 'false' );
 		expect( await scrolls(), 'and scrolls again once it closes' ).not.toBe( 'hidden' );
 	} );
 
-	test( 'the album takes the whole screen above the bar, the turntable where it is wide, and its button goes back', async ( {
+	test( 'a press anywhere on the bar but its controls opens Now Playing, and Enter on its track does too', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		const np = page.locator( '.riff-np' );
+		const bar = page.locator( '.riff-bar' );
+		// A control does what it does and opens nothing.
+		await bar.locator( '.riff-play' ).click();
+		await expect( np ).toBeHidden();
+		// The bar's own edge, which is no control.
+		const { height } = await bar.boundingBox();
+		await bar.click( { position: { x: 2, y: height / 2 } } );
+		await expect( np ).toBeVisible();
+		await page.keyboard.press( 'Escape' );
+		await expect( np ).toBeHidden();
+		await page.locator( '.riff-bar-info' ).focus();
+		await page.keyboard.press( 'Enter' );
+		await expect( np ).toBeVisible();
+		await expect( page.locator( '.riff-bar-info' ) ).toHaveAccessibleName( /^Now Playing, / );
+	} );
+
+	test( 'the album takes the whole screen above the bar, the turntable where it is wide, and the bar goes back', async ( {
 		page,
 		isMobile,
 	} ) => {
@@ -91,10 +112,10 @@ test.describe( 'Player', () => {
 		await expect( root ).not.toHaveAttribute( 'data-riff-turntable', 'off' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
 		await expect( page.locator( '[data-riff-control="turntable"], [data-riff-chip="turntable"]' ) ).toHaveCount( 0 );
-		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
+		await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-expanded', 'true' );
 
 		// Its button again goes back to the page.
-		await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
+		await page.locator( '.riff-bar-info' ).click();
 		await expect( np ).toBeHidden();
 	} );
 
@@ -136,8 +157,6 @@ test.describe( 'Player', () => {
 		expect( beside.width ).toBeLessThan( alone.width );
 		expect( beside.x + beside.width ).toBeLessThanOrEqual( side.x + 1 );
 		expect( side.y + side.height ).toBeLessThanOrEqual( ( await page.locator( '.riff-bar' ).boundingBox() ).y + 1 );
-		await page.locator( '[data-riff-control="queue"]' ).click();
-		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		const colors = await page.evaluate( () => ( {
 			repeat: getComputedStyle(
 				document.querySelector(
@@ -145,9 +164,11 @@ test.describe( 'Player', () => {
 				)
 			).color,
 			open: getComputedStyle(
-				document.querySelector( '.riff-bar [data-riff-control="album"]' )
+				document.querySelector( '.riff-bar [data-riff-control="queue"]' )
 			).color,
 		} ) );
+		await page.locator( '[data-riff-control="queue"]' ).click();
+		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		expect( colors.repeat ).toBe( 'rgb(144, 144, 144)' );
 		expect( colors.open, 'the open view\'s button is lit' ).toBe( 'rgb(255, 255, 255)' );
 		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();

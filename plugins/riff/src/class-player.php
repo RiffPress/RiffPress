@@ -95,8 +95,8 @@ final class Player {
 			)
 		);
 		// The album, what Now Playing opens to: the cover where Now Playing is portrait and the
-		// turntable where it is landscape (now-playing.js). Its button is on a phone's bar too, as
-		// the way into Now Playing.
+		// turntable where it is landscape (now-playing.js). As the stage it has no button in the
+		// bar, which opens it itself; its chip in Now Playing comes back to it from another view.
 		Registry::register_view(
 			'album',
 			array(
