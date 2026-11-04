@@ -616,10 +616,10 @@
 		loop.last = time;
 	}
 
-	// ---- The count-in: the loop's last bar before B counted out in clicks at the chart's tempo, the
+	// ---- The count-in: the loop's last bar before B counted out in chimes at the chart's tempo, the
 	// first of the bar higher, so the music comes round to A on the beat after the last, as a
 	// drummer counts a band back in. The music plays on under it; nothing is stopped or held. The
-	// clicks are made in the browser, with Web Audio, and timed on its clock from where the music
+	// chimes are made in the browser, with Web Audio, and timed on its clock from where the music
 	// is, at the speed it plays.
 	const tempo = () => {
 		const bpm = parseFloat( song?.read.meta.tempo );
@@ -638,20 +638,27 @@
 		} catch {}
 		return count.audio;
 	}
-	function click( at, first ) {
+	// Each beat a soft chime, as a cabin's ping is: a sine come up gently, with a quiet octave above
+	// it that fades first, ringing out for most of the beat. The first of the bar is the higher
+	// note, A, and the rest the E a fourth below it.
+	function click( at, first, gap ) {
 		const audio = count.audio;
-		const tone = audio.createOscillator();
-		const level = audio.createGain();
-		tone.type = 'triangle';
-		tone.frequency.value = first ? 1760 : 1320;
-		level.gain.setValueAtTime( 0.0001, at );
-		level.gain.exponentialRampToValueAtTime( 0.4, at + 0.003 );
-		level.gain.exponentialRampToValueAtTime( 0.0001, at + 0.08 );
-		tone.connect( level );
-		level.connect( audio.destination );
-		tone.start( at );
-		tone.stop( at + 0.1 );
-		count.clicks.push( tone );
+		const pitch = first ? 880 : 659.25;
+		const ring = Math.min( 0.9, gap * 0.9 );
+		for ( const [ multiple, peak, fade ] of [ [ 1, 0.22, ring ], [ 2, 0.05, ring / 3 ] ] ) {
+			const tone = audio.createOscillator();
+			const level = audio.createGain();
+			tone.type = 'sine';
+			tone.frequency.value = pitch * multiple;
+			level.gain.setValueAtTime( 0.0001, at );
+			level.gain.exponentialRampToValueAtTime( peak, at + 0.015 );
+			level.gain.exponentialRampToValueAtTime( 0.0001, at + fade );
+			tone.connect( level );
+			level.connect( audio.destination );
+			tone.start( at );
+			tone.stop( at + fade + 0.02 );
+			count.clicks.push( tone );
+		}
 	}
 	function showBeat( n ) {
 		if ( tools?.beat ) {
@@ -699,7 +706,7 @@
 				if ( wait < -0.02 ) {
 					continue;
 				}
-				click( now + Math.max( 0, wait ), n === 0 );
+				click( now + Math.max( 0, wait ), n === 0, gap / rate );
 				count.timers.push( setTimeout( () => showBeat( n + 1 ), Math.max( 0, wait ) * 1000 ) );
 			}
 		} catch {}
