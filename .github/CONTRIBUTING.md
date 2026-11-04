@@ -102,7 +102,7 @@ Every string uses the `riff` text domain, and each plugin beside it its own slug
 
 ## Releases
 
-Releases are automated by [release-please](https://github.com/googleapis/release-please). These ship from this repository, and each is released on its own: Riff (`plugins/riff/`, tagged `riff-v6.x.y`), Riff Lyrics (`plugins/riff-lyrics/`, tagged `riff-lyrics-v1.x.y`) and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
+Releases are automated by [release-please](https://github.com/googleapis/release-please). Six packages ship from this repository, each with its own version, tag and changelog: Riff (`plugins/riff/`, tagged `riff-v6.x.y`), Riff Lyrics, Riff Chords, Riff Sign In and Riff Sing (each in `plugins/<slug>/`, tagged `<slug>-vx.y.z`), and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
 
 - `feat: ...` → minor bump (before 1.0, a patch bump)
 - `fix: ...` → patch bump
@@ -124,7 +124,7 @@ Two things a package's folder doesn't cover:
 When WordPress ships a major release, Riff ships the same day, tested against it. The `core-release` issue lists the steps:
 
 1. Point `.wp-env.json` and `plugin-check.yml` at `WordPress/WordPress#7.2` (the new version) instead of the pre-release zip. The pull request runs the whole suite on it; merge it once it passes.
-2. Have a Riff release pull request open. If nothing in `plugins/riff/` is waiting to release, merge a change there that does, or one with a `Release-As:` footer.
+2. Have a Riff release pull request open. If nothing in `plugins/riff/` is waiting to release, merge a change there that does. Or merge one that touches `plugins/riff/` with a `Release-As: x.y.z` footer in the squash commit itself (`gh pr merge --squash --body 'Release-As: 6.2.0'`): squash commits here start with a blank body, so a footer in the pull request description never reaches `main`.
 3. Check that every `readme.txt` in it says the new `Tested up to`. The release workflow writes it from api.wordpress.org each time it runs, so any run after WordPress ships does.
 4. Merge it the same day.
 
@@ -137,8 +137,8 @@ WordPress names each major release after a jazz musician. Each minor or major re
 - Once the release is published, its title and notes can still be edited (only the tag and the assets are locked):
 
 ```bash
-gh release edit riff-v6.2.0 --title 'riff 6.2.0 "Name"' \
-  --notes "$(printf 'Name, on instrument, played with the namesake on *Album* (year). [Source](https://…)\n\n'; gh release view riff-v6.2.0 --json body --jq .body)"
+gh release edit riff-v6.2.0 --title 'riff: v6.2.0 "Name"' \
+  --notes "$(printf '%s\n\n' 'Name, on instrument, played with the namesake on *Album* (year). [Source](https://…)'; gh release view riff-v6.2.0 --json body --jq .body)"
 ```
 
 To check one, open the source link in the release's first line and find both names in the same credits.

@@ -59,7 +59,7 @@ function issueBody( version ) {
 		`WordPress ${ version } shipped, and Riff is tested up to an earlier major. Riff ships today, tested against it (the release-day steps in \`.github/CONTRIBUTING.md\`).`,
 		'',
 		`- [ ] Point \`.wp-env.json\` and \`plugin-check.yml\` at \`WordPress/WordPress#${ version }\` instead of the pre-release zip, and merge that once the suite passes on it.`,
-		`- [ ] Riff has an open release pull request. If it doesn't, merge a change to \`plugins/riff/\` that releases, or one with a \`Release-As:\` footer.`,
+		`- [ ] Riff has an open release pull request. If it doesn't, merge a change to \`plugins/riff/\` that releases, or one there with a \`Release-As:\` footer in the squash commit (\`gh pr merge --squash --body 'Release-As: x.y.z'\`).`,
 		`- [ ] Every \`readme.txt\` in that pull request says \`Tested up to: ${ version }\` (the release workflow writes it from api.wordpress.org on its next run).`,
 		`- [ ] Merge the release pull request today.`,
 		`- [ ] If it's a minor or major release, give it a codename: someone who played with ${ version }'s namesake, from wordpress.org's release post, with a source.`,
