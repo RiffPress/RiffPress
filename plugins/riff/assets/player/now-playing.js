@@ -665,7 +665,7 @@ export function nowPlaying( P ) {
 	// it moves by transform and opacity, on the compositor, and only where it is seen.
 	function change() {
 		const stage = $( '.riff-stage' );
-		if ( np.hidden || P.reduce() || P.mode === 'video' || ! stage || ! roomy() ) {
+		if ( np.hidden || P.reduce() || P.isVideo() || ! stage || ! roomy() ) {
 			return;
 		}
 		const leaving = document.createElement( 'div' );
@@ -798,6 +798,10 @@ export function nowPlaying( P ) {
 			clearTimeout( deck.opening );
 			// Onto the deck its speed and pitch hold; off it the music is at its own speed again.
 			retune( false );
+			if ( now && ! P.el().paused && ! held() ) {
+				deck( true );
+				return;
+			}
 			if ( now ) {
 				// Opened: the sleeve settles at the deck's edge first, then the record slides out of it.
 				deck.opening = setTimeout( () => deck( roomy() ), OPENING );
@@ -828,6 +832,21 @@ export function nowPlaying( P ) {
 		if ( root.dataset.riffDeck === 'out' ) {
 			return;
 		}
+		// Shown while the music plays (Now Playing opened, the phone turned, the window widened), the
+		// record is already on the platter at the music's speed and the stylus in the groove the music
+		// is at, rather than set down and dropped onto under music already heard.
+		if ( ! P.el().paused && ! held() && arm ) {
+			root.dataset.riffAt = '';
+			root.dataset.riffDeck = 'out';
+			stand( true );
+			arm.dataset.riffDown = '';
+			// A carry back to the rest still under way, from the deck going away, is over.
+			arm.querySelector( '.riff-arm-tube' )?.getAnimations().forEach( ( a ) => a.cancel() );
+			needle( true );
+			platter( P.el().playbackRate || 1 );
+			requestAnimationFrame( () => requestAnimationFrame( () => delete root.dataset.riffAt ) );
+			return;
+		}
 		root.dataset.riffDeck = 'out';
 		stand( true );
 		lay();
@@ -851,26 +870,33 @@ export function nowPlaying( P ) {
 	// (preservesPitch off), on the element's own clock.
 	//
 	// The platter moves as a direct-drive deck's does. Its motor pulls with a constant torque, so
-	// its speed rises at a constant rate, in a straight line: from rest to 33⅓ in 0.7 s. Its brake
-	// slows it at a constant rate too, from 33⅓ to rest in 0.9 s. A new speed or pitch while it
-	// turns is the same pull, for as long as the change takes. The music is heard from a crawl up,
-	// as slow as the player lets it go; below that the platter turns with the music silent
-	// (coast()).
+	// its speed rises at a constant rate, in a straight line: from rest to 33⅓ in 0.7 s. It brakes
+	// with the same torque, from 33⅓ to rest in 0.7 s. A new speed or pitch while it turns is the
+	// same pull, for as long as the change takes. The music is heard from a crawl up, as slow as
+	// the player lets it go; below that the platter turns with the music silent (coast()).
 	const ARRIVE = 850;
 	const DROP = 450;
-	const LAND = 250;
+	// The hand's carry of the arm from its rest to the groove (swing()): the music waits until the
+	// stylus is in it.
+	const LAND = 600;
 	const CRAWL = 0.3;
-	// In revolutions a minute, each millisecond.
+	// In revolutions a minute, each millisecond. Technics' SL-1200MK7 specification gives 0.7 s
+	// from standstill to 33⅓ (build-up characteristics) on 0.18 N·m of starting torque. Its brake is
+	// electronic, the motor itself pulling against the turn, and no stopping time is published, so
+	// it is taken at the motor's own torque: 33⅓ to rest in the same 0.7 s.
 	const TORQUE = 100 / 3 / 700;
-	const BRAKE = 100 / 3 / 900;
+	const BRAKE = TORQUE;
 	// How long the platter takes from one rate to another, the rates as shares of the record's own
 	// speed.
 	const pull = ( from, to ) =>
 		( Math.abs( to - from ) * ( root.dataset.riffFormat === '7' ? 45 : 100 / 3 ) ) / ( to > from ? TORQUE : BRAKE );
 	let ramping = 0;
 	let stowing = 0;
+	// Whether the track shows as its video is the track's (P.isVideo()), not P.mode: that is the
+	// listener's choice for a track that has a video, and is 'video' until they choose the song, so
+	// it would say every song in such a session was a picture and start and stop it at once.
 	const seen = () =>
-		! np.hidden && ! P.away() && ! P.reduce() && P.mode !== 'video' && roomy();
+		! np.hidden && ! P.away() && ! P.reduce() && ! P.isVideo() && roomy();
 	function bend( m, to ) {
 		const from = m.playbackRate || 1;
 		const ms = pull( from, to );
@@ -883,18 +909,50 @@ export function nowPlaying( P ) {
 				if ( id !== ramping ) {
 					return done( false );
 				}
-				const k = ms ? Math.min( 1, ( now - t0 ) / ms ) : 1;
+				// A page put out of sight stops drawing frames, which would leave the music at whatever
+				// speed it had reached: out of sight, the pull is over at once.
+				const k = ms && ! document.hidden ? Math.min( 1, ( now - t0 ) / ms ) : 1;
+				const rate = k < 1 ? from + ( to - from ) * k : to;
+				m.playbackRate = rate;
+				// The platter and the arm take the music's new speed in the same frame, not a frame
+				// later on its ratechange.
+				drive( rate );
 				if ( k < 1 ) {
-					m.playbackRate = from + ( to - from ) * k;
 					requestAnimationFrame( step );
 					return;
 				}
+				bend.finish = null;
 				P.ramping = false;
-				m.playbackRate = to;
 				done( true );
 			};
-			requestAnimationFrame( step );
+			bend.finish = () => step( performance.now() );
+			// Out of sight already (play pressed, then the tab left while the arm came down), no
+			// frame would come to start it: it is over at once.
+			if ( document.hidden ) {
+				bend.finish();
+			} else {
+				requestAnimationFrame( step );
+			}
 		} );
+	}
+	document.addEventListener( 'visibilitychange', () => document.hidden && bend.finish?.() );
+	// The platter's and the arm's rate, set where the music's is.
+	function drive( rate ) {
+		if ( coasting === null ) {
+			platter( rate );
+		}
+		if ( sweep ) {
+			rated( sweep, rate );
+		}
+	}
+	// An animation's rate, set at once so it changes in the frame the music's does; while its play
+	// is still pending, setting it would hold it there, so it waits for that.
+	function rated( a, rate ) {
+		if ( a.pending ) {
+			a.updatePlaybackRate( rate );
+		} else if ( a.playbackRate !== rate ) {
+			a.playbackRate = rate;
+		}
 	}
 	function settle( m ) {
 		ramping++;
@@ -929,12 +987,12 @@ export function nowPlaying( P ) {
 	function platter( rate ) {
 		for ( const turns of $$( '.riff-turns' ) ) {
 			for ( const a of turns.getAnimations() ) {
-				a.updatePlaybackRate( rate );
+				rated( a, rate );
 			}
 		}
 		strobe();
 	}
-	function coast( from, to ) {
+	function coast( from, to, then ) {
 		const id = ++coasts;
 		const ms = pull( from, to );
 		const t0 = performance.now();
@@ -951,6 +1009,7 @@ export function nowPlaying( P ) {
 				requestAnimationFrame( step );
 			} else if ( ! to ) {
 				release();
+				then?.();
 			}
 		};
 		requestAnimationFrame( step );
@@ -966,6 +1025,19 @@ export function nowPlaying( P ) {
 
 	function cued( on ) {
 		root.toggleAttribute( 'data-riff-cued', on );
+	}
+	// The cue lever. Up, the stylus rides above its groove (data-riff-up=""); lowering, it sinks
+	// onto it ("lowering"); down, the attribute is gone. It is raised only once the platter is at
+	// rest, the music long silent, and the music is heard only once it is down again.
+	const tonearmOf = () => $( '.riff-arm' );
+	function raise() {
+		const arm = tonearmOf();
+		if ( arm && 'riffDown' in arm.dataset && P.el().paused && ! held() ) {
+			arm.dataset.riffUp = '';
+		}
+	}
+	function lowered() {
+		delete tonearmOf()?.dataset.riffUp;
 	}
 	function turn( m ) {
 		// A followed host's start is made by Listen Together, when it is due.
@@ -987,6 +1059,7 @@ export function nowPlaying( P ) {
 		// At the listener's own speed the music keeps its pitch, which a platter coming up to speed
 		// would bend, so it starts at once.
 		if ( ! seen() || P.speed !== 1 || ( turning && ! P.ramping && ! flipping ) ) {
+			lowered();
 			cued( false );
 			if ( coasting !== null ) {
 				release();
@@ -996,10 +1069,20 @@ export function nowPlaying( P ) {
 			return;
 		}
 		let wait = 0;
-		if ( root.dataset.riffDeck === 'out' && m.paused && ! flipping && ! ( 'riffArriving' in root.dataset ) ) {
-			// The arm is up: it comes down onto the record, and the platter starts once the stylus
-			// is in the groove.
+		const arm = tonearmOf();
+		if (
+			root.dataset.riffDeck === 'out' &&
+			m.paused &&
+			! flipping &&
+			! ( 'riffArriving' in root.dataset ) &&
+			arm?.dataset.riffUp !== undefined
+		) {
+			// The arm is up: the cue lever lowers it onto the record, and the platter starts once
+			// the stylus is in the groove.
+			arm.dataset.riffUp = 'lowering';
 			wait = LOWER;
+			clearTimeout( turn.land );
+			turn.land = setTimeout( lowered, LOWER );
 		} else if ( flipping ) {
 			wait = flip.until - performance.now() + LAND;
 		} else if ( 'riffArriving' in root.dataset ) {
@@ -1016,6 +1099,7 @@ export function nowPlaying( P ) {
 				windDown();
 				return;
 			}
+			lowered();
 			const from = m.paused ? CRAWL : m.playbackRate;
 			m.playbackRate = from;
 			m.preservesPitch = m.webkitPreservesPitch = false;
@@ -1031,17 +1115,19 @@ export function nowPlaying( P ) {
 				} );
 		};
 		if ( m.paused ) {
-			// From rest, the platter is pulled up to a crawl by the moment the stylus is in the
-			// groove, so the music starts there, at the speed the platter has reached. Still turning
-			// as it winds down, it is pulled up from where it is, at once, unless the record is
-			// being turned over or changed meanwhile.
+			// From rest, the motor starts once the stylus is in the groove, pulling the platter up
+			// to a crawl in silence, and the music starts there, at the speed the platter has
+			// reached, its pitch rising with it. Still turning as it winds down, the stylus still in
+			// its groove, it is pulled up from where it is, at once, unless the record is being
+			// turned over or changed meanwhile.
 			const up = pull( coasting ?? 0, CRAWL );
 			if ( coasting !== null && ! flipping && ! ( 'riffArriving' in root.dataset ) ) {
 				coast( coasting, CRAWL );
+				wait = Math.max( wait, up );
 			} else {
-				turn.spin = setTimeout( () => coast( coasting ?? 0, CRAWL ), Math.max( 0, wait - up ) );
+				turn.spin = setTimeout( () => coast( coasting ?? 0, CRAWL ), wait );
+				wait += up;
 			}
-			wait = Math.max( wait, up );
 		}
 		if ( wait ) {
 			turn.wait = setTimeout( start, wait );
@@ -1056,15 +1142,21 @@ export function nowPlaying( P ) {
 		}
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
+		clearTimeout( turn.land );
 		if ( 'riffCued' in root.dataset ) {
 			cued( false );
-			windDown();
+			if ( coasting !== null ) {
+				coast( coasting, 0, raise );
+			} else {
+				raise();
+			}
 			P.paint();
 			return;
 		}
 		if ( ! seen() || m.paused || P.speed !== 1 ) {
 			settle( m );
 			m.pause();
+			raise();
 			return;
 		}
 		halt.going = m;
@@ -1073,8 +1165,9 @@ export function nowPlaying( P ) {
 			if ( whole ) {
 				m.pause();
 				settle( m );
-				// The music stops at a crawl, and the platter turns on down to rest.
-				coast( CRAWL, 0 );
+				// The music stops at a crawl, and the platter turns on down to rest; only then
+				// does the cue lever lift the stylus out of the groove.
+				coast( CRAWL, 0, raise );
 			}
 		} );
 		P.paint();
@@ -1220,6 +1313,7 @@ export function nowPlaying( P ) {
 	}
 	function lift() {
 		const arm = $( '.riff-arm' );
+		delete arm?.dataset.riffUp;
 		if ( sweep && arm ) {
 			const from = shown( arm );
 			sweep.cancel();
@@ -1230,7 +1324,7 @@ export function nowPlaying( P ) {
 		sweep = null;
 		swept = '';
 	}
-	function needle() {
+	function needle( at = false ) {
 		const arm = $( '.riff-arm' );
 		const w = where();
 		// In the hand, it is where the hand holds it; in the run-out, where the groove takes it.
@@ -1253,7 +1347,9 @@ export function nowPlaying( P ) {
 			sweep = arm.animate( frames, { duration: w.length * 1000, fill: 'both' } );
 			swept = key;
 			sweep.currentTime = ms;
-			swing( arm, from, angle( w.now / w.length ) );
+			if ( ! at ) {
+				swing( arm, from, angle( w.now / w.length ) );
+			}
 		} else if ( Math.abs( sweep.currentTime - ms ) > 300 ) {
 			const from = shown( arm );
 			sweep.currentTime = ms;

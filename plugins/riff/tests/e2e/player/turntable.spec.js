@@ -12,6 +12,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { playerSite, audioState } = require( '../helpers/site' );
+const { stopsAndStarts } = require( '../helpers/turntable' );
 
 const made = own();
 
@@ -294,6 +295,42 @@ test.describe( 'Turntable', () => {
 		expect( up.some( ( r ) => r > 0.5 && r < 1 ) ).toBe( true );
 		// And the arm is still on the record.
 		expect( await arm.evaluate( ( el ) => parseFloat( getComputedStyle( el ).rotate ) ) ).toBeGreaterThan( 0 );
+	} );
+
+	test( 'the music is heard only with the stylus down, the arm lifts only once it has stopped, and the platter turns at the music\'s rate each frame', async ( { page } ) => {
+		await stopsAndStarts( page );
+	} );
+
+	test( 'shown while the music plays, the record is already turning with the stylus in its groove', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		const lengths = await page.evaluate( () => window.riff.queue().map( ( t ) => t.duration ) );
+		const side = lengths.reduce( ( a, b ) => a + b, 0 );
+		// Narrowed to upright the album is the cover; widened again mid-song, the turntable.
+		await page.setViewportSize( { width: 700, height: 900 } );
+		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-deck', 'out' );
+		const rate = () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
+		// In its first frames: down, where the music is, the platter at speed, the music untouched.
+		const first = await page.evaluate( () => {
+			const arm = document.querySelector( '.riff-arm' );
+			const record = document.querySelector( '.riff-record' ).getBoundingClientRect();
+			const grip = document.querySelector( '.riff-arm-grip' );
+			const p = grip.getPointAtLength( grip.getTotalLength() );
+			const at = new DOMPoint( p.x, p.y ).matrixTransform( grip.getScreenCTM() );
+			const r = record.width / 2;
+			return {
+				down: 'riffDown' in arm.dataset,
+				radius: Math.hypot( at.x - record.left - r, at.y - record.top - r ) / r,
+				time: document.querySelector( '.riff-audio' ).currentTime,
+				running: getComputedStyle( document.querySelector( '.riff-wax' ) ).animationPlayState,
+			};
+		} );
+		expect( first.down ).toBe( true );
+		expect( first.running ).toBe( 'running' );
+		expect( first.radius ).toBeCloseTo( groove( first.time / side ), 2 );
+		expect( await rate() ).toBe( 1 );
+		expect( ( await audioState( page ) ).paused ).toBe( false );
 	} );
 } );
 

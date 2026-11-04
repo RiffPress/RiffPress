@@ -1701,8 +1701,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    base and its headshell angled, as a pivoted arm's is so the stylus sits
    along the groove: its length and the angle are Baerwald's alignment
    (now-playing.js), which draws the tube and the headshell. At rest on
-   its post until the needle drops; paused, it lifts. Sized by the record,
-   so it scales with it. */
+   its post until the needle drops; stopped, the cue lever lifts it once
+   the platter is at rest (now-playing.js). Sized by the record, so it
+   scales with it. */
 .riff-arm {
 	position: absolute;
 	top: 5%;
@@ -1782,11 +1783,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 2px;
 }
 
-#riff[data-riff-deck="out"]:is(:not([data-riff-turning], [data-riff-cued]), :has(.riff-arm[data-riff-held])) .riff-arm-lift {
+#riff[data-riff-deck="out"] .riff-arm:is([data-riff-up=""], [data-riff-held]) .riff-arm-lift {
 	opacity: 0.4;
 	translate: 0.8px 2.4px;
 	transition-duration: 0.15s;
 	transition-timing-function: ease-out;
+}
+
+/* Shown while the music already plays (now-playing.js marks it), the record
+   is on the platter and the stylus in its groove from the first frame:
+   nothing slides, drops or swings in under music already heard. The
+   stage's own sleeve is named so this outranks a phone on its side's. */
+#riff[data-riff-at] :is(.riff-record, .riff-stage > .riff-cover, .riff-cover, .riff-deck-part, .riff-arm, .riff-arm-lift),
+#riff[data-riff-at] .riff-mount::before {
+	transition: none;
 }
 
 #riff[data-mode="video"] .riff-record {
