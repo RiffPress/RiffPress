@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/RiffPress/RiffPress/compare/riff-chords-v0.3.1...riff-chords-v0.4.0) (2026-11-04)
+
+
+### Features
+
+* **player:** Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button ([#875](https://github.com/RiffPress/RiffPress/issues/875)) ([d07506d](https://github.com/RiffPress/RiffPress/commit/d07506d2dbb6529fd46a2674e3fd64dc5102e407))
+
 ## [0.3.1](https://github.com/RiffPress/RiffPress/compare/riff-chords-v0.3.0...riff-chords-v0.3.1) (2026-11-03)
 
 

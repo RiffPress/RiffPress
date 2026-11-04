@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.0.1...riff-v6.1.0) (2026-11-04)
+
+
+### Features
+
+* **player:** Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button ([#875](https://github.com/RiffPress/RiffPress/issues/875)) ([d07506d](https://github.com/RiffPress/RiffPress/commit/d07506d2dbb6529fd46a2674e3fd64dc5102e407))
+
 ## [6.0.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.0.0...riff-v6.0.1) (2026-11-03)
 
 
