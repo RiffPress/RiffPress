@@ -39,7 +39,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		Player::markup();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString( '<div id="riff" class="riff" hidden data-riff-showing="album" data-riff-turntable="off">', $html, 'Now Playing opens to the album, the cover on its own' );
+		$this->assertStringContainsString( '<div id="riff" class="riff" hidden data-riff-showing="album" data-riff-turntable="off">', $html, 'Now Playing opens to the album, the cover until the script finds room for the turntable' );
 		$this->assertStringContainsString( 'class="riff-audio"', $html );
 		$this->assertStringContainsString( 'class="riff-video"', $html );
 		$this->assertStringContainsString( 'data-riff-wire', $html );
@@ -241,7 +241,7 @@ class Test_Riff_Player extends Riff_TestCase {
 
 		// The bar's controls and the views' buttons, in their order, before any script runs.
 		$bar = substr( $html, strpos( $html, '<section class="riff-bar"' ), strpos( $html, '<div class="riff-np"' ) - strpos( $html, '<section class="riff-bar"' ) );
-		$this->assertMatchesRegularExpression( '#data-riff-control="like".*data-riff-control="badges".*data-riff-control="album".*data-riff-control="turntable".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="volume"#s', $bar );
+		$this->assertMatchesRegularExpression( '#data-riff-control="like".*data-riff-control="badges".*data-riff-control="album".*data-riff-control="queue".*data-riff-control="cast".*data-riff-control="volume"#s', $bar );
 		$this->assertStringContainsString( 'data-riff-opens="album" data-riff-order="26" aria-label="Album" aria-pressed="false"', $bar, 'a view\'s button says whether it is open' );
 		$this->assertStringContainsString( 'class="riff-btn riff-control riff-control-album" data-riff-control="album"', $bar, 'the album\'s button is on a phone\'s bar too, the way into Now Playing' );
 		$this->assertStringContainsString( '<div class="riff-bar-info">', $bar, 'what plays is read, not pressed' );
@@ -249,7 +249,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertStringNotContainsString( '<template', $bar );
 
 		// On a phone, a chip for each view in Now Playing.
-		$this->assertMatchesRegularExpression( '#<div class="riff-chips">.*data-riff-chip="album".*data-riff-chip="turntable".*data-riff-chip="queue"#s', $html );
+		$this->assertMatchesRegularExpression( '#<div class="riff-chips">.*data-riff-chip="album".*data-riff-chip="queue"#s', $html );
 
 		// Up next, a panel beside the page, closed until it is opened.
 		$this->assertStringContainsString( '<aside class="riff-side" aria-labelledby="riff-side-title" hidden>', $html );

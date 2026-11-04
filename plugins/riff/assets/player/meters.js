@@ -1,6 +1,6 @@
 /* The turntable's meters: a VU meter and a spectrum under the deck, read from the music itself
  * where it passes through Web Audio (filament.js), as it does everywhere but an iPhone, and only
- * while the Turntable view shows. Nothing here is made up: no crackle, no wow, no flutter, and no
+ * while the turntable shows. Nothing here is made up: no crackle, no wow, no flutter, and no
  * meter where nothing is measured. Neither is drawn for a listener who asks for less motion, or
  * where the turntable is turned off. Loaded by the filament where the music can pass through Web
  * Audio at all.
@@ -175,15 +175,13 @@ export default function meters( P ) {
 	}
 	audio.addEventListener( 'emptied', forget );
 
-	// Whether the meters have their place: the Turntable view showing in Now Playing, the song
+	// Whether the meters have their place: the turntable showing in Now Playing, the song
 	// rather than its video, motion wanted, and music Web Audio can hear, or will once it plays.
 	function placed() {
 		const t = P.track();
 		return (
 			!! t &&
 			! np.hidden &&
-			P.showing === 'turntable' &&
-			root.dataset.riffShowing === 'turntable' &&
 			! ( 'riffTurntable' in root.dataset ) &&
 			P.mode !== 'video' &&
 			! P.reduce() &&

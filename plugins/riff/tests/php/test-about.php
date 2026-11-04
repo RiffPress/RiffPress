@@ -24,7 +24,7 @@ class Test_Riff_About extends Riff_TestCase {
 		$panels = Registry::views( 'side' );
 		$this->assertSame( 'About', $panels['about']['label'] ?? null );
 		$this->assertSame( array( 'about', 'queue' ), array_keys( $panels ), 'before Up next' );
-		$this->assertMatchesRegularExpression( '#data-riff-control="turntable".*data-riff-control="about".*data-riff-control="queue"#s', Registry::bar() );
+		$this->assertMatchesRegularExpression( '#data-riff-control="album".*data-riff-control="about".*data-riff-control="queue"#s', Registry::bar() );
 		$this->assertStringContainsString( 'data-riff-chip="about"', Registry::chips(), 'a chip in Now Playing on a phone' );
 	}
 

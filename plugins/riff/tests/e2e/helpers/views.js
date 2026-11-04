@@ -9,11 +9,11 @@ const { expect } = require( '@wordpress/e2e-test-utils-playwright' );
  * pressing its button again would close it.
  *
  * @param {import('@playwright/test').Page} page Page.
- * @param {string}                          id   The view's id: `album`, `turntable`, `lyrics`, or `queue` for Up next.
- * @return {Promise<import('@playwright/test').Locator>} The view: Now Playing for the album and the turntable, else its region.
+ * @param {string}                          id   The view's id: `album`, `lyrics`, or `queue` for Up next.
+ * @return {Promise<import('@playwright/test').Locator>} The view: Now Playing for the album, else its region.
  */
 async function openView( page, id ) {
-	const stage = id === 'album' || id === 'turntable';
+	const stage = id === 'album';
 	const view = stage
 		? page.locator( '.riff-np' )
 		: page.locator( `.riff-np [data-riff-view="${ id }"], .riff-side [data-riff-panel="${ id }"]` );

@@ -1,5 +1,5 @@
 /**
- * Now Playing: its views, each opened from its button in the bar and taking the whole screen above it (the album, the turntable), closed with Escape or by pressing the button again; the art on its own, square, and the bar held to its measurements on a wide screen, Up next beside it, the art as wide as a phone allows, the Song and Video switch, a contrast theme, and axe.
+ * Now Playing: its views, each opened from its button in the bar and taking the whole screen above it (the album, the cover or the turntable by Now Playing's shape), closed with Escape or by pressing the button again; the art on its own, square, and the bar held to its measurements on a wide screen, Up next beside it, the art as wide as a phone allows, the Song and Video switch, a contrast theme, and axe.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -35,7 +35,8 @@ test.describe( 'Player', () => {
 		await openView( page, 'album' );
 		const np = page.locator( '.riff-np' );
 		await expect( np ).toBeVisible();
-		// The album, the cover on its own: the turntable is a view of its own.
+		// The album, the cover on its own: with less motion asked for, as the suite asks, in every
+		// shape.
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-turntable', 'off' );
 		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
 		// Modal on a phone, where it covers the bar; beside the bar on a wide screen, where the bar
@@ -65,11 +66,12 @@ test.describe( 'Player', () => {
 		expect( await scrolls(), 'and scrolls again once it closes' ).not.toBe( 'hidden' );
 	} );
 
-	test( 'each view takes the whole screen above the bar, the turntable is the listener\'s to open and is kept, and the open view\'s button goes back', async ( {
+	test( 'the album takes the whole screen above the bar, the turntable where it is wide, and its button goes back', async ( {
 		page,
 		isMobile,
 	} ) => {
 		test.skip( isMobile, 'the bar holds the views\' buttons on a wide screen' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		const root = page.locator( '#riff' );
@@ -77,32 +79,23 @@ test.describe( 'Player', () => {
 		const bar = page.locator( '.riff-bar' );
 
 		await openView( page, 'album' );
+		// Once it has slid up.
+		await expect.poll( async () => ( await np.boundingBox() ).y ).toBeLessThanOrEqual( 1 );
 		const screen = await np.boundingBox();
 		expect( screen.y ).toBeLessThanOrEqual( 1 );
 		expect( screen.width ).toBeGreaterThanOrEqual( 1440 - 1 );
 		expect( screen.y + screen.height ).toBeLessThanOrEqual( ( await bar.boundingBox() ).y + 1 );
-		await expect( root ).not.toHaveAttribute( 'data-riff-deck', 'out' );
 
-		// The turntable: the record out on the deck, playing or not.
-		await openView( page, 'turntable' );
+		// Wide, the album is the turntable: the record out on the deck, playing or not, from the
+		// one button there is.
 		await expect( root ).not.toHaveAttribute( 'data-riff-turntable', 'off' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
-		await expect( page.locator( '.riff-bar [data-riff-control="turntable"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
-		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'false' );
+		await expect( page.locator( '[data-riff-control="turntable"], [data-riff-chip="turntable"]' ) ).toHaveCount( 0 );
+		await expect( page.locator( '.riff-bar [data-riff-control="album"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
 
 		// Its button again goes back to the page.
-		await page.locator( '.riff-bar [data-riff-control="turntable"]' ).click();
+		await page.locator( '.riff-bar [data-riff-control="album"]' ).click();
 		await expect( np ).toBeHidden();
-
-		// Kept: Now Playing opens to the turntable the listener chose, after a reload too.
-		await page.reload();
-		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await page.evaluate( () => window.riff.open() );
-		await expect( root ).toHaveAttribute( 'data-riff-showing', 'turntable' );
-		await openView( page, 'album' );
-		await page.keyboard.press( 'Escape' );
-		await page.evaluate( () => window.riff.open() );
-		await expect( root ).toHaveAttribute( 'data-riff-showing', 'album' );
 	} );
 
 	test( 'on a wide screen the art stays square and the bar keeps its measurements', async ( {
@@ -110,12 +103,13 @@ test.describe( 'Player', () => {
 		isMobile,
 	} ) => {
 		test.skip( isMobile, 'the wide layout only' );
-		// Tall enough that the stage could hold more than 640px of art. The stage is wider than tall,
-		// so the sleeve is sized for the sleeve and the turntable side by side, the record's size,
-		// and never past the cap.
+		// Tall enough that the stage could hold more than 640px of art. Now Playing is wider than
+		// tall, so the sleeve is sized for the sleeve and the turntable side by side, the record's
+		// size, and never past the cap.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await openView( page, 'turntable' );
+		await openView( page, 'album' );
 		// The cover's own box, before the record moves it aside while the track plays.
 		const size = ( selector ) =>
 			page.locator( selector ).evaluate( ( el ) => ( { width: el.offsetWidth, height: el.offsetHeight } ) );
@@ -151,7 +145,7 @@ test.describe( 'Player', () => {
 				)
 			).color,
 			open: getComputedStyle(
-				document.querySelector( '.riff-bar [data-riff-control="turntable"]' )
+				document.querySelector( '.riff-bar [data-riff-control="album"]' )
 			).color,
 		} ) );
 		expect( colors.repeat ).toBe( 'rgb(144, 144, 144)' );

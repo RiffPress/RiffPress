@@ -55,7 +55,7 @@ final class Player {
 	/**
 	 * Riff's own controls and views, registered as any plugin's are: in the bar the heart, the
 	 * badges (the format and bit rate, which Riff's own listeners fill), Play on another device and
-	 * the volume; and the views, the album, the turntable where the site has it, and Up next.
+	 * the volume; and the views, the album, which is the turntable where there is room, and Up next.
 	 *
 	 * @since 5.8.0
 	 */
@@ -94,8 +94,9 @@ final class Player {
 				'render' => static fn() => '<label class="riff-volume"><input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="' . esc_attr__( 'Volume', 'riff' ) . '" aria-valuetext="' . esc_attr__( '100 percent', 'riff' ) . '">' . self::icon( 'volume' ) . '</label>',
 			)
 		);
-		// The album, the cover on its own, is what Now Playing opens to; its button is on a phone's
-		// bar too, as the way into Now Playing.
+		// The album, what Now Playing opens to: the cover where Now Playing is portrait and the
+		// turntable where it is landscape (now-playing.js). Its button is on a phone's bar too, as
+		// the way into Now Playing.
 		Registry::register_view(
 			'album',
 			array(
@@ -106,17 +107,6 @@ final class Player {
 				'wide'  => false,
 			)
 		);
-		if ( Turntable::on() ) {
-			Registry::register_view(
-				'turntable',
-				array(
-					'label' => __( 'Turntable', 'riff' ),
-					'icon'  => 'record',
-					'order' => 28,
-					'stage' => true,
-				)
-			);
-		}
 		Registry::register_view(
 			'queue',
 			array(

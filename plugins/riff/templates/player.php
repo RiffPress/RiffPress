@@ -3,8 +3,8 @@
  * Player markup: the docked bar and Now Playing. Hidden until a track is loaded.
  *
  * Now Playing is a view at a time, each taking the whole screen above the bar and opened from its
- * button at the right of the bar: the album, the cover on its own; the turntable; and any other a
- * plugin registers, such as the lyrics. Up next is a panel beside the page. The bar's controls and
+ * button at the right of the bar: the album, the cover where Now Playing is portrait and the
+ * turntable where it is landscape; and any other a plugin registers, such as the lyrics. Up next is a panel beside the page. The bar's controls and
  * the views are registered on the server (Riff\Registry) and drawn here, before any script; the
  * script brings each to life by its id. The wide bar has the seek line under the transport.
  * Controls that appear in more than one place are separate buttons with the same
@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Player::icon() returns static SVG shipped with the plugin, and Registry escapes what it draws.
 ?>
-<?php // Now Playing opens to the album, the cover on its own; the turntable is a view of its own (now-playing.js). ?>
+<?php // Now Playing opens to the album: the cover, or the turntable where Now Playing is landscape (now-playing.js). ?>
 <div id="riff" class="riff" hidden<?php echo Player::root_style(); ?> data-riff-showing="album" data-riff-turntable="off">
 	<section class="riff-bar" aria-label="<?php esc_attr_e( 'Player', 'riff' ); ?>">
 		<?php // What plays, read and not pressed: the views open from their buttons at the bar's right. ?>
@@ -85,7 +85,7 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" class="riff-sleeve"><?php esc_html_e( 'Play the record', 'riff' ); ?></button>
 				<video class="riff-video" playsinline preload="metadata"></video>
 			</div>
-			<?php // The turntable's VU meter and spectrum, under the deck, drawn by meters.js where the music passes through Web Audio, and only while the Turntable view shows. ?>
+			<?php // The turntable's VU meter and spectrum, under the deck, drawn by meters.js where the music passes through Web Audio, and only while the turntable shows. ?>
 			<div class="riff-meters" aria-hidden="true"></div>
 			<?php // The screens with a region of their own, such as the lyrics, each in the stage's place while it shows. ?>
 			<?php echo Registry::screens(); ?>

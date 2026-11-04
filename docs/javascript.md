@@ -63,7 +63,7 @@ Opens Now Playing, on a view of it when one is named.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `view` | `string` | A screen view's id. Default the album, or the turntable where the whole screen is one or the listener last chose it. |
+| `view` | `string` | A screen view's id. Default the album. |
 
 Since 4.0.0.
 
@@ -119,7 +119,7 @@ Since 5.8.0.
 
 ### `window.riff.view( id, view )`
 
-Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26), the turntable (`turntable`, 28), About (`about`, a panel, 36), Up next (`queue`, a panel, 40) and Together (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing (`sing`, 32) and Riff Chords Chords (`chords`, 34). A view with nothing for a track says so with `shown`: its button and chip hide while that track plays, and if it is open when the track changes to one, a screen goes back to the one the listener came from, or to what Now Playing opens to, and a panel closes.
+Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing: a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26; the cover, or the turntable where Now Playing is landscape), About (`about`, a panel, 36), Up next (`queue`, a panel, 40) and Together (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing (`sing`, 32) and Riff Chords Chords (`chords`, 34). A view with nothing for a track says so with `shown`: its button and chip hide while that track plays, and if it is open when the track changes to one, a screen goes back to the one the listener came from, or to what Now Playing opens to, and a panel closes.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -142,7 +142,7 @@ Opens a view: a screen of Now Playing, or a panel beside the page.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `id` | `string` | The view's id: `album`, `turntable`, `queue`, or one a plugin registered. |
+| `id` | `string` | The view's id: `album`, `queue`, or one a plugin registered. |
 
 Since 5.8.0.
 

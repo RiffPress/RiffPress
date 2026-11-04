@@ -81,7 +81,6 @@ test.describe( 'The tree is the spec', () => {
 			  - button "Like Underground"
 			  - text: MP3 · 128 kbps
 			  - button "Album"
-			  - button "Turntable"
 			  - button "About"
 			  - button "Up next"
 			  - slider "Volume"
@@ -145,7 +144,6 @@ test.describe( 'The tree is the spec', () => {
 			await expect( page.locator( '.riff-np .riff-chips' ) ).toMatchAriaSnapshot( `
 				- button "Share"
 				- button "Album"
-				- button "Turntable"
 				- button "About"
 				- button "Up next"
 			` );

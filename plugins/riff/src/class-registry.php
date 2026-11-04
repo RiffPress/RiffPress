@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * A control is something in the bar: a button, or an element of its own. A view is something the
  * listener opens from its button in the bar: a screen of Now Playing, which takes the whole screen
- * above the bar (the album, the turntable, the lyrics), or a panel beside the page (Up next).
+ * above the bar (the album, the lyrics), or a panel beside the page (Up next).
  * `window.riff.control()` and `window.riff.view()` give a registered one its behaviour, and add
  * one the server didn't, for what only the browser knows.
  */

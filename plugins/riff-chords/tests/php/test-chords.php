@@ -26,7 +26,7 @@ class Test_Riff_Chords extends Riff_TestCase {
 		$views = Riff\Registry::views( 'screen' );
 		$this->assertArrayHasKey( 'chords', $views, 'a screen of Now Playing, registered as Riff registers its own' );
 		$this->assertSame( 'Chords', $views['chords']['label'] );
-		$this->assertSame( array( 'album', 'turntable', 'chords' ), array_keys( $views ), 'its button after the turntable\'s' );
+		$this->assertSame( array( 'album', 'chords' ), array_keys( $views ), 'its button after the album\'s' );
 		$this->assertArrayNotHasKey( 'chords', Riff\Registry::views( 'side' ) );
 	}
 

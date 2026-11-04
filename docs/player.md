@@ -93,14 +93,17 @@ refuses one, and returns `false`.
 Now Playing is a view at a time, each taking the whole screen above the bar, opened from its button
 at the bar's right end, and on a phone from its chip in Now Playing:
 
-- **Album** (`album`): the cover on its own. It is what Now Playing opens to, and its button is on
-  a phone's bar too, as the way in. The track's title and artist at the bar's left are read, not
-  pressed.
-- **Turntable** (`turntable`): the record out on the deck, playing or not, the sleeve beside it
-  where the stage has room, and the record alone, turning in the cover's place, where it has not,
-  as on a phone held upright. It is the listener's to open, as some would rather not have the
-  motion, and Now Playing opens to it again for a listener who last chose it, a choice kept in the
-  browser. An unfolded iPhone Duo always opens to it, as that is what the shape is for.
+- **Album** (`album`): the record, shown as Now Playing's shape suits it. Where Now Playing is
+  upright, as on a phone held upright, it is the cover on its own; where it is wider than tall, as
+  on a phone on its side, an unfolded phone or a computer's window, it is the turntable: the record
+  out on the deck, playing or not, with the sleeve beside it. A container query on Now Playing
+  (`riff.css`) decides, so turning the phone or resizing the window changes it as it happens. A
+  listener who asks for less motion, and a site that turns the turntable off, get the cover in
+  every shape. It is what Now Playing opens to, and its button is on a phone's bar too, as the way
+  in. The track's title and artist at the bar's left are read, not pressed. The turntable was
+  once a view of its own, `turntable`, with its own button and the listener's choice of it kept
+  in the browser (`riff:turntable`). That id is gone: `window.riff.open( 'turntable' )` opens Now
+  Playing on the album, and `openView( 'turntable' )` does nothing.
 - **Lyrics** (`lyrics`), from Riff Lyrics; **Sing** (`sing`), from Riff Sing; **Chords**
   (`chords`), from Riff Chords; and any other a plugin registers. Each follows the song playing,
   so each is a screen of Now Playing rather than a panel.
@@ -190,8 +193,8 @@ add_action( 'riff_register', function () {
 } );
 ```
 
-A control's `order` places it among Riff's own: Like (10), the badges (20), the album (26), the
-turntable (28), Lyrics (30), Sing (32), Chords (34), About (36), Up next (40), Together (45), Play on another
+A control's `order` places it among Riff's own: Like (10), the badges (20), the album (26),
+Lyrics (30), Sing (32), Chords (34), About (36), Up next (40), Together (45), Play on another
 device (60) and the volume (70). `wide`
 keeps a control's button off a phone's bar, which holds the track, Play, the album and only what a
 control asks to keep there; a view's button is wide unless it says otherwise. A control can bring
@@ -294,25 +297,24 @@ In a window with room for the sidebar the Listen app is laid out as a desktop st
 
 Riff lays out by the screen's shape, never by the device, as WebKit and Apple ask: an iPhone Duo says it is an iPhone, and folds and unfolds while the page is open.
 
-- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: Now Playing opens to the Turntable view whatever the listener chose elsewhere, the deck, the record and the arm filling its height on the left and the controls in a strip down the right. Up next and the other panels open in that strip, and the deck keeps turning beside it. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Once the record is out, its sleeve stands in a rack at the top of the strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
+- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: the album is the turntable there, as on any screen wider than tall, the deck, the record and the arm filling its height on the left and the controls in a strip down the right. Up next and the other panels open in that strip, and the deck keeps turning beside it. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Once the record is out, its sleeve stands in a rack at the top of the strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again, the cover on its own. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
 - **A short screen that is not upright enough to be a phone** (a folded iPhone Duo's outer screen at 466 by 678) puts Home, Search and Library down the right edge, where iOS keeps its own bars on that screen.
-- **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, the deck fills the left page and the controls the right; stood like a tent, the sleeve and the turntable fill the upper half and the controls the lower, nearer the hand.
+- **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, the deck fills the left page and the controls the right; stood like a tent, Now Playing is upright, so the cover fills the upper half and the controls the lower, nearer the hand.
 
 `plugins/riff/tests/e2e/player/duo.spec.js` emulates the hinge through Chromium's DevTools protocol.
 
 ## The turntable
 
-The turntable is a view of its own (above). Under the deck it has a VU meter and a spectrum
+The turntable is the album where Now Playing is wider than tall (above). Under the deck it has a VU meter and a spectrum
 (`assets/player/meters.js`), read from the music where it passes through Web Audio, as it does
 everywhere but an iPhone. The VU meter is IEC 60268-17's: a needle on the rectified signal that
 reaches 99% of a steady tone's reading in 300 ms and passes it by about 1%, with 0 VU a sine at
 -14 dBFS, the loudness the streaming services play at. The spectrum is 31 one-third-octave bands
 from 20 Hz to 20 kHz, each averaged over IEC 61672's Slow second, so a lossy file shows where its
 encoder stopped: a 128 kbps MP3 has nothing above about 16 kHz. Their row is kept from the moment
-the view opens, so the deck doesn't change size when the music first plays and they are drawn.
+the turntable shows, so the deck doesn't change size when the music first plays and they are drawn.
 Neither is shown with the video, for a listener who asks for less motion, or for a file from
 another origin that doesn't share over CORS, which Web Audio can't hear. A site that wants the cover on its own registers none:
 it turns the turntable off under **Settings › Media** (Now Playing), or with the `riff_turntable`
-filter. Off, there is no Turntable button or chip, the record never comes out of its sleeve, and a
-touch screen on its side or a folding phone shows the cover beside the controls, with no deck board
-or rack.
+filter. Off, the record never comes out of its sleeve, and a touch screen on its side or a folding
+phone shows the cover beside the controls, with no deck board or rack.
