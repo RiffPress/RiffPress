@@ -183,7 +183,7 @@ export default function meters( P ) {
 			!! t &&
 			! np.hidden &&
 			! ( 'riffTurntable' in root.dataset ) &&
-			P.mode !== 'video' &&
+			! P.isVideo() &&
 			! P.reduce() &&
 			P.el() === audio &&
 			( !! P.analyser || ! P.foreign?.( t ) )
