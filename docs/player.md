@@ -127,7 +127,7 @@ view included. One shows at a time:
 - On a wide screen it stands beside the page and Now Playing, above the bar, and both make room
   for it. On a computer, where that leaves the page too little room for an album's rows beside the
   library, the library folds to its rail until the panel closes (a container query on the frame,
-  in `desktop.css`).
+  in `frame.css`).
 - On a phone it covers everything, Now Playing too, as a dialog with its name and Close at the
   top.
 - On a touch screen on its side, it opens in the controls' strip, and the turntable keeps

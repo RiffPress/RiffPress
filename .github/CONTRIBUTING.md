@@ -82,6 +82,7 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 - **Dependencies.** Dependabot opens one grouped pull request per ecosystem each month for minor and patch bumps, and `dependabot-auto-merge.yml` merges it once every required check is green. Major bumps wait for a person. Security updates arrive as soon as an advisory does.
 - **Required checks.** `main` is protected behind the single `CI status` check.
 - **Weekly against WordPress trunk.** `core-trunk.yml` runs, every Wednesday, the whole suite on trunk and on the current release. A test that fails only on trunk opens a `core-regression` issue, which gets a comment each week it still fails and closes itself once it passes (`.github/scripts/core-regressions.js`). The week's commits to core's and Gutenberg's media code open one `core-watch` issue to look through (`.github/scripts/core-watch.js`).
+- **WordPress release day.** `core-release.yml` checks api.wordpress.org four times a day, and when WordPress ships a major release that Riff's `readme.txt` isn't tested up to, it opens one `core-release` issue with the release-day steps below (`.github/scripts/core-release.js`).
 - **Weekly run.** CI runs the full suite every Monday against current WordPress core. The release and Pages workflows run weekly too.
 - **Version strings.** `scripts/sync-versions.sh` writes each package's version everywhere it is read, sets `Tested up to` from the core version the suite just ran against, and writes each plugin's `readme.txt` changelog from its `CHANGELOG.md`.
 
@@ -101,7 +102,7 @@ Every string uses the `riff` text domain, and each plugin beside it its own slug
 
 ## Releases
 
-Releases are automated by [release-please](https://github.com/googleapis/release-please). These ship from this repository, and each is released on its own: Riff (`plugins/riff/`, tagged `v4.x.y`), Riff Lyrics (`plugins/riff-lyrics/`, tagged `riff-lyrics-v0.x.y`) and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
+Releases are automated by [release-please](https://github.com/googleapis/release-please). Six packages ship from this repository, each with its own version, tag and changelog: Riff (`plugins/riff/`, tagged `riff-v6.x.y`), Riff Lyrics, Riff Chords, Riff Sign In and Riff Sing (each in `plugins/<slug>/`, tagged `<slug>-vx.y.z`), and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
 
 - `feat: ...` → minor bump (before 1.0, a patch bump)
 - `fix: ...` → patch bump
@@ -117,6 +118,30 @@ Two things a package's folder doesn't cover:
 - A change outside `plugins/riff/` that changes what `riff.zip` holds (`.distignore`) doesn't open a Riff release by itself. It goes out with Riff's next one; if it can't wait, add a `Release-As: x.y.z` footer to a commit that touches `plugins/riff/`.
 - The listing's banner, icon and screenshots in `.wordpress-org/`, and `readme.txt`, go to WordPress.org on their own when they change on `main` (`wporg-assets.yml`), once `WPORG_DEPLOY` is on. `wporg-dry-run.yml`, run by hand, does the whole release deploy without the final commit, against `riff` or a test plugin's slug.
 - A wp-api-coverage version released while `NPM_PUBLISH` is off isn't published to npm later on its own. When turning publishing on, run `npm publish --access public ./packages/wp-api-coverage` once for the current version.
+
+### On WordPress's release day
+
+When WordPress ships a major release, Riff ships the same day, tested against it. The `core-release` issue lists the steps:
+
+1. Point `.wp-env.json` and `plugin-check.yml` at `WordPress/WordPress#7.2` (the new version) instead of the pre-release zip. The pull request runs the whole suite on it; merge it once it passes.
+2. Have a Riff release pull request open. If nothing in `plugins/riff/` is waiting to release, merge a change there that does. Or merge one that touches `plugins/riff/` with a `Release-As: x.y.z` footer in the squash commit itself (`gh pr merge --squash --body 'Release-As: 6.2.0'`): squash commits here start with a blank body, so a footer in the pull request description never reaches `main`.
+3. Check that every `readme.txt` in it says the new `Tested up to`. The release workflow writes it from api.wordpress.org each time it runs, so any run after WordPress ships does.
+4. Merge it the same day.
+
+### Codenames
+
+WordPress names each major release after a jazz musician. Each minor or major release of Riff, never a patch, takes the name of a musician who played with the current WordPress release's namesake, as if Riff sat in with the band. The version stays the one release-please gives it.
+
+- The namesake is in wordpress.org's post for that release: [7.1 is "Mary Lou"](https://wordpress.org/news/2026/08/mary-lou/), for Mary Lou Williams. From WordPress's release day, the new namesake's band is the one to pick from.
+- The source comes first. The musician needs a citable record of playing or recording with the namesake: an album's credits, a discography, a label's or a festival's own page. With no source, the release goes out without a name. No name is used twice.
+- Once the release is published, its title and notes can still be edited (only the tag and the assets are locked):
+
+```bash
+gh release edit riff-v6.2.0 --title 'riff: v6.2.0 "Name"' \
+  --notes "$(printf '%s\n\n' 'Name, on instrument, played with the namesake on *Album* (year). [Source](https://…)'; gh release view riff-v6.2.0 --json body --jq .body)"
+```
+
+To check one, open the source link in the release's first line and find both names in the same credits.
 
 <details>
 <summary>How the release pull request gets its checks</summary>

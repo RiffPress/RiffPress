@@ -88,7 +88,7 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-account summary' ) ).toBeFocused();
 	} );
 
-	test( 'in a wide browser tab, where the desktop frame is drawn too, Go to post is a plain link that takes the tab', async ( {
+	test( 'in a wide browser tab, where the frame is drawn too, Go to post is a plain link that takes the tab', async ( {
 		page,
 		isMobile,
 	} ) => {

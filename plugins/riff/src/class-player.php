@@ -24,7 +24,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const APP_MODULES = array( 'helpers', 'addresses', 'fetch', 'cards', 'views', 'hearts', 'playlists', 'home', 'sidebar', 'install', 'desktop', 'search', 'rack', 'together' );
+	public const APP_MODULES = array( 'helpers', 'addresses', 'fetch', 'cards', 'views', 'hearts', 'playlists', 'home', 'sidebar', 'install', 'frame', 'search', 'rack', 'together' );
 
 	/**
 	 * The player's sections under assets/player/: the modules riff.js imports as it starts, each
@@ -157,20 +157,20 @@ final class Player {
 	 *
 	 * The design tokens are their own stylesheet, riff-tokens, which Riff's extensions list as a
 	 * dependency rather than copying values. The player's own, riff, is on every page; the Listen
-	 * app's only on the page that holds the block; standalone mode's and the desktop frame's only
+	 * app's only on the page that holds the block; standalone mode's and the frame's only
 	 * under app/.
 	 *
 	 * @since 4.33.0
 	 */
 	public static function styles(): void {
-		if ( wp_style_is( 'riff-desktop', 'registered' ) ) {
+		if ( wp_style_is( 'riff-frame', 'registered' ) ) {
 			return;
 		}
 		wp_register_style( 'riff-tokens', RIFF_URL . 'assets/tokens.css', array(), self::version( 'assets/tokens.css' ) );
 		wp_register_style( 'riff', RIFF_URL . 'assets/riff.css', array( 'riff-tokens' ), self::version( 'assets/riff.css' ) );
 		wp_register_style( 'riff-app', RIFF_URL . 'features/listen/app.css', array( 'riff' ), self::version( 'features/listen/app.css' ) );
 		wp_register_style( 'riff-standalone', RIFF_URL . 'features/listen/standalone.css', array( 'riff-app' ), self::version( 'features/listen/standalone.css' ) );
-		wp_register_style( 'riff-desktop', RIFF_URL . 'features/listen/desktop.css', array( 'riff-standalone' ), self::version( 'features/listen/desktop.css' ) );
+		wp_register_style( 'riff-frame', RIFF_URL . 'features/listen/frame.css', array( 'riff-standalone' ), self::version( 'features/listen/frame.css' ) );
 	}
 
 	/**
@@ -205,7 +205,7 @@ final class Player {
 			wp_enqueue_style( 'riff-app' );
 		}
 		if ( Listen\Standalone::active() ) {
-			wp_enqueue_style( 'riff-desktop' );
+			wp_enqueue_style( 'riff-frame' );
 		}
 		// wp.hooks is how a plugin's script listens to the player (see docs/javascript.md); the
 		// module reads it from the window when it is there.
