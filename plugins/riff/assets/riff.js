@@ -627,6 +627,10 @@ function start() {
 		P.paint();
 	}
 	P.reveal();
+	// A link followed without leaving the page (src/class-navigation.php) brings blocks to make rows of.
+	if ( data.navigation ) {
+		P.feature( 'navigation' );
+	}
 
 	/**
 	 * Fires once the player is set up, its state restored and `window.riff` available.

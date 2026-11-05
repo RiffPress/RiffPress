@@ -34,6 +34,7 @@ final class Plugin {
 		Blocks::register();
 		Bindings::register();
 		Player::register();
+		Navigation::register();
 		Shortcuts::register();
 		Turntable::register();
 		About::register();
