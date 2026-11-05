@@ -30,36 +30,8 @@ final class Blocks {
 	public static function register(): void {
 		add_filter( 'render_block_core/audio', array( self::class, 'render' ), 10, 3 );
 		add_filter( 'render_block_core/video', array( self::class, 'render' ), 10, 3 );
+		add_filter( 'render_block_core/playlist-track', array( self::class, 'render_playlist_track' ), 10, 3 );
 		add_filter( 'render_block_core/playlist', array( self::class, 'render_playlist' ), 10, 3 );
-		add_filter( 'render_block_data', array( self::class, 'lock_playlist' ), 10, 3 );
-	}
-
-	/**
-	 * Takes a locked track's file out of a playlist block before core renders it, since core
-	 * writes each track's address into the page's interactivity state as it renders.
-	 *
-	 * @since 4.17.0
-	 * @param array      $block  Parsed block.
-	 * @param array      $source The block as parsed, before any filter.
-	 * @param array|null $outer  The parent block, if any.
-	 * @return array
-	 */
-	public static function lock_playlist( $block, $source = array(), $outer = null ) {
-		unset( $source, $outer );
-		if ( 'core/playlist' !== ( $block['blockName'] ?? '' ) || empty( $block['innerBlocks'] ) || is_admin() || ! has_filter( 'riff_can_play' ) ) {
-			return $block;
-		}
-		$post_id = (int) get_the_ID();
-		foreach ( $block['innerBlocks'] as $i => $inner ) {
-			if ( 'core/playlist-track' !== ( $inner['blockName'] ?? '' ) ) {
-				continue;
-			}
-			$track = Tracks::from_block( $inner, $post_id );
-			if ( $track && $track['locked'] ) {
-				$block['innerBlocks'][ $i ]['attrs']['src'] = '';
-			}
-		}
-		return $block;
 	}
 
 	/**
@@ -115,29 +87,51 @@ final class Blocks {
 	}
 
 	/**
-	 * Adds a track to each item of one rendered playlist block (WordPress 7.1 and newer).
+	 * Adds the track to one rendered item of a playlist block (WordPress 7.1 and newer).
 	 *
-	 * Core renders one list item per track that names a file, in the block's order, so the items
-	 * and the tracks line up. Core's own player is told not to start: it fetches the whole current
-	 * file on every page load to draw its waveform, and the page's one player takes the tracks
-	 * instead. The list, its buttons and the figure's markup stay as core wrote them.
+	 * Each item is marked as core renders it, so a track core leaves out, one with no file, adds
+	 * no item and moves no other track onto the wrong one.
 	 *
-	 * @since 4.0.0
-	 * @param string        $content  Rendered block.
-	 * @param array         $block    Parsed block, with its track blocks as inner blocks.
-	 * @param WP_Block|null $instance Block instance, which carries the post ID in its context.
+	 * @since 6.2.0
+	 * @param string        $content  Rendered item.
+	 * @param array         $block    Parsed track block.
+	 * @param WP_Block|null $instance Block instance.
 	 * @return string
 	 */
-	public static function render_playlist( $content, $block, $instance = null ) {
+	public static function render_playlist_track( $content, $block, $instance = null ) {
 		if ( ! is_string( $content ) || '' === $content || is_admin() || is_feed() ) {
 			return $content;
 		}
 		$post_id = $instance instanceof WP_Block && isset( $instance->context['postId'] ) ? (int) $instance->context['postId'] : (int) get_the_ID();
-		$tracks  = array();
-		foreach ( Blocks_Source::playlist_tracks( (array) $block ) as $item ) {
-			$tracks[] = Tracks::from_block( $item, $post_id );
+		$track   = Tracks::from_block( (array) $block, $post_id );
+		$tags    = new WP_HTML_Tag_Processor( $content );
+		if ( ! $track || ! $tags->next_tag( 'li' ) ) {
+			return $content;
 		}
-		if ( ! array_filter( $tracks ) ) {
+		$tags->add_class( 'riff-track' );
+		$tags->set_attribute( 'data-riff-track', wp_json_encode( $track ) );
+		return $tags->get_updated_html();
+	}
+
+	/**
+	 * Hands a rendered playlist block's items to the page's one player.
+	 *
+	 * Core's own player is told not to start: it fetches the whole current file on every page
+	 * load to draw its waveform, and the page's one player takes the tracks instead. A locked
+	 * track's address comes out of core's interactivity state, where core wrote it as it rendered,
+	 * so the item stays listed with nothing to play. The list, its buttons and the figure's markup
+	 * stay as core wrote them.
+	 *
+	 * @since 4.0.0
+	 * @since 6.2.0 Items are marked as each renders; a locked track's address comes out of core's state here.
+	 * @param string        $content  Rendered block.
+	 * @param array         $block    Parsed block, with its track blocks as inner blocks.
+	 * @param WP_Block|null $instance Block instance.
+	 * @return string
+	 */
+	public static function render_playlist( $content, $block, $instance = null ) {
+		unset( $block, $instance );
+		if ( ! is_string( $content ) || ! str_contains( $content, 'data-riff-track' ) || is_admin() || is_feed() ) {
 			return $content;
 		}
 
@@ -146,25 +140,24 @@ final class Blocks {
 			return $content;
 		}
 		$tags->add_class( 'riff-tracks' );
+		$playlist = (string) ( json_decode( (string) $tags->get_attribute( 'data-wp-context' ), true )['playlistId'] ?? '' );
 		if ( $tags->next_tag( array( 'class_name' => 'wp-block-playlist__waveform-player' ) ) ) {
 			$tags->remove_attribute( 'data-wp-watch' );
 		}
-		$i = 0;
-		while (
-			$tags->next_tag(
-				array(
-					'tag_name'   => 'li',
-					'class_name' => 'wp-block-playlist-track',
-				)
-			)
-		) {
-			$track = $tracks[ $i ] ?? null;
-			++$i;
-			if ( ! $track ) {
+
+		$locked = array();
+		while ( $tags->next_tag( array( 'class_name' => 'riff-track' ) ) ) {
+			$track = json_decode( (string) $tags->get_attribute( 'data-riff-track' ), true );
+			if ( empty( $track['locked'] ) || ! $tags->next_tag( array( 'class_name' => 'wp-block-playlist-track__button' ) ) ) {
 				continue;
 			}
-			$tags->add_class( 'riff-track' );
-			$tags->set_attribute( 'data-riff-track', wp_json_encode( $track ) );
+			$key = (string) ( json_decode( (string) $tags->get_attribute( 'data-wp-context' ), true )['trackId'] ?? '' );
+			if ( '' !== $key ) {
+				$locked[ $key ] = array( 'url' => '' );
+			}
+		}
+		if ( $locked && '' !== $playlist ) {
+			wp_interactivity_state( 'core/playlist', array( 'playlists' => array( $playlist => array( 'tracks' => $locked ) ) ) );
 		}
 		return $tags->get_updated_html();
 	}
