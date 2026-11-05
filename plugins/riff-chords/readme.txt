@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,11 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 
 == Changelog ==
 
+= 0.4.1 =
+* Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
+* Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
+* Fixed: a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select.
+
 = 0.4.0 =
 * Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
 
@@ -48,10 +53,5 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 * Fixed: a piano names each note as its chord spells it and draws its keys white and black on any theme, and the key line is the key the song sounds in.
 * Fixed: Practice this keeps the queue's order, shuffle and later pages, and is offered only for a chart the visitor can read.
 * Fixed: Practice this plays a track already in the queue from its place, and isn't offered for a track with nothing to play.
-
-= 0.1.0 =
-* Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
-* Riff Chords, a chord chart that follows the song, with practice controls to slow it down, loop a part, transpose and set a capo.
-* Fixed: the chart's meta is registered on init, so WordPress no longer warns that Riff Chords loads its translations too early.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

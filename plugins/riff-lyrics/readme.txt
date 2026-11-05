@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,11 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.7.1 =
+* Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
+* Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
+* Fixed: a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select.
+
 = 1.7.0 =
 * Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
 
@@ -37,8 +42,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 = 1.5.0 =
 * Riff ships the plugins its manifest names inside itself, each turned on or off from Settings › Riff.
 * Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
-
-= 1.4.0 =
-* Riff, Riff Lyrics and Riff Sign In need WordPress 7.1, and on 7.2 Riff's fields also show in the Media Library's new views.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

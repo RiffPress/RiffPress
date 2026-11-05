@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/RiffPress/RiffPress/compare/riff-sing-v0.4.0...riff-sing-v0.4.1) (2026-11-05)
+
+
+### Bug Fixes
+
+* **build:** an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it ([#896](https://github.com/RiffPress/RiffPress/issues/896)) ([95b1aa3](https://github.com/RiffPress/RiffPress/commit/95b1aa34b3149be0c5361559a2eff2439b3a95a2))
+
 ## [0.4.0](https://github.com/RiffPress/RiffPress/compare/riff-sing-v0.3.1...riff-sing-v0.4.0) (2026-11-04)
 
 

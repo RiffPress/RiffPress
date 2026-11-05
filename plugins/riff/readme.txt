@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.1.0
+Stable tag: 6.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,18 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.1.1 =
+* Fixed: the demo ships no made-up video, and tests that need one use the test pattern.
+* Fixed: a phone on its side sees the turntable to its edges, not the theme's white in the margins Safari leaves.
+* Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
+* Fixed: a site that leaves client navigation off keeps its pages streamed.
+* Fixed: a song plays as the song, its video version one press away for that song only, and a video on its own opens as the video.
+* Fixed: a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select.
+* Fixed: each playlist item keeps its own track, and a locked one stays listed, when core leaves out an item with no file.
+* Fixed: Now Playing on a phone never cuts a name short, its views' buttons are a light row of icons, and on its side shuffle and repeat move to Up next.
+* Fixed: the turntable bends every song, its platter and arm keep the music's speed, and the arm lifts and lowers as a cue lever does.
+* Fixed: while Now Playing is open the page reaches a phone's edges, so no theme colour shows beside the turntable.
+
 = 6.1.0 =
 * Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
 
@@ -156,23 +168,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: on a computer, a panel that leaves the page too little room beside the library folds the library to its rail, so an album's rows keep their titles.
 * Fixed: a mark typed with AltGr, as [ on a German keyboard, reaches a plugin's shortcut.
 * Fixed: a track menu first opened before anything played still answers in Up next on a phone.
-
-= 5.8.0 =
-* A track says which disc of a set it is on, from the file's tags.
-* On a computer the strip across the top has back and forward at its left end, Home and search centred as one group and who is listening at its right, reached by the keyboard in that order.
-* Riff ships the plugins its manifest names inside itself, each turned on or off from Settings › Riff.
-* A track's … menu offers to listen along with whoever else is playing it.
-* Follow another listener, in time with them, and share what you play only if you choose.
-* Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
-* The turntable's arm is set up by Baerwald alignment, and its platter, record and arm move by their physics.
-* Together in Now Playing lists who is in the session, with Leave, and an album's page shows who is playing from it.
-* Riff Chords, a chord chart that follows the song, with practice controls to slow it down, loop a part, transpose and set a capo.
-* Riff Sing: sing along with the melody in Now Playing, scored by pitch from a microphone or a MIDI instrument.
-* Fixed: a row, an Up next item, the bar's track and the Up next handle are named by the words they show.
-* Fixed: the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service.
-* Fixed: a scene finds the track it names, and a follower who starts behind the host catches up.
-* Faster: a library of tens of thousands of tracks loads, lists, plays and imports at the pace of a small one.
-* Faster: a first visit to a Listen page loads the app in one wave, and the quality capsule is lit.
-* Faster: the turntable's moving parts no longer give Up next layers of its own, and the filament rests while nothing it lights is in sight.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

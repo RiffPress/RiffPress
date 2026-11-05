@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.4.1
+Stable tag: 0.4.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.4.2 =
+* Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
+
 = 0.4.1 =
 * Fixed: the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service.
 
@@ -39,8 +42,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 = 0.2.0 =
 * Riff Lyrics and Riff Sign In say which Riff they need, Requires Riff in their headers, stay out of the way on an older one, and CI holds each to the hooks it uses.
-
-= 0.1.1 =
-* Fixed: the sheet takes Riff's tokens from the player, so it is drawn in the player's surface, font and amber in the installed app and on every other page, with a visible field, a filled Continue and a close button in its corner.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
