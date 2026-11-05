@@ -13,12 +13,28 @@ const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 export function rows( P ) {
 	const list = [];
 	const built = new WeakMap();
+	// What each element was made a row of. Following a link without leaving the page
+	// (navigation.js), the router can reuse an element for the next page's block: a row made for
+	// another track, or one the router took out, is made again.
+	const madeOf = new WeakMap();
 	const hearts = new WeakMap(); // A row's heart, beside its … menu.
 	function mount() {
 		list.length = 0;
 		document
 			.querySelectorAll( 'figure[data-riff-track], li[data-riff-track]' )
 			.forEach( ( fig ) => {
+				const old = built.get( fig );
+				if (
+					old &&
+					( madeOf.get( fig ) !== fig.dataset.riffTrack ||
+						old.parentNode !== fig )
+				) {
+					fig.querySelectorAll(
+						':scope > [data-riff-added]'
+					).forEach( ( el ) => el.remove() );
+					built.delete( fig );
+				}
+				madeOf.set( fig, fig.dataset.riffTrack );
 				const t = parse( fig.dataset.riffTrack );
 				// A locked track is shown, with a lock and where to unlock it, and never queued.
 				if ( t?.locked && ! built.get( fig ) ) {
@@ -50,9 +66,13 @@ export function rows( P ) {
 		row.className = 'riff-row';
 		row.innerHTML = rowInner( t, __( 'Play', 'riff' ) );
 		fig.insertBefore( row, fig.firstChild );
-		row.after( P.moreButton( t ) );
+		const more = P.moreButton( t );
+		row.after( more );
+		row.dataset.riffAdded = '';
+		more.dataset.riffAdded = '';
 		if ( P.inLibrary( t ) ) {
 			const heart = P.likeButton( t );
+			heart.dataset.riffAdded = '';
 			hearts.set( row, heart );
 			row.after( heart );
 		}
@@ -104,6 +124,7 @@ export function rows( P ) {
 					),
 			true
 		);
+		row.dataset.riffAdded = '';
 		fig.insertBefore( row, fig.firstChild );
 		return row;
 	}

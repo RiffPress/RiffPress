@@ -47,7 +47,7 @@ module.exports = [
 			],
 			// The player and the Listen app are WordPress script modules, imported by the ids Player::enqueue()
 			// registers, which the page's import map resolves; there is no file for ESLint to find.
-			'import/no-unresolved': [ 'error', { ignore: [ '^riff-app/', '^riff-player/' ] } ],
+			'import/no-unresolved': [ 'error', { ignore: [ '^riff-app/', '^riff-player/', '^@wordpress/interactivity' ] } ],
 			'no-empty': [ 'error', { allowEmptyCatch: true } ],
 			'@wordpress/no-global-active-element': 'off',
 			'@wordpress/no-unused-vars-before-return': 'off', // a group of element lookups at the top of a function reads better together

@@ -39,7 +39,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const PLAYER_FEATURES = array( 'filament', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together', 'meters', 'about' );
+	public const PLAYER_FEATURES = array( 'filament', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together', 'meters', 'about', 'navigation' );
 
 	/**
 	 * Hooks the assets and the markup.
@@ -340,7 +340,7 @@ final class Player {
 		// likes and playlists, whether they have the single-key shortcuts, where they share what
 		// they play, whether the site has turned the turntable off, the views registered, and where
 		// the About panel finds a track's tags and its album's and artist's pages.
-		$data = About::player_data( Registry::player_data( Turntable::player_data( Listen\Together::player_data( Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) ) ) ) ) );
+		$data = Navigation::player_data( About::player_data( Registry::player_data( Turntable::player_data( Listen\Together::player_data( Shortcuts::player_data( Playlists_Rest::player_data( Likes_Rest::player_data( Listen\Art::player_data( $data ) ) ) ) ) ) ) ) );
 		printf(
 			'<script type="application/json" id="riff-data">%s</script>',
 			wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE )

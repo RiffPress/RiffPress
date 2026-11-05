@@ -33,6 +33,16 @@ Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
 | `$attachment_id` | `int` | Attachment ID, or 0 for a file outside the Media Library. |
 | `$post_id` | `int` | The post the track appears in, or 0. |
 
+### `riff_client_navigation`
+
+Filters whether a link on the site is followed without leaving the page, so what plays carries on. Only a block theme can: its template is the region that is swapped.
+
+Since 6.2.0. Fires in `plugins/riff/src/class-navigation.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$on` | `bool` | False by default. |
+
 ### `riff_enabled`
 
 Filters whether Riff's player loads on the current front-end request.
