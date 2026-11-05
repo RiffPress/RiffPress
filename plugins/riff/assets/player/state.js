@@ -179,9 +179,11 @@ export function createPlayer( root, data ) {
 		// change itself, as Listen Together does for a host someone follows, when it is due.
 		hold: new Set(),
 	};
-	// Riff's own badge: the playing track's format and rate, through the same area as any other.
+	// Riff's own badge: the playing track's format and rate, through the same area as any other. It
+	// describes the song's file, so it is left out while a song plays as its video version; a video
+	// of its own, a video block's, is described by its own file.
 	P.own.badges.add( ( list, t ) => {
-		const line = P.quality( t );
+		const line = P.mode === 'video' && t?.video ? '' : P.quality( t );
 		return line ? [ ...list, { id: 'quality', text: line } ] : list;
 	} );
 	P.tell = ( name, detail ) =>
