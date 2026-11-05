@@ -8,16 +8,15 @@
 
 namespace Riff;
 
-use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The controller for Likes: riff/v1/users/{user}/likes and /history, who may read and change
- * them, the handlers, the schemas, and the signed-in listener's likes and history handed to the
- * player. The model, what is kept and how, is Likes.
+ * The controller for Likes: riff/v1/users/{user}/likes and /history, the handlers, the schemas,
+ * and the signed-in listener's likes and history handed to the player. Who may read and change
+ * them is Listener's check; the model, what is kept and how, is Likes.
  */
 final class Likes_Rest {
 	/**
@@ -79,13 +78,13 @@ final class Likes_Rest {
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( self::class, 'rest_likes' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array( 'user' => $user ),
 				),
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_like' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array(
 						'user'  => $user,
 						'items' => array(
@@ -112,7 +111,7 @@ final class Likes_Rest {
 				array(
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_unlike' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array(
 						'user' => $user,
 						'kind' => array(
@@ -144,13 +143,13 @@ final class Likes_Rest {
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( self::class, 'rest_history' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array( 'user' => $user ),
 				),
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_played' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array(
 						'user'  => $user,
 						'items' => array(
@@ -186,53 +185,12 @@ final class Likes_Rest {
 				array(
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_forget' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array( 'user' => $user ),
 				),
 				'schema' => array( self::class, 'history_schema' ),
 			)
 		);
-	}
-
-	/**
-	 * Whether the request may read and change these likes: a signed-in user who can read this site,
-	 * for their own (me, or their own ID); for anyone else's, a user who can edit that user, as
-	 * core's application passwords route asks. Over cookies that means a valid REST nonce too,
-	 * since without one WordPress treats the request as a visitor's.
-	 *
-	 * @since 4.20.0
-	 *
-	 * @param WP_REST_Request|null $request Request.
-	 * @return true|WP_Error
-	 */
-	public static function allowed( $request = null ) {
-		if ( ! is_user_logged_in() ) {
-			return new WP_Error( 'rest_not_logged_in', __( 'Sign in to keep likes in your account.', 'riff' ), array( 'status' => 401 ) );
-		}
-		if ( ! current_user_can( 'read' ) ) {
-			return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to keep likes on this site.', 'riff' ), array( 'status' => 403 ) );
-		}
-		$user = $request instanceof WP_REST_Request ? self::user( $request ) : get_current_user_id();
-		if ( get_current_user_id() !== $user ) {
-			if ( ! $user || ! get_userdata( $user ) ) {
-				return new WP_Error( 'rest_user_invalid_id', __( 'Invalid user ID.', 'riff' ), array( 'status' => 404 ) );
-			}
-			if ( ! current_user_can( 'edit_user', $user ) ) {
-				return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to see that user\'s likes.', 'riff' ), array( 'status' => 403 ) );
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * The user a request names: the signed-in user for me, or the ID given.
-	 *
-	 * @param WP_REST_Request $request Request.
-	 * @return int User ID.
-	 */
-	private static function user( WP_REST_Request $request ): int {
-		$user = (string) $request['user'];
-		return 'me' === $user || '' === $user ? get_current_user_id() : (int) $user;
 	}
 
 	/**
@@ -244,7 +202,7 @@ final class Likes_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_likes( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => Likes::get( self::user( $request ) ) ) );
+		return new WP_REST_Response( array( 'items' => Likes::get( Listener::user( $request ) ) ) );
 	}
 
 	/**
@@ -256,7 +214,7 @@ final class Likes_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_like( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => Likes::add( self::user( $request ), (array) $request['items'] ) ) );
+		return new WP_REST_Response( array( 'items' => Likes::add( Listener::user( $request ), (array) $request['items'] ) ) );
 	}
 
 	/**
@@ -268,7 +226,7 @@ final class Likes_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_unlike( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => Likes::remove( self::user( $request ), (string) $request['kind'], (int) $request['id'] ) ) );
+		return new WP_REST_Response( array( 'items' => Likes::remove( Listener::user( $request ), (string) $request['kind'], (int) $request['id'] ) ) );
 	}
 
 	/**
@@ -280,7 +238,7 @@ final class Likes_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_history( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => Likes::history_tracks( self::user( $request ) ) ) );
+		return new WP_REST_Response( array( 'items' => Likes::history_tracks( Listener::user( $request ) ) ) );
 	}
 
 	/**
@@ -292,7 +250,7 @@ final class Likes_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_played( WP_REST_Request $request ): WP_REST_Response {
-		Likes::played( self::user( $request ), (array) $request['items'] );
+		Likes::played( Listener::user( $request ), (array) $request['items'] );
 		return self::rest_history( $request );
 	}
 
@@ -305,7 +263,7 @@ final class Likes_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_forget( WP_REST_Request $request ): WP_REST_Response {
-		delete_user_option( self::user( $request ), Likes::HISTORY_OPTION );
+		delete_user_option( Listener::user( $request ), Likes::HISTORY_OPTION );
 		return new WP_REST_Response( array( 'items' => array() ) );
 	}
 
@@ -319,7 +277,7 @@ final class Likes_Rest {
 	 * @return array
 	 */
 	public static function player_data( $data ) {
-		if ( ! is_array( $data ) || true !== self::allowed() ) {
+		if ( ! is_array( $data ) || true !== Listener::signed_in() ) {
 			return $data;
 		}
 		$user       = get_current_user_id();

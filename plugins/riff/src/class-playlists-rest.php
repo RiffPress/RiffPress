@@ -74,13 +74,13 @@ final class Playlists_Rest {
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( self::class, 'rest_list' ),
-					'permission_callback' => array( Likes_Rest::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array( 'user' => $user ),
 				),
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_create' ),
-					'permission_callback' => array( Likes_Rest::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'allowed' ),
 					'args'                => array(
 						'user'   => $user,
 						'title'  => $title + array( 'required' => true ),
@@ -184,8 +184,8 @@ final class Playlists_Rest {
 	}
 
 	/**
-	 * Whether the request may see and change this playlist: as for likes, and the playlist must be
-	 * one of that user's.
+	 * Whether the request may see and change this playlist: as for any of a listener's things
+	 * (Listener), and the playlist must be one of that user's.
 	 *
 	 * @since 4.20.0
 	 *
@@ -193,25 +193,14 @@ final class Playlists_Rest {
 	 * @return true|WP_Error
 	 */
 	public static function allowed( WP_REST_Request $request ) {
-		$allowed = Likes_Rest::allowed( $request );
+		$allowed = Listener::allowed( $request );
 		if ( true !== $allowed ) {
 			return $allowed;
 		}
-		if ( ! Playlists::owned( (int) $request['id'], self::user( $request ) ) ) {
+		if ( ! Playlists::owned( (int) $request['id'], Listener::user( $request ) ) ) {
 			return new WP_Error( 'rest_post_invalid_id', __( 'Invalid playlist ID.', 'riff' ), array( 'status' => 404 ) );
 		}
 		return true;
-	}
-
-	/**
-	 * The user a request names: the signed-in user for me, or the ID given.
-	 *
-	 * @param WP_REST_Request $request Request.
-	 * @return int User ID.
-	 */
-	private static function user( WP_REST_Request $request ): int {
-		$user = (string) $request['user'];
-		return 'me' === $user || '' === $user ? get_current_user_id() : (int) $user;
 	}
 
 	/**
@@ -223,7 +212,7 @@ final class Playlists_Rest {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_list( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( array( 'items' => Playlists::all( self::user( $request ) ) ) );
+		return new WP_REST_Response( array( 'items' => Playlists::all( Listener::user( $request ) ) ) );
 	}
 
 	/**
@@ -235,7 +224,7 @@ final class Playlists_Rest {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public static function rest_create( WP_REST_Request $request ) {
-		$id = Playlists::create( self::user( $request ), (string) $request['title'], (array) $request['tracks'] );
+		$id = Playlists::create( Listener::user( $request ), (string) $request['title'], (array) $request['tracks'] );
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -341,7 +330,7 @@ final class Playlists_Rest {
 		if ( ! is_array( $data ) ) {
 			return $data;
 		}
-		if ( true !== Likes_Rest::allowed() ) {
+		if ( true !== Listener::signed_in() ) {
 			// A visitor is offered a way to sign in instead.
 			$data['signIn'] = wp_login_url( (string) ( is_singular() ? get_permalink() : home_url( add_query_arg( array() ) ) ) );
 			return $data;
