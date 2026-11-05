@@ -25,9 +25,8 @@ test.afterAll( async ( { requestUtils } ) => {
 test.describe( 'App turntable', () => {
 	test.use( { viewport: { width: 1440, height: 900 } } );
 
-	test( 'the stylus is down before the music is heard and lifts only once it has stopped, with the video preferred', async ( { page }, info ) => {
+	test( 'the stylus is down before the music is heard and lifts only once it has stopped', async ( { page }, info ) => {
 		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
-		await page.addInitScript( () => window.localStorage.setItem( 'riff:mode', 'video' ) );
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.goto( `${ pageUrl }?riff=${ postId }` );
 		await page.locator( '.riff-row' ).first().click();

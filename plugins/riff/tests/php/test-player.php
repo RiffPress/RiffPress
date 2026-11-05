@@ -219,20 +219,6 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'strings', $data, 'the modules translate their own strings' );
 	}
 
-	public function test_a_song_with_a_video_opens_as_the_video_unless_the_site_says_the_song(): void {
-		$data = function (): array {
-			ob_start();
-			Player::markup();
-			preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', (string) ob_get_clean(), $found );
-			return json_decode( $found[1] ?? '', true );
-		};
-		$this->go_to( home_url( '/' ) );
-		$this->assertTrue( $data()['video'] );
-		add_filter( 'riff_video_first', '__return_false' );
-		$this->assertFalse( $data()['video'] );
-		remove_filter( 'riff_video_first', '__return_false' );
-	}
-
 	public function test_the_bar_and_the_views_are_drawn_on_the_server_each_by_its_id(): void {
 		$this->go_to( home_url( '/' ) );
 		ob_start();

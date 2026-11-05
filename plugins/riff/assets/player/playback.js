@@ -103,6 +103,8 @@ export function playback( P ) {
 		}
 		P.stopAll();
 		P.pos = to;
+		// Each track starts as the song: the Video switch is for the one it was pressed on.
+		P.mode = 'song';
 		load( { play } );
 	}
 

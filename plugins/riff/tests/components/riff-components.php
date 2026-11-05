@@ -381,15 +381,6 @@ if ( ! empty( $_COOKIE['riff_test_no_turntable'] ) ) {
 }
 
 /*
- * A song with a video opens as the song on the tests site, so the specs of what a song shows, the
- * record and the filament, play the fixture that has a video too; while the browser carries the
- * riff_test_video_first cookie it opens as the video, as on any other site. Loaded only on the
- * tests site.
- */
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test switch; nothing changes.
-add_filter( 'riff_video_first', static fn() => ! empty( $_COOKIE['riff_test_video_first'] ) );
-
-/*
  * A control registered on the server, as a plugin registers one, while the browser carries the
  * riff_test_control cookie: the page has it before any script, and its script gives it its press.
  * Loaded only on the tests site.

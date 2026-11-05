@@ -233,33 +233,26 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-chips [data-riff-chip="queue"]' ) ).toBeFocused();
 	} );
 
-	test( 'a song with a video opens as the video, the song keeps its place, and the choice is kept', async ( {
+	test( 'a song with a video plays as the song, its video picks up at the same moment, and the next press is the song again', async ( {
 		page,
-		context,
-		baseURL,
 	} ) => {
-		// As on any site but the tests site, where the song comes first (tests/components).
-		await context.addCookies( [ { name: 'riff_test_video_first', value: '1', url: baseURL } ] );
-		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await openView( page, 'album' );
 		await expect( page.locator( '.riff-modes' ) ).toBeVisible();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'song' );
+		await expect.poll( async () => ( await audioState( page ) ).time ).toBeGreaterThan( 1 );
+		const before = await audioState( page );
+		expect( before.paused ).toBe( false );
+		await page.locator( '[data-riff-mode="video"]' ).click();
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'video' );
 		await expect
-			.poll( async () => ( await audioState( page ) ).videoTime )
-			.toBeGreaterThan( 1 );
-		const before = await audioState( page );
-		expect( before.videoPaused ).toBe( false );
-		await page.locator( '[data-riff-mode="song"]' ).click();
-		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'song' );
-		await expect
-			.poll( async () => ( await audioState( page ) ).paused )
+			.poll( async () => ( await audioState( page ) ).videoPaused )
 			.toBe( false );
 		const after = await audioState( page );
-		expect( after.videoPaused ).toBe( true );
-		expect( after.time ).toBeGreaterThanOrEqual( before.videoTime - 0.5 );
-		// The listener chose the song: the next song with a video opens as the song.
-		await page.keyboard.press( 'Escape' );
+		expect( after.paused ).toBe( true );
+		expect( after.videoTime ).toBeGreaterThanOrEqual( before.time - 0.5 );
+		// Nothing is remembered: played again after a reload, the song is the song.
+		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'song' );
 	} );

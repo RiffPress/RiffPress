@@ -155,16 +155,6 @@ Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
 | `$attachment_id` | `int` | Attachment ID, or 0. |
 | `$post_id` | `int` | The post the track appears in, or 0. |
 
-### `riff_video_first`
-
-Whether a song that has a video opens as the video. A listener's own choice of the song or the video, and a browser that saves data, come first.
-
-Since 5.8.0. Fires in `plugins/riff/src/class-player.php`.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `$video` | `bool` | True to open as the video, false for the song. |
-
 ## Actions
 
 ### `riff_before_player`
