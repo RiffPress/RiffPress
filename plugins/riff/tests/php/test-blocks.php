@@ -120,7 +120,7 @@ class Test_Riff_Blocks extends Riff_TestCase {
 
 	public function test_a_video_block_is_a_video_track(): void {
 		$post = self::factory()->post->create();
-		$id   = self::attach( '01 - Intensities in Ten Cities [intensities].webm', $post );
+		$id   = self::attach( '../test/pattern.webm', $post );
 		wp_update_post(
 			array(
 				'ID'           => $post,

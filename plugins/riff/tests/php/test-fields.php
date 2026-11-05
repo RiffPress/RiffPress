@@ -36,7 +36,7 @@ class Test_Riff_Fields extends Riff_TestCase {
 
 	public function test_a_songs_artist_album_and_video_version_are_rest_fields_read_and_written_as_the_item(): void {
 		$song  = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$item  = $this->item( $song );
 		$this->assertSame( 'Airmen of Note, United States Air Force Band', $item['riff_artist'], 'from the file\'s tags' );
 		$this->assertSame( 'Compositions', $item['riff_album'] );
@@ -62,7 +62,7 @@ class Test_Riff_Fields extends Riff_TestCase {
 
 	public function test_a_video_takes_no_video_version_and_a_subscriber_may_write_nothing(): void {
 		$song  = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$this->assertSame( 400, $this->save( $video, array( 'riff_video' => $song ) )->get_status(), 'the field is not for a video' );
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 		$this->assertContains( $this->save( $song, array( 'riff_artist' => 'Nobody' ) )->get_status(), array( 401, 403 ) );

@@ -6,7 +6,7 @@ const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 
-const { FIXTURES } = require( '../helpers/site' );
+const { FIXTURES, TEST } = require( '../helpers/site' );
 
 let audio;
 let video;
@@ -19,7 +19,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 		path.join( FIXTURES, '02 - Underground [underground].mp3' )
 	);
 	video = await made.media( requestUtils,
-		path.join( FIXTURES, '01 - Intensities in Ten Cities [intensities].webm' )
+		path.join( TEST, 'pattern.webm' )
 	);
 	cover = await made.media( requestUtils,
 		path.join( FIXTURES, 'cover.png' )

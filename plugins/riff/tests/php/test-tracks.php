@@ -59,7 +59,7 @@ class Test_Riff_Tracks extends Riff_TestCase {
 
 	public function test_a_videos_captions_come_from_its_vtt_file_or_its_blocks_text_tracks(): void {
 		$post  = self::factory()->post->create();
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm', $post );
+		$video = self::attach( '../test/pattern.webm', $post );
 		$vtt   = self::attach( '../test/captions.vtt', $post );
 		$this->assertSame( array(), Tracks::from_attachment( $video, $post )['captions'], 'nothing until a file is chosen' );
 
@@ -160,7 +160,7 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$cover = self::attach( 'cover.png', $post );
 		set_post_thumbnail( $post, $cover );
 		$audio = self::attach( '01 - Intensities in Ten Cities [intensities].mp3', $post );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm', $post );
+		$video = self::attach( '../test/pattern.webm', $post );
 		update_post_meta( $audio, Media::VIDEO_META, $video );
 
 		$track = Tracks::from_attachment( $audio, $post );
@@ -173,7 +173,7 @@ class Test_Riff_Tracks extends Riff_TestCase {
 	}
 
 	public function test_a_video_attachment_is_a_video_track(): void {
-		$id    = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$id    = self::attach( '../test/pattern.webm' );
 		$track = Tracks::from_attachment( $id );
 		$this->assertSame( 'video', $track['type'] );
 		$this->assertNull( $track['video'] );

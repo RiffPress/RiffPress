@@ -32,16 +32,17 @@ class Test_Riff_Import extends Riff_TestCase {
 	/**
 	 * A folder of fixture files under a fresh temporary folder.
 	 *
-	 * @param string   $name  The folder's name, which may hold a subfolder ("label/album").
-	 * @param string[] $files Fixture file names to copy in.
+	 * @param string                    $name  The folder's name, which may hold a subfolder ("label/album").
+	 * @param array<int|string, string> $files Fixture file names to copy in, each under its own name,
+	 *                                         or under the name given as its key.
 	 * @return string The folder.
 	 */
 	private function album_dir( string $name, array $files ): string {
 		$root = sys_get_temp_dir() . '/riff-import-' . wp_generate_password( 8, false );
 		$dir  = $root . '/' . $name;
 		mkdir( $dir, 0777, true );
-		foreach ( $files as $file ) {
-			copy( self::fixture( $file ), $dir . '/' . $file );
+		foreach ( $files as $as => $file ) {
+			copy( self::fixture( $file ), $dir . '/' . ( is_string( $as ) ? $as : $file ) );
 		}
 		$this->dirs[] = $root;
 		return $dir;
@@ -118,7 +119,7 @@ class Test_Riff_Import extends Riff_TestCase {
 			'compositions',
 			array(
 				'01 - Intensities in Ten Cities [intensities].mp3',
-				'01 - Intensities in Ten Cities [intensities].webm',
+				'01 - Intensities in Ten Cities [intensities].webm' => '../test/pattern.webm',
 				'02 - Underground [underground].mp3',
 				'03 - Trombone Detritus [detritus].mp3',
 				'cover.png',
@@ -388,7 +389,7 @@ class Test_Riff_Import extends Riff_TestCase {
 			'compositions',
 			array(
 				'01 - Intensities in Ten Cities [intensities].mp3',
-				'01 - Intensities in Ten Cities [intensities].webm',
+				'01 - Intensities in Ten Cities [intensities].webm' => '../test/pattern.webm',
 			)
 		);
 		Import::folder( $dir );
@@ -400,7 +401,7 @@ class Test_Riff_Import extends Riff_TestCase {
 		$zip = $this->zip_of(
 			array(
 				'Theirs.mp3'  => '02 - Underground [underground].mp3',
-				'Theirs.webm' => '01 - Intensities in Ten Cities [intensities].webm',
+				'Theirs.webm' => '../test/pattern.webm',
 			)
 		);
 		Import::zip( $zip, array( 'status' => 'draft' ) );
