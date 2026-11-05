@@ -44,9 +44,11 @@ class Test_Riff_Sources extends Riff_TestCase {
 			array(
 				'ID'           => $post,
 				'post_content' => sprintf(
-					'<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist"><!-- wp:playlist-track {"id":%d} /--><!-- wp:playlist-track {"id":%d} /--><!-- wp:playlist-track {"src":"https://example.com/no-id.mp3"} /--></ol></figure><!-- /wp:playlist -->',
+					'<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist"><!-- wp:playlist-track {"id":%d,"src":"%s"} /--><!-- wp:playlist-track {"id":%d,"src":"%s"} /--><!-- wp:playlist-track {"src":"https://example.com/no-id.mp3"} /--></ol></figure><!-- /wp:playlist -->',
 					$first,
-					$second
+					wp_get_attachment_url( $first ),
+					$second,
+					wp_get_attachment_url( $second )
 				),
 			)
 		);

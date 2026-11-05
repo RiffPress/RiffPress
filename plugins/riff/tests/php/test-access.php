@@ -134,5 +134,10 @@ class Test_Riff_Access extends Riff_TestCase {
 		$this->assertStringNotContainsString( (string) wp_get_attachment_url( $this->locked ), $html );
 		$this->assertStringNotContainsString( wp_json_encode( (string) wp_get_attachment_url( $this->locked ) ), $state, 'core\'s own player state has no address for it' );
 		$this->assertStringContainsString( wp_json_encode( (string) wp_get_attachment_url( $this->open ) ), $state );
+
+		preg_match_all( '/<li [^>]*data-riff-track="([^"]*)"/', $html, $m );
+		$tracks = array_map( static fn( $json ) => json_decode( html_entity_decode( $json, ENT_QUOTES, 'UTF-8' ), true ), $m[1] );
+		$this->assertSame( array( (string) $this->locked, (string) $this->open ), array_column( $tracks, 'id' ), 'the locked item stays listed, and the next keeps its own track' );
+		$this->assertSame( array( true, false ), array_column( $tracks, 'locked' ) );
 	}
 }
