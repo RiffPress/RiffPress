@@ -1135,6 +1135,42 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	white-space: nowrap;
 }
 
+/* While a video plays untouched, the switch and the bar fade away, and come
+   back at the first move (now-playing.js). The bar fades into Now Playing's
+   own black under a veil, rather than to the page behind it. Faded, they let
+   a tap through to the picture, which brings them back, rather than pressing
+   what can't be seen. */
+.riff-bar::before {
+	content: "";
+	position: absolute;
+	z-index: 1;
+	inset: 0;
+	background: var(--riff-bg);
+	opacity: 0;
+	pointer-events: none;
+}
+
+#riff[data-riff-idle] .riff-bar {
+	pointer-events: none;
+}
+
+#riff[data-riff-idle] .riff-bar::before {
+	opacity: 1;
+}
+
+#riff[data-riff-idle] .riff-modes {
+	opacity: 0;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+	#riff .riff-bar::before,
+	#riff .riff-modes {
+		transition: opacity 0.3s ease;
+	}
+}
+
 .riff-np-body {
 
 	/* the space either side of the art on a wide screen */
