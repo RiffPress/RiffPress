@@ -3042,6 +3042,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    as WebKit and Apple ask. */
 @media (pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px) {
 
+	/* A theme's viewport rarely reaches into the phone's sides (viewport-fit),
+	   so Safari leaves a margin each side and paints it the page's colour:
+	   while the deck is the screen, that colour is the plinth's. */
+	html:has(#riff.is-open) {
+		background-color: #181818;
+	}
+
 	#riff .riff-np {
 		bottom: 0;
 		z-index: 3;
