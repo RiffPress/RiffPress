@@ -111,6 +111,17 @@ class Test_Riff_Playlists extends Riff_TestCase {
 		$this->assertSame( 401, $this->call( 'POST', '', array( 'title' => 'Mine' ) )->get_status() );
 	}
 
+	public function test_a_user_who_cannot_read_this_site_is_refused_even_their_own_playlist(): void {
+		$nobody = self::factory()->user->create( array( 'role' => '' ) );
+		wp_set_current_user( $nobody );
+		$id = Playlists::create( $nobody, 'Mine', array() );
+		$this->assertSame( 403, $this->call( 'GET' )->get_status() );
+		$this->assertSame( 403, $this->call( 'POST', '', array( 'title' => 'Another' ) )->get_status() );
+		$this->assertSame( 403, $this->call( 'GET', "/$id" )->get_status() );
+		$this->assertSame( 403, $this->call( 'DELETE', "/$id" )->get_status() );
+		$this->assertSame( Playlists::TYPE, get_post_type( $id ), 'and it is still there' );
+	}
+
 	public function test_a_playlist_is_a_private_post_of_its_user_holding_a_playlist_block(): void {
 		$id   = $this->made( array( $this->tracks[1], $this->tracks[0] ) );
 		$post = get_post( $id );

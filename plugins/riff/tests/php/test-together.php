@@ -177,6 +177,28 @@ class Test_Riff_Together extends Riff_TestCase {
 		}
 	}
 
+	public function test_a_user_who_cannot_read_this_site_is_refused_and_a_listener_named_is_the_one_followed(): void {
+		$this->share( $this->host, $this->queue() );
+		$nobody = self::factory()->user->create( array( 'role' => '' ) );
+		$this->assertSame( 403, $this->share( $nobody, $this->queue() )->get_status(), 'POST /together' );
+		foreach ( array(
+			array( 'GET', '/together' ),
+			array( 'DELETE', '/together' ),
+			array( 'GET', '/together/' . $this->host ),
+			array( 'POST', '/together/' . $this->host . '/follow' ),
+			array( 'DELETE', '/together/' . $this->host . '/follow' ),
+			array( 'GET', '/together/following' ),
+			array( 'GET', '/together/clock' ),
+		) as list( $method, $route ) ) {
+			$this->assertSame( 403, $this->call( $method, $route )->get_status(), "$method $route" );
+		}
+
+		// The user a Together route names is whoever is followed, not whose things the guest acts
+		// on, so the guest needs no right to edit them.
+		wp_set_current_user( $this->guest );
+		$this->assertSame( 200, $this->call( 'GET', '/together/' . $this->host )->get_status() );
+	}
+
 	public function test_a_listener_is_seen_by_others_on_their_track_and_not_by_themself(): void {
 		$own = $this->share( $this->host, $this->queue(), 1 );
 		$this->assertSame( 200, $own->get_status() );

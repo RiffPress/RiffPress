@@ -13,7 +13,7 @@ use WP_REST_Request;
 use WP_REST_Response;
 
 use Riff\Library;
-use Riff\Likes_Rest;
+use Riff\Listener;
 use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
@@ -145,7 +145,7 @@ final class Home_View {
 		Ui::lead( self::LEAD );
 		$html .= self::played_shelves( $page );
 		// Who else is playing, which the script fills; hidden until someone is.
-		if ( Together::available() && true === Likes_Rest::allowed() ) {
+		if ( Together::available() && true === Listener::signed_in() ) {
 			$html .= Ui::shelf( 'together', __( 'Listening now', 'riff' ), '', '', true, 'div', array( 'together' => rest_url( Library::REST . '/together' ) ) );
 		}
 		if ( $albums['items'] ) {

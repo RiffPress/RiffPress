@@ -10,7 +10,7 @@ namespace Riff\Listen;
 
 use Riff\Catalog;
 use Riff\Library;
-use Riff\Likes_Rest;
+use Riff\Listener;
 use Riff\Registry;
 use Riff\Tracks;
 use WP_Error;
@@ -195,7 +195,7 @@ final class Together {
 	 * @since 5.8.0
 	 */
 	public static function view(): void {
-		if ( ! self::available() || true !== self::allowed() ) {
+		if ( ! self::available() || true !== Listener::signed_in() ) {
 			return;
 		}
 		Registry::register_view(
@@ -219,7 +219,7 @@ final class Together {
 	 * @return string
 	 */
 	public static function faces( int $album ): string {
-		if ( $album <= 0 || ! self::available() || true !== self::allowed() ) {
+		if ( $album <= 0 || ! self::available() || true !== Listener::signed_in() ) {
 			return '';
 		}
 		return sprintf(
@@ -264,7 +264,7 @@ final class Together {
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( self::class, 'rest_room' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'signed_in' ),
 					'args'                => array(
 						'version' => array(
 							'description' => __( 'The room\'s version the player last had, as this route gave it.', 'riff' ),
@@ -280,7 +280,7 @@ final class Together {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_share' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'signed_in' ),
 					'args'                => array(
 						'queue'   => array(
 							'description' => __( 'The queue in play order, each track as its audio attachment and the post it plays from.', 'riff' ),
@@ -335,7 +335,7 @@ final class Together {
 				array(
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_leave' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'signed_in' ),
 				),
 			)
 		);
@@ -351,7 +351,7 @@ final class Together {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_listener' ),
-				'permission_callback' => array( self::class, 'allowed' ),
+				'permission_callback' => array( Listener::class, 'signed_in' ),
 				'args'                => array(
 					'user' => array(
 						'description' => __( 'The listener\'s user ID.', 'riff' ),
@@ -376,7 +376,7 @@ final class Together {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_follow' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'signed_in' ),
 					'args'                => array(
 						'user'    => array(
 							'description' => __( 'The listener\'s user ID.', 'riff' ),
@@ -391,7 +391,7 @@ final class Together {
 				array(
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_unfollow' ),
-					'permission_callback' => array( self::class, 'allowed' ),
+					'permission_callback' => array( Listener::class, 'signed_in' ),
 					'args'                => array(
 						'user' => array(
 							'description' => __( 'The listener\'s user ID.', 'riff' ),
@@ -412,7 +412,7 @@ final class Together {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_following' ),
-				'permission_callback' => array( self::class, 'allowed' ),
+				'permission_callback' => array( Listener::class, 'signed_in' ),
 			)
 		);
 		/**
@@ -428,7 +428,7 @@ final class Together {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_clock' ),
-				'permission_callback' => array( self::class, 'allowed' ),
+				'permission_callback' => array( Listener::class, 'signed_in' ),
 			)
 		);
 	}
@@ -449,18 +449,6 @@ final class Together {
 			$data['me']['sharing']          = self::shares( get_current_user_id() );
 		}
 		return $data;
-	}
-
-	/**
-	 * Whether the request may see and join the room: anyone signed in who can read this site, as
-	 * for likes.
-	 *
-	 * @since 5.6.0
-	 *
-	 * @return true|WP_Error
-	 */
-	public static function allowed() {
-		return Likes_Rest::allowed();
 	}
 
 	/**
