@@ -72,3 +72,6 @@ add_action(
 	},
 	5
 );
+
+// PHPCS keeps a phpcs:set for the files after this one, so the domain goes back to Riff's here.
+// phpcs:set WordPress.WP.I18n text_domain[] riff
