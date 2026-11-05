@@ -42,9 +42,23 @@ final class Navigation {
 	 */
 	public static function register(): void {
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
-		// Added at once, so core opens its template output buffer for it (core 6.9); it does
-		// nothing on a request where navigation is off.
-		add_filter( 'wp_template_enhancement_output_buffer', array( self::class, 'region' ) );
+		// Before core decides, at 1000, whether to open its template output buffer (core 6.9).
+		add_action( 'wp_before_include_template', array( self::class, 'buffer' ) );
+	}
+
+	/**
+	 * Asks core for its template output buffer, only on a request where navigation is on.
+	 *
+	 * Core opens the buffer for any page while a `wp_template_enhancement_output_buffer` filter is
+	 * added, and a buffered page is sent only once it is whole, so a site that leaves navigation off
+	 * keeps its pages streamed.
+	 *
+	 * @since 6.2.0
+	 */
+	public static function buffer(): void {
+		if ( self::enabled() && ! Player::listen_page() ) {
+			add_filter( 'wp_template_enhancement_output_buffer', array( self::class, 'region' ) );
+		}
 	}
 
 	/**
