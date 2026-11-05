@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.1.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.1.0...riff-v6.1.1) (2026-11-05)
+
+
+### Bug Fixes
+
+* **fixtures:** the demo ships no made-up video, and tests that need one use the test pattern ([#898](https://github.com/RiffPress/RiffPress/issues/898)) ([d947479](https://github.com/RiffPress/RiffPress/commit/d94747931c27997c01688ed9abd95e2e1e130319))
+* **player:** a phone on its side sees the turntable to its edges, not the theme's white in the margins Safari leaves ([#899](https://github.com/RiffPress/RiffPress/issues/899)) ([d272abe](https://github.com/RiffPress/RiffPress/commit/d272abe91ca314fff116c7a94f644146a0c77cbc))
+* **player:** a press on the bar opens Now Playing, and the album's button in the bar is gone ([#883](https://github.com/RiffPress/RiffPress/issues/883)) ([c481e78](https://github.com/RiffPress/RiffPress/commit/c481e788feca572ad853d7f35267ac085b51ad71))
+* **player:** a site that leaves client navigation off keeps its pages streamed ([#894](https://github.com/RiffPress/RiffPress/issues/894)) ([5eca297](https://github.com/RiffPress/RiffPress/commit/5eca297699a1bccfc654fca5ae0ab4b40e456670))
+* **player:** a song plays as the song, its video version one press away for that song only, and a video on its own opens as the video ([#897](https://github.com/RiffPress/RiffPress/issues/897)) ([ecc3b63](https://github.com/RiffPress/RiffPress/commit/ecc3b63e583324ee3726013f0e2af7abab0f9283))
+* **player:** a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select ([#882](https://github.com/RiffPress/RiffPress/issues/882)) ([d5f6606](https://github.com/RiffPress/RiffPress/commit/d5f660666f52be3f209e4235ce839db8a4ee7802))
+* **player:** each playlist item keeps its own track, and a locked one stays listed, when core leaves out an item with no file ([#895](https://github.com/RiffPress/RiffPress/issues/895)) ([32347b0](https://github.com/RiffPress/RiffPress/commit/32347b0f49875fce61dc246d8b19f0bbed64d9fb))
+* **player:** Now Playing on a phone never cuts a name short, its views' buttons are a light row of icons, and on its side shuffle and repeat move to Up next ([#900](https://github.com/RiffPress/RiffPress/issues/900)) ([ef9d17a](https://github.com/RiffPress/RiffPress/commit/ef9d17acd995cf3f833a880a934569e3eae49242))
+* **player:** the turntable bends every song, its platter and arm keep the music's speed, and the arm lifts and lowers as a cue lever does ([#885](https://github.com/RiffPress/RiffPress/issues/885)) ([be2e5e4](https://github.com/RiffPress/RiffPress/commit/be2e5e449deccba37563becec2966aec6a2f0fa3))
+* **player:** while Now Playing is open the page reaches a phone's edges, so no theme colour shows beside the turntable ([#901](https://github.com/RiffPress/RiffPress/issues/901)) ([9c11ef6](https://github.com/RiffPress/RiffPress/commit/9c11ef6ca3ea753ebbd2c77a879a0f552c30cf46))
+
 ## [6.1.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.0.1...riff-v6.1.0) (2026-11-04)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.1](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.7.0...riff-lyrics-v1.7.1) (2026-11-05)
+
+
+### Bug Fixes
+
+* **build:** an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it ([#896](https://github.com/RiffPress/RiffPress/issues/896)) ([95b1aa3](https://github.com/RiffPress/RiffPress/commit/95b1aa34b3149be0c5361559a2eff2439b3a95a2))
+* **player:** a press on the bar opens Now Playing, and the album's button in the bar is gone ([#883](https://github.com/RiffPress/RiffPress/issues/883)) ([c481e78](https://github.com/RiffPress/RiffPress/commit/c481e788feca572ad853d7f35267ac085b51ad71))
+* **player:** a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select ([#882](https://github.com/RiffPress/RiffPress/issues/882)) ([d5f6606](https://github.com/RiffPress/RiffPress/commit/d5f660666f52be3f209e4235ce839db8a4ee7802))
+
 ## [1.7.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.6.1...riff-lyrics-v1.7.0) (2026-11-04)
 
 
