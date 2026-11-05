@@ -128,6 +128,8 @@ final class Player {
 	 */
 	public static function queue(): string {
 		return '<header class="riff-queue-head"><div><p>' . esc_html__( 'Playing from', 'riff' ) . '</p><h3 data-riff-text="source"></h3></div>'
+			. '<span class="riff-queue-modes"><button type="button" class="riff-btn" data-riff-action="shuffle" aria-label="' . esc_attr__( 'Shuffle', 'riff' ) . '" aria-pressed="false">' . self::icon( 'shuffle' ) . '</button>'
+			. '<button type="button" class="riff-btn" data-riff-action="repeat" data-repeat="off" aria-label="' . esc_attr__( 'Repeat, off', 'riff' ) . '">' . self::icon( 'repeat' ) . self::icon( 'repeatOne' ) . '</button></span>'
 			. '<button type="button" class="riff-queue-clear" data-riff-action="clear-queue" aria-label="' . esc_attr__( 'Clear the queue', 'riff' ) . '" hidden>' . esc_html__( 'Clear', 'riff' ) . '</button>'
 			// On a phone only: what swiping the bar down does, as a button (WCAG 2.5.7). A computer has no such swipe.
 			. '<button type="button" class="riff-queue-clear riff-mobile" data-riff-action="dismiss">' . esc_html__( 'Close player', 'riff' ) . '</button>'

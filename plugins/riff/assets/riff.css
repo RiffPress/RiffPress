@@ -1874,23 +1874,33 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	padding: 0 32px;
 }
 
+/* A name is never cut short where it has room to wrap: two lines at most,
+   balanced so neither ends on a word alone. */
 #riff .riff-np-title {
+	display: -webkit-box;
 	overflow: hidden;
 	font-size: 24px;
 	font-weight: 700;
 	line-height: 1.25;
-	white-space: nowrap;
-	text-overflow: ellipsis;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
 }
 
 #riff .riff-np-sub {
+	display: -webkit-box;
 	overflow: hidden;
 	margin-top: 2px;
 	color: var(--riff-fg-2);
 	font-size: 16px;
 	line-height: 1.3;
-	white-space: nowrap;
-	text-overflow: ellipsis;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
 }
 
 /* Boxy and thumbless; it doubles in height while held. */
@@ -1969,38 +1979,47 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	height: 36px;
 }
 
-/* Actions as pills, in a row that scrolls sideways. */
+/* The views' buttons step back from the music: a light row of icons, each
+   named under it, sharing the width; more than fit (a plugin's views) and
+   the row scrolls. */
 .riff-chips {
 	display: flex;
-	gap: 8px;
-	margin: 24px -32px 0;
-	padding: 0 32px;
+	gap: 4px;
+	margin: 20px -32px 0;
+	padding: 0 28px;
 	overflow-x: auto;
 	scrollbar-width: none;
 }
 
 #riff .riff-chip {
 	display: inline-flex;
-	flex: none;
+	flex: 1 0 64px;
+	flex-direction: column;
 	align-items: center;
-	gap: 8px;
-	height: 36px;
-	padding: 0 16px;
-	border-radius: 999px;
-	background: var(--riff-hover);
-	font-size: 14px;
+	justify-content: center;
+	gap: 4px;
+	min-height: 52px;
+	padding: 4px 2px;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: 0;
+	background: none;
+	color: var(--riff-fg-2);
+	font-size: 12px;
 	font-weight: 500;
+	line-height: 1.2;
 }
 
 #riff .riff-chip svg {
-	width: 20px;
-	height: 20px;
+	width: 22px;
+	height: 22px;
 }
 
-/* the chip of the view showing, as the open view's button is lit in the bar */
+/* the chip of the view showing, lit as the open view's button is in the bar,
+   and underlined, which a contrast theme keeps when it sets the colours */
 #riff .riff-chip[aria-pressed="true"] {
-	background: var(--riff-fg);
-	color: var(--riff-bg);
+	border-bottom-color: currentcolor;
+	color: var(--riff-fg);
 }
 
 /* ---- The panels (registry.js): Up next, and any a plugin adds, one at a
@@ -2227,6 +2246,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	font-size: 16px;
 	overflow-wrap: anywhere;
 	text-wrap: pretty;
+}
+
+/* Shuffle and repeat in Up next, where the deck's strip has no room for
+   them (below); everywhere else they are with the transport. */
+.riff-queue-modes {
+	display: none;
+	gap: 4px;
 }
 
 .riff-queue-head {
@@ -3146,11 +3172,47 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		margin: 4px -8px 0;
 	}
 
+	/* each part of the strip keeps its height, and the names grow and
+	   shrink with the screen's, so a long one wraps rather than crowd the
+	   seek line */
+	#riff .riff-np-panel > * {
+		flex-shrink: 0;
+	}
+
+	#riff .riff-np-title {
+		font-size: clamp(18px, 5.6dvh, 24px);
+	}
+
+	#riff .riff-np-sub {
+		font-size: clamp(13px, 3.8dvh, 16px);
+	}
+
+	/* Shuffle and repeat are about the queue, so on the deck they are in Up
+	   next, and the strip keeps only the skips. */
+	#riff .riff-np-controls :is([data-riff-action="shuffle"], [data-riff-action="repeat"]) {
+		display: none;
+	}
+
+	#riff .riff-queue-modes {
+		display: flex;
+	}
+
+	/* in the strip the views' buttons wrap onto a second row rather than
+	   scroll, so every one shows beside the deck */
 	#riff .riff-chips {
 		flex-wrap: wrap;
-		margin: 8px 0 0;
+		justify-content: center;
+		gap: 4px 0;
+		margin: 12px -8px 0;
 		padding: 0;
 		overflow: visible;
+	}
+
+	#riff .riff-chip {
+		flex-basis: 40px;
+		min-height: 48px;
+		padding: 4px 0;
+		font-size: 11px;
 	}
 
 	/* the meters at the foot of the controls' strip */
