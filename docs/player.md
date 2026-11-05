@@ -100,7 +100,7 @@ bar's right end, and on a phone from its chip in Now Playing:
   upright, as on a phone held upright, it is the cover on its own; where it is wider than tall, as
   on a phone on its side, an unfolded phone or a computer's window, it is the turntable: the record
   out on the deck, playing or not, with the sleeve beside it. A container query on Now Playing
-  (`riff.css`) decides, so turning the phone or resizing the window changes it as it happens. A
+  (`turntable.css`) decides, so turning the phone or resizing the window changes it as it happens. A
   listener who asks for less motion, and a site that turns the turntable off, get the cover in
   every shape. It is what Now Playing opens to, and as the stage it has no button in the bar: the bar
   opens it, goes back to it from another view, and closes it from it. Its chip in Now Playing
@@ -310,7 +310,12 @@ Riff lays out by the screen's shape, never by the device, as WebKit and Apple as
 
 ## The turntable
 
-The turntable is the album where Now Playing is wider than tall (above). Under the deck it has a VU meter and a spectrum
+The turntable is the album where Now Playing is wider than tall (above). `now-playing.js` wires it
+in from its parts under `assets/player/turntable/`: how an album is pressed into sides
+(`press.js`), where the arm puts the stylus (`geometry.js`), the path a hand moves them on
+(`hand.js`), the record (`vinyl.js`), the arm (`stylus.js`), where the deck stands and the sleeve
+(`room.js`), the platter's motor (`motor.js`) and the deck's speeds and pitch (`speeds.js`). Its styles are `assets/turntable.css`, loaded right
+after `riff.css` in the order its rules stood there. Under the deck it has a VU meter and a spectrum
 (`assets/player/meters.js`), read from the music where it passes through Web Audio, as it does
 everywhere but an iPhone. The VU meter is IEC 60268-17's: a needle on the rectified signal that
 reaches 99% of a steady tone's reading in 300 ms and passes it by about 1%, with 0 VU a sine at

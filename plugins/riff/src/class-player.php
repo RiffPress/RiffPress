@@ -42,6 +42,12 @@ final class Player {
 	public const PLAYER_FEATURES = array( 'filament', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together', 'meters', 'about' );
 
 	/**
+	 * The turntable's parts under assets/player/turntable/, which now-playing.js imports as the
+	 * player starts, each registered as the script module `riff-player/turntable/<name>`.
+	 */
+	private const TURNTABLE = array( 'press', 'geometry', 'hand', 'vinyl', 'stylus', 'room', 'motor', 'speeds' );
+
+	/**
 	 * Hooks the assets and the markup.
 	 *
 	 * @since 4.0.0
@@ -95,7 +101,7 @@ final class Player {
 			)
 		);
 		// The album, what Now Playing opens to: the cover where Now Playing is portrait and the
-		// turntable where it is landscape (now-playing.js). As the stage it has no button in the
+		// turntable where it is landscape (turntable/room.js). As the stage it has no button in the
 		// bar, which opens it itself; its chip in Now Playing comes back to it from another view.
 		Registry::register_view(
 			'album',
@@ -168,7 +174,9 @@ final class Player {
 		}
 		wp_register_style( 'riff-tokens', RIFF_URL . 'assets/tokens.css', array(), self::version( 'assets/tokens.css' ) );
 		wp_register_style( 'riff', RIFF_URL . 'assets/riff.css', array( 'riff-tokens' ), self::version( 'assets/riff.css' ) );
-		wp_register_style( 'riff-app', RIFF_URL . 'features/listen/app.css', array( 'riff' ), self::version( 'features/listen/app.css' ) );
+		// Right after riff.css, whose order its rules keep, so the two cascade as one stylesheet.
+		wp_register_style( 'riff-turntable', RIFF_URL . 'assets/turntable.css', array( 'riff' ), self::version( 'assets/turntable.css' ) );
+		wp_register_style( 'riff-app', RIFF_URL . 'features/listen/app.css', array( 'riff-turntable' ), self::version( 'features/listen/app.css' ) );
 		wp_register_style( 'riff-standalone', RIFF_URL . 'features/listen/standalone.css', array( 'riff-app' ), self::version( 'features/listen/standalone.css' ) );
 		wp_register_style( 'riff-frame', RIFF_URL . 'features/listen/frame.css', array( 'riff-standalone' ), self::version( 'features/listen/frame.css' ) );
 	}
@@ -201,6 +209,7 @@ final class Player {
 		self::styles();
 		$listen = self::listen_page();
 		wp_enqueue_style( 'riff' );
+		wp_enqueue_style( 'riff-turntable' );
 		if ( $listen ) {
 			wp_enqueue_style( 'riff-app' );
 		}
@@ -262,7 +271,7 @@ final class Player {
 		foreach ( $modules as $id ) {
 			wp_set_script_module_translations( $id, 'riff' );
 		}
-		foreach ( array_merge( self::PLAYER_SECTIONS, self::PLAYER_FEATURES ) as $module ) {
+		foreach ( array_merge( self::PLAYER_SECTIONS, self::turntable(), self::PLAYER_FEATURES ) as $module ) {
 			wp_set_script_module_translations( 'riff-player/' . $module, 'riff' );
 		}
 		// The modules the registered controls and views name, which bring them to life.
@@ -271,9 +280,10 @@ final class Player {
 
 	/**
 	 * Registers the player's modules under assets/player/ and lists them as riff.js's dependencies:
-	 * the sections it imports as it starts, which the page preloads with it, and the features it
-	 * imports when first needed (the filament, gestures, the lock screen, Cast, sharing, the wake
-	 * lock), which the import map names so a dynamic import finds them.
+	 * the sections it imports as it starts and the turntable's parts now-playing.js imports, which
+	 * the page preloads with it, and the features it imports when first needed (the filament,
+	 * gestures, the lock screen, Cast, sharing, the wake lock), which the import map names so a
+	 * dynamic import finds them.
 	 *
 	 * @since 4.33.0
 	 *
@@ -282,7 +292,7 @@ final class Player {
 	private static function player_modules(): array {
 		$deps   = array();
 		$groups = array(
-			'static'  => self::PLAYER_SECTIONS,
+			'static'  => array_merge( self::PLAYER_SECTIONS, self::turntable() ),
 			'dynamic' => self::PLAYER_FEATURES,
 		);
 		foreach ( $groups as $import => $modules ) {
@@ -296,6 +306,15 @@ final class Player {
 			}
 		}
 		return $deps;
+	}
+
+	/**
+	 * The turntable's parts, by their paths under assets/player/.
+	 *
+	 * @return string[]
+	 */
+	private static function turntable(): array {
+		return array_map( static fn( string $part ): string => 'turntable/' . $part, self::TURNTABLE );
 	}
 
 	/**

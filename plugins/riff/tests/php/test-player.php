@@ -73,10 +73,13 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->go_to( home_url( '/' ) );
 		Player::enqueue();
 		$this->assertTrue( wp_style_is( 'riff', 'enqueued' ), 'the player, on every page' );
+		$this->assertTrue( wp_style_is( 'riff-turntable', 'enqueued' ), 'and its turntable, with it' );
 		$this->assertFalse( wp_style_is( 'riff-app', 'enqueued' ), 'the Listen app, not on a plain page' );
 		$this->assertFalse( wp_style_is( 'riff-standalone', 'enqueued' ) );
 		$this->assertFalse( wp_style_is( 'riff-frame', 'enqueued' ) );
-		$this->assertSame( array( 'riff' ), wp_styles()->registered['riff-app']->deps, 'the app builds on the player' );
+		$this->assertSame( array( 'riff' ), wp_styles()->registered['riff-turntable']->deps, 'right after riff.css, whose order it keeps' );
+		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'assets/turntable.css' ), wp_styles()->registered['riff-turntable']->ver );
+		$this->assertSame( array( 'riff-turntable' ), wp_styles()->registered['riff-app']->deps, 'the app builds on the player and its turntable' );
 		$this->assertSame( array( 'riff-app' ), wp_styles()->registered['riff-standalone']->deps );
 		$this->assertSame( array( 'riff-standalone' ), wp_styles()->registered['riff-frame']->deps );
 		$this->assertSame( RIFF_VERSION . '.' . filemtime( RIFF_DIR . 'features/listen/app.css' ), wp_styles()->registered['riff-app']->ver );
@@ -177,6 +180,18 @@ class Test_Riff_Player extends Riff_TestCase {
 		$all = array_merge( Player::PLAYER_SECTIONS, Player::PLAYER_FEATURES );
 		sort( $all );
 		$this->assertSame( $files, $all );
+		// And the turntable's parts, which now-playing.js imports: each file is registered and
+		// preloaded with the player.
+		$parts = array_map( static fn( string $file ): string => 'turntable/' . basename( $file, '.js' ), glob( RIFF_DIR . 'assets/player/turntable/*.js' ) );
+		$this->assertNotEmpty( $parts );
+		foreach ( $parts as $module ) {
+			$this->assertSame( 'static', $deps[ 'riff-player/' . $module ] ?? null, "$module is imported as the player starts, so the page preloads it" );
+		}
+		$registered = array_values( array_filter( array_keys( $deps ), static fn( string $id ): bool => str_starts_with( $id, 'riff-player/turntable/' ) ) );
+		sort( $registered );
+		sort( $parts );
+		$this->assertSame( array_map( static fn( string $m ): string => 'riff-player/' . $m, $parts ), $registered );
+		$all = array_merge( $all, $parts );
 		foreach ( $all as $module ) {
 			$registered = wp_script_modules()->get_registered( 'riff-player/' . $module );
 			$this->assertStringEndsWith( "assets/player/{$module}.js", strtok( (string) $registered['src'], '?' ), $module );
@@ -189,7 +204,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		foreach ( Player::PLAYER_SECTIONS as $module ) {
 			$this->assertStringContainsString( "from 'riff-player/{$module}';", $entry, "riff.js imports $module" );
 		}
-		foreach ( array_merge( array( RIFF_DIR . 'assets/riff.js' ), glob( RIFF_DIR . 'assets/player/*.js' ) ) as $file ) {
+		foreach ( array_merge( array( RIFF_DIR . 'assets/riff.js' ), glob( RIFF_DIR . 'assets/player/*.js' ), glob( RIFF_DIR . 'assets/player/turntable/*.js' ) ) as $file ) {
 			preg_match_all( "/^import .* from '([^']+)';$/m", (string) file_get_contents( $file ), $m );
 			$this->assertSame( array(), array_diff( $m[1], $ids ), basename( $file ) . ' imports only registered modules' );
 		}

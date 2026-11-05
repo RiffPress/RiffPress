@@ -86,8 +86,8 @@ export function playback( P ) {
 		if ( window.matchMedia( '(hover: none)' ).matches ) {
 			navigator.vibrate?.( 8 );
 		}
-		// Started and stopped as a turntable is where the record is seen (now-playing.js): pressed
-		// again while it waits on the needle or winds down, it changes its mind.
+		// Started and stopped as a turntable is where the record is seen (turntable/motor.js):
+		// pressed again while it waits on the needle or winds down, it changes its mind.
 		if ( P.held() ) {
 			P.halt( m );
 		} else if ( m.paused || P.stopping() ) {

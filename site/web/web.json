@@ -947,11 +947,11 @@
 		"fallback": "Without it, as in Safari until its flag is on, the unfolded layout holds: the screen is one turntable, crease and all.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/riff.css",
+				"file": "plugins/riff/assets/turntable.css",
 				"code": "@media (horizontal-viewport-segments: 2) {"
 			},
 			{
-				"file": "plugins/riff/assets/riff.css",
+				"file": "plugins/riff/assets/turntable.css",
 				"code": "grid-template-columns: env(viewport-segment-width 0 0) env(viewport-segment-width 1 0);"
 			}
 		],
