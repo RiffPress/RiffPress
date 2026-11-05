@@ -83,14 +83,6 @@
     },
     {
       "step": "writeFile",
-      "path": "/wordpress/wp-content/riff-demo/compositions/01 - Intensities in Ten Cities [intensities].webm",
-      "data": {
-        "resource": "url",
-        "url": "demo/01%20-%20Intensities%20in%20Ten%20Cities%20%5Bintensities%5D.webm"
-      }
-    },
-    {
-      "step": "writeFile",
       "path": "/wordpress/wp-content/riff-demo/compositions/02 - Underground [underground].mp3",
       "data": {
         "resource": "url",

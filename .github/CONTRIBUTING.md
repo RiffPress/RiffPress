@@ -9,7 +9,7 @@ In VS Code, accept the recommended extensions (`.vscode/extensions.json`): ESLin
 ```bash
 npm install && composer install
 npm run env:start          # WordPress at http://localhost:8890 (admin / password); the tests site at :8891. Core is the 7.2 beta or release candidate until 7.2 ships on 8 December 2026, so the fields only 7.2 shows can be worked on; Riff itself needs 7.1
-npm run seed               # a post with ten public-domain jazz tracks, and one with a video
+npm run seed               # a post with ten public-domain jazz tracks
 ```
 
 Until 7.2 ships, `.wp-env.json` names its current pre-release zip (Beta 3 today, then the release candidates), and `plugin-check.yml` names the same one. Each new build is a one-line change in those two files, then `npm run env:start` again; the PHPUnit rows and the weekly suite follow `.wp-env.json`, the trunk rows stay on trunk, and the Playground demo asks for `beta`, which is always the newest pre-release. On release day the zip becomes `WordPress/WordPress#7.2`.
@@ -27,7 +27,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | `plugins/riff-chords/` | Riff Chords: a chord chart that follows the song in a Chords view of Now Playing, with practice controls. Built the way Riff Lyrics is. |
 | `plugins/riff-sign-in/` | Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player. |
 | `plugins/riff-sing/` | Riff Sing: a Sing view of Now Playing, where the melody scrolls past and the singer is scored by pitch, from a microphone or a MIDI instrument. Built like Riff Lyrics, only on the public API. |
-| `packages/fixtures/` | Public-domain audio, video and artwork for demos and tests, and `seed.php`, which turns any folder of audio into a post. |
+| `packages/fixtures/` | Public-domain audio and artwork for demos, small files made for the tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
 | `apps/ios/` | Reserved for the native app. |
 | `site/` | [riffpress.com](https://riffpress.com/) and, from its `developers/` and `web/` pages, [developer.riffpress.com](https://developer.riffpress.com/), both published to Cloudflare Pages by `pages.yml`. |

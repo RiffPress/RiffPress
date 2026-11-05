@@ -6,8 +6,11 @@
  */
 const path = require( 'node:path' );
 
-/** The demo album's folder: ten public-domain tracks, a cover, and a video version of the first. */
+/** The demo album's folder: ten public-domain tracks and a cover. */
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', '..', 'packages', 'fixtures', 'compositions' );
+
+/** Files made for the tests alone, among them a test-pattern video to stand in for a video version. */
+const TEST = path.join( __dirname, '..', '..', '..', '..', '..', 'packages', 'fixtures', 'test' );
 
 /** The three tracks the player specs play, in the order their post lists them. */
 const FILES = [
@@ -113,7 +116,7 @@ const said = ( page ) => page.evaluate( () => window.said );
  */
 async function playerSite( made, requestUtils ) {
 	const cover = await made.media( requestUtils, path.join( FIXTURES, 'cover.png' ) );
-	const video = await made.media( requestUtils, path.join( FIXTURES, '01 - Intensities in Ten Cities [intensities].webm' ) );
+	const video = await made.media( requestUtils, path.join( TEST, 'pattern.webm' ) );
 	const audio = [];
 	for ( const file of FILES ) {
 		const media = await made.media( requestUtils, path.join( FIXTURES, file ) );
@@ -211,4 +214,4 @@ async function appSite( made, requestUtils ) {
 	return { pageUrl: page.link, postId: post.id, extraId, audioMedia: audio };
 }
 
-module.exports = { FIXTURES, FILES, AXE_TAGS, iosAgent, systemColours, audioState, playing, listen, said, playerSite, appSite };
+module.exports = { FIXTURES, TEST, FILES, AXE_TAGS, iosAgent, systemColours, audioState, playing, listen, said, playerSite, appSite };

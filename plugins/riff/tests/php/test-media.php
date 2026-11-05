@@ -34,7 +34,7 @@ class Test_Riff_Media extends Riff_TestCase {
 		$this->assertArrayHasKey( Media::CAPTIONS_META, $keys );
 		$this->assertTrue( $keys[ Media::CAPTIONS_META ]['show_in_rest'] );
 		$vtt   = self::attach( '../test/captions.vtt' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$this->assertSame( 'text/vtt', get_post_mime_type( $vtt ) );
 		$this->assertSame( $vtt, Media::sanitize_captions( (string) $vtt ) );
 		$this->assertSame( 0, Media::sanitize_captions( $video ) );
@@ -42,7 +42,7 @@ class Test_Riff_Media extends Riff_TestCase {
 	}
 
 	public function test_the_captions_field_is_on_video_only_and_saves_a_vtt_file(): void {
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$audio = self::attach( '02 - Underground [underground].mp3' );
 		$vtt   = self::attach( '../test/captions.vtt' );
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
@@ -131,7 +131,7 @@ class Test_Riff_Media extends Riff_TestCase {
 	}
 
 	public function test_only_a_video_attachment_is_kept(): void {
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$image = self::attach( 'cover.png' );
 		$this->assertSame( $video, Media::sanitize_video( (string) $video ) );
 		$this->assertSame( 0, Media::sanitize_video( $image ) );
@@ -160,7 +160,7 @@ class Test_Riff_Media extends Riff_TestCase {
 
 	public function test_the_field_appears_on_audio_only_and_shows_the_current_video(): void {
 		$audio = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 
 		$this->assertSame( '', self::input( $audio, 'riff_video' )->getAttribute( 'value' ) );
 		$this->assertStringContainsString( 'data-riff-pick="video"', Media::fields( array(), get_post( $audio ) )['riff_video']['html'] );
@@ -213,7 +213,7 @@ class Test_Riff_Media extends Riff_TestCase {
 
 	public function test_saving_accepts_an_address_or_an_id_and_clears_on_empty(): void {
 		$audio = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$post  = array( 'ID' => $audio );
 
 		Media::save( $post, array( 'riff_video' => wp_get_attachment_url( $video ) ) );
@@ -231,7 +231,7 @@ class Test_Riff_Media extends Riff_TestCase {
 
 	public function test_an_invalid_value_is_reported_on_the_field_once(): void {
 		$audio = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		update_post_meta( $audio, Media::VIDEO_META, $video );
 
 		Media::save( array( 'ID' => $audio ), array( 'riff_video' => 'https://example.com/not-in-the-library.mp4' ) );
@@ -261,7 +261,7 @@ class Test_Riff_Media extends Riff_TestCase {
 
 	public function test_the_rest_api_still_clears_an_invalid_video(): void {
 		$audio = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		update_post_meta( $audio, Media::VIDEO_META, $video );
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 
@@ -273,7 +273,7 @@ class Test_Riff_Media extends Riff_TestCase {
 
 	public function test_artwork_is_the_files_featured_image_set_from_an_address_or_an_id(): void {
 		$audio = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$cover = self::attach( 'cover.png' );
 
 		$this->assertSame( '', self::input( $audio, 'riff_art' )->getAttribute( 'value' ) );
@@ -294,7 +294,7 @@ class Test_Riff_Media extends Riff_TestCase {
 
 	public function test_what_a_picker_saves_reaches_the_track(): void {
 		$audio = self::attach( '02 - Underground [underground].mp3' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 		$cover = self::attach( 'cover.png' );
 
 		// A picker fills in the attachment's ID.

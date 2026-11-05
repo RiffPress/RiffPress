@@ -125,7 +125,7 @@ class Test_Riff_Stream extends Riff_TestCase {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$fields = Media::fields( array(), get_post( $this->song ) );
 		$this->assertArrayHasKey( 'riff_stream', $fields );
-		$this->assertArrayNotHasKey( 'riff_stream', Media::fields( array(), get_post( self::attach( '01 - Intensities in Ten Cities [intensities].webm' ) ) ), 'a video has none' );
+		$this->assertArrayNotHasKey( 'riff_stream', Media::fields( array(), get_post( self::attach( '../test/pattern.webm' ) ) ), 'a video has none' );
 
 		Media::save( array( 'ID' => $this->song ), array( 'riff_stream' => (string) $this->version ) );
 		$this->assertSame( $this->version, Media::stream( $this->song ) );

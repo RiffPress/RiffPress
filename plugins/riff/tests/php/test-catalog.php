@@ -155,7 +155,7 @@ class Test_Riff_Catalog extends Riff_TestCase {
 
 	public function test_images_and_video_are_left_alone(): void {
 		$image = self::attach( 'cover.png' );
-		$video = self::attach( '01 - Intensities in Ten Cities [intensities].webm' );
+		$video = self::attach( '../test/pattern.webm' );
 
 		foreach ( array( $image, $video ) as $id ) {
 			$this->assertSame( array(), $this->names( $id, Catalog::ALBUM ) );
