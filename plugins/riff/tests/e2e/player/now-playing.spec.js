@@ -257,6 +257,18 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'song' );
 	} );
 
+	test( 'while open it reaches a phone\'s edges, and the theme has its viewport back once closed', async ( { page } ) => {
+		const viewport = () => page.locator( 'meta[name="viewport"]' ).getAttribute( 'content' );
+		const themed = await viewport();
+		expect( themed ).not.toContain( 'viewport-fit' );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await openView( page, 'album' );
+		expect( await viewport() ).toBe( `${ themed }, viewport-fit=cover` );
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		expect( await viewport() ).toBe( themed );
+	} );
+
 	test( 'a track without a video has no switch', async ( { page } ) => {
 		await page.locator( '.riff-row' ).nth( 2 ).click();
 		await openView( page, 'album' );
