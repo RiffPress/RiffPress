@@ -148,6 +148,13 @@ is not the track's, genre, year, label, disc and track number, and copyright. No
 from anywhere else, and a tag the file lacks is left out; a file outside the Media Library, or one
 the listener may not read, shows the track and no credits.
 
+Beside Now Playing's album, the cover or the turntable, the panel leaves the picture to the stage
+and starts at the title; over another view, with the video, beside the page, or covering
+everything on a phone, the cover leads it, at most half the panel's height. The credits are a row
+each, what the tag is beside what the file says, so beside the album the whole panel shows at once
+at a computer's usual heights. Both follow the window as it resizes and the device as it turns,
+from riff.css alone (a style query on the panel's place).
+
 Its parts are sections, in the order the `riff_about_sections` filter gives them; Riff's own,
 `track` and `credits`, are two of them. A plugin adds one there, which the page draws hidden as
 `[data-riff-about="<id>"]` with its heading and an empty `.riff-about-body`, and fills it on the
