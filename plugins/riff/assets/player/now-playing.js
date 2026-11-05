@@ -62,6 +62,22 @@ export function nowPlaying( P ) {
 		} );
 	}
 
+	// A theme's viewport rarely reaches into a phone's notch and corners (viewport-fit), so Safari
+	// letterboxes the page in the theme's colour, a white strip beside the deck on a phone on its
+	// side. While Now Playing is open the page reaches them, and Now Playing keeps its controls
+	// clear of them (riff.css's safe areas); closed, the theme's viewport is as it was.
+	const viewport = document.querySelector( 'meta[name="viewport"]' );
+	const themed = viewport?.getAttribute( 'content' ) || '';
+	function reach( edges ) {
+		if ( ! viewport || /viewport-fit/.test( themed ) ) {
+			return;
+		}
+		viewport.setAttribute(
+			'content',
+			edges ? [ themed, 'viewport-fit=cover' ].filter( Boolean ).join( ', ' ) : themed
+		);
+	}
+
 	function open( id ) {
 		if ( ! P.track() ) {
 			return;
@@ -86,6 +102,7 @@ export function nowPlaying( P ) {
 		closing.done = null;
 		np.hidden = false;
 		root.classList.add( 'is-open' );
+		reach( true );
 		P.syncWakeLock?.();
 		// Everything but the dialog is inert: the rest of the page, and on a phone the player's own
 		// bar and toast, which the dialog covers there and which would otherwise still take focus.
@@ -194,6 +211,7 @@ export function nowPlaying( P ) {
 		np.classList.remove( 'is-in' );
 		np.style.removeProperty( 'transform' );
 		root.classList.remove( 'is-open' );
+		reach( false );
 		for ( const node of document.querySelectorAll( '[data-riff-inert]' ) ) {
 			node.inert = false;
 			node.removeAttribute( 'data-riff-inert' );
