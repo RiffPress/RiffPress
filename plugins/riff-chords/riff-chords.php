@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Riff Chords
  * Description: A Chords view in Riff's Now Playing: a chord chart that follows the song, with its fingerings, and practice controls to slow it down, loop a part, transpose and set a capo.
- * Version: 0.4.0
+ * Version: 0.4.1
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff
@@ -22,7 +22,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'RIFF_CHORDS_VERSION', '0.4.0' );
+define( 'RIFF_CHORDS_VERSION', '0.4.1' );
 define( 'RIFF_CHORDS_URL', plugin_dir_url( __FILE__ ) );
 
 require __DIR__ . '/src/class-chords.php';
