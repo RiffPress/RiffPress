@@ -58,7 +58,8 @@ export function queue( P ) {
 		if ( P.shuffle ) {
 			reshuffle();
 		}
-		P.mode = P.opening();
+		// A song plays as the song, its video one press away in Now Playing.
+		P.mode = 'song';
 		P.load( { play, at } );
 	}
 

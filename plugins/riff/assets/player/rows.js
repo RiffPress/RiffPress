@@ -94,8 +94,8 @@ export function rows( P ) {
 				list.findIndex( ( r ) => r.row === row ),
 				{ more: holder ? parse( holder.dataset.riffMore ) : null }
 			);
-			// A video is played to be seen, and so is a song that opens as its video (P.opening()):
-			// its picture is in Now Playing, which opens on it. A song played as the song stays here.
+			// A video is played to be seen: its picture is in Now Playing, which opens on it. A song,
+			// even one with a video version, plays as the song and stays here.
 			if ( P.isVideo() ) {
 				P.open();
 			}
