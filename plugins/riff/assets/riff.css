@@ -2016,7 +2016,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* the chip of the view showing, lit as the open view's button is in the bar,
-   and underlined, which a contrast theme keeps when it sets the colours */
+   and underlined (in a contrast theme, below, in its highlight colour) */
 #riff .riff-chip[aria-pressed="true"] {
 	border-bottom-color: currentcolor;
 	color: var(--riff-fg);
@@ -3179,6 +3179,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		flex-shrink: 0;
 	}
 
+	/* and on a screen too short for all of it, the strip scrolls rather
+	   than spill onto the meters */
+	#riff .riff-np-panel {
+		justify-content: safe center;
+		overflow-y: auto;
+		scrollbar-width: none;
+	}
+
 	#riff .riff-np-title {
 		font-size: clamp(18px, 5.6dvh, 24px);
 	}
@@ -3562,6 +3570,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 
 	/* the open panel's button in the bar, as a pressed control is drawn */
+	#riff .riff-chip {
+		border-bottom-color: Canvas;
+	}
+
+	#riff .riff-chip[aria-pressed="true"] {
+		border-bottom-color: Highlight;
+	}
+
 	#riff [data-riff-control][aria-pressed="true"] {
 		outline: 2px solid Highlight;
 		outline-offset: -2px;
