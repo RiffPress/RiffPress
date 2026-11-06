@@ -847,12 +847,17 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	.riff-bar {
 		display: grid;
 
-		/* The end column keeps room for its controls, up to half the bar; the
-		   track's column gives way and its text trims, instead of running under
-		   the transport. With more views and controls than half the bar holds,
-		   the end scrolls along, and focus brings each into sight. */
-		grid-template-columns: minmax(0, 1fr) clamp(320px, 40%, 640px) fit-content(50%);
+		/* The track and the end share alike either side of the transport, so it
+		   stays in the middle whatever each track's end holds: the quality
+		   pill's text and the views' buttons change from track to track. Where
+		   the end's controls outgrow their share, the end keeps room for them
+		   and the track's column gives way, its text trimming, instead of the
+		   controls running out of sight. */
+		grid-template-columns: minmax(0, 1fr) clamp(320px, 40%, 640px) minmax(max-content, 1fr);
 		gap: 16px;
+
+		/* for the end's cap below, as wide as the bar */
+		container-type: inline-size;
 		padding: 0 4px var(--riff-safe-b) 16px;
 	}
 
@@ -883,6 +888,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		gap: 8px;
 	}
 
+	/* Never past half the bar, however many views and controls it holds, so
+	   they can't push the bar past the window's edge: past that it scrolls. */
 	.riff-bar-end {
 		justify-content: flex-end;
 
@@ -891,6 +898,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		justify-content: safe flex-end;
 		gap: 8px;
 		min-width: 0;
+		max-width: 50cqi;
 		height: 100%;
 		padding-right: 8px;
 		overflow-x: auto;
@@ -1007,25 +1015,57 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		white-space: nowrap;
 	}
 
-	/* Volume: the slider appears beside the icon while the pointer is over it. */
+	/* the bar's own colour, whatever a theme or the app makes it, down
+	   through the end and its controls to the slider's box */
+	.riff-bar-end,
+	.riff-bar-end [data-riff-controls],
+	.riff-volume,
+	.riff-volume-pop {
+		background: inherit;
+	}
+
+	/* Volume: the icon alone in the bar. The slider opens over the controls
+	   beside it while the pointer is over it, or a tap holds it there, and
+	   while the keyboard is on it; it takes no room of its own. Focus left on
+	   it by a press doesn't keep it open over the buttons it covers. */
 	.riff-volume {
+		position: relative;
 		display: flex !important;
 		align-items: center;
-		gap: 8px;
 		color: var(--riff-fg-2);
+	}
+
+	/* The slider's own box, which a range input doesn't paint, covers what
+	   it opens over. */
+	.riff-volume-pop {
+		position: absolute;
+		z-index: 1;
+		inset-block: 0;
+		inset-inline-end: 100%;
+		display: flex;
+		align-items: center;
+		padding-inline: 8px;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s;
 	}
 
 	.riff-volume input {
 		width: 100px;
 		margin: 0;
 		accent-color: var(--riff-fg);
-		opacity: 0;
-		transition: opacity 0.2s;
 	}
 
-	.riff-volume:hover input,
-	.riff-volume input:focus-visible {
+	.riff-volume:hover .riff-volume-pop,
+	.riff-volume:has(input:focus-visible) .riff-volume-pop {
 		opacity: 1;
+		pointer-events: auto;
+	}
+
+	/* and it goes with the rest of the bar while a video plays untouched */
+	#riff[data-riff-idle] .riff-volume-pop {
+		opacity: 0;
+		pointer-events: none;
 	}
 
 	/* Volume, repeat and shuffle sit back in #909090; the caret is white. */

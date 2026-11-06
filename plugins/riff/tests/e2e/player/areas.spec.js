@@ -158,4 +158,81 @@ test.describe( 'Player', () => {
 			page.locator( '.riff-np-quality .riff-quality' )
 		).toHaveText( 'FLAC · 24-bit 96 kHz' );
 	} );
+
+	test( 'the transport stays in the middle of the bar from track to track, however wide the bar\'s end is for each', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'a phone\'s bar has Play alone at its end, not a transport in the middle' );
+		// Wide enough that the end's controls, a signed-in listener's among them, fit their share
+		// for both tracks; narrower, the end keeps room for them and the track's column gives way.
+		await page.setViewportSize( { width: 1920, height: 900 } );
+		// A badge for the second track alone, as a longer quality pill would be ("VORBIS · 86 kbps"
+		// after "MP3 · 128 kbps"): the end of the bar holds more for one track than the other.
+		await page.evaluate( () => {
+			const second = document.querySelectorAll( '.riff-row .riff-row-title' )[ 1 ].textContent.trim();
+			window.riffInternal.listen( 'badges', ( list, t ) => [ ...list, {
+				id: 'e2e-wide',
+				text: t && t.title === second ? 'Remastered' : '',
+				label: 'Remastered',
+			} ] );
+		} );
+		const badge = page.locator( '.riff-bar-end .riff-badge-e2e-wide' );
+		const at = async ( n, shown ) => {
+			await page.locator( '.riff-row' ).nth( n ).click();
+			// Paused, so the short track can't end and move on under the test.
+			await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
+			await expect( badge ).toBeVisible( { visible: shown } );
+			return page.evaluate( () => {
+				const box = ( s ) => document.querySelector( s ).getBoundingClientRect();
+				return { transport: box( '.riff-bar-transport' ).x, start: box( '.riff-bar-info' ).width, end: box( '.riff-bar-end' ).width };
+			} );
+		};
+		const first = await at( 0, false );
+		const second = await at( 1, true );
+		expect( second.transport ).toBe( first.transport );
+		// The track and the end share the bar alike either side of it.
+		expect( first.start ).toBe( first.end );
+		expect( second.start ).toBe( second.end );
+	} );
+
+	test( 'the volume\'s slider takes no room in the bar, and opens over it from the pointer, a tap or the keyboard', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'a phone has no volume in the bar' );
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
+		const volume = page.locator( '.riff-bar .riff-volume' );
+		const pop = volume.locator( '.riff-volume-pop' );
+		const slider = pop.locator( 'input' );
+		// The icon alone: the slider is out of the row, and while it's closed it doesn't take a
+		// press meant for what it covers.
+		expect( ( await volume.boundingBox() ).width ).toBeLessThan( ( await slider.boundingBox() ).width );
+		await expect( pop ).toHaveCSS( 'opacity', '0' );
+		await expect( pop ).toHaveCSS( 'pointer-events', 'none' );
+		await volume.hover();
+		await expect( pop ).toHaveCSS( 'opacity', '1' );
+		// Open, it covers the button beside it, so a press there sets the volume.
+		const over = await slider.boundingBox();
+		const hit = await page.evaluate( ( [ x, y ] ) => document.elementFromPoint( x, y )?.matches( '[data-riff-volume]' ), [ over.x + over.width / 2, over.y + over.height / 2 ] );
+		expect( hit ).toBe( true );
+		await page.mouse.move( 0, 0 );
+		await expect( pop ).toHaveCSS( 'opacity', '0' );
+		// Focus a press leaves on it doesn't keep it open over what it covers.
+		await page.mouse.click( over.x + over.width / 2, over.y + over.height / 2 );
+		await slider.focus();
+		await page.mouse.move( 0, 0 );
+		await expect( slider ).toBeFocused();
+		await expect( pop ).toHaveCSS( 'opacity', '0' );
+		await expect( pop ).toHaveCSS( 'pointer-events', 'none' );
+		// From the keyboard: Tab to it opens it, and the arrows set it.
+		await page.keyboard.press( 'Shift+Tab' );
+		await page.keyboard.press( 'Tab' );
+		await expect( slider ).toBeFocused();
+		await expect( pop ).toHaveCSS( 'opacity', '1' );
+		const value = Number( await slider.inputValue() );
+		await page.keyboard.press( 'ArrowLeft' );
+		await expect( slider ).toHaveValue( String( value - 1 ) );
+	} );
 } );
