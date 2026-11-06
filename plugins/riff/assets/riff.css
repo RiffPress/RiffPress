@@ -3316,6 +3316,9 @@ dl.riff-about-credits dd {
 	   the deck: the turntable keeps turning where it is. */
 	#riff .riff-side {
 		--riff-side-place: strip;
+
+		/* from the window's top, for a wash that lines up with Now Playing's */
+		--riff-side-top: 0px;
 		inset: 0 0 0 auto;
 		width: clamp(224px, 30%, 300px);
 		padding: var(--riff-safe-t) var(--riff-safe-r) var(--riff-safe-b) 0;
