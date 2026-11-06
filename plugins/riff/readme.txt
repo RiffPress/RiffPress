@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.1.1
+Stable tag: 6.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,12 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.1.2 =
+* Fixed: a song playing as its video leaves its format and bit rate out of the badges, and the switch and the bar fade while a video plays untouched.
+* Fixed: About shows all of a track at once beside the album, leaving the cover to the stage.
+* Fixed: in the Listen app on a computer, a panel beside Now Playing carries on its wash instead of standing on black.
+* Fixed: the bar's transport stays in the middle from track to track, and the volume's slider opens over the bar instead of taking room in it.
+
 = 6.1.1 =
 * Fixed: the demo ships no made-up video, and tests that need one use the test pattern.
 * Fixed: a phone on its side sees the turntable to its edges, not the theme's white in the margins Safari leaves.
@@ -151,22 +157,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: standalone mode is laid out as sidebar, rail or tabs from one choice in its stylesheet, and the desktop frame shows where it is sidebar rather than wherever there is a mouse.
 * Fixed: a song pressed in a list that opens as its video opens Now Playing on the picture and plays.
 * Fixed: Go to post opens a new window in the desktop app and the installed Listen app.
-
-= 5.9.0 =
-* A zip of an album imports as its folder does, from wp riff import or uploaded to the Media Library.
-* Keys for the loop, the speed and transpose, A, S and F, D and U, while the Chords view shows a chart.
-* A plugin adds its own items to the track menu with the riff.menu filter.
-* A plugin adds its own keyboard shortcuts with riff_register_shortcut() and window.riff.shortcut(), which follow Riff's single-key rules.
-* An about panel beside the page shows the track playing, its artist and album linked to their pages and the credits its file's tags carry, and a plugin adds a section to it with riff_about_sections.
-* The turntable presses discs from the tags, cuts grooves from the loudness, clicks in the run-out, and has a VU meter and a spectrum.
-* The developer reference moves to developer.riffpress.com, and its old addresses on riffpress.com redirect there.
-* Fixed: an uploaded zip's albums are its uploader's own, it changes no video they can't edit, and a zip ZipArchive can't read whole is refused rather than inflated by PclZip.
-* Fixed: a narrow window with a mouse, as a car's screen is, keeps the touch layout without the desktop frame laid over it.
-* Fixed: a header without a cover, as the Tracks view's, starts at the top and lines up with Play and the list, and a stacked cover is half the page wide.
-* Fixed: an album, artist or playlist header too narrow for its title beside the cover stacks them, and its cover is sized to the page as its title is.
-* Fixed: an album's title is sized to its header, so it stays whole when Up next or About narrows the page.
-* Fixed: on a computer, a panel that leaves the page too little room beside the library folds the library to its rail, so an album's rows keep their titles.
-* Fixed: a mark typed with AltGr, as [ on a German keyboard, reaches a plugin's shortcut.
-* Fixed: a track menu first opened before anything played still answers in Up next on a phone.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
