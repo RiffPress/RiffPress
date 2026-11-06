@@ -91,7 +91,7 @@ final class Player {
 				'label'  => __( 'Volume', 'riff' ),
 				'order'  => 70,
 				'wide'   => true,
-				'render' => static fn() => '<label class="riff-volume"><input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="' . esc_attr__( 'Volume', 'riff' ) . '" aria-valuetext="' . esc_attr__( '100 percent', 'riff' ) . '">' . self::icon( 'volume' ) . '</label>',
+				'render' => static fn() => '<label class="riff-volume"><span class="riff-volume-pop"><input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="' . esc_attr__( 'Volume', 'riff' ) . '" aria-valuetext="' . esc_attr__( '100 percent', 'riff' ) . '"></span>' . self::icon( 'volume' ) . '</label>',
 			)
 		);
 		// The album, what Now Playing opens to: the cover where Now Playing is portrait and the
