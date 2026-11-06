@@ -144,11 +144,20 @@ test.describe( 'Standalone', () => {
 		} );
 		expect( Math.abs( middle - ( room.x + ( room.width / 2 ) ) ) ).toBeLessThanOrEqual( 2 );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-side' ).analyze() ).violations ).toEqual( [] );
+		// Now Playing's wash carries on into the panel, drawn from the window's top as Now Playing's
+		// is, so the two line up across the rule between them.
+		await expect( side ).toHaveCSS( 'background-image', /gradient/ );
+		await expect( side ).toHaveCSS( 'background-position', '0px -64px' );
 
 		// Pressed again, it closes; Escape still closes Now Playing.
 		await upNext.click();
 		await expect( side ).toBeHidden();
 		await page.keyboard.press( 'Escape' );
 		await expect( np ).toBeHidden();
+
+		// Beside the page, with no wash to carry on, the panel is the frame's black.
+		await upNext.click();
+		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeVisible();
+		await expect( side ).toHaveCSS( 'background-image', 'none' );
 	} );
 } );

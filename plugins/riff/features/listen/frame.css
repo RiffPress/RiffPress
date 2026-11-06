@@ -359,9 +359,13 @@ html.riff-frame .riff-standalone .riff-app {
 	   colour, the art alone in the middle, with Up next and Lyrics beside it
 	   as panels of their own (riff.css). Its top drags an installed app's
 	   window. */
+	html.riff-frame #riff {
+		--riff-frame-wash: linear-gradient(color-mix(in srgb, var(--riff-tint) 45%, #000), color-mix(in srgb, var(--riff-tint) 18%, #000));
+	}
+
 	html.riff-frame #riff .riff-np-bg {
 		display: block;
-		background: linear-gradient(color-mix(in srgb, var(--riff-tint) 45%, #000), color-mix(in srgb, var(--riff-tint) 18%, #000));
+		background: var(--riff-frame-wash);
 	}
 
 	html.riff-frame #riff .riff-np-head {
@@ -408,6 +412,13 @@ html.riff-frame .riff-standalone .riff-app {
 
 	html.riff-frame #riff .riff-side {
 		background: #000;
+	}
+
+	/* Beside Now Playing, a panel goes on with its wash, sized and placed
+	   as Now Playing's is, from the window's top to the bar, so the two
+	   read as one surface with the panel's rule between them. */
+	html.riff-frame #riff.is-open .riff-side {
+		background: var(--riff-frame-wash) 0 calc(-1 * var(--riff-side-top, 0px)) / 100% calc(100% + var(--riff-side-top, 0px)) no-repeat #000;
 	}
 
 	/* Up next, About or another panel narrows the frame beside it, as the
