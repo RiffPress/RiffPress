@@ -1,5 +1,15 @@
 # Changelog
 
+## [6.1.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.1.1...riff-v6.1.2) (2026-11-06)
+
+
+### Bug Fixes
+
+* **player:** a song playing as its video leaves its format and bit rate out of the badges, and the switch and the bar fade while a video plays untouched ([#902](https://github.com/RiffPress/RiffPress/issues/902)) ([fa9a763](https://github.com/RiffPress/RiffPress/commit/fa9a763c6bdde8d06e789917dbaf14482a5df0a5))
+* **player:** About shows all of a track at once beside the album, leaving the cover to the stage ([#903](https://github.com/RiffPress/RiffPress/issues/903)) ([672b0ee](https://github.com/RiffPress/RiffPress/commit/672b0ee5e0f6001417be6b7baa112759723cc7c3))
+* **player:** in the Listen app on a computer, a panel beside Now Playing carries on its wash instead of standing on black ([#905](https://github.com/RiffPress/RiffPress/issues/905)) ([6226f18](https://github.com/RiffPress/RiffPress/commit/6226f1818cb83cf14a374cb772ddd53d4080add4))
+* **player:** the bar's transport stays in the middle from track to track, and the volume's slider opens over the bar instead of taking room in it ([#906](https://github.com/RiffPress/RiffPress/issues/906)) ([805e0cb](https://github.com/RiffPress/RiffPress/commit/805e0cbc7cf9b8f5eeae1f50c39e060bc6ad56f4))
+
 ## [6.1.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.1.0...riff-v6.1.1) (2026-11-05)
 
 
