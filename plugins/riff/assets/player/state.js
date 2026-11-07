@@ -14,7 +14,7 @@ const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 // A track with a video version carries a small film mark after its title, where the eye already
 // is, instead of a pill competing with the time on the row's right edge.
 const FILM =
-	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.5 16.5v-9l7 4.5-7 4.5z"/></svg>';
+	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 15L15 12L10 9V15Z" fill="currentColor" stroke="none"/><path d="M4.75 6C4.75 5.30964 5.30964 4.75 6 4.75H18C18.6904 4.75 19.25 5.30964 19.25 6V18C19.25 18.6904 18.6904 19.25 18 19.25H6C5.30964 19.25 4.75 18.6904 4.75 18V6Z"/></svg>';
 
 export function createPlayer( root, data ) {
 	const $ = ( sel ) => root.querySelector( sel );

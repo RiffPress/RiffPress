@@ -14,7 +14,7 @@ export function appFrame( ctx ) {
 	const wide = () => document.documentElement.dataset.riffFrame === 'sidebar';
 
 	const icon = ( d ) =>
-		`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="${ d }"/></svg>`;
+		`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="${ d }"/></svg>`;
 	const bar = document.createElement( 'div' );
 	bar.className = 'riff-app-titlebar';
 	bar.innerHTML = `<div class="riff-app-history" role="group" aria-label="${ esc(
@@ -22,11 +22,11 @@ export function appFrame( ctx ) {
 	) }"><button type="button" data-riff-app-action="back" aria-label="${ esc(
 		__( 'Back', 'riff' )
 	) }">${ icon(
-		'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z'
+		'M14 6.5L9 12L14 17.5'
 	) }</button><button type="button" data-riff-app-action="forward" aria-label="${ esc(
 		__( 'Forward', 'riff' )
 	) }">${ icon(
-		'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'
+		'M10 6.5L15 12L10 17.5'
 	) }</button></div>`;
 	// First in the app, so the buttons and the sidebar after it are holes in its drag region, and
 	// the keyboard reaches back and forward first. They stay in the strip, which is never drawn

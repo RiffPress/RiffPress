@@ -513,7 +513,7 @@ export default function together( P ) {
 		const span = document.createElement( 'span' );
 		span.className = 'riff-together-face';
 		span.innerHTML =
-			'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+			'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.25 8.25A3.25 3.25 0 1 1 8.75 8.25A3.25 3.25 0 0 1 15.25 8.25Z"/><path d="M5.75 19.25V18C5.75 16.2 7.2 14.75 9 14.75H15C16.8 14.75 18.25 16.2 18.25 18V19.25"/></svg>';
 		if ( src ) {
 			const img = document.createElement( 'img' );
 			img.alt = '';
@@ -808,7 +808,7 @@ export default function together( P ) {
 				__( 'Stop following %s', 'riff' ),
 				following?.name || ''
 			),
-		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41 6.29 6.3-6.3 6.29 1.42 1.42 6.29-6.3 6.3 6.3 1.41-1.42-6.29-6.3 6.29-6.29z"/></svg>',
+		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 19L19 5M19 19L5 5"/></svg>',
 		shown: () => !! following,
 		run: () => stop( '', false ),
 	} );
@@ -820,7 +820,7 @@ export default function together( P ) {
 				__( 'Follow %s again', 'riff' ),
 				again?.name || ''
 			),
-		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>',
+		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.72351 15.6312C6.97795 17.7948 9.31903 19.25 12 19.25C16.0041 19.25 19.25 16.0041 19.25 12C19.25 7.99594 16.0041 4.75 12 4.75C9.99797 4.75 8.18547 5.56148 6.87348 6.87348L4.5 9.5M4.5 6V9.5H8"/><path d="M11.25 13.5V10.5L13.25 12L11.25 13.5Z" fill="currentColor"/></svg>',
 		shown: () => ! following && !! again,
 		run: () => again && follow( again.user, again.name ),
 	} );

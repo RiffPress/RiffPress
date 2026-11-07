@@ -1478,7 +1478,7 @@
 .riff-app .riff-album-face svg {
 	padding: 6px;
 	box-sizing: border-box;
-	fill: var(--riff-app-ink-2);
+	stroke: var(--riff-app-ink-2);
 }
 
 .riff-app .riff-album-face img {

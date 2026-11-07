@@ -18,7 +18,7 @@ A change that breaks one of these is a finding, with the rule named:
 - No build step. `plugins/riff/assets/` and `plugins/riff/features/` are what ships.
 - Animate only `transform` and `opacity`. Every browser feature sits behind a check.
 - State (hover, current, selected, pressed) never changes `font-weight`; it changes colour, opacity, an underline or a background, because a weight change shifts the layout.
-- Icons are filled Material icons, never outlined.
+- Icons are WordPress's own (`@wordpress/icons`), or drawn to match them where it has none: 24 by 24, a 1.5 stroke, filled only where WordPress fills.
 - WordPress first: new storage, a field, a relation or a query needs a reason in [docs/native.md](docs/native.md), and WordPress's own version if it has one.
 - New public surface is a promise kept forever once Riff is on WordPress.org. Ask whether a real extension needs it; Riff Lyrics, built only on the public API, is the test. Private is the default.
 

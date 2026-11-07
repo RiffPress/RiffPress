@@ -126,17 +126,17 @@ test.describe( 'Standalone', () => {
 			await expect( item ).toHaveAttribute( 'rel', 'noopener' );
 			await expect( item.locator( 'svg[aria-hidden="true"]' ) ).toBeVisible();
 			// The icon is drawn in the words' colour, a little taller than their letters.
-			const { height, fill, size, color } = await item.evaluate( ( el ) => {
+			const { height, stroke, size, color } = await item.evaluate( ( el ) => {
 				const icon = el.querySelector( 'svg' );
 				return {
 					height: icon.getBoundingClientRect().height,
-					fill: getComputedStyle( icon ).fill,
+					stroke: getComputedStyle( icon ).stroke,
 					size: parseFloat( getComputedStyle( el ).fontSize ),
 					color: getComputedStyle( el ).color,
 				};
 			} );
 			expect( height ).toBeCloseTo( size * 1.25, 0 );
-			expect( fill ).toBe( color );
+			expect( stroke ).toBe( color );
 			return item;
 		};
 

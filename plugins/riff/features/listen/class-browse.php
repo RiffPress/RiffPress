@@ -14,6 +14,7 @@ use WP_User;
 use Riff\Catalog;
 use Riff\Catalog_Rest;
 use Riff\Library;
+use Riff\Player;
 use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
@@ -87,16 +88,16 @@ final class Browse {
 	public const ARGS = array( self::VIEW, self::ALBUM, self::ARTIST, self::SEARCH, self::FILTER, self::SORT, self::PLAYLIST );
 
 	/**
-	 * Icons for the navigation, as Material Icons draws them, beside each label in the sidebar.
+	 * The icon from Player::icon() beside each label in the sidebar.
 	 */
 	private const ICONS = array(
-		'home'    => 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
-		'search'  => 'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
-		'albums'  => 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z',
-		'artists' => 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
-		'tracks'  => 'M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z',
-		'posts'   => 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z',
-		'library' => 'M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 5h-3v5.5c0 1.38-1.12 2.5-2.5 2.5S10 13.88 10 12.5s1.12-2.5 2.5-2.5c.57 0 1.08.19 1.5.51V5h4v2zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z',
+		'home'    => 'home',
+		'search'  => 'search',
+		'albums'  => 'record',
+		'artists' => 'person',
+		'tracks'  => 'queue',
+		'posts'   => 'posts',
+		'library' => 'albums',
 	);
 
 	/**
@@ -172,18 +173,18 @@ final class Browse {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which view is showing; nothing changes.
 		$view = $current['view'] ?? ( empty( $_GET[ App::QUERY ] ) ? 'home' : 'post' );
 		$html = sprintf(
-			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button><span class="riff-app-name">%s</span></span>',
+			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12H19M5 18.25H19M5 5.75H19"/></svg></button><span class="riff-app-name">%s</span></span>',
 			esc_attr( $view ),
 			esc_attr__( 'Sidebar', 'riff' ),
 			esc_html( '' !== $name ? $name : 'Riff' )
 		);
 		foreach ( $links as $slug => list( $label, $href ) ) {
 			$html .= sprintf(
-				'<a class="riff-app-tab%s" href="%s"%s><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="%s"/></svg><span>%s</span></a>',
+				'<a class="riff-app-tab%s" href="%s"%s>%s<span>%s</span></a>',
 				array( 'home' => ' riff-app-home', 'search' => ' riff-app-tab-search', 'library' => ' riff-app-tab-library' )[ $slug ] ?? '', // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 				esc_url( $href ),
 				$slug === $here ? ' aria-current="page"' : '',
-				esc_attr( self::ICONS[ $slug ] ),
+				Player::icon( self::ICONS[ $slug ] ),
 				esc_html( $label )
 			);
 		}
@@ -544,7 +545,7 @@ final class Browse {
 		// Over an album's tracks, the usual column heads: #, Title and a clock. They only
 		// label what each row already says, so a screen reader is not told them again.
 		$head = $numbered || $heads ? sprintf(
-			'<div class="riff-tracks-head" aria-hidden="true"><span>%s</span><span>%s</span><svg viewBox="0 0 24 24" focusable="false" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></div>',
+			'<div class="riff-tracks-head" aria-hidden="true"><span>%s</span><span>%s</span><svg viewBox="0 0 24 24" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19.25C16.0041 19.25 19.25 16.0041 19.25 12C19.25 7.99594 16.0041 4.75 12 4.75C7.99594 4.75 4.75 7.99594 4.75 12C4.75 16.0041 7.99594 19.25 12 19.25Z" stroke-linejoin="round"/><path d="M9.5 12.25H12.25V8"/></svg></div>',
 			$numbered ? '#' : '',
 			esc_html__( 'Title', 'riff' )
 		) : '';

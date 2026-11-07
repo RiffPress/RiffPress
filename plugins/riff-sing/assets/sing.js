@@ -155,7 +155,7 @@
 
 	// A microphone under a note: what the empty panel shows, decoration beside its words.
 	const ICON =
-		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>';
+		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.75 11.5V7.5A2.75 2.75 0 0 0 9.25 7.5V11.5A2.75 2.75 0 0 0 14.75 11.5Z"/><path d="M6.75 11.5A5.25 5.25 0 0 0 17.25 11.5M12 16.75V19.25M9 19.25H15"/></svg>';
 
 	// The panel with nothing to sing: its message in the middle, and for someone who can edit the
 	// Media Library, the way to the track's Melody field.

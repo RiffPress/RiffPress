@@ -59,7 +59,7 @@
 
 	// A queue of lines under a note: what the empty view shows, decoration beside its words.
 	const ICON =
-		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/></svg>';
+		'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 10L20 10M15 15L20 15"/><path d="M11.25 16.5C11.25 18.0188 10.0188 19.25 8.5 19.25C6.98122 19.25 5.75 18.0188 5.75 16.5C5.75 14.9812 6.98122 13.75 8.5 13.75C10.0188 13.75 11.25 14.9812 11.25 16.5Z" fill="currentColor" stroke="none"/><path d="M8.5 19.25C10.0188 19.25 11.25 18.0188 11.25 16.5C11.25 14.9812 10.0188 13.75 8.5 13.75C6.98122 13.75 5.75 14.9812 5.75 16.5C5.75 18.0188 6.98122 19.25 8.5 19.25ZM8.5 19.25C11.4867 19.25 11.75 16.5 11.75 15.1379V7.99998C11.75 4.9108 14.4 5.00254 16 5.00233"/></svg>';
 
 	// The view with no lyrics in it: its message in the middle, and for someone who can edit the
 	// Media Library, the way to the track's Lyrics field.

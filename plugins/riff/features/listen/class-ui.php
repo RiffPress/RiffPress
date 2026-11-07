@@ -25,7 +25,7 @@ final class Ui {
 	/**
 	 * The play icon on a card's cover.
 	 */
-	private const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+	private const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.25 16.75L15.25 12L8.25 7.25L8.25 16.75Z" fill="currentColor"/></svg>';
 
 	/**
 	 * How wide a card's cover is shown: two to a row on a phone, about a fifth of a computer's.
@@ -353,7 +353,7 @@ final class Ui {
 				$current = ! empty( $choice['current'] ) ? (string) $choice['label'] : $current;
 			}
 			return sprintf(
-				'<details class="riff-library-sort"><summary aria-label="%1$s">%2$s<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg></summary><div class="riff-library-sort-menu" role="group" aria-label="%3$s">%4$s</div></details>',
+				'<details class="riff-library-sort"><summary aria-label="%1$s">%2$s<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7.25H20M4 12H15M4 16.75H10"/></svg></summary><div class="riff-library-sort-menu" role="group" aria-label="%3$s">%4$s</div></details>',
 				/* translators: 1: "Sort by", 2: the order in use, such as Recently added. */
 				esc_attr( sprintf( __( '%1$s: %2$s', 'riff' ), $label, $current ) ),
 				esc_html( $current ),

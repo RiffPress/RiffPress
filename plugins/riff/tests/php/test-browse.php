@@ -208,7 +208,7 @@ class Test_Riff_Browse extends Riff_TestCase {
 	public function test_the_navigation_marks_where_you_are_and_search_works_without_the_script(): void {
 		$html = $this->render_at( array( Browse::VIEW => 'albums' ) );
 
-		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab" href="[^"]*riff_view=albums" aria-current="page"><svg[^>]*><path d="[^"]+"/></svg><span>Albums</span></a>#', $html );
+		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab" href="[^"]*riff_view=albums" aria-current="page"><svg[^>]*>(?:<path d="[^"]+"/>)+</svg><span>Albums</span></a>#', $html );
 		$this->assertStringContainsString( '<a class="riff-app-tab riff-app-home" href="' . esc_url( get_permalink( $this->page ) ) . '"><svg', $html, 'the library link the script and the tests know' );
 		$this->assertStringContainsString( '<span class="riff-app-brand" data-riff-view="albums">', $html, 'the site\'s name, for the sidebar, with the view showing' );
 		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab riff-app-tab-search" href="[^"]*riff_view=search"><svg#', $html, 'Search, a tab on a phone' );
