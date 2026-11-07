@@ -1,4 +1,4 @@
-=== Riff ===
+=== Riff Music Player ===
 Contributors: joefusco
 Tags: music, audio, video, player, media
 Requires at least: 7.1
