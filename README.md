@@ -42,7 +42,7 @@ Riff is GPL-2.0-or-later.
 
 - Roboto, Inter and EB Garamond are bundled under the SIL Open Font License.
 - The logo is drawn from EB Garamond and Bravura, both under the SIL Open Font License ([site/brand/](site/brand/README.md)).
-- The icons are Google's Material Icons, under the Apache License 2.0.
+- The icons are WordPress's own (`@wordpress/icons`, GPL), with the few it lacks drawn to match.
 - The demo recordings are by the Airmen of Note, United States Air Force Band, and are public domain as U.S. Government works.
 
 </details>

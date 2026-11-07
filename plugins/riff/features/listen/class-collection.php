@@ -214,7 +214,7 @@ final class Collection {
 			$chips .= sprintf( '<a class="riff-app-library-chip" href="%s" data-riff-library-show="%s">%s</a>', esc_url( self::link( $page, $slug, 'recent' ) ), esc_attr( $slug ), esc_html( $label ) );
 		}
 		$create = $account ? sprintf(
-			'<button type="button" class="riff-app-library-create" data-riff-app-action="new-playlist" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>',
+			'<button type="button" class="riff-app-library-create" data-riff-app-action="new-playlist" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 18V6M18 12H6"/></svg></button>',
 			esc_attr__( 'New playlist', 'riff' )
 		) : '';
 		return sprintf(

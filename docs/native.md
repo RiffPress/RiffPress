@@ -9,6 +9,7 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | What | Where it lives in WordPress |
 | --- | --- |
 | A track | An audio attachment. |
+| Icons | The drawings of `@wordpress/icons`, the set behind core's icon library (`wp_get_icon()`, 7.1), with the few it lacks, such as a heart and a speaker, drawn to match. They're inlined rather than read from the library: the player's script modules need them as strings, and the library core ships holds only some of them. |
 | Title, artist, album, year, genre, track number, disc number, length | Read from the file's tags by getID3 on upload (`wp_read_audio_metadata()`), kept in `_wp_attachment_metadata`; the disc number as `part_of_a_set`, which the tracks Riff sends carry as `disc`. |
 | Bit rate, sample rate, bit depth, codec, lossless | The same upload metadata. |
 | A track's credits in the About panel: composer, lyricist, conductor, album artist, genre, label, copyright | The same upload metadata, under the names getID3 gives the tags (`composer`, `band`, `publisher`, `copyright_message` and the rest), read back from the media REST route's `media_details`, as Riff Lyrics reads the lyrics. The same answer gives the IDs of the albums and artists it is filed under (`riff_albums`, `riff_artists`), named through `riff/v1/albums` and `riff/v1/artists`, since WordPress's own term routes for them are closed. |

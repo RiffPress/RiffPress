@@ -30,7 +30,7 @@ class Test_Riff_Ui extends Riff_TestCase {
 		);
 
 		$this->assertSame(
-			'<div class="riff-card" id="riff-page-2" data-riff-album="1"><span class="riff-card-art"><img src="https://example.org/cover.jpg" sizes="(max-width: 599px) 45vw, 240px" alt="" loading="lazy" decoding="async"><button type="button" class="riff-card-play" data-riff-app-action="play-album" data-riff-album="1" aria-label="Play Compositions"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></span><a class="riff-card-link" href="https://example.org/?riff_album=1"><span class="riff-card-title">Compositions &lt;b&gt;</span></a><span class="riff-card-sub">The Airmen of Note</span></div>',
+			'<div class="riff-card" id="riff-page-2" data-riff-album="1"><span class="riff-card-art"><img src="https://example.org/cover.jpg" sizes="(max-width: 599px) 45vw, 240px" alt="" loading="lazy" decoding="async"><button type="button" class="riff-card-play" data-riff-app-action="play-album" data-riff-album="1" aria-label="Play Compositions"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.25 16.75L15.25 12L8.25 7.25L8.25 16.75Z" fill="currentColor"/></svg></button></span><a class="riff-card-link" href="https://example.org/?riff_album=1"><span class="riff-card-title">Compositions &lt;b&gt;</span></a><span class="riff-card-sub">The Airmen of Note</span></div>',
 			$html
 		);
 	}

@@ -5,11 +5,11 @@
 // The sidebar's toggle in the frame: a library (two books and a leaning third), and the
 // panel with an arrow to close it or to open it.
 const PANEL =
-	'M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v12h3V6H5zm5 0v12h9V6h-9z';
+	'M9.75 4.75H6C5.31 4.75 4.75 5.31 4.75 6V18C4.75 18.69 5.31 19.25 6 19.25H9.75M9.75 4.75H18C18.69 4.75 19.25 5.31 19.25 6V18C19.25 18.69 18.69 19.25 18 19.25H9.75M9.75 4.75V19.25';
 const SIDEBAR_ICONS = {
-	rest: 'M3 21V3h2v18H3zm5 0V3h2v18H8zm5-17.4L14.9 3l5.7 17.4-1.9.6L13 3.6z',
-	close: PANEL + 'm6.4 3.4-2.6 2.6 2.6 2.6-1.1 1.1-3.7-3.7 3.7-3.7z',
-	open: PANEL + 'm1 3.4 2.6 2.6-2.6 2.6 1.1 1.1 3.7-3.7-3.7-3.7z',
+	rest: 'M5.5 19.25V4.75M9.75 19.25V4.75M13.5 4.95L18.5 19.05',
+	close: PANEL + 'M15.75 9.25L13 12L15.75 14.75',
+	open: PANEL + 'M13 9.25L15.75 12L13 14.75',
 };
 
 export function sidebarPanel( ctx ) {
@@ -59,7 +59,7 @@ export function sidebarPanel( ctx ) {
 					svg.innerHTML = Object.entries( SIDEBAR_ICONS )
 						.map(
 							( [ name, d ] ) =>
-								`<path class="riff-app-collapse-${ name }" fill-rule="evenodd" d="${ d }"/>`
+								`<path class="riff-app-collapse-${ name }" d="${ d }"/>`
 						)
 						.join( '' );
 				}

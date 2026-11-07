@@ -40,7 +40,7 @@ final class Lyrics {
 	/**
 	 * A page of words, the Lyrics view's icon.
 	 */
-	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>';
+	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.75 4.75H18.25C18.8 4.75 19.25 5.2 19.25 5.75V15.25C19.25 15.8 18.8 16.25 18.25 16.25H9.5L4.75 19.25V5.75C4.75 5.2 5.2 4.75 5.75 4.75Z"/><path d="M8.5 8.5H15.5M8.5 12H13"/></svg>';
 
 	/**
 	 * Hooks the view, the field and the script, which fills the view.
@@ -292,7 +292,7 @@ final class Lyrics {
 			. '.riff-lyrics-note{margin:0;color:var(--riff-fg-2)}'
 			// No lyrics, nothing playing, or none could load: one quiet message in the middle of the view.
 			. '.riff-lyrics-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-sizing:border-box;min-height:min(320px,100%);height:100%;padding:32px 24px;text-align:center}'
-			. '#riff .riff-lyrics-empty svg{width:40px;height:40px;fill:currentColor;color:var(--riff-fg-3)}'
+			. '#riff .riff-lyrics-empty svg{width:40px;height:40px;color:var(--riff-fg-3)}'
 			. '.riff-lyrics-empty .riff-lyrics-note{max-width:24em;color:var(--riff-fg);font-size:16px;font-weight:600;line-height:1.4}'
 			. '#riff .riff-lyrics-add{margin-top:4px;padding:8px 16px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-fg-3);color:var(--riff-fg);font-size:14px;font-weight:600;text-decoration:none}'
 			. '#riff .riff-lyrics-add:hover{box-shadow:inset 0 0 0 1px var(--riff-fg)}'

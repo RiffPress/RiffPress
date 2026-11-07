@@ -356,14 +356,13 @@ html.has-riff .riff-standalone .riff-app {
 	.riff-standalone .riff-app-item-heart svg {
 		width: 20px;
 		height: 20px;
-		fill: currentcolor;
 	}
 
 	.riff-standalone .riff-app-item-note svg {
 		display: block;
 		width: 24px;
 		height: 24px;
-		fill: var(--riff-app-ink-2);
+		stroke: var(--riff-app-ink-2);
 	}
 
 	/* Your Library heads its own list here, so the tab for it would say it

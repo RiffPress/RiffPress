@@ -69,7 +69,7 @@ final class Sing {
 	/**
 	 * A microphone, the Sing view's icon.
 	 */
-	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>';
+	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.75 11.5V7.5A2.75 2.75 0 0 0 9.25 7.5V11.5A2.75 2.75 0 0 0 14.75 11.5Z"/><path d="M6.75 11.5A5.25 5.25 0 0 0 17.25 11.5M12 16.75V19.25M9 19.25H15"/></svg>';
 
 	/**
 	 * The longest melody kept, in characters: a long song's chart is a few tens of thousands.
@@ -506,7 +506,7 @@ final class Sing {
 			. '#riff .riff-sing-note{color:var(--riff-fg-2);font-size:14px;line-height:1.5}'
 			// Nothing to sing: one quiet message in the middle of the panel, as Riff Lyrics has it.
 			. '#riff .riff-sing-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-sizing:border-box;min-height:min(320px,100%);height:100%;padding:32px 24px;text-align:center}'
-			. '#riff .riff-sing-empty svg{width:40px;height:40px;fill:currentColor;color:var(--riff-fg-3)}'
+			. '#riff .riff-sing-empty svg{width:40px;height:40px;color:var(--riff-fg-3)}'
 			. '#riff .riff-sing-message{max-width:24em;margin:0;color:var(--riff-fg);font-size:16px;font-weight:600;line-height:1.4}'
 			. '#riff .riff-sing-add{margin-top:4px;padding:8px 16px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-fg-3);color:var(--riff-fg);font-size:14px;font-weight:600;text-decoration:none}'
 			. '#riff .riff-sing-add:hover{box-shadow:inset 0 0 0 1px var(--riff-fg)}'

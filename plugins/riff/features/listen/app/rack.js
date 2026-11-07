@@ -13,12 +13,12 @@
 import { average, read, write } from 'riff-app/helpers';
 
 const KEY = 'riff-rack';
-// Solid, as the app's other icons: four squares for the grid, and for the shelf one record faced
-// with others behind it, unlike the library's upright bars in the sidebar.
+// WordPress's own: its category squares for the grid, and for the shelf its gallery, one cover
+// faced with another behind it, unlike the library's upright bars in the sidebar.
 const GRID =
-	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg>';
+	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.75 6C4.75 5.30964 5.30964 4.75 6 4.75H9C9.69036 4.75 10.25 5.30964 10.25 6V9C10.25 9.69036 9.69036 10.25 9 10.25H6C5.30964 10.25 4.75 9.69036 4.75 9V6Z"/><path d="M4.75 15C4.75 14.3096 5.30964 13.75 6 13.75H9C9.69036 13.75 10.25 14.3096 10.25 15V18C10.25 18.6904 9.69036 19.25 9 19.25H6C5.30964 19.25 4.75 18.6904 4.75 18V15Z"/><path d="M13.75 6C13.75 5.30964 14.3096 4.75 15 4.75H18C18.6904 4.75 19.25 5.30964 19.25 6V9C19.25 9.69036 18.6904 10.25 18 10.25H15C14.3096 10.25 13.75 9.69036 13.75 9V6Z"/><path d="M13.75 15C13.75 14.3096 14.3096 13.75 15 13.75H18C18.6904 13.75 19.25 14.3096 19.25 15V18C19.25 18.6904 18.6904 19.25 18 19.25H15C14.3096 19.25 13.75 18.6904 13.75 18V15Z"/></svg>';
 const SHELF =
-	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M7 19h10V4H7v15zm-5-2h4V6H2v11zM18 6v11h4V6h-4z"/></svg>';
+	'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.25 6.75V19C20.25 19.6904 19.6904 20.25 19 20.25H6.75"/><path d="M17.25 12.596L14.2948 9.6397C14.2558 9.60064 14.1925 9.60063 14.1534 9.63969L10.5584 13.2347C10.5245 13.2686 10.4713 13.2737 10.4316 13.2469L7.39239 11.1909C7.35761 11.1674 7.31184 11.1681 7.27781 11.1927L3.75 13.7408M17.25 12.596V5C17.25 4.30964 16.6904 3.75 16 3.75H5C4.30964 3.75 3.75 4.30964 3.75 5V13.7408M17.25 12.596V16C17.25 16.6904 16.6904 17.25 16 17.25H5C4.30964 17.25 3.75 16.6904 3.75 16V13.7408"/></svg>';
 
 export function rack( ctx ) {
 	const { view, __ } = ctx;

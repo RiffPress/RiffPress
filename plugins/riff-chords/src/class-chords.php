@@ -49,7 +49,7 @@ final class Chords {
 	/**
 	 * A piano's keys, the Chords view's icon.
 	 */
-	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5.5 16h-3v-5.5h.5c.55 0 1-.45 1-1V5h1v7.5c0 .55.45 1 1 1h.5V19zM5 5h2v7.5c0 .55.45 1 1 1h.5V19H5V5zm14 14h-3.5v-5.5h.5c.55 0 1-.45 1-1V5h2v14z"/></svg>';
+	private const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4.75H18C18.69 4.75 19.25 5.31 19.25 6V18C19.25 18.69 18.69 19.25 18 19.25H6C5.31 19.25 4.75 18.69 4.75 18V6C4.75 5.31 5.31 4.75 6 4.75Z"/><path d="M8 4.75V13.5H10.25V4.75M13.75 4.75V13.5H16V4.75M9 13.5V19.25M15 13.5V19.25"/></svg>';
 
 	/**
 	 * Hooks the meta, the view, the field and the script.
@@ -406,7 +406,7 @@ final class Chords {
 			. '.riff-chords-words{white-space:pre}'
 			// No chart, nothing playing, or none could load: one quiet message in the middle of the panel.
 			. '.riff-chords-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-sizing:border-box;min-height:min(320px,100%);height:100%;padding:32px 24px;text-align:center}'
-			. '#riff .riff-chords-empty svg{width:40px;height:40px;fill:currentColor;color:var(--riff-fg-3)}'
+			. '#riff .riff-chords-empty svg{width:40px;height:40px;color:var(--riff-fg-3)}'
 			. '.riff-chords-empty .riff-chords-note{max-width:24em;margin:0;color:var(--riff-fg);font-size:16px;font-weight:600;line-height:1.4}'
 			. '#riff .riff-chords-add{margin-top:4px;padding:8px 16px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-fg-3);color:var(--riff-fg);font-size:14px;font-weight:600;text-decoration:none}'
 			. '#riff .riff-chords-add:hover{box-shadow:inset 0 0 0 1px var(--riff-fg)}';
