@@ -128,7 +128,7 @@ jobs:
           [[ "$BASE" =~ ^https://[^/]+/ ]] || { echo "::error::Unexpected site URL: $BASE"; exit 1; }
           # Stamp every asset URL with the commit so a deploy is always a new URL: the pages' stylesheets,
           # and the blueprint's zip and demo files (pull requests' Playground previews still use it). The
-          # landing page is riffpress.com's own repository's now, so it is left as written.
+          # landing page is riffpress.com's own repository's now, so it isn't stamped.
           V="${GITHUB_SHA::7}"
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g" out/robots.txt out/sitemap.xml
           # The 404 is served at whatever address was missed, so its links are absolute.
@@ -146,7 +146,10 @@ jobs:
           if [[ "$STABLE" == "$VERSION" ]]; then sed -i -E '/class="fine stable"/d' out/download/index.html; fi
           sed -i -E "s#\{\{stable\}\}#${STABLE}#g" out/download/index.html
           find out/web out/add-music out/download out/developers out/built out/accessibility -name index.html -exec sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#\{\{commit\}\}#${GITHUB_SHA}#g; s#\{\{version\}\}#${VERSION}#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g" {} +
-          if grep -rn '{{' out/404.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
+          # The landing page isn't deployed, but stands in for riffpress.com's home in the link check, so
+          # its addresses are filled in.
+          sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#\{\{version\}\}#${VERSION}#g" out/index.html
+          if grep -rn '{{' out/index.html out/404.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
           printf '/demo https://next.riffpress.com/listen/app/ 302\n' > out/_redirects
           # The developer site, and the redirects riffpress.com's repository carries from it.
           DEV=$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
