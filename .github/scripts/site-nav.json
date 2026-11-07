@@ -1,5 +1,5 @@
 {
-	"$comment": "The navigation of riffpress.com and developer.riffpress.com, in one place: site-nav.js stamps it into every page written by hand and site-shell.js into every generated one. Each entry of sections is one link in the header, in this order; its children are its section bar, and a child with children of its own is a group in that bar. href is the page's path on the site as written, before developers-site.js moves the pages it lists to their own host. host names that host, for the title: a section's, or a page's own where it differs. bar: false keeps a page out of the section bar while it still belongs to the section, for its breadcrumbs. ordered gives a group's pages a previous and next link. footer lists each group's links by key, or as label and href for a page off the site.",
+	"$comment": "The navigation of riffpress.com and source.riffpress.com, in one place: site-nav.js stamps it into every page written by hand and site-shell.js into every generated one. Each entry of sections is one link in the header, in this order; its children are its section bar, and a child with children of its own is a group in that bar. href is the page's path on the site as written, before developers-site.js moves the pages it lists to their own host. host names that host, for the title: a section's, or a page's own where it differs. bar: false keeps a page out of the section bar while it still belongs to the section, for its breadcrumbs. ordered gives a group's pages a previous and next link. footer lists each group's links by key, or as label and href for a page off the site.",
 	"sections": [
 		{
 			"key": "home",
@@ -44,7 +44,7 @@
 	],
 	"hosts": {
 		"site": "Riff",
-		"developers": "Riff Developer"
+		"developers": "Riff Source"
 	},
 	"footer": [
 		{ "key": "about", "label": "About", "links": [ "built", "accessibility" ] },

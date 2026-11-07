@@ -56,7 +56,7 @@ final class First_Run {
 	 *
 	 * @since 4.21.0
 	 */
-	public const GUIDE = 'https://developer.riffpress.com/add-music/';
+	public const GUIDE = 'https://source.riffpress.com/add-music/';
 
 	/**
 	 * The admin screens the notice shows on: where someone lands after activating a plugin.

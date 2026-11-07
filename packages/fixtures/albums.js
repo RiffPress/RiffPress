@@ -1,7 +1,7 @@
 /* eslint-disable no-console -- a command-line script; it talks. */
 /* The streamed albums' audio, built on this machine: `npm run albums [slug ...]`, every streamed
    album when no slug is given. Each album's tracks go to packages/fixtures/<slug>/audio/, which git
-   ignores, and `npm run seed` then plays them from this checkout instead of from developer.riffpress.com, so
+   ignores, and `npm run seed` then plays them from this checkout instead of from source.riffpress.com, so
    a new or changed album can be heard before it is published. Needs ffmpeg, ffprobe and curl;
    downloads are kept in ~/.cache/riff-albums/src, as the deploy keeps them. */
 const fs = require( 'fs' );

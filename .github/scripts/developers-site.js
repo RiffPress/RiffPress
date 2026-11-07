@@ -2,7 +2,7 @@
 /**
  * Takes the developer site out of the assembled site: the reference (/developers/ and the /web/
  * pages, Built on the open web) and the pages about the software (Download, Add music, How Riff is
- * built, Accessibility) go to developer.riffpress.com, with the site's own files they show. What is
+ * built, Accessibility) go to source.riffpress.com, with the site's own files they show. What is
  * left is not deployed: riffpress.com is the business's site, from its own repository, and the
  * _redirects written here, a 301 from each old address to the new one, are the ones it carries.
  *

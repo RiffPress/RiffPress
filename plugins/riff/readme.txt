@@ -40,11 +40,11 @@ Upload your tracks to the Media Library and they're on your Listen page, filed u
 
 There's nothing to configure. Riff adds its fields on media (Artwork, Video version, Streaming version and Protected), the Riff block, and Settings › Riff, where the features it ships with, such as Lyrics, are turned on or off.
 
-[The live demo](https://next.riffpress.com/listen/app/) has four albums and runs in your browser, with nothing to install. [Add your music](https://developer.riffpress.com/add-music/) walks through putting your first album online, starting from nothing.
+[The live demo](https://next.riffpress.com/listen/app/) has four albums and runs in your browser, with nothing to install. [Add your music](https://source.riffpress.com/add-music/) walks through putting your first album online, starting from nothing.
 
 = For developers =
 
-Riff has documented hooks, a JavaScript API, REST routes, WPGraphQL fields and CSS custom properties, and lets other plugins add their own source of tracks. The [developer reference](https://developer.riffpress.com/) covers all of it, generated from the plugin's own code, and says what stays stable between versions.
+Riff has documented hooks, a JavaScript API, REST routes, WPGraphQL fields and CSS custom properties, and lets other plugins add their own source of tracks. The [developer reference](https://source.riffpress.com/) covers all of it, generated from the plugin's own code, and says what stays stable between versions.
 
 == External services ==
 
@@ -82,7 +82,7 @@ Deleting Riff moves protected files back first.
 
 To keep the whole site private, tick Private site under Settings > Reading. Only people with an account on the site can reach it, its audio and video are protected as above, and search engines are asked to stay away. Images, such as covers, keep their public addresses, so someone who has the address of one can still see it.
 
-Membership and store plugins can decide who may play each track. A locked track stays listed with a lock that leads to your sign-up page. The [developer reference](https://developer.riffpress.com/php/) shows how.
+Membership and store plugins can decide who may play each track. A locked track stays listed with a lock that leads to your sign-up page. The [developer reference](https://source.riffpress.com/php/) shows how.
 
 = Does it work with my theme? =
 

@@ -5,7 +5,7 @@
  * Version: 6.3.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
- * Plugin URI: https://developer.riffpress.com/
+ * Plugin URI: https://source.riffpress.com/
  * Author: RiffPress Core Team
  * Author URI: https://riffpress.com/
  * License: GPL-2.0-or-later
