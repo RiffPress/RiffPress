@@ -125,7 +125,9 @@ final class Protect {
 	 * @return string
 	 */
 	private static function signature( int $id, int $expires ): string {
-		return substr( hash_hmac( 'sha256', $id . '|' . $expires, wp_salt( 'auth' ) ), 0, 32 );
+		// The site's, as a network shares one salt and its sites' IDs overlap; and whether it is private,
+		// so going private ends every address already handed out.
+		return substr( hash_hmac( 'sha256', get_current_blog_id() . '|' . (int) Private_Site::on() . '|' . $id . '|' . $expires, wp_salt( 'auth' ) ), 0, 32 );
 	}
 
 	/**
@@ -183,7 +185,7 @@ final class Protect {
 	 * @return bool
 	 */
 	public static function can( int $id ): bool {
-		if ( ! self::readable( $id ) ) {
+		if ( ! Private_Site::allowed() || ! self::readable( $id ) ) {
 			return false;
 		}
 		$track = Tracks::from_attachment( $id, (int) get_post_field( 'post_parent', $id ) );
@@ -376,6 +378,10 @@ final class Protect {
 		}
 		$id = absint( $_GET[ self::QUERY ] );
 		if ( ! self::is( $id ) ) {
+			// A file not yet moved on a private site, whose public address is no one's to be told.
+			if ( ! Private_Site::allowed() ) {
+				self::refuse( 403 );
+			}
 			$url = self::moved( $id );
 			if ( '' !== $url ) {
 				wp_safe_redirect( $url, 302 );
