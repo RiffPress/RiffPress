@@ -158,6 +158,12 @@ test( 'an artist takes an image from the Media Library on their edit screen', as
 		path: '/wp/v2/riff_artists',
 		params: { search: 'Airmen of Note' },
 	} );
+	// From no image, so a retry starts where the first try did.
+	await requestUtils.rest( {
+		method: 'POST',
+		path: `/wp/v2/riff_artists/${ artist.id }`,
+		data: { meta: { riff_artist_image: 0 } },
+	} );
 	await admin.visitAdminPage(
 		'term.php',
 		`taxonomy=riff_artist&tag_ID=${ artist.id }&post_type=attachment`
