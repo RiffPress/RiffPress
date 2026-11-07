@@ -223,6 +223,9 @@ final class App {
 				)
 			)
 			: 'class="' . esc_attr( $class . $align ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' );
+		if ( current_user_can( 'upload_files' ) ) {
+			$wrapper .= sprintf( ' data-riff-media="%s" data-riff-nonce="%s"', esc_url( rest_url( 'wp/v2/media' ) ), esc_attr( wp_create_nonce( 'wp_rest' ) ) );
+		}
 		return sprintf(
 			'<div %s data-riff-app data-riff-rest="%s" data-riff-tracks-rest="%s" data-riff-page="%s" data-riff-query="%s" data-riff-page-query="%s" data-riff-browse="%s">' .
 			'<nav class="riff-app-bar" aria-label="%s">%s</nav>' .

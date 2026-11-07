@@ -83,8 +83,30 @@ final class Import {
 	 * @since 5.9.0
 	 */
 	public static function register(): void {
+		// Before multisite's own check at 10, so a network's list of allowed files has the last word.
+		add_filter( 'upload_mimes', array( self::class, 'mimes' ), 5 );
 		add_action( 'add_attachment', array( self::class, 'on_upload' ) );
 		add_action( self::ZIP_JOB, array( self::class, 'uploaded_zip' ) );
+	}
+
+	/**
+	 * Core lists m4a as audio/mpeg and then refuses a real AAC file, which is audio/mp4, and does not
+	 * list opus at all. Both are common in music libraries, so they are allowed as what they are
+	 * (docs/native.md).
+	 *
+	 * @since 6.3.0
+	 *
+	 * @param array $types Allowed types, by extension.
+	 * @return array
+	 */
+	public static function mimes( $types ): array {
+		return array_merge(
+			(array) $types,
+			array(
+				'm4a'  => 'audio/mp4',
+				'opus' => 'audio/ogg',
+			)
+		);
 	}
 
 	/**
@@ -415,18 +437,6 @@ final class Import {
 			return $report;
 		}
 
-		// Core lists m4a as audio/mpeg and then refuses a real AAC file, which is audio/mp4, and
-		// does not list opus at all. Both are common in music libraries, so for the length of an
-		// import they are allowed as what they are (docs/native.md).
-		$mimes = static fn( array $types ): array => array_merge(
-			$types,
-			array(
-				'm4a'  => 'audio/mp4',
-				'opus' => 'audio/ogg',
-			)
-		);
-		add_filter( 'upload_mimes', $mimes );
-
 		$cover = self::cover( $dir, $files, $known );
 		$ids   = array();
 		foreach ( $audio as $file ) {
@@ -449,7 +459,6 @@ final class Import {
 			$ids[]                = $id;
 			$report['imported'][] = $file;
 		}
-		remove_filter( 'upload_mimes', $mimes );
 
 		$report['post'] = self::post( $name, $ids, $cover, (string) $args['status'] );
 		return $report;

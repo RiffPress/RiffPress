@@ -1153,6 +1153,24 @@
 	transform: translateX(-50%);
 }
 
+/* Files carried over the window: where they will land. */
+.riff-app-drop {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	display: grid;
+	place-items: center;
+	background: rgb(0 0 0 / 0.8);
+	color: #fff;
+	font-size: 24px;
+	font-weight: 700;
+	pointer-events: none;
+}
+
+.riff-app-drop[hidden] {
+	display: none;
+}
+
 .riff-app-status:empty {
 	position: absolute;
 	margin: 0;
