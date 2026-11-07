@@ -26,6 +26,13 @@ defined( 'ABSPATH' ) || exit;
 final class Library {
 
 	/**
+	 * The most an LP side holds, in seconds, before its grooves crowd.
+	 *
+	 * @since 6.3.0
+	 */
+	private const SIDE = 1440;
+
+	/**
 	 * REST namespace.
 	 *
 	 * @since 4.0.0
@@ -179,15 +186,19 @@ final class Library {
 	 * @return array JSON Schema.
 	 */
 	public static function post_schema(): array {
-		$schema                         = self::item_schema();
-		$schema['$schema']              = 'http://json-schema.org/draft-04/schema#';
-		$schema['title']                = 'riff-library-post';
-		$schema['properties']['tracks'] = array(
+		$schema                           = self::item_schema();
+		$schema['$schema']                = 'http://json-schema.org/draft-04/schema#';
+		$schema['title']                  = 'riff-library-post';
+		$schema['properties']['tracks']   = array(
 			'type'        => 'array',
 			'description' => __( 'The tracks, in order, as the player reads them.', 'riff' ),
 			'items'       => array( 'type' => 'object' ),
 		);
-		$schema['properties']['html']   = array(
+		$schema['properties']['pressing'] = array(
+			'type'        => 'object',
+			'description' => __( 'How the tracks are pressed: the format, 12 or 7, and its sides, each with the tracks it holds.', 'riff' ),
+		);
+		$schema['properties']['html']     = array(
 			'type'        => 'string',
 			'description' => __( 'The media blocks rendered as the post renders them.', 'riff' ),
 		);
@@ -365,11 +376,105 @@ final class Library {
 	 * @return array
 	 */
 	public static function post( WP_Post $post ): array {
-		$tracks         = self::tracks( $post );
-		$item           = self::listed( $post, self::summarize( $tracks ) );
-		$item['tracks'] = $tracks;
-		$item['html']   = self::html( $post );
+		$tracks           = self::tracks( $post );
+		$item             = self::listed( $post, self::summarize( $tracks ) );
+		$item['tracks']   = $tracks;
+		$item['pressing'] = self::pressing( $tracks );
+		$item['html']     = self::html( $post );
 		return $item;
+	}
+
+	/**
+	 * How an album is pressed, as the turntable plays it and the cover Riff draws shows it. A release
+	 * of one or two tracks and ten minutes at most is a 7-inch single at 45, a track a side. Anything
+	 * longer is LPs at 33⅓: sides of 24 minutes at most, as an LP side holds before its grooves crowd,
+	 * each as near the same length as the album's order allows, two to a record, A and B on the first,
+	 * C and D on the second. Where the files' tags say which disc of a set each track is on, and name
+	 * more than one, each disc is a record of its own (or more, should it run longer than two sides
+	 * hold), its sides worked out from its own tracks, so no side runs from one disc onto the next.
+	 *
+	 * @since 6.3.0
+	 *
+	 * @param array[] $tracks Tracks, in order.
+	 * @return array{format: string, sides: array<int, array{from: int, to: int, start: float, length: float, record: int, name: string}>}
+	 */
+	public static function pressing( array $tracks ): array {
+		$tracks  = array_values( $tracks );
+		$lengths = array_map( static fn( $track ) => (float) ( $track['duration'] ?? 0 ), $tracks );
+		$discs   = array_map( static fn( $track ) => (int) ( $track['disc'] ?? 0 ), $tracks );
+		$length  = array_sum( $lengths );
+		$count   = count( $lengths );
+		$single  = $count <= 2 && $length <= 600;
+		$named   = $count && min( $discs ) > 0 && count( array_unique( $discs ) ) > 1;
+		// The runs of tracks on one disc, in the album's order; the whole album as one, where the
+		// tags don't say.
+		$runs = array();
+		for ( $k = 0; $k < $count; $k++ ) {
+			if ( $k && $named && $discs[ $k ] === $discs[ $k - 1 ] ) {
+				$runs[ count( $runs ) - 1 ][1] = $k + 1;
+			} elseif ( ! $k || $named ) {
+				$runs[] = array( $k, $k + 1 );
+			} else {
+				$runs[0][1] = $k + 1;
+			}
+		}
+		$sides  = array();
+		$start  = 0.0;
+		$record = 0;
+		foreach ( $runs as [ $from, $to ] ) {
+			$part    = array_slice( $lengths, $from, $to - $from );
+			$span    = array_sum( $part );
+			$pressed = self::split( $part, $from, $start, $single ? count( $part ) : max( 1, (int) ceil( $span / self::SIDE ) ) );
+			foreach ( $pressed as $k => $side ) {
+				$sides[] = $side + array( 'record' => $record + (int) floor( $k / 2 ) );
+			}
+			$record += (int) ceil( count( $pressed ) / 2 );
+			$start  += $span;
+		}
+		foreach ( $sides as $k => $side ) {
+			$sides[ $k ]['name'] = chr( 65 + $k );
+		}
+		return array(
+			'format' => $single ? '7' : '12',
+			'sides'  => $sides,
+		);
+	}
+
+	/**
+	 * Lays tracks onto so many sides. A track joins a side while the side, with half of it, is within
+	 * the side's share, and enough tracks are left for the sides still to come.
+	 *
+	 * @param float[] $lengths Each track's length, in seconds.
+	 * @param int     $at      The first track's place in the album.
+	 * @param float   $start   How far into the album it starts, in seconds.
+	 * @param int     $count   How many sides.
+	 * @return array<int, array{from: int, to: int, start: float, length: float}>
+	 */
+	private static function split( array $lengths, int $at, float $start, int $count ): array {
+		$length = array_sum( $lengths );
+		$total  = count( $lengths );
+		$sides  = array();
+		$from   = 0;
+		$into   = 0.0;
+		for ( $k = 0; $k < $count; $k++ ) {
+			$target = ( $length - $into ) / ( $count - $k );
+			$to     = $from;
+			$side   = 0.0;
+			while ( $to < $total && ( $to === $from || $k === $count - 1 || ( $side + $lengths[ $to ] / 2 <= $target && $total - $to > $count - $k - 1 ) ) ) {
+				$side += $lengths[ $to++ ];
+			}
+			if ( $to > $from ) {
+				$sides[] = array(
+					'from'   => $at + $from,
+					'to'     => $at + $to,
+					'start'  => $start + $into,
+					'length' => $side,
+				);
+			}
+			$from  = $to;
+			$into += $side;
+		}
+		return $sides;
 	}
 
 	/**

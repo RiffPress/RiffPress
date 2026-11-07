@@ -432,6 +432,14 @@ test.describe( 'Turntable, from what the files say', () => {
 					track.disc = k ? 2 : 1;
 					track.levels = k ? '' : '0000000099';
 				} );
+				// As Library::pressing() has it, from those discs.
+				post.pressing = {
+					format: '12',
+					sides: [
+						{ from: 0, to: 1, start: 0, length: post.tracks[ 0 ].duration, record: 0, name: 'A' },
+						{ from: 1, to: post.tracks.length, start: post.tracks[ 0 ].duration, length: post.tracks.slice( 1 ).reduce( ( a, t ) => a + t.duration, 0 ), record: 1, name: 'B' },
+					],
+				};
 				await route.fulfill( { response, json: post } );
 			}
 		);
@@ -457,6 +465,10 @@ test.describe( 'Turntable, from what the files say', () => {
 				const response = await route.fetch();
 				const post = await response.json();
 				post.tracks = ( post.tracks || [] ).slice( 0, 1 );
+				post.pressing = {
+					format: '7',
+					sides: [ { from: 0, to: 1, start: 0, length: post.tracks[ 0 ]?.duration || 0, record: 0, name: 'A' } ],
+				};
 				await route.fulfill( { response, json: post } );
 			}
 		);
