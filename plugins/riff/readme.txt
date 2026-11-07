@@ -74,7 +74,7 @@ Any audio or video file WordPress accepts and your listener's browser can play. 
 
 Yes. Make the post private, a draft, or password protected, and its tracks stay out of the Listen page's browsing and search for visitors.
 
-To keep the files themselves private, tick Protected on an audio or video file in the Media Library. Riff moves it into a folder of its own and only sends it to visitors who can read its post. Apache and LiteSpeed keep that folder closed with the rule Riff leaves in it. Nginx, which many managed hosts run, ignores that rule: the Protected box and Tools > Site Health say when your server sends the folder to anyone, and you, or your host, add this to the site's Nginx configuration:
+To keep the files themselves private, tick Protected on an audio or video file in the Media Library. Riff moves it into a folder of its own and only sends it to visitors who can read a post that has it. Apache and LiteSpeed keep that folder closed with the rule Riff leaves in it. Nginx, which many managed hosts run, ignores that rule: the Protected box and Tools > Site Health say when your server sends the folder to anyone, and you, or your host, add this to the site's Nginx configuration:
 
 `location ~ /riff-protected-[a-z0-9]{20}/ { internal; }`
 

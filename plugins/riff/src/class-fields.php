@@ -103,7 +103,7 @@ final class Fields {
 				'get'         => static fn( WP_Post $post ): int => (int) get_post_meta( $post->ID, Media::STREAM_META, true ),
 				'set'         => static function ( WP_Post $post, $value ): void {
 					$id = $value ? Media::sanitize_stream( $value ) : 0;
-					if ( $value && ( ! $id || $id === $post->ID ) ) {
+					if ( $value && ( ! $id || $id === $post->ID || ! Media::may_link( $id ) ) ) {
 						throw new \RuntimeException( esc_html__( 'That is not another audio file in the Media Library.', 'riff' ) );
 					}
 					Media::link_stream( $post->ID, $id );

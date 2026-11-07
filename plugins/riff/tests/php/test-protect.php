@@ -6,6 +6,7 @@
  */
 
 use Riff\Catalog;
+use Riff\Media;
 use Riff\Protect;
 use Riff\Protected_Files;
 use Riff\Tracks;
@@ -29,6 +30,13 @@ class Test_Riff_Protect extends Riff_TestCase {
 	 */
 	private int $track = 0;
 
+	/**
+	 * Files a test protected besides it.
+	 *
+	 * @var int[]
+	 */
+	private array $extra = array();
+
 	public function set_up(): void {
 		parent::set_up();
 		$this->post  = self::factory()->post->create( array( 'post_status' => 'publish' ) );
@@ -37,6 +45,9 @@ class Test_Riff_Protect extends Riff_TestCase {
 
 	public function tear_down(): void {
 		Protected_Files::unprotect( $this->track );
+		foreach ( $this->extra as $id ) {
+			Protected_Files::unprotect( $id );
+		}
 		parent::tear_down();
 	}
 
@@ -107,6 +118,146 @@ class Test_Riff_Protect extends Riff_TestCase {
 		$this->assertFalse( Protect::can( $this->track ), 'a private post\'s, to a visitor' );
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
 		$this->assertTrue( Protect::can( $this->track ), 'and to someone who can read the post' );
+	}
+
+	/**
+	 * A protected file picked from the Media Library, so attached to no post.
+	 *
+	 * @return int Attachment ID.
+	 */
+	private function unattached(): int {
+		$id = self::attach( '03 - Trombone Detritus [detritus].mp3' );
+		Protected_Files::protect( $id );
+		$this->extra[] = $id;
+		return $id;
+	}
+
+	public function test_a_protected_file_no_post_has_is_only_for_who_may_edit_it(): void {
+		$file = $this->unattached();
+
+		$this->assertFalse( Protect::can( $file ), 'not for a visitor' );
+		$track = Tracks::from_attachment( $file, 0 );
+		$this->assertTrue( $track['locked'], 'listed as locked, rather than with a file that is refused' );
+		$this->assertSame( '', $track['src'] );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertTrue( Protect::can( $file ), 'and for someone who may edit it' );
+	}
+
+	public function test_an_unattached_protected_file_follows_the_posts_that_play_it(): void {
+		$file    = $this->unattached();
+		$content = '<!-- wp:audio {"id":' . $file . '} --><figure class="wp-block-audio"></figure><!-- /wp:audio -->';
+
+		$private = self::factory()->post->create(
+			array(
+				'post_status'  => 'private',
+				'post_author'  => self::factory()->user->create( array( 'role' => 'administrator' ) ),
+				'post_content' => $content,
+			)
+		);
+		$this->assertFalse( Protect::can( $file ), 'in a private post, not for a visitor' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertTrue( Protect::can( $file ), 'and for someone who can read it' );
+		wp_delete_post( $private, true );
+	}
+
+	public function test_an_unattached_protected_file_plays_from_a_public_post_that_has_it(): void {
+		$file = $this->unattached();
+		self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_author'  => self::factory()->user->create( array( 'role' => 'administrator' ) ),
+				'post_content' => '<!-- wp:audio {"id":' . $file . '} --><figure class="wp-block-audio"></figure><!-- /wp:audio -->',
+			)
+		);
+		$this->assertTrue( Protect::can( $file ) );
+	}
+
+	public function test_a_post_naming_a_longer_id_does_not_open_a_file(): void {
+		$file = $this->unattached();
+		self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_author'  => self::factory()->user->create( array( 'role' => 'administrator' ) ),
+				'post_content' => '<!-- wp:audio {"id":' . $file . '9} --><figure class="wp-block-audio"></figure><!-- /wp:audio -->',
+			)
+		);
+		$this->assertFalse( Protect::can( $file ) );
+	}
+
+	public function test_nobody_opens_a_file_by_naming_it_in_a_post_of_their_own(): void {
+		$file = $this->unattached();
+		wp_update_post(
+			array(
+				'ID'          => $file,
+				'post_author' => self::factory()->user->create( array( 'role' => 'editor' ) ),
+			)
+		);
+		foreach ( array( 'subscriber', 'contributor', 'author' ) as $role ) {
+			$user = self::factory()->user->create( array( 'role' => $role ) );
+			self::factory()->post->create(
+				array(
+					'post_status'  => 'publish',
+					'post_author'  => $user,
+					'post_content' => '<!-- wp:audio {"id":' . $file . '} --><figure class="wp-block-audio"></figure><!-- /wp:audio -->',
+				)
+			);
+			wp_set_current_user( $user );
+			$this->assertFalse( Protect::can( $file ), $role );
+		}
+		wp_set_current_user( 0 );
+		$this->assertFalse( Protect::can( $file ), 'nor for a visitor to those posts' );
+	}
+
+	public function test_a_song_on_no_post_opens_no_version(): void {
+		$file = $this->unattached();
+		$song = self::attach( '02 - Underground [underground].mp3' );
+		update_post_meta( $song, Media::STREAM_META, $file );
+		$this->assertFalse( Protect::can( $file ) );
+	}
+
+	public function test_a_version_played_as_itself_is_not_signed_once_its_song_is_locked(): void {
+		$file = $this->unattached();
+		update_post_meta( $this->track, Media::STREAM_META, $file );
+		$rule  = fn( $allowed, $track, $id ) => $id === $this->track ? false : $allowed;
+		add_filter( 'riff_can_play', $rule, 10, 3 );
+		$track = Tracks::from_attachment( $file, 0 );
+		remove_filter( 'riff_can_play', $rule, 10 );
+		$this->assertStringNotContainsString( 'riff-sig=', (string) $track['src'] );
+	}
+
+	public function test_a_version_answers_to_its_songs_post_and_rules(): void {
+		$file = $this->unattached();
+		update_post_meta( $this->track, Media::STREAM_META, $file );
+		$this->assertTrue( Protect::can( $file ), 'a version of a song on a public post' );
+
+		$rule = fn( $allowed, $track, $id ) => $id === $this->track ? false : $allowed;
+		add_filter( 'riff_can_play', $rule, 10, 3 );
+		$this->assertFalse( Protect::can( $file ), 'not once a plugin locks the song' );
+		remove_filter( 'riff_can_play', $rule, 10 );
+
+		wp_update_post(
+			array(
+				'ID'          => $this->post,
+				'post_status' => 'private',
+			)
+		);
+		$this->assertFalse( Protect::can( $file ), 'nor once the song\'s post is private' );
+	}
+
+	public function test_another_authors_protected_file_cannot_be_linked_as_a_version(): void {
+		$file = $this->unattached();
+		wp_update_post(
+			array(
+				'ID'          => $file,
+				'post_author' => self::factory()->user->create( array( 'role' => 'editor' ) ),
+			)
+		);
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$this->assertFalse( Media::may_link( $file ) );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$this->assertTrue( Media::may_link( $file ), 'someone who may edit it can' );
 	}
 
 	public function test_a_signed_address_works_until_it_expires_and_only_for_its_file(): void {

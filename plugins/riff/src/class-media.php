@@ -367,7 +367,20 @@ final class Media {
 	 */
 	public static function sanitize_video( $value ): int {
 		$id = absint( $value );
-		return $id && str_starts_with( (string) get_post_mime_type( $id ), 'video/' ) ? $id : 0;
+		return $id && str_starts_with( (string) get_post_mime_type( $id ), 'video/' ) && self::may_link( $id ) ? $id : 0;
+	}
+
+	/**
+	 * Whether the current user may name a file as a version of their own: linking another's
+	 * protected file would have the song's address signed for it, past the rules kept for it.
+	 *
+	 * @since 6.2.0
+	 *
+	 * @param int $id Attachment ID.
+	 * @return bool
+	 */
+	public static function may_link( int $id ): bool {
+		return ( defined( 'WP_CLI' ) && WP_CLI ) || ! Protect::is( $id ) || current_user_can( 'edit_post', $id );
 	}
 
 	/**
@@ -666,7 +679,7 @@ final class Media {
 		}
 		if ( isset( $attachment['riff_stream'] ) ) {
 			$id = self::submitted( $attachment['riff_stream'], array( self::class, 'sanitize_stream' ) );
-			if ( $id === $post_id ) {
+			if ( $id === $post_id || ( $id > 0 && ! self::may_link( $id ) ) ) {
 				$id = -1;
 			}
 			if ( $id >= 0 ) {

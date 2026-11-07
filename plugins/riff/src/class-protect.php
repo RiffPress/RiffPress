@@ -66,6 +66,7 @@ final class Protect {
 		add_action( 'wp_loaded', array( self::class, 'serve' ) );
 		add_filter( 'wp_get_attachment_url', array( self::class, 'url' ), 99, 2 );
 		add_filter( 'riff_track', array( self::class, 'sign' ), PHP_INT_MAX, 2 );
+		add_filter( 'riff_can_play', array( self::class, 'lock' ), 5, 3 );
 		add_filter( 'attachment_fields_to_edit', array( self::class, 'field' ), 20, 2 );
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 20, 2 );
 		add_filter( 'site_status_tests', array( self::class, 'tests' ) );
@@ -162,7 +163,7 @@ final class Protect {
 		// Only for a visitor who may read the file's post: the signature skips that check.
 		$stream = Media::stream( $id );
 		$file   = $stream ? $stream : $id;
-		if ( self::is( $file ) && ! empty( $track['src'] ) && wp_get_attachment_url( $file ) === $track['src'] && self::readable( $file ) ) {
+		if ( self::is( $file ) && ! empty( $track['src'] ) && wp_get_attachment_url( $file ) === $track['src'] && self::readable( $file ) && ( $file !== $id || self::songs_allow( $id ) ) ) {
 			$track['src'] = self::signed( $file );
 		}
 		$video = (int) get_post_meta( $id, Media::VIDEO_META, true );
@@ -186,28 +187,167 @@ final class Protect {
 			return false;
 		}
 		$track = Tracks::from_attachment( $id, (int) get_post_field( 'post_parent', $id ) );
-		return null !== $track && ! $track['locked'];
+		return null !== $track && ! $track['locked'] && self::songs_allow( $id );
 	}
 
 	/**
-	 * Whether the current visitor may read the post a file was uploaded to: one that is public or
-	 * that they may read, and behind a password only once they have given it, as its content is.
-	 * Someone who may edit the post needs no password, as in the REST API. A file uploaded to no
-	 * post may be read.
+	 * Whether a file that is a song's video or streaming version may go to the current visitor by
+	 * the rules a plugin keeps for the song. A file that is nobody's version answers only to its own.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return bool
+	 */
+	private static function songs_allow( int $id ): bool {
+		static $asking = array();
+		$songs         = self::songs_of( $id );
+		// Reading a song signs its own files, which may ask this again.
+		if ( ! $songs || isset( $asking[ $id ] ) ) {
+			return true;
+		}
+		$asking[ $id ] = true;
+		$allowed       = false;
+		foreach ( $songs as $song ) {
+			$of = Tracks::from_attachment( $song, (int) get_post_field( 'post_parent', $song ) );
+			if ( null !== $of && ! $of['locked'] ) {
+				$allowed = true;
+				break;
+			}
+		}
+		unset( $asking[ $id ] );
+		return $allowed;
+	}
+
+	/**
+	 * Whether the current visitor may read a post that has a file: the one it was uploaded to, or
+	 * for a file uploaded to none, a post that plays it or that of the song it is a version of,
+	 * since picking a file from the Media Library doesn't attach it. A post counts only if its
+	 * author may edit the file, so nobody opens a file by naming it in a post or playlist of their
+	 * own. Someone who may edit a protected file may always have it. A file no such post has
+	 * belongs to nobody else yet.
 	 *
 	 * @param int $id Attachment ID.
 	 * @return bool
 	 */
 	private static function readable( int $id ): bool {
-		$parent = (int) get_post_field( 'post_parent', $id );
-		$post   = $parent ? get_post( $parent ) : null;
-		if ( ! $post instanceof WP_Post ) {
+		$post = self::post_of( $id );
+		if ( $post ) {
+			return self::post_readable( $post );
+		}
+		// A file that isn't protected and was uploaded to no post is public, as core has it.
+		if ( ! self::is( $id ) ) {
 			return true;
 		}
-		if ( post_password_required( $post ) && ! current_user_can( 'edit_post', $parent ) ) {
+		if ( current_user_can( 'edit_post', $id ) ) {
+			return true;
+		}
+		foreach ( self::songs_of( $id ) as $song ) {
+			$post = self::post_of( $song );
+			if ( $post ? self::post_readable( $post ) : array_filter( self::posts_playing( $song ), array( self::class, 'post_readable' ) ) ) {
+				return true;
+			}
+		}
+		return (bool) array_filter( self::posts_playing( $id ), array( self::class, 'post_readable' ) );
+	}
+
+	/**
+	 * The post a file was uploaded to, if it still exists.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return WP_Post|null
+	 */
+	private static function post_of( int $id ): ?WP_Post {
+		$parent = (int) get_post_field( 'post_parent', $id );
+		$post   = $parent ? get_post( $parent ) : null;
+		return $post instanceof WP_Post ? $post : null;
+	}
+
+	/**
+	 * Whether the current visitor may read a post: one that is public or that they may read, and
+	 * behind a password only once they have given it, as its content is. Someone who may edit the
+	 * post needs no password, as in the REST API.
+	 *
+	 * @param WP_Post $post Post.
+	 * @return bool
+	 */
+	private static function post_readable( WP_Post $post ): bool {
+		if ( post_password_required( $post ) && ! current_user_can( 'edit_post', $post->ID ) ) {
 			return false;
 		}
-		return is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $parent );
+		return is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $post->ID );
+	}
+
+	/**
+	 * The songs a file is the video or streaming version of.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return int[] Attachment IDs.
+	 */
+	private static function songs_of( int $id ): array {
+		static $found = array();
+		if ( isset( $found[ $id ] ) ) {
+			return $found[ $id ];
+		}
+		$found[ $id ] = get_posts(
+			array(
+				'post_type'        => 'attachment',
+				'post_status'      => 'inherit',
+				'fields'           => 'ids',
+				'numberposts'      => -1,
+				'suppress_filters' => false,
+				'meta_query'       => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- only for a protected file uploaded to no post.
+					'relation' => 'OR',
+					array(
+						'key'   => Media::VIDEO_META,
+						'value' => $id,
+					),
+					array(
+						'key'   => Media::STREAM_META,
+						'value' => $id,
+					),
+				),
+			)
+		);
+		return $found[ $id ];
+	}
+
+	/**
+	 * The posts whose track blocks name a file and whose author may edit it, once a request. A search of post content, so it is
+	 * asked only for a protected file uploaded to no post, and the blocks themselves then decide,
+	 * since "id":12 is also how "id":123 begins.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return WP_Post[]
+	 */
+	private static function posts_playing( int $id ): array {
+		static $found = array();
+		if ( ! isset( $found[ $id ] ) ) {
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a search of content, which no API offers by a block's attribute.
+			$ids          = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ('revision','attachment') AND post_status NOT IN ('trash','auto-draft','inherit') AND post_content LIKE %s", '%' . $wpdb->esc_like( '"id":' . $id ) . '%' ) );
+			$found[ $id ] = array_values(
+				array_filter(
+					array_filter( array_map( 'get_post', array_map( 'intval', $ids ) ) ),
+					static fn( WP_Post $post ): bool => user_can( (int) $post->post_author, 'edit_post', $id ) && in_array( $id, Blocks_Source::attachments( $post ), true )
+				)
+			);
+		}
+		return $found[ $id ];
+	}
+
+	/**
+	 * Locks a protected file no post the visitor may read has: it stays listed, as a file uploaded
+	 * to no post is, with no file to play rather than one that is refused.
+	 *
+	 * @since 6.2.0
+	 *
+	 * @param bool  $allowed Whether the track plays.
+	 * @param array $track   Track.
+	 * @param int   $id      Attachment ID, or 0.
+	 * @return bool
+	 */
+	public static function lock( $allowed, $track, $id ) {
+		unset( $track );
+		return $allowed && ( ! $id || self::post_of( (int) $id ) || self::readable( (int) $id ) );
 	}
 
 	/**
