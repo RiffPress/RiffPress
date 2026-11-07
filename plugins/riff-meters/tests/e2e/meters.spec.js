@@ -101,7 +101,9 @@ test.describe( 'Turntable meters', () => {
 		const meters = page.locator( '.riff-meters' );
 		await expect( meters ).toBeVisible();
 		const stage = page.locator( '.riff-stage' );
-		const before = ( await stage.boundingBox() ).height;
+		// Its laid-out height: the box would carry Now Playing's slide in, which can still be running.
+		const height = () => stage.evaluate( ( el ) => el.offsetHeight );
+		const before = await height();
 		// The turntable stays, the same size: the meters keep their place, unseen.
 		await page.evaluate( () => {
 			window.riff.analyser = () => null;
@@ -109,7 +111,7 @@ test.describe( 'Turntable meters', () => {
 		} );
 		await expect( meters ).toBeHidden();
 		await expect( page.locator( '.riff-turntable-extras' ) ).toBeVisible();
-		expect( ( await stage.boundingBox() ).height ).toBe( before );
+		expect( await height() ).toBe( before );
 		await expect( page.locator( '#riff' ) ).toHaveAttribute(
 			'data-riff-deck',
 			'out'
