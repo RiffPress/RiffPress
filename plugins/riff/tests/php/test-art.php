@@ -122,7 +122,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertStringContainsString( '>1</text>', $svg, 'the track count, large' );
 		$this->assertStringContainsString( '1 track', $svg );
 		$this->assertStringContainsString( '<circle', $svg );
-		$this->assertSame( 1, substr_count( $svg, 'class="riff-groove"' ), 'one groove per track' );
+		$this->assertSame( 2, substr_count( $svg, 'class="riff-groove"' ), 'the lead-in and the lead-out of its one track' );
 	}
 
 	public function test_the_cover_does_not_repeat_the_artist_in_its_byline(): void {
@@ -163,6 +163,65 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertSame( array( 'corner', 'centre', 'horizon' ), Cover::layouts() );
 	}
 
+	/**
+	 * Each album's lengths and discs, and the sides they press to.
+	 *
+	 * @return array[]
+	 */
+	public static function pressings(): array {
+		return array(
+			'an LP in three sides'      => array( array( 453, 538, 408, 316, 496, 412, 355, 367, 357, 495 ), array(), '12', 'A:0-3 B:3-6 C:6-10' ),
+			'a single, a track a side'  => array( array( 200, 300 ), array(), '7', 'A:0-1 B:1-2' ),
+			'two long tracks on one'    => array( array( 400, 400 ), array(), '12', 'A:0-2' ),
+			'a track too long to split' => array( array( 4000 ), array(), '12', 'A:0-1' ),
+			'each disc its own record'  => array( array( 600, 600, 600, 900, 900, 900 ), array( 1, 1, 1, 2, 2, 2 ), '12', 'A:0-2 B:2-3 C:3-5 D:5-6' ),
+			'a disc not named is none'  => array( array( 600, 600, 600 ), array( 1, 0, 2 ), '12', 'A:0-2 B:2-3' ),
+		);
+	}
+
+	/**
+	 * @dataProvider pressings
+	 *
+	 * @param int[]  $lengths Lengths.
+	 * @param int[]  $discs   Discs.
+	 * @param string $format  Format.
+	 * @param string $sides   Sides.
+	 */
+	public function test_an_album_is_pressed_to_sides( array $lengths, array $discs, string $format, string $sides ): void {
+		$tracks = array();
+		foreach ( $lengths as $k => $length ) {
+			$tracks[] = array(
+				'duration' => $length,
+				'disc'     => $discs[ $k ] ?? 0,
+			);
+		}
+		$pressing = \Riff\Library::pressing( $tracks );
+		$this->assertSame( $format, $pressing['format'] );
+		$this->assertSame( $sides, implode( ' ', array_map( static fn( $side ) => "{$side['name']}:{$side['from']}-{$side['to']}", $pressing['sides'] ) ) );
+	}
+
+	public function test_a_sleeve_shows_side_a_as_the_record_has_it(): void {
+		$tracks = array_map( static fn( $length ) => array( 'duration' => $length ), array( 453, 538, 408, 316, 496, 412, 355, 367, 357, 495 ) );
+		$svg    = \Riff\Listen\Cover::draw( array( 'title' => 'T' ), $tracks, \Riff\Listen\Cover::palettes()[0], 'centre' );
+		$this->assertSame( 4, substr_count( $svg, 'class="riff-groove"' ), 'side A\'s three tracks: the lead-in, a ring between each, and the lead-out' );
+		// The first track outermost, from 97% of the radius, as long as it is of the side.
+		$this->assertStringContainsString( 'r="' . round( 330 * 0.97, 1 ) . '"', $svg );
+		$this->assertStringContainsString( 'r="' . round( 330 * 0.97 - 330 * 0.57 * 453 / 1399, 1 ) . '"', $svg );
+	}
+
+	public function test_a_track_with_no_levels_is_left_unshaded_beside_one_with_them(): void {
+		$tracks = array(
+			array(
+				'duration' => 400,
+				'levels'   => '99999999',
+			),
+			array( 'duration' => 400 ),
+		);
+		$svg    = \Riff\Listen\Cover::draw( array( 'title' => 'T' ), $tracks, \Riff\Listen\Cover::palettes()[0], 'centre' );
+		$this->assertMatchesRegularExpression( '#<radialGradient id="riff-grooves"><stop offset="[\d.]+" [^>]*stop-opacity="0"/>#', $svg, 'nothing inside the lead-out' );
+		$this->assertSame( 4, preg_match_all( '#stop-opacity="0"#', $svg ), 'the lead-out, the unmeasured track at both ends, and the lead-in' );
+	}
+
 	public function test_a_track_with_level_data_puts_the_music_in_the_groove(): void {
 		$levels = static function ( $track ) {
 			$track['levels'] = str_repeat( '0369', 30 );
@@ -172,7 +231,7 @@ class Test_Riff_Art extends Riff_TestCase {
 		[ $post ] = $this->bare_post();
 		$svg      = Art::svg( get_post( $post ) );
 		remove_filter( 'riff_track', $levels );
-		$this->assertMatchesRegularExpression( '#<path class="riff-groove" d="M[\d. ]+L#', $svg, 'the groove is a path that follows the levels' );
+		$this->assertStringContainsString( '<radialGradient id="riff-grooves">', $svg, 'the grooves lighter where the music is loud' );
 	}
 
 	public function test_the_sheet_is_for_editors_only(): void {

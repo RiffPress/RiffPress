@@ -8,11 +8,13 @@
 
 namespace Riff\Listen;
 
+use Riff\Library;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The cover Riff draws for an album with no image: a record with one groove per track, each as
- * long as the track and following its level data when it has any, the title and artist in type,
+ * The cover Riff draws for an album with no image: side A of its record, a band of grooves for each
+ * track, as long as the track and lighter where the music is loud,
  * in one of the palettes and layouts, chosen from the album's slug. Pure drawing: Art decides
  * when a cover is drawn and serves it.
  */
@@ -133,9 +135,10 @@ final class Cover {
 	}
 
 	/**
-	 * The record: the disc, one groove per track, the label and the hole. A groove's width is the
-	 * track's share of the album's length, and its line follows the track's level data when the
-	 * track carries any, so the music is in the grooves; otherwise it is a quiet, even ring.
+	 * The record as the turntable plays it: side A of the album's pressing (Library::pressing()), to
+	 * the same measure as the player's record, its first track outermost and each track's width its
+	 * share of the side, since a record's grooves keep one pitch. A ring parts each track from the
+	 * next, and where the tracks carry level data the grooves are lighter where the music is loud.
 	 *
 	 * @param float  $cx     Centre x.
 	 * @param float  $cy     Centre y.
@@ -150,66 +153,69 @@ final class Cover {
 	private static function record( float $cx, float $cy, float $r, array $tracks, string $disc, string $accent, string $bg, string $ink ): string {
 		// A groove is cut into the record, so it reads as the lighter line on a dark disc and the
 		// darker on a light one, whatever the ink of the words.
-		$ink   = self::luminance( $disc ) < 0.5 ? '#ffffff' : '#1e1e1e';
-		$label = $r / 3;
-		$hole  = max( 4, $r * 0.024 );
-		$out   = sprintf( '<circle cx="%s" cy="%s" r="%s" fill="%s"/>', $cx, $cy, $r, esc_attr( $disc ) );
-
-		$inner = $label + $r * 0.05;
-		$outer = $r * 0.95;
-		$total = 0.0;
-		foreach ( $tracks as $t ) {
-			$total += max( 30.0, (float) ( $t['duration'] ?? 0 ) );
+		$ink      = self::luminance( $disc ) < 0.5 ? '#ffffff' : '#1e1e1e';
+		$tracks   = array_values( $tracks );
+		$pressing = Library::pressing( $tracks );
+		$single   = '7' === $pressing['format'];
+		$side     = $pressing['sides'][0] ?? array(
+			'from' => 0,
+			'to'   => count( $tracks ),
+		);
+		$tracks   = array_slice( $tracks, $side['from'], $side['to'] - $side['from'] );
+		$label    = $r * ( $single ? 0.5 : 0.345 );
+		$hole     = max( 4, $r * ( $single ? 0.11 : 0.024 ) );
+		$lead_out = $r * ( $single ? 0.56 : 0.4 );
+		$lead_in  = $r * 0.97;
+		$at       = static fn( float $played ): float => round( $lead_in - ( $lead_in - $lead_out ) * $played, 1 );
+		$lengths  = array_map( static fn( $t ) => (float) ( $t['duration'] ?? 0 ), $tracks );
+		$whole    = array_sum( $lengths );
+		// With no lengths known, each track takes the same.
+		if ( $whole <= 0 ) {
+			$lengths = array_fill( 0, count( $tracks ), 1.0 );
+			$whole   = max( 1.0, (float) count( $tracks ) );
 		}
-		$tracks = array_values( $tracks );
-		$n      = count( $tracks );
-		$at     = $inner;
-		for ( $i = 0; $i < $n; $i++ ) {
-			$t     = $tracks[ $i ];
-			$share = $total > 0 ? max( 30.0, (float) ( $t['duration'] ?? 0 ) ) / $total : 1 / $n;
-			$width = ( $outer - $inner ) * $share;
-			$mid   = $at + $width / 2;
-			$at   += $width;
-			if ( $width < 3 ) {
+		$out = sprintf( '<circle cx="%s" cy="%s" r="%s" fill="%s"/>', $cx, $cy, $r, esc_attr( $disc ) );
+
+		// The music in the grooves: from the lead-out outwards, as a gradient's stops run, with nothing
+		// on the dead wax inside it, or on a track with no levels.
+		$shade = static fn( float $played, float $opacity ): string => sprintf(
+			'<stop offset="%s" stop-color="%s" stop-opacity="%s"/>',
+			round( $at( $played ) / $lead_in, 4 ),
+			esc_attr( $ink ),
+			round( $opacity, 3 )
+		);
+		$stops = '';
+		$into  = $whole;
+		$heard = false;
+		for ( $i = count( $tracks ) - 1; $i >= 0; $i-- ) {
+			$into  -= $lengths[ $i ];
+			$levels = isset( $tracks[ $i ]['levels'] ) && is_string( $tracks[ $i ]['levels'] ) ? $tracks[ $i ]['levels'] : '';
+			$n      = min( 24, strlen( $levels ) );
+			if ( ! $n ) {
+				$stops .= $shade( ( $into + $lengths[ $i ] ) / $whole, 0 ) . $shade( $into / $whole, 0 );
 				continue;
 			}
-			$levels = isset( $t['levels'] ) && is_string( $t['levels'] ) && strlen( $t['levels'] ) >= 8 ? $t['levels'] : '';
-			$weight = max( 1.5, min( 6, $width * 0.22 ) );
-			if ( $levels ) {
-				$out .= sprintf( '<path class="riff-groove" d="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.34" stroke-linejoin="round"/>', self::wave( $cx, $cy, $mid, min( ( $width - $weight ) / 2, $r * 0.006 ), $levels ), esc_attr( $ink ), $weight );
-			} else {
-				$out .= sprintf( '<circle class="riff-groove" cx="%s" cy="%s" r="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.22"/>', $cx, $cy, round( $mid, 1 ), esc_attr( $ink ), $weight );
+			$heard = true;
+			for ( $j = $n - 1; $j >= 0; $j-- ) {
+				$part   = substr( $levels, (int) floor( $j * strlen( $levels ) / $n ), max( 1, (int) floor( strlen( $levels ) / $n ) ) );
+				$stops .= $shade( ( $into + ( $j + 0.5 ) * $lengths[ $i ] / $n ) / $whole, 0.14 * (int) max( str_split( $part ) ) / 9 );
 			}
+		}
+		$stops = $heard ? $shade( 1, 0 ) . $stops . $shade( 0, 0 ) : '';
+		if ( $stops ) {
+			$out .= sprintf( '<radialGradient id="riff-grooves">%s</radialGradient><circle cx="%s" cy="%s" r="%s" fill="url(#riff-grooves)"/>', $stops, $cx, $cy, $lead_in );
+		}
+
+		// The lead-in, a ring between each track and the next, and the lead-out.
+		$played = 0.0;
+		foreach ( array_merge( array( 0.0 ), $lengths ) as $length ) {
+			$played += $length;
+			$out    .= sprintf( '<circle class="riff-groove" cx="%s" cy="%s" r="%s" fill="none" stroke="%s" stroke-width="%s" stroke-opacity="0.34"/>', $cx, $cy, $at( $played / $whole ), esc_attr( $ink ), max( 1.5, $r * 0.006 ) );
 		}
 
 		$out .= sprintf( '<circle cx="%s" cy="%s" r="%s" fill="%s"/>', $cx, $cy, $label, esc_attr( $accent ) );
 		$out .= sprintf( '<circle cx="%s" cy="%s" r="%s" fill="%s"/>', $cx, $cy, $hole, esc_attr( $bg ) );
 		return $out;
-	}
-
-	/**
-	 * A ring whose radius follows the track's levels around the circle: the waveform wrapped,
-	 * each point averaged with its neighbours so it reads as the music's texture, not a tremor.
-	 *
-	 * @param float  $cx     Centre x.
-	 * @param float  $cy     Centre y.
-	 * @param float  $r      Mean radius.
-	 * @param float  $amp    Largest departure from the mean.
-	 * @param string $levels Digits 0 to 9, one per sample.
-	 * @return string Path data.
-	 */
-	private static function wave( float $cx, float $cy, float $r, float $amp, string $levels ): string {
-		$n      = strlen( $levels );
-		$points = min( 180, max( 60, $n ) );
-		$d      = '';
-		for ( $i = 0; $i < $points; $i++ ) {
-			$at    = (int) floor( $i * $n / $points );
-			$digit = ( (int) $levels[ ( $at + $n - 1 ) % $n ] + 2 * (int) $levels[ $at ] + (int) $levels[ ( $at + 1 ) % $n ] ) / 4;
-			$rr    = $r + ( $digit / 9 - 0.5 ) * 2 * $amp;
-			$a     = 2 * M_PI * $i / $points;
-			$d    .= ( 0 === $i ? 'M' : 'L' ) . round( $cx + $rr * cos( $a ), 1 ) . ' ' . round( $cy + $rr * sin( $a ), 1 ) . ' ';
-		}
-		return $d . 'Z';
 	}
 
 	/**

@@ -24,8 +24,8 @@ defined( 'ABSPATH' ) || exit;
  *
  * A site's own images always win: the post's featured image, or the file's artwork set in the
  * Media Library. When there is neither, the player draws a cover. Every cover is the same object,
- * a record, and what changes is what the record carries: one groove per track, each as wide as
- * the track is long, textured by the track's own level data when it has any; the title in
+ * a record, and what changes is what the record carries: side A of the album's pressing, a band
+ * for each track as wide as the track is long, lighter where the music is loud; the title in
  * EB Garamond and the artist in Inter, as wordpress.org sets them; a ground, an accent and a
  * layout chosen from the post's slug, so the same post draws the same cover on any site, through
  * any reseed. The palette is wordpress.org's own. Served by WordPress at ?riff-art={post}, as SVG
