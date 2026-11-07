@@ -32,9 +32,7 @@ const stylus = ( page ) =>
 const turning = ( page ) =>
 	page.locator( '.riff-wax' ).evaluate( ( el ) => {
 		const turn = el.getAnimations()[ 0 ];
-		return turn && getComputedStyle( el ).animationPlayState === 'running'
-			? ( 360000 / turn.effect.getTiming().duration ) * turn.playbackRate
-			: 0;
+		return turn ? ( 360000 / turn.effect.getTiming().duration ) * turn.playbackRate : 0;
 	} );
 // A 12-inch side's grooves run from 97% of the radius at the lead-in to 40% at the lead-out, its
 // playing time evenly across them.
@@ -85,6 +83,21 @@ test.describe( 'Turntable', () => {
 				[ '.riff-arm-tube', '.riff-record' ].flatMap( ( q ) => document.querySelector( q ).getAnimations().map( ( a ) => a.finished ) )
 			)
 		);
+	} );
+
+	test( 'the record stops where it stops, and stays there while Now Playing closes and opens', async ( { page } ) => {
+		const angle = () => page.locator( '.riff-wax' ).evaluate( ( el ) => parseFloat( getComputedStyle( el ).rotate ) || 0 );
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await expect.poll( angle ).toBeGreaterThan( 20 );
+		await page.locator( '.riff-bar [data-riff-action="toggle"]' ).click();
+		await expect.poll( () => turning( page ), { timeout: 5000 } ).toBe( 0 );
+		const stopped = await angle();
+		expect( stopped ).toBeGreaterThan( 0 );
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '.riff-np' ) ).toBeVisible();
+		expect( await angle() ).toBeCloseTo( stopped, 1 );
 	} );
 
 	test( 'the needle rides the groove the music is at, and the platter turns at 33⅓ times the music\'s speed', async ( { page } ) => {
@@ -323,11 +336,11 @@ test.describe( 'Turntable', () => {
 				down: 'riffDown' in arm.dataset,
 				radius: Math.hypot( at.x - record.left - r, at.y - record.top - r ) / r,
 				time: document.querySelector( '.riff-audio' ).currentTime,
-				running: getComputedStyle( document.querySelector( '.riff-wax' ) ).animationPlayState,
+				running: document.querySelector( '.riff-wax' ).getAnimations()[ 0 ].playbackRate > 0,
 			};
 		} );
 		expect( first.down ).toBe( true );
-		expect( first.running ).toBe( 'running' );
+		expect( first.running ).toBe( true );
 		expect( first.radius ).toBeCloseTo( groove( first.time / side ), 2 );
 		expect( await rate() ).toBe( 1 );
 		expect( ( await audioState( page ) ).paused ).toBe( false );

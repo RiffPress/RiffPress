@@ -439,6 +439,7 @@ export function nowPlaying( P ) {
 		}
 		const show = () => {
 			root.dataset.riffFormat = album?.format || '12';
+			spins.forEach( ( a ) => a.effect.updateTiming( { duration: turnsIn() } ) );
 			strobe();
 			cut( next );
 			label( next );
@@ -1005,19 +1006,33 @@ export function nowPlaying( P ) {
 	// rate in place of the music's (platter()); null while they follow the music.
 	let coasting = null;
 	let coasts = 0;
+	// The record, its label and its run-out turn as one, by animations the script keeps: speed 0 is
+	// a platter at rest, so the record stays at the angle it stopped at, whatever was in view, and
+	// outlasts Now Playing closing or the deck going away, which a stylesheet's animation doesn't.
+	const turnsIn = () => 60000 / ( root.dataset.riffFormat === '7' ? 45 : 100 / 3 );
+	const spins = $$( '.riff-turns' ).map( ( turns ) => {
+		const a = turns.animate( [ { rotate: '0deg' }, { rotate: '360deg' } ], { duration: turnsIn(), iterations: Infinity } );
+		a.playbackRate = 0;
+		return a;
+	} );
+	let spinRate = 1;
 	function platter( rate ) {
-		for ( const turns of $$( '.riff-turns' ) ) {
-			for ( const a of turns.getAnimations() ) {
-				rated( a, rate );
-			}
+		spinRate = rate;
+		const on = ( 'riffTurning' in root.dataset || coasting !== null ) && root.dataset.riffDeck === 'out' && ! P.reduce();
+		for ( const a of spins ) {
+			rated( a, on ? rate : 0 );
 		}
 		strobe();
 	}
+	new MutationObserver( () => platter( spinRate ) ).observe( root, {
+		attributeFilter: [ 'data-riff-turning', 'data-riff-coasting', 'data-riff-deck' ],
+	} );
 	function coast( from, to, then ) {
 		const id = ++coasts;
 		const ms = pull( from, to );
 		const t0 = performance.now();
 		coasting = from;
+		platter( from );
 		root.dataset.riffCoasting = '';
 		const step = ( now ) => {
 			if ( id !== coasts ) {
