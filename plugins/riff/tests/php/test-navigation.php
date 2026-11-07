@@ -61,6 +61,33 @@ class Test_Riff_Navigation extends Riff_TestCase {
 		$this->assertStringContainsString( 'data-wp-interactive="' . Navigation::REGION . '"', $html );
 	}
 
+	public function test_the_region_carries_what_the_router_leaves_behind(): void {
+		add_filter( 'riff_client_navigation', '__return_true' );
+		$this->buffered();
+		$html = apply_filters(
+			'wp_template_enhancement_output_buffer',
+			'<html><head><link rel="canonical" href="https://example.org/a/"><link rel="shortlink" href="https://example.org/?p=1"></head><body class="single postid-1"><div class="wp-site-blocks"><li id="wp-admin-bar-edit"><a href="https://evil.example/">Edit Post</a></li></div><div id="wpadminbar"><ul id="wp-admin-bar-root-default"><li id=\'wp-admin-bar-edit\'><a class=\'ab-item\' href=\'/edit\'>Edit Post</a><ul><li id=\'wp-admin-bar-child\'></li></ul></li><li id=\'wp-admin-bar-other\'></li></ul></div></body></html>',
+			''
+		);
+		$p    = new WP_HTML_Tag_Processor( $html );
+		$p->next_tag( array( 'class_name' => 'wp-site-blocks' ) );
+		$page = json_decode( (string) $p->get_attribute( 'data-riff-page' ), true );
+
+		$this->assertSame( 'single postid-1', $page['body'] );
+		$this->assertSame( 'https://example.org/a/', $page['canonical'] );
+		$this->assertSame( 'https://example.org/?p=1', $page['shortlink'] );
+		$this->assertSame( array( 'edit' => "<li id='wp-admin-bar-edit'><a class='ab-item' href='/edit'>Edit Post</a><ul><li id='wp-admin-bar-child'></li></ul></li>" ), $page['bar'], 'the bar\'s own edit link with its menu, never the one in the post' );
+	}
+
+	public function test_a_page_with_no_admin_bar_carries_none_from_its_content(): void {
+		add_filter( 'riff_client_navigation', '__return_true' );
+		$this->buffered();
+		$html = apply_filters( 'wp_template_enhancement_output_buffer', '<body><div class="wp-site-blocks"><li id="wp-admin-bar-edit"><a href="https://evil.example/">Edit</a></li></div></body>', '' );
+		$p    = new WP_HTML_Tag_Processor( $html );
+		$p->next_tag( array( 'class_name' => 'wp-site-blocks' ) );
+		$this->assertSame( array(), json_decode( (string) $p->get_attribute( 'data-riff-page' ), true )['bar'] );
+	}
+
 	public function test_a_classic_theme_is_never_buffered_for_it(): void {
 		switch_theme( $this->theme );
 		$this->assertFalse( wp_is_block_theme(), 'the tests site runs a classic theme' );

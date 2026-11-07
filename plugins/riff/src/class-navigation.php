@@ -9,9 +9,11 @@
  * `.wp-site-blocks`, and the player is printed after it in the footer, so marking that element
  * one region swaps the page and leaves the bar, the queue and the one `<audio>` where they are.
  *
- * Off unless `riff_client_navigation` turns it on: the router keeps the page's `<head>`, its
- * classic scripts and the body's classes from the first page, which a theme or a plugin may not
- * expect. A Listen page is always reached by loading it, since the app builds its own views.
+ * Off unless `riff_client_navigation` turns it on: the router keeps what is outside its regions
+ * from the first page. Riff carries over the body's classes, the canonical and short addresses
+ * and the admin bar's edit links (page()); the rest of the `<head>` stays, and a classic script
+ * only a later page enqueues doesn't load, which a theme or a plugin may not expect. A Listen page
+ * is always reached by loading it, since the app builds its own views.
  *
  * @package Riff
  */
@@ -116,10 +118,75 @@ final class Navigation {
 			if ( $p->has_class( 'wp-site-blocks' ) ) {
 				$p->set_attribute( 'data-wp-interactive', self::REGION );
 				$p->set_attribute( 'data-wp-router-region', self::REGION );
+				$p->set_attribute( 'data-riff-page', (string) wp_json_encode( self::page( $html ) ) );
 				return $p->get_updated_html();
 			}
 		}
 		return $html;
+	}
+
+	/**
+	 * What the page says outside its template and a site would miss after a link, which the router
+	 * leaves as the first page had it: the body's classes, the canonical and short addresses, and
+	 * the admin bar's links to edit this page. navigation.js puts them in place.
+	 *
+	 * @since 6.2.0
+	 *
+	 * @param string $html The page.
+	 * @return array{body: string, canonical: string, shortlink: string, bar: array<string, string>}
+	 */
+	private static function page( string $html ): array {
+		$page = array(
+			'body'      => '',
+			'canonical' => '',
+			'shortlink' => '',
+			'bar'       => array(),
+		);
+		$p    = new \WP_HTML_Tag_Processor( $html );
+		while ( $p->next_tag() ) {
+			if ( 'BODY' === $p->get_tag() ) {
+				$page['body'] = (string) $p->get_attribute( 'class' );
+				break;
+			}
+			$rel = 'LINK' === $p->get_tag() ? (string) $p->get_attribute( 'rel' ) : '';
+			if ( 'canonical' === $rel || 'shortlink' === $rel ) {
+				$page[ $rel ] = (string) $p->get_attribute( 'href' );
+			}
+		}
+		$page['bar'] = self::bar_nodes( $html );
+		return $page;
+	}
+
+	/**
+	 * The admin bar's edit and template links, as the page printed them. Only from the bar itself,
+	 * which core prints after the content, so a post's own markup is never taken for one.
+	 *
+	 * @param string $html The page.
+	 * @return array<string, string>
+	 */
+	private static function bar_nodes( string $html ): array {
+		$from = strrpos( $html, 'id="wpadminbar"' );
+		if ( false === $from ) {
+			return array();
+		}
+		$bar   = substr( $html, $from );
+		$nodes = array();
+		foreach ( array( 'edit', 'site-editor' ) as $node ) {
+			if ( ! preg_match( '#<li\b[^>]*\bid=[\'"]wp-admin-bar-' . $node . '[\'"]#', $bar, $start, PREG_OFFSET_CAPTURE ) ) {
+				continue;
+			}
+			// To the </li> that closes it, past any a plugin's menu under it holds.
+			preg_match_all( '#</?li\b#', $bar, $tags, PREG_OFFSET_CAPTURE, $start[0][1] );
+			$depth = 0;
+			foreach ( $tags[0] as [ $tag, $at ] ) {
+				$depth += '<li' === $tag ? 1 : -1;
+				if ( 0 === $depth ) {
+					$nodes[ $node ] = substr( $bar, $start[0][1], $at + 5 - $start[0][1] );
+					break;
+				}
+			}
+		}
+		return $nodes;
 	}
 
 	/**
