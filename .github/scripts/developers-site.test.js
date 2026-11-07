@@ -51,7 +51,7 @@ const site = ( extra = {} ) => {
 		'icons/favicon.svg': '<svg/>',
 		'js/neck.js': '',
 		'shot.png': '',
-		'404.html': `<a href="${ SITE }developers/">Developers</a>`,
+		'404.html': `<link rel="stylesheet" href="${ SITE }web/web.css"><a href="${ SITE }">Riff</a><a href="${ SITE }developers/">Developers</a>`,
 		'sitemap.xml': `<?xml version="1.0"?>\n<urlset>\n  <url><loc>${ SITE }</loc></url>\n  <url><loc>${ SITE }developers/php/</loc></url>\n  <url><loc>${ SITE }web/has/</loc></url>\n</urlset>\n`,
 		_redirects: '/demo https://playground.wordpress.net/ 302\n',
 		...extra,
@@ -84,6 +84,8 @@ test( 'moves /developers/ to the root of its host and /web/ under it, with their
 	for ( const file of [
 		'index.html',
 		'php/index.html',
+		'download/index.html',
+		'shot.png',
 		'web/index.html',
 		'web/has/index.html',
 		'web/web.css',
@@ -104,13 +106,14 @@ test( 'moves /developers/ to the root of its host and /web/ under it, with their
 	assert.match( php, /href="\.\.\/web\/web\.css\?v=abc"/ );
 	assert.match( php, /href="\.\.\/web\/">Web/ );
 	assert.match( php, /href="\.\.\/">Developers/ );
-	// Back on the site: its own pages and images.
-	assert.match( php, /href="https:\/\/riffpress\.com\/">Riff/ );
-	assert.match( php, /href="https:\/\/riffpress\.com\/download\/"/ );
+	// The pages about the software move too, and the images a moved page shows go with it.
+	assert.match( php, /href="\.\.\/download\/"/ );
 	assert.match(
 		php,
-		/srcset="https:\/\/riffpress\.com\/shot\.png 1x, \.\.\/icons\/favicon\.svg 2x"/
+		/srcset="\.\.\/shot\.png 1x, \.\.\/icons\/favicon\.svg 2x"/
 	);
+	// Back on the site: its own pages.
+	assert.match( php, /href="https:\/\/riffpress\.com\/">Riff/ );
 	assert.match( php, /content="width=device-width, initial-scale=1"/ );
 	assert.match( read( dev, 'web/index.html' ), /href="\.\.\/php\/#hooks"/ );
 	assert.match(
@@ -124,6 +127,7 @@ test( 'the site keeps its stylesheet, points at the new host, and redirects each
 	const dev = fs.mkdtempSync( path.join( os.tmpdir(), 'developers-out-' ) );
 	split( { out, dev, site: SITE, developers: DEV } );
 	assert.ok( ! fs.existsSync( path.join( out, 'developers' ) ) );
+	assert.ok( ! fs.existsSync( path.join( out, 'download' ) ) );
 	assert.ok( ! fs.existsSync( path.join( out, 'web', 'has' ) ) );
 	assert.ok( ! fs.existsSync( path.join( out, 'web', 'index.html' ) ) );
 	assert.ok( fs.existsSync( path.join( out, 'web', 'web.css' ) ) );
@@ -138,6 +142,11 @@ test( 'the site keeps its stylesheet, points at the new host, and redirects each
 		read( out, '404.html' ),
 		/href="https:\/\/developer\.riffpress\.com\/"/
 	);
+	// The developer host's 404 is drawn with its own files, and links home to the site.
+	const missed = read( dev, '404.html' );
+	assert.match( missed, /href="https:\/\/developer\.riffpress\.com\/web\/web\.css"/ );
+	assert.match( missed, /href="https:\/\/developer\.riffpress\.com\/">Developers/ );
+	assert.match( missed, /href="https:\/\/riffpress\.com\/">Riff/ );
 	const redirects = read( out, '_redirects' ).split( '\n' );
 	assert.equal(
 		redirects[ 0 ],
@@ -158,9 +167,18 @@ test( 'the site keeps its stylesheet, points at the new host, and redirects each
 			'/web/has/ https://developer.riffpress.com/web/has/ 301'
 		)
 	);
-	assert.equal(
-		redirects.filter( Boolean ).at( -1 ),
-		'/developers/* https://developer.riffpress.com/:splat 301'
+	// The rest of each moved folder after its pages.
+	assert.deepEqual( redirects.filter( ( l ) => l.includes( '*' ) ), [
+		'/developers/* https://developer.riffpress.com/:splat 301',
+		'/download/* https://developer.riffpress.com/download/:splat 301',
+		'/add-music/* https://developer.riffpress.com/add-music/:splat 301',
+		'/built/* https://developer.riffpress.com/built/:splat 301',
+		'/accessibility/* https://developer.riffpress.com/accessibility/:splat 301',
+	] );
+	assert.ok(
+		redirects.includes(
+			'/download/ https://developer.riffpress.com/download/ 301'
+		)
 	);
 	// Not web/*: the stylesheet would leave with it.
 	assert.ok( ! redirects.some( ( l ) => l.startsWith( '/web/*' ) ) );

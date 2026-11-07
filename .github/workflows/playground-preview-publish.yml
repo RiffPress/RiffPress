@@ -11,8 +11,9 @@ name: Playground Preview Publish
 #
 # For a pull request from this repository (not a fork, whose pages would be
 # published under the project's address), the site it built is deployed as a
-# Cloudflare Pages preview at pr-N.riffpress.pages.dev, with that same
-# Playground blueprint as its blueprint.json, so its "Try the demo" opens the
+# Cloudflare Pages preview at pr-N.riffpress-developer.pages.dev, in the
+# developer site's project, with that same Playground blueprint as its
+# blueprint.json, so its "Try the demo" opens the
 # pull request's own build. Its placeholders are filled by the base branch's
 # site-preview.js, which only rewrites text, and it asks not to be indexed.
 
@@ -131,13 +132,13 @@ jobs:
           HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
           set -euo pipefail
-          BASE="https://pr-${PR_NUMBER}.riffpress.pages.dev/"
+          BASE="https://pr-${PR_NUMBER}.riffpress-developer.pages.dev/"
           VERSION=$(unzip -p artifacts/release-assets/riff.zip riff/riff.php | sed -nE 's/^ \* Version: *([0-9][0-9A-Za-z.-]*).*$/\1/p' | head -n1)
           STABLE=$( { curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" "https://api.github.com/repos/${GH_REPO}/releases/latest" || echo '{}'; } | jq -r '.tag_name // empty | ltrimstr("riff-") | ltrimstr("v")')
           [[ -n "$STABLE" && "$STABLE" != null ]] || STABLE="$VERSION"
           cp preview-blueprint.json artifacts/site/blueprint.json
           node .github/scripts/site-preview.js artifacts/site "$BASE" "$VERSION" "$STABLE" "$HEAD_SHA"
-          npx --yes wrangler@4 pages deploy artifacts/site --project-name riffpress --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
+          npx --yes wrangler@4 pages deploy artifacts/site --project-name riffpress-developer --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
           echo "url=$BASE" >> "$GITHUB_OUTPUT"
       - name: Post or update the sticky comment
         if: steps.meta.outputs.skipped != 'true'
@@ -175,7 +176,7 @@ jobs:
               '',
               buttons,
               '',
-              '<sub><b>Standalone app</b> is <code>/listen/app/</code>, the installable player with no theme around it. <b>Listen page</b> is <code>/listen/</code>, the same player as a block inside the theme. <b>Blog post</b> is an album post with its Riff block. <b>Website</b> is riffpress.com as this branch builds it.</sub>',
+              '<sub><b>Standalone app</b> is <code>/listen/app/</code>, the installable player with no theme around it. <b>Listen page</b> is <code>/listen/</code>, the same player as a block inside the theme. <b>Blog post</b> is an album post with its Riff block. <b>Website</b> is the site as this branch builds it, before its pages are split between the hosts.</sub>',
               '',
             ].join('\n');
             const prNumber = parseInt(process.env.PR_NUMBER, 10);

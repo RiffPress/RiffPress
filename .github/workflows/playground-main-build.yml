@@ -67,7 +67,7 @@ jobs:
           cp site/brand/mark.png preview/demo/
           # Every streamed album's manifest and levels in one albums.json, as blueprint.json fetches it.
           node .github/scripts/demo-albums.js bundle packages/fixtures preview/demo/albums.json
-          printf 'https://riffpress.com/demo/' > preview/demo/base.txt
+          printf 'https://developer.riffpress.com/demo/' > preview/demo/base.txt
           BASE="https://raw.githubusercontent.com/${GH_REPO}/preview-main/"
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" > preview/blueprint.json
           ls -la preview preview/demo

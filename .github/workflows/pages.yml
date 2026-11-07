@@ -1,15 +1,17 @@
 name: Pages
 
-# Publishes the landing page to Cloudflare Pages at riffpress.com, the developer reference to its own
-# project at developer.riffpress.com, and with them everything the live demo needs: riff.zip built
-# from main, blueprint.json, the seed script and the demo audio, all with URLs stamped by commit so
-# caches never serve an old build. blueprint.json names those files relative to itself; this
-# workflow resolves them against the site's address. GitHub Pages keeps serving a one-line redirect at the
-# old address, so links to it still land.
+# Publishes the developer site to Cloudflare Pages at developer.riffpress.com: the reference, the
+# pages about the software, and everything the live demo needs: riff.zip built from main,
+# blueprint.json, the seed script and the demo audio, all with URLs stamped by commit so caches never
+# serve an old build. blueprint.json names those files relative to itself; this workflow resolves
+# them against the developer host. riffpress.com is the business's own site, from its own
+# repository, and carries the redirects from the addresses this one used to serve there. GitHub
+# Pages keeps serving a one-line redirect at the old address, so links to it still land.
 #
-# The site is built as one, with /developers/ and /web/ in it, and developers-site.js then moves those
-# pages to the developer host, leaves a 301 at each old address, and fails the deploy on a link
-# between the two that leads nowhere.
+# The site is built as one, as riffpress.com was, and developers-site.js then moves the reference
+# and the software's pages to the developer host, writes the redirects the site's old addresses
+# need (printed below for riffpress.com's repository), and fails the deploy on a link that leads
+# nowhere. What it leaves behind is not deployed.
 #
 # Needs two repository secrets, CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID,
 # and takes the addresses from the SITE_URL and DEVELOPER_URL repository variables when set. Each
@@ -32,7 +34,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PROJECT: riffpress
   DEVELOPER_PROJECT: riffpress-developer
   SITE_URL: ${{ vars.SITE_URL || 'https://riffpress.com/' }}
   DEVELOPER_URL: ${{ vars.DEVELOPER_URL || 'https://developer.riffpress.com/' }}
@@ -47,7 +48,7 @@ jobs:
       contents: read
     environment:
       name: cloudflare-pages
-      url: ${{ env.SITE_URL }}
+      url: ${{ env.DEVELOPER_URL }}
     outputs:
       base: ${{ steps.site.outputs.base }}
       developers: ${{ steps.site.outputs.developers }}
@@ -120,17 +121,15 @@ jobs:
             cp ~/.cache/riff-albums/built/"$slug"/*.mp3 "out/demo/$slug/"
           done
           node .github/scripts/demo-albums.js bundle packages/fixtures out/demo/albums.json
-          printf '%sdemo/' "$(printf '%s' "$SITE_URL" | sed -E 's#^http://#https://#; s#/*$#/#')" > out/demo/base.txt
+          printf '%sdemo/' "$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')" > out/demo/base.txt
           du -sh out/demo
           # Playground runs on https and a browser will not fetch http from it, so the scheme is always https.
           BASE=$(printf '%s' "$SITE_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
           [[ "$BASE" =~ ^https://[^/]+/ ]] || { echo "::error::Unexpected site URL: $BASE"; exit 1; }
-          # Stamp every asset URL with the commit so a deploy is always a new URL: the page's images and
-          # stylesheets, and the blueprint's zip and demo files (pull requests' Playground previews still use it).
+          # Stamp every asset URL with the commit so a deploy is always a new URL: the pages' stylesheets,
+          # and the blueprint's zip and demo files (pull requests' Playground previews still use it). The
+          # landing page is riffpress.com's own repository's now, so it is left as written.
           V="${GITHUB_SHA::7}"
-          sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(src=\"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g; s#(\.avif)( [0-9]+w)?(,|\")#\1?v=${V}\2\3#g; s#(content=\"[^\"?]+/og\.png)\"#\1?v=${V}\"#; s#(\"image\": \"[^\"?]+\.png)\"#\1?v=${V}\"#g; s#(blueprint-url=[^\"&?]+/blueprint\.json)#\1?v=${V}#g" out/index.html
-          # The page's demo buttons go to the live demo, not Playground, so its stamped images say the sed ran.
-          grep -c "\.png?v=${V}" out/index.html
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g" out/robots.txt out/sitemap.xml
           # The 404 is served at whatever address was missed, so its links are absolute.
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g" out/404.html
@@ -147,39 +146,31 @@ jobs:
           if [[ "$STABLE" == "$VERSION" ]]; then sed -i -E '/class="fine stable"/d' out/download/index.html; fi
           sed -i -E "s#\{\{stable\}\}#${STABLE}#g" out/download/index.html
           find out/web out/add-music out/download out/developers out/built out/accessibility -name index.html -exec sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#\{\{commit\}\}#${GITHUB_SHA}#g; s#\{\{version\}\}#${VERSION}#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g" {} +
-          sed -i -E "s#\{\{version\}\}#${VERSION}#g" out/index.html
-          if grep -rn '{{' out/index.html out/404.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
-          node .github/scripts/demo-blueprint.js resolve blueprint.json "$BASE" "$V" > out/blueprint.json
-          grep -c "?v=${V}" out/index.html out/blueprint.json
-          # Everything stamped by commit can be cached forever; the page and the blueprint are fetched fresh.
-          cat > out/_headers <<'HEADERS'
+          if grep -rn '{{' out/404.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
+          printf '/demo https://next.riffpress.com/listen/app/ 302\n' > out/_redirects
+          # The developer site, and the redirects riffpress.com's repository carries from it.
+          DEV=$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
+          [[ "$DEV" =~ ^https://[^/]+/$ ]] || { echo "::error::Unexpected developers URL: $DEV"; exit 1; }
+          node .github/scripts/developers-site.js out out-developers "$BASE" "$DEV"
+          # The demo, on the developer host, with its blueprint resolved against it.
+          mkdir -p out-developers/demo
+          cp -R out/demo/. out-developers/demo/
+          cp out/riff.zip out-developers/
+          AT=$(printf '%s' "$BASE" | sed -E 's#^https://[^/]+##')
+          printf '%sdemo/* %sdemo/:splat 301\n%sriff.zip %sriff.zip 301\n%sblueprint.json %sblueprint.json 301\n' "$AT" "$DEV" "$AT" "$DEV" "$AT" "$DEV" >> out/_redirects
+          cat out/_redirects
+          node .github/scripts/demo-blueprint.js resolve blueprint.json "$DEV" "$V" > out-developers/blueprint.json
+          grep -c "?v=${V}" out-developers/blueprint.json
+          # Everything stamped by commit can be cached forever; the blueprint is fetched fresh.
+          cat >> out-developers/_headers <<'HEADERS'
           /demo/*
             Cache-Control: public, max-age=31536000, immutable
           /riff.zip
             Cache-Control: public, max-age=31536000, immutable
-          /:name.png
-            Cache-Control: public, max-age=31536000, immutable
-          /:name.avif
-            Cache-Control: public, max-age=31536000, immutable
-          /:name.css
-            Cache-Control: public, max-age=31536000, immutable
-          /web/web.css
-            Cache-Control: public, max-age=31536000, immutable
-          /fonts/*
-            Cache-Control: public, max-age=31536000, immutable
-          /index.html
-            Cache-Control: no-cache
           /blueprint.json
             Cache-Control: no-cache
           HEADERS
-          # A stable address for the demo: /demo sends to the live demo site, which runs main.
-          printf '/demo https://next.riffpress.com/listen/app/ 302\n' > out/_redirects
-          # The developer reference to its own host, with a redirect from each old address after /demo's.
-          DEV=$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
-          [[ "$DEV" =~ ^https://[^/]+/$ ]] || { echo "::error::Unexpected developers URL: $DEV"; exit 1; }
-          node .github/scripts/developers-site.js out out-developers "$BASE" "$DEV"
-          cat out/_redirects
-          ls -la out out/demo out-developers
+          ls -la out-developers out-developers/demo
           { echo "base=$BASE"; echo "developers=$DEV"; echo "version=$V"; } >> "$GITHUB_OUTPUT"
       - name: Deploy to Cloudflare Pages
         env:
@@ -193,23 +184,17 @@ jobs:
             exit 1
           fi
           # Creating a project fails harmlessly once it exists.
-          for p in "$PROJECT" "$DEVELOPER_PROJECT"; do
-            npx --yes wrangler@4 pages project create "$p" --production-branch main 2> /dev/null || true
-          done
-          # The developer host first, and only once it answers does the site start sending its old
-          # addresses there. Until the host is attached this stops the whole site's deploy, so the
-          # reference never redirects to nowhere.
+          npx --yes wrangler@4 pages project create "$DEVELOPER_PROJECT" --production-branch main 2> /dev/null || true
           npx --yes wrangler@4 pages deploy out-developers --project-name "$DEVELOPER_PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
           if ! curl -fsS -o /dev/null --retry 6 --retry-delay 10 --retry-all-errors "${DEVELOPERS}php/"; then
             echo "::error::${DEVELOPERS} does not answer. Attach it to the $DEVELOPER_PROJECT project as a custom domain, then run this again."
             exit 1
           fi
-          npx --yes wrangler@4 pages deploy out --project-name "$PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
       # The deploy reports success whether or not the demo can load what it names. Ask for each file the
       # way Playground will, from another origin, so a dead URL fails here instead of on a visitor.
       - name: Check every file the demo fetches
         env:
-          BLUEPRINT: ${{ steps.site.outputs.base }}blueprint.json?v=${{ steps.site.outputs.version }}
+          BLUEPRINT: ${{ steps.site.outputs.developers }}blueprint.json?v=${{ steps.site.outputs.version }}
         run: node .github/scripts/demo-blueprint.js check "$BLUEPRINT" 18
 
   # GitHub Pages keeps the old address alive as a redirect to the site.
