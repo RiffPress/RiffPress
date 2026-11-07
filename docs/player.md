@@ -43,6 +43,9 @@ The rest is what a player should do:
   reach it after it was due; it is joined once, where the music is by then, which the player
   says. Each listener turns sharing off under Personal Options on their profile; a site makes it
   off until turned on with the `riff_together_share` filter.
+- Someone who may upload adds music in the app: Add music in the account menu or an empty library, or
+  files and folders dropped on the window, each sent to WordPress's own media route. A file the Media
+  Library already has is skipped.
 - The queue and position are kept for the tab's session. A full-page navigation saves them and
   attempts to resume on the next page; a reload restores the same track paused. A queue of more
   than 500 tracks keeps the 500 around the one playing, in the order they play.

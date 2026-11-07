@@ -111,6 +111,22 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertTrue( wp_style_is( 'riff-app', 'enqueued' ) );
 	}
 
+	public function test_only_someone_who_may_upload_has_the_module_that_adds_music(): void {
+		// A module keeps the arguments it was first registered with, so each asks a registry of its own.
+		$registry = $GLOBALS['wp_script_modules'] ?? null;
+		$this->go_to( home_url( '/' ) );
+		$GLOBALS['wp_script_modules'] = null;
+		Player::enqueue();
+		$this->assertNotContains( 'riff-app/import', array_column( wp_script_modules()->get_registered( 'riff-app' )['dependencies'], 'id' ), 'not a visitor' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$GLOBALS['wp_script_modules'] = null;
+		Player::enqueue();
+		$dependencies = array_column( wp_script_modules()->get_registered( 'riff-app' )['dependencies'], 'import', 'id' );
+		$this->assertSame( 'dynamic', $dependencies['riff-app/import'] ?? '', 'an author has it, imported only when it is needed' );
+		$GLOBALS['wp_script_modules'] = $registry;
+	}
+
 	public function test_the_listen_app_is_modules_the_import_map_names_and_a_language_pack_reaches(): void {
 		$this->go_to( home_url( '/' ) );
 		Player::enqueue();
@@ -123,7 +139,8 @@ class Test_Riff_Player extends Riff_TestCase {
 		// without a registration would not be in the import map, and the app would not load.
 		$files = array_map( static fn( string $file ): string => basename( $file, '.js' ), glob( RIFF_DIR . 'features/listen/app/*.js' ) );
 		sort( $files );
-		$sorted = Player::APP_MODULES;
+		// Adding music is a file of its own, on the map only for someone who may upload.
+		$sorted = array_merge( Player::APP_MODULES, array( 'import' ) );
 		sort( $sorted );
 		$this->assertSame( $files, $sorted );
 		foreach ( Player::APP_MODULES as $module ) {

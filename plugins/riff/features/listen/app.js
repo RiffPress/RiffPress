@@ -47,10 +47,12 @@ export function start( api ) {
 	status.setAttribute( 'role', 'status' );
 	app.append( status );
 	let statusTimer = 0;
-	function tell( message ) {
+	function tell( message, stay = false ) {
 		status.textContent = message;
 		clearTimeout( statusTimer );
-		statusTimer = setTimeout( () => ( status.textContent = '' ), 6000 );
+		if ( ! stay ) {
+			statusTimer = setTimeout( () => ( status.textContent = '' ), 6000 );
+		}
 	}
 	function untell() {
 		clearTimeout( statusTimer );
@@ -128,6 +130,12 @@ export function start( api ) {
 		togetherRow,
 	] ) {
 		Object.assign( ctx, module( ctx ) );
+	}
+	// Only for someone who may upload, whose page says where to and whose map names the module.
+	if ( app.dataset.riffMedia ) {
+		import( 'riff-app/import' )
+			.then( ( { importing } ) => importing( ctx ) )
+			.catch( () => {} );
 	}
 	ctx.shown = ctx.keyOf( ctx.postOf( location.href ) || { id: 0 } );
 

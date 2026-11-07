@@ -231,6 +231,15 @@ final class Player {
 			$deps = 'helpers' === $module ? array( 'riff-player/helpers' ) : array();
 			wp_register_script_module( $id, RIFF_URL . "features/listen/app/{$module}.js", $deps, self::version( "features/listen/app/{$module}.js" ) );
 		}
+		// Adding music is for someone who may upload, and only for them is it on the page's map.
+		if ( current_user_can( 'upload_files' ) ) {
+			wp_register_script_module( 'riff-app/import', RIFF_URL . 'features/listen/app/import.js', array(), self::version( 'features/listen/app/import.js' ) );
+			wp_set_script_module_translations( 'riff-app/import', 'riff' );
+			$modules[] = array(
+				'id'     => 'riff-app/import',
+				'import' => 'dynamic',
+			);
+		}
 		wp_register_script_module( 'riff-app', RIFF_URL . 'features/listen/app.js', $modules, self::version( 'features/listen/app.js' ) );
 		// On a Listen page the module is the content. Elsewhere it is the bar at the foot of the
 		// page, which can wait: fetched at low priority and printed in the footer, so it never
@@ -261,7 +270,7 @@ final class Player {
 		wp_script_modules()->set_in_footer( 'riff', ! $listen );
 		wp_set_script_module_translations( 'riff', 'riff' );
 		wp_set_script_module_translations( 'riff-app', 'riff' );
-		foreach ( $modules as $id ) {
+		foreach ( array_filter( $modules, 'is_string' ) as $id ) {
 			wp_set_script_module_translations( $id, 'riff' );
 		}
 		foreach ( array_merge( self::PLAYER_SECTIONS, self::PLAYER_FEATURES ) as $module ) {

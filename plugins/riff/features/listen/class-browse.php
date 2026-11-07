@@ -277,7 +277,7 @@ final class Browse {
 			? sprintf( '<img class="riff-app-avatar" src="%s" alt="" width="32" height="32" decoding="async">', esc_url( (string) $src ) )
 			: sprintf( '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">%s</span>', esc_html( mb_strtoupper( mb_substr( $name, 0, 1 ) ) ) );
 		return sprintf(
-			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a><a href="%6$s">%7$s</a><a href="%8$s">%9$s</a></div></details>',
+			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a>%10$s<a href="%6$s">%7$s</a><a href="%8$s">%9$s</a></div></details>',
 			/* translators: %s: the signed-in listener's name. */
 			esc_attr( sprintf( __( 'Account: %s', 'riff' ), $name ) ),
 			$face,
@@ -287,7 +287,8 @@ final class Browse {
 			esc_url( get_edit_profile_url( $user->ID ) ),
 			esc_html__( 'Edit profile', 'riff' ),
 			esc_url( wp_logout_url( $back ) ),
-			esc_html__( 'Sign out', 'riff' )
+			esc_html__( 'Sign out', 'riff' ),
+			current_user_can( 'upload_files' ) ? sprintf( '<a href="%s">%s</a>', esc_url( admin_url( 'media-new.php' ) ), esc_html__( 'Add music', 'riff' ) ) : ''
 		);
 	}
 
