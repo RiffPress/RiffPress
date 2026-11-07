@@ -53,8 +53,8 @@ command -v npm >/dev/null 2>&1 || { echo "npm is required to run scripts/sync-ve
 
 ONLY=${1:-all}
 case "$ONLY" in
-	all | riff | riff-lyrics | riff-sign-in | riff-sing | riff-chords | wp-api-coverage) ;;
-	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, riff-sign-in, riff-sing, riff-chords or wp-api-coverage" >&2; exit 1 ;;
+	all | riff | riff-lyrics | riff-sign-in | riff-sing | riff-chords | riff-meters | wp-api-coverage) ;;
+	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, riff-sign-in, riff-sing, riff-chords, riff-meters or wp-api-coverage" >&2; exit 1 ;;
 esac
 
 # A package's version, or nothing for one that has never been released: it is
@@ -134,6 +134,17 @@ if [[ "$ONLY" == all || "$ONLY" == riff-chords ]]; then
 		echo "Synced Riff Chords to ${CHORDS_VERSION}"
 	else
 		echo "Riff Chords has not been released yet; nothing to sync"
+	fi
+fi
+
+if [[ "$ONLY" == all || "$ONLY" == riff-meters ]]; then
+	METERS_VERSION=$(manifest_version plugins/riff-meters)
+	if [[ -n "$METERS_VERSION" ]]; then
+		sync_plugin plugins/riff-meters/riff-meters.php RIFF_METERS_VERSION plugins/riff-meters/readme.txt "$METERS_VERSION"
+		node .github/scripts/readme-changelog.js riff-meters
+		echo "Synced Riff Meters to ${METERS_VERSION}"
+	else
+		echo "Riff Meters has not been released yet; nothing to sync"
 	fi
 fi
 

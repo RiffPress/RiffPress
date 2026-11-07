@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [riff, riff-lyrics, riff-sign-in, riff-sing, riff-chords]
+        plugin: [riff, riff-lyrics, riff-sign-in, riff-sing, riff-chords, riff-meters]
     env:
       PLUGIN: ${{ matrix.plugin }}
     steps:
@@ -41,7 +41,7 @@ jobs:
       - name: Build the plugins the way a release does
         run: |
           set -euo pipefail
-          for p in riff riff-lyrics riff-sign-in riff-sing riff-chords; do
+          for p in riff riff-lyrics riff-sign-in riff-sing riff-chords riff-meters; do
             if [ "$p" = riff ]; then
               # Riff with its extensions, as a release builds it.
               bash .github/scripts/build-riff.sh
@@ -54,7 +54,7 @@ jobs:
       - name: Mount the built plugin instead of the checkout
         run: |
           cat > .wp-env.override.json <<'JSON'
-          { "core": "https://wordpress.org/wordpress-7.2-beta3.zip", "plugins": [ "./build/riff", "./build/riff-lyrics", "./build/riff-sign-in", "./build/riff-sing", "./build/riff-chords" ], "mappings": {} }
+          { "core": "https://wordpress.org/wordpress-7.2-beta3.zip", "plugins": [ "./build/riff", "./build/riff-lyrics", "./build/riff-sign-in", "./build/riff-sing", "./build/riff-chords", "./build/riff-meters" ], "mappings": {} }
           JSON
 
       - run: npx wp-env start
@@ -62,7 +62,7 @@ jobs:
       - name: Install Plugin Check
         run: |
           npx wp-env run cli wp plugin install plugin-check --activate
-          npx wp-env run cli wp plugin activate riff riff-lyrics riff-sign-in riff-sing riff-chords
+          npx wp-env run cli wp plugin activate riff riff-lyrics riff-sign-in riff-sing riff-chords riff-meters
 
       # The translation template is generated, not committed: translations come from
       # translate.wordpress.org, and a release carries the template for everyone else.

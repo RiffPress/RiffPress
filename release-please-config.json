@@ -42,6 +42,11 @@
 			"component": "riff-sign-in",
 			"initial-version": "0.1.0"
 		},
+		"plugins/riff-meters": {
+			"package-name": "riff-meters",
+			"component": "riff-meters",
+			"initial-version": "0.1.0"
+		},
 		"plugins/riff-sing": {
 			"package-name": "riff-sing",
 			"component": "riff-sing",

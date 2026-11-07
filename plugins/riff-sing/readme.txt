@@ -1,4 +1,4 @@
-=== Riff Sing ===
+=== Riff Sing (Experimental) ===
 Contributors: joefusco
 Tags: karaoke, singing, music, microphone, midi
 Requires at least: 7.1
@@ -12,6 +12,8 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Sing along with the melody in Riff's Now Playing, from a computer microphone or a MIDI instrument, and see how close each line came.
 
 == Description ==
+
+**This plugin is experimental.** It may change or go away between versions.
 
 Riff Sing adds a Sing view to Riff's Now Playing, opened from its button in the player's bar, in the spirit of a karaoke game's vocals: the song's melody scrolls past as a lane of notes with its words under it, the singer's voice is drawn as a line against it, and each line gets a gentle score when it ends, made for children singing at home and students on a lessons site rather than a hard grade.
 
