@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.2.3
+Stable tag: 6.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -129,6 +129,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.3.0 =
+* Someone who may upload adds music in the Listen app, by choosing or dropping it.
+* The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.
+* A site can be private until its owner opens it, its audio and video with it.
+
 = 6.2.3 =
 * Fixed: a track in Up next is highlighted to the panel's edges, and the panel's words and art stand on one edge.
 * Fixed: the record stops at the angle it stops at, and keeps it while Now Playing closes.
@@ -145,11 +150,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Riff's icons are WordPress's own, with the few it lacks drawn to match.
 * Fixed: Riff is ready to submit to WordPress.org, named for its slug, with a readme that says what browsers do across a link.
 * Fixed: Riff Music Player keeps its full name, since Plugin Check wants five letters to make a slug from.
-
-= 6.1.2 =
-* Fixed: a song playing as its video leaves its format and bit rate out of the badges, and the switch and the bar fade while a video plays untouched.
-* Fixed: About shows all of a track at once beside the album, leaving the cover to the stage.
-* Fixed: in the Listen app on a computer, a panel beside Now Playing carries on its wash instead of standing on black.
-* Fixed: the bar's transport stays in the middle from track to track, and the volume's slider opens over the bar instead of taking room in it.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

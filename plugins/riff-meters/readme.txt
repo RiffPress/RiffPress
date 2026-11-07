@@ -23,6 +23,7 @@ It is built only on Riff's documented public API, and is a small example of fill
 
 == Changelog ==
 
-
+= 0.1.0 =
+* The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
