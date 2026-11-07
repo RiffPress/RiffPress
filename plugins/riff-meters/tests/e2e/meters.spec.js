@@ -109,7 +109,8 @@ test.describe( 'Turntable meters', () => {
 		} );
 		await expect( meters ).toBeHidden();
 		await expect( page.locator( '.riff-turntable-extras' ) ).toBeVisible();
-		expect( ( await stage.boundingBox() ).height ).toBe( before );
+		// To the pixel: the first reading can land a fraction off as Now Playing settles.
+		expect( ( await stage.boundingBox() ).height ).toBeCloseTo( before, 0 );
 		await expect( page.locator( '#riff' ) ).toHaveAttribute(
 			'data-riff-deck',
 			'out'
