@@ -136,13 +136,13 @@ test( 'a web feature, a hook and a handbook have previous and next, in their ord
 	}
 } );
 
-test( 'titles name the host: Riff on the site, Riff Developer on the developer host', () => {
-	assert.match( read( 'site/built/index.html' ), /<title>How Riff is built \| Riff Developer<\/title>/ );
-	assert.match( read( 'site/download/index.html' ), /<title>Download \| Riff Developer<\/title>/ );
-	assert.match( read( 'site/developers/index.html' ), /<title>Developers \| Riff Developer<\/title>/ );
+test( 'titles name the host: Riff on the site, Riff Source on the developer host', () => {
+	assert.match( read( 'site/built/index.html' ), /<title>How Riff is built \| Riff Source<\/title>/ );
+	assert.match( read( 'site/download/index.html' ), /<title>Download \| Riff Source<\/title>/ );
+	assert.match( read( 'site/developers/index.html' ), /<title>Developers \| Riff Source<\/title>/ );
 	assert.match( read( 'site/index.html' ), /<title>Riff, a music player for WordPress<\/title>/ );
 	for ( const [ file, html ] of generated() ) {
-		assert.match( html, /<title>[^<|]+ \| Riff Developer<\/title>/, file );
+		assert.match( html, /<title>[^<|]+ \| Riff Source<\/title>/, file );
 	}
 } );
 
@@ -174,7 +174,7 @@ test( '--check passes on the repository, and fails once a page drifts', () => {
 
 test( 'split across the two hosts, the navigation links relative on each and absolute to the other', () => {
 	const SITE = 'https://riffpress.com/';
-	const DEV = 'https://developer.riffpress.com/';
+	const DEV = 'https://source.riffpress.com/';
 	const out = fs.mkdtempSync( path.join( os.tmpdir(), 'site-nav-' ) );
 	const dev = path.join( fs.mkdtempSync( path.join( os.tmpdir(), 'site-nav-dev-' ) ), 'dev' );
 	const write = ( file, text ) => {

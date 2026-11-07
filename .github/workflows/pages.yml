@@ -1,6 +1,6 @@
 name: Pages
 
-# Publishes the developer site to Cloudflare Pages at developer.riffpress.com: the reference, the
+# Publishes the developer site to Cloudflare Pages at source.riffpress.com: the reference, the
 # pages about the software, and everything the live demo needs: riff.zip built from main,
 # blueprint.json, the seed script and the demo audio, all with URLs stamped by commit so caches never
 # serve an old build. blueprint.json names those files relative to itself; this workflow resolves
@@ -36,7 +36,7 @@ concurrency:
 env:
   DEVELOPER_PROJECT: riffpress-developer
   SITE_URL: ${{ vars.SITE_URL || 'https://riffpress.com/' }}
-  DEVELOPER_URL: ${{ vars.DEVELOPER_URL || 'https://developer.riffpress.com/' }}
+  DEVELOPER_URL: ${{ vars.DEVELOPER_URL || 'https://source.riffpress.com/' }}
 
 jobs:
   deploy:

@@ -243,7 +243,7 @@ function footer( ctx, up ) {
 }
 
 /**
- * A page's title with its host's name after it: "PHP | Riff Developer", "Download | Riff". The home
+ * A page's title with its host's name after it: "PHP | Riff Source", "Download | Riff". The home
  * page's title is the site's name already, and is left as written.
  *
  * @param {Object} ctx  From locate(), or null.
@@ -254,7 +254,7 @@ function title( ctx, text ) {
 	if ( ! ctx || ( ctx.node.href === '' && ! ctx.leaf ) ) {
 		return text;
 	}
-	const bare = text.replace( /\s*\|\s*Riff(?:Press)?(?: Developer)?$/, '' );
+	const bare = text.replace( /\s*\|\s*Riff(?:Press)?(?: Source)?$/, '' );
 	return `${ bare } | ${ ctx.nav.hosts[ ctx.node.host || ctx.section.host || 'site' ] }`;
 }
 

@@ -67,7 +67,7 @@ jobs:
           cp packages/fixtures/seed.php build/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} build/demo/ \;
           cp site/brand/mark.png build/demo/
-          printf 'https://developer.riffpress.com/demo/' > build/demo/base.txt
+          printf 'https://source.riffpress.com/demo/' > build/demo/base.txt
       - name: Keep the album downloads between runs
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

@@ -31,7 +31,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | `packages/fixtures/` | Public-domain audio and artwork for demos, small files made for the tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
 | `apps/ios/` | Reserved for the native app. |
-| `site/` | [developer.riffpress.com](https://developer.riffpress.com/): the reference, the pages about the software and the live demo's files, published to Cloudflare Pages by `pages.yml`. [riffpress.com](https://riffpress.com/) is the business's site, from a repository of its own. |
+| `site/` | [source.riffpress.com](https://source.riffpress.com/): the reference, the pages about the software and the live demo's files, published to Cloudflare Pages by `pages.yml`. [riffpress.com](https://riffpress.com/) is the business's site, from a repository of its own. |
 | `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |
 
 | File | What it covers |
@@ -91,9 +91,9 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 
 The demo library is one uploaded album, `packages/fixtures/compositions`, and a folder per streamed album beside it, each with a `source.json` naming its recordings on Wikimedia Commons.
 
-To add or change a streamed album, edit its `source.json` and run `npm run albums <slug>` (needs ffmpeg). That downloads and encodes the recordings into `packages/fixtures/<slug>/audio/`, which git ignores, and writes `manifest.json` and `levels.json`, which you commit. `npm run seed` then plays the album from your checkout. Without a local `audio/` folder, or with `RIFF_DEMO_BASE` set, an album plays from developer.riffpress.com.
+To add or change a streamed album, edit its `source.json` and run `npm run albums <slug>` (needs ffmpeg). That downloads and encodes the recordings into `packages/fixtures/<slug>/audio/`, which git ignores, and writes `manifest.json` and `levels.json`, which you commit. `npm run seed` then plays the album from your checkout. Without a local `audio/` folder, or with `RIFF_DEMO_BASE` set, an album plays from source.riffpress.com.
 
-Nothing else needs editing: the deploy bundles every streamed album into one `demo/albums.json`, so `blueprint.json` never lists them. A pull request's Playground preview builds the albums whose `source.json` it adds or changes and plays them from the preview, and plays the rest from developer.riffpress.com. Once merged, the Pages deploy publishes their audio under `demo/<slug>/`.
+Nothing else needs editing: the deploy bundles every streamed album into one `demo/albums.json`, so `blueprint.json` never lists them. A pull request's Playground preview builds the albums whose `source.json` it adds or changes and plays them from the preview, and plays the rest from source.riffpress.com. Once merged, the Pages deploy publishes their audio under `demo/<slug>/`.
 
 ## Translations
 
