@@ -160,6 +160,20 @@ function start() {
 		 */
 		time: () => ( P.track() ? P.el().currentTime || 0 : 0 ),
 		/**
+		 * The music as Web Audio hears it, for a plugin to read: connect an AnalyserNode of your own
+		 * to this one, and never to anything that changes the sound. It is null where the music
+		 * doesn't pass through Web Audio, so nothing should be drawn: before the first play, on an
+		 * iPhone, for a file from another origin that doesn't share over CORS, and while a video plays.
+		 *
+		 * @since 6.3.0
+		 *
+		 * @return {?AnalyserNode} The analyser, or null.
+		 */
+		analyser() {
+			const t = P.track();
+			return P.analyser && t && P.el() === P.audio && ! P.foreign( t ) ? P.analyser : null;
+		},
+		/**
 		 * How fast the music plays, with its pitch kept where the browser can keep it
 		 * (`preservesPitch`): slower to learn a part, faster to skim. Given a rate, from 0.5 to 2,
 		 * it sets it, and the speed holds for every track until it is set again. On the turntable

@@ -16,7 +16,7 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
 const ROOT = path.resolve( __dirname, '..', '..' );
-const PLUGINS = [ 'riff', 'riff-lyrics', 'riff-sign-in', 'riff-sing', 'riff-chords' ];
+const PLUGINS = [ 'riff', 'riff-lyrics', 'riff-sign-in', 'riff-sing', 'riff-chords', 'riff-meters' ];
 // How many releases the readme keeps; the rest are on GitHub.
 const KEEP = 5;
 const FOOTER =

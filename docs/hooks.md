@@ -163,6 +163,12 @@ Fires before the player's markup.
 
 Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
+### `riff_below_turntable`
+
+Fires in the place under the turntable, for what a plugin shows beside the record. Print one element for each thing: the place takes room only while one that isn't hidden is in it, and only where the turntable is the view. The record is out when `#riff` has `data-riff-deck="out"`. Script it from there; `window.riff.analyser()` hears the music.
+
+Since 6.3.0. Fires in `plugins/riff/templates/player.php`.
+
 ### `riff_private_refused`
 
 Fires before a private site refuses a visitor, for a page of the site's own in place of WordPress's message.

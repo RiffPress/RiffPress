@@ -3001,7 +3001,7 @@ dl.riff-about-credits dd {
 /* The turntable turned off (Settings › Media, now-playing.js): the cover on
    its own, where the record would have come out of it onto the deck, and
    on a touch screen on its side the cover beside the controls. */
-#riff[data-riff-turntable="off"] :is(.riff-record, .riff-deck-part, .riff-sleeve, .riff-deck-board, .riff-rack, .riff-meters) {
+#riff[data-riff-turntable="off"] :is(.riff-record, .riff-deck-part, .riff-sleeve, .riff-deck-board, .riff-rack, .riff-turntable-extras) {
 	display: none !important;
 }
 
@@ -3031,19 +3031,16 @@ dl.riff-about-credits dd {
 	display: none;
 }
 
-/* The turntable's meters (meters.js): a VU meter and a one-third-octave
-   spectrum in a row under the deck, while the turntable shows and the
-   music passes through Web Audio. Their row is kept from the moment the
-   turntable shows, so the deck keeps its size when the music first plays
-   and they are drawn; the stage takes what is left. On a wide screen it
-   is the view's last row, under the deck; on a touch screen on its side,
-   at the foot of the controls' strip. The needle and the bars move by
-   transform alone. */
-.riff-meters {
+/* The place under the deck, for what a plugin adds with the
+   riff_below_turntable action: taking no room unless something in it is
+   showing, and only where the turntable is the view, so the deck keeps its
+   size as the record comes and goes. On a wide screen it is the view's last
+   row; on a touch screen on its side, the foot of the controls. */
+.riff-turntable-extras {
 	display: none;
 }
 
-#riff[data-riff-meters] .riff-meters {
+#riff:not([data-riff-turntable="off"]) .riff-turntable-extras:has(> :not([hidden])) {
 	display: flex;
 	flex: none;
 	grid-area: 2 / 1;
@@ -3055,113 +3052,10 @@ dl.riff-about-credits dd {
 	margin-inline: auto;
 	padding: 0 24px 16px;
 	color: var(--riff-accent);
-	opacity: 0;
-	transition: opacity 0.4s;
 }
 
-#riff[data-riff-meters] .riff-meters[data-riff-heard] {
-	opacity: 1;
-}
-
-#riff[data-riff-meters] .riff-np-body {
+#riff:not([data-riff-turntable="off"]) .riff-np-body:has(.riff-turntable-extras > :not([hidden])) {
 	grid-template-rows: minmax(0, 1fr) auto;
-}
-
-/* the VU meter: its face as wide as the scale's arc, the needle's pivot
-   below it (meters.js draws the scale from the same numbers) */
-.riff-vu {
-	position: relative;
-	flex: none;
-	height: 100%;
-	aspect-ratio: 100 / 56;
-	overflow: hidden;
-	border-radius: 4px;
-	background: rgb(255 255 255 / 0.03);
-	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
-}
-
-#riff .riff-vu svg {
-	display: block;
-	width: 100%;
-	height: 100%;
-}
-
-.riff-vu-scale,
-.riff-vu-over {
-	fill: none;
-	stroke: currentcolor;
-	stroke-linecap: round;
-}
-
-.riff-vu-scale {
-	stroke-opacity: 0.4;
-	stroke-width: 0.8;
-}
-
-.riff-vu-over {
-	stroke-width: 1.6;
-}
-
-.riff-vu text {
-	fill: currentcolor;
-	fill-opacity: 0.45;
-	font-size: 8px;
-	letter-spacing: 0.1em;
-	text-anchor: middle;
-}
-
-.riff-vu-needle {
-	position: absolute;
-	bottom: calc(-10 / 56 * 100%);
-	left: calc(50% - 0.75px);
-	width: 1.5px;
-	height: calc(54 / 56 * 100%);
-	border-radius: 1px;
-	background: currentcolor;
-	transform: rotate(-45deg);
-	transform-origin: 50% 100%;
-	will-change: transform;
-}
-
-/* the spectrum: a bar for each third of an octave, 20 Hz to 20 kHz, on a
-   faint baseline with three frequencies under it */
-.riff-spectrum {
-	position: relative;
-	display: flex;
-	flex: 1;
-	gap: 2px;
-	min-width: 0;
-	padding-bottom: 14px;
-}
-
-.riff-spectrum::after {
-	content: "";
-	position: absolute;
-	right: 0;
-	bottom: 13px;
-	left: 0;
-	height: 1px;
-	background: currentcolor;
-	opacity: 0.15;
-}
-
-.riff-spectrum i {
-	flex: 1;
-	border-radius: 1px 1px 0 0;
-	background: currentcolor;
-	opacity: 0.4;
-	transform: scaleY(0);
-	transform-origin: 50% 100%;
-	will-change: transform;
-}
-
-.riff-spectrum small {
-	position: absolute;
-	bottom: 0;
-	color: var(--riff-fg-3);
-	font-size: 10px;
-	line-height: 1;
-	translate: -50% 0;
 }
 
 /* The screen as a turntable: a touch screen wider than it is tall and no
@@ -3288,7 +3182,7 @@ dl.riff-about-credits dd {
 	}
 
 	/* and on a screen too short for all of it, the strip scrolls rather
-	   than spill onto the meters */
+	   than spill onto what is under it */
 	#riff .riff-np-panel {
 		justify-content: safe center;
 		overflow-y: auto;
@@ -3331,8 +3225,8 @@ dl.riff-about-credits dd {
 		font-size: 11px;
 	}
 
-	/* the meters at the foot of the controls' strip */
-	#riff[data-riff-meters] .riff-meters {
+	/* what a plugin adds, at the foot of the controls' strip */
+	#riff:not([data-riff-turntable="off"]) .riff-turntable-extras:has(> :not([hidden])) {
 		grid-area: 2 / 2;
 		width: auto;
 		height: 48px;
@@ -3611,7 +3505,7 @@ dl.riff-about-credits dd {
 	}
 
 	#riff .riff-np-body,
-	#riff[data-riff-meters] .riff-np-body {
+	#riff:not([data-riff-turntable="off"]) .riff-np-body:has(.riff-turntable-extras > :not([hidden])) {
 		display: grid;
 		grid-template-rows: env(viewport-segment-height 0 0) env(viewport-segment-height 0 1);
 		grid-template-columns: minmax(0, 1fr);
@@ -3631,7 +3525,7 @@ dl.riff-about-credits dd {
 	}
 
 	/* no row of their own between the halves and the controls */
-	#riff[data-riff-meters] .riff-meters {
+	#riff:not([data-riff-turntable="off"]) .riff-turntable-extras:has(> :not([hidden])) {
 		display: none;
 	}
 

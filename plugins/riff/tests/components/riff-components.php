@@ -330,12 +330,12 @@ if ( ! empty( $_COOKIE['riff_test_no_music'] ) ) {
 		10,
 		2
 	);
-	// The library asks for Library::PER_PAGE posts; with no music, it finds none. The first-run
-	// test deactivates Riff, so the class may not be there.
+	// The library and Home's New posts ask for posts outside the main query; with no music, they
+	// find none.
 	add_action(
 		'pre_get_posts',
 		static function ( WP_Query $query ): void {
-			if ( class_exists( Riff\Library::class ) && Riff\Library::PER_PAGE === (int) $query->get( 'posts_per_page' ) ) {
+			if ( ! $query->is_main_query() && 'post' === $query->get( 'post_type' ) ) {
 				$query->set( 'post__in', array( 0 ) );
 			}
 		}

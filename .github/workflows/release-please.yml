@@ -37,6 +37,8 @@ jobs:
       chords_tag: ${{ steps.release.outputs['plugins/riff-chords--tag_name'] }}
       sign_in_release: ${{ steps.release.outputs['plugins/riff-sign-in--release_created'] }}
       sign_in_tag: ${{ steps.release.outputs['plugins/riff-sign-in--tag_name'] }}
+      meters_release: ${{ steps.release.outputs['plugins/riff-meters--release_created'] }}
+      meters_tag: ${{ steps.release.outputs['plugins/riff-meters--tag_name'] }}
       sing_release: ${{ steps.release.outputs['plugins/riff-sing--release_created'] }}
       sing_tag: ${{ steps.release.outputs['plugins/riff-sing--tag_name'] }}
       coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
@@ -385,6 +387,41 @@ jobs:
           set -euo pipefail
           gh release upload --clobber "$TAG_NAME" build/riff-sing.zip
           bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-sing/riff-sing.php not-latest
+
+  release-riff-meters:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.meters_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version-file: .php-version
+          coverage: none
+      - name: Build riff-meters.zip
+        run: |
+          set -euo pipefail
+          mkdir -p build/riff-meters
+          rsync -a --exclude-from='.distignore' ./plugins/riff-meters/ build/riff-meters/
+          (cd build && zip -qr riff-meters.zip riff-meters/)
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/riff-meters/riff-meters.php
+          find build/riff-meters -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      - name: Attach the zip and publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.meters_tag }}
+        run: |
+          set -euo pipefail
+          gh release upload --clobber "$TAG_NAME" build/riff-meters.zip
+          bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-meters/riff-meters.php not-latest
 
   # wp-api-coverage's release: the GitHub release is published, and the
   # package goes to npm as @riffpress/wp-api-coverage. Publishing stays off

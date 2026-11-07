@@ -27,6 +27,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | `plugins/riff-chords/` | Riff Chords: a chord chart that follows the song in a Chords view of Now Playing, with practice controls. Built the way Riff Lyrics is. |
 | `plugins/riff-sign-in/` | Riff Sign In: listeners sign in with a passkey or an email code, from a sheet inside the player. |
 | `plugins/riff-sing/` | Riff Sing: a Sing view of Now Playing, where the melody scrolls past and the singer is scored by pitch, from a microphone or a MIDI instrument. Built like Riff Lyrics, only on the public API. |
+| `plugins/riff-meters/` | Riff Meters (experimental): a VU meter and a spectrum under the turntable, in the place the `riff_below_turntable` action keeps. |
 | `packages/fixtures/` | Public-domain audio and artwork for demos, small files made for the tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
 | `apps/ios/` | Reserved for the native app. |
@@ -50,7 +51,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 
 ## The reference extension
 
-`plugins/riff-lyrics/` is Riff Lyrics, a real plugin built only on Riff's documented public API: the hooks in `docs/hooks.md`, `window.riff` in `docs/javascript.md`, and REST. `.github/scripts/extension-surface.test.js` fails if it, or Riff Sing or Riff Chords, built the same way, hooks anything undocumented or reaches into Riff's classes. When a feature needs something Riff doesn't offer, add it to Riff as a documented extension point, not as a shortcut in the plugin. wp-env loads every plugin in `plugins/`, and PHPUnit, Plugin Check and e2e cover each.
+`plugins/riff-lyrics/` is Riff Lyrics, a real plugin built only on Riff's documented public API: the hooks in `docs/hooks.md`, `window.riff` in `docs/javascript.md`, and REST. `.github/scripts/extension-surface.test.js` fails if it, or Riff Sing, Riff Chords or Riff Meters, built the same way, hooks anything undocumented or reaches into Riff's classes. When a feature needs something Riff doesn't offer, add it to Riff as a documented extension point, not as a shortcut in the plugin. wp-env loads every plugin in `plugins/`, and PHPUnit, Plugin Check and e2e cover each.
 
 ## Working on several branches at once
 
@@ -102,7 +103,7 @@ Every string uses the `riff` text domain, and each plugin beside it its own slug
 
 ## Releases
 
-Releases are automated by [release-please](https://github.com/googleapis/release-please). Six packages ship from this repository, each with its own version, tag and changelog: Riff (`plugins/riff/`, tagged `riff-v6.x.y`), Riff Lyrics, Riff Chords, Riff Sign In and Riff Sing (each in `plugins/<slug>/`, tagged `<slug>-vx.y.z`), and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
+Releases are automated by [release-please](https://github.com/googleapis/release-please). Seven packages ship from this repository, each with its own version, tag and changelog: Riff (`plugins/riff/`, tagged `riff-v6.x.y`), Riff Lyrics, Riff Chords, Riff Sign In, Riff Sing and Riff Meters (each in `plugins/<slug>/`, tagged `<slug>-vx.y.z`), and wp-api-coverage (`packages/wp-api-coverage/`, tagged `wp-api-coverage-v0.x.y`). release-please reads the titles of the pull requests merged on `main` that touch a package's folder to decide its next version and write its `CHANGELOG.md`. A change only to `site/`, `docs/`, CI or the test tooling releases nothing.
 
 - `feat: ...` → minor bump (before 1.0, a patch bump)
 - `fix: ...` → patch bump
