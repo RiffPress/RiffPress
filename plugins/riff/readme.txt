@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.2.0
+Stable tag: 6.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.2.1 =
+* Fixed: a protected file on no post goes only to who may edit it or read a post by someone who may.
+
 = 6.2.0 =
 * Riff's icons are WordPress's own, with the few it lacks drawn to match.
 * Fixed: Riff is ready to submit to WordPress.org, named for its slug, with a readme that says what browsers do across a link.
@@ -152,9 +155,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.1.0 =
 * Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
-
-= 6.0.1 =
-* Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
-* Fixed: the turntable's needle drops onto the record when its view opens as the music starts.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

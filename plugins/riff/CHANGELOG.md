@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.2.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.0...riff-v6.2.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* **protect:** a protected file on no post goes only to who may edit it or read a post by someone who may ([#913](https://github.com/RiffPress/RiffPress/issues/913)) ([2f3ee6e](https://github.com/RiffPress/RiffPress/commit/2f3ee6efa6ceef6152ca6e2076af79b29408516d))
+
 ## [6.2.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.1.2...riff-v6.2.0) (2026-11-07)
 
 
