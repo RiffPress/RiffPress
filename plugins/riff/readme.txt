@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.2.2
+Stable tag: 6.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.2.3 =
+* Fixed: a track in Up next is highlighted to the panel's edges, and the panel's words and art stand on one edge.
+* Fixed: the record stops at the angle it stops at, and keeps it while Now Playing closes.
+* Fixed: the sleeve Riff draws and the record on the turntable are one pressing.
+
 = 6.2.2 =
 * Fixed: after a link the body's classes, the canonical address and the admin bar's edit links are the page's own.
 * Fixed: in the Listen app on a computer, a panel beside Now Playing stands from the window's top, with no black strip above it.
@@ -144,17 +149,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: About shows all of a track at once beside the album, leaving the cover to the stage.
 * Fixed: in the Listen app on a computer, a panel beside Now Playing carries on its wash instead of standing on black.
 * Fixed: the bar's transport stays in the middle from track to track, and the volume's slider opens over the bar instead of taking room in it.
-
-= 6.1.1 =
-* Fixed: the demo ships no made-up video, and tests that need one use the test pattern.
-* Fixed: a phone on its side sees the turntable to its edges, not the theme's white in the margins Safari leaves.
-* Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
-* Fixed: a site that leaves client navigation off keeps its pages streamed.
-* Fixed: a song plays as the song, its video version one press away for that song only, and a video on its own opens as the video.
-* Fixed: a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select.
-* Fixed: each playlist item keeps its own track, and a locked one stays listed, when core leaves out an item with no file.
-* Fixed: Now Playing on a phone never cuts a name short, its views' buttons are a light row of icons, and on its side shuffle and repeat move to Up next.
-* Fixed: the turntable bends every song, its platter and arm keep the music's speed, and the arm lifts and lowers as a cue lever does.
-* Fixed: while Now Playing is open the page reaches a phone's edges, so no theme colour shows beside the turntable.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

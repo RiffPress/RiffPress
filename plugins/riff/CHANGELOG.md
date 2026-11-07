@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.2.3](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.2...riff-v6.2.3) (2026-11-07)
+
+
+### Bug Fixes
+
+* **player:** a track in Up next is highlighted to the panel's edges, and the panel's words and art stand on one edge ([#923](https://github.com/RiffPress/RiffPress/issues/923)) ([299a8ee](https://github.com/RiffPress/RiffPress/commit/299a8ee8d2f0f3bf8e77985787aff5c2581e60b9))
+* **player:** the record stops at the angle it stops at, and keeps it while Now Playing closes ([#920](https://github.com/RiffPress/RiffPress/issues/920)) ([0a00443](https://github.com/RiffPress/RiffPress/commit/0a00443f9a16c95d81a3af36018a5448958cbdc1))
+* **player:** the sleeve Riff draws and the record on the turntable are one pressing ([#922](https://github.com/RiffPress/RiffPress/issues/922)) ([7da3ff9](https://github.com/RiffPress/RiffPress/commit/7da3ff94efc2976f0b71ce8c7e969d3922743000))
+
 ## [6.2.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.1...riff-v6.2.2) (2026-11-07)
 
 
