@@ -267,6 +267,8 @@ class Test_Riff_Catalog extends Riff_TestCase {
 			$response = rest_do_request( new WP_REST_Request( 'GET', $route ) );
 			$this->assertSame( 401, $response->get_status(), $route );
 		}
+		// Core matches a route whatever its case, so the guard has to as well.
+		$this->assertSame( 401, rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/RIFF_ALBUMS' ) )->get_status() );
 	}
 
 	public function test_rest_lists_albums_and_names_them_on_the_attachment(): void {
