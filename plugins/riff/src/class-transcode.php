@@ -33,7 +33,8 @@ final class Transcode {
 	public const BITRATE = 192;
 
 	/**
-	 * The path to ffmpeg on this server, or empty when it has none.
+	 * The path to ffmpeg on this server, or empty when it has none or this isn't the command line,
+	 * so no request from the web can reach a shell.
 	 *
 	 * @since 5.8.0
 	 *
@@ -43,7 +44,7 @@ final class Transcode {
 		static $path = null;
 		if ( null === $path ) {
 			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec -- WP-CLI only, a fixed command.
-			$found = function_exists( 'exec' ) ? trim( (string) exec( 'command -v ffmpeg 2>/dev/null' ) ) : '';
+			$found = defined( 'WP_CLI' ) && WP_CLI && function_exists( 'exec' ) ? trim( (string) exec( 'command -v ffmpeg 2>/dev/null' ) ) : '';
 			$path  = '' !== $found && is_executable( $found ) ? $found : '';
 		}
 		return $path;
