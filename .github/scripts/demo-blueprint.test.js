@@ -232,15 +232,21 @@ test( 'the landing page takes its own address from the Pages build', () => {
 	assert.doesNotMatch( html, /playground\.wordpress\.net/ );
 } );
 
-test( 'every human-facing link names the same landing page', () => {
+// The software's home is the developer site; riffpress.com, the business's, is not one of them.
+test( "every link to the software's home names the same address", () => {
+	const plugins = fs
+		.readdirSync( path.join( ROOT, 'plugins' ) )
+		.filter( ( slug ) =>
+			fs.existsSync( path.join( ROOT, 'plugins', slug, `${ slug }.php` ) )
+		)
+		.map( ( slug ) => [ `plugins/${ slug }/${ slug }.php`, /Plugin URI: (\S+)/ ] );
 	const landing = [
-		[ 'README.md', /href="(https:\/\/[^"]+)">riffpress\.com</ ],
-		[ 'plugins/riff/riff.php', /Plugin URI: (\S+)/ ],
+		...plugins,
 		[ 'composer.json', /"homepage": "([^"]+)"/ ],
 		[ 'package.json', /"homepage": "([^"]+)"/ ],
 	].map( ( [ file, pattern ] ) => {
 		const match = read( file ).match( pattern );
-		assert.ok( match, `${ file } no longer carries the landing page link` );
+		assert.ok( match, `${ file } no longer carries the software's home` );
 		return `${ file }: ${ match[ 1 ] }`;
 	} );
 	const addresses = new Set(

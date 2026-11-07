@@ -31,7 +31,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | `packages/fixtures/` | Public-domain audio and artwork for demos, small files made for the tests, and `seed.php`, which turns any folder of audio into a post. |
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
 | `apps/ios/` | Reserved for the native app. |
-| `site/` | [riffpress.com](https://riffpress.com/) and, from its `developers/` and `web/` pages, [developer.riffpress.com](https://developer.riffpress.com/), both published to Cloudflare Pages by `pages.yml`. |
+| `site/` | [developer.riffpress.com](https://developer.riffpress.com/): the reference, the pages about the software and the live demo's files, published to Cloudflare Pages by `pages.yml`. [riffpress.com](https://riffpress.com/) is the business's site, from a repository of its own. |
 | `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |
 
 | File | What it covers |
@@ -76,7 +76,7 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 1. Branch off `main`.
 2. Title the pull request as a [Conventional Commit](https://www.conventionalcommits.org/). Pull requests squash-merge with the title as the commit subject, so the title is what release-please reads. `lint-pr.yml` enforces this.
 3. Fill in the template. The line at the top saying what we would miss by only reading the diff is the part that matters most.
-4. Every pull request gets a sticky comment with Playground links built from its own commit, signed in as admin. **Standalone app** opens `/listen/app/`, the installable player with no theme. **Listen page** opens `/listen/`, the same player as a block in the theme, which is where theme and block changes show. **Blog post** opens an album's post. **Website** is riffpress.com as the branch builds it. Use them to check the change on a phone.
+4. Every pull request gets a sticky comment with Playground links built from its own commit, signed in as admin. **Standalone app** opens `/listen/app/`, the installable player with no theme. **Listen page** opens `/listen/`, the same player as a block in the theme, which is where theme and block changes show. **Blog post** opens an album's post. **Website** is the site as the branch builds it, before its pages are split between the hosts. Use them to check the change on a phone.
 
 ## What runs itself
 
@@ -91,9 +91,9 @@ Playwright smoke tests run **before every commit**, from the hook in `.githooks`
 
 The demo library is one uploaded album, `packages/fixtures/compositions`, and a folder per streamed album beside it, each with a `source.json` naming its recordings on Wikimedia Commons.
 
-To add or change a streamed album, edit its `source.json` and run `npm run albums <slug>` (needs ffmpeg). That downloads and encodes the recordings into `packages/fixtures/<slug>/audio/`, which git ignores, and writes `manifest.json` and `levels.json`, which you commit. `npm run seed` then plays the album from your checkout. Without a local `audio/` folder, or with `RIFF_DEMO_BASE` set, an album plays from riffpress.com.
+To add or change a streamed album, edit its `source.json` and run `npm run albums <slug>` (needs ffmpeg). That downloads and encodes the recordings into `packages/fixtures/<slug>/audio/`, which git ignores, and writes `manifest.json` and `levels.json`, which you commit. `npm run seed` then plays the album from your checkout. Without a local `audio/` folder, or with `RIFF_DEMO_BASE` set, an album plays from developer.riffpress.com.
 
-Nothing else needs editing: the deploy bundles every streamed album into one `demo/albums.json`, so `blueprint.json` never lists them. A pull request's Playground preview builds the albums whose `source.json` it adds or changes and plays them from the preview, and plays the rest from riffpress.com. Once merged, the Pages deploy publishes their audio under `demo/<slug>/`.
+Nothing else needs editing: the deploy bundles every streamed album into one `demo/albums.json`, so `blueprint.json` never lists them. A pull request's Playground preview builds the albums whose `source.json` it adds or changes and plays them from the preview, and plays the rest from developer.riffpress.com. Once merged, the Pages deploy publishes their audio under `demo/<slug>/`.
 
 ## Translations
 

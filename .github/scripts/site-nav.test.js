@@ -46,7 +46,7 @@ test( 'the definition is consistent, and a broken one is caught', () => {
 	const nowhere = clone();
 	nowhere.footer[ 0 ].links.push( 'gone' );
 	assert.match( nav.validate( nowhere ).join( '\n' ), /footer links to "gone"/ );
-	// A Developers page outside developers/ and web/ would stay behind on riffpress.com.
+	// A Developers page outside what developers-site.js moves would stay behind, undeployed.
 	const astray = clone();
 	astray.sections[ 3 ].children.push( { key: 'learn', label: 'Learn', href: 'learn/' } );
 	assert.match( nav.validate( astray ).join( '\n' ), /learn \(learn\/\) is on developers, but developers-site\.js keeps it on the site/ );
@@ -137,8 +137,8 @@ test( 'a web feature, a hook and a handbook have previous and next, in their ord
 } );
 
 test( 'titles name the host: Riff on the site, Riff Developer on the developer host', () => {
-	assert.match( read( 'site/built/index.html' ), /<title>How Riff is built \| Riff<\/title>/ );
-	assert.match( read( 'site/download/index.html' ), /<title>Download \| Riff<\/title>/ );
+	assert.match( read( 'site/built/index.html' ), /<title>How Riff is built \| Riff Developer<\/title>/ );
+	assert.match( read( 'site/download/index.html' ), /<title>Download \| Riff Developer<\/title>/ );
 	assert.match( read( 'site/developers/index.html' ), /<title>Developers \| Riff Developer<\/title>/ );
 	assert.match( read( 'site/index.html' ), /<title>Riff, a music player for WordPress<\/title>/ );
 	for ( const [ file, html ] of generated() ) {
@@ -196,19 +196,21 @@ test( 'split across the two hosts, the navigation links relative on each and abs
 	assert.deepEqual( problems, [] );
 
 	const php = fs.readFileSync( path.join( dev, 'php', 'index.html' ), 'utf8' );
-	// The header: the site's sections absolute, Developers relative and current.
+	// The header: the site's home absolute, the rest on this host, Developers current.
 	assert.match( php, /class="mark" href="https:\/\/riffpress\.com\/"><img src="\.\.\/brand\/wordmark-ink\.svg"/ );
-	assert.match( php, /<a href="https:\/\/riffpress\.com\/add-music\/">Add your music<\/a><a href="https:\/\/riffpress\.com\/download\/">Download<\/a><a href="\.\.\/" aria-current="true">Developers<\/a>/ );
+	assert.match( php, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/" aria-current="true">Developers<\/a>/ );
 	// The section bar and the breadcrumbs stay on the host.
 	assert.match( php, /href="\.\.\/extensions\/">Extensions<\/a>.*href="\.\.\/php\/" aria-current="page">PHP<\/a>.*href="\.\.\/web\/">Built on the open web/ );
 	assert.match( php, /<li><a href="\.\.\/">Developers<\/a><\/li><li>Reference<\/li><li aria-current="page">PHP<\/li>/ );
-	// The footer's pages are the site's.
-	assert.match( php, /<a href="https:\/\/riffpress\.com\/built\/">How Riff is built<\/a>/ );
+	// The footer's pages moved with it.
+	assert.match( php, /<a href="\.\.\/built\/">How Riff is built<\/a>/ );
 	assert.match( fs.readFileSync( path.join( dev, 'index.html' ), 'utf8' ), /class="local-title" href="\.\/" aria-current="page">Developers/ );
 	assert.match( fs.readFileSync( path.join( dev, 'player', 'index.html' ), 'utf8' ), /rel="prev" href="\.\.\/extensions\/"/ );
 
-	const built = fs.readFileSync( path.join( out, 'built', 'index.html' ), 'utf8' );
-	assert.match( built, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="https:\/\/developer\.riffpress\.com\/">Developers<\/a>/ );
+	const built = fs.readFileSync( path.join( dev, 'built', 'index.html' ), 'utf8' );
+	assert.match( built, /class="mark" href="https:\/\/riffpress\.com\/"/ );
+	assert.match( built, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/">Developers<\/a>/ );
 	assert.match( built, /<a href="\.\.\/built\/" aria-current="page">How Riff is built/ );
 	assert.ok( ! fs.existsSync( path.join( out, 'developers' ) ) );
+	assert.ok( ! fs.existsSync( path.join( out, 'built' ) ) );
 } );

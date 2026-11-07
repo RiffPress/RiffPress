@@ -46,7 +46,7 @@ A pull request may auto-merge (`gh pr merge --auto --squash`) once its work is d
 
 ## Not bugs
 
-- `blueprint.json` names its zip and demo files relative to itself (`riff.zip`, `demo/…`), which is not a valid Playground URL on its own. The Pages workflow resolves them against wherever Pages serves the repository and stamps each with the commit, and a pull request's preview resolves them against its own preview branch, so neither demo depends on a hostname written down anywhere. `site/index.html`'s `{{pages_url}}` is filled in the same way.
+- `blueprint.json` names its zip and demo files relative to itself (`riff.zip`, `demo/…`), which is not a valid Playground URL on its own. The Pages workflow resolves them against wherever Pages serves the repository and stamps each with the commit, and a pull request's preview resolves them against its own preview branch, so neither demo depends on a hostname written down anywhere. The site's pages' `{{pages_url}}` is filled in the same way.
 - `packages/fixtures/*/cover-*.png` are WordPress's generated sizes and are gitignored.
 - `tests/` is ignored on purpose: on some machines a personal music library lives there. Never commit it, never screenshot it.
 
