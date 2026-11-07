@@ -118,7 +118,7 @@ final class Catalog {
 	 */
 	public static function guard_rest( $result, $server, $request ) {
 		unset( $server );
-		if ( null === $result && preg_match( '#^/wp/v2/riff_(albums|artists)(/|$)#', (string) $request->get_route() ) && ! current_user_can( 'upload_files' ) ) {
+		if ( null === $result && preg_match( '#^/wp/v2/riff_(albums|artists)(/|$)#i', (string) $request->get_route() ) && ! current_user_can( 'upload_files' ) ) {
 			return new \WP_Error( 'rest_forbidden', __( 'Albums and artists are listed through riff/v1.', 'riff' ), array( 'status' => rest_authorization_required_code() ) );
 		}
 		return $result;

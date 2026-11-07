@@ -520,7 +520,7 @@ final class Import {
 		$tags  = wp_get_attachment_metadata( $id );
 		$title = is_array( $tags ) ? trim( (string) ( $tags['title'] ?? '' ) ) : '';
 		if ( '' === $title ) {
-			$title = (string) preg_replace( '/^\d+\s*[-.]\s*|\s*\[[^\]]*\]$/', '', pathinfo( $path, PATHINFO_FILENAME ) );
+			$title = sanitize_text_field( (string) preg_replace( '/^\d+\s*[-.]\s*|\s*\[[^\]]*\]$/', '', pathinfo( $path, PATHINFO_FILENAME ) ) );
 		}
 		wp_update_post(
 			array(
@@ -645,7 +645,7 @@ final class Import {
 		$album   = is_array( $meta ) ? trim( (string) ( $meta['album'] ?? '' ) ) : '';
 		$post_id = wp_insert_post(
 			array(
-				'post_title'   => '' !== $album ? $album : ucwords( str_replace( array( '-', '_' ), ' ', (string) preg_replace( '/\.zip$/i', '', wp_basename( $dir ) ) ) ),
+				'post_title'   => '' !== $album ? $album : ucwords( str_replace( array( '-', '_' ), ' ', sanitize_text_field( (string) preg_replace( '/\.zip$/i', '', wp_basename( $dir ) ) ) ) ),
 				'post_status'  => in_array( $status, array( 'publish', 'draft', 'private' ), true ) ? $status : 'publish',
 				'post_content' => $blocks,
 			),

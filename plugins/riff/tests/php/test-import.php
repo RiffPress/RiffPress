@@ -162,6 +162,26 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertSame( 'video/webm', get_post_mime_type( $video ) );
 	}
 
+	public function test_a_name_in_a_folder_or_a_file_never_reaches_a_title_as_markup(): void {
+		// Someone allowed unfiltered HTML is who core's own filtering would let it past.
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$strip = static function ( $meta ) {
+			unset( $meta['title'], $meta['album'] );
+			return $meta;
+		};
+		add_filter( 'wp_read_audio_metadata', $strip );
+		$result = Import::folder( $this->album_dir( '<svg onload=alert(1)>Album', array( '<svg onload=alert(1)>Song.mp3' => '02 - Underground [underground].mp3' ) ) );
+		remove_filter( 'wp_read_audio_metadata', $strip );
+
+		$this->assertIsArray( $result );
+		$album = $result['albums'][0];
+		$this->assertStringNotContainsString( '<', get_the_title( $album['post'] ) );
+		$this->assertNotSame( '', get_the_title( $album['post'] ) );
+		foreach ( get_attached_media( 'audio', $album['post'] ) as $track ) {
+			$this->assertStringNotContainsString( '<', $track->post_title );
+		}
+	}
+
 	public function test_running_it_again_imports_nothing_twice(): void {
 		$dir   = $this->album_dir( 'compositions', array( '02 - Underground [underground].mp3', 'cover.png' ) );
 		$first = Import::folder( $dir );
