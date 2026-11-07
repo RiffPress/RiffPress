@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /**
- * Splits the assembled site in two for its two hosts: the developer reference (/developers/ and
- * the /web/ pages, Built on the open web) goes to its own host, developer.riffpress.com, and
- * riffpress.com keeps everything else, with a 301 from each old address to the new one.
+ * Takes the developer site out of the assembled site: the reference (/developers/ and the /web/
+ * pages, Built on the open web) and the pages about the software (Download, Add music, How Riff is
+ * built, Accessibility) go to developer.riffpress.com, with the site's own files they show. What is
+ * left is not deployed: riffpress.com is the business's site, from its own repository, and the
+ * _redirects written here, a 301 from each old address to the new one, are the ones it carries.
  *
  * The sources stay one site: site/ is written, generated and previewed as riffpress.com with
  * /developers/ and /web/ in it, and this runs on the Pages workflow's output once its placeholders
@@ -22,6 +24,10 @@ const path = require( 'node:path' );
 const MOVED = [
 	[ 'developers/', '' ],
 	[ 'web/', 'web/' ],
+	[ 'download/', 'download/' ],
+	[ 'add-music/', 'add-music/' ],
+	[ 'built/', 'built/' ],
+	[ 'accessibility/', 'accessibility/' ],
 ];
 // Files beside the pages that both hosts serve.
 const SHARED = [ 'neck.css', 'neck.svg', 'js', 'fonts', 'icons', 'brand' ];
@@ -130,20 +136,31 @@ function split( { out, dev, site, developers } ) {
 		if ( pages.has( bare ) ) {
 			return pages.get( bare ) + tail;
 		}
-		// Anything else under developers/ goes with it; web/ keeps its stylesheet.
-		if ( bare.startsWith( 'developers/' ) ) {
-			return bare.slice( 'developers/'.length ) + tail;
-		}
-		return null;
+		// Anything else under a moved folder goes with it; web/ keeps its stylesheet.
+		const rule = MOVED.find(
+			( [ from ] ) => from !== 'web/' && bare.startsWith( from )
+		);
+		return rule ? rule[ 1 ] + bare.slice( rule[ 0 ].length ) + tail : null;
 	};
+	// The site's own files a moved page shows, such as a screenshot: copied to the developer host.
+	const assets = new Set();
 	// A path on the site from the developer host: moved, shared, or back on the site.
 	const fromDev = ( rel ) => {
 		const moved = moves( rel );
 		if ( moved !== null ) {
 			return { host: 'dev', rel: moved };
 		}
-		const top = rel.replace( /[?#].*$/, '' ).split( '/' )[ 0 ];
+		const bare = rel.replace( /[?#].*$/, '' );
+		const top = bare.split( '/' )[ 0 ];
 		if ( SHARED.includes( top ) || rel.startsWith( 'web/web.css' ) ) {
+			return { host: 'dev', rel };
+		}
+		if (
+			/\.[a-z0-9]+$/i.test( bare ) &&
+			! bare.endsWith( '.html' ) &&
+			files.includes( bare )
+		) {
+			assets.add( bare );
 			return { host: 'dev', rel };
 		}
 		return { host: 'site', rel };
@@ -219,10 +236,9 @@ function split( { out, dev, site, developers } ) {
 	}
 
 	// The site: the moved pages go, and its links to them point at the new host.
-	fs.rmSync( path.join( out, 'developers' ), {
-		recursive: true,
-		force: true,
-	} );
+	for ( const [ from ] of MOVED.filter( ( [ f ] ) => f !== 'web/' ) ) {
+		fs.rmSync( path.join( out, from ), { recursive: true, force: true } );
+	}
 	for ( const page of pages.keys() ) {
 		if ( page.startsWith( 'web/' ) ) {
 			fs.rmSync( path.join( out, page, 'index.html' ), { force: true } );
@@ -278,12 +294,25 @@ function split( { out, dev, site, developers } ) {
 		path.join( dev, 'robots.txt' ),
 		`User-agent: *\nAllow: /\nSitemap: ${ developers }sitemap.xml\n`
 	);
-	// The site's own 404, whose links are all absolute, serves for a miss on either host.
+	// The site's own 404, whose links are all absolute, serves for a miss on either host, with what
+	// it is drawn with, and what moved, taken from the developer host.
 	if ( fs.existsSync( path.join( out, '404.html' ) ) ) {
-		fs.copyFileSync(
-			path.join( out, '404.html' ),
-			path.join( dev, '404.html' )
+		const html = rewrite(
+			fs.readFileSync( path.join( out, '404.html' ), 'utf8' ),
+			( name, value ) =>
+				each( name, value, ( u ) => {
+					const rel = onSite( u, '' );
+					const where = rel === null ? null : fromDev( rel );
+					return where?.host === 'dev' ? developers + where.rel : u;
+				} )
 		);
+		fs.writeFileSync( path.join( dev, '404.html' ), html );
+	}
+	for ( const file of assets ) {
+		fs.mkdirSync( path.dirname( path.join( dev, file ) ), {
+			recursive: true,
+		} );
+		fs.copyFileSync( path.join( out, file ), path.join( dev, file ) );
 	}
 	// As the site caches them: stamped by commit, so kept for good; the pages are fetched fresh.
 	fs.writeFileSync(
@@ -296,8 +325,8 @@ function split( { out, dev, site, developers } ) {
 			.join( '' ) + '/index.html\n  Cache-Control: no-cache\n'
 	);
 
-	// One redirect per moved page, with and without its slash, and the rest of /developers/ after
-	// them. web/ has no catch-all, since its stylesheet stays.
+	// One redirect per moved page, with and without its slash, and the rest of each moved folder
+	// after them. web/ has no catch-all, since its stylesheet stays.
 	const base = new URL( site ).pathname;
 	const lines = [];
 	for ( const [ from, to ] of pages ) {
@@ -308,7 +337,9 @@ function split( { out, dev, site, developers } ) {
 			);
 		}
 	}
-	lines.push( `${ base }developers/* ${ developers }:splat 301` );
+	for ( const [ from, to ] of MOVED.filter( ( [ f ] ) => f !== 'web/' ) ) {
+		lines.push( `${ base }${ from }* ${ developers }${ to }:splat 301` );
+	}
 	fs.appendFileSync(
 		path.join( out, '_redirects' ),
 		lines.join( '\n' ) + '\n'

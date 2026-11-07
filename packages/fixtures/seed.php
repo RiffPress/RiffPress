@@ -369,7 +369,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI && isset( $file ) && realpath( (string) $file
 	// Every album beside it that is published rather than uploaded, pointed at the live demo set,
 	// or wherever RIFF_DEMO_BASE says.
 	$base      = (string) getenv( 'RIFF_DEMO_BASE' );
-	$base      = rtrim( '' !== $base ? $base : 'https://riffpress.com/demo', '/' ) . '/';
+	$base      = rtrim( '' !== $base ? $base : 'https://developer.riffpress.com/demo', '/' ) . '/';
 	$manifests = glob( __DIR__ . '/*/manifest.json' );
 	foreach ( is_array( $manifests ) ? $manifests : array() as $remote ) {
 		$album = json_decode( (string) file_get_contents( $remote ), true );

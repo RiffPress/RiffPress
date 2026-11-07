@@ -7,7 +7,7 @@
  * Requires PHP: 8.1
  * Requires Plugins: riff
  * Requires Riff: 6.3
- * Plugin URI: https://riffpress.com/
+ * Plugin URI: https://developer.riffpress.com/
  * Author: RiffPress Core Team
  * Author URI: https://riffpress.com/
  * License: GPL-2.0-or-later

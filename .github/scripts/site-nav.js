@@ -255,7 +255,7 @@ function title( ctx, text ) {
 		return text;
 	}
 	const bare = text.replace( /\s*\|\s*Riff(?:Press)?(?: Developer)?$/, '' );
-	return `${ bare } | ${ ctx.nav.hosts[ ctx.section.host || 'site' ] }`;
+	return `${ bare } | ${ ctx.nav.hosts[ ctx.node.host || ctx.section.host || 'site' ] }`;
 }
 
 const REGION = ( name ) => new RegExp( `<!-- nav:${ name }((?: [a-z]+)*) -->\\n?[\\s\\S]*?<!-- /nav:${ name } -->`, 'g' );
@@ -330,8 +330,9 @@ function validate( nav = NAV ) {
 			}
 			hrefs.add( node.href );
 			const moves = MOVED.some( ( [ from ] ) => node.href.startsWith( from ) );
-			if ( moves !== ( section.host === 'developers' ) ) {
-				problems.push( `site-nav.json: ${ node.key } (${ node.href }) is on ${ section.host || 'site' }, but developers-site.js ${ moves ? 'moves it to the developer host' : 'keeps it on the site' }` );
+			const host = node.host || section.host;
+			if ( moves !== ( host === 'developers' ) ) {
+				problems.push( `site-nav.json: ${ node.key } (${ node.href }) is on ${ host || 'site' }, but developers-site.js ${ moves ? 'moves it to the developer host' : 'keeps it on the site' }` );
 			}
 		}
 	};
