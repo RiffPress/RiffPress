@@ -80,6 +80,8 @@ To keep the files themselves private, tick Protected on an audio or video file i
 
 Deleting Riff moves protected files back first.
 
+To keep the whole site private, tick Private site under Settings > Reading. Only people with an account on the site can reach it, its audio and video are protected as above, and search engines are asked to stay away. Images, such as covers, keep their public addresses, so someone who has the address of one can still see it.
+
 Membership and store plugins can decide who may play each track. A locked track stays listed with a lock that leads to your sign-up page. The [developer reference](https://developer.riffpress.com/php/) shows how.
 
 = Does it work with my theme? =

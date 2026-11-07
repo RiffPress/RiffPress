@@ -46,8 +46,9 @@ if ( ! empty( $riff_moved ) ) {
 	Riff\Protected_Files::relink_all( $riff_moved );
 }
 delete_option( 'riff_protected_dir' );
+delete_option( 'riff_private' );
 
-foreach ( array( '_riff_protected', '_riff_video', '_riff_stream', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
+foreach ( array( '_riff_private', '_riff_protected', '_riff_video', '_riff_stream', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
 	delete_post_meta_by_key( $riff_key );
 }
 
