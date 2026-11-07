@@ -16,6 +16,7 @@ use WP_Term;
 use Riff\Catalog;
 use Riff\Library;
 use Riff\Player;
+use Riff\Private_Site;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -357,7 +358,9 @@ final class Art {
 	 */
 	private static function file( string $drawn ): ?array {
 		$uploads = wp_upload_dir( null, false );
-		if ( ! empty( $uploads['error'] ) || wp_is_stream( $uploads['basedir'] ) || ! preg_match( '/^(album-)?\d+$/', $drawn ) ) {
+		// On a private site a cover stays behind the site's gate, drawn each time, as it says what the
+		// album is called.
+		if ( Private_Site::on() || ! empty( $uploads['error'] ) || wp_is_stream( $uploads['basedir'] ) || ! preg_match( '/^(album-)?\d+$/', $drawn ) ) {
 			return null;
 		}
 		$name = self::DIR . '/' . self::version() . '/' . $drawn . '.svg';

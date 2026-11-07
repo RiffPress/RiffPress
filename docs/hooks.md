@@ -163,6 +163,12 @@ Fires before the player's markup.
 
 Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 
+### `riff_private_refused`
+
+Fires before a private site refuses a visitor, for a page of the site's own in place of WordPress's message.
+
+Since 6.3.0. Fires in `plugins/riff/src/class-private-site.php`.
+
 ### `riff_register`
 
 Fires once a request, before the player's controls and views are first read: register them here with `riff_register_control()` and `riff_register_view()`, or take one of Riff's own away. A plugin's keyboard shortcuts are registered here too, with `riff_register_shortcut()`.
