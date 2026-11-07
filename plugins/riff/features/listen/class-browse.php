@@ -173,7 +173,7 @@ final class Browse {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which view is showing; nothing changes.
 		$view = $current['view'] ?? ( empty( $_GET[ App::QUERY ] ) ? 'home' : 'post' );
 		$html = sprintf(
-			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12H19M5 18.25H19M5 5.75H19"/></svg></button><span class="riff-app-name">%s</span></span>',
+			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s">' . Player::icon( 'menu' ) . '</button><span class="riff-app-name">%s</span></span>',
 			esc_attr( $view ),
 			esc_attr__( 'Sidebar', 'riff' ),
 			esc_html( '' !== $name ? $name : 'Riff' )
@@ -545,7 +545,7 @@ final class Browse {
 		// Over an album's tracks, the usual column heads: #, Title and a clock. They only
 		// label what each row already says, so a screen reader is not told them again.
 		$head = $numbered || $heads ? sprintf(
-			'<div class="riff-tracks-head" aria-hidden="true"><span>%s</span><span>%s</span><svg viewBox="0 0 24 24" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19.25C16.0041 19.25 19.25 16.0041 19.25 12C19.25 7.99594 16.0041 4.75 12 4.75C7.99594 4.75 4.75 7.99594 4.75 12C4.75 16.0041 7.99594 19.25 12 19.25Z" stroke-linejoin="round"/><path d="M9.5 12.25H12.25V8"/></svg></div>',
+			'<div class="riff-tracks-head" aria-hidden="true"><span>%s</span><span>%s</span>' . Player::icon( 'scheduled' ) . '</div>',
 			$numbered ? '#' : '',
 			esc_html__( 'Title', 'riff' )
 		) : '';
