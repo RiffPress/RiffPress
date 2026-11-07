@@ -56,6 +56,8 @@ function head( title, description, url, depth, css, { under = '', label = '', se
 <link rel="apple-touch-icon" href="${ up }icons/apple-touch-icon.png">
 <meta name="theme-color" content="#000">
 <meta name="color-scheme" content="light">
+<link rel="preload" href="${ up }fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${ up }fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${ css }">
 <link rel="stylesheet" href="${ up }neck.css">
 </head>
