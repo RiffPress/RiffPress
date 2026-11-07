@@ -23,11 +23,6 @@ defined( 'ABSPATH' ) || exit;
 final class Ui {
 
 	/**
-	 * The play icon on a card's cover.
-	 */
-	private const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.25 16.75L15.25 12L8.25 7.25L8.25 16.75Z" fill="currentColor"/></svg>';
-
-	/**
 	 * How wide a card's cover is shown: two to a row on a phone, about a fifth of a computer's.
 	 *
 	 * @since 5.8.0
@@ -109,7 +104,7 @@ final class Ui {
 				esc_attr( (string) $card['play']['action'] ),
 				self::data( (array) ( $card['play']['data'] ?? array() ) ),
 				esc_attr( (string) $card['play']['label'] ),
-				self::PLAY
+				Player::icon( 'play' )
 			);
 		}
 		$title = '<span class="riff-card-title">' . esc_html( $card['title'] ) . '</span>';
@@ -353,7 +348,7 @@ final class Ui {
 				$current = ! empty( $choice['current'] ) ? (string) $choice['label'] : $current;
 			}
 			return sprintf(
-				'<details class="riff-library-sort"><summary aria-label="%1$s">%2$s<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7.25H20M4 12H15M4 16.75H10"/></svg></summary><div class="riff-library-sort-menu" role="group" aria-label="%3$s">%4$s</div></details>',
+				'<details class="riff-library-sort"><summary aria-label="%1$s">%2$s' . Player::icon( 'sort' ) . '</summary><div class="riff-library-sort-menu" role="group" aria-label="%3$s">%4$s</div></details>',
 				/* translators: 1: "Sort by", 2: the order in use, such as Recently added. */
 				esc_attr( sprintf( __( '%1$s: %2$s', 'riff' ), $label, $current ) ),
 				esc_html( $current ),
