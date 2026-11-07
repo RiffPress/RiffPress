@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: Riff Chords
- * Description: A Chords view in Riff's Now Playing: a chord chart that follows the song, with its fingerings, and practice controls to slow it down, loop a part, transpose and set a capo.
+ * Plugin Name: Riff Chords (Experimental)
+ * Description: Experimental. A Chords view in Riff's Now Playing: a chord chart that follows the song, with its fingerings, and practice controls to slow it down, loop a part, transpose and set a capo.
  * Version: 0.5.0
  * Requires at least: 7.1
  * Requires PHP: 8.1

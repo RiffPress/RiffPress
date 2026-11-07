@@ -86,8 +86,21 @@ defined( 'ABSPATH' ) || exit;
 				<button type="button" class="riff-sleeve"><?php esc_html_e( 'Play the record', 'riff' ); ?></button>
 				<video class="riff-video" playsinline preload="metadata"></video>
 			</div>
-			<?php // The turntable's VU meter and spectrum, under the deck, drawn by meters.js where the music passes through Web Audio, and only while the turntable shows. ?>
-			<div class="riff-meters" aria-hidden="true"></div>
+			<?php // The place under the deck, for what a plugin adds. ?>
+			<div class="riff-turntable-extras">
+				<?php
+				/**
+				 * Fires in the place under the turntable, for what a plugin shows beside the record.
+				 * Print one element for each thing: the place takes room only while one that isn't
+				 * hidden is in it, and only where the turntable is the view. The record is out when
+				 * `#riff` has `data-riff-deck="out"`. Script it from there; `window.riff.analyser()`
+				 * hears the music.
+				 *
+				 * @since 6.3.0
+				 */
+				do_action( 'riff_below_turntable' );
+				?>
+			</div>
 			<?php // The screens with a region of their own, such as the lyrics, each in the stage's place while it shows. ?>
 			<?php echo Registry::screens(); ?>
 			<?php /* Where the whole screen is the turntable (riff.css), the deck's own controls on its plinth, as a direct-drive deck has them: start and stop at the front, the two speeds beside it, and the pitch fader at the side, moving the music, the platter, the strobe and the arm together. */ ?>

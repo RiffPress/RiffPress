@@ -738,7 +738,7 @@ export function nowPlaying( P ) {
 		!! $( '.riff-cover' ) &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
 	const deckScreen = () => roomy() && shapedAsDeck();
-	// For the stylesheet: off, the cover on its own, with no record, deck or meters.
+	// For the stylesheet: off, the cover on its own, with no record or deck.
 	function markRoom() {
 		if ( roomy() ) {
 			delete root.dataset.riffTurntable;

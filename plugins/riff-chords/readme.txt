@@ -1,4 +1,4 @@
-=== Riff Chords ===
+=== Riff Chords (Experimental) ===
 Contributors: joefusco
 Tags: chords, guitar, music, practice, player
 Requires at least: 7.1
@@ -12,6 +12,8 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 A Chords view in Riff's Now Playing: a chord chart that follows the song, and practice controls for playing along.
 
 == Description ==
+
+**This plugin is experimental.** It may change or go away between versions.
 
 Riff Chords adds a Chords view to Riff's Now Playing, opened from its button in the player's bar, for lessons, music shops and anyone learning a song by ear.
 

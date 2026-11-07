@@ -327,9 +327,10 @@ Riff lays out by the screen's shape, never by the device, as WebKit and Apple as
 
 ## The turntable
 
-The turntable is the album where Now Playing is wider than tall (above). Under the deck it has a VU meter and a spectrum
-(`assets/player/meters.js`), read from the music where it passes through Web Audio, as it does
-everywhere but an iPhone. The VU meter is IEC 60268-17's: a needle on the rectified signal that
+The turntable is the album where Now Playing is wider than tall (above). Under the deck is a place a
+plugin fills with the `riff_below_turntable` action, which takes no room while nothing shows in it. Riff
+Meters, an experimental plugin beside Riff, puts a VU meter and a spectrum there, read from the music
+through `window.riff.analyser()`, as it passes through Web Audio everywhere but an iPhone. The VU meter is IEC 60268-17's: a needle on the rectified signal that
 reaches 99% of a steady tone's reading in 300 ms and passes it by about 1%, with 0 VU a sine at
 -14 dBFS, the loudness the streaming services play at. The spectrum is 31 one-third-octave bands
 from 20 Hz to 20 kHz, each averaged over IEC 61672's Slow second, so a lossy file shows where its

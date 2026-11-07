@@ -1,0 +1,144 @@
+.riff-meters {
+	display: flex;
+	flex: 1;
+	gap: 16px;
+	min-width: 0;
+	height: 100%;
+	transition: opacity 0.3s, visibility 0.3s;
+}
+
+.riff-meters[hidden] {
+	display: none;
+}
+
+/* Holding its place with nothing to measure: the deck keeps its size. */
+.riff-meters[data-meters-quiet] {
+	visibility: hidden;
+	opacity: 0;
+}
+
+/* the VU meter: its face as wide as the scale's arc, the needle's pivot
+   below it (meters.js draws the scale from the same numbers) */
+.riff-vu {
+	position: relative;
+	flex: none;
+	height: 100%;
+	aspect-ratio: 100 / 56;
+	overflow: hidden;
+	border-radius: 4px;
+	--meters-heat: 0;
+}
+
+#riff .riff-vu svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.riff-vu-scale,
+.riff-vu-over {
+	fill: none;
+	stroke: currentcolor;
+	stroke-linecap: round;
+}
+
+.riff-vu-scale {
+	stroke-opacity: 0.22;
+	stroke-width: 0.6;
+}
+
+.riff-vu-over {
+	stroke-opacity: 0.4;
+	stroke-width: 1;
+}
+
+.riff-vu text {
+	fill: currentcolor;
+	fill-opacity: 0.25;
+	font-size: 8px;
+	letter-spacing: 0.1em;
+	text-anchor: middle;
+}
+
+.riff-vu-needle {
+	position: absolute;
+	bottom: calc(-10 / 56 * 100%);
+	left: calc(50% - 0.5px);
+	width: 1px;
+	height: calc(54 / 56 * 100%);
+	background: rgb(150 66 28);
+	transform: rotate(-45deg);
+	transform-origin: 50% 100%;
+	will-change: transform;
+}
+
+/* The needle is a filament: an ember at rest, its orange and halo as it
+   heats, and a pale heart at the peaks. Only their opacity follows the
+   music. */
+.riff-vu-needle::before,
+.riff-vu-needle::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	will-change: opacity;
+}
+
+.riff-vu-needle::before {
+	background: rgb(255 138 62);
+	box-shadow: 0 0 3px 0.5px rgb(255 120 40 / 0.7);
+	opacity: var(--meters-heat);
+}
+
+.riff-vu-needle::after {
+	background: #fff1dc;
+	opacity: calc(0.8 * var(--meters-heat) * var(--meters-heat) * var(--meters-heat));
+}
+
+/* the spectrum: a bar for each third of an octave, 20 Hz to 20 kHz, on a
+   faint baseline with three frequencies under it */
+.riff-spectrum {
+	position: relative;
+	display: flex;
+	flex: 1;
+	gap: 2px;
+	min-width: 0;
+	padding-bottom: 14px;
+}
+
+.riff-spectrum::after {
+	content: "";
+	position: absolute;
+	right: 0;
+	bottom: 13px;
+	left: 0;
+	height: 1px;
+	background: currentcolor;
+	opacity: 0.15;
+}
+
+.riff-spectrum i {
+	flex: 1;
+	border-radius: 1px 1px 0 0;
+	background: currentcolor;
+	opacity: 0.4;
+	transform: scaleY(0);
+	transform-origin: 50% 100%;
+	will-change: transform;
+}
+
+.riff-spectrum small {
+	position: absolute;
+	bottom: 0;
+	color: var(--riff-fg-3);
+	font-size: 10px;
+	line-height: 1;
+	translate: -50% 0;
+}
+
+@media (forced-colors: active) {
+
+	.riff-vu-needle::before,
+	.riff-vu-needle::after {
+		display: none;
+	}
+}

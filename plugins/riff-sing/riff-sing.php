@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: Riff Sing
- * Description: A Sing view in Riff's Now Playing: sing along with the song's melody, from a microphone or a MIDI instrument, and hear how close you came. Your voice never leaves the browser.
+ * Plugin Name: Riff Sing (Experimental)
+ * Description: Experimental. A Sing view in Riff's Now Playing: sing along with the song's melody, from a microphone or a MIDI instrument, and hear how close you came. Your voice never leaves the browser.
  * Version: 0.5.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
