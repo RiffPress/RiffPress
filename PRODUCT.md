@@ -16,7 +16,7 @@ Riff turns the audio and video already in a site's posts into a player with the 
 
 ## Positioning
 
-Riff is an open-source music player for WordPress. The Media Library is the store: every track is an attachment, read through WordPress's own APIs, and posts are how music is published from it. Riff is the listening surface on top. Where a music library needs something WordPress doesn't have, Riff adds it and records why in `docs/native.md`, so each addition is a candidate for core. Its design follows YouTube Music's current layout and measurements, which is the benchmark listeners already carry in their pocket, in Riff's own amber; on a computer the Listen app's frame, its strip across the top above all, is laid out as Spotify's desktop app is.
+Riff is an open-source music player for WordPress. The Media Library is the store: every track is an attachment, read through WordPress's own APIs, and posts are how music is published from it. Riff is the listening surface on top. Where a music library needs something WordPress doesn't have, Riff adds it and records why in `docs/native.md`, so each addition is a candidate for core. Its design follows YouTube Music's current layout and measurements, which is the benchmark listeners already carry in their pocket, in Riff's own ivory; on a computer the Listen app's frame, its strip across the top above all, is laid out as Spotify's desktop app is.
 
 ## Operating Context
 
@@ -26,8 +26,8 @@ Publishers write ordinary posts with the core audio and video blocks, and pair a
 
 - The player is added to every front-end page of any theme; the theme's own markup is left alone.
 - Tracks are audio attachments in the Media Library. The core audio, video and playlist blocks publish them in posts, and registered sources can provide tracks from other post types or catalogues. A post is a queue.
-- One script and one stylesheet, no build step. Every browser feature sits behind a check and degrades to the browser's native controls.
-- Playback: a docked bar whose controls and views are registered on the server, Riff's own as any plugin's; Now Playing as full-screen views opened from the bar (the album, the turntable, and a plugin's, such as the lyrics, the chords or singing along), Up next and Together as panels beside the page, a Song/Video switch, Media Session, AirPlay and Cast, keyboard control, and the filament, an analyser-driven glow on the bar's seek line. In-app navigation on a Listen page keeps the same media element; full-page navigation saves the tab's session state and attempts to resume on the next page, while reload restores the track paused.
+- Plain scripts and stylesheets, no build step, each loaded only where it applies. Every browser feature sits behind a check and degrades to the browser's native controls.
+- Playback: a docked bar whose controls and views are registered on the server, Riff's own as any plugin's; Now Playing as full-screen views opened from the bar (the album, the cover or the turntable by Now Playing's shape, and a plugin's, such as the lyrics, the chords or singing along), Up next and Together as panels beside the page, a Song/Video switch, Media Session, AirPlay and Cast, keyboard control, and the filament, an analyser-driven glow on the bar's seek line. In-app navigation on a Listen page keeps the same media element; full-page navigation saves the tab's session state and attempts to resume on the next page, while reload restores the track paused.
 - Not in scope: recommendations, radio, podcast feeds and analytics. Lyrics are the Riff Lyrics plugin, beside Riff in `plugins/`. Accounts are WordPress users. Favorites, a library view of the Media Library and a hosted network are on the roadmap (#365).
 - Riff's one app on a computer is the Listen app installed from the browser; there is no separate desktop app.
 - The iOS app is not built yet. It will connect to a Riff site through the REST API and application passwords.
@@ -40,7 +40,7 @@ The name is Riff. The voice is direct and practical, in plain WordPress-develope
 
 ## Evidence on Hand
 
-- Architecture and behaviour: `README.md`
+- Architecture and behaviour: `docs/player.md`
 - Listener-facing implementation: `plugins/riff/templates/player.php`, `plugins/riff/assets/riff.js`, `plugins/riff/assets/riff.css`
 - Public-domain demo media and screenshots: `packages/fixtures/`, `site/`
 

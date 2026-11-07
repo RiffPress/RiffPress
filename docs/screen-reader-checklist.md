@@ -23,7 +23,7 @@ Use the demo at https://next.riffpress.com/, or any post with at least three tra
 
 ## Now Playing
 
-5. Press Album. It says it is pressed, and Now Playing opens. On a phone it is a dialog that keeps you inside it; Escape, or the Close button, returns you to the button you opened it from. On a computer it is not modal, and you can move out to the bar and back.
+5. Press the bar's "Now Playing, <title>" button. It says it is expanded, and Now Playing opens on the album. On a phone it is a dialog that keeps you inside it; Escape, or the Close button, returns you to the button you opened it from. On a computer it is not modal, and you can move out to the bar and back.
 6. Press Up next. A panel opens with focus on its heading, "Up next", then Close Up next, Clear the queue, then each track as "Play <title>, <artist> • <album>, <length>" with "More options" after it, the playing one "Pause …". Escape returns you to Up next's button.
 7. Open a row's More options. The first item has focus; the arrows move through Play next, Add to queue, Add to Liked songs, Move up or down, Remove from queue, Go to post; Escape returns you to the … button.
 8. Choose Play next. You hear "<title> plays next". Choose Remove from queue on another. You hear "<title> removed from the queue". Clear the queue. You hear "Queue cleared".

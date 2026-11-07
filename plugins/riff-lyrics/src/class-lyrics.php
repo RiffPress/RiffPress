@@ -57,8 +57,8 @@ final class Lyrics {
 	}
 
 	/**
-	 * The Lyrics view: a screen of Now Playing, its button in the bar beside the album's, as the
-	 * words go with the song.
+	 * The Lyrics view: a screen of Now Playing, its button first among the views' in the bar, as
+	 * the words go with the song.
 	 */
 	public static function view(): void {
 		riff_register_view(
