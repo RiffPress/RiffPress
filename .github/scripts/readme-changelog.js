@@ -10,7 +10,7 @@
  *
  * --check fails when a readme.txt's changelog is not what CHANGELOG.md says.
  *
- * Usage: node .github/scripts/readme-changelog.js [--check] [riff|riff-lyrics|riff-sign-in|riff-sing|riff-chords ...]
+ * Usage: node .github/scripts/readme-changelog.js [--check] [riff|riff-lyrics|riff-sign-in|riff-sing|riff-chords|riff-meters ...]
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );

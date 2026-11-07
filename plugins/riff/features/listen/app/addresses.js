@@ -16,7 +16,7 @@ export function addresses( ctx ) {
 		others.delete( query );
 		others.delete( pageQuery );
 		browseArgs.forEach( ( key ) => others.delete( key ) );
-		// A shared track's name, which riff.js reads on arrival.
+		// A shared track's name, which rows.js reads on arrival.
 		others.delete( 'riff_track' );
 		others.sort();
 		const own = new URLSearchParams( page.search );

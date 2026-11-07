@@ -226,7 +226,7 @@ final class Bindings {
 	 * @return string Such as `MP3 · 128 kbps`, or an empty string when the file told nothing.
 	 */
 	public static function quality( array $track ): string {
-		// As riff.js draws the badge: nothing at all for a lossy file that told no bit rate.
+		// As the player draws the badge (state.js): nothing at all for a lossy file that told no bit rate.
 		if ( empty( $track['bitrate'] ) && empty( $track['lossless'] ) ) {
 			return '';
 		}

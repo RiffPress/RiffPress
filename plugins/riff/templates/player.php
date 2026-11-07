@@ -8,7 +8,7 @@
  * the views are registered on the server (Riff\Registry) and drawn here, before any script; the
  * script brings each to life by its id. The wide bar has the seek line under the transport.
  * Controls that appear in more than one place are separate buttons with the same
- * data-riff-action, and riff.js keeps every copy in step, so no control owns any state.
+ * data-riff-action, and paint.js keeps every copy in step, so no control owns any state.
  *
  * @package Riff
  */
@@ -45,7 +45,7 @@ defined( 'ABSPATH' ) || exit;
 				<?php // Times read left to right in every language. ?>
 				<span class="riff-time riff-desk" dir="ltr" data-riff-text="current">0:00</span>
 				<div class="riff-bar-seek">
-					<?php // The filament: the played part of the line is a wire that glows with the music (riff.js). ?>
+					<?php // The filament: the played part of the line is a wire that glows with the music (filament.js). ?>
 					<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i><span class="riff-bloom"></span></span>
 					<b class="riff-knob" aria-hidden="true"></b>
 					<span class="riff-tip" aria-hidden="true" hidden></span>
