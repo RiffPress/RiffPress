@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,9 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 == Changelog ==
 
+= 0.6.0 =
+* The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.
+
 = 0.5.0 =
 * Riff's icons are WordPress's own, with the few it lacks drawn to match.
 
@@ -44,9 +47,5 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 = 0.3.1 =
 * Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
-
-= 0.3.0 =
-* A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
-* Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
