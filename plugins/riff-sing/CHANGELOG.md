@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/RiffPress/RiffPress/compare/riff-sing-v0.4.1...riff-sing-v0.5.0) (2026-11-07)
+
+
+### Features
+
+* **player:** Riff's icons are WordPress's own, with the few it lacks drawn to match ([#909](https://github.com/RiffPress/RiffPress/issues/909)) ([69e11e1](https://github.com/RiffPress/RiffPress/commit/69e11e1a96dd96b58d6951391900c4172dabdb1e))
+
 ## [0.4.1](https://github.com/RiffPress/RiffPress/compare/riff-sing-v0.4.0...riff-sing-v0.4.1) (2026-11-05)
 
 

@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.7.1
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.8.0 =
+* Riff's icons are WordPress's own, with the few it lacks drawn to match.
+
 = 1.7.1 =
 * Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
 * Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
@@ -38,9 +41,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 = 1.6.0 =
 * A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
 * Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
-
-= 1.5.0 =
-* Riff ships the plugins its manifest names inside itself, each turned on or off from Settings › Riff.
-* Now Playing is a view at a time and the bar's controls and views are registered on the server; Lyrics, Sing and Chords are views, Up next and Together are panels, and the tabs are gone.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
