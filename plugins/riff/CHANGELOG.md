@@ -1,5 +1,18 @@
 # Changelog
 
+## [6.2.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.1.2...riff-v6.2.0) (2026-11-07)
+
+
+### Features
+
+* **player:** Riff's icons are WordPress's own, with the few it lacks drawn to match ([#909](https://github.com/RiffPress/RiffPress/issues/909)) ([69e11e1](https://github.com/RiffPress/RiffPress/commit/69e11e1a96dd96b58d6951391900c4172dabdb1e))
+
+
+### Bug Fixes
+
+* Riff is ready to submit to WordPress.org, named for its slug, with a readme that says what browsers do across a link ([#907](https://github.com/RiffPress/RiffPress/issues/907)) ([8f70580](https://github.com/RiffPress/RiffPress/commit/8f705806fccab8ec662707d697ed1b807959b9af))
+* Riff Music Player keeps its full name, since Plugin Check wants five letters to make a slug from ([#911](https://github.com/RiffPress/RiffPress/issues/911)) ([18b9cb2](https://github.com/RiffPress/RiffPress/commit/18b9cb28b26c40e0c24d67e286f58c54630b6ae6))
+
 ## [6.1.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.1.1...riff-v6.1.2) (2026-11-06)
 
 
