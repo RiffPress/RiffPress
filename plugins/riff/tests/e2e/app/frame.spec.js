@@ -126,15 +126,14 @@ test.describe( 'Standalone', () => {
 		expect( Math.abs( cover.x + ( cover.width / 2 ) - 720 ) ).toBeLessThanOrEqual( 2 );
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeHidden();
 
-		// Up next is a panel of its own, from its button in the bar: beside Now Playing, under the
-		// strip, and the art stays in the middle of what is left.
+		// Up next is a panel of its own, from its button in the bar: beside Now Playing, from the top,
+		// and the art stays in the middle of what is left.
 		const upNext = page.locator( '[data-riff-control="queue"]' );
 		await upNext.click();
 		await expect( upNext ).toHaveAttribute( 'aria-pressed', 'true' );
 		const side = page.locator( '.riff-side' );
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeVisible();
 		const panel = await side.boundingBox();
-		expect( panel.y ).toBeGreaterThanOrEqual( 64 );
 		expect( panel.x + panel.width ).toBeGreaterThan( 1400 );
 		const room = await np.boundingBox();
 		expect( room.x + room.width ).toBeLessThanOrEqual( panel.x + 1 );
@@ -144,10 +143,10 @@ test.describe( 'Standalone', () => {
 		} );
 		expect( Math.abs( middle - ( room.x + ( room.width / 2 ) ) ) ).toBeLessThanOrEqual( 2 );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-side' ).analyze() ).violations ).toEqual( [] );
-		// Now Playing's wash carries on into the panel, drawn from the window's top as Now Playing's
-		// is, so the two line up across the rule between them.
+		// The panel stands on Now Playing's wash from the window's top, as Now Playing does, with none
+		// of the strip's black above it.
 		await expect( side ).toHaveCSS( 'background-image', /gradient/ );
-		await expect( side ).toHaveCSS( 'background-position', '0px -64px' );
+		await expect( side ).toHaveCSS( 'top', '0px' );
 
 		// Pressed again, it closes; Escape still closes Now Playing.
 		await upNext.click();

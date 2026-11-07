@@ -414,11 +414,22 @@ html.riff-frame .riff-standalone .riff-app {
 		background: #000;
 	}
 
-	/* Beside Now Playing, a panel goes on with its wash, sized and placed
-	   as Now Playing's is, from the window's top to the bar, so the two
-	   read as one surface with the panel's rule between them. */
+	/* Beside Now Playing, a panel stands as Now Playing does, from the window's
+	   top to the bar on the same wash, so the two read as one surface with the
+	   panel's rule between them. What it covers of the strip still drags. */
 	html.riff-frame #riff.is-open .riff-side {
-		background: var(--riff-frame-wash) 0 calc(-1 * var(--riff-side-top, 0px)) / 100% calc(100% + var(--riff-side-top, 0px)) no-repeat #000;
+		--riff-side-top: 0px;
+		padding-top: var(--riff-frame-strip);
+		background: var(--riff-frame-wash);
+	}
+
+	html.riff-frame #riff.is-open .riff-side::before {
+		content: "";
+		position: absolute;
+		inset: 0 0 auto;
+		height: var(--riff-frame-strip);
+		-webkit-app-region: drag;
+		app-region: drag;
 	}
 
 	/* Up next, About or another panel narrows the frame beside it, as the
