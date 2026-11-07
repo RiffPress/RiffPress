@@ -2796,9 +2796,13 @@ dl.riff-about-credits dd {
 		--riff-side-place: beside;
 		inset: var(--riff-side-top, 0) 0 calc(var(--riff-bar-h) + var(--riff-safe-b)) auto;
 		width: var(--riff-side-w, 400px);
-		padding: 0 0 0 8px;
+		padding: 0;
 		border-left: 1px solid var(--riff-line);
 		background: var(--riff-bg);
+	}
+
+	#riff .riff-queue-list li {
+		padding-right: 8px;
 	}
 
 	html.riff-panel-open {
@@ -2815,7 +2819,7 @@ dl.riff-about-credits dd {
 
 	.riff-queue-head {
 		display: block;
-		margin: 0 16px 16px 16px;
+		margin: 0 16px 16px 24px;
 		padding: 0;
 		border: 0;
 	}
@@ -2845,14 +2849,18 @@ dl.riff-about-credits dd {
 		grid-template-columns: 32px minmax(0, 1fr) auto;
 		gap: 16px;
 		height: 56px;
-		padding: 0 8px;
+		padding: 0 8px 0 24px;
 	}
 
 	#riff .riff-queue-list button:hover {
+		background: none;
+	}
+
+	#riff .riff-queue-list li:hover {
 		background: rgb(255 255 255 / 0.05);
 	}
 
-	#riff .riff-queue-list button[aria-current] {
+	#riff .riff-queue-list li:has(> button[aria-current]) {
 		background: var(--riff-hover);
 	}
 
