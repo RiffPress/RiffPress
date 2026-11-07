@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.2.1
+Stable tag: 6.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.2.2 =
+* Fixed: after a link the body's classes, the canonical address and the admin bar's edit links are the page's own.
+* Fixed: in the Listen app on a computer, a panel beside Now Playing stands from the window's top, with no black strip above it.
+
 = 6.2.1 =
 * Fixed: a protected file on no post goes only to who may edit it or read a post by someone who may.
 
@@ -152,8 +156,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: Now Playing on a phone never cuts a name short, its views' buttons are a light row of icons, and on its side shuffle and repeat move to Up next.
 * Fixed: the turntable bends every song, its platter and arm keep the music's speed, and the arm lifts and lowers as a cue lever does.
 * Fixed: while Now Playing is open the page reaches a phone's edges, so no theme colour shows beside the turntable.
-
-= 6.1.0 =
-* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
