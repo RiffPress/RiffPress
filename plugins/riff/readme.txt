@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.1.2
+Stable tag: 6.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.2.0 =
+* Riff's icons are WordPress's own, with the few it lacks drawn to match.
+* Fixed: Riff is ready to submit to WordPress.org, named for its slug, with a readme that says what browsers do across a link.
+* Fixed: Riff Music Player keeps its full name, since Plugin Check wants five letters to make a slug from.
+
 = 6.1.2 =
 * Fixed: a song playing as its video leaves its format and bit rate out of the badges, and the switch and the bar fade while a video plays untouched.
 * Fixed: About shows all of a track at once beside the album, leaving the cover to the stage.
@@ -151,11 +156,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 6.0.1 =
 * Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
 * Fixed: the turntable's needle drops onto the record when its view opens as the music starts.
-
-= 6.0.0 =
-* Riff drops its desktop app, and the Listen app installed from the browser is its one app.
-* Fixed: standalone mode is laid out as sidebar, rail or tabs from one choice in its stylesheet, and the desktop frame shows where it is sidebar rather than wherever there is a mouse.
-* Fixed: a song pressed in a list that opens as its video opens Now Playing on the picture and plays.
-* Fixed: Go to post opens a new window in the desktop app and the installed Listen app.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

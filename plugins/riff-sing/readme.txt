@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.4.1
+Stable tag: 0.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,9 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 == Changelog ==
 
+= 0.5.0 =
+* Riff's icons are WordPress's own, with the few it lacks drawn to match.
+
 = 0.4.1 =
 * Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
 
@@ -43,11 +46,5 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 = 0.3.0 =
 * A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
 * Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
-
-= 0.2.0 =
-* An UltraStar chart written in relative beats (#RELATIVE:yes) is read, each line counted from where the break before it says.
-* An UltraStar duet sings in two lanes, each singer scored on their own from a microphone or a MIDI input of their own.
-* The melody can be a MIDI file's vocal track, named in the audio file's Melody file field, so a chart can come from a score.
-* Fixed: a #GAP after a blank line among a chart's headers is read, so the melody starts where it says.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

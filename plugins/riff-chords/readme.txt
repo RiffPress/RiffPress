@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.4.1
+Stable tag: 0.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,9 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 
 == Changelog ==
 
+= 0.5.0 =
+* Riff's icons are WordPress's own, with the few it lacks drawn to match.
+
 = 0.4.1 =
 * Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
 * Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
@@ -44,14 +47,5 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 = 0.3.0 =
 * A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
 * Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
-
-= 0.2.0 =
-* A count-in at the chart's tempo over a loop's last bar, off until it is turned on.
-* Keys for the loop, the speed and transpose, A, S and F, D and U, while the Chords view shows a chart.
-* Practice this in a track's menu, for a track with a chart, plays it and opens the Chords view on it.
-* Ukulele fingerings and a piano's keys beside the guitar's, chosen in the Chords view and kept in the listener's browser.
-* Fixed: a piano names each note as its chord spells it and draws its keys white and black on any theme, and the key line is the key the song sounds in.
-* Fixed: Practice this keeps the queue's order, shuffle and later pages, and is offered only for a chart the visitor can read.
-* Fixed: Practice this plays a track already in the queue from its place, and isn't offered for a track with nothing to play.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
