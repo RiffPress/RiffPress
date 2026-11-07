@@ -119,11 +119,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 == Screenshots ==
 
 1. The player bar, docked at the bottom of the screen while a post scrolls on.
-2. Now Playing, with the artwork, the controls and the album lined up next.
+2. Now Playing on a wide screen, with the cover beside the turntable.
 3. The Listen page, with recently added albums, artists and new posts.
 4. An album page, tinted from its cover, ready to play or shuffle.
 5. Your Library, with the songs, albums and artists a listener liked and their playlists.
-6. An audio file in the Media Library, with Riff's Artwork, Video version and Protected fields.
+6. An audio file in the Media Library, with Riff's Artwork, Video version and Streaming version fields.
 
 == Changelog ==
 
