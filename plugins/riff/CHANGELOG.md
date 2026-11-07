@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.2.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.1...riff-v6.2.2) (2026-11-07)
+
+
+### Bug Fixes
+
+* **player:** after a link the body's classes, the canonical address and the admin bar's edit links are the page's own ([#918](https://github.com/RiffPress/RiffPress/issues/918)) ([27ede2e](https://github.com/RiffPress/RiffPress/commit/27ede2e8528e7080dae4d224a529832caa25abb3))
+* **player:** in the Listen app on a computer, a panel beside Now Playing stands from the window's top, with no black strip above it ([#917](https://github.com/RiffPress/RiffPress/issues/917)) ([be61ba0](https://github.com/RiffPress/RiffPress/commit/be61ba08b7e141f70c09606d1be376e0280d0ba9))
+
 ## [6.2.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.0...riff-v6.2.1) (2026-11-07)
 
 
