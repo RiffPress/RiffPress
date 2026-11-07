@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.3.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.3...riff-v6.3.0) (2026-11-07)
+
+
+### Features
+
+* **app:** someone who may upload adds music in the Listen app, by choosing or dropping it ([#924](https://github.com/RiffPress/RiffPress/issues/924)) ([ac03899](https://github.com/RiffPress/RiffPress/commit/ac038996a9c60c5bbfaf2ea841f13bc9b06d582a))
+* **private:** a site can be private until its owner opens it, its audio and video with it ([#926](https://github.com/RiffPress/RiffPress/issues/926)) ([89c0956](https://github.com/RiffPress/RiffPress/commit/89c095621f769504152bfa7cf58523d59789d9b1))
+
 ## [6.2.3](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.2...riff-v6.2.3) (2026-11-07)
 
 
