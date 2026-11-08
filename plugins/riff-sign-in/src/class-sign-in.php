@@ -7,6 +7,7 @@
 
 namespace Riff\SignIn;
 
+use WP_Error;
 use WP_User;
 
 // phpcs:set WordPress.WP.I18n text_domain[] riff-sign-in
@@ -26,6 +27,13 @@ defined( 'ABSPATH' ) || exit;
  * Listen app already show, which the sheet answers in place of wp-login.php.
  */
 final class Sign_In {
+
+	/**
+	 * The token and code the page that asks carries in its form, while it is the page being shown.
+	 *
+	 * @var string
+	 */
+	private static string $asking = '';
 
 	/**
 	 * Hooks everything.
@@ -151,32 +159,131 @@ final class Sign_In {
 	}
 
 	/**
-	 * Signs in whoever opens the link in the email: ?riff-sign-in=TOKEN.CODE on the site's front
-	 * page, then on to the page they asked for the code from.
+	 * The link in the email: ?riff-sign-in=TOKEN.CODE on the site's front page, then on to the page
+	 * the code was asked from.
+	 *
+	 * A mail service that scans for threats opens every link in a message before the person does, so
+	 * opening the link uses nothing up. In the browser that asked for the code it
+	 * signs straight in; anywhere else it asks first, on a page of its own, and only the button's
+	 * POST, from this site, checks the code. An expired or used-up code says so at once.
 	 */
 	public static function link(): void {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- the token in the link is the proof.
-		if ( ! isset( $_GET[ Codes::QUERY ] ) ) {
+		// phpcs:disable WordPress.Security.NonceVerification -- the token and code are the proof, and a POST from another site is refused below.
+		$posted = isset( $_POST[ Codes::QUERY ] );
+		if ( ! $posted && ! isset( $_GET[ Codes::QUERY ] ) ) {
 			return;
 		}
-		$value = sanitize_text_field( wp_unslash( $_GET[ Codes::QUERY ] ) );
+		$value = sanitize_text_field( wp_unslash( $posted ? $_POST[ Codes::QUERY ] : $_GET[ Codes::QUERY ] ) );
 		// phpcs:enable
 		[ $token, $code ] = array_pad( explode( '.', $value, 2 ), 2, '' );
 		$landing          = Codes::landing( $token );
-		$user             = is_user_logged_in() ? wp_get_current_user() : Codes::verify( $token, $code );
-		if ( is_wp_error( $user ) ) {
-			wp_die(
-				esc_html( $user->get_error_message() ),
-				esc_html__( 'Sign in', 'riff-sign-in' ),
-				array(
-					'response'  => 403,
-					'link_url'  => esc_url( $landing ),
-					'link_text' => esc_html__( 'Back to the site', 'riff-sign-in' ),
-				)
-			);
+		if ( is_user_logged_in() ) {
+			wp_safe_redirect( $landing );
+			exit;
 		}
+		if ( $posted && self::cross_site() ) {
+			self::refuse( new WP_Error( 'riff_sign_in_cross_site', __( 'That sign-in came from another site. Open the link in your email again.', 'riff-sign-in' ) ), $landing );
+		}
+		if ( ! $posted && ! Codes::same_browser( $token ) ) {
+			if ( ! Codes::pending( $token ) ) {
+				self::refuse( new WP_Error( 'riff_sign_in_expired', __( 'That code has expired. Ask for a new one.', 'riff-sign-in' ) ), $landing );
+			}
+			self::$asking = $value;
+			add_filter( 'template_include', array( self::class, 'asking' ), PHP_INT_MAX );
+			return;
+		}
+		$user = Codes::verify( $token, $code );
+		if ( is_wp_error( $user ) ) {
+			self::refuse( $user, $landing );
+		}
+		Codes::forget();
 		wp_safe_redirect( $landing );
 		exit;
+	}
+
+	/**
+	 * The page that asks "Sign in to the site?" in place of the theme's template, sent so it is never
+	 * cached, framed or passed to another site in a Referer, since the address holds the code. Its
+	 * own POST still carries an Origin, which is how a browser with no Sec-Fetch-Site is checked.
+	 *
+	 * @return string The template.
+	 */
+	public static function asking(): string {
+		if ( ! headers_sent() ) {
+			nocache_headers();
+			send_frame_options_header();
+			header( "Content-Security-Policy: frame-ancestors 'self'" );
+			header( 'Referrer-Policy: same-origin' );
+			header( 'X-Robots-Tag: noindex, nofollow' );
+		}
+		return dirname( __DIR__ ) . '/templates/link.php';
+	}
+
+	/**
+	 * What the page that asks needs: the site's name, where its form goes, what it carries, and the
+	 * sheet's styles. The styles lean on Riff's tokens, which Riff registers with the front end's
+	 * scripts; this page has no theme, so that is asked for here and only those styles are printed.
+	 *
+	 * @return array `site`, `action`, `value`, `css`, and `tokens`: whether Riff's are there to print.
+	 */
+	public static function asked(): array {
+		if ( ! wp_style_is( 'riff-tokens', 'registered' ) ) {
+			/** This action is documented in wp-includes/script-loader.php */
+			do_action( 'wp_enqueue_scripts' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's own action, so Riff registers its stylesheets.
+		}
+		return array(
+			'site'   => wp_strip_all_tags( (string) get_bloginfo( 'name' ) ),
+			'action' => home_url( '/' ),
+			'value'  => self::$asking,
+			'css'    => self::css() . 'body.riff-signin-page{display:grid;min-height:100dvh;margin:0;place-items:center;background:var(--riff-bg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}.riff-signin-page .riff-signin{display:flex;flex-direction:column;gap:12px}.riff-signin h1{margin:0;padding:0;color:inherit;font-family:inherit;font-size:22px;font-weight:700;line-height:1.25}',
+			'tokens' => wp_style_is( 'riff-tokens', 'registered' ),
+		);
+	}
+
+	/**
+	 * Whether a request comes from anywhere but this site's own pages: its Sec-Fetch-Site is not
+	 * same-origin, so a sibling site under the same domain counts too, or, from a browser that
+	 * sends none, its Origin (or Referer) is on another host than this site's.
+	 *
+	 * @return bool
+	 */
+	public static function cross_site(): bool {
+		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- each is checked with isset() first.
+		$fetch = isset( $_SERVER['HTTP_SEC_FETCH_SITE'] ) ? strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_SEC_FETCH_SITE'] ) ) ) : '';
+		if ( '' !== $fetch ) {
+			return 'same-origin' !== $fetch;
+		}
+		$from = '';
+		if ( isset( $_SERVER['HTTP_ORIGIN'] ) ) {
+			$from = sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) );
+		} elseif ( isset( $_SERVER['HTTP_REFERER'] ) ) {
+			$from = esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
+		}
+		// phpcs:enable
+		if ( '' === $from ) {
+			return false;
+		}
+		$host = strtolower( (string) wp_parse_url( $from, PHP_URL_HOST ) );
+		$own  = array_map( static fn( $url ) => strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) ), array( home_url(), site_url() ) );
+		return '' === $host || ! in_array( $host, $own, true );
+	}
+
+	/**
+	 * Ends a sign-in by link with what went wrong, and the way back.
+	 *
+	 * @param WP_Error $error   What went wrong.
+	 * @param string   $landing Where the link would have landed.
+	 */
+	private static function refuse( WP_Error $error, string $landing ): void {
+		wp_die(
+			esc_html( $error->get_error_message() ),
+			esc_html__( 'Sign in', 'riff-sign-in' ),
+			array(
+				'response'  => 403,
+				'link_url'  => esc_url( $landing ),
+				'link_text' => esc_html__( 'Back to the site', 'riff-sign-in' ),
+			)
+		);
 	}
 
 	/**
@@ -296,7 +403,7 @@ final class Sign_In {
 		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
 			return;
 		}
-		$text = '<p>' . __( 'When you sign in to the player with your email, a code is sent to that address and kept, hashed, for ten minutes. When you save a passkey, the public half of the key your device made is kept with your account, with the name and date you gave it; the private half never leaves your device. You can remove a passkey from your profile, and ask for them to be exported or erased like the rest of your personal data.', 'riff-sign-in' ) . '</p>';
+		$text = '<p>' . __( 'When you sign in to the player with your email, a code is sent to that address and kept, hashed, for ten minutes. A cookie marks the browser that asked for it for those ten minutes, so the link in the email signs that browser straight in. When you save a passkey, the public half of the key your device made is kept with your account, with the name and date you gave it; the private half never leaves your device. You can remove a passkey from your profile, and ask for them to be exported or erased like the rest of your personal data.', 'riff-sign-in' ) . '</p>';
 		wp_add_privacy_policy_content( 'Riff Sign In', wp_kses_post( $text ) );
 	}
 

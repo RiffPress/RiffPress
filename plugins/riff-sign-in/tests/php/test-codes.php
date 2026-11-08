@@ -136,26 +136,142 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$outside = Codes::request( 'link@example.com', 'https://evil.example/' );
 		$this->assertSame( home_url( '/' ), Codes::landing( $outside['token'] ), 'only this site' );
 
-		$_GET[ Codes::QUERY ] = $sent['token'] . '.' . $this->sent[0][1];
-		$redirected           = '';
-		// The redirect is where the request ends, so it is stopped there, before the exit after it.
-		add_filter(
-			'wp_redirect',
-			static function ( $to ) use ( &$redirected ) {
-				$redirected = $to;
-				throw new RuntimeException( 'redirected' );
-			}
-		);
+		$this->assertSame( array( 'redirected', home_url( '/listen/?riff_view=albums' ) ), $this->open( $sent['token'] . '.' . $this->sent[0][1], true ) );
+		$this->assertSame( $user, get_current_user_id() );
+	}
+
+	public function tear_down(): void {
+		unset( $_GET[ Codes::QUERY ], $_POST[ Codes::QUERY ], $_COOKIE[ Codes::COOKIE ], $_SERVER['HTTP_SEC_FETCH_SITE'], $_SERVER['HTTP_ORIGIN'], $_SERVER['HTTP_REFERER'] );
+		parent::tear_down();
+	}
+
+	/**
+	 * Opens the link as a browser would, by GET, or by the POST of the page that asks, and says how
+	 * the request ended: `asked` for the page that asks, `redirected` and where, or `refused` and why.
+	 *
+	 * @param string $value  The token and the code, with a dot between.
+	 * @param bool   $posted Whether it is the button's POST.
+	 * @return array [ how, what ].
+	 */
+	private function open( string $value, bool $posted = false ): array {
+		unset( $_GET[ Codes::QUERY ], $_POST[ Codes::QUERY ] );
+		if ( $posted ) {
+			$_POST[ Codes::QUERY ] = $value;
+		} else {
+			$_GET[ Codes::QUERY ] = $value;
+		}
+		$stop = static function ( $to ) {
+			throw new RuntimeException( esc_url_raw( $to ) );
+		};
+		add_filter( 'wp_redirect', $stop );
+		remove_all_filters( 'template_include' );
 		try {
 			Sign_In::link();
-			$this->fail( 'the link redirects' );
+			$template = apply_filters( 'template_include', '' );
+			return array( 'asked', $template );
 		} catch ( RuntimeException $e ) {
-			$this->assertSame( 'redirected', $e->getMessage() );
+			return array( 'redirected', $e->getMessage() );
+		} catch ( WPDieException $e ) {
+			return array( 'refused', $e->getMessage() );
 		} finally {
-			unset( $_GET[ Codes::QUERY ] );
+			remove_filter( 'wp_redirect', $stop );
 		}
-		$this->assertSame( home_url( '/listen/?riff_view=albums' ), $redirected );
+	}
+
+	public function test_opening_the_link_in_another_browser_asks_first_and_uses_nothing_up(): void {
+		$user  = self::factory()->user->create( array( 'user_email' => 'scanned@example.com' ) );
+		$sent  = Codes::request( 'scanned@example.com', home_url( '/listen/' ) );
+		$value = $sent['token'] . '.' . $this->sent[0][1];
+
+		for ( $i = 0; $i < Codes::TRIES + 1; $i++ ) {
+			[ $how, $template ] = $this->open( $value );
+			$this->assertSame( 'asked', $how, 'a scanner, or another browser, is asked' );
+		}
+		$this->assertStringEndsWith( 'templates/link.php', $template );
+		$this->assertSame( 0, get_current_user_id(), 'nobody is signed in' );
+		$this->assertTrue( Codes::pending( $sent['token'] ), 'and the code is still there, however many times the link is opened' );
+
+		ob_start();
+		require $template;
+		$page = (string) ob_get_clean();
+		$this->assertStringContainsString( 'Sign in to ' . get_bloginfo( 'name' ) . '?', $page );
+		$this->assertMatchesRegularExpression( '/<form method="post" action="' . preg_quote( esc_url( home_url( '/' ) ), '/' ) . '">/', $page );
+		$this->assertStringContainsString( 'name="' . Codes::QUERY . '" value="' . esc_attr( $value ) . '"', $page, 'its one button carries the token and code' );
+		$this->assertStringContainsString( 'class="riff-signin', $page, 'drawn as the sheet is' );
+
+		$this->assertSame( array( 'redirected', home_url( '/listen/' ) ), $this->open( $value, true ), 'the button signs in, and lands where the code was asked from' );
 		$this->assertSame( $user, get_current_user_id() );
+	}
+
+	public function test_the_button_uses_the_code_up(): void {
+		$user  = self::factory()->user->create( array( 'user_email' => 'pressed@example.com' ) );
+		$sent  = Codes::request( 'pressed@example.com' );
+		$value = $sent['token'] . '.' . $this->sent[0][1];
+
+		$_SERVER['HTTP_SEC_FETCH_SITE'] = 'same-origin';
+		$this->assertSame( 'redirected', $this->open( $value, true )[0] );
+		$this->assertSame( $user, get_current_user_id() );
+		$this->assertFalse( Codes::pending( $sent['token'] ), 'the code is used' );
+
+		wp_set_current_user( 0 );
+		$this->assertSame( 'refused', $this->open( $value, true )[0], 'and works once' );
+		$this->assertSame( array( 'refused', 'That code has expired. Ask for a new one.' ), $this->open( $value ), 'the link says so at once' );
+	}
+
+	public function test_in_the_browser_that_asked_the_link_signs_straight_in(): void {
+		$user  = self::factory()->user->create( array( 'user_email' => 'same@example.com' ) );
+		$sent  = Codes::request( 'same@example.com', home_url( '/listen/' ) );
+		$value = $sent['token'] . '.' . $this->sent[0][1];
+
+		$_COOKIE[ Codes::COOKIE ] = Codes::browser( 'another-token' );
+		$this->assertSame( 'asked', $this->open( $value )[0], 'a mark for another code is not this one' );
+
+		$_COOKIE[ Codes::COOKIE ] = Codes::browser( $sent['token'] );
+		$this->assertSame( array( 'redirected', home_url( '/listen/' ) ), $this->open( $value ) );
+		$this->assertSame( $user, get_current_user_id() );
+		$this->assertFalse( Codes::pending( $sent['token'] ) );
+		$this->assertArrayNotHasKey( Codes::COOKIE, $_COOKIE, 'the mark goes once it is used' );
+	}
+
+	public function test_a_wrong_expired_or_cross_site_sign_in_by_link_fails(): void {
+		self::factory()->user->create( array( 'user_email' => 'refused@example.com' ) );
+		$sent  = Codes::request( 'refused@example.com' );
+		$code  = $this->sent[0][1];
+		$wrong = '000000' === $code ? '111111' : '000000';
+
+		$this->assertSame( array( 'refused', 'That code has expired. Ask for a new one.' ), $this->open( 'nonsense.123456' ), 'an unknown token' );
+
+		$this->assertSame( 'asked', $this->open( $sent['token'] . '.' . $wrong )[0], 'a wrong code only finds out on the POST' );
+		$this->assertSame( array( 'refused', 'That code did not match. Check the email and try again.' ), $this->open( $sent['token'] . '.' . $wrong, true ) );
+
+		$_SERVER['HTTP_SEC_FETCH_SITE'] = 'cross-site';
+		$this->assertSame( 'refused', $this->open( $sent['token'] . '.' . $code, true )[0], 'a form on another site' );
+		$_SERVER['HTTP_SEC_FETCH_SITE'] = 'same-site';
+		$this->assertSame( 'refused', $this->open( $sent['token'] . '.' . $code, true )[0], 'or on a sibling site under the same domain' );
+		unset( $_SERVER['HTTP_SEC_FETCH_SITE'] );
+		$_SERVER['HTTP_ORIGIN'] = 'https://evil.example';
+		$this->assertSame( 'refused', $this->open( $sent['token'] . '.' . $code, true )[0], 'and from a browser that sends no Sec-Fetch-Site, by its Origin' );
+		$this->assertSame( 0, get_current_user_id() );
+		$this->assertTrue( Codes::pending( $sent['token'] ), 'neither used the code up' );
+
+		$_SERVER['HTTP_SEC_FETCH_SITE'] = 'cross-site';
+		$this->assertSame( 'asked', $this->open( $sent['token'] . '.' . $code )[0], 'a link opened from webmail is cross-site too, and only asks' );
+		unset( $_SERVER['HTTP_SEC_FETCH_SITE'] );
+
+		$_SERVER['HTTP_ORIGIN'] = 'null';
+		$this->assertTrue( Sign_In::cross_site(), 'an opaque origin is another site' );
+		$_SERVER['HTTP_ORIGIN'] = home_url();
+		$this->assertFalse( Sign_In::cross_site() );
+		unset( $_SERVER['HTTP_ORIGIN'] );
+		$_SERVER['HTTP_REFERER'] = 'https://evil.example/page';
+		$this->assertTrue( Sign_In::cross_site(), 'the Referer, when there is no Origin' );
+		unset( $_SERVER['HTTP_REFERER'] );
+		$this->assertFalse( Sign_In::cross_site(), 'and nothing to go on is not another site' );
+
+		for ( $i = 1; $i < Codes::TRIES; $i++ ) {
+			$this->open( $sent['token'] . '.' . $wrong, true );
+		}
+		$this->assertSame( array( 'refused', 'That code has expired. Ask for a new one.' ), $this->open( $sent['token'] . '.' . $code ), 'five tries end it, and the link says so' );
 	}
 
 	public function test_the_routes_answer_as_the_sheet_asks(): void {

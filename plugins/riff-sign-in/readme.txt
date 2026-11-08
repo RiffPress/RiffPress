@@ -15,7 +15,7 @@ Listeners sign in to Riff with a passkey, or a code sent to their email, from a 
 
 Riff Sign In gives a site's listeners a way in that asks nothing to remember.
 
-* A listener types their email and gets a six-digit code, with a one-tap link in the same email. The code works for ten minutes and allows five tries.
+* A listener types their email and gets a six-digit code, with a one-tap link in the same email. The code works for ten minutes and allows five tries. The link signs in at once in the browser that asked for the code; anywhere else it asks first, so a mail service that opens every link to scan it uses nothing up.
 * After the first sign-in the player offers to save a passkey: Face ID, Touch ID, a fingerprint or a security key. From then on the browser offers the passkey from the email field itself.
 * It all happens in a sheet inside the player, on the page the listener is on, so the music keeps playing; nobody sees wp-login.php.
 * Listeners are ordinary WordPress users, signed in with the same cookie as everyone else, and new accounts are made only when the site lets anyone register (Settings › General › Membership).
