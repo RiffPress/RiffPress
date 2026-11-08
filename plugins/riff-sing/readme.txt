@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.6.0
+Stable tag: 0.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,14 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 == Changelog ==
 
+= 0.7.0 =
+* Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
+* Experimental sandbox runs an untrusted extension's PHP in php-wasm, behind a bridge that grants only its manifest.
+* The accent comes from the cover playing, muted to read on black, and the site's accent stands in for a grey one.
+* Abilities for an owner and an assistant, offered over MCP through the MCP Adapter once the site turns it on.
+* Typed SDK generated from the code, and a post's blocks as a typed tree over REST.
+* Fixed: main's checks pass again after the drafts merged untested, each plugin declaring what they added and About crediting only a caption a file has.
+
 = 0.6.0 =
 * The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.
 
@@ -44,8 +52,5 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 = 0.4.0 =
 * Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
-
-= 0.3.1 =
-* Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

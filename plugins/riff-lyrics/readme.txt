@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.8.0
+Stable tag: 1.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,14 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.9.0 =
+* Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
+* Experimental sandbox runs an untrusted extension's PHP in php-wasm, behind a bridge that grants only its manifest.
+* The accent comes from the cover playing, muted to read on black, and the site's accent stands in for a grey one.
+* Abilities for an owner and an assistant, offered over MCP through the MCP Adapter once the site turns it on.
+* Typed SDK generated from the code, and a post's blocks as a typed tree over REST.
+* Fixed: main's checks pass again after the drafts merged untested, each plugin declaring what they added and About crediting only a caption a file has.
+
 = 1.8.0 =
 * Riff's icons are WordPress's own, with the few it lacks drawn to match.
 
@@ -37,9 +45,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 1.6.1 =
 * Fixed: a view's button shows only for a track it has something for, and an open view gives way to one without.
-
-= 1.6.0 =
-* A track with Riff Lyrics' timed lyrics shows its words under the lane at Riff Lyrics' times.
-* Fixed: through a break the lyrics mark, the next line waits under the lane, and lyrics whose file tag starts with a blank line are still read as timed.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.4.0
+Stable tag: 6.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,22 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.5.0 =
+* A zip imports privately by default, each track Protected and its album's post private, and --no-private imports an artist's own releases.
+* Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
+* Experimental sandbox runs an untrusted extension's PHP in php-wasm, behind a bridge that grants only its manifest.
+* A site keeps the music playing across links on a block theme, from Settings &gt; Riff.
+* The accent comes from the cover playing, muted to read on black, and the site's accent stands in for a grey one.
+* Abilities for an owner and an assistant, offered over MCP through the MCP Adapter once the site turns it on.
+* Protected files can be kept outside the web root, moved there safely, with a check that warns when the server sends them.
+* Take my Riff with me, the whole site as one archive that boots in Playground.
+* Typed SDK generated from the code, and a post's blocks as a typed tree over REST.
+* Settings › Riff lists what each Riff plugin can do, in plain words from its isolation.json, and says it again when one is turned on.
+* Wp riff archive imports what the Library of Congress and Europeana publish for reuse, each item's own rights read and each track credited.
+* Fixed: a control in focus has one ring of Riff's own, so the round Home button's no longer runs off toward the search field.
+* Fixed: main's checks pass again after the drafts merged untested, each plugin declaring what they added and About crediting only a caption a file has.
+* Fixed: the seek line is plain, with no filament, and the volume has a slot of its own beside its mute, never over the controls.
+
 = 6.4.0 =
 * A site can open the Listen app at its own address, and a host can fit the app to it.
 
@@ -161,8 +177,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 6.2.2 =
 * Fixed: after a link the body's classes, the canonical address and the admin bar's edit links are the page's own.
 * Fixed: in the Listen app on a computer, a panel beside Now Playing stands from the window's top, with no black strip above it.
-
-= 6.2.1 =
-* Fixed: a protected file on no post goes only to who may edit it or read a post by someone who may.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

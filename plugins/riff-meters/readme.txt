@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +22,10 @@ They show only where the music can be measured, so not on an iPhone, nor for a f
 It is built only on Riff's documented public API, and is a small example of filling the place under the turntable.
 
 == Changelog ==
+
+= 0.2.0 =
+* Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
+* Fixed: the seek line is plain, with no filament, and the volume has a slot of its own beside its mute, never over the controls.
 
 = 0.1.0 =
 * The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Riff Meters (Experimental)
  * Description: Experimental. A VU meter and a spectrum under Riff's turntable, read from the music as it plays.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff
@@ -22,7 +22,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'RIFF_METERS_VERSION', '0.1.0' );
+define( 'RIFF_METERS_VERSION', '0.2.0' );
 define( 'RIFF_METERS_URL', plugin_dir_url( __FILE__ ) );
 
 require __DIR__ . '/src/class-meters.php';
