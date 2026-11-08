@@ -37,7 +37,9 @@
 		"publish_pages",
 		"upload_files",
 		"export",
-		"manage_network_options"
+		"manage_network_options",
+		"manage_options",
+		"activate_plugins"
 	],
 	"hosts": [
 		"self",
