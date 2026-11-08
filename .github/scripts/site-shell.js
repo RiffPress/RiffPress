@@ -54,7 +54,7 @@ function head( title, description, url, depth, css, { under = '', label = '', se
 <link rel="icon" href="${ up }icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="${ up }icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="${ up }icons/apple-touch-icon.png">
-<meta name="theme-color" content="#fcfaf6">
+<meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
 <link rel="preload" href="${ up }fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${ up }fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
