@@ -11,7 +11,8 @@ const { test } = require( 'node:test' );
 const ROOT = path.resolve( __dirname, '..', '..' );
 const read = ( file ) => fs.readFileSync( path.join( ROOT, file ), 'utf8' );
 
-// The tokens, as written: --name: value; from tokens.css, and standalone mode's from its PHP.
+// The tokens, as written: --name: value; from tokens.css, and standalone mode's from its PHP and
+// standalone.css.
 function tokens() {
 	const out = {};
 	for ( const m of read( 'plugins/riff/assets/tokens.css' ).matchAll( /(--riff-[a-z0-9-]+):\s*([^;]+);/g ) ) {
@@ -20,6 +21,11 @@ function tokens() {
 	const dark = {};
 	for ( const m of read( 'plugins/riff/features/listen/class-standalone.php' ).matchAll( /'(--riff-app-[a-z-]+)'\s*=>\s*'([^']+)'/g ) ) {
 		dark[ m[ 1 ] ] = m[ 2 ];
+	}
+	// And the app's tokens standalone.css sets for its own document, its accent among them.
+	const own = read( 'plugins/riff/features/listen/standalone.css' ).match( /\.riff-standalone \.riff-app \{([^}]*)\}/ );
+	for ( const m of ( own ? own[ 1 ] : '' ).matchAll( /(--riff-app-[a-z-]+):\s*([^;]+);/g ) ) {
+		dark[ m[ 1 ] ] = m[ 2 ].trim();
 	}
 	const bg = read( 'plugins/riff/features/listen/class-standalone.php' ).match( /BACKGROUND = '(#[0-9a-f]{6})'/i );
 	dark[ '--riff-app-bg' ] = dark[ '--riff-app-bg' ] === 'self::BACKGROUND' || ! dark[ '--riff-app-bg' ] ? bg[ 1 ] : dark[ '--riff-app-bg' ];
@@ -34,9 +40,42 @@ function tokens() {
 	return { light: out, dark: { ...out, ...dark } };
 }
 
+// A value with each var() in it replaced by the token it names, or by its fallback where the token
+// is not set (as --riff-theme-accent is not, until a theme gives one), as the browser computes it.
+function resolve( value, set, depth = 0 ) {
+	const at = value.indexOf( 'var(' );
+	if ( at < 0 || depth > 10 ) {
+		return value;
+	}
+	// The var()'s closing parenthesis, past any nested in its fallback.
+	let open = 0;
+	let end = at + 3;
+	for ( ; end < value.length; end++ ) {
+		if ( value[ end ] === '(' ) {
+			open++;
+		} else if ( value[ end ] === ')' && --open === 0 ) {
+			break;
+		}
+	}
+	const inner = value.slice( at + 4, end );
+	const comma = inner.indexOf( ',' );
+	const name = ( comma < 0 ? inner : inner.slice( 0, comma ) ).trim();
+	const fallback = comma < 0 ? '' : inner.slice( comma + 1 ).trim();
+	const got = set[ name ] !== undefined ? set[ name ] : fallback;
+	return resolve( value.slice( 0, at ) + got + value.slice( end + 1 ), set, depth + 1 );
+}
+
 // A colour as [r, g, b, a] from #rgb, #rrggbb, rgb(r g b / a) or rgb(r, g, b).
 function parse( value ) {
-	let m = value.match( /^#([0-9a-f]{6})$/i );
+	// color-mix() in sRGB, as tokens.css mixes a tint: each channel in proportion.
+	let m = value.match( /^color-mix\(\s*in srgb\s*,\s*(.+?)\s+([\d.]+)%\s*,\s*(.+?)(?:\s+([\d.]+)%)?\s*\)$/ );
+	if ( m ) {
+		const p = Number( m[ 2 ] ) / 100;
+		const q = m[ 4 ] === undefined ? 1 - p : Number( m[ 4 ] ) / 100;
+		const [ a, b ] = [ parse( m[ 1 ] ), parse( m[ 3 ] ) ];
+		return [ 0, 1, 2, 3 ].map( ( i ) => ( a[ i ] * p + b[ i ] * q ) / ( p + q ) );
+	}
+	m = value.match( /^#([0-9a-f]{6})$/i );
 	if ( m ) {
 		return [ 0, 2, 4 ].map( ( i ) => parseInt( m[ 1 ].slice( i, i + 2 ), 16 ) ).concat( 1 );
 	}
@@ -99,12 +138,19 @@ test( 'every token pair the player and the app draw text or a control in keeps i
 	for ( const [ where, fg, bg, least, what ] of PAIRS ) {
 		const set = where === 'dark' ? dark : light;
 		assert.ok( set[ fg ] && set[ bg ], `${ fg } and ${ bg } are defined for ${ where }` );
-		const ratio = contrast( set[ fg ], set[ bg ] );
+		const ratio = contrast( resolve( set[ fg ], set ), resolve( set[ bg ], set ) );
 		if ( ratio < least ) {
 			failures.push( `${ where }: ${ fg } on ${ bg } is ${ ratio.toFixed( 2 ) }:1, under ${ least }:1 (${ what })` );
 		}
 	}
 	assert.deepEqual( failures, [] );
+} );
+
+test( 'a token that names another is read as the one it names, or its fallback', () => {
+	const set = { '--a': '#000', '--b': 'var(--a)', '--c': 'var(--unset, var(--b))' };
+	assert.equal( resolve( set[ '--c' ], set ), '#000' );
+	assert.equal( resolve( 'var(--unset, #fff)', set ), '#fff' );
+	assert.deepEqual( parse( 'color-mix(in srgb, #ffffff 50%, #000000)' ), [ 127.5, 127.5, 127.5, 1 ] );
 } );
 
 test( 'the contrast arithmetic is WCAG\'s', () => {
