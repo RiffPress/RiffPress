@@ -15,7 +15,7 @@ const button = side?.querySelector( '.docs-menu' );
 const list = side && document.getElementById( button?.getAttribute( 'aria-controls' ) );
 
 if ( side && button && list ) {
-	const phone = window.matchMedia( '(max-width: 900px)' );
+	const phone = window.matchMedia( '(max-width: 899.98px)' );
 	const scrim = document.createElement( 'div' );
 	scrim.className = 'docs-scrim';
 	scrim.hidden = true;

@@ -24,27 +24,27 @@
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
-<link rel="preload" href="../fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../web/web.css">
 </head>
 <body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><nav aria-label="Main"><a href="../add-music/" aria-current="page">Add your music</a><a href="../download/">Download</a><a href="../developers/">Docs</a></nav></div></header>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><nav aria-label="Main"><a href="../add-music/" aria-current="page">Add your music</a><a href="../download/">Download</a></nav></div></header>
 <!-- /nav:top -->
 
 <main id="main" class="wrap doc guide">
 <h1>Add your music</h1>
 <p class="lede">How an album goes onto a site you own, starting from nothing. It takes no code and there is nothing to configure.</p>
 <div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#start">Before you start</a></li><li><a href="#listen">Make your Listen page</a></li><li><a href="#upload">Upload your music</a></li><li><a href="#details">Titles, artists and covers come from the files</a></li><li><a href="#post">Give an album its own post</a></li><li><a href="#many">Many albums at once</a></li><li><a href="#soundcloud">Your own tracks from SoundCloud</a></li><li><a href="#archives">From a public archive</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/add-music/index.html">Edit this page on GitHub</a></p></aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#start">Before you start</a></li><li><a href="#listen">Make your Listen page</a></li><li><a href="#upload">Upload your music</a></li><li><a href="#details">Titles, artists and covers come from the files</a></li><li><a href="#post">Give an album its own post</a></li><li><a href="#many">Many albums at once</a></li><li><a href="#soundcloud">Your own tracks from SoundCloud</a></li><li><a href="#archives">From a public archive</a></li></ul></details></aside>
 <article class="entry">
 <h2 id="start">Before you start</h2>
 <p>You need a WordPress site. WordPress is free software that runs on a web host. Most hosts set it up in a few clicks, and any host will do as long as it runs WordPress 7.2 or newer. Once it is up, you sign in at your site's address followed by <code>/wp-admin</code>. That is the dashboard, where everything below happens.</p>
 <p>Then install Riff. In the dashboard, go to <kbd>Plugins</kbd>, then <kbd>Add New Plugin</kbd>, then <kbd>Upload Plugin</kbd>, choose the zip, and activate it.</p>
-<div class="cta"><a class="btn" href="../download/">Get Riff</a><a class="btn outline" href="https://next.riffpress.com/listen/app/" target="_blank" rel="noopener">Try it first in the demo</a></div>
-<p class="fine">The demo is a WordPress site running in your browser with Riff already installed. Its dashboard is at <code>/wp-admin</code> too, so you can follow every step here without a site of your own.</p>
+<p class="cta"><a class="btn" href="../download/">Get Riff</a></p>
+<p class="fine">No site yet? <a href="https://next.riffpress.com/listen/app/" target="_blank" rel="noopener">The demo</a> is a WordPress site running in your browser with Riff already installed. Its dashboard is at <code>/wp-admin</code> too, so you can follow every step here without a site of your own.</p>
 
 <h2 id="listen">Make your Listen page</h2>
 <p>The Listen page is where your music lives: every album as a cover, browsing by album, artist and track, and one search box. The music keeps playing while visitors move around it.</p>
@@ -97,19 +97,20 @@
 <p>Archives publish recordings for anyone to reuse. With WP-CLI, <code>wp riff archive loc</code> imports the Library of Congress's, starting with the Edison companies' sound recordings, or a collection or an item you name by its address. <code>wp riff archive europeana "gramophone" --key=yourkey</code> searches Europeana, with a <a href="https://pro.europeana.eu/page/get-api">key it gives anyone who asks</a>.</p>
 <p>Rights are per recording, so Riff reads each one's rights statement and imports only what is marked public domain or under CC0, CC BY or CC BY-SA, or, from the Library of Congress, what its statement says it knows of no U.S. copyright in, credited as just that. It lists what it skipped and why. Check the rights where you are, too: the Library speaks only for the U.S. Each track keeps its source, licence and credit in its caption and description, the About panel shows the credit, and each album's post opens with it. Your site credits the archive; it doesn't present itself as the archive. Add <code>--dry-run</code> to see what it would take first.</p>
 
-<div class="aside">Stuck? <a href="https://github.com/RiffPress/RiffPress/issues">Open an issue</a> and say what you tried. If something here is wrong or unclear, that is a bug in this page too.</div>
+<p class="aside">Stuck? <a href="https://github.com/RiffPress/RiffPress/issues">Open an issue</a> and say what you tried. If something here is wrong or unclear, that is a bug in this page too.</p>
+<p class="edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/add-music/index.html">Edit this page on GitHub</a></p>
 </article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>
 
 <!-- nav:footer -->
-<footer><div class="wrap"><p class="foot-license">Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</p><nav aria-label="Footer"><div class="foot-group"><p class="foot-label" id="foot-about">About</p><ul aria-labelledby="foot-about"><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://riffpress.com/">Riff Cloud</a></li></ul></div><div class="foot-group"><p class="foot-label" id="foot-help">Help</p><ul aria-labelledby="foot-help"><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></div></nav></div></footer>
+<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
 <!-- /nav:footer -->
 <script type="module" src="../js/docs.js"></script>
 </body>

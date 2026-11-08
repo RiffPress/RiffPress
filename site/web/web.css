@@ -1,935 +1,31 @@
-/* source.riffpress.com: the docs and the download, in the platform's look.
-   Black and white, with one colour: ember, a muted fire at about 1900K.
-   The ink wordmark on white; EB Garamond for display and headings, Inter
-   for text; black for the one thing to press; deep ember for links, the
-   focus ring and what marks where you are. No blue, no gold, no gradient;
-   the rest of the colour is the player's, in its pictures and covers. */
+/* source.riffpress.com: the docs, the download and the guide.
+
+   One system with riffpress.com (site/brand/README.md has the values side by
+   side): paper whose neutrals lean a hair toward ember's hue, ink for text
+   and the one button, and ember, a muted 1900K, for links, the focus ring
+   and where you are. EB Garamond for titles, Schibsted Grotesk for
+   everything read or pressed, IBM Plex Mono for code. The frame is hairlines
+   on an exact grid, the sidebar, the article and "On this page"; the column
+   inside it is calm.
+
+   Every colour, size and step is a token in :root. Rules below use the
+   tokens, never a value. */
+
 @font-face {
-	font-family: Inter;
+	font-family: "Schibsted Grotesk";
 	font-style: normal;
-	font-weight: 400 700;
+	font-weight: 400 900;
 	font-display: swap;
-	src: url(../fonts/inter.woff2) format("woff2");
+	src: url(../fonts/schibsted-grotesk.woff2) format("woff2");
 }
 
 @font-face {
 	font-family: "EB Garamond";
 	font-style: normal;
-	font-weight: 400 700;
+	font-weight: 400 800;
 	font-display: swap;
 	src: url(../fonts/eb-garamond.woff2) format("woff2");
 }
-
-:root {
-
-	/* the ground: white, a raised grey surface, neutral rules, and two
-	   quieter inks, each 4.8:1 or more on both the white and the surface */
-	--paper: #fff;
-	--surface: #f5f5f5;
-	--rule: #e5e5e5;
-	--rule-strong: #c4c4c4;
-	--warm-ink-2: #5c5c5c;
-	--warm-ink-3: #6b6b6b;
-	--warm-dark: #0b0b0b;
-	--fingerboard: var(--paper);
-
-	/* ember, the one colour, about 1900K and muted: deep on white (5.7:1)
-	   for links, the focus ring and the marks for where you are (the
-	   sidebar's tick, the header's underline, the section being read), darker
-	   under the pointer; bright on black (7.5:1); a pale wash for selection */
-	--riff-ember-deep: #a3501a;
-	--riff-ember-ink: #7f3d12;
-	--riff-ember: #e8873f;
-	--riff-ember-wash: #fbe9dc;
-	--riff-mark: var(--riff-ember-deep);
-	--space-1: 8px;
-	--space-2: 16px;
-	--space-3: 24px;
-	--space-4: 32px;
-	--space-5: 48px;
-	--space-6: 64px;
-	--space-7: 96px;
-	--charcoal-1: #0b0b0b;
-	--charcoal-3: #3d3d3d;
-	--charcoal-4: var(--warm-ink-3);
-	--charcoal-5: #8a8a8a;
-	--grey-1: var(--rule);
-	--grey-2: var(--surface);
-	--white: #fff;
-	--action: var(--charcoal-1);
-	--action-hover: #2b2b2b;
-	--on-action: var(--white);
-	--black: #000;
-	--panel: #121212;
-	--ink: var(--charcoal-1);
-	--ink-2: var(--warm-ink-2);
-	--ink-3: var(--warm-ink-3);
-	--line: var(--rule);
-	--accent: var(--riff-ember-deep);
-	--accent-hover: var(--riff-ember-ink);
-	--focus: var(--riff-ember-deep);
-	--serif: "EB Garamond", garamond, georgia, serif;
-	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
-
-	/* the type scale: one size for a page's title, one for its sections */
-	--h1: clamp(38px, 4.2vw + 10px, 52px);
-	--h2: clamp(26px, 1.2vw + 20px, 32px);
-	--h3: 1.125rem;
-	--measure: 68ch;
-	--t: 0.2s;
-	--gap: clamp(40px, 5vw, 60px);
-	--section: clamp(60px, calc(5vw + 30px), 100px);
-	--edge: clamp(20px, 5vw, 80px);
-}
-
-* {
-	box-sizing: border-box;
-}
-
-html {
-	font-family: var(--sans);
-}
-
-body {
-	margin: 0;
-	background: var(--paper);
-	color: var(--ink);
-	font-size: 16px;
-	line-height: 1.75;
-	-webkit-font-smoothing: antialiased;
-	text-wrap: pretty;
-}
-
-a {
-	color: var(--accent);
-	text-decoration: underline;
-	text-decoration-thickness: 1px;
-	text-underline-offset: 3px;
-	transition: color var(--t), text-decoration-color var(--t);
-}
-
-a:hover {
-	color: var(--accent-hover);
-	text-decoration-thickness: 2px;
-}
-
-/* one focus ring everywhere: deep ember on white, 2px, just outside */
-:focus-visible {
-	outline: 2px solid var(--focus);
-	outline-offset: 2px;
-	border-radius: 2px;
-}
-
-code {
-	font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-	font-size: 0.875em;
-	background: var(--surface);
-	border: 0;
-	padding: 0.125em 0.375em;
-	border-radius: 3px;
-	box-decoration-break: clone;
-	-webkit-box-decoration-break: clone;
-}
-
-a code {
-	color: inherit;
-}
-
-.wrap {
-	max-width: calc(var(--docs-w) + 2 * var(--edge));
-	margin: 0 auto;
-	padding: 0 var(--edge);
-}
-
-.skip {
-	position: absolute;
-	left: 16px;
-	top: -200px;
-	z-index: 20;
-	background: var(--action);
-	color: var(--on-action);
-	padding: 10px 16px;
-	border-radius: 2px;
-	font-weight: 600;
-	text-decoration: none;
-}
-
-.skip:focus {
-	top: 12px;
-	outline: 2px solid var(--ink);
-	outline-offset: 2px;
-}
-
-/* the global bar: on the page's own paper, Riff | Source at its left and
-   the sections at its right; it scrolls away, and on the docs the sidebar
-   beside the article stays */
-.nav {
-	position: relative;
-	z-index: 10;
-	background: var(--paper);
-	border-bottom: 1px solid var(--rule);
-	color: var(--ink);
-}
-
-.nav .brand {
-	order: 0;
-}
-
-.nav .wrap > nav {
-	order: 2;
-}
-
-/* the wordmark and the sections on one row while they fit, the sections
-   under the wordmark when they don't */
-.nav .wrap {
-	min-height: 72px;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0 20px;
-	padding-top: 8px;
-	padding-bottom: 8px;
-}
-
-.mark {
-	display: inline-flex;
-	align-items: center;
-	gap: 14px;
-	font-weight: 600;
-	text-decoration: none;
-	color: var(--ink);
-	font-size: 1.375rem;
-	letter-spacing: -0.01em;
-}
-
-.mark svg,
-.mark img {
-	flex: none;
-	display: block;
-	width: auto;
-	height: 30px;
-}
-
-.mark:focus-visible {
-	outline-offset: 6px;
-}
-
-.nav nav {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0 clamp(16px, 3vw, 28px);
-}
-
-/* each a 44px target, and never broken across two lines */
-.nav nav a {
-	color: var(--ink-2);
-	text-decoration: none;
-	font-size: 0.9375rem;
-	line-height: 24px;
-	padding: 10px 0;
-	white-space: nowrap;
-	transition: color var(--t);
-}
-
-.nav nav a:hover,
-.nav nav a[aria-current] {
-	color: var(--ink);
-	text-decoration: underline;
-	text-decoration-thickness: 1px;
-	text-underline-offset: 6px;
-}
-
-.nav nav a[aria-current] {
-	text-decoration: none;
-	background: linear-gradient(var(--riff-mark), var(--riff-mark)) no-repeat 0 calc(100% - 6px) / 100% 2px;
-}
-
-/* the one thing a page asks for: black, white on it */
-.btn {
-	appearance: none;
-	border: 1px solid var(--action);
-	background: var(--action);
-	color: var(--on-action);
-	border-radius: 2px;
-	padding: 8px 16px;
-	display: inline-flex;
-	align-items: center;
-	font-weight: 600;
-	text-decoration: none;
-	font-size: 0.875rem;
-	line-height: 1.714;
-	transition: background-color var(--t), border-color var(--t), color var(--t);
-}
-
-.btn:hover {
-	background: var(--action-hover);
-	border-color: var(--action-hover);
-	color: var(--on-action);
-	text-decoration: none;
-}
-
-/* marginalia, as wordpress.org sets it: a band of dots before the footer, a
-   record cropped into the margin on a wide screen */
-main,
-.layout {
-	position: relative;
-	z-index: 1;
-}
-
-footer {
-	background: var(--warm-dark);
-	color: #a3a3a3;
-	padding: var(--space-5) 0;
-	font-size: 0.875rem;
-	line-height: 1.714;
-	margin-top: var(--space-7);
-	position: relative;
-	z-index: 1;
-}
-
-footer .wrap {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-4) 28px;
-	justify-content: space-between;
-	align-items: flex-start;
-}
-
-footer p {
-	margin: 0;
-}
-
-footer a {
-	text-decoration: underline;
-	text-decoration-color: #5c5c5c;
-	text-underline-offset: 3px;
-	color: var(--white);
-}
-
-footer a:hover {
-	color: var(--white);
-	text-decoration-color: var(--riff-ember);
-}
-
-footer :focus-visible {
-	outline-color: var(--riff-ember);
-}
-
-/* the footer's links in their groups, as wordpress.org's foot has them */
-footer nav {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-3) var(--space-6);
-}
-
-footer .foot-label {
-	margin-bottom: var(--space-1);
-	color: #a3a3a3;
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-}
-
-footer .foot-group ul {
-	display: grid;
-	gap: 6px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-/* type */
-h1,
-h2 {
-	font-family: var(--serif);
-	font-weight: 400;
-	margin: 0;
-	letter-spacing: 0;
-	text-wrap: balance;
-	color: var(--ink);
-}
-
-h1 {
-	font-size: var(--h1);
-	line-height: 1.1;
-	letter-spacing: -0.01em;
-}
-
-main h2 {
-	font-size: var(--h2);
-	line-height: 1.25;
-	margin: var(--space-5) 0 var(--space-2);
-}
-
-main h3 {
-	font-size: var(--h3);
-	font-weight: 600;
-	line-height: 1.4;
-}
-
-.lede {
-	margin: var(--space-2) 0 0;
-	font-size: 1.25rem;
-	line-height: 1.6;
-	color: var(--charcoal-3);
-	max-width: 36rem;
-}
-
-.fine {
-	font-size: 0.875rem;
-	line-height: 1.714;
-	color: var(--ink-2);
-}
-
-
-/* the page: sidebar left, article right */
-.layout {
-	display: grid;
-	grid-template-columns: 240px minmax(0, 1fr);
-	gap: var(--gap);
-	padding-top: var(--section);
-	align-items: start;
-}
-
-.layout > * {
-	min-width: 0;
-}
-
-main p {
-	max-width: var(--measure);
-}
-
-.side {
-	order: -1;
-	font-size: 0.875rem;
-	line-height: 1.714;
-}
-
-
-.side h2 {
-	font-family: var(--sans);
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-	color: var(--ink-2);
-	margin: 20px 0 6px;
-}
-
-.side ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.side a {
-	display: block;
-	color: var(--ink);
-	text-decoration: none;
-	padding: 3px 10px;
-	margin-left: -10px;
-	border-radius: 2px;
-}
-
-.side a:hover {
-	text-decoration: underline;
-}
-
-.side a {
-	position: relative;
-}
-
-.side a[aria-current] {
-	background: var(--surface);
-	color: var(--ink);
-}
-
-.side a[aria-current]::before {
-	content: "";
-	position: absolute;
-	inset: 4px auto 4px 0;
-	width: 3px;
-	border-radius: 2px;
-	background: var(--riff-mark);
-}
-
-figure {
-	margin: 32px 0 0;
-	padding: 32px;
-	background: var(--surface);
-	border: 1px solid var(--rule);
-	border-radius: 3px;
-	display: grid;
-	justify-items: center;
-	gap: 16px;
-}
-
-figcaption {
-	font-size: 0.875rem;
-	line-height: 1.714;
-	color: var(--ink-2);
-	text-align: center;
-	max-width: 36rem;
-	text-wrap: balance;
-}
-
-.device {
-	display: block;
-	width: min(300px, 100%);
-	border-radius: 2px;
-	border: 1px solid var(--line);
-	overflow: hidden;
-}
-
-.device img {
-	display: block;
-	width: 100%;
-	height: auto;
-}
-
-.desk {
-	display: block;
-	width: 100%;
-	height: auto;
-	border-radius: 2px;
-	border: 1px solid var(--line);
-}
-
-.where {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	display: grid;
-	gap: 14px;
-}
-
-.where li {
-	min-width: 0;
-}
-
-.where pre {
-	margin: 4px 0 0;
-	padding: 10px 14px;
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-radius: 2px;
-	overflow: auto;
-	font-size: 0.8125rem;
-	line-height: 1.6;
-	white-space: pre-wrap;
-	overflow-wrap: anywhere;
-}
-
-.where pre code {
-	background: none;
-	border: 0;
-	padding: 0;
-	font-size: inherit;
-}
-
-.pager {
-	margin-top: 48px;
-	padding-top: 24px;
-	border-top: 1px solid var(--line);
-	display: flex;
-	justify-content: space-between;
-	gap: 20px;
-}
-
-.pager a {
-	display: grid;
-	gap: 2px;
-	text-decoration: none;
-}
-
-.pager .pager-dir {
-	color: var(--ink-2);
-	font-size: 0.8125rem;
-}
-
-.pager .pager-name {
-	text-decoration: underline;
-	text-underline-offset: 3px;
-}
-
-.pager a[rel="prev"] .pager-dir::before {
-	content: "← ";
-}
-
-.pager a[rel="next"] .pager-dir::after {
-	content: " →";
-}
-
-.pager a[rel="next"] {
-	margin-left: auto;
-	text-align: right;
-}
-
-/* the index of them all */
-.index {
-	padding-top: var(--section);
-}
-
-.groups {
-	margin-top: var(--gap);
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: var(--gap);
-}
-
-.groups h2 {
-	font-family: var(--sans);
-	font-size: 1rem;
-	font-weight: 600;
-	line-height: 1.5;
-	margin: 0 0 10px;
-}
-
-.groups ul {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	gap: 10px;
-}
-
-.groups li {
-	display: grid;
-	gap: 0;
-	line-height: 1.6;
-}
-
-.groups li span {
-	color: var(--ink-2);
-	font-size: 0.875rem;
-	line-height: 1.714;
-}
-
-@media (max-width: 900px) {
-
-	.layout {
-		grid-template-columns: 1fr;
-	}
-
-	.side {
-		order: 0;
-		border-top: 1px solid var(--line);
-		padding-top: 24px;
-	}
-
-	.groups {
-		grid-template-columns: 1fr;
-	}
-}
-
-@media (max-width: 640px) {
-
-	figure {
-		padding: 20px;
-	}
-}
-
-/* ---- the guide */
-
-/* one column, numbered steps */
-.guide {
-	max-width: 760px;
-	padding-top: var(--section);
-}
-
-.guide h1 {
-	margin-bottom: 0;
-}
-
-.guide .lede {
-	max-width: none;
-}
-
-.guide h2 {
-	margin-top: var(--space-6);
-}
-
-.guide p {
-	max-width: none;
-}
-
-.guide ol {
-	margin: 16px 0 0;
-	padding-left: 1.4em;
-}
-
-.guide li {
-	margin: 0 0 8px;
-}
-
-.guide li::marker {
-	color: var(--ink-2);
-}
-
-.guide code {
-	white-space: nowrap;
-}
-
-.guide kbd {
-	font-family: var(--sans);
-	font-size: 0.9375em;
-	background: var(--white);
-	border: 1px solid var(--rule-strong);
-	border-bottom-width: 2px;
-	border-radius: 3px;
-	padding: 0 6px;
-	white-space: nowrap;
-}
-
-.guide figure {
-	margin-top: var(--space-4);
-}
-
-.guide .fine {
-	margin-top: var(--space-2);
-}
-
-.with-cover {
-	display: grid;
-	grid-template-columns: 160px minmax(0, 1fr);
-	gap: 24px;
-	align-items: start;
-	margin-top: 16px;
-}
-
-.with-cover img {
-	display: block;
-	width: 100%;
-	height: auto;
-	border-radius: 2px;
-}
-
-.with-cover p {
-	margin: 0;
-}
-
-@media (max-width: 640px) {
-
-	.with-cover {
-		grid-template-columns: 1fr;
-	}
-
-	.with-cover img {
-		width: 160px;
-	}
-}
-
-.aside {
-	margin: 24px 0 0;
-	padding: 16px 20px;
-	background: var(--surface);
-	border-left: 3px solid var(--riff-mark);
-	font-size: 0.9375rem;
-	line-height: 1.7;
-}
-
-.cta {
-	margin-top: 24px;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 16px 20px;
-	align-items: center;
-}
-
-.cta .btn {
-	padding: 14px 32px;
-	font-size: 1rem;
-	line-height: 1.3;
-}
-
-.btn.outline {
-	background: transparent;
-	color: var(--ink);
-	border-color: var(--ink);
-}
-
-.btn.outline:hover {
-	background: var(--surface);
-	border-color: var(--ink);
-	color: var(--ink);
-}
-
-/* ---- the download page */
-
-/* one column, as wordpress.org/download is laid out */
-.dl {
-	max-width: 760px;
-	padding-top: var(--section);
-}
-
-.dl h1 {
-	margin-bottom: 0;
-}
-
-.dl .lede {
-	max-width: none;
-}
-
-.dl h2 {
-	margin-top: var(--space-6);
-}
-
-.dl p {
-	max-width: none;
-}
-
-.dl ol,
-.dl ul {
-	margin: 16px 0 0;
-	padding-left: 1.4em;
-}
-
-.dl li {
-	margin: 0 0 8px;
-}
-
-.dl li::marker {
-	color: var(--ink-2);
-}
-
-.dl code {
-	white-space: nowrap;
-}
-
-.dl kbd {
-	font-family: var(--sans);
-	font-size: 0.9375em;
-	background: var(--white);
-	border: 1px solid var(--rule-strong);
-	border-bottom-width: 2px;
-	border-radius: 3px;
-	padding: 0 6px;
-	white-space: nowrap;
-}
-
-.shelf {
-	list-style: none;
-	margin: 28px 0 0;
-	padding: 0;
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 12px;
-	max-width: 34rem;
-}
-
-.shelf li {
-	aspect-ratio: 1;
-	border-radius: 2px;
-	overflow: hidden;
-	background: var(--surface);
-}
-
-.shelf img {
-	display: block;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-}
-
-/* the download, as wordpress.org/download sets it: the button and its
-   fine print on the left, what it needs on the right, in one grey box
-   straight under the heading */
-.get {
-	margin-top: var(--space-5);
-	padding: var(--space-5);
-	background: var(--surface);
-	border: 1px solid var(--rule);
-	border-radius: 3px;
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	gap: var(--space-3) var(--space-6);
-	align-items: start;
-}
-
-.get-main .fine {
-	max-width: 34rem;
-}
-
-.get-needs {
-	margin: 0;
-	display: grid;
-	gap: 8px;
-	font-size: 0.9375rem;
-	line-height: 1.5;
-}
-
-.get-needs div {
-	display: grid;
-	grid-template-columns: 7rem auto;
-	gap: 12px;
-}
-
-.get-needs dt {
-	color: var(--ink-2);
-}
-
-.get-needs dd {
-	margin: 0;
-}
-
-.get .btn {
-	padding: 14px 32px;
-	font-size: 1.125rem;
-	line-height: 1.3;
-}
-
-.get .fine {
-	margin: var(--space-2) 0 0;
-}
-
-.links {
-	margin: 20px 0 0;
-	padding: 0;
-	list-style: none;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px 24px;
-	font-size: 0.9375rem;
-}
-
-.dl .req,
-.req {
-	margin: 16px 0 0;
-	padding: 0;
-	list-style: none;
-	display: grid;
-	gap: 6px;
-}
-
-.req li {
-	display: grid;
-	grid-template-columns: 9rem 1fr;
-	gap: 16px;
-}
-
-.req li span:first-child {
-	color: var(--ink-2);
-}
-
-@media (max-width: 640px) {
-
-	.get {
-		padding: 20px;
-		grid-template-columns: minmax(0, 1fr);
-	}
-
-	.req li {
-		grid-template-columns: 1fr;
-		gap: 0;
-	}
-}
-
-/* ---- the hooks reference, as developer.wordpress.org's code reference
-   sets it: Inter headings, IBM Plex Mono for code, the syntax colours from
-   its titles, and its code tables */
 
 @font-face {
 	font-family: "IBM Plex Mono";
@@ -947,13 +43,270 @@ figcaption {
 	src: url(../fonts/ibm-plex-mono-600.woff2) format("woff2");
 }
 
+/* the local faces shown until the web fonts arrive, sized to their metrics
+   so the swap moves nothing */
+@font-face {
+	font-family: "Schibsted Fallback";
+	src: local("Arial"), local("Helvetica Neue"), local("Helvetica");
+	size-adjust: 105.37%;
+	ascent-override: 92.68%;
+	descent-override: 24.47%;
+	line-gap-override: 0%;
+}
+
+@font-face {
+	font-family: "Garamond Fallback";
+	src: local("Georgia"), local("Times New Roman");
+	size-adjust: 87.15%;
+	ascent-override: 115.54%;
+	descent-override: 34.19%;
+	line-gap-override: 0%;
+}
+
 :root {
-	--mono: "IBM Plex Mono", monospace;
-	--charcoal-2: #23282d;
-	--syntax-func: var(--warm-ink-2);
-	--syntax-type: var(--charcoal-3);
-	--syntax-name: var(--riff-ember-deep);
-	--code-bg: var(--surface);
+
+	/* paper, as riffpress.com's: each neutral at OKLCH hue 55-70, chroma
+	   under 0.01 */
+	--white: oklch(0.992 0.002 70); /* the page */
+	--white-2: oklch(0.968 0.004 65); /* code, the current link, hover */
+	--rule: oklch(0.89 0.006 60); /* hairlines */
+
+	/* a table's head, the brand's divider */
+	--rule-strong: oklch(0.8 0.008 58);
+	--field-edge: oklch(0.56 0.01 55); /* a field's edge, 4.6:1 */
+	--ink: oklch(0.18 0.008 55); /* text, 18.4:1 */
+
+	/* quieter text: 7.3:1 on white, 6.8:1 on white-2 */
+	--ink-2: oklch(0.45 0.01 55);
+	--ink-3: oklch(0.3 0.009 55); /* a lede, 13.4:1 */
+
+	/* ember, about 1900K, muted: deep on paper for links, the ring and where
+	   you are */
+	--ember-deep: oklch(0.5 0.12 48); /* 6.2:1 on white, 5.7:1 on white-2 */
+	--ember-ink: oklch(0.42 0.11 46); /* a link under the pointer, 8.7:1 */
+	--wash: oklch(0.91 0.045 60); /* selected words, under ink 14.3:1 */
+
+	/* the one button: ink on paper */
+	--primary: var(--ink);
+	--primary-hover: oklch(0.32 0.01 55);
+	--on-primary: var(--white);
+
+	/* type */
+	--serif: "EB Garamond", "Garamond Fallback", garamond, georgia, serif;
+	--sans: "Schibsted Grotesk", "Schibsted Fallback", -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
+	--mono: "IBM Plex Mono", ui-monospace, sfmono-regular, menlo, monospace;
+	--text-label: 0.8125rem; /* 13px: a label, a caption, the rail */
+	--text-small: 0.9375rem; /* 15px: the sidebar, a table, fine print */
+	--text-body: 1.0625rem; /* 17px: running text */
+	--text-code: 0.875rem; /* 14px: a code block */
+	--text-lead: 1.25rem; /* 20px: a page's opening */
+	--text-h3: 1.25rem; /* 20px */
+	--text-h2: 2rem; /* 32px */
+	--text-h1: clamp(2.25rem, 1.6rem + 1.8vw, 3.25rem); /* 36 to 52px */
+
+	/* 56 to 96px: the 404's one line */
+	--text-display: clamp(3.5rem, 2rem + 5vw, 6rem);
+	--leading: 1.65; /* 28px on 17px */
+	--leading-tight: 1.2;
+	--leading-ui: 1.45;
+
+	/* space: an 8px step, with 4 and 12 for what sits close */
+	--space-0: 4px;
+	--space-1: 8px;
+	--space-1-5: 12px;
+	--space-2: 16px;
+	--space-3: 24px;
+	--space-4: 32px;
+	--space-5: 48px;
+	--space-6: 64px;
+	--space-7: 96px;
+	--space-8: 128px;
+
+	/* the grid: sidebar, article, rail, each gap the same */
+	--edge: clamp(20px, 5vw, 64px);
+	--header-h: 64px;
+	--side-w: 15rem;
+	--article-w: 42rem; /* about 70 characters of body text */
+	--rail-w: 13rem;
+	--gutter: var(--space-6);
+	--page-w: calc(var(--side-w) + var(--article-w) + var(--rail-w) + 2 * var(--gutter));
+	--hairline: 1px;
+
+	/* shape and depth: the page is flat; only what opens over it is raised */
+	--radius-control: 2px;
+	--radius-code: 4px;
+	--radius-frame: 8px;
+	--shadow-popover: 0 12px 32px oklch(0.18 0.008 55 / 12%), 0 1px 2px oklch(0.18 0.008 55 / 8%);
+	--scrim: oklch(0.18 0.008 55 / 40%);
+	--focus-width: 2px;
+	--focus-offset: 2px;
+	--control-height: 44px;
+
+	/* motion: colour only, short */
+	--t: 0.15s;
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* on a dense screen a hairline is one device pixel */
+@media (min-resolution: 2dppx) {
+
+	:root {
+		--hairline: 0.5px;
+	}
+}
+
+@media (width < 1200px) {
+
+	:root {
+		--gutter: var(--space-5);
+	}
+}
+
+/* ---- base */
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+	scroll-padding-top: calc(var(--header-h) + var(--space-3));
+}
+
+body {
+	margin: 0;
+	background: var(--white);
+	color: var(--ink);
+	font-family: var(--sans);
+	font-size: var(--text-body);
+	line-height: var(--leading);
+	font-kerning: normal;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+a {
+	color: var(--ember-deep);
+	text-decoration: underline;
+	text-decoration-thickness: var(--hairline);
+	text-decoration-color: color-mix(in oklch, currentcolor 45%, transparent);
+	text-underline-offset: 0.22em;
+	transition: color var(--t), text-decoration-color var(--t);
+}
+
+a:hover {
+	color: var(--ember-ink);
+	text-decoration-color: currentcolor;
+}
+
+:focus-visible {
+	outline: var(--focus-width) solid var(--ember-deep);
+	outline-offset: var(--focus-offset);
+	border-radius: var(--radius-control);
+}
+
+::selection {
+	background: var(--wash);
+	color: var(--ink);
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+}
+
+strong {
+	font-weight: 600;
+}
+
+code {
+	font-family: var(--mono);
+	font-size: 0.875em;
+	font-variant-ligatures: none;
+	padding: 0.1em 0.3em;
+	border-radius: var(--radius-control);
+	background: var(--white-2);
+	box-shadow: inset 0 0 0 var(--hairline) var(--rule);
+	color: var(--ink);
+	box-decoration-break: clone;
+	-webkit-box-decoration-break: clone;
+}
+
+a code {
+	color: inherit;
+}
+
+/* a label on the screen, as the guide names Plugins or Publish: set in the
+   text's own face */
+kbd {
+	font: inherit;
+	font-weight: 600;
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	margin: 0;
+	color: var(--ink);
+	text-wrap: balance;
+}
+
+h1 {
+	font-family: var(--serif);
+	font-size: var(--text-h1);
+	font-weight: 500;
+	line-height: 1.08;
+	letter-spacing: -0.012em;
+}
+
+h2 {
+	font-family: var(--serif);
+	font-size: var(--text-h2);
+	font-weight: 500;
+	line-height: var(--leading-tight);
+	letter-spacing: -0.005em;
+}
+
+h3 {
+	font-size: var(--text-h3);
+	font-weight: 600;
+	line-height: 1.35;
+	letter-spacing: -0.005em;
+}
+
+h4 {
+	font-size: var(--text-small);
+	font-weight: 600;
+	line-height: var(--leading-ui);
+}
+
+p,
+li,
+dd,
+dt,
+figcaption {
+	text-wrap: pretty;
+}
+
+.skip {
+	position: absolute;
+	left: var(--space-2);
+	top: -200px;
+	z-index: 50;
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-control);
+	background: var(--primary);
+	color: var(--on-primary);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.skip:focus {
+	top: var(--space-1-5);
 }
 
 .screen-reader-text {
@@ -965,177 +318,199 @@ figcaption {
 	white-space: nowrap;
 }
 
-/* ---- the header's two destinations: the wordmark back to riffpress.com,
-   and "Source" beside it, after a hairline, to the docs' home */
-.brand {
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	min-height: 44px;
-}
+/* ---- the grid: the bar across the top, then the sidebar and the page, then
+   the footer. Every page sits on it, so a page with no sidebar starts its
+   title where the docs start theirs. */
 
-.brand .host {
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	padding-left: 14px;
-	border-left: 1px solid var(--rule-strong);
-	color: var(--ink);
-	font-family: var(--serif);
-	font-size: 1.5rem;
-	line-height: 1;
-	letter-spacing: 0.005em;
-	text-decoration: none;
-}
-
-.brand .host:hover {
-	color: var(--accent-hover);
-	text-decoration: underline;
-	text-decoration-thickness: 1px;
-	text-underline-offset: 5px;
-}
-
-/* ---- the docs: the sidebar left, the article, "On this page" right, as a
-   documentation site sets them. The body is the grid, so the sidebar runs
-   the article's whole height and is held in the window beside it */
-:root {
-	--side-w: 248px;
-	--docs-w: 1280px;
-	--docs-gap: clamp(32px, 4vw, 64px);
-}
-
-body:has(> .docs-nav) {
+body {
 	display: grid;
 	grid-template-columns:
 		[full-start] minmax(var(--edge), 1fr)
 		[side-start] var(--side-w)
-		[side-end content-start] minmax(0, calc(var(--docs-w) - var(--side-w)))
-		[content-end] minmax(var(--edge), 1fr) [full-end];
-	grid-template-rows: auto auto 1fr auto;
+		[side-end main-start] minmax(0, calc(var(--page-w) - var(--side-w)))
+		[main-end] minmax(var(--edge), 1fr) [full-end];
+	grid-template-rows: auto 1fr auto;
+	min-height: 100vh;
+	min-height: 100dvh;
 }
 
-body:has(> .docs-nav) > .nav,
-body:has(> .docs-nav) > footer {
+body > .nav,
+body > footer {
 	grid-column: full;
 }
 
-body:has(> .docs-nav) > .nav {
-	grid-row: 1;
-}
-
-body:has(> .docs-nav) > footer {
-	grid-row: 4;
-}
-
-body:has(> .docs-nav) > .crumbs {
-	grid-column: content;
+body > .docs-nav {
+	grid-column: side;
 	grid-row: 2;
 }
 
-body:has(> .docs-nav) > main,
-body:has(> .docs-nav) > .layout {
-	grid-column: content;
-	grid-row: 3;
+body > main,
+body > .layout {
+	grid-column: main;
+	grid-row: 2;
 	min-width: 0;
+	padding-left: var(--gutter);
 }
 
-body:has(> .docs-nav) > .crumbs .wrap,
-body:has(> .docs-nav) > main.wrap,
-body:has(> .docs-nav) > .layout.wrap {
+.wrap {
+	width: 100%;
+	max-width: calc(var(--page-w) + 2 * var(--edge));
+	margin-inline: auto;
+	padding-inline: var(--edge);
+}
+
+body > main.wrap,
+body > .layout.wrap {
 	max-width: none;
 	margin: 0;
-	padding-left: var(--docs-gap);
 	padding-right: 0;
 }
 
-/* the root of the docs has no breadcrumbs: its title starts level with
-   the sidebar */
-body:has(> .docs-nav) > .nav + .docs-nav + main {
-	padding-top: var(--space-5);
+/* ---- the bar: Riff | Source at the left, the two other destinations at the
+   right */
+
+.nav {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	background: var(--white);
+	border-bottom: var(--hairline) solid var(--rule);
 }
 
+.nav .wrap {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	height: var(--header-h);
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1-5);
+}
+
+.mark {
+	display: flex;
+	align-items: center;
+	min-height: var(--control-height);
+}
+
+.mark img {
+	display: block;
+	width: auto;
+	height: 28px;
+}
+
+.mark:focus-visible {
+	outline-offset: var(--space-0);
+}
+
+.brand .host {
+	display: flex;
+	align-items: center;
+	min-height: 24px;
+	padding-left: var(--space-1-5);
+	border-left: var(--hairline) solid var(--rule-strong);
+	color: var(--ink);
+	font-family: var(--serif);
+	font-size: 1.375rem;
+	line-height: 1;
+	text-decoration: none;
+}
+
+.brand .host:hover {
+	color: var(--ember-deep);
+}
+
+.nav nav {
+	display: flex;
+	gap: var(--space-4);
+}
+
+.nav nav a {
+	display: flex;
+	align-items: center;
+	min-height: var(--control-height);
+	color: var(--ink-2);
+	font-size: var(--text-small);
+	line-height: 1;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.nav nav a:hover {
+	color: var(--ink);
+}
+
+.nav nav a[aria-current] {
+	color: var(--ink);
+	text-decoration: underline;
+	text-decoration-color: var(--ember-deep);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 10px;
+}
+
+/* ---- the sidebar: groups by name, the page you are on in ember */
+
 .docs-nav {
-	grid-column: side;
-	grid-row: 2 / span 2;
-	border-right: 1px solid var(--rule);
-	font-size: 0.9375rem;
-	line-height: 1.5;
+	border-right: var(--hairline) solid var(--rule);
+	font-size: var(--text-small);
+	line-height: var(--leading-ui);
 }
 
 .docs-nav > nav {
 	position: sticky;
-	top: 0;
-	max-height: 100vh;
+	top: var(--header-h);
+	max-height: calc(100vh - var(--header-h));
+	max-height: calc(100dvh - var(--header-h));
 	overflow-y: auto;
 	overscroll-behavior: contain;
-	padding: var(--space-5) var(--space-3) var(--space-5) 0;
+	padding: var(--space-5) var(--space-3) var(--space-6) 0;
 	scrollbar-width: thin;
+	scrollbar-color: var(--rule) transparent;
 }
 
 .docs-nav ul {
-	list-style: none;
 	margin: 0;
 	padding: 0;
+	list-style: none;
 }
 
 .docs-nav nav > ul {
 	display: grid;
-	gap: var(--space-1);
-}
-
-.docs-nav .local-group {
-	margin-top: var(--space-2);
-}
-
-.docs-nav .local-group + li:not(.local-group) {
-	margin-top: var(--space-2);
-	padding-top: var(--space-2);
-	border-top: 1px solid var(--rule);
+	gap: var(--space-3);
 }
 
 .docs-nav .local-label {
 	display: block;
-	margin: 0 0 6px;
-	color: var(--ink-3);
-	font-size: 0.6875rem;
+	padding-bottom: var(--space-0);
+	color: var(--ink);
+	font-size: var(--text-label);
 	font-weight: 600;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-}
-
-.docs-nav .local-group ul {
-	display: grid;
-	gap: 2px;
 }
 
 .docs-nav a {
-	position: relative;
 	display: block;
-	padding: 6px 12px;
-	margin-left: -12px;
-	border-radius: 2px;
+	margin-left: calc(-1 * var(--space-1-5));
+	padding: 5px var(--space-1-5);
+	border-radius: var(--radius-control);
 	color: var(--ink-2);
 	text-decoration: none;
+	transition: color var(--t), background-color var(--t);
 }
 
 .docs-nav a:hover {
+	background: var(--white-2);
 	color: var(--ink);
-	background: var(--surface);
 }
 
 /* the page itself, and the page a page sits under, as a hook under PHP */
 .docs-nav a[aria-current] {
-	color: var(--ink);
-	background: var(--surface);
-}
-
-.docs-nav a[aria-current]::before {
-	content: "";
-	position: absolute;
-	inset: 4px auto 4px 0;
-	width: 3px;
-	border-radius: 2px;
-	background: var(--riff-mark);
+	background: var(--white-2);
+	color: var(--ember-deep);
+	font-weight: 500;
 }
 
 .docs-nav a:focus-visible {
@@ -1147,51 +522,1115 @@ body:has(> .docs-nav) > .nav + .docs-nav + main {
 	display: none;
 }
 
-/* the feature pages keep their list of features, at the right where
-   "On this page" sits on the others */
-body:has(> .docs-nav) .layout {
-	grid-template-columns: minmax(0, 1fr) 220px;
+/* ---- the page: the article, and "On this page" in the rail beside it */
+
+main.doc,
+main.reference,
+main.index,
+main.dl,
+.layout {
+	display: grid;
+	grid-template-columns: minmax(0, var(--article-w)) var(--rail-w);
+	column-gap: var(--gutter);
+	align-content: start;
+	padding-top: var(--space-6);
+	padding-bottom: var(--space-8);
 }
 
-body:has(> .docs-nav) .side {
-	order: 0;
+main.doc > *,
+main.reference > *,
+main.index > *,
+main.dl > * {
+	grid-column: 1;
+	min-width: 0;
+}
+
+.with-toc {
+	display: contents;
+}
+
+.layout > main {
+	grid-column: 1;
+	min-width: 0;
+}
+
+.toc,
+.layout > .side {
+	grid-column: 2;
+	grid-row: 1 / span 40;
+	align-self: start;
 	position: sticky;
-	top: var(--space-4);
+	top: calc(var(--header-h) + var(--space-6));
+	max-height: calc(100vh - var(--header-h) - var(--space-6) * 2);
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: var(--rule) transparent;
+	font-size: var(--text-label);
+	line-height: var(--leading-ui);
 }
 
-@media (max-width: 1240px) {
+.lede {
+	max-width: 36rem;
+	margin: var(--space-2) 0 0;
+	color: var(--ink-3);
+	font-size: var(--text-lead);
+	line-height: 1.5;
+}
 
-	body:has(> .docs-nav) .layout {
-		grid-template-columns: minmax(0, 1fr);
+.entry {
+	margin-top: var(--space-6);
+}
+
+/* a reference page opens with its summary, which is its lede */
+.entry:has(> .summary:first-child) {
+	margin-top: var(--space-2);
+}
+
+/* the article's rhythm: more room over a heading than under it */
+main h2 {
+	margin: var(--space-6) 0 var(--space-2);
+	scroll-margin-top: calc(var(--header-h) + var(--space-3));
+}
+
+main h3 {
+	margin: var(--space-5) 0 var(--space-1);
+}
+
+main h4 {
+	margin: var(--space-3) 0 var(--space-1);
+}
+
+.entry > h2:first-child,
+.entry > section:first-child > h2:first-child,
+.entry > section:first-child > :first-child {
+	margin-top: 0;
+}
+
+.entry > section + section {
+	margin-top: var(--space-6);
+}
+
+.entry > section > h2:first-child {
+	margin-top: 0;
+}
+
+main p {
+	margin: 0 0 var(--space-2);
+}
+
+main ul,
+main ol {
+	margin: 0 0 var(--space-2);
+	padding-left: 1.25em;
+}
+
+main li {
+	margin: 0 0 var(--space-1);
+}
+
+main li::marker {
+	color: var(--ink-2);
+}
+
+.fine {
+	color: var(--ink-2);
+	font-size: var(--text-small);
+	line-height: var(--leading-ui);
+}
+
+/* "On this page" */
+.toc-box summary {
+	display: block;
+	margin-bottom: var(--space-1);
+	color: var(--ink);
+	font-weight: 600;
+	list-style: none;
+	cursor: default;
+	pointer-events: none;
+}
+
+.toc-box summary::-webkit-details-marker {
+	display: none;
+}
+
+.toc ul,
+.side ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.toc ul ul {
+	padding-left: var(--space-1-5);
+}
+
+.toc a,
+.side a {
+	display: block;
+	padding: 3px 0;
+	color: var(--ink-2);
+	text-decoration: none;
+	overflow-wrap: anywhere;
+}
+
+.toc a:hover,
+.side a:hover {
+	color: var(--ink);
+}
+
+/* the section being read (docs.js), and the feature you are on */
+.toc a[aria-current],
+.side a[aria-current] {
+	color: var(--ember-deep);
+	font-weight: 500;
+}
+
+.side h2 {
+	margin: var(--space-3) 0 var(--space-0);
+	color: var(--ink);
+	font-family: var(--sans);
+	font-size: var(--text-label);
+	font-weight: 600;
+	line-height: var(--leading-ui);
+	letter-spacing: 0;
+}
+
+.side h2:first-child {
+	margin-top: 0;
+}
+
+/* where to edit it, and the pages either side */
+.edit {
+	margin-top: var(--space-5);
+	font-size: var(--text-small);
+}
+
+.edit a {
+	color: var(--ink-2);
+}
+
+.pager {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-top: var(--space-5);
+	padding-top: var(--space-3);
+	border-top: var(--hairline) solid var(--rule);
+}
+
+.pager a {
+	display: grid;
+	gap: 2px;
+	text-decoration: none;
+}
+
+.pager .pager-dir {
+	color: var(--ink-2);
+	font-size: var(--text-label);
+}
+
+.pager .pager-name {
+	font-weight: 500;
+}
+
+.pager a[rel="prev"] .pager-dir::before {
+	content: "← ";
+}
+
+.pager a[rel="next"] {
+	margin-left: auto;
+	text-align: right;
+}
+
+.pager a[rel="next"] .pager-dir::after {
+	content: " →";
+}
+
+/* ---- pictures */
+
+figure {
+	display: grid;
+	justify-items: center;
+	gap: var(--space-2);
+	margin: var(--space-4) 0;
+	padding: var(--space-4);
+	border-radius: var(--radius-frame);
+	background: var(--white-2);
+}
+
+figcaption {
+	max-width: 36rem;
+	color: var(--ink-2);
+	font-size: var(--text-label);
+	line-height: var(--leading-ui);
+	text-align: center;
+	text-wrap: balance;
+}
+
+.device {
+	display: block;
+	width: min(300px, 100%);
+	overflow: hidden;
+	border-radius: var(--radius-frame);
+	box-shadow: 0 0 0 var(--hairline) var(--rule);
+}
+
+.device img,
+.desk {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.desk {
+	border-radius: var(--radius-code);
+	box-shadow: 0 0 0 var(--hairline) var(--rule);
+}
+
+/* ---- code */
+
+.wp-block-code,
+.where pre {
+	margin: 0 0 var(--space-3);
+	padding: var(--space-2) var(--space-3);
+	overflow: auto;
+	border-radius: var(--radius-code);
+	background: var(--white-2);
+	box-shadow: inset 0 0 0 var(--hairline) var(--rule);
+	color: var(--ink);
+	font-family: var(--mono);
+	font-size: var(--text-code);
+	line-height: 1.715; /* 24px */
+	tab-size: 4;
+	scrollbar-width: thin;
+	scrollbar-color: var(--rule) transparent;
+}
+
+.wp-block-code:focus-visible {
+	outline-offset: -2px;
+}
+
+.wp-block-code code,
+.where pre code {
+	display: block;
+	padding: 0;
+	background: none;
+	box-shadow: none;
+	font-size: inherit;
+	white-space: pre;
+}
+
+.wp-block-code .row {
+	display: block;
+}
+
+.wp-block-code .n {
+	display: inline-block;
+	min-width: 2.5em;
+	margin-right: var(--space-2);
+	color: var(--ink-2);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+	user-select: none;
+}
+
+/* what a block of source is: the file, and where to read it */
+.dot-links {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0 var(--space-1-5);
+	margin-top: calc(-1 * var(--space-1-5));
+	color: var(--ink-2);
+	font-size: var(--text-label);
+}
+
+.dot-links > :not(:last-child)::after {
+	content: "·";
+	margin-left: var(--space-1-5);
+}
+
+.dot-links code {
+	padding: 0;
+	background: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+.where {
+	display: grid;
+	gap: var(--space-2);
+	margin: 0 0 var(--space-2);
+	padding: 0;
+	list-style: none;
+}
+
+.where li {
+	min-width: 0;
+	margin: 0;
+	font-size: var(--text-small);
+}
+
+.where pre {
+	margin: var(--space-1) 0 0;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+/* ---- tables: a rule under the head and each row, numbers in columns */
+
+.code-table {
+	width: 100%;
+	margin: var(--space-3) 0;
+	border-collapse: collapse;
+	font-size: var(--text-small);
+	line-height: 1.55;
+}
+
+.code-table th,
+.code-table td {
+	padding: var(--space-1-5) var(--space-3) var(--space-1-5) 0;
+	border-bottom: var(--hairline) solid var(--rule);
+	text-align: left;
+	vertical-align: top;
+}
+
+.code-table th:last-child,
+.code-table td:last-child {
+	padding-right: 0;
+}
+
+.code-table th {
+	padding-block: var(--space-1);
+	border-bottom-color: var(--rule-strong);
+	color: var(--ink-2);
+	font-size: var(--text-label);
+	font-weight: 600;
+}
+
+.code-table tr > :first-child:nth-last-child(2) {
+	width: 36%;
+}
+
+.code-table tr > :first-child:nth-last-child(3),
+.code-table tr > :first-child:nth-last-child(4) {
+	width: 30%;
+}
+
+.code-table td > .type {
+	color: var(--ink-2);
+	font-family: var(--mono);
+	font-size: var(--text-label);
+	white-space: nowrap;
+}
+
+.changelog .code-table tr > :first-child {
+	width: 7rem;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.code-table td a {
+	overflow-wrap: anywhere;
+}
+
+.code-table td:first-child code {
+	display: block;
+	width: fit-content;
+	padding: 0;
+	background: none;
+	box-shadow: none;
+	color: var(--ink);
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.code-table td:first-child a code {
+	color: inherit;
+}
+
+.code-table td:first-child .path {
+	color: var(--ink-2);
+	font-weight: 400;
+}
+
+/* ---- the reference */
+
+/* a hook's title: the call itself */
+.reference .code-title {
+	margin-bottom: var(--space-2);
+	font-family: var(--mono);
+	font-size: 1.5rem;
+	font-weight: 400;
+	line-height: 1.5;
+	letter-spacing: 0;
+	overflow-wrap: anywhere;
+}
+
+.code-title .hook-func,
+.code-title .arg-type {
+	color: var(--ink-2);
+}
+
+.code-title .arg-name {
+	color: var(--ink);
+}
+
+.reference .summary p {
+	color: var(--ink-3);
+	font-size: var(--text-lead);
+	line-height: 1.5;
+}
+
+.is-toc-heading a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.is-toc-heading a::after {
+	content: "#";
+	margin-left: 0.3em;
+	color: var(--ink-2);
+	font-weight: 400;
+	opacity: 0;
+	transition: opacity var(--t);
+}
+
+.is-toc-heading a:hover::after,
+.is-toc-heading a:focus-visible::after {
+	opacity: 1;
+}
+
+.reference h2 code,
+.reference h3 code {
+	padding: 0;
+	background: none;
+	box-shadow: none;
+	font-size: 0.9em;
+}
+
+/* parameters: the name, its type, then what it is, a hairline between each */
+.parameters dl {
+	margin: 0 0 var(--space-3);
+	border-top: var(--hairline) solid var(--rule);
+}
+
+.parameters dt {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 var(--space-1);
+	padding-top: var(--space-1-5);
+}
+
+.parameters dt > code,
+.param-hash li > code {
+	padding: 0;
+	background: none;
+	box-shadow: none;
+	color: var(--ink);
+	font-size: var(--text-small);
+	font-weight: 600;
+}
+
+.parameters .type,
+.param-hash .type,
+.member .returns .type {
+	color: var(--ink-2);
+	font-family: var(--mono);
+	font-size: var(--text-label);
+}
+
+.param-hash .type {
+	margin-left: var(--space-1);
+}
+
+.parameters .required {
+	color: var(--ember-deep);
+	font-size: var(--text-label);
+	font-weight: 500;
+}
+
+.parameters dd {
+	margin: var(--space-0) 0 0;
+	padding-bottom: var(--space-1-5);
+	border-bottom: var(--hairline) solid var(--rule);
+	font-size: var(--text-small);
+	line-height: 1.55;
+}
+
+.param-hash {
+	margin: var(--space-1) 0 0;
+	padding: 0 0 0 var(--space-2);
+	border-left: var(--hairline) solid var(--rule);
+	list-style: none;
+}
+
+.param-hash li {
+	margin: 0;
+	padding: var(--space-1) 0;
+}
+
+/* the JavaScript reference: a section per member of window.riff */
+.member {
+	padding-top: var(--space-4);
+	border-top: var(--hairline) solid var(--rule);
+	scroll-margin-top: calc(var(--header-h) + var(--space-3));
+}
+
+.entry > .member + .member {
+	margin-top: var(--space-4);
+}
+
+.reference .member-title {
+	margin: 0 0 var(--space-1-5);
+	font-family: var(--mono);
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+
+.member-title a {
+	color: var(--ink);
+	text-decoration: none;
+}
+
+.member .dot-links {
+	margin-top: var(--space-2);
+}
+
+/* the hooks: a search over the list it filters */
+.hooks-index .intro {
+	max-width: 36rem;
+	margin: var(--space-2) 0 var(--space-4);
+	color: var(--ink-3);
+	font-size: var(--text-lead);
+	line-height: 1.5;
+}
+
+.hook-search {
+	margin-bottom: var(--space-2);
+}
+
+.hook-search input {
+	width: 100%;
+	max-width: 22rem;
+	height: var(--control-height);
+	padding: 0 var(--space-1-5);
+	border: 1px solid var(--field-edge);
+	border-radius: var(--radius-control);
+	background: var(--white);
+	color: var(--ink);
+	font: inherit;
+	font-size: var(--text-small);
+}
+
+.hook-search input::placeholder {
+	color: var(--ink-2);
+	opacity: 1;
+}
+
+.hook-search input:focus-visible {
+	outline-offset: -1px;
+	border-color: var(--ember-deep);
+}
+
+.hook-group[hidden],
+.hook-list li[hidden] {
+	display: none;
+}
+
+.hook-list {
+	margin: 0;
+	padding: 0;
+	border-top: var(--hairline) solid var(--rule);
+	list-style: none;
+}
+
+.hook-list li {
+	margin: 0;
+	padding: var(--space-2) 0;
+	border-bottom: var(--hairline) solid var(--rule);
+}
+
+.hook-list .hook-name {
+	font-family: var(--mono);
+	font-size: var(--text-small);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.hook-list .hook-name:hover {
+	text-decoration: underline;
+}
+
+.hook-list p {
+	margin: var(--space-0) 0 0;
+	font-size: var(--text-small);
+}
+
+.hook-list .meta {
+	color: var(--ink-2);
+	font-size: var(--text-label);
+}
+
+.hook-list .meta code {
+	padding: 0;
+	background: none;
+	box-shadow: none;
+	color: inherit;
+}
+
+/* a long selector or path in the running text breaks rather than widen the
+   page */
+.handbook :not(pre) > code {
+	overflow-wrap: anywhere;
+}
+
+/* ---- Built on the open web: the features in groups */
+
+.groups {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--space-5) var(--gutter);
+	margin-top: var(--space-5);
+}
+
+.groups h2 {
+	margin: 0 0 var(--space-1-5);
+	font-family: var(--sans);
+	font-size: var(--text-small);
+	font-weight: 600;
+	line-height: var(--leading-ui);
+}
+
+.groups ul {
+	display: grid;
+	gap: var(--space-1-5);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.groups li {
+	display: grid;
+	margin: 0;
+	line-height: var(--leading-ui);
+}
+
+.groups li span {
+	color: var(--ink-2);
+	font-size: var(--text-small);
+}
+
+/* ---- the guide and the download */
+
+/* the guide's sections are numbered, the number hung in the margin before
+   each title */
+.guide .entry {
+	counter-reset: step;
+}
+
+.guide .entry > h2 {
+	position: relative;
+}
+
+.guide .entry > h2::before {
+	counter-increment: step;
+	content: counter(step);
+	position: absolute;
+	right: calc(100% + 0.5em);
+	color: var(--ink-2);
+	font-variant-numeric: lining-nums tabular-nums;
+}
+
+.guide .toc-box > ul {
+	counter-reset: track;
+}
+
+.guide .toc-box > ul > li {
+	display: flex;
+	gap: var(--space-1);
+}
+
+.guide .toc-box > ul > li::before {
+	counter-increment: track;
+	content: counter(track);
+	flex: none;
+	width: 1.25em;
+	padding-top: 3px;
+	color: var(--ink-2);
+	font-variant-numeric: tabular-nums;
+}
+
+.with-cover {
+	display: grid;
+	grid-template-columns: 160px minmax(0, 1fr);
+	gap: var(--space-3);
+	align-items: start;
+	margin: var(--space-3) 0;
+}
+
+.with-cover img {
+	display: block;
+	width: 100%;
+	border-radius: var(--radius-control);
+}
+
+.with-cover p {
+	margin: 0;
+}
+
+.aside {
+	margin-top: var(--space-5);
+	padding-top: var(--space-2);
+	border-top: var(--hairline) solid var(--rule);
+	color: var(--ink-2);
+	font-size: var(--text-small);
+}
+
+.cta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	align-items: center;
+	margin: var(--space-3) 0 var(--space-1-5);
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--control-height);
+	padding: 0 var(--space-3);
+	border: 1px solid var(--primary);
+	border-radius: var(--radius-control);
+	background: var(--primary);
+	color: var(--on-primary);
+	font-size: var(--text-small);
+	font-weight: 600;
+	line-height: 1;
+	text-decoration: none;
+	transition: background-color var(--t), border-color var(--t);
+}
+
+.btn:hover {
+	border-color: var(--primary-hover);
+	background: var(--primary-hover);
+	color: var(--on-primary);
+}
+
+.btn.outline {
+	background: transparent;
+	color: var(--ink);
+}
+
+.btn.outline:hover {
+	background: var(--white-2);
+	color: var(--ink);
+}
+
+/* the download: the button and its fine print, what it needs beside them,
+   between two rules */
+.get {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--space-3) var(--space-5);
+	align-items: start;
+	margin-top: var(--space-5);
+	padding: var(--space-4) 0;
+	border-block: var(--hairline) solid var(--rule);
+}
+
+.get .fine {
+	margin: var(--space-1-5) 0 0;
+}
+
+.get-needs {
+	display: grid;
+	gap: var(--space-0);
+	margin: 0;
+	font-size: var(--text-small);
+	line-height: var(--leading-ui);
+}
+
+.get-needs div {
+	display: grid;
+	grid-template-columns: 6rem minmax(0, 16rem);
+	gap: var(--space-1-5);
+}
+
+.get-needs dt {
+	color: var(--ink-2);
+}
+
+.get-needs dd {
+	margin: 0;
+}
+
+.req {
+	display: grid;
+	gap: var(--space-0);
+	margin: 0 0 var(--space-2);
+	padding: 0;
+	list-style: none;
+}
+
+.req li {
+	display: grid;
+	grid-template-columns: 9rem minmax(0, 1fr);
+	gap: var(--space-2);
+	margin: 0;
+}
+
+.req li span:first-child {
+	color: var(--ink-2);
+}
+
+/* the missing page: its one line set large */
+main.lost {
+	padding-top: var(--space-7);
+	padding-bottom: var(--space-8);
+}
+
+.lost h1 {
+	font-size: var(--text-display);
+	line-height: 1;
+	letter-spacing: -0.02em;
+}
+
+.lost .lede {
+	margin-top: var(--space-3);
+}
+
+.lost .cta {
+	margin-top: var(--space-4);
+}
+
+/* ---- the footer: one line */
+
+footer {
+	border-top: var(--hairline) solid var(--rule);
+	color: var(--ink-2);
+	font-size: var(--text-label);
+	line-height: var(--leading-ui);
+}
+
+footer .wrap {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-1) var(--space-3);
+	padding-block: var(--space-3);
+}
+
+footer p,
+footer ul {
+	margin: 0;
+	padding: 0;
+}
+
+footer ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1) var(--space-3);
+	list-style: none;
+}
+
+footer a {
+	color: var(--ink-2);
+	text-decoration: none;
+}
+
+footer a:hover,
+footer a[aria-current] {
+	color: var(--ink);
+	text-decoration: underline;
+}
+
+/* what is the page's chrome cannot be selected, so select-all picks up
+   words, not the bar */
+.nav,
+.docs-nav,
+.btn,
+.device,
+.desk,
+figure img {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+
+/* ---- narrower than the three columns: "On this page" folds into a
+   disclosure over the article */
+
+@media (width < 1200px) {
+
+	main.doc,
+	main.reference,
+	main.index,
+	main.dl,
+	.layout {
+		grid-template-columns: minmax(0, var(--article-w));
 	}
 
-	body:has(> .docs-nav) .side {
+	.toc,
+	.layout > .side {
+		grid-column: 1;
+		grid-row: auto;
 		position: static;
-		border-top: 1px solid var(--line);
-		padding-top: 24px;
+		max-height: none;
+		overflow: visible;
+	}
+
+	.toc {
+		margin-top: var(--space-4);
+		border-block: var(--hairline) solid var(--rule);
+		font-size: var(--text-small);
+	}
+
+	.toc + .entry {
+		margin-top: var(--space-5);
+	}
+
+	.toc-box summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		min-height: var(--control-height);
+		margin: 0;
+		cursor: pointer;
+		pointer-events: auto;
+	}
+
+	.toc-box summary::after {
+		content: "";
+		width: 7px;
+		height: 7px;
+		margin-right: var(--space-0);
+		border-right: 1.5px solid var(--ink-2);
+		border-bottom: 1.5px solid var(--ink-2);
+		transform: translateY(-2px) rotate(45deg);
+	}
+
+	.toc-box[open] summary::after {
+		transform: translateY(2px) rotate(-135deg);
+	}
+
+	.toc-box > ul {
+		padding-bottom: var(--space-1-5);
+	}
+
+	.toc a {
+		padding: var(--space-0) 0;
+	}
+
+	.layout > .side {
+		margin-top: var(--space-6);
+		padding-top: var(--space-3);
+		border-top: var(--hairline) solid var(--rule);
+		font-size: var(--text-small);
+	}
+
+	/* no sidebar, so no empty column for it */
+	body:not(:has(> .docs-nav)) > main,
+	body:not(:has(> .docs-nav)) > .layout {
+		grid-column: side-start / main-end;
+		padding-left: 0;
 	}
 }
 
-/* a phone: one column, and the sidebar a Menu button in a bar held at the
-   top of the window, opening the list as a sheet over the page */
-@media (max-width: 900px) {
+/* ---- a phone: one column, and the sidebar a Menu button, held at the top
+   of the window, that names where you are and opens the list as a sheet over
+   the page */
 
-	body:has(> .docs-nav) {
-		display: block;
+@media (width < 900px) {
+
+	:root {
+		--header-h: 56px;
 	}
 
-	body:has(> .docs-nav) > .crumbs .wrap,
-	body:has(> .docs-nav) > main.wrap,
-	body:has(> .docs-nav) > .layout.wrap {
-		margin: 0 auto;
-		padding-left: var(--edge);
-		padding-right: var(--edge);
+	body {
+		display: flex;
+		flex-direction: column;
+	}
+
+	body > main,
+	body > .layout {
+		flex: 1 0 auto;
+	}
+
+	body > main,
+	body > .layout,
+	body > main.wrap,
+	body > .layout.wrap {
+		padding-inline: var(--edge);
+	}
+
+	main.doc,
+	main.reference,
+	main.index,
+	main.dl,
+	.layout,
+	main.lost {
+		padding-top: var(--space-4);
+		padding-bottom: var(--space-6);
+	}
+
+	/* the bar scrolls away here; the Menu bar under it stays */
+	.nav {
+		position: relative;
+	}
+
+	.nav .wrap {
+		gap: var(--space-2);
+	}
+
+	.mark img {
+		height: 24px;
+	}
+
+	.brand .host {
+		font-size: 1.25rem;
+	}
+
+	.nav nav {
+		gap: var(--space-2);
+	}
+
+	.nav nav a {
+		font-size: var(--text-label);
+	}
+
+	html {
+		scroll-padding-top: calc(var(--control-height) + var(--space-2));
+	}
+
+	main h2 {
+		scroll-margin-top: calc(var(--control-height) + var(--space-2));
+	}
+
+	h2 {
+		font-size: 1.75rem;
+	}
+
+	.lede,
+	.hooks-index .intro,
+	.reference .summary p {
+		font-size: 1.125rem;
+	}
+
+	.entry {
+		margin-top: var(--space-5);
+	}
+
+	main h2 {
+		margin-top: var(--space-5);
 	}
 
 	.docs-nav {
 		border-right: 0;
-		border-bottom: 1px solid var(--rule);
-		background: var(--paper);
+		border-bottom: var(--hairline) solid var(--rule);
+		background: var(--white);
 	}
 
 	.docs-nav > nav {
@@ -1216,25 +1655,31 @@ body:has(> .docs-nav) .side {
 		top: 100%;
 		left: 0;
 		right: 0;
-		max-height: calc(100dvh - 56px);
+		max-height: calc(100dvh - var(--control-height) - var(--space-5));
 		overflow-y: auto;
-		background: var(--paper);
-		border-bottom: 1px solid var(--rule);
-		box-shadow: 0 12px 24px rgb(0 0 0 / 10%);
+		border-bottom: var(--hairline) solid var(--rule);
+		background: var(--white);
+		box-shadow: var(--shadow-popover);
+	}
+
+	.docs-nav a {
+		margin-left: calc(-1 * var(--space-1-5));
+		padding-block: 10px;
 	}
 
 	.docs-menu:not([hidden]) {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-1-5);
 		width: 100%;
-		min-height: 52px;
+		min-height: var(--control-height);
 		margin: 0;
 		padding: 0 var(--edge);
 		border: 0;
 		background: none;
 		color: var(--ink);
-		font: 600 0.9375rem/1 var(--sans);
+		font: 500 var(--text-small) / 1 var(--sans);
+		text-align: left;
 		cursor: pointer;
 	}
 
@@ -1242,15 +1687,34 @@ body:has(> .docs-nav) .side {
 		outline-offset: -4px;
 	}
 
-	/* three bars, a cross while open */
+	.docs-where {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.docs-where-up {
+		color: var(--ink-2);
+		font-weight: 400;
+	}
+
+	.docs-where-up::after {
+		content: "/";
+		margin: 0 var(--space-1);
+		color: var(--rule-strong);
+	}
+
+	/* three lines, a cross while open */
 	.docs-menu-icon,
 	.docs-menu-icon::before,
 	.docs-menu-icon::after {
 		display: block;
+		flex: none;
 		width: 16px;
 		height: 1.5px;
 		background: currentcolor;
-		transition: transform var(--t);
+		transition: transform var(--t) var(--ease-out);
 	}
 
 	.docs-menu-icon {
@@ -1289,952 +1753,92 @@ body:has(> .docs-nav) .side {
 		position: fixed;
 		inset: 0;
 		z-index: 25;
-		background: rgb(0 0 0 / 40%);
+		background: var(--scrim);
 	}
 
 	.docs-menu-open {
 		overflow: hidden;
 	}
-}
 
-/* text-wrap on every li would set them wrapping again: a label stays whole */
-.crumbs li {
-	white-space: nowrap;
-	text-wrap: nowrap;
-}
-
-main h2[id] {
-	scroll-margin-top: 80px;
-}
-
-.crumbs {
-	font-size: 0.875rem;
-	line-height: 1.714;
-	position: relative;
-	z-index: 1;
-}
-
-.crumbs .wrap {
-	padding-top: 18px;
-	padding-bottom: 18px;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 20px;
-	flex-wrap: wrap;
-}
-
-.crumbs nav {
-	min-width: 0;
-	overflow-x: auto;
-	white-space: nowrap;
-}
-
-.crumbs ol {
-	display: flex;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-/* a step with no page of its own, such as Reference, in the links' grey */
-.crumbs li {
-	color: var(--ink-3);
-}
-
-.crumbs li[aria-current] {
-	color: var(--ink);
-}
-
-.crumbs li:not(:last-child)::after {
-	content: "/";
-	color: var(--rule-strong);
-	margin: 0 10px;
-}
-
-.crumbs a {
-	color: var(--ink-2);
-	text-decoration: none;
-}
-
-.crumbs a:hover {
-	color: var(--ink);
-	text-decoration: underline;
-}
-
-.hook-search input {
-	width: 232px;
-	max-width: 100%;
-	font: inherit;
-	font-size: 0.875rem;
-	padding: 8px 16px;
-	border: 1px solid var(--charcoal-5);
-	border-radius: 2px;
-	background: var(--white);
-	color: var(--ink);
-}
-
-.hook-search input::placeholder {
-	color: var(--ink-3);
-	opacity: 1;
-}
-
-.hook-search input:focus-visible {
-	outline: 2px solid var(--focus);
-	outline-offset: -1px;
-	border-color: var(--focus);
-}
-
-.reference {
-	padding-top: 20px;
-}
-
-/* under the breadcrumbs, a page starts close to them, as on wordpress.org */
-.crumbs + main,
-.crumbs + .layout {
-	padding-top: 20px;
-}
-
-/* a top-level page has no breadcrumbs, so its title gets the room they took */
-.nav + main {
-	padding-top: var(--space-6);
-}
-
-/* the reference in the site's own type: its titles and sections in the
-   heading face, as every other page's are; code titles and hook names keep
-   Inter and monospace */
-.reference h1,
-.reference h2,
-.reference h3 {
-	color: var(--ink);
-	text-wrap: balance;
-}
-
-.reference h1,
-.reference h2 {
-	font-family: var(--serif);
-	font-weight: 400;
-}
-
-.reference h3 {
-	font-family: var(--sans);
-}
-
-.reference h1 {
-	font-size: var(--h1);
-	line-height: 1.1;
-	margin: 0 0 24px;
-}
-
-.reference h2 {
-	font-size: var(--h2);
-	line-height: 1.25;
-	margin: 0 0 16px;
-}
-
-.reference h3 {
-	font-size: var(--h3);
-	font-weight: 600;
-	line-height: 1.4;
-	margin: 32px 0 12px;
-}
-
-.reference p {
-	max-width: none;
-}
-
-.reference code {
-	font-family: var(--mono);
-	font-size: 0.875em;
-	background: var(--surface);
-	border: 0;
-	border-radius: 3px;
-	padding: 0.125em 0.375em;
-}
-
-/* the title: the call, monospace, in the code reference's colours */
-.reference .code-title {
-	font-family: var(--mono);
-	font-size: 24px;
-	font-weight: 400;
-	line-height: 1.73;
-	margin-bottom: 40px;
-	overflow-wrap: anywhere;
-}
-
-.code-title .hook-func {
-	color: var(--syntax-func);
-}
-
-.code-title .arg-type {
-	color: var(--syntax-type);
-}
-
-.code-title .arg-name {
-	color: var(--syntax-name);
-}
-
-.is-toc-heading {
-	scroll-margin-top: 80px;
-}
-
-.is-toc-heading a {
-	color: inherit;
-	text-decoration: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.is-toc-heading a::after {
-	content: "#";
-	color: var(--accent);
-	font-weight: 400;
-	opacity: 0;
-	transition: opacity var(--t);
-}
-
-.is-toc-heading a:hover::after,
-.is-toc-heading a:focus-visible::after {
-	opacity: 1;
-}
-
-.is-toc-heading:target {
-	box-shadow: -12px 0 0 -9px var(--riff-mark);
-}
-
-/* the article, with "On this page" beside it on a wide screen */
-.with-toc {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) 224px;
-	gap: var(--space-5);
-	align-items: start;
-}
-
-.entry {
-	grid-row: 1;
-	min-width: 0;
-}
-
-.entry > section + section {
-	margin-top: 50px;
-}
-
-.entry p {
-	margin: 0 0 16px;
-}
-
-.toc {
-	grid-row: 1;
-	grid-column: 2;
-	position: sticky;
-	top: var(--space-4);
-	max-height: calc(100vh - 2 * var(--space-4));
-	overflow-y: auto;
-	font-size: 0.875rem;
-	line-height: 1.5;
-}
-
-.toc-box {
-	border: 1px solid var(--rule);
-	border-radius: 2px;
-	background: var(--paper);
-}
-
-.toc-box summary {
-	padding: 15px 20px;
-	color: var(--ink);
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	list-style: none;
-	cursor: default;
-	pointer-events: none;
-}
-
-.toc-box summary::-webkit-details-marker {
-	display: none;
-}
-
-.toc-box ul {
-	list-style: none;
-	margin: 0;
-	padding: 0 20px 15px;
-}
-
-.toc ul ul {
-	padding: 0 0 0 14px;
-}
-
-@media (width > 1240px) {
-
-	.toc-box ul ul {
-		padding: 0;
-	}
-}
-
-.toc li {
-	margin: 6px 0;
-	color: var(--ink-2);
-}
-
-.toc a {
-	color: inherit;
-	text-decoration: none;
-}
-
-.toc a:hover {
-	color: var(--ink);
-	text-decoration: underline;
-}
-
-/* the section being read (docs.js): ink, underlined in ember, and on the
-   wide rail an ember tick in its place */
-.toc a[aria-current] {
-	color: var(--ink);
-	text-decoration: underline;
-	text-decoration-color: var(--riff-mark);
-	text-decoration-thickness: 2px;
-	text-underline-offset: 4px;
-}
-
-/* a rail on a wide screen: no box, a hairline down the left, the section
-   being read ticked on it */
-@media (width > 1240px) {
-
-	.toc-box {
-		border: 0;
-		background: none;
-	}
-
-	.toc-box summary {
-		padding: 0 0 10px;
-	}
-
-	.toc-box > ul {
-		padding: 0;
-		border-left: 1px solid var(--rule);
-	}
-
-	.toc-box li {
-		margin: 0;
-	}
-
-	.toc-box a {
-		position: relative;
-		display: block;
-		padding: 4px 0 4px 14px;
-	}
-
-	.toc-box a[aria-current]::before,
-	.guide .toc-box > ul > li:has(> a[aria-current])::after {
-		content: "";
-		position: absolute;
-		inset: 0 auto 0 -1px;
-		width: 2px;
-		background: var(--riff-mark);
-	}
-
-	.toc-box ul ul a {
-		padding-left: 26px;
-	}
-
-	.toc-box a[aria-current] {
-		text-decoration: none;
-	}
-
-	.toc .to-top,
-	.toc-edit {
-		padding-left: 15px;
-	}
-
-	/* the guide's tracklist: each number beside its title, the tick
-	   down the left of both */
-	.guide .toc-box > ul > li {
-		position: relative;
-		display: flex;
-		align-items: baseline;
-		padding-left: 14px;
-	}
-
-	.guide .toc-box > ul > li > a {
+	/* the step numbers come in from the margin, before each title */
+	.guide .entry > h2::before {
 		position: static;
-		padding-left: 0;
+		margin-right: 0.4em;
 	}
 
-	.guide .toc-box > ul > li > a[aria-current]::before {
-		content: none;
+	figure {
+		padding: var(--space-2);
 	}
-}
 
-.toc .to-top {
-	margin: 16px 0 0;
-}
+	.wp-block-code,
+	.where pre {
+		margin-inline: calc(-1 * var(--edge));
+		padding-inline: var(--edge);
+		border-radius: 0;
+		box-shadow: inset 0 var(--hairline) 0 var(--rule), inset 0 calc(-1 * var(--hairline)) 0 var(--rule);
+	}
 
-.toc .to-top a {
-	color: var(--accent);
-}
+	.where pre {
+		margin-inline: 0;
+		padding-inline: var(--space-2);
+		border-radius: var(--radius-code);
+		box-shadow: inset 0 0 0 var(--hairline) var(--rule);
+	}
 
-/* parameters */
-.parameters dl {
-	margin: 0;
-}
-
-.parameters dt {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-.parameters dt > code,
-.param-hash li > code {
-	background: none;
-	padding: 0;
-	font-size: 1rem;
-	font-weight: 600;
-	color: var(--charcoal-1);
-}
-
-.parameters .type {
-	font-family: var(--mono);
-	font-size: 0.875rem;
-	color: var(--syntax-type);
-}
-
-.parameters dd {
-	margin: 0;
-}
-
-.parameters dd:not(:last-child) {
-	padding-bottom: 20px;
-}
-
-.param-hash {
-	list-style: none;
-	margin: 10px 0 0;
-	padding-inline-start: 10px;
-	border-left: 1px solid var(--grey-1);
-}
-
-.param-hash li:not(:last-child) {
-	padding-bottom: 20px;
-}
-
-.param-hash .type {
-	margin-inline-start: 5px;
-}
-
-/* code blocks: light, bordered, with line numbers for source */
-.wp-block-code {
-	margin: 0 0 24px;
-	padding: 20px 24px;
-	background: var(--code-bg);
-	border: 0;
-	border-radius: 3px;
-	overflow: auto;
-	font-family: var(--mono);
-	font-size: 0.8125rem;
-	line-height: 1.7;
-	tab-size: 4;
-	color: var(--ink);
-}
-
-.wp-block-code:focus-visible {
-	outline-offset: -2px;
-}
-
-.wp-block-code code {
-	display: block;
-	background: none;
-	padding: 0;
-	font-size: inherit;
-	white-space: pre;
-}
-
-.wp-block-code .row {
-	display: block;
-}
-
-.wp-block-code .n {
-	display: inline-block;
-	min-width: 3.2em;
-	margin-left: -0.4em;
-	padding-right: 0.8em;
-	text-align: right;
-	color: var(--ink-3);
-	user-select: none;
-}
-
-.dot-links {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0 10px;
-	align-items: center;
-	font-size: 0.875rem;
-}
-
-.dot-links > :not(:last-child)::after {
-	content: "·";
-	margin-left: 10px;
-	color: var(--ink);
-}
-
-.dot-links code {
-	color: var(--ink-2);
-	background: none;
-	padding: 0;
-}
-
-/* the code reference's tables: bold heads, a rule under each row */
-.code-table {
-	width: 100%;
-	border-collapse: collapse;
-	margin-top: 20px;
-}
-
-.code-table th,
-.code-table td {
-	text-align: left;
-	vertical-align: top;
-	font-size: 0.9375rem;
-	line-height: 1.6;
-	padding: 12px 20px 12px 0;
-	border-bottom: 1px solid var(--rule);
-	width: 50%;
-}
-
-.code-table th {
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--ink-2);
-	padding-top: 8px;
-	padding-bottom: 8px;
-	border-bottom-color: var(--rule-strong);
-}
-
-/* three columns, as a schema has: the name wide enough for a nested path,
-   the type narrow, the description the rest */
-.code-table tr > :first-child:nth-last-child(3) {
-	width: 32%;
-}
-
-.code-table tr > :nth-child(2):nth-last-child(2) {
-	width: 16%;
-}
-
-.code-table td > .type {
-	white-space: nowrap;
-}
-
-.code-table tr > :nth-child(3):last-child {
-	width: auto;
-}
-
-.changelog .code-table th:first-child,
-.changelog .code-table td:first-child {
-	width: 8%;
-	min-width: 5rem;
-	white-space: nowrap;
-	padding-right: 32px;
-}
-
-.code-table td a {
-	display: block;
-	overflow-wrap: anywhere;
-}
-
-.code-table td:first-child code {
-	display: block;
-	width: fit-content;
-	margin-top: 2px;
-	background: none;
-	padding: 0;
-	color: var(--ink);
-	overflow-wrap: anywhere;
-}
-
-/* the path to a nested property, quieter than the property itself */
-.code-table td:first-child .path {
-	color: var(--ink-3);
-}
-
-/* the index */
-.hooks-index .intro {
-	max-width: 40rem;
-	margin: 0 0 20px;
-	font-size: 1.125rem;
-	line-height: 1.7;
-	color: var(--charcoal-3);
-}
-
-.hook-group h2 {
-	margin-top: 50px;
-}
-
-.hook-group[hidden],
-.hook-list li[hidden] {
-	display: none;
-}
-
-.hook-list {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	border-top: 1px solid var(--rule);
-}
-
-.hook-list li {
-	padding: 20px 0;
-	border-bottom: 1px solid var(--rule);
-}
-
-.hook-list .hook-name {
-	font-family: var(--mono);
-	font-size: 1.125rem;
-	font-weight: 600;
-}
-
-.hook-list p {
-	margin: 4px 0 0;
-}
-
-.hook-list .meta {
-	font-size: 0.875rem;
-	color: var(--ink-2);
-}
-
-.hook-list .meta code {
-	background: none;
-	padding: 0;
-	color: inherit;
-}
-
-@media (max-width: 1240px) {
-
-	.with-toc {
+	.groups,
+	.get {
 		grid-template-columns: minmax(0, 1fr);
-		gap: 30px;
 	}
 
-	.toc {
-		position: static;
-		grid-column: 1;
+	.with-cover {
+		grid-template-columns: 1fr;
 	}
 
-	.toc-box summary {
-		cursor: pointer;
-		pointer-events: auto;
-		display: flex;
-		justify-content: space-between;
+	.with-cover img {
+		width: 160px;
 	}
 
-	.toc-box summary::after {
-		content: "";
-		width: 8px;
-		height: 8px;
-		margin: 4px 4px 0 0;
-		border-right: 1.5px solid var(--charcoal-4);
-		border-bottom: 1.5px solid var(--charcoal-4);
-		transform: rotate(45deg);
-	}
-
-	.toc-box[open] summary::after {
-		transform: rotate(-135deg);
-		margin-top: 8px;
-	}
-
-	.toc .to-top {
-		display: none;
-	}
-
-	.entry {
-		grid-row: 2;
-	}
-}
-
-@media (max-width: 640px) {
-
-	.reference h1 {
-		font-size: 36px;
-	}
-
-	.reference .code-title {
-		font-size: 20px;
-	}
-
-	.member,
-	.is-toc-heading {
-		scroll-margin-top: 110px;
-	}
-
-	.code-table th,
-	.code-table td {
-		display: block;
-		width: 100%;
-		padding: 5px 0;
-		border: 0;
-	}
-
-	.code-table tr {
-		display: block;
-		padding: 5px 0;
-		border-bottom: 1px solid var(--grey-1);
+	.req li {
+		grid-template-columns: 1fr;
+		gap: 0;
 	}
 
 	.code-table thead {
 		display: none;
 	}
+
+	.code-table tr {
+		display: block;
+		padding: var(--space-1-5) 0;
+		border-bottom: var(--hairline) solid var(--rule);
+	}
+
+	/* as specific as the column widths above, so it wins over them */
+	.code-table tr > :nth-child(n):nth-last-child(n) {
+		display: block;
+		width: auto;
+		padding: 0;
+		border: 0;
+	}
+
+	.code-table td + td {
+		margin-top: var(--space-0);
+	}
+
+	footer .wrap {
+		flex-direction: column;
+		align-items: flex-start;
+	}
 }
 
-/* the JavaScript reference: one section per member of window.riff */
-.member {
-	scroll-margin-top: 80px;
-	padding-top: 30px;
-	border-top: 1px solid var(--grey-1);
-}
-
-.entry > .member + .member {
-	margin-top: 30px;
-}
-
-.reference .member-title {
-	font-size: 20px;
-	margin: 0 0 12px;
-}
-
-.member-title a {
-	color: var(--ink);
-	text-decoration: none;
-}
-
-.member-title a:hover {
-	text-decoration: underline;
-}
-
-.reference h4 {
-	font-size: 1rem;
-	font-weight: 600;
-	margin: 20px 0 8px;
-}
-
-.parameters .required {
-	color: var(--ink-2);
-	font-size: 0.875rem;
-}
-
-.member .returns .type,
-.member .parameters p .type {
-	font-family: var(--mono);
-	font-size: 0.875rem;
-	color: var(--syntax-type);
-}
-
-.reference h2 code {
-	background: none;
-	padding: 0;
-	font-size: inherit;
-	font-weight: 600;
-}
-
-.member .dot-links {
-	margin-top: 20px;
-}
-
-/* the handbooks: a doc from the repository as a page, its sections apart as
-   the reference's are and its lists spaced as the download page's */
-.handbook > h2:not(:first-child) {
-	margin-top: 50px;
-}
-
-.handbook ul,
-.handbook ol {
-	margin: 0 0 16px;
-	padding-left: 1.4em;
-}
-
-.handbook li {
-	margin: 0 0 8px;
-}
-
-.handbook li::marker {
-	color: var(--ink-2);
-}
-
-.handbook .code-table {
-	margin: 0 0 16px;
-}
-
-/* a long selector or path in the running text breaks rather than widen the
-   page */
-.handbook :not(pre) > code {
-	overflow-wrap: anywhere;
-}
-
-/* ---- the pages: a title, then the article with "On this page" beside it,
-   as wordpress.org's documentation is laid out */
-.doc {
-	max-width: calc(var(--docs-w) + 2 * var(--edge));
-	padding-top: 24px;
-}
-
-.doc .lede {
-	max-width: 40rem;
-	text-wrap: pretty;
-}
-
-.doc .with-toc {
-	margin-top: 40px;
-}
-
-.doc .entry {
-	max-width: 760px;
-}
-
-.doc .entry h2 {
-	margin-top: 48px;
-}
-
-.doc .entry > h2:first-child {
-	margin-top: 0;
-}
-
-.toc-edit {
-	margin: 10px 0 0;
-}
-
-.toc-edit a {
-	color: var(--ink-2);
-}
-
-/* the guide's sections are numbered as a tracklist is: the number in mono,
-   before the title and before each entry of the contents */
-.guide .entry {
-	counter-reset: step;
-}
-
-.guide .entry h2::before {
-	counter-increment: step;
-	content: counter(step, decimal-leading-zero);
-	display: block;
-	margin-bottom: 8px;
-	font-family: var(--mono);
-	font-size: 0.8125rem;
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	color: var(--accent);
-	font-variant-numeric: tabular-nums;
-}
-
-.guide .toc-box > ul {
-	counter-reset: track;
-}
-
-.guide .toc-box > ul > li::before {
-	counter-increment: track;
-	content: counter(track, decimal-leading-zero);
-	margin-right: 10px;
-	font-family: var(--mono);
-	font-size: 0.75rem;
-	color: var(--ink-3);
-}
-
-/* what is content can be selected and copied; what is the page's chrome
-   cannot, so select-all, a double click or a strum across the strings
-   picks up words and not the bar, the buttons or the pictures */
-.nav,
-.docs-nav,
-.btn,
-.go,
-.device,
-.desk,
-.shot,
-.fan,
-.shelf,
-figure img {
-	-webkit-user-select: none;
-	user-select: none;
-	-webkit-touch-callout: none;
-}
-
-/* selected words in ember: a pale wash under black on white, and the
-   bright ember under black on a dark band */
-::selection {
-	background: var(--riff-ember-wash);
-	color: var(--charcoal-1);
-}
-
-.alt ::selection,
-footer ::selection {
-	background: var(--riff-ember);
-	color: var(--charcoal-1);
-}
-
-/* no lone last word on a line: headings balanced, running text shaped so
-   its last line is never one word (the deploy also binds the last two) */
-h1,
-h2,
-h3,
-h4 {
-	text-wrap: balance;
-}
-
-p,
-li,
-dd,
-dt,
-figcaption,
-blockquote {
-	text-wrap: pretty;
-}
-
-/* the missing page: the bar and the footer as on every page, and the
-   heading set large, since it is the only thing on the page */
-.lost {
-	min-height: calc(100vh - 72px - 120px);
-	padding-top: var(--space-7);
-}
-
-.lost h1 {
-	font-size: clamp(56px, 8vw, 96px);
-	line-height: 1;
-	letter-spacing: -0.015em;
-}
-
-.lost .lede {
-	margin-top: var(--space-3);
-}
-
-.lost .cta {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 16px 20px;
-	align-items: center;
-	margin-top: var(--space-4);
-}
-
-.lost .go {
-	font-weight: 600;
-	text-underline-offset: 4px;
-}
-
-/* the page's title is its only content, so it sits a little higher */
-.nav + main.lost {
-	padding-top: var(--space-7);
-}
-
-/* motion only for those who have not asked for less: the strings' board
-   and every fade come and go at once */
+/* motion is colour and one icon; with less motion asked for, the icon turns
+   at once */
 @media (prefers-reduced-motion: reduce) {
 
-	*,
-	::before,
-	::after {
-		transition-duration: 0.01ms !important;
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
-		scroll-behavior: auto !important;
+	.docs-menu-icon,
+	.docs-menu-icon::before,
+	.docs-menu-icon::after,
+	.is-toc-heading a::after {
+		transition: none;
 	}
 }

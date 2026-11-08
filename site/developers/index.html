@@ -24,22 +24,22 @@
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
-<link rel="preload" href="../fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../web/web.css">
 </head>
 <body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/" aria-current="page">Source</a></div><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/">Download</a><a href="../developers/" aria-current="page">Docs</a></nav></div></header>
-<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span>Menu</button><nav id="docs-nav-list" aria-label="Docs"><ul><li class="local-home"><a href="../developers/" aria-current="page">Overview</a></li><li class="local-group"><span class="local-label" id="docs-group-handbook">Handbook</span><ul aria-labelledby="docs-group-handbook"><li><a href="../developers/music/">Your music</a></li><li><a href="../developers/album/">An album</a></li><li><a href="../developers/post/">Music in a post</a></li><li><a href="../developers/listen-page/">The Listen page</a></li><li><a href="../developers/app/">The app</a></li><li><a href="../developers/lyrics/">Lyrics</a></li><li><a href="../developers/sign-in/">Signing in</a></li><li><a href="../developers/network/">Clients and networks</a></li><li><a href="../developers/extensions/">Extensions</a></li><li><a href="../developers/player/">Player</a></li></ul></li><li class="local-group"><span class="local-label" id="docs-group-reference">Reference</span><ul aria-labelledby="docs-group-reference"><li><a href="../developers/php/">PHP</a></li><li><a href="../developers/javascript/">JavaScript</a></li><li><a href="../developers/rest/">REST API</a></li><li><a href="../developers/css/">CSS</a></li></ul></li><li><a href="../web/">Built on the open web</a></li></ul></nav></aside>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/" aria-current="page">Source</a></div><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/">Download</a></nav></div></header>
+<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span><span class="screen-reader-text">Menu: </span><span class="docs-where">Overview</span></button><nav id="docs-nav-list" aria-label="Docs"><ul><li class="local-home"><a href="../developers/" aria-current="page">Overview</a></li><li class="local-group"><span class="local-label" id="docs-group-handbook">Handbook</span><ul aria-labelledby="docs-group-handbook"><li><a href="../developers/music/">Your music</a></li><li><a href="../developers/album/">An album</a></li><li><a href="../developers/post/">Music in a post</a></li><li><a href="../developers/listen-page/">The Listen page</a></li><li><a href="../developers/app/">The app</a></li><li><a href="../developers/lyrics/">Lyrics</a></li><li><a href="../developers/sign-in/">Signing in</a></li><li><a href="../developers/network/">Clients and networks</a></li><li><a href="../developers/extensions/">Extensions</a></li><li><a href="../developers/player/">Player</a></li></ul></li><li class="local-group"><span class="local-label" id="docs-group-reference">Reference</span><ul aria-labelledby="docs-group-reference"><li><a href="../developers/php/">PHP</a></li><li><a href="../developers/javascript/">JavaScript</a></li><li><a href="../developers/rest/">REST API</a></li><li><a href="../developers/css/">CSS</a></li></ul></li><li><a href="../web/">Built on the open web</a></li></ul></nav></aside>
 <!-- /nav:top -->
 
-<main id="main" class="wrap doc dl">
+<main id="main" class="wrap doc">
 <h1>Built to be extended</h1>
 <p class="lede">Riff is built the way a feature plugin is: one track shape everywhere, read through WordPress's own APIs, with a public surface that is written down and kept. Everything below is stable within a major version.</p>
 <div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#php">PHP</a></li><li><a href="#javascript">JavaScript</a></li><li><a href="#rest-and-graphql">REST and GraphQL</a></li><li><a href="#your-own-tracks">Your own tracks</a></li><li><a href="#views-and-controls">Views and controls</a></li><li><a href="#standalone-mode-and-wp-cli">Standalone mode and WP-CLI</a></li><li><a href="#design">Design and theming</a></li><li><a href="#handbooks">Handbooks</a></li><li><a href="#under-the-hood">Under the hood</a></li><li><a href="#the-code">The code</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/developers/index.html">Edit this page on GitHub</a></p></aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#php">PHP</a></li><li><a href="#javascript">JavaScript</a></li><li><a href="#rest-and-graphql">REST and GraphQL</a></li><li><a href="#your-own-tracks">Your own tracks</a></li><li><a href="#views-and-controls">Views and controls</a></li><li><a href="#standalone-mode-and-wp-cli">Standalone mode and WP-CLI</a></li><li><a href="#design">Design and theming</a></li></ul></details></aside>
 <article class="entry">
 <h2 id="php">PHP</h2>
 <p>Every filter and action has a page of its own, generated from the docblock above the line it fires on, and CI fails a change that adds one without it; Riff's functions are held to the same. <a href="php/">The PHP reference</a> lists them with the <code>Riff\Source</code> interface, the track schema and the Listen block. Change a track before the player reads it, add a section to About, register a view or a control, or turn the turntable or the whole player off on a page; <a href="hooks/">all hooks</a> are searchable in one list.</p>
@@ -70,26 +70,19 @@
 </ul>
 <p>Other plugins' styles still load in standalone mode, where only the theme's are left out, so a stylesheet can set the player's public custom properties there too; <a href="css/">the CSS reference</a> lists each with its default.</p>
 
-<h2 id="handbooks">Handbooks</h2>
-<p>Beside the reference, the repository's own docs, published from the Markdown on every deploy. <a href="player/">How the player works</a> follows the front end from the blocks a page plays to the views, the panels and the turntable. <a href="extensions/">Extensions</a> covers the plugins that ship inside Riff: how one is bundled, how Riff loads it, and how to write one.</p>
-
-<h2 id="under-the-hood">Under the hood</h2>
-<p>Each browser API and CSS feature the player calls has <a href="../web/">a page of its own</a>: how Riff uses it, why, what happens without it, and the exact lines in the source at the commit that was published.</p>
-
-<h2 id="the-code">The code</h2>
-<p>No build step: the shipped files are the source. <a href="https://github.com/RiffPress/RiffPress">The repository</a> has the contributing guide, the test suites, and a Playground blueprint for a scratch site with the demo on it.</p>
+<p class="edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/developers/index.html">Edit this page on GitHub</a></p>
 </article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>
 
 <!-- nav:footer -->
-<footer><div class="wrap"><p class="foot-license">Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</p><nav aria-label="Footer"><div class="foot-group"><p class="foot-label" id="foot-about">About</p><ul aria-labelledby="foot-about"><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://riffpress.com/">Riff Cloud</a></li></ul></div><div class="foot-group"><p class="foot-label" id="foot-help">Help</p><ul aria-labelledby="foot-help"><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></div></nav></div></footer>
+<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
 <!-- /nav:footer -->
 <script type="module" src="../js/docs.js"></script>
 </body>

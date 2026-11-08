@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * The navigation of source.riffpress.com, drawn from site-nav.json: the header, the section bar, the
- * breadcrumbs, the previous and next links and the footer, and each page's title.
+ * previous and next links and the footer, and each page's title.
  *
  * site-shell.js draws them into every generated page. The pages written by hand carry them between
  * markers, which this stamps, leaving the rest of the page alone:
  *
- *   <!-- nav:top -->…<!-- /nav:top -->        the skip link, header, section bar and breadcrumbs
+ *   <!-- nav:top -->…<!-- /nav:top -->        the skip link, header and section bar
  *   <!-- nav:pager -->…<!-- /nav:pager -->    previous and next, where the page has siblings in order
  *   <!-- nav:footer -->…<!-- /nav:footer -->  the footer
  *
@@ -114,7 +114,8 @@ function current( ctx, node ) {
 /**
  * The header: the wordmark, then each section, the one the page is in marked. The wordmark leads
  * back to riffpress.com, and the host's own name beside it, "Source", to the host's home, as
- * developer.wordpress.org and Stripe's docs lead back to their sites: Riff | Source.
+ * developer.wordpress.org and Stripe's docs lead back to their sites: Riff | Source. Source is the
+ * docs, so the docs' section has no second link of its own at the right.
  *
  * @param {Object} ctx From locate(), or null where no section is current (the 404).
  * @param {string} up  The path back to the site's root.
@@ -124,8 +125,8 @@ function current( ctx, node ) {
 function header( ctx, up, nav = NAV ) {
 	// "Source" leads to the host's home, the section marked root.
 	const mark = nav.sections.find( ( s ) => s.root );
-	const links = nav.sections.map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a>` ).join( '' );
-	const here = ctx && ctx.node === mark && ! ctx.leaf ? ' aria-current="page"' : '';
+	const links = nav.sections.filter( ( s ) => ! s.root ).map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a>` ).join( '' );
+	const here = current( ctx, mark );
 	// "Riff Source" less the product's own name: "Source".
 	const name = nav.hosts[ mark.host ];
 	const host = name.startsWith( `${ PRODUCT } ` ) ? name.slice( PRODUCT.length + 1 ) : name;
@@ -158,37 +159,29 @@ function sectionBar( ctx, up ) {
 		return `<li><a href="${ to( up, n.href ) }"${ current( ctx, n ) }>${ esc( n.label ) }</a></li>`;
 	};
 	const overview = `<li class="local-home"><a href="${ to( up, s.href ) }"${ ctx.node === s && ! ctx.leaf ? ' aria-current="page"' : '' }>Overview</a></li>`;
-	return `<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span>Menu</button><nav id="docs-nav-list" aria-label="${ esc( s.label ) }"><ul>${ overview }${ shown( s.children ).map( item ).join( '' ) }</ul></nav></aside>
+	return `<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span><span class="screen-reader-text">Menu: </span>${ where( ctx ) }</button><nav id="docs-nav-list" aria-label="${ esc( s.label ) }"><ul>${ overview }${ shown( s.children ).map( item ).join( '' ) }</ul></nav></aside>
 `;
 }
 
 /**
- * The breadcrumbs, from the section down to the page, on every page below a section's root. A
- * group with no page of its own is named without a link. A section's root has none; the strip is
- * kept there only for what sits at its right, such as a search form.
+ * Where the page is, below its section, for the phone's Menu button: "Handbook / Your music",
+ * "PHP / riff_track". The sidebar marks the same place on a wide screen, so there are no
+ * breadcrumbs as well.
  *
- * @param {Object} ctx   From locate(), or null.
- * @param {string} up    The path back to the site's root.
- * @param {string} extra HTML for the right-hand side.
- * @return {string} HTML, or nothing.
+ * @param {Object} ctx From locate().
+ * @return {string} HTML.
  */
-function crumbs( ctx, up, extra = '' ) {
-	const trail = ctx ? ctx.trail.map( ( n ) => [ n.label, n.href ] ) : [];
-	if ( ctx?.leaf ) {
-		trail.push( [ ctx.leaf ] );
+function where( ctx ) {
+	const names = ctx.trail.slice( 1 ).map( ( n ) => n.label );
+	if ( ctx.leaf ) {
+		names.push( ctx.leaf );
 	}
-	if ( trail.length < 2 ) {
-		return extra ? `<div class="crumbs"><div class="wrap">${ extra }</div></div>
-` : '';
+	// A hook sits under PHP, under Reference: the two nearest say enough.
+	const shown = names.slice( -2 );
+	if ( ! shown.length ) {
+		return '<span class="docs-where">Overview</span>';
 	}
-	const parts = trail.map( ( [ label, href ], i ) => {
-		if ( i === trail.length - 1 ) {
-			return `<li aria-current="page">${ esc( label ) }</li>`;
-		}
-		return typeof href === 'string' ? `<li><a href="${ to( up, href ) }">${ esc( label ) }</a></li>` : `<li>${ esc( label ) }</li>`;
-	} );
-	return `<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><ol>${ parts.join( '' ) }</ol></nav>${ extra }</div></div>
-`;
+	return `<span class="docs-where">${ shown.map( ( n, i ) => ( i < shown.length - 1 ? `<span class="docs-where-up">${ esc( n ) }</span>` : esc( n ) ) ).join( '' ) }</span>`;
 }
 
 /**
@@ -229,7 +222,8 @@ function siblings( ctx, up ) {
 }
 
 /**
- * The footer: the license, then each group of links, the page's own marked.
+ * The footer, one line: the license, then the few links nothing above leads to, the page's own
+ * marked. riffpress.com is the wordmark's, so it is not here again.
  *
  * @param {Object} ctx From locate(), or null.
  * @param {string} up  The path back to the site's root.
@@ -238,17 +232,14 @@ function siblings( ctx, up ) {
 function footer( ctx, up ) {
 	const nav = ctx?.nav || NAV;
 	const all = entries( nav );
-	const groups = nav.footer.map( ( g ) => {
-		const links = g.links.map( ( l ) => {
-			if ( typeof l === 'string' ) {
-				const n = all.get( l ).node;
-				return `<li><a href="${ to( up, n.href ) }"${ ctx && ctx.node === n && ! ctx.leaf ? ' aria-current="page"' : '' }>${ esc( n.label ) }</a></li>`;
-			}
-			return `<li><a href="${ esc( l.href ) }">${ esc( l.label ) }</a></li>`;
-		} );
-		return `<div class="foot-group"><p class="foot-label" id="foot-${ g.key }">${ esc( g.label ) }</p><ul aria-labelledby="foot-${ g.key }">${ links.join( '' ) }</ul></div>`;
+	const links = nav.footer.map( ( l ) => {
+		if ( typeof l === 'string' ) {
+			const n = all.get( l ).node;
+			return `<li><a href="${ to( up, n.href ) }"${ ctx && ctx.node === n && ! ctx.leaf ? ' aria-current="page"' : '' }>${ esc( n.label ) }</a></li>`;
+		}
+		return `<li><a href="${ esc( l.href ) }">${ esc( l.label ) }</a></li>`;
 	} );
-	return `<footer><div class="wrap"><p class="foot-license">Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</p><nav aria-label="Footer">${ groups.join( '' ) }</nav></div></footer>
+	return `<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul>${ links.join( '' ) }</ul></nav></div></footer>
 `;
 }
 
@@ -304,7 +295,7 @@ function stamp( html, file, nav = NAV ) {
 	if ( ! /<main id="main"/.test( html ) ) {
 		problems.push( `site/${ file }: the skip link needs <main id="main">` );
 	}
-	let out = html.replace( REGION( 'top' ), ( m, opts ) => `<!-- nav:top${ opts } -->\n${ header( ctx, up, nav ) }${ sectionBar( ctx, up ) }${ crumbs( ctx, up ) }<!-- /nav:top -->` );
+	let out = html.replace( REGION( 'top' ), ( m, opts ) => `<!-- nav:top${ opts } -->\n${ header( ctx, up, nav ) }${ sectionBar( ctx, up ) }<!-- /nav:top -->` );
 	out = out.replace( REGION( 'pager' ), ( m, opts ) => `<!-- nav:pager${ opts } -->\n${ pager( ...siblings( ctx, up ) ) }<!-- /nav:pager -->` );
 	out = out.replace( REGION( 'footer' ), ( m, opts ) => `<!-- nav:footer${ opts } -->\n${ footer( ctx, up ) }<!-- /nav:footer -->` );
 	if ( ctx && siblings( ctx, up ).some( Boolean ) && ! html.match( REGION( 'pager' ) ) ) {
@@ -366,11 +357,9 @@ function validate( nav = NAV ) {
 			problems.push( `site-nav.json: the handbook developers/${ h.slug }/ is not in the Handbook group` );
 		}
 	}
-	for ( const g of nav.footer ) {
-		for ( const l of g.links ) {
-			if ( typeof l === 'string' && ! keys.has( l ) ) {
-				problems.push( `site-nav.json: the footer links to "${ l }", which is no entry` );
-			}
+	for ( const l of nav.footer ) {
+		if ( typeof l === 'string' && ! keys.has( l ) ) {
+			problems.push( `site-nav.json: the footer links to "${ l }", which is no entry` );
 		}
 	}
 	return problems;
@@ -419,7 +408,7 @@ function main() {
 	}
 }
 
-module.exports = { NAV, entries, locate, current, header, sectionBar, crumbs, pager, siblings, footer, title, stamp, validate, handWritten };
+module.exports = { NAV, entries, locate, current, header, sectionBar, where, pager, siblings, footer, title, stamp, validate, handWritten };
 
 if ( require.main === module ) {
 	main();
