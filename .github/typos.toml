@@ -34,4 +34,5 @@ extend-exclude = [
 
 [default]
 # The ISO 639-2 to 639-1 map in class-media.php: three-letter codes, not misspelt words.
-extend-ignore-re = ["'[a-z]{3}' => '[a-z]{2}',"]
+# A font's unicode-range: code points in hexadecimal, such as u+0100-02ba, not words.
+extend-ignore-re = ["'[a-z]{3}' => '[a-z]{2}',", "(?i)u\\+[0-9a-f?]+(-[0-9a-f]+)?"]

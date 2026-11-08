@@ -266,7 +266,8 @@ final class Cover {
 	}
 
 	/**
-	 * The two fonts, subset to Latin, embedded so the cover is set the same wherever it is shown.
+	 * The two fonts, each one weight subset to Basic Latin, Latin-1 and the punctuation a title
+	 * uses, embedded so the cover is set the same wherever it is shown.
 	 * An SVG shown as an image cannot reach the page's fonts.
 	 *
 	 * @return string A style element, or nothing when the files are not there.
