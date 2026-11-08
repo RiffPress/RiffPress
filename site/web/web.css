@@ -583,7 +583,12 @@ body > main.wrap {
 
 .docs-nav nav > ul {
 	display: grid;
-	gap: var(--space-3);
+}
+
+/* a group stands apart from what is around it; pages sit close */
+.docs-nav nav > ul > .local-group:not(:first-child),
+.docs-nav nav > ul > .local-group + li {
+	margin-top: var(--space-3);
 }
 
 .docs-nav .local-label {
@@ -724,6 +729,14 @@ main.dl > * {
 .reference .summary p {
 	max-width: var(--measure);
 	margin: var(--space-3) 0 0;
+}
+
+.reference .summary p {
+	margin-top: 0;
+}
+
+.lede,
+.reference .summary p {
 	color: var(--ink-3);
 	font-size: var(--text-intro);
 	line-height: 1.5;
@@ -735,7 +748,7 @@ main.dl > * {
 
 /* a reference page opens with its summary, which is its lede */
 .entry:has(> .summary:first-child) {
-	margin-top: 0;
+	margin-top: var(--space-3);
 }
 
 .reference .summary p {
@@ -1145,7 +1158,9 @@ figcaption {
 	padding: var(--space-1-5) var(--space-3) var(--space-1-5) 0;
 	border-bottom: var(--hairline) solid var(--rule);
 	text-align: left;
-	vertical-align: top;
+
+	/* a name, its type and what it is share one line, whatever their sizes */
+	vertical-align: baseline;
 }
 
 .code-table th:last-child,
@@ -1162,7 +1177,7 @@ figcaption {
 }
 
 .code-table tr > :first-child:nth-last-child(2) {
-	width: 36%;
+	width: 32%;
 }
 
 .code-table tr > :first-child:nth-last-child(3),
@@ -1621,7 +1636,7 @@ main.lost {
 }
 
 .lost .lede {
-	margin-top: var(--space-3);
+	margin-top: var(--space-4);
 }
 
 .lost .cta {

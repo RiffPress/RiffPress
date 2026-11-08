@@ -126,14 +126,15 @@ if ( opener && window.HTMLDialogElement ) {
 	const esc = ( s ) => s.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' ).replace( /"/g, '&quot;' );
 
 	// A page whose title has the words ranks first, then one where a heading has them, then the
-	// summary; a title that starts with them ranks over one that only holds them.
+	// summary; a title that starts with them ranks over one that only holds them. A page is its
+	// title alone; a section says its page, and a summary's match shows the summary.
 	const find = ( pages, q ) => {
 		const words = q.toLowerCase().split( /\s+/ ).filter( Boolean );
 		const has = ( text ) => words.every( ( w ) => text.toLowerCase().includes( w ) );
 		const hits = [];
 		for ( const p of pages ) {
 			if ( has( p.t ) ) {
-				hits.push( { score: p.t.toLowerCase().startsWith( words[ 0 ] ) ? 4 : 3, href: p.u, title: p.t, where: p.d } );
+				hits.push( { score: p.t.toLowerCase().startsWith( words[ 0 ] ) ? 4 : 3, href: p.u, title: p.t } );
 			}
 			for ( const [ id, text ] of p.h ) {
 				if ( has( text ) ) {
@@ -141,7 +142,7 @@ if ( opener && window.HTMLDialogElement ) {
 				}
 			}
 			if ( ! has( p.t ) && has( p.s ) ) {
-				hits.push( { score: 1, href: p.u, title: p.t, where: p.d } );
+				hits.push( { score: 1, href: p.u, title: p.t, where: p.s } );
 			}
 		}
 		return hits.sort( ( a, b ) => b.score - a.score || a.title.length - b.title.length ).slice( 0, 12 );
