@@ -147,13 +147,24 @@ test.describe( 'The accent from the cover', () => {
 	} );
 } );
 
-test( 'without reduced motion, the accent fades from one track\'s to the next', async ( { page } ) => {
+test( 'without reduced motion, the wash behind Now Playing fades from one cover\'s accent to the next', async ( { page } ) => {
 	await page.emulateMedia( { reducedMotion: 'no-preference' } );
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).first().click();
 	await expect.poll( async () => ( await colours( page ) ).set ).not.toBe( '' );
-	const line = page.locator( '.riff-bar .riff-line i' ).first();
-	await expect( line ).toHaveCSS( 'transition-duration', '0.6s' );
+	const wash = page.locator( '.riff-np-bg' );
+	const fade = ( pseudo ) => wash.evaluate( ( el, p ) => getComputedStyle( el, p ).animationName, pseudo );
+	await expect( wash ).toHaveAttribute( 'data-riff-fading', '' );
+	expect( await fade( '::after' ) ).toBe( 'riff-wash-in' );
+	expect( await fade( '::before' ) ).toBe( 'riff-wash-out' );
+	// The last cover's accent is the one fading out.
+	const set = ( await colours( page ) ).set;
+	await page.evaluate( () => window.riff.next() );
+	await expect( wash ).toHaveCSS( '--riff-cover-accent-was', set );
+
+	// Asked for less motion, it changes at once.
+	await page.emulateMedia( { reducedMotion: 'reduce' } );
+	expect( await fade( '::after' ) ).toBe( 'none' );
 } );
 
 test( 'the Listen app\'s own document keeps no colour of its own: Liked songs and the Browse tiles take the accent', async ( {
@@ -185,43 +196,48 @@ test( 'the Listen app\'s own document keeps no colour of its own: Liked songs an
 	await expect( page.locator( '.riff-browse-tile' ).first() ).toHaveCSS( 'color', 'rgb(255, 255, 255)' );
 
 	// Nothing in the app is drawn in a violet, a hue from 250° to 310° with real saturation, but
-	// the covers, which are the music's own colours.
-	const violets = await page.evaluate( () => {
-		const hue = ( css ) => {
-			const m = css.match( /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/ );
-			if ( ! m || m[ 4 ] === '0' ) {
-				return null;
-			}
-			const [ r, g, b ] = m.slice( 1, 4 ).map( ( v ) => v / 255 );
-			const max = Math.max( r, g, b );
-			const d = max - Math.min( r, g, b );
-			if ( d < 0.2 ) {
-				return null;
-			}
-			let h;
-			if ( max === r ) {
-				h = ( g - b ) / d + ( g < b ? 6 : 0 );
-			} else if ( max === g ) {
-				h = ( b - r ) / d + 2;
-			} else {
-				h = ( r - g ) / d + 4;
-			}
-			return h * 60;
-		};
-		const found = [];
-		for ( const el of document.querySelectorAll( '.riff-app *' ) ) {
-			if ( el.closest( 'img, .riff-app-item-art:not(:has(.riff-app-item-heart)), .riff-card-art:not(.riff-card-liked .riff-card-art), .riff-album-art' ) ) {
-				continue;
-			}
-			const s = getComputedStyle( el );
-			for ( const value of [ s.color, s.backgroundColor, ...( s.backgroundImage.match( /rgba?\([^)]+\)/g ) || [] ) ] ) {
-				const h = hue( value );
-				if ( h !== null && h >= 250 && h <= 310 ) {
-					found.push( `${ el.className } ${ value }` );
+	// the covers, which are the music's own colours: on Search, and on Liked songs' own page.
+	const violets = () =>
+		page.evaluate( () => {
+			const pixel = document.createElement( 'canvas' ).getContext( '2d', { willReadFrequently: true } );
+			const hue = ( css ) => {
+				pixel.clearRect( 0, 0, 1, 1 );
+				pixel.fillStyle = css;
+				pixel.fillRect( 0, 0, 1, 1 );
+				const [ r, g, b, a ] = [ ...pixel.getImageData( 0, 0, 1, 1 ).data ].map( ( v ) => v / 255 );
+				const max = Math.max( r, g, b );
+				const d = max - Math.min( r, g, b );
+				if ( a === 0 || d < 0.2 ) {
+					return null;
+				}
+				let h;
+				if ( max === r ) {
+					h = ( g - b ) / d + ( g < b ? 6 : 0 );
+				} else if ( max === g ) {
+					h = ( b - r ) / d + 2;
+				} else {
+					h = ( r - g ) / d + 4;
+				}
+				return h * 60;
+			};
+			const found = [];
+			const skip = 'img, .riff-app-item-art:not(:has(.riff-app-item-heart)), .riff-card-art:not(.riff-card-liked .riff-card-art), .riff-album-art';
+			for ( const el of [ ...document.querySelectorAll( '.riff-app *' ) ].filter( ( node ) => ! node.closest( skip ) ) ) {
+				for ( const pseudo of [ null, '::before' ] ) {
+					const s = getComputedStyle( el, pseudo );
+					const fns = s.backgroundImage.match( /(?:rgba?|oklab|oklch|lab|lch|hsla?|color)\([^()]*\)/g ) || [];
+					for ( const value of [ s.color, s.backgroundColor, ...fns ] ) {
+						const h = hue( value );
+						if ( h !== null && h >= 250 && h <= 310 ) {
+							found.push( `${ el.className }${ pseudo || '' } ${ value }` );
+						}
+					}
 				}
 			}
-		}
-		return found;
-	} );
-	expect( violets ).toEqual( [] );
+			return found;
+		} );
+	expect( await violets() ).toEqual( [] );
+	await page.locator( '.riff-app-item', { hasText: 'Liked songs' } ).first().click();
+	await expect( page.locator( '.riff-album-liked' ) ).toBeVisible();
+	expect( await violets() ).toEqual( [] );
 } );

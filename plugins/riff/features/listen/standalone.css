@@ -45,9 +45,9 @@
 	   sets --riff-cover-accent on the body from the cover playing, or the
 	   site's --riff-accent for a grey one (now-playing.js). Before anything
 	   plays the app is the text's colour alone. Liked songs is a wash of it,
-	   darkened so its white heart holds 3:1 on it. */
-	--riff-liked: linear-gradient(135deg, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.78)) var(--riff-cover-accent, var(--riff-app-ink));
-	--riff-on-liked: #fff;
+	   darkened so its heart, in the text's colour, holds 3:1 on it. */
+	--riff-liked: linear-gradient(135deg, color-mix(in srgb, var(--riff-standalone-bg) 45%, transparent), color-mix(in srgb, var(--riff-standalone-bg) 78%, transparent)) var(--riff-cover-accent, var(--riff-app-ink));
+	--riff-on-liked: var(--riff-standalone-ink);
 }
 
 /* A link in the app's words, as Add your first album in an empty library is:
@@ -56,15 +56,14 @@
 	color: var(--riff-cover-accent, var(--riff-app-ink));
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
-	transition: color 0.6s;
 }
 
-/* Search's Browse tiles: shades of the accent on black, each with white words
-   at 4.5:1, in place of the palette the Listen block keeps in a theme. */
+/* Search's Browse tiles: shades of the accent on the app's black, each with
+   its words in the text's colour at 4.5:1, in place of the palette the
+   Listen block keeps in a theme. */
 .riff-standalone .riff-app .riff-browse-tile {
-	background-color: color-mix(in oklab, var(--riff-cover-accent, var(--riff-app-ink)) var(--riff-tile-mix, 40%), #000);
-	color: #fff;
-	transition: background-color 0.6s;
+	background: color-mix(in oklab, var(--riff-cover-accent, var(--riff-app-ink)) var(--riff-tile-mix, 40%), var(--riff-standalone-bg));
+	color: var(--riff-standalone-ink);
 }
 
 .riff-standalone .riff-app .riff-browse li:nth-child(2) .riff-browse-tile {
@@ -82,23 +81,12 @@
 /* The track playing in a list: its title in the accent. */
 .riff-standalone .riff-app .riff-row[data-current] .riff-row-title {
 	color: var(--riff-cover-accent, var(--riff-app-ink));
-	transition: color 0.6s;
 }
 
-.riff-standalone .riff-app :is(.riff-card-liked .riff-card-art, .riff-album-liked),
-.riff-standalone .riff-app-item-heart {
-	transition: background-color 0.6s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-	.riff-standalone .riff-app :is(p, li, dd) > a:not([class]),
-	.riff-standalone .riff-app .riff-browse-tile,
-	.riff-standalone .riff-app .riff-row[data-current] .riff-row-title,
-	.riff-standalone .riff-app :is(.riff-card-liked .riff-card-art, .riff-album-liked),
-	.riff-standalone .riff-app-item-heart {
-		transition: none;
-	}
+/* Liked songs' own page washes its header in the accent too, over the tint
+   its header names for the Listen block in a theme. */
+.riff-standalone .riff-album-tinted:has(.riff-album-liked) {
+	--riff-album-mix: var(--riff-cover-accent, var(--riff-app-ink)) 40%, var(--riff-app-bg);
 }
 
 /* Once the bar shows, the page already keeps its height free below

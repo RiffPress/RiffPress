@@ -128,7 +128,7 @@
 	list-style: none;
 }
 
-.riff-app .riff-browse-tile {
+.riff-app a.riff-browse-tile {
 	display: flex;
 	background: var(--riff-tile);
 	color: var(--riff-tile-ink);

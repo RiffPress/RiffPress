@@ -528,7 +528,6 @@ div.riff-row-locked {
 	position: absolute;
 	inset: 0;
 	background: var(--riff-cover-accent);
-	transition: background-color 0.6s;
 	transform-origin: left;
 	transform: scaleX(var(--riff-p));
 }
@@ -1114,8 +1113,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	pointer-events: none;
 }
 
-/* Over it, a soft wash of the cover's accent from the top, which fades from
-   one track's to the next. */
+/* Over it, a soft wash of the cover's accent from the top. When the track
+   changes the last one's (::before) fades out as this one's (::after) fades
+   in, by their opacity alone (now-playing.js). */
+.riff-np-bg::before,
 .riff-np-bg::after {
 	content: "";
 	position: absolute;
@@ -1124,7 +1125,41 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	opacity: 0.14;
 	-webkit-mask-image: radial-gradient(120% 70% at 50% 0%, #000, transparent 75%);
 	mask-image: radial-gradient(120% 70% at 50% 0%, #000, transparent 75%);
-	transition: background-color 0.6s;
+}
+
+.riff-np-bg::before {
+	background-color: var(--riff-cover-accent-was, var(--riff-cover-accent));
+	opacity: 0;
+}
+
+.riff-np-bg[data-riff-fading]::before {
+	animation: riff-wash-out 0.6s ease-out;
+}
+
+.riff-np-bg[data-riff-fading]::after {
+	animation: riff-wash-in 0.6s ease-out;
+}
+
+@keyframes riff-wash-out {
+
+	from {
+		opacity: 0.14;
+	}
+
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes riff-wash-in {
+
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 0.14;
+	}
 }
 
 .riff-np-head,
@@ -2690,12 +2725,10 @@ dl.riff-about-credits dd {
    accent. */
 #riff .riff-queue-list button[aria-current] .riff-row-title {
 	color: var(--riff-cover-accent);
-	transition: color 0.6s;
 }
 
 #riff .riff-queue-list button[aria-current] .riff-row-state i {
 	background: var(--riff-cover-accent);
-	transition: background-color 0.6s;
 }
 
 /* Under #riff, as the reset above for the player's paragraphs is, so the
@@ -3011,13 +3044,14 @@ dl.riff-about-credits dd {
 	.riff-np,
 	#riff .riff-bar-info,
 	.riff-line,
-	.riff-line i,
 	.riff-knob,
-	.riff-np-glow,
-	.riff-np-bg::after,
-	#riff .riff-queue-list button[aria-current] .riff-row-title,
-	#riff .riff-queue-list button[aria-current] .riff-row-state i {
+	.riff-np-glow {
 		transition: none;
+	}
+
+	.riff-np-bg[data-riff-fading]::before,
+	.riff-np-bg[data-riff-fading]::after {
+		animation: none;
 	}
 
 	[data-playing="true"] .riff-row-state i,

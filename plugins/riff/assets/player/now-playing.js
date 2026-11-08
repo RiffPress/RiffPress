@@ -264,33 +264,76 @@ export function nowPlaying( P ) {
 	};
 	// ---- The accent the cover gives (helpers.js coverAccent()), on the player's root and, in the
 	// Listen app's own document, on its body for the app: the seek bar, the playing bars, the
-	// current Up next item, the focus ring and the wash behind Now Playing take it from
-	// --riff-cover-accent (riff.css). Without one, a grey or black cover's or none at all, the
-	// player's is the site's --riff-accent and the app's that same colour as the player has it. A
-	// site turns it off with the riff_cover_accent filter.
+	// current Up next item and the wash behind Now Playing take it from --riff-cover-accent
+	// (riff.css). Without one, a grey or black cover's or none at all, or with the
+	// riff_cover_accent filter off, the player's is the site's --riff-accent and the app's that
+	// same colour as the player has it. Colours change at once; the wash, the one large field of
+	// it, fades from the last track's to this one's through its opacity (riff.css).
 	const standalone = document.body.classList.contains( 'riff-standalone' ) ? document.body : null;
-	// A colour as the page computes it, here in the player, as red, green and blue.
+	const wash = $( '.riff-np-bg' );
+	// A colour as the page computes it, here in the player, as sRGB red, green, blue and alpha:
+	// drawn on a pixel and read back, so a colour in any space a site writes reads the same.
+	const pixel = document.createElement( 'canvas' ).getContext( '2d', { willReadFrequently: true } );
 	const rgbOf = ( css ) => {
 		const probe = document.createElement( 'i' );
 		probe.style.color = css;
 		root.append( probe );
-		const parts = getComputedStyle( probe ).color.match( /[\d.]+/g ) || [ 0, 0, 0 ];
+		const computed = getComputedStyle( probe ).color;
 		probe.remove();
-		return parts.slice( 0, 3 ).map( Number );
+		if ( ! pixel ) {
+			return [ 0, 0, 0, 1 ];
+		}
+		pixel.clearRect( 0, 0, 1, 1 );
+		pixel.fillStyle = computed;
+		pixel.fillRect( 0, 0, 1, 1 );
+		const [ r, g, b, a ] = pixel.getImageData( 0, 0, 1, 1 ).data;
+		return [ r, g, b, a / 255 ];
 	};
+	// A colour with see-through parts laid on an opaque one.
+	const layered = ( [ r, g, b, a ], under ) => [ r, g, b ].map( ( v, i ) => v * a + under[ i ] * ( 1 - a ) );
+	const css = ( [ r, g, b ] ) => `rgb(${ Math.round( r ) } ${ Math.round( g ) } ${ Math.round( b ) })`;
+	let painted = '';
+	function setAccent( value ) {
+		const was = painted;
+		painted = value;
+		if ( value ) {
+			root.style.setProperty( '--riff-cover-accent', value );
+		} else {
+			root.style.removeProperty( '--riff-cover-accent' );
+		}
+		standalone?.style.setProperty( '--riff-cover-accent', value || css( rgbOf( 'var(--riff-accent)' ) ) );
+		if ( wash && was !== value ) {
+			wash.style.setProperty( '--riff-cover-accent-was', was || 'var(--riff-accent)' );
+			// The fade starts over for each track.
+			wash.removeAttribute( 'data-riff-fading' );
+			void wash.offsetWidth;
+			wash.setAttribute( 'data-riff-fading', '' );
+		}
+	}
 	function accent( c, tinted ) {
 		if ( P.data.coverAccent === false ) {
+			if ( standalone && ! standalone.style.getPropertyValue( '--riff-cover-accent' ) ) {
+				setAccent( '' );
+			}
 			return;
 		}
-		const colour = c && coverAccent( c, [ rgbOf( 'var(--riff-surface)' ), rgbOf( 'var(--riff-bg)' ), rgbOf( tinted ) ] );
-		if ( colour ) {
-			const value = `rgb(${ colour.join( ' ' ) })`;
-			root.style.setProperty( '--riff-cover-accent', value );
-			standalone?.style.setProperty( '--riff-cover-accent', value );
+		if ( ! c ) {
+			setAccent( '' );
 			return;
 		}
-		root.style.removeProperty( '--riff-cover-accent' );
-		standalone?.style.setProperty( '--riff-cover-accent', `rgb(${ rgbOf( 'var(--riff-accent)' ).join( ' ' ) })` );
+		const surface = rgbOf( 'var(--riff-surface)' );
+		const backgrounds = [
+			surface,
+			rgbOf( 'var(--riff-bg)' ),
+			rgbOf( tinted ),
+			// A row under the pointer in Up next, its wash over the sheet.
+			layered( rgbOf( 'var(--riff-hover)' ), surface ),
+		];
+		if ( standalone ) {
+			backgrounds.push( rgbOf( 'var(--riff-standalone-bg, #030303)' ) );
+		}
+		const colour = coverAccent( c, backgrounds.map( ( bg ) => bg.slice( 0, 3 ) ) );
+		setAccent( colour ? css( colour ) : '' );
 	}
 
 	function tint( src ) {
@@ -298,7 +341,7 @@ export function nowPlaying( P ) {
 			for ( const name of [ '--riff-tint', '--riff-label-paper', ...Object.keys( LABEL ) ] ) {
 				root.style.removeProperty( name );
 			}
-			accent( null, 'var(--riff-bg)' );
+			accent( null );
 		};
 		if ( ! src ) {
 			clear();
