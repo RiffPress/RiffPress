@@ -208,6 +208,14 @@ final class Permissions {
 			/* translators: %s: a program's name, such as ffmpeg. */
 			$add( sprintf( __( 'Runs %s on your server', 'riff' ), $program ) );
 		}
+		foreach ( self::map( $manifest['cron'] ?? array() ) as $event => $why ) {
+			/* translators: %s: a scheduled event's name, such as riff_import_zip. */
+			$add( sprintf( __( 'Runs %s in the background, on WordPress\'s schedule', 'riff' ), (string) $event ), is_string( $why ) ? $why : '' );
+		}
+		foreach ( self::map( $manifest['paths'] ?? array() ) as $setting => $why ) {
+			/* translators: %s: a constant or filter that names a folder, such as RIFF_PROTECTED_PATH. */
+			$add( sprintf( __( 'Keeps files in the folder %s names, where the site sets one', 'riff' ), (string) $setting ), is_string( $why ) ? $why : '' );
+		}
 
 		// Who may use it.
 		$who = array_values( array_unique( array_map( array( self::class, 'can' ), self::strings( $manifest['capabilities'] ?? array() ) ) ) );
@@ -232,7 +240,7 @@ final class Permissions {
 		}
 
 		// A part this doesn't know yet, as it is written.
-		$parts = array( '$schema', 'plugin', 'namespace', 'data', 'rest', 'capabilities', 'hosts', 'spawn', 'riff', 'scripts', 'modules', 'sandbox' );
+		$parts = array( '$schema', 'plugin', 'namespace', 'data', 'rest', 'capabilities', 'hosts', 'spawn', 'cron', 'paths', 'riff', 'scripts', 'modules', 'sandbox' );
 		foreach ( array_diff_key( $manifest, array_flip( $parts ) ) as $part => $value ) {
 			if ( is_array( $value ) ) {
 				$value = implode( ', ', array_is_list( $value ) ? self::strings( $value ) : array_map( 'strval', array_keys( $value ) ) );
