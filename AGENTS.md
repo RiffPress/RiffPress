@@ -1,6 +1,6 @@
 # Agents
 
-Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup, tests, and pull request conventions. [docs/player.md](docs/player.md) explains the front end; read it before changing anything under `plugins/riff/`.
+Notes for coding agents. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers setup, tests, and pull request conventions. [docs/player.md](docs/player.md) explains the front end; read it before changing anything under `plugins/riff/`. [docs/state.md](docs/state.md) maps where the player and Riff keep what they know, and which of it has more than one owner; update it when a change moves one.
 
 ## Pull request descriptions
 
