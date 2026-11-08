@@ -65,6 +65,50 @@ final class Chords {
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
 		add_action( 'wp_entity_fields_api_init', array( self::class, 'entity_field' ) );
+		add_filter( 'riff_abilities', array( self::class, 'abilities' ) );
+	}
+
+	/**
+	 * Setting a track's chord chart, as an ability beside Riff's: the `riff_chords` field on
+	 * wp/v2/media, written by whoever may edit the file.
+	 *
+	 * @since 0.7.0
+	 *
+	 * @param array $abilities Abilities, by name.
+	 * @return array
+	 */
+	public static function abilities( $abilities ): array {
+		$abilities                           = (array) $abilities;
+		$abilities['riff-chords/set-chords'] = array(
+			'label'       => __( 'Set a track\'s chords', 'riff-chords' ),
+			'description' => __( 'Sets the chord chart of an audio file in the Media Library, shown in the Chords view while it plays: ChordPro, with LRC times to follow the music. Empty to clear it. For someone who can edit the file.', 'riff-chords' ),
+			'method'      => 'POST',
+			'namespace'   => 'wp/v2',
+			'route'       => '/media/{id}',
+			'input'       => array(
+				'id'     => array(
+					'type'        => 'integer',
+					'description' => __( 'The audio attachment\'s ID.', 'riff-chords' ),
+					'minimum'     => 1,
+					'required'    => true,
+				),
+				'chords' => array(
+					'type'        => 'string',
+					'description' => __( 'The chart, in ChordPro.', 'riff-chords' ),
+					'required'    => true,
+				),
+			),
+			'params'      => static fn( array $input ): array => array( self::FIELD => $input['chords'] ?? '' ),
+			'output'      => array(
+				'type'       => 'object',
+				'properties' => array(
+					'id'        => array( 'type' => 'integer' ),
+					self::FIELD => array( 'type' => array( 'string', 'null' ) ),
+				),
+			),
+			'readonly'    => false,
+		);
+		return $abilities;
 	}
 
 	/**

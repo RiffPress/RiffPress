@@ -54,6 +54,50 @@ final class Lyrics {
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
 		add_action( 'wp_entity_fields_api_init', array( self::class, 'entity_field' ) );
 		add_filter( 'wp_read_audio_metadata', array( self::class, 'synced_from_tags' ), 10, 4 );
+		add_filter( 'riff_abilities', array( self::class, 'abilities' ) );
+	}
+
+	/**
+	 * Setting a track's lyrics, as an ability beside Riff's: the `riff_lyrics` field on
+	 * wp/v2/media, written by whoever may edit the file.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param array $abilities Abilities, by name.
+	 * @return array
+	 */
+	public static function abilities( $abilities ): array {
+		$abilities                           = (array) $abilities;
+		$abilities['riff-lyrics/set-lyrics'] = array(
+			'label'       => __( 'Set a track\'s lyrics', 'riff-lyrics' ),
+			'description' => __( 'Sets the lyrics of an audio file in the Media Library, shown in the Lyrics view while it plays: plain text, or timed as LRC or WebVTT to follow the music. Empty to clear them. For someone who can edit the file.', 'riff-lyrics' ),
+			'method'      => 'POST',
+			'namespace'   => 'wp/v2',
+			'route'       => '/media/{id}',
+			'input'       => array(
+				'id'     => array(
+					'type'        => 'integer',
+					'description' => __( 'The audio attachment\'s ID.', 'riff-lyrics' ),
+					'minimum'     => 1,
+					'required'    => true,
+				),
+				'lyrics' => array(
+					'type'        => 'string',
+					'description' => __( 'The lyrics.', 'riff-lyrics' ),
+					'required'    => true,
+				),
+			),
+			'params'      => static fn( array $input ): array => array( 'riff_lyrics' => $input['lyrics'] ?? '' ),
+			'output'      => array(
+				'type'       => 'object',
+				'properties' => array(
+					'id'          => array( 'type' => 'integer' ),
+					'riff_lyrics' => array( 'type' => array( 'string', 'null' ) ),
+				),
+			),
+			'readonly'    => false,
+		);
+		return $abilities;
 	}
 
 	/**
