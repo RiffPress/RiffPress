@@ -428,11 +428,15 @@ div.riff-row-locked {
 	-webkit-tap-highlight-color: transparent;
 }
 
+/* One ring for every control of the player's that has the keyboard's focus,
+   outside its edge and round its corners (tokens.css). */
 #riff button:focus-visible,
-#riff input:focus-visible {
-	outline: 2px solid var(--riff-fg);
-	outline-offset: 2px;
-	border-radius: 4px;
+#riff input:focus-visible,
+#riff a:focus-visible,
+#riff summary:focus-visible,
+#riff :where([tabindex]:not([tabindex="-1"])):focus-visible {
+	outline: var(--riff-focus-ring);
+	outline-offset: var(--riff-focus-ring-offset);
 }
 
 #riff h2,
@@ -1781,8 +1785,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 #riff .riff-arm:focus-visible .riff-arm-tube {
-	outline: 2px solid var(--riff-fg);
-	outline-offset: 2px;
+	outline: var(--riff-focus-ring);
+	outline-offset: var(--riff-focus-ring-offset);
 	border-radius: 2px;
 }
 
@@ -2255,8 +2259,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 #riff .riff-about a:focus-visible {
-	outline: 2px solid var(--riff-fg);
-	outline-offset: 2px;
+	outline: var(--riff-focus-ring);
+	outline-offset: var(--riff-focus-ring-offset);
 	border-radius: 4px;
 }
 
@@ -2476,7 +2480,18 @@ dl.riff-about-credits dd {
 
 .riff-menu > :focus-visible,
 #riff .riff-menu > :focus-visible {
+	outline: none;
 	box-shadow: inset 0 0 0 2px var(--riff-accent, #f2eadb);
+}
+
+/* Forced colours drop the shadow, so the item keeps a ring there, inside it. */
+@media (forced-colors: active) {
+
+	.riff-menu > :focus-visible,
+	#riff .riff-menu > :focus-visible {
+		outline: 2px solid Highlight;
+		outline-offset: -2px;
+	}
 }
 
 @media (pointer: coarse) {
@@ -3279,8 +3294,8 @@ dl.riff-about-credits dd {
 	#riff .riff-start:focus-visible,
 	#riff .riff-speeds button:focus-visible,
 	#riff .riff-pitch input:focus-visible {
-		outline: 2px solid var(--riff-fg);
-		outline-offset: 2px;
+		outline: var(--riff-focus-ring);
+		outline-offset: var(--riff-focus-ring-offset);
 	}
 
 	#riff .riff-pitch {

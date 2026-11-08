@@ -95,8 +95,8 @@ html.riff-frame .riff-standalone .riff-app .riff-app-collapse:hover {
 
 html.riff-frame .riff-standalone .riff-app-history button:focus-visible,
 html.riff-frame .riff-standalone .riff-app .riff-app-collapse:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 0;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 html.riff-frame .riff-standalone .riff-app-history button:disabled {
@@ -243,8 +243,8 @@ html.riff-frame .riff-standalone .riff-app {
 	}
 
 	html.riff-frame .riff-standalone .riff-app .riff-app-search input:focus-visible {
-		outline: 2px solid var(--riff-app-ink);
-		outline-offset: 0;
+		outline: var(--riff-app-focus-ring);
+		outline-offset: var(--riff-app-focus-ring-offset);
 	}
 
 	html.riff-frame .riff-standalone .riff-app .riff-app-home,
@@ -279,6 +279,7 @@ html.riff-frame .riff-standalone .riff-app {
 		position: absolute;
 		width: 1px;
 		height: 1px;
+		overflow: hidden;
 		clip-path: inset(50%);
 		white-space: nowrap;
 	}

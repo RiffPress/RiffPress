@@ -79,6 +79,24 @@
 	--riff-hover: rgb(255 255 255 / 0.1);
 
 	/**
+	 * The ring around the player's control that has the keyboard's focus, as
+	 * an `outline` value: one ring outside the control's edge, following its
+	 * corners, in the cover's accent, `--riff-cover-accent`, where the player
+	 * sets one on `#riff`, else the player's text colour. A theme sets a ring
+	 * of its own, such as `3px solid #ffbf47`.
+	 *
+	 * @since 6.5.0
+	 */
+	--riff-focus-ring: 2px solid var(--riff-cover-accent, var(--riff-fg));
+
+	/**
+	 * How far the focus ring sits outside the control's edge.
+	 *
+	 * @since 6.5.0
+	 */
+	--riff-focus-ring-offset: 2px;
+
+	/**
 	 * The played part of the seek bar in the bar, its knob, the format label,
 	 * and the glow behind the cover. A theme sets it in theme.json under
 	 * `settings.custom.riff.accent`, or in its own CSS.
@@ -126,8 +144,8 @@
 	--riff-app-line: #d9d9d9;
 
 	/**
-	 * Links, play buttons, focus rings, and the title of the card under the
-	 * pointer in the Listen block.
+	 * Links, play buttons, and the title of the card under the pointer in the
+	 * Listen block. Its focus rings are `--riff-app-focus-ring`.
 	 *
 	 * @since 4.0.0
 	 */
@@ -154,6 +172,24 @@
 	 * @since 4.14.0
 	 */
 	--riff-app-on-accent: #fff;
+
+	/**
+	 * The ring around the Listen app's control that has the keyboard's
+	 * focus, as an `outline` value: Home, search, the tabs, the sidebar and
+	 * the rest, each ringed outside its own edge and corners, in the cover's
+	 * accent where the app sets one on `.riff-app`, else the text's colour. The
+	 * player's own is `--riff-focus-ring`.
+	 *
+	 * @since 6.5.0
+	 */
+	--riff-app-focus-ring: 2px solid var(--riff-cover-accent, var(--riff-app-ink));
+
+	/**
+	 * How far the Listen app's focus ring sits outside the control's edge.
+	 *
+	 * @since 6.5.0
+	 */
+	--riff-app-focus-ring-offset: 2px;
 
 	/**
 	 * The Listen block's text font.
