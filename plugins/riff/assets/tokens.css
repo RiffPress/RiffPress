@@ -195,7 +195,7 @@
 	 *
 	 * @since 6.4.0
 	 */
-	--riff-standalone-tabs: #212121;
+	--riff-standalone-tabs: var(--riff-surface, #212121);
 
 	/**
 	 * The icon on an album's round Play button, which is in the accent.

@@ -185,7 +185,23 @@ final class Standalone {
 		if ( ! self::at_root() ) {
 			return 0;
 		}
-		return self::$root ? self::$root : First_Run::listen_page();
+		return self::$root ? self::$root : self::listen_page();
+	}
+
+	/**
+	 * The site's Listen page, as First_Run::listen_page() finds it, kept in the object cache until
+	 * a post or its meta changes: the site's address asks for it on every visit.
+	 *
+	 * @return int
+	 */
+	private static function listen_page(): int {
+		$key  = 'listen_page:' . wp_cache_get_last_changed( 'posts' );
+		$page = wp_cache_get( $key, 'riff' );
+		if ( false === $page ) {
+			$page = First_Run::listen_page();
+			wp_cache_set( $key, $page, 'riff' );
+		}
+		return (int) $page;
 	}
 
 	/**
@@ -201,10 +217,11 @@ final class Standalone {
 	 */
 	public static function route( $query_vars ) {
 		self::$root = 0;
-		if ( ! is_array( $query_vars ) || array_diff( array_keys( $query_vars ), array( self::QUERY ) ) || ! self::at_root() ) {
+		// The Customizer previews the theme's own home page.
+		if ( ! is_array( $query_vars ) || array_diff( array_keys( $query_vars ), array( self::QUERY ) ) || is_customize_preview() || ! self::at_root() ) {
 			return $query_vars;
 		}
-		$page = First_Run::listen_page();
+		$page = self::listen_page();
 		if ( ! $page ) {
 			return $query_vars;
 		}
@@ -242,7 +259,7 @@ final class Standalone {
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the view asked for, carried over; nothing changes.
 		$args = map_deep( wp_unslash( $_GET ), 'sanitize_text_field' );
-		unset( $args[ self::QUERY ], $args['page_id'], $args['pagename'] );
+		unset( $args[ self::QUERY ], $args['page_id'], $args['pagename'], $args['p'] );
 		wp_safe_redirect( add_query_arg( urlencode_deep( $args ), home_url( '/' ) ), 301 );
 		exit;
 	}
@@ -481,7 +498,7 @@ final class Standalone {
 	 */
 	public static function tokens(): array {
 		return array(
-			'--riff-app-bg'           => 'var(--riff-standalone-bg, ' . self::BACKGROUND . ')',
+			'--riff-app-bg'           => 'var(--riff-standalone-bg, #030303)',
 			'--riff-app-ink'          => 'var(--riff-standalone-ink, #fff)',
 			'--riff-app-accent'       => '#f2eadb',
 			'--riff-app-on-accent'    => self::BACKGROUND,

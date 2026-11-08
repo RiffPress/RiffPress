@@ -108,6 +108,22 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		$this->assertNull( $this->to_root() );
 	}
 
+	public function test_on_without_pretty_permalinks_the_site_address_is_the_app_too(): void {
+		$this->set_permalink_structure( '' );
+		update_option( Standalone::AT_ROOT, true );
+
+		$this->go_to( home_url( '/' ) );
+		$this->assertTrue( Standalone::active() );
+		$this->assertSame( home_url( '/' ), Standalone::url() );
+
+		$this->go_to( Standalone::url( $this->listen, true ) );
+		$this->assertSame( 'manifest', get_query_var( 'riff_app' ) );
+		$this->assertTrue( Standalone::active() );
+
+		$this->go_to( add_query_arg( 'feed', 'rss2', home_url( '/' ) ) );
+		$this->assertFalse( Standalone::active(), 'a feed is a feed' );
+	}
+
 	public function test_a_filter_turns_it_on_without_the_setting(): void {
 		add_filter( 'riff_app_at_root', '__return_true' );
 		$this->go_to( home_url( '/' ) );
@@ -318,7 +334,7 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		foreach ( array(
 			'--riff-standalone-bg: #030303;',
 			'--riff-standalone-ink: #fff;',
-			'--riff-standalone-tabs: #212121;',
+			'--riff-standalone-tabs: var(--riff-surface, #212121);',
 			'--riff-standalone-on-accent: #000;',
 		) as $declaration ) {
 			$this->assertStringContainsString( $declaration, $tokens );

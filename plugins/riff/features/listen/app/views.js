@@ -122,6 +122,7 @@ export function views( ctx ) {
 		app.removeAttribute( 'aria-busy' );
 		api.mount();
 		ctx.paintLikes();
+		ctx.announce();
 		if ( quiet ) {
 			return;
 		}

@@ -23,6 +23,14 @@ function tokens() {
 	}
 	const bg = read( 'plugins/riff/features/listen/class-standalone.php' ).match( /BACKGROUND = '(#[0-9a-f]{6})'/i );
 	dark[ '--riff-app-bg' ] = dark[ '--riff-app-bg' ] === 'self::BACKGROUND' || ! dark[ '--riff-app-bg' ] ? bg[ 1 ] : dark[ '--riff-app-bg' ];
+	// Standalone mode's background and text follow the --riff-standalone-* tokens, as tokens.css
+	// sets them on .riff-standalone.
+	for ( const [ name, value ] of Object.entries( dark ) ) {
+		const ref = /^var\((--[a-z0-9-]+)(?:,\s*([^)]+))?\)$/.exec( value );
+		if ( ref ) {
+			dark[ name ] = out[ ref[ 1 ] ] || ref[ 2 ];
+		}
+	}
 	return { light: out, dark: { ...out, ...dark } };
 }
 

@@ -216,6 +216,7 @@ Each change of state is announced twice with the same detail: through `wp.hooks`
 - [`riff.queue`](hooks.md#riffqueue), filter: Filters the tracks about to become the queue.
 - [`riff.shortcuts`](hooks.md#riffshortcuts), filter: Filters whether the single-key shortcuts (Space, K, J, L and plugins' keys) act on a key press.
 - [`riff.track`](hooks.md#rifftrack), filter: Filters one track as a queue is set, after `riff.queue`.
+- [`riff.app_view`](hooks.md#riffapp_view), action: Fires when a view of the Listen app shows: the first as the app starts, then each one in-page navigation brings, and again when one is drawn again in place. A plugin that added a view with the `riff_app_views` filter binds its script to what it drew here, or on the `riff:app_view` event, which bubbles to `document`.
 - [`riff.ended`](hooks.md#riffended), action: Fires when a track plays to its end, before the next one loads.
 - [`riff.pause`](hooks.md#riffpause), action: Fires when the track pauses.
 - [`riff.play`](hooks.md#riffplay), action: Fires when the track starts or resumes playing.

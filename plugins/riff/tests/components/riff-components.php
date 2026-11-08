@@ -447,3 +447,44 @@ if ( ! empty( $_COOKIE['riff_test_about_section'] ) ) {
 		}
 	);
 }
+
+// A plugin's view of the Listen app (riff_app_views), while the riff_test_app_view setting is on,
+// for tests/e2e/app/app-views.spec.js: for someone who may upload, in the sidebar and the account
+// menu, with a script that marks what it drew when riff:app_view says it shows; and no Posts.
+add_action(
+	'init',
+	static function (): void {
+		register_setting(
+			'riff-test',
+			'riff_test_app_view',
+			array(
+				'type'         => 'boolean',
+				'default'      => false,
+				'show_in_rest' => true,
+			)
+		);
+		wp_register_script( 'riff-test-view', false, array(), '1', true );
+		wp_add_inline_script(
+			'riff-test-view',
+			"document.addEventListener( 'riff:app_view', function ( e ) { window.riffTestViews = ( window.riffTestViews || [] ).concat( e.detail.view ); var mine = e.detail.panel.querySelector( '.riff-test-view' ); if ( 'test-view' === e.detail.view && mine ) { mine.dataset.bound = String( ( Number( mine.dataset.bound ) || 0 ) + 1 ); } } );"
+		);
+	}
+);
+add_filter(
+	'riff_app_views',
+	static function ( $views ) {
+		if ( ! get_option( 'riff_test_app_view' ) ) {
+			return $views;
+		}
+		unset( $views['posts'] );
+		$views['test-view'] = array(
+			'label'      => 'Test view',
+			'icon'       => 'heart',
+			'nav'        => array( 'sidebar', 'account' ),
+			'capability' => 'upload_files',
+			'render'     => static fn(): string => '<p class="riff-test-view">Drawn by a plugin.</p>',
+			'script'     => 'riff-test-view',
+		);
+		return $views;
+	}
+);
