@@ -113,6 +113,11 @@ final class Navigation {
 				} else {
 					$note = __( 'A link on the site brings the next page in without leaving this one, so what plays carries on. It changes how the whole site navigates: a script or style that only a later page asks for is not loaded, and a plugin that expects each page to load may not work.', 'riff' );
 				}
+				// A disabled box is not sent with the form, so what the site chose is, or saving the
+				// page would turn it off.
+				if ( $on !== $saved ) {
+					printf( '<input type="hidden" name="%1$s" value="%2$s">', esc_attr( self::OPTION ), esc_attr( $saved ? '1' : '' ) );
+				}
 				printf(
 					'<label for="%1$s"><input name="%1$s" type="checkbox" id="%1$s" value="1"%2$s%3$s> %4$s</label><p class="description">%5$s</p>',
 					esc_attr( self::OPTION ),
@@ -235,12 +240,17 @@ final class Navigation {
 
 	/**
 	 * The admin bar's edit and template links, as the page printed them. Only from the bar itself,
-	 * which core prints after the content, so a post's own markup is never taken for one.
+	 * which core prints after the content, and only where it shows, so a post's own markup is
+	 * never taken for one.
 	 *
 	 * @param string $html The page.
 	 * @return array<string, string>
 	 */
 	private static function bar_nodes( string $html ): array {
+		// Without a bar, any match would be in the page's own content, which an author wrote.
+		if ( ! is_admin_bar_showing() ) {
+			return array();
+		}
 		$from = strrpos( $html, 'id="wpadminbar"' );
 		if ( false === $from ) {
 			return array();
@@ -257,7 +267,9 @@ final class Navigation {
 			foreach ( $tags[0] as [ $tag, $at ] ) {
 				$depth += '<li' === $tag ? 1 : -1;
 				if ( 0 === $depth ) {
-					$nodes[ $node ] = substr( $bar, $start[0][1], $at + 5 - $start[0][1] );
+					// The bar is core's and plugins' markup; navigation.js puts it in the page as HTML,
+					// so only what a post may hold goes, and never a handler.
+					$nodes[ $node ] = wp_kses_post( substr( $bar, $start[0][1], $at + 5 - $start[0][1] ) );
 					break;
 				}
 			}

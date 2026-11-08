@@ -77,7 +77,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 		status: 'publish',
 		content: '<!-- wp:riff/app {"align":"full"} /-->',
 	} );
-	Object.assign( site, { start: start.link, sung: sung.link, pictured: pictured.link, paged: paged.link, word } );
+	Object.assign( site, { sungId: sung.id, start: start.link, sung: sung.link, pictured: pictured.link, paged: paged.link, word } );
 	await setting( requestUtils, true );
 } );
 
@@ -128,6 +128,12 @@ test.describe( 'Links that keep the music playing', () => {
 		await expect( page.locator( '.riff-row' ) ).toHaveCount( 1 );
 		await stillPlaying( page );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Intensities in Ten Cities' );
+
+		// What lies outside the template follows the page: the body's classes, the canonical link
+		// and the admin bar's Edit link, signed in as the suite is.
+		await expect( page.locator( 'body' ) ).toHaveClass( new RegExp( `\\bpostid-${ site.sungId }\\b` ) );
+		await expect( page.locator( 'link[rel="canonical"]' ) ).toHaveAttribute( 'href', site.sung );
+		await expect( page.locator( '#wp-admin-bar-edit > a' ) ).toHaveAttribute( 'href', new RegExp( `post=${ site.sungId }\\b` ) );
 
 		await page.goBack();
 		await expect( page ).toHaveURL( site.start );
