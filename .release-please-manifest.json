@@ -2,7 +2,7 @@
 	"plugins/riff": "6.4.0",
 	"plugins/riff-lyrics": "1.8.0",
 	"packages/wp-api-coverage": "0.1.0",
-	"plugins/riff-sign-in": "0.4.2",
+	"plugins/riff-sign-in": "0.4.3",
 	"plugins/riff-chords": "0.6.0",
 	"plugins/riff-sing": "0.6.0",
 	"plugins/riff-meters": "0.1.0"
