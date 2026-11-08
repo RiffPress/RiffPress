@@ -491,6 +491,30 @@ final class Archive {
 	}
 
 	/**
+	 * Whether a file may be written by extract(): its folder exists and is in the temp folder or
+	 * under uploads, links resolved.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @param string $to A file.
+	 * @return bool
+	 */
+	public static function writable_at( string $to ): bool {
+		$dir = realpath( dirname( $to ) );
+		if ( false === $dir || '' === wp_basename( $to ) ) {
+			return false;
+		}
+		$dir = trailingslashit( wp_normalize_path( $dir ) );
+		foreach ( array( get_temp_dir(), wp_get_upload_dir()['basedir'] ) as $base ) {
+			$base = realpath( (string) $base );
+			if ( false !== $base && str_starts_with( $dir, trailingslashit( wp_normalize_path( $base ) ) ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Copies one entry of a zip to a file, a piece at a time, never more than its declared size.
 	 *
 	 * @since 6.5.0
@@ -498,15 +522,18 @@ final class Archive {
 	 * @param ZipArchive $zip  An open zip.
 	 * @param string     $name The entry.
 	 * @param int        $size Its declared size.
-	 * @param string     $to   The file to write.
-	 * @return bool
+	 * @param string     $to   The file to write, in the temp folder or under uploads.
+	 * @return bool False too for a file anywhere else.
 	 */
 	public static function extract( ZipArchive $zip, string $name, int $size, string $to ): bool {
+		if ( ! self::writable_at( $to ) ) {
+			return false;
+		}
 		$in = $zip->getStream( $name );
 		if ( ! $in ) {
 			return false;
 		}
-		// isolation: write -- the file its caller names, in a temp folder of its own or under uploads; an entry's name never becomes the path.
+		// isolation: write -- in the temp folder or under uploads, as writable_at() made sure.
 		$out = fopen( $to, 'wb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- a file of any size, streamed.
 		if ( ! $out ) {
 			fclose( $in ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose

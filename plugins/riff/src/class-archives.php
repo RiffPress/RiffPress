@@ -314,6 +314,18 @@ final class Archives {
 	}
 
 	/**
+	 * Whether an address is the Library of Congress's own, over https: its files are on its own
+	 * hosts (tile.loc.gov), and Riff declares *.loc.gov in its isolation.json.
+	 *
+	 * @param string $url An address.
+	 * @return bool
+	 */
+	private static function loc_host( string $url ): bool {
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		return 'https' === wp_parse_url( $url, PHP_URL_SCHEME ) && ( 'loc.gov' === $host || str_ends_with( $host, '.loc.gov' ) );
+	}
+
+	/**
 	 * The file of a resource to import: its MP3 where it has one, as the smaller, else its first audio.
 	 *
 	 * @param array $groups The resource's files, in groups.
@@ -324,7 +336,7 @@ final class Archives {
 		foreach ( $groups as $group ) {
 			foreach ( (array) $group as $file ) {
 				$url = is_array( $file ) ? (string) ( $file['url'] ?? $file['filename'] ?? '' ) : '';
-				if ( '' !== $url && str_starts_with( (string) ( $file['mimetype'] ?? '' ), 'audio/' ) && str_starts_with( $url, 'https://' ) ) {
+				if ( '' !== $url && str_starts_with( (string) ( $file['mimetype'] ?? '' ), 'audio/' ) && self::loc_host( $url ) ) {
 					$audio[] = array_merge( $file, array( 'url' => $url ) );
 				}
 			}

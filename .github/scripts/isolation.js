@@ -576,6 +576,27 @@ function owner( key, kind, manifests ) {
 }
 
 /**
+ * Whose a script handle or module id is: the plugin whose slug it is, or starts with followed by
+ * `-` or `/` (`@slug/…` too), the longest slug winning, as WordPress names handles (riff-sing-midi
+ * is Riff Sing's, though it starts with riff-).
+ *
+ * @param {string}                 handle
+ * @param {Object<string, Object>} manifests By slug.
+ * @return {string|null}
+ */
+function handleOwner( handle, manifests ) {
+	const name = handle.startsWith( '@' ) ? handle.slice( 1 ) : handle;
+	let best = null;
+	for ( const slug of Object.keys( manifests ) ) {
+		const named = name === slug || name.startsWith( slug + '-' ) || name.startsWith( slug + '/' );
+		if ( named && ( ! best || slug.length > best.length ) ) {
+			best = slug;
+		}
+	}
+	return best;
+}
+
+/**
  * Whether a host is one a manifest names: exactly, or under a `*.` wildcard.
  *
  * @param {string}   host
@@ -710,15 +731,19 @@ function check( slug, found, manifests, riff ) {
 		}
 	}
 
-	// Handles are named as WordPress names them, after the slug, hyphens and all (riff-sing-midi).
-	const prefix = slug;
 	for ( const [ kind, list ] of [ [ 'scripts', m.scripts || [] ], [ 'modules', m.modules || [] ] ] ) {
 		for ( const s of found[ kind ] ) {
 			if ( ! list.includes( s.value ) ) {
 				say( s.where, `the script${ kind === 'modules' ? ' module' : '' } '${ s.value }' is not in ${ kind } in ${ manifestFile }. Declare it.` );
 			}
-			if ( ! s.value.startsWith( prefix ) && ! s.value.startsWith( '@' + prefix ) ) {
-				say( s.where, `the script handle '${ s.value }' doesn't start with '${ prefix }'. Name it after the plugin, so it can't collide with another's.` );
+			const theirs = handleOwner( s.value, manifests );
+			if ( theirs !== slug ) {
+				say(
+					s.where,
+					theirs
+						? `the script handle '${ s.value }' is named after ${ theirs }, not ${ slug }. Name it '${ slug }' or '${ slug }-…', so it can't collide with another's.`
+						: `the script handle '${ s.value }' doesn't start with '${ slug }'. Name it '${ slug }' or '${ slug }-…', so it can't collide with another's.`
+				);
 			}
 		}
 		for ( const name of list ) {
@@ -874,4 +899,4 @@ if ( require.main === module ) {
 	process.exitCode = run();
 }
 
-module.exports = { stripPhp, stripJs, scan, check, resolve, constants, hostAllowed, owner, riffSurface, manifests, run };
+module.exports = { stripPhp, stripJs, scan, check, resolve, constants, hostAllowed, owner, handleOwner, riffSurface, manifests, run };
