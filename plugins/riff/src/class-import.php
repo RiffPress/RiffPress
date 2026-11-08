@@ -9,6 +9,8 @@
 namespace Riff;
 
 use WP_Error;
+use WP_REST_Request;
+use WP_REST_Response;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -87,6 +89,126 @@ final class Import {
 		add_filter( 'upload_mimes', array( self::class, 'mimes' ), 5 );
 		add_action( 'add_attachment', array( self::class, 'on_upload' ) );
 		add_action( self::ZIP_JOB, array( self::class, 'uploaded_zip' ) );
+		add_action( 'rest_api_init', array( self::class, 'routes' ) );
+	}
+
+	/**
+	 * Registers POST /riff/v1/imports.
+	 *
+	 * @since 6.5.0
+	 */
+	public static function routes(): void {
+		/**
+		 * POST /riff/v1/imports: imports a zip already in the Media Library, as uploading it there
+		 * does: in the background, into draft album posts for its uploader to publish. For a zip
+		 * uploaded somewhere that did not start the import, such as over REST by an assistant.
+		 *
+		 * @since 6.5.0
+		 */
+		register_rest_route(
+			Library::REST,
+			'/imports',
+			array(
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( self::class, 'rest_queue' ),
+					'permission_callback' => static fn( WP_REST_Request $request ) => self::may_queue( (int) $request['attachment'] ),
+					'args'                => array(
+						'attachment' => array(
+							'description' => __( 'The zip\'s attachment ID, in the Media Library and attached to no post.', 'riff' ),
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'required'    => true,
+						),
+					),
+				),
+				'schema' => array( self::class, 'queued_schema' ),
+			)
+		);
+	}
+
+	/**
+	 * The schema of POST /imports.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @return array JSON Schema.
+	 */
+	public static function queued_schema(): array {
+		return array(
+			'$schema'    => 'http://json-schema.org/draft-04/schema#',
+			'title'      => 'riff-import',
+			'type'       => 'object',
+			'properties' => array(
+				'attachment' => array(
+					'type'        => 'integer',
+					'description' => __( 'The zip\'s attachment ID.', 'riff' ),
+				),
+				'queued'     => array(
+					'type'        => 'integer',
+					'description' => __( 'When the import starts, as a Unix time. Its album posts are drafts by the zip\'s uploader; the zip is attached to the first once it is done.', 'riff' ),
+				),
+			),
+		);
+	}
+
+	/**
+	 * Whether the current user may import a zip: someone who can write posts, and edit the zip.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @param int $id Attachment ID.
+	 * @return true|WP_Error
+	 */
+	public static function may_queue( int $id ) {
+		if ( ! current_user_can( 'edit_posts' ) || ( $id && get_post( $id ) && ! current_user_can( 'edit_post', $id ) ) ) {
+			return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to import music on this site.', 'riff' ), array( 'status' => rest_authorization_required_code() ) );
+		}
+		return true;
+	}
+
+	/**
+	 * POST /imports.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function rest_queue( WP_REST_Request $request ) {
+		$id   = (int) $request['attachment'];
+		$post = get_post( $id );
+		if ( ! $post || 'attachment' !== $post->post_type || ! self::is_zip( $id ) ) {
+			return new WP_Error( 'riff_import_zip', __( 'That is not a zip in the Media Library.', 'riff' ), array( 'status' => 400 ) );
+		}
+		if ( 0 !== (int) $post->post_parent ) {
+			return new WP_Error( 'riff_import_zip', __( 'That zip is attached to a post: it has been imported, or is a download on that post.', 'riff' ), array( 'status' => 409 ) );
+		}
+		return new WP_REST_Response(
+			array(
+				'attachment' => $id,
+				'queued'     => self::queue( $id ),
+			),
+			202
+		);
+	}
+
+	/**
+	 * Queues a zip in the Media Library to be imported in the background, once.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @param int $id Attachment ID.
+	 * @return int When it runs, as a Unix time.
+	 */
+	public static function queue( int $id ): int {
+		$at = wp_next_scheduled( self::ZIP_JOB, array( $id ) );
+		if ( $at ) {
+			return (int) $at;
+		}
+		$at = time();
+		wp_schedule_single_event( $at, self::ZIP_JOB, array( $id ) );
+		return $at;
 	}
 
 	/**
@@ -125,7 +247,7 @@ final class Import {
 		if ( ! $post || 0 !== (int) $post->post_parent || ! self::is_zip( $id ) || ! current_user_can( 'edit_posts' ) ) {
 			return;
 		}
-		wp_schedule_single_event( time(), self::ZIP_JOB, array( $id ) );
+		self::queue( $id );
 	}
 
 	/**
@@ -189,10 +311,12 @@ final class Import {
 	/**
 	 * Whether an attachment is a zip.
 	 *
+	 * @since 6.5.0
+	 *
 	 * @param int $id Attachment ID.
 	 * @return bool
 	 */
-	private static function is_zip( int $id ): bool {
+	public static function is_zip( int $id ): bool {
 		return in_array( get_post_mime_type( $id ), array( 'application/zip', 'application/x-zip-compressed', 'application/x-zip' ), true );
 	}
 
@@ -639,43 +763,28 @@ final class Import {
 		if ( ! $ids ) {
 			return $post_id;
 		}
-		$ids    = self::in_track_order( $ids );
-		$blocks = implode( '', array_map( array( self::class, 'block' ), $ids ) );
+		$ids = self::in_track_order( $ids );
 		if ( $post_id ) {
 			wp_update_post(
 				array(
 					'ID'           => $post_id,
-					'post_content' => get_post_field( 'post_content', $post_id, 'raw' ) . $blocks,
+					'post_content' => get_post_field( 'post_content', $post_id, 'raw' ) . Library::blocks( $ids ),
 				)
 			);
 			return $post_id;
 		}
 		$meta    = wp_get_attachment_metadata( $ids[0] );
 		$album   = is_array( $meta ) ? trim( (string) ( $meta['album'] ?? '' ) ) : '';
-		$post_id = wp_insert_post(
-			array(
-				'post_title'   => '' !== $album ? $album : ucwords( str_replace( array( '-', '_' ), ' ', sanitize_text_field( (string) preg_replace( '/\.zip$/i', '', wp_basename( $dir ) ) ) ) ),
-				'post_status'  => in_array( $status, array( 'publish', 'draft', 'private' ), true ) ? $status : 'publish',
-				'post_content' => $blocks,
-			),
-			true
+		$post_id = Library::create(
+			'' !== $album ? $album : ucwords( str_replace( array( '-', '_' ), ' ', sanitize_text_field( (string) preg_replace( '/\.zip$/i', '', wp_basename( $dir ) ) ) ) ),
+			$ids,
+			in_array( $status, array( 'publish', 'draft', 'private' ), true ) ? $status : 'publish',
+			$cover
 		);
 		if ( is_wp_error( $post_id ) ) {
 			return 0;
 		}
 		update_post_meta( $post_id, self::FOLDER, $dir );
-		$art = $cover ? $cover : (int) get_post_thumbnail_id( $ids[0] );
-		if ( $art ) {
-			set_post_thumbnail( $post_id, $art );
-		}
-		foreach ( $ids as $id ) {
-			wp_update_post(
-				array(
-					'ID'          => $id,
-					'post_parent' => $post_id,
-				)
-			);
-		}
 		return $post_id;
 	}
 
@@ -693,19 +802,5 @@ final class Import {
 		$order  = array_flip( $ids );
 		usort( $ids, static fn( $a, $b ) => array( $number( $a ), $order[ $a ] ) <=> array( $number( $b ), $order[ $b ] ) );
 		return $ids;
-	}
-
-	/**
-	 * A core audio block for a track, as the editor saves it.
-	 *
-	 * @param int $id Attachment ID.
-	 * @return string
-	 */
-	private static function block( int $id ): string {
-		return sprintf(
-			'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
-			$id,
-			esc_url( (string) wp_get_attachment_url( $id ) )
-		);
 	}
 }

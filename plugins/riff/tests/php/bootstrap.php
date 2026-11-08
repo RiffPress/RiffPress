@@ -89,6 +89,10 @@ tests_add_filter(
 		if ( is_readable( WP_PLUGIN_DIR . '/presence-api/presence-api.php' ) ) {
 			require WP_PLUGIN_DIR . '/presence-api/presence-api.php';
 		}
+		// The MCP Adapter, where wp-env installs it, for Riff's MCP server; its tests skip without it.
+		if ( is_readable( WP_PLUGIN_DIR . '/mcp-adapter/mcp-adapter.php' ) ) {
+			require WP_PLUGIN_DIR . '/mcp-adapter/mcp-adapter.php';
+		}
 	}
 );
 
