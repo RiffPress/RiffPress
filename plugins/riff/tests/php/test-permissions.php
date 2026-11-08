@@ -143,6 +143,22 @@ class Test_Riff_Permissions extends Riff_TestCase {
 		);
 	}
 
+	public function test_background_jobs_and_folders_a_site_names_are_said_with_why(): void {
+		$lines = Permissions::lines(
+			array(
+				'cron'  => array( 'riff_import_zip' => 'Unpacks an uploaded zip after the upload.' ),
+				'paths' => array( 'RIFF_PROTECTED_PATH' => 'Where a host keeps protected files.' ),
+			)
+		);
+		$this->assertSame(
+			array(
+				array( 'Runs riff_import_zip in the background, on WordPress\'s schedule', 'Unpacks an uploaded zip after the upload.' ),
+				array( 'Keeps files in the folder RIFF_PROTECTED_PATH names, where the site sets one', 'Where a host keeps protected files.' ),
+			),
+			array_map( static fn( $l ) => array( $l['text'], $l['why'] ), $lines )
+		);
+	}
+
 	public function test_a_part_it_does_not_know_is_listed_as_written_never_dropped(): void {
 		$texts = $this->texts(
 			array(
