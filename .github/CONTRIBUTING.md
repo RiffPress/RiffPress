@@ -32,7 +32,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | `packages/wp-api-coverage/` | Lists the WordPress APIs a plugin uses and the ones it doesn't yet. |
 | `apps/ios/` | Reserved for the native app. |
 | `site/` | [source.riffpress.com](https://source.riffpress.com/): the reference, the pages about the software and the live demo's files, published to Cloudflare Pages by `pages.yml`. [riffpress.com](https://riffpress.com/) is the business's site, from a repository of its own. |
-| `blueprint.json` | The Playground demo: installs the plugin, uploads the fixtures, seeds a post. |
+| `blueprint.json` | The Playground demo: installs Riff, and Riff Chords and Riff Sing for the charted song, uploads the fixtures, seeds the posts. |
 
 | File | What it covers |
 | --- | --- |

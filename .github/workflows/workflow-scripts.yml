@@ -12,6 +12,9 @@ on:
       - 'site/**/*.html'
       - 'site/web/**'
       - 'packages/fixtures/**'
+      # The demo chart's test reads it with these plugins' own readers.
+      - 'plugins/riff-chords/assets/**'
+      - 'plugins/riff-sing/assets/**'
       - 'README.md'
       - 'plugins/riff/riff.php'
       - 'composer.json'
@@ -24,6 +27,9 @@ on:
       - 'site/**/*.html'
       - 'site/web/**'
       - 'packages/fixtures/**'
+      # The demo chart's test reads it with these plugins' own readers.
+      - 'plugins/riff-chords/assets/**'
+      - 'plugins/riff-sing/assets/**'
       - 'README.md'
       - 'plugins/riff/riff.php'
       - 'composer.json'
