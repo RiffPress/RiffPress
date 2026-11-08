@@ -361,6 +361,11 @@ body > main.wrap {
 	color: var(--ink);
 }
 
+/* the link is only as wide as its word, so its ring stands a little off */
+.nav nav a:focus-visible {
+	outline-offset: var(--space-0);
+}
+
 .nav nav a[aria-current] {
 	color: var(--ink);
 	text-decoration: underline;
@@ -539,8 +544,11 @@ body > main.wrap {
 }
 
 .search-where {
+	overflow: hidden;
 	color: var(--ink-2);
 	font-size: var(--text-label);
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .search-status {
@@ -709,6 +717,12 @@ main.dl > * {
 
 .with-toc {
 	display: contents;
+}
+
+/* the article keeps the first column whether or not the rail is beside it */
+.with-toc > .entry {
+	grid-column: 1;
+	min-width: 0;
 }
 
 .toc {

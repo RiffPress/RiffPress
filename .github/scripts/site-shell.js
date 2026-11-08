@@ -103,8 +103,8 @@ const HANDBOOKS = [
 ];
 
 /**
- * A reference page: a title, and the article with "On this page" beside it, and at its end where
- * to edit it.
+ * A reference page: a title, and the article with "On this page" beside it where it has more than
+ * one section to go to, and at its end where to edit it.
  *
  * @param {Object} page             The page.
  * @param {string} page.title       The document title.
@@ -128,7 +128,7 @@ function referencePage( { title, description, url, under = '', label = '', h1, t
 	html += `<main id="main" class="wrap reference">
 ${ h1 }
 <div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details></aside>
+${ toc.length > 1 ? `<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details></aside>` : '' }
 <article class="entry">
 ${ body }${ edit ? `<p class="edit"><a href="${ esc( edit ) }">Edit this page on GitHub</a></p>
 ` : '' }${ nav.pager( ...nav.siblings( ctx, up ) ) }</article>
@@ -137,7 +137,10 @@ ${ body }${ edit ? `<p class="edit"><a href="${ esc( edit ) }">Edit this page on
 <script>
 // Folded on a narrow screen, as the code reference folds it.
 if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
-	document.querySelector( '.toc-box' ).open = false;
+	const toc = document.querySelector( '.toc-box' );
+	if ( toc ) {
+		toc.open = false;
+	}
 }
 </script>
 `;
