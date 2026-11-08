@@ -44,8 +44,6 @@ Each has a fallback sized to its metrics (`size-adjust` and the ascent and desce
 | `social-preview.png` | 1280×640, the word, "A music player for WordPress" and the five strings on the paper: the repository's social preview, in Settings › General |
 | `../icons/favicon.svg` | The app icon cropped to its tile, for the favicon |
 | `mark.png` | The app icon's tile, 512px, for the README and the site |
-| `avatar.png` | The GitHub organisation's old picture, the *ff* alone |
-| `dots.svg` | wordpress.org's dots, between sections |
 | `icon.svg` | The app icon, on Apple's icon grid |
 
 EB Garamond is © 2017 The EB Garamond Project Authors, and Bravura © Steinberg Media Technologies GmbH. Both are under the SIL Open Font License 1.1 (`../fonts/eb-garamond-OFL.txt`, `bravura-OFL.txt`), which covers outlines drawn from them for a logo.

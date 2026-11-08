@@ -32,7 +32,7 @@ const MOVED = [
 ];
 // Files beside the pages that every page may need.
 // tokens.css is riffpress.com's, byte for byte (tokens.js checks it): every page loads it first.
-const SHARED = [ 'tokens.css', 'neck.css', 'neck.svg', 'js', 'fonts', 'icons', 'brand' ];
+const SHARED = [ 'tokens.css', 'js', 'fonts', 'icons', 'brand' ];
 const ATTRS = /(\s)(href|src|content|action|srcset)="([^"]*)"/g;
 // A tag, or a block whose text is not markup: its opening tag is read, what is inside it is not.
 const TAGS =

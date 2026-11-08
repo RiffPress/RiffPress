@@ -20,7 +20,7 @@ const page = ( up, body ) => `<!doctype html><html><head>
 </head><body>
 <a href="${ SITE }">Riff Cloud</a><a href="${ up }download/">Download</a><a href="${ up }developers/">Developers</a>
 ${ body }
-<script type="module" src="${ up }js/neck.js"></script>
+<script type="module" src="${ up }js/docs.js"></script>
 </body></html>`;
 
 const site = ( extra = {} ) => {
@@ -45,7 +45,7 @@ const site = ( extra = {} ) => {
 		),
 		'web/web.css': 'body{}',
 		'icons/favicon.svg': '<svg/>',
-		'js/neck.js': '',
+		'js/docs.js': '',
 		'shot.png': '',
 		'404.html': `<link rel="stylesheet" href="${ SITE }web/web.css"><a href="${ SITE }">Riff</a><a href="${ SITE }developers/">Developers</a>`,
 		'sitemap.xml': `<?xml version="1.0"?>\n<urlset>\n  <url><loc>${ SITE }</loc></url>\n  <url><loc>${ SITE }developers/php/</loc></url>\n  <url><loc>${ SITE }web/has/</loc></url>\n</urlset>\n`,
@@ -86,7 +86,7 @@ test( 'moves /developers/ to the root of its host and /web/ under it, with their
 		'web/has/index.html',
 		'web/web.css',
 		'icons/favicon.svg',
-		'js/neck.js',
+		'js/docs.js',
 		'404.html',
 		'robots.txt',
 		'sitemap.xml',
@@ -190,7 +190,7 @@ test( 'leaves a code sample alone, and reads stylesheets and modules for the fil
 			'developers/js/'
 		),
 		'web/web.css': 'body{font-family:x;src:url(../fonts/inter.woff2)}',
-		'js/neck.js': 'import"./chunks/a.js";',
+		'js/docs.js': 'import"./chunks/a.js";',
 	} );
 	const dev = path.join(
 		fs.mkdtempSync( path.join( os.tmpdir(), 'developers-out-' ) ),
@@ -203,7 +203,7 @@ test( 'leaves a code sample alone, and reads stylesheets and modules for the fil
 	assert.equal( run.status, 1 );
 	assert.match( run.stderr, /2 link\(s\) lead nowhere/ );
 	assert.match( run.stderr, /web\.css: \.\.\/fonts\/inter\.woff2/ );
-	assert.match( run.stderr, /neck\.js: \.\/chunks\/a\.js/ );
+	assert.match( run.stderr, /docs\.js: \.\/chunks\/a\.js/ );
 } );
 
 test( 'search indexes each page by its title and door, and the headings it does not share with every other page', () => {
