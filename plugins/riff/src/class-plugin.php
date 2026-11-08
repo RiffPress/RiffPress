@@ -40,6 +40,7 @@ final class Plugin {
 		Turntable::register();
 		About::register();
 		Library::register();
+		Blocks_Rest::register();
 		Api::register();
 		Fields::register();
 		Abilities::register();
