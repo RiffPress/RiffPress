@@ -7,7 +7,7 @@ const fs = require( 'node:fs' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 const { test } = require( 'node:test' );
-const { scan, check, stripPhp, hostAllowed, owner, riffSurface, manifests } = require( './isolation' );
+const { scan, check, stripPhp, hostAllowed, owner, handleOwner, riffSurface, manifests } = require( './isolation' );
 
 const RIFF = riffSurface();
 
@@ -161,6 +161,19 @@ test( 'a script handle is named after the plugin and declared', () => {
 	const out = problems( php( "public static function a() { wp_enqueue_script( 'helper', 'x.js', array(), '1', true ); }" ) );
 	assert.ok( out.some( ( e ) => /'helper' is not in scripts/.test( e ) ) );
 	assert.ok( out.some( ( e ) => /doesn't start with 'riff-demo'/.test( e ) ) );
+} );
+
+test( 'a handle is the plugin with the longest slug it is named after, at a word boundary', () => {
+	const all = { riff: {}, 'riff-sing': {}, 'riff-sign-in': {} };
+	assert.equal( handleOwner( 'riff-sing-midi', all ), 'riff-sing' );
+	assert.equal( handleOwner( 'riff-sign-in-profile', all ), 'riff-sign-in' );
+	assert.equal( handleOwner( 'riff-singer', all ), 'riff', 'riff-sing… is not riff-sing\'s without a hyphen' );
+	assert.equal( handleOwner( '@riff-sing/melody', all ), 'riff-sing' );
+	assert.equal( handleOwner( 'riff', all ), 'riff' );
+	assert.equal( handleOwner( 'riffy', all ), null );
+	// The demo plugin may not register a handle named after Riff Sign In.
+	const out = problems( php( "public static function a() { wp_enqueue_script( 'riff-sign-in-x', 'x.js', array(), '1', true ); }" ) );
+	assert.ok( out.some( ( e ) => /named after riff-sign-in, not riff-demo/.test( e ) ) );
 } );
 
 test( 'the longest prefix owns a key', () => {
