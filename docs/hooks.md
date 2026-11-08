@@ -189,9 +189,23 @@ Since 5.7.0. Fires in `plugins/riff/src/class-protected-files.php`.
 | `$id` | `int` | Attachment ID. |
 | `$protect` | `bool` | True to make it private, false to make it public again. |
 
+### `riff_protected_path`
+
+Filters the folder protected files are kept in, so the web server never has them to send: an absolute path outside the web root, which Riff makes when it is first needed, keeping each site's files in a folder of its own inside it (the site's ID on a network). Empty, the default, keeps them in a folder under uploads, which Apache is told to refuse and Nginx needs a rule for.
+
+A path inside ABSPATH, wp-content, uploads, or the folder that holds both WordPress and wp-content, is refused with a notice, and the files stay under uploads; WP Engine's _wpeprivate folder at the site's root, which WP Engine never serves, is the one exception. When the path changes, Riff moves the files already protected to the new folder in the background, or at once with `wp riff protected move`. Defaults to the RIFF_PROTECTED_PATH constant.
+
+Since 6.5.0. Fires in `plugins/riff/src/class-protected-files.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$path` | `string` | Absolute path, or empty for the folder under uploads. |
+
 ### `riff_protected_send`
 
 Filters how a protected file is handed over: 'php' sends it from PHP; 'x-sendfile' asks Apache's mod_xsendfile or LiteSpeed to send it; 'x-accel-redirect' asks Nginx, which then needs an internal location for the protected folder (see the readme).
+
+X-Sendfile names the file's absolute path, wherever it is kept, so with RIFF_PROTECTED_PATH the web server must be allowed that folder (XSendFilePath on Apache). X-Accel-Redirect names the file's address under uploads, or, with RIFF_PROTECTED_PATH, its path inside that folder under /riff-protected/, which an internal location aliases to it; a file in neither, as one not yet moved into the folder it belongs in is, is sent from PHP instead.
 
 Since 4.18.0. Fires in `plugins/riff/src/class-protect.php`.
 

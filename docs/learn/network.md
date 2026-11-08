@@ -22,6 +22,24 @@ Deleting Riff cleans up only the site it runs in, which on a network is the main
 
 A host that gives each customer a player of their own can make the site's address the Listen app, name and colour the app, and leave out an extension, all from a plugin of its own. Each is in Under the hood below.
 
+A host can also keep protected files where its web server never sends them. Riff keeps them in a folder under uploads, which Apache is told to refuse; Nginx ignores that rule, and Riff then warns that protected files can be downloaded directly. Outside the web root, no rule is needed. Name a folder there in wp-config.php:
+
+```php
+define( 'RIFF_PROTECTED_PATH', '/srv/example/riff-protected' );
+```
+
+or from the host's own plugin, with the [`riff_protected_path`](../hooks.md#riff_protected_path) filter, which starts from the constant:
+
+```php
+add_filter( 'riff_protected_path', fn() => dirname( ABSPATH ) . '/riff-protected' );
+```
+
+- The path is absolute. Riff makes it when a file is first protected, and keeps each site's files in a folder of its own inside it: the site's ID on a network, so sites never share one, and a random name on a single site. The web server's user has to be able to write to it.
+- A path inside WordPress's folder (`ABSPATH`), wp-content, uploads, or the folder holding both WordPress and wp-content (Bedrock's `web/`), is refused, with a notice on the Dashboard, the Media Library, Settings, then Riff, and Site Health, and the files stay under uploads. WP Engine's `_wpeprivate` folder at the site's root is the one exception, as WP Engine never serves it: `ABSPATH . '_wpeprivate/riff-protected'` works there.
+- When the path changes, Riff moves the files already protected to the new folder in the background, 25 at a time, or all at once with `wp riff protected move`. Each keeps its address, `?riff-file=ID`, so no post changes. A move cut short is finished the next time, and a file waits, still protected, in the folder it was in. Taking the setting away moves them back under uploads.
+- PHP sends the files by default, from wherever they are. [`riff_protected_send`](../hooks.md#riff_protected_send) can hand them to the web server instead: `x-sendfile` names the file's absolute path, so Apache's `XSendFilePath` must allow the folder; `x-accel-redirect` names `/riff-protected/` and the file's path inside the folder, which an internal location maps there: `location /riff-protected/ { internal; alias /srv/example/riff-protected/; }`.
+- Riff asks the web server for a probe file in the protected folder about once a day, and when Settings, then Riff, is opened and nobody has for a day, to warn when it is sent to anyone. A folder outside the web root isn't asked about.
+
 ## Under the hood
 
 - [`riff_extensions`](../hooks.md#riff_extensions) changes the list of extensions Riff loads: a host can leave one out, or name a plugin it has placed in Riff's `extensions/` folder. [Extensions](../extensions.md) explains how they load.

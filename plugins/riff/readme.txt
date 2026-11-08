@@ -74,7 +74,15 @@ Any audio or video file WordPress accepts and your listener's browser can play. 
 
 Yes. Make the post private, a draft, or password protected, and its tracks stay out of the Listen page's browsing and search for visitors.
 
-To keep the files themselves private, tick Protected on an audio or video file in the Media Library. Riff moves it into a folder of its own and only sends it to visitors who can read a post that has it. Apache and LiteSpeed keep that folder closed with the rule Riff leaves in it. Nginx, which many managed hosts run, ignores that rule: the Protected box and Tools > Site Health say when your server sends the folder to anyone, and you, or your host, add this to the site's Nginx configuration:
+To keep the files themselves private, tick Protected on an audio or video file in the Media Library. Riff moves it into a folder of its own and only sends it to visitors who can read a post that has it. Apache and LiteSpeed keep that folder closed with the rule Riff leaves in it. Nginx, which many managed hosts run, ignores that rule, so anyone who has a protected file's address in uploads could still download it. Riff checks: the Dashboard, the Media Library, Settings > Riff and Tools > Site Health say "Protected files can be downloaded directly on this server" when yours sends the folder to anyone.
+
+There are two ways to close it. The surest is to keep protected files outside the web root, where no web server can send them. Add this to wp-config.php, with a folder of your own that the web server can write to but never serves:
+
+`define( 'RIFF_PROTECTED_PATH', '/home/example/riff-protected' );`
+
+Riff makes a folder for the site inside it (one for each site on a multisite network) and moves the files already protected there in the background, or at once with `wp riff protected move`. Their addresses stay the same. A path inside WordPress's folder, wp-content, uploads, or the folder that holds both WordPress and wp-content, is refused, with a notice, and the files stay where they are; on WP Engine, `_wpeprivate` at the site's root is the one exception, as WP Engine never serves it. A plugin can set the path with the `riff_protected_path` filter instead.
+
+Or you, or your host, add this to the site's Nginx configuration:
 
 `location ~ /riff-protected-[a-z0-9]{20}/ { internal; }`
 
@@ -92,7 +100,7 @@ Riff doesn't change your posts. The blocks keep their own markup and their own p
 
 = Where are my files stored? =
 
-In your Media Library, in your site's uploads folder on your own server, exactly as WordPress stores them. Riff doesn't copy them anywhere else. Protected files move to a folder of their own inside uploads.
+In your Media Library, in your site's uploads folder on your own server, exactly as WordPress stores them. Riff doesn't copy them anywhere else. Protected files move to a folder of their own inside uploads, or outside the web root where `RIFF_PROTECTED_PATH` names one.
 
 Riff keeps very little of its own: the link between a song and its video, the album and artist it files each track under, and each listener's likes, recently played and playlists. Deleting Riff from the Plugins screen removes its links, albums, artists, likes and recently played, and leaves your files, their tags and their images alone.
 

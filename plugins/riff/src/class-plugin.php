@@ -24,6 +24,7 @@ final class Plugin {
 		Sources::register( new Blocks_Source() );
 		Media::register();
 		Protect::register();
+		Protected_Path::register();
 		Private_Site::register();
 		Catalog::register();
 		Import::register();

@@ -25,6 +25,7 @@ final class Cli {
 	public static function register(): void {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			WP_CLI::add_command( 'riff', self::class );
+			WP_CLI::add_command( 'riff protected', Protected_Cli::class );
 		}
 	}
 

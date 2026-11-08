@@ -332,6 +332,8 @@ const HTTP_CALLS = [
 	'wp_safe_remote_request',
 	'download_url',
 ];
+// Scheduling a cron event, by the argument that is its hook.
+const CRON_CALLS = { wp_schedule_event: 2, wp_schedule_single_event: 1 };
 const SPAWN_CALLS = [ 'exec', 'shell_exec', 'system', 'passthru', 'proc_open', 'popen', 'pcntl_exec' ];
 // Writes to the filesystem. fopen() only counts when its mode writes.
 const WRITE_CALLS = [
@@ -402,6 +404,8 @@ function scan( dir ) {
 		writes: [],
 		includes: [],
 		iframes: [],
+		cron: [],
+		settings: [],
 	};
 	const at = ( f, line ) => `${ f.rel }:${ line }`;
 
@@ -501,6 +505,21 @@ function scan( dir ) {
 		}
 		for ( const c of calls( code, SPAWN_CALLS ) ) {
 			found.spawn.push( { value: c.name, where: at( f, c.line ), ok: annotated( f.raw, c.line, 'spawn' ) } );
+		}
+		for ( const c of calls( code, Object.keys( CRON_CALLS ) ) ) {
+			const k = key( c, CRON_CALLS[ c.name ] );
+			found.cron.push( { value: k ? k.value : null, where: at( f, c.line ) } );
+		}
+		// What a site can set: the constants the code asks after and the filters it applies, which
+		// paths names a folder by.
+		for ( const m of code.matchAll( /\bdefined\s*\(\s*'([A-Z][A-Z0-9_]*)'\s*\)/g ) ) {
+			found.settings.push( { value: m[ 1 ], where: at( f, lineOf( code, m.index ) ) } );
+		}
+		for ( const c of calls( code, [ 'apply_filters' ] ) ) {
+			const k = key( c, 0 );
+			if ( k ) {
+				found.settings.push( { value: k.value, where: at( f, c.line ) } );
+			}
 		}
 		for ( const c of calls( code, WRITE_CALLS ) ) {
 			if ( c.name === 'fopen' && ! /['"][^'"]*[waxc+][^'"]*['"]/.test( c.args[ 1 ] || '' ) ) {
@@ -717,7 +736,25 @@ function check( slug, found, manifests, riff ) {
 	}
 	for ( const w of found.writes ) {
 		if ( ! w.ok ) {
-			say( w.where, `${ w.value }() writes to the filesystem. A plugin writes only under uploads or the temp folder; say which on the line or the one before: // isolation: write -- <where, and why>.` );
+			say( w.where, `${ w.value }() writes to the filesystem. A plugin writes only under uploads, the temp folder or a folder its manifest's paths names; say which on the line or the one before: // isolation: write -- <where, and why>.` );
+		}
+	}
+	const cron = m.cron || {};
+	for ( const c of found.cron ) {
+		if ( c.value === null ) {
+			say( c.where, `a cron event's hook can't be read here. Use a literal or a class constant, so the check can hold it to cron in ${ manifestFile }.` );
+		} else if ( ! cron[ c.value ] ) {
+			say( c.where, `it schedules the cron event '${ c.value }', which is not in cron in ${ manifestFile }. Declare it, with why it runs.` );
+		}
+	}
+	for ( const name of Object.keys( cron ) ) {
+		if ( ! found.cron.some( ( c ) => c.value === name ) ) {
+			say( manifestFile, `cron names '${ name }', which the code never schedules. Take it out.` );
+		}
+	}
+	for ( const name of Object.keys( m.paths || {} ) ) {
+		if ( ! found.settings.some( ( s ) => s.value === name ) ) {
+			say( manifestFile, `paths names '${ name }', which is neither a constant the code asks after nor a filter it applies. Name the folder by the setting a site gives it with.` );
 		}
 	}
 	for ( const i of found.includes ) {
@@ -824,7 +861,7 @@ function plugins() {
 		.map( ( d ) => d.name );
 }
 
-const SCHEMA_KEYS = [ '$schema', 'plugin', 'namespace', 'data', 'rest', 'capabilities', 'hosts', 'spawn', 'riff', 'scripts', 'modules', 'sandbox' ];
+const SCHEMA_KEYS = [ '$schema', 'plugin', 'namespace', 'data', 'rest', 'capabilities', 'hosts', 'spawn', 'cron', 'paths', 'riff', 'scripts', 'modules', 'sandbox' ];
 
 /**
  * Reads every manifest, and the problems with their shape.
