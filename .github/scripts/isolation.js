@@ -710,7 +710,7 @@ function check( slug, found, manifests, riff ) {
 		}
 	}
 
-	const prefix = slug.replace( /-/g, '-' );
+	const prefix = slug.replace( /-/g, '_' );
 	for ( const [ kind, list ] of [ [ 'scripts', m.scripts || [] ], [ 'modules', m.modules || [] ] ] ) {
 		for ( const s of found[ kind ] ) {
 			if ( ! list.includes( s.value ) ) {
