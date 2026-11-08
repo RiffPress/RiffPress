@@ -4,9 +4,10 @@
  * cover, the title, and the artist and the album, each a link to its page in the Listen app.
  * `credits` is what the file's own tags say about who made it, as WordPress read them on upload and
  * the media route hands them back in media_details; the albums and artists the file is filed under
- * come from the same answer by ID, named through riff/v1. Nothing is fetched from anywhere else, and a tag the file
- * lacks is left out, so a track with none shows no credits at all. Loaded the first time the panel
- * opens. */
+ * come from the same answer by ID, named through riff/v1. The file's caption, where it has one, is
+ * its credit line, as an archive's recording is given its source and licence there (Riff\Archives).
+ * Nothing is fetched from anywhere else, and a tag the file lacks is left out, so a track with none
+ * shows no credits at all. Loaded the first time the panel opens. */
 import { fmt, largest } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
@@ -40,6 +41,17 @@ export default function about( P ) {
 		[ __( 'Copyright', 'riff' ), [ 'copyright_message', 'copyright' ] ],
 	];
 
+	// A caption as the media route renders it, as text: it is read, never put on the page as markup.
+	const plain = ( html ) =>
+		html
+			? (
+					new DOMParser().parseFromString(
+						String( html ),
+						'text/html'
+					).body.textContent || ''
+				).trim()
+			: '';
+
 	// What the media route has on a Media Library file: its tags, and the IDs of the albums and
 	// artists it is filed under, named through Riff's own routes, since WordPress's term routes for
 	// them are closed (Catalog_REST). Null for a file outside the library, or one this listener may
@@ -70,7 +82,10 @@ export default function about( P ) {
 		if ( ! cache.has( id ) ) {
 			const url = new URL( String( id ), data.media );
 			// media_details is built only when asked for by that name.
-			url.searchParams.set( '_fields', 'media_details,riff_albums,riff_artists' );
+			url.searchParams.set(
+				'_fields',
+				'media_details,caption,riff_albums,riff_artists'
+			);
 			const asked = P.internal
 				.request( url )
 				.then( ( r ) => ( r.ok ? r.json() : null ) )
@@ -81,6 +96,7 @@ export default function about( P ) {
 								known( 'artists', ids( answer.riff_artists ) ),
 						  ] ).then( ( [ albums, artists ] ) => ( {
 								tags: answer.media_details || {},
+								credit: plain( answer.caption?.rendered ),
 								albums,
 								artists,
 						  } ) )
@@ -241,6 +257,16 @@ export default function about( P ) {
 						)
 					: document.createTextNode( value )
 			);
+			row.append( term, definition );
+			list.append( row );
+		}
+		// Last, the file's credit line, whoever it credits.
+		if ( found?.credit ) {
+			const row = document.createElement( 'div' );
+			const term = document.createElement( 'dt' );
+			term.textContent = __( 'Credit', 'riff' );
+			const definition = document.createElement( 'dd' );
+			definition.textContent = found.credit;
 			row.append( term, definition );
 			list.append( row );
 		}

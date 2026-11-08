@@ -32,7 +32,9 @@ const surface = () => JSON.parse( execFileSync( 'php', [ path.join( __dirname, '
 
 /**
  * A name for a schema's title: riff-library-post is LibraryPost.
- * @param title
+ *
+ * @param {string} title A schema's title.
+ * @return {string} A type's name.
  */
 const pascal = ( title ) =>
 	title
@@ -46,8 +48,10 @@ const key = ( k ) => ( isIdentifier( k ) ? k : JSON.stringify( k ) );
 
 /**
  * A docblock for a description, or nothing.
- * @param text
- * @param pad
+ *
+ * @param {string} text The description.
+ * @param {string} pad  Its indent.
+ * @return {string} TypeScript.
  */
 const doc = ( text, pad ) => ( text ? `${ pad }/** ${ String( text ).replace( /\*\//g, '*\\/' ).replace( /\s+/g, ' ' ).trim() } */\n` : '' );
 
@@ -147,7 +151,9 @@ function tsOf( schema, ctx ) {
 
 /**
  * Types joined, each once, null last.
- * @param list
+ *
+ * @param {string[]} list Types.
+ * @return {string} Their union.
  */
 function union( list ) {
 	const seen = [ ...new Set( list ) ];
@@ -273,8 +279,10 @@ function rest( s ) {
 
 /**
  * A top-level split of a type at `|`, leaving the ones inside parentheses or brackets.
- * @param type
- * @param sep
+ *
+ * @param {string} type A JSDoc type.
+ * @param {string} sep  What to split at.
+ * @return {string[]} The parts.
  */
 function topLevel( type, sep = '|' ) {
 	const parts = [];
@@ -297,7 +305,9 @@ function topLevel( type, sep = '|' ) {
 
 /**
  * Whether a type is all inside one pair of parentheses: `((a) => b)`, not `(a) => b`.
- * @param type
+ *
+ * @param {string} type A JSDoc type.
+ * @return {boolean} Whether it is.
  */
 function wrapped( type ) {
 	if ( ! type.startsWith( '(' ) ) {
@@ -355,8 +365,8 @@ function tsJs( type, name = '', description = '' ) {
 		const m = /^\((.*)\)\s*=>\s*(.+)$/s.exec( t );
 		if ( m ) {
 			const params = m[ 1 ].trim() ? topLevel( m[ 1 ], ',' ).map( ( p ) => {
-				const [ n, ...rest ] = p.split( ':' );
-				return `${ n.trim() }: ${ tsJs( rest.join( ':' ), n.trim().replace( /\?$/, '' ) ) }`;
+				const [ n, ...after ] = p.split( ':' );
+				return `${ n.trim() }: ${ tsJs( after.join( ':' ), n.trim().replace( /\?$/, '' ) ) }`;
 			} ) : [];
 			const returns = m[ 2 ].trim();
 			return `(${ params.join( ', ' ) }) => ${ returns === 'void' ? 'void' : tsJs( returns ) }`;
@@ -404,14 +414,18 @@ function tsParams( params, pad = '' ) {
 
 /**
  * A parameter list.
- * @param ps
+ *
+ * @param {Array<{ name: string, optional: boolean, type: string }>} ps As tsParams() gives them.
+ * @return {string} TypeScript.
  */
 const list = ( ps ) => ps.map( ( p ) => `${ p.name }${ p.optional ? '?' : '' }: ${ p.type }` ).join( ', ' );
 
 /**
  * A JSDoc comment from a summary, a description and @since.
- * @param item
- * @param pad
+ *
+ * @param {Object} item Its summary, description and since.
+ * @param {string} pad  Its indent.
+ * @return {string} TypeScript.
  */
 function jsdoc( item, pad ) {
 	const lines = [ item.summary, item.description ].filter( Boolean ).join( '\n\n' ).replace( /\*\//g, '*\\/' ).split( '\n' );
@@ -533,8 +547,10 @@ function views( file = VIEWS ) {
 
 /**
  * A heading comment between sections.
- * @param title
- * @param words
+ *
+ * @param {string} title The section's name.
+ * @param {string} words What it holds.
+ * @return {string} TypeScript.
  */
 const section = ( title, words ) => `// ---- ${ title }.\n// ${ words }\n\n`;
 
@@ -578,14 +594,14 @@ function main() {
 	if ( process.argv.includes( '--check' ) ) {
 		const problem = drift( out );
 		if ( problem ) {
-			console.error( problem );
+			process.stderr.write( `${ problem }\n` );
 			process.exit( 1 );
 		}
-		console.log( `${ path.relative( ROOT, OUT ) } is current` );
+		process.stdout.write( `${ path.relative( ROOT, OUT ) } is current\n` );
 		return;
 	}
 	fs.writeFileSync( OUT, out );
-	console.log( `Wrote ${ path.relative( ROOT, OUT ) }` );
+	process.stdout.write( `Wrote ${ path.relative( ROOT, OUT ) }\n` );
 }
 
 if ( require.main === module ) {

@@ -115,6 +115,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Every plugin keeps to its isolation.json
+        run: node .github/scripts/isolation.js --check
       - name: The hooks reference is current
         run: node .github/scripts/hooks-reference.js --check
       - name: The JavaScript reference is current

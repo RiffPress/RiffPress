@@ -8,6 +8,7 @@
 use Riff\Catalog;
 use Riff\Import;
 use Riff\Media;
+use Riff\Protect;
 
 /**
  * Riff\Import.
@@ -291,6 +292,51 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertSame( $before, $this->unpacked(), 'the folder it was unpacked into is gone' );
 	}
 
+	public function test_a_zip_is_private_its_tracks_and_videos_protected_and_its_post_private(): void {
+		$zip = $this->zip_of(
+			array(
+				'01 - Intensities in Ten Cities [intensities].mp3' => '01 - Intensities in Ten Cities [intensities].mp3',
+				'01 - Intensities in Ten Cities [intensities].webm' => '../test/pattern.webm',
+				'cover.png' => 'cover.png',
+			)
+		);
+
+		$album = Import::zip( $zip )['albums'][0];
+
+		$this->assertSame( array(), $album['failed'] );
+		$track = $this->tracks()[0];
+		$video = (int) get_post_meta( $track, Media::VIDEO_META, true );
+		$this->assertGreaterThan( 0, $video, 'paired' );
+		$this->assertSame( 'private', get_post_status( $album['post'] ) );
+		$this->assertTrue( Protect::is( $track ) );
+		$this->assertTrue( Protect::is( $video ), 'its video too' );
+		$this->assertSame( Protect::address( $track ), wp_get_attachment_url( $track ) );
+		$this->assertStringContainsString( Protect::address( $track ), get_post_field( 'post_content', $album['post'] ), 'the post plays it at its protected address' );
+		$this->assertFalse( Protect::is( (int) get_post_thumbnail_id( $album['post'] ) ), 'a cover keeps its public address, as on a private site' );
+	}
+
+	public function test_a_zip_imported_as_public_is_public(): void {
+		$zip = $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) );
+
+		$album = Import::zip( $zip, array( 'private' => false ) )['albums'][0];
+
+		$this->assertSame( 'publish', get_post_status( $album['post'] ) );
+		$this->assertFalse( Protect::is( $this->tracks()[0] ) );
+	}
+
+	public function test_a_track_that_cannot_be_protected_is_not_left_public(): void {
+		$refuse = static fn() => new WP_Error( 'riff_test_storage', 'The storage cannot make it private.' );
+		add_filter( 'riff_protect_storage', $refuse );
+		$zip    = $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) );
+
+		$album = Import::zip( $zip )['albums'][0];
+		remove_filter( 'riff_protect_storage', $refuse );
+
+		$this->assertSame( array( '02 - Underground [underground].mp3' => 'The storage cannot make it private.' ), $album['failed'] );
+		$this->assertCount( 0, $this->tracks(), 'deleted again, not left at a public address' );
+		$this->assertSame( 0, $album['post'] );
+	}
+
 	public function test_a_zip_imported_again_finds_its_album_and_imports_nothing_twice(): void {
 		$zip   = $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) );
 		$first = Import::zip( $zip );
@@ -352,7 +398,7 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertCount( 0, $this->tracks() );
 	}
 
-	public function test_a_zip_uploaded_to_the_media_library_is_imported_in_the_background_as_a_draft(): void {
+	public function test_a_zip_uploaded_to_the_media_library_is_imported_in_the_background_privately(): void {
 		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
 		wp_set_current_user( $editor );
 		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
@@ -365,9 +411,10 @@ class Test_Riff_Import extends Riff_TestCase {
 
 		$this->assertIsArray( $result );
 		$post = get_post( $result['albums'][0]['post'] );
-		$this->assertSame( 'draft', $post->post_status, 'a draft, for the person who uploaded it to publish' );
+		$this->assertSame( 'private', $post->post_status, 'private, for the person who uploaded it to publish if it is theirs to' );
 		$this->assertSame( $editor, (int) $post->post_author );
 		$this->assertCount( 1, $this->tracks() );
+		$this->assertTrue( Protect::is( $this->tracks()[0] ), 'the track is Protected' );
 		$this->assertSame( $post->ID, (int) get_post( $id )->post_parent, 'the zip stays, attached to its album' );
 		$this->assertSame( 0, get_current_user_id(), 'the job puts back who was signed in' );
 	}
@@ -439,7 +486,30 @@ class Test_Riff_Import extends Riff_TestCase {
 
 		$this->assertSame( array( 'log', 'success' ), array_column( WP_CLI::$lines, 0 ) );
 		$this->assertSame( '1 albums: 1 tracks imported, 0 skipped, 0 failed.', WP_CLI::$lines[1][1] );
+		$this->assertSame( 'private', get_post_status( get_posts( array( 'post_status' => 'any' ) )[0] ), 'a zip is private unless it is said not to be' );
+		$this->assertTrue( Protect::is( $this->tracks()[0] ) );
+	}
+
+	public function test_wp_riff_import_no_private_imports_an_artists_own_zip_publicly(): void {
+		require_once __DIR__ . '/class-riff-test-wp-cli.php';
+		WP_CLI::$lines = array();
+		$zip           = $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) );
+
+		( new Riff\Cli() )->import( array( $zip ), array( 'private' => false ) );
+
 		$this->assertSame( 'publish', get_post_status( get_posts()[0] ) );
+		$this->assertFalse( Protect::is( $this->tracks()[0] ) );
+	}
+
+	public function test_wp_riff_import_private_imports_a_folder_privately(): void {
+		require_once __DIR__ . '/class-riff-test-wp-cli.php';
+		WP_CLI::$lines = array();
+		$dir           = $this->album_dir( 'compositions', array( '02 - Underground [underground].mp3' ) );
+
+		( new Riff\Cli() )->import( array( $dir ), array( 'private' => true ) );
+
+		$this->assertSame( 'private', get_post_status( get_posts( array( 'post_status' => 'any' ) )[0] ) );
+		$this->assertTrue( Protect::is( $this->tracks()[0] ) );
 	}
 
 	public function test_wp_riff_import_reports_each_album_and_a_summary(): void {

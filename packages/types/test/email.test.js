@@ -107,6 +107,33 @@ test( 'safe() keeps a short list of tags and attributes, and escapes a stray bra
 	assert.equal( safe( '<!-- wp:paragraph -->' ), '' );
 } );
 
+test( 'safe() lets no script through markup built to survive a pass, and decodes an attribute once', () => {
+	for ( const html of [
+		'<scr<script></script>ipt>alert(1)</script>',
+		'<<script>script>alert(1)<</script>/script>',
+		'<!-<!-- -->- <script>alert(1)</script> -->',
+		'<!-- never closed <script>alert(1)</script>',
+		'<script>alert(1)',
+		'<svg><script>alert(1)</script></svg><p>after</p>',
+	] ) {
+		const out = safe( html );
+		assert.doesNotMatch( out, /<script|<svg/i, html );
+		assert.doesNotMatch( out, /<[a-z]+[^>]*on\w+=/i, html );
+	}
+	assert.equal( safe( '<svg><script>x</script></svg><p>after</p>' ), '<p style="margin:0 0 16px;line-height:1.6;">after</p>' );
+	// &amp;quot; is the text &quot;, never a quote that could end the attribute.
+	assert.equal( safe( '<a href="https://x.test/?q=&amp;quot;">x</a>' ), '<a href="https://x.test/?q=&amp;quot;" style="color:#1c1c1c;text-decoration:underline;">x</a>' );
+} );
+
+test( 'safe() takes time in proportion to the markup, however it repeats', () => {
+	for ( const piece of [ '<!--', '<script>', '<', '<a ', '<p>' ] ) {
+		const html = piece.repeat( 50000 );
+		const started = performance.now();
+		safe( html );
+		assert.ok( performance.now() - started < 1000, `${ piece } × 50,000` );
+	}
+} );
+
 test( 'a length is m:ss, or nothing when unknown', () => {
 	assert.equal( length( 125.4 ), '2:05' );
 	assert.equal( length( 0 ), '' );

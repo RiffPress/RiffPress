@@ -1,0 +1,86 @@
+{
+	"success": true,
+	"itemsCount": 3,
+	"totalResults": 3,
+	"items": [
+		{
+			"id": "/916107/wws_object_2713",
+			"title": [
+				"Wind up gramophone"
+			],
+			"rights": [
+				"http://creativecommons.org/licenses/by/4.0/"
+			],
+			"edmIsShownBy": [
+				"http://www.soundsofchanges.eu/soundfiles/5b4/5b43248b43f80.mp3"
+			],
+			"edmIsShownAt": [
+				"http://soundsofchanges.eu/sound/wind-up-gramophone/"
+			],
+			"dataProvider": [
+				"Sounds of Changes"
+			],
+			"provider": [
+				"Swedish Open Cultural Heritage"
+			],
+			"dcCreator": null,
+			"year": null,
+			"guid": "https://www.europeana.eu/item/916107/wws_object_2713?utm_source=api&utm_medium=api&utm_campaign=api2demo",
+			"type": "SOUND"
+		},
+		{
+			"id": "/2059219/data_sounds_ark__12148_cb37895035f",
+			"title": [
+				"Le régiment de Sambre et Meuse / Rauski ; orch militaire du Gramophone",
+				"Marche lorraine / L. Ganne ; orchestre militaire du Gramophone",
+				"Le régiment de Sambre et Meuse / Rauski ; orch militaire du Gramophone",
+				"Marche lorraine / L. Ganne ; orchestre militaire du Gramophone"
+			],
+			"rights": [
+				"http://creativecommons.org/publicdomain/mark/1.0/"
+			],
+			"edmIsShownBy": [
+				"http://gallica.bnf.fr/ark:/12148/bpt6k13110096/f1.audio"
+			],
+			"edmIsShownAt": [
+				"http://gallica.bnf.fr/ark:/12148/bpt6k13110096"
+			],
+			"dataProvider": [
+				"National Library of France"
+			],
+			"provider": [
+				"Europeana Sounds"
+			],
+			"dcCreator": null,
+			"year": null,
+			"guid": "https://www.europeana.eu/item/2059219/data_sounds_ark__12148_cb37895035f?utm_source=api&utm_medium=api&utm_campaign=api2demo",
+			"type": "SOUND"
+		},
+		{
+			"id": "/2059210/data_sounds_http___archive_org_download_tsool2002_01_29_aud_flac16_tsool20020129_t14_mp3",
+			"title": [
+				"Galaxy gramophone",
+				"Track from The Soundtrack of Our Lives Live at Kulturbolaget on 2002-01-29"
+			],
+			"rights": [
+				"http://rightsstatements.org/vocab/InC/1.0/"
+			],
+			"edmIsShownBy": [
+				"http://archive.org/download/tsool2002-01-29.aud.flac16/tsool20020129-t14.mp3"
+			],
+			"edmIsShownAt": [
+				"https://archive.org/details/tsool2002-01-29.aud.flac16"
+			],
+			"dataProvider": [
+				"Internet Archive"
+			],
+			"provider": [
+				"Europeana Sounds"
+			],
+			"dcCreator": null,
+			"year": null,
+			"guid": "https://www.europeana.eu/item/2059210/data_sounds_http___archive_org_download_tsool2002_01_29_aud_flac16_tsool20020129_t14_mp3?utm_source=api&utm_medium=api&utm_campaign=api2demo",
+			"type": "SOUND"
+		}
+	]
+}

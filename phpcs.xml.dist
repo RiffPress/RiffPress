@@ -33,6 +33,43 @@
 	<rule ref="PHPCompatibilityWP"/>
 
 	<!--
+		Isolation (docs/isolation.md): the primitives no plugin here uses without saying why. The
+		WordPress standard already fails eval() (Squiz.PHP.Eval), create_function()
+		(WordPress.PHP.RestrictedPHPFunctions), extract() (WordPress.PHP.DontExtract) and SQL built
+		without $wpdb->prepare() (WordPress.DB.PreparedSQL); these make its warnings about running a
+		program and unserializing errors, each saying what to do instead.
+		.github/scripts/isolation.js checks the rest against each plugin's isolation.json.
+	-->
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec">
+		<type>error</type>
+		<message>%s() runs a program through a shell. Do it in PHP, or declare the program in isolation.json "spawn", escape every argument, and say why on the line: // isolation: spawn -- why (docs/isolation.md).</message>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_shell_exec">
+		<type>error</type>
+		<message>%s() runs a program through a shell. Do it in PHP, or declare the program in isolation.json "spawn", escape every argument, and say why on the line: // isolation: spawn -- why (docs/isolation.md).</message>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_system">
+		<type>error</type>
+		<message>%s() runs a program through a shell. Do it in PHP, or use exec() with a declared program (docs/isolation.md).</message>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_passthru">
+		<type>error</type>
+		<message>%s() runs a program through a shell. Do it in PHP, or use exec() with a declared program (docs/isolation.md).</message>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_proc_open">
+		<type>error</type>
+		<message>%s() runs a program. Do it in PHP, or use exec() with a declared program (docs/isolation.md).</message>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_popen">
+		<type>error</type>
+		<message>%s() runs a program. Do it in PHP, or use exec() with a declared program (docs/isolation.md).</message>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize">
+		<type>error</type>
+		<message>%s() can build any object from its input. Store JSON and read it with json_decode(), or let WordPress's own option and meta functions do it (docs/isolation.md).</message>
+	</rule>
+
+	<!--
 		Tests are held to the same code style, but not to the same documentation rules: a test's name is
 		its description, and a docblock repeating it in prose is noise. The file-name and filesystem rules
 		go too, because `test-*.php` is PHPUnit's convention and a test that writes a fixture archive has

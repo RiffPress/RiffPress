@@ -22,6 +22,20 @@ class Test_Riff_Media extends Riff_TestCase {
 		Media::register_meta();
 	}
 
+	public function test_an_audio_files_caption_on_the_media_route_is_its_own_or_none(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		$audio   = self::attach( '02 - Underground [underground].mp3' );
+		$caption = static fn(): string => rest_do_request( new WP_REST_Request( 'GET', "/wp/v2/media/$audio" ) )->get_data()['caption']['rendered'];
+		$this->assertSame( '', $caption(), 'not one made from the description' );
+		wp_update_post(
+			array(
+				'ID'           => $audio,
+				'post_excerpt' => 'Public domain, from the U.S. Air Force Band.',
+			)
+		);
+		$this->assertStringContainsString( 'Public domain, from the U.S. Air Force Band.', $caption() );
+	}
+
 	public function test_the_video_link_is_registered_for_the_rest_api(): void {
 		$keys = get_registered_meta_keys( 'post', 'attachment' );
 		$this->assertArrayHasKey( Media::VIDEO_META, $keys );

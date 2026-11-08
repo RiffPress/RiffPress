@@ -1,0 +1,25 @@
+{
+	"title": "Inventing Entertainment: The Early Motion Pictures and Sound Recordings of the Edison Companies",
+	"pagination": {
+		"next": null,
+		"total": 2
+	},
+	"results": [
+		{
+			"id": "http://www.loc.gov/item/00694028/",
+			"title": "Hungarian rag",
+			"date": "1914",
+			"online_format": [
+				"audio"
+			]
+		},
+		{
+			"id": "http://www.loc.gov/item/00694070/",
+			"title": "The raggedy man",
+			"date": "1914",
+			"online_format": [
+				"audio"
+			]
+		}
+	]
+}

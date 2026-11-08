@@ -100,6 +100,24 @@ export interface LibraryResponse {
 	total: number;
 }
 
+export interface LibrarySummaryResponse {
+	/** Audio files in the Media Library. */
+	tracks: number;
+	/** Albums, by the files' tags. */
+	albums: number;
+	/** Artists, by the files' tags. */
+	artists: number;
+	/** Published posts with music. */
+	posts: number;
+	/** Space taken, in bytes: by the audio files, and by every upload. */
+	bytes: {
+		audio: number;
+		uploads: number;
+	};
+	/** The most the site may upload, in bytes, where its network sets a limit; null for none. */
+	quota: number | null;
+}
+
 export interface LibraryPostResponse {
 	/** Post ID. */
 	id: number;
@@ -126,6 +144,13 @@ export interface LibraryPostResponse {
 	pressing: Record<string, unknown>;
 	/** The media blocks rendered as the post renders them. */
 	html: string;
+}
+
+export interface ImportResponse {
+	/** The zip's attachment ID. */
+	attachment: number;
+	/** When the import starts, as a Unix time. Its album posts are drafts by the zip's uploader; the zip is attached to the first once it is done. */
+	queued: number;
 }
 
 /** A post's blocks as a tree, parsed by WordPress's own block parser, with the tracks Riff's blocks play resolved in place. */
@@ -281,12 +306,36 @@ export interface Routes {
 		};
 		response: LibraryResponse;
 	};
+	"POST /riff/v1/library": {
+		params: {
+			/** The album's title. */
+			title: string;
+			/** Audio attachment IDs, in play order. */
+			tracks: number[];
+			/** Draft, for its author to look over first; published; or private. */
+			status?: "draft" | "publish" | "private";
+			/** An image attachment ID for the cover; the first track's artwork when not given. */
+			artwork?: number;
+		};
+		response: LibraryResponse;
+	};
+	"GET /riff/v1/library/summary": {
+		params: Record<string, never>;
+		response: LibrarySummaryResponse;
+	};
 	"GET /riff/v1/library/{id}": {
 		params: {
 			/** Post ID. */
 			id: number;
 		};
 		response: LibraryPostResponse;
+	};
+	"POST /riff/v1/imports": {
+		params: {
+			/** The zip's attachment ID, in the Media Library and attached to no post. */
+			attachment: number;
+		};
+		response: ImportResponse;
 	};
 	/** A post's blocks as a tree, parsed by WordPress's own block parser, with the tracks Riff's blocks play resolved in place. */
 	"GET /riff/v1/posts/{id}/blocks": {

@@ -441,7 +441,7 @@ export function nowPlaying( P ) {
 	// until the arm is lifted. The ring's join clicks once a turn, the same click each time, since
 	// it is the same groove: 1.8 s apart at 33⅓. Two turns of it, and then the arm goes back and the
 	// record is turned over or changed. Only where the record is seen, and only where the music
-	// passes through Web Audio (filament.js), as the click is played there; elsewhere the arm still
+	// passes through Web Audio (meter.js), as the click is played there; elsewhere the arm still
 	// rides the run-out, in silence. The platter turns on at the music's last speed meanwhile, the
 	// music over, and is braked once the arm is lifted.
 	const LOCKED = 1.06;
@@ -464,7 +464,7 @@ export function nowPlaying( P ) {
 			[ { rotate: `${ angle( 1 ).toFixed( 2 ) }deg` }, { rotate: `${ angle( LOCKED ).toFixed( 2 ) }deg` } ],
 			{ duration: once / 2, easing: 'ease-in', fill: 'forwards' }
 		);
-		// Woken once the ended event is through: filament.js suspends the context on it, after this.
+		// Woken once the ended event is through: meter.js suspends the context on it, after this.
 		const ctx = P.analyser?.context;
 		setTimeout( () =>
 			ctx?.resume()

@@ -15,6 +15,14 @@
 					"label": "Handbook",
 					"ordered": true,
 					"children": [
+						{ "key": "music", "label": "Your music", "href": "developers/music/" },
+						{ "key": "album", "label": "An album", "href": "developers/album/" },
+						{ "key": "post", "label": "Music in a post", "href": "developers/post/" },
+						{ "key": "listen-page", "label": "The Listen page", "href": "developers/listen-page/" },
+						{ "key": "app", "label": "The app", "href": "developers/app/" },
+						{ "key": "lyrics", "label": "Lyrics", "href": "developers/lyrics/" },
+						{ "key": "sign-in", "label": "Signing in", "href": "developers/sign-in/" },
+						{ "key": "network", "label": "Clients and networks", "href": "developers/network/" },
 						{ "key": "extensions", "label": "Extensions", "href": "developers/extensions/" },
 						{ "key": "player", "label": "Player", "href": "developers/player/" }
 					]

@@ -29,6 +29,9 @@ function __( $text, $domain = null ) {
 }
 function add_action() {}
 function add_filter() {}
+function apply_filters( $hook, $value ) {
+	return $value;
+}
 function register_rest_route( $ns, $route, $args ) {
 	$GLOBALS['riff_surface']['routes'][] = array( 'namespace' => $ns, 'route' => $route, 'args' => $args );
 }
@@ -62,6 +65,7 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 }
 
 \Riff\Library::routes();
+\Riff\Import::routes();
 \Riff\Blocks_Rest::routes();
 \Riff\Catalog_Rest::routes();
 \Riff\Likes_Rest::routes();

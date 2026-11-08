@@ -159,4 +159,89 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '[data-riff-panel="queue"]' ) ).toBeVisible();
 		await expect( side ).toHaveCSS( 'background-image', 'none' );
 	} );
+
+	test( 'a control in focus has one ring, its own shape, and the round Home button\'s ring is round and no wider than it', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'The strip is a computer\'s.' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+		const home = page.locator( '.riff-app-bar .riff-app-home' );
+		// Focused from the keyboard, as :focus-visible wants.
+		await home.focus();
+		await page.keyboard.press( 'Shift+Tab' );
+		await page.keyboard.press( 'Tab' );
+		await expect( home ).toBeFocused();
+
+		// Every control's ring is the token's: Home, search, a tab in the sidebar, an item of it.
+		const ring = async ( el ) =>
+			el.evaluate( ( node ) => {
+				const s = getComputedStyle( node );
+				return [ s.outlineStyle, s.outlineWidth, s.outlineOffset ].join( ' ' );
+			} );
+		expect( await ring( home ) ).toBe( 'solid 2px 2px' );
+		for ( const el of [
+			page.locator( '.riff-app-bar .riff-app-search input' ),
+			page.locator( '.riff-app-bar .riff-app-tab', { hasText: 'Albums' } ),
+		] ) {
+			await el.focus();
+			await page.keyboard.press( 'Shift+Tab' );
+			await page.keyboard.press( 'Tab' );
+			expect( await ring( el ) ).toBe( 'solid 2px 2px' );
+		}
+
+		// The ring drawn round Home is its own box, 2px out and 2px wide, round as it is, with no
+		// tail toward the search field: what focus changes, between a picture of the strip around
+		// Home with it and one without, is all within that box.
+		await home.focus();
+		await page.keyboard.press( 'Shift+Tab' );
+		const box = await home.boundingBox();
+		const clip = { x: box.x - 24, y: Math.max( 0, box.y - 8 ), width: box.width + 96, height: box.height + 16 };
+		await page.mouse.move( 0, 899 );
+		const before = ( await page.screenshot( { clip } ) ).toString( 'base64' );
+		await page.keyboard.press( 'Tab' );
+		await expect( home ).toBeFocused();
+		const after = ( await page.screenshot( { clip } ) ).toString( 'base64' );
+		const inked = await page.evaluate(
+			async ( pngs ) => {
+				const read = async ( png ) => {
+					const img = new Image();
+					img.src = `data:image/png;base64,${ png }`;
+					await img.decode();
+					const c = document.createElement( 'canvas' );
+					c.width = img.width;
+					c.height = img.height;
+					const ctx = c.getContext( '2d' );
+					ctx.drawImage( img, 0, 0 );
+					return { w: c.width, h: c.height, px: ctx.getImageData( 0, 0, c.width, c.height ).data };
+				};
+				const [ was, is ] = await Promise.all( pngs.map( read ) );
+				const found = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity };
+				for ( let y = 0; y < is.h; y++ ) {
+					for ( let x = 0; x < is.w; x++ ) {
+						const i = ( y * is.w + x ) * 4;
+						const d = Math.abs( was.px[ i ] - is.px[ i ] ) + Math.abs( was.px[ i + 1 ] - is.px[ i + 1 ] ) + Math.abs( was.px[ i + 2 ] - is.px[ i + 2 ] );
+						if ( d > 60 ) {
+							found.left = Math.min( found.left, x );
+							found.top = Math.min( found.top, y );
+							found.right = Math.max( found.right, x );
+							found.bottom = Math.max( found.bottom, y );
+						}
+					}
+				}
+				return found;
+			},
+			[ before, after ]
+		);
+		// Device pixels are CSS pixels here (a scale of 1).
+		const left = box.x - 4 - clip.x;
+		const top = box.y - 4 - clip.y;
+		expect( Math.abs( inked.left - left ) ).toBeLessThanOrEqual( 1 );
+		expect( Math.abs( inked.top - top ) ).toBeLessThanOrEqual( 1 );
+		expect( Math.abs( inked.right - ( left + box.width + 8 - 1 ) ) ).toBeLessThanOrEqual( 1 );
+		expect( Math.abs( inked.bottom - ( top + box.height + 8 - 1 ) ) ).toBeLessThanOrEqual( 1 );
+		await expect( home ).toHaveCSS( 'border-top-left-radius', '50%' );
+	} );
 } );

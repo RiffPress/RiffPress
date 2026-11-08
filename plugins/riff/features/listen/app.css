@@ -144,8 +144,17 @@
 }
 
 .riff-app .riff-browse-tile:focus-visible {
-	outline: 2px solid var(--riff-app-ink);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
+}
+
+/* One ring for every control of the app's that has the keyboard's focus,
+   outside its edge and round its corners (tokens.css), where the control has
+   none of its own below. Without it the browser's own ring takes in a tab's
+   hidden label too, and runs off the round Home button. */
+.riff-app :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-app .riff-app-tab:hover,
@@ -214,8 +223,8 @@
 }
 
 .riff-app .riff-app-account summary:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-app .riff-app-avatar {
@@ -304,8 +313,8 @@
 }
 
 .riff-app .riff-app-search input:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 1px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 /* Search as you type: a list under the field, the best match first, placed
@@ -556,8 +565,8 @@
 }
 
 .riff-app .riff-shelf-row:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 4px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-app .riff-shelf-row > * {
@@ -642,8 +651,8 @@
 }
 
 .riff-app .riff-card:has(> .riff-card-link:focus-visible) {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 4px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-card-art {
@@ -1390,8 +1399,8 @@
 }
 
 .riff-app .riff-pill:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-app .riff-pill-solid {
@@ -1440,8 +1449,8 @@
 }
 
 .riff-app .riff-app-like:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-app .riff-app-like svg {
@@ -1509,8 +1518,8 @@
 }
 
 .riff-app .riff-album-face:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-app .riff-album-face[aria-busy="true"] {
@@ -1570,8 +1579,8 @@
 }
 
 .riff-library-sort summary:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-library-sort summary svg {
@@ -1620,8 +1629,8 @@
 
 .riff-app .riff-chip-link:focus-visible,
 .riff-app .riff-sort-link:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 .riff-app .riff-chip-link[aria-current="true"] {
@@ -1695,8 +1704,8 @@
 }
 
 .riff-app .riff-rename input:focus-visible {
-	outline: 2px solid var(--riff-app-accent);
-	outline-offset: 2px;
+	outline: var(--riff-app-focus-ring);
+	outline-offset: var(--riff-app-focus-ring-offset);
 }
 
 /* Your Library under the views, only in the standalone sidebar. */

@@ -53,9 +53,10 @@ const TAGS = {
 	mark: 'background:#fff3b0;',
 };
 const ATTRS = { a: [ 'href' ], img: [ 'src', 'alt', 'width', 'height' ] };
-// Dropped with everything inside them.
-const GONE = /<(script|style|iframe|object|embed|audio|video|svg|math|form|noscript|template|select|textarea|button)\b[\s\S]*?<\/\1\s*>/gi;
-const GONE_OPEN = /<\/?(script|style|iframe|object|embed|audio|video|source|track|svg|math|form|noscript|template|select|textarea|button|input|link|meta|base)\b[^>]*>/gi;
+// Dropped with everything inside them, to their closing tag, or to the end where there is none.
+const GONE = new Set( [ 'script', 'style', 'iframe', 'object', 'embed', 'audio', 'video', 'svg', 'math', 'form', 'noscript', 'template', 'select', 'textarea', 'button' ] );
+// The entities an attribute's value is decoded from, each once, before it is escaped once.
+const ENTITIES = { amp: '&', quot: '"', '#39': "'" };
 
 /**
  * Escapes text for HTML.
@@ -82,54 +83,102 @@ const href = ( url ) => ( /^(https?:|mailto:)/i.test( String( url ).trim() ) ? S
  * @return {string} Email-safe markup.
  */
 export function safe( html ) {
-	const src = String( html || '' )
-		.replace( /<!--[\s\S]*?-->/g, '' )
-		.replace( GONE, '' )
-		.replace( GONE_OPEN, '' );
-	return src
-		.split( /(<[^<>]*>)/ )
-		.map( ( part ) => {
-			const tag = /^<(\/?)([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>$/.exec( part );
-			if ( ! tag ) {
-				// Text, already escaped in the post; a stray bracket is escaped here.
-				return part.replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
+	// One pass, left to right, each character looked at a bounded number of times: no pattern
+	// here is run again over what an earlier one left, and none backtracks over the markup.
+	const src = String( html || '' );
+	const text = ( t ) => t.replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
+	let out = '';
+	let i = 0;
+	// The next '>' from where the last was found, kept so a run of '<' with none after is linear.
+	let gt = -1;
+	while ( i < src.length ) {
+		const lt = src.indexOf( '<', i );
+		if ( lt < 0 ) {
+			out += text( src.slice( i ) );
+			break;
+		}
+		// Text, already escaped in the post; a stray bracket is escaped here.
+		out += text( src.slice( i, lt ) );
+		if ( src.startsWith( '<!--', lt ) ) {
+			// A comment, to its end or the end of the markup.
+			const close = src.indexOf( '-->', lt + 4 );
+			i = close < 0 ? src.length : close + 3;
+			continue;
+		}
+		if ( gt < lt ) {
+			gt = src.indexOf( '>', lt + 1 );
+		}
+		const next = src.indexOf( '<', lt + 1 );
+		if ( gt < 0 || ( next >= 0 && next < gt ) ) {
+			// A '<' that opens no tag.
+			out += '&lt;';
+			i = lt + 1;
+			continue;
+		}
+		const raw = src.slice( lt, gt + 1 );
+		i = gt + 1;
+		const tag = /^<(\/?)([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>$/.exec( raw );
+		if ( ! tag ) {
+			out += text( raw );
+			continue;
+		}
+		const name = tag[ 2 ].toLowerCase();
+		if ( ! tag[ 1 ] && GONE.has( name ) ) {
+			// Everything to its closing tag goes with it; one never closed takes the rest.
+			const close = new RegExp( `</${ name }\\s*>`, 'gi' );
+			close.lastIndex = i;
+			const found = close.exec( src );
+			i = found ? found.index + found[ 0 ].length : src.length;
+			continue;
+		}
+		out += element( name, ! tag[ 1 ], tag[ 3 ] );
+	}
+	return out;
+}
+
+/**
+ * One tag kept from TAGS, with only the attributes ATTRS keeps, each escaped, and its inline style.
+ *
+ * @param {string}  name  The tag's name, in lower case.
+ * @param {boolean} opens Whether it opens rather than closes.
+ * @param {string}  attrs What follows its name inside the tag.
+ * @return {string} The tag, or nothing.
+ */
+function element( name, opens, attrs ) {
+	if ( ! ( name in TAGS ) ) {
+		return '';
+	}
+	const empty = name === 'br' || name === 'img' || name === 'hr';
+	if ( ! opens ) {
+		return empty ? '' : `</${ name }>`;
+	}
+	const given = {};
+	for ( const m of attrs.matchAll( /([a-zA-Z-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g ) ) {
+		given[ m[ 1 ].toLowerCase() ] = m[ 2 ] ?? m[ 3 ] ?? m[ 4 ] ?? '';
+	}
+	let out = `<${ name }`;
+	for ( const a of ATTRS[ name ] || [] ) {
+		let value = given[ a ];
+		if ( value === undefined ) {
+			continue;
+		}
+		// Decoded in one pass, so &amp;quot; is &quot; and not a quote, then escaped once.
+		value = value.replace( /&(amp|quot|#0*39);/g, ( m, e ) => ENTITIES[ e.startsWith( '#' ) ? '#39' : e ] );
+		if ( a === 'href' || a === 'src' ) {
+			value = href( value );
+			if ( ! value || ( a === 'src' && /^mailto:/i.test( value ) ) ) {
+				continue;
 			}
-			const name = tag[ 2 ].toLowerCase();
-			if ( ! ( name in TAGS ) ) {
-				return '';
-			}
-			if ( tag[ 1 ] ) {
-				return name === 'br' || name === 'img' || name === 'hr' ? '' : `</${ name }>`;
-			}
-			const attrs = {};
-			for ( const m of tag[ 3 ].matchAll( /([a-zA-Z-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g ) ) {
-				attrs[ m[ 1 ].toLowerCase() ] = m[ 2 ] ?? m[ 3 ] ?? m[ 4 ] ?? '';
-			}
-			let out = `<${ name }`;
-			for ( const a of ATTRS[ name ] || [] ) {
-				let value = attrs[ a ];
-				if ( value === undefined ) {
-					continue;
-				}
-				// Decoded, so &amp; is not doubled, then escaped once.
-				value = value.replace( /&amp;/g, '&' ).replace( /&quot;/g, '"' ).replace( /&#0*39;/g, "'" );
-				if ( a === 'href' || a === 'src' ) {
-					value = href( value );
-					if ( ! value || ( a === 'src' && /^mailto:/i.test( value ) ) ) {
-						continue;
-					}
-				}
-				if ( ( a === 'width' || a === 'height' ) && ! /^\d+$/.test( value ) ) {
-					continue;
-				}
-				out += ` ${ a }="${ esc( value ) }"`;
-			}
-			if ( TAGS[ name ] ) {
-				out += ` style="${ TAGS[ name ] }"`;
-			}
-			return `${ out }${ name === 'br' || name === 'img' || name === 'hr' ? ' /' : '' }>`;
-		} )
-		.join( '' );
+		}
+		if ( ( a === 'width' || a === 'height' ) && ! /^\d+$/.test( value ) ) {
+			continue;
+		}
+		out += ` ${ a }="${ esc( value ) }"`;
+	}
+	if ( TAGS[ name ] ) {
+		out += ` style="${ TAGS[ name ] }"`;
+	}
+	return `${ out }${ empty ? ' /' : '' }>`;
 }
 
 /**
