@@ -318,17 +318,30 @@ function split( { out, dev, site, developers } ) {
  * @return {Array} [ { u, t, d, s, h: [ [ id, text ] ] } ].
  */
 function searchIndex( dev ) {
-	const text = ( html ) =>
-		html
-			.replace( /<[^>]+>/g, '' )
-			.replace( /&#(\d+);/g, ( m, n ) => String.fromCodePoint( Number( n ) ) )
-			.replace( /&#x([0-9a-f]+);/gi, ( m, n ) => String.fromCodePoint( parseInt( n, 16 ) ) )
-			.replace( /&quot;/g, '"' )
-			.replace( /&lt;/g, '<' )
-			.replace( /&gt;/g, '>' )
-			.replace( /&amp;/g, '&' )
+	// Tags are dropped until none are left, then each entity is decoded once, in one pass, so
+	// "&amp;lt;" stays "&lt;" and no decoded "<" can form a tag.
+	const named = { quot: '"', lt: '<', gt: '>', amp: '&', apos: "'" };
+	const text = ( html ) => {
+		let out = html;
+		let before = '';
+		while ( before !== out ) {
+			before = out;
+			out = out.replace( /<[^<>]*>/g, '' );
+		}
+		return out
+			.replace( /[<>]/g, '' )
+			.replace( /&(?:#(\d+)|#x([0-9a-f]+)|(quot|lt|gt|amp|apos));/gi, ( m, dec, hex, name ) => {
+				if ( dec ) {
+					return String.fromCodePoint( Number( dec ) );
+				}
+				if ( hex ) {
+					return String.fromCodePoint( parseInt( hex, 16 ) );
+				}
+				return named[ name.toLowerCase() ];
+			} )
 			.replace( /\s+/g, ' ' )
 			.trim();
+	};
 	const pages = fs
 		.readdirSync( dev, { recursive: true } )
 		.filter( ( f ) => f.endsWith( 'index.html' ) && ! f.startsWith( 'demo' ) )
