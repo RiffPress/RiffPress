@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.3.0...riff-v6.4.0) (2026-11-08)
+
+
+### Features
+
+* **listen:** a site can open the Listen app at its own address, and a host can fit the app to it ([#936](https://github.com/RiffPress/RiffPress/issues/936)) ([25d3b33](https://github.com/RiffPress/RiffPress/commit/25d3b33213f9277b26f714280f03080094673bb1))
+
 ## [6.3.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.2.3...riff-v6.3.0) (2026-11-07)
 
 
