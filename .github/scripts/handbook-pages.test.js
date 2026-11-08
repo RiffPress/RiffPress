@@ -46,7 +46,7 @@ test( 'the blocks the docs are written in: headings, wrapped lists, tables and c
 } );
 
 test( 'Markdown the pages would not draw is refused, not dropped', () => {
-	for ( const md of [ '> A quote.', '<details>', '![A picture](a.png)', '- A list\n  - inside a list', '---', 'Underlined\n===', 'One line,\n> then a quote.', '- An item\nlazily continued.', '- An item\n\t\twith a tab.', '- An item\n  ```js\n  code\n  ```', '##### Deep', '~~~\ncode\n~~~', '1) One', '3. Three', '[a][b]', '[a](u "t")' ] ) {
+	for ( const md of [ '> A quote.', '<details>', 'Words, then ![a picture](a.png)', '![](a.png)', '- ![A picture](a.png)','- A list\n  - inside a list', '---', 'Underlined\n===', 'One line,\n> then a quote.', '- An item\nlazily continued.', '- An item\n\t\twith a tab.', '- An item\n  ```js\n  code\n  ```', '##### Deep', '~~~\ncode\n~~~', '1) One', '3. Three', '[a][b]', '[a](u "t")' ] ) {
 		assert.ok( blocks( md ).problems.length, md );
 	}
 } );
@@ -84,6 +84,34 @@ test( 'a link to a file, a heading or a hook that is not there fails the check',
 	assert.match( found, /docs\/hooks\.md#riff_nothing/ );
 	assert.match( found, /NOPE\.md, which isn't in the repository/ );
 	assert.match( found, /docs\/javascript\.md#x/ );
+} );
+
+test( 'a picture on a line of its own is one of the site\'s, with its AVIFs, and one site/ lacks fails the check', () => {
+	const ok = doc( '# Doc\n\nWords.\n![The editor](../../site/guide-post.png)\n\n![A phone](../../site/phone-post.png)\n', 'docs' );
+	const { pages, problems } = build( [ ok ] );
+	assert.deepEqual( problems, [] );
+	const html = [ ...pages.values() ][ 0 ];
+	assert.match( html, /<p>Words\.<\/p>\n<figure><picture><source type="image\/avif" srcset="\.\.\/\.\.\/guide-post\.avif 2880w, \.\.\/\.\.\/guide-post-1440\.avif 1440w" [^>]*><img class="desk" src="\.\.\/\.\.\/guide-post\.png" width="2880" height="1800" alt="The editor"/ );
+	assert.match( html, /<figure><span class="device"><picture><source type="image\/avif" srcset="\.\.\/\.\.\/phone-post\.avif 780w" sizes="300px"><img src="\.\.\/\.\.\/phone-post\.png"/ );
+
+	const found = build( [ doc( '# Doc\n\n![Gone](../../site/nope.png)\n\n![Not the site\'s](../../README.md)\n', 'docs' ) ] ).problems.join( '\n' );
+	assert.match( found, /shows \.\.\/\.\.\/site\/nope\.png, which isn't a picture in site\// );
+	assert.match( found, /shows \.\.\/\.\.\/README\.md, which isn't a picture in site\// );
+} );
+
+test( 'a link to a page of Source\'s goes to it from the page, and one it does not build fails the check', () => {
+	const ok = doc( '# Doc\n\n[REST](https://source.riffpress.com/rest/#routes), [a hook](https://source.riffpress.com/hooks/riff_track/), [Add your music](https://source.riffpress.com/add-music/), [the player](https://source.riffpress.com/player/#registering-controls-and-views).\n', 'docs' );
+	const { pages, problems } = build( [ ...HANDBOOKS, ok ] );
+	assert.deepEqual( problems, [] );
+	const html = [ ...pages.values() ].pop();
+	assert.match( html, /href="\.\.\/\.\.\/developers\/rest\/#routes"/ );
+	assert.match( html, /href="\.\.\/\.\.\/developers\/hooks\/riff_track\/"/ );
+	assert.match( html, /href="\.\.\/\.\.\/add-music\/"/ );
+	assert.match( html, /href="\.\.\/\.\.\/developers\/player\/#registering-controls-and-views"/ );
+
+	const found = build( [ ...HANDBOOKS, doc( '# Doc\n\n[No page](https://source.riffpress.com/nope/), [No heading](https://source.riffpress.com/player/#nope).\n', 'docs' ) ] ).problems.join( '\n' );
+	assert.match( found, /nope\/, which isn't a page of Source's/ );
+	assert.match( found, /player\/#nope, a heading that page doesn't have/ );
 } );
 
 test( 'a doc needs one title at its top', () => {
