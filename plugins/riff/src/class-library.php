@@ -192,7 +192,7 @@ final class Library {
 		$schema['properties']['tracks']   = array(
 			'type'        => 'array',
 			'description' => __( 'The tracks, in order, as the player reads them.', 'riff' ),
-			'items'       => array( 'type' => 'object' ),
+			'items'       => Tracks::schema(),
 		);
 		$schema['properties']['pressing'] = array(
 			'type'        => 'object',

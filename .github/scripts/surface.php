@@ -62,6 +62,7 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 }
 
 \Riff\Library::routes();
+\Riff\Blocks_Rest::routes();
 \Riff\Catalog_Rest::routes();
 \Riff\Likes_Rest::routes();
 \Riff\Playlists_Rest::routes();
@@ -72,12 +73,14 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 
 $out = $GLOBALS['riff_surface'];
 foreach ( $out['routes'] as &$route ) {
-	$methods = array();
-	$args    = array();
+	$methods   = array();
+	$args      = array();
+	$endpoints = array();
 	foreach ( $route['args'] as $key => $endpoint ) {
 		if ( is_int( $key ) ) {
-			$methods[] = $endpoint['methods'];
-			$args      = array_merge( $args, $endpoint['args'] ?? array() );
+			$methods[]   = $endpoint['methods'];
+			$args        = array_merge( $args, $endpoint['args'] ?? array() );
+			$endpoints[] = array( 'methods' => $endpoint['methods'], 'args' => (object) ( $endpoint['args'] ?? array() ) );
 		}
 	}
 	$schema = $route['args']['schema'] ?? null;
@@ -86,6 +89,7 @@ foreach ( $out['routes'] as &$route ) {
 		'route'     => $route['route'],
 		'methods'   => $methods,
 		'args'      => $args,
+		'endpoints' => $endpoints,
 		'schema'    => is_callable( $schema ) ? call_user_func( $schema ) : null,
 	);
 }
