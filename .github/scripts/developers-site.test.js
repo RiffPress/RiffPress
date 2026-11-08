@@ -18,7 +18,7 @@ const page = ( up, body ) => `<!doctype html><html><head>
 <link rel="stylesheet" href="${ up }web/web.css?v=abc">
 <link rel="icon" href="${ up }icons/favicon.svg">
 </head><body>
-<a href="${ up }">Riff</a><a href="${ up }download/">Download</a><a href="${ up }developers/">Developers</a>
+<a href="${ SITE }">Riff Cloud</a><a href="${ up }download/">Download</a><a href="${ up }developers/">Developers</a>
 ${ body }
 <script type="module" src="${ up }js/neck.js"></script>
 </body></html>`;
@@ -26,10 +26,6 @@ ${ body }
 const site = ( extra = {} ) => {
 	const dir = fs.mkdtempSync( path.join( os.tmpdir(), 'developers-site-' ) );
 	const files = {
-		'index.html': page(
-			'',
-			'<a href="developers/php/#hooks">PHP</a><a href="web/">Web</a>'
-		).replace( 'PATH', '' ),
 		'download/index.html': page( '../', '' ).replace( 'PATH', 'download/' ),
 		'developers/index.html': page(
 			'../',
@@ -112,8 +108,8 @@ test( 'moves /developers/ to the root of its host and /web/ under it, with their
 		php,
 		/srcset="\.\.\/shot\.png 1x, \.\.\/icons\/favicon\.svg 2x"/
 	);
-	// Back on the site: its own pages.
-	assert.match( php, /href="https:\/\/riffpress\.com\/">Riff/ );
+	// riffpress.com's home, written out in full, stays as it is.
+	assert.match( php, /href="https:\/\/riffpress\.com\/">Riff Cloud/ );
 	assert.match( php, /content="width=device-width, initial-scale=1"/ );
 	assert.match( read( dev, 'web/index.html' ), /href="\.\.\/php\/#hooks"/ );
 	assert.match(
@@ -122,82 +118,33 @@ test( 'moves /developers/ to the root of its host and /web/ under it, with their
 	);
 } );
 
-test( 'the site keeps its stylesheet, points at the new host, and redirects each old address', () => {
+test( 'the 404 and the sitemap are the host\'s, and the assembled site is only read', () => {
 	const out = site();
+	const before = read( out, '_redirects' );
 	const dev = fs.mkdtempSync( path.join( os.tmpdir(), 'developers-out-' ) );
 	split( { out, dev, site: SITE, developers: DEV } );
-	assert.ok( ! fs.existsSync( path.join( out, 'developers' ) ) );
-	assert.ok( ! fs.existsSync( path.join( out, 'download' ) ) );
-	assert.ok( ! fs.existsSync( path.join( out, 'web', 'has' ) ) );
-	assert.ok( ! fs.existsSync( path.join( out, 'web', 'index.html' ) ) );
-	assert.ok( fs.existsSync( path.join( out, 'web', 'web.css' ) ) );
-	const index = read( out, 'index.html' );
-	assert.match(
-		index,
-		/href="https:\/\/source\.riffpress\.com\/php\/#hooks"/
-	);
-	assert.match( index, /href="https:\/\/source\.riffpress\.com\/web\/"/ );
-	assert.match( index, /href="web\/web\.css\?v=abc"/ );
-	assert.match(
-		read( out, '404.html' ),
-		/href="https:\/\/source\.riffpress\.com\/"/
-	);
-	// The developer host's 404 is drawn with its own files, and links home to the site.
+	assert.ok( fs.existsSync( path.join( out, 'developers', 'index.html' ) ) );
+	assert.equal( read( out, '_redirects' ), before, 'riffpress.com\'s repository carries its redirects' );
+	assert.ok( ! fs.existsSync( path.join( dev, '_redirects' ) ) );
+	// The 404 is drawn with the host's files, and links to the host.
 	const missed = read( dev, '404.html' );
 	assert.match( missed, /href="https:\/\/source\.riffpress\.com\/web\/web\.css"/ );
 	assert.match( missed, /href="https:\/\/source\.riffpress\.com\/">Developers/ );
 	assert.match( missed, /href="https:\/\/riffpress\.com\/">Riff/ );
-	const redirects = read( out, '_redirects' ).split( '\n' );
-	assert.equal(
-		redirects[ 0 ],
-		'/demo https://playground.wordpress.net/ 302'
-	);
-	assert.ok(
-		redirects.includes(
-			'/developers/php/ https://source.riffpress.com/php/ 301'
-		)
-	);
-	assert.ok(
-		redirects.includes(
-			'/developers/php https://source.riffpress.com/php/ 301'
-		)
-	);
-	assert.ok(
-		redirects.includes(
-			'/web/has/ https://source.riffpress.com/web/has/ 301'
-		)
-	);
-	// The rest of each moved folder after its pages.
-	assert.deepEqual( redirects.filter( ( l ) => l.includes( '*' ) ), [
-		'/developers/* https://source.riffpress.com/:splat 301',
-		'/download/* https://source.riffpress.com/download/:splat 301',
-		'/add-music/* https://source.riffpress.com/add-music/:splat 301',
-		'/built/* https://source.riffpress.com/built/:splat 301',
-		'/accessibility/* https://source.riffpress.com/accessibility/:splat 301',
-	] );
-	assert.ok(
-		redirects.includes(
-			'/download/ https://source.riffpress.com/download/ 301'
-		)
-	);
-	// Not web/*: the stylesheet would leave with it.
-	assert.ok( ! redirects.some( ( l ) => l.startsWith( '/web/*' ) ) );
+	// The host's pages, at their new addresses, and not riffpress.com's home.
+	const map = read( dev, 'sitemap.xml' );
 	assert.match(
-		read( out, 'sitemap.xml' ),
-		/<loc>https:\/\/riffpress\.com\/<\/loc>/
-	);
-	assert.doesNotMatch( read( out, 'sitemap.xml' ), /developers|web\/has/ );
-	assert.match(
-		read( dev, 'sitemap.xml' ),
+		map,
 		/<loc>https:\/\/source\.riffpress\.com\/php\/<\/loc>[\s\S]*<loc>https:\/\/source\.riffpress\.com\/web\/has\/<\/loc>/
 	);
+	assert.doesNotMatch( map, /riffpress\.com\/<\/loc>/ );
 } );
 
-test( 'fails on a link, file or fragment that leads nowhere on either host', () => {
+test( 'fails on a link, file or fragment that leads nowhere on the host, or off it to riffpress.com', () => {
 	const out = site( {
 		'developers/css/index.html': page(
 			'../../',
-			'<a href="../php/#gone">PHP</a><a href="../nope/">Nope</a><img src="../../missing.png">'
+			'<a href="../php/#gone">PHP</a><a href="../nope/">Nope</a><img src="../../missing.png"><a href="../../">Home</a><a href="https://riffpress.com/pricing/">Pricing</a>'
 		).replace( 'PATH', 'developers/css/' ),
 	} );
 	const dev = path.join(
@@ -208,10 +155,14 @@ test( 'fails on a link, file or fragment that leads nowhere on either host', () 
 		encoding: 'utf8',
 	} );
 	assert.equal( run.status, 1 );
-	assert.match( run.stderr, /3 link\(s\) lead nowhere/ );
+	assert.match( run.stderr, /5 link\(s\) lead nowhere/ );
 	assert.match( run.stderr, /\.\.\/php\/#gone \(no #gone\)/ );
 	assert.match( run.stderr, /\.\.\/nope\// );
-	assert.match( run.stderr, /https:\/\/riffpress\.com\/missing\.png/ );
+	// A relative link to a file or page the host doesn't serve, and anything on riffpress.com but
+	// its home, which isn't built from here.
+	assert.match( run.stderr, /css\/index\.html: https:\/\/riffpress\.com\/missing\.png/ );
+	assert.match( run.stderr, /css\/index\.html: https:\/\/riffpress\.com\/\n/ );
+	assert.match( run.stderr, /css\/index\.html: https:\/\/riffpress\.com\/pricing\// );
 } );
 
 test( 'refuses addresses that are not a host and a slash, or one host for both', () => {
@@ -250,7 +201,7 @@ test( 'leaves a code sample alone, and reads stylesheets and modules for the fil
 	} );
 	assert.ok( read( dev, 'js/index.html' ).includes( sample ) );
 	assert.equal( run.status, 1 );
-	assert.match( run.stderr, /4 link\(s\) lead nowhere/ );
+	assert.match( run.stderr, /2 link\(s\) lead nowhere/ );
 	assert.match( run.stderr, /web\.css: \.\.\/fonts\/inter\.woff2/ );
 	assert.match( run.stderr, /neck\.js: \.\/chunks\/a\.js/ );
 } );

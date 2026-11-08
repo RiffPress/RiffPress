@@ -10,4 +10,4 @@ Please do not open a public issue for a vulnerability.
 
 ## Scope
 
-The plugin in `plugins/riff/`. The landing page in `site/` and the fixtures in `packages/` are not installed on anyone's site.
+The plugin in `plugins/riff/`. The site in `site/` and the fixtures in `packages/` are not installed on anyone's site.

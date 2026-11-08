@@ -5,13 +5,12 @@ name: Pages
 # blueprint.json, the seed script and the demo audio, all with URLs stamped by commit so caches never
 # serve an old build. blueprint.json names those files relative to itself; this workflow resolves
 # them against the developer host. riffpress.com is the business's own site, from its own
-# repository, and carries the redirects from the addresses this one used to serve there. GitHub
+# repository, which carries the redirects from the addresses this one used to serve there. GitHub
 # Pages keeps serving a one-line redirect at the old address, so links to it still land.
 #
-# The site is built as one, as riffpress.com was, and developers-site.js then moves the reference
-# and the software's pages to the developer host, writes the redirects the site's old addresses
-# need (printed below for riffpress.com's repository), and fails the deploy on a link that leads
-# nowhere. What it leaves behind is not deployed.
+# site/ keeps the reference under /developers/, and developers-site.js moves it to the host's root
+# with the software's pages, and fails the deploy on a link that leads nowhere. What it leaves
+# behind is not deployed.
 #
 # Needs two repository secrets, CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID,
 # and takes the addresses from the SITE_URL and DEVELOPER_URL repository variables when set. Each
@@ -127,8 +126,7 @@ jobs:
           BASE=$(printf '%s' "$SITE_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
           [[ "$BASE" =~ ^https://[^/]+/ ]] || { echo "::error::Unexpected site URL: $BASE"; exit 1; }
           # Stamp every asset URL with the commit so a deploy is always a new URL: the pages' stylesheets,
-          # and the blueprint's zip and demo files (pull requests' Playground previews still use it). The
-          # landing page is riffpress.com's own repository's now, so it isn't stamped.
+          # and the blueprint's zip and demo files (pull requests' Playground previews still use it).
           V="${GITHUB_SHA::7}"
           sed -i -E "s#\{\{pages_url\}\}#${BASE}#g" out/robots.txt out/sitemap.xml
           # The 404 is served at whatever address was missed, so its links are absolute.
@@ -146,12 +144,8 @@ jobs:
           if [[ "$STABLE" == "$VERSION" ]]; then sed -i -E '/class="fine stable"/d' out/download/index.html; fi
           sed -i -E "s#\{\{stable\}\}#${STABLE}#g" out/download/index.html
           find out/web out/add-music out/download out/developers out/built out/accessibility -name index.html -exec sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#\{\{commit\}\}#${GITHUB_SHA}#g; s#\{\{version\}\}#${VERSION}#g; s#(href=\"[^\"?]+\.css)\"#\1?v=${V}\"#g" {} +
-          # The landing page isn't deployed, but stands in for riffpress.com's home in the link check, so
-          # its addresses are filled in.
-          sed -i -E "s#\{\{pages_url\}\}#${BASE}#g; s#\{\{version\}\}#${VERSION}#g" out/index.html
-          if grep -rn '{{' out/index.html out/404.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
-          printf '/demo https://next.riffpress.com/listen/app/ 302\n' > out/_redirects
-          # The developer site, and the redirects riffpress.com's repository carries from it.
+          if grep -rn '{{' out/404.html out/robots.txt out/sitemap.xml out/web out/add-music out/download out/developers out/built out/accessibility; then echo "::error::A placeholder survived"; exit 1; fi
+          # The developer site.
           DEV=$(printf '%s' "$DEVELOPER_URL" | sed -E 's#^http://#https://#; s#/*$#/#')
           [[ "$DEV" =~ ^https://[^/]+/$ ]] || { echo "::error::Unexpected developers URL: $DEV"; exit 1; }
           node .github/scripts/developers-site.js out out-developers "$BASE" "$DEV"
@@ -159,9 +153,6 @@ jobs:
           mkdir -p out-developers/demo
           cp -R out/demo/. out-developers/demo/
           cp out/riff.zip out-developers/
-          AT=$(printf '%s' "$BASE" | sed -E 's#^https://[^/]+##')
-          printf '%sdemo/* %sdemo/:splat 301\n%sriff.zip %sriff.zip 301\n%sblueprint.json %sblueprint.json 301\n' "$AT" "$DEV" "$AT" "$DEV" "$AT" "$DEV" >> out/_redirects
-          cat out/_redirects
           node .github/scripts/demo-blueprint.js resolve blueprint.json "$DEV" "$V" > out-developers/blueprint.json
           grep -c "?v=${V}" out-developers/blueprint.json
           # Everything stamped by commit can be cached forever; the blueprint is fetched fresh.

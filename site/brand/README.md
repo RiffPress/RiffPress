@@ -13,7 +13,7 @@
 | File | What it is |
 | --- | --- |
 | `wordmark.svg` | *Riff*, in amber, on a transparent ground |
-| `wordmark-ivory.svg` | *Riff* in Riff's ivory, `#f2eadb`, on a transparent ground, for the landing page's nav |
+| `wordmark-ivory.svg` | *Riff* in Riff's ivory, `#f2eadb`, on a transparent ground, for use on a dark background |
 | `wordmark-ink.svg`, `wordmark-ink.png` | *Riff* in charcoal ink on a transparent ground; the PNG 2048px wide |
 | `avatar-ink.png` | The ink word on Riff's paper, `#fcfaf6`, 1024px square, with 1/φ⁵ margins: the GitHub organisation's picture |
 | `social-preview.png` | 1280×640, the word, "A music player for WordPress" and the five strings on the paper: the repository's social preview, in Settings › General |
