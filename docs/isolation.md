@@ -40,7 +40,7 @@ Every plugin has an `isolation.json` beside its main file, and [`isolation.schem
 
 **REST routes.** Every route has a `permission_callback`. One that lets anyone write (`__return_true`, directly or through a variable) fails unless `rest.public` names it with the reason. *Static.*
 
-**A network allowlist.** A plugin calls only the hosts it declares. *Static* for literal URLs in PHP and scripts; a URL built at runtime is for the runtime guard (in progress, see below).
+**A network allowlist.** A plugin calls only the hosts it declares. *Static* for literal URLs in PHP and scripts; a URL built at runtime is for the runtime guard (in progress, see below). One reach no list can name: `wp riff archive` downloads a Europeana recording from whichever of its providers holds it, through `wp_safe_remote_get()`, so the guard will have to let that command through; the Library of Congress's files it takes only from `*.loc.gov`.
 
 **No dangerous primitives.** PHPCS fails `eval()`, `create_function()`, `extract()` and SQL not built with `$wpdb->prepare()` (the WordPress standard already does), and `phpcs.xml.dist` makes running a program (`exec()`, `shell_exec()`, `system()`, `passthru()`, `proc_open()`, `popen()`) and `unserialize()` errors, each saying what to do instead. The isolation check adds what PHPCS has no sniff for: a filesystem write, a program run, or an `include` of a path from a variable must say on the line why, as `// isolation: write -- under uploads/riff-art`, so each is visible in review; an iframe must carry `sandbox`. *Static.*
 

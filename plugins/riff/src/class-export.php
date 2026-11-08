@@ -102,6 +102,7 @@ final class Export {
 			set_time_limit( 0 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- an archive of a whole library takes as long as it takes.
 		}
 		$work = get_temp_dir() . 'riff-export-' . wp_generate_password( 20, false );
+		// isolation: write -- a folder of this request's own under the temp folder, emptied and removed below.
 		wp_mkdir_p( $work );
 		try {
 			return self::write( $file, $work, $args );

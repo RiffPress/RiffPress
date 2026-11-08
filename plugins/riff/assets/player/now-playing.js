@@ -5,7 +5,7 @@
  * is: a band of grooves for each of the album's tracks, as wide as the track is long. It turns at
  * 33⅓, faster or slower with the music's speed as a turntable's pitch would, and its tonearm
  * tracks the album from the outside in. */
-import { average, hsl, largest, route, time } from 'riff-player/helpers';
+import { average, coverAccent, hsl, largest, route, time } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -262,11 +262,86 @@ export function nowPlaying( P ) {
 		'--riff-label-ink': [ '#141414', '#fff' ],
 		'--riff-label-halo': [ 'rgb(255 255 255 / 0.4)', 'rgb(0 0 0 / 0.35)' ],
 	};
+	// ---- The accent the cover gives (helpers.js coverAccent()), on the player's root and, in the
+	// Listen app's own document, on its body for the app: the seek bar, the playing bars, the
+	// current Up next item and the wash behind Now Playing take it from --riff-cover-accent
+	// (riff.css). Without one, a grey or black cover's or none at all, or with the
+	// riff_cover_accent filter off, the player's is the site's --riff-accent and the app's that
+	// same colour as the player has it. Colours change at once; the wash, the one large field of
+	// it, fades from the last track's to this one's through its opacity (riff.css).
+	const standalone = document.body.classList.contains( 'riff-standalone' ) ? document.body : null;
+	const wash = $( '.riff-np-bg' );
+	// A colour as the page computes it, here in the player, as sRGB red, green, blue and alpha:
+	// drawn on a pixel and read back, so a colour in any space a site writes reads the same.
+	const pixel = document.createElement( 'canvas' ).getContext( '2d', { willReadFrequently: true } );
+	const rgbOf = ( css ) => {
+		const probe = document.createElement( 'i' );
+		probe.style.color = css;
+		root.append( probe );
+		const computed = getComputedStyle( probe ).color;
+		probe.remove();
+		if ( ! pixel ) {
+			return [ 0, 0, 0, 1 ];
+		}
+		pixel.clearRect( 0, 0, 1, 1 );
+		pixel.fillStyle = computed;
+		pixel.fillRect( 0, 0, 1, 1 );
+		const [ r, g, b, a ] = pixel.getImageData( 0, 0, 1, 1 ).data;
+		return [ r, g, b, a / 255 ];
+	};
+	// A colour with see-through parts laid on an opaque one.
+	const layered = ( [ r, g, b, a ], under ) => [ r, g, b ].map( ( v, i ) => v * a + under[ i ] * ( 1 - a ) );
+	const css = ( [ r, g, b ] ) => `rgb(${ Math.round( r ) } ${ Math.round( g ) } ${ Math.round( b ) })`;
+	let painted = '';
+	function setAccent( value ) {
+		const was = painted;
+		painted = value;
+		if ( value ) {
+			root.style.setProperty( '--riff-cover-accent', value );
+		} else {
+			root.style.removeProperty( '--riff-cover-accent' );
+		}
+		standalone?.style.setProperty( '--riff-cover-accent', value || css( rgbOf( 'var(--riff-accent)' ) ) );
+		if ( wash && was !== value ) {
+			wash.style.setProperty( '--riff-cover-accent-was', was || 'var(--riff-accent)' );
+			// The fade starts over for each track.
+			wash.removeAttribute( 'data-riff-fading' );
+			void wash.offsetWidth;
+			wash.setAttribute( 'data-riff-fading', '' );
+		}
+	}
+	function accent( c, tinted ) {
+		if ( P.data.coverAccent === false ) {
+			if ( standalone && ! standalone.style.getPropertyValue( '--riff-cover-accent' ) ) {
+				setAccent( '' );
+			}
+			return;
+		}
+		if ( ! c ) {
+			setAccent( '' );
+			return;
+		}
+		const surface = rgbOf( 'var(--riff-surface)' );
+		const backgrounds = [
+			surface,
+			rgbOf( 'var(--riff-bg)' ),
+			rgbOf( tinted ),
+			// A row under the pointer in Up next, its wash over the sheet.
+			layered( rgbOf( 'var(--riff-hover)' ), surface ),
+		];
+		if ( standalone ) {
+			backgrounds.push( rgbOf( 'var(--riff-standalone-bg, #030303)' ) );
+		}
+		const colour = coverAccent( c, backgrounds.map( ( bg ) => bg.slice( 0, 3 ) ) );
+		setAccent( colour ? css( colour ) : '' );
+	}
+
 	function tint( src ) {
 		const clear = () => {
 			for ( const name of [ '--riff-tint', '--riff-label-paper', ...Object.keys( LABEL ) ] ) {
 				root.style.removeProperty( name );
 			}
+			accent( null );
 		};
 		if ( ! src ) {
 			clear();
@@ -281,10 +356,9 @@ export function nowPlaying( P ) {
 				return;
 			}
 			const [ h, sat ] = hsl( c.r, c.g, c.b );
-			root.style.setProperty(
-				'--riff-tint',
-				`hsl(${ Math.round( h ) } ${ Math.round( Math.min( sat, 0.55 ) * 100 ) }% 22%)`
-			);
+			const tinted = `hsl(${ Math.round( h ) } ${ Math.round( Math.min( sat, 0.55 ) * 100 ) }% 22%)`;
+			root.style.setProperty( '--riff-tint', tinted );
+			accent( c, tinted );
 			root.style.setProperty(
 				'--riff-label-paper',
 				`rgb(${ Math.round( c.r ) } ${ Math.round( c.g ) } ${ Math.round( c.b ) })`

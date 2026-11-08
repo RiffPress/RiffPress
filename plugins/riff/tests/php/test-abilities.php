@@ -6,9 +6,11 @@
  */
 
 use Riff\Abilities;
+use Riff\Mcp;
 
 /**
  * @covers \Riff\Abilities
+ * @covers \Riff\Mcp
  */
 class Test_Riff_Abilities extends Riff_TestCase {
 
@@ -81,9 +83,40 @@ class Test_Riff_Abilities extends Riff_TestCase {
 			$this->assertSame( $spec['label'], $ability->get_label() );
 			$this->assertSame( $spec['output'], $ability->get_output_schema(), "$name answers in its route's shape" );
 			$this->assertSame( $spec['readonly'], $ability->get_meta_item( 'annotations' )['readonly'] );
-			$this->assertTrue( $ability->get_meta_item( 'public' ) );
+			$this->assertSame(
+				array(
+					'public' => false,
+					'type'   => 'tool',
+				),
+				$ability->get_meta_item( 'mcp' ),
+				"$name is not offered over MCP until the site turns that on"
+			);
 		}
-		$this->assertCount( 11, Abilities::list() );
+		$this->assertCount( 17, Abilities::list() );
+	}
+
+	public function test_turning_mcp_on_offers_riffs_abilities_and_no_one_elses(): void {
+		$riff  = array(
+			'category' => Abilities::CATEGORY,
+			'meta'     => array(
+				'mcp' => array(
+					'public' => false,
+					'type'   => 'tool',
+				),
+			),
+		);
+		$other = array(
+			'category' => 'site',
+			'meta'     => array( 'mcp' => array( 'public' => false ) ),
+		);
+		$this->assertFalse( Mcp::expose( $riff, 'riff/tracks' )['meta']['mcp']['public'] );
+		add_filter( 'riff_mcp', '__return_true' );
+		$this->assertTrue( Mcp::expose( $riff, 'riff/tracks' )['meta']['mcp']['public'] );
+		$this->assertSame( 'tool', Mcp::expose( $riff, 'riff/tracks' )['meta']['mcp']['type'] );
+		$this->assertFalse( Mcp::expose( $other, 'core/get-site-info' )['meta']['mcp']['public'], 'another plugin\'s ability is left as it was' );
+		remove_filter( 'riff_mcp', '__return_true' );
+		update_option( Mcp::OPTION, '1' );
+		$this->assertTrue( Mcp::on(), 'Settings › Riff turns it on too' );
 	}
 
 	public function test_the_read_abilities_answer_what_their_routes_answer_to_a_visitor(): void {

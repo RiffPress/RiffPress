@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"target": "es2022",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"lib": [ "es2022", "dom" ],
+		"strict": true,
+		"noEmit": true,
+		"skipLibCheck": false,
+		"types": []
+	},
+	"files": [ "index.d.ts", "client.d.ts", "examples/email.d.ts", "test/usage.ts" ]
+}

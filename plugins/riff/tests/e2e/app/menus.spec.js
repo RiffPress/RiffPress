@@ -31,7 +31,9 @@ test.describe( 'Standalone', () => {
 				return { background: style.backgroundColor, radius: style.borderTopLeftRadius };
 			} );
 		const toolbar = { background: 'rgb(44, 51, 56)', radius: '0px' };
-		const ivory = 'rgb(242, 234, 219)';
+		// Under the pointer the words take the app's accent, in both menus. Nothing has played and
+		// the site sets none, so it is the app's ink, white: Riff has no ivory of its own now (#952).
+		const accent = 'rgb(255, 255, 255)';
 
 		// It opens before anything has played, while the player itself is still hidden.
 		await page.locator( '.riff-track' ).first().locator( '.riff-more-button' ).click();
@@ -41,7 +43,7 @@ test.describe( 'Standalone', () => {
 		expect( await look( menu ) ).toEqual( toolbar );
 		const item = menu.getByRole( 'menuitem' ).first();
 		await item.hover();
-		await expect( item ).toHaveCSS( 'color', ivory );
+		await expect( item ).toHaveCSS( 'color', accent );
 		await page.keyboard.press( 'Escape' );
 
 		await page.locator( '.riff-app-account summary' ).click();
@@ -50,7 +52,7 @@ test.describe( 'Standalone', () => {
 		expect( await look( account ) ).toEqual( toolbar );
 		const link = account.locator( 'a' ).first();
 		await link.hover();
-		await expect( link ).toHaveCSS( 'color', ivory );
+		await expect( link ).toHaveCSS( 'color', accent );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app-account' ).analyze() ).violations ).toEqual( [] );
 	} );
 

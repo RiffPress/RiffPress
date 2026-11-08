@@ -221,3 +221,49 @@ export function hsl( r, g, b ) {
 	}
 	return [ h * 60, s, l ];
 }
+
+// The red, green and blue of a hue, saturation and lightness, each 0 to 255.
+function rgb( h, s, l ) {
+	const k = ( n ) => ( n + h / 30 ) % 12;
+	const a = s * Math.min( l, 1 - l );
+	const f = ( n ) => l - a * Math.max( -1, Math.min( k( n ) - 3, 9 - k( n ), 1 ) );
+	return [ f( 0 ), f( 8 ), f( 4 ) ].map( ( v ) => v * 255 );
+}
+
+// How light a colour is to the eye, as WCAG counts it, from 0 for black to 1 for white.
+export function luminance( [ r, g, b ] ) {
+	const lin = ( v ) => {
+		v /= 255;
+		return v <= 0.04045 ? v / 12.92 : ( ( v + 0.055 ) / 1.055 ) ** 2.4;
+	};
+	return 0.2126 * lin( r ) + 0.7152 * lin( g ) + 0.0722 * lin( b );
+}
+
+// WCAG's contrast between two colours, from 1 to 21.
+export function contrast( a, b ) {
+	const [ hi, lo ] = [ luminance( a ), luminance( b ) ].sort( ( x, y ) => y - x );
+	return ( hi + 0.05 ) / ( lo + 0.05 );
+}
+
+// The accent a cover gives the player, from its average colour (average()): the cover's hue, its
+// saturation held between 35% and 60% so it never shouts, and light enough to read at 4.5:1 on
+// every one of the backgrounds given, as text must and a ring or a bar more than needs. A cover
+// that is grey, near black or near white has no hue worth taking, and gives null.
+export function coverAccent( c, backgrounds ) {
+	if ( ! c ) {
+		return null;
+	}
+	const [ h, s, l ] = hsl( c.r, c.g, c.b );
+	const chroma = Math.max( c.r, c.g, c.b ) - Math.min( c.r, c.g, c.b );
+	if ( chroma < 24 || s < 0.15 || l < 0.1 || l > 0.94 ) {
+		return null;
+	}
+	const sat = Math.min( Math.max( s, 0.35 ), 0.6 );
+	for ( let light = Math.min( Math.max( l, 0.55 ), 0.72 ); light <= 0.95; light += 0.01 ) {
+		const colour = rgb( h, sat, light );
+		if ( backgrounds.every( ( bg ) => contrast( colour, bg ) >= 4.5 ) ) {
+			return colour.map( Math.round );
+		}
+	}
+	return null;
+}
