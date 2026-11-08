@@ -1,0 +1,40 @@
+{
+	"$schema": "../../docs/isolation.schema.json",
+	"plugin": "riff-meters",
+	"namespace": "Meters",
+	"data": {
+		"options": [],
+		"meta": [],
+		"shared": {},
+		"keep": {}
+	},
+	"rest": {
+		"namespaces": [],
+		"fields": [],
+		"public": {}
+	},
+	"capabilities": [
+		"update_plugins"
+	],
+	"hosts": [],
+	"spawn": [],
+	"riff": {
+		"hooks": [
+			"riff_before_player",
+			"riff_below_turntable"
+		],
+		"functions": [],
+		"events": [
+			"track",
+			"play",
+			"pause"
+		],
+		"api": [
+			"analyser"
+		]
+	},
+	"scripts": [
+		"riff-meters"
+	],
+	"modules": []
+}

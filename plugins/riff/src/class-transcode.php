@@ -43,7 +43,7 @@ final class Transcode {
 	public static function ffmpeg(): string {
 		static $path = null;
 		if ( null === $path ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec -- WP-CLI only, a fixed command.
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec -- WP-CLI only, a fixed command. isolation: spawn -- ffmpeg, which isolation.json declares.
 			$found = defined( 'WP_CLI' ) && WP_CLI && function_exists( 'exec' ) ? trim( (string) exec( 'command -v ffmpeg 2>/dev/null' ) ) : '';
 			$path  = '' !== $found && is_executable( $found ) ? $found : '';
 		}
@@ -95,7 +95,7 @@ final class Transcode {
 		if ( ! str_starts_with( (string) get_post_mime_type( $id ), 'audio/' ) || ! is_file( $source ) ) {
 			return new WP_Error( 'riff_transcode_file', __( 'There is no audio file to measure.', 'riff' ) );
 		}
-		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_shell_exec -- WP-CLI only, every argument escaped; the samples come back on stdout.
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_shell_exec -- WP-CLI only, every argument escaped; the samples come back on stdout. isolation: spawn -- ffmpeg.
 		$levels = self::envelope( (string) shell_exec( sprintf( '%s -nostdin -v error -i %s -ac 1 -ar 1000 -f u8 - 2>/dev/null', escapeshellarg( self::ffmpeg() ), escapeshellarg( $source ) ) ) );
 		if ( '' === $levels ) {
 			return new WP_Error( 'riff_transcode_ffmpeg', __( 'ffmpeg could not read the file.', 'riff' ) );
@@ -166,7 +166,7 @@ final class Transcode {
 		$tmp  = wp_tempnam( $name );
 		$out  = array();
 		$code = 1;
-		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec -- WP-CLI only, every argument escaped.
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec -- WP-CLI only, every argument escaped. isolation: spawn -- ffmpeg, into a wp_tempnam() file.
 		exec( sprintf( '%s -nostdin -hide_banner -loglevel error -y -i %s -vn -map_metadata -1 -codec:a libmp3lame -b:a %dk -f mp3 %s 2>&1', escapeshellarg( $ffmpeg ), escapeshellarg( $source ), max( 32, $kbps ), escapeshellarg( $tmp ) ), $out, $code );
 		if ( 0 !== $code || ! filesize( $tmp ) ) {
 			wp_delete_file( $tmp );

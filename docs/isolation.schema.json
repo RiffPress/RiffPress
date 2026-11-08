@@ -1,0 +1,61 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://source.riffpress.com/isolation.schema.json",
+	"title": "isolation.json",
+	"description": "What a plugin in the Riff repository needs, beside its main file. docs/isolation.md explains each part; .github/scripts/isolation.js holds the code to it.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [ "plugin", "data", "rest", "capabilities", "hosts", "scripts", "modules" ],
+	"properties": {
+		"$schema": { "type": "string" },
+		"plugin": { "description": "The plugin's slug, its folder's name.", "type": "string" },
+		"namespace": { "description": "An extension's own namespace under Riff\\, the only one of Riff's it may name.", "type": "string" },
+		"data": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [ "options", "meta" ],
+			"properties": {
+				"options": { "description": "Prefixes of the options, site options and transients it owns.", "type": "array", "items": { "type": "string", "minLength": 3 } },
+				"meta": { "description": "Prefixes of the post, user, term and comment meta keys it owns, user options included.", "type": "array", "items": { "type": "string", "minLength": 3 } },
+				"shared": { "description": "WordPress's own keys it writes on purpose, each with why. Left on uninstall: they are WordPress's.", "type": "object", "additionalProperties": { "type": "string" } },
+				"keep": { "description": "Keys under its prefixes that uninstall leaves, each with why.", "type": "object", "additionalProperties": { "type": "string" } }
+			}
+		},
+		"rest": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"namespaces": { "description": "The REST namespaces it registers routes under.", "type": "array", "items": { "type": "string" } },
+				"fields": { "description": "The fields it adds to WordPress's routes, as object.field.", "type": "array", "items": { "type": "string" } },
+				"public": { "description": "Routes anyone may write to, as namespace/route, each with why and what limits it.", "type": "object", "additionalProperties": { "type": "string" } }
+			}
+		},
+		"capabilities": { "description": "Every capability it checks.", "type": "array", "items": { "type": "string" } },
+		"hosts": { "description": "The hosts it may call: a name, *.name for it and every host under it, or self for the site's own.", "type": "array", "items": { "type": "string" } },
+		"spawn": { "description": "The programs it runs, if any.", "type": "array", "items": { "type": "string" } },
+		"riff": {
+			"description": "An extension's use of Riff: only what docs/hooks.md, docs/javascript.md and src/functions.php make public.",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"hooks": { "description": "Riff's PHP actions and filters it hooks.", "type": "array", "items": { "type": "string" } },
+				"functions": { "description": "Riff's PHP functions it calls.", "type": "array", "items": { "type": "string" } },
+				"events": { "description": "The player's JavaScript actions and filters it hears, without riff.", "type": "array", "items": { "type": "string" } },
+				"api": { "description": "The window.riff members it calls.", "type": "array", "items": { "type": "string" } }
+			}
+		},
+		"scripts": { "description": "The classic script handles it registers.", "type": "array", "items": { "type": "string" } },
+		"modules": { "description": "The script module ids it registers.", "type": "array", "items": { "type": "string" } },
+		"sandbox": {
+			"description": "Experimental, for an extension run in the php-wasm sandbox (docs/isolation.md): what the bridge lets it read, the events it runs on, and its limits.",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"reads": { "type": "array", "items": { "enum": [ "track" ] } },
+				"events": { "type": "array", "items": { "type": "string" } },
+				"time": { "description": "Milliseconds a job may run.", "type": "integer", "minimum": 1 },
+				"memory": { "description": "PHP's memory_limit.", "type": "string" }
+			}
+		}
+	}
+}
