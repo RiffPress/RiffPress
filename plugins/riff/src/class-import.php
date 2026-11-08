@@ -25,7 +25,9 @@ defined( 'ABSPATH' ) || exit;
  *
  * A zip of an album, or of a folder of albums, is unpacked by core's unzip_file() into a folder of
  * its own and imported the same way, whether it is given to `wp riff import` or uploaded to the
- * Media Library.
+ * Media Library. A zip is private by default, as it is how a store's download arrives, bought for
+ * its buyer's own listening: each track and video is Protected, and its album's post is private.
+ * An artist importing their own releases imports them as public.
  */
 final class Import {
 
@@ -251,14 +253,18 @@ final class Import {
 	}
 
 	/**
-	 * Imports a zip uploaded to the Media Library, as the person who uploaded it, into draft album
-	 * posts for them to publish. The zip stays in the Media Library, attached to its album's post,
-	 * so the Media Library shows where it went; one that holds no audio stays as it was. Its
-	 * albums are its own, found by the zip's attachment, so a zip uploaded again, as a new file,
-	 * skips the tracks already imported and puts any new ones in a draft of their own, and never
-	 * adds to a post its uploader did not make.
+	 * Imports a zip uploaded to the Media Library, as the person who uploaded it, privately: each
+	 * track Protected and each album's post private, for them to publish if the music is theirs to
+	 * share. The zip stays in the Media Library, attached to its album's post, so the Media Library
+	 * shows where it went, and it may hold more than the import reads, a booklet say; one that
+	 * holds no audio stays as it was. Core serves the zip itself at a public address, which the
+	 * docs tell its uploader, for them to delete it once they no longer need it. Its albums are
+	 * its own, found by the zip's attachment, so a zip uploaded again, as a new file, skips the
+	 * tracks already imported and puts any new ones in a post of their own, and never adds to a
+	 * post its uploader did not make.
 	 *
 	 * @since 5.9.0
+	 * @since 6.5.0 Private: Protected tracks and private posts.
 	 *
 	 * @param int $id Attachment ID.
 	 * @return array|WP_Error|null The import's report, as zip() gives it, or null when there was nothing to import.
@@ -283,10 +289,10 @@ final class Import {
 			$result = self::zip(
 				$file,
 				array(
-					'status' => 'draft',
+					'private' => true,
 					// The attachment, which no other upload can be: a path is free again once its
 					// file is deleted, and another upload by the same name would find this album.
-					'as'     => dirname( $file ) . '/' . $id . '/' . wp_basename( $file ),
+					'as'      => dirname( $file ) . '/' . $id . '/' . wp_basename( $file ),
 				)
 			);
 		} finally {
@@ -326,11 +332,13 @@ final class Import {
 	 * maker's choice, so core keeps its paths inside the folder, folder() reads only the files it
 	 * looks for, and fits() refuses a zip that would fill the disk or PHP's memory before it is
 	 * unpacked. An album's post is found again by the zip's path, unless `as` names it otherwise.
+	 * Private unless `private` is false, as a zip is how a bought download arrives.
 	 *
 	 * @since 5.9.0
+	 * @since 6.5.0 Private by default.
 	 *
 	 * @param string $file A zip on the server.
-	 * @param array  $args Optional. As for folder().
+	 * @param array  $args Optional. As for folder(), with `private` true unless it is given.
 	 * @return array{albums: array<int, array{folder: string, post: int, imported: string[], skipped: string[], failed: array<string, string>}>}|WP_Error
 	 */
 	public static function zip( string $file, array $args = array() ) {
@@ -372,7 +380,7 @@ final class Import {
 				);
 			}
 			$as = '' !== (string) ( $args['as'] ?? '' ) ? (string) $args['as'] : $file;
-			return self::folder( $to, array_merge( $args, array( 'as' => $as ) ) );
+			return self::folder( $to, array_merge( array( 'private' => true ), $args, array( 'as' => $as ) ) );
 		} finally {
 			remove_filter( 'unzip_file_use_ziparchive', '__return_true', PHP_INT_MAX );
 			$clean();
@@ -431,12 +439,18 @@ final class Import {
 	 * Imports a folder, and every folder inside it that holds audio, as albums.
 	 *
 	 * @since 4.16.0
+	 * @since 6.5.0 The `private` argument.
 	 *
 	 * @param string $dir  A folder on the server.
 	 * @param array  $args {
 	 *     Optional.
 	 *
-	 *     @type string $status  Status for new album posts. Default 'publish'.
+	 *     @type bool   $private Protect each track and video it imports, so only those who may read
+	 *                           its post can load the file, and make new album posts private. A track
+	 *                           that cannot be protected, as where uploads are kept on another
+	 *                           service that cannot make them private, is not imported. Default false.
+	 *     @type string $status  Status for new album posts. Default 'private' when `private` is true,
+	 *                           otherwise 'publish'.
 	 *     @type bool   $dry_run Report what would be imported without importing it. Default false.
 	 *     @type string $as      What the folder is known by in place of its path, such as the zip it
 	 *                           was unpacked from: what the report names, what an album is called
@@ -453,7 +467,8 @@ final class Import {
 		$args = wp_parse_args(
 			$args,
 			array(
-				'status'  => 'publish',
+				'private' => false,
+				'status'  => empty( $args['private'] ) ? 'publish' : 'private',
 				'dry_run' => false,
 				'as'      => '',
 			)
@@ -571,7 +586,7 @@ final class Import {
 				$report['skipped'][] = $file;
 				continue;
 			}
-			$id = self::sideload( $path, $hash, $known );
+			$id = self::sideload( $path, $hash, $known, (bool) $args['private'] );
 			if ( is_wp_error( $id ) ) {
 				$report['failed'][ $file ] = $id->get_error_message();
 				continue;
@@ -580,7 +595,10 @@ final class Import {
 			if ( $cover && ! has_post_thumbnail( $id ) ) {
 				set_post_thumbnail( $id, $cover );
 			}
-			self::pair_video( $id, $dir, $file, $video, $cover, $known );
+			$paired = self::pair_video( $id, $dir, $file, $video, $cover, $known, (bool) $args['private'] );
+			if ( is_wp_error( $paired ) ) {
+				$report['failed'][ $paired->get_error_data()['file'] ] = $paired->get_error_message();
+			}
 			$ids[]                = $id;
 			$report['imported'][] = $file;
 		}
@@ -612,14 +630,16 @@ final class Import {
 
 	/**
 	 * Adds a file to the Media Library through core's sideload, from a copy so the original stays,
-	 * and to the files imported before, so the same file later in the run is found.
+	 * and to the files imported before, so the same file later in the run is found. A file to be
+	 * protected that cannot be is deleted again, so it is never left at a public address.
 	 *
-	 * @param string $path  File.
-	 * @param string $hash  Its hash, from hash().
-	 * @param array  $known Files imported before, from imported().
+	 * @param string $path    File.
+	 * @param string $hash    Its hash, from hash().
+	 * @param array  $known   Files imported before, from imported().
+	 * @param bool   $protect Whether to protect it.
 	 * @return int|WP_Error Attachment ID.
 	 */
-	private static function sideload( string $path, string $hash, array &$known ) {
+	private static function sideload( string $path, string $hash, array &$known, bool $protect = false ) {
 		$tmp = wp_tempnam( basename( $path ) );
 		// isolation: write -- a wp_tempnam() file, which media_handle_sideload() moves into uploads.
 		if ( ! $tmp || ! copy( $path, $tmp ) ) {
@@ -635,6 +655,11 @@ final class Import {
 		if ( is_wp_error( $id ) ) {
 			wp_delete_file( $tmp );
 			return $id;
+		}
+		$protected = $protect ? Protected_Files::protect( (int) $id ) : true;
+		if ( is_wp_error( $protected ) ) {
+			wp_delete_attachment( (int) $id, true );
+			return $protected;
 		}
 		if ( '' !== $hash ) {
 			update_post_meta( (int) $id, self::HASH, $hash );
@@ -693,14 +718,16 @@ final class Import {
 	/**
 	 * Makes a video with the same name as the track its video version.
 	 *
-	 * @param int      $id    Track attachment ID.
-	 * @param string   $dir   Folder.
-	 * @param string   $file  Track file name.
-	 * @param string[] $video Video file names in the folder.
-	 * @param int      $cover Cover attachment ID, or 0.
-	 * @param array    $known Files imported before, from imported().
+	 * @param int      $id      Track attachment ID.
+	 * @param string   $dir     Folder.
+	 * @param string   $file    Track file name.
+	 * @param string[] $video   Video file names in the folder.
+	 * @param int      $cover   Cover attachment ID, or 0.
+	 * @param array    $known   Files imported before, from imported().
+	 * @param bool     $protect Whether to protect a video imported now.
+	 * @return true|WP_Error A video that could not be imported, with its file name as its data's `file`.
 	 */
-	private static function pair_video( int $id, string $dir, string $file, array $video, int $cover, array &$known ): void {
+	private static function pair_video( int $id, string $dir, string $file, array $video, int $cover, array &$known, bool $protect = false ) {
 		$stem = pathinfo( $file, PATHINFO_FILENAME );
 		foreach ( $video as $clip ) {
 			if ( pathinfo( $clip, PATHINFO_FILENAME ) !== $stem ) {
@@ -709,17 +736,27 @@ final class Import {
 			$path     = $dir . '/' . $clip;
 			$hash     = self::hash( $path );
 			$video_id = self::existing( $hash, $known );
-			if ( ! $video_id ) {
+			$new      = ! $video_id;
+			if ( $new ) {
 				$video_id = self::sideload( $path, $hash, $known );
 			}
-			if ( is_wp_error( $video_id ) || ! $video_id ) {
-				return;
+			if ( is_wp_error( $video_id ) ) {
+				return new WP_Error( $video_id->get_error_code(), $video_id->get_error_message(), array( 'file' => $clip ) );
 			}
+			// Linked before it is protected: a protected file is linked only by someone who may edit
+			// it (Media::may_link()), and with no one signed in that would be no one.
 			update_post_meta( $id, Media::VIDEO_META, $video_id );
+			$protected = $new && $protect ? Protected_Files::protect( $video_id ) : true;
+			if ( is_wp_error( $protected ) ) {
+				delete_post_meta( $id, Media::VIDEO_META );
+				wp_delete_attachment( $video_id, true );
+				unset( $known[ $hash ] );
+				return new WP_Error( $protected->get_error_code(), $protected->get_error_message(), array( 'file' => $clip ) );
+			}
 			// A video imported before is someone's: a person importing changes only one they may
 			// edit. With no one signed in, as from WP-CLI, the import is the site's own.
 			if ( get_current_user_id() && ! current_user_can( 'edit_post', $video_id ) ) {
-				return;
+				return true;
 			}
 			wp_update_post(
 				array(
@@ -730,8 +767,9 @@ final class Import {
 			if ( $cover && ! has_post_thumbnail( $video_id ) ) {
 				set_post_thumbnail( $video_id, $cover );
 			}
-			return;
+			return true;
 		}
+		return true;
 	}
 
 	/**
