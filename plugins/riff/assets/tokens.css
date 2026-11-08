@@ -215,14 +215,14 @@
 	 *
 	 * @since 4.14.0
 	 */
-	--riff-app-font: "Riff Inter", inter, -apple-system, blinkmacsystemfont, sans-serif;
+	--riff-app-font: "Riff Inter", inter, "Riff Inter Fallback", -apple-system, blinkmacsystemfont, sans-serif;
 
 	/**
 	 * The Listen block's headings: the library's title and each album's.
 	 *
 	 * @since 4.14.0
 	 */
-	--riff-app-heading-font: "Riff Garamond", "EB Garamond", garamond, georgia, serif;
+	--riff-app-heading-font: "Riff Garamond", "EB Garamond", "Riff Garamond Fallback", garamond, georgia, serif;
 }
 
 /* The Listen app's own document, at the Listen page's app/ address or the

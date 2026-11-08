@@ -8,7 +8,12 @@
    block). Otherwise it is drawn in WordPress.org's own design system: its
    palette, Inter for text, EB Garamond for the headings, 2px corners. The two
    fonts are bundled (SIL Open Font License, see fonts/) and fetched only where
-   they are used. The bar and Now Playing keep their own dark look below. */
+   they are used. The bar and Now Playing keep their own dark look below.
+
+   Each font is Google Fonts' Latin subset, with its Latin Extended subset as a
+   second file the browser fetches only for a name that needs it (Dvořák,
+   Łódź). Until one arrives the text is drawn in a local face sized and spaced
+   to the font's own measurements, so nothing moves when it does. */
 
 @font-face {
 	font-family: "Riff Inter";
@@ -16,6 +21,27 @@
 	font-weight: 400 700;
 	font-display: swap;
 	src: url(../../assets/fonts/inter/inter.woff2) format("woff2");
+	unicode-range: u+0000-00ff, u+0131, u+0152-0153, u+02bb-02bc, u+02c6, u+02da, u+02dc, u+0304, u+0308, u+0329, u+2000-206f, u+20ac, u+2122, u+2191, u+2193, u+2212, u+2215, u+feff, u+fffd;
+}
+
+@font-face {
+	font-family: "Riff Inter";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(../../assets/fonts/inter/inter-latin-ext.woff2) format("woff2");
+	unicode-range: u+0100-02ba, u+02bd-02c5, u+02c7-02cc, u+02ce-02d7, u+02dd-02ff, u+0304, u+0308, u+0329, u+1d00-1dbf, u+1e00-1e9f, u+1ef2-1eff, u+2020, u+20a0-20ab, u+20ad-20c4, u+2113, u+2c60-2c7f, u+a720-a7ff;
+}
+
+/* Arial, or the Liberation Sans that stands in for it on Linux, at Inter's
+   measurements. */
+@font-face {
+	font-family: "Riff Inter Fallback";
+	src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo");
+	size-adjust: 107.57%;
+	ascent-override: 90.06%;
+	descent-override: 22.42%;
+	line-gap-override: 0%;
 }
 
 @font-face {
@@ -24,6 +50,26 @@
 	font-weight: 400 700;
 	font-display: swap;
 	src: url(../../assets/fonts/eb-garamond/eb-garamond.woff2) format("woff2");
+	unicode-range: u+0000-00ff, u+0131, u+0152-0153, u+02bb-02bc, u+02c6, u+02da, u+02dc, u+0304, u+0308, u+0329, u+2000-206f, u+20ac, u+2122, u+2191, u+2193, u+2212, u+2215, u+feff, u+fffd;
+}
+
+@font-face {
+	font-family: "Riff Garamond";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(../../assets/fonts/eb-garamond/eb-garamond-latin-ext.woff2) format("woff2");
+	unicode-range: u+0100-02ba, u+02bd-02c5, u+02c7-02cc, u+02ce-02d7, u+02dd-02ff, u+0304, u+0308, u+0329, u+1d00-1dbf, u+1e00-1e9f, u+1ef2-1eff, u+2020, u+20a0-20ab, u+20ad-20c4, u+2113, u+2c60-2c7f, u+a720-a7ff;
+}
+
+/* Times New Roman, or Liberation Serif on Linux, at EB Garamond's. */
+@font-face {
+	font-family: "Riff Garamond Fallback";
+	src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif"), local("Tinos");
+	size-adjust: 94.8%;
+	ascent-override: 106.22%;
+	descent-override: 31.43%;
+	line-gap-override: 0%;
 }
 
 .riff-app {
