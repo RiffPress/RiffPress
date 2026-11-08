@@ -47,6 +47,23 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertMatchesRegularExpression( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html );
 	}
 
+	public function test_the_accent_follows_the_cover_unless_a_host_keeps_its_own(): void {
+		$this->go_to( home_url( '/' ) );
+		$data = function (): array {
+			ob_start();
+			Player::markup();
+			preg_match( '#<script type="application/json" id="riff-data">(.+?)</script>#s', (string) ob_get_clean(), $m );
+			return json_decode( $m[1], true );
+		};
+		$this->assertTrue( Player::cover_accent(), 'on by default: a grey cover falls back to the site\'s accent' );
+		$this->assertArrayNotHasKey( 'coverAccent', $data() );
+
+		add_filter( 'riff_cover_accent', '__return_false' );
+		$this->assertFalse( Player::cover_accent() );
+		$this->assertFalse( $data()['coverAccent'] );
+		remove_filter( 'riff_cover_accent', '__return_false' );
+	}
+
 	public function test_the_place_under_the_turntable_is_empty_until_a_plugin_prints_in_it(): void {
 		$this->go_to( home_url( '/' ) );
 		ob_start();
@@ -285,7 +302,7 @@ class Test_Riff_Player extends Riff_TestCase {
 
 	public function test_the_accent_comes_from_the_theme(): void {
 		$this->go_to( home_url( '/' ) );
-		$this->assertSame( '', Player::root_style(), 'nothing set: the default ivory' );
+		$this->assertSame( '', Player::root_style(), 'nothing set: Riff\'s default' );
 
 		$accent = '#3858e9';
 		$theme  = static function ( WP_Theme_JSON_Data $json ) use ( &$accent ): WP_Theme_JSON_Data {
@@ -299,7 +316,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		add_filter( 'wp_theme_json_data_theme', $theme );
 		wp_clean_theme_json_cache();
 		try {
-			$this->assertSame( ' style="--riff-accent: #3858e9"', Player::root_style() );
+			$this->assertSame( ' style="--riff-theme-accent: #3858e9"', Player::root_style() );
 			$accent = 'red; background: url(x)';
 			wp_clean_theme_json_cache();
 			$this->assertSame( '', Player::root_style(), 'only a colour goes in' );
