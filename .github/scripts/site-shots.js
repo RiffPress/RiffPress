@@ -2,8 +2,8 @@
 /* eslint-disable no-console -- a build script that says what it wrote, as og-images.js does. */
 /**
  * The pictures of the player on Riff Source's pages, in site/: the Listen app, Now Playing and a
- * sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post, Now Playing, Up
- * next and the lyrics on a phone (780×1688), each as a PNG and an AVIF. They are taken from a site
+ * sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post and the lyrics on
+ * a phone (780×1688), each as a PNG and an AVIF. They are taken from a site
  * that holds the demo albums and nothing else, set up as the demo's blueprint sets up Playground,
  * so the pictures show the demo a visitor will open:
  *
@@ -159,11 +159,6 @@ async function phone( browser, devices ) {
 	// The post's tracks, from the line above the first row: the rows are what the picture is of.
 	await page.evaluate( () => window.scrollTo( 0, document.querySelector( '.riff-row' ).getBoundingClientRect().top + window.scrollY - 100 ) );
 	await save( page, 'phone-post', false );
-	await page.locator( '.riff-bar-info' ).click();
-	await page.locator( '.riff-np' ).waitFor();
-	await save( page, 'phone-now-playing', false );
-	await page.locator( '[data-riff-chip="queue"]' ).click();
-	await save( page, 'phone-up-next', false );
 
 	// The sung album's words on a phone: Now Playing, then Lyrics from its chip.
 	await page.goto( BASE + LYRICS );
