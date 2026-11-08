@@ -44,6 +44,14 @@ wp_print_inline_script_tag( '(function(){var r=document.documentElement,read=fun
 wp_print_inline_script_tag( 'try{if(localStorage.getItem("riff-sidebar")==="mini"){document.querySelector("[data-riff-app]").dataset.sidebar="mini";}}catch(e){}' );
 ?>
 </main>
-<?php wp_footer(); ?>
+<?php
+wp_footer();
+// The service worker keeps the app's fonts and stylesheets on the device (worker.js), so they are
+// there offline and drawn from the first frame on every launch after this one.
+$riff_worker = Standalone::worker_registration();
+if ( '' !== $riff_worker ) {
+	wp_print_inline_script_tag( $riff_worker );
+}
+?>
 </body>
 </html>

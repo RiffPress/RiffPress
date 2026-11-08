@@ -5,12 +5,19 @@
 
 /* Roboto, shipped with the plugin (SIL Open Font License, see
    fonts/roboto/OFL.txt) rather than fetched from Google, so a listener's
-   address never leaves the site. One variable file, Latin only. */
+   address never leaves the site. One variable file, Latin only.
+
+   Optional, so it is never swapped in after the first paint: the app at app/
+   preloads it (Riff\Listen\Fonts), which a browser waits a moment for, and
+   its service worker keeps it for every launch after; elsewhere the bar is
+   hidden until something plays, and the player fetches the font while the
+   page is idle (riff.js). Where it still isn't there in time, the fallback
+   below stands in at its size for the rest of the page's life. */
 @font-face {
 	font-family: "Riff Roboto";
 	font-style: normal;
 	font-weight: 100 900;
-	font-display: swap;
+	font-display: optional;
 	src: url(fonts/roboto/roboto.woff2) format("woff2");
 }
 
