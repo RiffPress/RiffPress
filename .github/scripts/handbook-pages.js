@@ -395,7 +395,8 @@ function build( list = HANDBOOKS ) {
 					...JSON.parse( fs.readFileSync( path.join( ROOT, 'site', 'web', 'web.json' ), 'utf8' ) ).map( ( e ) => `web/${ e.slug }/` ),
 				] );
 				// The reference sits under developers/ on the site and at the host's root.
-				const page = [ where, `developers/${ where }` ].find( ( p ) => built.has( p ) );
+				// So developers/ is never in the address: the host has no such folder.
+				const page = where.startsWith( 'developers/' ) ? undefined : [ where, `developers/${ where }` ].find( ( p ) => built.has( p ) );
 				if ( page === undefined ) {
 					problems.push( `${ h.file } links to ${ href }, which isn't a page of Source's` );
 					return [ href, words ];

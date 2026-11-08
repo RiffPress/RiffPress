@@ -14,7 +14,7 @@ Albums and Artists are also under the Media menu, where you can see how many tra
 
 ## Give it a cover
 
-An album wears its first track's artwork. Set Artwork on that track in the Media Library, or keep the cover the file came with, which WordPress takes from its tags when you upload it. Without either, it wears the featured image of the post the track was uploaded to.
+An album wears the artwork of the track that was uploaded first, which may not be track 1. Give every track of the album the same Artwork in the Media Library, or keep the cover the files came with, which WordPress takes from their tags when you upload them. Without either, it wears the featured image of the post the track was uploaded to.
 
 With no picture at all, Riff draws one: a record with one groove per track, each groove as long as the track.
 

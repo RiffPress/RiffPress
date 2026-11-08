@@ -23,7 +23,7 @@ The queue is every track on the page, in order, starting from the one pressed. T
 
 Riff doesn't change the blocks' own markup, so the post still plays with the browser's own player if Riff's script doesn't load, and the post reads the same in its feed.
 
-Make the post private, a draft or password protected, and its tracks stay off the Listen page for visitors until you publish it.
+Make the post private, a draft or password protected, and visitors no longer find it under Posts on the Listen page. The tracks uploaded to it, with Upload in step 3, leave the Listen page with it; a track chosen from the Media Library belongs to the post it was first uploaded to, and stays wherever that post is.
 
 ## The Riff block in a post
 

@@ -109,8 +109,9 @@ test( 'a link to a page of Source\'s goes to it from the page, and one it does n
 	assert.match( html, /href="\.\.\/\.\.\/add-music\/"/ );
 	assert.match( html, /href="\.\.\/\.\.\/developers\/player\/#registering-controls-and-views"/ );
 
-	const found = build( [ ...HANDBOOKS, doc( '# Doc\n\n[No page](https://source.riffpress.com/nope/), [No heading](https://source.riffpress.com/player/#nope).\n', 'docs' ) ] ).problems.join( '\n' );
+	const found = build( [ ...HANDBOOKS, doc( '# Doc\n\n[No page](https://source.riffpress.com/nope/), [Not on the host](https://source.riffpress.com/developers/rest/), [No heading](https://source.riffpress.com/player/#nope).\n', 'docs' ) ] ).problems.join( '\n' );
 	assert.match( found, /nope\/, which isn't a page of Source's/ );
+	assert.match( found, /developers\/rest\/, which isn't a page of Source's/ );
 	assert.match( found, /player\/#nope, a heading that page doesn't have/ );
 } );
 
