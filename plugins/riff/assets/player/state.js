@@ -203,7 +203,7 @@ export function createPlayer( root, data ) {
 		toastTimer = setTimeout( () => ( toastEl.hidden = true ), 2500 );
 	};
 
-	// The optional features (the filament, gestures, the lock screen, Cast, sharing, the wake lock)
+	// The optional features (the meter, gestures, the lock screen, Cast, sharing, the wake lock)
 	// are modules loaded when first needed, each registered as a dynamic dependency of the player so
 	// the import map names it. A module that cannot load leaves the player without that feature.
 	const features = new Map();

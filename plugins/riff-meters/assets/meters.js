@@ -141,7 +141,7 @@
 	}
 	box.append( dial, spectrum );
 
-	// ---- What the meters hear: a second analyser on the filament's, which passes the music on
+	// ---- What the meters hear: a second analyser on Riff's, which passes the music on
 	// unchanged. Its own, for a window long enough to part the lowest bands (8192 samples, under
 	// 6 Hz a bin), with no smoothing of its own: the time weighting is the meters'.
 	let tap = null;
@@ -256,11 +256,6 @@
 		if ( shown.needle !== deg ) {
 			shown.needle = deg;
 			needle.style.transform = `rotate(${ deg }deg)`;
-			// The needle is a wire with current in it, as hot as it is deflected.
-			dial.style.setProperty(
-				'--meters-heat',
-				Math.min( 1, Math.max( 0, x / FULL ) ).toFixed( 2 )
-			);
 		}
 
 		// The bands: each one's power summed over its bins, then averaged over the Slow second.

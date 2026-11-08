@@ -263,8 +263,8 @@ menu has closed and focus is back on the ⋯. An item with no label, or with nei
 
 The player has places Riff's own features fill: **badges**, the pills at the bar's right end and
 under the title in Now Playing, and on a phone small print between the seek line's times; and the
-**meter**, the music's level each frame, which lights the seek line and moves the playing row's
-bars. The quality pill is a badge, and the seek line's glow is a meter listener.
+**meter**, the music's level each frame, which moves the playing row's bars. The quality pill is
+a badge, and the bars are a meter listener.
 
 They are internal for now, on the object Riff hands its own Listen app, and not yet on
 `window.riff`: they become public once they have settled, as the track menu has. Each works
@@ -273,7 +273,7 @@ through `listen( name, fn )`:
 | Name | `fn` is called with | and returns |
 | --- | --- | --- |
 | `badges` | the badges so far, and the playing track | the badges, each `{ id, text, label? }` |
-| `meter` | `{ heat, levels }` each frame while music plays and the bar, Now Playing or the playing row is in sight: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
+| `meter` | `{ levels }` each frame while music plays and the playing row is in sight: three bands from 0 to 1 | nothing |
 
 The badges are redrawn only when what they hold changes.
 

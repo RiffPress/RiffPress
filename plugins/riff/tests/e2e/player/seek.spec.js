@@ -135,7 +135,8 @@ test.describe( 'Player', () => {
 						)
 					)
 			);
-		await expect.poll( async () => ( await gliding() ).length ).toBeGreaterThan( 3 );
+		// The played part and the knob.
+		await expect.poll( async () => ( await gliding() ).length ).toBeGreaterThan( 1 );
 		expect( new Set( ( await gliding() ).flat() ) ).toEqual( new Set( [ 'transform' ] ) );
 		// A press and release where the line already is changes no value, so no seek follows.
 		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();
@@ -146,6 +147,6 @@ test.describe( 'Player', () => {
 		await page.mouse.move( seek.x + seek.width * at, seek.y + seek.height / 2 );
 		await page.mouse.down();
 		await page.mouse.up();
-		await expect.poll( async () => ( await gliding() ).length ).toBeGreaterThan( 3 );
+		await expect.poll( async () => ( await gliding() ).length ).toBeGreaterThan( 1 );
 	} );
 } );

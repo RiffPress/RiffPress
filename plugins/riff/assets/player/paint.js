@@ -161,8 +161,8 @@ export function paint( P ) {
 		}
 	}
 
-	// The played fraction, on the two seek containers rather than the root, for the same reason as
-	// the heat.
+	// The played fraction, on the two seek containers rather than the root: a property on the root
+	// restyles every element in the player, these restyle their own lines.
 	const seekers = $$( '.riff-bar-seek, .riff-np-seek' );
 
 	// How far the file has loaded past the playhead, from the element's TimeRanges, as the lighter

@@ -43,10 +43,8 @@
   <url><loc>{{pages_url}}web/text-wrap/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/variable-fonts/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/prefers-reduced-motion/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/prefers-reduced-transparency/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/clip-path/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/aspect-ratio/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/accent-color/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/touch-action/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/overscroll-behavior/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/focus-visible/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>

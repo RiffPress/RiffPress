@@ -10,7 +10,7 @@
  * api, window.riff, and the fuller door Riff's own features get, and runs the sections under
  * assets/player/ over that state, one per concern. Each section is a function of the state object
  * that adds its functions to it, so a section calls another through it and none has to be loaded
- * before the rest. The optional features (the filament, gestures, the lock screen, Cast, sharing,
+ * before the rest. The optional features (the meter, gestures, the lock screen, Cast, sharing,
  * the wake lock) are modules loaded when first needed. Every module is a WordPress script module
  * registered by Player::enqueue() and imported by its id, which the page's import map resolves. No
  * build step: these files are what ships. */
@@ -301,8 +301,8 @@ function start() {
 		 * `{ change, playlist }`, or `menu` with a track menu's items, track and context, for
 		 * `fn` to return the items. The badges work as `menu` does: `badges` is called with the
 		 * badges so far and the track, and returns them, each `{ id, text, label? }`. `meter` is
-		 * called each frame while the music plays, with `{ heat, levels }`: the wire's heat, 0 to
-		 * a little over 1, and the three bands, 0 to 1, or null while it cools. The bar's controls
+		 * called each frame while the music plays and the playing row is in sight, with
+		 * `{ levels }`: the three bands, 0 to 1. The bar's controls
 		 * are public, through `control()`.
 		 *
 		 * @since 4.23.0
