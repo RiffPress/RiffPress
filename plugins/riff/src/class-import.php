@@ -610,13 +610,23 @@ final class Import {
 			$path     = $dir . '/' . $clip;
 			$hash     = self::hash( $path );
 			$video_id = self::existing( $hash, $known );
-			if ( ! $video_id ) {
-				$video_id = self::sideload( $path, $hash, $known, $protect );
+			$new      = ! $video_id;
+			if ( $new ) {
+				$video_id = self::sideload( $path, $hash, $known );
 			}
 			if ( is_wp_error( $video_id ) ) {
 				return new WP_Error( $video_id->get_error_code(), $video_id->get_error_message(), array( 'file' => $clip ) );
 			}
+			// Linked before it is protected: a protected file is linked only by someone who may edit
+			// it (Media::may_link()), and with no one signed in that would be no one.
 			update_post_meta( $id, Media::VIDEO_META, $video_id );
+			$protected = $new && $protect ? Protected_Files::protect( $video_id ) : true;
+			if ( is_wp_error( $protected ) ) {
+				delete_post_meta( $id, Media::VIDEO_META );
+				wp_delete_attachment( $video_id, true );
+				unset( $known[ $hash ] );
+				return new WP_Error( $protected->get_error_code(), $protected->get_error_message(), array( 'file' => $clip ) );
+			}
 			// A video imported before is someone's: a person importing changes only one they may
 			// edit. With no one signed in, as from WP-CLI, the import is the site's own.
 			if ( get_current_user_id() && ! current_user_can( 'edit_post', $video_id ) ) {
