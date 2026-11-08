@@ -520,14 +520,14 @@ function hookPage( p, all = [ p ] ) {
 	html += `<main id="main" class="wrap reference">
 <h1 class="code-title">${ signature( p ) }</h1>
 <div class="with-toc">
-<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p></aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p></aside>
 <article class="entry">
 ${ body }${ pager( prev && [ prev.name, `../${ prev.slug }/` ], next && [ next.name, `../${ next.slug }/` ] ) }</article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>

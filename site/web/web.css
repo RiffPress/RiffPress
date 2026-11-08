@@ -1,5 +1,8 @@
-/* Every page of Riff Source: wordpress.org's tokens, with a sidebar under
-   /web/. */
+/* source.riffpress.com: the docs and the download, in the platform's look.
+   The ink wordmark on Riff's warm paper, as the RiffPress organisation's
+   picture has it; EB Garamond for display and headings, Inter for text;
+   amber for the one thing to press, deep amber for links. There is no blue:
+   the colour on these pages is the player's, in its pictures and covers. */
 @font-face {
 	font-family: Inter;
 	font-style: normal;
@@ -18,17 +21,26 @@
 
 :root {
 
-	/* warm greys in place of wordpress.org's cool ones, where the page is
-	   paper: the surfaces, the rules and the quieter text */
-	--warm-1: #e4ded4;
-	--warm-2: #f6f3ee;
+	/* Riff's paper, the organisation picture's ground, and warm greys on
+	   it: a raised surface, the rules, and two quieter inks, each 4.5:1 or
+	   more on both the paper and the surface */
+	--paper: #fcfaf6;
+	--surface: #f5efe4;
+	--rule: #e6dccb;
+	--rule-strong: #d3c6b0;
 	--warm-ink-2: #625c53;
+	--warm-ink-3: #6b6359;
 	--warm-dark: #1c1a17;
-	--paper: #efe5d5;
-	--rule: #dccfb9;
 	--fingerboard: var(--paper);
-	--blueberry: #3858e9;
-	--blueberry-deep: #213fd4;
+
+	/* Riff's amber: filled, with charcoal on it, for the one action a page
+	   asks for; deep amber for links and outlines on the paper (5.9:1), and
+	   darker again under the pointer */
+	--amber: #ffb020;
+	--amber-hover: #f0a30a;
+	--amber-deep: #8f5400;
+	--amber-ink: #6e4000;
+	--amber-wash: #ffe7b8;
 	--space-1: 8px;
 	--space-2: 16px;
 	--space-3: 24px;
@@ -37,24 +49,32 @@
 	--space-6: 64px;
 	--space-7: 96px;
 	--charcoal-1: #1e1e1e;
-	--charcoal-3: #40464d;
-	--charcoal-4: #656a71;
-	--charcoal-5: #979aa1;
-	--grey-1: #d9d9d9;
-	--grey-2: #f6f6f6;
+	--charcoal-3: #3d3830;
+	--charcoal-4: var(--warm-ink-3);
+	--charcoal-5: #8a8173;
+	--grey-1: var(--rule);
+	--grey-2: var(--surface);
 	--white: #fff;
-	--action: var(--blueberry);
-	--action-hover: var(--blueberry-deep);
-	--on-action: var(--white);
+	--action: var(--amber);
+	--action-hover: var(--amber-hover);
+	--on-action: var(--charcoal-1);
 	--black: #000;
 	--panel: #121212;
-	--surface: #f6f0e6;
 	--ink: var(--charcoal-1);
 	--ink-2: var(--warm-ink-2);
+	--ink-3: var(--warm-ink-3);
 	--line: var(--rule);
-	--accent: var(--blueberry-deep);
+	--accent: var(--amber-deep);
+	--accent-hover: var(--amber-ink);
+	--focus: var(--amber-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
+
+	/* the type scale: one size for a page's title, one for its sections */
+	--h1: clamp(38px, 4.2vw + 10px, 52px);
+	--h2: clamp(26px, 1.2vw + 20px, 32px);
+	--h3: 1.125rem;
+	--measure: 68ch;
 	--t: 0.2s;
 	--gap: clamp(40px, 5vw, 60px);
 	--section: clamp(60px, calc(5vw + 30px), 100px);
@@ -74,7 +94,7 @@ body {
 	background: var(--paper);
 	color: var(--ink);
 	font-size: 16px;
-	line-height: 1.875;
+	line-height: 1.75;
 	-webkit-font-smoothing: antialiased;
 	text-wrap: pretty;
 }
@@ -82,24 +102,40 @@ body {
 a {
 	color: var(--accent);
 	text-decoration: underline;
+	text-decoration-thickness: 1px;
 	text-underline-offset: 3px;
+	transition: color var(--t), text-decoration-color var(--t);
 }
 
 a:hover {
-	text-decoration: none;
+	color: var(--accent-hover);
+	text-decoration-thickness: 2px;
+}
+
+/* one focus ring everywhere: deep amber on the paper, 2px, just outside */
+:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+	border-radius: 2px;
 }
 
 code {
 	font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 	font-size: 0.875em;
 	background: var(--surface);
-	border: 1px solid var(--line);
-	padding: 1px 5px;
-	border-radius: 2px;
+	border: 0;
+	padding: 0.125em 0.375em;
+	border-radius: 3px;
+	box-decoration-break: clone;
+	-webkit-box-decoration-break: clone;
+}
+
+a code {
+	color: inherit;
 }
 
 .wrap {
-	max-width: 1160px;
+	max-width: calc(var(--docs-w) + 2 * var(--edge));
 	margin: 0 auto;
 	padding: 0 var(--edge);
 }
@@ -113,16 +149,19 @@ code {
 	color: var(--on-action);
 	padding: 10px 16px;
 	border-radius: 2px;
+	font-weight: 600;
 	text-decoration: none;
 }
 
 .skip:focus {
 	top: 12px;
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
 }
 
-/* the global bar: light, on the page's own ground, with the wordmark
-   alone, Riff and nothing more; it scrolls away and the section bar
-   under it stays. The strings are in the margin (neck.css). */
+/* the global bar: on the page's own paper, Riff | Source at its left and
+   the sections at its right; it scrolls away, and on the docs the sidebar
+   beside the article stays */
 .nav {
 	position: relative;
 	z-index: 10;
@@ -131,7 +170,7 @@ code {
 	color: var(--ink);
 }
 
-.nav .mark {
+.nav .brand {
 	order: 0;
 }
 
@@ -163,11 +202,16 @@ code {
 	letter-spacing: -0.01em;
 }
 
-.mark svg {
+.mark svg,
+.mark img {
 	flex: none;
 	display: block;
 	width: auto;
 	height: 30px;
+}
+
+.mark:focus-visible {
+	outline-offset: 6px;
 }
 
 .nav nav {
@@ -179,55 +223,55 @@ code {
 
 /* each a 44px target, and never broken across two lines */
 .nav nav a {
-	color: var(--ink);
+	color: var(--ink-2);
 	text-decoration: none;
 	font-size: 0.9375rem;
 	line-height: 24px;
 	padding: 10px 0;
 	white-space: nowrap;
-	opacity: 0.85;
-	transition: opacity var(--t);
+	transition: color var(--t);
 }
 
 .nav nav a:hover,
 .nav nav a[aria-current] {
-	opacity: 1;
+	color: var(--ink);
 	text-decoration: underline;
-	text-underline-offset: 4px;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 6px;
 }
 
-.nav nav a:focus-visible {
-	outline: 1.5px solid var(--accent);
-	outline-offset: 2px;
-	opacity: 1;
+.nav nav a[aria-current] {
+	text-decoration-color: var(--amber);
+	text-decoration-thickness: 2px;
 }
 
+/* the one thing a page asks for: Riff's amber, charcoal on it */
 .btn {
 	appearance: none;
 	border: 1px solid var(--action);
 	background: var(--action);
 	color: var(--on-action);
 	border-radius: 2px;
-	padding: 7px 12px;
+	padding: 8px 16px;
 	display: inline-flex;
 	align-items: center;
 	font-weight: 600;
 	text-decoration: none;
 	font-size: 0.875rem;
 	line-height: 1.714;
-	transition: background-color var(--t), border-color var(--t);
+	transition: background-color var(--t), border-color var(--t), color var(--t);
 }
 
 .btn:hover {
 	background: var(--action-hover);
 	border-color: var(--action-hover);
 	color: var(--on-action);
+	text-decoration: none;
 }
 
 .btn:focus-visible {
-	box-shadow: inset 0 0 0 3px var(--white);
-	outline: 1.5px solid var(--charcoal-1);
-	outline-offset: -1.5px;
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
 }
 
 /* marginalia, as wordpress.org sets it: a band of dots before the footer, a
@@ -263,8 +307,18 @@ footer p {
 
 footer a {
 	text-decoration: underline;
+	text-decoration-color: #6b655c;
 	text-underline-offset: 3px;
+	color: #f2eadb;
+}
+
+footer a:hover {
 	color: var(--white);
+	text-decoration-color: var(--amber);
+}
+
+footer :focus-visible {
+	outline-color: var(--amber);
 }
 
 /* the footer's links in their groups, as wordpress.org's foot has them */
@@ -277,11 +331,15 @@ footer nav {
 footer .foot-label {
 	margin-bottom: var(--space-1);
 	color: #a39d93;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
 }
 
 footer .foot-group ul {
 	display: grid;
-	gap: 4px;
+	gap: 6px;
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -299,20 +357,27 @@ h2 {
 }
 
 h1 {
-	font-size: clamp(40px, 5vw, 50px);
-	line-height: 1.2;
+	font-size: var(--h1);
+	line-height: 1.1;
+	letter-spacing: -0.01em;
 }
 
 main h2 {
-	font-size: clamp(26px, 3vw, 30px);
-	line-height: 1.3;
+	font-size: var(--h2);
+	line-height: 1.25;
 	margin: var(--space-5) 0 var(--space-2);
+}
+
+main h3 {
+	font-size: var(--h3);
+	font-weight: 600;
+	line-height: 1.4;
 }
 
 .lede {
 	margin: var(--space-2) 0 0;
 	font-size: 1.25rem;
-	line-height: 1.7;
+	line-height: 1.6;
 	color: var(--charcoal-3);
 	max-width: 36rem;
 }
@@ -338,7 +403,7 @@ main h2 {
 }
 
 main p {
-	max-width: 40rem;
+	max-width: var(--measure);
 }
 
 .side {
@@ -379,15 +444,16 @@ main p {
 
 .side a[aria-current] {
 	background: var(--surface);
-	color: var(--accent);
-	font-weight: 600;
+	color: var(--ink);
+	box-shadow: inset 2px 0 0 var(--amber);
 }
 
 figure {
 	margin: 32px 0 0;
 	padding: 32px;
 	background: var(--surface);
-	border-radius: 2px;
+	border: 1px solid var(--rule);
+	border-radius: 3px;
 	display: grid;
 	justify-items: center;
 	gap: 16px;
@@ -602,10 +668,12 @@ figcaption {
 .guide kbd {
 	font-family: var(--sans);
 	font-size: 0.9375em;
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-radius: 2px;
-	padding: 1px 6px;
+	background: var(--white);
+	border: 1px solid var(--rule-strong);
+	border-bottom-width: 2px;
+	border-radius: 3px;
+	padding: 0 6px;
+	white-space: nowrap;
 }
 
 .guide figure {
@@ -650,7 +718,8 @@ figcaption {
 	margin: 24px 0 0;
 	padding: 16px 20px;
 	background: var(--surface);
-	border-radius: 2px;
+	border-left: 3px solid var(--amber);
+	border-radius: 0 2px 2px 0;
 	font-size: 0.9375rem;
 	line-height: 1.7;
 }
@@ -676,9 +745,9 @@ figcaption {
 }
 
 .btn.outline:hover {
-	background: var(--action);
-	border-color: var(--action);
-	color: var(--on-action);
+	background: var(--surface);
+	border-color: var(--accent-hover);
+	color: var(--accent-hover);
 }
 
 /* ---- the download page */
@@ -726,10 +795,12 @@ figcaption {
 .dl kbd {
 	font-family: var(--sans);
 	font-size: 0.9375em;
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-radius: 2px;
-	padding: 1px 6px;
+	background: var(--white);
+	border: 1px solid var(--rule-strong);
+	border-bottom-width: 2px;
+	border-radius: 3px;
+	padding: 0 6px;
+	white-space: nowrap;
 }
 
 .shelf {
@@ -763,7 +834,8 @@ figcaption {
 	margin-top: var(--space-5);
 	padding: var(--space-5);
 	background: var(--surface);
-	border-radius: 2px;
+	border: 1px solid var(--rule);
+	border-radius: 3px;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
 	gap: var(--space-3) var(--space-6);
@@ -871,10 +943,10 @@ figcaption {
 :root {
 	--mono: "IBM Plex Mono", monospace;
 	--charcoal-2: #23282d;
-	--syntax-grey: #646970;
-	--syntax-red: #d63638;
-	--syntax-amber: #9a5b00;
-	--code-bg: #f8f6f2;
+	--syntax-grey: var(--warm-ink-2);
+	--syntax-red: #b32d2e;
+	--syntax-amber: var(--amber-deep);
+	--code-bg: #f8f4ec;
 }
 
 .screen-reader-text {
@@ -886,154 +958,337 @@ figcaption {
 	white-space: nowrap;
 }
 
-/* the section bar under the global one */
-.local-nav {
+/* ---- the header's two destinations: the wordmark back to riffpress.com,
+   and "Source" beside it, after a hairline, to the docs' home */
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-height: 44px;
+}
+
+.brand .host {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding-left: 14px;
+	border-left: 1px solid var(--rule-strong);
+	color: var(--ink);
+	font-family: var(--serif);
+	font-size: 1.5rem;
+	line-height: 1;
+	letter-spacing: 0.005em;
+	text-decoration: none;
+}
+
+.brand .host:hover {
+	color: var(--accent-hover);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 5px;
+}
+
+/* ---- the docs: the sidebar left, the article, "On this page" right, as a
+   documentation site sets them. The body is the grid, so the sidebar runs
+   the article's whole height and is held in the window beside it */
+:root {
+	--side-w: 248px;
+	--docs-w: 1280px;
+	--docs-gap: clamp(32px, 4vw, 64px);
+}
+
+body:has(> .docs-nav) {
+	display: grid;
+	grid-template-columns:
+		[full-start] minmax(var(--edge), 1fr)
+		[side-start] var(--side-w)
+		[side-end content-start] minmax(0, calc(var(--docs-w) - var(--side-w)))
+		[content-end] minmax(var(--edge), 1fr) [full-end];
+	grid-template-rows: auto auto 1fr auto;
+}
+
+body:has(> .docs-nav) > .nav,
+body:has(> .docs-nav) > footer {
+	grid-column: full;
+}
+
+body:has(> .docs-nav) > .nav {
+	grid-row: 1;
+}
+
+body:has(> .docs-nav) > footer {
+	grid-row: 4;
+}
+
+body:has(> .docs-nav) > .crumbs {
+	grid-column: content;
+	grid-row: 2;
+}
+
+body:has(> .docs-nav) > main,
+body:has(> .docs-nav) > .layout {
+	grid-column: content;
+	grid-row: 3;
+	min-width: 0;
+}
+
+body:has(> .docs-nav) > .crumbs .wrap,
+body:has(> .docs-nav) > main.wrap,
+body:has(> .docs-nav) > .layout.wrap {
+	max-width: none;
+	margin: 0;
+	padding-left: var(--docs-gap);
+	padding-right: 0;
+}
+
+/* the root of the docs has no breadcrumbs: its title starts level with
+   the sidebar */
+body:has(> .docs-nav) > .nav + .docs-nav + main {
+	padding-top: var(--space-5);
+}
+
+.docs-nav {
+	grid-column: side;
+	grid-row: 2 / span 2;
+	border-right: 1px solid var(--rule);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+}
+
+.docs-nav > nav {
 	position: sticky;
 	top: 0;
-	z-index: 9;
-	background: var(--paper);
-	color: var(--ink);
-	font-size: 0.875rem;
-	border-bottom: 1px solid var(--rule);
+	max-height: 100vh;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: var(--space-5) var(--space-3) var(--space-5) 0;
+	scrollbar-width: thin;
 }
 
-.local-nav .wrap {
-	min-height: 56px;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0 20px;
-}
-
-.local-nav a {
-	color: var(--warm-ink-2);
-	text-decoration: none;
-	padding: 4px 8px;
-	border-radius: 2px;
-}
-
-.local-nav a:hover {
-	color: var(--ink);
-	text-decoration: underline;
-}
-
-.neck-live {
-	display: block;
-	overflow: visible;
-	touch-action: none;
-	cursor: pointer;
-}
-
-.neck-live svg {
-	display: block;
-	width: 100%;
-	height: 100%;
-	overflow: visible;
-}
-
-/* the chord held while strumming, quietly, beside the strings */
-.neck-chord {
-	order: 1;
-	flex: none;
-	min-width: 2.5em;
-	margin: 0 0 0 -40px;
-	color: var(--ink-2);
-	font: 600 13px/1 var(--sans);
-	font-variant-numeric: tabular-nums;
-	pointer-events: none;
-}
-
-/* only once the strings have been asked to sound, in the gap before the menu */
-.neck-mute {
-	order: 1;
-	flex: none;
-	width: 24px;
-	height: 24px;
-	margin: 0 20px 0 -44px;
+.docs-nav ul {
+	list-style: none;
+	margin: 0;
 	padding: 0;
-	border: 0;
-	border-radius: 50%;
-	background: transparent;
+}
+
+.docs-nav nav > ul {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.docs-nav .local-group {
+	margin-top: var(--space-2);
+}
+
+.docs-nav .local-group + li:not(.local-group) {
+	margin-top: var(--space-2);
+	padding-top: var(--space-2);
+	border-top: 1px solid var(--rule);
+}
+
+.docs-nav .local-label {
+	display: block;
+	margin: 0 0 6px;
+	color: var(--ink-3);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.docs-nav .local-group ul {
+	display: grid;
+	gap: 2px;
+}
+
+.docs-nav a {
+	display: block;
+	padding: 6px 12px;
+	margin-left: -12px;
+	border-radius: 2px;
 	color: var(--ink-2);
-	font: 12px/24px var(--sans);
-	cursor: pointer;
+	text-decoration: none;
 }
 
-.neck-mute[aria-pressed="true"] {
-	opacity: 0.45;
-}
-
-.neck-mute:focus-visible {
-	outline: 2px solid var(--accent);
-}
-
-.local-nav a[aria-current] {
+.docs-nav a:hover {
 	color: var(--ink);
-	text-decoration: underline;
-	text-underline-offset: 6px;
+	background: var(--surface);
 }
 
-.local-nav a:focus-visible {
-	outline: none;
-	box-shadow: inset 0 0 0 1.5px var(--accent);
+/* the page itself, and the page a page sits under, as a hook under PHP */
+.docs-nav a[aria-current] {
+	color: var(--ink);
+	background: var(--surface);
+	box-shadow: inset 3px 0 0 var(--amber);
 }
 
-/* the section's pages from the left, under the wordmark, scrolled sideways
-   rather than wrapped; the section's own name is the header's, marked there */
-.local-nav nav {
-	flex: 1 1 20rem;
-	min-width: 0;
-	display: flex;
-	overflow-x: auto;
-	white-space: nowrap;
-	scrollbar-width: none;
+.docs-nav a:focus-visible {
+	outline-offset: -2px;
+}
+
+.docs-menu,
+.docs-scrim {
+	display: none;
+}
+
+/* the feature pages keep their list of features, at the right where
+   "On this page" sits on the others */
+body:has(> .docs-nav) .layout {
+	grid-template-columns: minmax(0, 1fr) 220px;
+}
+
+body:has(> .docs-nav) .side {
+	order: 0;
+	position: sticky;
+	top: var(--space-4);
+}
+
+@media (max-width: 1240px) {
+
+	body:has(> .docs-nav) .layout {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	body:has(> .docs-nav) .side {
+		position: static;
+		border-top: 1px solid var(--line);
+		padding-top: 24px;
+	}
+}
+
+/* a phone: one column, and the sidebar a Menu button in a bar held at the
+   top of the window, opening the list as a sheet over the page */
+@media (max-width: 900px) {
+
+	body:has(> .docs-nav) {
+		display: block;
+	}
+
+	body:has(> .docs-nav) > .crumbs .wrap,
+	body:has(> .docs-nav) > main.wrap,
+	body:has(> .docs-nav) > .layout.wrap {
+		margin: 0 auto;
+		padding-left: var(--edge);
+		padding-right: var(--edge);
+	}
+
+	.docs-nav {
+		border-right: 0;
+		border-bottom: 1px solid var(--rule);
+		background: var(--paper);
+	}
+
+	.docs-nav > nav {
+		position: static;
+		max-height: none;
+		padding: var(--space-2) var(--edge) var(--space-3);
+	}
+
+	.docs-nav.has-menu {
+		position: sticky;
+		top: 0;
+		z-index: 30;
+	}
+
+	.docs-nav.has-menu > nav {
+		display: none;
+	}
+
+	.docs-nav.has-menu.is-open > nav {
+		display: block;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		max-height: calc(100dvh - 56px);
+		overflow-y: auto;
+		background: var(--paper);
+		border-bottom: 1px solid var(--rule);
+		box-shadow: 0 12px 24px rgb(28 26 23 / 12%);
+	}
+
+	.docs-menu:not([hidden]) {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		min-height: 52px;
+		margin: 0;
+		padding: 0 var(--edge);
+		border: 0;
+		background: none;
+		color: var(--ink);
+		font: 600 0.9375rem/1 var(--sans);
+		cursor: pointer;
+	}
+
+	.docs-menu:focus-visible {
+		outline-offset: -4px;
+	}
+
+	/* three bars, a cross while open */
+	.docs-menu-icon,
+	.docs-menu-icon::before,
+	.docs-menu-icon::after {
+		display: block;
+		width: 16px;
+		height: 1.5px;
+		background: currentcolor;
+		transition: transform var(--t);
+	}
+
+	.docs-menu-icon {
+		position: relative;
+	}
+
+	.docs-menu-icon::before,
+	.docs-menu-icon::after {
+		content: "";
+		position: absolute;
+		left: 0;
+	}
+
+	.docs-menu-icon::before {
+		top: -5px;
+	}
+
+	.docs-menu-icon::after {
+		top: 5px;
+	}
+
+	.docs-menu[aria-expanded="true"] .docs-menu-icon {
+		background: transparent;
+	}
+
+	.docs-menu[aria-expanded="true"] .docs-menu-icon::before {
+		transform: translateY(5px) rotate(45deg);
+	}
+
+	.docs-menu[aria-expanded="true"] .docs-menu-icon::after {
+		transform: translateY(-5px) rotate(-45deg);
+	}
+
+	.docs-scrim:not([hidden]) {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 25;
+		background: rgb(28 26 23 / 32%);
+	}
+
+	.docs-menu-open {
+		overflow: hidden;
+	}
 }
 
 /* text-wrap on every li would set them wrapping again: a label stays whole */
-.local-nav li,
 .crumbs li {
 	white-space: nowrap;
 	text-wrap: nowrap;
 }
 
-.local-nav ul {
-	display: flex;
-	align-items: center;
-	gap: 2px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.local-nav nav > ul {
-	padding: 10px 0;
-	gap: var(--space-2);
-}
-
-/* a group: its name, quiet, then its pages, a rule between groups */
-.local-nav .local-group {
-	display: flex;
-	align-items: center;
-}
-
-.local-nav nav > ul > li + li {
-	border-left: 1px solid var(--rule);
-	padding-left: var(--space-1);
-}
-
-.local-nav .local-label {
-	color: var(--ink-2);
-	font-size: 0.8125rem;
-	padding: 4px 4px 4px 0;
-}
-
 main h2[id] {
 	scroll-margin-top: 80px;
-}
-
-.local-nav nav a[aria-current] {
-	text-decoration: underline;
-	text-underline-offset: 6px;
 }
 
 .crumbs {
@@ -1068,7 +1323,7 @@ main h2[id] {
 
 /* a step with no page of its own, such as Reference, in the links' grey */
 .crumbs li {
-	color: var(--charcoal-4);
+	color: var(--ink-3);
 }
 
 .crumbs li[aria-current] {
@@ -1077,16 +1332,17 @@ main h2[id] {
 
 .crumbs li:not(:last-child)::after {
 	content: "/";
-	color: var(--grey-1);
+	color: var(--rule-strong);
 	margin: 0 10px;
 }
 
 .crumbs a {
-	color: var(--charcoal-4);
+	color: var(--ink-2);
 	text-decoration: none;
 }
 
 .crumbs a:hover {
+	color: var(--ink);
 	text-decoration: underline;
 }
 
@@ -1102,10 +1358,15 @@ main h2[id] {
 	color: var(--ink);
 }
 
+.hook-search input::placeholder {
+	color: var(--ink-3);
+	opacity: 1;
+}
+
 .hook-search input:focus-visible {
-	outline: 1.5px solid var(--accent);
-	outline-offset: -1.5px;
-	border-color: var(--action);
+	outline: 2px solid var(--focus);
+	outline-offset: -1px;
+	border-color: var(--focus);
 }
 
 .reference {
@@ -1119,7 +1380,7 @@ main h2[id] {
 }
 
 /* a top-level page has no breadcrumbs, so its title gets the room they took */
-.local-nav + main {
+.nav + main {
 	padding-top: var(--space-6);
 }
 
@@ -1144,22 +1405,22 @@ main h2[id] {
 }
 
 .reference h1 {
-	font-size: clamp(40px, 5vw, 50px);
-	line-height: 1.2;
-	margin: 0 0 20px;
+	font-size: var(--h1);
+	line-height: 1.1;
+	margin: 0 0 24px;
 }
 
 .reference h2 {
-	font-size: 28px;
+	font-size: var(--h2);
 	line-height: 1.25;
 	margin: 0 0 16px;
 }
 
 .reference h3 {
-	font-size: 18px;
+	font-size: var(--h3);
 	font-weight: 600;
-	line-height: 1.2;
-	margin: 24px 0 12px;
+	line-height: 1.4;
+	margin: 32px 0 12px;
 }
 
 .reference p {
@@ -1168,11 +1429,11 @@ main h2[id] {
 
 .reference code {
 	font-family: var(--mono);
-	font-size: 0.875rem;
-	background: var(--grey-2);
+	font-size: 0.875em;
+	background: var(--surface);
 	border: 0;
-	border-radius: 2px;
-	padding: 4px 6px;
+	border-radius: 3px;
+	padding: 0.125em 0.375em;
 }
 
 /* the title: the call, monospace, in the code reference's colours */
@@ -1223,15 +1484,14 @@ main h2[id] {
 }
 
 .is-toc-heading:target {
-	border-left: 2px solid var(--accent);
-	padding-left: 8px;
+	box-shadow: -12px 0 0 -9px var(--amber);
 }
 
-/* the article, with "In this article" beside it on a wide screen */
+/* the article, with "On this page" beside it on a wide screen */
 .with-toc {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 300px;
-	gap: 60px;
+	grid-template-columns: minmax(0, 1fr) 224px;
+	gap: var(--space-5);
 	align-items: start;
 }
 
@@ -1252,18 +1512,26 @@ main h2[id] {
 	grid-row: 1;
 	grid-column: 2;
 	position: sticky;
-	top: 140px;
+	top: var(--space-4);
+	max-height: calc(100vh - 2 * var(--space-4));
+	overflow-y: auto;
 	font-size: 0.875rem;
-	line-height: 1.6;
+	line-height: 1.5;
 }
 
 .toc-box {
-	border: 1px solid var(--grey-1);
+	border: 1px solid var(--rule);
 	border-radius: 2px;
+	background: var(--paper);
 }
 
 .toc-box summary {
 	padding: 15px 20px;
+	color: var(--ink);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
 	list-style: none;
 	cursor: default;
 	pointer-events: none;
@@ -1283,9 +1551,16 @@ main h2[id] {
 	padding: 0 0 0 14px;
 }
 
+@media (width > 1240px) {
+
+	.toc-box ul ul {
+		padding: 0;
+	}
+}
+
 .toc li {
-	margin: 5px 0;
-	color: var(--charcoal-4);
+	margin: 6px 0;
+	color: var(--ink-2);
 }
 
 .toc a {
@@ -1294,7 +1569,82 @@ main h2[id] {
 }
 
 .toc a:hover {
+	color: var(--ink);
 	text-decoration: underline;
+}
+
+/* the section being read (docs.js): ink and an amber underline, and on
+   the wide rail an amber tick in its place */
+.toc a[aria-current] {
+	color: var(--ink);
+	text-decoration: underline;
+	text-decoration-color: var(--amber);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+
+/* a rail on a wide screen: no box, a hairline down the left, the section
+   being read ticked on it */
+@media (width > 1240px) {
+
+	.toc-box {
+		border: 0;
+		background: none;
+	}
+
+	.toc-box summary {
+		padding: 0 0 10px;
+	}
+
+	.toc-box > ul {
+		padding: 0;
+		border-left: 1px solid var(--rule);
+	}
+
+	.toc-box li {
+		margin: 0;
+	}
+
+	.toc-box a {
+		display: block;
+		padding: 4px 0 4px 14px;
+		margin-left: -1px;
+		border-left: 2px solid transparent;
+	}
+
+	.toc-box ul ul a {
+		padding-left: 26px;
+	}
+
+	.toc-box a[aria-current] {
+		border-left-color: var(--amber);
+		text-decoration: none;
+	}
+
+	.toc .to-top,
+	.toc-edit {
+		padding-left: 15px;
+	}
+
+	/* the guide's tracklist: each number beside its title, the tick
+	   down the left of both */
+	.guide .toc-box > ul > li {
+		display: flex;
+		align-items: baseline;
+		margin-left: -1px;
+		padding-left: 14px;
+		border-left: 2px solid transparent;
+	}
+
+	.guide .toc-box > ul > li:has(> a[aria-current]) {
+		border-left-color: var(--amber);
+	}
+
+	.guide .toc-box > ul > li > a {
+		margin-left: 0;
+		padding-left: 0;
+		border-left: 0;
+	}
 }
 
 .toc .to-top {
@@ -1356,17 +1706,21 @@ main h2[id] {
 
 /* code blocks: light, bordered, with line numbers for source */
 .wp-block-code {
-	margin: 0 0 16px;
-	padding: 20px;
+	margin: 0 0 24px;
+	padding: 20px 24px;
 	background: var(--code-bg);
-	border: 1px solid var(--grey-1);
-	border-radius: 2px;
+	border: 1px solid var(--rule);
+	border-radius: 3px;
 	overflow: auto;
 	font-family: var(--mono);
-	font-size: 0.875rem;
-	line-height: 1.5;
+	font-size: 0.8125rem;
+	line-height: 1.7;
 	tab-size: 4;
-	color: #101517;
+	color: var(--ink);
+}
+
+.wp-block-code:focus-visible {
+	outline-offset: -2px;
 }
 
 .wp-block-code code {
@@ -1387,7 +1741,7 @@ main h2[id] {
 	margin-left: -0.4em;
 	padding-right: 0.8em;
 	text-align: right;
-	color: #5c6370;
+	color: var(--ink-3);
 	user-select: none;
 }
 
@@ -1406,7 +1760,7 @@ main h2[id] {
 }
 
 .dot-links code {
-	color: var(--charcoal-4);
+	color: var(--ink-2);
 	background: none;
 	padding: 0;
 }
@@ -1423,14 +1777,21 @@ main h2[id] {
 	text-align: left;
 	vertical-align: top;
 	font-size: 0.9375rem;
-	line-height: 1.5;
-	padding: 10px 16px 10px 0;
-	border-bottom: 1px solid var(--grey-1);
+	line-height: 1.6;
+	padding: 12px 20px 12px 0;
+	border-bottom: 1px solid var(--rule);
 	width: 50%;
 }
 
 .code-table th {
-	font-weight: 700;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--ink-2);
+	padding-top: 8px;
+	padding-bottom: 8px;
+	border-bottom-color: var(--rule-strong);
 }
 
 /* three columns, as a schema has: the name wide enough for a nested path,
@@ -1476,7 +1837,7 @@ main h2[id] {
 
 /* the path to a nested property, quieter than the property itself */
 .code-table td:first-child .path {
-	color: var(--charcoal-5);
+	color: var(--ink-3);
 }
 
 /* the index */
@@ -1501,7 +1862,7 @@ main h2[id] {
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	border-top: 1px solid var(--grey-1);
+	border-top: 1px solid var(--rule);
 }
 
 .hook-list li {
@@ -1521,7 +1882,7 @@ main h2[id] {
 
 .hook-list .meta {
 	font-size: 0.875rem;
-	color: var(--charcoal-4);
+	color: var(--ink-2);
 }
 
 .hook-list .meta code {
@@ -1530,7 +1891,7 @@ main h2[id] {
 	color: inherit;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1240px) {
 
 	.with-toc {
 		grid-template-columns: minmax(0, 1fr);
@@ -1639,7 +2000,7 @@ main h2[id] {
 }
 
 .parameters .required {
-	color: var(--charcoal-4);
+	color: var(--ink-2);
 	font-size: 0.875rem;
 }
 
@@ -1691,10 +2052,10 @@ main h2[id] {
 	overflow-wrap: anywhere;
 }
 
-/* ---- the pages: a title, then the article with "In this article" beside it,
+/* ---- the pages: a title, then the article with "On this page" beside it,
    as wordpress.org's documentation is laid out */
 .doc {
-	max-width: 1160px;
+	max-width: calc(var(--docs-w) + 2 * var(--edge));
 	padding-top: 24px;
 }
 
@@ -1724,7 +2085,7 @@ main h2[id] {
 }
 
 .toc-edit a {
-	color: var(--charcoal-4);
+	color: var(--ink-2);
 }
 
 /* the guide's sections are numbered as a tracklist is: the number in mono,
@@ -1743,6 +2104,7 @@ main h2[id] {
 	font-weight: 600;
 	letter-spacing: 0.08em;
 	color: var(--accent);
+	font-variant-numeric: tabular-nums;
 }
 
 .guide .toc-box > ul {
@@ -1755,19 +2117,16 @@ main h2[id] {
 	margin-right: 10px;
 	font-family: var(--mono);
 	font-size: 0.75rem;
-	color: var(--charcoal-4);
+	color: var(--ink-3);
 }
 
 /* what is content can be selected and copied; what is the page's chrome
    cannot, so select-all, a double click or a strum across the strings
    picks up words and not the bar, the buttons or the pictures */
 .nav,
-.local-nav,
+.docs-nav,
 .btn,
 .go,
-.neck-live,
-.neck-mute,
-.neck-chord,
 .device,
 .desk,
 .shot,
@@ -1779,17 +2138,17 @@ figure img {
 	-webkit-touch-callout: none;
 }
 
-/* selected words in blueberry: a pale wash under dark ink on the paper,
-   and the deep shade under light text on a dark band */
+/* selected words in amber: a pale wash under dark ink on the paper, and
+   the amber itself under charcoal on a dark band */
 ::selection {
-	background: #c9d3fa;
+	background: var(--amber-wash);
 	color: var(--charcoal-1);
 }
 
 .alt ::selection,
 footer ::selection {
-	background: var(--blueberry-deep);
-	color: #fff;
+	background: var(--amber);
+	color: var(--charcoal-1);
 }
 
 /* no lone last word on a line: headings balanced, running text shaped so
@@ -1810,8 +2169,8 @@ blockquote {
 	text-wrap: pretty;
 }
 
-/* the missing page: the bar, the neck and the footer as on every page,
-   and the heading set large, since it is the only thing on the page */
+/* the missing page: the bar and the footer as on every page, and the
+   heading set large, since it is the only thing on the page */
 .lost {
 	min-height: calc(100vh - 72px - 120px);
 	padding-top: var(--space-7);
@@ -1838,4 +2197,23 @@ blockquote {
 .lost .go {
 	font-weight: 600;
 	text-underline-offset: 4px;
+}
+
+/* the page's title is its only content, so it sits a little higher */
+.nav + main.lost {
+	padding-top: var(--space-7);
+}
+
+/* motion only for those who have not asked for less: the strings' board
+   and every fade come and go at once */
+@media (prefers-reduced-motion: reduce) {
+
+	*,
+	::before,
+	::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+	}
 }

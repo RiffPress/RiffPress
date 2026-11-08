@@ -97,24 +97,27 @@ test( 'each level marks where the page is: the header, the section bar and the b
 	assert.equal( ( php.match( /aria-current="page"/g ) || [] ).length, 2, 'the bar and the breadcrumbs' );
 
 	const dev = read( 'site/developers/index.html' );
-	// The wordmark leads to the Source home, and the bar doesn't repeat the header's name for it.
-	assert.match( dev, /class="mark" href="\.\.\/developers\/" aria-current="page"><img [^>]*alt="Riff Source"/ );
+	// Riff | Source: the wordmark leads back to riffpress.com, Source to the Source home, and the
+	// sidebar doesn't repeat the header's name for it.
+	assert.match( dev, /<div class="brand"><a class="mark" href="https:\/\/riffpress\.com\/"><img [^>]*alt="Riff"[^>]*><\/a><a class="host" href="\.\.\/developers\/" aria-current="page">Source<\/a><\/div>/ );
 	assert.match( dev, /<a href="\.\.\/developers\/" aria-current="page">Docs<\/a><\/nav><\/div><\/header>/ );
 	assert.doesNotMatch( dev, /local-title/ );
 	assert.doesNotMatch( dev, /Breadcrumbs/, 'a section root has none' );
-	assert.match( dev, /<span class="local-label">Handbook<\/span><ul><li><a href="\.\.\/developers\/extensions\/">Extensions<\/a><\/li><li><a href="\.\.\/developers\/player\/">Player<\/a><\/li><\/ul>.*<span class="local-label">Reference<\/span><ul><li><a[^>]*>PHP<\/a><\/li><li><a[^>]*>JavaScript<\/a><\/li><li><a[^>]*>REST API<\/a><\/li><li><a[^>]*>CSS<\/a><\/li><\/ul><\/li><li><a href="\.\.\/web\/">Built on the open web<\/a>/ );
+	assert.match( dev, /<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden>/ );
+	assert.match( dev, /<li class="local-home"><a href="\.\.\/developers\/" aria-current="page">Overview<\/a><\/li>/ );
+	assert.match( dev, /<span class="local-label" id="docs-group-handbook">Handbook<\/span><ul aria-labelledby="docs-group-handbook"><li><a href="\.\.\/developers\/extensions\/">Extensions<\/a><\/li><li><a href="\.\.\/developers\/player\/">Player<\/a><\/li><\/ul>.*<span class="local-label" id="docs-group-reference">Reference<\/span><ul aria-labelledby="docs-group-reference"><li><a[^>]*>PHP<\/a><\/li><li><a[^>]*>JavaScript<\/a><\/li><li><a[^>]*>REST API<\/a><\/li><li><a[^>]*>CSS<\/a><\/li><\/ul><\/li><li><a href="\.\.\/web\/">Built on the open web<\/a>/ );
 
 	// How Riff is built sits under Docs, out of its bar, and in the footer's About group.
 	const built = read( 'site/built/index.html' );
-	assert.match( built, /class="mark" href="\.\.\/developers\/"><img/ );
+	assert.match( built, /class="host" href="\.\.\/developers\/">Source</ );
 	assert.match( built, /<a href="\.\.\/developers\/" aria-current="true">Docs<\/a><\/nav><\/div><\/header>/ );
-	assert.doesNotMatch( built.match( /<div class="local-nav">.*?<\/div><\/div>/ )[ 0 ], /built\//, 'not in the bar' );
+	assert.doesNotMatch( built.match( /<aside class="docs-nav".*?<\/aside>/ )[ 0 ], /built\//, 'not in the sidebar' );
 	assert.match( built, /<li><a href="\.\.\/developers\/">Docs<\/a><\/li><li aria-current="page">How Riff is built<\/li>/ );
 	assert.match( built, /<a href="\.\.\/built\/" aria-current="page">How Riff is built<\/a>/ );
 
 	const music = read( 'site/add-music/index.html' );
 	assert.match( music, /<a href="\.\.\/add-music\/" aria-current="page">Add your music<\/a>/ );
-	assert.doesNotMatch( music, /local-nav|Breadcrumbs/ );
+	assert.doesNotMatch( music, /docs-nav|Breadcrumbs/ );
 	assert.doesNotMatch( read( 'site/404.html' ), /aria-current/ );
 } );
 
@@ -201,19 +204,20 @@ test( 'moved to the host, the navigation links relative to each page and leads s
 	assert.deepEqual( problems, [] );
 
 	const php = fs.readFileSync( path.join( dev, 'php', 'index.html' ), 'utf8' );
-	// The header: the wordmark to this host's home, every section on this host, Docs current.
-	assert.match( php, /class="mark" href="\.\.\/"><img src="\.\.\/brand\/wordmark-ink\.svg"/ );
+	// The header: the wordmark to riffpress.com, Source to this host's home, every section on this
+	// host, Docs current.
+	assert.match( php, /class="mark" href="https:\/\/riffpress\.com\/"><img src="\.\.\/brand\/wordmark-ink\.svg"[^>]*><\/a><a class="host" href="\.\.\/">Source<\/a>/ );
 	assert.match( php, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/" aria-current="true">Docs<\/a>/ );
-	// The section bar and the breadcrumbs stay on the host.
+	// The sidebar and the breadcrumbs stay on the host.
 	assert.match( php, /href="\.\.\/extensions\/">Extensions<\/a>.*href="\.\.\/php\/" aria-current="page">PHP<\/a>.*href="\.\.\/web\/">Built on the open web/ );
 	assert.match( php, /<li><a href="\.\.\/">Docs<\/a><\/li><li>Reference<\/li><li aria-current="page">PHP<\/li>/ );
 	// The footer's pages moved with it.
 	assert.match( php, /<a href="\.\.\/built\/">How Riff is built<\/a>/ );
-	assert.match( fs.readFileSync( path.join( dev, 'index.html' ), 'utf8' ), /class="mark" href="\.\/" aria-current="page"/ );
+	assert.match( fs.readFileSync( path.join( dev, 'index.html' ), 'utf8' ), /class="host" href="\.\/" aria-current="page"/ );
 	assert.match( fs.readFileSync( path.join( dev, 'player', 'index.html' ), 'utf8' ), /rel="prev" href="\.\.\/extensions\/"/ );
 
 	const built = fs.readFileSync( path.join( dev, 'built', 'index.html' ), 'utf8' );
-	assert.match( built, /class="mark" href="\.\.\/"/ );
+	assert.match( built, /class="host" href="\.\.\/"/ );
 	assert.match( built, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/" aria-current="true">Docs<\/a>/ );
 	assert.match( built, /<li><a href="\.\.\/">Docs<\/a><\/li><li aria-current="page">How Riff is built<\/li>/ );
 	assert.match( built, /<a href="\.\.\/built\/" aria-current="page">How Riff is built/ );
