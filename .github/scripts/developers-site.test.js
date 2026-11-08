@@ -205,3 +205,19 @@ test( 'leaves a code sample alone, and reads stylesheets and modules for the fil
 	assert.match( run.stderr, /web\.css: \.\.\/fonts\/inter\.woff2/ );
 	assert.match( run.stderr, /neck\.js: \.\/chunks\/a\.js/ );
 } );
+
+test( 'search indexes each page by its title and door, and the headings it does not share with every other page', () => {
+	const { searchIndex } = require( './developers-site.js' );
+	const dev = fs.mkdtempSync( path.join( os.tmpdir(), 'search-' ) );
+	const page = ( dir, title, door, body ) => {
+		fs.mkdirSync( path.join( dev, dir ), { recursive: true } );
+		fs.writeFileSync( path.join( dev, dir, 'index.html' ), `<title>${ title } | Riff Source</title><meta name="description" content="About ${ title }."><span class="docs-where"><span class="docs-where-up">${ door }</span>${ title }</span><main>${ body }</main>` );
+	};
+	for ( const name of [ 'riff_a', 'riff_b', 'riff_c', 'riff_d' ] ) {
+		page( `hooks/${ name }`, name, 'Build on Riff', '<h2 id="parameters">Parameters</h2>' );
+	}
+	page( 'web', 'Built on the open web', 'Build on Riff', '<h2 id="group-media">Media</h2><section class="feature"><h3 id="media-session">Media Session</h3></section>' );
+	const index = searchIndex( dev );
+	assert.deepEqual( index.find( ( p ) => p.u === 'web/' ), { u: 'web/', t: 'Built on the open web', d: 'Build on Riff', s: 'About Built on the open web.', h: [ [ 'group-media', 'Media' ], [ 'media-session', 'Media Session' ] ] } );
+	assert.deepEqual( index.find( ( p ) => p.u === 'hooks/riff_a/' ).h, [], 'a heading on more than three pages is left out' );
+} );

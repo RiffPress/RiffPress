@@ -55,7 +55,7 @@ const groupId = ( group ) => `group-${ group.toLowerCase().replace( /[^a-z0-9]+/
  * @return {string} HTML.
  */
 function feature( e ) {
-	let html = `<section class="feature" id="${ e.slug }"><h3 class="is-toc-heading"><a href="#${ e.slug }">${ esc( e.name ) }</a></h3>
+	let html = `<section class="feature"><h3 id="${ e.slug }" class="is-toc-heading"><a href="#${ e.slug }">${ esc( e.name ) }</a></h3>
 <p class="feature-summary">${ inline( e.summary ) }</p>
 <h4>How Riff uses it</h4>
 <p>${ inline( e.how ) }</p>

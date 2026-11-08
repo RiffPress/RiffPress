@@ -333,7 +333,7 @@ function searchIndex( dev ) {
 		.readdirSync( dev, { recursive: true } )
 		.filter( ( f ) => f.endsWith( 'index.html' ) && ! f.startsWith( 'demo' ) )
 		.sort();
-	return pages.map( ( file ) => {
+	const index = pages.map( ( file ) => {
 		const html = fs.readFileSync( path.join( dev, file ), 'utf8' );
 		const main = html.slice( html.indexOf( '<main' ), html.indexOf( '</main>' ) );
 		// The page's own title, less the host's name: a hook's h1 is its whole call.
@@ -349,6 +349,18 @@ function searchIndex( dev ) {
 			h: headings,
 		};
 	} );
+	// A heading on more than three pages is the reference's own scaffolding, and would fill the
+	// results with one word; the pages are found by their titles instead.
+	const seen = new Map();
+	for ( const p of index ) {
+		for ( const [ , t ] of p.h ) {
+			seen.set( t, ( seen.get( t ) || 0 ) + 1 );
+		}
+	}
+	for ( const p of index ) {
+		p.h = p.h.filter( ( [ , t ] ) => seen.get( t ) <= 3 );
+	}
+	return index;
 }
 
 /**

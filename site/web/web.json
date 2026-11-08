@@ -25,11 +25,7 @@
 				"file": "plugins/riff/assets/player/playback.js",
 				"code": "m.play().catch( P.paint );"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "Everything on this screen reads from or writes to the one audio element."
-		}
+		]
 	},
 	{
 		"slug": "time-ranges",
@@ -53,11 +49,7 @@
 				"file": "plugins/riff/assets/player/paint.js",
 				"code": "const ranges = m.buffered;"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "The lighter band on the seek line ahead of the played part is the buffered range."
-		}
+		]
 	},
 	{
 		"slug": "screen-wake-lock",
@@ -77,11 +69,7 @@
 				"file": "plugins/riff/assets/player/wake-lock.js",
 				"code": "lock = await navigator.wakeLock.request( 'screen' );"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "With Video selected at the top and the dialog open, the screen is held awake."
-		}
+		]
 	},
 	{
 		"slug": "vibration",
@@ -101,11 +89,7 @@
 				"file": "plugins/riff/assets/player/playback.js",
 				"code": "navigator.vibrate?.( 8 );"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "Tapping the play button gives an 8ms tick on a phone."
-		}
+		]
 	},
 	{
 		"slug": "network-information",
@@ -125,11 +109,7 @@
 				"file": "plugins/riff/assets/player/state.js",
 				"code": "if ( navigator.connection?.saveData ) {"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "With Data Saver on, these rows fetch nothing until one is tapped."
-		}
+		]
 	},
 	{
 		"slug": "media-session",
@@ -157,11 +137,7 @@
 				"file": "plugins/riff/assets/player/session.js",
 				"code": "navigator.mediaSession.setPositionState( {"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "The cover, title and artist shown here are handed to the lock screen and headphone controls."
-		}
+		]
 	},
 	{
 		"slug": "remote-playback",
@@ -185,11 +161,7 @@
 				"file": "plugins/riff/assets/player/cast.js",
 				"code": "m.remote.prompt().catch( () => {} );"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "The cast control in the bar appears once a target is in reach."
-		}
+		]
 	},
 	{
 		"slug": "web-audio",
@@ -213,11 +185,7 @@
 				"file": "plugins/riff/assets/player/meter.js",
 				"code": "const src = ctx.createMediaElementSource( audio );"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The bars on the playing row move with the music read through Web Audio."
-		}
+		]
 	},
 	{
 		"slug": "analyser-node",
@@ -241,11 +209,7 @@
 				"file": "plugins/riff/assets/player/meter.js",
 				"code": "analyser.getByteFrequencyData( bins );"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The three bars on the playing row come from the analyser."
-		}
+		]
 	},
 	{
 		"slug": "page-visibility",
@@ -265,11 +229,7 @@
 				"file": "plugins/riff/assets/player/playback.js",
 				"code": "document.addEventListener( 'visibilitychange', () => {"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "Playing in Video and switching apps hands the position to audio; coming back hands it to video again."
-		}
+		]
 	},
 	{
 		"slug": "lazy-loading",
@@ -293,11 +253,7 @@
 				"file": "plugins/riff/features/listen/class-ui.php",
 				"code": "$load = ' loading=\"lazy\"';"
 			}
-		],
-		"shot": {
-			"image": "desktop-listen",
-			"caption": "Each cover in the grid is a lazy-loaded image; those below the fold wait for a scroll."
-		}
+		]
 	},
 	{
 		"slug": "async-decoding",
@@ -321,11 +277,7 @@
 				"file": "plugins/riff/assets/player/helpers.js",
 				"code": "img.decoding = 'async';"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "The large cover decodes off the main thread when the track changes."
-		}
+		]
 	},
 	{
 		"slug": "pointer-events",
@@ -349,11 +301,7 @@
 				"file": "plugins/riff/assets/player/gestures.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
-		],
-		"shot": {
-			"image": "phone-up-next",
-			"caption": "The Up next sheet opens from a drag on the handle."
-		}
+		]
 	},
 	{
 		"slug": "web-animations",
@@ -373,11 +321,7 @@
 				"file": "plugins/riff/assets/player/media.js",
 				"code": "glides.push( node.animate( frames, { ...timing, ...extra } ) );"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The seek line glides under the bar."
-		}
+		]
 	},
 	{
 		"slug": "request-animation-frame",
@@ -397,11 +341,7 @@
 				"file": "plugins/riff/assets/player/meter.js",
 				"code": "meterRaf = requestAnimationFrame( tick );"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The bars on the playing row move with the music."
-		}
+		]
 	},
 	{
 		"slug": "web-share",
@@ -421,11 +361,7 @@
 				"file": "plugins/riff/assets/player/share.js",
 				"code": "await navigator.share( {"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "The Share button opens the phone's share sheet."
-		}
+		]
 	},
 	{
 		"slug": "clipboard",
@@ -445,11 +381,7 @@
 				"file": "plugins/riff/assets/player/share.js",
 				"code": "await navigator.clipboard.writeText( url );"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "On a desktop with no share sheet the Share chip copies the link."
-		}
+		]
 	},
 	{
 		"slug": "inert",
@@ -473,11 +405,7 @@
 				"file": "plugins/riff/assets/player/now-playing.js",
 				"code": "node.inert = false;"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "While this dialog is open the post, the bar and the toast underneath cannot take focus."
-		}
+		]
 	},
 	{
 		"slug": "match-media",
@@ -501,11 +429,7 @@
 				"file": "plugins/riff/assets/player/playback.js",
 				"code": "if ( window.matchMedia( '(hover: none)' ).matches ) {"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "At 900px and wider the bar stays interactive beside the open dialog."
-		}
+		]
 	},
 	{
 		"slug": "scroll-into-view",
@@ -529,11 +453,7 @@
 				"file": "plugins/riff/features/listen/app/views.js",
 				"code": "app.scrollIntoView( { block: 'start' } );"
 			}
-		],
-		"shot": {
-			"image": "phone-up-next",
-			"caption": "The playing track in the Up next list was scrolled into view when the sheet opened."
-		}
+		]
 	},
 	{
 		"slug": "es-modules",
@@ -557,11 +477,7 @@
 				"file": "plugins/riff/features/listen/app.js",
 				"code": "export function start( api ) {"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "A post with the player attached by one module script; without it the blocks still play natively."
-		}
+		]
 	},
 	{
 		"slug": "dynamic-import",
@@ -581,11 +497,7 @@
 				"file": "plugins/riff/assets/riff.js",
 				"code": "import( data.assets.app )"
 			}
-		],
-		"shot": {
-			"image": "desktop-listen",
-			"caption": "This page has the Listen block, so the player imported the app that turns cover links into in-page navigation."
-		}
+		]
 	},
 	{
 		"slug": "history",
@@ -613,11 +525,7 @@
 				"file": "plugins/riff/features/listen/app/views.js",
 				"code": "{ ...history.state, riffApp: id },"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "Opening this view pushed a history entry, so the phone's Back gesture closes it instead of leaving the page."
-		}
+		]
 	},
 	{
 		"slug": "web-storage",
@@ -641,11 +549,7 @@
 				"file": "plugins/riff/assets/player/seek.js",
 				"code": "write( localStorage, P.VOLUME, String( audio.volume ) );"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The bar came with the listener from the previous page: the queue and position were read back from storage."
-		}
+		]
 	},
 	{
 		"slug": "fetch",
@@ -669,11 +573,7 @@
 				"file": "plugins/riff/features/listen/app/views.js",
 				"code": "to.browse ? to.href : ctx.addressOf( id, upto )"
 			}
-		],
-		"shot": {
-			"image": "desktop-listen",
-			"caption": "This grid came from the library REST route; clicking a cover fetches that post and swaps it in."
-		}
+		]
 	},
 	{
 		"slug": "navigation-timing",
@@ -693,11 +593,7 @@
 				"file": "plugins/riff/assets/player/resume.js",
 				"code": "const arrival = performance.getEntriesByType( 'navigation' )[ 0 ]?.type;"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "Arriving here from a link resumes the music; a reload shows the bar paused at the same spot."
-		}
+		]
 	},
 	{
 		"slug": "pagehide",
@@ -717,11 +613,7 @@
 				"file": "plugins/riff/assets/player/resume.js",
 				"code": "window.addEventListener( 'pagehide', save );"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "Leaving this page stores the exact position, which the next page picks up."
-		}
+		]
 	},
 	{
 		"slug": "pageshow",
@@ -741,11 +633,7 @@
 				"file": "plugins/riff/assets/player/media.js",
 				"code": "window.addEventListener( 'pageshow', ( e ) => {"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "After a Back from the cache the seek line here would be frozen without the restart."
-		}
+		]
 	},
 	{
 		"slug": "aria-dialog",
@@ -773,11 +661,7 @@
 				"file": "plugins/riff/assets/player/keyboard.js",
 				"code": "if ( e.key === 'Escape' && ! np.hidden ) {"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "This whole view is one dialog named Now Playing; focus lands on the close chevron when it opens."
-		}
+		]
 	},
 	{
 		"slug": "property",
@@ -801,11 +685,7 @@
 				"file": "plugins/riff/assets/riff.css",
 				"code": "--riff-quality-ink 0.4s ease,"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "The quality pill in the bar, in its tier's colour."
-		}
+		]
 	},
 	{
 		"slug": "color-mix",
@@ -829,11 +709,7 @@
 				"file": "plugins/riff/assets/riff.css",
 				"code": "background: linear-gradient(var(--riff-tint), color-mix(in srgb, var(--riff-tint) 70%, #000));"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The faint highlight on the current track row, mixed from the theme's own text colour."
-		}
+		]
 	},
 	{
 		"slug": "container-queries",
@@ -857,11 +733,7 @@
 				"file": "plugins/riff/assets/riff.css",
 				"code": "width: min(100cqw, 100cqh);"
 			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "The square cover filling the stage, sized from the stage itself."
-		}
+		]
 	},
 	{
 		"slug": "has",
@@ -889,11 +761,7 @@
 				"file": "plugins/riff/features/listen/app.css",
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The three equalizer bars on the playing row, following the live signal."
-		}
+		]
 	},
 	{
 		"slug": "env-safe-areas",
@@ -918,11 +786,7 @@
 				"code": "height: calc(var(--riff-bar-h) + var(--riff-safe-b));",
 				"after": ".riff-bar {"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The player bar, padded so its controls clear the home indicator."
-		}
+		]
 	},
 	{
 		"slug": "viewport-segments",
@@ -946,11 +810,7 @@
 				"file": "plugins/riff/assets/riff.css",
 				"code": "grid-template-columns: env(viewport-segment-width 0 0) env(viewport-segment-width 1 0);"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "The turntable, which keeps to one page of a half-open phone."
-		}
+		]
 	},
 	{
 		"slug": "text-wrap",
@@ -970,11 +830,7 @@
 				"file": "plugins/riff/features/listen/app.css",
 				"code": "text-wrap: balance;"
 			}
-		],
-		"shot": {
-			"image": "desktop-listen",
-			"caption": "The library in the Listen app; opening an album sets its title large above the tracks."
-		}
+		]
 	},
 	{
 		"slug": "variable-fonts",
@@ -998,11 +854,7 @@
 				"file": "plugins/riff/assets/riff.css",
 				"code": "font-weight: 100 900;"
 			}
-		],
-		"shot": {
-			"image": "desktop-listen",
-			"caption": "The EB Garamond heading and Inter labels of the library, each family one file."
-		}
+		]
 	},
 	{
 		"slug": "prefers-reduced-motion",
@@ -1030,11 +882,7 @@
 				"file": "plugins/riff/features/listen/app/views.js",
 				"code": "window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;"
 			}
-		],
-		"shot": {
-			"image": "phone-post",
-			"caption": "The equalizer bars, which go still under reduced motion."
-		}
+		]
 	},
 	{
 		"slug": "clip-path",
@@ -1059,11 +907,7 @@
 				"code": "clip-path: none;",
 				"after": "\t.riff-modes span {"
 			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "The Song/Video switch reading as words; on a phone the same labels are clipped and icons show."
-		}
+		]
 	},
 	{
 		"slug": "aspect-ratio",
@@ -1087,11 +931,7 @@
 				"file": "plugins/riff/features/listen/app.css",
 				"code": "aspect-ratio: 1;"
 			}
-		],
-		"shot": {
-			"image": "desktop-listen",
-			"caption": "The nine square covers, each a box that holds its place before the image loads."
-		}
+		]
 	},
 	{
 		"slug": "touch-action",
@@ -1119,11 +959,7 @@
 				"file": "plugins/riff/assets/player/gestures.js",
 				"code": "zone.addEventListener( 'pointerdown', ( e ) => {"
 			}
-		],
-		"shot": {
-			"image": "phone-up-next",
-			"caption": "The handle on the Up next sheet, a drag zone that takes the whole touch."
-		}
+		]
 	},
 	{
 		"slug": "overscroll-behavior",
@@ -1143,11 +979,7 @@
 				"file": "plugins/riff/assets/riff.css",
 				"code": "overscroll-behavior: contain;"
 			}
-		],
-		"shot": {
-			"image": "phone-up-next",
-			"caption": "The Up next list, which scrolls on its own without pulling the post along."
-		}
+		]
 	},
 	{
 		"slug": "focus-visible",
@@ -1175,10 +1007,6 @@
 				"file": "plugins/riff/features/listen/app.css",
 				"code": ".riff-app .riff-card:has(> .riff-card-link:focus-visible) {"
 			}
-		],
-		"shot": {
-			"image": "desktop-listen",
-			"caption": "A record card with keyboard focus gets a blue ring around the whole card."
-		}
+		]
 	}
 ]

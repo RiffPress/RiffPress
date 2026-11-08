@@ -216,10 +216,23 @@ function where( ctx ) {
  */
 function doorPages( door, up ) {
 	const list = ( pages ) => `<ul class="pages">${ pages.filter( ( n ) => n.bar !== false ).map( ( n ) => `<li><a href="${ to( up, n.href ) }">${ esc( n.label ) }</a><span>${ esc( n.summary ) }</span></li>` ).join( '' ) }</ul>`;
-	if ( door.children.some( ( n ) => n.children ) ) {
-		return door.children.map( ( g ) => `<h2 class="pages-group" id="${ g.key }">${ esc( g.label ) }</h2>${ list( g.children ) }` ).join( '' );
+	// Pages side by side are one list; a group is its name over its own.
+	let html = '';
+	let loose = [];
+	const flush = () => {
+		html += loose.length ? list( loose ) : '';
+		loose = [];
+	};
+	for ( const n of door.children || [] ) {
+		if ( n.children ) {
+			flush();
+			html += `<h2 class="pages-group" id="${ n.key }">${ esc( n.label ) }</h2>${ list( n.children ) }`;
+		} else {
+			loose.push( n );
+		}
 	}
-	return list( door.children );
+	flush();
+	return html;
 }
 
 /**
@@ -230,7 +243,7 @@ function doorPages( door, up ) {
  * @return {string} HTML.
  */
 function doorList( up, nav = NAV ) {
-	const pages = ( d ) => d.children.flatMap( ( n ) => ( n.children ? n.children : [ n ] ) ).filter( ( n ) => n.bar !== false );
+	const pages = ( d ) => ( d.children || [] ).flatMap( ( n ) => ( n.children ? n.children : [ n ] ) ).filter( ( n ) => n.bar !== false );
 	return `<ul class="doors">${ doors( nav ).map( ( d ) => `<li><h2><a href="${ to( up, d.href ) }">${ esc( d.label ) }</a></h2><p>${ esc( d.summary ) }</p><p class="doors-first">${ pages( d ).slice( 0, 4 ).map( ( n ) => `<a href="${ to( up, n.href ) }">${ esc( n.label ) }</a>` ).join( '' ) }</p></li>` ).join( '' ) }</ul>`;
 }
 
@@ -414,10 +427,14 @@ function validate( nav = NAV ) {
 	const inDoors = new Set();
 	const gather = ( n ) => ( n.children ? n.children.forEach( gather ) : inDoors.add( n.href ) );
 	for ( const d of doors( nav ) ) {
-		d.children.forEach( gather );
 		if ( ! d.summary || typeof d.href !== 'string' ) {
 			problems.push( `site-nav.json: the door ${ d.key } needs a page of its own (href) and a summary` );
 		}
+		if ( ! d.children?.length ) {
+			problems.push( `site-nav.json: the door ${ d.key } has no pages` );
+			continue;
+		}
+		d.children.forEach( gather );
 		const pages = d.children.flatMap( ( n ) => ( n.children ? n.children : [ n ] ) ).filter( ( n ) => n.bar !== false );
 		for ( const p of pages.filter( ( n ) => ! n.summary ) ) {
 			problems.push( `site-nav.json: ${ p.key } is listed on the ${ d.key } door's page, so it needs a summary` );

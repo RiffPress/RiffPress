@@ -60,6 +60,16 @@ test( 'the definition is consistent, and a broken one is caught', () => {
 	const found = nav.validate( bare ).join( '\n' );
 	assert.match( found, /the door use needs a page of its own \(href\) and a summary/ );
 	assert.match( found, /music is listed on the use door's page, so it needs a summary/ );
+	// A door with no pages yet is reported, not a crash.
+	const empty = clone();
+	empty.sections[ 1 ].children.push( { key: 'soon', label: 'Soon', href: 'developers/soon/', door: true, summary: 'Soon.' } );
+	assert.match( nav.validate( empty ).join( '\n' ), /the door soon has no pages/ );
+} );
+
+test( 'a door\'s page lists pages beside its groups as a list of their own', () => {
+	const door = { key: 'd', door: true, children: [ { key: 'a', label: 'A', href: 'a/', summary: 'First.' }, { key: 'g', label: 'Group', children: [ { key: 'b', label: 'B', href: 'b/', summary: 'Second.' } ] }, { key: 'c', label: 'C', href: 'c/', summary: 'Third.' } ] };
+	assert.equal( nav.doorPages( door, '' ), '<ul class="pages"><li><a href="a/">A</a><span>First.</span></li></ul><h2 class="pages-group" id="g">Group</h2><ul class="pages"><li><a href="b/">B</a><span>Second.</span></li></ul><ul class="pages"><li><a href="c/">C</a><span>Third.</span></li></ul>' );
+	assert.equal( door.children[ 1 ].children.length, 1, 'the definition is left as it was' );
 } );
 
 test( 'adding a section is one entry, and its folder in developers-site.js: it joins the header of every page, in its place, and the docs stay Source\'s alone', () => {
@@ -161,7 +171,7 @@ test( 'the lessons and the hooks have previous and next, in their order, and the
 	// Every feature a section of the one page, none a page of its own.
 	assert.deepEqual( [ ...pages.keys() ].filter( ( f ) => f.startsWith( 'web/' ) ), [ 'web/index.html' ] );
 	const web = pages.get( 'web/index.html' );
-	assert.match( web, /<section class="feature" id="media-session">/ );
+	assert.match( web, /<section class="feature"><h3 id="media-session" class="is-toc-heading">/ );
 	assert.match( web, /href="\.\.\/web\/" aria-current="page">Built on the open web/ );
 	// A PHP hook's neighbours are PHP hooks.
 	const isPhp = ( h ) => /php\/" aria-current="true">PHP</.test( h );

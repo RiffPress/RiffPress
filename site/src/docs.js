@@ -28,7 +28,9 @@ if ( side && button && list ) {
 		scrim.hidden = ! open;
 		document.documentElement.classList.toggle( 'docs-menu-open', open );
 		if ( open ) {
-			( list.querySelector( '[aria-current="page"]' ) || list.querySelector( 'a' ) )?.focus();
+			// The page, or the page it sits under, or the door's first page; never a link inside the
+			// closed door switcher, which focus() cannot reach.
+			( list.querySelector( ':scope > ul [aria-current]' ) || list.querySelector( ':scope > ul a' ) || list.querySelector( 'summary' ) )?.focus();
 		} else if ( focus ) {
 			button.focus();
 		}
@@ -172,6 +174,12 @@ if ( opener && window.HTMLDialogElement ) {
 	};
 
 	opener.addEventListener( 'click', open );
+	// A result on this page only moves to its section, so the dialog closes for it to be seen.
+	results.addEventListener( 'click', ( e ) => {
+		if ( e.target.closest( 'a' ) ) {
+			dialog.close();
+		}
+	} );
 	input.addEventListener( 'input', show );
 	dialog.addEventListener( 'click', ( e ) => {
 		// A press on the backdrop, outside the dialog's own box.
@@ -184,7 +192,9 @@ if ( opener && window.HTMLDialogElement ) {
 		const at = found.indexOf( document.activeElement );
 		// A search field spends its first Escape on clearing itself; here Escape closes.
 		if ( e.key === 'Escape' ) {
+			// It closes this layer only, not the phone's sheet under it.
 			e.preventDefault();
+			e.stopPropagation();
 			dialog.close();
 		} else if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
 			e.preventDefault();
@@ -217,6 +227,8 @@ if ( doorSwitch ) {
 	} );
 	doorSwitch.addEventListener( 'keydown', ( e ) => {
 		if ( e.key === 'Escape' && doorSwitch.open ) {
+			// It closes the switcher only, not the phone's sheet it sits in.
+			e.stopPropagation();
 			doorSwitch.open = false;
 			doorSwitch.querySelector( 'summary' ).focus();
 		}
