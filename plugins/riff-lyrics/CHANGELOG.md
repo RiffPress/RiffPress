@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.8.0...riff-lyrics-v1.9.0) (2026-11-08)
+
+
+### Features
+
+* each plugin declares what it needs in isolation.json, and CI fails code that reaches past it ([#954](https://github.com/RiffPress/RiffPress/issues/954)) ([2f8ba39](https://github.com/RiffPress/RiffPress/commit/2f8ba39bfaaa3bfb2cf2fc445f84b737c691b888))
+* experimental sandbox runs an untrusted extension's PHP in php-wasm, behind a bridge that grants only its manifest ([#957](https://github.com/RiffPress/RiffPress/issues/957)) ([0bcd173](https://github.com/RiffPress/RiffPress/commit/0bcd1735b1aa6330870a01ab8a0ad6facaa653c9))
+* **player:** the accent comes from the cover playing, muted to read on black, and the site's accent stands in for a grey one ([#952](https://github.com/RiffPress/RiffPress/issues/952)) ([557e798](https://github.com/RiffPress/RiffPress/commit/557e7989ed069c6dfbc2fd5ffd337473e3787723))
+* **riff:** abilities for an owner and an assistant, offered over MCP through the MCP Adapter once the site turns it on ([#959](https://github.com/RiffPress/RiffPress/issues/959)) ([3feed2b](https://github.com/RiffPress/RiffPress/commit/3feed2b205941b27320d261d7154faf94f497fb7))
+* **riff:** typed SDK generated from the code, and a post's blocks as a typed tree over REST ([#960](https://github.com/RiffPress/RiffPress/issues/960)) ([038924f](https://github.com/RiffPress/RiffPress/commit/038924fe661889ef32ca305709f7169651a6d8db))
+
+
+### Bug Fixes
+
+* main's checks pass again after the drafts merged untested, each plugin declaring what they added and About crediting only a caption a file has ([#962](https://github.com/RiffPress/RiffPress/issues/962)) ([708dfac](https://github.com/RiffPress/RiffPress/commit/708dfac72716ed9483fb80dd127ce181c9643db1))
+
 ## [1.8.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.7.1...riff-lyrics-v1.8.0) (2026-11-07)
 
 
