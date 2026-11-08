@@ -59,6 +59,12 @@ delete_transient( 'riff_protected_open' );
 wp_clear_scheduled_hook( 'riff_protected_move' );
 wp_clear_scheduled_hook( 'riff_protected_probe' );
 delete_option( 'riff_private' );
+wp_clear_scheduled_hook( 'riff_private_sweep' );
+// The settings on Settings › Riff: the assistant's tools, links that keep the music playing, and
+// the app at the site's address.
+delete_option( 'riff_mcp' );
+delete_option( 'riff_client_navigation' );
+delete_option( 'riff_app_at_root' );
 
 foreach ( array( '_riff_private', '_riff_protected', '_riff_protected_moving', '_riff_video', '_riff_stream', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
 	delete_post_meta_by_key( $riff_key );
@@ -92,3 +98,7 @@ wp_unschedule_hook( 'riff_import_zip' );
 
 // Who dismissed the first-run notice: a user option, so its key carries the site's table prefix.
 delete_metadata( 'user', 0, $wpdb->get_blog_prefix() . 'riff_first_run_dismissed', '', true );
+// A listener's choices, also user options: the single-key shortcuts turned off, and whether they
+// show others what they are listening to. Their likes and recently played stay, as above.
+delete_metadata( 'user', 0, $wpdb->get_blog_prefix() . 'riff_shortcuts', '', true );
+delete_metadata( 'user', 0, $wpdb->get_blog_prefix() . 'riff_together_share', '', true );

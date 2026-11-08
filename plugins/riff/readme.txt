@@ -102,7 +102,7 @@ Riff doesn't change your posts. The blocks keep their own markup and their own p
 
 In your Media Library, in your site's uploads folder on your own server, exactly as WordPress stores them. Riff doesn't copy them anywhere else. Protected files move to a folder of their own inside uploads, or outside the web root where `RIFF_PROTECTED_PATH` names one.
 
-Riff keeps very little of its own: the link between a song and its video, the album and artist it files each track under, and each listener's likes, recently played and playlists. Deleting Riff from the Plugins screen removes its links, albums, artists, likes and recently played, and leaves your files, their tags and their images alone.
+Riff keeps very little of its own: the link between a song and its video, the album and artist it files each track under, and each listener's likes, recently played and playlists. Deleting Riff from the Plugins screen removes its links, albums, artists and settings, and leaves your files, their tags and their images alone, and listeners' likes, recently played and playlists, which installing it again brings back.
 
 = Can I add video? =
 
