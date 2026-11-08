@@ -58,6 +58,34 @@ test( 'an attest step on a tag, or without its permissions, fails', () => {
 	] );
 } );
 
+test( 'every way of putting a zip on a release counts as an upload', () => {
+	const ways = [
+		'      - run: gh release create "$TAG" build/riff-lyrics.zip\n',
+		'      - run: |\n          gh release upload --clobber "$TAG_NAME" \\\n            build/riff-lyrics.zip\n',
+		'      - uses: softprops/action-gh-release@0123456789012345678901234567890123456789 # v2\n        with:\n          files: build/riff-lyrics.zip\n',
+	];
+	for ( const way of ways ) {
+		assert.deepStrictEqual( found( workflow( way ) ), [ 'uploads build/riff-lyrics.zip without attesting it first' ], way );
+	}
+	assert.deepStrictEqual( found( workflow( '      - run: gh release upload "$TAG" build/*.zip\n' ) ), [
+		'uploads build/*.zip without attesting it first',
+	] );
+	assert.deepStrictEqual( found( workflow( '      - run: gh release upload "$TAG" build/\n' ) ), [
+		'uploads to a release without naming each zip, so its attestation cannot be checked',
+	] );
+} );
+
+test( 'an attest step that can be skipped, or fail quietly, attests nothing', () => {
+	for ( const guard of [ "        if: github.event_name == 'push'\n", '        continue-on-error: true\n' ] ) {
+		const skippable = attest().replace( '        with:\n', `${ guard }        with:\n` );
+		assert.deepStrictEqual( found( workflow( build + skippable + upload ) ), [
+			'attests in a step that can be skipped or fail without failing the job',
+			'uploads build/riff-lyrics.zip without attesting it first',
+			'builds build/riff-lyrics.zip without attesting it',
+		], guard );
+	}
+} );
+
 test( 'a job that builds, attests, then uploads passes', () => {
 	assert.deepStrictEqual( found( workflow( build + attest() + upload ) ), [] );
 } );
@@ -75,9 +103,12 @@ test( 'build-zip.sh makes the same zip twice, whenever and wherever the files we
 		for ( const p of [ '.github/scripts', 'plugins', '.distignore' ] ) {
 			fs.cpSync( path.join( root, p ), path.join( copy, p ), { recursive: true } );
 		}
+		// Its files as a checkout under umask 077 leaves them: owner only.
 		const later = new Date( Date.now() + 3600e3 );
 		for ( const f of fs.readdirSync( path.join( copy, 'plugins' ), { recursive: true } ) ) {
-			fs.utimesSync( path.join( copy, 'plugins', f ), later, later );
+			const file = path.join( copy, 'plugins', f );
+			fs.chmodSync( file, fs.statSync( file ).isDirectory() ? 0o700 : 0o600 );
+			fs.utimesSync( file, later, later );
 		}
 		execFileSync(
 			'bash',

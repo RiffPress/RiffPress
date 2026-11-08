@@ -186,6 +186,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.riff_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -263,6 +266,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.lyrics_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -307,6 +313,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.chords_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -351,6 +360,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.sign_in_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -395,6 +407,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.sing_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -437,6 +452,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.meters_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
