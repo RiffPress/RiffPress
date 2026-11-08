@@ -41,6 +41,10 @@
 	min-height: 100dvh;
 	padding-bottom: 48px;
 
+	/* The app's accent is the host's, from --riff-standalone-accent
+	   (tokens.css), never written inline. */
+	--riff-app-accent: var(--riff-standalone-accent);
+
 	/* The chrome is black and white; colour comes from the music. The player
 	   sets --riff-cover-accent on the body from the cover playing, or the
 	   site's --riff-accent for a grey one (now-playing.js). Before anything

@@ -493,6 +493,8 @@ final class Standalone {
 	 *
 	 * @since 4.17.0
 	 * @since 6.4.0 The background and text from --riff-standalone-bg and --riff-standalone-ink.
+	 * @since 6.5.0 No accent of its own written inline: standalone.css takes it from
+	 *              --riff-standalone-accent, which a host's stylesheet sets.
 	 *
 	 * @return array<string, string>
 	 */
@@ -500,7 +502,6 @@ final class Standalone {
 		return array(
 			'--riff-app-bg'           => 'var(--riff-standalone-bg, #030303)',
 			'--riff-app-ink'          => 'var(--riff-standalone-ink, #fff)',
-			'--riff-app-accent'       => '#f2eadb',
 			'--riff-app-on-accent'    => self::BACKGROUND,
 			'--riff-app-font'         => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',
 			'--riff-app-heading-font' => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',

@@ -241,3 +241,35 @@ test( 'the Listen app\'s own document keeps no colour of its own: Liked songs an
 	await expect( page.locator( '.riff-album-liked' ) ).toBeVisible();
 	expect( await violets() ).toEqual( [] );
 } );
+
+test( 'a host\'s stylesheet sets the accent over Riff\'s own, and a grey cover falls back to it', async ( {
+	page,
+	requestUtils,
+} ) => {
+	// What a network's brand stylesheet does: its accent, ember, for the player and the app.
+	const HOST = '#riff { --riff-accent: #e8873f; } .riff-standalone { --riff-standalone-accent: #e8873f; }';
+	const EMBER = [ '232', '135', '63' ];
+	await page.goto( postUrl );
+	await page.addStyleTag( { content: HOST } );
+	// The near-black cover's track: no colour of its own, so the host's.
+	await page.locator( '.riff-row' ).nth( 1 ).click();
+	await expect.poll( async () => ( await colours( page ) ).line.match( /\d+/g ).slice( 0, 3 ) ).toEqual( EMBER );
+	expect( ( await colours( page ) ).set ).toBe( '' );
+
+	const listen = await made.page( requestUtils, {
+		title: `Riff accent host e2e ${ Date.now() }`,
+		status: 'publish',
+		content: '<!-- wp:riff/app {"align":"full"} /-->',
+	} );
+	await page.goto( listen.link.replace( /\/?$/, '/' ) + 'app/' );
+	await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
+	await page.addStyleTag( { content: HOST } );
+	// Nothing of Riff's own written inline wins over it.
+	const app = () =>
+		page.locator( '.riff-app' ).first().evaluate( ( el ) => getComputedStyle( el ).getPropertyValue( '--riff-app-accent' ).trim() );
+	expect( await app() ).toBe( '#e8873f' );
+	await page.evaluate( () => window.riff.play( window.riff.queue(), 1 ) );
+	await expect
+		.poll( () => page.evaluate( () => document.body.style.getPropertyValue( '--riff-cover-accent' ) ) )
+		.toMatch( /232\D+135\D+63/ );
+} );

@@ -439,7 +439,9 @@ final class Player {
 		if ( '' === $accent || ! preg_match( '/^[#a-z0-9(),.% -]+$/i', $accent ) ) {
 			return '';
 		}
-		return ' style="--riff-accent: ' . esc_attr( $accent ) . '"';
+		// Through a variable of its own, which tokens.css makes --riff-accent's default, so a host's
+		// stylesheet that sets --riff-accent still wins over the theme's.
+		return ' style="--riff-theme-accent: ' . esc_attr( $accent ) . '"';
 	}
 
 	/**

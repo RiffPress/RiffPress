@@ -2448,7 +2448,7 @@ dl.riff-about-credits dd {
 }
 
 .riff-more-button:focus-visible {
-	outline: 2px solid var(--riff-accent, #f2eadb);
+	outline: 2px solid var(--riff-accent, var(--riff-app-ink, currentcolor));
 	outline-offset: 1px;
 }
 
@@ -2524,7 +2524,7 @@ dl.riff-about-credits dd {
 }
 
 .riff-like-button:focus-visible {
-	outline: 2px solid var(--riff-accent, #f2eadb);
+	outline: 2px solid var(--riff-accent, var(--riff-app-ink, currentcolor));
 	outline-offset: 1px;
 }
 
@@ -2578,12 +2578,12 @@ dl.riff-about-credits dd {
 .riff-menu > :focus-visible,
 #riff .riff-menu > :hover,
 #riff .riff-menu > :focus-visible {
-	color: var(--riff-accent, #f2eadb);
+	color: var(--riff-accent, var(--riff-app-ink, currentcolor));
 }
 
 .riff-menu > :focus-visible,
 #riff .riff-menu > :focus-visible {
-	box-shadow: inset 0 0 0 2px var(--riff-accent, #f2eadb);
+	box-shadow: inset 0 0 0 2px var(--riff-accent, var(--riff-app-ink, currentcolor));
 }
 
 @media (pointer: coarse) {
@@ -3400,7 +3400,7 @@ dl.riff-about-credits dd {
 	}
 
 	#riff .riff-speeds button[aria-checked="true"] {
-		color: #f2eadb;
+		color: var(--riff-fg);
 	}
 
 	#riff .riff-speeds button[aria-checked="true"]::before {

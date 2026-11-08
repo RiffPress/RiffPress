@@ -301,7 +301,7 @@ class Test_Riff_Player extends Riff_TestCase {
 
 	public function test_the_accent_comes_from_the_theme(): void {
 		$this->go_to( home_url( '/' ) );
-		$this->assertSame( '', Player::root_style(), 'nothing set: the default ivory' );
+		$this->assertSame( '', Player::root_style(), 'nothing set: Riff\'s default' );
 
 		$accent = '#3858e9';
 		$theme  = static function ( WP_Theme_JSON_Data $json ) use ( &$accent ): WP_Theme_JSON_Data {
@@ -315,7 +315,7 @@ class Test_Riff_Player extends Riff_TestCase {
 		add_filter( 'wp_theme_json_data_theme', $theme );
 		wp_clean_theme_json_cache();
 		try {
-			$this->assertSame( ' style="--riff-accent: #3858e9"', Player::root_style() );
+			$this->assertSame( ' style="--riff-theme-accent: #3858e9"', Player::root_style() );
 			$accent = 'red; background: url(x)';
 			wp_clean_theme_json_cache();
 			$this->assertSame( '', Player::root_style(), 'only a colour goes in' );
