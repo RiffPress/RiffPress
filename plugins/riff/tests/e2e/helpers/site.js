@@ -159,7 +159,7 @@ async function playerSite( made, requestUtils ) {
 		content: `<!-- wp:playlist --><figure class="wp-block-playlist"><ol class="wp-block-playlist__tracklist wp-block-playlist__tracklist-show-numbers">${ items }</ol></figure><!-- /wp:playlist -->`,
 		featured_media: cover.id,
 	} );
-	return { postUrl: post.link, playlistUrl: playlist.link };
+	return { postUrl: post.link, playlistUrl: playlist.link, audio };
 }
 
 /**

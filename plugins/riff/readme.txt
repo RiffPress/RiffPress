@@ -112,6 +112,10 @@ Yes. Upload a zip of an album, or of several, to the Media Library, and Riff unp
 
 Yes, as files. Put the files you uploaded to SoundCloud, or downloaded from your own tracks there, in a folder per album, with the artwork as cover.jpg, and import them as any album: a zip of the folders uploaded to the Media Library, or `wp riff import` with the folder. Name a WAV file the way its title should read, as WAV files rarely carry tags, and export AIFF as WAV or FLAC, which every browser plays. Riff doesn't sign in to SoundCloud and fetch your uploads itself yet.
 
+= Can I make albums from a public archive's recordings? =
+
+Yes, with WP-CLI. `wp riff archive loc` imports recordings the Library of Congress publishes for reuse, the Edison companies' sound recordings unless you name another collection or an item, and `wp riff archive europeana "a search" --key=yourkey` those on Europeana. Rights are per item, so Riff reads each item's rights statement and imports only what is marked public domain or under CC0, CC BY or CC BY-SA, or, from the Library of Congress, what its statement says it knows of no U.S. copyright in, credited as just that. It says what it skipped and why. Each track keeps its source, licence and credit in its caption and description, the About panel shows the credit, and each album's post opens with it, so the site credits the archive rather than presenting itself as it.
+
 = My files are lossless. Do listeners download all of that? =
 
 Not if you give a song a smaller copy. Choose an MP3 of it as its Streaming version in the Media Library, and the player streams that while the song stays the file you uploaded. Where the server has ffmpeg, `wp riff transcode` makes one for every lossless song.
