@@ -108,6 +108,10 @@ From the post. Every audio and video block in the post is the queue, in order, s
 
 Yes. Upload a zip of an album, or of several, to the Media Library, and Riff unpacks it in the background and makes a draft album post for each folder in it that holds audio, for you to publish, and attaches the zip to it. A zip it cannot import, such as one on a server whose PHP has no zip extension, stays unattached. With WP-CLI, `wp riff import` with the path to a folder or a zip does the same, and publishes the posts. Run either again and it skips what it already imported.
 
+= Can I bring my own tracks over from SoundCloud? =
+
+Yes, as files. Put the files you uploaded to SoundCloud, or downloaded from your own tracks there, in a folder per album, with the artwork as cover.jpg, and import them as any album: a zip of the folders uploaded to the Media Library, or `wp riff import` with the folder. Name a WAV file the way its title should read, as WAV files rarely carry tags, and export AIFF as WAV or FLAC, which every browser plays. Riff doesn't sign in to SoundCloud and fetch your uploads itself yet.
+
 = My files are lossless. Do listeners download all of that? =
 
 Not if you give a song a smaller copy. Choose an MP3 of it as its Streaming version in the Media Library, and the player streams that while the song stays the file you uploaded. Where the server has ffmpeg, `wp riff transcode` makes one for every lossless song.
