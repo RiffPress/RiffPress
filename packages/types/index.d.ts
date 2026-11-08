@@ -149,7 +149,7 @@ export interface LibraryPostResponse {
 export interface ImportResponse {
 	/** The zip's attachment ID. */
 	attachment: number;
-	/** When the import starts, as a Unix time. Its album posts are drafts by the zip's uploader; the zip is attached to the first once it is done. */
+	/** When the import starts, as a Unix time. Its album posts are private, by the zip's uploader, with each track Protected; the zip is attached to the first once it is done. */
 	queued: number;
 }
 
