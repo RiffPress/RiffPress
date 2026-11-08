@@ -1,6 +1,6 @@
 <?php
 /**
- * Following a link without leaving the page, so the music keeps playing (a spike).
+ * Following a link without leaving the page, so the music keeps playing.
  *
  * WordPress's Interactivity API router swaps a page's router regions for the next page's, fetched
  * in the background, and keeps everything outside them. Core ships the router and a module that
@@ -9,7 +9,8 @@
  * `.wp-site-blocks`, and the player is printed after it in the footer, so marking that element
  * one region swaps the page and leaves the bar, the queue and the one `<audio>` where they are.
  *
- * Off unless `riff_client_navigation` turns it on: the router keeps what is outside its regions
+ * Off unless the site turns it on, under Settings › Riff or with the `riff_client_navigation`
+ * filter: it changes how the whole site navigates, and the router keeps what is outside its regions
  * from the first page. Riff carries over the body's classes, the canonical and short addresses
  * and the admin bar's edit links (page()); the rest of the `<head>` stays, and a classic script
  * only a later page enqueues doesn't load, which a theme or a plugin may not expect. A Listen page
@@ -38,11 +39,21 @@ final class Navigation {
 	const REGION = 'riff/page';
 
 	/**
+	 * Option: whether links are followed without leaving the page.
+	 *
+	 * @since 6.5.0
+	 * @var string
+	 */
+	const OPTION = 'riff_client_navigation';
+
+	/**
 	 * Hooks in.
 	 *
 	 * @since 6.2.0
 	 */
 	public static function register(): void {
+		add_action( 'init', array( self::class, 'setting' ) );
+		add_action( 'admin_init', array( self::class, 'field' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'enqueue' ) );
 		// Before core decides, at 1000, whether to open its template output buffer (core 6.9).
 		add_action( 'wp_before_include_template', array( self::class, 'buffer' ) );
@@ -64,22 +75,87 @@ final class Navigation {
 	}
 
 	/**
+	 * The setting, on Settings › Riff and in the REST settings route.
+	 *
+	 * @since 6.5.0
+	 */
+	public static function setting(): void {
+		register_setting(
+			Extensions::PAGE,
+			self::OPTION,
+			array(
+				'type'              => 'boolean',
+				'description'       => __( 'Whether a link on the site is followed without leaving the page, so the music keeps playing.', 'riff' ),
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'show_in_rest'      => true,
+			)
+		);
+	}
+
+	/**
+	 * The checkbox on Settings › Riff, in a section of its own.
+	 *
+	 * @since 6.5.0
+	 */
+	public static function field(): void {
+		add_settings_section( 'riff-links', __( 'Links', 'riff' ), '__return_false', Extensions::PAGE );
+		add_settings_field(
+			self::OPTION,
+			__( 'Music across links', 'riff' ),
+			static function (): void {
+				$saved = rest_sanitize_boolean( get_option( self::OPTION, false ) );
+				$on    = self::chosen();
+				if ( ! wp_is_block_theme() ) {
+					$note = __( 'Only a block theme can: this theme loads each page outright, and the player picks the music up where it was.', 'riff' );
+				} elseif ( $on !== $saved ) {
+					$note = __( 'Set for this site by a plugin.', 'riff' );
+				} else {
+					$note = __( 'A link on the site brings the next page in without leaving this one, so what plays carries on. It changes how the whole site navigates: a script or style that only a later page asks for is not loaded, and a plugin that expects each page to load may not work.', 'riff' );
+				}
+				printf(
+					'<label for="%1$s"><input name="%1$s" type="checkbox" id="%1$s" value="1"%2$s%3$s> %4$s</label><p class="description">%5$s</p>',
+					esc_attr( self::OPTION ),
+					checked( $on, true, false ),
+					disabled( $on !== $saved, true, false ),
+					esc_html__( 'Keep the music playing when a link is followed', 'riff' ),
+					esc_html( $note )
+				);
+			},
+			Extensions::PAGE,
+			'riff-links'
+		);
+	}
+
+	/**
+	 * Whether the site has asked for it, from Settings › Riff and the filter, whatever its theme.
+	 *
+	 * @return bool
+	 */
+	private static function chosen(): bool {
+		/**
+		 * Filters whether a link on the site is followed without leaving the page, so what plays
+		 * carries on. Only a block theme can: its template is the region that is swapped.
+		 *
+		 * A host turns it on for every site with
+		 * `add_filter( 'riff_client_navigation', '__return_true' )`.
+		 *
+		 * @since 6.2.0
+		 * @since 6.5.0 Its default is the Settings › Riff checkbox.
+		 *
+		 * @param bool $on Whether it is on, from Settings › Riff. Default false.
+		 */
+		return (bool) apply_filters( 'riff_client_navigation', rest_sanitize_boolean( get_option( self::OPTION, false ) ) );
+	}
+
+	/**
 	 * Whether links are followed without leaving the page on this request.
 	 *
 	 * @since 6.2.0
 	 * @return bool
 	 */
 	public static function enabled(): bool {
-		$enabled = Player::enabled() && wp_is_block_theme() && function_exists( 'wp_interactivity_config' );
-		/**
-		 * Filters whether a link on the site is followed without leaving the page, so what plays
-		 * carries on. Only a block theme can: its template is the region that is swapped.
-		 *
-		 * @since 6.2.0
-		 *
-		 * @param bool $on False by default.
-		 */
-		return $enabled && (bool) apply_filters( 'riff_client_navigation', false );
+		return Player::enabled() && wp_is_block_theme() && function_exists( 'wp_interactivity_config' ) && self::chosen();
 	}
 
 	/**

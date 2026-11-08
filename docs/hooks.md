@@ -89,11 +89,13 @@ Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
 
 Filters whether a link on the site is followed without leaving the page, so what plays carries on. Only a block theme can: its template is the region that is swapped.
 
+A host turns it on for every site with `add_filter( 'riff_client_navigation', '__return_true' )`.
+
 Since 6.2.0. Fires in `plugins/riff/src/class-navigation.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `$on` | `bool` | False by default. |
+| `$on` | `bool` | Whether it is on, from Settings › Riff. Default false. |
 
 ### `riff_enabled`
 

@@ -26,6 +26,8 @@ class Test_Riff_Navigation extends Riff_TestCase {
 	}
 
 	public function tear_down(): void {
+		delete_option( Navigation::OPTION );
+		remove_all_filters( 'riff_client_navigation' );
 		switch_theme( $this->theme );
 		parent::tear_down();
 	}
@@ -86,6 +88,16 @@ class Test_Riff_Navigation extends Riff_TestCase {
 		$p    = new WP_HTML_Tag_Processor( $html );
 		$p->next_tag( array( 'class_name' => 'wp-site-blocks' ) );
 		$this->assertSame( array(), json_decode( (string) $p->get_attribute( 'data-riff-page' ), true )['bar'] );
+	}
+
+	public function test_a_site_turns_it_on_under_settings_and_a_plugin_decides_last(): void {
+		Navigation::setting();
+		$this->assertArrayHasKey( Navigation::OPTION, get_registered_settings(), 'on Settings › Riff and in the REST settings route' );
+		update_option( Navigation::OPTION, '1' );
+		$this->assertTrue( $this->buffered() );
+		$this->assertTrue( Navigation::enabled() );
+		add_filter( 'riff_client_navigation', '__return_false' );
+		$this->assertFalse( Navigation::enabled(), 'a host can keep it off whatever the setting says' );
 	}
 
 	public function test_a_classic_theme_is_never_buffered_for_it(): void {
