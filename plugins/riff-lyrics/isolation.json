@@ -1,0 +1,53 @@
+{
+	"$schema": "../../docs/isolation.schema.json",
+	"plugin": "riff-lyrics",
+	"namespace": "Lyrics",
+	"data": {
+		"options": [],
+		"meta": [],
+		"shared": {
+			"_wp_attachment_metadata": "The lyrics live in the attachment's own metadata, as unsynchronised_lyric, where WordPress puts a file's lyrics tag on upload. They are the file's, so they stay when the plugin goes."
+		},
+		"keep": {}
+	},
+	"rest": {
+		"namespaces": [],
+		"fields": [
+			"attachment.riff_lyrics"
+		],
+		"public": {}
+	},
+	"capabilities": [
+		"edit_post",
+		"upload_files",
+		"update_plugins"
+	],
+	"hosts": [],
+	"spawn": [],
+	"riff": {
+		"hooks": [
+			"riff_register",
+			"riff_before_player",
+			"riff_track",
+			"riff_abilities"
+		],
+		"functions": [
+			"riff_register_view"
+		],
+		"events": [
+			"view",
+			"ready",
+			"time"
+		],
+		"api": [
+			"seek",
+			"view",
+			"time"
+		]
+	},
+	"scripts": [
+		"riff-lyrics-timing",
+		"riff-lyrics"
+	],
+	"modules": []
+}

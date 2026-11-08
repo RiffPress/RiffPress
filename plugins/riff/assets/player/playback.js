@@ -43,10 +43,10 @@ export function playback( P ) {
 			// Said when the sound starts (media.js), so a track that never starts is not called playing.
 			P.announcing = t.id;
 		}
-		// The lock screen, the filament, the wake lock and listening together are modules of their
+		// The lock screen, the meter, the wake lock and listening together are modules of their
 		// own, loaded when the first track does and told about this one once they are.
 		P.feature( 'session' );
-		P.feature( 'filament' );
+		P.feature( 'meter' );
 		P.feature( 'wake-lock' );
 		if ( P.me?.rest?.together ) {
 			P.feature( 'together' );
@@ -176,7 +176,7 @@ export function playback( P ) {
 		if ( ! P.away() && ! P.el().paused ) {
 			P.glide();
 		}
-		// The filament goes dark while the page is out of sight, and lights again on its return.
+		// The meter rests while the page is out of sight, and reads again on its return.
 		P.meterSync?.();
 		const t = P.track();
 		if ( ! t || ! t.video ) {

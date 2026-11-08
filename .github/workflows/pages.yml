@@ -108,6 +108,8 @@ jobs:
           # No lone last word on a line: each block's last two words joined by a no-break space.
           node .github/scripts/no-widows.js out
           cp build/riff.zip out/
+          # Riff Chords and Riff Sing, which the blueprint installs beside Riff for the charted song.
+          bash .github/scripts/build-demo-plugins.sh out/demo
           cp packages/fixtures/seed.php out/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} out/demo/ \;
           cp site/brand/mark.png out/demo/

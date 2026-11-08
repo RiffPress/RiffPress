@@ -1,0 +1,64 @@
+{
+	"item": {
+		"id": "http://www.loc.gov/item/00694028/",
+		"title": "Hungarian rag",
+		"contributor_names": [
+			"Lenzberg, Julius",
+			"New York Military Band. prf"
+		],
+		"date": "1914",
+		"rights": [
+			"<p>The Library of Congress is providing access to these materials for   educational and research purposes and makes no warranty with regard to their use   for other purposes. The written permission of the copyright owners and/or other   rights holders (such as publicity and/or privacy rights) is required for   distribution, reproduction, or other use of protected items beyond that allowed   by fair use or other statutory exemptions. </p>\n<p>While the Library is not aware of any U.S. copyright protection (see Title   17, U.S.C.) or any other restrictions in the materials in the Inventing   Entertainment: The Motion Pictures and Sound Recordings of the Edison Companies,   there may be content protected as \"works for hire\" (copyright may be held by the   party that commissioned the original work) and/or under the copyright or   neighboring-rights laws of other nations. The Library is anxious to hear from   individuals or institutions that have information about these materials or know   of their history. </p>\n<p>Responsibility for making an independent legal assessment of an item and   securing any necessary permissions ultimately rests with persons desiring to use   the item. Users should consult the catalog information that accompanies each   item for specific information. This catalog data provides the details known to   the Library of Congress regarding the corresponding item and may assist users in   making independent assessments of the legal status of these items as related to   their desired uses. </p>\n<p>The following films are reproduced courtesy of the Theodore Roosevelt   Association, P.O. Box 720, Oyster Bay, NY 11771: <em>U.S. Troops Landing at   Daiquirí, Cuba; Troops Making Military Road in Front of Santiago; Pack Mules   with Ammunition on the Santiago Trail, Cuba.</em></p>\n<p>Suggested credit line: Library of Congress, Motion Picture, Broadcasting, and   Recorded Sound Division. </p>\n"
+		],
+		"rights_advisory": null,
+		"access_restricted": false,
+		"partof": [
+			{
+				"title": "recorded sound section",
+				"url": "https://www.loc.gov/search/?fa=partof:recorded+sound+section&fo=json"
+			},
+			{
+				"title": "inventing entertainment: the early motion pictures and sound recordings of the edison companies",
+				"url": "https://www.loc.gov/collections/edison-company-motion-pictures-and-sound-recordings/?fo=json"
+			},
+			{
+				"title": "motion picture, broadcasting and recorded sound division",
+				"url": "https://www.loc.gov/search/?fa=partof:motion+picture,+broadcasting+and+recorded+sound+division&fo=json"
+			},
+			{
+				"title": "national audiovisual conservation center",
+				"url": "https://www.loc.gov/search/?fa=partof:national+audiovisual+conservation+center&fo=json"
+			},
+			{
+				"title": "recorded sound research center",
+				"url": "https://www.loc.gov/search/?fa=partof:recorded+sound+research+center&fo=json"
+			},
+			{
+				"title": "the library of congress celebrates the songs of america",
+				"url": "https://www.loc.gov/collections/songs-of-america/?fo=json"
+			},
+			{
+				"title": "catalog",
+				"url": "https://www.loc.gov/search/?fa=partof:catalog&fo=json"
+			}
+		],
+		"mime_type": [
+			"audio/mpeg"
+		],
+		"url": "https://www.loc.gov/item/00694028/"
+	},
+	"resources": [
+		{
+			"url": "https://www.loc.gov/resource/navcc.edrs-50123l/",
+			"files": [
+				[
+					{
+						"mimetype": "audio/mpeg",
+						"size": 7051052,
+						"url": "https://tile.loc.gov/storage-services/public/navcc/edrs-50123l/edrs-50123l.mp3"
+					}
+				]
+			]
+		}
+	]
+}

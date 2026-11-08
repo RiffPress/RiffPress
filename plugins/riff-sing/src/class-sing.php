@@ -88,6 +88,51 @@ final class Sing {
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 10, 2 );
 		add_action( 'rest_api_init', array( self::class, 'rest_field' ) );
 		add_action( 'wp_entity_fields_api_init', array( self::class, 'entity_field' ) );
+		add_filter( 'riff_abilities', array( self::class, 'abilities' ) );
+	}
+
+	/**
+	 * Setting a track's melody, as an ability beside Riff's: the `riff_sing_melody` field on
+	 * wp/v2/media, written by whoever may edit the file.
+	 *
+	 * @since 0.7.0
+	 *
+	 * @param array $abilities Abilities, by name.
+	 * @return array
+	 */
+	public static function abilities( $abilities ): array {
+		$abilities                         = (array) $abilities;
+		$abilities['riff-sing/set-melody'] = array(
+			'label'       => __( 'Set a track\'s melody', 'riff-sing' ),
+			'description' => __( 'Sets the melody of an audio file in the Media Library, to sing along with in the Sing view: UltraStar\'s text format, with the notes, their pitches and the words. Empty to clear it. For someone who can edit the file.', 'riff-sing' ),
+			'method'      => 'POST',
+			'namespace'   => 'wp/v2',
+			'route'       => '/media/{id}',
+			'input'       => array(
+				'id'     => array(
+					'type'        => 'integer',
+					'description' => __( 'The audio attachment\'s ID.', 'riff-sing' ),
+					'minimum'     => 1,
+					'required'    => true,
+				),
+				'melody' => array(
+					'type'        => 'string',
+					'description' => __( 'The melody, in UltraStar\'s text format.', 'riff-sing' ),
+					'maxLength'   => self::MAX,
+					'required'    => true,
+				),
+			),
+			'params'      => static fn( array $input ): array => array( self::FIELD => $input['melody'] ?? '' ),
+			'output'      => array(
+				'type'       => 'object',
+				'properties' => array(
+					'id'        => array( 'type' => 'integer' ),
+					self::FIELD => array( 'type' => array( 'string', 'null' ) ),
+				),
+			),
+			'readonly'    => false,
+		);
+		return $abilities;
 	}
 
 	/**

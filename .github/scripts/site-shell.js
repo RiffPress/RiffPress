@@ -82,6 +82,16 @@ const foot = ( up, ctx = null ) => `${ nav.footer( ctx, up ) }<script type="modu
  * from, and its name on its own page. Their order and their names in the bar are site-nav.json's.
  */
 const HANDBOOKS = [
+	// The lessons for whoever runs a site, one task each.
+	{ slug: 'music', file: 'docs/learn/media-library.md', label: 'Your music' },
+	{ slug: 'album', file: 'docs/learn/album.md', label: 'An album' },
+	{ slug: 'post', file: 'docs/learn/post.md', label: 'Music in a post' },
+	{ slug: 'listen-page', file: 'docs/learn/listen-page.md', label: 'The Listen page' },
+	{ slug: 'app', file: 'docs/learn/app.md', label: 'The app' },
+	{ slug: 'lyrics', file: 'docs/learn/lyrics.md', label: 'Lyrics' },
+	{ slug: 'sign-in', file: 'docs/learn/sign-in.md', label: 'Signing in' },
+	{ slug: 'network', file: 'docs/learn/network.md', label: 'Clients and networks' },
+	// For developers.
 	{ slug: 'extensions', file: 'docs/extensions.md', label: 'Extensions' },
 	{ slug: 'player', file: 'docs/player.md', label: 'The player' },
 ];

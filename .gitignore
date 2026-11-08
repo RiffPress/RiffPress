@@ -38,6 +38,14 @@ plugins/riff/languages/
 /site/developers/css/
 /site/developers/player/
 /site/developers/extensions/
+/site/developers/music/
+/site/developers/album/
+/site/developers/post/
+/site/developers/listen-page/
+/site/developers/app/
+/site/developers/lyrics/
+/site/developers/sign-in/
+/site/developers/network/
 # Built by npm run docs:web, and by the Pages deploy, for the same reason: each page links the lines it
 # quotes. Only its data, its stylesheet and the sitemap are committed.
 /site/web/*

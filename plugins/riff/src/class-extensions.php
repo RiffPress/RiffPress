@@ -179,6 +179,7 @@ final class Extensions {
 	 */
 	public static function load(): void {
 		foreach ( self::loadable() as $file ) {
+			// isolation: include -- an extension's main file, from extensions.json or the riff_extensions filter.
 			include_once $file;
 		}
 		add_action( 'admin_menu', array( self::class, 'menu' ) );

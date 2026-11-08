@@ -90,6 +90,20 @@ class Test_Riff_Permissions extends Riff_TestCase {
 		$this->assertNotContains( 'Contacts no other website', $this->texts( array() ), 'a manifest silent on hosts promises nothing' );
 	}
 
+	public function test_abilities_and_the_sandbox_read_as_plain_words(): void {
+		$texts = $this->texts(
+			array(
+				'riff'    => array( 'hooks' => array( 'riff_abilities' ) ),
+				'sandbox' => array(
+					'reads'  => array( 'track' ),
+					'events' => array( 'riff_track_added' ),
+					'time'   => 2000,
+				),
+			)
+		);
+		$this->assertSame( array( 'Adds to what AI assistants may do with your music, where you allow them', 'Runs apart from your site, reading only: track' ), $texts );
+	}
+
 	public function test_a_wildcard_host_names_the_domain_and_what_is_under_it(): void {
 		$this->assertSame( array( 'Can contact gravatar.com and any address under it' ), $this->texts( array( 'hosts' => array( 'self', '*.gravatar.com' ) ) ) );
 	}

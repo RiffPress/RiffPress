@@ -105,7 +105,7 @@ test( 'each level marks where the page is: the header, the section bar and the b
 	assert.doesNotMatch( dev, /Breadcrumbs/, 'a section root has none' );
 	assert.match( dev, /<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden>/ );
 	assert.match( dev, /<li class="local-home"><a href="\.\.\/developers\/" aria-current="page">Overview<\/a><\/li>/ );
-	assert.match( dev, /<span class="local-label" id="docs-group-handbook">Handbook<\/span><ul aria-labelledby="docs-group-handbook"><li><a href="\.\.\/developers\/extensions\/">Extensions<\/a><\/li><li><a href="\.\.\/developers\/player\/">Player<\/a><\/li><\/ul>.*<span class="local-label" id="docs-group-reference">Reference<\/span><ul aria-labelledby="docs-group-reference"><li><a[^>]*>PHP<\/a><\/li><li><a[^>]*>JavaScript<\/a><\/li><li><a[^>]*>REST API<\/a><\/li><li><a[^>]*>CSS<\/a><\/li><\/ul><\/li><li><a href="\.\.\/web\/">Built on the open web<\/a>/ );
+	assert.match( dev, /<span class="local-label" id="docs-group-handbook">Handbook<\/span><ul aria-labelledby="docs-group-handbook"><li><a href="\.\.\/developers\/music\/">Your music<\/a><\/li>.*<li><a href="\.\.\/developers\/network\/">Clients and networks<\/a><\/li><li><a href="\.\.\/developers\/extensions\/">Extensions<\/a><\/li><li><a href="\.\.\/developers\/player\/">Player<\/a><\/li><\/ul>.*<span class="local-label" id="docs-group-reference">Reference<\/span><ul aria-labelledby="docs-group-reference"><li><a[^>]*>PHP<\/a><\/li><li><a[^>]*>JavaScript<\/a><\/li><li><a[^>]*>REST API<\/a><\/li><li><a[^>]*>CSS<\/a><\/li><\/ul><\/li><li><a href="\.\.\/web\/">Built on the open web<\/a>/ );
 
 	// How Riff is built sits under Docs, out of its bar, and in the footer's About group.
 	const built = read( 'site/built/index.html' );
@@ -123,10 +123,14 @@ test( 'each level marks where the page is: the header, the section bar and the b
 
 test( 'a web feature, a hook and a handbook have previous and next, in their order', () => {
 	const pages = generated();
+	const first = pages.get( 'developers/music/index.html' );
 	const ext = pages.get( 'developers/extensions/index.html' );
 	const player = pages.get( 'developers/player/index.html' );
+	assert.doesNotMatch( first, /rel="prev"/ );
+	// The lessons lead on to the developers' handbooks.
+	assert.match( ext, /<a rel="prev" href="\.\.\/\.\.\/developers\/network\/">/ );
 	assert.match( ext, /<a rel="next" href="\.\.\/\.\.\/developers\/player\/"><span class="pager-dir">Next<\/span> <span class="pager-name">Player<\/span>/ );
-	assert.doesNotMatch( ext, /rel="prev"/ );
+	assert.doesNotMatch( player, /rel="next"/ );
 	assert.match( player, /<a rel="prev" href="\.\.\/\.\.\/developers\/extensions\/">/ );
 	assert.match( player, /<li><a href="\.\.\/\.\.\/developers\/">Docs<\/a><\/li><li>Handbook<\/li><li aria-current="page">Player<\/li>/ );
 	const web = [ ...pages ].filter( ( [ f ] ) => /^web\/[^/]+\/index\.html$/.test( f ) );

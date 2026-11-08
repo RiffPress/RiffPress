@@ -20,7 +20,7 @@ test( 'only a custom property with a docblock is public', () => {
 	--riff-bg: #000;
 	/* stylelint-disable-next-line length-zero-no-unit -- calc() needs a length. */
 	--riff-safe-b: env(safe-area-inset-bottom, 0px);
-	--riff-heat: 0;
+	--riff-p: 0;
 }
 ` );
 	const list = customProperties( file );

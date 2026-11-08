@@ -42,7 +42,8 @@ class Test_Riff_Player extends Riff_TestCase {
 		$this->assertStringContainsString( '<div id="riff" class="riff" hidden data-riff-showing="album" data-riff-turntable="off">', $html, 'Now Playing opens to the album, the cover until the script finds room for the turntable' );
 		$this->assertStringContainsString( 'class="riff-audio"', $html );
 		$this->assertStringContainsString( 'class="riff-video"', $html );
-		$this->assertStringContainsString( 'data-riff-wire', $html );
+		$this->assertStringContainsString( 'data-riff-seek', $html );
+		$this->assertStringNotContainsString( 'riff-wire', $html, 'the seek line is plain' );
 		$this->assertMatchesRegularExpression( '#<script type="application/json" id="riff-data">(.+?)</script>#s', $html );
 	}
 

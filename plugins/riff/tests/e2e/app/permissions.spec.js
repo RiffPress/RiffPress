@@ -41,7 +41,8 @@ test.describe( 'What each plugin can do', () => {
 
 	test( "a Riff plugin's row on the Plugins screen links to its list", async ( { admin, page } ) => {
 		await admin.visitAdminPage( 'plugins.php' );
-		const link = page.locator( 'tr[data-slug="riff-meters"]' ).getByRole( 'link', { name: 'What it can do' } );
+		// By its file: WordPress names a row's data-slug after the plugin's name, riff-meters-experimental.
+		const link = page.locator( 'tr[data-plugin="riff-meters/riff-meters.php"]' ).getByRole( 'link', { name: 'What it can do' } );
 		await expect( link ).toHaveAttribute( 'href', /options-general\.php\?page=riff#riff-permissions-riff-meters$/ );
 	} );
 } );

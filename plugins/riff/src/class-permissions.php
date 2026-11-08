@@ -126,8 +126,11 @@ final class Permissions {
 		if ( in_array( 'riff_listen_page', $functions, true ) ) {
 			$add( __( 'Finds your Listen page', 'riff' ) );
 		}
+		if ( in_array( 'riff_abilities', $hooks, true ) ) {
+			$add( __( 'Adds to what AI assistants may do with your music, where you allow them', 'riff' ) );
+		}
 		$known = array(
-			'hooks'     => array( 'riff_register', 'riff_before_player', 'riff_below_turntable', 'riff_track' ),
+			'hooks'     => array( 'riff_register', 'riff_before_player', 'riff_below_turntable', 'riff_track', 'riff_abilities' ),
 			'functions' => array( 'riff_register_view', 'riff_register_shortcut', 'riff_listen_page' ),
 			'events'    => array( 'menu', 'view', 'ready', 'track', 'play', 'pause', 'time', 'ended' ),
 			'api'       => array( 'seek', 'speed', 'shortcut', 'time', 'playing', 'view', 'analyser' ),
@@ -216,8 +219,20 @@ final class Permissions {
 			$add( sprintf( __( 'Some of it is only for people who can %s', 'riff' ), $list ) );
 		}
 
+		// Run in Riff's sandbox, apart from the site (experimental, docs/isolation.md).
+		$sandbox = self::map( $manifest['sandbox'] ?? array() );
+		if ( $sandbox ) {
+			$reads = self::strings( $sandbox['reads'] ?? array() );
+			$add(
+				$reads
+					/* translators: %s: what the sandbox lets it read, comma-separated, such as track. */
+					? sprintf( __( 'Runs apart from your site, reading only: %s', 'riff' ), implode( ', ', $reads ) )
+					: __( 'Runs apart from your site', 'riff' )
+			);
+		}
+
 		// A part this doesn't know yet, as it is written.
-		$parts = array( '$schema', 'plugin', 'namespace', 'data', 'rest', 'capabilities', 'hosts', 'spawn', 'riff', 'scripts', 'modules' );
+		$parts = array( '$schema', 'plugin', 'namespace', 'data', 'rest', 'capabilities', 'hosts', 'spawn', 'riff', 'scripts', 'modules', 'sandbox' );
 		foreach ( array_diff_key( $manifest, array_flip( $parts ) ) as $part => $value ) {
 			if ( is_array( $value ) ) {
 				$value = implode( ', ', array_is_list( $value ) ? self::strings( $value ) : array_map( 'strval', array_keys( $value ) ) );
@@ -248,6 +263,8 @@ final class Permissions {
 			'edit_user'              => __( 'edit the profile', 'riff' ),
 			'upload_files'           => __( 'upload media', 'riff' ),
 			'update_plugins'         => __( 'update plugins', 'riff' ),
+			'activate_plugins'       => __( 'turn plugins on and off', 'riff' ),
+			'export'                 => __( 'export the site', 'riff' ),
 			'manage_options'         => __( "change the site's settings", 'riff' ),
 			'manage_network_options' => __( "change the network's settings", 'riff' ),
 		);
