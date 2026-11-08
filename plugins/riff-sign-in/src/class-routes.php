@@ -174,7 +174,15 @@ final class Routes {
 			return new WP_Error( 'riff_sign_in_already', __( 'You are already signed in.', 'riff-sign-in' ), array( 'status' => 400 ) );
 		}
 		$sent = Codes::request( (string) $request['email'], (string) $request['redirect'] );
-		return is_wp_error( $sent ) ? self::error( $sent ) : new WP_REST_Response( $sent );
+		if ( is_wp_error( $sent ) ) {
+			return self::error( $sent );
+		}
+		// The sheet asks from this site's own pages; a form anywhere else, a sibling site included,
+		// does not get to mark the browser.
+		if ( ! Sign_In::cross_site() ) {
+			Codes::remember( $sent['token'] );
+		}
+		return new WP_REST_Response( $sent );
 	}
 
 	/**

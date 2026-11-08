@@ -20,9 +20,10 @@ defined( 'ABSPATH' ) || exit;
  * A request makes a token and a six-digit code, keeps the code's hash under the token in a
  * transient for ten minutes, and mails the code with a link that carries both. Whoever types the
  * code into the sheet, or taps the link, is signed in as the user with that address, or becomes
- * one when the site lets anyone register. The request answers the same whether or not the address
- * has an account, so it tells nobody who is a member. Requests are limited per address and per
- * network address, and a code allows five tries.
+ * one when the site lets anyone register. The link asks before it uses the code, except in the
+ * browser that asked for it, so a mail scanner that opens every link uses nothing up. The request
+ * answers the same whether or not the address has an account, so it tells nobody who is a member.
+ * Requests are limited per address and per network address, and a code allows five tries.
  */
 final class Codes {
 
@@ -55,6 +56,11 @@ final class Codes {
 	 * The query argument a link in the email carries: the token and the code, with a dot between.
 	 */
 	public const QUERY = 'riff-sign-in';
+
+	/**
+	 * The cookie that marks the browser a code was asked from, so the link signs it straight in.
+	 */
+	public const COOKIE = 'riff_sign_in_browser';
 
 	/**
 	 * Sends a code to an address, within the limits, and says which token the answer belongs to.
@@ -139,8 +145,98 @@ final class Codes {
 	 * @return string
 	 */
 	public static function landing( string $token ): string {
-		$kept = get_transient( 'riff_signin_code_' . preg_replace( '/[^A-Za-z0-9_-]/', '', $token ) );
+		$kept = self::kept( $token );
 		return is_array( $kept ) && ! empty( $kept['redirect'] ) ? (string) $kept['redirect'] : home_url( '/' );
+	}
+
+	/**
+	 * Whether a token's code can still be used: not expired, and with tries left. Only reads it.
+	 *
+	 * @param string $token The token.
+	 * @return bool
+	 */
+	public static function pending( string $token ): bool {
+		$kept = self::kept( $token );
+		return is_array( $kept ) && $kept['tries'] < self::TRIES;
+	}
+
+	/**
+	 * What the cookie holds in the browser that asked for a token's code: bound to the token and
+	 * the site, so nobody who only has the link can make it.
+	 *
+	 * @param string $token The token.
+	 * @return string
+	 */
+	public static function browser( string $token ): string {
+		return hash_hmac( 'sha256', 'browser|' . $token, wp_salt( 'auth' ) );
+	}
+
+	/**
+	 * Marks this browser as the one that asked for a token's code, for as long as the code lives.
+	 * A browser keeps one at a time, so after "Send another code" only the newest link signs in
+	 * without asking.
+	 *
+	 * @param string $token The token.
+	 */
+	public static function remember( string $token ): void {
+		if ( headers_sent() ) {
+			return;
+		}
+		setcookie(
+			self::COOKIE,
+			self::browser( $token ),
+			array(
+				'expires'  => time() + self::TTL,
+				'path'     => COOKIEPATH,
+				'domain'   => COOKIE_DOMAIN,
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				'samesite' => 'Lax',
+			)
+		);
+	}
+
+	/**
+	 * Takes the mark off this browser once its code is used.
+	 */
+	public static function forget(): void {
+		unset( $_COOKIE[ self::COOKIE ] );
+		if ( headers_sent() ) {
+			return;
+		}
+		setcookie(
+			self::COOKIE,
+			'',
+			array(
+				'expires'  => time() - YEAR_IN_SECONDS,
+				'path'     => COOKIEPATH,
+				'domain'   => COOKIE_DOMAIN,
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				'samesite' => 'Lax',
+			)
+		);
+	}
+
+	/**
+	 * Whether this request comes from the browser that asked for a token's code.
+	 *
+	 * @param string $token The token.
+	 * @return bool
+	 */
+	public static function same_browser( string $token ): bool {
+		$cookie = isset( $_COOKIE[ self::COOKIE ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE ] ) ) : '';
+		return '' !== $cookie && hash_equals( self::browser( $token ), $cookie );
+	}
+
+	/**
+	 * A token's transient, or false.
+	 *
+	 * @param string $token The token.
+	 * @return array|false
+	 */
+	private static function kept( string $token ) {
+		return get_transient( 'riff_signin_code_' . preg_replace( '/[^A-Za-z0-9_-]/', '', $token ) );
 	}
 
 	/**
