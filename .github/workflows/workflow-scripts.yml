@@ -1,7 +1,7 @@
 name: Workflow Scripts Tests
 
-# demo-blueprint.test.js reads the blueprint, the landing page, the workflows, the demo fixtures, and
-# the files that carry the landing page's address, so a change to any of them runs it too.
+# demo-blueprint.test.js reads the blueprint, the site's pages, the workflows, the demo fixtures, and
+# the files that carry the site's address, so a change to any of them runs it too.
 on:
   push:
     branches: [main]
@@ -9,7 +9,7 @@ on:
       - '.github/scripts/**'
       - '.github/workflows/**'
       - 'blueprint.json'
-      - 'site/index.html'
+      - 'site/**/*.html'
       - 'site/web/**'
       - 'packages/fixtures/**'
       - 'README.md'
@@ -21,7 +21,7 @@ on:
       - '.github/scripts/**'
       - '.github/workflows/**'
       - 'blueprint.json'
-      - 'site/index.html'
+      - 'site/**/*.html'
       - 'site/web/**'
       - 'packages/fixtures/**'
       - 'README.md'

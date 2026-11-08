@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * The navigation of both hosts, drawn from site-nav.json: the header, the section bar, the
+ * The navigation of source.riffpress.com, drawn from site-nav.json: the header, the section bar, the
  * breadcrumbs, the previous and next links and the footer, and each page's title.
  *
  * site-shell.js draws them into every generated page. The pages written by hand carry them between
@@ -10,9 +10,8 @@
  *   <!-- nav:pager -->…<!-- /nav:pager -->    previous and next, where the page has siblings in order
  *   <!-- nav:footer -->…<!-- /nav:footer -->  the footer
  *
- * `<!-- nav:top dark -->` draws the header for a dark band, as the home page's hero is. Every link
- * is written relative to the page, as on one site; developers-site.js then points the ones that
- * cross to the other host at it.
+ * Every link is written relative to the page, as the sources are laid out; developers-site.js then
+ * points each at where the host serves it.
  *
  * --check changes nothing and fails when a page written by hand has drifted from the definition,
  * has no markers, or belongs to no section, or when the definition itself is inconsistent.
@@ -55,7 +54,7 @@ function entries( nav = NAV ) {
 /**
  * Where a page sits: its section and the entries from the section down to it.
  *
- * @param {string} url     The page's path on the site, as "developers/php/" or "" for home.
+ * @param {string} url     The page's path on the site, as "developers/php/".
  * @param {Object} o       Options.
  * @param {string} o.under The entry the page sits under, when it is not in the definition (a hook).
  * @param {string} o.label The page's own name, when it is not in the definition.
@@ -78,7 +77,7 @@ function locate( url, { under = '', label = '', nav = NAV } = {} ) {
 			.sort( ( a, b ) => b.node.href.length - a.node.href.length )[ 0 ];
 	}
 	if ( ! found ) {
-		throw new Error( `${ url || 'the home page' } belongs to no section in site-nav.json` );
+		throw new Error( `${ url || 'the page at the root' } belongs to no section in site-nav.json` );
 	}
 	const own = found.node.href === url && ! under;
 	if ( ! own && ! label ) {
@@ -109,25 +108,20 @@ function current( ctx, node ) {
 }
 
 /**
- * The header: the wordmark, leading home, then each section, the one the page is in marked.
+ * The header: the wordmark, leading to the host's home, then each section, the one the page is in
+ * marked.
  *
- * @param {Object}  ctx  From locate(), or null where no section is current (the 404).
- * @param {string}  up   The path back to the site's root.
- * @param {boolean} dark For a dark band.
- * @param {Object}  nav  The definition.
+ * @param {Object} ctx From locate(), or null where no section is current (the 404).
+ * @param {string} up  The path back to the site's root.
+ * @param {Object} nav The definition.
  * @return {string} HTML.
  */
-function header( ctx, up, dark = false, nav = NAV ) {
-	const home = nav.sections.find( ( s ) => s.href === '' );
-	// The wordmark leads to source.riffpress.com's home, the section marked root, where there is one.
-	const mark = nav.sections.find( ( s ) => s.root ) || home;
-	const links = nav.sections
-		.filter( ( s ) => s !== home )
-		.map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a>` )
-		.join( '' );
-	const name = mark === home ? home.label : nav.hosts[ mark.host || 'site' ];
+function header( ctx, up, nav = NAV ) {
+	// The wordmark leads to the host's home, the section marked root.
+	const mark = nav.sections.find( ( s ) => s.root );
+	const links = nav.sections.map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a>` ).join( '' );
 	return `<a class="skip" href="#main">Skip to content</a>
-<header class="nav${ dark ? ' alt' : '' }"><div class="wrap"><a class="mark" href="${ to( up, mark.href ) }"${ ctx && ctx.node === mark && ! ctx.leaf ? ' aria-current="page"' : '' }><img src="${ up }brand/wordmark-${ dark ? 'ivory' : 'ink' }.svg" alt="${ esc( name ) }" width="64" height="30"></a><nav aria-label="Main">${ links }</nav></div></header>
+<header class="nav"><div class="wrap"><a class="mark" href="${ to( up, mark.href ) }"${ ctx && ctx.node === mark && ! ctx.leaf ? ' aria-current="page"' : '' }><img src="${ up }brand/wordmark-ink.svg" alt="${ esc( nav.hosts[ mark.host ] ) }" width="64" height="30"></a><nav aria-label="Main">${ links }</nav></div></header>
 `;
 }
 
@@ -246,8 +240,7 @@ function footer( ctx, up ) {
 }
 
 /**
- * A page's title with its host's name after it: "PHP | Riff Source", "Download | Riff". The home
- * page's title is the site's name already, and is left as written, and a host's root is titled
+ * A page's title with its host's name after it: "PHP | Riff Source". The host's root is titled
  * with the host's name alone.
  *
  * @param {Object} ctx  From locate(), or null.
@@ -255,15 +248,15 @@ function footer( ctx, up ) {
  * @return {string} The title.
  */
 function title( ctx, text ) {
-	if ( ! ctx || ( ctx.node.href === '' && ! ctx.leaf ) ) {
+	if ( ! ctx ) {
 		return text;
 	}
 	// A host's home is titled with the host's name alone: "Riff Source".
 	if ( ctx.node.root && ! ctx.leaf ) {
-		return ctx.nav.hosts[ ctx.node.host || 'site' ];
+		return ctx.nav.hosts[ ctx.node.host ];
 	}
 	const bare = text.replace( /\s*\|\s*Riff(?:Press)?(?: Source)?$/, '' );
-	return `${ bare } | ${ ctx.nav.hosts[ ctx.node.host || ctx.section.host || 'site' ] }`;
+	return `${ bare } | ${ ctx.nav.hosts[ ctx.node.host || ctx.section.host ] }`;
 }
 
 const REGION = ( name ) => new RegExp( `<!-- nav:${ name }((?: [a-z]+)*) -->\\n?[\\s\\S]*?<!-- /nav:${ name } -->`, 'g' );
@@ -298,7 +291,7 @@ function stamp( html, file, nav = NAV ) {
 	if ( ! /<main id="main"/.test( html ) ) {
 		problems.push( `site/${ file }: the skip link needs <main id="main">` );
 	}
-	let out = html.replace( REGION( 'top' ), ( m, opts ) => `<!-- nav:top${ opts } -->\n${ header( ctx, up, opts.includes( 'dark' ), nav ) }${ sectionBar( ctx, up ) }${ crumbs( ctx, up ) }<!-- /nav:top -->` );
+	let out = html.replace( REGION( 'top' ), ( m, opts ) => `<!-- nav:top${ opts } -->\n${ header( ctx, up, nav ) }${ sectionBar( ctx, up ) }${ crumbs( ctx, up ) }<!-- /nav:top -->` );
 	out = out.replace( REGION( 'pager' ), ( m, opts ) => `<!-- nav:pager${ opts } -->\n${ pager( ...siblings( ctx, up ) ) }<!-- /nav:pager -->` );
 	out = out.replace( REGION( 'footer' ), ( m, opts ) => `<!-- nav:footer${ opts } -->\n${ footer( ctx, up ) }<!-- /nav:footer -->` );
 	if ( ctx && siblings( ctx, up ).some( Boolean ) && ! html.match( REGION( 'pager' ) ) ) {
@@ -312,7 +305,7 @@ function stamp( html, file, nav = NAV ) {
 
 /**
  * What is wrong with the definition itself: a key or a page named twice, a footer link to no entry,
- * a host with no name, or a page set on the wrong host for developers-site.js to move it.
+ * a host with no name, a page developers-site.js would not move to the host, or no one home.
  *
  * @param {Object} nav The definition.
  * @return {string[]} Problems.
@@ -334,24 +327,23 @@ function validate( nav = NAV ) {
 		}
 		if ( typeof node.href === 'string' ) {
 			if ( hrefs.has( node.href ) ) {
-				problems.push( `site-nav.json: ${ node.href || 'the home page' } is listed twice` );
+				problems.push( `site-nav.json: ${ node.href || 'the root' } is listed twice` );
 			}
 			hrefs.add( node.href );
 			const moves = MOVED.some( ( [ from ] ) => node.href.startsWith( from ) );
-			const host = node.host || section.host;
-			if ( moves !== ( host === 'developers' ) ) {
-				problems.push( `site-nav.json: ${ node.key } (${ node.href }) is on ${ host || 'site' }, but developers-site.js ${ moves ? 'moves it to the developer host' : 'keeps it on the site' }` );
+			if ( ! moves ) {
+				problems.push( `site-nav.json: ${ node.key } (${ node.href }) is a page developers-site.js does not publish` );
 			}
 		}
 	};
 	for ( const s of nav.sections ) {
 		walk( s, s );
-		if ( ! nav.hosts[ s.host || 'site' ] ) {
-			problems.push( `site-nav.json: no name in hosts for ${ s.host || 'site' }` );
+		if ( ! nav.hosts[ s.host ] ) {
+			problems.push( `site-nav.json: no name in hosts for ${ s.host || s.key }` );
 		}
 	}
-	if ( nav.sections.filter( ( s ) => s.href === '' ).length !== 1 ) {
-		problems.push( 'site-nav.json: one section, and only one, is the home page (href "")' );
+	if ( nav.sections.filter( ( s ) => s.root ).length !== 1 ) {
+		problems.push( 'site-nav.json: one section, and only one, is the host\'s home (root)' );
 	}
 	// Every handbook handbook-pages.js publishes is in the Handbook group, so it is in the bar.
 	const { HANDBOOKS } = require( './site-shell.js' );

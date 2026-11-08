@@ -1,5 +1,5 @@
-/* The pages under /web/: the same wordpress.org tokens as the landing page,
-   with a sidebar. */
+/* Every page of Riff Source: wordpress.org's tokens, with a sidebar under
+   /web/. */
 @font-face {
 	font-family: Inter;
 	font-style: normal;
@@ -1772,7 +1772,6 @@ main h2[id] {
 .desk,
 .shot,
 .fan,
-.crate,
 .shelf,
 figure img {
 	-webkit-user-select: none;
@@ -1812,8 +1811,7 @@ blockquote {
 }
 
 /* the missing page: the bar, the neck and the footer as on every page,
-   and the heading set as large as the landing page's, since it is the
-   only thing on the page */
+   and the heading set large, since it is the only thing on the page */
 .lost {
 	min-height: calc(100vh - 72px - 120px);
 	padding-top: var(--space-7);

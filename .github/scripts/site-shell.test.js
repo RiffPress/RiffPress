@@ -8,10 +8,8 @@ const path = require( 'node:path' );
 
 const read = ( file ) => fs.readFileSync( path.join( __dirname, '..', '..', file ), 'utf8' );
 
-test( 'the current section is underlined in the header, in both stylesheets', () => {
-	for ( const file of [ 'site/site.css', 'site/web/web.css' ] ) {
-		assert.match( read( file ), /\.nav nav a\[aria-current\]/, `${ file } underlines the current link` );
-	}
+test( 'the current section is underlined in the header', () => {
+	assert.match( read( 'site/web/web.css' ), /\.nav nav a\[aria-current\]/, 'web.css underlines the current link' );
 } );
 
 test( 'every share image a page names is a committed file, so a link never previews blank', () => {
