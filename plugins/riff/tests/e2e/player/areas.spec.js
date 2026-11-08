@@ -1,12 +1,12 @@
 /**
- * The player's areas: the quality pill in the bar and Now Playing (small print between the times on a phone), lossless shown as bit depth and rate, Riff's own features adding badges and hearing the meter, and a script adding a control to the bar.
+ * The player's areas: the quality pill in the bar and Now Playing (small print between the times on a phone), lossless shown as bit depth and rate, Riff's own features adding badges and hearing the meter, a script adding a control to the bar, and the volume in a slot of its own.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
-const { FIXTURES, playerSite } = require( '../helpers/site' );
+const { FIXTURES, iosAgent, playerSite } = require( '../helpers/site' );
 
 const made = own();
 let postUrl;
@@ -54,14 +54,20 @@ test.describe( 'Player', () => {
 
 	test( 'Riff\'s own features add badges to the player\'s areas, and hear the meter', async ( {
 		page,
-	} ) => {
+	}, testInfo ) => {
+		// The meter reads the music only where motion is wanted.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.reload();
 		await page.evaluate( () => {
 			window.riffHeard = 0;
 			window.riffInternal.listen( 'badges', ( list, t ) => [ ...list, { id: 'e2e', text: t ? 'Live' : '', label: 'Recorded live' } ] );
-			window.riffInternal.listen( 'meter', ( { heat } ) => heat > 0 && window.riffHeard++ );
+			window.riffInternal.listen( 'meter', ( { levels } ) => levels.length === 3 && window.riffHeard++ );
 		} );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
-		await expect.poll( () => page.evaluate( () => window.riffHeard ) ).toBeGreaterThan( 0 );
+		// An iPhone keeps the music off Web Audio, so there is nothing to hear there.
+		if ( ! iosAgent( testInfo ) ) {
+			await expect.poll( () => page.evaluate( () => window.riffHeard ) ).toBeGreaterThan( 0 );
+		}
 		// Paused, so the short track can't end and empty the queue under the test.
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 		const end = page.locator( '.riff-bar-end' );
@@ -196,43 +202,67 @@ test.describe( 'Player', () => {
 		expect( second.start ).toBe( second.end );
 	} );
 
-	test( 'the volume\'s slider takes no room in the bar, and opens over it from the pointer, a tap or the keyboard', async ( {
+	test( 'the volume has a slot of its own in the bar: using it covers and moves none of the controls beside it', async ( {
 		page,
 		isMobile,
 	} ) => {
 		test.skip( isMobile, 'a phone has no volume in the bar' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 		const volume = page.locator( '.riff-bar .riff-volume' );
-		const pop = volume.locator( '.riff-volume-pop' );
-		const slider = pop.locator( 'input' );
-		// The icon alone: the slider is out of the row, and while it's closed it doesn't take a
-		// press meant for what it covers.
-		expect( ( await volume.boundingBox() ).width ).toBeLessThan( ( await slider.boundingBox() ).width );
-		await expect( pop ).toHaveCSS( 'opacity', '0' );
-		await expect( pop ).toHaveCSS( 'pointer-events', 'none' );
-		await volume.hover();
-		await expect( pop ).toHaveCSS( 'opacity', '1' );
-		// Open, it covers the button beside it, so a press there sets the volume.
-		const over = await slider.boundingBox();
-		const hit = await page.evaluate( ( [ x, y ] ) => document.elementFromPoint( x, y )?.matches( '[data-riff-volume]' ), [ over.x + over.width / 2, over.y + over.height / 2 ] );
-		expect( hit ).toBe( true );
+		const slider = volume.locator( '[data-riff-volume]' );
+		const mute = volume.locator( '[data-riff-mute]' );
+		// At rest the slider is already there, short, in the row: nothing opens later.
+		await expect( slider ).toBeVisible();
+		const rest = await slider.boundingBox();
+		expect( rest.width ).toBeGreaterThanOrEqual( 96 );
+		expect( rest.width ).toBeLessThanOrEqual( 120 );
+		// Where every other control at the bar's end is (the heart, the quality pill, the views'
+		// buttons such as the lyrics), and whether anything lies on top at each one's middle.
+		const others = () =>
+			page.evaluate( () =>
+				[ ...document.querySelectorAll( '.riff-bar-end [data-riff-controls] > *, .riff-bar-end [data-riff-area="badges"] > *' ) ]
+					.filter( ( el ) => ! el.matches( '.riff-volume' ) && el.getClientRects().length )
+					.map( ( el ) => {
+						const r = el.getBoundingClientRect();
+						const top = document.elementFromPoint( r.x + r.width / 2, r.y + r.height / 2 );
+						return { box: [ r.x, r.y, r.width, r.height ].map( Math.round ).join( ',' ), covered: ! el.contains( top ) };
+					} )
+			);
+		const before = await others();
+		expect( before.length ).toBeGreaterThan( 0 );
+		expect( before.every( ( o ) => ! o.covered ) ).toBe( true );
+		// Pointed at, dragged and set from the keyboard: nothing beside it moves or is covered.
+		await slider.hover();
+		expect( await others() ).toEqual( before );
+		await page.mouse.move( rest.x + rest.width * 0.8, rest.y + rest.height / 2 );
+		await page.mouse.down();
+		await expect( slider ).toHaveAttribute( 'data-held', '' );
+		await page.mouse.move( rest.x + rest.width * 0.3, rest.y + rest.height / 2, { steps: 5 } );
+		expect( await others() ).toEqual( before );
+		await page.mouse.up();
+		await expect( slider ).not.toHaveAttribute( 'data-held', '' );
+		expect( Number( await slider.inputValue() ) ).toBeLessThan( 50 );
 		await page.mouse.move( 0, 0 );
-		await expect( pop ).toHaveCSS( 'opacity', '0' );
-		// Focus a press leaves on it doesn't keep it open over what it covers.
-		await page.mouse.click( over.x + over.width / 2, over.y + over.height / 2 );
+		expect( await others() ).toEqual( before );
+		expect( await slider.boundingBox() ).toEqual( rest );
+		// The keyboard as before: an arrow steps one, spoken as a percentage, and remembered.
 		await slider.focus();
-		await page.mouse.move( 0, 0 );
-		await expect( slider ).toBeFocused();
-		await expect( pop ).toHaveCSS( 'opacity', '0' );
-		await expect( pop ).toHaveCSS( 'pointer-events', 'none' );
-		// From the keyboard: Tab to it opens it, and the arrows set it.
-		await page.keyboard.press( 'Shift+Tab' );
-		await page.keyboard.press( 'Tab' );
-		await expect( slider ).toBeFocused();
-		await expect( pop ).toHaveCSS( 'opacity', '1' );
 		const value = Number( await slider.inputValue() );
 		await page.keyboard.press( 'ArrowLeft' );
 		await expect( slider ).toHaveValue( String( value - 1 ) );
+		await expect( slider ).toHaveAttribute( 'aria-valuetext', `${ value - 1 } percent` );
+		expect( Number( await page.evaluate( () => localStorage.getItem( 'riff:volume' ) ) ) ).toBeCloseTo( ( value - 1 ) / 100, 5 );
+		expect( await others() ).toEqual( before );
+		// The icon mutes and unmutes, keeping the level to come back to.
+		await mute.click();
+		await expect( mute ).toHaveAttribute( 'aria-pressed', 'true' );
+		expect( await page.evaluate( () => document.querySelector( '.riff-audio' ).muted ) ).toBe( true );
+		await expect( slider ).toHaveValue( String( value - 1 ) );
+		await mute.click();
+		await expect( mute ).toHaveAttribute( 'aria-pressed', 'false' );
+		expect( await page.evaluate( () => document.querySelector( '.riff-audio' ).muted ) ).toBe( false );
+		expect( await others() ).toEqual( before );
 	} );
 } );

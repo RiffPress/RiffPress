@@ -284,7 +284,6 @@ test.describe( 'Player', () => {
 		const player = await systemColours( page.locator( '.riff-bar' ) );
 		await expect( line ).toHaveCSS( 'background-color', player.gray );
 		await expect( line.locator( '> i:first-child' ) ).toHaveCSS( 'background-color', player.highlight );
-		await expect( line.locator( '.riff-hot' ) ).toBeHidden();
 		// What plays is marked as the system marks a selection, not by a shade it would drop.
 		const row = page.locator( '.riff-row' ).nth( 1 );
 		const post = await systemColours( row.locator( '..' ) );

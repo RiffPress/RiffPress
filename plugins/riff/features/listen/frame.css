@@ -557,7 +557,7 @@ html.riff-frame .riff-standalone .riff-card:hover .riff-card-title {
 }
 
 /* The bar: a white round Play, and the track in smaller type.
-   The seek line keeps Riff's filament. */
+   The seek line is Riff's own. */
 html.riff-frame #riff .riff-bar .riff-play {
 	display: grid;
 	place-items: center;

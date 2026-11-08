@@ -200,23 +200,23 @@
 			"name": "Web Audio API",
 			"url": "https://www.w3.org/TR/webaudio/"
 		},
-		"summary": "Reads the signal that lights the filament.",
+		"summary": "Reads the signal that moves the bars on the playing row.",
 		"how": "The first time something plays through the audio element on a non-iOS browser, the script creates an `AudioContext`. It wraps the element in a media source and connects it through an analyser and back to the destination, so the sound still comes out. The context suspends on pause and resumes on play.",
-		"why": "This is what drives the filament. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
-		"fallback": "Where there is no analyser the wire breathes at working temperature on a fixed loop instead.",
+		"why": "This is what moves the three bars on the playing row, and what `window.riff.analyser()` hands a plugin such as Riff Meters. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
+		"fallback": "Where there is no analyser the bars keep a fixed keyframe loop instead.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/player/filament.js",
+				"file": "plugins/riff/assets/player/meter.js",
 				"code": "const ctx = new AudioContext();"
 			},
 			{
-				"file": "plugins/riff/assets/player/filament.js",
+				"file": "plugins/riff/assets/player/meter.js",
 				"code": "const src = ctx.createMediaElementSource( audio );"
 			}
 		],
 		"shot": {
 			"image": "phone-post",
-			"caption": "The filament on the bar's seek line is lit by the signal's level read through Web Audio."
+			"caption": "The bars on the playing row move with the music read through Web Audio."
 		}
 	},
 	{
@@ -228,27 +228,23 @@
 			"name": "Web Audio API",
 			"url": "https://www.w3.org/TR/webaudio/#AnalyserNode"
 		},
-		"summary": "Turns the signal into one heat value and three band levels, every frame.",
-		"how": "The analyser uses a 1024-sample window with 0.6 smoothing. Each frame, the time-domain samples give an RMS that feeds the filament's heat model, and the frequency bins are summed into three bands, bass, voice and air. Those three values scale the three bars on the playing row.",
-		"why": "Without it there is no signal to read, so the filament could not follow the music and the bars could not move.",
-		"fallback": "Same as Web Audio: the bars stay still and the wire breathes on a loop.",
+		"summary": "Turns the signal into three band levels, every frame.",
+		"how": "The analyser uses a 1024-sample window with 0.6 smoothing. Each frame its frequency bins are summed into three bands, bass, voice and air, and each band is read against its own recent range. Those three values scale the three bars on the playing row.",
+		"why": "Without it there is no signal to read, so the bars could not follow the music.",
+		"fallback": "Same as Web Audio: the bars keep a fixed loop.",
 		"where": [
 			{
-				"file": "plugins/riff/assets/player/filament.js",
+				"file": "plugins/riff/assets/player/meter.js",
 				"code": "analyser = ctx.createAnalyser();"
 			},
 			{
-				"file": "plugins/riff/assets/player/filament.js",
-				"code": "analyser.getFloatTimeDomainData( samples );"
-			},
-			{
-				"file": "plugins/riff/assets/player/filament.js",
+				"file": "plugins/riff/assets/player/meter.js",
 				"code": "analyser.getByteFrequencyData( bins );"
 			}
 		],
 		"shot": {
 			"image": "phone-post",
-			"caption": "The three bars on the playing row and the heat of the filament come from the analyser."
+			"caption": "The three bars on the playing row come from the analyser."
 		}
 	},
 	{
@@ -368,23 +364,19 @@
 			"name": "Web Animations",
 			"url": "https://www.w3.org/TR/web-animations-1/"
 		},
-		"summary": "Glides the seek line on the GPU, and breathes the filament where there is no signal.",
-		"how": "While a track plays, each moving layer of the seek line (the played part, the wire, its heart, the bloom and the knob) runs one linear `element.animate()` from where the time is to the end of the track, at the playback rate. They are aimed again when the time jumps (a seek, a pause, a stall, a new rate or track, or drift past 150 ms), and the bloom is animated through `pseudoElement: '::after'`. Where there is no analyser (on iOS, for a cross-origin file, or through the video element) the filament's heart also breathes on an infinite 2.6 second opacity loop.",
+		"summary": "Glides the seek line on the GPU.",
+		"how": "While a track plays, the seek line's played part and its knob each run one linear `element.animate()` from where the time is to the end of the track, at the playback rate. They are aimed again when the time jumps (a seek, a pause, a stall, a new rate or track, or drift past 150 ms).",
 		"why": "Transform animations run on the compositor, so the line glides even while the page's own script is busy, and nothing is written each frame.",
 		"fallback": "Without the API the line rests where `timeupdate` puts it, four times a second.",
 		"where": [
 			{
 				"file": "plugins/riff/assets/player/media.js",
 				"code": "glides.push( node.animate( frames, { ...timing, ...extra } ) );"
-			},
-			{
-				"file": "plugins/riff/assets/player/filament.js",
-				"code": "breath = heart.animate("
 			}
 		],
 		"shot": {
 			"image": "phone-post",
-			"caption": "The seek line glides under the bar, and on an iPhone its filament breathes on a loop."
+			"caption": "The seek line glides under the bar."
 		}
 	},
 	{
@@ -396,19 +388,19 @@
 			"name": "HTML Standard",
 			"url": "https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animation-frames"
 		},
-		"summary": "Advances the filament's heat with the music every frame.",
-		"how": "While music plays, one frame loop reads the analyser and advances the filament's heat model with the frame timestamp, writing the heat once a frame; the stylesheet turns it into opacity only. Opening Now Playing also waits one frame before adding its class, so the slide-up transition actually runs.",
-		"why": "The light has to follow the music as it happens; the seek line itself moves by Web Animations instead.",
+		"summary": "Moves the playing row's bars with the music every frame.",
+		"how": "While music plays and the playing row is in sight, one frame loop reads the analyser's three bands with the frame timestamp and scales the bars, writing each only when it moves by a step the eye could see. Opening Now Playing also waits one frame before adding its class, so the slide-up transition actually runs.",
+		"why": "The bars have to follow the music as it happens; the seek line itself moves by Web Animations instead.",
 		"fallback": null,
 		"where": [
 			{
-				"file": "plugins/riff/assets/player/filament.js",
+				"file": "plugins/riff/assets/player/meter.js",
 				"code": "meterRaf = requestAnimationFrame( tick );"
 			}
 		],
 		"shot": {
-			"image": "phone-now-playing",
-			"caption": "The filament under the seek line brightens with the music."
+			"image": "phone-post",
+			"caption": "The bars on the playing row move with the music."
 		}
 	},
 	{
@@ -796,23 +788,23 @@
 			"name": "CSS Properties and Values API Level 1",
 			"url": "https://www.w3.org/TR/css-properties-values-api-1/#at-property-rule"
 		},
-		"summary": "Registers the filament's heat as a real number, so every layer's opacity can be worked out from it.",
-		"how": "The script writes one number, `--riff-heat`, onto the seek lines and the Now Playing glow every frame. Every opacity in the filament is a `calc()` off that one number, and each layer keeps one fixed colour, so the GPU composites the light without painting anything again. Registering it as a `<number>` with an initial value of 0 makes it a typed value the `calc()`s can multiply.",
-		"why": "A registered property given a bad value falls back to 0, so the light goes dark. An unregistered one would invalidate every `calc()` built on it, and each layer would show at full opacity.",
-		"fallback": "Unregistered, a bad value would invalidate every opacity worked out from the heat, and the light would show at full strength.",
+		"summary": "Registers the quality pill's colour as a colour, so a change of tier fades to the new one.",
+		"how": "`--riff-quality-ink` is registered as a `<color>` and `--riff-quality-lift` as a `<percentage>`, so the browser can interpolate them: when the tier changes, the words and the light under them move to the new colour over 0.4 seconds, and the light under a pointer rises, rather than switching at once.",
+		"why": "An unregistered custom property is a string to the browser, which can't transition it.",
+		"fallback": "Unregistered, the colour and the light change at once.",
 		"where": [
 			{
 				"file": "plugins/riff/assets/riff.css",
-				"code": "@property --riff-heat {"
+				"code": "@property --riff-quality-ink {"
 			},
 			{
-				"file": "plugins/riff/assets/player/filament.js",
-				"code": "const heated = $$( '.riff-line, .riff-np-glow' ).map( ( node ) => ( {"
+				"file": "plugins/riff/assets/riff.css",
+				"code": "--riff-quality-ink 0.4s ease,"
 			}
 		],
 		"shot": {
-			"image": "phone-post",
-			"caption": "The filament along the bar's seek line, whose brightness follows the music."
+			"image": "desktop-now-playing",
+			"caption": "The quality pill in the bar, in its tier's colour."
 		}
 	},
 	{
@@ -1021,9 +1013,9 @@
 			"name": "Media Queries Level 5",
 			"url": "https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion"
 		},
-		"summary": "Stops the equalizer, the filament and the sliding sheets when the system asks.",
-		"how": "In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run and the filament sits at a steady glow. Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.",
-		"why": "A music player is continuous motion by nature: bars, a glowing wire, a pulsing button and sliding sheets, which is what the setting asks to stop.",
+		"summary": "Stops the equalizer and the sliding sheets when the system asks.",
+		"how": "In CSS the query removes every transition on the player and stops the equalizer bars and the buffering pulse. In the script, the audio meter does not run. Now Playing closes without waiting for its transition, and the Listen app swaps views without a view transition.",
+		"why": "A music player is continuous motion by nature: bars, a pulsing button and sliding sheets, which is what the setting asks to stop.",
 		"fallback": null,
 		"where": [
 			{
@@ -1041,35 +1033,7 @@
 		],
 		"shot": {
 			"image": "phone-post",
-			"caption": "The equalizer bars and the filament, both of which go still under reduced motion."
-		}
-	},
-	{
-		"slug": "prefers-reduced-transparency",
-		"name": "prefers-reduced-transparency",
-		"group": "Behaviour",
-		"mdn": "https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-transparency",
-		"spec": {
-			"name": "Media Queries Level 5",
-			"url": "https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-transparency"
-		},
-		"summary": "Removes the translucent wash and the bloom when the system asks.",
-		"how": "On a phone the top of Now Playing carries a translucent wash of the filament's colour that brightens with the music. Under reduced transparency that wash is removed, and the wire and its white heart lose their blurred bloom, leaving a solid line.",
-		"why": "The wash and the bloom are the player's only translucent layers over content, and they change opacity every frame.",
-		"fallback": null,
-		"where": [
-			{
-				"file": "plugins/riff/assets/riff.css",
-				"code": "@media (prefers-reduced-transparency: reduce) {"
-			},
-			{
-				"file": "plugins/riff/assets/riff.css",
-				"code": ".riff-np-glow {"
-			}
-		],
-		"shot": {
-			"image": "phone-now-playing",
-			"caption": "The warm wash across the top of the screen, the layer that disappears under reduced transparency."
+			"caption": "The equalizer bars, which go still under reduced motion."
 		}
 	},
 	{
@@ -1127,30 +1091,6 @@
 		"shot": {
 			"image": "desktop-listen",
 			"caption": "The nine square covers, each a box that holds its place before the image loads."
-		}
-	},
-	{
-		"slug": "accent-color",
-		"name": "accent-color",
-		"group": "Behaviour",
-		"mdn": "https://developer.mozilla.org/docs/Web/CSS/accent-color",
-		"spec": {
-			"name": "CSS Basic User Interface Module Level 4",
-			"url": "https://www.w3.org/TR/css-ui-4/#widget-accent"
-		},
-		"summary": "Recolours the browser's own volume slider to the player's white.",
-		"how": "On a wide screen the volume control is a native range input that fades in beside the mute icon on hover or keyboard focus. `accent-color` recolours the browser's slider to the player's foreground, so it is the stock control, not a custom-drawn track.",
-		"why": "A default blue slider would be the only off-palette element in a player that is always dark, and restyling a range input across browsers takes a lot of vendor CSS.",
-		"fallback": "The browser's default accent shows.",
-		"where": [
-			{
-				"file": "plugins/riff/assets/riff.css",
-				"code": "accent-color: var(--riff-fg);"
-			}
-		],
-		"shot": {
-			"image": "desktop-now-playing",
-			"caption": "The mute control in the bar; the slider that appears beside it on hover is the browser's own, recoloured."
 		}
 	},
 	{
