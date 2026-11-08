@@ -973,28 +973,13 @@ figcaption {
 	text-underline-offset: 6px;
 }
 
-/* the section's own name is a title, not a link to underline: the page
-   it marks is named by its heading */
-.local-nav .local-title[aria-current] {
-	text-decoration: none;
-}
-
 .local-nav a:focus-visible {
 	outline: none;
 	box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
-.local-nav .local-title {
-	flex: none;
-	color: var(--ink);
-	font-size: 1rem;
-	font-weight: 600;
-	margin-left: -8px;
-}
-
-/* beside the section's name while there is room, under it when there is
-   not, and scrolled sideways rather than wrapped; the auto margin sets it
-   at the right only while it fits, so nothing is pushed out of reach */
+/* the section's pages from the left, under the wordmark, scrolled sideways
+   rather than wrapped; the section's own name is the header's, marked there */
 .local-nav nav {
 	flex: 1 1 20rem;
 	min-width: 0;
@@ -1021,7 +1006,6 @@ figcaption {
 }
 
 .local-nav nav > ul {
-	margin-left: auto;
 	padding: 10px 0;
 	gap: var(--space-2);
 }

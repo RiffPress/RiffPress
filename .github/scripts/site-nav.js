@@ -109,7 +109,7 @@ function current( ctx, node ) {
 }
 
 /**
- * The header: the wordmark home, then each section, the one the page is in marked.
+ * The header: the wordmark, leading home, then each section, the one the page is in marked.
  *
  * @param {Object}  ctx  From locate(), or null where no section is current (the 404).
  * @param {string}  up   The path back to the site's root.
@@ -119,18 +119,21 @@ function current( ctx, node ) {
  */
 function header( ctx, up, dark = false, nav = NAV ) {
 	const home = nav.sections.find( ( s ) => s.href === '' );
+	// The wordmark leads to source.riffpress.com's home, the section marked root, where there is one.
+	const mark = nav.sections.find( ( s ) => s.root ) || home;
 	const links = nav.sections
 		.filter( ( s ) => s !== home )
 		.map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a>` )
 		.join( '' );
+	const name = mark === home ? home.label : nav.hosts[ mark.host || 'site' ];
 	return `<a class="skip" href="#main">Skip to content</a>
-<header class="nav${ dark ? ' alt' : '' }"><div class="wrap"><a class="mark" href="${ to( up, '' ) }"${ current( ctx, home ) }><img src="${ up }brand/wordmark-${ dark ? 'ivory' : 'ink' }.svg" alt="${ esc( home.label ) }" width="64" height="30"></a><nav aria-label="Main">${ links }</nav></div></header>
+<header class="nav${ dark ? ' alt' : '' }"><div class="wrap"><a class="mark" href="${ to( up, mark.href ) }"${ ctx && ctx.node === mark && ! ctx.leaf ? ' aria-current="page"' : '' }><img src="${ up }brand/wordmark-${ dark ? 'ivory' : 'ink' }.svg" alt="${ esc( name ) }" width="64" height="30"></a><nav aria-label="Main">${ links }</nav></div></header>
 `;
 }
 
 /**
- * The section bar, for a section with pages of its own to list: its name, then its pages, a group
- * as its name and its pages.
+ * The section bar, for a section with pages of its own to list: its pages, a group as its name and
+ * its pages. The section's own name is the header's, marked there, so the bar doesn't repeat it.
  *
  * @param {Object} ctx From locate(), or null.
  * @param {string} up  The path back to the site's root.
@@ -148,7 +151,7 @@ function sectionBar( ctx, up ) {
 		}
 		return `<li><a href="${ to( up, n.href ) }"${ current( ctx, n ) }>${ esc( n.label ) }</a></li>`;
 	};
-	return `<div class="local-nav"><div class="wrap"><a class="local-title" href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a><nav aria-label="${ esc( s.label ) }"><ul>${ shown( s.children ).map( item ).join( '' ) }</ul></nav></div></div>
+	return `<div class="local-nav"><div class="wrap"><nav aria-label="${ esc( s.label ) }"><ul>${ shown( s.children ).map( item ).join( '' ) }</ul></nav></div></div>
 `;
 }
 
@@ -244,7 +247,8 @@ function footer( ctx, up ) {
 
 /**
  * A page's title with its host's name after it: "PHP | Riff Source", "Download | Riff". The home
- * page's title is the site's name already, and is left as written.
+ * page's title is the site's name already, and is left as written, and a host's root is titled
+ * with the host's name alone.
  *
  * @param {Object} ctx  From locate(), or null.
  * @param {string} text The title, with or without a name after it.
@@ -253,6 +257,10 @@ function footer( ctx, up ) {
 function title( ctx, text ) {
 	if ( ! ctx || ( ctx.node.href === '' && ! ctx.leaf ) ) {
 		return text;
+	}
+	// A host's home is titled with the host's name alone: "Riff Source".
+	if ( ctx.node.root && ! ctx.leaf ) {
+		return ctx.nav.hosts[ ctx.node.host || 'site' ];
 	}
 	const bare = text.replace( /\s*\|\s*Riff(?:Press)?(?: Source)?$/, '' );
 	return `${ bare } | ${ ctx.nav.hosts[ ctx.node.host || ctx.section.host || 'site' ] }`;
