@@ -22,6 +22,20 @@
       }
     },
     {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "url",
+        "url": "demo/riff-chords.zip"
+      }
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "url",
+        "url": "demo/riff-sing.zip"
+      }
+    },
+    {
       "step": "mkdir",
       "path": "/wordpress/wp-content/riff-demo/compositions"
     },
