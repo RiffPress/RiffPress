@@ -1,0 +1,61 @@
+{
+	"item": {
+		"id": "http://www.loc.gov/item/jukebox-254546/",
+		"title": "Moriah",
+		"contributor_names": [
+			"Williams, Harry -- Lyricist -- Lyricist",
+			"Stone, Fred -- Vocalist -- Vocalist",
+			"Montgomery, David Craig -- Vocalist -- Vocalist",
+			"Montgomery and Stone -- Vocal Group -- Vocal Group"
+		],
+		"date": "1911-01-24",
+		"rights": [
+			"<p>The Library makes the sound recordings in the National Jukebox available pursuant to permission from the rightsholders. Under the Music Modernization Act, many of these recordings will begin entering into the public domain on January 1, 2022, when all recordings published prior to 1923 will enter the public domain and will be free to use and reuse. Recordings published between 1923 and 1946 are then protected for 100 years, and recordings published between 1947 and 1956 are protected for 110 years.  In addition, some of the items in the Jukebox, such as the Victrola Book of the Opera, are currently in the public domain and free to use and reuse. Disc labels that are more than 95 years old are now in the public domain and are free to use and reuse. The Library presents more recent disc labels with permission or under fair use.</p>\n<p>You are responsible for deciding whether your use of the items in this collection is legal. You will need written permission from the rightsholders to copy, distribute, or otherwise use copyrighted materials except as allowed by fair use or other statutory exemptions. Some materials may be protected under international law.  You may also need permission from holders of other rights, such as publicity and/or privacy rights. </p>\n<p>Credit Line: Library of Congress, National Jukebox.</p>\n<p>More about <a href=\"/legal/\">Copyright and other Restrictions</a>.</p>\n<p>For guidance about compiling full citations consult <a href=\"https://www.loc.gov/teachers/usingprimarysources/citing.html\">Citing Primary Sources</a>.</p>\n"
+		],
+		"rights_advisory": "Inclusion of the recording in the National Jukebox, courtesy of Sony Music Entertainment or EMI Music",
+		"access_restricted": false,
+		"partof": [
+			{
+				"title": "johnson victrola museum, delaware",
+				"url": "https://www.loc.gov/search/?fa=partof:johnson+victrola+museum,+delaware&fo=json"
+			},
+			{
+				"title": "national jukebox",
+				"url": "https://www.loc.gov/collections/national-jukebox/?fo=json"
+			},
+			{
+				"title": "recorded sound research center",
+				"url": "https://www.loc.gov/search/?fa=partof:recorded+sound+research+center&fo=json"
+			}
+		],
+		"mime_type": [
+			"audio/mpeg",
+			"audio/wav",
+			"image/tif",
+			"image/jpeg"
+		],
+		"url": "https://www.loc.gov/item/jukebox-254546/"
+	},
+	"resources": [
+		{
+			"url": "https://www.loc.gov/resource/jukebox-254546.0",
+			"files": [
+				[
+					{
+						"canDownload": true,
+						"download": "https://tile.loc.gov/streaming-services/iiif/service:mbrsrs:mbrsjukebox:jvm_victor_70044_01_c9846_01:jvm_victor_70044_01_c9846_01/full/full/0/full/default.mp3",
+						"duration": 209.0,
+						"filename": "https://tile.loc.gov/storage-services/service/mbrsrs/mbrsjukebox/jvm_victor_70044_01_c9846_01/jvm_victor_70044_01_c9846_01.mp3",
+						"mimetype": "audio/mpeg",
+						"rights_restricted": true
+					},
+					{
+						"mimetype": "audio/wav",
+						"size": 36874912,
+						"url": "https://tile.loc.gov/storage-services/master/mbrsrs/mbrsjukebox/jvm_victor_70044_01_c9846_01/jvm_victor_70044_01_c9846_01.wav"
+					}
+				]
+			]
+		}
+	]
+}

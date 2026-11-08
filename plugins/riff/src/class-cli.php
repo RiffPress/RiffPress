@@ -209,6 +209,102 @@ final class Cli {
 	}
 
 	/**
+	 * Imports recordings that a public archive publishes for reuse, with their credit.
+	 *
+	 * Rights are per item, so each item's own rights statement is read, and only what it says is
+	 * free to reuse is imported: the public domain mark, CC0, CC BY and CC BY-SA, and from the
+	 * Library of Congress, which says it in words, what its statement says it knows of no U.S.
+	 * copyright in. Everything else is skipped, and said. Each item becomes an album, imported as `wp riff import` imports a
+	 * folder, and each track keeps its source, licence and credit in its caption and description,
+	 * which the About panel shows. Running it again skips what it has already imported.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <archive>
+	 * : The archive.
+	 * ---
+	 * options:
+	 *   - loc
+	 *   - europeana
+	 * ---
+	 *
+	 * [<what>]
+	 * : For loc, a collection, by its address or its name in it, or an item by its address; the
+	 * Edison companies' sound recordings when none is given. For europeana, what to search for.
+	 *
+	 * [--limit=<n>]
+	 * : How many items to look at.
+	 * ---
+	 * default: 25
+	 * ---
+	 *
+	 * [--key=<key>]
+	 * : Europeana's API key, which it gives anyone who asks for one.
+	 *
+	 * [--status=<status>]
+	 * : Status for new album posts.
+	 * ---
+	 * default: publish
+	 * options:
+	 *   - publish
+	 *   - draft
+	 *   - private
+	 * ---
+	 *
+	 * [--dry-run]
+	 * : List the recordings it would download and the items it would skip, without downloading.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp riff archive loc
+	 *     wp riff archive loc https://www.loc.gov/item/00694028/
+	 *     wp riff archive europeana "gramophone" --key=yourkey --limit=10
+	 *
+	 * @since 6.5.0
+	 *
+	 * @param string[]             $args       Positional arguments.
+	 * @param array<string, mixed> $assoc_args Named arguments.
+	 */
+	public function archive( array $args, array $assoc_args ): void {
+		$dry    = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
+		$result = Archives::import(
+			(string) $args[0],
+			(string) ( $args[1] ?? '' ),
+			array(
+				'limit'   => (int) ( $assoc_args['limit'] ?? Archives::LIMIT ),
+				'key'     => (string) ( $assoc_args['key'] ?? '' ),
+				'status'  => (string) ( $assoc_args['status'] ?? 'publish' ),
+				'dry_run' => $dry,
+			)
+		);
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+		$tracks = 0;
+		$failed = 0;
+		foreach ( $result['albums'] as $album ) {
+			$tracks += count( $album['imported'] );
+			$failed += count( $album['failed'] );
+			$where   = $album['post'] ? get_permalink( $album['post'] ) : $album['folder'];
+			WP_CLI::log( sprintf( '%s: %d imported, %d skipped, %d failed', $where, count( $album['imported'] ), count( $album['skipped'] ), count( $album['failed'] ) ) );
+			foreach ( $album['failed'] as $file => $message ) {
+				WP_CLI::warning( "$file: $message" );
+			}
+		}
+		foreach ( $result['refused'] as $url => $why ) {
+			WP_CLI::log( "Skipped $url: $why" );
+		}
+		$summary = sprintf( '%d items: %d tracks imported, %d failed; %d items skipped.', count( $result['albums'] ), $tracks, $failed, count( $result['refused'] ) );
+		if ( $dry ) {
+			WP_CLI::success( 'Dry run. ' . $summary );
+		} elseif ( $failed ) {
+			WP_CLI::warning( $summary );
+		} else {
+			WP_CLI::success( $summary );
+		}
+	}
+
+	/**
 	 * Imports a folder of music, or a zip of one, into the Media Library.
 	 *
 	 * Each folder that holds audio, the one given and any inside it, becomes an album: its files are
