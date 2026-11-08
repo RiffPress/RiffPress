@@ -15,7 +15,7 @@ Experimental. A VU meter and a spectrum under Riff's turntable, read from the mu
 
 **This plugin is experimental.** It may change or go away between versions.
 
-Riff Meters adds a VU meter and a spectrum under Riff's turntable. The meter follows IEC 60268-17's movement, with its needle drawn as a lit filament. The spectrum is 31 one-third-octave bands, so a lossy file shows where its encoder stopped.
+Riff Meters adds a VU meter and a spectrum under Riff's turntable. The meter follows IEC 60268-17's movement, with a plain needle. The spectrum is 31 one-third-octave bands, so a lossy file shows where its encoder stopped.
 
 They show only where the music can be measured, so not on an iPhone, nor for a file from another site that doesn't share over CORS, and not for a listener who asks for less motion.
 

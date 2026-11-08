@@ -11,9 +11,13 @@ import { confine, runJob } from './job.js';
 const pending = new Map();
 let next = 0;
 parentPort.on( 'message', ( m ) => {
-	if ( m.type === 'answer' ) {
-		pending.get( m.id )?.( m.value );
-		pending.delete( m.id );
+	if ( m?.type === 'answer' ) {
+		// Only a call this thread made and is still waiting on, as in web-worker.js.
+		const resolve = Number.isInteger( m.id ) ? pending.get( m.id ) : undefined;
+		if ( typeof resolve === 'function' ) {
+			pending.delete( m.id );
+			resolve( m.value );
+		}
 	}
 } );
 const call = ( raw ) =>

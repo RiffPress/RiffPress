@@ -49,6 +49,7 @@ final class Protected_Files {
 		}
 		$path = trailingslashit( wp_upload_dir( null, false )['basedir'] ) . $name;
 		if ( ! is_dir( $path ) ) {
+			// isolation: write -- the protected folder, under uploads.
 			wp_mkdir_p( $path );
 		}
 		self::guard( $path );
@@ -67,7 +68,7 @@ final class Protected_Files {
 		);
 		foreach ( $files as $file => $contents ) {
 			if ( ! file_exists( "$path/$file" ) ) {
-				file_put_contents( "$path/$file", $contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a two-line guard file, written once.
+				file_put_contents( "$path/$file", $contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a two-line guard file, written once. isolation: write -- the protected folder, under uploads.
 			}
 		}
 	}
@@ -221,8 +222,9 @@ final class Protected_Files {
 	 * @return bool
 	 */
 	private static function move( string $from, string $to ): bool {
+		// isolation: write -- between uploads and the protected folder inside it; both callers name paths under uploads.
 		wp_mkdir_p( dirname( $to ) );
-		return @rename( $from, $to ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename -- a failure is reported to the person who asked.
+		return @rename( $from, $to ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename -- a failure is reported to the person who asked. isolation: write -- under uploads.
 	}
 
 	/**

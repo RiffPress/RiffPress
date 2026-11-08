@@ -1,0 +1,59 @@
+{
+	"$schema": "../../docs/isolation.schema.json",
+	"plugin": "riff-sing",
+	"namespace": "Sing",
+	"data": {
+		"options": [],
+		"meta": [
+			"_riff_sing_"
+		],
+		"shared": {},
+		"keep": {}
+	},
+	"rest": {
+		"namespaces": [],
+		"fields": [
+			"attachment.riff_sing_melody",
+			"attachment.riff_sing_midi"
+		],
+		"public": {}
+	},
+	"capabilities": [
+		"edit_post",
+		"read_post",
+		"upload_files",
+		"update_plugins"
+	],
+	"hosts": [],
+	"spawn": [],
+	"riff": {
+		"hooks": [
+			"riff_register",
+			"riff_before_player",
+			"riff_track",
+			"riff_abilities"
+		],
+		"functions": [
+			"riff_register_view"
+		],
+		"events": [
+			"view",
+			"ready",
+			"play",
+			"ended",
+			"time"
+		],
+		"api": [
+			"time",
+			"playing",
+			"view"
+		]
+	},
+	"scripts": [
+		"riff-sing-timing",
+		"riff-sing-melody",
+		"riff-sing-midi",
+		"riff-sing"
+	],
+	"modules": []
+}

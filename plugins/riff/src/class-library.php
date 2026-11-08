@@ -78,7 +78,68 @@ final class Library {
 						),
 					),
 				),
+				/**
+				 * POST /riff/v1/library: a new album, a post with one audio block for each track
+				 * already in the Media Library, in the order given.
+				 *
+				 * @since 6.5.0
+				 */
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( self::class, 'rest_create' ),
+					'permission_callback' => array( self::class, 'may_create' ),
+					'args'                => array(
+						'title'   => array(
+							'description' => __( 'The album\'s title.', 'riff' ),
+							'type'        => 'string',
+							'minLength'   => 1,
+							'maxLength'   => 200,
+							'required'    => true,
+						),
+						'tracks'  => array(
+							'description' => __( 'Audio attachment IDs, in play order.', 'riff' ),
+							'type'        => 'array',
+							'items'       => array(
+								'type'    => 'integer',
+								'minimum' => 1,
+							),
+							'minItems'    => 1,
+							'maxItems'    => 200,
+							'required'    => true,
+						),
+						'status'  => array(
+							'description' => __( 'Draft, for its author to look over first; published; or private.', 'riff' ),
+							'type'        => 'string',
+							'enum'        => array( 'draft', 'publish', 'private' ),
+							'default'     => 'draft',
+						),
+						'artwork' => array(
+							'description' => __( 'An image attachment ID for the cover; the first track\'s artwork when not given.', 'riff' ),
+							'type'        => 'integer',
+							'default'     => 0,
+							'minimum'     => 0,
+						),
+					),
+				),
 				'schema' => array( self::class, 'list_schema' ),
+			)
+		);
+		/**
+		 * GET /riff/v1/library/summary: what the library holds and the space it takes, for whoever
+		 * can upload to it.
+		 *
+		 * @since 6.5.0
+		 */
+		register_rest_route(
+			self::REST,
+			'/library/summary',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( self::class, 'rest_summary' ),
+					'permission_callback' => static fn() => current_user_can( 'upload_files' ) ? true : new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to see what the library holds.', 'riff' ), array( 'status' => rest_authorization_required_code() ) ),
+				),
+				'schema' => array( self::class, 'summary_schema' ),
 			)
 		);
 		register_rest_route(
@@ -203,6 +264,264 @@ final class Library {
 			'description' => __( 'The media blocks rendered as the post renders them.', 'riff' ),
 		);
 		return $schema;
+	}
+
+	/**
+	 * The schema of POST /library: the new post as GET /library/{id} has it, with its status.
+	 *
+	 * @since 6.5.0
+	 * @return array JSON Schema.
+	 */
+	public static function created_schema(): array {
+		$schema                         = self::post_schema();
+		$schema['title']                = 'riff-library-created';
+		$schema['properties']['status'] = array(
+			'type'        => 'string',
+			'description' => __( 'The post\'s status: draft, publish or private.', 'riff' ),
+		);
+		$schema['properties']['edit']   = array(
+			'type'        => 'string',
+			'description' => __( 'Where its author edits it.', 'riff' ),
+		);
+		return $schema;
+	}
+
+	/**
+	 * The schema of GET /library/summary.
+	 *
+	 * @since 6.5.0
+	 * @return array JSON Schema.
+	 */
+	public static function summary_schema(): array {
+		$count = static fn( string $what ): array => array(
+			'type'        => 'integer',
+			'description' => $what,
+		);
+		return array(
+			'$schema'    => 'http://json-schema.org/draft-04/schema#',
+			'title'      => 'riff-library-summary',
+			'type'       => 'object',
+			'properties' => array(
+				'tracks'  => $count( __( 'Audio files in the Media Library.', 'riff' ) ),
+				'albums'  => $count( __( 'Albums, by the files\' tags.', 'riff' ) ),
+				'artists' => $count( __( 'Artists, by the files\' tags.', 'riff' ) ),
+				'posts'   => $count( __( 'Published posts with music.', 'riff' ) ),
+				'bytes'   => array(
+					'type'        => 'object',
+					'description' => __( 'Space taken, in bytes: by the audio files, and by every upload.', 'riff' ),
+					'properties'  => array(
+						'audio'   => array( 'type' => 'integer' ),
+						'uploads' => array( 'type' => 'integer' ),
+					),
+				),
+				'quota'   => array(
+					'type'        => array( 'integer', 'null' ),
+					'description' => __( 'The most the site may upload, in bytes, where its network sets a limit; null for none.', 'riff' ),
+				),
+			),
+		);
+	}
+
+	/**
+	 * Whether the current user may make an album of these tracks: write posts, publish them when
+	 * it is to be published, edit each track, and see the artwork.
+	 *
+	 * @since 6.5.0
+	 * @param WP_REST_Request $request Request.
+	 * @return true|WP_Error
+	 */
+	public static function may_create( WP_REST_Request $request ) {
+		$type    = get_post_type_object( 'post' );
+		$publish = in_array( $request['status'], array( 'publish', 'private' ), true );
+		$allowed = $type && current_user_can( $type->cap->create_posts ) && ( ! $publish || current_user_can( $type->cap->publish_posts ) );
+		foreach ( array_map( 'intval', (array) $request['tracks'] ) as $id ) {
+			$allowed = $allowed && ( ! get_post( $id ) || current_user_can( 'edit_post', $id ) );
+		}
+		$art = (int) $request['artwork'];
+		if ( $art && get_post( $art ) ) {
+			$allowed = $allowed && current_user_can( 'read_post', $art );
+		}
+		return $allowed ? true : new WP_Error( 'rest_cannot_create', __( 'Sorry, you are not allowed to make an album of these tracks.', 'riff' ), array( 'status' => rest_authorization_required_code() ) );
+	}
+
+	/**
+	 * POST /library: makes the album and answers with it.
+	 *
+	 * @since 6.5.0
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function rest_create( WP_REST_Request $request ) {
+		$ids = array_values( array_unique( array_map( 'intval', (array) $request['tracks'] ) ) );
+		foreach ( $ids as $id ) {
+			if ( ! str_starts_with( (string) get_post_mime_type( $id ), 'audio/' ) ) {
+				return new WP_Error(
+					'rest_invalid_param',
+					/* translators: %d: An attachment ID. */
+					sprintf( __( '%d is not an audio file in the Media Library.', 'riff' ), $id ),
+					array( 'status' => 400 )
+				);
+			}
+		}
+		$art = (int) $request['artwork'];
+		if ( $art && ! wp_attachment_is_image( $art ) ) {
+			return new WP_Error( 'rest_invalid_param', __( 'The artwork is not an image in the Media Library.', 'riff' ), array( 'status' => 400 ) );
+		}
+		$id = self::create( (string) $request['title'], $ids, (string) $request['status'], $art );
+		if ( is_wp_error( $id ) ) {
+			$id->add_data( array( 'status' => 500 ) );
+			return $id;
+		}
+		$post             = get_post( $id );
+		$detail           = self::post( $post );
+		$detail['status'] = $post->post_status;
+		$detail['edit']   = (string) get_edit_post_link( $id, 'raw' );
+		return new WP_REST_Response( $detail, 201 );
+	}
+
+	/**
+	 * Makes an album: a post with one core audio block for each track, in the order given, with
+	 * the artwork as its featured image, or the first track's. Each track attached to no post is
+	 * attached to this one, as uploading it to the post would have.
+	 *
+	 * @since 6.5.0
+	 * @param string $title  Title.
+	 * @param int[]  $ids    Audio attachment IDs, in order.
+	 * @param string $status Status: draft, publish or private.
+	 * @param int    $art    Image attachment ID, or 0.
+	 * @return int|WP_Error The post's ID.
+	 */
+	public static function create( string $title, array $ids, string $status = 'draft', int $art = 0 ) {
+		$post_id = wp_insert_post(
+			array(
+				'post_title'   => $title,
+				'post_status'  => $status,
+				'post_content' => self::blocks( $ids ),
+			),
+			true
+		);
+		if ( is_wp_error( $post_id ) ) {
+			return $post_id;
+		}
+		$art = $art ? $art : ( $ids ? (int) get_post_thumbnail_id( $ids[0] ) : 0 );
+		if ( $art ) {
+			set_post_thumbnail( $post_id, $art );
+		}
+		foreach ( $ids as $id ) {
+			if ( 0 === (int) get_post_field( 'post_parent', $id ) ) {
+				wp_update_post(
+					array(
+						'ID'          => $id,
+						'post_parent' => $post_id,
+					)
+				);
+			}
+		}
+		return (int) $post_id;
+	}
+
+	/**
+	 * Core audio blocks for tracks, as the editor saves them.
+	 *
+	 * @since 6.5.0
+	 * @param int[] $ids Audio attachment IDs.
+	 * @return string
+	 */
+	public static function blocks( array $ids ): string {
+		return implode(
+			'',
+			array_map(
+				static fn( int $id ): string => sprintf(
+					'<!-- wp:audio {"id":%1$d} --><figure class="wp-block-audio"><audio controls src="%2$s"></audio></figure><!-- /wp:audio -->',
+					$id,
+					esc_url( (string) wp_get_attachment_url( $id ) )
+				),
+				$ids
+			)
+		);
+	}
+
+	/**
+	 * GET /library/summary.
+	 *
+	 * @since 6.5.0
+	 * @return WP_REST_Response
+	 */
+	public static function rest_summary(): WP_REST_Response {
+		$tracks = 0;
+		foreach ( (array) wp_count_attachments( 'audio' ) as $count ) {
+			$tracks += (int) $count;
+		}
+		$terms = static function ( string $taxonomy ): int {
+			$count = wp_count_terms(
+				array(
+					'taxonomy'   => $taxonomy,
+					'hide_empty' => true,
+				)
+			);
+			return is_wp_error( $count ) ? 0 : (int) $count;
+		};
+		$quota = null;
+		if ( is_multisite() && ! get_site_option( 'upload_space_check_disabled' ) ) {
+			$quota = (int) ( get_space_allowed() * MB_IN_BYTES );
+		}
+		return new WP_REST_Response(
+			array(
+				'tracks'  => $tracks,
+				'albums'  => $terms( Catalog::ALBUM ),
+				'artists' => $terms( Catalog::ARTIST ),
+				'posts'   => (int) self::query(
+					array(
+						'posts_per_page' => 1,
+						'fields'         => 'ids',
+					)
+				)->found_posts,
+				'bytes'   => array(
+					'audio'   => self::audio_bytes(),
+					'uploads' => is_multisite() ? (int) ( get_space_used() * MB_IN_BYTES ) : (int) get_dirsize( wp_upload_dir()['basedir'] ),
+				),
+				'quota'   => $quota,
+			)
+		);
+	}
+
+	/**
+	 * What the audio files take, in bytes: each file's size as WordPress noted it on upload, or as
+	 * the disk says for a file uploaded before it noted sizes.
+	 *
+	 * @return int
+	 */
+	private static function audio_bytes(): int {
+		$bytes = 0;
+		$page  = 1;
+		do {
+			$ids = get_posts(
+				array(
+					'post_type'              => 'attachment',
+					'post_mime_type'         => 'audio',
+					'post_status'            => 'inherit',
+					'fields'                 => 'ids',
+					'posts_per_page'         => 100,
+					'paged'                  => $page++,
+					'orderby'                => 'ID',
+					'order'                  => 'ASC',
+					'no_found_rows'          => true,
+					'update_post_term_cache' => false,
+				)
+			);
+			update_postmeta_cache( $ids );
+			foreach ( $ids as $id ) {
+				$meta = wp_get_attachment_metadata( $id );
+				$size = is_array( $meta ) ? (int) ( $meta['filesize'] ?? 0 ) : 0;
+				if ( ! $size ) {
+					$file = get_attached_file( $id );
+					$size = $file && is_file( $file ) ? (int) filesize( $file ) : 0;
+				}
+				$bytes += $size;
+			}
+			$more = 100 === count( $ids );
+		} while ( $more );
+		return $bytes;
 	}
 
 	/**

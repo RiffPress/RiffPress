@@ -1,8 +1,7 @@
 /* The two media elements. Which one a track plays through, where its file comes from and whether
  * that origin shares it over CORS, and the events both report through the same handlers. While
  * something plays the seek line glides on the compositor: one linear animation per moving layer
- * (the played part, the wire, its heart, the bloom and the knob), from where the time is to the end
- * of the track, at the playback rate. The page's own work cannot make it stutter and nothing is
+ * (the played part and the knob), from where the time is to the end of the track, at the playback rate. The page's own work cannot make it stutter and nothing is
  * written each frame; it is aimed again only when the time jumps: a seek, a pause or a stall, a new
  * rate or track, or drift past 150 ms. --riff-p is still written on timeupdate, for the times, the
  * input, and where the line rests when the animations stop. */
@@ -56,7 +55,7 @@ export function media( P ) {
 			m.src = src;
 		}
 	}
-	// The analyser, when the filament has made one, is wired to <audio>: see foreign(). The track
+	// The analyser, when meter.js has made one, is wired to <audio>: see foreign(). The track
 	// playing stays on the element that holds its file, whatever an origin answers about CORS after
 	// it was loaded: otherwise a yes arriving mid-track would send Play and Pause to the other one.
 	const el = ( t = P.track() ) => {
@@ -119,7 +118,7 @@ export function media( P ) {
 			try {
 				glides.push( node.animate( frames, { ...timing, ...extra } ) );
 			} catch {
-				// A browser without pseudo-element animations keeps the line's resting place.
+				// A browser that can't animate it keeps the line's resting place.
 			}
 		};
 		// Each animation starts on the same frame of the document's clock, the one keepAimed() reads,
@@ -141,11 +140,6 @@ export function media( P ) {
 				{ transform: slide( from ) },
 				{ transform: slide( 1 ) },
 			];
-			if ( seeker.matches( '.riff-bar-seek' ) ) {
-				run( seeker.querySelector( '.riff-bloom' ), along, {
-					pseudoElement: '::after',
-				} );
-			}
 			const knob = seeker.querySelector( '.riff-knob' );
 			if ( knob ) {
 				run( knob, along );

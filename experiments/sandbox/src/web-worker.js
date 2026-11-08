@@ -13,6 +13,16 @@ import { confine, runJob } from './job.js';
 
 const pending = new Map();
 let next = 0;
+// An answer settles only a call this worker made and is still waiting on: an id it handed out,
+// whose resolver is a function. Anything else in a message is ignored, never called.
+const answer = ( { id, value } ) => {
+	const resolve = Number.isInteger( id ) ? pending.get( id ) : undefined;
+	if ( typeof resolve !== 'function' ) {
+		return;
+	}
+	pending.delete( id );
+	resolve( value );
+};
 const call = ( raw ) =>
 	new Promise( ( resolve ) => {
 		const id = next++;
@@ -21,9 +31,8 @@ const call = ( raw ) =>
 	} );
 
 self.onmessage = async ( { data } ) => {
-	if ( data.type === 'answer' ) {
-		pending.get( data.id )?.( data.value );
-		pending.delete( data.id );
+	if ( data?.type === 'answer' ) {
+		answer( data );
 		return;
 	}
 	if ( data.type !== 'run' ) {

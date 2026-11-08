@@ -175,12 +175,16 @@ test( 'blueprint.json names no host, so moving the site cannot break the demo', 
 	);
 } );
 
-test( 'blueprint.json installs exactly one plugin, the zip beside it', () => {
+test( 'blueprint.json installs Riff from the zip beside it, then the demo\'s extensions from demo/', () => {
 	const installs = source().steps.filter(
 		( s ) => s.step === 'installPlugin'
 	);
-	assert.equal( installs.length, 1 );
 	assert.equal( installs[ 0 ].pluginData.url, 'riff.zip' );
+	// Riff Chords and Riff Sing, so the demo's charted song shows them; each needs Riff first.
+	assert.deepEqual(
+		installs.slice( 1 ).map( ( s ) => s.pluginData.url ),
+		[ 'demo/riff-chords.zip', 'demo/riff-sing.zip' ]
+	);
 } );
 
 test( 'every demo file blueprint.json fetches exists in the fixture set', () => {
@@ -197,6 +201,11 @@ test( 'every demo file blueprint.json fetches exists in the fixture set', () => 
 		}
 		if ( name === 'mark.png' ) {
 			return path.join( ROOT, 'site/brand', name );
+		}
+		// A plugin's zip is built by the deploy from its folder.
+		if ( name.endsWith( '.zip' ) ) {
+			const slug = name.slice( 0, -'.zip'.length );
+			return path.join( ROOT, 'plugins', slug, `${ slug }.php` );
 		}
 		return path.join( ROOT, 'packages/fixtures/compositions', name );
 	};

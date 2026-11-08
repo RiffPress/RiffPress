@@ -26,7 +26,6 @@
 	aspect-ratio: 100 / 56;
 	overflow: hidden;
 	border-radius: 4px;
-	--meters-heat: 0;
 }
 
 #riff .riff-vu svg {
@@ -66,32 +65,10 @@
 	left: calc(50% - 0.5px);
 	width: 1px;
 	height: calc(54 / 56 * 100%);
-	background: rgb(150 66 28);
+	background: var(--riff-fg);
 	transform: rotate(-45deg);
 	transform-origin: 50% 100%;
 	will-change: transform;
-}
-
-/* The needle is a filament: an ember at rest, its orange and halo as it
-   heats, and a pale heart at the peaks. Only their opacity follows the
-   music. */
-.riff-vu-needle::before,
-.riff-vu-needle::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	will-change: opacity;
-}
-
-.riff-vu-needle::before {
-	background: rgb(255 138 62);
-	box-shadow: 0 0 3px 0.5px rgb(255 120 40 / 0.7);
-	opacity: var(--meters-heat);
-}
-
-.riff-vu-needle::after {
-	background: #fff1dc;
-	opacity: calc(0.8 * var(--meters-heat) * var(--meters-heat) * var(--meters-heat));
 }
 
 /* the spectrum: a bar for each third of an octave, 20 Hz to 20 kHz, on a

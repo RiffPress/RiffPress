@@ -84,8 +84,14 @@ export function seek( P ) {
 		} );
 	}
 
-	// ---- Volume, remembered on this device. Phones ignore it, so it only shows on desktop.
+	// ---- Volume, remembered on this device, in a slot of its own at the bar's end: the slider is
+	// always there, so nothing opens over the controls beside it. Phones ignore it, so it shows only
+	// on a wide bar, and where the browser keeps the volume at full (an iPad) only the mute is left.
 	const volume = $( '[data-riff-volume]' );
+	const mute = $( '[data-riff-mute]' );
+	// The filled part of the slider's track, which a range input doesn't draw on its own.
+	const fill = () =>
+		volume.style.setProperty( '--riff-vol', String( Number( volume.value ) / 100 ) );
 	const kept = read( localStorage, P.VOLUME );
 	const stored = kept === null ? NaN : Number( kept );
 	// Spoken as a percentage, and as Muted at nothing, rather than a bare number.
@@ -107,11 +113,32 @@ export function seek( P ) {
 		volume.value = String( Math.round( stored * 100 ) );
 	}
 	sayVolume();
+	fill();
 	volume.addEventListener( 'input', () => {
 		audio.volume = video.volume = Number( volume.value ) / 100;
 		write( localStorage, P.VOLUME, String( audio.volume ) );
 		sayVolume();
+		fill();
 	} );
+	// The slider shows a thumb while it is held, as the seek line does.
+	volume.addEventListener( 'pointerdown', () => volume.setAttribute( 'data-held', '' ) );
+	// Let go anywhere: a drag often ends off the slider.
+	const letGo = () => volume.removeAttribute( 'data-held' );
+	for ( const ev of [ 'pointerup', 'pointercancel' ] ) {
+		document.addEventListener( ev, letGo );
+	}
+	volume.addEventListener( 'blur', letGo );
+	// Muting keeps the level, so unmuting comes back to it.
+	mute?.addEventListener( 'click', () => {
+		const muted = ! audio.muted;
+		audio.muted = video.muted = muted;
+		mute.setAttribute( 'aria-pressed', String( muted ) );
+	} );
+	const probe = document.createElement( 'audio' );
+	probe.volume = 0.5;
+	if ( probe.volume !== 0.5 ) {
+		volume.hidden = true;
+	}
 
 	// ---- The time under the pointer, above the bar's seek line on a wide screen.
 	const barSeek = $( '.riff-bar-seek' );

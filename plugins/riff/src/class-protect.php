@@ -734,7 +734,7 @@ final class Protect {
 	public static function probe(): bool {
 		$dir   = Protected_Files::dir();
 		$probe = $dir . '/riff-probe.txt';
-		file_put_contents( $probe, 'riff' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a probe, removed below.
+		file_put_contents( $probe, 'riff' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a probe, removed below. isolation: write -- the protected folder under uploads.
 		$response = wp_remote_get(
 			trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( $dir ) . '/riff-probe.txt',
 			array(
