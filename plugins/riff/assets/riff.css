@@ -434,7 +434,7 @@ div.riff-row-locked {
 #riff input:focus-visible,
 #riff a:focus-visible,
 #riff summary:focus-visible,
-#riff [tabindex]:not([tabindex="-1"]):focus-visible {
+#riff :where([tabindex]:not([tabindex="-1"])):focus-visible {
 	outline: var(--riff-focus-ring);
 	outline-offset: var(--riff-focus-ring-offset);
 }
@@ -2538,7 +2538,18 @@ dl.riff-about-credits dd {
 
 .riff-menu > :focus-visible,
 #riff .riff-menu > :focus-visible {
+	outline: none;
 	box-shadow: inset 0 0 0 2px var(--riff-accent, #f2eadb);
+}
+
+/* Forced colours drop the shadow, so the item keeps a ring there, inside it. */
+@media (forced-colors: active) {
+
+	.riff-menu > :focus-visible,
+	#riff .riff-menu > :focus-visible {
+		outline: 2px solid Highlight;
+		outline-offset: -2px;
+	}
 }
 
 @media (pointer: coarse) {

@@ -81,13 +81,13 @@
 	/**
 	 * The ring around the player's control that has the keyboard's focus, as
 	 * an `outline` value: one ring outside the control's edge, following its
-	 * corners, in the accent: the cover's, `--riff-cover-accent`, where the
-	 * player takes one from it, else `--riff-accent`. A theme sets a ring of
-	 * its own, such as `3px solid #ffbf47`.
+	 * corners, in the cover's accent, `--riff-cover-accent`, where the player
+	 * sets one on `#riff`, else the player's text colour. A theme sets a ring
+	 * of its own, such as `3px solid #ffbf47`.
 	 *
 	 * @since 6.5.0
 	 */
-	--riff-focus-ring: 2px solid var(--riff-cover-accent, var(--riff-accent));
+	--riff-focus-ring: 2px solid var(--riff-cover-accent, var(--riff-fg));
 
 	/**
 	 * How far the focus ring sits outside the control's edge.
@@ -144,8 +144,8 @@
 	--riff-app-line: #d9d9d9;
 
 	/**
-	 * Links, play buttons, focus rings, and the title of the card under the
-	 * pointer in the Listen block.
+	 * Links, play buttons, and the title of the card under the pointer in the
+	 * Listen block. Its focus rings are `--riff-app-focus-ring`.
 	 *
 	 * @since 4.0.0
 	 */
@@ -177,7 +177,7 @@
 	 * The ring around the Listen app's control that has the keyboard's
 	 * focus, as an `outline` value: Home, search, the tabs, the sidebar and
 	 * the rest, each ringed outside its own edge and corners, in the cover's
-	 * accent where the app takes one from it, else the text's colour. The
+	 * accent where the app sets one on `.riff-app`, else the text's colour. The
 	 * player's own is `--riff-focus-ring`.
 	 *
 	 * @since 6.5.0
