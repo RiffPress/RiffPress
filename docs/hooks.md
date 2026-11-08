@@ -66,6 +66,30 @@ Since 6.4.0. Fires in `plugins/riff/features/listen/class-standalone.php`.
 | --- | --- | --- |
 | `$manifest` | `array` | The manifest's members: id, name, short_name, description, start_url, scope, display_override, display, background_color, theme_color and icons. |
 
+### `riff_app_precache`
+
+Filters what the installed Listen app's service worker keeps on the device, so it is there offline and on every launch after the first: a host's fonts that the first paint doesn't show, say. The fonts `riff_app_preload_fonts` returns are already in it.
+
+Only these addresses are answered from the device; every other request goes to the network as before. An address on another host needs CORS. Return an empty array for no service worker at all.
+
+Since 6.6.0. Fires in `plugins/riff/features/listen/class-fonts.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$urls` | `string[]` | Addresses: the first paint's fonts, then Riff's stylesheets and its script modules. |
+
+### `riff_app_preload_fonts`
+
+Filters the fonts a Listen page preloads, the faces its first paint shows, so a host that draws the app in fonts of its own has them fetched with the page rather than after the stylesheet asks. The installed app's service worker keeps them on the device too.
+
+Each is preloaded with `crossorigin`, as a font must be, so an address on another host needs CORS. Name each exactly as the stylesheet's `url()` does, or the browser fetches it twice.
+
+Since 6.6.0. Fires in `plugins/riff/features/listen/class-fonts.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$urls` | `string[]` | Font addresses: Roboto in the app at app/, Inter and EB Garamond in the Listen block where the theme sets no font. |
+
 ### `riff_app_views`
 
 Filters the Listen app's views: Riff's own, by slug (`home`, `search`, `albums`, `artists`, `tracks`, `posts` and `library`), and any a plugin adds.

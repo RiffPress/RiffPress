@@ -667,6 +667,14 @@ function start() {
 		P.paint();
 	}
 	P.reveal();
+	// The bar is drawn in Roboto, which riff.css never swaps in late (font-display: optional).
+	// On a page with something to play, or one whose links keep the music playing into another
+	// that may have, it is fetched while the page is idle, so it is there when the bar shows.
+	if ( document.fonts && ( P.rows.length || P.track() || data.navigation ) ) {
+		( window.requestIdleCallback?.bind( window ) || setTimeout )( () =>
+			document.fonts.load( '400 16px "Riff Roboto"' ).catch( () => {} )
+		);
+	}
 	// A link followed without leaving the page (src/class-navigation.php) brings blocks to make rows of.
 	if ( data.navigation ) {
 		P.feature( 'navigation' );

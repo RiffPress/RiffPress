@@ -48,6 +48,13 @@ final class Standalone {
 	public const MANIFEST = 'manifest';
 
 	/**
+	 * The endpoint value that serves the app's service worker.
+	 *
+	 * @since 6.6.0
+	 */
+	public const WORKER = 'worker';
+
+	/**
 	 * Option noting which version last added the endpoint to the rewrite rules.
 	 *
 	 * @since 4.17.0
@@ -89,6 +96,7 @@ final class Standalone {
 		add_action( 'template_redirect', array( self::class, 'no_admin_bar' ), -1 );
 		add_action( 'template_redirect', array( self::class, 'to_root' ), 0 );
 		add_action( 'template_redirect', array( self::class, 'manifest' ) );
+		add_action( 'template_redirect', array( self::class, 'worker' ) );
 		add_filter( 'template_include', array( self::class, 'template' ), 99 );
 	}
 
@@ -231,7 +239,7 @@ final class Standalone {
 			return $query_vars;
 		}
 		$app = isset( $query_vars[ self::QUERY ] ) ? (string) $query_vars[ self::QUERY ] : '';
-		if ( '' === $app || self::MANIFEST === $app ) {
+		if ( '' === $app || self::MANIFEST === $app || self::WORKER === $app ) {
 			self::$root = $page;
 		}
 		return array(
@@ -259,7 +267,7 @@ final class Standalone {
 	 * @since 6.4.0
 	 */
 	public static function to_root(): void {
-		if ( self::$root || ! self::active() || self::MANIFEST === get_query_var( self::QUERY ) || get_queried_object_id() !== self::root_page() ) {
+		if ( self::$root || ! self::active() || in_array( get_query_var( self::QUERY ), array( self::MANIFEST, self::WORKER ), true ) || get_queried_object_id() !== self::root_page() ) {
 			return;
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the view asked for, carried over; nothing changes.
@@ -308,16 +316,60 @@ final class Standalone {
 	 * @return string
 	 */
 	public static function url( int $page_id = 0, bool $manifest = false ): string {
+		return self::address( $page_id, $manifest ? self::MANIFEST : '' );
+	}
+
+	/**
+	 * The service worker's address for a page's app.
+	 *
+	 * @since 6.6.0
+	 *
+	 * @param int $page_id Page ID; the queried page by default.
+	 * @return string
+	 */
+	public static function worker_url( int $page_id = 0 ): string {
+		$url = self::address( $page_id, self::WORKER );
+		// Ending as the site's permalinks do, or core's canonical redirect moves it, and a service
+		// worker's script is never fetched through a redirect.
+		return str_contains( $url, '?' ) ? $url : user_trailingslashit( untrailingslashit( $url ), 'page' );
+	}
+
+	/**
+	 * What the app's service worker controls: the app's address and every view under it. With
+	 * permalinks that end without a slash the app is at …/app, so the scope ends there too. At the
+	 * site's address it is the whole site, as the app's own start address is.
+	 *
+	 * @since 6.6.0
+	 *
+	 * @param int $page_id Page ID; the queried page by default.
+	 * @return string
+	 */
+	public static function worker_scope( int $page_id = 0 ): string {
+		$url = self::url( $page_id );
+		if ( str_contains( $url, '?' ) || untrailingslashit( $url ) === untrailingslashit( home_url() ) ) {
+			return $url;
+		}
+		return untrailingslashit( $url );
+	}
+
+	/**
+	 * The app's address, or one of the endpoint's own beside it: the manifest's or the worker's.
+	 *
+	 * @param int    $page_id Page ID; the queried page by default.
+	 * @param string $value   The endpoint's value, or empty for the app itself.
+	 * @return string
+	 */
+	private static function address( int $page_id, string $value ): string {
 		$page_id = $page_id ? $page_id : get_queried_object_id();
 		if ( $page_id && self::root_page() === $page_id ) {
 			// A query argument, which answers with or without pretty permalinks.
-			return $manifest ? add_query_arg( self::QUERY, self::MANIFEST, home_url( '/' ) ) : home_url( '/' );
+			return '' !== $value ? add_query_arg( self::QUERY, $value, home_url( '/' ) ) : home_url( '/' );
 		}
 		$link = (string) get_permalink( $page_id );
 		if ( get_option( 'permalink_structure' ) ) {
-			return trailingslashit( $link ) . self::ENDPOINT . '/' . ( $manifest ? self::MANIFEST . '/' : '' );
+			return trailingslashit( $link ) . self::ENDPOINT . '/' . ( '' !== $value ? $value . '/' : '' );
 		}
-		return add_query_arg( self::QUERY, $manifest ? self::MANIFEST : '1', $link );
+		return add_query_arg( self::QUERY, '' !== $value ? $value : '1', $link );
 	}
 
 	/**
@@ -345,6 +397,67 @@ final class Standalone {
 		header( 'Content-Type: application/manifest+json; charset=' . get_option( 'blog_charset' ) );
 		echo wp_json_encode( $manifest, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT );
 		exit;
+	}
+
+	/**
+	 * Serves the app's service worker at app/worker/: worker.js, told what to keep. Its scope is
+	 * the app's own address, which the Service-Worker-Allowed header lets it claim from the
+	 * address below it.
+	 *
+	 * @since 6.6.0
+	 */
+	public static function worker(): void {
+		if ( ! self::active() || self::WORKER !== get_query_var( self::QUERY ) ) {
+			return;
+		}
+		status_header( 200 );
+		header( 'Content-Type: text/javascript; charset=utf-8' );
+		$scope = (string) wp_parse_url( self::worker_scope(), PHP_URL_PATH );
+		header( 'Service-Worker-Allowed: ' . ( '' !== $scope ? $scope : '/' ) );
+		header( 'Cache-Control: no-cache' );
+		echo self::worker_script(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JavaScript: JSON from wp_json_encode() and the plugin's own file.
+		exit;
+	}
+
+	/**
+	 * The service worker's script: what to keep, as JSON, then worker.js. The cache's name changes
+	 * with what is kept, so a new version of Riff, or a host's new font, replaces the old copies;
+	 * it starts with the app's own prefix, so one Listen page's app never clears another's.
+	 *
+	 * @since 6.6.0
+	 *
+	 * @return string
+	 */
+	public static function worker_script(): string {
+		$files  = Fonts::precache();
+		$prefix = 'riff-app-' . substr( md5( self::worker_scope() ), 0, 8 ) . '-';
+		$data   = array(
+			'cache'  => $prefix . substr( md5( RIFF_VERSION . '|' . implode( '|', $files ) ), 0, 12 ),
+			'prefix' => $prefix,
+			'files'  => $files,
+		);
+		return 'self.riffWorker = ' . wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG ) . ";\n" . (string) file_get_contents( RIFF_DIR . 'features/listen/worker.js' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- the plugin's own file.
+	}
+
+	/**
+	 * The inline script that registers the service worker once the page has loaded, or nothing
+	 * where the worker would keep nothing. Where another worker already holds exactly this scope,
+	 * at the site's address, say, a plugin's of its own, it is left in place: one scope has one
+	 * worker, and registering Riff's would replace it.
+	 *
+	 * @since 6.6.0
+	 *
+	 * @return string JavaScript.
+	 */
+	public static function worker_registration(): string {
+		if ( ! Fonts::precache() ) {
+			return '';
+		}
+		return sprintf(
+			'if("serviceWorker"in navigator){addEventListener("load",function(){var w=navigator.serviceWorker,u=new URL(%1$s,location.href).href,s=new URL(%2$s,location.href).href;w.getRegistration(s).then(function(r){var a=r&&(r.active||r.waiting||r.installing);if(a&&r.scope===s&&a.scriptURL!==u){return;}return w.register(u,{scope:s});}).catch(function(){});});}',
+			wp_json_encode( self::worker_url(), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG ),
+			wp_json_encode( self::worker_scope(), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG )
+		);
 	}
 
 	/**
@@ -482,7 +595,6 @@ final class Standalone {
 		if ( ! self::active() ) {
 			return $template;
 		}
-		add_filter( 'wp_preload_resources', array( self::class, 'preload' ) );
 		add_action( 'wp_enqueue_scripts', array( self::class, 'strip' ), PHP_INT_MAX );
 		// The document prints its own title and viewport. A block theme's template has core add
 		// its own of each (locate_block_template()) before this runs, so those go too; a second
@@ -511,26 +623,6 @@ final class Standalone {
 			'--riff-app-font'         => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',
 			'--riff-app-heading-font' => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',
 		);
-	}
-
-	/**
-	 * Fetches Roboto with the page rather than after the stylesheet asks for it, so the text is
-	 * drawn in it from the start more often than not. The address is the one riff.css names.
-	 *
-	 * @since 4.21.0
-	 *
-	 * @param array $resources Resources WordPress preloads.
-	 * @return array
-	 */
-	public static function preload( $resources ): array {
-		$resources   = is_array( $resources ) ? $resources : array();
-		$resources[] = array(
-			'href'        => RIFF_URL . 'assets/fonts/roboto/roboto.woff2',
-			'as'          => 'font',
-			'type'        => 'font/woff2',
-			'crossorigin' => 'anonymous',
-		);
-		return $resources;
 	}
 
 	/**

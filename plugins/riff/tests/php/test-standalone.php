@@ -399,7 +399,7 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		$this->go_to( Standalone::url( $this->listen ) );
 		Standalone::template( '/theme/page.php' );
 
-		$resources = apply_filters( 'wp_preload_resources', array() );
+		$resources = \Riff\Listen\Fonts::preload( array() );
 		$this->assertContains(
 			array(
 				'href'        => RIFF_URL . 'assets/fonts/roboto/roboto.woff2',
@@ -412,7 +412,6 @@ class Test_Riff_Standalone extends Riff_TestCase {
 		);
 		$this->assertStringContainsString( 'url(fonts/roboto/roboto.woff2)', (string) file_get_contents( RIFF_DIR . 'assets/riff.css' ) );
 		$this->assertStringContainsString( '"Riff Roboto Fallback"', Standalone::tokens()['--riff-app-font'], 'text drawn before Roboto arrives takes its room' );
-		remove_filter( 'wp_preload_resources', array( Standalone::class, 'preload' ) );
 	}
 
 	public function test_the_themes_assets_and_the_block_styles_stay_out(): void {
