@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.4.2...riff-sign-in-v0.4.3) (2026-11-08)
+
+
+### Bug Fixes
+
+* **sign-in:** the link in the email asks before it signs in, so a mail scanner that opens it no longer uses up the code ([#938](https://github.com/RiffPress/RiffPress/issues/938)) ([78988d9](https://github.com/RiffPress/RiffPress/commit/78988d99ccbefe035de1c16e1e6c31270b9c47c0))
+
 ## [0.4.2](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.4.1...riff-sign-in-v0.4.2) (2026-11-05)
 
 
