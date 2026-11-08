@@ -18,6 +18,42 @@ Since 5.9.0. Fires in `plugins/riff/src/class-about.php`.
 | --- | --- | --- |
 | `$sections` | `array[]` | By id (lowercase letters, digits and dashes), each with a `label`, its heading, or empty for none; an `order`, lowest first; and an optional `render`, a callable given the id that returns the body's markup as the page is drawn. |
 
+### `riff_add_music_url`
+
+Filters where the Listen app sends someone who may upload to add music: the account menu's Add music, and Add your first album in an empty library.
+
+At the default address the app opens its own file picker in place of following the link, and uploads what is chosen to the Media Library; at any other address the link is followed, and the empty library no longer names the Media Library.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-browse.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | The address. Default admin_url( 'media-new.php' ). |
+
+### `riff_app_at_root`
+
+Filters whether the site's own address opens the Listen page's app. On, a request for the home page with no other query is the Listen page in standalone mode, every link to the app and the manifest's start address are the home page, and the app/ address redirects there. The Listen page's own address and the theme's front page setting are left as they are.
+
+A host that gives each site its own player turns it on with `add_filter( 'riff_app_at_root', '__return_true' )`.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-standalone.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$on` | `bool` | Whether it is on, from Settings › Riff. Default false. |
+
+### `riff_app_manifest`
+
+Filters the Listen app's web app manifest, for a host that names, colours or gives icons to each site's app its own way.
+
+The document's theme-color meta tag follows the manifest's theme_color. Its page colours come from the custom properties on `.riff-standalone`, such as `--riff-standalone-bg`.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-standalone.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$manifest` | `array` | The manifest's members: id, name, short_name, description, start_url, scope, display_override, display, background_color, theme_color and icons. |
+
 ### `riff_can_play`
 
 Filters whether the current visitor may play a track.
@@ -62,6 +98,17 @@ Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `$names` | `string[]` | The names in extensions.json. |
+
+### `riff_profile_url`
+
+Filters where the Listen app's account menu sends a listener to edit their profile, for a host or a membership plugin with a profile page of its own.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-browse.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | The address. Default get_edit_profile_url(), their profile in wp-admin. |
+| `$user` | `\\WP_User` | The signed-in listener. |
 
 ### `riff_protect_storage`
 

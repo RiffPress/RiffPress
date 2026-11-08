@@ -539,7 +539,7 @@ class Test_Riff_App extends Riff_TestCase {
 		$this->go_to( \Riff\Listen\Standalone::url( $listen ) );
 
 		$block = do_blocks( '<!-- wp:riff/app {"backgroundColor":"contrast"} /-->' );
-		$this->assertStringContainsString( '--riff-app-bg:#030303', $block );
+		$this->assertStringContainsString( '--riff-app-bg:var(--riff-standalone-bg, #030303)', $block );
 		$this->assertStringNotContainsString( 'preset--color--contrast', $block );
 	}
 

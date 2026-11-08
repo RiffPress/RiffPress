@@ -170,6 +170,41 @@
 	--riff-app-heading-font: "Riff Garamond", "EB Garamond", garamond, georgia, serif;
 }
 
+/* The Listen app's own document, at the Listen page's app/ address or the
+   site's: the page around the Listen block, behind the status bar and under
+   the tabs. Its block takes its background and text from these too. */
+.riff-standalone {
+
+	/**
+	 * The Listen app's background: the page, the strip behind the status bar,
+	 * and the Listen block inside it.
+	 *
+	 * @since 6.4.0
+	 */
+	--riff-standalone-bg: #030303;
+
+	/**
+	 * The Listen app's text and icons.
+	 *
+	 * @since 6.4.0
+	 */
+	--riff-standalone-ink: #fff;
+
+	/**
+	 * Behind the Home, Search and Library tabs along the bottom on a phone.
+	 *
+	 * @since 6.4.0
+	 */
+	--riff-standalone-tabs: #212121;
+
+	/**
+	 * The icon on an album's round Play button, which is in the accent.
+	 *
+	 * @since 6.4.0
+	 */
+	--riff-standalone-on-accent: #000;
+}
+
 /* A control is pressed, not read: a tap, a long-press or a double-click on a
    button in the player, a view, a panel, the Listen block, a post's rows or
    an extension's own never paints its label blue. So too the parts that act

@@ -110,6 +110,50 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'Add your first album', $author );
 	}
 
+	public function test_a_host_sends_add_music_and_edit_profile_to_its_own_pages(): void {
+		foreach ( get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'audio',
+				'post_status'    => 'any',
+				'fields'         => 'ids',
+				'posts_per_page' => -1,
+			)
+		) as $id ) {
+			wp_delete_attachment( $id, true );
+		}
+		$user = self::factory()->user->create( array( 'role' => 'author' ) );
+		wp_set_current_user( $user );
+
+		$default = $this->render_at( array() );
+		$this->assertStringContainsString( 'href="' . esc_url( admin_url( 'media-new.php' ) ) . '">Add music</a>', $default );
+		$this->assertStringContainsString( 'href="' . esc_url( get_edit_profile_url( $user ) ) . '">Edit profile</a>', $default );
+		$this->assertStringContainsString( 'Media Library', $default );
+
+		$seen = null;
+		add_filter( 'riff_add_music_url', static fn(): string => 'https://cloud.example.org/upload/' );
+		add_filter(
+			'riff_profile_url',
+			static function ( $url, $who ) use ( &$seen ) {
+				$seen = $who;
+				return 'https://cloud.example.org/account/';
+			},
+			10,
+			2
+		);
+		$hosted = $this->render_at( array() );
+		remove_all_filters( 'riff_add_music_url' );
+		remove_all_filters( 'riff_profile_url' );
+
+		$this->assertStringContainsString( 'href="https://cloud.example.org/upload/">Add music</a>', $hosted );
+		$this->assertStringContainsString( 'href="https://cloud.example.org/upload/"', str_replace( '>Add music</a>', '', $hosted ), 'Add your first album too' );
+		$this->assertStringNotContainsString( 'media-new.php', $hosted );
+		$this->assertStringNotContainsString( 'Media Library', $hosted, 'the empty library names no screen the host has moved' );
+		$this->assertStringContainsString( 'Add your first album', $hosted );
+		$this->assertStringContainsString( 'href="https://cloud.example.org/account/">Edit profile</a>', $hosted );
+		$this->assertSame( $user, $seen instanceof WP_User ? $seen->ID : 0, 'the filter is told whose profile' );
+	}
+
 	public function test_the_bar_shows_who_is_listening(): void {
 		// A visitor gets Sign in whether or not anyone may register: a site's own people sign in too.
 		update_option( 'users_can_register', 0 );

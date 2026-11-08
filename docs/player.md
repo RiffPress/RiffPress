@@ -296,6 +296,8 @@ these:
 
 Listeners can install the Listen page's `app/` address as an app of its own. From their second visit Riff offers it, with the browser's own Install where there is one (Chrome and Edge) and the steps where there is not (Safari's Add to Dock and Add to Home Screen). Installed from Chrome or Edge on a computer it has no title bar, and its strip across the top is the window's title bar. Its name and icon are the site's, so set a site icon under **Settings › General**.
 
+To make the home page that player, tick **Open the player at the site's address** under **Settings › Riff**, or have a plugin return true from the `riff_app_at_root` filter, as a host that gives each site its own player does. The site's address is then the oldest Listen page's app, its `app/` address redirects there with the view it asked for, and the manifest's start address and scope are the home page. The manifest answers at `?riff_app=manifest` on the home page, and still at the Listen page's `app/manifest/`. The Listen page's own address, the other pages and the front page setting stay as they are; a Listen page that is also the front page works too.
+
 ## Video versions
 
 A track with a video version is set in the Media Library: click an audio file and choose a video

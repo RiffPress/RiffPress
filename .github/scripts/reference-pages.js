@@ -484,10 +484,17 @@ function cssPage( data ) {
 	const groups = [
 		[ 'player', 'The player', '#riff', 'Set on the player\'s root, <code>#riff</code>, so they reach the bar and Now Playing and nothing else. <code>--riff-bar-h</code> is on <code>:root</code>, since the page keeps room for the bar.' ],
 		[ 'listen-block', 'The Listen block', '.riff-app', 'Set on the block\'s root, <code>.riff-app</code>. The block\'s colour settings in the editor set its background and text colour directly, on top of these.' ],
+		[ 'listen-app', 'The Listen app', '.riff-standalone', 'Set on the Listen app\'s own document, <code>body.riff-standalone</code>, at the Listen page\'s <code>app/</code> address or the site\'s. The Listen block in it takes its background and text from them.' ],
 	];
+	const group = ( p ) => {
+		if ( p.selector.includes( '.riff-standalone' ) ) {
+			return '.riff-standalone';
+		}
+		return p.selector.includes( '.riff-app' ) ? '.riff-app' : '#riff';
+	};
 	let body = '<section class="summary"><p>The player and the Listen block take their colours and sizes from custom properties. The ones below are public: each keeps its name within a major version. Any other <code>--riff-*</code> property is internal and may change.</p><p>They are all in one stylesheet, <code>riff-tokens</code>. An extension lists it as a dependency of its own, <code>wp_register_style( \'my-extension\', $src, array( \'riff-tokens\' ) )</code>, and uses the names rather than copying values.</p></section>\n';
 	for ( const [ id, title, selector, text ] of groups ) {
-		const list = data.properties.filter( ( p ) => ( selector === '#riff' ? ! p.selector.includes( '.riff-app' ) : p.selector.includes( '.riff-app' ) ) );
+		const list = data.properties.filter( ( p ) => group( p ) === selector );
 		body += `<section>${ hooks.h2( id, title ) }<p>${ text }</p>`;
 		body += table( [ 'Property', 'Description' ], list.map( ( p ) => `<tr><td><a href="${ REPO }${ rel( p.file ) }#L${ p.line }">${ esc( p.name ) }</a><code>${ esc( p.value ) }</code></td><td>${ inline( p.summary ) }${ p.description ? ' ' + inline( p.description ) : '' }</td></tr>` ) );
 		body += '</section>\n';

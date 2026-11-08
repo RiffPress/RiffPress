@@ -284,12 +284,56 @@ final class Browse {
 			esc_html( $name ),
 			esc_url( add_query_arg( self::VIEW, 'library', $page ) ),
 			esc_html__( 'Your Library', 'riff' ),
-			esc_url( get_edit_profile_url( $user->ID ) ),
+			esc_url( self::profile_url( $user ) ),
 			esc_html__( 'Edit profile', 'riff' ),
 			esc_url( wp_logout_url( $back ) ),
 			esc_html__( 'Sign out', 'riff' ),
-			current_user_can( 'upload_files' ) ? sprintf( '<a href="%s">%s</a>', esc_url( admin_url( 'media-new.php' ) ), esc_html__( 'Add music', 'riff' ) ) : ''
+			current_user_can( 'upload_files' ) ? sprintf( '<a href="%s">%s</a>', esc_url( self::add_music_url() ), esc_html__( 'Add music', 'riff' ) ) : ''
 		);
+	}
+
+	/**
+	 * Where the account menu's Edit profile goes.
+	 *
+	 * @since 6.4.0
+	 *
+	 * @param \WP_User $user The signed-in listener.
+	 * @return string
+	 */
+	public static function profile_url( \WP_User $user ): string {
+		/**
+		 * Filters where the Listen app's account menu sends a listener to edit their profile, for a
+		 * host or a membership plugin with a profile page of its own.
+		 *
+		 * @since 6.4.0
+		 *
+		 * @param string   $url  The address. Default get_edit_profile_url(), their profile in wp-admin.
+		 * @param \WP_User $user The signed-in listener.
+		 */
+		return (string) apply_filters( 'riff_profile_url', get_edit_profile_url( $user->ID ), $user );
+	}
+
+	/**
+	 * Where the Listen app's Add music links go: the account menu's, and an empty library's.
+	 *
+	 * @since 6.4.0
+	 *
+	 * @return string
+	 */
+	public static function add_music_url(): string {
+		/**
+		 * Filters where the Listen app sends someone who may upload to add music: the account
+		 * menu's Add music, and Add your first album in an empty library.
+		 *
+		 * At the default address the app opens its own file picker in place of following the link,
+		 * and uploads what is chosen to the Media Library; at any other address the link is
+		 * followed, and the empty library no longer names the Media Library.
+		 *
+		 * @since 6.4.0
+		 *
+		 * @param string $url The address. Default admin_url( 'media-new.php' ).
+		 */
+		return (string) apply_filters( 'riff_add_music_url', admin_url( 'media-new.php' ) );
 	}
 
 	/**
@@ -584,9 +628,12 @@ final class Browse {
 		if ( ! current_user_can( 'upload_files' ) ) {
 			return Ui::empty_note( __( 'Nothing here yet.', 'riff' ) );
 		}
-		$text = __( 'Nothing here yet. Upload music to the Media Library and it shows here.', 'riff' );
+		$url  = self::add_music_url();
+		$text = admin_url( 'media-new.php' ) === $url
+			? __( 'Nothing here yet. Upload music to the Media Library and it shows here.', 'riff' )
+			: __( 'Nothing here yet. Add music and it shows here.', 'riff' );
 		if ( ! First_Run::has_music() ) {
-			return Ui::empty_note( $text, admin_url( 'media-new.php' ), __( 'Add your first album', 'riff' ) );
+			return Ui::empty_note( $text, $url, __( 'Add your first album', 'riff' ) );
 		}
 		return Ui::empty_note( $text );
 	}

@@ -1,6 +1,7 @@
 <?php
 /**
- * Standalone mode: the Listen page as a player of its own at /listen/app/, outside the theme.
+ * Standalone mode: the Listen page as a player of its own at /listen/app/, outside the theme, or,
+ * where the site asks for it, at the site's own address.
  *
  * @since 4.17.0
  * @package Riff
@@ -9,6 +10,7 @@
 namespace Riff\Listen;
 
 use WP_Post;
+use Riff\Extensions;
 use Riff\Player;
 
 defined( 'ABSPATH' ) || exit;
@@ -60,13 +62,32 @@ final class Standalone {
 	public const BACKGROUND = '#030303';
 
 	/**
+	 * Option: whether the site's own address opens the app.
+	 *
+	 * @since 6.4.0
+	 */
+	public const AT_ROOT = 'riff_app_at_root';
+
+	/**
+	 * The Listen page this request serves at the site's address, or 0.
+	 *
+	 * @var int
+	 */
+	private static $root = 0;
+
+	/**
 	 * Hooks the endpoint, the manifest and the template.
 	 *
 	 * @since 4.17.0
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'endpoint' ) );
+		add_action( 'init', array( self::class, 'setting' ) );
+		add_action( 'admin_init', array( self::class, 'field' ) );
+		add_filter( 'request', array( self::class, 'route' ) );
+		add_filter( 'redirect_canonical', array( self::class, 'canonical' ) );
 		add_action( 'template_redirect', array( self::class, 'no_admin_bar' ), -1 );
+		add_action( 'template_redirect', array( self::class, 'to_root' ), 0 );
 		add_action( 'template_redirect', array( self::class, 'manifest' ) );
 		add_filter( 'template_include', array( self::class, 'template' ), 99 );
 	}
@@ -83,6 +104,147 @@ final class Standalone {
 			flush_rewrite_rules( false );
 			update_option( self::REWRITE, RIFF_VERSION, true );
 		}
+	}
+
+	/**
+	 * The setting, on Settings › Riff and in the REST settings route.
+	 *
+	 * @since 6.4.0
+	 */
+	public static function setting(): void {
+		register_setting(
+			Extensions::PAGE,
+			self::AT_ROOT,
+			array(
+				'type'              => 'boolean',
+				'description'       => __( 'Whether the site\'s own address opens the Listen page\'s app.', 'riff' ),
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'show_in_rest'      => true,
+			)
+		);
+	}
+
+	/**
+	 * The checkbox on Settings › Riff, in a section of its own.
+	 *
+	 * @since 6.4.0
+	 */
+	public static function field(): void {
+		add_settings_section( 'riff-app', __( 'Listen app', 'riff' ), '__return_false', Extensions::PAGE );
+		add_settings_field(
+			self::AT_ROOT,
+			__( 'Site address', 'riff' ),
+			static function (): void {
+				$saved = rest_sanitize_boolean( get_option( self::AT_ROOT, false ) );
+				$on    = self::at_root();
+				printf(
+					'<label for="%1$s"><input name="%1$s" type="checkbox" id="%1$s" value="1"%2$s%3$s> %4$s</label><p class="description">%5$s</p>',
+					esc_attr( self::AT_ROOT ),
+					checked( $on, true, false ),
+					disabled( $on !== $saved, true, false ),
+					esc_html__( 'Open the player at the site\'s address', 'riff' ),
+					esc_html( $on !== $saved ? __( 'Set for this site by a plugin.', 'riff' ) : __( 'The home page is the Listen page\'s app, without the theme, and its app/ address leads there. The Listen page itself, and the other pages, stay as they are.', 'riff' ) )
+				);
+			},
+			Extensions::PAGE,
+			'riff-app'
+		);
+	}
+
+	/**
+	 * Whether the site's own address opens the app.
+	 *
+	 * @since 6.4.0
+	 *
+	 * @return bool
+	 */
+	public static function at_root(): bool {
+		/**
+		 * Filters whether the site's own address opens the Listen page's app. On, a request for the
+		 * home page with no other query is the Listen page in standalone mode, every link to the app
+		 * and the manifest's start address are the home page, and the app/ address redirects there.
+		 * The Listen page's own address and the theme's front page setting are left as they are.
+		 *
+		 * A host that gives each site its own player turns it on with
+		 * `add_filter( 'riff_app_at_root', '__return_true' )`.
+		 *
+		 * @since 6.4.0
+		 *
+		 * @param bool $on Whether it is on, from Settings › Riff. Default false.
+		 */
+		return (bool) apply_filters( 'riff_app_at_root', rest_sanitize_boolean( get_option( self::AT_ROOT, false ) ) );
+	}
+
+	/**
+	 * The Listen page the site's address opens, or 0 when it opens none.
+	 *
+	 * @return int
+	 */
+	private static function root_page(): int {
+		if ( ! self::at_root() ) {
+			return 0;
+		}
+		return self::$root ? self::$root : First_Run::listen_page();
+	}
+
+	/**
+	 * Answers the site's address with the Listen page in standalone mode, when that is on: a request
+	 * with no query at all, or only the manifest's, or the app's own (which to_root() then sends to
+	 * the site's address). Through the query, not the front page setting, so a Listen page that is
+	 * also the front page works too.
+	 *
+	 * @since 6.4.0
+	 *
+	 * @param array $query_vars The request's query variables.
+	 * @return array
+	 */
+	public static function route( $query_vars ) {
+		self::$root = 0;
+		if ( ! is_array( $query_vars ) || array_diff( array_keys( $query_vars ), array( self::QUERY ) ) || ! self::at_root() ) {
+			return $query_vars;
+		}
+		$page = First_Run::listen_page();
+		if ( ! $page ) {
+			return $query_vars;
+		}
+		$app = isset( $query_vars[ self::QUERY ] ) ? (string) $query_vars[ self::QUERY ] : '';
+		if ( '' === $app || self::MANIFEST === $app ) {
+			self::$root = $page;
+		}
+		return array(
+			'page_id'   => $page,
+			self::QUERY => '' === $app ? '1' : $app,
+		);
+	}
+
+	/**
+	 * Keeps WordPress from moving the site's address to the Listen page's own.
+	 *
+	 * @since 6.4.0
+	 *
+	 * @param string|false $redirect Where WordPress would send the request.
+	 * @return string|false
+	 */
+	public static function canonical( $redirect ) {
+		return self::$root ? false : $redirect;
+	}
+
+	/**
+	 * Sends the app/ address of the Listen page the site's address opens, the manifest's aside,
+	 * to the site's address, with the view it asked for.
+	 *
+	 * @since 6.4.0
+	 */
+	public static function to_root(): void {
+		if ( self::$root || ! self::active() || self::MANIFEST === get_query_var( self::QUERY ) || get_queried_object_id() !== self::root_page() ) {
+			return;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the view asked for, carried over; nothing changes.
+		$args = map_deep( wp_unslash( $_GET ), 'sanitize_text_field' );
+		unset( $args[ self::QUERY ], $args['page_id'], $args['pagename'] );
+		wp_safe_redirect( add_query_arg( urlencode_deep( $args ), home_url( '/' ) ), 301 );
+		exit;
 	}
 
 	/**
@@ -114,16 +276,22 @@ final class Standalone {
 	}
 
 	/**
-	 * The standalone address of a page.
+	 * The standalone address of a page: the site's own, for the Listen page it opens.
 	 *
 	 * @since 4.17.0
+	 * @since 6.4.0 The site's address, where it opens the app.
 	 *
 	 * @param int  $page_id  Page ID; the queried page by default.
 	 * @param bool $manifest The manifest's address instead.
 	 * @return string
 	 */
 	public static function url( int $page_id = 0, bool $manifest = false ): string {
-		$link = (string) get_permalink( $page_id ? $page_id : get_queried_object_id() );
+		$page_id = $page_id ? $page_id : get_queried_object_id();
+		if ( $page_id && self::root_page() === $page_id ) {
+			// A query argument, which answers with or without pretty permalinks.
+			return $manifest ? add_query_arg( self::QUERY, self::MANIFEST, home_url( '/' ) ) : home_url( '/' );
+		}
+		$link = (string) get_permalink( $page_id );
 		if ( get_option( 'permalink_structure' ) ) {
 			return trailingslashit( $link ) . self::ENDPOINT . '/' . ( $manifest ? self::MANIFEST . '/' : '' );
 		}
@@ -198,6 +366,7 @@ final class Standalone {
 	 * The web app manifest's members for the queried Listen page.
 	 *
 	 * @since 4.17.0
+	 * @since 6.4.0 Filtered by riff_app_manifest.
 	 *
 	 * @return array
 	 */
@@ -229,7 +398,21 @@ final class Standalone {
 			'theme_color'      => self::BACKGROUND,
 			'icons'            => $icons,
 		);
-		return $manifest;
+		/**
+		 * Filters the Listen app's web app manifest, for a host that names, colours or gives icons
+		 * to each site's app its own way.
+		 *
+		 * The document's theme-color meta tag follows the manifest's theme_color. Its page colours
+		 * come from the custom properties on `.riff-standalone`, such as `--riff-standalone-bg`.
+		 *
+		 * @since 6.4.0
+		 *
+		 * @param array $manifest The manifest's members: id, name, short_name, description,
+		 *                        start_url, scope, display_override, display, background_color,
+		 *                        theme_color and icons.
+		 */
+		$filtered = apply_filters( 'riff_app_manifest', $manifest );
+		return is_array( $filtered ) ? $filtered : $manifest;
 	}
 
 	/**
@@ -292,13 +475,14 @@ final class Standalone {
 	 * Riff's own dark look, in place of the theme's colours and fonts.
 	 *
 	 * @since 4.17.0
+	 * @since 6.4.0 The background and text from --riff-standalone-bg and --riff-standalone-ink.
 	 *
 	 * @return array<string, string>
 	 */
 	public static function tokens(): array {
 		return array(
-			'--riff-app-bg'           => self::BACKGROUND,
-			'--riff-app-ink'          => '#ffffff',
+			'--riff-app-bg'           => 'var(--riff-standalone-bg, ' . self::BACKGROUND . ')',
+			'--riff-app-ink'          => 'var(--riff-standalone-ink, #fff)',
 			'--riff-app-accent'       => '#f2eadb',
 			'--riff-app-on-accent'    => self::BACKGROUND,
 			'--riff-app-font'         => '"Riff Roboto", roboto, "Riff Roboto Fallback", system-ui, sans-serif',

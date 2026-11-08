@@ -31,8 +31,8 @@
    look, with no theme around it. */
 .riff-standalone {
 	margin: 0;
-	background: #030303;
-	color: #fff;
+	background: var(--riff-standalone-bg);
+	color: var(--riff-standalone-ink);
 	color-scheme: dark;
 }
 
@@ -569,13 +569,13 @@ html.has-riff .riff-standalone .riff-app {
 		border: 0;
 		border-radius: 50%;
 		background: var(--riff-app-accent);
-		color: #000;
+		color: var(--riff-standalone-on-accent);
 		transition: transform 0.15s, background-color 0.15s;
 	}
 
 	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="play"]:hover {
 		transform: scale(1.04);
-		background: color-mix(in srgb, var(--riff-app-accent) 85%, #fff);
+		background: color-mix(in srgb, var(--riff-app-accent) 85%, var(--riff-standalone-ink));
 	}
 
 	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"] {
@@ -875,7 +875,7 @@ html.has-riff .riff-standalone .riff-app {
 		left: 0;
 		z-index: 3;
 		height: calc(var(--riff-tabs-h) + 50vh);
-		background: var(--riff-surface, #212121);
+		background: var(--riff-standalone-tabs);
 	}
 
 	/* And the status bar's strip at the top in the page's own black, as the
@@ -889,7 +889,7 @@ html.has-riff .riff-standalone .riff-app {
 		left: 0;
 		z-index: 4;
 		height: var(--riff-safe-t);
-		background: #030303;
+		background: var(--riff-standalone-bg);
 	}
 
 	.riff-standalone .riff-app .riff-app-bar .riff-app-tab:is(.riff-app-home, .riff-app-tab-search, .riff-app-tab-library) {
