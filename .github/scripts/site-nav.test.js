@@ -57,7 +57,7 @@ test( 'adding a section is one entry: it joins the header of every page, in its 
 	more.sections.splice( 3, 0, { key: 'learn', label: 'Learn', href: 'learn/' } );
 	assert.deepEqual( nav.validate( more ), [] );
 	const html = nav.header( nav.locate( 'learn/', { nav: more } ), '../', false, more );
-	assert.match( html, />Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/learn\/" aria-current="page">Learn<\/a><a href="\.\.\/developers\/">Developers<\/a>/ );
+	assert.match( html, />Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/learn\/" aria-current="page">Learn<\/a><a href="\.\.\/developers\/">Docs<\/a>/ );
 } );
 
 test( 'every page, written by hand or generated, has the same header in the same order', () => {
@@ -77,15 +77,15 @@ test( 'every page, written by hand or generated, has the same header in the same
 		assert.match( html, /<footer>.*<nav aria-label="Footer">.*>About<.*>How Riff is built<.*>Accessibility<.*>Help<.*>Support<.*>Security<.*>GitHub</, file );
 	}
 	assert.equal( shapes.size, 1, [ ...shapes ].join( '\n' ) );
-	assert.match( [ ...shapes ][ 0 ], /<nav aria-label="Main"><a href="add-music\/">Add your music<\/a><a href="download\/">Download<\/a><a href="developers\/">Developers<\/a><\/nav>/ );
+	assert.match( [ ...shapes ][ 0 ], /<nav aria-label="Main"><a href="add-music\/">Add your music<\/a><a href="download\/">Download<\/a><a href="developers\/">Docs<\/a><\/nav>/ );
 } );
 
 test( 'each level marks where the page is: the header, the section bar and the breadcrumbs', () => {
 	const pages = generated();
 	const hook = pages.get( 'developers/hooks/riff_track/index.html' ) || [ ...pages ].find( ( [ f, h ] ) => f.startsWith( 'developers/hooks/riff_' ) && h.includes( 'apply_filters' ) )[ 1 ];
-	assert.match( hook, /<a href="\.\.\/\.\.\/\.\.\/developers\/" aria-current="true">Developers<\/a><\/nav><\/div><\/header>/ );
+	assert.match( hook, /<a href="\.\.\/\.\.\/\.\.\/developers\/" aria-current="true">Docs<\/a><\/nav><\/div><\/header>/ );
 	assert.match( hook, /<a href="\.\.\/\.\.\/\.\.\/developers\/php\/" aria-current="true">PHP<\/a>/ );
-	assert.match( hook, /<nav aria-label="Breadcrumbs"><ol><li><a href="\.\.\/\.\.\/\.\.\/developers\/">Developers<\/a><\/li><li>Reference<\/li><li><a href="\.\.\/\.\.\/\.\.\/developers\/php\/">PHP<\/a><\/li><li aria-current="page">riff_/ );
+	assert.match( hook, /<nav aria-label="Breadcrumbs"><ol><li><a href="\.\.\/\.\.\/\.\.\/developers\/">Docs<\/a><\/li><li>Reference<\/li><li><a href="\.\.\/\.\.\/\.\.\/developers\/php\/">PHP<\/a><\/li><li aria-current="page">riff_/ );
 	assert.match( hook, /<nav class="pager" aria-label="Previous and next">/ );
 
 	const php = pages.get( 'developers/php/index.html' );
@@ -94,13 +94,15 @@ test( 'each level marks where the page is: the header, the section bar and the b
 	assert.equal( ( php.match( /aria-current="page"/g ) || [] ).length, 2, 'the bar and the breadcrumbs' );
 
 	const dev = read( 'site/developers/index.html' );
-	assert.match( dev, /class="local-title" href="\.\.\/developers\/" aria-current="page">Developers/ );
-	assert.match( dev, /<a href="\.\.\/developers\/" aria-current="page">Developers<\/a><\/nav><\/div><\/header>/ );
+	// The wordmark leads to the Source home, and the bar doesn't repeat the header's name for it.
+	assert.match( dev, /class="mark" href="\.\.\/developers\/" aria-current="page"><img [^>]*alt="Riff Source"/ );
+	assert.match( dev, /<a href="\.\.\/developers\/" aria-current="page">Docs<\/a><\/nav><\/div><\/header>/ );
+	assert.doesNotMatch( dev, /local-title/ );
 	assert.doesNotMatch( dev, /Breadcrumbs/, 'a section root has none' );
 	assert.match( dev, /<span class="local-label">Handbook<\/span><ul><li><a href="\.\.\/developers\/extensions\/">Extensions<\/a><\/li><li><a href="\.\.\/developers\/player\/">Player<\/a><\/li><\/ul>.*<span class="local-label">Reference<\/span><ul><li><a[^>]*>PHP<\/a><\/li><li><a[^>]*>JavaScript<\/a><\/li><li><a[^>]*>REST API<\/a><\/li><li><a[^>]*>CSS<\/a><\/li><\/ul><\/li><li><a href="\.\.\/web\/">Built on the open web<\/a>/ );
 
 	const built = read( 'site/built/index.html' );
-	assert.match( built, /class="mark" href="\.\.\/" aria-current="true"/ );
+	assert.match( built, /class="mark" href="\.\.\/developers\/"><img/ );
 	assert.doesNotMatch( built, /local-nav/, 'the home section lists nothing in a bar' );
 	assert.match( built, /<li><a href="\.\.\/">Riff<\/a><\/li><li aria-current="page">How Riff is built<\/li>/ );
 	assert.match( built, /<a href="\.\.\/built\/" aria-current="page">How Riff is built<\/a>/ );
@@ -109,7 +111,8 @@ test( 'each level marks where the page is: the header, the section bar and the b
 	assert.match( music, /<a href="\.\.\/add-music\/" aria-current="page">Add your music<\/a>/ );
 	assert.doesNotMatch( music, /local-nav|Breadcrumbs/ );
 	assert.doesNotMatch( read( 'site/404.html' ), /aria-current/ );
-	assert.match( read( 'site/index.html' ), /<header class="nav alt">.*class="mark" href="\.\/" aria-current="page"><img src="brand\/wordmark-ivory\.svg"/ );
+	// The old riffpress.com home isn't deployed; its wordmark leads to the Source home like every page's.
+	assert.match( read( 'site/index.html' ), /<header class="nav alt">.*class="mark" href="developers\/"><img src="brand\/wordmark-ivory\.svg"/ );
 } );
 
 test( 'a web feature, a hook and a handbook have previous and next, in their order', () => {
@@ -119,7 +122,7 @@ test( 'a web feature, a hook and a handbook have previous and next, in their ord
 	assert.match( ext, /<a rel="next" href="\.\.\/\.\.\/developers\/player\/"><span class="pager-dir">Next<\/span> <span class="pager-name">Player<\/span>/ );
 	assert.doesNotMatch( ext, /rel="prev"/ );
 	assert.match( player, /<a rel="prev" href="\.\.\/\.\.\/developers\/extensions\/">/ );
-	assert.match( player, /<li><a href="\.\.\/\.\.\/developers\/">Developers<\/a><\/li><li>Handbook<\/li><li aria-current="page">Player<\/li>/ );
+	assert.match( player, /<li><a href="\.\.\/\.\.\/developers\/">Docs<\/a><\/li><li>Handbook<\/li><li aria-current="page">Player<\/li>/ );
 	const web = [ ...pages ].filter( ( [ f ] ) => /^web\/[^/]+\/index\.html$/.test( f ) );
 	assert.ok( web.length > 2 );
 	for ( const [ file, html ] of web ) {
@@ -139,7 +142,7 @@ test( 'a web feature, a hook and a handbook have previous and next, in their ord
 test( 'titles name the host: Riff on the site, Riff Source on the developer host', () => {
 	assert.match( read( 'site/built/index.html' ), /<title>How Riff is built \| Riff Source<\/title>/ );
 	assert.match( read( 'site/download/index.html' ), /<title>Download \| Riff Source<\/title>/ );
-	assert.match( read( 'site/developers/index.html' ), /<title>Developers \| Riff Source<\/title>/ );
+	assert.match( read( 'site/developers/index.html' ), /<title>Riff Source<\/title>/ );
 	assert.match( read( 'site/index.html' ), /<title>Riff, a music player for WordPress<\/title>/ );
 	for ( const [ file, html ] of generated() ) {
 		assert.match( html, /<title>[^<|]+ \| Riff Source<\/title>/, file );
@@ -149,7 +152,7 @@ test( 'titles name the host: Riff on the site, Riff Source on the developer host
 test( 'stamping keeps the page body, mends a drifted region, and fails a page it cannot place', () => {
 	const page = read( 'site/download/index.html' );
 	assert.equal( nav.stamp( page, 'download/index.html' ).html, page, 'already current' );
-	const drifted = page.replace( '>Developers</a>', '>Devs</a>' ).replace( '<title>Download | Riff</title>', '<title>Download | RiffPress</title>' );
+	const drifted = page.replace( '>Docs</a>', '>Devs</a>' ).replace( '<title>Download | Riff</title>', '<title>Download | RiffPress</title>' );
 	assert.equal( nav.stamp( drifted, 'download/index.html' ).html, page );
 	const body = page.replace( '<h1>', '<h1 data-x="kept">' );
 	assert.match( nav.stamp( body, 'download/index.html' ).html, /data-x="kept"/ );
@@ -196,20 +199,20 @@ test( 'split across the two hosts, the navigation links relative on each and abs
 	assert.deepEqual( problems, [] );
 
 	const php = fs.readFileSync( path.join( dev, 'php', 'index.html' ), 'utf8' );
-	// The header: the site's home absolute, the rest on this host, Developers current.
-	assert.match( php, /class="mark" href="https:\/\/riffpress\.com\/"><img src="\.\.\/brand\/wordmark-ink\.svg"/ );
-	assert.match( php, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/" aria-current="true">Developers<\/a>/ );
+	// The header: the wordmark to this host's home, every section on this host, Docs current.
+	assert.match( php, /class="mark" href="\.\.\/"><img src="\.\.\/brand\/wordmark-ink\.svg"/ );
+	assert.match( php, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/" aria-current="true">Docs<\/a>/ );
 	// The section bar and the breadcrumbs stay on the host.
 	assert.match( php, /href="\.\.\/extensions\/">Extensions<\/a>.*href="\.\.\/php\/" aria-current="page">PHP<\/a>.*href="\.\.\/web\/">Built on the open web/ );
-	assert.match( php, /<li><a href="\.\.\/">Developers<\/a><\/li><li>Reference<\/li><li aria-current="page">PHP<\/li>/ );
+	assert.match( php, /<li><a href="\.\.\/">Docs<\/a><\/li><li>Reference<\/li><li aria-current="page">PHP<\/li>/ );
 	// The footer's pages moved with it.
 	assert.match( php, /<a href="\.\.\/built\/">How Riff is built<\/a>/ );
-	assert.match( fs.readFileSync( path.join( dev, 'index.html' ), 'utf8' ), /class="local-title" href="\.\/" aria-current="page">Developers/ );
+	assert.match( fs.readFileSync( path.join( dev, 'index.html' ), 'utf8' ), /class="mark" href="\.\/" aria-current="page"/ );
 	assert.match( fs.readFileSync( path.join( dev, 'player', 'index.html' ), 'utf8' ), /rel="prev" href="\.\.\/extensions\/"/ );
 
 	const built = fs.readFileSync( path.join( dev, 'built', 'index.html' ), 'utf8' );
-	assert.match( built, /class="mark" href="https:\/\/riffpress\.com\/"/ );
-	assert.match( built, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/">Developers<\/a>/ );
+	assert.match( built, /class="mark" href="\.\.\/"/ );
+	assert.match( built, /<a href="\.\.\/add-music\/">Add your music<\/a><a href="\.\.\/download\/">Download<\/a><a href="\.\.\/">Docs<\/a>/ );
 	assert.match( built, /<a href="\.\.\/built\/" aria-current="page">How Riff is built/ );
 	assert.ok( ! fs.existsSync( path.join( out, 'developers' ) ) );
 	assert.ok( ! fs.existsSync( path.join( out, 'built' ) ) );
