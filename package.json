@@ -50,7 +50,10 @@
     "docs:og": "node .github/scripts/og-images.js",
     "docs:shots": "node .github/scripts/site-shots.js",
     "docs:wporg": "node .github/scripts/wporg-assets.js",
-    "docs:changelog:check": "node .github/scripts/readme-changelog.js --check"
+    "docs:changelog:check": "node .github/scripts/readme-changelog.js --check",
+    "types": "node .github/scripts/riff-types.js",
+    "types:check": "node .github/scripts/riff-types.js --check",
+    "test:types": "tsc -p packages/types/tsconfig.json && node --test packages/types/test/*.test.js .github/scripts/riff-types.test.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

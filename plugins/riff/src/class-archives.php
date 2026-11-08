@@ -314,6 +314,18 @@ final class Archives {
 	}
 
 	/**
+	 * Whether an address is the Library of Congress's own, over https: its files are on its own
+	 * hosts (tile.loc.gov), and Riff declares *.loc.gov in its isolation.json.
+	 *
+	 * @param string $url An address.
+	 * @return bool
+	 */
+	private static function loc_host( string $url ): bool {
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		return 'https' === wp_parse_url( $url, PHP_URL_SCHEME ) && ( 'loc.gov' === $host || str_ends_with( $host, '.loc.gov' ) );
+	}
+
+	/**
 	 * The file of a resource to import: its MP3 where it has one, as the smaller, else its first audio.
 	 *
 	 * @param array $groups The resource's files, in groups.
@@ -324,7 +336,7 @@ final class Archives {
 		foreach ( $groups as $group ) {
 			foreach ( (array) $group as $file ) {
 				$url = is_array( $file ) ? (string) ( $file['url'] ?? $file['filename'] ?? '' ) : '';
-				if ( '' !== $url && str_starts_with( (string) ( $file['mimetype'] ?? '' ), 'audio/' ) && str_starts_with( $url, 'https://' ) ) {
+				if ( '' !== $url && str_starts_with( (string) ( $file['mimetype'] ?? '' ), 'audio/' ) && self::loc_host( $url ) ) {
 					$audio[] = array_merge( $file, array( 'url' => $url ) );
 				}
 			}
@@ -436,6 +448,7 @@ final class Archives {
 			'skipped'  => array(),
 			'failed'   => array(),
 		);
+		// isolation: write -- a folder of its own under the temp folder, emptied and removed below.
 		wp_mkdir_p( $dir );
 		try {
 			$files = array();
@@ -529,6 +542,7 @@ final class Archives {
 			return new WP_Error( 'riff_archive_download', __( 'The recording is larger than Riff downloads.', 'riff' ) );
 		}
 		$file = $stem . '.' . $ext;
+		// isolation: write -- the download's .part file to its name, both in item()'s temp folder.
 		if ( ! rename( $tmp, $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- within a temporary folder of Riff's own.
 			wp_delete_file( $tmp );
 			return new WP_Error( 'riff_archive_download', __( 'The download could not be kept.', 'riff' ) );

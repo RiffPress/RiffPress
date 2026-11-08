@@ -99,11 +99,30 @@
 	/**
 	 * The played part of the seek bar in the bar, its knob, the format label,
 	 * and the glow behind the cover. A theme sets it in theme.json under
-	 * `settings.custom.riff.accent`, or in its own CSS.
+	 * `settings.custom.riff.accent`; a site's or a host's own stylesheet that
+	 * sets it on `#riff` wins over that. Unset, it is the player's text
+	 * colour.
 	 *
 	 * @since 4.0.0
+	 * @since 6.5.0 The player's text colour by default, and a stylesheet wins
+	 *              over theme.json.
 	 */
-	--riff-accent: #f2eadb;
+	--riff-accent: var(--riff-theme-accent, var(--riff-fg));
+
+	/**
+	 * The accent the playing track's cover gives, which the player sets here
+	 * as the track changes: the cover's hue, muted, and light enough to read
+	 * at 4.5:1 on the bar and on Now Playing. The played part of the seek bar
+	 * in the bar, its knob, the playing bars and the title of the current Up
+	 * next item, and a wash behind Now Playing take it. A cover that is grey,
+	 * near black or near white gives none, and it is `--riff-accent`. In the
+	 * Listen app's own document the player sets it on the body too, for the
+	 * app's links, Liked songs and the Browse tiles. The `riff_cover_accent`
+	 * filter turns it off.
+	 *
+	 * @since 6.5.0
+	 */
+	--riff-cover-accent: var(--riff-accent);
 }
 
 .riff-app {
@@ -163,7 +182,7 @@
 	 *
 	 * @since 4.0.0
 	 */
-	--riff-app-accent-tint: #f2eadb;
+	--riff-app-accent-tint: color-mix(in srgb, var(--riff-app-accent) 10%, var(--riff-app-bg));
 
 	/**
 	 * Text and icons on a filled button: the accent, or the text colour under
@@ -239,6 +258,16 @@
 	 * @since 6.4.0
 	 */
 	--riff-standalone-on-accent: #000;
+
+	/**
+	 * The Listen app's accent in its own document: its Play buttons and
+	 * links, until a cover gives one, and what a grey cover falls back to. A
+	 * host's stylesheet sets it, on `.riff-standalone`, and it wins over
+	 * Riff's own default, the app's text colour.
+	 *
+	 * @since 6.5.0
+	 */
+	--riff-standalone-accent: var(--riff-standalone-ink);
 }
 
 /* A control is pressed, not read: a tap, a long-press or a double-click on a

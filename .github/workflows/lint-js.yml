@@ -21,6 +21,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint:js
+      # packages/types: the generated declarations, the client and the email example compile, refuse
+      # what the routes and hooks refuse, and pass their tests.
+      - run: npm run test:types
       # The site's animated pieces build; Pages builds them again to deploy.
       - run: npm run site:js
 

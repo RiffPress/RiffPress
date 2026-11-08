@@ -1,0 +1,47 @@
+{
+	"name": "@riffpress/riff-types",
+	"version": "0.1.0",
+	"description": "TypeScript types for Riff, generated from its code: every REST route, the track, album and playlist, window.riff with its actions, filters and events, and the Listen app's views. With a small typed client for the REST routes.",
+	"license": "GPL-2.0-or-later",
+	"private": true,
+	"type": "module",
+	"keywords": [
+		"wordpress",
+		"riff",
+		"typescript",
+		"types",
+		"rest-api"
+	],
+	"homepage": "https://github.com/RiffPress/RiffPress/tree/main/packages/types#readme",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RiffPress/RiffPress.git",
+		"directory": "packages/types"
+	},
+	"bugs": {
+		"url": "https://github.com/RiffPress/RiffPress/issues"
+	},
+	"types": "index.d.ts",
+	"exports": {
+		".": {
+			"types": "./index.d.ts"
+		},
+		"./client": {
+			"types": "./client.d.ts",
+			"default": "./client.js"
+		},
+		"./examples/email": {
+			"types": "./examples/email.d.ts",
+			"default": "./examples/email.js"
+		}
+	},
+	"files": [
+		"index.d.ts",
+		"client.js",
+		"client.d.ts",
+		"examples"
+	],
+	"devDependencies": {
+		"typescript": "^6.0.3"
+	}
+}

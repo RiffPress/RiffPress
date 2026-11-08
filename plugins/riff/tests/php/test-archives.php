@@ -171,7 +171,7 @@ class Test_Riff_Archives extends Riff_TestCase {
 		$this->assertCount( 2, $this->tracks() );
 		$this->assertSame( array( '01 - Hungarian-rag.mp3' ), $again['albums'][0]['skipped'] );
 		$this->assertSame( $first['albums'][0]['post'], $again['albums'][0]['post'] );
-		$this->assertSame( 1, substr_count( get_post_field( 'post_content', $first['albums'][0]['post'] ), 'wp:paragraph' ) );
+		$this->assertSame( 1, substr_count( get_post_field( 'post_content', $first['albums'][0]['post'] ), '<!-- wp:paragraph' ), 'one credit block' );
 		$this->assertSame( 'The owner\'s own credit.', get_post_field( 'post_excerpt', $this->tracks()[0] ), 'a file it skipped is left as its owner made it' );
 	}
 

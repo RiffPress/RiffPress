@@ -128,8 +128,10 @@
 	list-style: none;
 }
 
-.riff-app .riff-browse-tile {
+.riff-app a.riff-browse-tile {
 	display: flex;
+	background: var(--riff-tile);
+	color: var(--riff-tile-ink);
 	min-height: 96px;
 	padding: 16px;
 	border-radius: 8px;
@@ -305,11 +307,11 @@
 .riff-standalone .riff-app .riff-app-account-menu a:hover,
 .riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
 	background: none;
-	color: var(--riff-accent, #f2eadb);
+	color: var(--riff-accent, var(--riff-app-ink));
 }
 
 .riff-standalone .riff-app .riff-app-account-menu a:focus-visible {
-	box-shadow: inset 0 0 0 2px var(--riff-accent, #f2eadb);
+	box-shadow: inset 0 0 0 2px var(--riff-accent, var(--riff-app-ink));
 }
 
 .riff-app .riff-app-search input:focus-visible {
@@ -957,7 +959,7 @@
    blend has no grey middle and no bands. */
 .riff-app {
 	--riff-liked: linear-gradient(135deg in oklab, #7a00df, #3858e9);
-	--riff-on-liked: #f2eadb;
+	--riff-on-liked: var(--riff-app-on-accent);
 }
 
 .riff-app .riff-card-liked .riff-card-art {

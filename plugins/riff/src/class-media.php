@@ -129,6 +129,31 @@ final class Media {
 		add_action( 'admin_enqueue_scripts', array( self::class, 'enqueue_media' ) );
 		add_action( Catalog::ARTIST . '_edit_form_fields', array( self::class, 'artist_field' ) );
 		add_action( 'edited_' . Catalog::ARTIST, array( self::class, 'save_artist' ) );
+		add_filter( 'rest_prepare_attachment', array( self::class, 'caption' ), 10, 2 );
+	}
+
+	/**
+	 * An audio file's caption on the media route is the one it has, or none. Core renders an
+	 * empty caption through `get_the_excerpt`, which makes one from the description, as a post's
+	 * excerpt is made from its content: for an audio file, its own address. The About panel shows
+	 * the caption as the file's credit line, so a file without one would be credited with that.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @param \WP_REST_Response $response The media route's answer.
+	 * @param WP_Post           $post     The attachment.
+	 * @return \WP_REST_Response
+	 */
+	public static function caption( $response, $post ) {
+		if ( ! $response instanceof \WP_REST_Response || ! $post instanceof WP_Post || ! wp_attachment_is( 'audio', $post ) || '' !== trim( $post->post_excerpt ) ) {
+			return $response;
+		}
+		$data = $response->get_data();
+		if ( isset( $data['caption']['rendered'] ) ) {
+			$data['caption']['rendered'] = '';
+			$response->set_data( $data );
+		}
+		return $response;
 	}
 
 	/**

@@ -338,6 +338,9 @@ final class Player {
 			// A post's tracks, which the record in Now Playing cuts its grooves from.
 			'library'    => rest_url( 'riff/v1/library/' ),
 		);
+		if ( ! self::cover_accent() ) {
+			$data['coverAccent'] = false;
+		}
 		// What Riff's own features add for the script: the Listen app's address, the listener's
 		// likes and playlists, whether they have the single-key shortcuts, where they share what
 		// they play, whether the site has turned the turntable off, the views registered, and where
@@ -396,6 +399,33 @@ final class Player {
 	}
 
 	/**
+	 * Whether the player takes its accent from the cover of the track playing.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @return bool
+	 */
+	public static function cover_accent(): bool {
+		/**
+		 * Filters whether the player takes its accent from the cover of the track playing: the
+		 * cover's hue, muted and lightened until it reads on the player's dark surfaces, as
+		 * `--riff-cover-accent`, on the seek bar, the playing bars, the current Up next item and a
+		 * wash behind Now Playing, and in the Listen app's own document on its links, the track
+		 * playing, Liked songs and the Browse tiles. A cover that is grey, near black or near
+		 * white gives none, and the accent is the site's `--riff-accent`, as it is everywhere with
+		 * this off.
+		 *
+		 * A host keeps its one accent everywhere with
+		 * `add_filter( 'riff_cover_accent', '__return_false' )`.
+		 *
+		 * @since 6.5.0
+		 *
+		 * @param bool $on Default true.
+		 */
+		return (bool) apply_filters( 'riff_cover_accent', true );
+	}
+
+	/**
 	 * The inline style on the player's root: the accent a theme sets in theme.json under
 	 * settings.custom.riff.accent, or nothing.
 	 *
@@ -409,7 +439,9 @@ final class Player {
 		if ( '' === $accent || ! preg_match( '/^[#a-z0-9(),.% -]+$/i', $accent ) ) {
 			return '';
 		}
-		return ' style="--riff-accent: ' . esc_attr( $accent ) . '"';
+		// Through a variable of its own, which tokens.css makes --riff-accent's default, so a host's
+		// stylesheet that sets --riff-accent still wins over the theme's.
+		return ' style="--riff-theme-accent: ' . esc_attr( $accent ) . '"';
 	}
 
 	/**

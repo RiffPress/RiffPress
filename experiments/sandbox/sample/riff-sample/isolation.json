@@ -1,0 +1,13 @@
+{
+	"$schema": "../../../../docs/isolation.schema.json",
+	"plugin": "riff-sample",
+	"data": { "options": [], "meta": [ "_riff_sample_" ], "shared": {}, "keep": {} },
+	"rest": { "namespaces": [], "fields": [], "public": {} },
+	"capabilities": [],
+	"hosts": [ "api.example.org" ],
+	"spawn": [],
+	"riff": { "hooks": [], "functions": [], "events": [], "api": [] },
+	"scripts": [],
+	"modules": [],
+	"sandbox": { "reads": [ "track" ], "events": [ "riff_sandbox_uploaded" ], "time": 2000, "memory": "64M" }
+}

@@ -330,7 +330,9 @@ final class Extensions {
 		settings_fields( self::PAGE );
 		do_settings_sections( self::PAGE );
 		submit_button();
-		echo '</form></div>';
+		echo '</form>';
+		Permissions::section();
+		echo '</div>';
 	}
 
 	/**
