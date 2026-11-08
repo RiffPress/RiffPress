@@ -130,7 +130,6 @@ function index( entries ) {
 
 function sitemap( entries ) {
 	let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-	xml += '  <url><loc>{{pages_url}}</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n';
 	xml += '  <url><loc>{{pages_url}}download/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n';
 	xml += '  <url><loc>{{pages_url}}developers/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n';
 	xml += '  <url><loc>{{pages_url}}add-music/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n';

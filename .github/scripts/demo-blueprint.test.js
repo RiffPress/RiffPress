@@ -206,10 +206,10 @@ test( 'every demo file blueprint.json fetches exists in the fixture set', () => 
 	assert.deepEqual( missing, [] );
 } );
 
-test( 'no workflow, blueprint, or landing page hardcodes a Pages address', () => {
+test( 'no workflow, blueprint, or page written by hand hardcodes a Pages address', () => {
 	const files = [
 		'blueprint.json',
-		'site/index.html',
+		...require( './site-nav.js' ).handWritten().map( ( f ) => `site/${ f }` ),
 		...fs
 			.readdirSync( path.join( ROOT, '.github/workflows' ) )
 			.map( ( name ) => `.github/workflows/${ name }` ),
@@ -220,15 +220,13 @@ test( 'no workflow, blueprint, or landing page hardcodes a Pages address', () =>
 	assert.deepEqual( hits, [] );
 } );
 
-test( 'the landing page takes its own address from the Pages build', () => {
-	const html = read( 'site/index.html' );
-	assert.match( html, /<link rel="canonical" href="\{\{pages_url\}\}">/ );
+test( 'Riff Source\'s home takes its own address from the Pages build', () => {
+	const html = read( 'site/developers/index.html' );
+	assert.match( html, /<link rel="canonical" href="\{\{pages_url\}\}developers\/">/ );
 	assert.match(
 		html,
-		/property="og:image" content="\{\{pages_url\}\}og\/home\.png"/
+		/property="og:image" content="\{\{pages_url\}\}og\/developers\.png"/
 	);
-	// Its demo buttons open the live demo, which runs main; Playground is for a pull request's own.
-	assert.match( html, /href="https:\/\/next\.riffpress\.com\/listen\/app\/"[^>]*>Open the demo</ );
 	assert.doesNotMatch( html, /playground\.wordpress\.net/ );
 } );
 

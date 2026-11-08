@@ -13,7 +13,7 @@
    the pointer, with a chord held or a string still moving (neck.js marks
    the page .neck-awake), and goes again, slowly, once it is left.
    neck.js builds the rail; where it does not run, the strings stay in the
-   bar, as site.css and web.css draw them. */
+   bar, as web.css draws them. */
 .neck {
 	display: contents;
 }

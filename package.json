@@ -59,8 +59,7 @@
     "@wordpress/env": "^12.0.0",
     "@wordpress/scripts": "^37.0.0",
     "esbuild": "0.28.2",
-    "globals": "^17.13.0",
-    "three": "0.186.1"
+    "globals": "^17.13.0"
   },
   "engines": {
     "node": ">=22",
