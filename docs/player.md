@@ -296,6 +296,35 @@ these:
 
 Listeners can install the Listen page's `app/` address as an app of its own. From their second visit Riff offers it, with the browser's own Install where there is one (Chrome and Edge) and the steps where there is not (Safari's Add to Dock and Add to Home Screen). Installed from Chrome or Edge on a computer it has no title bar, and its strip across the top is the window's title bar. Its name and icon are the site's, so set a site icon under **Settings › General**.
 
+To make the home page that player, tick **Open the player at the site's address** under **Settings › Riff**, or have a plugin return true from the `riff_app_at_root` filter, as a host that gives each site its own player does. The site's address is then the oldest Listen page's app, its `app/` address redirects there with the view it asked for, and the manifest's start address and scope are the home page. The manifest answers at `?riff_app=manifest` on the home page, and still at the Listen page's `app/manifest/`. The Listen page's own address, the other pages and the front page setting stay as they are; a Listen page that is also the front page works too.
+
+A plugin adds a view of its own to the Listen app with the `riff_app_views` filter, and can take Albums, Artists, Tracks or Posts away. Riff serves the view at `?riff_view=<slug>`, draws its title and the panel around what its `render` returns, lists it in the sidebar or the account menu for those with its capability, enqueues its scripts and styles with the app, and says when it shows with the `riff.app_view` action and the `riff:app_view` event:
+
+```php
+add_filter( 'riff_app_views', function ( $views ) {
+	unset( $views['posts'] );
+	$views['upload'] = array(
+		'label'      => __( 'Add music', 'my-plugin' ),
+		'icon'       => MY_UPLOAD_ICON,
+		'nav'        => array( 'account' ),
+		'capability' => 'upload_files',
+		'render'     => fn( $app ) => '<form class="my-upload"></form>',
+		'script'     => 'my-upload',
+	);
+	return $views;
+} );
+// Riff's own Add music and an empty library's link lead to it.
+add_filter( 'riff_add_music_url', fn() => 'upload' );
+```
+
+```js
+document.addEventListener( 'riff:app_view', ( { detail } ) => {
+	if ( detail.view === 'upload' ) {
+		bind( detail.panel.querySelector( '.my-upload' ) );
+	}
+} );
+```
+
 ## Video versions
 
 A track with a video version is set in the Media Library: click an audio file and choose a video

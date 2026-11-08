@@ -32,13 +32,13 @@ Add the Riff block to a page, and it becomes your Listen page: every album as a 
 
 * A heart on every track, album and artist fills Your Library.
 * Signed-in listeners make their own playlists, and their likes and recently played follow their account.
-* Add `app/` to the page's address, for example `/listen/app/`, for the player on its own without your theme, which a browser can install as an app.
+* Add `app/` to the page's address, for example `/listen/app/`, for the player on its own without your theme, which a browser can install as an app. Tick Open the player at the site's address under Settings › Riff, and your home page is that player.
 
 = You publish from WordPress =
 
 Upload your tracks to the Media Library and they're on your Listen page, filed under their album and artist from the tags in the files, with their titles and artwork. Put an album in a post when you want to write about it. If an album has no cover, Riff draws one: its record, with a band of grooves for each track on its first side.
 
-There's nothing to configure. Riff adds its fields on media (Artwork, Video version, Streaming version and Protected), the Riff block, and Settings › Riff, where the features it ships with, such as Lyrics, are turned on or off.
+There's nothing to configure. Riff adds its fields on media (Artwork, Video version, Streaming version and Protected), the Riff block, and Settings › Riff, where the features it ships with, such as Lyrics, are turned on or off, and the player can open at the site's address.
 
 [The live demo](https://next.riffpress.com/listen/app/) has four albums and runs in your browser, with nothing to install. [Add your music](https://source.riffpress.com/add-music/) walks through putting your first album online, starting from nothing.
 

@@ -318,6 +318,32 @@ function start() {
 			return () => P.own[ name ]?.delete( fn );
 		},
 		/**
+		 * Says which view of the Listen app is showing, for the plugins that drew one: the app
+		 * calls it once its first view is up, and again after each view it brings.
+		 *
+		 * @since 6.4.0
+		 *
+		 * @param {{view: string, panel: HTMLElement}} detail The view's slug, and the element its view is drawn in.
+		 */
+		appView( detail ) {
+			/**
+			 * Fires when a view of the Listen app shows: the first as the app starts, then each one
+			 * in-page navigation brings, and again when one is drawn again in place. A plugin that
+			 * added a view with the `riff_app_views` filter binds its script to what it drew here,
+			 * or on the `riff:app_view` event, which bubbles to `document`.
+			 *
+			 * @since 6.4.0
+			 *
+			 * @param {Object}      detail       The view.
+			 * @param {string}      detail.view  Its slug: `home`, `albums`, `album`, `post` and the
+			 *                                   rest of Riff's, or the plugin's own.
+			 * @param {HTMLElement} detail.panel The element the view is drawn in, `[data-riff-app-view]`;
+			 *                                   a plugin's is inside it, `[data-riff-app-panel="<slug>"]`.
+			 * @param {Object}      api          `window.riff`.
+			 */
+			emit( 'app_view', { view: detail.view, panel: detail.panel } );
+		},
+		/**
 		 * A GET to one of Riff's routes as whoever is signed in: with the account's nonce, or
 		 * WordPress answers as it would a visitor, whatever the cookie says.
 		 *

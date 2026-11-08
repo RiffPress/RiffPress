@@ -220,14 +220,12 @@ final class Extensions {
 	}
 
 	/**
-	 * Settings › Riff.
+	 * Settings › Riff: the extensions, and the Listen app's own setting, so it is there with none.
 	 *
 	 * @since 5.8.0
+	 * @since 6.4.0 Also with no extensions.
 	 */
 	public static function menu(): void {
-		if ( ! self::bundled() ) {
-			return;
-		}
 		add_options_page( __( 'Riff', 'riff' ), __( 'Riff', 'riff' ), 'manage_options', self::PAGE, array( self::class, 'page' ) );
 	}
 
@@ -246,6 +244,9 @@ final class Extensions {
 				'default'           => array(),
 			)
 		);
+		if ( ! self::bundled() ) {
+			return;
+		}
 		add_settings_section( 'riff-extensions', __( 'Extensions', 'riff' ), array( self::class, 'intro' ), self::PAGE );
 		foreach ( self::bundled() as $name ) {
 			add_settings_field(

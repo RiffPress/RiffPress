@@ -91,6 +91,14 @@ export function start( api ) {
 			),
 	};
 	const { view, nav } = ctx;
+	// Which view is showing, for a plugin's script (riff.app_view): the bar's brand names it.
+	ctx.announce = () =>
+		api.appView?.( {
+			view:
+				nav?.querySelector( '.riff-app-brand' )?.dataset.riffView ||
+				'home',
+			panel: view,
+		} );
 
 	// The account menu is a details element, so it opens without the script; with it, it closes
 	// as a menu does: on Escape, on a click outside it, and once one of its links is followed,
@@ -321,4 +329,5 @@ export function start( api ) {
 	}
 	// Everything is listening: what needs the script, the sidebar's toggle and the hearts, can show.
 	app.dataset.riffAppReady = '';
+	ctx.announce();
 }

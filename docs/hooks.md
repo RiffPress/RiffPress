@@ -18,6 +18,58 @@ Since 5.9.0. Fires in `plugins/riff/src/class-about.php`.
 | --- | --- | --- |
 | `$sections` | `array[]` | By id (lowercase letters, digits and dashes), each with a `label`, its heading, or empty for none; an `order`, lowest first; and an optional `render`, a callable given the id that returns the body's markup as the page is drawn. |
 
+### `riff_add_music_url`
+
+Filters where the Listen app sends someone who may upload to add music: the account menu's Add music, and Add your first album in an empty library.
+
+The slug of one of the app's views (riff_app_views) leads to that view, inside the app. At the default address the app opens its own file picker in place of following the link, and uploads what is chosen to the Media Library; at any other address the link is followed, and the empty library no longer names the Media Library.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-browse.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | The address, or a view's slug. Default admin_url( 'media-new.php' ). |
+
+### `riff_app_at_root`
+
+Filters whether the site's own address opens the Listen page's app. On, a request for the home page with no other query is the Listen page in standalone mode, every link to the app and the manifest's start address are the home page, and the app/ address redirects there. The Listen page's own address and the theme's front page setting are left as they are.
+
+A host that gives each site its own player turns it on with `add_filter( 'riff_app_at_root', '__return_true' )`.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-standalone.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$on` | `bool` | Whether it is on, from Settings › Riff. Default false. |
+
+### `riff_app_manifest`
+
+Filters the Listen app's web app manifest, for a host that names, colours or gives icons to each site's app its own way.
+
+The document's theme-color meta tag follows the manifest's theme_color. Its page colours come from the custom properties on `.riff-standalone`, such as `--riff-standalone-bg`.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-standalone.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$manifest` | `array` | The manifest's members: id, name, short_name, description, start_url, scope, display_override, display, background_color, theme_color and icons. |
+
+### `riff_app_views`
+
+Filters the Listen app's views: Riff's own, by slug (`home`, `search`, `albums`, `artists`, `tracks`, `posts` and `library`), and any a plugin adds.
+
+A plugin adds a view under a slug of its own, lowercase letters, digits and dashes, with a `label` and a `render` callback, and Riff serves it at the app's address with `?riff_view=<slug>`, the Listen page's own or, where the site opens the app at its address, the site's. Riff draws the view's title and the panel around what `render` returns, and once the view shows, on arrival or after in-page navigation, fires the `riff.app_view` action and the `riff:app_view` event on `document`, for the plugin's script to bind to what it drew.
+
+A view of a plugin's is an array with a `label`, its name in the navigation; `title`, its heading, the label by default; `icon`, one of Riff's icons by name or SVG markup from the plugin's own code; `nav`, where it is listed, `sidebar` (beside Albums, Artists and Tracks, a chip on a phone) and or `account` (the account menu), sidebar by default; `capability`, what a visitor needs to see it at all, none by default; `render`, given the app's address and returning the panel's HTML, escaped by the plugin; and `script`, `style` and `module`, handles of the plugin's registered scripts, styles and script modules, which Riff enqueues on the page that holds the app.
+
+Unsetting `albums`, `artists`, `tracks` or `posts` takes it out of the app: out of the navigation, out of Home's rows, and its address opens Home. Home, Search and Library stay.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-views.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$views` | `array` | The views by slug, Riff's own first. |
+
 ### `riff_can_play`
 
 Filters whether the current visitor may play a track.
@@ -62,6 +114,17 @@ Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `$names` | `string[]` | The names in extensions.json. |
+
+### `riff_profile_url`
+
+Filters where the Listen app's account menu sends a listener to edit their profile, for a host or a membership plugin with a profile page of its own.
+
+Since 6.4.0. Fires in `plugins/riff/features/listen/class-browse.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | The address. Default get_edit_profile_url(), their profile in wp-admin. |
+| `$user` | `\\WP_User` | The signed-in listener. |
 
 ### `riff_protect_storage`
 
@@ -240,6 +303,19 @@ Since 4.0.0. Fires in `plugins/riff/assets/player/queue.js`.
 | `track` | `Object` | The track, in the shape `Tracks::schema()` describes. |
 
 ### JavaScript actions
+
+#### `riff.app_view`
+
+Fires when a view of the Listen app shows: the first as the app starts, then each one in-page navigation brings, and again when one is drawn again in place. A plugin that added a view with the `riff_app_views` filter binds its script to what it drew here, or on the `riff:app_view` event, which bubbles to `document`.
+
+Since 6.4.0. Fires in `plugins/riff/assets/riff.js`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `detail` | `Object` | The view. |
+| `detail.view` | `string` | Its slug: `home`, `albums`, `album`, `post` and the rest of Riff's, or the plugin's own. |
+| `detail.panel` | `HTMLElement` | The element the view is drawn in, `[data-riff-app-view]`; a plugin's is inside it, `[data-riff-app-panel="<slug>"]`. |
+| `api` | `Object` | `window.riff`. |
 
 #### `riff.ended`
 

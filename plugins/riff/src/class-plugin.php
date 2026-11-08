@@ -47,6 +47,7 @@ final class Plugin {
 		// The Listen feature: the block, its views, the drawn covers. Built on the hooks above.
 		Listen\App::register();
 		Listen\Standalone::register();
+		Listen\Views::register();
 		Listen\Art::register();
 		Listen\First_Run::register();
 		Listen\Together::register();

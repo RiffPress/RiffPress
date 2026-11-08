@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 <head>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="<?php echo esc_attr( Standalone::BACKGROUND ); ?>">
+<meta name="theme-color" content="<?php echo esc_attr( (string) ( Standalone::manifest_data()['theme_color'] ?? Standalone::BACKGROUND ) ); ?>">
 <meta name="color-scheme" content="dark">
 <title><?php echo esc_html( wp_get_document_title() ); ?></title>
 <link rel="manifest" href="<?php echo esc_url( Standalone::url( 0, true ) ); ?>">

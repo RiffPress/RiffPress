@@ -148,13 +148,13 @@ final class Home_View {
 		if ( Together::available() && true === Listener::signed_in() ) {
 			$html .= Ui::shelf( 'together', __( 'Listening now', 'riff' ), '', '', true, 'div', array( 'together' => rest_url( Library::REST . '/together' ) ) );
 		}
-		if ( $albums['items'] ) {
+		if ( $albums['items'] && Views::has( 'albums' ) ) {
 			$html .= Ui::shelf( 'added', __( 'Recently added', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( $albums['items'], $page ) );
 		}
-		if ( $artists['items'] ) {
+		if ( $artists['items'] && Views::has( 'artists' ) ) {
 			$html .= Ui::shelf( 'artists', __( 'Artists', 'riff' ), add_query_arg( Browse::VIEW, 'artists', $page ), Browse::artist_items( $artists['items'], $page ), false, 'ul' );
 		}
-		if ( '' !== $posts ) {
+		if ( '' !== $posts && Views::has( 'posts' ) ) {
 			$html .= Ui::shelf( 'posts', __( 'New posts', 'riff' ), add_query_arg( Browse::VIEW, 'posts', $page ), $posts );
 		}
 		Ui::lead( 0 );

@@ -131,12 +131,13 @@ final class Browse {
 		if ( '' !== $search || 'search' === $view ) {
 			return array( 'view' => 'search', 'id' => 0, 'search' => $search, 'page' => 1 ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
-		if ( in_array( $view, array( 'albums', 'artists', 'tracks', 'posts', 'library' ), true ) ) {
+		// Riff's own lists, and a plugin's views (Views), each while the visitor may see it.
+		if ( '' !== $view && ! in_array( $view, array( 'home', 'search' ), true ) && Views::has( $view ) ) {
 			return array( 'view' => $view, 'id' => 0, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		// The posts grid lived at the page's own address before Home did; a link to one of its
 		// later pages still opens it.
-		if ( $page > 1 ) {
+		if ( $page > 1 && Views::has( 'posts' ) ) {
 			return array( 'view' => 'posts', 'id' => 0, 'search' => '', 'page' => $page ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		}
 		return null;
@@ -152,20 +153,17 @@ final class Browse {
 	 * @return string
 	 */
 	public static function nav( string $page, ?array $current ): string {
-		$here  = $current['view'] ?? 'home';
-		$here  = array( 'album' => 'albums', 'artist' => 'artists', 'playlist' => 'library' )[ $here ] ?? $here; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
-		$links = array(
-			'home'    => array( __( 'Home', 'riff' ), $page ),
-			// A tab of its own only on a phone, at the bottom with Home and Library, as the apps
-			// have it; wider, the field is always in view.
-			'search'  => array( __( 'Search', 'riff' ), add_query_arg( self::VIEW, 'search', $page ) ),
-			'albums'  => array( __( 'Albums', 'riff' ), add_query_arg( self::VIEW, 'albums', $page ) ),
-			'artists' => array( __( 'Artists', 'riff' ), add_query_arg( self::VIEW, 'artists', $page ) ),
-			'tracks'  => array( __( 'Tracks', 'riff' ), add_query_arg( self::VIEW, 'tracks', $page ) ),
-			'posts'   => array( __( 'Posts', 'riff' ), add_query_arg( self::VIEW, 'posts', $page ) ),
-			// Last, as the streaming apps have it: what is the listener's own, under what is the site's.
-			'library' => array( __( 'Library', 'riff' ), add_query_arg( self::VIEW, 'library', $page ) ),
-		);
+		$here = $current['view'] ?? 'home';
+		$here = array( 'album' => 'albums', 'artist' => 'artists', 'playlist' => 'library' )[ $here ] ?? $here; // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		// Home, Search on a phone, the lists and a plugin's views, then Library (Views::all()). Search
+		// is a tab of its own only on a phone, at the bottom with Home and Library, as the apps have
+		// it; wider, the field is always in view.
+		$links = array();
+		foreach ( Views::all() as $slug => $listed ) {
+			if ( in_array( 'sidebar', $listed['nav'], true ) || in_array( $slug, Views::KEPT, true ) ) {
+				$links[ $slug ] = array( $listed['label'], 'home' === $slug ? $page : add_query_arg( self::VIEW, $slug, $page ), $listed );
+			}
+		}
 		// The site's name heads the sidebar, and a phone's top row; as tabs it is hidden. The brand
 		// carries the view showing, which the tabs alone cannot say (an album marks Albums), so a
 		// phone can keep its chips to the lists.
@@ -178,13 +176,13 @@ final class Browse {
 			esc_attr__( 'Sidebar', 'riff' ),
 			esc_html( '' !== $name ? $name : 'Riff' )
 		);
-		foreach ( $links as $slug => list( $label, $href ) ) {
+		foreach ( $links as $slug => list( $label, $href, $listed ) ) {
 			$html .= sprintf(
 				'<a class="riff-app-tab%s" href="%s"%s>%s<span>%s</span></a>',
 				array( 'home' => ' riff-app-home', 'search' => ' riff-app-tab-search', 'library' => ' riff-app-tab-library' )[ $slug ] ?? '', // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 				esc_url( $href ),
 				$slug === $here ? ' aria-current="page"' : '',
-				Player::icon( self::ICONS[ $slug ] ),
+				$listed['own'] && isset( self::ICONS[ $slug ] ) ? Player::icon( self::ICONS[ $slug ] ) : Views::icon( $listed ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Riff's own markup, or the plugin's SVG through wp_kses().
 				esc_html( $label )
 			);
 		}
@@ -276,20 +274,83 @@ final class Browse {
 		$face = $src
 			? sprintf( '<img class="riff-app-avatar" src="%s" alt="" width="32" height="32" decoding="async">', esc_url( (string) $src ) )
 			: sprintf( '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">%s</span>', esc_html( mb_strtoupper( mb_substr( $name, 0, 1 ) ) ) );
+		// A plugin's views listed in the account menu, after Your Library.
+		$more = '';
+		foreach ( Views::all() as $slug => $listed ) {
+			if ( ! $listed['own'] && in_array( 'account', $listed['nav'], true ) ) {
+				$more .= sprintf( '<a href="%s">%s</a>', esc_url( add_query_arg( self::VIEW, $slug, $page ) ), esc_html( $listed['label'] ) );
+			}
+		}
+		$add = self::add_music_url( $page );
 		return sprintf(
-			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a>%10$s<a href="%6$s">%7$s</a><a href="%8$s">%9$s</a></div></details>',
+			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a>%11$s%10$s<a href="%6$s">%7$s</a><a href="%8$s">%9$s</a></div></details>',
 			/* translators: %s: the signed-in listener's name. */
 			esc_attr( sprintf( __( 'Account: %s', 'riff' ), $name ) ),
 			$face,
 			esc_html( $name ),
 			esc_url( add_query_arg( self::VIEW, 'library', $page ) ),
 			esc_html__( 'Your Library', 'riff' ),
-			esc_url( get_edit_profile_url( $user->ID ) ),
+			esc_url( self::profile_url( $user ) ),
 			esc_html__( 'Edit profile', 'riff' ),
 			esc_url( wp_logout_url( $back ) ),
 			esc_html__( 'Sign out', 'riff' ),
-			current_user_can( 'upload_files' ) ? sprintf( '<a href="%s">%s</a>', esc_url( admin_url( 'media-new.php' ) ), esc_html__( 'Add music', 'riff' ) ) : ''
+			// Add music, unless it leads to a view the menu already lists.
+			current_user_can( 'upload_files' ) && ! str_contains( $more, 'href="' . esc_url( $add ) . '"' ) ? sprintf( '<a href="%s">%s</a>', esc_url( $add ), esc_html__( 'Add music', 'riff' ) ) : '',
+			$more
 		);
+	}
+
+	/**
+	 * Where the account menu's Edit profile goes.
+	 *
+	 * @since 6.4.0
+	 *
+	 * @param \WP_User $user The signed-in listener.
+	 * @return string
+	 */
+	public static function profile_url( \WP_User $user ): string {
+		/**
+		 * Filters where the Listen app's account menu sends a listener to edit their profile, for a
+		 * host or a membership plugin with a profile page of its own.
+		 *
+		 * @since 6.4.0
+		 *
+		 * @param string   $url  The address. Default get_edit_profile_url(), their profile in wp-admin.
+		 * @param \WP_User $user The signed-in listener.
+		 */
+		return (string) apply_filters( 'riff_profile_url', get_edit_profile_url( $user->ID ), $user );
+	}
+
+	/**
+	 * Where the Listen app's Add music links go: the account menu's, and an empty library's.
+	 *
+	 * @since 6.4.0
+	 *
+	 * @param string $page The app's address; the one showing by default.
+	 * @return string
+	 */
+	public static function add_music_url( string $page = '' ): string {
+		/**
+		 * Filters where the Listen app sends someone who may upload to add music: the account
+		 * menu's Add music, and Add your first album in an empty library.
+		 *
+		 * The slug of one of the app's views (riff_app_views) leads to that view, inside the app.
+		 * At the default address the app opens its own file picker in place of following the link,
+		 * and uploads what is chosen to the Media Library; at any other address the link is
+		 * followed, and the empty library no longer names the Media Library.
+		 *
+		 * @since 6.4.0
+		 *
+		 * @param string $url The address, or a view's slug. Default admin_url( 'media-new.php' ).
+		 */
+		$url = (string) apply_filters( 'riff_add_music_url', admin_url( 'media-new.php' ) );
+		if ( preg_match( '/^[a-z0-9-]+$/', $url ) && Views::has( $url ) ) {
+			if ( '' === $page ) {
+				$page = Standalone::active() ? Standalone::url() : (string) get_permalink();
+			}
+			return add_query_arg( self::VIEW, $url, $page );
+		}
+		return $url;
 	}
 
 	/**
@@ -353,8 +414,10 @@ final class Browse {
 				return Album_View::view( $page, $current['id'], $current['page'] );
 			case 'artist':
 				return Artist_View::view( $page, $current['id'], $current['page'] );
-			default:
+			case 'search':
 				return Search_View::view( $page, $current['search'] );
+			default:
+				return Views::render( (string) $current['view'], $page );
 		}
 	}
 
@@ -584,9 +647,12 @@ final class Browse {
 		if ( ! current_user_can( 'upload_files' ) ) {
 			return Ui::empty_note( __( 'Nothing here yet.', 'riff' ) );
 		}
-		$text = __( 'Nothing here yet. Upload music to the Media Library and it shows here.', 'riff' );
+		$url  = self::add_music_url();
+		$text = admin_url( 'media-new.php' ) === $url
+			? __( 'Nothing here yet. Upload music to the Media Library and it shows here.', 'riff' )
+			: __( 'Nothing here yet. Add music and it shows here.', 'riff' );
 		if ( ! First_Run::has_music() ) {
-			return Ui::empty_note( $text, admin_url( 'media-new.php' ), __( 'Add your first album', 'riff' ) );
+			return Ui::empty_note( $text, $url, __( 'Add your first album', 'riff' ) );
 		}
 		return Ui::empty_note( $text );
 	}
