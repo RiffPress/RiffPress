@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.4.3...riff-sign-in-v0.5.0) (2026-11-08)
+
+
+### Features
+
+* each plugin declares what it needs in isolation.json, and CI fails code that reaches past it ([#954](https://github.com/RiffPress/RiffPress/issues/954)) ([2f8ba39](https://github.com/RiffPress/RiffPress/commit/2f8ba39bfaaa3bfb2cf2fc445f84b737c691b888))
+
 ## [0.4.3](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.4.2...riff-sign-in-v0.4.3) (2026-11-08)
 
 

@@ -1,5 +1,29 @@
 # Changelog
 
+## [6.5.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.4.0...riff-v6.5.0) (2026-11-08)
+
+
+### Features
+
+* a zip imports privately by default, each track Protected and its album's post private, and --no-private imports an artist's own releases ([#950](https://github.com/RiffPress/RiffPress/issues/950)) ([1eab560](https://github.com/RiffPress/RiffPress/commit/1eab560f22c367afd50c21e19fa763531889cc67))
+* each plugin declares what it needs in isolation.json, and CI fails code that reaches past it ([#954](https://github.com/RiffPress/RiffPress/issues/954)) ([2f8ba39](https://github.com/RiffPress/RiffPress/commit/2f8ba39bfaaa3bfb2cf2fc445f84b737c691b888))
+* experimental sandbox runs an untrusted extension's PHP in php-wasm, behind a bridge that grants only its manifest ([#957](https://github.com/RiffPress/RiffPress/issues/957)) ([0bcd173](https://github.com/RiffPress/RiffPress/commit/0bcd1735b1aa6330870a01ab8a0ad6facaa653c9))
+* **player:** a site keeps the music playing across links on a block theme, from Settings &gt; Riff ([#945](https://github.com/RiffPress/RiffPress/issues/945)) ([90fb020](https://github.com/RiffPress/RiffPress/commit/90fb020ef2116efbbea7001084fee61e2a2facdc))
+* **player:** the accent comes from the cover playing, muted to read on black, and the site's accent stands in for a grey one ([#952](https://github.com/RiffPress/RiffPress/issues/952)) ([557e798](https://github.com/RiffPress/RiffPress/commit/557e7989ed069c6dfbc2fd5ffd337473e3787723))
+* **riff:** abilities for an owner and an assistant, offered over MCP through the MCP Adapter once the site turns it on ([#959](https://github.com/RiffPress/RiffPress/issues/959)) ([3feed2b](https://github.com/RiffPress/RiffPress/commit/3feed2b205941b27320d261d7154faf94f497fb7))
+* **riff:** protected files can be kept outside the web root, moved there safely, with a check that warns when the server sends them ([#965](https://github.com/RiffPress/RiffPress/issues/965)) ([429f1bc](https://github.com/RiffPress/RiffPress/commit/429f1bc2f3ddbefc87756b184f8cc2ab9a796df1))
+* **riff:** take my Riff with me, the whole site as one archive that boots in Playground ([#958](https://github.com/RiffPress/RiffPress/issues/958)) ([ee3b894](https://github.com/RiffPress/RiffPress/commit/ee3b8940811b52d2d3163e17b906caf9c555aa8d))
+* **riff:** typed SDK generated from the code, and a post's blocks as a typed tree over REST ([#960](https://github.com/RiffPress/RiffPress/issues/960)) ([038924f](https://github.com/RiffPress/RiffPress/commit/038924fe661889ef32ca305709f7169651a6d8db))
+* **settings:** Settings › Riff lists what each Riff plugin can do, in plain words from its isolation.json, and says it again when one is turned on ([#955](https://github.com/RiffPress/RiffPress/issues/955)) ([1bd4dac](https://github.com/RiffPress/RiffPress/commit/1bd4dac40c7a3bf85ca417ae2f0f9c2b33ca3d81))
+* wp riff archive imports what the Library of Congress and Europeana publish for reuse, each item's own rights read and each track credited ([#951](https://github.com/RiffPress/RiffPress/issues/951)) ([e05c00f](https://github.com/RiffPress/RiffPress/commit/e05c00f013db70377786eca14689a71d654b51c2))
+
+
+### Bug Fixes
+
+* **listen:** a control in focus has one ring of Riff's own, so the round Home button's no longer runs off toward the search field ([#946](https://github.com/RiffPress/RiffPress/issues/946)) ([df2f17f](https://github.com/RiffPress/RiffPress/commit/df2f17fe8cf94886b9c058f014ab1e275b15b671))
+* main's checks pass again after the drafts merged untested, each plugin declaring what they added and About crediting only a caption a file has ([#962](https://github.com/RiffPress/RiffPress/issues/962)) ([708dfac](https://github.com/RiffPress/RiffPress/commit/708dfac72716ed9483fb80dd127ce181c9643db1))
+* **player:** the seek line is plain, with no filament, and the volume has a slot of its own beside its mute, never over the controls ([#956](https://github.com/RiffPress/RiffPress/issues/956)) ([ebb9de8](https://github.com/RiffPress/RiffPress/commit/ebb9de82e089e5e9b9aac830f3b30347c62e294b))
+
 ## [6.4.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.3.0...riff-v6.4.0) (2026-11-08)
 
 
