@@ -78,7 +78,7 @@ final class Export {
 	 *
 	 *     @type bool $media   Put the files in. Without them, each attachment keeps this site's
 	 *                         address for its file. Default true.
-	 *     @type bool $open_only  Only what anyone may see: published posts and pages and their
+	 *     @type bool $public  Only what anyone may see: published posts and pages and their
 	 *                         media, with no playlist and no protected file. Default false.
 	 *     @type bool $plugins Put Riff and its extensions in, with the blueprint that installs
 	 *                         them. Default true.
@@ -308,10 +308,14 @@ final class Export {
 			return $rows;
 		}
 		$dir = trailingslashit( dirname( $path ) );
+		// Files are read from uploads, and a protected one from the protected folder, which a host
+		// may keep outside the web root; from nowhere else.
+		$roots = array_filter( array( realpath( $base ), '' !== $protected ? realpath( Protected_Files::path() ) : false ) );
+		$under = static fn( string $real ): bool => (bool) array_filter( $roots, static fn( string $root ): bool => str_starts_with( $real, $root . '/' ) );
 		foreach ( Archive::files_of( $rel, $meta[0] ?? null ) as $i => $one ) {
 			$from = 0 === $i ? $path : $dir . wp_basename( $one );
 			$real = realpath( $from );
-			if ( ! $real || ! is_file( $real ) || ! is_readable( $real ) || ! str_starts_with( $real, (string) realpath( $base ) . '/' ) ) {
+			if ( ! $real || ! is_file( $real ) || ! is_readable( $real ) || ! $under( $real ) ) {
 				if ( 0 === $i ) {
 					$skipped[] = $rel;
 				}
