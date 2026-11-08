@@ -6,7 +6,7 @@
 
 **Proportions** follow the golden ratio, φ. On the app icon, the word's margins either side are 1/φ⁵ of the tile.
 
-**Colour** is ink on paper, with one accent: ember, a muted fire colour at about 1900K. Neither the paper nor the greys is pure: each neutral leans a hair toward ember's hue, at OKLCH hue 55 to 70 with chroma under 0.01, so the page is warm without being cream. These are riffpress.com's values, by the same names, so the two sites are one system; on Source they live in `site/web/web.css`'s `:root`, and matching riffpress.com's `site/tokens.css` is a change to that one block.
+**Colour** is ink on paper, with one accent: ember, a muted fire colour at about 1900K. Neither the paper nor the greys is pure: each neutral leans a hair toward ember's hue, at OKLCH hue 55 to 70 with chroma under 0.01, so the page is warm without being cream. These are riffpress.com's values, in riffpress.com's own file: `../tokens.css` is its `site/tokens.css` byte for byte, with the two font files, pinned in `shared.json` and checked by `.github/scripts/tokens.js`. Change them there and copy them over with `tokens.js --copy`; `web.css` sets none of them again.
 
 | Token | OKLCH | What it is for |
 | --- | --- | --- |
@@ -20,20 +20,20 @@
 | `--ink-2` | `oklch(0.45 0.01 55)` | Quieter text, 7.3:1 on white and 6.8:1 on white-2 |
 | `--ember-deep` | `oklch(0.5 0.12 48)` | Links, the focus ring, where you are: the sidebar's current page, the header's current section, the section being read; 6.2:1 |
 | `--ember-ink` | `oklch(0.42 0.11 46)` | A link under the pointer |
-| `--ember` | `oklch(0.72 0.13 55)` | Ember on night: riffpress.com's and the player's, listed here for the reconciliation; Source has no night surface and does not use it |
+| `--ember` | `oklch(0.72 0.13 55)` | Ember on night, riffpress.com's and the player's; Source has no night surface |
 | `--wash` | `oklch(0.91 0.045 60)` | Selected words, under ink 14.3:1 |
 
 The one primary button on a page is ink with paper on it. There is no blue, no gold and no gradient: the rest of the colour comes from the player, in its pictures and its covers.
 
-**Type** is three families, each self-hosted from `../fonts/`, subset to Latin, and under the SIL Open Font License 1.1:
+**Type** is two families, self-hosted from `../fonts/` (riffpress.com's files, subset to Latin) and under the SIL Open Font License 1.1, and the platform's own monospace:
 
-- **EB Garamond** (`eb-garamond.woff2`, variable 400 to 800) for titles: a page's title at 36 to 52px and its sections at 32px, weight 500.
-- **Schibsted Grotesk** (`schibsted-grotesk.woff2`, variable 400 to 900), riffpress.com's text face, for everything read or pressed: running text at 17px on a 28px line, about 70 characters to the line, and the sidebar, tables and fine print at 15px and 13px. It replaces Inter on Source, which is left in `../fonts/` only for the share cards that `og-images.js` draws.
-- **IBM Plex Mono** (`ibm-plex-mono.woff2`, 400 and 600) for code, parameters and hook names, at 14px on a 24px line in a block and 0.875em in a sentence.
+- **EB Garamond** (`eb-garamond.woff2`, variable 400 to 700) for titles: a page's title at 36 to 52px and its sections at 26 to 36px, at weight 400, as riffpress.com sets them.
+- **Schibsted Grotesk** (`schibsted-grotesk.woff2`, variable 400 to 700), riffpress.com's text face, for everything read or pressed: running text at 17px on a 1.6 line, about 72 characters to the line, and the sidebar, tables and fine print at 15px and 13px. It replaces Inter on Source, which is left in `../fonts/` only for the share cards that `og-images.js` draws.
+- **The platform's monospace** (`--mono`: SF Mono, Menlo or Consolas) for code, parameters and hook names only, at 14px on a 24px line in a block, 13px for a type, and 0.875em in a sentence.
 
 Each has a fallback sized to its metrics (`size-adjust` and the ascent and descent overrides in `web.css`), so the swap when the font arrives moves nothing.
 
-**The grid** on Source is three columns, the sidebar (15rem), the article (42rem) and "On this page" (13rem), with the same 64px between them, under a 64px bar, divided by hairlines that are one device pixel on a dense screen. A page with no sidebar starts its title where the docs start theirs. Space steps by 8px, with 4px and 12px for what sits close, as on riffpress.com.
+**The grid** on Source is riffpress.com's 1160px page in three columns, the door's pages (15rem), the article (36.5rem, about 72 characters) and "On this page" (13rem), two grid gaps (64px) between each, under the 72px bar, divided by hairlines that are one device pixel on a dense screen. A page with no sidebar starts its title where the docs start theirs. Space steps by 8px, with 4px and 12px for what sits close, as on riffpress.com.
 
 | File | What it is |
 | --- | --- |

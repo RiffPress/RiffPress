@@ -55,12 +55,13 @@ Four kinds of reader arrive. Each comes in by a door named for what they want to
 
 - **Ranges:** a page runs from one paragraph (a short hook page) to about 12,000 words (How the player works). There are 38 hooks, 20 JavaScript members, 14 REST routes and 28 CSS properties. Built on the open web covers 43 features, which become one page with a section each.
 - **States:**
-  - Search: empty, results, no result and no script. Without a script, search is a link to the Hooks index, which filters as you type.
+  - Search: empty, results, no result and no script. Without a script there is nothing to press, so search stays hidden; the Hooks index keeps its own filter.
   - The sidebar: on a door page, on a page in a door, on a page a door does not list (a hook, under PHP), and as a drawer on a phone.
-  - The rail: an article with no headings shows no rail.
-- **Pages that do not exist yet:**
-  - **Taking a Riff with you (export).** The feature is merged (#958), but nothing documents it. It is a placeholder until someone writes it; Source does not invent its words.
-  - **Types.** The track schema is a section of the PHP reference today; whether it becomes a page of its own is open.
+  - The rail: an article with fewer than two sections shows no rail.
+- **Decided after the wireframes:**
+  - **Export** stays out of Run Riff for others until #958's import side is finished; the door shows only the pages that exist.
+  - **Track schema** is a page of its own under Reference.
+  - **The two real-device checklists** stay in the repository: their numbering runs across sections so a check can be recorded by number, which the handbook pages would renumber.
 
 ## Layout and interaction
 
@@ -76,8 +77,8 @@ Four kinds of reader arrive. Each comes in by a door named for what they want to
   - The rail is a disclosure.
   - Code runs edge to edge.
 - **Search:**
-  - It is a field in the bar, opened by ⌘K or /, and its results are an overlay over the page.
-  - Its index is a prebuilt JSON of titles, headings and summaries, written at build time. **Assumption:** it stays under 60 KB gzipped.
+  - It is a field in the bar, opened by ⌘K, Ctrl+K or /, and its results are a dialog over the page.
+  - Its index is a JSON of each page's title, door, summary and headings, which developers-site.js writes at build time: 29 KB, 8 KB gzipped.
   - The keyboard moves through the results, and Escape closes it and returns focus.
 - **Depth:** three layers, as the tokens define them. The page is flat. The phone's sheet and the search overlay use `--elevation-overlay`. Nothing else is raised.
 
@@ -88,8 +89,4 @@ Four kinds of reader arrive. Each comes in by a door named for what they want to
   - `site-nav.json` stays the one definition of the navigation.
   - Everything works without the script, except search's overlay and the phone's sheet, which fall back to a link and a plain list.
 - **Decided: the shared type, and so no IBM Plex Mono.** Source takes riffpress.com's `--mono` (the platform's own monospace) for code. Code blocks are set at 14px on a 24px line, one step over `--text-mono`, because code is read at length here.
-- **Open decisions:**
-  - Where Download lives once Use Riff starts with installing: in the bar alone, or as that door's first page as well. The proposal is the bar alone.
-  - Whether the doors' names are final: Use Riff, Build on Riff, Run Riff for others, Contribute.
-  - Whether Types becomes a page of its own.
-  - Who writes the export page.
+- **Settled:** Download lives in the bar alone, and each door page keeps its one-line descriptions.
