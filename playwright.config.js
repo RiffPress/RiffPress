@@ -45,6 +45,21 @@ const testsPort = () => {
 process.env.WP_BASE_URL =
 	process.env.WP_BASE_URL || `http://localhost:${ testsPort() }`;
 
+/**
+ * Chromium, playing into a silent output of its own rather than the machine's sound card. Through a
+ * real device, a media element's clock is the device's: on a busy laptop, or while another program
+ * holds the card, it stops at the first frame (currentTime 0.021333) and every test that waits for
+ * the music to move times out. The null output keeps time by the clock, and Web Audio still runs,
+ * so the meter's analyser hears what plays.
+ */
+const chromium = ( use ) => ( {
+	...use,
+	launchOptions: {
+		...use.launchOptions,
+		args: [ ...( use.launchOptions?.args || [] ), '--disable-audio-output' ],
+	},
+} );
+
 module.exports = defineConfig( {
 	...base,
 	testDir: './plugins',
@@ -53,14 +68,14 @@ module.exports = defineConfig( {
 	globalSetup: require.resolve( './plugins/riff/tests/e2e/global-setup.js' ),
 	reporter: process.env.CI ? [ [ 'github' ], [ 'list' ] ] : 'list',
 	projects: [
-		{ name: 'chromium', use: { ...base.use } },
+		{ name: 'chromium', use: chromium( base.use ) },
 		{
 			name: 'mobile-chromium',
-			use: {
+			use: chromium( {
 				...base.use,
 				...devices[ 'iPhone 14' ],
 				defaultBrowserType: 'chromium',
-			},
+			} ),
 			// The specs written for both widths: the player, the Listen app, Riff Lyrics and Riff Chords. The rest of
 			// the app folder (likes, playlists, first run, the layout checks) is desktop only.
 			testMatch:
