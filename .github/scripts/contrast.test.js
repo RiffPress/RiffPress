@@ -75,7 +75,7 @@ const PAIRS = [
 	[ 'player', '--riff-fg', '--riff-bg', 4.5, 'the title on the bar' ],
 	[ 'player', '--riff-fg-2', '--riff-bg', 4.5, 'the artist under it' ],
 	[ 'player', '--riff-fg-3', '--riff-bg', 3, 'a time, a count: small print that is never the only copy' ],
-	[ 'player', '--riff-accent', '--riff-bg', 4.5, 'the quality pill and the filament' ],
+	[ 'player', '--riff-accent', '--riff-bg', 4.5, 'the quality pill and the seek line\'s played part' ],
 	[ 'player', '--riff-fg', '--riff-surface', 4.5, 'text on a menu' ],
 	[ 'player', '--riff-fg-2', '--riff-surface', 4.5, 'secondary text on a menu' ],
 	[ 'player', '--riff-accent', '--riff-surface', 4.5, 'the accent on a menu' ],

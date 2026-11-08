@@ -1,4 +1,4 @@
-/* Following a link without leaving the page (src/class-navigation.php, a spike). Core's link handler
+/* Following a link without leaving the page (src/class-navigation.php). Core's link handler
  * sends the link to the Interactivity API's router, which swaps the template for the next page's
  * and leaves the player, outside it, playing. Each page it brings in has blocks of its own, made
  * rows here as they are on a page that loads; a track carries on, and the queue stays the one

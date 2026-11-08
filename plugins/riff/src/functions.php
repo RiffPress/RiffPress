@@ -81,3 +81,15 @@ function riff_unregister_view( string $id ): bool {
 function riff_register_shortcut( string $id, array $args = array() ): bool {
 	return Riff\Registry::register_shortcut( $id, $args );
 }
+
+/**
+ * The site's Listen page, where the player opens as an app: the oldest published page holding the
+ * Riff block or using the Listen template.
+ *
+ * @since 6.5.0
+ *
+ * @return int Page ID, or 0 when there is none.
+ */
+function riff_listen_page(): int {
+	return Riff\Listen\First_Run::listen_page();
+}

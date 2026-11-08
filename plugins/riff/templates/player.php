@@ -45,8 +45,7 @@ defined( 'ABSPATH' ) || exit;
 				<?php // Times read left to right in every language. ?>
 				<span class="riff-time riff-desk" dir="ltr" data-riff-text="current">0:00</span>
 				<div class="riff-bar-seek">
-					<?php // The filament: the played part of the line is a wire that glows with the music (filament.js). ?>
-					<span class="riff-line" aria-hidden="true"><i></i><i class="riff-wire" data-riff-wire></i><i class="riff-hot" data-riff-hot></i><span class="riff-bloom"></span></span>
+					<span class="riff-line" aria-hidden="true"><i></i></span>
 					<b class="riff-knob" aria-hidden="true"></b>
 					<span class="riff-tip" aria-hidden="true" hidden></span>
 					<input type="range" class="riff-seek" data-riff-seek min="0" max="1000" step="1" value="0" aria-label="<?php esc_attr_e( 'Track position', 'riff' ); ?>">
@@ -62,7 +61,6 @@ defined( 'ABSPATH' ) || exit;
 
 	<div class="riff-np" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Now Playing', 'riff' ); ?>" hidden>
 		<div class="riff-np-bg" aria-hidden="true"></div>
-		<div class="riff-np-glow" data-riff-npglow aria-hidden="true"></div>
 		<header class="riff-np-head">
 			<button type="button" class="riff-btn" data-riff-action="close" aria-label="<?php esc_attr_e( 'Close Now Playing', 'riff' ); ?>"><?php echo Player::icon( 'down' ); ?></button>
 			<div class="riff-modes" role="radiogroup" aria-label="<?php esc_attr_e( 'Song or video', 'riff' ); ?>" hidden>

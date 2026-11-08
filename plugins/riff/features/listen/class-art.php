@@ -381,11 +381,12 @@ final class Art {
 	 */
 	private static function keep( string $drawn, string $svg, float $since ): void {
 		$file = self::file( $drawn );
+		// isolation: write -- uploads/riff-art, where the drawn covers are kept.
 		if ( ! $file || ! wp_mkdir_p( dirname( $file['path'] ) ) ) {
 			return;
 		}
 		$part = $file['path'] . '.' . wp_generate_password( 6, false ) . '.part';
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename -- a cover drawn here, written once and moved into place.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename -- a cover drawn here, written once and moved into place. isolation: write -- uploads/riff-art.
 		if ( false === file_put_contents( $part, $svg ) || ! @rename( $part, $file['path'] ) ) {
 			wp_delete_file( $part );
 			return;

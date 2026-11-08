@@ -218,15 +218,22 @@ final class Cli {
 	 * version. Running it again skips what it has already imported and adds new tracks to the
 	 * album's post. A zip is unpacked into a temporary folder, imported the same way, and removed.
 	 *
+	 * A zip is imported privately unless --no-private is given, as a zip is how a store's download
+	 * arrives, bought for its buyer's own listening: each track it adds is Protected, so only those who may
+	 * read its post can load the file, and each album's post is private. An artist importing their
+	 * own releases gives --no-private. A folder is imported publicly unless --private is given.
+	 *
 	 * ## OPTIONS
 	 *
 	 * <path>
 	 * : The folder on the server to import, or a zip of it.
 	 *
+	 * [--[no-]private]
+	 * : Protect each track and keep new album posts private. On for a zip, off for a folder.
+	 *
 	 * [--status=<status>]
-	 * : Status for new album posts.
+	 * : Status for new album posts. Private when the import is, otherwise publish.
 	 * ---
-	 * default: publish
 	 * options:
 	 *   - publish
 	 *   - draft
@@ -241,9 +248,11 @@ final class Cli {
 	 *     wp riff import ~/Music/Floating\ Points
 	 *     wp riff import /srv/music --status=draft
 	 *     wp riff import ~/Downloads/album.zip
+	 *     wp riff import ~/Releases/our-first-album.zip --no-private
 	 *
 	 * @since 4.16.0
 	 * @since 5.9.0 Takes a zip.
+	 * @since 6.5.0 --private, on by default for a zip.
 	 *
 	 * @param string[]             $args       Positional arguments.
 	 * @param array<string, mixed> $assoc_args Named arguments.
@@ -251,8 +260,10 @@ final class Cli {
 	public function import( array $args, array $assoc_args ): void {
 		$dry     = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
 		$path    = (string) $args[0];
+		$private = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'private', is_file( $path ) );
 		$options = array(
-			'status'  => (string) ( $assoc_args['status'] ?? 'publish' ),
+			'private' => $private,
+			'status'  => (string) ( $assoc_args['status'] ?? ( $private ? 'private' : 'publish' ) ),
 			'dry_run' => $dry,
 		);
 		$result  = is_file( $path ) ? Import::zip( $path, $options ) : Import::folder( $path, $options );

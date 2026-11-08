@@ -1,8 +1,9 @@
 /* source.riffpress.com: the docs and the download, in the platform's look.
-   The ink wordmark on Riff's warm paper, as the RiffPress organisation's
-   picture has it; EB Garamond for display and headings, Inter for text;
-   amber for the one thing to press, deep amber for links. There is no blue:
-   the colour on these pages is the player's, in its pictures and covers. */
+   Black and white, with one colour: ember, a muted fire at about 1900K.
+   The ink wordmark on white; EB Garamond for display and headings, Inter
+   for text; black for the one thing to press; deep ember for links, the
+   focus ring and what marks where you are. No blue, no gold, no gradient;
+   the rest of the colour is the player's, in its pictures and covers. */
 @font-face {
 	font-family: Inter;
 	font-style: normal;
@@ -21,26 +22,26 @@
 
 :root {
 
-	/* Riff's paper, the organisation picture's ground, and warm greys on
-	   it: a raised surface, the rules, and two quieter inks, each 4.5:1 or
-	   more on both the paper and the surface */
-	--paper: #fcfaf6;
-	--surface: #f5efe4;
-	--rule: #e6dccb;
-	--rule-strong: #d3c6b0;
-	--warm-ink-2: #625c53;
-	--warm-ink-3: #6b6359;
-	--warm-dark: #1c1a17;
+	/* the ground: white, a raised grey surface, neutral rules, and two
+	   quieter inks, each 4.8:1 or more on both the white and the surface */
+	--paper: #fff;
+	--surface: #f5f5f5;
+	--rule: #e5e5e5;
+	--rule-strong: #c4c4c4;
+	--warm-ink-2: #5c5c5c;
+	--warm-ink-3: #6b6b6b;
+	--warm-dark: #0b0b0b;
 	--fingerboard: var(--paper);
 
-	/* Riff's amber: filled, with charcoal on it, for the one action a page
-	   asks for; deep amber for links and outlines on the paper (5.9:1), and
-	   darker again under the pointer */
-	--amber: #ffb020;
-	--amber-hover: #f0a30a;
-	--amber-deep: #8f5400;
-	--amber-ink: #6e4000;
-	--amber-wash: #ffe7b8;
+	/* ember, the one colour, about 1900K and muted: deep on white (5.7:1)
+	   for links, the focus ring and the marks for where you are (the
+	   sidebar's tick, the header's underline, the section being read), darker
+	   under the pointer; bright on black (7.5:1); a pale wash for selection */
+	--riff-ember-deep: #a3501a;
+	--riff-ember-ink: #7f3d12;
+	--riff-ember: #e8873f;
+	--riff-ember-wash: #fbe9dc;
+	--riff-mark: var(--riff-ember-deep);
 	--space-1: 8px;
 	--space-2: 16px;
 	--space-3: 24px;
@@ -48,25 +49,25 @@
 	--space-5: 48px;
 	--space-6: 64px;
 	--space-7: 96px;
-	--charcoal-1: #1e1e1e;
-	--charcoal-3: #3d3830;
+	--charcoal-1: #0b0b0b;
+	--charcoal-3: #3d3d3d;
 	--charcoal-4: var(--warm-ink-3);
-	--charcoal-5: #8a8173;
+	--charcoal-5: #8a8a8a;
 	--grey-1: var(--rule);
 	--grey-2: var(--surface);
 	--white: #fff;
-	--action: var(--amber);
-	--action-hover: var(--amber-hover);
-	--on-action: var(--charcoal-1);
+	--action: var(--charcoal-1);
+	--action-hover: #2b2b2b;
+	--on-action: var(--white);
 	--black: #000;
 	--panel: #121212;
 	--ink: var(--charcoal-1);
 	--ink-2: var(--warm-ink-2);
 	--ink-3: var(--warm-ink-3);
 	--line: var(--rule);
-	--accent: var(--amber-deep);
-	--accent-hover: var(--amber-ink);
-	--focus: var(--amber-deep);
+	--accent: var(--riff-ember-deep);
+	--accent-hover: var(--riff-ember-ink);
+	--focus: var(--riff-ember-deep);
 	--serif: "EB Garamond", garamond, georgia, serif;
 	--sans: inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
 
@@ -112,7 +113,7 @@ a:hover {
 	text-decoration-thickness: 2px;
 }
 
-/* one focus ring everywhere: deep amber on the paper, 2px, just outside */
+/* one focus ring everywhere: deep ember on white, 2px, just outside */
 :focus-visible {
 	outline: 2px solid var(--focus);
 	outline-offset: 2px;
@@ -241,11 +242,11 @@ a code {
 }
 
 .nav nav a[aria-current] {
-	text-decoration-color: var(--amber);
-	text-decoration-thickness: 2px;
+	text-decoration: none;
+	background: linear-gradient(var(--riff-mark), var(--riff-mark)) no-repeat 0 calc(100% - 6px) / 100% 2px;
 }
 
-/* the one thing a page asks for: Riff's amber, charcoal on it */
+/* the one thing a page asks for: black, white on it */
 .btn {
 	appearance: none;
 	border: 1px solid var(--action);
@@ -269,11 +270,6 @@ a code {
 	text-decoration: none;
 }
 
-.btn:focus-visible {
-	outline: 2px solid var(--ink);
-	outline-offset: 2px;
-}
-
 /* marginalia, as wordpress.org sets it: a band of dots before the footer, a
    record cropped into the margin on a wide screen */
 main,
@@ -284,7 +280,7 @@ main,
 
 footer {
 	background: var(--warm-dark);
-	color: #a39d93;
+	color: #a3a3a3;
 	padding: var(--space-5) 0;
 	font-size: 0.875rem;
 	line-height: 1.714;
@@ -307,18 +303,18 @@ footer p {
 
 footer a {
 	text-decoration: underline;
-	text-decoration-color: #6b655c;
+	text-decoration-color: #5c5c5c;
 	text-underline-offset: 3px;
-	color: #f2eadb;
+	color: var(--white);
 }
 
 footer a:hover {
 	color: var(--white);
-	text-decoration-color: var(--amber);
+	text-decoration-color: var(--riff-ember);
 }
 
 footer :focus-visible {
-	outline-color: var(--amber);
+	outline-color: var(--riff-ember);
 }
 
 /* the footer's links in their groups, as wordpress.org's foot has them */
@@ -330,7 +326,7 @@ footer nav {
 
 footer .foot-label {
 	margin-bottom: var(--space-1);
-	color: #a39d93;
+	color: #a3a3a3;
 	font-size: 0.75rem;
 	font-weight: 600;
 	letter-spacing: 0.06em;
@@ -442,10 +438,22 @@ main p {
 	text-decoration: underline;
 }
 
+.side a {
+	position: relative;
+}
+
 .side a[aria-current] {
 	background: var(--surface);
 	color: var(--ink);
-	box-shadow: inset 2px 0 0 var(--amber);
+}
+
+.side a[aria-current]::before {
+	content: "";
+	position: absolute;
+	inset: 4px auto 4px 0;
+	width: 3px;
+	border-radius: 2px;
+	background: var(--riff-mark);
 }
 
 figure {
@@ -718,8 +726,7 @@ figcaption {
 	margin: 24px 0 0;
 	padding: 16px 20px;
 	background: var(--surface);
-	border-left: 3px solid var(--amber);
-	border-radius: 0 2px 2px 0;
+	border-left: 3px solid var(--riff-mark);
 	font-size: 0.9375rem;
 	line-height: 1.7;
 }
@@ -740,14 +747,14 @@ figcaption {
 
 .btn.outline {
 	background: transparent;
-	color: var(--accent);
-	border-color: currentcolor;
+	color: var(--ink);
+	border-color: var(--ink);
 }
 
 .btn.outline:hover {
 	background: var(--surface);
-	border-color: var(--accent-hover);
-	color: var(--accent-hover);
+	border-color: var(--ink);
+	color: var(--ink);
 }
 
 /* ---- the download page */
@@ -943,10 +950,10 @@ figcaption {
 :root {
 	--mono: "IBM Plex Mono", monospace;
 	--charcoal-2: #23282d;
-	--syntax-grey: var(--warm-ink-2);
-	--syntax-red: #b32d2e;
-	--syntax-amber: var(--amber-deep);
-	--code-bg: #f8f4ec;
+	--syntax-func: var(--warm-ink-2);
+	--syntax-type: var(--charcoal-3);
+	--syntax-name: var(--riff-ember-deep);
+	--code-bg: var(--surface);
 }
 
 .screen-reader-text {
@@ -1102,6 +1109,7 @@ body:has(> .docs-nav) > .nav + .docs-nav + main {
 }
 
 .docs-nav a {
+	position: relative;
 	display: block;
 	padding: 6px 12px;
 	margin-left: -12px;
@@ -1119,7 +1127,15 @@ body:has(> .docs-nav) > .nav + .docs-nav + main {
 .docs-nav a[aria-current] {
 	color: var(--ink);
 	background: var(--surface);
-	box-shadow: inset 3px 0 0 var(--amber);
+}
+
+.docs-nav a[aria-current]::before {
+	content: "";
+	position: absolute;
+	inset: 4px auto 4px 0;
+	width: 3px;
+	border-radius: 2px;
+	background: var(--riff-mark);
 }
 
 .docs-nav a:focus-visible {
@@ -1204,7 +1220,7 @@ body:has(> .docs-nav) .side {
 		overflow-y: auto;
 		background: var(--paper);
 		border-bottom: 1px solid var(--rule);
-		box-shadow: 0 12px 24px rgb(28 26 23 / 12%);
+		box-shadow: 0 12px 24px rgb(0 0 0 / 10%);
 	}
 
 	.docs-menu:not([hidden]) {
@@ -1273,7 +1289,7 @@ body:has(> .docs-nav) .side {
 		position: fixed;
 		inset: 0;
 		z-index: 25;
-		background: rgb(28 26 23 / 32%);
+		background: rgb(0 0 0 / 40%);
 	}
 
 	.docs-menu-open {
@@ -1447,15 +1463,15 @@ main h2[id] {
 }
 
 .code-title .hook-func {
-	color: var(--syntax-grey);
+	color: var(--syntax-func);
 }
 
 .code-title .arg-type {
-	color: var(--syntax-red);
+	color: var(--syntax-type);
 }
 
 .code-title .arg-name {
-	color: var(--syntax-amber);
+	color: var(--syntax-name);
 }
 
 .is-toc-heading {
@@ -1484,7 +1500,7 @@ main h2[id] {
 }
 
 .is-toc-heading:target {
-	box-shadow: -12px 0 0 -9px var(--amber);
+	box-shadow: -12px 0 0 -9px var(--riff-mark);
 }
 
 /* the article, with "On this page" beside it on a wide screen */
@@ -1573,12 +1589,12 @@ main h2[id] {
 	text-decoration: underline;
 }
 
-/* the section being read (docs.js): ink and an amber underline, and on
-   the wide rail an amber tick in its place */
+/* the section being read (docs.js): ink, underlined in ember, and on the
+   wide rail an ember tick in its place */
 .toc a[aria-current] {
 	color: var(--ink);
 	text-decoration: underline;
-	text-decoration-color: var(--amber);
+	text-decoration-color: var(--riff-mark);
 	text-decoration-thickness: 2px;
 	text-underline-offset: 4px;
 }
@@ -1606,10 +1622,18 @@ main h2[id] {
 	}
 
 	.toc-box a {
+		position: relative;
 		display: block;
 		padding: 4px 0 4px 14px;
-		margin-left: -1px;
-		border-left: 2px solid transparent;
+	}
+
+	.toc-box a[aria-current]::before,
+	.guide .toc-box > ul > li:has(> a[aria-current])::after {
+		content: "";
+		position: absolute;
+		inset: 0 auto 0 -1px;
+		width: 2px;
+		background: var(--riff-mark);
 	}
 
 	.toc-box ul ul a {
@@ -1617,7 +1641,6 @@ main h2[id] {
 	}
 
 	.toc-box a[aria-current] {
-		border-left-color: var(--amber);
 		text-decoration: none;
 	}
 
@@ -1629,21 +1652,19 @@ main h2[id] {
 	/* the guide's tracklist: each number beside its title, the tick
 	   down the left of both */
 	.guide .toc-box > ul > li {
+		position: relative;
 		display: flex;
 		align-items: baseline;
-		margin-left: -1px;
 		padding-left: 14px;
-		border-left: 2px solid transparent;
-	}
-
-	.guide .toc-box > ul > li:has(> a[aria-current]) {
-		border-left-color: var(--amber);
 	}
 
 	.guide .toc-box > ul > li > a {
-		margin-left: 0;
+		position: static;
 		padding-left: 0;
-		border-left: 0;
+	}
+
+	.guide .toc-box > ul > li > a[aria-current]::before {
+		content: none;
 	}
 }
 
@@ -1678,7 +1699,7 @@ main h2[id] {
 .parameters .type {
 	font-family: var(--mono);
 	font-size: 0.875rem;
-	color: var(--syntax-red);
+	color: var(--syntax-type);
 }
 
 .parameters dd {
@@ -1709,7 +1730,7 @@ main h2[id] {
 	margin: 0 0 24px;
 	padding: 20px 24px;
 	background: var(--code-bg);
-	border: 1px solid var(--rule);
+	border: 0;
 	border-radius: 3px;
 	overflow: auto;
 	font-family: var(--mono);
@@ -2008,7 +2029,7 @@ main h2[id] {
 .member .parameters p .type {
 	font-family: var(--mono);
 	font-size: 0.875rem;
-	color: var(--syntax-red);
+	color: var(--syntax-type);
 }
 
 .reference h2 code {
@@ -2138,16 +2159,16 @@ figure img {
 	-webkit-touch-callout: none;
 }
 
-/* selected words in amber: a pale wash under dark ink on the paper, and
-   the amber itself under charcoal on a dark band */
+/* selected words in ember: a pale wash under black on white, and the
+   bright ember under black on a dark band */
 ::selection {
-	background: var(--amber-wash);
+	background: var(--riff-ember-wash);
 	color: var(--charcoal-1);
 }
 
 .alt ::selection,
 footer ::selection {
-	background: var(--amber);
+	background: var(--riff-ember);
 	color: var(--charcoal-1);
 }
 

@@ -36,3 +36,11 @@ Use the demo at https://next.riffpress.com/ or any post with at least two tracks
 
 12. Open a page with the Listen block, open an album and play a track. Go back to the library with Back. The music keeps playing.
 13. Lock the phone on the library page. The lock-screen controls still work.
+
+## Links that keep the music playing
+
+On a block theme, with **Keep the music playing when a link is followed** ticked under **Settings › Riff** ([#943](https://github.com/RiffPress/RiffPress/issues/943) collects the results, on a Mac as well):
+
+14. Play a track and follow a link in the post. The music doesn't stop or stutter, and the bar keeps the track.
+15. After the link, lock the phone. The lock screen shows the track, and its controls work.
+16. Swipe back from the screen's edge, then forward. The music keeps playing, and with Now Playing open, Back closes it.

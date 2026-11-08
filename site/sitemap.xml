@@ -43,10 +43,8 @@
   <url><loc>{{pages_url}}web/text-wrap/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/variable-fonts/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/prefers-reduced-motion/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/prefers-reduced-transparency/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/clip-path/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/aspect-ratio/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/accent-color/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/touch-action/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/overscroll-behavior/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}web/focus-visible/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
@@ -57,6 +55,7 @@
   <url><loc>{{pages_url}}developers/extensions/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/player/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/hooks/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/riff_abilities/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_about_sections/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_add_music_url/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_app_at_root/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
@@ -66,6 +65,7 @@
   <url><loc>{{pages_url}}developers/hooks/riff_client_navigation/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_enabled/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_extensions/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/riff_mcp/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_profile_url/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_protect_storage/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_protected_send/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>

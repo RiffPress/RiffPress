@@ -1,5 +1,5 @@
 /**
- * The meter and the filament: a shared file is analysed, the bars on the playing row swing with the music, the seek line lights and cools, and the glow fades before the knob.
+ * The meter and the plain seek line: a shared file is analysed, the bars on the playing row swing with the music and rest out of sight, and the seek line has nothing that glows, with a knob only while pointed at, and still seeks.
  * Runs in desktop Chromium and in Chromium at an iPhone's size; the tests tagged `@smoke` also run in WebKit (see playwright.config.js).
  */
 const path = require( 'node:path' );
@@ -109,120 +109,120 @@ test.describe( 'Player', () => {
 		}
 	} );
 
-	test( 'the filament lights with the music and cools when paused', async ( {
-		page,
-	}, testInfo ) => {
-		// iOS keeps the breath: routing audio through Web Audio there breaks background playback.
-		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
-		await page.emulateMedia( { reducedMotion: 'no-preference' } );
-		await page.reload();
-		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await expect( page.locator( '#riff' ) ).toHaveAttribute(
-			'data-live',
-			''
-		);
-		await expect
-			.poll( () =>
-				page.evaluate( () =>
-					Number(
-						getComputedStyle(
-							document.querySelector(
-								'.riff-bar-seek .riff-line'
-							)
-						).getPropertyValue( '--riff-heat' )
-					)
-				)
-			)
-			.toBeGreaterThan( 0.2 );
-		await page.locator( '.riff-bar [data-riff-action="toggle"]' ).click();
-		await expect( page.locator( '#riff' ) ).not.toHaveAttribute(
-			'data-live',
-			''
-		);
-		await expect
-			.poll(
-				() =>
-					page.evaluate( () =>
-						Number(
-							getComputedStyle(
-								document.querySelector(
-									'.riff-bar-seek .riff-line'
-								)
-							).getPropertyValue( '--riff-heat' )
-						)
-					),
-				{ timeout: 6000 }
-			)
-			.toBeLessThan( 0.1 );
-	} );
-
-	test( 'the filament rests while nothing it lights is in sight, and lights again when something is', async ( {
+	test( 'the meter rests while no bar is in sight, and reads again when one is', async ( {
 		page,
 	}, testInfo ) => {
 		test.skip( iosAgent( testInfo ), 'no analyser on iOS' );
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.reload();
+		await page.evaluate( () => {
+			window.riffFrames = 0;
+			window.riffInternal.listen( 'meter', () => window.riffFrames++ );
+		} );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-live', '' );
-		// The bar and the playing row out of sight, Now Playing closed: nothing the wire lights is
-		// seen. What the loop writes to the bar's line, read for a second and a half once the
-		// observer has had a frame to say so.
+		await expect.poll( () => page.evaluate( () => window.riffFrames ) ).toBeGreaterThan( 0 );
+		// The playing row out of sight: how many frames the meter reads in a second and a half,
+		// once the observer has had a frame to say so.
 		const sight = ( shown ) =>
 			page.evaluate( ( on ) => {
-				for ( const node of document.querySelectorAll( '.riff-bar, .riff-row[data-current]' ) ) {
-					node.style.display = on ? '' : 'none';
-				}
+				document.querySelector( '.riff-row[data-current]' ).style.display = on ? '' : 'none';
 			}, shown );
-		const written = () =>
+		const read = () =>
 			page.evaluate(
 				() =>
 					new Promise( ( resolve ) => {
-						const line = document.querySelector( '.riff-bar-seek .riff-line' );
-						const seen = new Set();
 						setTimeout( () => {
-							const every = setInterval(
-								() => seen.add( line.style.getPropertyValue( '--riff-heat' ) ),
-								50
-							);
-							setTimeout( () => {
-								clearInterval( every );
-								resolve( seen.size );
-							}, 1500 );
+							const from = window.riffFrames;
+							setTimeout( () => resolve( window.riffFrames - from ), 1500 );
 						}, 300 );
 					} )
 			);
 		await sight( false );
-		expect( await written() ).toBe( 1 );
-		// The music plays on: only the drawing rests.
+		expect( await read() ).toBe( 0 );
+		// The music plays on: only the reading rests.
 		expect( await page.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
 		await sight( true );
-		await expect.poll( written ).toBeGreaterThan( 1 );
+		await expect.poll( read ).toBeGreaterThan( 0 );
 	} );
 
-	test( 'the glow fades out before the knob instead of ending in a square edge', async ( {
+	test( 'the seek line is plain: a track, what has loaded and the played part, with nothing that glows or breathes', async ( {
 		page,
+		isMobile,
 	} ) => {
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();
-		const glow = await page.evaluate( () => {
+		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).currentTime ) ).toBeGreaterThan( 0.5 );
+		// One layer in each line, the played part; what has loaded is the line's ::before.
+		for ( const seeker of [ '.riff-bar-seek', '.riff-np-seek' ] ) {
+			await expect( page.locator( `${ seeker } .riff-line > *` ) ).toHaveCount( 1 );
+		}
+		await expect( page.locator( '.riff-wire, .riff-hot, .riff-bloom, .riff-np-glow, [data-riff-wire], [data-riff-hot]' ) ).toHaveCount( 0 );
+		const found = await page.evaluate( () => {
 			const line = document.querySelector( '.riff-bar-seek .riff-line' );
-			const frame = getComputedStyle( line.querySelector( '.riff-bloom' ) );
-			const after = getComputedStyle( line.querySelector( '.riff-bloom' ), '::after' );
+			const style = getComputedStyle( line );
 			return {
-				start: frame.maskImage || frame.webkitMaskImage,
-				end: after.maskImage || after.webkitMaskImage,
-				shadow: getComputedStyle( line.querySelector( '.riff-hot' ) ).boxShadow,
+				heat: style.getPropertyValue( '--riff-heat' ),
+				shadow: getComputedStyle( line.firstElementChild ).boxShadow,
+				// Whatever runs on the seek line moves it by transform, and ends: no light that
+				// fades, flickers or breathes forever.
+				animations: document
+					.getAnimations()
+					.filter( ( a ) => a.effect?.target?.closest?.( '.riff-bar-seek, .riff-np-seek' ) )
+					.map( ( a ) => ( {
+						infinite: a.effect.getTiming().iterations === Infinity,
+						props: Object.keys( a.effect.getKeyframes()[ 0 ] ).filter(
+							( k ) => ! [ 'offset', 'easing', 'composite', 'computedOffset' ].includes( k )
+						),
+					} ) ),
 			};
 		} );
-		// The bloom is faded at both ends: in from the line's start on a still frame, and out
-		// before the knob on the glow that slides, so neither fade reads the position and is
-		// repainted as it changes. A box-shadow on the stretched hot layer is what drew the
-		// square edge.
-		expect( glow.start ).toMatch( /^linear-gradient\(90deg, rgba\( *0, *0, *0, *0 *\)/ );
-		expect( glow.start ).not.toContain( 'calc' );
-		expect( glow.end ).toMatch( /rgba\( *0, *0, *0, *0 *\)\)$/ );
-		expect( glow.end ).not.toContain( '--riff-p' );
-		expect( glow.shadow ).toBe( 'none' );
-		// Now Playing's seek line is plain white: no bloom tints it.
-		await expect( page.locator( '.riff-np-seek .riff-bloom' ) ).toHaveCount( 0 );
+		expect( found.heat ).toBe( '' );
+		expect( found.shadow ).toBe( 'none' );
+		for ( const a of found.animations ) {
+			expect( a.infinite ).toBe( false );
+			expect( a.props ).toEqual( [ 'transform' ] );
+		}
+		// The bar's knob shows only while the line is pointed at, in focus or held.
+		if ( isMobile ) {
+			return;
+		}
+		const knob = page.locator( '.riff-bar-seek .riff-knob' );
+		await expect( knob ).toHaveCSS( 'opacity', '0' );
+		await page.locator( '.riff-bar-seek' ).hover();
+		await expect( knob ).toHaveCSS( 'opacity', '1' );
+		await page.mouse.move( 0, 0 );
+		await expect( knob ).toHaveCSS( 'opacity', '0' );
+	} );
+
+	test( 'the plain seek line still seeks, by a press and from the keyboard', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'a phone\'s bar line is a readout; Now Playing seeks there' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).duration || 0 ) ).toBeGreaterThan( 10 );
+		const fraction = () =>
+			page.evaluate( () => {
+				const m = document.querySelector( '.riff-audio' );
+				return m.currentTime / m.duration;
+			} );
+		const seek = await page.locator( '.riff-bar-seek' ).boundingBox();
+		await page.mouse.click( seek.x + seek.width * 0.6, seek.y + seek.height / 2 );
+		await expect.poll( fraction ).toBeGreaterThan( 0.55 );
+		await expect( page.locator( '.riff-bar-seek .riff-knob' ) ).toHaveCSS( 'opacity', '1' );
+		// From the keyboard: in focus, the knob shows, and an arrow moves five seconds.
+		await page.mouse.move( 0, 0 );
+		const input = page.locator( '.riff-bar-seek .riff-seek' );
+		await input.focus();
+		await page.keyboard.press( 'Home' );
+		await expect.poll( fraction ).toBeLessThan( 0.05 );
+		await page.keyboard.press( 'ArrowRight' );
+		await expect
+			.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).currentTime ) )
+			.toBeGreaterThan( 4 );
+		await expect( input ).toHaveAttribute( 'aria-valuetext', /seconds? of / );
 	} );
 } );
