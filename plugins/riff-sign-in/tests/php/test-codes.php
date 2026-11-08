@@ -137,7 +137,6 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 	 */
 	private function counting( string $method, ...$args ) {
 		$call = new ReflectionMethod( Codes::class, $method );
-		$call->setAccessible( true );
 		return $call->invoke( null, ...$args );
 	}
 
