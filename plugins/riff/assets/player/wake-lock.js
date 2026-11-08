@@ -6,8 +6,10 @@ export default function wakeLock( P ) {
 	const { root, video, np } = P;
 	let lock = null;
 	async function syncWakeLock() {
+		// isVideo(), not the listener's song-or-video choice: a video block's own video plays
+		// with the choice at song.
 		const wanted =
-			P.mode === 'video' &&
+			P.isVideo() &&
 			! video.paused &&
 			! np.hidden &&
 			! document.hidden;

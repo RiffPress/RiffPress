@@ -237,4 +237,55 @@ test.describe( 'A video on its own', () => {
 		await seesTheVideo( page );
 		await expect( page.locator( '.riff-modes' ) ).toBeHidden();
 	} );
+
+	test( 'keeps the screen on while it plays in Now Playing, and lets go when it pauses', async ( {
+		page,
+	} ) => {
+		await keepsCount( page );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row', { hasText: videoOnly } ).click();
+		await seesTheVideo( page );
+		await expect.poll( () => page.evaluate( () => window.riffLock.held ) ).toBe( true );
+		await page.evaluate( () => document.querySelector( '.riff-video' ).pause() );
+		await expect.poll( () => page.evaluate( () => window.riffLock.held ) ).toBe( false );
+	} );
 } );
+
+test.describe( 'The screen kept on', () => {
+	test( 'for a song switched to its video, and not for the song', async ( { page } ) => {
+		await keepsCount( page );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row', { hasText: withVideo } ).click();
+		await hearsTheSong( page );
+		await openView( page, 'album' );
+		expect( await page.evaluate( () => window.riffLock.asked ) ).toBe( 0 );
+		await watchesItsVideo( page );
+		await expect.poll( () => page.evaluate( () => window.riffLock.held ) ).toBe( true );
+	} );
+} );
+
+/**
+ * Stands in for the Screen Wake Lock, which a headless browser refuses, counting what is asked of it.
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ */
+async function keepsCount( page ) {
+	await page.addInitScript( () => {
+		window.riffLock = { asked: 0, held: false };
+		Object.defineProperty( navigator, 'wakeLock', {
+			configurable: true,
+			value: {
+				request: async () => {
+					window.riffLock.asked++;
+					window.riffLock.held = true;
+					const sentinel = new EventTarget();
+					sentinel.release = async () => {
+						window.riffLock.held = false;
+						sentinel.dispatchEvent( new Event( 'release' ) );
+					};
+					return sentinel;
+				},
+			},
+		} );
+	} );
+}
