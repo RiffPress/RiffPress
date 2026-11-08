@@ -170,6 +170,7 @@ function start( dir ) {
 	}
 	const { port, testsPort } = readOverride( dir );
 	console.log( `site http://localhost:${ port }, tests http://localhost:${ testsPort }` );
+	require( 'node:child_process' ).execFileSync( process.execPath, [ path.join( __dirname, 'open-local.js' ), `http://localhost:${ port }` ], { stdio: 'inherit' } );
 }
 
 function prs() {
