@@ -38,6 +38,10 @@
 	--text-face: "Schibsted Grotesk", "Schibsted Fallback", var(--sans);
 	--title-face: "EB Garamond", "Garamond Fallback", var(--serif);
 
+	/* the platform's own interface face, for a key on its keyboard: Schibsted
+	   has no ⌘, and Apple's face does */
+	--key-face: system-ui, -apple-system, "Segoe UI", sans-serif;
+
 	/* the docs' type: a page's title, its sections, a subsection, code */
 	--text-page: clamp(2.25rem, 1.6rem + 1.8vw, 3.25rem); /* 36 to 52px */
 	--text-section: var(--text-title); /* 26 to 36px */
@@ -411,10 +415,9 @@ body > main.wrap {
 	border: var(--hairline) solid var(--rule);
 	border-radius: var(--radius-control);
 	color: var(--ink-2);
-	font-family: var(--text-face);
+	font-family: var(--key-face);
 	font-size: var(--text-label);
 	font-weight: 400;
-	font-variant-numeric: var(--numerals);
 }
 
 /* a lens, drawn: a ring and its handle */
@@ -1508,7 +1511,7 @@ figcaption {
 	position: absolute;
 	right: calc(100% + 0.5em);
 	color: var(--ink-2);
-	font-variant-numeric: lining-nums var(--numerals);
+	font-variant-numeric: var(--numerals);
 }
 
 .guide .toc-box > ul {

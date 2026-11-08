@@ -112,11 +112,13 @@
 	--control-pad: 28px;
 	--control-pad-small: 18px;
 
-	/* technical facts, an address, a format, a function, set small in the platform's mono, and
-	   numbers that line up: never a costume, only for what a machine would print */
+	/* code, data and measurements, set small in the platform's mono: never a costume, only for
+	   what a machine would print. Figures (a size, a track's length) are lining figures. They
+	   aren't tabular: Schibsted Grotesk's tabular set widens the full stop, the comma and the
+	   colon with the digits, which pulls "0.0 MB" and "3:45" apart. */
 	--mono: ui-monospace, "SF Mono", sfmono-regular, menlo, consolas, monospace;
 	--text-mono: 0.8125rem; /* 13px */
-	--numerals: tabular-nums;
+	--numerals: lining-nums;
 
 	/* the grid: 12 columns, a column 1160px at most, its edge, and the bar */
 	--grid-columns: 12;
