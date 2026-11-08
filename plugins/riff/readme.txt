@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.3.0
+Stable tag: 6.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -129,6 +129,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.4.0 =
+* A site can open the Listen app at its own address, and a host can fit the app to it.
+
 = 6.3.0 =
 * Someone who may upload adds music in the Listen app, by choosing or dropping it.
 * The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.
@@ -145,10 +148,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.2.1 =
 * Fixed: a protected file on no post goes only to who may edit it or read a post by someone who may.
-
-= 6.2.0 =
-* Riff's icons are WordPress's own, with the few it lacks drawn to match.
-* Fixed: Riff is ready to submit to WordPress.org, named for its slug, with a readme that says what browsers do across a link.
-* Fixed: Riff Music Player keeps its full name, since Plugin Check wants five letters to make a slug from.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
