@@ -46,6 +46,7 @@ final class Plugin {
 		Fields::register();
 		Abilities::register();
 		Mcp::register();
+		Permissions::register();
 		Cli::register();
 		// The Listen feature: the block, its views, the drawn covers. Built on the hooks above.
 		Listen\App::register();
