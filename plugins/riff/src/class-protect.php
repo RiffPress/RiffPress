@@ -563,7 +563,14 @@ final class Protect {
 		 * Apache's mod_xsendfile or LiteSpeed to send it; 'x-accel-redirect' asks Nginx, which then
 		 * needs an internal location for the protected folder (see the readme).
 		 *
+		 * X-Sendfile names the file's absolute path, wherever it is kept, so with RIFF_PROTECTED_PATH
+		 * the web server must be allowed that folder (XSendFilePath on Apache). X-Accel-Redirect
+		 * names the file's address under uploads, or, with RIFF_PROTECTED_PATH, its path inside that
+		 * folder under /riff-protected/, which an internal location aliases to it; a file in neither,
+		 * as one not yet moved into the folder it belongs in is, is sent from PHP instead.
+		 *
 		 * @since 4.18.0
+		 * @since 6.5.0 With RIFF_PROTECTED_PATH, x-accel-redirect names /riff-protected/.
 		 *
 		 * @param string $how  'php', 'x-sendfile' or 'x-accel-redirect'. Default 'php'.
 		 * @param string $file Absolute path.
@@ -574,9 +581,9 @@ final class Protect {
 			header( 'X-Sendfile: ' . $file );
 			exit;
 		}
-		if ( 'x-accel-redirect' === $how ) {
-			$base = (string) wp_parse_url( wp_upload_dir( null, false )['baseurl'], PHP_URL_PATH );
-			header( 'X-Accel-Redirect: ' . $base . '/' . Protected_Files::relative( $file ) );
+		$accel = 'x-accel-redirect' === $how ? self::accel( $file ) : '';
+		if ( '' !== $accel ) {
+			header( 'X-Accel-Redirect: ' . $accel );
 			exit;
 		}
 
@@ -620,6 +627,26 @@ final class Protect {
 		}
 		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		exit;
+	}
+
+	/**
+	 * The address Nginx's internal location has a protected file at: under uploads, or under
+	 * /riff-protected/ for a folder at RIFF_PROTECTED_PATH. Empty for a file in neither, which PHP
+	 * sends instead.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @param string $file Absolute path.
+	 * @return string
+	 */
+	public static function accel( string $file ): string {
+		$base = Protected_Files::base();
+		if ( '' !== $base ) {
+			$rel = Protected_Files::relative( $file, $base );
+			return $rel !== $file ? '/riff-protected/' . $rel : '';
+		}
+		$rel = Protected_Files::relative( $file );
+		return $rel !== $file ? (string) wp_parse_url( wp_upload_dir( null, false )['baseurl'], PHP_URL_PATH ) . '/' . $rel : '';
 	}
 
 	/**
@@ -702,7 +729,7 @@ final class Protect {
 	 * @return array Site Health result.
 	 */
 	public static function health(): array {
-		$open   = get_option( Protected_Files::DIR ) && self::probe();
+		$open   = Protected_Files::folders() && self::probe();
 		$result = array(
 			'label'       => __( 'Riff\'s protected files can only be loaded through WordPress', 'riff' ),
 			'status'      => 'good',
@@ -714,31 +741,60 @@ final class Protect {
 			'test'        => 'riff_protected_files',
 		);
 		if ( $open ) {
-			$folder                = (string) wp_parse_url( trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( Protected_Files::dir() ), PHP_URL_PATH );
 			$result['status']      = 'recommended';
 			$result['label']       = __( 'Riff\'s protected files can be loaded directly', 'riff' );
-			$result['description'] = '<p>' . esc_html__( 'The web server sends files from the protected folder to anyone who has their address, so protecting a file only hides that address. On Nginx, add a rule that refuses the folder:', 'riff' ) . '</p><p><code>location ^~ ' . esc_html( $folder ) . '/ { internal; }</code></p>';
+			$result['description'] = self::advice();
 		}
 		return $result;
 	}
 
 	/**
+	 * How to close a protected folder the web server sends: keep it outside the web root, or, on
+	 * Nginx, refuse it with a rule.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @return string HTML.
+	 */
+	public static function advice(): string {
+		$folder = (string) wp_parse_url( Protected_Files::url( Protected_Files::exposed() ), PHP_URL_PATH );
+		return '<p>' . esc_html__( 'The web server sends files from the protected folder to anyone who has their address, so protecting a file only hides that address. Nginx, which many hosts run, ignores the rule Riff leaves there for Apache.', 'riff' ) . '</p><p>' . sprintf(
+			/* translators: %s: RIFF_PROTECTED_PATH. */
+			esc_html__( 'Keep protected files outside the web root: define %s in wp-config.php as a folder the web server never serves, and Riff moves them there. Or add this rule to the site\'s Nginx configuration:', 'riff' ),
+			'<code>RIFF_PROTECTED_PATH</code>'
+		) . '</p><p><code>location ^~ ' . esc_html( $folder ) . '/ { internal; }</code></p>';
+	}
+
+	/**
 	 * Whether the web server sends files from the protected folder to anyone, by asking it for one,
 	 * as Nginx does when it ignores the .htaccess Apache reads. Kept for a day, so the Media Library
-	 * can say so without asking again.
+	 * and the notice can say so without asking again. The folder asked about is the one files belong
+	 * in, or, while they are still being moved out of one in the web root, that one. A folder
+	 * outside the web root has no address to ask at, and isn't asked.
 	 *
 	 * @since 5.7.0
+	 * @since 6.5.0 Not asked for a folder outside the web root.
 	 *
 	 * @return bool
 	 */
 	public static function probe(): bool {
-		$dir   = Protected_Files::dir();
-		$probe = $dir . '/riff-probe.txt';
-		file_put_contents( $probe, 'riff' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a probe, removed below. isolation: write -- the protected folder under uploads.
+		$folder = Protected_Files::exposed();
+		$now    = Protected_Files::path();
+		// The folder files belong in is made if it isn't yet; an old one is asked about only while it is there.
+		if ( $now === $folder ) {
+			$folder = Protected_Files::dir();
+		}
+		$url = '' !== $folder && is_dir( $folder ) ? Protected_Files::url( $folder ) : '';
+		if ( '' === $url ) {
+			set_transient( self::OPEN, '0', DAY_IN_SECONDS );
+			return false;
+		}
+		$probe = $folder . '/riff-probe.txt';
+		file_put_contents( $probe, 'riff' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a probe, removed below. isolation: write -- the protected folder under uploads, or in the web root, as one outside it isn't asked.
 		$response = wp_remote_get(
-			trailingslashit( wp_upload_dir( null, false )['baseurl'] ) . basename( $dir ) . '/riff-probe.txt',
+			$url . '/riff-probe.txt',
 			array(
-				'timeout'   => 5,
+				'timeout'   => 3,
 				/** This filter is documented in wp-includes/cron.php */
 				'sslverify' => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core's own filter, applied as core applies it.
 			)
@@ -754,10 +810,14 @@ final class Protect {
 	 * Library doesn't wait on a request: when nobody has asked for a day, asking is left to cron.
 	 *
 	 * @since 5.7.0
+	 * @since 6.5.0 Never for a folder outside the web root, or before a file was protected.
 	 *
 	 * @return bool
 	 */
 	public static function open(): bool {
+		if ( ! Protected_Files::folders() || '' === Protected_Files::exposed() ) {
+			return false;
+		}
 		$open = get_transient( self::OPEN );
 		if ( false === $open && ! wp_next_scheduled( self::PROBE ) ) {
 			wp_schedule_single_event( time(), self::PROBE );

@@ -33,6 +33,8 @@
 		"capabilities": { "description": "Every capability it checks.", "type": "array", "items": { "type": "string" } },
 		"hosts": { "description": "The hosts it may call: a name, *.name for it and every host under it, or self for the site's own.", "type": "array", "items": { "type": "string" } },
 		"spawn": { "description": "The programs it runs, if any.", "type": "array", "items": { "type": "string" } },
+		"cron": { "description": "The cron events it schedules, each with why.", "type": "object", "additionalProperties": { "type": "string" } },
+		"paths": { "description": "Folders outside uploads and the temp folder it may write to, each by the constant or filter a site names it with, and why.", "type": "object", "additionalProperties": { "type": "string" } },
 		"riff": {
 			"description": "An extension's use of Riff: only what docs/hooks.md, docs/javascript.md and src/functions.php make public.",
 			"type": "object",

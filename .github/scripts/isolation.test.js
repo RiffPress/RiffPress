@@ -125,6 +125,19 @@ test( 'a host it does not declare is refused, in PHP and in a script', () => {
 	assert.ok( ! hostAllowed( 'gravatar.com.evil.example', [ '*.gravatar.com' ] ) );
 } );
 
+test( 'a cron event is declared with why, and a folder outside uploads by the setting that names it', () => {
+	const [ e ] = problems( php( "public static function a() { wp_schedule_single_event( time(), 'riff_demo_job' ); }" ) );
+	assert.match( e, /schedules the cron event 'riff_demo_job', which is not in cron/ );
+	assert.deepEqual( problems( php( "const JOB = 'riff_demo_job';\npublic static function a() { wp_schedule_event( time(), 'hourly', self::JOB ); }" ), base( { cron: { riff_demo_job: 'Why.' } } ) ), [] );
+	const [ unused ] = problems( php( 'public static function a() {}' ), base( { cron: { riff_demo_job: 'Why.' } } ) );
+	assert.match( unused, /never schedules/ );
+	const [ unread ] = problems( php( 'public static function a( $h ) { wp_schedule_single_event( time(), $h ); }' ) );
+	assert.match( unread, /hook can't be read here/ );
+	assert.deepEqual( problems( php( "public static function a() { return defined( 'RIFF_DEMO_PATH' ) ? RIFF_DEMO_PATH : apply_filters( 'riff_demo_path', '' ); }" ), base( { paths: { RIFF_DEMO_PATH: 'Why.', riff_demo_path: 'Why.' } } ) ), [] );
+	const [ folder ] = problems( php( 'public static function a() {}' ), base( { paths: { RIFF_DEMO_PATH: 'Why.' } } ) );
+	assert.match( folder, /paths names 'RIFF_DEMO_PATH'/ );
+} );
+
 test( 'running a program, writing a file and including a variable each need a reason on the line', () => {
 	const spawn = problems( php( "public static function a() { exec( 'ls' ); }" ) );
 	assert.match( spawn[ 0 ], /declares none \(spawn\)/ );

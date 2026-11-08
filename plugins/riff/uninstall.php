@@ -28,7 +28,12 @@ foreach ( get_posts(
 	)
 ) as $riff_id ) {
 	$riff_file = (string) get_attached_file( $riff_id, true );
-	$riff_to   = $riff_base . ltrim( (string) get_post_meta( $riff_id, '_riff_protected', true ), '/' );
+	// A move to a new protected folder cut short after the file went and before WordPress was told.
+	$riff_moving = (string) get_post_meta( $riff_id, '_riff_protected_moving', true );
+	if ( ! is_file( $riff_file ) && '' !== $riff_moving && is_file( $riff_moving ) ) {
+		$riff_file = $riff_moving;
+	}
+	$riff_to = $riff_base . ltrim( (string) get_post_meta( $riff_id, '_riff_protected', true ), '/' );
 	if ( file_exists( $riff_to ) ) {
 		$riff_to = dirname( $riff_to ) . '/' . wp_unique_filename( dirname( $riff_to ), basename( $riff_to ) );
 	}
@@ -47,9 +52,15 @@ if ( ! empty( $riff_moved ) ) {
 	Riff\Protected_Files::relink_all( $riff_moved );
 }
 delete_option( 'riff_protected_dir' );
+delete_option( 'riff_protected_folders' );
+delete_option( 'riff_protected_move_state' );
+delete_option( 'riff_protected_move_lock' );
+delete_transient( 'riff_protected_open' );
+wp_clear_scheduled_hook( 'riff_protected_move' );
+wp_clear_scheduled_hook( 'riff_protected_probe' );
 delete_option( 'riff_private' );
 
-foreach ( array( '_riff_private', '_riff_protected', '_riff_video', '_riff_stream', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
+foreach ( array( '_riff_private', '_riff_protected', '_riff_protected_moving', '_riff_video', '_riff_stream', '_riff_import_hash', '_riff_import_folder', '_riff_catalog', '_riff_tint' ) as $riff_key ) {
 	delete_post_meta_by_key( $riff_key );
 }
 

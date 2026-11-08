@@ -145,3 +145,76 @@ test( 'a private post\'s protected file is refused to a visitor, and a signed ad
 	).toBe( 403 );
 	await visitor.dispose();
 } );
+
+test( 'a protected file plays from a folder outside the web root, and its old uploads address is gone', async ( {
+	admin,
+	page,
+	requestUtils,
+	request,
+} ) => {
+	const outside = await made.media(
+		requestUtils,
+		path.join( FIXTURES, '01 - Intensities in Ten Cities [intensities].mp3' )
+	);
+	const post = await made.post( requestUtils, {
+		title: 'Protected, outside the web root',
+		status: 'publish',
+		content: block( outside ),
+	} );
+	await requestUtils.rest( {
+		method: 'POST',
+		path: `/wp/v2/media/${ outside.id }`,
+		data: { post: post.id },
+	} );
+	const keepIn = ( folder ) =>
+		requestUtils.rest( {
+			method: 'POST',
+			path: '/riff-test/v1/protected-path',
+			data: { path: folder },
+		} );
+	const onDisk = async () =>
+		( await requestUtils.rest( { path: `/riff-test/v1/file/${ outside.id }` } ) ).file;
+
+	// Outside the tests site's /var/www/html, as a host's private folder is.
+	await keepIn( '/tmp/riff-e2e-protected' );
+	try {
+		await protect( admin, page, outside );
+		expect( await onDisk() ).toMatch( /^\/tmp\/riff-e2e-protected\/riff-protected-[a-z0-9]{20}\// );
+		expect(
+			( await request.get( outside.source_url ) ).status(),
+			'nothing left at the uploads address'
+		).toBe( 404 );
+
+		const media = await requestUtils.rest( { path: `/wp/v2/media/${ outside.id }` } );
+		expect( media.source_url ).toContain( `riff-file=${ outside.id }` );
+		await page.goto( post.link );
+		await page.locator( '.riff-row' ).first().click();
+		await expect
+			.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 15000 } )
+			.toBe( true );
+		expect(
+			await page.evaluate( () => document.querySelector( '.riff-audio' ).currentSrc )
+		).toContain( `riff-file=${ outside.id }` );
+		const part = await request.get( media.source_url, {
+			headers: { Range: 'bytes=0-99' },
+		} );
+		expect( part.status(), 'streamed by PHP, with ranges' ).toBe( 206 );
+		expect( ( await part.body() ).length ).toBe( 100 );
+	} finally {
+		// Back under uploads, moved there as when a host takes the path away.
+		await keepIn( '' );
+	}
+	expect( await onDisk() ).toMatch( /\/wp-content\/uploads\/riff-protected-[a-z0-9]{20}\// );
+	expect(
+		( await request.get( outside.source_url ) ).status(),
+		'the uploads address still serves nothing'
+	).toBe( 404 );
+	expect(
+		(
+			await request.get( `${ outside.source_url.split( '/wp-content/' )[ 0 ] }/?riff-file=${ outside.id }`, {
+				headers: { Range: 'bytes=0-9' },
+			} )
+		).status(),
+		'and the file plays from the folder under uploads again'
+	).toBe( 206 );
+} );

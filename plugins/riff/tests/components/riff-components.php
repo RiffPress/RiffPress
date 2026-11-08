@@ -51,9 +51,49 @@ add_action(
 	}
 );
 
+// Protected files kept outside the web root, at the path the suite sets, as a host's plugin sets one.
+add_filter( 'riff_protected_path', static fn( $path ) => (string) get_option( 'riff_test_protected_path', $path ) );
+
 add_action(
 	'rest_api_init',
 	static function (): void {
+		// Where protected files are kept, and the move to there, at once rather than in the background.
+		register_rest_route(
+			'riff-test/v1',
+			'/protected-path',
+			array(
+				'methods'             => 'POST',
+				'callback'            => static function ( WP_REST_Request $request ) {
+					$path = (string) $request['path'];
+					'' === $path ? delete_option( 'riff_test_protected_path' ) : update_option( 'riff_test_protected_path', $path );
+					$moved = 0;
+					while ( Riff\Protected_Files::pending() ) {
+						$done   = Riff\Protected_Files::migrate();
+						$moved += $done['moved'];
+						if ( ! $done['left'] ) {
+							break;
+						}
+					}
+					return rest_ensure_response(
+						array(
+							'folder' => Riff\Protected_Files::path(),
+							'moved'  => $moved,
+						)
+					);
+				},
+				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+			)
+		);
+		// Where a file is on disk, which no address says once it is protected.
+		register_rest_route(
+			'riff-test/v1',
+			'/file/(?P<id>\d+)',
+			array(
+				'methods'             => 'GET',
+				'callback'            => static fn( WP_REST_Request $request ) => rest_ensure_response( array( 'file' => (string) get_attached_file( (int) $request['id'] ) ) ),
+				'permission_callback' => static fn() => current_user_can( 'manage_options' ),
+			)
+		);
 		// Deletes what the suite made: one spec's, or with no spec every spec's. Nothing unmarked.
 		register_rest_route(
 			'riff-test/v1',

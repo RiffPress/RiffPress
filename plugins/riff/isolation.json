@@ -50,6 +50,17 @@
 	"spawn": [
 		"ffmpeg"
 	],
+	"cron": {
+		"riff_catalog_backfill": "Files a library from before 4.16.0 under its albums and artists, a batch at a time, as a big one takes longer than a request.",
+		"riff_import_zip": "Unpacks an uploaded album's zip after the upload's request, which it would outlast.",
+		"riff_private_sweep": "Protects a private site's audio and video when the setting changes, and every hour while it is private, for a file that arrived some way the upload's filter never saw.",
+		"riff_protected_probe": "Asks the web server, at most once a day, whether it sends the protected folder to anyone, so the Media Library and the notices never wait on a request.",
+		"riff_protected_move": "Moves protected files a batch at a time when the folder they are kept in changes (RIFF_PROTECTED_PATH), as a library takes longer to move than a request is given."
+	},
+	"paths": {
+		"RIFF_PROTECTED_PATH": "Where a host keeps protected files outside the web root, so the web server never has them to send; Riff makes the site's folder inside it and moves files in and out. Riff refuses a path inside ABSPATH, wp-content, uploads, or the folder holding both WordPress and wp-content.",
+		"riff_protected_path": "The same folder, set by a plugin rather than wp-config.php, as a host's own plugin does for a network."
+	},
 	"scripts": [
 		"riff-media"
 	],

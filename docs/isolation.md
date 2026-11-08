@@ -26,6 +26,8 @@ Every plugin has an `isolation.json` beside its main file, and [`isolation.schem
 | `capabilities` | Every capability it checks. |
 | `hosts` | The hosts it may call: a name, `*.name`, or `self`. |
 | `spawn` | The programs it runs: Riff's `ffmpeg`, from WP-CLI only. |
+| `cron` | The cron events it schedules, each with why (`riff_protected_move`, a library moved a batch at a time). |
+| `paths` | Folders outside uploads and the temp folder it may write to, each by the constant or filter a site names it with, and why (`RIFF_PROTECTED_PATH`, protected files outside the web root). |
 | `riff` | An extension's use of Riff: the `hooks`, `functions`, player `events` and `window.riff` members (`api`) it uses. |
 | `scripts`, `modules` | The script handles and script modules it registers. |
 | `sandbox` | Experimental: for the sandboxed runtime below. |
@@ -42,7 +44,7 @@ Every plugin has an `isolation.json` beside its main file, and [`isolation.schem
 
 **A network allowlist.** A plugin calls only the hosts it declares. *Static* for literal URLs in PHP and scripts; a URL built at runtime is for the runtime guard (in progress, see below). One reach no list can name: `wp riff archive` downloads a Europeana recording from whichever of its providers holds it, through `wp_safe_remote_get()`, so the guard will have to let that command through; the Library of Congress's files it takes only from `*.loc.gov`.
 
-**No dangerous primitives.** PHPCS fails `eval()`, `create_function()`, `extract()` and SQL not built with `$wpdb->prepare()` (the WordPress standard already does), and `phpcs.xml.dist` makes running a program (`exec()`, `shell_exec()`, `system()`, `passthru()`, `proc_open()`, `popen()`) and `unserialize()` errors, each saying what to do instead. The isolation check adds what PHPCS has no sniff for: a filesystem write, a program run, or an `include` of a path from a variable must say on the line why, as `// isolation: write -- under uploads/riff-art`, so each is visible in review; an iframe must carry `sandbox`. *Static.*
+**No dangerous primitives.** PHPCS fails `eval()`, `create_function()`, `extract()` and SQL not built with `$wpdb->prepare()` (the WordPress standard already does), and `phpcs.xml.dist` makes running a program (`exec()`, `shell_exec()`, `system()`, `passthru()`, `proc_open()`, `popen()`) and `unserialize()` errors, each saying what to do instead. The isolation check adds what PHPCS has no sniff for: a filesystem write, a program run, or an `include` of a path from a variable must say on the line why, as `// isolation: write -- under uploads/riff-art`, so each is visible in review; an iframe must carry `sandbox`. A write goes under uploads, the temp folder, or a folder `paths` names, which only the site's own setting points anywhere; every cron event scheduled is in `cron`, and one declared is scheduled. *Static.*
 
 **Failure isolation.** One broken extension must never break the player. *In progress*: catching a throwing view, control or action in the player's JavaScript, reported once with the plugin's name and skipped, and catching `Throwable` around the render and registry callbacks Riff calls in PHP, with a deliberately broken test extension in PHPUnit and Playwright.
 
