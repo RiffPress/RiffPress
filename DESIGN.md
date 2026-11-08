@@ -8,7 +8,7 @@ Riff is a music player that sits inside someone else's site. The player is alway
 
 ### The player
 
-YouTube Music's current layout and measurements are the authority, except the wide bar's arrangement, which follows Tidal, and Now Playing, which is a view at a time, each taking the whole screen above the bar and opened from its button at the bar's right, as Spotify's views are (the lyrics), the album from a press on the bar itself (the cover where Now Playing is upright and the turntable where it is wide), with Up next a panel beside the page: the 72px bar on a wide screen, the 2025 Now Playing on a phone, Roboto, and `#212121` surfaces on `#030303`; the icons are WordPress's own in place of Material's. Riff's own marks are one accent taken from the cover playing (`--riff-cover-accent`), or the site's own where a cover has none, in place of red, the dark-mode mirror of the site's charcoal on paper, and the filament: the played part of the bar's seek line glows with the music, a dim ember when it is quiet, a warm ivory light at working level and a pale white heart at the peaks, and cools when playback stops. Each layer has one colour and only fades, and the line moves on the compositor. The bloom is a soft band either side of the line that fades out before the knob, and stays on the bar's line; Now Playing's own seek line is plain white.
+YouTube Music's current layout and measurements are the authority, except the wide bar's arrangement, which follows Tidal, and Now Playing, which is a view at a time, each taking the whole screen above the bar and opened from its button at the bar's right, as Spotify's views are (the lyrics), the album from a press on the bar itself (the cover where Now Playing is upright and the turntable where it is wide), with Up next a panel beside the page: the 72px bar on a wide screen, the 2025 Now Playing on a phone, Roboto, and `#212121` surfaces on `#030303`; the icons are WordPress's own in place of Material's. Riff's own mark is one accent taken from the cover playing (`--riff-cover-accent`), or the site's own where a cover has none, in place of red, the dark-mode mirror of the site's charcoal on paper. The bar's seek line is plain, as YouTube Music's is: a thin track, what has loaded in a quieter shade, the played part in the accent, and a knob only while it is pointed at, in focus or dragged. It moves on the compositor. Now Playing's own seek line is plain white. The volume, on a wide bar, is a short slider drawn the same way, beside its mute button, in a slot of its own, so it never opens over the controls beside it.
 
 ### The Listen block
 
@@ -28,7 +28,7 @@ On a computer, in a browser and installed alike: Spotify's frame. A 64px black s
 
 ## Interaction
 
-Tap a row to play, tap the bar for Now Playing, swipe the bar to skip, drag Now Playing down to close. Motion is transform and opacity only. Reduced motion removes the transitions and holds the filament at half; reduced transparency removes the halo.
+Tap a row to play, tap the bar for Now Playing, swipe the bar to skip, drag Now Playing down to close. Motion is transform and opacity only. Reduced motion removes the transitions and stills the playing row's bars.
 
 ## Accessibility
 

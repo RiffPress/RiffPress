@@ -357,8 +357,8 @@ html.has-riff .riff-standalone .riff-app {
 	.riff-standalone .riff-app .riff-app-library-chip:focus-visible,
 	.riff-standalone .riff-app .riff-app-library-create:focus-visible,
 	.riff-standalone .riff-app .riff-app-library-title:focus-visible {
-		outline: 2px solid var(--riff-app-accent);
-		outline-offset: -2px;
+		outline: var(--riff-app-focus-ring);
+		outline-offset: var(--riff-app-focus-ring-offset);
 	}
 
 	/* What is showing has its name in the accent. */

@@ -6,12 +6,14 @@
  *
  * The pages link to the code at the commit being published, so they are built at deploy time and
  * are not committed. The Markdown is read in the subset the docs are written in: headings,
- * paragraphs, lists, tables, fenced code, and inline code, bold, emphasis and links. A link to
- * another doc that has a page goes to that page; a link to any other file in the repository opens
- * it on GitHub.
+ * paragraphs, lists, tables, fenced code, pictures on a line of their own, and inline code, bold,
+ * emphasis and links. A link to another doc that has a page goes to that page; a link to a page of
+ * Source's, written out in full so it works on GitHub too, goes to it from here; a link to any
+ * other file in the repository opens it on GitHub. A picture is one of the site's own, in site/.
  *
- * --check fails when a doc uses Markdown outside that subset, has no title, or links to a file,
- * a heading or a hook that isn't there.
+ * --check fails when a doc uses Markdown outside that subset, has no title, links to a file, a
+ * heading, a hook or a page of Source's that isn't there, or shows a picture site/ doesn't have.
+ * A fragment of a reference page is left to the deploy's link check, which reads the built page.
  *
  * Usage: node .github/scripts/handbook-pages.js [--check]
  */
@@ -32,6 +34,10 @@ const REFERENCES = {
 	'docs/hooks.md': [ 'hooks/', 'Hooks' ],
 	'docs/javascript.md': [ 'javascript/', 'JavaScript' ],
 };
+// Source's address, as a doc writes a link to one of its pages.
+const SOURCE = 'https://source.riffpress.com/';
+// A picture alone on its line.
+const PICTURE = /^!\[([^\]]+)\]\(([^)\s]+)\)\s*$/;
 
 /**
  * A heading's anchor as GitHub writes it, so a link into a doc works on GitHub and on its page.
@@ -144,7 +150,7 @@ function blocks( markdown ) {
 	const refused = [
 		[ /^\s*>/, 'a quote' ],
 		[ /^\s*<[a-zA-Z/!]/, 'HTML' ],
-		[ /!\[[^\]]*\]\(/, 'an image' ],
+		[ /^(?!!\[[^\]]+\]\([^)\s]+\)\s*$).*!\[[^\]]*\]\(/, 'an image inside a line or without words for its alt' ],
 		[ /^\s+(```|~~~)|^~~~/, 'code fenced other than with ``` at the start of a line' ],
 		[ /^#{5,}/, 'a heading below ####' ],
 		[ /^\s*\d+\) /, 'a list numbered with )' ],
@@ -185,6 +191,12 @@ function blocks( markdown ) {
 				text: lines.slice( i + 1, end ).join( '\n' ),
 			} );
 			i = end + 1;
+			continue;
+		}
+		const shown = PICTURE.exec( line );
+		if ( shown ) {
+			out.push( { type: 'picture', alt: shown[ 1 ], src: shown[ 2 ] } );
+			i++;
 			continue;
 		}
 		const heading = /^(#{1,4}) +(.+?)\s*#*\s*$/.exec( line );
@@ -271,7 +283,7 @@ function blocks( markdown ) {
 		while (
 			i < lines.length &&
 			lines[ i ].trim() &&
-			! /^(```|#{1,4} |\|)/.test( lines[ i ] ) &&
+			! /^(```|#{1,4} |\||!\[)/.test( lines[ i ] ) &&
 			! listItem.test( lines[ i ] )
 		) {
 			words.push( lines[ i ].trim() );
@@ -310,6 +322,28 @@ function hookAnchors() {
 }
 
 /**
+ * A picture from site/, as the pages written by hand show one: the PNG at its own size, with its
+ * AVIFs where site-shots.js made them, wide in the column or narrow as a phone.
+ *
+ * @param {string} to  The picture's path in the repository.
+ * @param {string} alt What it shows.
+ * @return {string} HTML.
+ */
+function picture( to, alt ) {
+	const at = ( file ) => `../../${ file.slice( 'site/'.length ) }`;
+	const bytes = fs.readFileSync( path.join( ROOT, to ) );
+	const [ w, h ] = /\.png$/.test( to ) ? [ bytes.readUInt32BE( 16 ), bytes.readUInt32BE( 20 ) ] : [];
+	const size = w ? ` width="${ w }" height="${ h }"` : '';
+	const wide = ! w || w > h;
+	const avif = [ [ to.replace( /\.png$/, '.avif' ), w ], [ to.replace( /\.png$/, '-1440.avif' ), 1440 ] ]
+		.filter( ( [ f ] ) => f !== to && fs.existsSync( path.join( ROOT, f ) ) )
+		.map( ( [ f, width ] ) => `${ at( f ) } ${ width }w` );
+	const sizes = wide ? '(max-width: 800px) 100vw, 760px' : '300px';
+	const img = `<picture>${ avif.length && w ? `<source type="image/avif" srcset="${ avif.join( ', ' ) }" sizes="${ sizes }">` : '' }<img${ wide ? ' class="desk"' : '' } src="${ at( to ) }"${ size } alt="${ esc( alt ) }" loading="lazy" decoding="async"></picture>`;
+	return `<figure>${ wide ? img : `<span class="device">${ img }</span>` }</figure>`;
+}
+
+/**
  * Every handbook page, and what is wrong with any of them.
  *
  * @param {Array} list The handbooks.
@@ -335,6 +369,10 @@ function build( list = HANDBOOKS ) {
 	} );
 	const pages = new Map( parsed.map( ( h ) => [ h.file, h ] ) );
 	let anchors = null;
+	// Source's pages by their path on the site: the ones site-nav.json lists, each hook's and each
+	// web feature's.
+	let built = null;
+	const handbookAt = new Map( parsed.map( ( h ) => [ `developers/${ h.slug }/`, h ] ) );
 
 	for ( const h of parsed ) {
 		const titles = h.parts.filter(
@@ -348,6 +386,26 @@ function build( list = HANDBOOKS ) {
 		// A link as the doc has it, made the page's own; and its words, where they are only the
 		// name of a file that has a page, the page's name.
 		const link = ( href, words ) => {
+			if ( href.startsWith( SOURCE ) ) {
+				const [ where, frag = '' ] = href.slice( SOURCE.length ).split( '#' );
+				built = built || new Set( [
+					...[ ...nav.entries().values() ].map( ( e ) => e.node.href ),
+					...handbookAt.keys(),
+					...hooks.pages( hooks.collect() ).map( ( p ) => `developers/hooks/${ p.slug }/` ),
+					...JSON.parse( fs.readFileSync( path.join( ROOT, 'site', 'web', 'web.json' ), 'utf8' ) ).map( ( e ) => `web/${ e.slug }/` ),
+				] );
+				// The reference sits under developers/ on the site and at the host's root.
+				// So developers/ is never in the address: the host has no such folder.
+				const page = where.startsWith( 'developers/' ) ? undefined : [ where, `developers/${ where }` ].find( ( p ) => built.has( p ) );
+				if ( page === undefined ) {
+					problems.push( `${ h.file } links to ${ href }, which isn't a page of Source's` );
+					return [ href, words ];
+				}
+				if ( frag && handbookAt.has( page ) && ! handbookAt.get( page ).ids.has( frag ) ) {
+					problems.push( `${ h.file } links to ${ href }, a heading that page doesn't have` );
+				}
+				return [ `../../${ page }${ frag ? `#${ frag }` : '' }`, words ];
+			}
 			if ( /^[a-z]+:/i.test( href ) ) {
 				return [ href, words ];
 			}
@@ -434,6 +492,13 @@ function build( list = HANDBOOKS ) {
 				h.html += `<table class="code-table"><thead><tr>${ b.head.map( ( c ) => `<th scope="col">${ inline( c, link ) }</th>` ).join( '' ) }</tr></thead><tbody>${ b.rows.map( ( r ) => `<tr>${ r.map( ( c ) => `<td>${ inline( c, link ) }</td>` ).join( '' ) }</tr>` ).join( '' ) }</tbody></table>\n`;
 			} else if ( b.type === 'code' ) {
 				h.html += hooks.codeBlock( b.text ) + '\n';
+			} else if ( b.type === 'picture' ) {
+				const to = path.posix.normalize( path.posix.join( path.posix.dirname( h.file ), b.src ) );
+				if ( ! to.startsWith( 'site/' ) || ! fs.existsSync( path.join( ROOT, to ) ) ) {
+					problems.push( `${ h.file } shows ${ b.src }, which isn't a picture in site/` );
+				} else {
+					h.html += picture( to, b.alt ) + '\n';
+				}
 			}
 		}
 	}

@@ -6,6 +6,18 @@ The same reference, a page per hook, is on the site under Developers, PHP and Ja
 
 ## Filters
 
+### `riff_abilities`
+
+Filters the abilities Riff registers, so an extension adds its own the way Riff adds its: each the REST route it runs, with what it takes and what it answers. Each is registered in Riff's category, run as a REST request to its route and allowed what the route's own permission callback allows, and offered to an MCP client only where the site turns that on.
+
+Each is keyed by its name, a namespace of the plugin's own, a slash and a name, such as `riff-lyrics/set-lyrics`, and has a `label` and a `description`; the route's `method`, its `namespace` (`riff/v1` unless given) and its `route`, with each part the input fills in braces, such as `/media/{id}`; the `input`'s properties as JSON Schema, each with `required` where it must be given; the `output` as JSON Schema; and `readonly`. It may also have `params`, a callable that takes the input left after the route's parts and gives the route's parameters, and `destructive` (default false) and `idempotent` (default true).
+
+Since 6.5.0. Fires in `plugins/riff/src/class-abilities.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$abilities` | `array[]` | Abilities by name: Riff's own, and any added before. |
+
 ### `riff_about_sections`
 
 Filters the sections of the About panel, Riff's own included: `track`, the cover, the title and the artist and album, and `credits`, what the file's tags say about who made it.
@@ -89,11 +101,13 @@ Since 4.17.0. Fires in `plugins/riff/src/class-tracks.php`.
 
 Filters whether a link on the site is followed without leaving the page, so what plays carries on. Only a block theme can: its template is the region that is swapped.
 
+A host turns it on for every site with `add_filter( 'riff_client_navigation', '__return_true' )`.
+
 Since 6.2.0. Fires in `plugins/riff/src/class-navigation.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `$on` | `bool` | False by default. |
+| `$on` | `bool` | Whether it is on, from Settings › Riff. Default false. |
 
 ### `riff_cover_accent`
 
@@ -126,6 +140,18 @@ Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `$names` | `string[]` | The names in extensions.json. |
+
+### `riff_mcp`
+
+Filters whether AI assistants may use Riff's abilities over MCP. On, and with the MCP Adapter plugin active, `/wp-json/mcp/riff` serves each of them as a tool to a signed-in user, and the adapter's default server lists them. Each still does only what that user may do. Off, there is no such server, and the default server does not list them.
+
+A host that offers it on every site turns it on with `add_filter( 'riff_mcp', '__return_true' )`.
+
+Since 6.5.0. Fires in `plugins/riff/src/class-mcp.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$on` | `bool` | Whether it is on, from Settings › Riff. Default false. |
 
 ### `riff_profile_url`
 

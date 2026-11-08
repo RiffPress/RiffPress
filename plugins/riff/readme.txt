@@ -106,7 +106,15 @@ From the post. Every audio and video block in the post is the queue, in order, s
 
 = Can I add a whole folder of albums at once? =
 
-Yes. Upload a zip of an album, or of several, to the Media Library, and Riff unpacks it in the background and makes a draft album post for each folder in it that holds audio, for you to publish, and attaches the zip to it. A zip it cannot import, such as one on a server whose PHP has no zip extension, stays unattached. With WP-CLI, `wp riff import` with the path to a folder or a zip does the same, and publishes the posts. Run either again and it skips what it already imported.
+Yes. Upload a zip of an album, or of several, to the Media Library, and Riff unpacks it in the background and makes a private album post for each folder in it that holds audio, with each track it adds Protected, and attaches the zip to it. A zip is private because it is how a store's download arrives, such as a Bandcamp purchase, bought for your own listening: you and the site's editors and administrators hear it, and the open web doesn't. For listeners who sign in to hear it too, turn on Private site under Settings > Reading and publish the posts; if the music is yours to share, publish them. The zip itself stays at its public address in uploads, so delete it from the Media Library once the album is in. A track already in the Media Library is skipped and stays as it was. A zip it cannot import, such as one on a server whose PHP has no zip extension, stays unattached. With WP-CLI, `wp riff import` with the path to a zip imports it privately too, or publicly with `--no-private`; with the path to a folder it publishes the posts, or keeps them private with `--private`. Run either again and it skips what it already imported.
+
+= Can I bring my own tracks over from SoundCloud? =
+
+Yes, as files. Put the files you uploaded to SoundCloud, or downloaded from your own tracks there, in a folder per album, with the artwork as cover.jpg, and import them as any album: a zip of the folders uploaded to the Media Library, or `wp riff import` with the folder. Name a WAV file the way its title should read, as WAV files rarely carry tags, and export AIFF as WAV or FLAC, which every browser plays. Riff doesn't sign in to SoundCloud and fetch your uploads itself yet.
+
+= Can I make albums from a public archive's recordings? =
+
+Yes, with WP-CLI. `wp riff archive loc` imports recordings the Library of Congress publishes for reuse, the Edison companies' sound recordings unless you name another collection or an item, and `wp riff archive europeana "a search" --key=yourkey` those on Europeana. Rights are per item, so Riff reads each item's rights statement and imports only what is marked public domain or under CC0, CC BY or CC BY-SA, or, from the Library of Congress, what its statement says it knows of no U.S. copyright in, credited as just that. It says what it skipped and why. Each track keeps its source, licence and credit in its caption and description, the About panel shows the credit, and each album's post opens with it, so the site credits the archive rather than presenting itself as it.
 
 = My files are lossless. Do listeners download all of that? =
 

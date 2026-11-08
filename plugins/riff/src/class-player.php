@@ -39,7 +39,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const PLAYER_FEATURES = array( 'filament', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together', 'about', 'navigation' );
+	public const PLAYER_FEATURES = array( 'meter', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together', 'about', 'navigation' );
 
 	/**
 	 * Hooks the assets and the markup.
@@ -91,7 +91,7 @@ final class Player {
 				'label'  => __( 'Volume', 'riff' ),
 				'order'  => 70,
 				'wide'   => true,
-				'render' => static fn() => '<label class="riff-volume"><span class="riff-volume-pop"><input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="' . esc_attr__( 'Volume', 'riff' ) . '" aria-valuetext="' . esc_attr__( '100 percent', 'riff' ) . '"></span>' . self::icon( 'volume' ) . '</label>',
+				'render' => static fn() => '<span class="riff-volume"><button type="button" class="riff-btn riff-volume-mute" data-riff-mute aria-label="' . esc_attr__( 'Mute', 'riff' ) . '" aria-pressed="false">' . self::icon( 'volume' ) . self::icon( 'muted' ) . '</button><input type="range" data-riff-volume min="0" max="100" step="1" value="100" aria-label="' . esc_attr__( 'Volume', 'riff' ) . '" aria-valuetext="' . esc_attr__( '100 percent', 'riff' ) . '"></span>',
 			)
 		);
 		// The album, what Now Playing opens to: the cover where Now Playing is portrait and the
@@ -283,7 +283,7 @@ final class Player {
 	/**
 	 * Registers the player's modules under assets/player/ and lists them as riff.js's dependencies:
 	 * the sections it imports as it starts, which the page preloads with it, and the features it
-	 * imports when first needed (the filament, gestures, the lock screen, Cast, sharing, the wake
+	 * imports when first needed (the meter, gestures, the lock screen, Cast, sharing, the wake
 	 * lock), which the import map names so a dynamic import finds them.
 	 *
 	 * @since 4.33.0
@@ -482,6 +482,7 @@ final class Player {
 			'queue'     => '<path d="M15 10L20 10M15 15L20 15"/><path d="M11.25 16.5C11.25 18.0188 10.0188 19.25 8.5 19.25C6.98122 19.25 5.75 18.0188 5.75 16.5C5.75 14.9812 6.98122 13.75 8.5 13.75C10.0188 13.75 11.25 14.9812 11.25 16.5Z" fill="currentColor" stroke="none"/><path d="M8.5 19.25C10.0188 19.25 11.25 18.0188 11.25 16.5C11.25 14.9812 10.0188 13.75 8.5 13.75C6.98122 13.75 5.75 14.9812 5.75 16.5C5.75 18.0188 6.98122 19.25 8.5 19.25ZM8.5 19.25C11.4867 19.25 11.75 16.5 11.75 15.1379V7.99998C11.75 4.9108 14.4 5.00254 16 5.00233"/>',
 			'close'     => '<path d="M5 19L19 5M19 19L5 5"/>',
 			'volume'    => '<path d="M4.75 9.75V14.25H7.75L11.75 17.75V6.25L7.75 9.75H4.75Z"/><path d="M14.25 9.5C15.6 10.9 15.6 13.1 14.25 14.5M16.75 7C19.5 9.8 19.5 14.2 16.75 17"/>',
+			'muted'     => '<path d="M4.75 9.75V14.25H7.75L11.75 17.75V6.25L7.75 9.75H4.75Z"/><path d="M14.75 9.75L19.25 14.25M19.25 9.75L14.75 14.25"/>',
 			'share'     => '<path d="M15.75 5.69118V7C15.75 7.13807 15.8619 7.25 16 7.25H18C18.1381 7.25 18.25 7.13807 18.25 7V5C18.25 4.86193 18.1381 4.75 18 4.75H16C15.8619 4.75 15.75 4.86193 15.75 5V5.69118ZM15.75 5.69118L8.25 11.4265M15.75 18.3088V19C15.75 19.1381 15.8619 19.25 16 19.25H18C18.1381 19.25 18.25 19.1381 18.25 19V17C18.25 16.8619 18.1381 16.75 18 16.75H16C15.8619 16.75 15.75 16.8619 15.75 17V18.3088ZM15.75 18.3088L8.25 12.5735M8.25 11.4265V11C8.25 10.8619 8.13807 10.75 8 10.75H6C5.86193 10.75 5.75 10.8619 5.75 11V13C5.75 13.1381 5.86193 13.25 6 13.25H8C8.13807 13.25 8.25 13.1381 8.25 13V12.5735M8.25 11.4265V12.5735"/>',
 			'heart'     => '<path d="M12 18.75L5.9 12.6C4.2 10.9 4.2 8.2 5.9 6.6C7.5 5 10.2 5 11.9 6.7L12 6.8L12.1 6.7C13.8 5 16.5 5 18.1 6.6C19.8 8.2 19.8 10.9 18.1 12.6L12 18.75Z"/>',
 			'album'     => '<path d="M6 4.75H18C18.69 4.75 19.25 5.31 19.25 6V18C19.25 18.69 18.69 19.25 18 19.25H6C5.31 19.25 4.75 18.69 4.75 18V6C4.75 5.31 5.31 4.75 6 4.75Z"/><path d="M12.75 14.5V8.25H15.75M12.75 14.5A1.75 1.75 0 1 1 11 12.75A1.75 1.75 0 0 1 12.75 14.5Z"/>',

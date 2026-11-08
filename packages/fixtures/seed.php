@@ -71,6 +71,25 @@ if ( ! function_exists( 'riff_seed' ) ) {
 	}
 
 	/**
+	 * A song's chord chart and melody, from its manifest entry, into the meta Riff Chords and Riff
+	 * Sing read: `_riff_chords` (ChordPro) and `_riff_sing_melody` (UltraStar), the keys their Chords
+	 * and Melody fields in the Media Library save to. Written whether or not those plugins are
+	 * active, so turning one on later shows the chart.
+	 *
+	 * @param int   $id    Attachment ID.
+	 * @param array $track The track's manifest entry.
+	 */
+	function riff_seed_charts( int $id, array $track ): void {
+		$charts = array(
+			'_riff_chords'      => (string) ( $track['chords'] ?? '' ),
+			'_riff_sing_melody' => (string) ( $track['melody'] ?? '' ),
+		);
+		foreach ( array_filter( $charts ) as $key => $text ) {
+			update_post_meta( $id, $key, wp_slash( $text ) );
+		}
+	}
+
+	/**
 	 * Files a post under a category, made if it does not exist.
 	 *
 	 * @param int    $post_id Post ID.
@@ -159,6 +178,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 					'riff_levels' => (string) ( $levels[ $track['id'] ?? '' ] ?? '' ),
 				) + riff_seed_words( $track )
 			);
+			riff_seed_charts( $id, $track );
 			$ids[] = $id;
 		}
 		$intro = isset( $manifest['curator'] ) ? sprintf( '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->', esc_html( (string) $manifest['curator'] ) ) : '';
@@ -290,6 +310,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 			if ( $changed ) {
 				wp_update_attachment_metadata( $id, $meta );
 			}
+			riff_seed_charts( $id, $track );
 		}
 
 		$post_id = (int) $album['post'];

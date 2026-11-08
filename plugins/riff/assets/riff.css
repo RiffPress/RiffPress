@@ -428,11 +428,15 @@ div.riff-row-locked {
 	-webkit-tap-highlight-color: transparent;
 }
 
+/* One ring for every control of the player's that has the keyboard's focus,
+   outside its edge and round its corners (tokens.css). */
 #riff button:focus-visible,
-#riff input:focus-visible {
-	outline: 2px solid var(--riff-fg);
-	outline-offset: 2px;
-	border-radius: 4px;
+#riff input:focus-visible,
+#riff a:focus-visible,
+#riff summary:focus-visible,
+#riff :where([tabindex]:not([tabindex="-1"])):focus-visible {
+	outline: var(--riff-focus-ring);
+	outline-offset: var(--riff-focus-ring-offset);
 }
 
 #riff h2,
@@ -510,7 +514,10 @@ div.riff-row-locked {
 	}
 }
 
-/* ---- Seek lines. A native range sits on top of a drawn line. */
+/* ---- Seek lines. A native range sits on top of a drawn line: a thin
+   track, how far the file has loaded in a quieter shade, and the played
+   part in the accent. Nothing on it moves but the played part and the knob,
+   by transform. */
 
 .riff-line {
 	position: absolute;
@@ -537,7 +544,7 @@ div.riff-row-locked {
 	content: "";
 	position: absolute;
 	inset: 0;
-	background: color-mix(in srgb, currentcolor 22%, transparent);
+	background: color-mix(in srgb, var(--riff-fg) 22%, transparent);
 	transform-origin: left;
 	transform: scaleX(var(--riff-buffered, 0));
 }
@@ -565,29 +572,16 @@ div.riff-row-locked {
 
 .riff-bar-seek:has(> .riff-seek:focus-visible),
 .riff-np-seek:has(> .riff-seek:focus-visible) {
-	outline: 2px solid var(--riff-fg);
-	outline-offset: 2px;
+	outline: var(--riff-focus-ring, 2px solid var(--riff-fg));
+	outline-offset: var(--riff-focus-ring-offset, 2px);
 	border-radius: 4px;
 }
 
 /* Right to left: the played part grows from the right, and the knob
    sits at its end. */
 [dir="rtl"] .riff-line i,
-[dir="rtl"] .riff-line::before,
-[dir="rtl"] .riff-wire,
-[dir="rtl"] .riff-hot {
+[dir="rtl"] .riff-line::before {
 	transform-origin: right;
-}
-
-[dir="rtl"] .riff-bloom {
-	-webkit-mask-image: linear-gradient(270deg, transparent, #000 24px);
-	mask-image: linear-gradient(270deg, transparent, #000 24px);
-}
-
-[dir="rtl"] .riff-bloom::after {
-	-webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
-	mask-image: linear-gradient(270deg, #000 calc(100% - 28px), transparent);
-	transform: translateX(calc((1 - var(--riff-p)) * 100%));
 }
 
 [dir="rtl"] .riff-knob {
@@ -599,122 +593,10 @@ div.riff-row-locked {
 	left: -7px;
 }
 
-/* ---- The filament. filament.js writes one number a frame, --riff-heat, 0 cold
-   to 1 white-hot, and it changes nothing but opacity: every layer has one
-   fixed colour and fades, so the GPU composites the light and nothing is
-   painted again while the music plays. Over the played part of the line: the
-   wire, an ember that darkens the line when the music is quiet and fades as
-   it heats; the heart, a pale centre that shows at the peaks; and the bloom
-   around them. The played part, wire and heart stretch with the played part,
-   and the bloom slides, so its blur keeps its shape and its leading end fades
-   out rather than stopping square at the knob. While a track plays, media.js
-   moves all of them with animations the compositor runs (see glide()), so the
-   page's own work cannot make the line stutter. */
-
-@property --riff-heat {
-	syntax: "<number>";
-	inherits: true;
-	initial-value: 0;
-}
-
-/* On the lines and the glow, where filament.js writes the heat, so nothing
-   above them restyles each frame. */
-.riff-line,
-.riff-np-glow {
-	--riff-heat: 0;
-}
-
-.riff-wire,
-.riff-hot {
-	position: absolute;
-	inset: 0;
-	transform-origin: left;
-	transform: scaleX(var(--riff-p));
-	will-change: opacity;
-	pointer-events: none;
-}
-
-.riff-wire {
-	background: rgb(74 16 0);
-	opacity: calc(0.6 * (1 - min(1, var(--riff-heat) / 0.5)));
-}
-
-/* The bar's line keeps the bloom inside its own length, and lets it spill
-   above and below; a clip in one direction, which costs no painting, or a
-   clip-path where a browser has no one-way clip. Now Playing's line is plain
-   white and has no bloom. */
-.riff-bar-seek .riff-line {
-	clip-path: inset(-12px 0);
-}
-
-@supports (overflow-x: clip) {
-
-	.riff-bar-seek .riff-line {
-		overflow-x: clip;
-		overflow-y: visible;
-		clip-path: none;
-	}
-}
-
-/* The bloom is a still frame faded in from the line's start, and in it the
-   glow, faded out before the knob and slid along by transform as the knob
-   is. Neither fade moves with the music, so neither is repainted as it
-   plays; the two intersect, so the line clips nothing that shows and the
-   glow never ends in a hard edge. */
-.riff-bloom {
-	position: absolute;
-	inset: -7px 0;
-	-webkit-mask-image: linear-gradient(90deg, transparent, #000 24px);
-	mask-image: linear-gradient(90deg, transparent, #000 24px);
-	pointer-events: none;
-}
-
-.riff-bloom::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	/* stylelint-disable-next-line @stylistic/max-line-length */
-	background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--riff-accent) 55%, transparent) 42% 58%, transparent);
-	-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-	mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-	opacity: calc(0.15 + 0.85 * var(--riff-heat));
-	transform: translateX(calc((var(--riff-p) - 1) * 100%));
-	will-change: transform, opacity;
-}
-
-.riff-hot {
-	/* stylelint-disable-next-line @stylistic/max-line-length */
-	background: linear-gradient(90deg, transparent, #ffd2a8 30%, #fff1dc 50%, #ffd2a8 70%, transparent);
-	opacity: calc(0.6 * var(--riff-heat) * var(--riff-heat) * var(--riff-heat));
-}
-
-/* The wire's heat washes the top of Now Playing on a phone, as a room
-   brightening rather than a lamp switching. */
-.riff-np-glow {
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 0;
-	height: 220px;
-	/* stylelint-disable-next-line @stylistic/max-line-length */
-	background: linear-gradient(180deg, color-mix(in srgb, var(--riff-accent) 40%, transparent), color-mix(in srgb, var(--riff-accent) 12%, transparent) 45%, transparent);
-	opacity: calc(0.5 * var(--riff-heat) * var(--riff-heat));
-	will-change: opacity;
-	pointer-events: none;
-}
-
 /* With a live reading the bars follow it; the keyframes are for when there
    is none. */
 html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	animation: none;
-}
-
-@media (prefers-reduced-transparency: reduce) {
-
-	.riff-np-glow,
-	.riff-bloom {
-		display: none;
-	}
 }
 
 /* ---- The bar. On a phone: art, title and artist, Cast, play. Swipe it to
@@ -967,9 +849,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		transform: scaleY(2);
 	}
 
-	/* The knob is a rail as wide as the line, slid by transform as the bloom
-	   is, with the dot at its end: it moves on the compositor with the line it
-	   sits on, never by a layout. */
+	/* The knob is a rail as wide as the line, slid by transform, with the
+	   dot at its end: it moves on the compositor with the line it sits on,
+	   never by a layout. It shows only while the line is pointed at, in focus
+	   or held. */
 	.riff-knob {
 		position: absolute;
 		top: 8px;
@@ -996,7 +879,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		background: var(--riff-cover-accent);
 	}
 
-	.riff-bar-seek:hover .riff-knob {
+	.riff-bar-seek:hover .riff-knob,
+	.riff-bar-seek:has(> .riff-seek:focus-visible) .riff-knob,
+	#riff[data-seeking] .riff-bar-seek .riff-knob {
 		opacity: 1;
 	}
 
@@ -1016,56 +901,117 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 
 	/* the bar's own colour, whatever a theme or the app makes it, down
-	   through the end and its controls to the slider's box */
+	   through the end and its controls */
 	.riff-bar-end,
-	.riff-bar-end [data-riff-controls],
-	.riff-volume,
-	.riff-volume-pop {
+	.riff-bar-end [data-riff-controls] {
 		background: inherit;
 	}
 
-	/* Volume: the icon alone in the bar. The slider opens over the controls
-	   beside it while the pointer is over it, or a tap holds it there, and
-	   while the keyboard is on it; it takes no room of its own. Focus left on
-	   it by a press doesn't keep it open over the buttons it covers. */
+	/* Volume: the mute button and a short slider beside it, in a slot of
+	   its own whose width never changes, so nothing opens over the controls
+	   next to it or moves them. The slider is drawn as the seek line is: a
+	   thin track, the level filled in the accent, and a thumb only while it
+	   is pointed at, in focus or held. */
 	.riff-volume {
-		position: relative;
 		display: flex !important;
+		flex: none;
 		align-items: center;
 		color: var(--riff-fg-2);
 	}
 
-	/* The slider's own box, which a range input doesn't paint, covers what
-	   it opens over. */
-	.riff-volume-pop {
-		position: absolute;
-		z-index: 1;
-		inset-block: 0;
-		inset-inline-end: 100%;
-		display: flex;
-		align-items: center;
-		padding-inline: 8px;
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.2s;
+	#riff .riff-volume-mute svg:last-child,
+	#riff .riff-volume-mute[aria-pressed="true"] svg:first-child {
+		display: none;
+	}
+
+	#riff .riff-volume-mute[aria-pressed="true"] svg:last-child {
+		display: block;
 	}
 
 	.riff-volume input {
-		width: 100px;
-		margin: 0;
-		accent-color: var(--riff-fg);
+		--riff-vol-fill: var(--riff-cover-accent, var(--riff-accent));
+		-webkit-appearance: none;
+		appearance: none;
+		flex: none;
+		width: 104px;
+		height: 24px;
+		margin: 0 8px 0 0;
+		background: transparent;
+		cursor: pointer;
 	}
 
-	.riff-volume:hover .riff-volume-pop,
-	.riff-volume:has(input:focus-visible) .riff-volume-pop {
-		opacity: 1;
-		pointer-events: auto;
+	.riff-volume input[hidden] {
+		display: none;
 	}
 
-	/* and it goes with the rest of the bar while a video plays untouched */
-	#riff[data-riff-idle] .riff-volume-pop {
+	.riff-volume input:focus-visible {
+		outline: var(--riff-focus-ring, 2px solid var(--riff-fg));
+		outline-offset: var(--riff-focus-ring-offset, 2px);
+		border-radius: 4px;
+	}
+
+	/* muted, the level stays, quieter, for unmuting to come back to */
+	.riff-volume:has([aria-pressed="true"]) input {
+		opacity: 0.5;
+	}
+
+	.riff-volume input::-webkit-slider-runnable-track {
+		height: 2px;
+		border-radius: 1px;
+		/* stylelint-disable-next-line @stylistic/max-line-length */
+		background: linear-gradient(90deg, var(--riff-vol-fill) calc(var(--riff-vol, 1) * 100%), var(--riff-line) 0);
+	}
+
+	[dir="rtl"] .riff-volume input::-webkit-slider-runnable-track {
+		/* stylelint-disable-next-line @stylistic/max-line-length */
+		background: linear-gradient(270deg, var(--riff-vol-fill) calc(var(--riff-vol, 1) * 100%), var(--riff-line) 0);
+	}
+
+	.riff-volume input::-moz-range-track {
+		height: 2px;
+		border-radius: 1px;
+		background: var(--riff-line);
+	}
+
+	.riff-volume input::-moz-range-progress {
+		height: 2px;
+		border-radius: 1px;
+		background: var(--riff-vol-fill);
+	}
+
+	.riff-volume input::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 12px;
+		height: 12px;
+		margin-top: -5px;
+		border: 0;
+		border-radius: 50%;
+		background: var(--riff-vol-fill);
 		opacity: 0;
-		pointer-events: none;
+		transition: opacity 0.1s;
+	}
+
+	.riff-volume input::-moz-range-thumb {
+		width: 12px;
+		height: 12px;
+		border: 0;
+		border-radius: 50%;
+		background: var(--riff-vol-fill);
+		opacity: 0;
+		transition: opacity 0.1s;
+	}
+
+	.riff-volume input:hover::-webkit-slider-thumb,
+	.riff-volume input:focus-visible::-webkit-slider-thumb,
+	.riff-volume input[data-held]::-webkit-slider-thumb {
+		opacity: 1;
+	}
+
+	.riff-volume input:hover::-moz-range-thumb,
+	.riff-volume input:focus-visible::-moz-range-thumb,
+	.riff-volume input[data-held]::-moz-range-thumb {
+		opacity: 1;
 	}
 
 	/* Volume, repeat and shuffle sit back in #909090; the caret is white. */
@@ -1888,8 +1834,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 #riff .riff-arm:focus-visible .riff-arm-tube {
-	outline: 2px solid var(--riff-fg);
-	outline-offset: 2px;
+	outline: var(--riff-focus-ring);
+	outline-offset: var(--riff-focus-ring-offset);
 	border-radius: 2px;
 }
 
@@ -2362,8 +2308,8 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 #riff .riff-about a:focus-visible {
-	outline: 2px solid var(--riff-fg);
-	outline-offset: 2px;
+	outline: var(--riff-focus-ring);
+	outline-offset: var(--riff-focus-ring-offset);
 	border-radius: 4px;
 }
 
@@ -2546,8 +2492,10 @@ dl.riff-about-credits dd {
 }
 
 /* The … menu, drawn as WordPress's toolbar draws its menus: square, on the
-   toolbar's #2c3338, light grey words that turn Riff's ivory under the pointer
-   or the keyboard. Its rows keep 44px on a touch screen. */
+   toolbar's #2c3338, light grey words that turn the accent under the pointer
+   or the keyboard: the player's, or in the Listen app's own document, where
+   the menu is outside the player, the app's, as its account menu's are. Its
+   rows keep 44px on a touch screen. */
 .riff-menu {
 	position: fixed;
 	z-index: 2147483000;
@@ -2578,12 +2526,23 @@ dl.riff-about-credits dd {
 .riff-menu > :focus-visible,
 #riff .riff-menu > :hover,
 #riff .riff-menu > :focus-visible {
-	color: var(--riff-accent, var(--riff-app-ink, currentcolor));
+	color: var(--riff-accent, var(--riff-standalone-accent, var(--riff-app-ink, currentcolor)));
 }
 
 .riff-menu > :focus-visible,
 #riff .riff-menu > :focus-visible {
-	box-shadow: inset 0 0 0 2px var(--riff-accent, var(--riff-app-ink, currentcolor));
+	outline: none;
+	box-shadow: inset 0 0 0 2px var(--riff-accent, var(--riff-standalone-accent, var(--riff-app-ink, currentcolor)));
+}
+
+/* Forced colours drop the shadow, so the item keeps a ring there, inside it. */
+@media (forced-colors: active) {
+
+	.riff-menu > :focus-visible,
+	#riff .riff-menu > :focus-visible {
+		outline: 2px solid Highlight;
+		outline-offset: -2px;
+	}
 }
 
 @media (pointer: coarse) {
@@ -2756,10 +2715,6 @@ dl.riff-about-credits dd {
 		--riff-np-covers: 0;
 		bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
 		padding: 0;
-	}
-
-	.riff-np-glow {
-		display: none;
 	}
 
 	/* No artwork's colour behind it here, only the cover's accent's wash. */
@@ -3044,8 +2999,7 @@ dl.riff-about-credits dd {
 	.riff-np,
 	#riff .riff-bar-info,
 	.riff-line,
-	.riff-knob,
-	.riff-np-glow {
+	.riff-knob {
 		transition: none;
 	}
 
@@ -3145,10 +3099,6 @@ dl.riff-about-credits dd {
 		background:
 			radial-gradient(120% 90% at 30% 20%, rgb(255 255 255 / 0.035), transparent 60%),
 			linear-gradient(160deg, #222 0%, #181818 60%, #141414);
-	}
-
-	#riff .riff-np-glow {
-		display: none;
 	}
 
 	#riff .riff-np-bg {
@@ -3411,8 +3361,8 @@ dl.riff-about-credits dd {
 	#riff .riff-start:focus-visible,
 	#riff .riff-speeds button:focus-visible,
 	#riff .riff-pitch input:focus-visible {
-		outline: 2px solid var(--riff-fg);
-		outline-offset: 2px;
+		outline: var(--riff-focus-ring);
+		outline-offset: var(--riff-focus-ring-offset);
 	}
 
 	#riff .riff-pitch {
@@ -3638,11 +3588,14 @@ dl.riff-about-credits dd {
 		background: Highlight;
 	}
 
-	.riff-line::before,
-	.riff-bloom,
-	.riff-wire,
-	.riff-hot {
+	.riff-line::before {
 		display: none;
+	}
+
+	/* the volume as the system draws a slider */
+	.riff-volume input {
+		-webkit-appearance: auto;
+		appearance: auto;
 	}
 
 	/* the open panel's button in the bar, as a pressed control is drawn */

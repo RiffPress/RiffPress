@@ -13,9 +13,10 @@ const { openView } = require( '../helpers/views' );
 
 const made = own();
 let postUrl;
+let audio;
 
 test.beforeAll( async ( { requestUtils } ) => {
-	( { postUrl } = await playerSite( made, requestUtils ) );
+	( { postUrl, audio } = await playerSite( made, requestUtils ) );
 	// A Listen page, for an album's and an artist's pages to be in.
 	await made.page( requestUtils, {
 		title: 'About e2e',
@@ -116,6 +117,20 @@ test.describe( 'About', () => {
 		await page.setViewportSize( { width: 1280, height: 720 } );
 		await expect( cover ).toBeVisible();
 		await expect.poll( fits ).toBe( true );
+	} );
+
+	test( 'ends the credits with the file\'s caption, its credit line, as text', async ( { page, requestUtils } ) => {
+		// As an archive's recording is credited (Riff\Archives), markup and all, which stays text.
+		const credit = '“Trombone Detritus” by The Airmen of Note. <b>U.S. Air Force</b>. Public domain.';
+		await requestUtils.rest( { method: 'POST', path: `/wp/v2/media/${ audio[ 2 ].id }`, data: { caption: credit } } );
+		await page.reload();
+		await page.locator( '.riff-row' ).nth( 2 ).click();
+		const panel = await openView( page, 'about' );
+		const credits = panel.locator( '[data-riff-about="credits"]' );
+		const last = credits.locator( 'dl.riff-about-credits > div' ).last();
+		await expect( last.locator( 'dt' ) ).toHaveText( 'Credit' );
+		await expect( last.locator( 'dd' ) ).toHaveText( '“Trombone Detritus” by The Airmen of Note. U.S. Air Force. Public domain.' );
+		await expect( last.locator( 'dd b' ) ).toHaveCount( 0 );
 	} );
 
 	test( 'follows the track as it changes while it is open', async ( { page } ) => {

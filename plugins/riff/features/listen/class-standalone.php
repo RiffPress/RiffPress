@@ -138,6 +138,11 @@ final class Standalone {
 			static function (): void {
 				$saved = rest_sanitize_boolean( get_option( self::AT_ROOT, false ) );
 				$on    = self::at_root();
+				// A disabled box is not sent with the form, so what the site chose is, or saving the
+				// page would turn it off.
+				if ( $on !== $saved ) {
+					printf( '<input type="hidden" name="%1$s" value="%2$s">', esc_attr( self::AT_ROOT ), esc_attr( $saved ? '1' : '' ) );
+				}
 				printf(
 					'<label for="%1$s"><input name="%1$s" type="checkbox" id="%1$s" value="1"%2$s%3$s> %4$s</label><p class="description">%5$s</p>',
 					esc_attr( self::AT_ROOT ),

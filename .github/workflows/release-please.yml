@@ -179,10 +179,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      # attest-build-provenance signs with the workflow's identity and stores the attestation.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.riff_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -190,13 +196,18 @@ jobs:
       - name: Build riff.zip
         run: |
           set -euo pipefail
-          bash .github/scripts/build-riff.sh
-          (cd build && zip -qr riff.zip riff/)
+          bash .github/scripts/build-zip.sh riff
       - name: Smoke-test the build
         run: |
           set -euo pipefail
           test -f build/riff/riff.php
           find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # A host can check this zip came from this workflow, at this commit, before installing it:
+      # gh attestation verify riff.zip --repo RiffPress/RiffPress (docs/verify.md).
+      - name: Attest the zip's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/riff.zip
       - name: Attach the zip to the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -248,10 +259,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      # attest-build-provenance signs with the workflow's identity and stores the attestation.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.lyrics_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -259,14 +276,18 @@ jobs:
       - name: Build riff-lyrics.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff-lyrics
-          rsync -a --exclude-from='.distignore' ./plugins/riff-lyrics/ build/riff-lyrics/
-          (cd build && zip -qr riff-lyrics.zip riff-lyrics/)
+          bash .github/scripts/build-zip.sh riff-lyrics
       - name: Smoke-test the build
         run: |
           set -euo pipefail
           test -f build/riff-lyrics/riff-lyrics.php
           find build/riff-lyrics -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # A host can check this zip came from this workflow, at this commit, before installing it:
+      # gh attestation verify riff-lyrics.zip --repo RiffPress/RiffPress (docs/verify.md).
+      - name: Attest the zip's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/riff-lyrics.zip
       - name: Attach the zip and publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -285,10 +306,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      # attest-build-provenance signs with the workflow's identity and stores the attestation.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.chords_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -296,14 +323,18 @@ jobs:
       - name: Build riff-chords.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff-chords
-          rsync -a --exclude-from='.distignore' ./plugins/riff-chords/ build/riff-chords/
-          (cd build && zip -qr riff-chords.zip riff-chords/)
+          bash .github/scripts/build-zip.sh riff-chords
       - name: Smoke-test the build
         run: |
           set -euo pipefail
           test -f build/riff-chords/riff-chords.php
           find build/riff-chords -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # A host can check this zip came from this workflow, at this commit, before installing it:
+      # gh attestation verify riff-chords.zip --repo RiffPress/RiffPress (docs/verify.md).
+      - name: Attest the zip's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/riff-chords.zip
       - name: Attach the zip and publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -322,10 +353,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      # attest-build-provenance signs with the workflow's identity and stores the attestation.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.sign_in_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -333,14 +370,18 @@ jobs:
       - name: Build riff-sign-in.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff-sign-in
-          rsync -a --exclude-from='.distignore' ./plugins/riff-sign-in/ build/riff-sign-in/
-          (cd build && zip -qr riff-sign-in.zip riff-sign-in/)
+          bash .github/scripts/build-zip.sh riff-sign-in
       - name: Smoke-test the build
         run: |
           set -euo pipefail
           test -f build/riff-sign-in/riff-sign-in.php
           find build/riff-sign-in -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # A host can check this zip came from this workflow, at this commit, before installing it:
+      # gh attestation verify riff-sign-in.zip --repo RiffPress/RiffPress (docs/verify.md).
+      - name: Attest the zip's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/riff-sign-in.zip
       - name: Attach the zip and publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -359,10 +400,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      # attest-build-provenance signs with the workflow's identity and stores the attestation.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.sing_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -370,14 +417,18 @@ jobs:
       - name: Build riff-sing.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff-sing
-          rsync -a --exclude-from='.distignore' ./plugins/riff-sing/ build/riff-sing/
-          (cd build && zip -qr riff-sing.zip riff-sing/)
+          bash .github/scripts/build-zip.sh riff-sing
       - name: Smoke-test the build
         run: |
           set -euo pipefail
           test -f build/riff-sing/riff-sing.php
           find build/riff-sing -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # A host can check this zip came from this workflow, at this commit, before installing it:
+      # gh attestation verify riff-sing.zip --repo RiffPress/RiffPress (docs/verify.md).
+      - name: Attest the zip's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/riff-sing.zip
       - name: Attach the zip and publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -394,10 +445,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      # attest-build-provenance signs with the workflow's identity and stores the attestation.
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.meters_tag }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version-file: .php-version
@@ -405,14 +462,18 @@ jobs:
       - name: Build riff-meters.zip
         run: |
           set -euo pipefail
-          mkdir -p build/riff-meters
-          rsync -a --exclude-from='.distignore' ./plugins/riff-meters/ build/riff-meters/
-          (cd build && zip -qr riff-meters.zip riff-meters/)
+          bash .github/scripts/build-zip.sh riff-meters
       - name: Smoke-test the build
         run: |
           set -euo pipefail
           test -f build/riff-meters/riff-meters.php
           find build/riff-meters -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # A host can check this zip came from this workflow, at this commit, before installing it:
+      # gh attestation verify riff-meters.zip --repo RiffPress/RiffPress (docs/verify.md).
+      - name: Attest the zip's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/riff-meters.zip
       - name: Attach the zip and publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

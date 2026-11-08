@@ -64,6 +64,7 @@ jobs:
           # The demo set travels beside the zip, the same selection the Pages workflow publishes, so the
           # preview plays this pull request's recordings rather than whatever main last published.
           mkdir -p build/demo
+          bash .github/scripts/build-demo-plugins.sh build/demo
           cp packages/fixtures/seed.php build/demo/
           find packages/fixtures/compositions -maxdepth 1 -type f ! -name 'cover-*' -exec cp {} build/demo/ \;
           cp site/brand/mark.png build/demo/
@@ -109,7 +110,8 @@ jobs:
           find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
       - name: Schema-validate the blueprint
         run: |
-          jq -e '(.steps | length > 0) and (.steps | map(select(.step == "installPlugin" and (.pluginData.resource // "") == "url")) | length == 1)' blueprint.json > /dev/null
+          # Riff first, from the zip beside the blueprint; the demo's extensions after it, from demo/.
+          jq -e '(.steps | length > 0) and (.steps | map(select(.step == "installPlugin" and (.pluginData.resource // "") == "url")) | (.[0].pluginData.url == "riff.zip") and (.[1:] | all(.pluginData.url | startswith("demo/"))))' blueprint.json > /dev/null
       - name: Save pull request metadata
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}

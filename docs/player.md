@@ -49,6 +49,7 @@ The rest is what a player should do:
 - The queue and position are kept for the tab's session. A full-page navigation saves them and
   attempts to resume on the next page; a reload restores the same track paused. A queue of more
   than 500 tracks keeps the 500 around the one playing, in the order they play.
+- On a block theme, a site can keep the music playing across links: see [Links](#links).
 
 On a keyboard:
 
@@ -263,8 +264,8 @@ menu has closed and focus is back on the ⋯. An item with no label, or with nei
 
 The player has places Riff's own features fill: **badges**, the pills at the bar's right end and
 under the title in Now Playing, and on a phone small print between the seek line's times; and the
-**meter**, the music's level each frame, which lights the seek line and moves the playing row's
-bars. The quality pill is a badge, and the seek line's glow is a meter listener.
+**meter**, the music's level each frame, which moves the playing row's bars. The quality pill is
+a badge, and the bars are a meter listener.
 
 They are internal for now, on the object Riff hands its own Listen app, and not yet on
 `window.riff`: they become public once they have settled, as the track menu has. Each works
@@ -273,7 +274,7 @@ through `listen( name, fn )`:
 | Name | `fn` is called with | and returns |
 | --- | --- | --- |
 | `badges` | the badges so far, and the playing track | the badges, each `{ id, text, label? }` |
-| `meter` | `{ heat, levels }` each frame while music plays and the bar, Now Playing or the playing row is in sight: heat from 0 to a little over 1, and three bands from 0 to 1, or `null` while the line cools | nothing |
+| `meter` | `{ levels }` each frame while music plays and the playing row is in sight: three bands from 0 to 1 | nothing |
 
 The badges are redrawn only when what they hold changes.
 
@@ -323,6 +324,29 @@ document.addEventListener( 'riff:app_view', ( { detail } ) => {
 		bind( detail.panel.querySelector( '.my-upload' ) );
 	}
 } );
+```
+
+## Links
+
+Following a link loads the next page, and the music stops for a moment while the player resumes
+it there; Safari leaves it paused. On a block theme, tick **Keep the music playing when a link is
+followed** under **Settings › Riff**, or have a plugin return true from the
+`riff_client_navigation` filter, and links go through WordPress's Interactivity API router: the
+next page's template replaces this one's, and the player, printed after it, carries on. It is off
+by default because it changes how the whole site navigates:
+
+- The page's `<head>` stays the first page's, but for its canonical and short links. A classic
+  script or style that only a later page enqueues is not loaded there; script modules that opt in
+  with `add_client_navigation_support_to_script_module()` are. Riff Lyrics, Riff Chords and Riff
+  Sing load on every page with the player, so their views work on a page reached by a link.
+- The body's classes and the admin bar's Edit links follow the page; anything else outside the
+  template stays as the first page had it.
+- A Listen page is always loaded outright, since the app builds its own views.
+- A classic theme has no template to swap, so its links load the next page as before
+  ([docs/native.md](native.md)).
+
+```php
+add_filter( 'riff_client_navigation', '__return_true' );
 ```
 
 ## Video versions
