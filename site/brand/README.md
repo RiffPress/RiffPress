@@ -2,13 +2,38 @@
 
 **The wordmark** is the word *Riff*: *Ri* in EB Garamond Italic at weight 800, and its *ff* as a score writes *fortissimo*, music's marking for very loud. The *ff* is Bravura's (the SMuFL reference font for music notation), scaled so its *f*s rise to Garamond's ascender, and set close so its tails sweep under the *i*. In a score, dynamics sit beside a text face, so the pair is how music is printed. Every file is outlines, so nothing depends on either font being installed.
 
-**The main mark** is the word in ink on a light ground: on white in the header of every page on source.riffpress.com, where the word leads back to riffpress.com and *Source* beside it to the docs, and in the RiffPress organisation's picture (`avatar-ink.png`) and the social preview. **The app icon** is the same word on its charcoal tile, for the player: the installed app, the plugin's icon and the favicon, which uses the tile cropped to its edge so it fills a small square. Those are the two; there is no other mark.
+**The main mark** is the word in ink on a light ground: on paper in the header of every page on source.riffpress.com, where the word leads back to riffpress.com and *Source* beside it to the docs, and in the RiffPress organisation's picture (`avatar-ink.png`) and the social preview. **The app icon** is the same word on its charcoal tile, for the player: the installed app, the plugin's icon and the favicon, which uses the tile cropped to its edge so it fills a small square. Those are the two; there is no other mark.
 
 **Proportions** follow the golden ratio, φ. On the app icon, the word's margins either side are 1/φ⁵ of the tile.
 
-**Colour** is black and white, with one accent: ember, a muted fire colour at about 1900K. Pages are white, `#ffffff`, with text in `#0b0b0b` and secondary text in `#5c5c5c` (6.7:1), raised surfaces and code in `#f5f5f5`, and rules in `#e5e5e5`. The one primary button on a page is black with white text; a secondary button is outlined in black. Deep ember, `#a3501a` (5.7:1 on white), is for links, the focus ring and what marks where you are: the docs sidebar's current page, the header's current section and the section being read. On black, as in the footer, it is ember, `#e8873f` (7.5:1). Code is set in greys and deep ember, each 4.5:1 or more. There is no blue, no gold and no gradient: the rest of the colour comes from the player, in its pictures and its covers.
+**Colour** is ink on paper, with one accent: ember, a muted fire colour at about 1900K. Neither the paper nor the greys is pure: each neutral leans a hair toward ember's hue, at OKLCH hue 55 to 70 with chroma under 0.01, so the page is warm without being cream. These are riffpress.com's values, in riffpress.com's own file: `../tokens.css` is its `site/tokens.css` byte for byte, with the two font files, pinned in `shared.json` and checked by `.github/scripts/tokens.js`. Change them there and copy them over with `tokens.js --copy`; `web.css` sets none of them again.
 
-**Type** is wordpress.org's: EB Garamond for display and headings, Inter for text.
+| Token | OKLCH | What it is for |
+| --- | --- | --- |
+| `--white` | `oklch(0.992 0.002 70)` | The page |
+| `--white-2` | `oklch(0.968 0.004 65)` | Code, the current link in the sidebar, hover |
+| `--rule` | `oklch(0.89 0.006 60)` | Hairlines: the grid's dividers, a table's rows |
+| `--rule-strong` | `oklch(0.8 0.008 58)` | A table's head, the divider in Riff \| Source |
+| `--field-edge` | `oklch(0.56 0.01 55)` | A field's edge, 4.6:1 |
+| `--ink` | `oklch(0.18 0.008 55)` | Text, the one button, the ink wordmark, 18.4:1 |
+| `--ink-3` | `oklch(0.3 0.009 55)` | A page's lede, 13.4:1 |
+| `--ink-2` | `oklch(0.45 0.01 55)` | Quieter text, 7.3:1 on white and 6.8:1 on white-2 |
+| `--ember-deep` | `oklch(0.5 0.12 48)` | Links, the focus ring, where you are: the sidebar's current page, the header's current section, the section being read; 6.2:1 |
+| `--ember-ink` | `oklch(0.42 0.11 46)` | A link under the pointer |
+| `--ember` | `oklch(0.72 0.13 55)` | Ember on night, riffpress.com's and the player's; Source has no night surface |
+| `--wash` | `oklch(0.91 0.045 60)` | Selected words, under ink 14.3:1 |
+
+The one primary button on a page is ink with paper on it. There is no blue, no gold and no gradient: the rest of the colour comes from the player, in its pictures and its covers.
+
+**Type** is two families, self-hosted from `../fonts/` (riffpress.com's files, subset to Latin) and under the SIL Open Font License 1.1, and the platform's own monospace:
+
+- **EB Garamond** (`eb-garamond.woff2`, variable 400 to 700) for titles: a page's title at 36 to 52px and its sections at 26 to 36px, at weight 400, as riffpress.com sets them.
+- **Schibsted Grotesk** (`schibsted-grotesk.woff2`, variable 400 to 700), riffpress.com's text face, for everything read or pressed: running text at 17px on a 1.6 line, about 72 characters to the line, and the sidebar, tables and fine print at 15px and 13px. It replaces Inter on Source, which is left in `../fonts/` only for the share cards that `og-images.js` draws.
+- **The platform's monospace** (`--mono`: SF Mono, Menlo or Consolas) for code, parameters and hook names only, at 14px on a 24px line in a block, 13px for a type, and 0.875em in a sentence.
+
+Each has a fallback sized to its metrics (`size-adjust` and the ascent and descent overrides in `web.css`), so the swap when the font arrives moves nothing.
+
+**The grid** on Source is riffpress.com's 1160px page in three columns, the door's pages (15rem), the article (36.5rem, about 72 characters) and "On this page" (13rem), two grid gaps (64px) between each, under the 72px bar, divided by hairlines that are one device pixel on a dense screen. A page with no sidebar starts its title where the docs start theirs. Space steps by 8px, with 4px and 12px for what sits close, as on riffpress.com.
 
 | File | What it is |
 | --- | --- |

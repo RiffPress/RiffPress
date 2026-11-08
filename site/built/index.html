@@ -24,23 +24,23 @@
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
-<link rel="preload" href="../fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../tokens.css">
 <link rel="stylesheet" href="../web/web.css">
 </head>
 <body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/">Download</a><a href="../developers/" aria-current="true">Docs</a></nav></div></header>
-<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span>Menu</button><nav id="docs-nav-list" aria-label="Docs"><ul><li class="local-home"><a href="../developers/">Overview</a></li><li class="local-group"><span class="local-label" id="docs-group-handbook">Handbook</span><ul aria-labelledby="docs-group-handbook"><li><a href="../developers/music/">Your music</a></li><li><a href="../developers/album/">An album</a></li><li><a href="../developers/post/">Music in a post</a></li><li><a href="../developers/listen-page/">The Listen page</a></li><li><a href="../developers/app/">The app</a></li><li><a href="../developers/lyrics/">Lyrics</a></li><li><a href="../developers/sign-in/">Signing in</a></li><li><a href="../developers/network/">Clients and networks</a></li><li><a href="../developers/extensions/">Extensions</a></li><li><a href="../developers/player/">Player</a></li></ul></li><li class="local-group"><span class="local-label" id="docs-group-reference">Reference</span><ul aria-labelledby="docs-group-reference"><li><a href="../developers/php/">PHP</a></li><li><a href="../developers/javascript/">JavaScript</a></li><li><a href="../developers/rest/">REST API</a></li><li><a href="../developers/css/">CSS</a></li></ul></li><li><a href="../web/">Built on the open web</a></li></ul></nav></aside>
-<div class="crumbs"><div class="wrap"><nav aria-label="Breadcrumbs"><ol><li><a href="../developers/">Docs</a></li><li aria-current="page">How Riff is built</li></ol></nav></div></div>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/" aria-current="true">Source</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main"><a href="../download/">Download</a></nav></div></header>
+<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span><span class="screen-reader-text">Menu: </span><span class="docs-where"><span class="docs-where-up">Contribute</span>How Riff is built</span></button><nav id="docs-nav-list" aria-label="Contribute"><details class="door-switch"><summary><span class="screen-reader-text">Door: </span>Contribute</summary><ul><li><a href="../developers/use/">Use Riff</a></li><li><a href="../developers/build/">Build on Riff</a></li><li><a href="../developers/run/">Run Riff for others</a></li><li><a href="../developers/contribute/" aria-current="true">Contribute</a></li></ul></details><ul><li><a href="../developers/contributing/">Contributing</a></li><li><a href="../built/" aria-current="page">How Riff is built</a></li><li><a href="../developers/native/">What WordPress has</a></li></ul></nav></aside>
 <!-- /nav:top -->
 
-<main id="main" class="wrap doc dl">
+<main id="main" class="wrap doc">
 <h1>How Riff is built</h1>
 <p class="lede">Your music should outlast the software that plays it. Riff is built on what WordPress already has, is tested on every change, and comes with written commitments about how it will be maintained.</p>
 <div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#wordpress">Built on WordPress</a></li><li><a href="#testing">Tested on every change</a></li><li><a href="#docs">Documentation that matches the code</a></li><li><a href="#commitments">What we commit to</a></li><li><a href="#releases">Every release</a></li><li><a href="#help">Get help</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/built/index.html">Edit this page on GitHub</a></p></aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#wordpress">Built on WordPress</a></li><li><a href="#testing">Tested on every change</a></li><li><a href="#docs">Documentation that matches the code</a></li><li><a href="#commitments">What we commit to</a></li><li><a href="#releases">Every release</a></li><li><a href="#help">Get help</a></li></ul></details></aside>
 <article class="entry">
 <h2 id="wordpress">Built on WordPress</h2>
 <p>Riff plays the Audio, Video and Playlist blocks that ship with WordPress, and reads track details from the Media Library. It adds no settings screen and no database tables. It stores albums and artists as terms filed from your tags, listeners' playlists, likes and what they played, and a few fields on media items, such as a track's artwork and its video version. If you turn it off, your posts still play in the browser's own player.</p>
@@ -75,18 +75,19 @@
 
 <h2 id="help">Get help</h2>
 <p>Ask a question or report a bug in <a href="https://github.com/RiffPress/RiffPress/issues">GitHub issues</a>. Report a security problem privately, through the <a href="https://github.com/RiffPress/RiffPress/security/advisories/new">security advisory form</a>.</p>
+<p class="edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/built/index.html">Edit this page on GitHub</a></p>
 </article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>
 
 <!-- nav:footer -->
-<footer><div class="wrap"><p class="foot-license">Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</p><nav aria-label="Footer"><div class="foot-group"><p class="foot-label" id="foot-about">About</p><ul aria-labelledby="foot-about"><li><a href="../built/" aria-current="page">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://riffpress.com/">Riff Cloud</a></li></ul></div><div class="foot-group"><p class="foot-label" id="foot-help">Help</p><ul aria-labelledby="foot-help"><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></div></nav></div></footer>
+<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
 <!-- /nav:footer -->
 <script type="module" src="../js/docs.js"></script>
 </body>

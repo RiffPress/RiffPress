@@ -10,8 +10,8 @@ const esc = ( s ) => String( s ).replace( /&/g, '&amp;' ).replace( /</g, '&lt;' 
 const inline = ( s ) => esc( s ).replace( /`([^`]+)`/g, '<code>$1</code>' );
 
 /**
- * The document head, then the page's navigation from site-nav.json: the skip link, the header, the
- * section bar and the breadcrumbs.
+ * The document head, then the page's navigation from site-nav.json: the skip link, the header and
+ * the section bar.
  *
  * @param {string} title       Title; the host's name is put after it.
  * @param {string} description Meta description.
@@ -20,11 +20,10 @@ const inline = ( s ) => esc( s ).replace( /`([^`]+)`/g, '<code>$1</code>' );
  * @param {string} css         The stylesheet's address from the page.
  * @param {Object} where       Where the page sits, for a page site-nav.json does not list.
  * @param {string} where.under The entry it sits under, as 'php' for a PHP hook.
- * @param {string} where.label Its name in the breadcrumbs.
- * @param {string} where.search HTML for the right of the breadcrumbs.
+ * @param {string} where.label Its own name, for the phone's Menu button.
  * @return {string} HTML.
  */
-function head( title, description, url, depth, css, { under = '', label = '', search = '' } = {} ) {
+function head( title, description, url, depth, css, { under = '', label = '' } = {} ) {
 	const up = '../'.repeat( depth );
 	const ctx = nav.locate( url, { under, label } );
 	const name = nav.title( ctx, title );
@@ -56,12 +55,13 @@ function head( title, description, url, depth, css, { under = '', label = '', se
 <link rel="apple-touch-icon" href="${ up }icons/apple-touch-icon.png">
 <meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
-<link rel="preload" href="${ up }fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${ up }fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${ up }fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="${ up }tokens.css">
 <link rel="stylesheet" href="${ css }">
 </head>
 <body>
-${ nav.header( ctx, up ) }${ nav.sectionBar( ctx, up ) }${ nav.crumbs( ctx, up, search ) }`;
+${ nav.header( ctx, up ) }${ nav.sectionBar( ctx, up ) }`;
 }
 
 /**
@@ -93,45 +93,54 @@ const HANDBOOKS = [
 	{ slug: 'network', file: 'docs/learn/network.md', label: 'Clients and networks' },
 	// For developers.
 	{ slug: 'extensions', file: 'docs/extensions.md', label: 'Extensions' },
-	{ slug: 'player', file: 'docs/player.md', label: 'The player' },
+	{ slug: 'player', file: 'docs/player.md', label: 'How the player works' },
+	{ slug: 'isolation', file: 'docs/isolation.md', label: 'Isolation' },
+	// For whoever runs Riff for others.
+	{ slug: 'verify', file: 'docs/verify.md', label: 'Verifying a release' },
+	// For whoever works on Riff itself.
+	{ slug: 'contributing', file: '.github/CONTRIBUTING.md', label: 'Contributing' },
+	{ slug: 'native', file: 'docs/native.md', label: 'What WordPress has' },
 ];
 
 /**
- * A reference page, laid out like developer.wordpress.org's code reference: the bar, the
- * breadcrumbs, a title, and the article with "On this page" beside it.
+ * A reference page: a title, and the article with "On this page" beside it where it has more than
+ * one section to go to, and at its end where to edit it.
  *
  * @param {Object} page             The page.
  * @param {string} page.title       The document title.
  * @param {string} page.description Meta description.
  * @param {string} page.url         Path from the site root, ending in a slash.
  * @param {string} page.under       The site-nav.json entry it sits under, for a page it does not list.
- * @param {string} page.label       Its name in the breadcrumbs, for a page it does not list.
+ * @param {string} page.label       Its own name, for a page it does not list.
  * @param {string} page.h1          The heading's HTML, with its attributes.
  * @param {Array}  page.toc         [ id, label, children ] entries for "On this page".
  * @param {string} page.body        The article.
- * @param {string} page.search      HTML for the right of the breadcrumbs.
  * @param {string} page.edit        Where the page's source is edited, for a page written by hand.
  * @return {string} HTML.
  */
-function referencePage( { title, description, url, under = '', label = '', h1, toc, body, search = '', edit = '' } ) {
+function referencePage( { title, description, url, under = '', label = '', h1, toc, body, edit = '' } ) {
 	const depth = url.split( '/' ).filter( Boolean ).length;
 	const up = '../'.repeat( depth );
 	// A long route wraps before one of its slashes, not inside a word.
 	const list = ( items ) => '<ul>' + items.map( ( [ id, words, sub ] ) => `<li><a href="#${ id }">${ esc( words ).replace( /(.)\//g, '$1<wbr>/' ) }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
 	const ctx = nav.locate( url, { under, label } );
-	let html = head( title, description, url, depth, `${ up }web/web.css`, { under, label, search } );
+	let html = head( title, description, url, depth, `${ up }web/web.css`, { under, label } );
 	html += `<main id="main" class="wrap reference">
 ${ h1 }
 <div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p>${ edit ? `<p class="toc-edit"><a href="${ esc( edit ) }">Edit this page on GitHub</a></p>` : '' }</aside>
+${ toc.length > 1 ? `<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details></aside>` : '' }
 <article class="entry">
-${ body }${ nav.pager( ...nav.siblings( ctx, up ) ) }</article>
+${ body }${ edit ? `<p class="edit"><a href="${ esc( edit ) }">Edit this page on GitHub</a></p>
+` : '' }${ nav.pager( ...nav.siblings( ctx, up ) ) }</article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
-	document.querySelector( '.toc-box' ).open = false;
+if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
+	const toc = document.querySelector( '.toc-box' );
+	if ( toc ) {
+		toc.open = false;
+	}
 }
 </script>
 `;

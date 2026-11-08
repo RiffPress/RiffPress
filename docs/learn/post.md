@@ -31,7 +31,7 @@ The Riff block is the Listen page, the whole library, and a page holds one. It i
 
 ## Under the hood
 
-- Riff reads `core/audio`, `core/video` and `core/playlist` blocks, at any depth, and adds a `data-riff-track` attribute to each track's figure or list item, holding the track as [the track schema](https://source.riffpress.com/php/#track-schema) has it, after the [`riff_track`](../hooks.md#riff_track) filter.
+- Riff reads `core/audio`, `core/video` and `core/playlist` blocks, at any depth, and adds a `data-riff-track` attribute to each track's figure or list item, holding the track as [the track schema](https://source.riffpress.com/track/) has it, after the [`riff_track`](../hooks.md#riff_track) filter.
 - [`riff_can_play`](../hooks.md#riff_can_play) decides whether a visitor may play a track, and [`riff_unlock_url`](../hooks.md#riff_unlock_url) where a locked one leads, for a membership or store plugin.
 - In the browser, [`window.riff.play()`](https://source.riffpress.com/javascript/#method-play) starts a queue of a script's own, and the [`riff.queue`](../hooks.md#riffqueue) filter changes the one Riff builds from the page.
 - On a block theme, [`riff_client_navigation`](../hooks.md#riff_client_navigation) turns on following a link without leaving the page, so what plays carries on.

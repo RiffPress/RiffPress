@@ -27,5 +27,5 @@ An album's page lists its tracks. To write about the record as well, give it a p
 ## Under the hood
 
 - An album is a term in the `riff_album` taxonomy on attachments, keyed by its name and album artist, and an artist one in `riff_artist`. The Listen page reads them from [`/riff/v1/albums`](https://source.riffpress.com/rest/#riff-v1-albums) and [`/riff/v1/artists`](https://source.riffpress.com/rest/#riff-v1-artists), and an album's tracks from [`/riff/v1/tracks`](https://source.riffpress.com/rest/#riff-v1-tracks). Each counts only the tracks the visitor may see.
-- A track's album, artist, year and cover are in [the track schema](https://source.riffpress.com/php/#track-schema). The drawn cover is added in the [`riff_track`](../hooks.md#riff_track) filter, so a plugin's own filter can replace it.
+- A track's album, artist, year and cover are in [the track schema](https://source.riffpress.com/track/). The drawn cover is added in the [`riff_track`](../hooks.md#riff_track) filter, so a plugin's own filter can replace it.
 - The `riff/track` [Block Bindings](https://source.riffpress.com/php/#block-bindings) source shows a track's title, artist, album, year, length, quality or cover in a Heading, Paragraph or Image block, with no Riff block on the page.

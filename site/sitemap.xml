@@ -1,57 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>{{pages_url}}download/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>{{pages_url}}developers/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>{{pages_url}}add-music/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>{{pages_url}}built/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>{{pages_url}}web/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>{{pages_url}}web/html-media-element/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/time-ranges/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/screen-wake-lock/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/vibration/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/network-information/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/media-session/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/remote-playback/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/web-audio/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/analyser-node/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/page-visibility/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/lazy-loading/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/async-decoding/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/pointer-events/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/web-animations/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/request-animation-frame/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/web-share/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/clipboard/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/inert/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/match-media/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/scroll-into-view/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/es-modules/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/dynamic-import/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/history/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/web-storage/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/fetch/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/navigation-timing/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/pagehide/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/pageshow/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/aria-dialog/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/property/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/color-mix/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/container-queries/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/has/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/env-safe-areas/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/viewport-segments/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/text-wrap/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/variable-fonts/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/prefers-reduced-motion/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/clip-path/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/aspect-ratio/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/touch-action/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/overscroll-behavior/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}web/focus-visible/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>{{pages_url}}developers/php/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>{{pages_url}}developers/javascript/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>{{pages_url}}developers/rest/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>{{pages_url}}developers/css/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>{{pages_url}}developers/use/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}add-music/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/music/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/album/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/post/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
@@ -59,10 +11,25 @@
   <url><loc>{{pages_url}}developers/app/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/lyrics/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/sign-in/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>{{pages_url}}developers/network/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/build/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/php/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/javascript/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/rest/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/css/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/track/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/extensions/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/player/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>{{pages_url}}developers/hooks/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/isolation/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}web/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/run/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/network/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/verify/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/contribute/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/contributing/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}built/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}developers/native/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{pages_url}}accessibility/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_abilities/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_about_sections/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_add_music_url/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>

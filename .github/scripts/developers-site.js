@@ -31,7 +31,8 @@ const MOVED = [
 	[ 'accessibility/', 'accessibility/' ],
 ];
 // Files beside the pages that every page may need.
-const SHARED = [ 'neck.css', 'neck.svg', 'js', 'fonts', 'icons', 'brand' ];
+// tokens.css is riffpress.com's, byte for byte (tokens.js checks it): every page loads it first.
+const SHARED = [ 'tokens.css', 'neck.css', 'neck.svg', 'js', 'fonts', 'icons', 'brand' ];
 const ATTRS = /(\s)(href|src|content|action|srcset)="([^"]*)"/g;
 // A tag, or a block whose text is not markup: its opening tag is read, what is inside it is not.
 const TAGS =
@@ -243,6 +244,9 @@ function split( { out, dev, site, developers } ) {
 		fs.writeFileSync( to, html );
 	}
 
+	// What search reads: every page's title, door, summary and headings.
+	fs.writeFileSync( path.join( dev, 'search.json' ), JSON.stringify( searchIndex( dev ) ) );
+
 	// The sitemap: the host's pages, at their new addresses.
 	const map = path.join( out, 'sitemap.xml' );
 	if ( fs.existsSync( map ) ) {
@@ -303,6 +307,73 @@ function split( { out, dev, site, developers } ) {
 		moved: [ ...pages.keys() ],
 		problems: [ ...new Set( strays ), ...check( { dev, developers } ) ],
 	};
+}
+
+/**
+ * The search index for the host: for each page, its address from the host's root, its title, the
+ * door it is in, its summary, and each heading with an id, so a result can lead to the section.
+ * Entities are decoded and tags dropped; nothing else is kept, so the file stays small.
+ *
+ * @param {string} dev The developer host, as written.
+ * @return {Array} [ { u, t, d, s, h: [ [ id, text ] ] } ].
+ */
+function searchIndex( dev ) {
+	// Tags are dropped until none are left, then each entity is decoded once, in one pass, so
+	// "&amp;lt;" stays "&lt;" and no decoded "<" can form a tag.
+	const named = { quot: '"', lt: '<', gt: '>', amp: '&', apos: "'" };
+	const text = ( html ) => {
+		let out = html;
+		let before = '';
+		while ( before !== out ) {
+			before = out;
+			out = out.replace( /<[^<>]*>/g, '' );
+		}
+		return out
+			.replace( /[<>]/g, '' )
+			.replace( /&(?:#(\d+)|#x([0-9a-f]+)|(quot|lt|gt|amp|apos));/gi, ( m, dec, hex, name ) => {
+				if ( dec ) {
+					return String.fromCodePoint( Number( dec ) );
+				}
+				if ( hex ) {
+					return String.fromCodePoint( parseInt( hex, 16 ) );
+				}
+				return named[ name.toLowerCase() ];
+			} )
+			.replace( /\s+/g, ' ' )
+			.trim();
+	};
+	const pages = fs
+		.readdirSync( dev, { recursive: true } )
+		.filter( ( f ) => f.endsWith( 'index.html' ) && ! f.startsWith( 'demo' ) )
+		.sort();
+	const index = pages.map( ( file ) => {
+		const html = fs.readFileSync( path.join( dev, file ), 'utf8' );
+		const main = html.slice( html.indexOf( '<main' ), html.indexOf( '</main>' ) );
+		// The page's own title, less the host's name: a hook's h1 is its whole call.
+		const title = html.match( /<title>([^<]*)<\/title>/ );
+		const door = html.match( /<span class="docs-where-up">([^<]*)<\/span>/ ) || html.match( /<span class="docs-where">([^<]*)<\/span>/ );
+		const summary = html.match( /<meta name="description" content="([^"]*)">/ );
+		const headings = [ ...main.matchAll( /<h[23][^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/h[23]>/g ) ].map( ( m ) => [ m[ 1 ], text( m[ 2 ] ) ] );
+		return {
+			u: file.replace( /index\.html$/, '' ),
+			t: title ? text( title[ 1 ] ).replace( / \| Riff Source$/, '' ) : '',
+			d: door ? text( door[ 1 ] ) : '',
+			s: summary ? text( summary[ 1 ] ) : '',
+			h: headings,
+		};
+	} );
+	// A heading on more than three pages is the reference's own scaffolding, and would fill the
+	// results with one word; the pages are found by their titles instead.
+	const seen = new Map();
+	for ( const p of index ) {
+		for ( const [ , t ] of p.h ) {
+			seen.set( t, ( seen.get( t ) || 0 ) + 1 );
+		}
+	}
+	for ( const p of index ) {
+		p.h = p.h.filter( ( [ , t ] ) => seen.get( t ) <= 3 );
+	}
+	return index;
 }
 
 /**
@@ -419,7 +490,7 @@ function check( { dev, developers } ) {
 	return [ ...new Set( problems ) ];
 }
 
-module.exports = { split, check, relative, MOVED };
+module.exports = { searchIndex, split, check, relative, MOVED };
 
 if ( require.main === module ) {
 	const [ out, dev, site, developers ] = process.argv.slice( 2 );

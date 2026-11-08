@@ -1,7 +1,6 @@
 {
-	"$comment": "The navigation of source.riffpress.com, in one place: site-nav.js stamps it into every page written by hand and site-shell.js into every generated one. Each entry of sections is one link in the header, in this order; its children are its section bar, and a child with children of its own is a group in that bar. href is the page's path on the site as written, before developers-site.js moves the reference from developers/ to the host's root. host names the host, for the title. bar: false keeps a page out of the section bar while it still belongs to the section, for its breadcrumbs. root marks the section that is the host's home: the wordmark leads to it, and its page is titled with the host's name alone. ordered gives a group's pages a previous and next link. footer lists each group's links by key, or as label and href for a page off the site.",
+	"$comment": "The navigation of source.riffpress.com, in one place: site-nav.js stamps it into every page written by hand and site-shell.js into every generated one. Each entry of sections is one link in the header, in this order, but the one marked root: that is the host's home, which Source beside the wordmark leads to, titled with the host's name alone. href is the page's path on the site as written, before developers-site.js moves the reference from developers/ to the host's root. host names the host, for the title. The root's children marked door are the doors: the home lists them, each has a page listing its own pages with their summary, and a page in a door has the door's pages alone in its sidebar, with a switcher to the other doors at the top. A child with children of its own, inside a door, is a group in the sidebar. ordered gives a door's or a group's pages a previous and next link. bar: false keeps a page out of the sidebar while it still belongs where it sits, as a hook under PHP. footer lists the footer's few links, in one line, by key, or as label and href for a page off the site.",
 	"sections": [
-		{ "key": "add-music", "label": "Add your music", "href": "add-music/", "host": "developers" },
 		{ "key": "download", "label": "Download", "href": "download/", "host": "developers" },
 		{
 			"key": "developers",
@@ -11,35 +10,77 @@
 			"root": true,
 			"children": [
 				{
-					"key": "handbook",
-					"label": "Handbook",
+					"key": "use",
+					"label": "Use Riff",
+					"href": "developers/use/",
+					"door": true,
+					"summary": "For whoever runs a site with music on it.",
 					"ordered": true,
 					"children": [
-						{ "key": "music", "label": "Your music", "href": "developers/music/" },
-						{ "key": "album", "label": "An album", "href": "developers/album/" },
-						{ "key": "post", "label": "Music in a post", "href": "developers/post/" },
-						{ "key": "listen-page", "label": "The Listen page", "href": "developers/listen-page/" },
-						{ "key": "app", "label": "The app", "href": "developers/app/" },
-						{ "key": "lyrics", "label": "Lyrics", "href": "developers/lyrics/" },
-						{ "key": "sign-in", "label": "Signing in", "href": "developers/sign-in/" },
-						{ "key": "network", "label": "Clients and networks", "href": "developers/network/" },
-						{ "key": "extensions", "label": "Extensions", "href": "developers/extensions/" },
-						{ "key": "player", "label": "Player", "href": "developers/player/" }
+						{ "key": "add-music", "label": "Add your music", "href": "add-music/", "summary": "From no site to an album playing, with nothing to configure." },
+						{ "key": "music", "label": "Your music", "href": "developers/music/", "summary": "Upload, and how Riff reads the tags in each file." },
+						{ "key": "album", "label": "An album", "href": "developers/album/", "summary": "Its cover, its order and its discs." },
+						{ "key": "post", "label": "Music in a post", "href": "developers/post/", "summary": "A post is a queue: the audio, video and playlist blocks." },
+						{ "key": "listen-page", "label": "The Listen page", "href": "developers/listen-page/", "summary": "Every album as a cover, browsing and one search box." },
+						{ "key": "app", "label": "The app", "href": "developers/app/", "summary": "The same page as a player on its own, which a browser installs." },
+						{ "key": "lyrics", "label": "Lyrics", "href": "developers/lyrics/", "summary": "Riff Lyrics: words timed to the song." },
+						{ "key": "sign-in", "label": "Signing in", "href": "developers/sign-in/", "summary": "Listeners with a passkey or an emailed code." }
 					]
 				},
 				{
-					"key": "reference",
-					"label": "Reference",
+					"key": "build",
+					"label": "Build on Riff",
+					"href": "developers/build/",
+					"door": true,
+					"summary": "For developers extending Riff or reading its data.",
 					"children": [
-						{ "key": "php", "label": "PHP", "href": "developers/php/" },
-						{ "key": "javascript", "label": "JavaScript", "href": "developers/javascript/" },
-						{ "key": "rest", "label": "REST API", "href": "developers/rest/" },
-						{ "key": "css", "label": "CSS", "href": "developers/css/" },
-						{ "key": "hooks", "label": "Hooks", "href": "developers/hooks/", "bar": false }
+						{
+							"key": "reference",
+							"label": "Reference",
+							"children": [
+								{ "key": "php", "label": "PHP", "href": "developers/php/", "summary": "Functions, the Source interface, Block Bindings, the abilities and the Listen block." },
+								{ "key": "javascript", "label": "JavaScript", "href": "developers/javascript/", "summary": "window.riff: its members, actions, filters and events." },
+								{ "key": "rest", "label": "REST API", "href": "developers/rest/", "summary": "The riff/v1 routes, the riff_track field on media, and GraphQL." },
+								{ "key": "css", "label": "CSS", "href": "developers/css/", "summary": "The public custom properties of the player and the Listen block." },
+								{ "key": "track", "label": "Track schema", "href": "developers/track/", "summary": "The one shape of a track that every surface shares." },
+								{ "key": "hooks", "label": "Hooks", "href": "developers/hooks/", "summary": "Every filter and action, in PHP and in the player, searchable." }
+							]
+						},
+						{
+							"key": "guides",
+							"label": "Guides",
+							"children": [
+								{ "key": "extensions", "label": "Extensions", "href": "developers/extensions/", "summary": "How a plugin inside Riff is bundled, loaded and written." },
+								{ "key": "player", "label": "How the player works", "href": "developers/player/", "summary": "From the blocks a page plays to the views, the panels and the turntable." },
+								{ "key": "isolation", "label": "Isolation", "href": "developers/isolation/", "summary": "What an extension may touch, and the check that holds it to that." },
+								{ "key": "web", "label": "Built on the open web", "href": "web/", "summary": "Each browser API and CSS feature the player uses, how and why." }
+							]
+						}
 					]
 				},
-				{ "key": "web", "label": "Built on the open web", "href": "web/" },
-				{ "key": "built", "label": "How Riff is built", "href": "built/", "bar": false },
+				{
+					"key": "run",
+					"label": "Run Riff for others",
+					"href": "developers/run/",
+					"door": true,
+					"summary": "For hosts, agencies and multisite networks.",
+					"children": [
+						{ "key": "network", "label": "Clients and networks", "href": "developers/network/", "summary": "A client's site, a multisite network, and a host." },
+						{ "key": "verify", "label": "Verifying a release", "href": "developers/verify/", "summary": "Check a zip against its attestation, or rebuild it." }
+					]
+				},
+				{
+					"key": "contribute",
+					"label": "Contribute",
+					"href": "developers/contribute/",
+					"door": true,
+					"summary": "For anyone fixing, testing or improving Riff.",
+					"children": [
+						{ "key": "contributing", "label": "Contributing", "href": "developers/contributing/", "summary": "Setup, the tests, and how a pull request is made and merged." },
+						{ "key": "built", "label": "How Riff is built", "href": "built/", "summary": "What Riff rests on, how it is tested, and what it promises." },
+						{ "key": "native", "label": "What WordPress has", "href": "developers/native/", "summary": "What Riff uses as core has it, and what it adds and why." }
+					]
+				},
 				{ "key": "accessibility", "label": "Accessibility", "href": "accessibility/", "bar": false }
 			]
 		}
@@ -48,15 +89,9 @@
 		"developers": "Riff Source"
 	},
 	"footer": [
-		{ "key": "about", "label": "About", "links": [ "built", "accessibility", { "label": "Riff Cloud", "href": "https://riffpress.com/" } ] },
-		{
-			"key": "help",
-			"label": "Help",
-			"links": [
-				{ "label": "Support", "href": "https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md" },
-				{ "label": "Security", "href": "https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md" },
-				{ "label": "GitHub", "href": "https://github.com/RiffPress/RiffPress" }
-			]
-		}
+		"accessibility",
+		{ "label": "Support", "href": "https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md" },
+		{ "label": "Security", "href": "https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md" },
+		{ "label": "GitHub", "href": "https://github.com/RiffPress/RiffPress" }
 	]
 }

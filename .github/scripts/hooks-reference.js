@@ -516,18 +516,18 @@ function hookPage( p, all = [ p ] ) {
 	const list = ( items ) => '<ul>' + items.map( ( [ id, label, sub ] ) => `<li><a href="#${ id }">${ label }</a>${ sub ? list( sub ) : '' }</li>` ).join( '' ) + '</ul>';
 	// A hook sits under its language: Developers / Reference / PHP / riff_enabled, or JavaScript for riff.track.
 	const lang = p.lang === 'js' ? 'javascript' : 'php';
-	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() }`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', { under: lang, label: p.name, search: searchForm( '../' ) } );
+	let html = head( `${ p.name }, ${ group( p ).replace( /s$/, '' ).toLowerCase() }`, summary, `developers/hooks/${ p.slug }/`, 3, '../../../web/web.css', { under: lang, label: p.name } );
 	html += `<main id="main" class="wrap reference">
 <h1 class="code-title">${ signature( p ) }</h1>
 <div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p></aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details></aside>
 <article class="entry">
 ${ body }${ pager( prev && [ prev.name, `../${ prev.slug }/` ], next && [ next.name, `../${ next.slug }/` ] ) }</article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>
@@ -536,11 +536,12 @@ if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
 }
 
 function indexPage( list ) {
-	// Developers / Reference / Hooks, the search at their right, as on every hook's own page.
-	let html = head( 'Hooks', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css', { search: searchForm( './' ) } );
+	// The search filters this list as it is typed, so it sits over the list it filters.
+	let html = head( 'Hooks', 'Every filter and action Riff fires, in PHP and in the player, with its parameters and the line it fires on.', 'developers/hooks/', 2, '../../web/web.css' );
 	html += `<main id="main" class="wrap reference hooks-index">
 <h1>Hooks</h1>
 <p class="intro">Every filter and action Riff fires, in PHP and in the player. Each page is generated from the docblock above the line the hook fires on, at the commit this site was published from. A hook keeps its name and parameters within a major version.</p>
+${ searchForm( './' ) }
 `;
 	for ( const name of Object.values( KIND ) ) {
 		const inGroup = list.filter( ( p ) => group( p ) === name );

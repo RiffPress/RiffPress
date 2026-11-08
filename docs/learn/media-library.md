@@ -35,7 +35,7 @@ Upload a zip of an album, or of several, to the Media Library. Riff unpacks it i
 
 ## Under the hood
 
-- Every audio and video item in `wp/v2/media` carries the read-only `riff_track` field, described under [The track on media](https://source.riffpress.com/rest/#media). Its shape is [the track schema](https://source.riffpress.com/php/#track-schema), after the [`riff_track`](../hooks.md#riff_track) filter.
+- Every audio and video item in `wp/v2/media` carries the read-only `riff_track` field, described under [The track on media](https://source.riffpress.com/rest/#media). Its shape is [the track schema](https://source.riffpress.com/track/), after the [`riff_track`](../hooks.md#riff_track) filter.
 - Albums and artists are two taxonomies on attachments, `riff_album` and `riff_artist`, kept by Riff from the tags each time WordPress saves a file's metadata. An album is keyed by its name and its album artist, the `band` tag.
 - The fields are saved as attachment meta, and the artwork as the attachment's featured image. On WordPress 7.2, Artist, Album, Video version, Streaming version and Protected are in the Media Library's field API too.
 - A protected file is served through WordPress. [`riff_protected_url`](../hooks.md#riff_protected_url), [`riff_protected_send`](../hooks.md#riff_protected_send) and [`riff_protect_storage`](../hooks.md#riff_protect_storage) let a plugin that keeps files elsewhere take part.

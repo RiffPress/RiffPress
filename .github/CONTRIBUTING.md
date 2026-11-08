@@ -144,9 +144,6 @@ gh release edit riff-v6.2.0 --title 'riff: v6.2.0 "Name"' \
 
 To check one, open the source link in the release's first line and find both names in the same credits.
 
-<details>
-<summary>How the release pull request gets its checks</summary>
+### How the release pull request gets its checks
 
 release-please opens its pull request with the workflow's own `GITHUB_TOKEN`. GitHub holds the CI runs for a pull request opened that way until someone approves them, so after syncing the version strings the release workflow approves them itself. CI then runs the full suite on the exact commit that will be tagged. No personal access token is involved, so nothing expires.
-
-</details>

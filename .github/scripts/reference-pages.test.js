@@ -39,15 +39,15 @@ test( 'the plugin\'s PHP, REST and CSS surface is documented, and each page says
 	assert.ok( data.surface.routes.some( ( r ) => r.route === '/library' ) );
 	assert.ok( Object.keys( data.surface.track.properties ).includes( 'duration' ) );
 	const pages = [ ...site( data ).values() ];
-	const [ php, rest, css ] = pages;
+	const [ php, track, rest, css ] = pages;
 	assert.match( php, /Riff\\Sources::register/ );
 	for ( const name of Object.keys( data.surface.track.properties ) ) {
-		assert.ok( php.includes( `<code>${ name }</code>` ), `the track schema lists ${ name }` );
+		assert.ok( track.includes( `<code>${ name }</code>` ), `the track schema lists ${ name }` );
 	}
 	assert.match( rest, /GET \/riff\/v1\/library\/\{id\}/ );
 	// The accent's default as tokens.css writes it: the theme's accent, else the player's text (#952).
 	assert.match( css, /--riff-accent<\/a><code>var\(--riff-theme-accent, var\(--riff-fg\)\)<\/code>/ );
-	for ( const [ html, label ] of [ [ php, 'PHP' ], [ rest, 'REST API' ], [ css, 'CSS' ] ] ) {
+	for ( const [ html, label ] of [ [ php, 'PHP' ], [ track, 'Track schema' ], [ rest, 'REST API' ], [ css, 'CSS' ] ] ) {
 		assert.match( html, new RegExp( `aria-current="page">${ label }</a>` ), `${ label } is current in the bar` );
 	}
 } );

@@ -24,24 +24,25 @@
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <meta name="theme-color" content="#ffffff">
 <meta name="color-scheme" content="light">
-<link rel="preload" href="../fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../tokens.css">
 <link rel="stylesheet" href="../web/web.css">
 </head>
 <body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/" aria-current="page">Download</a><a href="../developers/">Docs</a></nav></div></header>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main"><a href="../download/" aria-current="page">Download</a></nav></div></header>
 <!-- /nav:top -->
 
-<main id="main" class="wrap doc dl">
+<main id="main" class="wrap doc">
 <h1>Download</h1>
 <p class="lede">The music player for WordPress, in one zip for the Plugins screen.</p>
 
 <div class="get">
 	<div class="get-main">
 		<a class="btn" href="https://github.com/RiffPress/RiffPress/releases/download/riff-v{{version}}/riff.zip">Download Riff {{version}}</a>
-		<p class="fine">Free software under the GPL, version 2 or later, like WordPress. Then <a href="../add-music/">add your music</a>.</p>
+		<p class="fine">Free software under the GPL, version 2 or later, like WordPress.</p>
 		<p class="fine stable">Riff {{version}} needs WordPress 7.2, which is in beta until 8 December 2026. On WordPress 7.0 or 7.1, get <a href="https://github.com/RiffPress/RiffPress/releases/latest/download/riff.zip">Riff {{stable}}</a>, the last release for them.</p>
 	</div>
 	<dl class="get-needs">
@@ -51,7 +52,7 @@
 	</dl>
 </div>
 <div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#install">Install it</a></li><li><a href="#update">Update it</a></li><li><a href="#releases">Every release</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/download/index.html">Edit this page on GitHub</a></p></aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#install">Install it</a></li><li><a href="#update">Update it</a></li><li><a href="#releases">Every release</a></li></ul></details></aside>
 <article class="entry">
 <h2 id="install">Install it</h2>
 <ol>
@@ -67,18 +68,19 @@
 
 <h2 id="releases">Every release</h2>
 <p>Each version is a tagged release on GitHub with its zip attached and its changes listed. <a href="https://github.com/RiffPress/RiffPress/releases">See all releases</a>, or <a href="https://github.com/RiffPress/RiffPress/blob/main/plugins/riff/CHANGELOG.md">read the changelog</a>.</p>
+<p class="edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/download/index.html">Edit this page on GitHub</a></p>
 </article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>
 
 <!-- nav:footer -->
-<footer><div class="wrap"><p class="foot-license">Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</p><nav aria-label="Footer"><div class="foot-group"><p class="foot-label" id="foot-about">About</p><ul aria-labelledby="foot-about"><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://riffpress.com/">Riff Cloud</a></li></ul></div><div class="foot-group"><p class="foot-label" id="foot-help">Help</p><ul aria-labelledby="foot-help"><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></div></nav></div></footer>
+<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
 <!-- /nav:footer -->
 <script type="module" src="../js/docs.js"></script>
 </body>

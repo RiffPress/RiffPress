@@ -369,8 +369,8 @@ function build( list = HANDBOOKS ) {
 	} );
 	const pages = new Map( parsed.map( ( h ) => [ h.file, h ] ) );
 	let anchors = null;
-	// Source's pages by their path on the site: the ones site-nav.json lists, each hook's and each
-	// web feature's.
+	// Source's pages by their path on the site: the ones site-nav.json lists and each hook's. A web
+	// feature is a section of Built on the open web, web/#slug.
 	let built = null;
 	const handbookAt = new Map( parsed.map( ( h ) => [ `developers/${ h.slug }/`, h ] ) );
 
@@ -392,7 +392,6 @@ function build( list = HANDBOOKS ) {
 					...[ ...nav.entries().values() ].map( ( e ) => e.node.href ),
 					...handbookAt.keys(),
 					...hooks.pages( hooks.collect() ).map( ( p ) => `developers/hooks/${ p.slug }/` ),
-					...JSON.parse( fs.readFileSync( path.join( ROOT, 'site', 'web', 'web.json' ), 'utf8' ) ).map( ( e ) => `web/${ e.slug }/` ),
 				] );
 				// The reference sits under developers/ on the site and at the host's root.
 				// So developers/ is never in the address: the host has no such folder.
@@ -512,8 +511,8 @@ function build( list = HANDBOOKS ) {
 				title: h.title || h.label,
 				description: h.description || h.label,
 				url: `developers/${ h.slug }/`,
-				// One site-nav.json doesn't list yet sits under Handbook; site-nav.js --check fails on it.
-				...( listed.has( `developers/${ h.slug }/` ) ? {} : { under: 'handbook', label: h.label } ),
+				// One site-nav.json doesn't list yet sits under the guides; site-nav.js --check fails on it.
+				...( listed.has( `developers/${ h.slug }/` ) ? {} : { under: 'guides', label: h.label } ),
 				h1: h.h1 || `<h1>${ esc( h.label ) }</h1>`,
 				toc: h.toc,
 				body: `<div class="handbook">\n${ h.html }</div>\n`,

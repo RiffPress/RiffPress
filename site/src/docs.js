@@ -1,5 +1,6 @@
 /**
- * The docs' two helpers, on every Source page that has them.
+ * The docs' helpers, on every Source page: the sidebar's Menu, "On this page", search and the door
+ * switcher, each described where it starts.
  *
  * The sidebar's Menu: on a phone the docs' sidebar (site-nav.js draws it) folds into a Menu button
  * in a bar held at the top of the window, which opens it as a sheet over the page. Escape, a press
@@ -15,7 +16,7 @@ const button = side?.querySelector( '.docs-menu' );
 const list = side && document.getElementById( button?.getAttribute( 'aria-controls' ) );
 
 if ( side && button && list ) {
-	const phone = window.matchMedia( '(max-width: 900px)' );
+	const phone = window.matchMedia( '(max-width: 899.98px)' );
 	const scrim = document.createElement( 'div' );
 	scrim.className = 'docs-scrim';
 	scrim.hidden = true;
@@ -27,7 +28,9 @@ if ( side && button && list ) {
 		scrim.hidden = ! open;
 		document.documentElement.classList.toggle( 'docs-menu-open', open );
 		if ( open ) {
-			( list.querySelector( '[aria-current="page"]' ) || list.querySelector( 'a' ) )?.focus();
+			// The page, or the page it sits under, or the door's first page; never a link inside the
+			// closed door switcher, which focus() cannot reach.
+			( list.querySelector( ':scope > ul [aria-current]' ) || list.querySelector( ':scope > ul a' ) || list.querySelector( 'summary' ) )?.focus();
 		} else if ( focus ) {
 			button.focus();
 		}
@@ -83,4 +86,151 @@ if ( targets.length && 'IntersectionObserver' in window ) {
 	targets.forEach( ( t ) => watch.observe( t ) );
 	window.addEventListener( 'scrollend', mark, { passive: true } );
 	mark();
+}
+
+/*
+ * Search: the bar's button, ⌘K or Ctrl+K anywhere, or / outside a field, opens a dialog over the
+ * page. It reads search.json (developers-site.js writes it at the host's root) once, when first
+ * opened, and matches what is typed against each page's title, its headings and its summary. The
+ * arrow keys move between the results and Enter follows one; Escape, or a press outside, closes it
+ * and focus goes back to where it was. Without this script the button stays hidden.
+ */
+const opener = document.querySelector( '.search' );
+
+if ( opener && window.HTMLDialogElement ) {
+	const root = new URL( '../', import.meta.url );
+	const mac = /Mac|iPhone|iPad/.test( navigator.platform || navigator.userAgent );
+	const key = opener.querySelector( '.search-key' );
+	if ( key && ! mac ) {
+		key.textContent = 'Ctrl K';
+	}
+	opener.hidden = false;
+
+	const dialog = document.createElement( 'dialog' );
+	dialog.className = 'search-dialog';
+	dialog.setAttribute( 'aria-label', 'Search the docs' );
+	dialog.innerHTML = '<form method="dialog" role="search"><span class="search-icon" aria-hidden="true"></span><label class="screen-reader-text" for="search-q">Search the docs</label><input id="search-q" type="search" placeholder="Search the docs" autocomplete="off" spellcheck="false" enterkeyhint="go"><button class="search-close" type="submit">Close</button></form><ul class="search-results" aria-label="Results"></ul><p class="search-status" role="status"></p>';
+	document.body.append( dialog );
+	const input = dialog.querySelector( 'input' );
+	const results = dialog.querySelector( '.search-results' );
+	const status = dialog.querySelector( '.search-status' );
+	let index = null;
+
+	const load = () => {
+		index =
+			index ||
+			fetch( new URL( 'search.json', root ) )
+				.then( ( r ) => ( r.ok ? r.json() : [] ) )
+				.catch( () => [] );
+		return index;
+	};
+
+	const esc = ( s ) => s.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' ).replace( /"/g, '&quot;' );
+
+	// A page whose title has the words ranks first, then one where a heading has them, then the
+	// summary; a title that starts with them ranks over one that only holds them. A page is its
+	// title alone; a section says its page, and a summary's match shows the summary.
+	const find = ( pages, q ) => {
+		const words = q.toLowerCase().split( /\s+/ ).filter( Boolean );
+		const has = ( text ) => words.every( ( w ) => text.toLowerCase().includes( w ) );
+		const hits = [];
+		for ( const p of pages ) {
+			if ( has( p.t ) ) {
+				hits.push( { score: p.t.toLowerCase().startsWith( words[ 0 ] ) ? 4 : 3, href: p.u, title: p.t } );
+			}
+			for ( const [ id, text ] of p.h ) {
+				if ( has( text ) ) {
+					hits.push( { score: 2, href: `${ p.u }#${ id }`, title: text, where: p.t } );
+				}
+			}
+			if ( ! has( p.t ) && has( p.s ) ) {
+				hits.push( { score: 1, href: p.u, title: p.t, where: p.s } );
+			}
+		}
+		return hits.sort( ( a, b ) => b.score - a.score || a.title.length - b.title.length ).slice( 0, 12 );
+	};
+
+	const show = async () => {
+		const q = input.value.trim();
+		if ( ! q ) {
+			results.innerHTML = '';
+			status.textContent = '';
+			return;
+		}
+		const hits = find( await load(), q );
+		if ( input.value.trim() !== q ) {
+			return;
+		}
+		results.innerHTML = hits.map( ( h ) => `<li><a href="${ esc( new URL( h.href, root ).href ) }"><span class="search-title">${ esc( h.title ) }</span>${ h.where ? `<span class="search-where">${ esc( h.where ) }</span>` : '' }</a></li>` ).join( '' );
+		status.textContent = hits.length ? `${ hits.length } result${ hits.length === 1 ? '' : 's' }` : `Nothing matches “${ q }”.`;
+	};
+
+	const open = () => {
+		if ( ! dialog.open ) {
+			dialog.showModal();
+			load();
+		}
+		input.select();
+	};
+
+	opener.addEventListener( 'click', open );
+	// A result on this page only moves to its section, so the dialog closes for it to be seen.
+	results.addEventListener( 'click', ( e ) => {
+		if ( e.target.closest( 'a' ) ) {
+			dialog.close();
+		}
+	} );
+	input.addEventListener( 'input', show );
+	dialog.addEventListener( 'click', ( e ) => {
+		// A press on the backdrop, outside the dialog's own box.
+		if ( e.target === dialog ) {
+			dialog.close();
+		}
+	} );
+	dialog.addEventListener( 'keydown', ( e ) => {
+		const found = [ ...results.querySelectorAll( 'a' ) ];
+		const at = found.indexOf( document.activeElement );
+		// A search field spends its first Escape on clearing itself; here Escape closes.
+		if ( e.key === 'Escape' ) {
+			// It closes this layer only, not the phone's sheet under it.
+			e.preventDefault();
+			e.stopPropagation();
+			dialog.close();
+		} else if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
+			e.preventDefault();
+			const next = e.key === 'ArrowDown' ? at + 1 : at - 1;
+			( next < 0 ? input : found[ Math.min( next, found.length - 1 ) ] )?.focus();
+		} else if ( e.key === 'Enter' && document.activeElement === input && found[ 0 ] ) {
+			e.preventDefault();
+			found[ 0 ].click();
+		}
+	} );
+	document.addEventListener( 'keydown', ( e ) => {
+		const typing = e.target.closest?.( 'input, textarea, select, [contenteditable]' );
+		if ( ( e.key === 'k' && ( e.metaKey || e.ctrlKey ) ) || ( e.key === '/' && ! typing && ! dialog.open ) ) {
+			e.preventDefault();
+			open();
+		}
+	} );
+}
+
+/*
+ * The door switcher at the top of the sidebar is a disclosure, so it works without this script;
+ * this closes it as a menu closes, on Escape or a press outside it.
+ */
+const doorSwitch = document.querySelector( '.door-switch' );
+if ( doorSwitch ) {
+	document.addEventListener( 'click', ( e ) => {
+		if ( doorSwitch.open && ! doorSwitch.contains( e.target ) ) {
+			doorSwitch.open = false;
+		}
+	} );
+	doorSwitch.addEventListener( 'keydown', ( e ) => {
+		if ( e.key === 'Escape' && doorSwitch.open ) {
+			// It closes the switcher only, not the phone's sheet it sits in.
+			e.stopPropagation();
+			doorSwitch.open = false;
+			doorSwitch.querySelector( 'summary' ).focus();
+		}
+	} );
 }
