@@ -338,6 +338,9 @@ final class Player {
 			// A post's tracks, which the record in Now Playing cuts its grooves from.
 			'library'    => rest_url( 'riff/v1/library/' ),
 		);
+		if ( ! self::cover_accent() ) {
+			$data['coverAccent'] = false;
+		}
 		// What Riff's own features add for the script: the Listen app's address, the listener's
 		// likes and playlists, whether they have the single-key shortcuts, where they share what
 		// they play, whether the site has turned the turntable off, the views registered, and where
@@ -393,6 +396,32 @@ final class Player {
 			self::icon( (string) $item['icon'] ),
 			esc_html( (string) $item['label'] )
 		);
+	}
+
+	/**
+	 * Whether the player takes its accent from the cover of the track playing.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @return bool
+	 */
+	public static function cover_accent(): bool {
+		/**
+		 * Filters whether the player takes its accent from the cover of the track playing: the
+		 * cover's hue, muted and lightened until it reads on the player's dark surfaces, as
+		 * `--riff-cover-accent`, on the seek bar, the playing bars, the current Up next item, the
+		 * focus ring and a wash behind Now Playing, and in the Listen app's own document on its
+		 * links, Liked songs and the Browse tiles. A cover that is grey, near black or near white
+		 * gives none, and the accent is the site's `--riff-accent`.
+		 *
+		 * A host keeps its one accent everywhere with
+		 * `add_filter( 'riff_cover_accent', '__return_false' )`.
+		 *
+		 * @since 6.5.0
+		 *
+		 * @param bool $on Default true.
+		 */
+		return (bool) apply_filters( 'riff_cover_accent', true );
 	}
 
 	/**

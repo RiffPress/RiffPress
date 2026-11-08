@@ -130,6 +130,8 @@
 
 .riff-app .riff-browse-tile {
 	display: flex;
+	background: var(--riff-tile);
+	color: var(--riff-tile-ink);
 	min-height: 96px;
 	padding: 16px;
 	border-radius: 8px;

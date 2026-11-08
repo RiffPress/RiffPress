@@ -95,6 +95,18 @@ Since 6.2.0. Fires in `plugins/riff/src/class-navigation.php`.
 | --- | --- | --- |
 | `$on` | `bool` | False by default. |
 
+### `riff_cover_accent`
+
+Filters whether the player takes its accent from the cover of the track playing: the cover's hue, muted and lightened until it reads on the player's dark surfaces, as `--riff-cover-accent`, on the seek bar, the playing bars, the current Up next item, the focus ring and a wash behind Now Playing, and in the Listen app's own document on its links, Liked songs and the Browse tiles. A cover that is grey, near black or near white gives none, and the accent is the site's `--riff-accent`.
+
+A host keeps its one accent everywhere with `add_filter( 'riff_cover_accent', '__return_false' )`.
+
+Since 6.5.0. Fires in `plugins/riff/src/class-player.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$on` | `bool` | Default true. |
+
 ### `riff_enabled`
 
 Filters whether Riff's player loads on the current front-end request.

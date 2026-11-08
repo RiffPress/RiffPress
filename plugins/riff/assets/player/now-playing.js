@@ -5,7 +5,7 @@
  * is: a band of grooves for each of the album's tracks, as wide as the track is long. It turns at
  * 33⅓, faster or slower with the music's speed as a turntable's pitch would, and its tonearm
  * tracks the album from the outside in. */
-import { average, hsl, largest, route, time } from 'riff-player/helpers';
+import { average, coverAccent, hsl, largest, route, time } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -262,11 +262,43 @@ export function nowPlaying( P ) {
 		'--riff-label-ink': [ '#141414', '#fff' ],
 		'--riff-label-halo': [ 'rgb(255 255 255 / 0.4)', 'rgb(0 0 0 / 0.35)' ],
 	};
+	// ---- The accent the cover gives (helpers.js coverAccent()), on the player's root and, in the
+	// Listen app's own document, on its body for the app: the seek bar, the playing bars, the
+	// current Up next item, the focus ring and the wash behind Now Playing take it from
+	// --riff-cover-accent (riff.css). Without one, a grey or black cover's or none at all, the
+	// player's is the site's --riff-accent and the app's that same colour as the player has it. A
+	// site turns it off with the riff_cover_accent filter.
+	const standalone = document.body.classList.contains( 'riff-standalone' ) ? document.body : null;
+	// A colour as the page computes it, here in the player, as red, green and blue.
+	const rgbOf = ( css ) => {
+		const probe = document.createElement( 'i' );
+		probe.style.color = css;
+		root.append( probe );
+		const parts = getComputedStyle( probe ).color.match( /[\d.]+/g ) || [ 0, 0, 0 ];
+		probe.remove();
+		return parts.slice( 0, 3 ).map( Number );
+	};
+	function accent( c, tinted ) {
+		if ( P.data.coverAccent === false ) {
+			return;
+		}
+		const colour = c && coverAccent( c, [ rgbOf( 'var(--riff-surface)' ), rgbOf( 'var(--riff-bg)' ), rgbOf( tinted ) ] );
+		if ( colour ) {
+			const value = `rgb(${ colour.join( ' ' ) })`;
+			root.style.setProperty( '--riff-cover-accent', value );
+			standalone?.style.setProperty( '--riff-cover-accent', value );
+			return;
+		}
+		root.style.removeProperty( '--riff-cover-accent' );
+		standalone?.style.setProperty( '--riff-cover-accent', `rgb(${ rgbOf( 'var(--riff-accent)' ).join( ' ' ) })` );
+	}
+
 	function tint( src ) {
 		const clear = () => {
 			for ( const name of [ '--riff-tint', '--riff-label-paper', ...Object.keys( LABEL ) ] ) {
 				root.style.removeProperty( name );
 			}
+			accent( null, 'var(--riff-bg)' );
 		};
 		if ( ! src ) {
 			clear();
@@ -281,10 +313,9 @@ export function nowPlaying( P ) {
 				return;
 			}
 			const [ h, sat ] = hsl( c.r, c.g, c.b );
-			root.style.setProperty(
-				'--riff-tint',
-				`hsl(${ Math.round( h ) } ${ Math.round( Math.min( sat, 0.55 ) * 100 ) }% 22%)`
-			);
+			const tinted = `hsl(${ Math.round( h ) } ${ Math.round( Math.min( sat, 0.55 ) * 100 ) }% 22%)`;
+			root.style.setProperty( '--riff-tint', tinted );
+			accent( c, tinted );
 			root.style.setProperty(
 				'--riff-label-paper',
 				`rgb(${ Math.round( c.r ) } ${ Math.round( c.g ) } ${ Math.round( c.b ) })`

@@ -86,6 +86,21 @@
 	 * @since 4.0.0
 	 */
 	--riff-accent: #f2eadb;
+
+	/**
+	 * The accent the playing track's cover gives, which the player sets here
+	 * as the track changes: the cover's hue, muted, and light enough to read
+	 * at 4.5:1 on the bar and on Now Playing. The played part of the seek bar
+	 * in the bar, its knob, the playing bars and the title of the current Up
+	 * next item, and a wash behind Now Playing take it. A cover that is grey,
+	 * near black or near white gives none, and it is `--riff-accent`. In the
+	 * Listen app's own document the player sets it on the body too, for the
+	 * app's links, Liked songs and the Browse tiles. The `riff_cover_accent`
+	 * filter turns it off.
+	 *
+	 * @since 6.5.0
+	 */
+	--riff-cover-accent: var(--riff-accent);
 }
 
 .riff-app {
