@@ -102,7 +102,8 @@ final class Import {
 	public static function routes(): void {
 		/**
 		 * POST /riff/v1/imports: imports a zip already in the Media Library, as uploading it there
-		 * does: in the background, into draft album posts for its uploader to publish. For a zip
+		 * does: in the background, into private album posts with each track Protected, for its uploader
+		 * to publish. For a zip
 		 * uploaded somewhere that did not start the import, such as over REST by an assistant.
 		 *
 		 * @since 6.5.0
@@ -148,7 +149,7 @@ final class Import {
 				),
 				'queued'     => array(
 					'type'        => 'integer',
-					'description' => __( 'When the import starts, as a Unix time. Its album posts are drafts by the zip\'s uploader; the zip is attached to the first once it is done.', 'riff' ),
+					'description' => __( 'When the import starts, as a Unix time. Its album posts are private, by the zip\'s uploader, with each track Protected; the zip is attached to the first once it is done.', 'riff' ),
 				),
 			),
 		);

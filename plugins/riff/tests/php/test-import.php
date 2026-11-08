@@ -536,4 +536,61 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->expectException( RuntimeException::class );
 		( new Riff\Cli() )->import( array( '/no/such/folder' ), array() );
 	}
+
+	/**
+	 * Asks POST /riff/v1/imports to import an attachment.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return WP_REST_Response
+	 */
+	private static function queue_over_rest( int $id ): WP_REST_Response {
+		$request = new WP_REST_Request( 'POST', '/riff/v1/imports' );
+		$request->set_body_params( array( 'attachment' => $id ) );
+		return rest_do_request( $request );
+	}
+
+	public function test_rest_queues_a_zip_in_the_media_library_once(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+		// As if uploaded somewhere that did not queue it, as an assistant's upload over REST is.
+		wp_clear_scheduled_hook( Import::ZIP_JOB, array( $id ) );
+
+		$first = self::queue_over_rest( $id );
+		$this->assertSame( 202, $first->get_status() );
+		$this->assertSame( $id, $first->get_data()['attachment'] );
+		$this->assertNotFalse( wp_next_scheduled( Import::ZIP_JOB, array( $id ) ) );
+
+		$again = self::queue_over_rest( $id );
+		$this->assertSame( $first->get_data()['queued'], $again->get_data()['queued'], 'asked twice, queued once' );
+		$this->assertCount( 0, $this->tracks(), 'nothing imported during the request' );
+	}
+
+	public function test_rest_refuses_whoever_cannot_write_posts_or_edit_the_zip(): void {
+		$owner = self::factory()->user->create( array( 'role' => 'author' ) );
+		wp_set_current_user( $owner );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+		wp_clear_scheduled_hook( Import::ZIP_JOB, array( $id ) );
+
+		wp_set_current_user( 0 );
+		$this->assertSame( 401, self::queue_over_rest( $id )->get_status(), 'a visitor' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$this->assertSame( 403, self::queue_over_rest( $id )->get_status(), 'a subscriber' );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$this->assertSame( 403, self::queue_over_rest( $id )->get_status(), 'another author, whose zip it isn\'t' );
+		$this->assertFalse( wp_next_scheduled( Import::ZIP_JOB, array( $id ) ), 'and nothing was queued' );
+	}
+
+	public function test_rest_says_why_for_a_file_that_is_not_a_zip_or_a_zip_on_a_post(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$track = self::attach( '02 - Underground [underground].mp3' );
+		$this->assertSame( 400, self::queue_over_rest( $track )->get_status(), 'a track' );
+		$this->assertSame( 400, self::queue_over_rest( 999999 )->get_status(), 'nothing at all' );
+
+		$post     = self::factory()->post->create();
+		$download = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ), $post );
+		$attached = self::queue_over_rest( $download );
+		$this->assertSame( 409, $attached->get_status(), 'a File block\'s download, or one already imported' );
+		$this->assertSame( 'riff_import_zip', $attached->as_error()->get_error_code() );
+		$this->assertFalse( wp_next_scheduled( Import::ZIP_JOB, array( $download ) ) );
+	}
 }
