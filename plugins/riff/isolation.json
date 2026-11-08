@@ -1,0 +1,56 @@
+{
+	"$schema": "../../docs/isolation.schema.json",
+	"plugin": "riff",
+	"data": {
+		"options": [
+			"riff_"
+		],
+		"meta": [
+			"_riff_",
+			"riff_"
+		],
+		"shared": {
+			"_thumbnail_id": "An album's cover, set as the post's and the track's featured image, which is where WordPress keeps one.",
+			"_wp_attachment_image_alt": "A cover's alternative text, set on import where WordPress keeps it."
+		},
+		"keep": {
+			"riff_likes": "What a listener liked. Theirs, and cumbersome to make again after a reinstall; Tools > Erase Personal Data deletes one listener's.",
+			"riff_history": "What a listener played recently, kept for the same reason as their likes."
+		}
+	},
+	"rest": {
+		"namespaces": [
+			"riff/v1"
+		],
+		"fields": [
+			"attachment.riff_track"
+		],
+		"public": {}
+	},
+	"capabilities": [
+		"read",
+		"read_post",
+		"edit_post",
+		"edit_posts",
+		"edit_term",
+		"edit_user",
+		"publish_pages",
+		"upload_files",
+		"manage_network_options"
+	],
+	"hosts": [
+		"self",
+		"*.gravatar.com"
+	],
+	"spawn": [
+		"ffmpeg"
+	],
+	"scripts": [
+		"riff-media"
+	],
+	"modules": [
+		"riff",
+		"riff-app",
+		"riff-app/import"
+	]
+}

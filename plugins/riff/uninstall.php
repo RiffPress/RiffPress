@@ -32,8 +32,9 @@ foreach ( get_posts(
 	if ( file_exists( $riff_to ) ) {
 		$riff_to = dirname( $riff_to ) . '/' . wp_unique_filename( dirname( $riff_to ), basename( $riff_to ) );
 	}
+	// isolation: write -- a protected file back where it was under uploads.
 	wp_mkdir_p( dirname( $riff_to ) );
-	if ( is_file( $riff_file ) && @rename( $riff_file, $riff_to ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename
+	if ( is_file( $riff_file ) && @rename( $riff_file, $riff_to ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.rename_rename -- isolation: write -- back under uploads.
 		update_attached_file( $riff_id, $riff_to );
 		$riff_moved[ add_query_arg( 'riff-file', $riff_id, home_url( '/' ) ) ] = (string) wp_get_attachment_url( $riff_id );
 	}

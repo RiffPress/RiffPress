@@ -39,6 +39,7 @@ spl_autoload_register(
 		foreach ( array( 'class-', 'interface-' ) as $kind ) {
 			$file = RIFF_DIR . $dir . $kind . $name . '.php';
 			if ( is_readable( $file ) ) {
+				// isolation: include -- a class file under RIFF_DIR, named from a Riff\ class name.
 				require $file;
 				return;
 			}

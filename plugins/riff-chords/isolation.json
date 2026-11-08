@@ -1,0 +1,61 @@
+{
+	"$schema": "../../docs/isolation.schema.json",
+	"plugin": "riff-chords",
+	"namespace": "Chords",
+	"data": {
+		"options": [],
+		"meta": [
+			"_riff_chords"
+		],
+		"shared": {},
+		"keep": {}
+	},
+	"rest": {
+		"namespaces": [],
+		"fields": [
+			"attachment.riff_chords"
+		],
+		"public": {}
+	},
+	"capabilities": [
+		"edit_post",
+		"upload_files",
+		"update_plugins"
+	],
+	"hosts": [],
+	"spawn": [],
+	"riff": {
+		"hooks": [
+			"riff_register",
+			"riff_before_player",
+			"riff_track"
+		],
+		"functions": [
+			"riff_register_view",
+			"riff_register_shortcut"
+		],
+		"events": [
+			"menu",
+			"view",
+			"ready",
+			"track",
+			"play",
+			"pause",
+			"time"
+		],
+		"api": [
+			"seek",
+			"speed",
+			"shortcut",
+			"time",
+			"playing",
+			"view"
+		]
+	},
+	"scripts": [
+		"riff-chords-timing",
+		"riff-chords-chart",
+		"riff-chords"
+	],
+	"modules": []
+}

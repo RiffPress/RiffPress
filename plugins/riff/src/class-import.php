@@ -361,6 +361,7 @@ final class Import {
 		// file into memory before anything can look at what it holds.
 		add_filter( 'unzip_file_use_ziparchive', '__return_true', PHP_INT_MAX );
 		try {
+			// isolation: write -- a folder of its own under the temp folder, removed after the import.
 			$unzipped = unzip_file( $file, $to );
 			remove_filter( 'unzip_file_use_ziparchive', '__return_true', PHP_INT_MAX );
 			if ( is_wp_error( $unzipped ) ) {
@@ -620,6 +621,7 @@ final class Import {
 	 */
 	private static function sideload( string $path, string $hash, array &$known ) {
 		$tmp = wp_tempnam( basename( $path ) );
+		// isolation: write -- a wp_tempnam() file, which media_handle_sideload() moves into uploads.
 		if ( ! $tmp || ! copy( $path, $tmp ) ) {
 			return new WP_Error( 'riff_import_copy', __( 'The file could not be copied for upload.', 'riff' ) );
 		}

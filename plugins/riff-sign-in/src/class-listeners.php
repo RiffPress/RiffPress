@@ -103,7 +103,8 @@ final class Listeners {
 	 * @return string
 	 */
 	public static function destination(): string {
-		$page = class_exists( '\Riff\Listen\First_Run' ) ? \Riff\Listen\First_Run::listen_page() : 0;
+		// Riff's public function, from 6.5; before it, the home page.
+		$page = function_exists( 'riff_listen_page' ) ? riff_listen_page() : 0;
 		return $page ? (string) get_permalink( $page ) : home_url( '/' );
 	}
 
