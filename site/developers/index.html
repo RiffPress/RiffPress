@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Riff Source</title>
-<meta name="description" content="How to extend Riff: every hook documented, a JavaScript API on the player, REST and GraphQL fields, a source interface for your own tracks, and the browser APIs it is built on.">
+<meta name="description" content="Riff's documentation: how to use it, build on it, run it for others, and help make it.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="RiffPress">
 <meta property="og:url" content="{{pages_url}}developers/">
 <meta property="og:title" content="Riff Source">
-<meta property="og:description" content="How to extend Riff: every hook documented, a JavaScript API, REST and GraphQL, a source interface, and the browser APIs it is built on.">
+<meta property="og:description" content="Riff's documentation: how to use it, build on it, run it for others, and help make it.">
 <meta property="og:image" content="{{pages_url}}og/developers.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Riff Source">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Riff Source">
-<meta name="twitter:description" content="How to extend Riff: every hook documented, a JavaScript API, REST and GraphQL, a source interface, and the browser APIs it is built on.">
+<meta name="twitter:description" content="Riff's documentation: how to use it, build on it, run it for others, and help make it.">
 <meta name="twitter:image" content="{{pages_url}}og/developers.png">
 <link rel="canonical" href="{{pages_url}}developers/">
 <link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
@@ -26,63 +26,24 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="../fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../tokens.css">
 <link rel="stylesheet" href="../web/web.css">
 </head>
 <body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/" aria-current="page">Source</a></div><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/">Download</a></nav></div></header>
-<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span><span class="screen-reader-text">Menu: </span><span class="docs-where">Overview</span></button><nav id="docs-nav-list" aria-label="Docs"><ul><li class="local-home"><a href="../developers/" aria-current="page">Overview</a></li><li class="local-group"><span class="local-label" id="docs-group-handbook">Handbook</span><ul aria-labelledby="docs-group-handbook"><li><a href="../developers/music/">Your music</a></li><li><a href="../developers/album/">An album</a></li><li><a href="../developers/post/">Music in a post</a></li><li><a href="../developers/listen-page/">The Listen page</a></li><li><a href="../developers/app/">The app</a></li><li><a href="../developers/lyrics/">Lyrics</a></li><li><a href="../developers/sign-in/">Signing in</a></li><li><a href="../developers/network/">Clients and networks</a></li><li><a href="../developers/extensions/">Extensions</a></li><li><a href="../developers/player/">Player</a></li></ul></li><li class="local-group"><span class="local-label" id="docs-group-reference">Reference</span><ul aria-labelledby="docs-group-reference"><li><a href="../developers/php/">PHP</a></li><li><a href="../developers/javascript/">JavaScript</a></li><li><a href="../developers/rest/">REST API</a></li><li><a href="../developers/css/">CSS</a></li></ul></li><li><a href="../web/">Built on the open web</a></li></ul></nav></aside>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/" aria-current="page">Source</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main"><a href="../download/">Download</a></nav></div></header>
 <!-- /nav:top -->
 
-<main id="main" class="wrap doc">
-<h1>Built to be extended</h1>
-<p class="lede">Riff is built the way a feature plugin is: one track shape everywhere, read through WordPress's own APIs, with a public surface that is written down and kept. Everything below is stable within a major version.</p>
-<div class="with-toc">
-<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#php">PHP</a></li><li><a href="#javascript">JavaScript</a></li><li><a href="#rest-and-graphql">REST and GraphQL</a></li><li><a href="#your-own-tracks">Your own tracks</a></li><li><a href="#views-and-controls">Views and controls</a></li><li><a href="#standalone-mode-and-wp-cli">Standalone mode and WP-CLI</a></li><li><a href="#design">Design and theming</a></li></ul></details></aside>
-<article class="entry">
-<h2 id="php">PHP</h2>
-<p>Every filter and action has a page of its own, generated from the docblock above the line it fires on, and CI fails a change that adds one without it; Riff's functions are held to the same. <a href="php/">The PHP reference</a> lists them with the <code>Riff\Source</code> interface, the track schema and the Listen block. Change a track before the player reads it, add a section to About, register a view or a control, or turn the turntable or the whole player off on a page; <a href="hooks/">all hooks</a> are searchable in one list.</p>
-
-<h2 id="javascript">JavaScript</h2>
-<p><code>window.riff</code> is the player's API. Actions and filters through <code>wp.hooks</code>, and <code>riff:*</code> events on the player's root, announce every change of state: what is playing, what is queued, what a press did. <a href="javascript/">The JavaScript reference</a> has every member of <code>window.riff</code>, generated from the player's own docblocks, and each action and filter has a page in <a href="hooks/">the hooks reference</a>.</p>
-
-<h2 id="rest-and-graphql">REST and GraphQL</h2>
-<p>The REST API gives each audio and video item in <code>wp/v2/media</code> a <code>riff_track</code>. <code>riff/v1/library</code> lists the posts with tracks and <code>riff/v1/library/{id}</code> opens one with its tracks and rendered blocks. <code>riff/v1/tracks</code>, <code>riff/v1/albums</code> and <code>riff/v1/artists</code> browse and search the Media Library, and a visitor sees only what WordPress's own media route would show them. Every route describes itself on <code>OPTIONS</code>. With WPGraphQL active, <code>MediaItem.riffTrack</code> and <code>Post.riffTracks</code>. All of it shares one schema with the player, <code>Riff\Tracks::schema()</code>, versioned and held to after the <code>riff_track</code> filter; WPGraphQL's <code>RiffTrack</code> is built from it. <a href="rest/">The REST API reference</a> has every route, argument and field.</p>
-
-<h2 id="your-own-tracks">Your own tracks</h2>
-<p>Tracks come from registered sources. The core source reads the audio, video and playlist blocks in posts. A plugin adds its own post type or catalogue by implementing <code>Riff\Source</code> and calling <code>Riff\Sources::register()</code> on <code>init</code>, or through the <code>riff_sources</code> filter, and the library, the REST routes and the player read it like any other. <a href="php/#sources">The PHP reference</a> has the interface, method by method.</p>
-
-<h2 id="views-and-controls">Views and controls</h2>
-<p>Now Playing shows one view at a time, the album, the turntable or the lyrics, each taking the whole screen above the bar and opened from its button at the bar's right, or on a phone from its chip in Now Playing. Up next, About and Together are side panels, one open at a time, beside the page on a wide screen and over it on a phone.</p>
-<p>A plugin adds its own views, and controls to the bar, as Riff adds its own: registered on the server with <a href="php/#riff_register_view"><code>riff_register_view()</code></a> and <a href="php/#riff_register_control"><code>riff_register_control()</code></a> on the <a href="hooks/riff_register/"><code>riff_register</code></a> action, so the page has every button and every view before any script runs. In the browser, <code>window.riff.view()</code> and <code>window.riff.control()</code> give each what it does, by its id, and add one the server didn't register, for what only the browser knows; <code>window.riff.openView()</code> and <code>closeView()</code> open and close one. <a href="player/#registering-controls-and-views">How the player works</a> has the whole of it.</p>
-<p><a href="https://github.com/RiffPress/RiffPress/tree/main/plugins/riff-lyrics">Riff Lyrics</a> is the reference extension: a separate plugin that adds a Lyrics view using only Riff's documented API, and CI fails if it reaches past it.</p>
-
-<h2 id="standalone-mode-and-wp-cli">Standalone mode and WP-CLI</h2>
-<p>Any page with the Riff block also answers at its address plus <code>app/</code>, outside the theme and with a web app manifest. <code>wp riff import &lt;path&gt;</code> adds a folder of music, or a zip of one, to the Media Library, one album post per folder, and <code>--dry-run</code> shows what it would do.</p>
-
-<h2 id="design">Design and theming</h2>
-<p>Riff has three layers, and each one is changed in a different place.</p>
-<ul>
-<li><strong>The Listen block follows your site.</strong> It takes the background, text, link colour and fonts from the theme's global styles. <strong>Styles &gt; Blocks &gt; Riff</strong> in the Site Editor comes before those, and the colour, typography, spacing, border and shadow settings on one block come before both. Every view inside the block, its rows, cards and search, is drawn from those colours, so a dark block has dark rows.</li>
-<li><strong>The standalone player is one design.</strong> At a Listen page's <code>app/</code> address, Riff looks the same on every site, in its own dark style, the way a streaming app does. The Site Editor doesn't change it.</li>
-<li><strong>The docked player is the same everywhere too.</strong> The bar and Now Playing keep Riff's layout on every page. A theme sets their accent under <code>settings.custom.riff.accent</code> in <code>theme.json</code>.</li>
-</ul>
-<p>Other plugins' styles still load in standalone mode, where only the theme's are left out, so a stylesheet can set the player's public custom properties there too; <a href="css/">the CSS reference</a> lists each with its default.</p>
-
-<p class="edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/developers/index.html">Edit this page on GitHub</a></p>
-</article>
-</div>
+<main id="main" class="wrap doc home">
+<h1>Riff Source</h1>
+<p class="lede">How to use Riff, build on it, run it for others, and help make it.</p>
+<!-- nav:doors -->
+<ul class="doors"><li><h2><a href="../developers/use/">Use Riff</a></h2><p>For whoever runs a site with music on it.</p><p class="doors-first"><a href="../add-music/">Add your music</a><a href="../developers/music/">Your music</a><a href="../developers/album/">An album</a><a href="../developers/post/">Music in a post</a></p></li><li><h2><a href="../developers/build/">Build on Riff</a></h2><p>For developers extending Riff or reading its data.</p><p class="doors-first"><a href="../developers/php/">PHP</a><a href="../developers/javascript/">JavaScript</a><a href="../developers/rest/">REST API</a><a href="../developers/css/">CSS</a></p></li><li><h2><a href="../developers/run/">Run Riff for others</a></h2><p>For hosts, agencies and multisite networks.</p><p class="doors-first"><a href="../developers/network/">Clients and networks</a><a href="../developers/verify/">Verifying a release</a></p></li><li><h2><a href="../developers/contribute/">Contribute</a></h2><p>For anyone fixing, testing or improving Riff.</p><p class="doors-first"><a href="../developers/contributing/">Contributing</a><a href="../built/">How Riff is built</a><a href="../developers/native/">What WordPress has</a></p></li></ul>
+<!-- /nav:doors -->
 </main>
-<script>
-// Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
-	document.querySelector( '.toc-box' ).open = false;
-}
-</script>
-
 <!-- nav:footer -->
-<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
+<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
 <!-- /nav:footer -->
 <script type="module" src="../js/docs.js"></script>
 </body>

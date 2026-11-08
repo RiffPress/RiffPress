@@ -46,6 +46,13 @@ plugins/riff/languages/
 /site/developers/lyrics/
 /site/developers/sign-in/
 /site/developers/network/
+/site/developers/track/
+/site/developers/isolation/
+/site/developers/verify/
+/site/developers/contributing/
+/site/developers/native/
+# The Build on Riff door is written by hand, though build/ is ignored everywhere else.
+!/site/developers/build/
 # Built by npm run docs:web, and by the Pages deploy, for the same reason: each page links the lines it
 # quotes. Only its data, its stylesheet and the sitemap are committed.
 /site/web/*

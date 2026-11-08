@@ -26,12 +26,13 @@
 <meta name="color-scheme" content="light">
 <link rel="preload" href="../fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../tokens.css">
 <link rel="stylesheet" href="../web/web.css">
 </head>
 <body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/" aria-current="page">Download</a></nav></div></header>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main"><a href="../download/" aria-current="page">Download</a></nav></div></header>
 <!-- /nav:top -->
 
 <main id="main" class="wrap doc">
@@ -79,7 +80,7 @@ if ( window.matchMedia( '(max-width: 1199.98px)' ).matches ) {
 </script>
 
 <!-- nav:footer -->
-<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
+<footer><div class="wrap"><p class="foot-license">Riff is free software under the GPL.</p><nav aria-label="Footer"><ul><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></nav></div></footer>
 <!-- /nav:footer -->
 <script type="module" src="../js/docs.js"></script>
 </body>

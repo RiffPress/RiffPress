@@ -387,12 +387,10 @@ function phpPage( data ) {
 	body += member( data.register, 'Riff\\Sources::register( Source $source ): void' );
 	body += member( data.unregister, 'Riff\\Sources::unregister( string $id ): void' );
 
-	const gqlComplete = Object.keys( data.surface.track.properties ).every( ( p ) => ( data.surface.gql_types.RiffTrack?.fields || {} )[ p ] );
-	body += `<section>${ hooks.h2( 'track-schema', 'The track schema' ) }<p>One shape for a track: the REST field and routes, the block markup and the player script all use it, and WPGraphQL carries <a href="../rest/#graphql">${ gqlComplete ? 'all of it' : 'most of it' }</a>. It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
 
 	const supports = Object.entries( data.block.supports || {} ).filter( ( [ , v ] ) => v ).map( ( [ k ] ) => k );
 	for ( const b of data.surface.bindings || [] ) {
-		body += `<section>${ hooks.h2( 'block-bindings', 'Block Bindings' ) }<p><code>${ esc( b.name ) }</code> (“${ esc( b.label ) }”) is a <a href="https://developer.wordpress.org/block-editor/reference-guides/block-api/block-bindings/">Block Bindings</a> source: a Heading or Paragraph bound to it shows a track's details, and an Image bound to it shows the cover, with no Riff block on the page. The binding's <code>key</code> picks the detail and <code>id</code> names the attachment; with no <code>id</code>, it is the post's first track. Every value is the track as <a href="#track-schema">the track schema</a> has it, after <a href="../hooks/riff_track/"><code>riff_track</code></a>, and a named track shows only where the media route would show it. In the editor the block shows that it is bound; the value is filled on the front end.</p>${ hooks.codeBlock( '<!-- wp:heading {"metadata":{"bindings":{"content":{"source":"riff/track","args":{"key":"title","id":123}}}}} -->\n<h2 class="wp-block-heading"></h2>\n<!-- /wp:heading -->\n\n<!-- wp:image {"metadata":{"bindings":{"url":{"source":"riff/track","args":{"key":"cover","id":123}}}}} -->\n<figure class="wp-block-image"><img src="" alt=""/></figure>\n<!-- /wp:image -->' ) }${ table( [ 'Key', 'Shows' ], Object.entries( b.keys ).map( ( [ k, d ] ) => `<tr><td><code>${ esc( k ) }</code></td><td>${ inline( d ) }</td></tr>` ) ) }</section>\n`;
+		body += `<section>${ hooks.h2( 'block-bindings', 'Block Bindings' ) }<p><code>${ esc( b.name ) }</code> (“${ esc( b.label ) }”) is a <a href="https://developer.wordpress.org/block-editor/reference-guides/block-api/block-bindings/">Block Bindings</a> source: a Heading or Paragraph bound to it shows a track's details, and an Image bound to it shows the cover, with no Riff block on the page. The binding's <code>key</code> picks the detail and <code>id</code> names the attachment; with no <code>id</code>, it is the post's first track. Every value is the track as <a href="../track/">the track schema</a> has it, after <a href="../hooks/riff_track/"><code>riff_track</code></a>, and a named track shows only where the media route would show it. In the editor the block shows that it is bound; the value is filled on the front end.</p>${ hooks.codeBlock( '<!-- wp:heading {"metadata":{"bindings":{"content":{"source":"riff/track","args":{"key":"title","id":123}}}}} -->\n<h2 class="wp-block-heading"></h2>\n<!-- /wp:heading -->\n\n<!-- wp:image {"metadata":{"bindings":{"url":{"source":"riff/track","args":{"key":"cover","id":123}}}}} -->\n<figure class="wp-block-image"><img src="" alt=""/></figure>\n<!-- /wp:image -->' ) }${ table( [ 'Key', 'Shows' ], Object.entries( b.keys ).map( ( [ k, d ] ) => `<tr><td><code>${ esc( k ) }</code></td><td>${ inline( d ) }</td></tr>` ) ) }</section>\n`;
 	}
 	if ( data.surface.abilities?.length ) {
 		const rows = data.surface.abilities.map( ( a ) => {
@@ -406,14 +404,13 @@ function phpPage( data ) {
 
 	return referencePage( {
 		title: 'PHP',
-		description: 'Riff\'s PHP surface: every hook, the functions that register the player\'s controls and views, the Source interface for your own tracks, the track schema, the Block Bindings source, the abilities and the Listen block.',
+		description: 'Riff\'s PHP surface: every hook, the functions that register the player\'s controls and views, the Source interface for your own tracks, the Block Bindings source, the abilities and the Listen block.',
 		url: 'developers/php/',
 		h1: '<h1>PHP</h1>',
 		toc: [
 			[ 'hooks', 'Hooks', [ [ 'filters', 'Filters' ], [ 'actions', 'Actions' ] ] ],
 			[ 'functions', 'Functions', data.functions.map( ( f ) => [ f.name.toLowerCase(), `${ f.name }()` ] ) ],
 			[ 'sources', 'Sources', [ [ 'the-source-interface', 'The Source interface' ] ] ],
-			[ 'track-schema', 'The track schema' ],
 			[ 'block-bindings', 'Block Bindings' ],
 			[ 'abilities', 'Abilities' ],
 			[ 'the-listen-block', 'The Listen block' ],
@@ -430,7 +427,7 @@ function restPage( data ) {
 
 	body += `<section>${ hooks.h2( 'media', 'The track on media' ) }`;
 	for ( const f of s.fields ) {
-		body += `<p>Every audio and video item in <code>wp/v2/media</code> carries <code>${ esc( f.name ) }</code>: ${ inline( f.schema?.description || '' ) } It is read only, and <code>null</code> for any other file. Its shape is <a href="../php/#track-schema">the track schema</a>.</p>`;
+		body += `<p>Every audio and video item in <code>wp/v2/media</code> carries <code>${ esc( f.name ) }</code>: ${ inline( f.schema?.description || '' ) } It is read only, and <code>null</code> for any other file. Its shape is <a href="../track/">the track schema</a>.</p>`;
 	}
 	body += hooks.codeBlock( 'GET /wp-json/wp/v2/media/123?_fields=id,riff_track' ) + '</section>\n';
 
@@ -458,7 +455,7 @@ function restPage( data ) {
 	// Said from the code, so the page stays true when either side changes.
 	const missing = Object.keys( s.track.properties ).filter( ( p ) => ! ( s.gql_types.RiffTrack?.fields || {} )[ p ] );
 	if ( missing.length ) {
-		body += `<p><code>RiffTrack</code> does not yet carry every property of <a href="../php/#track-schema">the track schema</a>: ${ missing.map( ( p ) => `<code>${ esc( p ) }</code>` ).join( ', ' ) } are only in REST.</p>`;
+		body += `<p><code>RiffTrack</code> does not yet carry every property of <a href="../track/">the track schema</a>: ${ missing.map( ( p ) => `<code>${ esc( p ) }</code>` ).join( ', ' ) } are only in REST.</p>`;
 	}
 	const gqlType = ( t ) => ( typeof t === 'string' ? t : `[${ t.list_of }]` );
 	body += table( [ 'Field', 'Description' ], s.gql_fields.map( ( f ) => `<tr><td><code>${ esc( f.type ) }.${ esc( f.name ) }</code><span class="type">${ esc( gqlType( f.returns ) ) }</span></td><td>${ inline( f.description ) }</td></tr>` ) );
@@ -523,9 +520,25 @@ function cssPage( data ) {
 	} );
 }
 
+// ---- /developers/track/
+
+function trackPage( data ) {
+	const gqlComplete = Object.keys( data.surface.track.properties ).every( ( p ) => ( data.surface.gql_types.RiffTrack?.fields || {} )[ p ] );
+	const body = `<section class="summary"><p>One shape for a track: the REST field and routes, the block markup and the player script all use it, and WPGraphQL carries <a href="../rest/#graphql">${ gqlComplete ? 'all of it' : 'most of it' }</a>.</p></section>\n<section>${ hooks.h2( 'properties', 'Properties' ) }<p>It is <code>Riff\\Tracks::schema()</code>, version <code>${ data.surface.version }</code>, and a track still matches it after the <a href="../hooks/riff_track/"><code>riff_track</code></a> filter.</p>${ schemaTable( data.surface.track ) }</section>\n`;
+	return referencePage( {
+		title: 'Track schema',
+		description: 'The one shape of a track in Riff, shared by the REST field and routes, the block markup, the player script and WPGraphQL.',
+		url: 'developers/track/',
+		h1: '<h1>Track schema</h1>',
+		toc: [ [ 'properties', 'Properties' ] ],
+		body,
+	} );
+}
+
 function site( data ) {
 	return new Map( [
 		[ path.join( SITE, 'php', 'index.html' ), phpPage( data ) ],
+		[ path.join( SITE, 'track', 'index.html' ), trackPage( data ) ],
 		[ path.join( SITE, 'rest', 'index.html' ), restPage( data ) ],
 		[ path.join( SITE, 'css', 'index.html' ), cssPage( data ) ],
 	] );
@@ -539,7 +552,7 @@ function main() {
 			fs.mkdirSync( path.dirname( file ), { recursive: true } );
 			fs.writeFileSync( file, html );
 		}
-		console.log( `Wrote site/developers/php/, rest/ and css/ (${ data.properties.length } custom properties, ${ data.surface.routes.length } routes)` );
+		console.log( `Wrote site/developers/php/, track/, rest/ and css/ (${ data.properties.length } custom properties, ${ data.surface.routes.length } routes)` );
 	}
 	if ( found.length ) {
 		found.forEach( ( p ) => console.error( p ) );

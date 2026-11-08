@@ -57,6 +57,7 @@ function head( title, description, url, depth, css, { under = '', label = '' } =
 <meta name="color-scheme" content="light">
 <link rel="preload" href="${ up }fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${ up }fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="${ up }tokens.css">
 <link rel="stylesheet" href="${ css }">
 </head>
 <body>
@@ -92,7 +93,13 @@ const HANDBOOKS = [
 	{ slug: 'network', file: 'docs/learn/network.md', label: 'Clients and networks' },
 	// For developers.
 	{ slug: 'extensions', file: 'docs/extensions.md', label: 'Extensions' },
-	{ slug: 'player', file: 'docs/player.md', label: 'The player' },
+	{ slug: 'player', file: 'docs/player.md', label: 'How the player works' },
+	{ slug: 'isolation', file: 'docs/isolation.md', label: 'Isolation' },
+	// For whoever runs Riff for others.
+	{ slug: 'verify', file: 'docs/verify.md', label: 'Verifying a release' },
+	// For whoever works on Riff itself.
+	{ slug: 'contributing', file: '.github/CONTRIBUTING.md', label: 'Contributing' },
+	{ slug: 'native', file: 'docs/native.md', label: 'What WordPress has' },
 ];
 
 /**

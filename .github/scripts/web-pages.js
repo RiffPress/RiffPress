@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * Writes site/web/: one page per browser API or CSS feature the player uses, from site/web/web.json,
- * plus the index of them and the sitemap. Run `npm run docs:web` to see them locally.
+ * Writes site/web/: one page, Built on the open web, with a section for each browser API or CSS
+ * feature the player uses, from site/web/web.json, and the sitemap. Run `npm run docs:web` to see
+ * it locally.
  *
- * Each page links the lines it quotes, so the pages are built by the Pages deploy from the commit it
- * publishes, and are not committed: a committed copy changed with every edit above a quoted line.
+ * The page links the lines it quotes, so it is built by the Pages deploy from the commit it
+ * publishes, and is not committed: a committed copy changed with every edit above a quoted line.
  * web.json names a quote by its file and its code, and by the line above it (`after`) only when the
  * code appears earlier in the file too. --check fails when a quote is no longer in its file, and
  * when the committed sitemap is out of date.
@@ -31,29 +32,7 @@ const SPEC_HOSTS = [
 ];
 const shell = require( './site-shell.js' );
 const hooksReference = require( './hooks-reference.js' );
-const { esc, inline, foot, pager } = shell;
-const head = ( title, description, url, depth, label = '' ) =>
-	shell.head( title, description, url, depth, `${ depth === 2 ? '../' : '' }web.css`, { label } );
-
-const SHOTS = {
-	'phone-now-playing': { wide: false, alt: 'Now Playing on a phone: the cover, the title and artist, a seek bar, and the play controls' },
-	'phone-post': { wide: false, alt: 'A post with its tracks listed, and the player bar along the bottom of the screen' },
-	'phone-up-next': { wide: false, alt: 'Now Playing with the Up next sheet open, listing the rest of the post\'s tracks' },
-	'desktop-now-playing': { wide: true, alt: 'Now Playing on a wide screen: the Song and Video switch at the top, the cover on the left, the Up next list on the right, and the player bar along the bottom' },
-	'desktop-listen': { wide: true, alt: 'The Listen page: the library, the demo\'s four albums as drawn record covers' },
-};
-
-function picture( shot ) {
-	const s = SHOTS[ shot.image ];
-	if ( ! s ) {
-		throw new Error( `Unknown screenshot ${ shot.image }` );
-	}
-	const base = `../../${ shot.image }`;
-	if ( s.wide ) {
-		return `<picture><source type="image/avif" srcset="${ base }.avif 2880w, ${ base }-1440.avif 1440w" sizes="(max-width: 1200px) 100vw, 760px"><img class="desk" src="${ base }.png" width="2880" height="1800" alt="${ esc( s.alt ) }" loading="lazy" decoding="async"></picture>`;
-	}
-	return `<span class="device"><picture><source type="image/avif" srcset="${ base }.avif"><img src="${ base }.png" width="780" height="1688" alt="${ esc( s.alt ) }" loading="lazy" decoding="async"></picture></span>`;
-}
+const { esc, inline, referencePage } = shell;
 
 function groups( entries ) {
 	const out = new Map();
@@ -66,82 +45,60 @@ function groups( entries ) {
 	return out;
 }
 
-function sidebar( entries, current, depth ) {
-	const up = depth === 2 ? '../' : '';
-	// No title of its own: the Developers bar and the breadcrumbs already name the section.
-	let html = '<aside class="side" aria-label="All the features">';
-	for ( const [ group, list ] of groups( entries ) ) {
-		html += `<h2>${ esc( group ) }</h2><ul>`;
-		for ( const e of list ) {
-			const here = e.slug === current;
-			html += here ? `<li><a href="${ up }${ e.slug }/" aria-current="page">${ esc( e.name ) }</a></li>` : `<li><a href="${ up }${ e.slug }/">${ esc( e.name ) }</a></li>`;
-		}
-		html += '</ul>';
-	}
-	return html + '</aside>';
-}
+const groupId = ( group ) => `group-${ group.toLowerCase().replace( /[^a-z0-9]+/g, '-' ) }`;
 
-function page( e, i, entries ) {
-	const prev = entries[ i - 1 ];
-	const next = entries[ i + 1 ];
-	let html = head( e.name, e.summary, `web/${ e.slug }/`, 2, e.name );
-	html += `<div class="wrap layout">
-<main id="main">
-<h1>${ esc( e.name ) }</h1>
-<p class="lede">${ inline( e.summary ) }</p>
-<figure>${ picture( e.shot ) }<figcaption>${ inline( e.shot.caption ) }</figcaption></figure>
-<h2>How Riff uses it</h2>
+/**
+ * One feature: what it is for, how Riff uses it, why, what happens without it, and the lines that
+ * call it, each linked at the commit the page was published from.
+ *
+ * @param {Object} e An entry of web.json.
+ * @return {string} HTML.
+ */
+function feature( e ) {
+	let html = `<section class="feature" id="${ e.slug }"><h3 class="is-toc-heading"><a href="#${ e.slug }">${ esc( e.name ) }</a></h3>
+<p class="feature-summary">${ inline( e.summary ) }</p>
+<h4>How Riff uses it</h4>
 <p>${ inline( e.how ) }</p>
-<h2>Why</h2>
+<h4>Why</h4>
 <p>${ inline( e.why ) }</p>
 `;
 	if ( e.fallback ) {
-		html += `<h2>Without it</h2>\n<p>${ inline( e.fallback ) }</p>\n`;
+		html += `<h4>Without it</h4>\n<p>${ inline( e.fallback ) }</p>\n`;
 	}
-	html += '<h2>Where</h2>\n<ul class="where">';
+	html += '<h4>Where</h4>\n<ul class="where">';
 	for ( const w of e.where ) {
 		html += `<li><a href="${ REPO }${ w.file }#L${ w.line }">${ esc( w.file ) }, line ${ w.line }</a><pre><code>${ esc( w.code ) }</code></pre></li>`;
 	}
-	html += `</ul>
-<p class="fine">Links open the source at the commit this page was published from.</p>
+	return html + `</ul>
 <p class="fine">Specification: <a href="${ esc( e.spec.url ) }">${ esc( e.spec.name ) }</a>. Reference: <a href="${ esc( e.mdn ) }">${ esc( e.name ) } on MDN</a>.</p>
-${ pager( prev && [ prev.name, `../${ prev.slug }/` ], next && [ next.name, `../${ next.slug }/` ] ) }</main>
-${ sidebar( entries, e.slug, 2 ) }
-</div>
+</section>
 `;
-	return html + foot( '../../' );
 }
 
 function index( entries ) {
-	let html = head( 'Built on the open web', 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.', 'web/', 1 );
-	html += `<main id="main" class="wrap index">
-<h1>Built on the open web</h1>
-<p class="lede">Every browser API and CSS feature the player uses, and what each one is for.</p>
-<div class="groups">`;
+	let body = '<section class="summary"><p>Every browser API and CSS feature the player uses, how and why it uses each, and what happens without it. The lines quoted open at the commit this page was published from.</p></section>\n';
+	const toc = [];
 	for ( const [ group, list ] of groups( entries ) ) {
-		html += `<section><h2>${ esc( group ) }</h2><ul>`;
-		for ( const e of list ) {
-			html += `<li><a href="${ e.slug }/">${ esc( e.name ) }</a><span>${ inline( e.summary ) }</span></li>`;
-		}
-		html += '</ul></section>';
+		toc.push( [ groupId( group ), group, list.map( ( e ) => [ e.slug, e.name ] ) ] );
+		body += `<section class="features"><h2 id="${ groupId( group ) }" class="is-toc-heading"><a href="#${ groupId( group ) }">${ esc( group ) }</a></h2>\n${ list.map( feature ).join( '' ) }</section>\n`;
 	}
-	return html + '</div>\n</main>\n' + foot( '../' );
+	return referencePage( {
+		title: 'Built on the open web',
+		description: 'Every browser API and CSS feature the Riff player calls, each with how and why it is used.',
+		url: 'web/',
+		h1: '<h1>Built on the open web</h1>',
+		toc,
+		body,
+	} );
 }
 
-function sitemap( entries ) {
+function sitemap() {
+	const nav = require( './site-nav.js' );
 	let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-	xml += '  <url><loc>{{pages_url}}download/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n';
-	xml += '  <url><loc>{{pages_url}}developers/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n';
-	xml += '  <url><loc>{{pages_url}}add-music/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n';
-	xml += '  <url><loc>{{pages_url}}built/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
-	xml += '  <url><loc>{{pages_url}}web/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
-	for ( const e of entries ) {
-		xml += `  <url><loc>{{pages_url}}web/${ e.slug }/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>\n`;
+	const pages = [ ...nav.entries().values() ].map( ( e ) => e.node.href ).filter( ( h ) => typeof h === 'string' );
+	for ( const p of pages ) {
+		xml += `  <url><loc>{{pages_url}}${ p }</loc><changefreq>monthly</changefreq><priority>${ p === 'developers/' || p === 'download/' ? '0.9' : '0.6' }</priority></url>\n`;
 	}
-	for ( const p of [ 'php', 'javascript', 'rest', 'css', ...shell.HANDBOOKS.map( ( h ) => h.slug ) ] ) {
-		xml += `  <url><loc>{{pages_url}}developers/${ p }/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n`;
-	}
-	xml += '  <url><loc>{{pages_url}}developers/hooks/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>\n';
 	for ( const p of hooksReference.pages( hooksReference.collect() ) ) {
 		xml += `  <url><loc>{{pages_url}}developers/hooks/${ p.slug }/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>\n`;
 	}
@@ -200,8 +157,7 @@ function build() {
 	}
 	const files = new Map();
 	files.set( path.join( DIR, 'index.html' ), index( entries ) );
-	entries.forEach( ( e, i ) => files.set( path.join( DIR, e.slug, 'index.html' ), page( e, i, entries ) ) );
-	files.set( SITEMAP, sitemap( entries ) );
+	files.set( SITEMAP, sitemap() );
 	return files;
 }
 
@@ -226,7 +182,7 @@ function main() {
 			fs.writeFileSync( file, content );
 		}
 	}
-	// Pages whose entry was removed.
+	// The pages each feature had of its own, before it was a section of the one page.
 	for ( const entry of check ? [] : fs.readdirSync( DIR, { withFileTypes: true } ) ) {
 		const file = path.join( DIR, entry.name, 'index.html' );
 		if ( entry.isDirectory() && ! files.has( file ) ) {
@@ -237,7 +193,8 @@ function main() {
 	if ( check && stale ) {
 		process.exit( 1 );
 	}
-	console.log( check ? `site/web's quotes are all in place (${ files.size - 2 } pages)` : `site/web written (${ files.size - 2 } pages)` );
+	const count = JSON.parse( fs.readFileSync( DATA, 'utf8' ) ).length;
+	console.log( check ? `site/web's quotes are all in place (${ count } features)` : `site/web written (${ count } features, one page)` );
 }
 
 if ( require.main === module ) {

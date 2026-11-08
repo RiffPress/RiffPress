@@ -1,0 +1,168 @@
+/* Riff's one visual system, shared by riffpress.com and the network's own pages (the sign-up,
+   Cloud inside each Riff's player, and Login with Riff). This file is the only place the values
+   live: site/tokens.css is the source, and network/plugins/riff-network/assets/tokens.css is a
+   byte-for-byte copy, which check-site.py fails on when the two differ. Each surface's own
+   stylesheet uses these names and sets no colour, size or ring of its own.
+
+   Paper and night, as a record sleeve is: paper for reading, with the ink wordmark on it, and
+   night wherever the player is, with the white one. Neither is pure: each neutral leans a
+   hair toward ember's hue (OKLCH hue 55, chroma under 0.01), so the page is warm without being
+   cream and the greys belong to it. What you press is quiet, ink on paper and paper on night,
+   so the covers bring the colour. The one colour of Riff's own is ember, a muted 1900K glow,
+   kept for what is live: the focus ring, what is playing, the selection. On paper it deepens
+   so it reads. The player takes its accent from the cover playing, with ember only as the
+   fallback (brand.css). Every pair below is WCAG AA or better; the ratio is beside each.
+
+   Type: EB Garamond sets titles, as a record's label is set; Schibsted Grotesk, a calm
+   newspaper grotesk, sets everything read or pressed. Both are under the SIL Open Font
+   Licence and served from here. */
+@font-face {
+	font-family: "Schibsted Grotesk";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(fonts/schibsted-grotesk.woff2) format("woff2");
+}
+
+@font-face {
+	font-family: "EB Garamond";
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url(fonts/eb-garamond.woff2) format("woff2");
+}
+
+:root {
+	/* paper: the white pages */
+	--white: oklch(0.992 0.002 70); /* the page */
+	--white-2: oklch(0.968 0.004 65); /* a quieter band on it */
+	--white-3: oklch(0.93 0.005 60); /* a picture's place while it loads */
+	--rule: oklch(0.89 0.006 60); /* hairlines, decorative */
+	--ink: oklch(0.18 0.008 55); /* text on paper, 18.4:1; the ink wordmark */
+	--ink-2: oklch(0.45 0.01 55); /* quieter text: on paper 7.3:1, on white-2 6.8:1 */
+	--ink-3: oklch(0.3 0.009 55); /* a lead's text, 13.4:1 */
+	--field-edge: oklch(0.56 0.01 55); /* a field's edge on paper, 4.6:1 */
+
+	/* night: the black bands, Cloud and the player */
+	--black: oklch(0.145 0.004 55); /* the ground */
+	--black-2: oklch(0.19 0.005 55); /* a raised surface */
+	--black-3: oklch(0.23 0.006 55); /* a surface over it, and its hover */
+	--black-4: oklch(0.28 0.007 55); /* a chip or hover on black-2, decorative */
+	--black-line: oklch(0.3 0.006 55); /* hairlines on night, decorative */
+	--on-black: oklch(0.955 0.006 75); /* text on night, 17.4:1; the white wordmark */
+	--on-black-2: oklch(0.8 0.009 65); /* quieter text: on night 10.6:1, black-2 9.9:1, black-3 9.0:1 */
+	--on-black-3: oklch(0.7 0.01 60); /* labels: on night 7.4:1, black-2 6.9:1 */
+
+	/* the one button: ink on paper, paper on night */
+	--primary: var(--ink); /* paper on it 18.4:1 */
+	--primary-hover: oklch(0.32 0.01 55); /* paper on it 12.4:1 */
+	--on-primary: var(--white);
+	--primary-on-black: var(--on-black); /* night on it 17.4:1 */
+	--primary-on-black-hover: oklch(0.86 0.008 65); /* night on it 12.9:1 */
+	--on-primary-on-black: var(--black);
+
+	/* ember, about 1900K, muted: the one colour, for what is live */
+	--ember: oklch(0.72 0.13 55); /* on night 7.7:1, black-2 7.2:1, black-3 6.6:1; night on it 7.7:1 */
+	--ember-deep: oklch(0.5 0.12 48); /* on paper 6.2:1, white-2 5.7:1: the ring and the current item */
+	--wash: oklch(0.91 0.045 60); /* selected words on paper, under ink 14.3:1 */
+
+	--error: oklch(0.5 0.17 28); /* on paper 6.4:1; paper on it 6.4:1 */
+	--error-on-black: oklch(0.78 0.12 28); /* on night 9.4:1, black-2 8.8:1 */
+
+	/* type: two families, and a scale whose steps are far enough apart to carry a role each */
+	--serif: "EB Garamond", garamond, "Times New Roman", serif;
+	--sans: "Schibsted Grotesk", -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif;
+	--text-label: 0.8125rem; /* 13px: a caption, a timecode */
+	--text-small: 0.9375rem; /* 15px: fine print, the bar */
+	--text-body: 1.0625rem; /* 17px: running text */
+	--text-lead: clamp(1.1875rem, 1.05rem + 0.55vw, 1.4375rem); /* 19 to 23px: a section's opening */
+	--text-title: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem); /* 26 to 36px: a part's title */
+	--text-heading: clamp(2.5rem, 1.6rem + 3.4vw, 4.5rem); /* 40 to 72px: a section's heading */
+	--text-display: clamp(3.5rem, 1.4rem + 6.6vw, 6rem); /* 56 to 96px: the page's one loud line */
+	--measure: 36rem; /* running text, about 68 characters */
+	--measure-read: 40rem; /* a page that is read, 70 characters at 17px */
+	--measure-head: 44rem; /* a section's heading and lead */
+	--measure-form: 24rem; /* a form's one column */
+
+	/* space: an 8px step, with 4 and 12 for what sits close */
+	--space-0: 4px;
+	--space-1: 8px;
+	--space-1-5: 12px;
+	--space-2: 16px;
+	--space-3: 24px;
+	--space-4: 32px;
+	--space-5: 48px;
+	--space-6: 64px;
+	--space-7: 96px;
+	--space-8: 128px;
+	--space-9: 192px;
+
+	/* shape: controls are nearly square, cards a little rounder, pictures of screens rounder */
+	--radius-control: 2px;
+	--radius-card: 8px;
+	--radius-frame: 12px;
+
+	/* one focus ring everywhere: 2px, 2px clear of what it rings */
+	--focus-width: 2px;
+	--focus-offset: 2px;
+
+	/* the one button, its small size for a bar, and a field the same height */
+	--control-height: 48px;
+	--control-height-small: 40px;
+	--control-pad: 28px;
+	--control-pad-small: 18px;
+
+	/* technical facts, an address, a format, a function, set small in the platform's mono, and
+	   numbers that line up: never a costume, only for what a machine would print */
+	--mono: ui-monospace, "SF Mono", sfmono-regular, menlo, consolas, monospace;
+	--text-mono: 0.8125rem; /* 13px */
+	--numerals: tabular-nums;
+
+	/* the grid: 12 columns, a column 1160px at most, its edge, and the bar */
+	--grid-columns: 12;
+	--grid-gap: var(--space-4);
+	--page-max: 72.5rem;
+	--page-edge: clamp(20px, 5vw, 80px);
+	--bar-height: 72px;
+	--wordmark-height: 32px;
+
+	/* hairlines: 1px, and one device pixel on a sharper screen */
+	--hairline: 1px;
+
+	/* depth, three layers and no more: the page; a screen raised on it; and a phone over that.
+	   Each is a hairline edge and a shadow that falls down and away, as light from above casts. */
+	--elevation-raised: 0 0 0 var(--hairline) oklch(0.18 0.008 55 / 0.1), 0 2px 4px oklch(0.1 0.004 55 / 0.08), 0 24px 48px -24px oklch(0.1 0.004 55 / 0.4);
+	--elevation-overlay: 0 0 0 var(--hairline) oklch(0.18 0.008 55 / 0.14), 0 4px 8px oklch(0.1 0.004 55 / 0.14), 0 40px 80px -24px oklch(0.1 0.004 55 / 0.6);
+	/* a screen's own edge, drawn over it, so it reads on night as on paper */
+	--edge-light: oklch(1 0 0 / 0.1);
+
+	/* motion: short, and eased out, as a hand lets go */
+	--t: 0.2s;
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-resolution: 2dppx) {
+
+	:root {
+		--hairline: 0.5px;
+	}
+}
+
+/* the ring, deep ember on paper; a night surface sets --focus to ember */
+:focus-visible {
+	outline: var(--focus-width) solid var(--focus, var(--ember-deep));
+	outline-offset: var(--focus-offset);
+}
+
+/* with reduced motion asked for, nothing travels: states still change, at once */
+@media (prefers-reduced-motion: reduce) {
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+		transition-duration: 0.01ms !important;
+	}
+}

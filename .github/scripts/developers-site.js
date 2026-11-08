@@ -31,7 +31,8 @@ const MOVED = [
 	[ 'accessibility/', 'accessibility/' ],
 ];
 // Files beside the pages that every page may need.
-const SHARED = [ 'neck.css', 'neck.svg', 'js', 'fonts', 'icons', 'brand' ];
+// tokens.css is riffpress.com's, byte for byte (tokens.js checks it): every page loads it first.
+const SHARED = [ 'tokens.css', 'neck.css', 'neck.svg', 'js', 'fonts', 'icons', 'brand' ];
 const ATTRS = /(\s)(href|src|content|action|srcset)="([^"]*)"/g;
 // A tag, or a block whose text is not markup: its opening tag is read, what is inside it is not.
 const TAGS =
@@ -243,6 +244,9 @@ function split( { out, dev, site, developers } ) {
 		fs.writeFileSync( to, html );
 	}
 
+	// What search reads: every page's title, door, summary and headings.
+	fs.writeFileSync( path.join( dev, 'search.json' ), JSON.stringify( searchIndex( dev ) ) );
+
 	// The sitemap: the host's pages, at their new addresses.
 	const map = path.join( out, 'sitemap.xml' );
 	if ( fs.existsSync( map ) ) {
@@ -303,6 +307,48 @@ function split( { out, dev, site, developers } ) {
 		moved: [ ...pages.keys() ],
 		problems: [ ...new Set( strays ), ...check( { dev, developers } ) ],
 	};
+}
+
+/**
+ * The search index for the host: for each page, its address from the host's root, its title, the
+ * door it is in, its summary, and each heading with an id, so a result can lead to the section.
+ * Entities are decoded and tags dropped; nothing else is kept, so the file stays small.
+ *
+ * @param {string} dev The developer host, as written.
+ * @return {Array} [ { u, t, d, s, h: [ [ id, text ] ] } ].
+ */
+function searchIndex( dev ) {
+	const text = ( html ) =>
+		html
+			.replace( /<[^>]+>/g, '' )
+			.replace( /&#(\d+);/g, ( m, n ) => String.fromCodePoint( Number( n ) ) )
+			.replace( /&#x([0-9a-f]+);/gi, ( m, n ) => String.fromCodePoint( parseInt( n, 16 ) ) )
+			.replace( /&quot;/g, '"' )
+			.replace( /&lt;/g, '<' )
+			.replace( /&gt;/g, '>' )
+			.replace( /&amp;/g, '&' )
+			.replace( /\s+/g, ' ' )
+			.trim();
+	const pages = fs
+		.readdirSync( dev, { recursive: true } )
+		.filter( ( f ) => f.endsWith( 'index.html' ) && ! f.startsWith( 'demo' ) )
+		.sort();
+	return pages.map( ( file ) => {
+		const html = fs.readFileSync( path.join( dev, file ), 'utf8' );
+		const main = html.slice( html.indexOf( '<main' ), html.indexOf( '</main>' ) );
+		// The page's own title, less the host's name: a hook's h1 is its whole call.
+		const title = html.match( /<title>([^<]*)<\/title>/ );
+		const door = html.match( /<span class="docs-where-up">([^<]*)<\/span>/ ) || html.match( /<span class="docs-where">([^<]*)<\/span>/ );
+		const summary = html.match( /<meta name="description" content="([^"]*)">/ );
+		const headings = [ ...main.matchAll( /<h[23][^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/h[23]>/g ) ].map( ( m ) => [ m[ 1 ], text( m[ 2 ] ) ] );
+		return {
+			u: file.replace( /index\.html$/, '' ),
+			t: title ? text( title[ 1 ] ).replace( / \| Riff Source$/, '' ) : '',
+			d: door ? text( door[ 1 ] ) : '',
+			s: summary ? text( summary[ 1 ] ) : '',
+			h: headings,
+		};
+	} );
 }
 
 /**
@@ -419,7 +465,7 @@ function check( { dev, developers } ) {
 	return [ ...new Set( problems ) ];
 }
 
-module.exports = { split, check, relative, MOVED };
+module.exports = { searchIndex, split, check, relative, MOVED };
 
 if ( require.main === module ) {
 	const [ out, dev, site, developers ] = process.argv.slice( 2 );

@@ -1,47 +1,15 @@
-/* source.riffpress.com: the docs, the download and the guide.
+/* source.riffpress.com: the docs.
 
-   One system with riffpress.com (site/brand/README.md has the values side by
-   side): paper whose neutrals lean a hair toward ember's hue, ink for text
-   and the one button, and ember, a muted 1900K, for links, the focus ring
-   and where you are. EB Garamond for titles, Schibsted Grotesk for
-   everything read or pressed, IBM Plex Mono for code. The frame is hairlines
-   on an exact grid, the sidebar, the article and "On this page"; the column
-   inside it is calm.
+   The values are riffpress.com's: ../tokens.css, which every page loads
+   first, is its file byte for byte (tokens.js copies and checks it). This
+   file sets no colour, face, step or ring of its own; it adds only what a
+   docs site needs and riffpress.com does not, in the block of Source's
+   tokens below, each made from the shared ones.
 
-   Every colour, size and step is a token in :root. Rules below use the
-   tokens, never a value. */
-
-@font-face {
-	font-family: "Schibsted Grotesk";
-	font-style: normal;
-	font-weight: 400 900;
-	font-display: swap;
-	src: url(../fonts/schibsted-grotesk.woff2) format("woff2");
-}
-
-@font-face {
-	font-family: "EB Garamond";
-	font-style: normal;
-	font-weight: 400 800;
-	font-display: swap;
-	src: url(../fonts/eb-garamond.woff2) format("woff2");
-}
-
-@font-face {
-	font-family: "IBM Plex Mono";
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
-	src: url(../fonts/ibm-plex-mono.woff2) format("woff2");
-}
-
-@font-face {
-	font-family: "IBM Plex Mono";
-	font-style: normal;
-	font-weight: 600;
-	font-display: swap;
-	src: url(../fonts/ibm-plex-mono-600.woff2) format("woff2");
-}
+   Read mode, after Impeccable: the frame is precise and quiet, hairlines on
+   an exact grid (the door's pages, the article, "On this page"); the column
+   inside it is calm, Schibsted Grotesk at a real measure. EB Garamond sets
+   titles. Ember marks links, the ring and where you are. */
 
 /* the local faces shown until the web fonts arrive, sized to their metrics
    so the swap moves nothing */
@@ -63,102 +31,48 @@
 	line-gap-override: 0%;
 }
 
+/* Source's tokens, each from the shared ones */
 :root {
 
-	/* paper, as riffpress.com's: each neutral at OKLCH hue 55-70, chroma
-	   under 0.01 */
-	--white: oklch(0.992 0.002 70); /* the page */
-	--white-2: oklch(0.968 0.004 65); /* code, the current link, hover */
-	--rule: oklch(0.89 0.006 60); /* hairlines */
+	/* the faces, with the fallbacks above before the platform's */
+	--text-face: "Schibsted Grotesk", "Schibsted Fallback", var(--sans);
+	--title-face: "EB Garamond", "Garamond Fallback", var(--serif);
 
-	/* a table's head, the brand's divider */
-	--rule-strong: oklch(0.8 0.008 58);
-	--field-edge: oklch(0.56 0.01 55); /* a field's edge, 4.6:1 */
-	--ink: oklch(0.18 0.008 55); /* text, 18.4:1 */
+	/* the docs' type: a page's title, its sections, a subsection, code */
+	--text-page: clamp(2.25rem, 1.6rem + 1.8vw, 3.25rem); /* 36 to 52px */
+	--text-section: var(--text-title); /* 26 to 36px */
+	--text-sub: 1.25rem; /* 20px */
+	--text-code: 0.875rem; /* 14px: a code block, read at length */
 
-	/* quieter text: 7.3:1 on white, 6.8:1 on white-2 */
-	--ink-2: oklch(0.45 0.01 55);
-	--ink-3: oklch(0.3 0.009 55); /* a lede, 13.4:1 */
-
-	/* ember, about 1900K, muted: deep on paper for links, the ring and where
-	   you are */
-	--ember-deep: oklch(0.5 0.12 48); /* 6.2:1 on white, 5.7:1 on white-2 */
-	--ember-ink: oklch(0.42 0.11 46); /* a link under the pointer, 8.7:1 */
-	--wash: oklch(0.91 0.045 60); /* selected words, under ink 14.3:1 */
-
-	/* the one button: ink on paper */
-	--primary: var(--ink);
-	--primary-hover: oklch(0.32 0.01 55);
-	--on-primary: var(--white);
-
-	/* type */
-	--serif: "EB Garamond", "Garamond Fallback", garamond, georgia, serif;
-	--sans: "Schibsted Grotesk", "Schibsted Fallback", -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
-	--mono: "IBM Plex Mono", ui-monospace, sfmono-regular, menlo, monospace;
-	--text-label: 0.8125rem; /* 13px: a label, a caption, the rail */
-	--text-small: 0.9375rem; /* 15px: the sidebar, a table, fine print */
-	--text-body: 1.0625rem; /* 17px: running text */
-	--text-code: 0.875rem; /* 14px: a code block */
-	--text-lead: 1.25rem; /* 20px: a page's opening */
-	--text-h3: 1.25rem; /* 20px */
-	--text-h2: 2rem; /* 32px */
-	--text-h1: clamp(2.25rem, 1.6rem + 1.8vw, 3.25rem); /* 36 to 52px */
-
-	/* 56 to 96px: the 404's one line */
-	--text-display: clamp(3.5rem, 2rem + 5vw, 6rem);
-	--leading: 1.65; /* 28px on 17px */
-	--leading-tight: 1.2;
+	/* a lede: the shared lead, held to 20px where it runs several lines */
+	--text-intro: min(var(--text-lead), 1.25rem);
+	--leading: 1.6;
 	--leading-ui: 1.45;
+	--leading-code: 1.715; /* 24px on 14px */
 
-	/* space: an 8px step, with 4 and 12 for what sits close */
-	--space-0: 4px;
-	--space-1: 8px;
-	--space-1-5: 12px;
-	--space-2: 16px;
-	--space-3: 24px;
-	--space-4: 32px;
-	--space-5: 48px;
-	--space-6: 64px;
-	--space-7: 96px;
-	--space-8: 128px;
-
-	/* the grid: sidebar, article, rail, each gap the same */
-	--edge: clamp(20px, 5vw, 64px);
-	--header-h: 64px;
+	/* the grid: the door's pages, the article, "On this page", one gutter
+	   between each, as wide as riffpress.com's page */
+	--gutter: calc(2 * var(--grid-gap));
 	--side-w: 15rem;
-	--article-w: 42rem; /* about 70 characters of body text */
 	--rail-w: 13rem;
-	--gutter: var(--space-6);
-	--page-w: calc(var(--side-w) + var(--article-w) + var(--rail-w) + 2 * var(--gutter));
-	--hairline: 1px;
-
-	/* shape and depth: the page is flat; only what opens over it is raised */
-	--radius-control: 2px;
-	--radius-code: 4px;
-	--radius-frame: 8px;
-	--shadow-popover: 0 12px 32px oklch(0.18 0.008 55 / 12%), 0 1px 2px oklch(0.18 0.008 55 / 8%);
+	--article-w: calc(var(--page-max) - var(--side-w) - var(--rail-w) - 2 * var(--gutter));
+	--header-h: var(--bar-height);
+	--wordmark: calc(var(--wordmark-height) - var(--space-0));
 	--scrim: oklch(0.18 0.008 55 / 40%);
-	--focus-width: 2px;
-	--focus-offset: 2px;
-	--control-height: 44px;
-
-	/* motion: colour only, short */
-	--t: 0.15s;
-	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* on a dense screen a hairline is one device pixel */
-@media (min-resolution: 2dppx) {
-
-	:root {
-		--hairline: 0.5px;
-	}
 }
 
 @media (width < 1200px) {
 
 	:root {
-		--gutter: var(--space-5);
+		--gutter: calc(1.5 * var(--grid-gap));
+	}
+}
+
+@media (width < 900px) {
+
+	:root {
+		--header-h: 56px;
+		--wordmark: calc(var(--wordmark-height) - var(--space-1));
 	}
 }
 
@@ -178,7 +92,8 @@ body {
 	margin: 0;
 	background: var(--white);
 	color: var(--ink);
-	font-family: var(--sans);
+	caret-color: var(--ember-deep);
+	font-family: var(--text-face);
 	font-size: var(--text-body);
 	line-height: var(--leading);
 	font-kerning: normal;
@@ -196,13 +111,11 @@ a {
 }
 
 a:hover {
-	color: var(--ember-ink);
+	color: var(--ink);
 	text-decoration-color: currentcolor;
 }
 
 :focus-visible {
-	outline: var(--focus-width) solid var(--ember-deep);
-	outline-offset: var(--focus-offset);
 	border-radius: var(--radius-control);
 }
 
@@ -256,23 +169,23 @@ h4 {
 }
 
 h1 {
-	font-family: var(--serif);
-	font-size: var(--text-h1);
-	font-weight: 500;
+	font-family: var(--title-face);
+	font-size: var(--text-page);
+	font-weight: 400;
 	line-height: 1.08;
-	letter-spacing: -0.012em;
+	letter-spacing: -0.015em;
 }
 
 h2 {
-	font-family: var(--serif);
-	font-size: var(--text-h2);
-	font-weight: 500;
-	line-height: var(--leading-tight);
-	letter-spacing: -0.005em;
+	font-family: var(--title-face);
+	font-size: var(--text-section);
+	font-weight: 400;
+	line-height: 1.15;
+	letter-spacing: -0.01em;
 }
 
 h3 {
-	font-size: var(--text-h3);
+	font-size: var(--text-sub);
 	font-weight: 600;
 	line-height: 1.35;
 	letter-spacing: -0.005em;
@@ -318,17 +231,17 @@ figcaption {
 	white-space: nowrap;
 }
 
-/* ---- the grid: the bar across the top, then the sidebar and the page, then
-   the footer. Every page sits on it, so a page with no sidebar starts its
+/* ---- the grid: the bar, then the door's pages and the page, then the
+   footer. Every page sits on it, so a page outside every door starts its
    title where the docs start theirs. */
 
 body {
 	display: grid;
 	grid-template-columns:
-		[full-start] minmax(var(--edge), 1fr)
+		[full-start] minmax(var(--page-edge), 1fr)
 		[side-start] var(--side-w)
-		[side-end main-start] minmax(0, calc(var(--page-w) - var(--side-w)))
-		[main-end] minmax(var(--edge), 1fr) [full-end];
+		[side-end main-start] minmax(0, calc(var(--page-max) - var(--side-w)))
+		[main-end] minmax(var(--page-edge), 1fr) [full-end];
 	grid-template-rows: auto 1fr auto;
 	min-height: 100vh;
 	min-height: 100dvh;
@@ -344,30 +257,34 @@ body > .docs-nav {
 	grid-row: 2;
 }
 
-body > main,
-body > .layout {
+body > main {
 	grid-column: main;
 	grid-row: 2;
 	min-width: 0;
 	padding-left: var(--gutter);
 }
 
-.wrap {
-	width: 100%;
-	max-width: calc(var(--page-w) + 2 * var(--edge));
-	margin-inline: auto;
-	padding-inline: var(--edge);
+/* the home and the missing page are indexes, not articles: they start at
+   the bar's edge and take the whole width */
+body > main:is(.home, .lost) {
+	grid-column: side-start / main-end;
+	padding-left: 0;
 }
 
-body > main.wrap,
-body > .layout.wrap {
+.wrap {
+	width: 100%;
+	max-width: calc(var(--page-max) + 2 * var(--page-edge));
+	margin-inline: auto;
+	padding-inline: var(--page-edge);
+}
+
+body > main.wrap {
 	max-width: none;
 	margin: 0;
 	padding-right: 0;
 }
 
-/* ---- the bar: Riff | Source at the left, the two other destinations at the
-   right */
+/* ---- the bar: Riff | Source, search, Download */
 
 .nav {
 	position: sticky;
@@ -380,8 +297,7 @@ body > .layout.wrap {
 .nav .wrap {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-3);
+	gap: var(--space-4);
 	height: var(--header-h);
 }
 
@@ -389,18 +305,19 @@ body > .layout.wrap {
 	display: flex;
 	align-items: center;
 	gap: var(--space-1-5);
+	margin-right: auto;
 }
 
 .mark {
 	display: flex;
 	align-items: center;
-	min-height: var(--control-height);
+	min-height: var(--control-height-small);
 }
 
 .mark img {
 	display: block;
 	width: auto;
-	height: 28px;
+	height: var(--wordmark);
 }
 
 .mark:focus-visible {
@@ -410,11 +327,11 @@ body > .layout.wrap {
 .brand .host {
 	display: flex;
 	align-items: center;
-	min-height: 24px;
+	min-height: var(--space-3);
 	padding-left: var(--space-1-5);
-	border-left: var(--hairline) solid var(--rule-strong);
+	border-left: var(--hairline) solid var(--field-edge);
 	color: var(--ink);
-	font-family: var(--serif);
+	font-family: var(--title-face);
 	font-size: 1.375rem;
 	line-height: 1;
 	text-decoration: none;
@@ -432,7 +349,7 @@ body > .layout.wrap {
 .nav nav a {
 	display: flex;
 	align-items: center;
-	min-height: var(--control-height);
+	min-height: var(--control-height-small);
 	color: var(--ink-2);
 	font-size: var(--text-small);
 	line-height: 1;
@@ -452,7 +369,193 @@ body > .layout.wrap {
 	text-underline-offset: 10px;
 }
 
-/* ---- the sidebar: groups by name, the page you are on in ember */
+/* search, as a field in the bar; docs.js shows it and opens the dialog */
+.search {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	width: 18rem;
+	height: var(--control-height-small);
+	margin: 0;
+	padding: 0 var(--space-1) 0 var(--space-1-5);
+	border: var(--hairline) solid var(--field-edge);
+	border-radius: var(--radius-control);
+	background: var(--white);
+	color: var(--ink-2);
+	font: inherit;
+	font-size: var(--text-small);
+	cursor: pointer;
+	transition: border-color var(--t);
+}
+
+.search[hidden] {
+	display: none;
+}
+
+.search:hover {
+	border-color: var(--ink-2);
+}
+
+.search-label {
+	flex: 1;
+	text-align: left;
+}
+
+.search-key {
+	padding: 2px var(--space-0);
+	border: var(--hairline) solid var(--rule);
+	border-radius: var(--radius-control);
+	color: var(--ink-2);
+	font-family: var(--text-face);
+	font-size: var(--text-label);
+	font-weight: 400;
+	font-variant-numeric: var(--numerals);
+}
+
+/* a lens, drawn: a ring and its handle */
+.search-icon {
+	position: relative;
+	flex: none;
+	width: 14px;
+	height: 14px;
+}
+
+.search-icon::before,
+.search-icon::after {
+	content: "";
+	position: absolute;
+}
+
+.search-icon::before {
+	inset: 0 3px 3px 0;
+	border: 1.5px solid currentcolor;
+	border-radius: 50%;
+}
+
+.search-icon::after {
+	right: 0;
+	bottom: 1px;
+	width: 5px;
+	height: 1.5px;
+	background: currentcolor;
+	transform: rotate(45deg);
+	transform-origin: right center;
+}
+
+/* the dialog over the page, the third layer */
+.search-dialog {
+	width: min(40rem, calc(100vw - 2 * var(--space-2)));
+	max-height: min(70vh, 36rem);
+	margin: 12vh auto auto;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	border-radius: var(--radius-card);
+	background: var(--white);
+	box-shadow: var(--elevation-overlay);
+	color: var(--ink);
+}
+
+.search-dialog[open] {
+	display: flex;
+	flex-direction: column;
+}
+
+.search-dialog::backdrop {
+	background: var(--scrim);
+}
+
+.search-dialog form {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1-5);
+	padding: 0 var(--space-2);
+	border-bottom: var(--hairline) solid var(--rule);
+	color: var(--ink-2);
+}
+
+.search-dialog input {
+	flex: 1;
+	min-width: 0;
+	height: var(--control-height);
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--ink);
+	font: inherit;
+	font-size: var(--text-body);
+	outline: none;
+}
+
+.search-dialog input::placeholder {
+	color: var(--ink-2);
+	opacity: 1;
+}
+
+.search-dialog input::-webkit-search-cancel-button {
+	display: none;
+}
+
+.search-close {
+	padding: var(--space-0) var(--space-1);
+	border: var(--hairline) solid var(--rule);
+	border-radius: var(--radius-control);
+	background: none;
+	color: var(--ink-2);
+	font: inherit;
+	font-size: var(--text-label);
+	cursor: pointer;
+}
+
+.search-results {
+	margin: 0;
+	padding: var(--space-1);
+	overflow-y: auto;
+	list-style: none;
+}
+
+.search-results:empty {
+	display: none;
+}
+
+.search-results a {
+	display: grid;
+	gap: 2px;
+	padding: var(--space-1) var(--space-1-5);
+	border-radius: var(--radius-control);
+	color: var(--ink);
+	text-decoration: none;
+}
+
+.search-results a:hover,
+.search-results a:focus-visible {
+	background: var(--white-2);
+	outline-offset: -2px;
+}
+
+.search-title {
+	font-size: var(--text-small);
+	font-weight: 500;
+}
+
+.search-where {
+	color: var(--ink-2);
+	font-size: var(--text-label);
+}
+
+.search-status {
+	margin: 0;
+	padding: var(--space-1) var(--space-2);
+	border-top: var(--hairline) solid var(--rule);
+	color: var(--ink-2);
+	font-size: var(--text-label);
+}
+
+.search-status:empty {
+	display: none;
+}
+
+/* ---- the sidebar: the door, then its pages, the page you are on in ember */
 
 .docs-nav {
 	border-right: var(--hairline) solid var(--rule);
@@ -517,6 +620,63 @@ body > .layout.wrap {
 	outline-offset: -2px;
 }
 
+/* the door, and the other three under it */
+.door-switch {
+	position: relative;
+	margin-bottom: var(--space-4);
+}
+
+.door-switch summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: var(--control-height-small);
+	padding: 0 var(--space-1-5);
+	border: var(--hairline) solid var(--field-edge);
+	border-radius: var(--radius-control);
+	color: var(--ink);
+	font-weight: 600;
+	list-style: none;
+	cursor: pointer;
+}
+
+.door-switch summary::-webkit-details-marker {
+	display: none;
+}
+
+.door-switch summary::after,
+.toc-box summary::after {
+	content: "";
+	flex: none;
+	width: 7px;
+	height: 7px;
+	margin-right: 2px;
+	border-right: 1.5px solid var(--ink-2);
+	border-bottom: 1.5px solid var(--ink-2);
+	transform: translateY(-2px) rotate(45deg);
+}
+
+.door-switch[open] summary::after,
+.toc-box[open] summary::after {
+	transform: translateY(2px) rotate(-135deg);
+}
+
+.door-switch ul {
+	position: absolute;
+	top: calc(100% + var(--space-0));
+	left: 0;
+	right: 0;
+	z-index: 5;
+	padding: var(--space-0);
+	border-radius: var(--radius-card);
+	background: var(--white);
+	box-shadow: var(--elevation-overlay);
+}
+
+.door-switch a {
+	margin: 0;
+}
+
 .docs-menu,
 .docs-scrim {
 	display: none;
@@ -526,9 +686,7 @@ body > .layout.wrap {
 
 main.doc,
 main.reference,
-main.index,
-main.dl,
-.layout {
+main.dl {
 	display: grid;
 	grid-template-columns: minmax(0, var(--article-w)) var(--rail-w);
 	column-gap: var(--gutter);
@@ -539,7 +697,6 @@ main.dl,
 
 main.doc > *,
 main.reference > *,
-main.index > *,
 main.dl > * {
 	grid-column: 1;
 	min-width: 0;
@@ -549,13 +706,7 @@ main.dl > * {
 	display: contents;
 }
 
-.layout > main {
-	grid-column: 1;
-	min-width: 0;
-}
-
-.toc,
-.layout > .side {
+.toc {
 	grid-column: 2;
 	grid-row: 1 / span 40;
 	align-self: start;
@@ -569,11 +720,12 @@ main.dl > * {
 	line-height: var(--leading-ui);
 }
 
-.lede {
-	max-width: 36rem;
-	margin: var(--space-2) 0 0;
+.lede,
+.reference .summary p {
+	max-width: var(--measure);
+	margin: var(--space-3) 0 0;
 	color: var(--ink-3);
-	font-size: var(--text-lead);
+	font-size: var(--text-intro);
 	line-height: 1.5;
 }
 
@@ -583,7 +735,11 @@ main.dl > * {
 
 /* a reference page opens with its summary, which is its lede */
 .entry:has(> .summary:first-child) {
-	margin-top: var(--space-2);
+	margin-top: 0;
+}
+
+.reference .summary p {
+	margin-bottom: var(--space-6);
 }
 
 /* the article's rhythm: more room over a heading than under it */
@@ -594,15 +750,16 @@ main h2 {
 
 main h3 {
 	margin: var(--space-5) 0 var(--space-1);
+	scroll-margin-top: calc(var(--header-h) + var(--space-3));
 }
 
 main h4 {
-	margin: var(--space-3) 0 var(--space-1);
+	margin: var(--space-3) 0 var(--space-0);
 }
 
 .entry > h2:first-child,
-.entry > section:first-child > h2:first-child,
-.entry > section:first-child > :first-child {
+.entry > section:first-child > :first-child,
+.entry > .handbook > :first-child {
 	margin-top: 0;
 }
 
@@ -628,8 +785,11 @@ main li {
 	margin: 0 0 var(--space-1);
 }
 
+/* Schibsted's figures are tabular unless asked; a step's number sits
+   close to its point */
 main li::marker {
 	color: var(--ink-2);
+	font-variant-numeric: proportional-nums;
 }
 
 .fine {
@@ -649,12 +809,15 @@ main li::marker {
 	pointer-events: none;
 }
 
+.toc-box summary::after {
+	display: none;
+}
+
 .toc-box summary::-webkit-details-marker {
 	display: none;
 }
 
-.toc ul,
-.side ul {
+.toc ul {
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -664,8 +827,11 @@ main li::marker {
 	padding-left: var(--space-1-5);
 }
 
-.toc a,
-.side a {
+.toc li {
+	margin: 0;
+}
+
+.toc a {
 	display: block;
 	padding: 3px 0;
 	color: var(--ink-2);
@@ -673,30 +839,14 @@ main li::marker {
 	overflow-wrap: anywhere;
 }
 
-.toc a:hover,
-.side a:hover {
+.toc a:hover {
 	color: var(--ink);
 }
 
-/* the section being read (docs.js), and the feature you are on */
-.toc a[aria-current],
-.side a[aria-current] {
+/* the section being read (docs.js) */
+.toc a[aria-current] {
 	color: var(--ember-deep);
 	font-weight: 500;
-}
-
-.side h2 {
-	margin: var(--space-3) 0 var(--space-0);
-	color: var(--ink);
-	font-family: var(--sans);
-	font-size: var(--text-label);
-	font-weight: 600;
-	line-height: var(--leading-ui);
-	letter-spacing: 0;
-}
-
-.side h2:first-child {
-	margin-top: 0;
 }
 
 /* where to edit it, and the pages either side */
@@ -746,6 +896,109 @@ main li::marker {
 	content: " →";
 }
 
+/* ---- the home: the four doors, a list between hairlines */
+
+main.doc > .doors {
+	grid-column: 1 / -1;
+}
+
+.doors {
+	margin: var(--space-6) 0 0;
+	padding: 0;
+	border-top: var(--hairline) solid var(--rule);
+	list-style: none;
+}
+
+.doors li {
+	display: grid;
+	grid-template-columns: 16rem minmax(0, 1fr);
+	gap: var(--space-1) var(--gutter);
+	margin: 0;
+	padding: var(--space-4) 0;
+	border-bottom: var(--hairline) solid var(--rule);
+}
+
+.doors h2 {
+	grid-row: span 2;
+	margin: 0;
+}
+
+.doors h2 a {
+	color: var(--ink);
+	text-decoration: none;
+}
+
+.doors h2 a:hover {
+	color: var(--ember-deep);
+}
+
+.doors p {
+	margin: 0;
+	color: var(--ink-3);
+}
+
+.doors .doors-first {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-0) var(--space-3);
+	font-size: var(--text-small);
+}
+
+.doors .doors-first a {
+	color: var(--ink-2);
+}
+
+.doors .doors-first a:hover {
+	color: var(--ink);
+}
+
+/* a door's own page: its pages, each with what it covers */
+.pages-group {
+	margin: var(--space-5) 0 var(--space-1);
+	font-family: var(--text-face);
+	font-size: var(--text-small);
+	font-weight: 600;
+	line-height: var(--leading-ui);
+	letter-spacing: 0;
+}
+
+.door .entry > .pages-group:first-child {
+	margin-top: 0;
+}
+
+.pages {
+	margin: 0;
+	padding: 0;
+	border-top: var(--hairline) solid var(--rule);
+	list-style: none;
+}
+
+.pages li {
+	display: grid;
+	grid-template-columns: 12rem minmax(0, 1fr);
+	gap: var(--space-0) var(--space-4);
+	margin: 0;
+	padding: var(--space-1-5) 0;
+	border-bottom: var(--hairline) solid var(--rule);
+	line-height: var(--leading-ui);
+}
+
+.pages a {
+	color: var(--ink);
+	font-weight: 500;
+	text-decoration: none;
+}
+
+.pages a:hover {
+	color: var(--ember-deep);
+	text-decoration: underline;
+}
+
+.pages span {
+	color: var(--ink-2);
+	font-size: var(--text-small);
+}
+
 /* ---- pictures */
 
 figure {
@@ -754,12 +1007,12 @@ figure {
 	gap: var(--space-2);
 	margin: var(--space-4) 0;
 	padding: var(--space-4);
-	border-radius: var(--radius-frame);
+	border-radius: var(--radius-card);
 	background: var(--white-2);
 }
 
 figcaption {
-	max-width: 36rem;
+	max-width: var(--measure);
 	color: var(--ink-2);
 	font-size: var(--text-label);
 	line-height: var(--leading-ui);
@@ -772,7 +1025,7 @@ figcaption {
 	width: min(300px, 100%);
 	overflow: hidden;
 	border-radius: var(--radius-frame);
-	box-shadow: 0 0 0 var(--hairline) var(--rule);
+	box-shadow: var(--elevation-raised);
 }
 
 .device img,
@@ -783,8 +1036,8 @@ figcaption {
 }
 
 .desk {
-	border-radius: var(--radius-code);
-	box-shadow: 0 0 0 var(--hairline) var(--rule);
+	border-radius: var(--radius-card);
+	box-shadow: var(--elevation-raised);
 }
 
 /* ---- code */
@@ -794,13 +1047,13 @@ figcaption {
 	margin: 0 0 var(--space-3);
 	padding: var(--space-2) var(--space-3);
 	overflow: auto;
-	border-radius: var(--radius-code);
+	border-radius: var(--radius-control);
 	background: var(--white-2);
 	box-shadow: inset 0 0 0 var(--hairline) var(--rule);
 	color: var(--ink);
 	font-family: var(--mono);
 	font-size: var(--text-code);
-	line-height: 1.715; /* 24px */
+	line-height: var(--leading-code);
 	tab-size: 4;
 	scrollbar-width: thin;
 	scrollbar-color: var(--rule) transparent;
@@ -829,7 +1082,7 @@ figcaption {
 	min-width: 2.5em;
 	margin-right: var(--space-2);
 	color: var(--ink-2);
-	font-variant-numeric: tabular-nums;
+	font-variant-numeric: var(--numerals);
 	text-align: right;
 	user-select: none;
 }
@@ -877,7 +1130,7 @@ figcaption {
 	overflow-wrap: anywhere;
 }
 
-/* ---- tables: a rule under the head and each row, numbers in columns */
+/* ---- tables: a rule under the head and each row */
 
 .code-table {
 	width: 100%;
@@ -902,7 +1155,7 @@ figcaption {
 
 .code-table th {
 	padding-block: var(--space-1);
-	border-bottom-color: var(--rule-strong);
+	border-bottom-color: var(--field-edge);
 	color: var(--ink-2);
 	font-size: var(--text-label);
 	font-weight: 600;
@@ -920,14 +1173,14 @@ figcaption {
 .code-table td > .type {
 	color: var(--ink-2);
 	font-family: var(--mono);
-	font-size: var(--text-label);
+	font-size: var(--text-mono);
 	white-space: nowrap;
 }
 
 .changelog .code-table tr > :first-child {
 	width: 7rem;
 	white-space: nowrap;
-	font-variant-numeric: tabular-nums;
+	font-variant-numeric: var(--numerals);
 }
 
 .code-table td a {
@@ -960,7 +1213,7 @@ figcaption {
 .reference .code-title {
 	margin-bottom: var(--space-2);
 	font-family: var(--mono);
-	font-size: 1.5rem;
+	font-size: 1.375rem;
 	font-weight: 400;
 	line-height: 1.5;
 	letter-spacing: 0;
@@ -974,12 +1227,6 @@ figcaption {
 
 .code-title .arg-name {
 	color: var(--ink);
-}
-
-.reference .summary p {
-	color: var(--ink-3);
-	font-size: var(--text-lead);
-	line-height: 1.5;
 }
 
 .is-toc-heading a {
@@ -1038,7 +1285,7 @@ figcaption {
 .member .returns .type {
 	color: var(--ink-2);
 	font-family: var(--mono);
-	font-size: var(--text-label);
+	font-size: var(--text-mono);
 }
 
 .param-hash .type {
@@ -1100,23 +1347,23 @@ figcaption {
 
 /* the hooks: a search over the list it filters */
 .hooks-index .intro {
-	max-width: 36rem;
+	max-width: var(--measure);
 	margin: var(--space-2) 0 var(--space-4);
 	color: var(--ink-3);
-	font-size: var(--text-lead);
+	font-size: var(--text-intro);
 	line-height: 1.5;
 }
 
 .hook-search {
-	margin-bottom: var(--space-2);
+	margin-bottom: var(--space-3);
 }
 
 .hook-search input {
 	width: 100%;
-	max-width: 22rem;
-	height: var(--control-height);
+	max-width: var(--measure-form);
+	height: var(--control-height-small);
 	padding: 0 var(--space-1-5);
-	border: 1px solid var(--field-edge);
+	border: var(--hairline) solid var(--field-edge);
 	border-radius: var(--radius-control);
 	background: var(--white);
 	color: var(--ink);
@@ -1186,40 +1433,26 @@ figcaption {
 	overflow-wrap: anywhere;
 }
 
-/* ---- Built on the open web: the features in groups */
-
-.groups {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--space-5) var(--gutter);
-	margin-top: var(--space-5);
+/* Built on the open web: a section for each feature, under its group */
+.features > h2 {
+	margin-bottom: 0;
 }
 
-.groups h2 {
-	margin: 0 0 var(--space-1-5);
-	font-family: var(--sans);
-	font-size: var(--text-small);
-	font-weight: 600;
-	line-height: var(--leading-ui);
+.feature {
+	padding-top: var(--space-4);
 }
 
-.groups ul {
-	display: grid;
-	gap: var(--space-1-5);
-	margin: 0;
-	padding: 0;
-	list-style: none;
+.feature + .feature {
+	margin-top: var(--space-4);
+	border-top: var(--hairline) solid var(--rule);
 }
 
-.groups li {
-	display: grid;
-	margin: 0;
-	line-height: var(--leading-ui);
+.feature > h3 {
+	margin-top: 0;
 }
 
-.groups li span {
-	color: var(--ink-2);
-	font-size: var(--text-small);
+.feature-summary {
+	color: var(--ink-3);
 }
 
 /* ---- the guide and the download */
@@ -1240,7 +1473,7 @@ figcaption {
 	position: absolute;
 	right: calc(100% + 0.5em);
 	color: var(--ink-2);
-	font-variant-numeric: lining-nums tabular-nums;
+	font-variant-numeric: lining-nums var(--numerals);
 }
 
 .guide .toc-box > ul {
@@ -1259,7 +1492,7 @@ figcaption {
 	width: 1.25em;
 	padding-top: 3px;
 	color: var(--ink-2);
-	font-variant-numeric: tabular-nums;
+	font-variant-numeric: var(--numerals);
 }
 
 .with-cover {
@@ -1300,7 +1533,7 @@ figcaption {
 	display: inline-flex;
 	align-items: center;
 	min-height: var(--control-height);
-	padding: 0 var(--space-3);
+	padding: 0 var(--control-pad);
 	border: 1px solid var(--primary);
 	border-radius: var(--radius-control);
 	background: var(--primary);
@@ -1318,21 +1551,11 @@ figcaption {
 	color: var(--on-primary);
 }
 
-.btn.outline {
-	background: transparent;
-	color: var(--ink);
-}
-
-.btn.outline:hover {
-	background: var(--white-2);
-	color: var(--ink);
-}
-
 /* the download: the button and its fine print, what it needs beside them,
    between two rules */
 .get {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--space-3) var(--space-5);
 	align-items: start;
 	margin-top: var(--space-5);
@@ -1354,7 +1577,7 @@ figcaption {
 
 .get-needs div {
 	display: grid;
-	grid-template-columns: 6rem minmax(0, 16rem);
+	grid-template-columns: 6rem minmax(0, 1fr);
 	gap: var(--space-1-5);
 }
 
@@ -1394,7 +1617,7 @@ main.lost {
 .lost h1 {
 	font-size: var(--text-display);
 	line-height: 1;
-	letter-spacing: -0.02em;
+	letter-spacing: -0.03em;
 }
 
 .lost .lede {
@@ -1467,23 +1690,17 @@ figure img {
 
 	main.doc,
 	main.reference,
-	main.index,
-	main.dl,
-	.layout {
+	main.dl {
 		grid-template-columns: minmax(0, var(--article-w));
 	}
 
-	.toc,
-	.layout > .side {
+	.toc {
 		grid-column: 1;
 		grid-row: auto;
 		position: static;
 		max-height: none;
-		overflow: visible;
-	}
-
-	.toc {
 		margin-top: var(--space-4);
+		overflow: visible;
 		border-block: var(--hairline) solid var(--rule);
 		font-size: var(--text-small);
 	}
@@ -1496,24 +1713,14 @@ figure img {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		min-height: var(--control-height);
+		min-height: var(--control-height-small);
 		margin: 0;
 		cursor: pointer;
 		pointer-events: auto;
 	}
 
 	.toc-box summary::after {
-		content: "";
-		width: 7px;
-		height: 7px;
-		margin-right: var(--space-0);
-		border-right: 1.5px solid var(--ink-2);
-		border-bottom: 1.5px solid var(--ink-2);
-		transform: translateY(-2px) rotate(45deg);
-	}
-
-	.toc-box[open] summary::after {
-		transform: translateY(2px) rotate(-135deg);
+		display: block;
 	}
 
 	.toc-box > ul {
@@ -1524,30 +1731,22 @@ figure img {
 		padding: var(--space-0) 0;
 	}
 
-	.layout > .side {
-		margin-top: var(--space-6);
-		padding-top: var(--space-3);
-		border-top: var(--hairline) solid var(--rule);
-		font-size: var(--text-small);
+	.doors li {
+		grid-template-columns: 12rem minmax(0, 1fr);
 	}
 
 	/* no sidebar, so no empty column for it */
-	body:not(:has(> .docs-nav)) > main,
-	body:not(:has(> .docs-nav)) > .layout {
+	body:not(:has(> .docs-nav)) > main {
 		grid-column: side-start / main-end;
 		padding-left: 0;
 	}
 }
 
 /* ---- a phone: one column, and the sidebar a Menu button, held at the top
-   of the window, that names where you are and opens the list as a sheet over
-   the page */
+   of the window, that names where you are and opens the door's pages as a
+   sheet over the page */
 
 @media (width < 900px) {
-
-	:root {
-		--header-h: 56px;
-	}
 
 	body {
 		display: flex;
@@ -1555,22 +1754,14 @@ figure img {
 	}
 
 	body > main,
-	body > .layout {
+	body > main.wrap {
 		flex: 1 0 auto;
-	}
-
-	body > main,
-	body > .layout,
-	body > main.wrap,
-	body > .layout.wrap {
-		padding-inline: var(--edge);
+		padding-inline: var(--page-edge);
 	}
 
 	main.doc,
 	main.reference,
-	main.index,
 	main.dl,
-	.layout,
 	main.lost {
 		padding-top: var(--space-4);
 		padding-bottom: var(--space-6);
@@ -1585,46 +1776,53 @@ figure img {
 		gap: var(--space-2);
 	}
 
-	.mark img {
-		height: 24px;
-	}
-
 	.brand .host {
 		font-size: 1.25rem;
-	}
-
-	.nav nav {
-		gap: var(--space-2);
 	}
 
 	.nav nav a {
 		font-size: var(--text-label);
 	}
 
+	/* search is its lens alone */
+	.search {
+		justify-content: center;
+		width: var(--control-height-small);
+		padding: 0;
+		border-color: transparent;
+		color: var(--ink);
+	}
+
+	.search-label,
+	.search-key {
+		display: none;
+	}
+
+	.search-dialog {
+		margin-top: var(--space-2);
+		max-height: calc(100dvh - 2 * var(--space-2));
+	}
+
 	html {
 		scroll-padding-top: calc(var(--control-height) + var(--space-2));
 	}
 
-	main h2 {
+	main h2,
+	main h3 {
 		scroll-margin-top: calc(var(--control-height) + var(--space-2));
 	}
 
-	h2 {
-		font-size: 1.75rem;
-	}
-
-	.lede,
-	.hooks-index .intro,
-	.reference .summary p {
-		font-size: 1.125rem;
-	}
-
-	.entry {
+	.entry,
+	.doors {
 		margin-top: var(--space-5);
 	}
 
 	main h2 {
 		margin-top: var(--space-5);
+	}
+
+	.reference .summary p {
+		margin-bottom: var(--space-5);
 	}
 
 	.docs-nav {
@@ -1636,7 +1834,7 @@ figure img {
 	.docs-nav > nav {
 		position: static;
 		max-height: none;
-		padding: var(--space-2) var(--edge) var(--space-3);
+		padding: var(--space-2) var(--page-edge) var(--space-3);
 	}
 
 	.docs-nav.has-menu {
@@ -1659,11 +1857,10 @@ figure img {
 		overflow-y: auto;
 		border-bottom: var(--hairline) solid var(--rule);
 		background: var(--white);
-		box-shadow: var(--shadow-popover);
+		box-shadow: var(--elevation-overlay);
 	}
 
 	.docs-nav a {
-		margin-left: calc(-1 * var(--space-1-5));
 		padding-block: 10px;
 	}
 
@@ -1674,11 +1871,11 @@ figure img {
 		width: 100%;
 		min-height: var(--control-height);
 		margin: 0;
-		padding: 0 var(--edge);
+		padding: 0 var(--page-edge);
 		border: 0;
 		background: none;
 		color: var(--ink);
-		font: 500 var(--text-small) / 1 var(--sans);
+		font: 500 var(--text-small) / 1 var(--text-face);
 		text-align: left;
 		cursor: pointer;
 	}
@@ -1702,7 +1899,7 @@ figure img {
 	.docs-where-up::after {
 		content: "/";
 		margin: 0 var(--space-1);
-		color: var(--rule-strong);
+		color: var(--field-edge);
 	}
 
 	/* three lines, a cross while open */
@@ -1770,24 +1967,29 @@ figure img {
 		padding: var(--space-2);
 	}
 
-	.wp-block-code,
-	.where pre {
-		margin-inline: calc(-1 * var(--edge));
-		padding-inline: var(--edge);
+	.wp-block-code {
+		margin-inline: calc(-1 * var(--page-edge));
+		padding-inline: var(--page-edge);
 		border-radius: 0;
 		box-shadow: inset 0 var(--hairline) 0 var(--rule), inset 0 calc(-1 * var(--hairline)) 0 var(--rule);
 	}
 
 	.where pre {
-		margin-inline: 0;
 		padding-inline: var(--space-2);
-		border-radius: var(--radius-code);
-		box-shadow: inset 0 0 0 var(--hairline) var(--rule);
 	}
 
-	.groups,
+	.doors li,
+	.pages li,
 	.get {
 		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.doors li {
+		padding: var(--space-3) 0;
+	}
+
+	.doors h2 {
+		grid-row: auto;
 	}
 
 	.with-cover {
@@ -1831,14 +2033,5 @@ figure img {
 	}
 }
 
-/* motion is colour and one icon; with less motion asked for, the icon turns
-   at once */
-@media (prefers-reduced-motion: reduce) {
-
-	.docs-menu-icon,
-	.docs-menu-icon::before,
-	.docs-menu-icon::after,
-	.is-toc-heading a::after {
-		transition: none;
-	}
-}
+/* motion is colour and one icon; tokens.css stills both for whoever asks
+   for less */
