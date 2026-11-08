@@ -710,7 +710,8 @@ function check( slug, found, manifests, riff ) {
 		}
 	}
 
-	const prefix = slug.replace( /-/g, '_' );
+	// Handles are named as WordPress names them, after the slug, hyphens and all (riff-sing-midi).
+	const prefix = slug;
 	for ( const [ kind, list ] of [ [ 'scripts', m.scripts || [] ], [ 'modules', m.modules || [] ] ] ) {
 		for ( const s of found[ kind ] ) {
 			if ( ! list.includes( s.value ) ) {

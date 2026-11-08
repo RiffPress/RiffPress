@@ -30,7 +30,8 @@
 		"hooks": [
 			"riff_register",
 			"riff_before_player",
-			"riff_track"
+			"riff_track",
+			"riff_abilities"
 		],
 		"functions": [
 			"riff_register_view"

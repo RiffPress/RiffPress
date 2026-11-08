@@ -436,6 +436,7 @@ final class Archives {
 			'skipped'  => array(),
 			'failed'   => array(),
 		);
+		// isolation: write -- a folder of its own under the temp folder, emptied and removed below.
 		wp_mkdir_p( $dir );
 		try {
 			$files = array();
@@ -529,6 +530,7 @@ final class Archives {
 			return new WP_Error( 'riff_archive_download', __( 'The recording is larger than Riff downloads.', 'riff' ) );
 		}
 		$file = $stem . '.' . $ext;
+		// isolation: write -- the download's .part file to its name, both in item()'s temp folder.
 		if ( ! rename( $tmp, $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- within a temporary folder of Riff's own.
 			wp_delete_file( $tmp );
 			return new WP_Error( 'riff_archive_download', __( 'The download could not be kept.', 'riff' ) );

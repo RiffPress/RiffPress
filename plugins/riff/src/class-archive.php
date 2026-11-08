@@ -506,6 +506,7 @@ final class Archive {
 		if ( ! $in ) {
 			return false;
 		}
+		// isolation: write -- the file its caller names, in a temp folder of its own or under uploads; an entry's name never becomes the path.
 		$out = fopen( $to, 'wb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- a file of any size, streamed.
 		if ( ! $out ) {
 			fclose( $in ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose

@@ -36,11 +36,14 @@
 		"edit_user",
 		"publish_pages",
 		"upload_files",
+		"export",
 		"manage_network_options"
 	],
 	"hosts": [
 		"self",
-		"*.gravatar.com"
+		"*.gravatar.com",
+		"*.loc.gov",
+		"api.europeana.eu"
 	],
 	"spawn": [
 		"ffmpeg"
