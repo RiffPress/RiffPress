@@ -128,6 +128,83 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$this->assertSame( 'riff_sign_in_limit', Codes::request( 'onemore@example.com' )->get_error_code() );
 	}
 
+	/**
+	 * Calls one of Codes' private counting methods.
+	 *
+	 * @param string $method  count, counted or uncount.
+	 * @param mixed  ...$args Its arguments.
+	 * @return mixed
+	 */
+	private function counting( string $method, ...$args ) {
+		$call = new ReflectionMethod( Codes::class, $method );
+		$call->setAccessible( true );
+		return $call->invoke( null, ...$args );
+	}
+
+	public function test_a_count_adds_one_each_time_and_starts_again_once_its_time_is_up(): void {
+		foreach ( array( false, true ) as $cache ) {
+			$was = wp_using_ext_object_cache( $cache );
+			try {
+				$name = 'riff_signin_rate_test_' . ( $cache ? 'cache' : 'table' );
+				$this->assertSame( 0, $this->counting( 'counted', $name ) );
+				$this->assertSame( 1, $this->counting( 'count', $name, 60 ) );
+				$this->assertSame( 2, $this->counting( 'count', $name, 60 ) );
+				$this->assertSame( 3, $this->counting( 'count', $name, 60 ) );
+				$this->assertSame( 3, $this->counting( 'counted', $name ), 'reading does not add' );
+				$this->counting( 'uncount', $name );
+				$this->assertSame( 0, $this->counting( 'counted', $name ) );
+			} finally {
+				wp_using_ext_object_cache( $was );
+			}
+		}
+
+		global $wpdb;
+		$name = 'riff_signin_rate_test_expired';
+		$this->counting( 'count', $name, 60 );
+		$this->counting( 'count', $name, 60 );
+		$wpdb->update( $wpdb->options, array( 'option_value' => (string) ( time() - 1 ) ), array( 'option_name' => '_transient_timeout_' . $name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$this->assertSame( 0, $this->counting( 'counted', $name ), 'an expired count reads as none' );
+		$this->assertSame( 1, $this->counting( 'count', $name, 60 ), 'and starts again' );
+		$this->assertGreaterThan( time(), (int) $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", '_transient_timeout_' . $name ) ), 'with a new time' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
+
+	public function test_two_counts_from_the_same_starting_value_both_land(): void {
+		$name   = 'riff_signin_rate_test_together';
+		$other  = null;
+		$inject = function ( $query ) use ( $name, &$other, &$inject ) {
+			if ( null === $other && str_contains( $query, 'option_value = option_value + 1' ) && str_contains( $query, $name ) ) {
+				// Another request counts after this one has started, before its own step lands.
+				remove_filter( 'query', $inject );
+				$other = $this->counting( 'count', $name, 60 );
+			}
+			return $query;
+		};
+		add_filter( 'query', $inject );
+		$mine = $this->counting( 'count', $name, 60 );
+		remove_filter( 'query', $inject );
+		$this->assertSame( 1, $other );
+		$this->assertSame( 2, $mine, 'both counted, neither lost' );
+		$this->assertSame( 2, $this->counting( 'counted', $name ) );
+	}
+
+	public function test_requests_that_arrive_together_stay_within_the_limit(): void {
+		self::factory()->user->create( array( 'user_email' => 'together@example.com' ) );
+		$answers = array();
+		$inject  = function ( $query ) use ( &$answers, &$inject ) {
+			if ( str_contains( $query, 'option_value = option_value + 1' ) && str_contains( $query, 'riff_signin_rate_email_' ) ) {
+				remove_filter( 'query', $inject );
+				for ( $i = 0; $i < Codes::PER_EMAIL + 2; $i++ ) {
+					$answers[] = Codes::request( 'together@example.com' );
+				}
+			}
+			return $query;
+		};
+		add_filter( 'query', $inject );
+		$answers[] = Codes::request( 'together@example.com' );
+		remove_filter( 'query', $inject );
+		$this->assertCount( Codes::PER_EMAIL, array_filter( $answers, 'is_array' ), 'only as many as the limit, however they arrive' );
+	}
+
 	public function test_the_link_in_the_email_signs_in_and_lands_where_the_code_was_asked_from(): void {
 		$user = self::factory()->user->create( array( 'user_email' => 'link@example.com' ) );
 		$sent = Codes::request( 'link@example.com', home_url( '/listen/?riff_view=albums' ) );

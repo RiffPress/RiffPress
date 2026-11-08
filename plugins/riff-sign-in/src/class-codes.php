@@ -23,7 +23,9 @@ defined( 'ABSPATH' ) || exit;
  * one when the site lets anyone register. The link asks before it uses the code, except in the
  * browser that asked for it, so a mail scanner that opens every link uses nothing up. The request
  * answers the same whether or not the address has an account, so it tells nobody who is a member.
- * Requests are limited per address and per network address, and a code allows five tries.
+ * Requests are limited per address and per network address, and a code allows five tries. Each
+ * request and each try is counted in one step, in the object cache when the site has a persistent
+ * one and in the options table otherwise, so requests that arrive together are each counted.
  */
 final class Codes {
 
@@ -58,6 +60,11 @@ final class Codes {
 	public const QUERY = 'riff-sign-in';
 
 	/**
+	 * The object cache group the counts are kept in, on a site with a persistent cache.
+	 */
+	private const GROUP = 'riff_signin';
+
+	/**
 	 * The cookie that marks the browser a code was asked from, so the link signs it straight in.
 	 */
 	public const COOKIE = 'riff_sign_in_browser';
@@ -86,7 +93,6 @@ final class Codes {
 				'email'    => $email,
 				'user'     => $user instanceof WP_User ? $user->ID : 0,
 				'hash'     => self::hash( $token, $code ),
-				'tries'    => 0,
 				'redirect' => self::redirect( $redirect ),
 			),
 			self::TTL
@@ -117,16 +123,19 @@ final class Codes {
 		if ( ! is_array( $kept ) ) {
 			return new WP_Error( 'riff_sign_in_expired', __( 'That code has expired. Ask for a new one.', 'riff-sign-in' ) );
 		}
-		if ( $kept['tries'] >= self::TRIES ) {
+		// The try is counted before the code is checked, so every try is counted, however many arrive
+		// at once, and only the first five are checked.
+		$tries = self::tries( $token );
+		if ( self::count( $tries, self::TTL ) > self::TRIES ) {
 			delete_transient( $key );
+			self::uncount( $tries );
 			return new WP_Error( 'riff_sign_in_tries', __( 'Too many tries. Ask for a new code.', 'riff-sign-in' ) );
 		}
 		if ( 6 !== strlen( $code ) || ! hash_equals( $kept['hash'], self::hash( $token, $code ) ) ) {
-			++$kept['tries'];
-			set_transient( $key, $kept, self::TTL );
 			return new WP_Error( 'riff_sign_in_wrong', __( 'That code did not match. Check the email and try again.', 'riff-sign-in' ) );
 		}
 		delete_transient( $key );
+		self::uncount( $tries );
 		$user = $kept['user'] ? get_user_by( 'id', (int) $kept['user'] ) : false;
 		if ( ! $user instanceof WP_User ) {
 			$user = self::make( (string) $kept['email'] );
@@ -157,7 +166,17 @@ final class Codes {
 	 */
 	public static function pending( string $token ): bool {
 		$kept = self::kept( $token );
-		return is_array( $kept ) && $kept['tries'] < self::TRIES;
+		return is_array( $kept ) && self::counted( self::tries( $token ) ) < self::TRIES;
+	}
+
+	/**
+	 * What a token's tries are counted under.
+	 *
+	 * @param string $token The token.
+	 * @return string
+	 */
+	private static function tries( string $token ): string {
+		return 'riff_signin_tries_' . preg_replace( '/[^A-Za-z0-9_-]/', '', $token );
 	}
 
 	/**
@@ -344,12 +363,107 @@ final class Codes {
 	 * @return bool
 	 */
 	private static function within( string $key, int $limit ): bool {
-		$count = (int) get_transient( 'riff_signin_rate_' . $key );
-		if ( $count >= $limit ) {
-			return false;
+		return self::count( 'riff_signin_rate_' . $key, self::WINDOW ) <= $limit;
+	}
+
+	/**
+	 * Adds one to a count and says what it is now, in one step, so two requests that arrive
+	 * together are both counted. A count lasts `$ttl` seconds from its first, then starts again.
+	 *
+	 * A site with a persistent object cache keeps the count there, by wp_cache_add() and
+	 * wp_cache_incr(). Any other keeps it in the options table as a transient, `_transient_{$name}`
+	 * with its `_transient_timeout_{$name}`, so WordPress's own clean-up of expired transients
+	 * removes it, but adds to it in SQL rather than reading it and writing it back.
+	 *
+	 * @param string $name What is counted.
+	 * @param int    $ttl  How long the count lasts, in seconds.
+	 * @return int The count, this one included. PHP_INT_MAX when the cache will not keep it, so a
+	 *             limit refuses rather than lets everything through.
+	 */
+	private static function count( string $name, int $ttl ): int {
+		if ( wp_using_ext_object_cache() ) {
+			for ( $i = 0; $i < 2; $i++ ) {
+				wp_cache_add( $name, 0, self::GROUP, $ttl );
+				$count = wp_cache_incr( $name, 1, self::GROUP );
+				if ( false !== $count ) {
+					return (int) $count;
+				}
+			}
+			return PHP_INT_MAX;
 		}
-		set_transient( 'riff_signin_rate_' . $key, $count + 1, self::WINDOW );
-		return true;
+		global $wpdb;
+		$value   = '_transient_' . $name;
+		$timeout = '_transient_timeout_' . $name;
+		$now     = time();
+		// A count whose time is up starts again: the count and its time in one statement, which
+		// holds both rows, so of two requests at the end of the time only one starts it again.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- the count must be read and written by MySQL in one step, which the options API can't.
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->options} AS v INNER JOIN {$wpdb->options} AS t ON t.option_name = %s SET v.option_value = '0', t.option_value = %s WHERE v.option_name = %s AND CAST( t.option_value AS UNSIGNED ) < %d",
+				$timeout,
+				(string) ( $now + $ttl ),
+				$value,
+				$now
+			)
+		);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query(
+			$wpdb->prepare(
+				"INSERT INTO {$wpdb->options} ( option_name, option_value, autoload ) VALUES ( %s, %s, 'off' ) ON DUPLICATE KEY UPDATE option_name = option_name",
+				$timeout,
+				(string) ( $now + $ttl )
+			)
+		);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query(
+			$wpdb->prepare(
+				"INSERT INTO {$wpdb->options} ( option_name, option_value, autoload ) VALUES ( %s, '1', 'off' ) ON DUPLICATE KEY UPDATE option_value = option_value + 1",
+				$value
+			)
+		);
+		// Read after this request's own step, so it is at least this request's count: another
+		// request's step in between only makes it higher, never lower, and never lets one more in.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$count = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $value ) );
+		return null === $count ? PHP_INT_MAX : (int) $count;
+	}
+
+	/**
+	 * What a count is now, without adding to it: 0 when there is none, or its time is up.
+	 *
+	 * @param string $name What is counted.
+	 * @return int
+	 */
+	private static function counted( string $name ): int {
+		if ( wp_using_ext_object_cache() ) {
+			return (int) wp_cache_get( $name, self::GROUP );
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT v.option_value FROM {$wpdb->options} AS v INNER JOIN {$wpdb->options} AS t ON t.option_name = %s WHERE v.option_name = %s AND CAST( t.option_value AS UNSIGNED ) >= %d",
+				'_transient_timeout_' . $name,
+				'_transient_' . $name,
+				time()
+			)
+		);
+	}
+
+	/**
+	 * Ends a count.
+	 *
+	 * @param string $name What is counted.
+	 */
+	private static function uncount( string $name ): void {
+		if ( wp_using_ext_object_cache() ) {
+			wp_cache_delete( $name, self::GROUP );
+			return;
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name IN ( %s, %s )", '_transient_' . $name, '_transient_timeout_' . $name ) );
 	}
 
 	/**
