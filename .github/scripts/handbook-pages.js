@@ -53,7 +53,7 @@ function slug( text, taken = new Map() ) {
 }
 
 /**
- * A heading's text as plain words, for "In this article" and the title.
+ * A heading's text as plain words, for "On this page" and the title.
  *
  * @param {string} text Markdown.
  * @return {string} Words.

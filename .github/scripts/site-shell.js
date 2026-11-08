@@ -54,25 +54,25 @@ function head( title, description, url, depth, css, { under = '', label = '', se
 <link rel="icon" href="${ up }icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="${ up }icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="${ up }icons/apple-touch-icon.png">
-<meta name="theme-color" content="#000">
+<meta name="theme-color" content="#fcfaf6">
 <meta name="color-scheme" content="light">
 <link rel="preload" href="${ up }fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${ up }fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${ css }">
-<link rel="stylesheet" href="${ up }neck.css">
 </head>
-<body data-neck="margin">
+<body>
 ${ nav.header( ctx, up ) }${ nav.sectionBar( ctx, up ) }${ nav.crumbs( ctx, up, search ) }`;
 }
 
 /**
- * The footer from site-nav.json, and the strings' script.
+ * The footer from site-nav.json, and the docs' script: the sidebar's Menu on a phone, and the
+ * section being read marked in "On this page".
  *
  * @param {string} up  Path back to the site root.
  * @param {Object} ctx Where the page sits, from site-nav.js's locate(), to mark its own link.
  * @return {string} HTML.
  */
-const foot = ( up, ctx = null ) => `${ nav.footer( ctx, up ) }<script type="module" src="${ up }js/neck.js"></script>
+const foot = ( up, ctx = null ) => `${ nav.footer( ctx, up ) }<script type="module" src="${ up }js/docs.js"></script>
 </body>
 </html>
 `;
@@ -88,7 +88,7 @@ const HANDBOOKS = [
 
 /**
  * A reference page, laid out like developer.wordpress.org's code reference: the bar, the
- * breadcrumbs, a title, and the article with "In this article" beside it.
+ * breadcrumbs, a title, and the article with "On this page" beside it.
  *
  * @param {Object} page             The page.
  * @param {string} page.title       The document title.
@@ -97,7 +97,7 @@ const HANDBOOKS = [
  * @param {string} page.under       The site-nav.json entry it sits under, for a page it does not list.
  * @param {string} page.label       Its name in the breadcrumbs, for a page it does not list.
  * @param {string} page.h1          The heading's HTML, with its attributes.
- * @param {Array}  page.toc         [ id, label, children ] entries for "In this article".
+ * @param {Array}  page.toc         [ id, label, children ] entries for "On this page".
  * @param {string} page.body        The article.
  * @param {string} page.search      HTML for the right of the breadcrumbs.
  * @param {string} page.edit        Where the page's source is edited, for a page written by hand.
@@ -113,14 +113,14 @@ function referencePage( { title, description, url, under = '', label = '', h1, t
 	html += `<main id="main" class="wrap reference">
 ${ h1 }
 <div class="with-toc">
-<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p>${ edit ? `<p class="toc-edit"><a href="${ esc( edit ) }">Edit this page on GitHub</a></p>` : '' }</aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary>${ list( toc ) }</details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p>${ edit ? `<p class="toc-edit"><a href="${ esc( edit ) }">Edit this page on GitHub</a></p>` : '' }</aside>
 <article class="entry">
 ${ body }${ nav.pager( ...nav.siblings( ctx, up ) ) }</article>
 </div>
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>

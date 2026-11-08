@@ -29,6 +29,10 @@ const SITE = path.join( ROOT, 'site' );
 // A link from the page to an entry; from the root to itself is "./", never an empty href.
 const to = ( up, href ) => up + href || './';
 
+// The main site, riffpress.com, which the wordmark leads back to from every page of the docs.
+const MAIN = 'https://riffpress.com/';
+const PRODUCT = 'Riff';
+
 const esc = ( s ) => String( s ).replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' ).replace( /"/g, '&quot;' );
 
 /**
@@ -108,8 +112,9 @@ function current( ctx, node ) {
 }
 
 /**
- * The header: the wordmark, leading to the host's home, then each section, the one the page is in
- * marked.
+ * The header: the wordmark, then each section, the one the page is in marked. The wordmark leads
+ * back to riffpress.com, and the host's own name beside it, "Source", to the host's home, as
+ * developer.wordpress.org and Stripe's docs lead back to their sites: Riff | Source.
  *
  * @param {Object} ctx From locate(), or null where no section is current (the 404).
  * @param {string} up  The path back to the site's root.
@@ -117,17 +122,23 @@ function current( ctx, node ) {
  * @return {string} HTML.
  */
 function header( ctx, up, nav = NAV ) {
-	// The wordmark leads to the host's home, the section marked root.
+	// "Source" leads to the host's home, the section marked root.
 	const mark = nav.sections.find( ( s ) => s.root );
 	const links = nav.sections.map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a>` ).join( '' );
+	const here = ctx && ctx.node === mark && ! ctx.leaf ? ' aria-current="page"' : '';
+	// "Riff Source" less the product's own name: "Source".
+	const name = nav.hosts[ mark.host ];
+	const host = name.startsWith( `${ PRODUCT } ` ) ? name.slice( PRODUCT.length + 1 ) : name;
 	return `<a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><a class="mark" href="${ to( up, mark.href ) }"${ ctx && ctx.node === mark && ! ctx.leaf ? ' aria-current="page"' : '' }><img src="${ up }brand/wordmark-ink.svg" alt="${ esc( nav.hosts[ mark.host ] ) }" width="64" height="30"></a><nav aria-label="Main">${ links }</nav></div></header>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="${ MAIN }"><img src="${ up }brand/wordmark-ink.svg" alt="${ PRODUCT }" width="64" height="30"></a><a class="host" href="${ to( up, mark.href ) }"${ here }>${ esc( host ) }</a></div><nav aria-label="Main">${ links }</nav></div></header>
 `;
 }
 
 /**
- * The section bar, for a section with pages of its own to list: its pages, a group as its name and
- * its pages. The section's own name is the header's, marked there, so the bar doesn't repeat it.
+ * The docs' sidebar, for a section with pages of its own to list: its home as Overview, then its
+ * pages, a group as its name over its pages. It sits left of the article on a wide screen, held in
+ * the window as the page scrolls, and is a Menu button's drawer on a phone (docs.js); without the
+ * script it is a list above the article. The section's own name is the header's, so it isn't repeated.
  *
  * @param {Object} ctx From locate(), or null.
  * @param {string} up  The path back to the site's root.
@@ -141,11 +152,13 @@ function sectionBar( ctx, up ) {
 	const s = ctx.section;
 	const item = ( n ) => {
 		if ( n.children ) {
-			return `<li class="local-group"><span class="local-label">${ esc( n.label ) }</span><ul>${ shown( n.children ).map( item ).join( '' ) }</ul></li>`;
+			const id = `docs-group-${ n.key }`;
+			return `<li class="local-group"><span class="local-label" id="${ id }">${ esc( n.label ) }</span><ul aria-labelledby="${ id }">${ shown( n.children ).map( item ).join( '' ) }</ul></li>`;
 		}
 		return `<li><a href="${ to( up, n.href ) }"${ current( ctx, n ) }>${ esc( n.label ) }</a></li>`;
 	};
-	return `<div class="local-nav"><div class="wrap"><nav aria-label="${ esc( s.label ) }"><ul>${ shown( s.children ).map( item ).join( '' ) }</ul></nav></div></div>
+	const overview = `<li class="local-home"><a href="${ to( up, s.href ) }"${ ctx.node === s && ! ctx.leaf ? ' aria-current="page"' : '' }>Overview</a></li>`;
+	return `<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span>Menu</button><nav id="docs-nav-list" aria-label="${ esc( s.label ) }"><ul>${ overview }${ shown( s.children ).map( item ).join( '' ) }</ul></nav></aside>
 `;
 }
 

@@ -17,7 +17,7 @@ const out = path.join( root, 'site', 'js' );
 
 const build = ( outdir ) =>
 	esbuild.build( {
-		entryPoints: [ 'neck' ].map( ( n ) =>
+		entryPoints: [ 'neck', 'docs' ].map( ( n ) =>
 			path.join( root, 'site', 'src', `${ n }.js` )
 		),
 		bundle: true,

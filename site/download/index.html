@@ -22,17 +22,16 @@
 <link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
-<meta name="theme-color" content="#000">
+<meta name="theme-color" content="#fcfaf6">
 <meta name="color-scheme" content="light">
 <link rel="preload" href="../fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/eb-garamond.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../web/web.css">
-<link rel="stylesheet" href="../neck.css">
 </head>
-<body data-neck="margin">
+<body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><a class="mark" href="../developers/"><img src="../brand/wordmark-ink.svg" alt="Riff Source" width="64" height="30"></a><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/" aria-current="page">Download</a><a href="../developers/">Docs</a></nav></div></header>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../developers/">Source</a></div><nav aria-label="Main"><a href="../add-music/">Add your music</a><a href="../download/" aria-current="page">Download</a><a href="../developers/">Docs</a></nav></div></header>
 <!-- /nav:top -->
 
 <main id="main" class="wrap doc dl">
@@ -52,7 +51,7 @@
 	</dl>
 </div>
 <div class="with-toc">
-<aside class="toc" aria-label="In this article"><details class="toc-box" open><summary>In this article</summary><ul><li><a href="#install">Install it</a></li><li><a href="#update">Update it</a></li><li><a href="#releases">Every release</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/download/index.html">Edit this page on GitHub</a></p></aside>
+<aside class="toc" aria-label="On this page"><details class="toc-box" open><summary>On this page</summary><ul><li><a href="#install">Install it</a></li><li><a href="#update">Update it</a></li><li><a href="#releases">Every release</a></li></ul></details><p class="to-top"><a href="#main"><span aria-hidden="true">↑</span> Back to top</a></p><p class="toc-edit"><a href="https://github.com/RiffPress/RiffPress/edit/main/site/download/index.html">Edit this page on GitHub</a></p></aside>
 <article class="entry">
 <h2 id="install">Install it</h2>
 <ol>
@@ -73,7 +72,7 @@
 </main>
 <script>
 // Folded on a narrow screen, as the code reference folds it.
-if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
+if ( window.matchMedia( '(max-width: 1240px)' ).matches ) {
 	document.querySelector( '.toc-box' ).open = false;
 }
 </script>
@@ -81,6 +80,6 @@ if ( window.matchMedia( '(max-width: 1100px)' ).matches ) {
 <!-- nav:footer -->
 <footer><div class="wrap"><p class="foot-license">Riff is free software from <a href="https://github.com/RiffPress">RiffPress</a>, under the GPL.</p><nav aria-label="Footer"><div class="foot-group"><p class="foot-label" id="foot-about">About</p><ul aria-labelledby="foot-about"><li><a href="../built/">How Riff is built</a></li><li><a href="../accessibility/">Accessibility</a></li><li><a href="https://riffpress.com/">Riff Cloud</a></li></ul></div><div class="foot-group"><p class="foot-label" id="foot-help">Help</p><ul aria-labelledby="foot-help"><li><a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md">Support</a></li><li><a href="https://github.com/RiffPress/RiffPress/blob/main/SECURITY.md">Security</a></li><li><a href="https://github.com/RiffPress/RiffPress">GitHub</a></li></ul></div></nav></div></footer>
 <!-- /nav:footer -->
-<script type="module" src="../js/neck.js"></script>
+<script type="module" src="../js/docs.js"></script>
 </body>
 </html>
