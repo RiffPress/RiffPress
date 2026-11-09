@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.5.0...riff-sign-in-v0.5.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **sign-in:** each sign-in attempt is counted in one step ([#995](https://github.com/RiffPress/RiffPress/issues/995)) ([00a6f53](https://github.com/RiffPress/RiffPress/commit/00a6f53666f40c1217efae140b737971040120d4))
+
 ## [0.5.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.4.3...riff-sign-in-v0.5.0) (2026-11-08)
 
 

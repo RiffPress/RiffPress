@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.6.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.5.0...riff-v6.6.0) (2026-11-09)
+
+
+### Features
+
+* **listen:** the app's fonts come with it, preloaded with the page and kept by a service worker for every launch after the first ([#990](https://github.com/RiffPress/RiffPress/issues/990)) ([fd28cdc](https://github.com/RiffPress/RiffPress/commit/fd28cdc8971ab6a55eb3d96ccf89fc7baaea242b))
+
+
+### Bug Fixes
+
+* **listen:** Inter and EB Garamond draw the Latin they are written in, with a fallback of each one's size ([#975](https://github.com/RiffPress/RiffPress/issues/975)) ([fa467d3](https://github.com/RiffPress/RiffPress/commit/fa467d3e0a1566b0cbb1480cf47f1cd7fe5ad4fb))
+* **player:** a video on its own keeps the screen on while it plays, as a song's video does ([#986](https://github.com/RiffPress/RiffPress/issues/986)) ([3366bcd](https://github.com/RiffPress/RiffPress/commit/3366bcd3726e35a9c4f13fd55e5a4c0f35cddb9b))
+* **riff:** deleting Riff removes its settings, listeners' choices and its hourly job, as isolation.json says ([#989](https://github.com/RiffPress/RiffPress/issues/989)) ([11e2502](https://github.com/RiffPress/RiffPress/commit/11e2502556f0023e346223e9997290e31c015a34))
+* **riff:** Download your Riff holds protected files kept outside the web root ([#987](https://github.com/RiffPress/RiffPress/issues/987)) ([ec0ca29](https://github.com/RiffPress/RiffPress/commit/ec0ca29d3b24def71ad308dd2c05afddd1d7d768))
+* **settings:** Settings › Riff says what Riff's background jobs and its protected folder setting are, so main's checks pass again ([#985](https://github.com/RiffPress/RiffPress/issues/985)) ([e257284](https://github.com/RiffPress/RiffPress/commit/e257284d6cbdd28cd824d0399b599b6f0f8d0f5c))
+
 ## [6.5.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.4.0...riff-v6.5.0) (2026-11-08)
 
 
