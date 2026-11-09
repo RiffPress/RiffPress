@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.5.1 =
+* Fixed: each sign-in attempt is counted in one step.
+
 = 0.5.0 =
 * Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
 
@@ -39,8 +42,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 = 0.4.1 =
 * Fixed: the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service.
-
-= 0.4.0 =
-* Listeners can stay in the player, with their profile but no dashboard, toolbar or wp-login.php registration form.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

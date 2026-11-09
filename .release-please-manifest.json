@@ -1,8 +1,8 @@
 {
-	"plugins/riff": "6.5.0",
+	"plugins/riff": "6.6.0",
 	"plugins/riff-lyrics": "1.9.0",
 	"packages/wp-api-coverage": "0.1.0",
-	"plugins/riff-sign-in": "0.5.0",
+	"plugins/riff-sign-in": "0.5.1",
 	"plugins/riff-chords": "0.7.0",
 	"plugins/riff-sing": "0.7.0",
 	"plugins/riff-meters": "0.2.0"

@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.5.0
+Stable tag: 6.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,14 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.6.0 =
+* The app's fonts come with it, preloaded with the page and kept by a service worker for every launch after the first.
+* Fixed: Inter and EB Garamond draw the Latin they are written in, with a fallback of each one's size.
+* Fixed: a video on its own keeps the screen on while it plays, as a song's video does.
+* Fixed: deleting Riff removes its settings, listeners' choices and its hourly job, as isolation.json says.
+* Fixed: Download your Riff holds protected files kept outside the web root.
+* Fixed: Settings › Riff says what Riff's background jobs and its protected folder setting are, so main's checks pass again.
+
 = 6.5.0 =
 * A zip imports privately by default, each track Protected and its album's post private, and --no-private imports an artist's own releases.
 * Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
@@ -173,9 +181,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: a track in Up next is highlighted to the panel's edges, and the panel's words and art stand on one edge.
 * Fixed: the record stops at the angle it stops at, and keeps it while Now Playing closes.
 * Fixed: the sleeve Riff draws and the record on the turntable are one pressing.
-
-= 6.2.2 =
-* Fixed: after a link the body's classes, the canonical address and the admin bar's edit links are the page's own.
-* Fixed: in the Listen app on a computer, a panel beside Now Playing stands from the window's top, with no black strip above it.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
