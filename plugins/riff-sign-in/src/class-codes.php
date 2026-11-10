@@ -23,7 +23,8 @@ defined( 'ABSPATH' ) || exit;
  * one when the site lets anyone register. The link asks before it uses the code, except in the
  * browser that asked for it, so a mail scanner that opens every link uses nothing up. The request
  * answers the same whether or not the address has an account, so it tells nobody who is a member.
- * Requests are limited per address and per network address, and a code allows five tries. Each
+ * Requests are limited per address and per network address, a hundred times as many on a local
+ * site, and a code allows five tries. Each
  * request and each try is counted in one step, in the object cache when the site has a persistent
  * one and in the options table otherwise, so requests that arrive together are each counted.
  */
@@ -55,6 +56,11 @@ final class Codes {
 	public const WINDOW = 15 * MINUTE_IN_SECONDS;
 
 	/**
+	 * How many times higher the limits are on a local site, where sign-in is tried over and over.
+	 */
+	private const LOCAL_LIMITS = 100;
+
+	/**
 	 * The query argument a link in the email carries: the token and the code, with a dot between.
 	 */
 	public const QUERY = 'riff-sign-in';
@@ -70,6 +76,14 @@ final class Codes {
 	public const COOKIE = 'riff_sign_in_browser';
 
 	/**
+	 * The environment, as the tests set it. WordPress keeps its own answer for the whole request,
+	 * so the tests can't change it there; nothing else sets this.
+	 *
+	 * @var string|null
+	 */
+	private static ?string $environment = null;
+
+	/**
 	 * Sends a code to an address, within the limits, and says which token the answer belongs to.
 	 *
 	 * @param string $email    The address typed.
@@ -81,7 +95,8 @@ final class Codes {
 		if ( ! is_email( $email ) ) {
 			return new WP_Error( 'riff_sign_in_email', __( 'That is not an email address.', 'riff-sign-in' ) );
 		}
-		if ( ! self::within( 'email_' . md5( strtolower( $email ) ), self::PER_EMAIL ) || ! self::within( 'ip_' . md5( self::ip() ), self::PER_IP ) ) {
+		$times = self::times();
+		if ( ! self::within( 'email_' . md5( strtolower( $email ) ), self::PER_EMAIL * $times ) || ! self::within( 'ip_' . md5( self::ip() ), self::PER_IP * $times ) ) {
 			return new WP_Error( 'riff_sign_in_limit', __( 'Too many codes asked for. Wait a few minutes and try again.', 'riff-sign-in' ), array( 'status' => 429 ) );
 		}
 		$token = Passkeys::b64( random_bytes( 24 ) );
@@ -353,6 +368,27 @@ final class Codes {
 	 */
 	private static function hash( string $token, string $code ): string {
 		return hash_hmac( 'sha256', $token . '|' . $code, wp_salt( 'auth' ) );
+	}
+
+	/**
+	 * How many times higher the limits are: one, so the real limits, anywhere but a local site.
+	 *
+	 * @return int
+	 */
+	private static function times(): int {
+		if ( 'local' !== ( self::$environment ?? wp_get_environment_type() ) ) {
+			return 1;
+		}
+		/**
+		 * Filters how many times higher the code request limits are on a local site, where
+		 * wp_get_environment_type() is 'local'. Outside a local environment they are never
+		 * raised, whatever this says.
+		 *
+		 * @since 0.6.0
+		 *
+		 * @param int $times How many times. Default 100.
+		 */
+		return max( 1, (int) apply_filters( 'riff_sign_in_limits', self::LOCAL_LIMITS ) );
 	}
 
 	/**

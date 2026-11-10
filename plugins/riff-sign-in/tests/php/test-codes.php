@@ -26,6 +26,17 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		add_action( 'riff_sign_in_code', array( $this, 'record' ), 10, 3 );
 		add_filter( 'riff_sign_in_send', '__return_false' );
 		$_SERVER['REMOTE_ADDR'] = '203.0.113.' . wp_rand( 1, 254 );
+		// wp-env is a local environment, where the limits are higher; the tests are of a real site's.
+		$this->environment( 'production' );
+	}
+
+	/**
+	 * Sets the environment Codes sees, since WordPress keeps its own for the whole run.
+	 *
+	 * @param string|null $type The environment, or null for WordPress's.
+	 */
+	private function environment( ?string $type ): void {
+		( new ReflectionProperty( Codes::class, 'environment' ) )->setValue( null, $type );
 	}
 
 	public function record( string $email, string $code, string $link ): void {
@@ -128,6 +139,34 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$this->assertSame( 'riff_sign_in_limit', Codes::request( 'onemore@example.com' )->get_error_code() );
 	}
 
+	public function test_the_limits_are_higher_only_on_a_local_site(): void {
+		add_filter( 'riff_sign_in_limits', static fn() => 1000 );
+		foreach ( array( 'production', 'staging', 'development' ) as $n => $type ) {
+			$this->environment( $type );
+			$_SERVER['REMOTE_ADDR'] = '198.51.100.' . ( 10 + $n );
+			for ( $i = 0; $i < Codes::PER_EMAIL; $i++ ) {
+				$this->assertIsArray( Codes::request( "$type@example.com" ), "$type request $i" );
+			}
+			$this->assertSame( 'riff_sign_in_limit', Codes::request( "$type@example.com" )->get_error_code(), "$type keeps the limit, whatever the filter says" );
+			for ( $i = 0; $i < Codes::PER_IP - Codes::PER_EMAIL; $i++ ) {
+				$this->assertIsArray( Codes::request( "$type$i@example.com" ), "$type address request $i" );
+			}
+			$this->assertSame( 'riff_sign_in_limit', Codes::request( "$type-more@example.com" )->get_error_code(), "$type keeps the network address limit" );
+		}
+
+		$this->environment( 'local' );
+		$_SERVER['REMOTE_ADDR'] = '198.51.100.20';
+		for ( $i = 0; $i <= Codes::PER_EMAIL; $i++ ) {
+			$this->assertIsArray( Codes::request( 'local@example.com' ), "local request $i" );
+		}
+
+		add_filter( 'riff_sign_in_limits', static fn() => 2, 11 );
+		for ( $i = 0; $i < 2 * Codes::PER_EMAIL; $i++ ) {
+			$this->assertIsArray( Codes::request( 'twice@example.com' ), "local request $i at twice" );
+		}
+		$this->assertSame( 'riff_sign_in_limit', Codes::request( 'twice@example.com' )->get_error_code(), 'the filter sets how many times higher, locally' );
+	}
+
 	/**
 	 * Calls one of Codes' private counting methods.
 	 *
@@ -217,6 +256,7 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 	}
 
 	public function tear_down(): void {
+		$this->environment( null );
 		unset( $_GET[ Codes::QUERY ], $_POST[ Codes::QUERY ], $_COOKIE[ Codes::COOKIE ], $_SERVER['HTTP_SEC_FETCH_SITE'], $_SERVER['HTTP_ORIGIN'], $_SERVER['HTTP_REFERER'] );
 		parent::tear_down();
 	}
