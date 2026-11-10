@@ -433,16 +433,7 @@ the groove under its stylus. Both are the inverse of the arm's own angle, so the
 rest on the point pressed. A touch on the record does nothing: a finger has the arm.
 
 Under the deck is a place a
-plugin fills with the `riff_below_turntable` action, which takes no room while nothing shows in it. Riff
-Meters, an experimental plugin beside Riff, puts a VU meter and a spectrum there, read from the music
-through `window.riff.analyser()`, as it passes through Web Audio everywhere but an iPhone. The VU meter is IEC 60268-17's: a needle on the rectified signal that
-reaches 99% of a steady tone's reading in 300 ms and passes it by about 1%, with 0 VU a sine at
--14 dBFS, the loudness the streaming services play at. The spectrum is 31 one-third-octave bands
-from 20 Hz to 20 kHz, each averaged over IEC 61672's Slow second, so a lossy file shows where its
-encoder stopped: a 128 kbps MP3 has nothing above about 16 kHz. Their row is kept from the moment
-the turntable shows, so the deck doesn't change size when the music first plays and they are drawn.
-Neither is shown with the video, for a listener who asks for less motion, or for a file from
-another origin that doesn't share over CORS, which Web Audio can't hear. A site that wants the cover on its own registers none:
+plugin fills with the `riff_below_turntable` action, which takes no room while nothing shows in it. A site that wants the cover on its own registers none:
 it turns the turntable off under **Settings › Media** (Now Playing), or with the `riff_turntable`
 filter. Off, the record never comes out of its sleeve, and a touch screen on its side or a folding
 phone shows the cover beside the controls, with no deck board or rack.

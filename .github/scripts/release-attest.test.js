@@ -28,7 +28,7 @@ test( 'every workflow attests each zip it releases', () => {
 
 test( 'the release workflow attests riff.zip and each extension', () => {
 	const text = fs.readFileSync( path.join( root, '.github/workflows/release-please.yml' ), 'utf8' );
-	for ( const name of [ 'riff', 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-meters', 'riff-sing' ] ) {
+	for ( const name of [ 'riff', 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing' ] ) {
 		assert.match( text, new RegExp( `subject-path: build/${ name }\\.zip\\n` ), name );
 		assert.match( text, new RegExp( `build-zip\\.sh ${ name }\\n` ), `${ name } is built by build-zip.sh` );
 	}

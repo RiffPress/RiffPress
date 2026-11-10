@@ -1,6 +1,6 @@
 # Verifying a release
 
-Every zip on a RiffPress GitHub release, `riff.zip` and each extension's (`riff-lyrics.zip`, `riff-chords.zip`, `riff-sign-in.zip`, `riff-sing.zip`, `riff-meters.zip`), carries a [GitHub artifact attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations). It is a signed record of the zip's SHA-256, the commit it was built from and the workflow run that built it, made by `release-please.yml` before the zip is uploaded. Releases made before the workflow began attesting have none. A host can check a zip against it before installing, and anyone can rebuild the zip and get the same bytes.
+Every zip on a RiffPress GitHub release, `riff.zip` and each extension's (`riff-lyrics.zip`, `riff-chords.zip`, `riff-sign-in.zip`, `riff-sing.zip`), carries a [GitHub artifact attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations). It is a signed record of the zip's SHA-256, the commit it was built from and the workflow run that built it, made by `release-please.yml` before the zip is uploaded. Releases made before the workflow began attesting have none. A host can check a zip against it before installing, and anyone can rebuild the zip and get the same bytes.
 
 ## Check a zip
 

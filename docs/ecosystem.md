@@ -11,12 +11,11 @@ Riff is nine plugins in two repositories, three hosts, and one release train. Th
 | **Riff Sign In** (`riff-sign-in`) | Listeners sign in with a passkey or an emailed code, from a sheet inside the player. No passwords. | Riff | RiffPress, `plugins/riff-sign-in/` | Its own release zip, `riff-sign-in-vX.Y.Z` |
 | **Riff Chords** (`riff-chords`) | A Chords view: a chord chart that follows the song, with practice controls. | Riff | RiffPress, `plugins/riff-chords/` | Its own release zip, `riff-chords-vX.Y.Z` |
 | **Riff Sing** (`riff-sing`) | A Sing view: sing the melody from a microphone or MIDI and hear how close you came. Audio never leaves the browser. | Riff | RiffPress, `plugins/riff-sing/` | Its own release zip, `riff-sing-vX.Y.Z` |
-| **Riff Meters** (`riff-meters`) | Experimental. A VU meter and a spectrum under the turntable. | Riff | RiffPress, `plugins/riff-meters/` | Its own release zip, `riff-meters-vX.Y.Z` |
 | **Riff Network** (`riff-network`) | Riff Cloud's own plugin: anyone signs in with their email and gets a Riff of their own on the network. | Riff, Riff Sign In | riffpress-com (private), `network/plugins/riff-network/` | Composer path package, deployed with the network |
 | **Riff Account** (`riff-account`) | Login with Riff: the network's main site signs listeners in to other sites with OpenID Connect. Off until `wp-config.php` names its issuer. | Riff Network, Riff Sign In | riffpress-com (private), `network/plugins/riff-account/` | Composer path package, deployed with the network |
 | **Presence API** (`presence-api`) | Who is here now, for the Together features. Not Riff's; a WordPress.org plugin. | WordPress | WordPress.org | Composer, from the WordPress.org zip |
 
-Riff Lyrics, Chords, Sing and Meters are *extensions*: plugins built only on Riff's public hooks, `window.riff` and REST, as anyone's plugin would be. `.github/scripts/extension-surface.test.js` fails if one of them reaches past that surface. When an extension needs something Riff doesn't offer, Riff grows a documented extension point; the extension never takes a shortcut.
+Riff Lyrics, Chords and Sing are *extensions*: plugins built only on Riff's public hooks, `window.riff` and REST, as anyone's plugin would be. `.github/scripts/extension-surface.test.js` fails if one of them reaches past that surface. When an extension needs something Riff doesn't offer, Riff grows a documented extension point; the extension never takes a shortcut.
 
 `packages/` holds what isn't a plugin: `wp-api-coverage` (released, `wp-api-coverage-vX.Y.Z`), `types` (the TypeScript types for the REST API and `window.riff`), `fixtures` (the demo recordings and test media), `benchmarks` and `dev` (local tooling).
 
@@ -29,7 +28,7 @@ Riff Lyrics, Chords, Sing and Meters are *extensions*: plugins built only on Rif
 | `riffpress.com` | The platform's own site | riffpress-com, `site/` | Cloudflare Pages |
 | `cloud.riffpress.com` | Riff Cloud: each person's Riff at `cloud.riffpress.com/<name>/`, a WordPress network | riffpress-com, `network/` | WP Engine |
 
-A self-hosted Riff is Riff plus whichever extensions and Riff Sign In its owner installs. Riff Cloud is Riff, Riff Sign In, Riff Chords and the Presence API at exact versions, plus Riff Network and Riff Account, all installed by Composer from `network/composer.json`. Riff Lyrics comes along inside Riff. Riff Sing and Riff Meters are left off Cloud on purpose.
+A self-hosted Riff is Riff plus whichever extensions and Riff Sign In its owner installs. Riff Cloud is Riff, Riff Sign In, Riff Chords and the Presence API at exact versions, plus Riff Network and Riff Account, all installed by Composer from `network/composer.json`. Riff Lyrics comes along inside Riff. Riff Sing is left off Cloud on purpose.
 
 ## How a change travels
 

@@ -29,7 +29,6 @@ for ( const [ slug, own ] of [
 	[ 'riff-lyrics', 'Lyrics' ],
 	[ 'riff-sing', 'Sing' ],
 	[ 'riff-chords', 'Chords' ],
-	[ 'riff-meters', 'Meters' ],
 ] ) {
 	const DIR = path.join( ROOT, 'plugins', slug );
 	const PHP = files( DIR, '.php' ).map( read ).join( '\n' );
@@ -95,7 +94,7 @@ const newer = ( a, b ) => {
 	}
 	return false;
 };
-for ( const slug of [ 'riff-lyrics', 'riff-sign-in', 'riff-sing', 'riff-chords', 'riff-meters' ] ) {
+for ( const slug of [ 'riff-lyrics', 'riff-sign-in', 'riff-sing', 'riff-chords' ] ) {
 	test( `${ slug }'s Requires Riff covers every Riff hook and API it uses`, () => {
 		const dir = path.join( ROOT, 'plugins', slug );
 		const header = read( path.join( dir, `${ slug }.php` ) ).match( /^ \* Requires Riff: *(\S+)/m );

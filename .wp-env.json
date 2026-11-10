@@ -7,7 +7,6 @@
     "./plugins/riff-chords",
     "./plugins/riff-sign-in",
     "./plugins/riff-sing",
-    "./plugins/riff-meters",
     "https://github.com/WordPress/presence-api/releases/download/v0.20.0/presence-api.zip",
     "https://github.com/WordPress/presence-api/releases/download/v0.20.0/presence-scenes.zip",
     "https://github.com/WordPress/mcp-adapter/releases/download/v0.7.1/mcp-adapter.zip"
@@ -38,7 +37,6 @@
         "./plugins/riff-chords",
         "./plugins/riff-sign-in",
         "./plugins/riff-sing",
-        "./plugins/riff-meters",
         "https://github.com/WordPress/presence-api/releases/download/v0.20.0/presence-api.zip",
         "https://github.com/WordPress/presence-api/releases/download/v0.20.0/presence-scenes.zip",
         "https://github.com/WordPress/mcp-adapter/releases/download/v0.7.1/mcp-adapter.zip",

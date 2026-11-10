@@ -224,7 +224,7 @@ class Test_Riff_Permissions extends Riff_TestCase {
 	 */
 	public function test_every_extension_in_the_repository_reads_as_plain_words(): void {
 		$found = 0;
-		foreach ( array( 'riff', 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing', 'riff-meters' ) as $slug ) {
+		foreach ( array( 'riff', 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing' ) as $slug ) {
 			$manifest = Permissions::manifest( dirname( RIFF_DIR ) . '/' . $slug );
 			if ( null === $manifest ) {
 				continue;
@@ -258,11 +258,11 @@ class Test_Riff_Permissions extends Riff_TestCase {
 		Permissions::activated( 'akismet/akismet.php' );
 		$this->assertFalse( get_transient( 'riff_permissions_pending_' . get_current_user_id() ), 'neither requires Riff' );
 
-		Permissions::activated( 'riff-meters/riff-meters.php' );
+		Permissions::activated( 'riff-chords/riff-chords.php' );
 		ob_start();
 		Permissions::notice();
 		$html = (string) ob_get_clean();
-		$this->assertStringContainsString( 'Riff Meters (Experimental) is on. Here is what it can do.', $html );
+		$this->assertStringContainsString( 'Riff Chords (Experimental) is on. Here is what it can do.', $html );
 		$this->assertStringContainsString( 'riff-permissions-notice', $html );
 
 		ob_start();
