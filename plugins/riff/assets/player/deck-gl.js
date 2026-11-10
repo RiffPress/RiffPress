@@ -1155,7 +1155,7 @@ export default function deckGl( P ) {
 		const off = [ 0, 0, 0 ];
 		const BLACK = [ 0.012, 0.012, 0.013 ];
 		const CHROME = [ 0.62, 0.63, 0.66 ];
-		// Each: mesh, where, colour, roughness, metalness, mode, its own light.
+		// Each: mesh, where, colour, roughness, metallicity, mode, its own light.
 		const items = [
 			[ m.desk, I, off, 1, 0, 5, off ],
 			[ keyed ? m.bodyKeyed : m.body, I, BLACK, 0.62, 0, 0, off ],
