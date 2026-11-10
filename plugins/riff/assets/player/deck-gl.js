@@ -1295,11 +1295,13 @@ export default function deckGl( P ) {
 	let lost = false;
 	// A listener whose system forces its own colours has the page's deck, which takes them.
 	const forced = window.matchMedia( '(forced-colors: active)' );
-	const active = () => ! lost && ! forced.matches && ! np.hidden && ! P.away() && root.dataset.riffTurntable !== 'off';
+	const active = () => ! lost && ! forced.matches && ! np.hidden && ! P.away() && root.dataset.riffTurntable !== 'off' && root.dataset.mode !== 'video';
 	function wake() {
 		quiet = 0;
 		if ( ! raf && active() ) {
 			last = '';
+			// The time since the last frame was a rest, not a slow frame.
+			then = performance.now();
 			raf = requestAnimationFrame( frame );
 		}
 	}

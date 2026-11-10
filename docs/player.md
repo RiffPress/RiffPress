@@ -404,7 +404,7 @@ The deck has its own keys on a strip along the front of its plinth: Start · Sto
 the track before and after, shuffle and repeat, each a button in the page (`.riff-keys` in
 `player.php`) with an amber lamp. Held, the track keys wind the music back or on. The speeds are
 the ones the deck's board has where the whole screen is the turntable: an LP at 45 runs fast, and
-the music is at its own speed again where the turntable isn't the view; the pitch fader stays the
+the music is at its own speed again where the turntable isn't the view, Now Playing closed or a video on the stage; the pitch fader stays the
 board's. Beside the keys is the deck's display (`assets/player/level.js`): the band the stylus is
 in, the time into its track, the speed, and a row of lamps lit to the music's RMS over 300 ms, with
 its peak held, read from the analyser.

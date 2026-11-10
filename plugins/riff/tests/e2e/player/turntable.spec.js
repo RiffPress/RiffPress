@@ -114,17 +114,20 @@ test.describe( 'Turntable', () => {
 
 	test( 'a mouse over the grooves says the band and the moment under it, and a press puts the needle down in that groove', async ( { page } ) => {
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
-		const box = await page.locator( '.riff-cue' ).boundingBox();
-		const middle = [ box.x + box.width / 2, box.y + box.height / 2 ];
 		const tip = page.locator( '.riff-cue-tip' );
 		// Halfway through the side, straight left of the spindle, clear of the arm.
 		const out = groove( 0.5 );
-		const at = [ middle[ 0 ] - ( out * box.width ) / 2, middle[ 1 ] ];
-		// Once the side's tracks are known, which the first move may be ahead of.
+		// Where the record is once it has come to rest on the platter, and once the side's tracks
+		// are known: the first look may be ahead of either.
+		let box, middle, at;
 		await expect( async () => {
+			box = await page.locator( '.riff-cue' ).boundingBox();
+			middle = [ box.x + box.width / 2, box.y + box.height / 2 ];
+			at = [ middle[ 0 ] - ( out * box.width ) / 2, middle[ 1 ] ];
 			await page.mouse.move( at[ 0 ], at[ 1 ] + 1 );
 			await page.mouse.move( ...at );
 			await expect( tip ).toBeVisible( { timeout: 500 } );
+			expect( await page.locator( '.riff-cue' ).boundingBox() ).toEqual( box );
 		} ).toPass();
 		await expect( tip ).toHaveText( /^A\d+ .+ · \d+:\d\d$/ );
 		// On the label there is no groove to say.

@@ -1651,6 +1651,29 @@ export function nowPlaying( P ) {
 			}
 		} );
 	}
+	// The transport is the bar's own or the deck's keys, never both (riff.css). When the one that
+	// has the focus goes, as the record comes out, is put away or a video takes the stage, the
+	// focus goes to the same control where it now is, rather than nowhere. And the deck's speed
+	// is asked again, since it holds only while the deck is the view (deckOnly()).
+	const transport = ( b ) => b?.closest?.( '.riff-bar-transport, .riff-keys' );
+	const inSight = ( b ) => b.offsetParent !== null && getComputedStyle( b ).visibility !== 'hidden';
+	let pressedOn = null;
+	root.addEventListener( 'focusin', ( e ) => {
+		const b = e.target.closest?.( '[data-riff-action]' );
+		pressedOn = transport( b ) ? b : null;
+	} );
+	new MutationObserver( () => {
+		retune( false );
+		requestAnimationFrame( () => {
+			const lost = pressedOn && ! inSight( pressedOn ) && [ document.body, pressedOn ].includes( document.activeElement );
+			if ( lost ) {
+				$$( `[data-riff-action="${ pressedOn.dataset.riffAction }"]` )
+					.find( ( b ) => b !== pressedOn && transport( b ) && inSight( b ) )
+					?.focus();
+			}
+		} );
+	} ).observe( root, { attributeFilter: [ 'data-riff-deck', 'data-mode', 'data-riff-showing' ] } );
+	new MutationObserver( () => retune( false ) ).observe( np, { attributeFilter: [ 'hidden' ] } );
 	$( '.riff-keys' )?.addEventListener( 'pointerdown', ( e ) => {
 		if ( e.target.closest( 'button' ) && e.pointerType === 'touch' ) {
 			navigator.vibrate?.( 8 );
@@ -1759,7 +1782,9 @@ export function nowPlaying( P ) {
 	const RPM = { 33: 100 / 3, 45: 45 };
 	const own = () => ( root.dataset.riffFormat === '7' ? '45' : '33' );
 	function deckOnly() {
-		if ( ! roomy() ) {
+		// Only while the deck is the view: closed, or on a video, the music is at its own speed,
+		// rather than fast or slow with no control in sight that says why.
+		if ( ! roomy() || np.hidden || P.isVideo?.() ) {
 			return 1;
 		}
 		// The pitch fader is the board's alone.
@@ -1916,7 +1941,7 @@ export function nowPlaying( P ) {
 		root.classList.contains( 'is-open' ) &&
 		! P.panelOpen &&
 		!! P.views?.get( P.showing )?.stage &&
-		( P.isVideo?.() ? ! P.video.paused : root.dataset.riffDeck === 'out' && ! P.audio.paused );
+		( P.isVideo?.() ? ! P.video.paused : root.dataset.riffDeck === 'out' && ! P.el().paused );
 	const focused = ( el ) =>
 		el.contains( document.activeElement ) &&
 		document.activeElement.matches( ':focus-visible' );
