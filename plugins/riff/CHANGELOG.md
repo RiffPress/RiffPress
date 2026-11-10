@@ -1,5 +1,20 @@
 # Changelog
 
+## [6.7.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.6.0...riff-v6.7.0) (2026-11-10)
+
+
+### Features
+
+* **riff:** the deck is as large as the window allows, holds its scene while a new album arrives, and its keys spring and lean and its record sways in the light as real ones do ([#1009](https://github.com/RiffPress/RiffPress/issues/1009)) ([a11ba3e](https://github.com/RiffPress/RiffPress/commit/a11ba3e7fbac58f6a6c8bafe600b84c504e3b6e1))
+* **riff:** the turntable is drawn lit in WebGL where a graphics card can, stands alone in a wide Now Playing with its own keys and display, and a press on the record puts the needle down there ([#1007](https://github.com/RiffPress/RiffPress/issues/1007)) ([6eddbd8](https://github.com/RiffPress/RiffPress/commit/6eddbd827fdb6ca706eb314c498b8a08a0f59885))
+
+
+### Bug Fixes
+
+* Bindings and Protect forget what they cached when a post or its meta changes, and Export keeps an archive's statements with its own handle ([#1005](https://github.com/RiffPress/RiffPress/issues/1005)) ([e086909](https://github.com/RiffPress/RiffPress/commit/e0869099bed7673aefeadb45a9fba37e7f168224))
+* **listen:** an empty riff_profile_url hides Edit profile instead of printing a link that reloads the app ([#1002](https://github.com/RiffPress/RiffPress/issues/1002)) ([df7958f](https://github.com/RiffPress/RiffPress/commit/df7958fdb5ce6b1b422f5d6e334437e965017525))
+* one answer to "is it playing", so the button, riff.playing() and the saved state agree while the needle is cued ([#1006](https://github.com/RiffPress/RiffPress/issues/1006)) ([132d58d](https://github.com/RiffPress/RiffPress/commit/132d58dc02ee499d38e96f0a87fb858f9d7a82af))
+
 ## [6.6.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.5.0...riff-v6.6.0) (2026-11-09)
 
 
