@@ -314,6 +314,62 @@ test.describe( 'Turntable', () => {
 		await stopsAndStarts( page );
 	} );
 
+	test( 'the button, riff.playing() and the painted state give one answer while the needle is cued and while the music winds down', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		// Each frame: what the element says, what the deck says, and the three answers that must agree.
+		await page.evaluate( () => {
+			const audio = document.querySelector( '.riff-audio' );
+			const root = document.querySelector( '#riff' );
+			const toggle = document.querySelector( '.riff-bar [data-riff-action="toggle"]' );
+			window.riffFrames = [];
+			const sample = () => {
+				window.riffFrames.push( {
+					paused: audio.paused,
+					rate: audio.playbackRate,
+					cued: 'riffCued' in root.dataset,
+					api: window.riff.playing(),
+					painted: root.dataset.playing === 'true',
+					label: toggle.getAttribute( 'aria-label' ),
+				} );
+				requestAnimationFrame( sample );
+			};
+			sample();
+		} );
+		const frames = () => page.evaluate( () => window.riffFrames.splice( 0 ) );
+		const agree = ( all ) => all.every( ( f ) => f.api === f.painted && f.api === ( f.label === 'Pause' ) );
+		const toggle = page.locator( '.riff-bar [data-riff-action="toggle"]' ).first();
+
+		// Stopped: the music is still heard as it winds down, and every answer is already "paused".
+		await toggle.click();
+		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-up', '' );
+		const stop = await frames();
+		const winding = stop.filter( ( f ) => ! f.paused && f.rate < 1 && ! f.cued );
+		expect( winding.length, 'heard winding down' ).toBeGreaterThan( 0 );
+		expect( winding.every( ( f ) => ! f.api ), 'riff.playing() false while winding down' ).toBe( true );
+		expect( agree( stop ), 'one answer through the stop' ).toBe( true );
+
+		// Started: the needle is cued while the element is still paused, and every answer is "playing".
+		await toggle.click();
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate ) ).toBe( 1 );
+		const start = await frames();
+		const cued = start.filter( ( f ) => f.cued && f.paused );
+		expect( cued.length, 'the needle cued before the music' ).toBeGreaterThan( 0 );
+		expect( cued.every( ( f ) => f.api ), 'riff.playing() true while cued' ).toBe( true );
+		expect( agree( start ), 'one answer through the start' ).toBe( true );
+
+		// Changed its mind: Play pressed while the music still winds down is "playing" from that
+		// press, in every frame, not from the frame the wind-down notices.
+		await toggle.click();
+		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate ) ).toBeLessThan( 1 );
+		await frames();
+		await toggle.click();
+		await expect.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).playbackRate ) ).toBe( 1 );
+		const again = await frames();
+		expect( again.some( ( f ) => f.api ), 'playing again' ).toBe( true );
+		expect( agree( again ), 'one answer through the change of mind' ).toBe( true );
+	} );
+
 	test( 'shown while the music plays, the record is already turning with the stylus in its groove', async ( { page } ) => {
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 		const lengths = await page.evaluate( () => window.riff.queue().map( ( t ) => t.duration ) );
