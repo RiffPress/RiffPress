@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.5.1...riff-sign-in-v0.6.0) (2026-11-10)
+
+
+### Features
+
+* **riff-sign-in:** a local site raises the code request limits a hundredfold, through riff_sign_in_limits ([#1004](https://github.com/RiffPress/RiffPress/issues/1004)) ([b0d4be2](https://github.com/RiffPress/RiffPress/commit/b0d4be2679468f02fd0edf3e06925437f4df381c))
+
+
+### Bug Fixes
+
+* **riff-sign-in:** removing a passkey on the profile moves focus on and says so ([#1003](https://github.com/RiffPress/RiffPress/issues/1003)) ([48ad2af](https://github.com/RiffPress/RiffPress/commit/48ad2af5bf447bf4b328696d60ca8b77ef3cf123))
+
 ## [0.5.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.5.0...riff-sign-in-v0.5.1) (2026-11-09)
 
 

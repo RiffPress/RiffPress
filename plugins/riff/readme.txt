@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.6.0
+Stable tag: 6.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,13 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.7.0 =
+* The deck is as large as the window allows, holds its scene while a new album arrives, and its keys spring and lean and its record sways in the light as real ones do.
+* The turntable is drawn lit in WebGL where a graphics card can, stands alone in a wide Now Playing with its own keys and display, and a press on the record puts the needle down there.
+* Fixed: Bindings and Protect forget what they cached when a post or its meta changes, and Export keeps an archive's statements with its own handle.
+* Fixed: an empty riff_profile_url hides Edit profile instead of printing a link that reloads the app.
+* Fixed: one answer to "is it playing", so the button, riff.playing() and the saved state agree while the needle is cued.
+
 = 6.6.0 =
 * The app's fonts come with it, preloaded with the page and kept by a service worker for every launch after the first.
 * Fixed: Inter and EB Garamond draw the Latin they are written in, with a fallback of each one's size.
@@ -176,10 +183,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Someone who may upload adds music in the Listen app, by choosing or dropping it.
 * The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.
 * A site can be private until its owner opens it, its audio and video with it.
-
-= 6.2.3 =
-* Fixed: a track in Up next is highlighted to the panel's edges, and the panel's words and art stand on one edge.
-* Fixed: the record stops at the angle it stops at, and keeps it while Now Playing closes.
-* Fixed: the sleeve Riff draws and the record on the turntable are one pressing.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
