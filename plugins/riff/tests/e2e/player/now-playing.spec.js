@@ -105,12 +105,18 @@ test.describe( 'Player', () => {
 		const screen = await np.boundingBox();
 		expect( screen.y ).toBeLessThanOrEqual( 1 );
 		expect( screen.width ).toBeGreaterThanOrEqual( 1440 - 1 );
-		expect( screen.y + screen.height ).toBeLessThanOrEqual( ( await bar.boundingBox() ).y + 1 );
+		expect( screen.y + screen.height ).toBeLessThanOrEqual( 900 );
 
 		// Wide, the album is the turntable: the record out on the deck, playing or not, from the
 		// one button there is.
 		await expect( root ).not.toHaveAttribute( 'data-riff-turntable', 'off' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
+		// With the record out the deck is the scene: Now Playing runs on under the bar to the
+		// screen's foot, and the bar's own transport gives way to the deck's keys.
+		await expect.poll( async () => ( await np.boundingBox() ).height ).toBeGreaterThanOrEqual( 900 - 1 );
+		expect( ( await bar.boundingBox() ).y ).toBeLessThan( 900 );
+		await expect( page.locator( '.riff-bar .riff-play' ) ).toBeHidden();
+		await expect( page.locator( '.riff-keys [data-riff-action="toggle"]' ) ).toBeVisible();
 		await expect( page.locator( '[data-riff-control="turntable"], [data-riff-chip="turntable"]' ) ).toHaveCount( 0 );
 		await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-expanded', 'true' );
 
@@ -181,10 +187,10 @@ test.describe( 'Player', () => {
 		} );
 		expect( dot ).toEqual( { width: '14px', height: '14px' } );
 		await expect( page.locator( '.riff-knob' ) ).toHaveCSS( 'opacity', '1' );
-		// The seek line sits under the transport, inside the bar, with a time at each end.
+		// The seek line sits inside the bar, with a time at each end; the transport over it is the
+		// deck's own while the record is out.
 		const bar = await page.locator( '.riff-bar' ).boundingBox();
-		const play = await page.locator( '.riff-bar .riff-play' ).boundingBox();
-		expect( seek.y ).toBeGreaterThanOrEqual( play.y + play.height );
+		await expect( page.locator( '.riff-bar .riff-play' ) ).toBeHidden();
 		expect( knob.y ).toBeGreaterThanOrEqual( bar.y );
 		expect( seek.y + seek.height ).toBeLessThanOrEqual( bar.y + bar.height );
 		const times = page.locator( '.riff-bar .riff-time' );

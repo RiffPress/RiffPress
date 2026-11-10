@@ -71,6 +71,57 @@ final class Protect {
 		add_filter( 'attachment_fields_to_save', array( self::class, 'save' ), 20, 2 );
 		add_filter( 'site_status_tests', array( self::class, 'tests' ) );
 		add_action( self::PROBE, array( self::class, 'probe' ) );
+		// Who may have a file is read from posts and from the version meta; a change to either
+		// forgets what was found, so a request that links a version then asks for it sees it.
+		add_action( 'clean_post_cache', array( self::class, 'forget' ), 10, 2 );
+		add_action( 'added_post_meta', array( self::class, 'on_meta' ), 10, 3 );
+		add_action( 'updated_post_meta', array( self::class, 'on_meta' ), 10, 3 );
+		add_action( 'deleted_post_meta', array( self::class, 'on_meta' ), 10, 3 );
+	}
+
+	/**
+	 * The songs each file is a version of, found since a version was last linked.
+	 *
+	 * @var array<int, int[]>
+	 */
+	private static array $songs = array();
+
+	/**
+	 * The posts that play each file, found since a post last changed.
+	 *
+	 * @var array<int, WP_Post[]>
+	 */
+	private static array $playing = array();
+
+	/**
+	 * Forgets which songs each file is a version of and which posts play it. A change to an
+	 * attachment leaves the posts found, since only a post's content names a file.
+	 *
+	 * @since 6.5.1
+	 *
+	 * @param int          $post_id Post ID, or 0 to forget everything.
+	 * @param WP_Post|null $post    The post.
+	 */
+	public static function forget( int $post_id = 0, $post = null ): void {
+		self::$songs = array();
+		if ( ! $post instanceof WP_Post || 'attachment' !== $post->post_type ) {
+			self::$playing = array();
+		}
+	}
+
+	/**
+	 * Forgets what was found when a song's video or streaming version changes.
+	 *
+	 * @since 6.5.1
+	 *
+	 * @param int|int[] $meta_id   Meta ID, or IDs when deleted.
+	 * @param int       $object_id Attachment ID.
+	 * @param string    $meta_key  Meta key.
+	 */
+	public static function on_meta( $meta_id, $object_id, $meta_key ): void {
+		if ( in_array( $meta_key, array( Media::VIDEO_META, Media::STREAM_META ), true ) ) {
+			self::forget();
+		}
 	}
 
 	/**
@@ -285,11 +336,10 @@ final class Protect {
 	 * @return int[] Attachment IDs.
 	 */
 	private static function songs_of( int $id ): array {
-		static $found = array();
-		if ( isset( $found[ $id ] ) ) {
-			return $found[ $id ];
+		if ( isset( self::$songs[ $id ] ) ) {
+			return self::$songs[ $id ];
 		}
-		$found[ $id ] = get_posts(
+		self::$songs[ $id ] = get_posts(
 			array(
 				'post_type'        => 'attachment',
 				'post_status'      => 'inherit',
@@ -309,31 +359,30 @@ final class Protect {
 				),
 			)
 		);
-		return $found[ $id ];
+		return self::$songs[ $id ];
 	}
 
 	/**
-	 * The posts whose track blocks name a file and whose author may edit it, once a request. A search of post content, so it is
-	 * asked only for a protected file uploaded to no post, and the blocks themselves then decide,
-	 * since "id":12 is also how "id":123 begins.
+	 * The posts whose track blocks name a file and whose author may edit it, once until a post
+	 * changes. A search of post content, so it is asked only for a protected file uploaded to no
+	 * post, and the blocks themselves then decide, since "id":12 is also how "id":123 begins.
 	 *
 	 * @param int $id Attachment ID.
 	 * @return WP_Post[]
 	 */
 	private static function posts_playing( int $id ): array {
-		static $found = array();
-		if ( ! isset( $found[ $id ] ) ) {
+		if ( ! isset( self::$playing[ $id ] ) ) {
 			global $wpdb;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a search of content, which no API offers by a block's attribute.
-			$ids          = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ('revision','attachment') AND post_status NOT IN ('trash','auto-draft','inherit') AND post_content LIKE %s", '%' . $wpdb->esc_like( '"id":' . $id ) . '%' ) );
-			$found[ $id ] = array_values(
+			$ids                  = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ('revision','attachment') AND post_status NOT IN ('trash','auto-draft','inherit') AND post_content LIKE %s", '%' . $wpdb->esc_like( '"id":' . $id ) . '%' ) );
+			self::$playing[ $id ] = array_values(
 				array_filter(
 					array_filter( array_map( 'get_post', array_map( 'intval', $ids ) ) ),
 					static fn( WP_Post $post ): bool => user_can( (int) $post->post_author, 'edit_post', $id ) && in_array( $id, Blocks_Source::attachments( $post ), true )
 				)
 			);
 		}
-		return $found[ $id ];
+		return self::$playing[ $id ];
 	}
 
 	/**

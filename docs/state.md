@@ -10,8 +10,10 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 
 | Where | What | Risk |
 | --- | --- | --- |
-| `P.status()`, `P.playing()` (`state.js`) | The one answer: `none`, `paused`, `cued` (play pressed, the needle on its way: `P.held()`), `playing`, or `stopping` (pause pressed, the music winding down: `P.stopping()`). `playing()` is `cued` or `playing`, what was asked for. `paint()` draws it (`#riff[data-playing]`, the rows' and Up next's `data-playing`, the toggle's label, the Media Session's state), `window.riff.playing()` returns it, and `resume.js` saves it; Riff Together, Riff Sing and Riff Chords read it through `window.riff`. | |
-| `riff/assets/player/now-playing.js` (`turn()`) | Asks `data-riff-turning`, the deck's own fact, whether the platter is already turning so the music starts at once. Not `P.status()`: a new track's element is paused from the moment it is pointed at its file until it is heard, while the platter turns on through the change. | low |
+| `riff/assets/player/paint.js` (`paint()`) | `playing` = a track, and the needle cued (`P.held()`) or the element playing and not stopping. Drives `#riff[data-playing]`, the rows' and Up next's `data-playing`, the toggle's label and the Media Session's state. | |
+| `riff/assets/riff.js` (`api.playing()`) | A track, and the element not paused. Ignores the cued needle and the platter coming to a stop. Riff Together, Riff Sing and Riff Chords read it. | **medium**: with the needle cued the button says Pause and `riff.playing()` says false ([#977](https://github.com/RiffPress/RiffPress/issues/977)). |
+| `riff/assets/player/resume.js` (`save()`) | `playing` saved as `!paused && !ended`. | low |
+| `riff/assets/player/now-playing.js` (`turn()`) | Reads `#riff[data-playing]`, the last paint, to decide whether the platter starts at once. | **medium**: a `turn()` between a `play` event and the next paint takes the other branch. |
 | `riff/assets/player/now-playing.js` | `data-riff-turning`, set on `playing`, cleared on `pause`. | low |
 | `riff-meters/assets/meters.js` | `!audio.paused` and the context running. Always the `<audio>` element. | low |
 
@@ -46,7 +48,7 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 
 ### The turntable
 
-`now-playing.js` keeps the deck's state in attributes on `#riff`, with a `MutationObserver` driving the platter from one of them: `data-riff-deck` (`out`, the record on the platter), `data-riff-cued` (`P.held()`, which `P.status()` reads to say Play or Pause), `data-riff-turning`, `data-riff-coasting`, `data-riff-arriving`, `data-riff-at`, `data-riff-format` (`7` or `12`, which sets the speed), `data-riff-turntable` (`off`), and `data-riff-down`, `data-riff-up` and `data-riff-held` on the arm; with about twenty-five closure variables and function properties (`turn.wait`, `halt.going`, `runout.until`, `deck.opening`) beside them, and `P.ramping`, a boolean, beside a closure `ramping`, a counter. Riff Meters reads `data-riff-deck` and `data-riff-turntable`. **Medium**: the attributes are the CSS's and the state machine's at once, so a style change can change behaviour.
+`now-playing.js` keeps the deck's state in attributes on `#riff`, with a `MutationObserver` driving the platter from one of them: `data-riff-deck` (`out`, the record on the platter), `data-riff-cued` (`P.held()`, which `P.status()` reads to say Play or Pause), `data-riff-turning`, `data-riff-coasting`, `data-riff-arriving`, `data-riff-at`, `data-riff-format` (`7` or `12`, which sets the speed), `data-riff-turntable` (`off`), and `data-riff-down`, `data-riff-up` and `data-riff-held` on the arm; with about twenty-five closure variables and function properties (`turn.wait`, `halt.going`, `runout.until`, `deck.opening`) beside them, and `P.ramping`, a boolean, beside a closure `ramping`, a counter. Riff Meters reads `data-riff-deck` and `data-riff-turntable`. `deck-gl.js`, which draws the deck in WebGL, owns none of it: it reads those attributes and the page's computed styles each frame, takes the arm's geometry from `P.arm`, the side's bands from `P.pressed` and the groove pointed at from `P.cueAt` (all three written by `now-playing.js`) and the music's level from `P.loud` (written by `level.js`), and writes only `data-riff-gl`, which tells `riff.css` the canvas has drawn. **Medium**: the attributes are the CSS's and the state machine's at once, so a style change can change behaviour.
 
 ### Volume and mute
 
@@ -126,9 +128,9 @@ Besides the turntable and Now Playing above:
 
 | Where | What | Risk |
 | --- | --- | --- |
-| `Bindings::$read` (`class-bindings.php`) | Tracks read for block bindings; `flush()` only in tests. | medium: in a long process (WP-CLI, cron) a track changed and then rendered is rendered as it was. |
-| `static $found` in `Protect::songs_of()` and `Protect::posts_playing()` | Which songs a file is the video or stream of, which posts play a file. | medium: a change in the same request is not seen by the check that decides who may play it. |
-| `static $statements` in `Export` | Prepared statements keyed by `spl_object_id()` and a prefix match. | medium: an id is reused once its object is freed, and `1` prefixes `12`. |
+| `Bindings::$read` (`class-bindings.php`) | Tracks read for block bindings; `flush()` runs on `clean_post_cache` and on any post meta change. | low: keyed by attachment and post only, so a process that switches user or site between renders is handed the first one's track. |
+| `Protect::$songs`, `Protect::$playing` | Which songs a file is the video or stream of, which posts play a file; `forget()` runs on `clean_post_cache` and on a change to `_riff_video` or `_riff_stream`. | low: keyed by attachment only, so a switch of site is not seen, nor an author losing `edit_post`, until a post changes. |
+| `Export::write()`'s `$statements` | The archive's prepared statements, by table, a local of the one call that writes it; dropped with its handle before the zip reads the database. | none: no static. |
 | `UI::$eager`, `UI::$lead` | How many images load eagerly, counted down across every render in a request. | low |
 | The rest (`Permissions`, `Extensions`, `Transcode`, `Cover`, `Art`, `Blocks_Source`, the extensions' REST controllers) | Keyed or per request. | low |
 | JS: `cache` in `features/listen/app/fetch.js` | Every REST answer the app fetched, for the session; `forget()` clears the drawn views but not this. | medium |

@@ -152,6 +152,16 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringContainsString( 'Add your first album', $hosted );
 		$this->assertStringContainsString( 'href="https://cloud.example.org/account/">Edit profile</a>', $hosted );
 		$this->assertSame( $user, $seen instanceof WP_User ? $seen->ID : 0, 'the filter is told whose profile' );
+
+		// A host with no profile page returns an empty address, and the menu leaves Edit profile out.
+		add_filter( 'riff_profile_url', '__return_empty_string' );
+		$hidden = $this->render_at( array() );
+		remove_all_filters( 'riff_profile_url' );
+
+		$this->assertStringNotContainsString( 'Edit profile', $hidden );
+		$this->assertStringNotContainsString( 'href=""', $hidden, 'no empty link is left behind' );
+		$this->assertStringNotContainsString( 'profile.php', $hidden );
+		$this->assertMatchesRegularExpression( '#>Your Library</a>.*>Add music</a><a href="[^"]*action=logout[^"]*">Sign out</a></div></details>#', $hidden, 'the rest of the menu stands, in its order' );
 	}
 
 	public function test_the_bar_shows_who_is_listening(): void {

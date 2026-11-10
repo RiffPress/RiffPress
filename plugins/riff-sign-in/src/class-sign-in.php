@@ -293,9 +293,11 @@ final class Sign_In {
 	 */
 	public static function profile( WP_User $user ): void {
 		$keys = Passkeys::all( $user->ID );
-		echo '<h2>' . esc_html__( 'Passkeys', 'riff-sign-in' ) . '</h2>';
+		$none = __( 'No passkeys yet. Sign in to the player from a new device and it offers to save one.', 'riff-sign-in' );
+		// Focusable so that removing the last key has somewhere to leave the keyboard (profile.js).
+		echo '<h2 id="riff-signin-passkeys" tabindex="-1">' . esc_html__( 'Passkeys', 'riff-sign-in' ) . '</h2>';
 		if ( ! $keys ) {
-			echo '<p>' . esc_html__( 'No passkeys yet. Sign in to the player from a new device and it offers to save one.', 'riff-sign-in' ) . '</p>';
+			echo '<p>' . esc_html( $none ) . '</p>';
 			return;
 		}
 		echo '<p>' . esc_html__( 'A passkey signs you in to the player on the device that made it. Take one away here if the device is gone.', 'riff-sign-in' ) . '</p>';
@@ -310,8 +312,21 @@ final class Sign_In {
 			);
 		}
 		echo '</ul>';
-		wp_enqueue_script( 'riff-sign-in-profile', RIFF_SIGN_IN_URL . 'assets/profile.js', array( 'wp-api-fetch' ), RIFF_SIGN_IN_VERSION, true );
-		wp_add_inline_script( 'riff-sign-in-profile', 'window.riffSignInProfile = ' . wp_json_encode( array( 'route' => Routes::NAMESPACE . '/passkeys/' ) ) . ';', 'before' );
+		wp_enqueue_script( 'riff-sign-in-profile', RIFF_SIGN_IN_URL . 'assets/profile.js', array( 'wp-api-fetch', 'wp-a11y' ), RIFF_SIGN_IN_VERSION, true );
+		wp_add_inline_script(
+			'riff-sign-in-profile',
+			'window.riffSignInProfile = ' . wp_json_encode(
+				array(
+					'route'   => Routes::NAMESPACE . '/passkeys/',
+					'strings' => array(
+						'removed' => __( 'Passkey removed.', 'riff-sign-in' ),
+						'failed'  => __( 'That did not work. Try again.', 'riff-sign-in' ),
+						'none'    => $none,
+					),
+				)
+			) . ';',
+			'before'
+		);
 	}
 
 	/**

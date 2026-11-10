@@ -19,7 +19,7 @@
 		],
 		"fields": [],
 		"public": {
-			"riff-sign-in/v1/code": "Asking for a code is what someone signed out does. Limited to three codes an email and ten an address in fifteen minutes (Codes::PER_EMAIL, Codes::PER_IP), and it answers the same whether or not the email has an account.",
+			"riff-sign-in/v1/code": "Asking for a code is what someone signed out does. Limited to three codes an email and ten an address in fifteen minutes (Codes::PER_EMAIL, Codes::PER_IP), a hundred times that only on a local site, and it answers the same whether or not the email has an account.",
 			"riff-sign-in/v1/code/verify": "Typing the code in is how they sign in. Five tries a code, and a code lasts ten minutes (Codes::TRIES, Codes::TTL).",
 			"riff-sign-in/v1/assertion/options": "A passkey's challenge, asked for before anyone is signed in. It is random, single use and lasts five minutes (Passkeys::TTL).",
 			"riff-sign-in/v1/assertion": "Signing in with a passkey: the signature over that challenge is the proof."

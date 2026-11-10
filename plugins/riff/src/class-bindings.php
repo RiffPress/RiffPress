@@ -48,6 +48,13 @@ final class Bindings {
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'source' ) );
+		// A track is read from its attachment, its post and their meta; a change to any post
+		// forgets every track read, so a long process (WP-CLI, cron, an import) renders what it
+		// just saved.
+		add_action( 'clean_post_cache', array( self::class, 'flush' ) );
+		add_action( 'added_post_meta', array( self::class, 'flush' ) );
+		add_action( 'updated_post_meta', array( self::class, 'flush' ) );
+		add_action( 'deleted_post_meta', array( self::class, 'flush' ) );
 	}
 
 	/**
@@ -126,14 +133,14 @@ final class Bindings {
 	}
 
 	/**
-	 * The tracks read so far this request, so three bound blocks on one track read it once.
+	 * The tracks read since a post last changed, so three bound blocks on one track read it once.
 	 *
 	 * @var array<string, array|null>
 	 */
 	private static array $read = array();
 
 	/**
-	 * Forgets the tracks read this request.
+	 * Forgets the tracks read. Runs itself whenever a post or its meta changes.
 	 *
 	 * @since 4.32.0
 	 */

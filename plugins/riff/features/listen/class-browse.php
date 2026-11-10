@@ -282,26 +282,27 @@ final class Browse {
 			}
 		}
 		$add = self::add_music_url( $page );
+		// Edit profile, unless the host has no profile page: an empty riff_profile_url hides it.
+		$profile = self::profile_url( $user );
 		return sprintf(
-			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a>%11$s%10$s<a href="%6$s">%7$s</a><a href="%8$s">%9$s</a></div></details>',
+			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a>%9$s%8$s%6$s<a href="%7$s">%10$s</a></div></details>',
 			/* translators: %s: the signed-in listener's name. */
 			esc_attr( sprintf( __( 'Account: %s', 'riff' ), $name ) ),
 			$face,
 			esc_html( $name ),
 			esc_url( add_query_arg( self::VIEW, 'library', $page ) ),
 			esc_html__( 'Your Library', 'riff' ),
-			esc_url( self::profile_url( $user ) ),
-			esc_html__( 'Edit profile', 'riff' ),
+			'' !== $profile ? sprintf( '<a href="%s">%s</a>', esc_url( $profile ), esc_html__( 'Edit profile', 'riff' ) ) : '',
 			esc_url( wp_logout_url( $back ) ),
-			esc_html__( 'Sign out', 'riff' ),
 			// Add music, unless it leads to a view the menu already lists.
 			current_user_can( 'upload_files' ) && ! str_contains( $more, 'href="' . esc_url( $add ) . '"' ) ? sprintf( '<a href="%s">%s</a>', esc_url( $add ), esc_html__( 'Add music', 'riff' ) ) : '',
-			$more
+			$more,
+			esc_html__( 'Sign out', 'riff' )
 		);
 	}
 
 	/**
-	 * Where the account menu's Edit profile goes.
+	 * Where the account menu's Edit profile goes; empty when the menu should not show it.
 	 *
 	 * @since 6.4.0
 	 *
@@ -311,11 +312,13 @@ final class Browse {
 	public static function profile_url( \WP_User $user ): string {
 		/**
 		 * Filters where the Listen app's account menu sends a listener to edit their profile, for a
-		 * host or a membership plugin with a profile page of its own.
+		 * host or a membership plugin with a profile page of its own. An empty string hides Edit
+		 * profile, for a host with no profile page.
 		 *
 		 * @since 6.4.0
+		 * @since 6.5.1 An empty string hides the link.
 		 *
-		 * @param string   $url  The address. Default get_edit_profile_url(), their profile in wp-admin.
+		 * @param string   $url  The address, or '' to leave Edit profile out of the menu. Default get_edit_profile_url(), their profile in wp-admin.
 		 * @param \WP_User $user The signed-in listener.
 		 */
 		return (string) apply_filters( 'riff_profile_url', get_edit_profile_url( $user->ID ), $user );

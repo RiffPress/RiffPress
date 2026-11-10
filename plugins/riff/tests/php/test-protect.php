@@ -216,6 +216,39 @@ class Test_Riff_Protect extends Riff_TestCase {
 		$this->assertFalse( Protect::can( $file ) );
 	}
 
+	public function test_a_version_linked_in_the_same_process_is_seen_by_the_next_check(): void {
+		$file = $this->unattached();
+		$this->assertFalse( Protect::can( $file ), 'nobody\'s version yet' );
+
+		update_post_meta( $this->track, Media::STREAM_META, $file );
+		$this->assertTrue( Protect::can( $file ), 'the version of a song on a public post, once linked' );
+
+		delete_post_meta( $this->track, Media::STREAM_META );
+		$this->assertFalse( Protect::can( $file ), 'and nobody\'s again once unlinked' );
+	}
+
+	public function test_a_post_that_names_a_file_in_the_same_process_is_seen_by_the_next_check(): void {
+		$file = $this->unattached();
+		$this->assertFalse( Protect::can( $file ), 'no post plays it yet' );
+
+		$post = self::factory()->post->create(
+			array(
+				'post_status'  => 'publish',
+				'post_author'  => self::factory()->user->create( array( 'role' => 'administrator' ) ),
+				'post_content' => '<!-- wp:audio {"id":' . $file . '} --><figure class="wp-block-audio"></figure><!-- /wp:audio -->',
+			)
+		);
+		$this->assertTrue( Protect::can( $file ), 'once a public post plays it' );
+
+		wp_update_post(
+			array(
+				'ID'           => $post,
+				'post_content' => '',
+			)
+		);
+		$this->assertFalse( Protect::can( $file ), 'and not once that post drops it' );
+	}
+
 	public function test_a_version_played_as_itself_is_not_signed_once_its_song_is_locked(): void {
 		$file = $this->unattached();
 		update_post_meta( $this->track, Media::STREAM_META, $file );
