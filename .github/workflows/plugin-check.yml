@@ -54,7 +54,7 @@ jobs:
       - name: Mount the built plugin instead of the checkout
         run: |
           cat > .wp-env.override.json <<'JSON'
-          { "core": "https://wordpress.org/wordpress-7.2-beta3.zip", "plugins": [ "./build/riff", "./build/riff-lyrics", "./build/riff-sign-in", "./build/riff-sing", "./build/riff-chords" ], "mappings": {} }
+          { "core": "https://wordpress.org/wordpress-7.2-beta5.zip", "plugins": [ "./build/riff", "./build/riff-lyrics", "./build/riff-sign-in", "./build/riff-sing", "./build/riff-chords" ], "mappings": {} }
           JSON
 
       - run: npx wp-env start

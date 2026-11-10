@@ -1,5 +1,5 @@
 {
-  "core": "https://wordpress.org/wordpress-7.2-beta3.zip",
+  "core": "https://wordpress.org/wordpress-7.2-beta5.zip",
   "phpVersion": "8.2",
   "plugins": [
     "./plugins/riff",
