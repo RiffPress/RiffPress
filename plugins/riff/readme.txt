@@ -40,7 +40,7 @@ Upload your tracks to the Media Library and they're on your Listen page, filed u
 
 There's nothing to configure. Riff adds its fields on media (Artwork, Video version, Streaming version and Protected), the Riff block, and Settings › Riff, where the features it ships with, such as Lyrics, are turned on or off, and the player can open at the site's address.
 
-[The live demo](https://next.riffpress.com/listen/app/) has four albums and runs in your browser, with nothing to install. [Add your music](https://source.riffpress.com/add-music/) walks through putting your first album online, starting from nothing.
+[The live demo](https://riffpress.com/demo) has four albums and plays in your browser, with nothing to install. [Add your music](https://source.riffpress.com/add-music/) walks through putting your first album online, starting from nothing.
 
 = For developers =
 
