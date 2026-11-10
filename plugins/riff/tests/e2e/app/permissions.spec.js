@@ -8,7 +8,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
 const root = path.join( __dirname, '..', '..', '..', '..' );
 // The extensions wp-env activates (.wp-env.json), each with its name on the Plugins screen.
-const extensions = [ 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing', 'riff-meters' ];
+const extensions = [ 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing' ];
 const manifest = ( slug ) => {
 	const file = path.join( root, slug, 'isolation.json' );
 	return fs.existsSync( file ) ? JSON.parse( fs.readFileSync( file, 'utf8' ) ) : null;
@@ -41,8 +41,8 @@ test.describe( 'What each plugin can do', () => {
 
 	test( "a Riff plugin's row on the Plugins screen links to its list", async ( { admin, page } ) => {
 		await admin.visitAdminPage( 'plugins.php' );
-		// By its file: WordPress names a row's data-slug after the plugin's name, riff-meters-experimental.
-		const link = page.locator( 'tr[data-plugin="riff-meters/riff-meters.php"]' ).getByRole( 'link', { name: 'What it can do' } );
-		await expect( link ).toHaveAttribute( 'href', /options-general\.php\?page=riff#riff-permissions-riff-meters$/ );
+		// By its file: WordPress names a row's data-slug after the plugin's name, riff-chords-experimental.
+		const link = page.locator( 'tr[data-plugin="riff-chords/riff-chords.php"]' ).getByRole( 'link', { name: 'What it can do' } );
+		await expect( link ).toHaveAttribute( 'href', /options-general\.php\?page=riff#riff-permissions-riff-chords$/ );
 	} );
 } );

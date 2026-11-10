@@ -1,5 +1,5 @@
 /* The meter. The music passes through one AnalyserNode, which the three bars on the playing row are
- * read from, and which window.riff.analyser() hands to a plugin such as Riff Meters. Each frame it
+ * read from, and which window.riff.analyser() hands to a plugin. Each frame it
  * reads three bands, bass, voice and air, and tells Riff's own listeners (own.meter); the bars are
  * one of them. Where there is no analyser (iOS, a file from another origin, less motion asked for)
  * the bars keep their keyframes. Loaded on demand, when the first track does. */

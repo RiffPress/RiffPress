@@ -4,6 +4,5 @@
 	"packages/wp-api-coverage": "0.1.0",
 	"plugins/riff-sign-in": "0.5.1",
 	"plugins/riff-chords": "0.7.0",
-	"plugins/riff-sing": "0.7.0",
-	"plugins/riff-meters": "0.2.0"
+	"plugins/riff-sing": "0.7.0"
 }

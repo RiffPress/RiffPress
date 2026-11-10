@@ -174,7 +174,7 @@
 		},
 		"summary": "Reads the signal that moves the bars on the playing row.",
 		"how": "The first time something plays through the audio element on a non-iOS browser, the script creates an `AudioContext`. It wraps the element in a media source and connects it through an analyser and back to the destination, so the sound still comes out. The context suspends on pause and resumes on play.",
-		"why": "This is what moves the three bars on the playing row, and what `window.riff.analyser()` hands a plugin such as Riff Meters. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
+		"why": "This is what moves the three bars on the playing row, and what `window.riff.analyser()` hands a plugin. On iOS the graph breaks lock-screen and background playback, so iPhones are left out.",
 		"fallback": "Where there is no analyser the bars keep a fixed keyframe loop instead.",
 		"where": [
 			{

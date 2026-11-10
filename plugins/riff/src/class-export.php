@@ -49,7 +49,7 @@ final class Export {
 	/**
 	 * The extensions beside Riff whose data an archive carries, installed with it when active.
 	 */
-	private const EXTENSIONS = array( 'riff-lyrics', 'riff-chords', 'riff-sing', 'riff-meters' );
+	private const EXTENSIONS = array( 'riff-lyrics', 'riff-chords', 'riff-sing' );
 
 	/**
 	 * Rows read at a time.

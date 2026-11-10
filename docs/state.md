@@ -15,7 +15,6 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 | `riff/assets/player/resume.js` (`save()`) | `playing` saved as `!paused && !ended`. | low |
 | `riff/assets/player/now-playing.js` (`turn()`) | Reads `#riff[data-playing]`, the last paint, to decide whether the platter starts at once. | **medium**: a `turn()` between a `play` event and the next paint takes the other branch. |
 | `riff/assets/player/now-playing.js` | `data-riff-turning`, set on `playing`, cleared on `pause`. | low |
-| `riff-meters/assets/meters.js` | `!audio.paused` and the context running. Always the `<audio>` element. | low |
 
 ### Video or song
 
@@ -23,7 +22,7 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 | --- | --- | --- |
 | `P.mode` (`state.js`) | The listener's choice, `song` or `video`; set back to `song` by a new queue. | |
 | `P.isVideo()` (`media.js`) | Derived: the track is a video, or it has a video version and the choice is `video`. The one answer to "is a picture playing". | |
-| `#riff[data-mode]` (`paint.js`) | `isVideo()`, painted; Riff Meters watches it. | low |
+| `#riff[data-mode]` (`paint.js`) | `isVideo()`, painted. | low |
 | `riff/assets/player/wake-lock.js` | Tests `P.mode === 'video'`, so a video block's own track (type `video`, mode `song`) never keeps the screen on. | **high**: a phone sleeps in the middle of a video; the fix is to ask `P.isVideo()`. |
 | `state.js` (the badges), `paint.js` (captions) | Each tests `P.mode` with the track's own video. | low |
 
