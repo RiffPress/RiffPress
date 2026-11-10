@@ -68,6 +68,29 @@ export function createPlayer( root, data ) {
 		me: data.me?.rest && data.me.nonce ? data.me : null,
 	};
 
+	// The one answer to "is it playing", which the controls, window.riff.playing(), the saved
+	// state and Listen Together all give. Where the record is seen the music starts and stops as
+	// a turntable's does (now-playing.js): 'cued' is play pressed and the music waiting on the
+	// needle, 'stopping' is stop pressed and the music winding down. Each counts as what was
+	// asked for, so the button and a script agree while the needle is cued. The sections that
+	// answer the parts (el, held, stopping) are added to P after this, so each is read when asked.
+	P.status = () => {
+		if ( ! P.track() ) {
+			return 'none';
+		}
+		if ( P.held?.() ) {
+			return 'cued';
+		}
+		if ( P.el().paused ) {
+			return 'paused';
+		}
+		return P.stopping?.() ? 'stopping' : 'playing';
+	};
+	P.playing = () => {
+		const status = P.status();
+		return status === 'playing' || status === 'cued';
+	};
+
 	// What the seek line says: where the track is and how long it is, in words.
 	P.seekText = ( at, duration ) =>
 		/* translators: 1: time played, 2: the track's length, both in words. */ __(

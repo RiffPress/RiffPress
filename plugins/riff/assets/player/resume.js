@@ -66,7 +66,7 @@ export function resume( P ) {
 				repeat: P.repeat,
 				shuffle: P.shuffle,
 				at: m.currentTime || 0,
-				playing: ! m.paused && ! m.ended,
+				playing: P.playing(),
 			} )
 		);
 	}

@@ -93,7 +93,9 @@ Since 4.0.0.
 
 Whether something is playing.
 
-Returns `boolean`: True while a track plays.
+The same answer the Pause button gives. On the turntable the music starts and stops as a record does, so this is true from the press of Play, while the needle is still being cued, and false from the press of Pause, while the music winds down.
+
+Returns `boolean`: True while a track plays, or waits on the needle to.
 
 Since 4.0.0.
 

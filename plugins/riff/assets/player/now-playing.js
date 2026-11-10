@@ -1099,6 +1099,9 @@ export function nowPlaying( P ) {
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
 		stowing++;
+		// Play pressed while the music winds down: it is no longer stopping (P.status()), from this
+		// press, not from the frame the wind-down's pull notices it has been cancelled.
+		halt.going = null;
 		// The stylus is in the run-out: the record is seen to once it has been lifted from there.
 		if ( runout.until > performance.now() && seen() ) {
 			cued( true );
@@ -1106,7 +1109,11 @@ export function nowPlaying( P ) {
 			turn.wait = setTimeout( () => turn( m ), runout.until - performance.now() + 20 );
 			return;
 		}
-		const turning = root.dataset.playing === 'true' && root.dataset.riffDeck === 'out' && ! ( 'riffCued' in root.dataset );
+		// Whether the platter is turning with the music, the deck's own fact rather than the last
+		// paint's: the music itself cannot say, since a new track's element is paused from the
+		// moment its file is pointed at until it is heard, while the platter turns on through the
+		// change (below, data-riff-turning holds from `playing` to `pause`).
+		const turning = 'riffTurning' in root.dataset && root.dataset.riffDeck === 'out' && ! held();
 		const flipping = flip.until > performance.now();
 		// At the listener's own speed the music keeps its pitch, which a platter coming up to speed
 		// would bend, so it starts at once.
