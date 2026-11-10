@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.5.1
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,10 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.6.0 =
+* A local site raises the code request limits a hundredfold, through riff_sign_in_limits.
+* Fixed: removing a passkey on the profile moves focus on and says so.
+
 = 0.5.1 =
 * Fixed: each sign-in attempt is counted in one step.
 
@@ -39,8 +43,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 = 0.4.2 =
 * Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
-
-= 0.4.1 =
-* Fixed: the PHP suite runs to its end, and Site Health on a network no longer mistakes WordPress's own mail tidying for a mail service.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
