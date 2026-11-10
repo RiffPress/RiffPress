@@ -53,6 +53,19 @@ const move = ( x, y, z = 0 ) => {
 	m[ 14 ] = z;
 	return m;
 };
+// A key cap, down by dz and leaning by a little about its own middle (cx, cy, cz): the side under
+// the finger lower than the other.
+const lean = ( cx, cy, cz, dz, ax, ay ) => {
+	const m = ident();
+	m[ 2 ] = -ax;
+	m[ 6 ] = -ay;
+	m[ 8 ] = ax;
+	m[ 9 ] = ay;
+	m[ 12 ] = -ax * cz;
+	m[ 13 ] = -ay * cz;
+	m[ 14 ] = ax * cx + ay * cy + dz;
+	return m;
+};
 const size = ( x, y ) => {
 	const m = ident();
 	m[ 0 ] = x;
@@ -407,13 +420,13 @@ const DEPTH_FS = `#version 300 es
 precision mediump float;
 void main() {}`;
 
-// uMode: 0 plain, 1 turned metal, 2 the deck's plate, 3 the platter and its strobe, 5 the desk,
+// uMode: 0 plain, 1 turned metal, 2 the deck's plate, 3 the platter and its strobe, 6 a key's cap, 5 the desk,
 // which is only the shadows on it: the page shows through everywhere else.
 const STD_FS =
 	COMMON +
 	`
 in vec3 vP, vN, vO; out vec4 o;
-uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uSleeve, uBody; uniform vec3 uTint, uGlowAt[5]; uniform float uSleeveA;
+uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uSleeve, uBody, uKey; uniform vec3 uTint, uGlowAt[5]; uniform float uSleeveA;
 const float RP = ${ f1( PLATTER ) };
 float row(float a, float r, float n, float rr, float px) {
   vec2 c = vec2((fract(a / 6.2831853 * n) - 0.5) * 6.2831853 * rr / n, r - rr);
@@ -450,6 +463,13 @@ void main() {
     alb = mix(vec3(0.012), vec3(0.11), d); rough = 0.5; metal = 0.0;
     lit = max(row(aw + uStrobe.x, ro, 216.0, r1, px), row(aw + uStrobe.y, ro, 160.0, r2, px));
   }
+  if (uMode == 6 && N.z > 0.5) {
+    // Moulded, as a key's cap is: dished a little toward its middle, so the light lies across it and
+    // moves as the key leans, and matt with the mould's fine grain.
+    float grain = (hash(floor(vO.xy * 9000.0)) - 0.5) * (1.0 - smoothstep(1.5e-4, 6e-4, px));
+    N = normalize(N + mat3(uM) * vec3((uKey.xy - vO.xy) / uKey.zw * 0.07, 0.0));
+    alb *= 1.0 + 0.16 * grain; rough += 0.12 * grain;
+  }
   if (uMode == 2) alb = mix(alb, uTint, 0.08);
   if (uMode == 2 && N.z > 0.5) {
     // Brushed, as an aluminium top plate is: fine lines along it, each a little lighter or darker
@@ -484,8 +504,14 @@ uniform mat4 uM; uniform sampler2D uLabel, uBands; uniform vec4 uZone; uniform f
 void main() {
   float r = length(vQ), phi = atan(vQ.y, vQ.x);
   if (r < uZone.x) discard;
-  vec3 N = vec3(0.0, 0.0, 1.0), V = normalize(uEye - vP);
-  vec3 Tw = normalize(mat3(uM) * vec3(-sin(phi), cos(phi), 0.0));
+  // No pressing is flat: this one is dished a hair and rises twice round, half a millimetre at the
+  // rim, so as it turns the light on it sways, as it does on a record.
+  float w = r / ${ f1( R ) }, c1 = cos(phi - 0.7), s1 = sin(phi - 0.7), c2 = cos(2.0 * phi + 1.9), s2 = sin(2.0 * phi + 1.9);
+  float dzr = (2.0 * 0.0004 * w * c1 + 3.0 * 0.00018 * w * w * c2) / ${ f1( R ) };
+  float dzt = (-0.0004 * w * w * s1 - 2.0 * 0.00018 * w * w * w * s2) / max(r, 0.01);
+  vec2 er = vec2(cos(phi), sin(phi)), et = vec2(-er.y, er.x);
+  vec3 N = normalize(mat3(uM) * vec3(-dzr * er - dzt * et, 1.0)), V = normalize(uEye - vP);
+  vec3 Tw = normalize(mat3(uM) * vec3(et, dzt));
   float px = fwidth(vQ.x) + fwidth(vQ.y), sh = shadow(vP, N), key = sh * pool(vP);
   vec4 tex = texture(uLabel, vQ / (2.0 * uZone.z) + 0.5);
   float fr = pow(1.0 - max(dot(N, V), 0.0), 5.0);
@@ -509,6 +535,10 @@ void main() {
   vec3 c = mix(land, groove, cover);
   float off = (r - uNow) / 0.0016;
   c += vec3(1.0, 0.9, 0.76) * 0.085 * uGlow * going * exp(-off * off) * smoothstep(0.0, 0.06, band);
+  // Dust, which every record that has left its sleeve carries: a few specks, seen where the light falls.
+  vec2 cell = vQ * 1300.0, at = floor(cell);
+  float speck = step(0.9986, hash(at)) * (1.0 - smoothstep(0.12, 0.3, length(fract(cell) - 0.3 - 0.4 * vec2(hash(at + 7.0), hash(at + 13.0)))));
+  c += vec3(0.9, 0.88, 0.84) * 0.04 * speck * key * step(uZone.y, r);
   // The matrix number, scratched into the dead wax.
   c += tex.a * 0.02 * (0.4 + key) * step(uZone.y + 0.001, r);
   // The groove a pointer or the arm in the hand is at: a hair of light round the side.
@@ -960,6 +990,8 @@ export default function deckGl( P ) {
 	// The stylus's height, the strobe's two rows as the lamp shows them, and how fast the platter turns.
 	let ride = UP;
 	const travel = keys.map( () => 0 );
+	const going = keys.map( () => 0 );
+	const leant = keys.map( () => [ 0, 0 ] );
 	const lamp = keys.map( () => 0 );
 	// Where a mouse or a pen is, and whether it is over the deck.
 	const hand = { x: 0, y: 0, over: false, on: 0 };
@@ -1076,24 +1108,46 @@ export default function deckGl( P ) {
 		const lit = P.loud === null || P.loud === undefined ? 0.4 : Math.min( 1, Math.max( 0, ( P.loud + 42 ) / 34 ) );
 		glow += ( ( sounding ? lit : 0 ) - glow ) * Math.min( 1, dt * 8 );
 		const keyed = keys.length === KEYS.length && getComputedStyle( keys[ 0 ] ).display !== 'none';
-		// A key goes down under the finger quickly and comes back on its spring a little slower;
-		// its lamp comes on and goes off as a small lamp does, not at once.
+		// The pointer over the deck: where it is on the deck.
+		const handX = ( hand.x - ( pb.left + pb.width / 2 ) ) / scale;
+		const handY = -( hand.y - ( pb.top + pb.height / 2 ) ) / scale;
+		// A key is a cap on a spring between two stops. The finger drives it down to the lower one,
+		// the spring sends it back to the upper one, and it meets either with a small bounce, as a
+		// thing with weight does; pressed off its middle it leans that way. Its lamp comes on and
+		// goes off as a small lamp does, not at once.
 		keys.forEach( ( key, k ) => {
 			const under = keyed && key.matches( ':active' ) ? 1 : 0;
-			travel[ k ] += ( under - travel[ k ] ) * ( 1 - Math.exp( -dt / ( under ? 0.016 : 0.05 ) ) );
+			const [ to, stiff ] = under ? [ 1.35, 85 ] : [ -0.3, 52 ];
+			for ( let rest = dt; rest > 0; rest -= 0.004 ) {
+				const tick = Math.min( 0.004, rest );
+				going[ k ] += ( stiff * stiff * ( to - travel[ k ] ) - 2 * 0.55 * stiff * going[ k ] ) * tick;
+				travel[ k ] += going[ k ] * tick;
+				if ( travel[ k ] > 1 || travel[ k ] < 0 ) {
+					travel[ k ] = Math.min( 1, Math.max( 0, travel[ k ] ) );
+					going[ k ] = Math.abs( going[ k ] ) > 6 ? -0.32 * going[ k ] : 0;
+				}
+			}
+			if ( under && hand.over ) {
+				const [ left, wide, top, tall ] = KEYS[ k ];
+				const half = [ ( wide * MM ) / 2, ( tall * MM ) / 2 ];
+				const away = [ handX - ( left + wide / 2 - 0.5 ) * MM, handY - ( 0.5 - top - tall / 2 ) * MM ];
+				leant[ k ] = away.map( ( o, i ) => ( Math.max( -1, Math.min( 1, o / half[ i ] ) ) * Math.min( 0.03, 0.0009 / half[ i ] ) ) );
+			} else if ( under ) {
+				leant[ k ] = [ 0, 0 ];
+			}
 			const alight = k === 0 ? root.dataset.playing === 'true' : key.getAttribute( 'aria-pressed' ) === 'true' || key.getAttribute( 'aria-checked' ) === 'true' || ( key.dataset.repeat || 'off' ) !== 'off';
 			lamp[ k ] += ( ( keyed && alight ? 1 : 0 ) - lamp[ k ] ) * ( 1 - Math.exp( -dt / 0.07 ) );
 		} );
-		const down = travel.map( ( t ) => ( Math.abs( t ) < 0.004 ? 0 : Math.min( 1, t ) ) );
+		const down = travel.map( ( t ) => ( t < 0.004 ? 0 : Math.round( t * 200 ) / 200 ) );
 		const lamps = lamp.map( ( l ) => Math.round( l * 50 ) / 50 );
 		// The pointer over the deck, as a light: where it is on the deck, and how near.
 		hand.on += ( ( hand.over ? 1 : 0 ) - hand.on ) * ( 1 - Math.exp( -dt / 0.12 ) );
-		const handAt = [ ( hand.x - ( pb.left + pb.width / 2 ) ) / scale, -( hand.y - ( pb.top + pb.height / 2 ) ) / scale, hand.on < 0.01 ? 0 : hand.on ];
+		const handAt = [ handX, handY, hand.on < 0.01 ? 0 : hand.on ];
 		// What stands still while a record plays, and what turns. While only the platter turns, the
 		// shadows are the ones already cast and only the platter's own square is drawn again: over a
 		// long side that is most of every frame saved.
 		const still = [
-			cueAt, keyed, down.map( ( d ) => d.toFixed( 2 ) ), lamps, handAt.map( ( n ) => n.toFixed( 3 ) ), w, h, pb.left - cb.left, pb.top - cb.top, pb.width, deckAlpha, turn.toFixed( 2 ), ride, out, prints, accented,
+			cueAt, keyed, down.map( ( d ) => d.toFixed( 3 ) ), lamps, handAt.map( ( n ) => n.toFixed( 3 ) ), w, h, pb.left - cb.left, pb.top - cb.top, pb.width, deckAlpha, turn.toFixed( 2 ), ride, out, prints, accented,
 			sleeve.map( ( n ) => n.toFixed( 4 ) ), sleeveShown.toFixed( 2 ), discs.map( ( d ) => d.key + d.alpha ),
 		].join( '|' );
 		const turning = [ nowAt.toFixed( 5 ), glow.toFixed( 2 ), spin, speed.toFixed( 1 ), lampRows.map( ( a ) => a.toFixed( 1 ) ) ].join( '|' );
@@ -1155,7 +1209,10 @@ export default function deckGl( P ) {
 		const off = [ 0, 0, 0 ];
 		const BLACK = [ 0.012, 0.012, 0.013 ];
 		const CHROME = [ 0.62, 0.63, 0.66 ];
-		// Each: mesh, where, colour, roughness, metallicity, mode, its own light.
+		// Each key where its travel and its lean have it, and its lamp with it.
+		const capOf = KEYS.map( ( [ left, wide, top, tall ] ) => [ ( left + wide / 2 - 0.5 ) * MM, ( 0.5 - top - tall / 2 ) * MM, ( wide * MM ) / 2, ( tall * MM ) / 2 ] );
+		const capAt = capOf.map( ( [ cx, cy ], k ) => lean( cx, cy, DECK_Z + 0.001, -0.0018 * down[ k ], leant[ k ][ 0 ] * down[ k ], leant[ k ][ 1 ] * down[ k ] ) );
+		// Each: mesh, where, colour, roughness, metallicity, mode, its own light, how much of it shows, and a key's middle and half its size.
 		const items = [
 			[ m.desk, I, off, 1, 0, 5, off ],
 			[ keyed ? m.bodyKeyed : m.body, I, BLACK, 0.62, 0, 0, off ],
@@ -1163,9 +1220,9 @@ export default function deckGl( P ) {
 			...( keyed
 				? [
 						[ m.wells, I, [ 0.006, 0.006, 0.007 ], 0.8, 0, 0, off ],
-						...m.keys.map( ( key, k ) => [ key, move( 0, 0, -0.0018 * down[ k ] ), [ 0.034, 0.034, 0.038 ].map( ( c ) => c * ( 1 - 0.45 * down[ k ] ) ), 0.42, 0.3, 0, off ] ),
+						...m.keys.map( ( key, k ) => [ key, capAt[ k ], [ 0.034, 0.034, 0.038 ].map( ( c ) => c * ( 1 - 0.45 * down[ k ] ) ), 0.46, 0.25, 6, off, undefined, capOf[ k ] ] ),
 						...m.lamps.flatMap( ( part, k ) =>
-							part ? [ [ part, move( 0, 0, -0.0018 * down[ k ] ), [ 0.05, 0.05, 0.05 ], 0.3, 0, 0, AMBER.map( ( c ) => ( 0.04 + 2.2 * c ) * lamps[ k ] ) ] ] : []
+							part ? [ [ part, capAt[ k ], [ 0.05, 0.05, 0.05 ], 0.3, 0, 0, AMBER.map( ( c ) => ( 0.04 + 2.2 * c ) * lamps[ k ] ) ] ] : []
 						),
 				  ]
 				: [] ),
@@ -1246,7 +1303,7 @@ export default function deckGl( P ) {
 		gl.uniform4f( u.uBody, ( BODY[ 0 ] + BODY[ 2 ] ) / 2, ( front + BODY[ 3 ] ) / 2, ( BODY[ 2 ] - BODY[ 0 ] ) / 2, ( BODY[ 3 ] - front ) / 2 );
 		gl.uniform2f( u.uStrobe, ( lampRows[ 0 ] * Math.PI ) / 180, ( lampRows[ 1 ] * Math.PI ) / 180 );
 		gl.uniform1f( u.uBlur, Math.min( 1, Math.abs( speed ) / 40 ) );
-		for ( const [ part, M, col, rough, metal, mode, emis, alpha ] of items ) {
+		for ( const [ part, M, col, rough, metal, mode, emis, alpha, cap ] of items ) {
 			const a = alpha ?? deckAlpha;
 			if ( a <= 0.003 ) {
 				continue;
@@ -1258,6 +1315,9 @@ export default function deckGl( P ) {
 			gl.uniform1f( u.uMetal, metal );
 			gl.uniform1f( u.uAlpha, a );
 			gl.uniform1i( u.uMode, mode );
+			if ( cap ) {
+				gl.uniform4f( u.uKey, ...cap );
+			}
 			gl.bindVertexArray( part.vao );
 			gl.drawArrays( gl.TRIANGLES, 0, part.count );
 		}
