@@ -411,9 +411,12 @@ its peak held, read from the analyser.
 
 Where Now Playing is wide, the record out on the deck is the whole scene. The sleeve is drawn away
 and gone once the record is out, and back whenever the record is in it; its button, for a keyboard
-and a screen reader, still puts the record away. The deck stands in the middle of the screen: Now
+and a screen reader, still puts the record away. A new album changes the record and nothing else:
+the scene holds while it arrives. The deck is as large as the window allows above the bar: Now
 Playing runs on under the bar, whose surface is gone so the desk reaches the screen's edge, and the
-stage leaves as much room above the deck as the bar takes below. The deck's keys are the transport
+stage keeps only a margin at the top. Each key is a cap on a spring between two stops, which meets
+either with a small bounce and leans toward the finger that presses it off its middle, and the
+record is warped a hair and carries a little dust, so the light on it sways as it turns. The deck's keys are the transport
 there, so the bar's own are not shown. Left alone while the music plays, the bar, Now Playing's
 head and what a plugin shows under the deck fade away, as they do for a video, and are back at the
 first move, key or touch. Anywhere else the bar is as it always is, and on a wide screen it lies

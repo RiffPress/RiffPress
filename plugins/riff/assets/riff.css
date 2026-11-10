@@ -1540,7 +1540,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	visibility: hidden;
 }
 
-#riff[data-riff-deck="out"] .riff-keys {
+#riff:is([data-riff-deck="out"], [data-riff-arriving]) .riff-keys {
 	visibility: visible;
 }
 
@@ -1692,35 +1692,29 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    the turntable, which has its own shape (below). */
 @media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px))) {
 
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-transport > * {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-transport > * {
 
 		/* over .riff-desk's own, which is important too */
 		display: none !important;
 	}
 
-	/* and the deck has the middle of it. Now Playing's head lies over the
-	   scene rather than above it, and the stage leaves as much room above the
-	   deck as the bar, and whatever a plugin shows under the deck, take below
-	   it: so the deck stands in the middle of the screen, and stays there as
-	   the bar and the rest fade away and come back. Not where the whole screen
-	   is the turntable, which has its own shape (below). */
+	/* and the deck has all of it down to the bar. Now Playing's head lies
+	   over the scene rather than above it, and the stage keeps only a margin
+	   at the top: so the deck is as large as the window allows, and stays
+	   where it is as the bar and the rest fade away and come back. Not where
+	   the whole screen is the turntable, which has its own shape (below). */
 
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-np-head {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-np-head {
 		position: absolute;
 		z-index: 2;
 		inset: var(--riff-safe-t) 0 auto;
 	}
 
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-stage {
-		padding-block: calc(var(--riff-bar-h) + var(--riff-safe-b)) 0;
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-stage {
+		padding-block: calc(var(--riff-safe-t) + clamp(16px, 3dvh, 36px)) 0;
 	}
 
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-np-body:has(.riff-turntable-extras > :not([hidden])) .riff-stage {
-		padding-top: calc(var(--riff-bar-h) + var(--riff-safe-b) + clamp(44px, 9dvh, 72px));
-	}
-
-
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-np {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-np {
 		bottom: 0;
 		padding-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
 	}
@@ -1730,27 +1724,27 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	   plugin shows under the deck fade away, and are back at the first move,
 	   key or touch. The deck's own display still says the band, the time and
 	   the level. */
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-bar::before {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-bar::before {
 		content: none;
 	}
 
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) :is(.riff-bar, .riff-np-head, .riff-turntable-extras) {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) :is(.riff-bar, .riff-np-head, .riff-turntable-extras) {
 		transition: opacity 0.5s ease;
 	}
 
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden]))[data-riff-idle] :is(.riff-bar, .riff-np-head, .riff-turntable-extras) {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden]))[data-riff-idle] :is(.riff-bar, .riff-np-head, .riff-turntable-extras) {
 		opacity: 0;
 		pointer-events: none;
 	}
 
 	/* the bar's end takes the bar's colour as its own everywhere else; here
 	   there is none to take */
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-end,
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-end [data-riff-controls] {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-end,
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-end [data-riff-controls] {
 		background: none;
 	}
 
-	#riff[data-riff-deck="out"][data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-bar {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-bar {
 
 		/* over Now Playing, which now lies under it */
 		z-index: 1;
@@ -1842,7 +1836,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		transition: translate 0.75s var(--riff-hand) 0.08s, scale 0.75s var(--riff-hand) 0.08s, opacity 0.4s 0.3s;
 	}
 
-	#riff[data-riff-deck="out"] .riff-stage > .riff-cover {
+	#riff:is([data-riff-deck="out"], [data-riff-arriving]) .riff-stage > .riff-cover {
 		scale: 0.8;
 		opacity: 0;
 		pointer-events: none;
