@@ -12,7 +12,7 @@ npm run env:start          # WordPress at http://localhost:8890 (admin / passwor
 npm run seed               # a post with ten public-domain jazz tracks
 ```
 
-Until 7.2 ships, `.wp-env.json` names its current pre-release zip (Beta 3 today, then the release candidates), and `plugin-check.yml` names the same one. Each new build is a one-line change in those two files, then `npm run env:start` again; the PHPUnit rows and the weekly suite follow `.wp-env.json`, the trunk rows stay on trunk, and the Playground demo asks for `beta`, which is always the newest pre-release. On release day the zip becomes `WordPress/WordPress#7.2`.
+Until 7.2 ships, `.wp-env.json` names its current pre-release zip (Beta 5 today, then the release candidates), and `plugin-check.yml` names the same one. Each new build is a one-line change in those two files, then `npm run env:start` again; the PHPUnit rows and the weekly suite follow `.wp-env.json`, the trunk rows stay on trunk, and the Playground demo asks for `beta`, which is always the newest pre-release. On release day the zip becomes `WordPress/WordPress#7.2`.
 
 The plugin is `plugins/riff/`. It ships plain stylesheets and scripts with no build step, each loaded only where it applies, and the only thing it adds to a page is the player. Keep it that way: transform and opacity animations only, native controls first, every browser feature behind a check.
 

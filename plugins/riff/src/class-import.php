@@ -284,11 +284,16 @@ final class Import {
 		if ( function_exists( 'set_time_limit' ) ) {
 			set_time_limit( 0 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- a background import, lifted as core lifts it for an upgrade.
 		}
+		// A zip kept off this server, in object storage, is brought here to be unpacked.
+		$local = self::here( $file );
+		if ( '' === $local ) {
+			return new WP_Error( 'riff_import_zip', __( 'That zip does not exist or cannot be read.', 'riff' ) );
+		}
 		$previous = get_current_user_id();
 		wp_set_current_user( $author );
 		try {
 			$result = self::zip(
-				$file,
+				$local,
 				array(
 					'private' => true,
 					// The attachment, which no other upload can be: a path is free again once its
@@ -298,6 +303,9 @@ final class Import {
 			);
 		} finally {
 			wp_set_current_user( $previous );
+			if ( $local !== $file ) {
+				wp_delete_file( $local );
+			}
 		}
 		if ( ! is_wp_error( $result ) ) {
 			foreach ( $result['albums'] as $album ) {
@@ -313,6 +321,32 @@ final class Import {
 			}
 		}
 		return $result;
+	}
+
+	/**
+	 * A zip as a file on this server, which is what ZipArchive opens. One a storage plugin keeps
+	 * elsewhere, whose path is a stream such as `s3://`, is copied to a temporary file, for its
+	 * caller to delete; any other is itself.
+	 *
+	 * @since 6.7.1
+	 *
+	 * @param string $file The zip's path.
+	 * @return string A local path, or empty when the zip can't be read.
+	 */
+	private static function here( string $file ): string {
+		if ( ! wp_is_stream( $file ) ) {
+			return $file;
+		}
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		$copy = wp_tempnam( wp_basename( $file ) );
+		// isolation: write -- a copy of the zip in the temp folder, removed after the import.
+		if ( ! $copy || ! @copy( $file, $copy ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- a failure is the answer, said by the caller.
+			if ( $copy ) {
+				wp_delete_file( $copy );
+			}
+			return '';
+		}
+		return $copy;
 	}
 
 	/**

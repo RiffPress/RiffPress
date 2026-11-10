@@ -419,6 +419,50 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertSame( 0, get_current_user_id(), 'the job puts back who was signed in' );
 	}
 
+	public function test_a_zip_a_storage_plugin_keeps_elsewhere_is_brought_here_and_imported(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+
+		// As an offloading plugin leaves it: the attachment's path is a stream, which ZipArchive can't open.
+		require_once __DIR__ . '/class-riff-test-elsewhere.php';
+		stream_wrapper_register( 'riffelsewhere', Riff_Test_Elsewhere::class );
+		$elsewhere = static fn( $file, $attachment ) => $attachment === $id ? 'riffelsewhere://' . $file : $file;
+		add_filter( 'get_attached_file', $elsewhere, 10, 2 );
+		$before    = glob( get_temp_dir() . '*' );
+		try {
+			$result = Import::uploaded_zip( $id );
+		} finally {
+			remove_filter( 'get_attached_file', $elsewhere, 10 );
+			stream_wrapper_unregister( 'riffelsewhere' );
+		}
+
+		$this->assertIsArray( $result );
+		$this->assertSame( 'private', get_post_status( $result['albums'][0]['post'] ) );
+		$this->assertCount( 1, $this->tracks() );
+		$this->assertSame( $result['albums'][0]['post'], (int) get_post( $id )->post_parent, 'the zip is attached to its album' );
+		$this->assertSame( $before, glob( get_temp_dir() . '*' ), 'the copy brought here is removed' );
+	}
+
+	public function test_a_zip_kept_elsewhere_that_cannot_be_read_is_an_error(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+
+		require_once __DIR__ . '/class-riff-test-elsewhere.php';
+		stream_wrapper_register( 'riffelsewhere', Riff_Test_Elsewhere::class );
+		$gone = static fn( $file, $attachment ) => $attachment === $id ? 'riffelsewhere:///nowhere/gone.zip' : $file;
+		add_filter( 'get_attached_file', $gone, 10, 2 );
+		try {
+			$result = Import::uploaded_zip( $id );
+		} finally {
+			remove_filter( 'get_attached_file', $gone, 10 );
+			stream_wrapper_unregister( 'riffelsewhere' );
+		}
+
+		$this->assertWPError( $result );
+		$this->assertCount( 0, $this->tracks() );
+	}
+
 	public function test_a_zip_uploaded_to_a_post_or_by_someone_who_cannot_write_posts_is_left_alone(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
 		$post     = self::factory()->post->create();
