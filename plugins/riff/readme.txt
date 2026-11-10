@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.7.0
+Stable tag: 6.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.7.1 =
+* Fixed: a zip that a storage plugin keeps in object storage is brought to the server and imported.
+* Fixed: a deleted site takes its protected files with it when a host keeps them outside uploads.
+
 = 6.7.0 =
 * The deck is as large as the window allows, holds its scene while a new album arrives, and its keys spring and lean and its record sways in the light as real ones do.
 * The turntable is drawn lit in WebGL where a graphics card can, stands alone in a wide Now Playing with its own keys and display, and a press on the record puts the needle down there.
@@ -178,10 +182,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.4.0 =
 * A site can open the Listen app at its own address, and a host can fit the app to it.
-
-= 6.3.0 =
-* Someone who may upload adds music in the Listen app, by choosing or dropping it.
-* The VU meter and spectrum move to an experimental plugin, in a place Riff keeps under the turntable.
-* A site can be private until its owner opens it, its audio and video with it.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
