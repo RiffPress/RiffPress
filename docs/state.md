@@ -128,9 +128,9 @@ Besides the turntable and Now Playing above:
 
 | Where | What | Risk |
 | --- | --- | --- |
-| `Bindings::$read` (`class-bindings.php`) | Tracks read for block bindings; `flush()` only in tests. | medium: in a long process (WP-CLI, cron) a track changed and then rendered is rendered as it was. |
-| `static $found` in `Protect::songs_of()` and `Protect::posts_playing()` | Which songs a file is the video or stream of, which posts play a file. | medium: a change in the same request is not seen by the check that decides who may play it. |
-| `static $statements` in `Export` | Prepared statements keyed by `spl_object_id()` and a prefix match. | medium: an id is reused once its object is freed, and `1` prefixes `12`. |
+| `Bindings::$read` (`class-bindings.php`) | Tracks read for block bindings; `flush()` runs on `clean_post_cache` and on any post meta change. | low: keyed by attachment and post only, so a process that switches user or site between renders is handed the first one's track. |
+| `Protect::$songs`, `Protect::$playing` | Which songs a file is the video or stream of, which posts play a file; `forget()` runs on `clean_post_cache` and on a change to `_riff_video` or `_riff_stream`. | low: keyed by attachment only, so a switch of site is not seen, nor an author losing `edit_post`, until a post changes. |
+| `Export::write()`'s `$statements` | The archive's prepared statements, by table, a local of the one call that writes it; dropped with its handle before the zip reads the database. | none: no static. |
 | `UI::$eager`, `UI::$lead` | How many images load eagerly, counted down across every render in a request. | low |
 | The rest (`Permissions`, `Extensions`, `Transcode`, `Cover`, `Art`, `Blocks_Source`, the extensions' REST controllers) | Keyed or per request. | low |
 | JS: `cache` in `features/listen/app/fetch.js` | Every REST answer the app fetched, for the session; `forget()` clears the drawn views but not this. | medium |

@@ -294,6 +294,27 @@ class Test_Riff_Bindings extends Riff_TestCase {
 		$this->assertSame( 1, $reads - 1, 'once for the three bindings, beside the audio block\'s own read' );
 	}
 
+	public function test_a_track_changed_in_the_same_process_is_read_again(): void {
+		[ $post, $id ] = $this->post_with_track();
+		$this->assertSame( 'Underground', Bindings::field( Bindings::track( $id, $post ), 'title' ) );
+
+		wp_update_post(
+			array(
+				'ID'         => $id,
+				'post_title' => 'Renamed',
+			)
+		);
+		$this->assertSame( 'Renamed', Bindings::field( Bindings::track( $id, $post ), 'title' ), 'a post saved forgets what was read' );
+
+		wp_update_post(
+			array(
+				'ID'         => $id,
+				'post_title' => 'Renamed again',
+			)
+		);
+		$this->assertSame( 'Renamed again', Bindings::field( Bindings::track( 0, $post ), 'title' ), 'and so does the post\'s first track' );
+	}
+
 	public function test_a_file_outside_the_media_library_binds_what_it_knows(): void {
 		$post = self::factory()->post->create(
 			array(

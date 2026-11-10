@@ -128,6 +128,10 @@ final class Export {
 		global $wpdb;
 		$db = Archive::database( $work . '/' . Archive::DATABASE, true );
 		$db->beginTransaction();
+		// This archive's insert statements, one a table, alive only as long as write() is: they
+		// hold the handle, and dropping them with it is what closes the database before the zip
+		// reads it.
+		$statements = array();
 
 		$ids     = self::posts( (bool) $args['public'] );
 		$uploads = wp_upload_dir( null, false );
@@ -162,20 +166,21 @@ final class Export {
 				} else {
 					++$counts['posts'];
 				}
-				self::insert( $db, 'posts', $post );
+				self::insert( $db, $statements, 'posts', $post );
 				foreach ( $rows as $row ) {
 					if ( ! in_array( $row['meta_key'], Archive::SKIP_META, true ) ) {
-						self::insert( $db, 'postmeta', $row );
+						self::insert( $db, $statements, 'postmeta', $row );
 					}
 				}
 			}
 			wp_cache_flush_runtime();
 		}
-		$counts['terms'] = self::terms( $db, $ids );
-		self::users( $db, array_keys( $authors ) );
-		self::options( $db );
+		$counts['terms'] = self::terms( $db, $statements, $ids );
+		self::users( $db, $statements, array_keys( $authors ) );
+		self::options( $db, $statements );
 		$db->commit();
-		$db = null;
+		$statements = array();
+		$db         = null;
 
 		$counts['files'] = count( $files );
 		$manifest        = array(
@@ -332,18 +337,19 @@ final class Export {
 	/**
 	 * The terms the posts are filed under, with their parents and meta.
 	 *
-	 * @param PDO   $db  The archive's database.
-	 * @param int[] $ids Post IDs.
+	 * @param PDO             $db         The archive's database.
+	 * @param \PDOStatement[] $statements Its insert statements, by table.
+	 * @param int[]           $ids        Post IDs.
 	 * @return int How many terms.
 	 */
-	private static function terms( PDO $db, array $ids ): int {
+	private static function terms( PDO $db, array &$statements, array $ids ): int {
 		global $wpdb;
 		$taxonomies = array();
 		foreach ( array_chunk( $ids, self::BATCH ) as $chunk ) {
 			$in = implode( ',', array_map( 'intval', $chunk ) );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- integers only.
 			foreach ( (array) $wpdb->get_results( "SELECT * FROM {$wpdb->term_relationships} WHERE object_id IN ($in)", ARRAY_A ) as $row ) {
-				self::insert( $db, 'term_relationships', $row );
+				self::insert( $db, $statements, 'term_relationships', $row );
 				$taxonomies[ (int) $row['term_taxonomy_id'] ] = true;
 			}
 		}
@@ -358,7 +364,7 @@ final class Export {
 					continue;
 				}
 				$done[ (int) $row['term_id'] ] = true;
-				self::insert( $db, 'term_taxonomy', $row );
+				self::insert( $db, $statements, 'term_taxonomy', $row );
 				// A parent the posts are not filed under still goes, so the tree is whole.
 				if ( (int) $row['parent'] && ! isset( $done[ (int) $row['parent'] ] ) ) {
 					// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- one parent.
@@ -373,11 +379,11 @@ final class Export {
 			$in = implode( ',', array_map( 'intval', $chunk ) );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- integers only.
 			foreach ( (array) $wpdb->get_results( "SELECT * FROM {$wpdb->terms} WHERE term_id IN ($in)", ARRAY_A ) as $row ) {
-				self::insert( $db, 'terms', $row );
+				self::insert( $db, $statements, 'terms', $row );
 			}
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- integers only.
 			foreach ( (array) $wpdb->get_results( "SELECT * FROM {$wpdb->termmeta} WHERE term_id IN ($in) ORDER BY meta_id", ARRAY_A ) as $row ) {
-				self::insert( $db, 'termmeta', $row );
+				self::insert( $db, $statements, 'termmeta', $row );
 			}
 		}
 		return count( $done );
@@ -387,15 +393,17 @@ final class Export {
 	 * Who wrote the posts: their names and email, by which an import finds them again. No
 	 * password, and nothing else of their account.
 	 *
-	 * @param PDO   $db  The archive's database.
-	 * @param int[] $ids User IDs.
+	 * @param PDO             $db         The archive's database.
+	 * @param \PDOStatement[] $statements Its insert statements, by table.
+	 * @param int[]           $ids        User IDs.
 	 */
-	private static function users( PDO $db, array $ids ): void {
+	private static function users( PDO $db, array &$statements, array $ids ): void {
 		foreach ( $ids as $id ) {
 			$user = get_userdata( (int) $id );
 			if ( $user ) {
 				self::insert(
 					$db,
+					$statements,
 					'users',
 					array(
 						'ID'            => (int) $user->ID,
@@ -412,38 +420,38 @@ final class Export {
 	/**
 	 * Riff's settings and the site's name, tagline and icon, as stored.
 	 *
-	 * @param PDO $db The archive's database.
+	 * @param PDO             $db         The archive's database.
+	 * @param \PDOStatement[] $statements Its insert statements, by table.
 	 */
-	private static function options( PDO $db ): void {
+	private static function options( PDO $db, array &$statements ): void {
 		global $wpdb;
 		$names = array_merge( Archive::OPTIONS, Archive::IDENTITY );
 		$in    = implode( ',', array_map( static fn( string $n ): string => "'" . esc_sql( $n ) . "'", $names ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the names are constants, escaped.
 		foreach ( (array) $wpdb->get_results( "SELECT * FROM {$wpdb->options} WHERE option_name IN ($in)", ARRAY_A ) as $row ) {
-			self::insert( $db, 'options', $row );
+			self::insert( $db, $statements, 'options', $row );
 		}
 	}
 
 	/**
-	 * Inserts a row into one of the archive's tables, its columns and no others.
+	 * Inserts a row into one of the archive's tables, its columns and no others, with a statement
+	 * prepared once a table on this archive's own handle.
 	 *
-	 * @param PDO    $db    The archive's database.
-	 * @param string $table Table, without the prefix.
-	 * @param array  $row   Row.
+	 * @param PDO             $db         The archive's database.
+	 * @param \PDOStatement[] $statements Its insert statements, by table.
+	 * @param string          $table      Table, without the prefix.
+	 * @param array           $row        Row.
 	 */
-	private static function insert( PDO $db, string $table, array $row ): void {
-		static $statements = array();
-		$columns           = array_keys( Archive::TABLES[ $table ] );
-		$key               = spl_object_id( $db ) . $table;
-		if ( ! isset( $statements[ $key ] ) ) {
-			$statements         = array_filter( $statements, static fn( $s, $k ): bool => str_starts_with( (string) $k, (string) spl_object_id( $db ) ), ARRAY_FILTER_USE_BOTH );
-			$statements[ $key ] = $db->prepare( 'INSERT INTO ' . Archive::PREFIX . $table . ' (' . implode( ', ', $columns ) . ') VALUES (' . implode( ', ', array_fill( 0, count( $columns ), '?' ) ) . ')' );
+	private static function insert( PDO $db, array &$statements, string $table, array $row ): void {
+		$columns = array_keys( Archive::TABLES[ $table ] );
+		if ( ! isset( $statements[ $table ] ) ) {
+			$statements[ $table ] = $db->prepare( 'INSERT INTO ' . Archive::PREFIX . $table . ' (' . implode( ', ', $columns ) . ') VALUES (' . implode( ', ', array_fill( 0, count( $columns ), '?' ) ) . ')' );
 		}
 		$values = array();
 		foreach ( $columns as $column ) {
 			$values[] = $row[ $column ] ?? null;
 		}
-		$statements[ $key ]->execute( $values );
+		$statements[ $table ]->execute( $values );
 	}
 
 	/**
