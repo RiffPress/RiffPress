@@ -38,6 +38,8 @@ final class Protected_Path {
 		add_action( 'load-settings_page_' . Extensions::PAGE, array( self::class, 'ask' ) );
 		add_action( 'admin_notices', array( self::class, 'notices' ) );
 		add_action( 'delete_attachment', array( Protected_Files::class, 'deleted' ) );
+		// Before core's own, at 10, which drops the site's tables and empties its uploads.
+		add_action( 'wp_uninitialize_site', array( Protected_Files::class, 'forget' ), 5 );
 	}
 
 	/**

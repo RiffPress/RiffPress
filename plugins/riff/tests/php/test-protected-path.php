@@ -265,6 +265,55 @@ class Test_Riff_Protected_Path extends Riff_TestCase {
 		$this->assertNotSame( $main, $theirs, 'never shared' );
 	}
 
+	public function test_a_deleted_site_takes_its_folder_with_it_and_leaves_the_others(): void {
+		if ( ! is_multisite() ) {
+			$this->markTestSkipped( 'A network only.' );
+		}
+		$this->path = $this->base;
+		$folders    = array();
+		$files      = array();
+		$sites      = array();
+		foreach ( array( 'gone', 'kept' ) as $which ) {
+			$site = self::factory()->blog->create();
+			switch_to_blog( $site );
+			$id = self::attach( '03 - Trombone Detritus [detritus].mp3' );
+			$this->assertTrue( Protected_Files::protect( $id ) );
+			$folders[ $which ] = Protected_Files::path();
+			$files[ $which ]   = (string) get_attached_file( $id );
+			$sites[ $which ]   = $site;
+			restore_current_blog();
+		}
+		$this->assertFileExists( $files['gone'] );
+
+		wp_delete_site( $sites['gone'] );
+
+		$this->assertDirectoryDoesNotExist( $folders['gone'], 'its folder, and the file in it' );
+		$this->assertFileExists( $files['kept'], 'another site keeps its own' );
+		$this->assertDirectoryExists( $this->base, 'never the path itself' );
+		wp_delete_site( $sites['kept'] );
+	}
+
+	public function test_a_deleted_sites_folder_that_is_a_link_is_left_alone(): void {
+		if ( ! is_multisite() ) {
+			$this->markTestSkipped( 'A network only.' );
+		}
+		$this->path = $this->base;
+		$elsewhere  = sys_get_temp_dir() . '/riff-phpunit-elsewhere';
+		wp_mkdir_p( $elsewhere );
+		wp_mkdir_p( $this->base );
+		file_put_contents( $elsewhere . '/theirs.mp3', 'audio' ); // phpcs:ignore WordPress.WP.AlternativeFunctions -- test scratch.
+		$site = self::factory()->blog->create();
+		if ( ! @symlink( $elsewhere, $this->base . '/' . $site ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- skipped where it fails.
+			self::empty( $elsewhere );
+			$this->markTestSkipped( 'This filesystem has no symbolic links.' );
+		}
+
+		wp_delete_site( $site );
+
+		$this->assertFileExists( $elsewhere . '/theirs.mp3', 'what the link leads to is not the site\'s to remove' );
+		self::empty( $elsewhere );
+	}
+
 	public function test_files_move_to_a_new_path_and_back_keeping_their_address(): void {
 		$id      = $this->protected_track();
 		$address = (string) wp_get_attachment_url( $id );

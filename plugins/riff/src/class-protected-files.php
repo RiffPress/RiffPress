@@ -8,7 +8,11 @@
 
 namespace Riff;
 
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use WP_Error;
+use WP_Site;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -802,6 +806,36 @@ final class Protected_Files {
 		if ( ! wp_is_stream( $file ) && '' !== self::folder_of( $file ) && ! self::within( $file, self::uploads() ) && is_file( $file ) ) {
 			wp_delete_file( $file );
 		}
+	}
+
+	/**
+	 * Removes a deleted site's folder under the path a host set. Core empties the site's uploads
+	 * folder, where protected files are by default, but knows nothing of a folder outside it, so
+	 * without this the site's protected files would stay on the disk, and a site later given the
+	 * same ID would find them in its own folder. Only that site's folder goes, never the path
+	 * itself, and a link is removed, never what it leads to.
+	 *
+	 * @since 6.7.1
+	 *
+	 * @param WP_Site $site The site being deleted.
+	 */
+	public static function forget( $site ): void {
+		$base = self::base();
+		$id   = $site instanceof WP_Site ? (int) $site->blog_id : 0;
+		if ( '' === $base || $id < 1 ) {
+			return;
+		}
+		$folder = $base . '/' . $id;
+		if ( ! is_dir( $folder ) || is_link( $folder ) ) {
+			return;
+		}
+		$items = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $folder, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );
+		foreach ( $items as $item ) {
+			// isolation: write -- a deleted site's own folder under RIFF_PROTECTED_PATH, emptied as core empties its uploads.
+			$item->isDir() && ! $item->isLink() ? rmdir( $item->getPathname() ) : unlink( $item->getPathname() ); // phpcs:ignore WordPress.WP.AlternativeFunctions -- outside uploads, where WP_Filesystem may not reach.
+		}
+		// isolation: write -- the folder itself, now empty.
+		rmdir( $folder ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- emptied just above.
 	}
 
 	/**
