@@ -816,6 +816,10 @@ export function nowPlaying( P ) {
 	function markRoom() {
 		if ( roomy() ) {
 			delete root.dataset.riffTurntable;
+			// The deck drawn in WebGL, where the browser has it, from the first time it shows.
+			P.feature( 'deck-gl' );
+			// And the music's level in the bar, where the deck's keys take the transport's place.
+			P.feature( 'level' );
 		} else {
 			root.dataset.riffTurntable = 'off';
 		}
@@ -1284,6 +1288,8 @@ export function nowPlaying( P ) {
 	const LENGTH = Math.sqrt( SPAN * SPAN + NULLS[ 0 ] * NULLS[ 1 ] );
 	const OFFSET = Math.asin( ( NULLS[ 0 ] + NULLS[ 1 ] ) / ( 2 * LENGTH ) );
 	const ARM = LENGTH / MM;
+	// For the deck as WebGL draws it (deck-gl.js), which stands its arm where this one is.
+	P.arm = { base: BASE, length: ARM, offset: OFFSET, rest: REST };
 	// Drawn to match, in the drawing's units (the record's hundredths, the base at (6, 4)): the
 	// stylus on the line from the base, the headshell turned by β round it, and the tube's S
 	// bending into the headshell's back along its line. The grip runs on to the stylus.
@@ -1485,6 +1491,7 @@ export function nowPlaying( P ) {
 		delete tonearm.dataset.riffDown;
 		grip.now = Math.min( angle( 1 ), Math.max( REST, grip.deg + around( x, y ) - grip.at ) );
 		tonearm.style.setProperty( '--riff-arm', `${ grip.now.toFixed( 2 ) }deg` );
+		point( playedOf( grip.now ), x, y );
 	}
 	// The band a moment of the side is in, and how far into it.
 	function bandAt( played ) {
@@ -1501,6 +1508,7 @@ export function nowPlaying( P ) {
 	// playing if the music was. A band whose track is not in the queue leaves the music alone.
 	function land( k, into = 0 ) {
 		P.press( 'seek' );
+		unpoint();
 		delete tonearm.dataset.riffHeld;
 		if ( root.dataset.riffDeck === 'out' ) {
 			tonearm.dataset.riffDown = '';
@@ -1521,6 +1529,156 @@ export function nowPlaying( P ) {
 		}
 		needle();
 	}
+	// ---- What lies in a groove of the side, said beside the pointer: the band, its title and the
+	// moment in it, which is where the needle would land. The arm in the hand says it for the
+	// groove under its stylus. A mouse or a pen over the record says it for the groove it points
+	// at, and a press there puts the needle down in it: the same moment the arm's own angle
+	// stands for (angle()), so the stylus comes to rest on the point pressed. A finger has the
+	// arm; a touch on the record is too easily one meant for something else. The record WebGL
+	// draws marks the groove too (deck-gl.js, P.cueAt, as a share of the radius).
+	const cue = $( '.riff-cue' );
+	const said = document.createElement( 'span' );
+	said.className = 'riff-cue-tip';
+	said.setAttribute( 'aria-hidden', 'true' );
+	said.hidden = true;
+	np.append( said );
+	function point( played, x, y ) {
+		const on = sideOf( P.track() );
+		if ( ! on ) {
+			unpoint();
+			return;
+		}
+		const { k, into } = bandAt( played );
+		const box = np.getBoundingClientRect();
+		said.textContent = `${ on.name }${ k - on.from + 1 } ${ albums.get( playing ).titles[ k ] } · ${ time( into ) }`;
+		said.style.translate = `${ ( x - box.left ).toFixed( 1 ) }px ${ ( y - box.top ).toFixed( 1 ) }px`;
+		said.hidden = false;
+		P.cueAt = groovedAt( played );
+	}
+	function unpoint() {
+		said.hidden = true;
+		P.cueAt = null;
+	}
+	if ( cue ) {
+		// The share of the side in the groove under a point of the screen; null off the grooves.
+		const under = ( e ) => {
+			const r = cue.getBoundingClientRect();
+			const out = Math.hypot( e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2 ) / ( r.width / 2 );
+			return out > LEAD_IN || out < leadOut() || ! sideOf( P.track() ) ? null : ( LEAD_IN - out ) / ( LEAD_IN - leadOut() );
+		};
+		let down = null;
+		cue.addEventListener( 'pointermove', ( e ) => {
+			if ( grip || e.pointerType === 'touch' ) {
+				return;
+			}
+			const played = under( e );
+			cue.toggleAttribute( 'data-riff-over', played !== null );
+			if ( played === null ) {
+				unpoint();
+			} else {
+				point( played, e.clientX, e.clientY );
+			}
+		} );
+		cue.addEventListener( 'pointerleave', () => {
+			down = null;
+			cue.removeAttribute( 'data-riff-over' );
+			if ( ! grip ) {
+				unpoint();
+			}
+		} );
+		cue.addEventListener( 'pointerdown', ( e ) => {
+			if ( e.pointerType === 'touch' || e.button !== 0 || under( e ) === null ) {
+				return;
+			}
+			e.stopPropagation();
+			down = { x: e.clientX, y: e.clientY };
+		} );
+		cue.addEventListener( 'pointerup', ( e ) => {
+			const played = under( e );
+			const pressed = down && played !== null && Math.hypot( e.clientX - down.x, e.clientY - down.y ) <= 4;
+			down = null;
+			if ( ! pressed ) {
+				return;
+			}
+			const { k, into } = bandAt( played );
+			land( k, into );
+			point( played, e.clientX, e.clientY );
+		} );
+	}
+	// ---- The deck's keys under the hand (player.php), as a deck's are. Pressed and let go, the
+	// track keys go to the track before or after; held, they wind the music back or on, slowly
+	// at first and then faster, for as long as they are held, and the stylus goes with it. Where
+	// a device can, each key gives a tick under the finger as it goes down.
+	for ( const [ key, way ] of [ [ $( '.riff-key-prev' ), -1 ], [ $( '.riff-key-next' ), 1 ] ] ) {
+		if ( ! key ) {
+			continue;
+		}
+		let wait = 0;
+		let winding = 0;
+		let wound = false;
+		const letGo = () => {
+			clearTimeout( wait );
+			clearInterval( winding );
+			wait = winding = 0;
+		};
+		key.addEventListener( 'pointerdown', ( e ) => {
+			if ( e.button !== 0 ) {
+				return;
+			}
+			letGo();
+			wound = false;
+			key.setPointerCapture?.( e.pointerId );
+			wait = setTimeout( () => {
+				let turns = 0;
+				wound = true;
+				winding = setInterval( () => {
+					const m = P.el();
+					if ( Number.isFinite( m.duration ) ) {
+						m.currentTime = Math.min( m.duration - 0.25, Math.max( 0, m.currentTime + way * Math.min( 8, 1 + 0.25 * turns++ ) ) );
+					}
+				}, 120 );
+			}, 450 );
+		} );
+		for ( const over of [ 'pointerup', 'pointercancel', 'lostpointercapture' ] ) {
+			key.addEventListener( over, letGo );
+		}
+		// A key that wound the music is not also a press of it.
+		key.addEventListener( 'click', ( e ) => {
+			if ( wound ) {
+				wound = false;
+				e.stopPropagation();
+				e.preventDefault();
+			}
+		} );
+	}
+	// The transport is the bar's own or the deck's keys, never both (riff.css). When the one that
+	// has the focus goes, as the record comes out, is put away or a video takes the stage, the
+	// focus goes to the same control where it now is, rather than nowhere. And the deck's speed
+	// is asked again, since it holds only while the deck is the view (deckOnly()).
+	const transport = ( b ) => b?.closest?.( '.riff-bar-transport, .riff-keys' );
+	const inSight = ( b ) => b.offsetParent !== null && getComputedStyle( b ).visibility !== 'hidden';
+	let pressedOn = null;
+	root.addEventListener( 'focusin', ( e ) => {
+		const b = e.target.closest?.( '[data-riff-action]' );
+		pressedOn = transport( b ) ? b : null;
+	} );
+	new MutationObserver( () => {
+		retune( false );
+		requestAnimationFrame( () => {
+			const lost = pressedOn && ! inSight( pressedOn ) && [ document.body, pressedOn ].includes( document.activeElement );
+			if ( lost ) {
+				$$( `[data-riff-action="${ pressedOn.dataset.riffAction }"]` )
+					.find( ( b ) => b !== pressedOn && transport( b ) && inSight( b ) )
+					?.focus();
+			}
+		} );
+	} ).observe( root, { attributeFilter: [ 'data-riff-deck', 'data-mode', 'data-riff-showing' ] } );
+	new MutationObserver( () => retune( false ) ).observe( np, { attributeFilter: [ 'hidden' ] } );
+	$( '.riff-keys' )?.addEventListener( 'pointerdown', ( e ) => {
+		if ( e.target.closest( 'button' ) && e.pointerType === 'touch' ) {
+			navigator.vibrate?.( 8 );
+		}
+	} );
 	// The slider's value: the band playing, by its number on the side.
 	function bands() {
 		const album = albums.get( playing );
@@ -1616,18 +1774,21 @@ export function nowPlaying( P ) {
 		} );
 	}
 
-	// ---- The deck's own controls, where the whole screen is the turntable: the two speeds and the
-	// pitch fader. The music plays at the speed chosen over the record's own (an LP at 45 runs
+	// ---- The deck's own controls: the two speeds, among its keys or, where the whole screen is the
+	// turntable, on its board with the pitch fader. The music plays at the speed chosen over the record's own (an LP at 45 runs
 	// fast, as on a deck), times the pitch, ±8%; its pitch moves with it, as a record's does, and
-	// the platter, the strobe and the arm follow the one rate (ratechange, above). Anywhere else
-	// the music plays at its own speed.
+	// the platter, the strobe and the arm follow the one rate (ratechange, above). Where the
+	// turntable isn't the view, the music plays at its own speed.
 	const RPM = { 33: 100 / 3, 45: 45 };
 	const own = () => ( root.dataset.riffFormat === '7' ? '45' : '33' );
 	function deckOnly() {
-		if ( ! deckScreen() ) {
+		// Only while the deck is the view: closed, or on a video, the music is at its own speed,
+		// rather than fast or slow with no control in sight that says why.
+		if ( ! roomy() || np.hidden || P.isVideo?.() ) {
 			return 1;
 		}
-		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( 1 + pitch / 100 );
+		// The pitch fader is the board's alone.
+		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( deckScreen() ? 1 + pitch / 100 : 1 );
 	}
 	// The deck's speed times the listener's own (respeed(), above).
 	function deckRate() {
@@ -1636,13 +1797,13 @@ export function nowPlaying( P ) {
 	const board = $( '.riff-deck-board' );
 	const fader = $( '[data-riff-pitch]' );
 	function paintDeck() {
-		if ( ! board ) {
-			return;
-		}
-		for ( const b of board.querySelectorAll( '[data-riff-speed]' ) ) {
+		for ( const b of $$( '[data-riff-speed]' ) ) {
 			const on = b.dataset.riffSpeed === ( chosen ?? own() );
 			b.setAttribute( 'aria-checked', String( on ) );
 			b.tabIndex = on ? 0 : -1;
+		}
+		if ( ! board ) {
+			return;
 		}
 		const readout = `${ pitch > 0 ? '+' : '' }${ pitch.toFixed( 1 ) }`;
 		fader.value = String( pitch );
@@ -1664,24 +1825,27 @@ export function nowPlaying( P ) {
 		}
 		bend( m, deckRate() ).then( ( whole ) => whole && settle( m ) );
 	}
-	if ( board ) {
-		board.addEventListener( 'click', ( e ) => {
+	// The speeds are a radio group, wherever they stand: a press chooses one, and the arrows move
+	// between them.
+	for ( const speeds of $$( '.riff-speeds' ) ) {
+		speeds.addEventListener( 'click', ( e ) => {
 			const speed = e.target.closest( '[data-riff-speed]' );
 			if ( speed ) {
 				chosen = speed.dataset.riffSpeed;
 				retune();
 			}
 		} );
-		// The speeds are a radio group: the arrows move between them.
-		board.querySelector( '.riff-speeds' ).addEventListener( 'keydown', ( e ) => {
+		speeds.addEventListener( 'keydown', ( e ) => {
 			if ( ! [ 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown' ].includes( e.key ) ) {
 				return;
 			}
 			e.preventDefault();
 			chosen = ( chosen ?? own() ) === '33' ? '45' : '33';
 			retune();
-			board.querySelector( `[data-riff-speed="${ chosen }"]` ).focus();
+			speeds.querySelector( `[data-riff-speed="${ chosen }"]` ).focus();
 		} );
+	}
+	if ( board ) {
 		fader.addEventListener( 'input', () => {
 			const v = Number( fader.value );
 			// It clicks into the middle, as a fader's centre detent does.
@@ -1692,8 +1856,8 @@ export function nowPlaying( P ) {
 			pitch = 0;
 			retune();
 		} );
-		paintDeck();
 	}
+	paintDeck();
 
 	// The side's grooves: a glossy ring between each of its tracks, and, where something has measured
 	// a track's loudness (its levels, a digit from 0 to 9 for each moment of it), the band lighter
@@ -1705,6 +1869,8 @@ export function nowPlaying( P ) {
 		const album = albums.get( playing );
 		const lengths = on && album ? album.lengths.slice( on.from, on.to ) : [];
 		const whole = lengths.reduce( ( a, b ) => a + b, 0 );
+		// The same side for the record WebGL draws (deck-gl.js), which reads it at its next frame.
+		P.pressed = whole ? { lengths, levels: lengths.map( ( _, k ) => album.levels?.[ on.from + k ] || '' ) } : null;
 		if ( ! record || ! whole ) {
 			record?.style.removeProperty( '--riff-bands' );
 			return;
@@ -1768,13 +1934,14 @@ export function nowPlaying( P ) {
 	const modes = $( '.riff-modes' );
 	let idle = 0;
 	let mouse = false;
+	// The same holds for the deck on its own, the record out and the music playing: what is round
+	// it goes quiet, and the deck is the picture (riff.css).
 	const watching = () =>
 		! np.hidden &&
 		root.classList.contains( 'is-open' ) &&
 		! P.panelOpen &&
 		!! P.views?.get( P.showing )?.stage &&
-		!! P.isVideo?.() &&
-		! P.video.paused;
+		( P.isVideo?.() ? ! P.video.paused : root.dataset.riffDeck === 'out' && ! P.el().paused );
 	const focused = ( el ) =>
 		el.contains( document.activeElement ) &&
 		document.activeElement.matches( ':focus-visible' );
@@ -1811,7 +1978,9 @@ export function nowPlaying( P ) {
 	}
 	for ( const ev of [ 'play', 'pause', 'ended' ] ) {
 		P.video.addEventListener( ev, wake );
+		P.audio.addEventListener( ev, wake );
 	}
+	new MutationObserver( wake ).observe( root, { attributeFilter: [ 'data-riff-deck' ] } );
 	root.addEventListener( 'riff:track', wake );
 	P.wakeControls = wake;
 

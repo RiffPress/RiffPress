@@ -382,7 +382,54 @@ Riff lays out by the screen's shape, never by the device, as WebKit and Apple as
 
 ## The turntable
 
-The turntable is the album where Now Playing is wider than tall (above). Under the deck is a place a
+The turntable is the album where Now Playing is wider than tall (above). The deck in the page (the
+plinth, the record, the arm in `player.php`, styled by `riff.css` and moved by `now-playing.js`) is
+the turntable: it is what a hand takes, what a keyboard and a screen reader find, and what the tests
+read. Where the browser has WebGL2, `assets/player/deck-gl.js` draws it: a canvas the whole of Now
+Playing, in its background, lit as a deck on a desk is, seen from straight above the spindle so
+everything it draws lies where the page has it. It only draws. Each frame it reads the page's deck
+(the record's place and turn, the arm's angle, the cue lever, the label's words and colours, the
+side's bands from `P.pressed`) and draws that; once it has drawn, `#riff` has `data-riff-gl` and
+`riff.css` stops painting the page's own parts, which stay where they are. Without WebGL2, without a
+graphics card to draw it (it is never drawn in software), on a card that can't keep up even at
+half the sharpness, with the context lost, or where the system forces its own colours, the attribute is gone and the page's deck
+paints as before, in the same place at the same size. So a change to the turntable is made to the
+page's deck, and the canvas follows; only how it looks is the canvas's own. While a record plays
+only the platter turns, so only the platter's square is drawn again and the shadows are the ones
+already cast; nothing is drawn while nothing moves, while Now Playing is closed or the page is out
+of sight. Its lighting and mesh builders are adapted from Guillermo Rauch's
+[vinyl](https://github.com/rauchg/vinyl) (MIT; the notice is in the file).
+
+The deck has its own keys on a strip along the front of its plinth: Start · Stop, the two speeds,
+the track before and after, shuffle and repeat, each a button in the page (`.riff-keys` in
+`player.php`) with an amber lamp. Held, the track keys wind the music back or on. The speeds are
+the ones the deck's board has where the whole screen is the turntable: an LP at 45 runs fast, and
+the music is at its own speed again where the turntable isn't the view, Now Playing closed or a video on the stage; the pitch fader stays the
+board's. Beside the keys is the deck's display (`assets/player/level.js`): the band the stylus is
+in, the time into its track, the speed, and a row of lamps lit to the music's RMS over 300 ms, with
+its peak held, read from the analyser.
+
+Where Now Playing is wide, the record out on the deck is the whole scene. The sleeve is drawn away
+and gone once the record is out, and back whenever the record is in it; its button, for a keyboard
+and a screen reader, still puts the record away. The deck stands in the middle of the screen: Now
+Playing runs on under the bar, whose surface is gone so the desk reaches the screen's edge, and the
+stage leaves as much room above the deck as the bar takes below. The deck's keys are the transport
+there, so the bar's own are not shown. Left alone while the music plays, the bar, Now Playing's
+head and what a plugin shows under the deck fade away, as they do for a video, and are back at the
+first move, key or touch. Anywhere else the bar is as it always is, and on a wide screen it lies
+over Now Playing, so every view comes up from under it. A touch screen on its side keeps the deck's
+board and its own shape (above).
+
+Drawn in WebGL, the record also shows where the music is, which a pressed one can't: the grooves
+still to be played lie a little quieter than those the stylus has been through, and the groove
+under the stylus carries a soft light that follows the music's level.
+
+A mouse or a pen over the record's grooves is shown the band, its title and the moment under the
+pointer, and a press puts the needle down in that groove; the arm in the hand is shown the same for
+the groove under its stylus. Both are the inverse of the arm's own angle, so the stylus comes to
+rest on the point pressed. A touch on the record does nothing: a finger has the arm.
+
+Under the deck is a place a
 plugin fills with the `riff_below_turntable` action, which takes no room while nothing shows in it. Riff
 Meters, an experimental plugin beside Riff, puts a VU meter and a spectrum there, read from the music
 through `window.riff.analyser()`, as it passes through Web Audio everywhere but an iPhone. The VU meter is IEC 60268-17's: a needle on the rectified signal that
