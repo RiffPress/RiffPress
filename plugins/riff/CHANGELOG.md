@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.7.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.7.0...riff-v6.7.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* **import:** a zip that a storage plugin keeps in object storage is brought to the server and imported ([#1012](https://github.com/RiffPress/RiffPress/issues/1012)) ([4610578](https://github.com/RiffPress/RiffPress/commit/4610578a469f2116600443a0902bca1a84f7bb35))
+* **multisite:** a deleted site takes its protected files with it when a host keeps them outside uploads ([#1011](https://github.com/RiffPress/RiffPress/issues/1011)) ([4190e0b](https://github.com/RiffPress/RiffPress/commit/4190e0b8fbd0d1eb7c28c5279b3c0d5438f92cdc))
+
 ## [6.7.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.6.0...riff-v6.7.0) (2026-11-10)
 
 
