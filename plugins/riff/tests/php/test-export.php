@@ -146,4 +146,40 @@ class Test_Riff_Export extends Riff_TestCase {
 		$this->assertContains( $away, $done['skipped'], 'only uploads and the protected folder are read from' );
 		wp_delete_file( $away );
 	}
+
+	public function test_a_second_archive_in_the_same_process_holds_what_was_added_since_the_first(): void {
+		$post  = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$first = self::attach( '02 - Underground [underground].mp3', $post );
+		$done  = Export::to_file( $this->zip, array( 'plugins' => false ) );
+		$this->assertIsArray( $done );
+		$this->assertContains( $first, $this->attachments_in( $this->zip ) );
+
+		$second = self::attach( '03 - Trombone Detritus [detritus].mp3', $post );
+		$again  = get_temp_dir() . 'riff-phpunit-export-' . wp_generate_password( 8, false ) . '.zip';
+		$next   = Export::to_file( $again, array( 'plugins' => false ) );
+
+		$this->assertIsArray( $next );
+		$this->assertSame( $done['counts']['tracks'] + 1, $next['counts']['tracks'] );
+		$this->assertContains( $second, $this->attachments_in( $again ), 'written on its own database, with what was added since' );
+		wp_delete_file( $again );
+	}
+
+	/**
+	 * The attachments an archive's database holds.
+	 *
+	 * @param string $zip The archive.
+	 * @return int[] Attachment IDs.
+	 */
+	private function attachments_in( string $zip ): array {
+		$archive = new ZipArchive();
+		$this->assertTrue( $archive->open( $zip ) );
+		$file = get_temp_dir() . 'riff-phpunit-export-' . wp_generate_password( 8, false ) . '.sqlite';
+		file_put_contents( $file, (string) $archive->getFromName( Archive::DATABASE ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions -- test scratch.
+		$archive->close();
+		$db  = Archive::database( $file );
+		$ids = array_map( static fn( array $row ): int => (int) $row['ID'], (array) $db->query( 'SELECT ID FROM ' . Archive::PREFIX . "posts WHERE post_type = 'attachment'" )->fetchAll() );
+		$db  = null;
+		wp_delete_file( $file );
+		return $ids;
+	}
 }
