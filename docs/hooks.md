@@ -192,13 +192,13 @@ Since 6.5.0. Fires in `plugins/riff/src/class-blocks-rest.php`.
 
 ### `riff_profile_url`
 
-Filters where the Listen app's account menu sends a listener to edit their profile, for a host or a membership plugin with a profile page of its own.
+Filters where the Listen app's account menu sends a listener to edit their profile, for a host or a membership plugin with a profile page of its own. An empty string hides Edit profile, for a host with no profile page.
 
 Since 6.4.0. Fires in `plugins/riff/features/listen/class-browse.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `$url` | `string` | The address. Default get_edit_profile_url(), their profile in wp-admin. |
+| `$url` | `string` | The address, or '' to leave Edit profile out of the menu. Default get_edit_profile_url(), their profile in wp-admin. |
 | `$user` | `\\WP_User` | The signed-in listener. |
 
 ### `riff_protect_storage`
