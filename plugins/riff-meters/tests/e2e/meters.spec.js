@@ -76,7 +76,7 @@ test.describe( 'Turntable meters', () => {
 			)
 			.toBeGreaterThan( 0.1 );
 		// Paused, the needle falls back to its peg and the bars come down.
-		await page.locator( '.riff-bar [data-riff-action="toggle"]' ).click();
+		await page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).click();
 		await expect
 			.poll( async () => ( await read( page ) ).angle, { timeout: 3000 } )
 			.toBeLessThan( -44 );

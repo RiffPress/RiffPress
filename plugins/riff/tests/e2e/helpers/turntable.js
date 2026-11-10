@@ -37,7 +37,7 @@ async function stopsAndStarts( page ) {
 		sample();
 	} );
 	const frames = () => page.evaluate( () => window.riffFrames.splice( 0 ) );
-	const toggle = page.locator( '.riff-bar [data-riff-action="toggle"]' ).first();
+	const toggle = page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).first();
 	const tracked = ( all ) =>
 		all.filter( ( f ) => ! f.paused && ! f.coasting && f.platter !== null ).every( ( f ) => Math.abs( f.platter - f.rate ) < 1e-3 );
 

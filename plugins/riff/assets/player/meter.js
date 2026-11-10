@@ -239,6 +239,11 @@ export default function meter( P ) {
 	function meterSync() {
 		const t = P.track();
 		if ( t && ! P.el().paused && ! P.away() ) {
+			// A new track may be one the analyser can hear where the last was not (a file loaded
+			// before its origin said it shares): it is tried again.
+			if ( unread && barsFor !== t ) {
+				unread = false;
+			}
 			if ( ! looping() && ! unread ) {
 				meterStart();
 			} else if ( looping() ) {
@@ -250,6 +255,14 @@ export default function meter( P ) {
 		}
 	}
 
+	// A file that could not be heard when it was first asked about (loaded before its origin said
+	// it shares) may be one that can by the time it plays: asked again as it starts.
+	audio.addEventListener( 'playing', () => {
+		if ( unread && ! P.reduce() ) {
+			unread = false;
+			meterSync();
+		}
+	} );
 	P.meterSync = meterSync;
 	// Loaded while something may already be playing: the meter catches up at once.
 	meterSync();

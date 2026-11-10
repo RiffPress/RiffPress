@@ -39,7 +39,7 @@ final class Player {
 	 *
 	 * @since 4.33.0
 	 */
-	public const PLAYER_FEATURES = array( 'meter', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together', 'about', 'navigation' );
+	public const PLAYER_FEATURES = array( 'meter', 'gestures', 'session', 'cast', 'share', 'wake-lock', 'together', 'about', 'navigation', 'deck-gl', 'level' );
 
 	/**
 	 * Hooks the assets and the markup.
