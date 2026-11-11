@@ -49,6 +49,8 @@ jobs:
       # apt waits on a stalled mirror indefinitely by default; a stalled download now gives up after
       # 30 seconds and is tried again, up to three times.
       - run: printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/80-retries
+      # A runner that can reach none of Ubuntu's mirrors is given one it can (apt-mirror.sh).
+      - run: bash .github/scripts/apt-mirror.sh
       # A stalled apt mirror once held this install for the job's full timeout.
       - run: npx playwright install-deps chromium webkit
         timeout-minutes: 20
