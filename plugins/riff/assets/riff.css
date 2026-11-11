@@ -1770,18 +1770,21 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 /* The deck is one object, laid out in its record's width, so it keeps its
    composition at any size: the keys and the display along the front of
    the plinth (above) where the stage holds the deck large enough for its
-   smallest key to be 44px, at least 947 by 793. On a smaller stage, as a
-   phone on its side or a small window, the plinth reaches further right
-   and its controls stand in a panel beside the arm: the display on top,
-   start and stop, the speeds, the skips, shuffle and repeat in two
-   columns, and the pitch fader beside them, each key a sixth of the
-   record across. The WebGL deck draws the first only (deck-gl.js), so the
-   page's own draws this one. Below a stage of 540 by 335 even that has
-   no room, and the album is the cover. */
-@container riff-stage (max-width: 946px) or (max-height: 792px) {
+   smallest key to be large enough to press. Under a finger that is 44px
+   (WCAG 2.5.5), a stage of at least 947 by 793; under a mouse or a pen,
+   24px (WCAG 2.5.8), at least 516 by 433, which is most windows. On a
+   smaller stage, as a phone on its side or a small window, the plinth
+   reaches further right and its controls stand in a panel beside the arm:
+   the display on top, start and stop, the speeds, the skips, shuffle and
+   repeat in two columns, and the pitch fader beside them, each key a sixth
+   of the record across. The WebGL deck draws either (deck-gl.js, which
+   reads --riff-deck-keys). Below a stage of 540 by 335 even that has no
+   room, and the album is the cover. The two rules are one arrangement: a
+   container query can't ask what the pointer is. */
+@container riff-stage (max-width: 515px) or (max-height: 432px) {
 
 	:root #riff .riff-np .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
-		--riff-deck-gl: 0;
+		--riff-deck-keys: beside;
 		--riff-out-record: -41%;
 		--riff-out-drop: 0%;
 		width: min(82cqh, 50cqw);
@@ -1845,9 +1848,77 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 		height: 81%;
 		font-size: 3cqi;
 	}
+}
 
-	#riff .riff-deck-gl {
-		display: none;
+@media (pointer: coarse) {
+
+	@container riff-stage (max-width: 946px) or (max-height: 792px) {
+
+		:root #riff .riff-np .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
+			--riff-deck-keys: beside;
+			--riff-out-record: -41%;
+			--riff-out-drop: 0%;
+			width: min(82cqh, 50cqw);
+			height: min(82cqh, 50cqw);
+		}
+
+		#riff .riff-plinth {
+			--riff-plinth-edge: -6% -87% -6% -5%;
+		}
+
+		#riff .riff-keys :is(button, .riff-level) {
+			width: 16%;
+			height: 16%;
+		}
+
+		#riff .riff-keys svg {
+			width: 6cqi;
+			height: 6cqi;
+		}
+
+		#riff .riff-keys .riff-level {
+			top: 0;
+			left: 128%;
+			width: 55%;
+			height: 12%;
+		}
+
+		#riff .riff-keys .riff-key-start {
+			top: 15%;
+			left: 128%;
+			width: 35%;
+			font-size: 2.6cqi;
+		}
+
+		#riff .riff-keys :is(.riff-key-33, .riff-key-45) {
+			top: 34%;
+			padding-top: 2cqi;
+			font-size: 3.4cqi;
+		}
+
+		#riff .riff-keys :is(.riff-key-prev, .riff-key-next) {
+			top: 53%;
+		}
+
+		#riff .riff-keys :is(.riff-key-shuffle, .riff-key-repeat) {
+			top: 72%;
+		}
+
+		#riff .riff-keys :is(.riff-key-33, .riff-key-prev, .riff-key-shuffle) {
+			left: 128%;
+		}
+
+		#riff .riff-keys :is(.riff-key-45, .riff-key-next, .riff-key-repeat) {
+			left: 147%;
+		}
+
+		#riff .riff-keys .riff-pitch {
+			top: 15%;
+			left: 167%;
+			width: 16%;
+			height: 81%;
+			font-size: 3cqi;
+		}
 	}
 }
 
