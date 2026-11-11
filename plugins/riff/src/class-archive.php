@@ -120,7 +120,8 @@ final class Archive {
 
 	/**
 	 * The tables, each column with its SQLite type. The users table keeps who wrote what, and no
-	 * password.
+	 * password. In an archive made for a Playground link (`public` in riff.json) its login, nicename
+	 * and email are empty strings, so a reader finds an author by display name and ID, never by those.
 	 *
 	 * @since 6.5.0
 	 */

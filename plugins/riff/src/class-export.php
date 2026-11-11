@@ -176,7 +176,7 @@ final class Export {
 			wp_cache_flush_runtime();
 		}
 		$counts['terms'] = self::terms( $db, $statements, $ids );
-		self::users( $db, $statements, array_keys( $authors ) );
+		self::users( $db, $statements, array_keys( $authors ), (bool) $args['public'] );
 		self::options( $db, $statements );
 		$db->commit();
 		$statements = array();
@@ -391,13 +391,15 @@ final class Export {
 
 	/**
 	 * Who wrote the posts: their names and email, by which an import finds them again. No
-	 * password, and nothing else of their account.
+	 * password, and nothing else of their account. A public archive is one that is shared, in a
+	 * Playground link, so it names each author by display name only, with no login and no email, and leaves the name empty where it is the login or an address.
 	 *
 	 * @param PDO             $db         The archive's database.
 	 * @param \PDOStatement[] $statements Its insert statements, by table.
 	 * @param int[]           $ids        User IDs.
+	 * @param bool            $names_only Whether to write display names only, as a public archive does.
 	 */
-	private static function users( PDO $db, array &$statements, array $ids ): void {
+	private static function users( PDO $db, array &$statements, array $ids, bool $names_only ): void {
 		foreach ( $ids as $id ) {
 			$user = get_userdata( (int) $id );
 			if ( $user ) {
@@ -407,10 +409,10 @@ final class Export {
 					'users',
 					array(
 						'ID'            => (int) $user->ID,
-						'user_login'    => $user->user_login,
-						'user_nicename' => $user->user_nicename,
-						'user_email'    => $user->user_email,
-						'display_name'  => $user->display_name,
+						'user_login'    => $names_only ? '' : $user->user_login,
+						'user_nicename' => $names_only ? '' : $user->user_nicename,
+						'user_email'    => $names_only ? '' : $user->user_email,
+						'display_name'  => $names_only && ( is_email( $user->display_name ) || 0 === strcasecmp( $user->display_name, $user->user_login ) ) ? '' : $user->display_name,
 					)
 				);
 			}
@@ -663,7 +665,7 @@ final class Export {
 		echo '<p>';
 		printf( '<button type="submit" form="riff-export" class="button">%s</button> ', esc_html__( 'Download your Riff', 'riff' ) );
 		printf( '<button type="submit" form="riff-playground" class="button">%s</button>', esc_html__( 'Open in Playground', 'riff' ) );
-		echo '</p><p class="description">' . esc_html__( 'Playground opens what anyone may see, playing the music from this site. The download holds everything, private posts and protected files included, so keep it as you would the site.', 'riff' ) . '</p>';
+		echo '</p><p class="description">' . esc_html__( 'Playground opens what anyone may see, playing the music from this site. The download holds everything, private posts, protected files and each author’s email address included, so keep it as you would the site.', 'riff' ) . '</p>';
 		add_action( 'admin_footer', array( self::class, 'forms' ) );
 	}
 
