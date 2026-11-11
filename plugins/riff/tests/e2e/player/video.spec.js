@@ -178,7 +178,8 @@ test.describe( 'A song with a video version', () => {
 		await expect
 			.poll( () => page.locator( '.riff-modes' ).evaluate( ( el ) => getComputedStyle( el ).opacity ) )
 			.toBe( '0' );
-		// Any move brings them back, at once.
+		// Any move brings them back, at once. On a phone this one ends on Now Playing's close
+		// button, which stays over a video and so must not keep them.
 		await page.mouse.move( 40, 40 );
 		await expect( root ).not.toHaveAttribute( 'data-riff-idle', '', { timeout: 100 } );
 		await expect( root ).toHaveAttribute( 'data-riff-idle', '', { timeout: 6000 } );
