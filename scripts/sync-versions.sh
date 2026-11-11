@@ -25,6 +25,10 @@
 #   - plugins/riff-sing/riff-sing.php plugin header and `RIFF_SING_VERSION`
 #   - plugins/riff-sing/readme.txt `Stable tag:`, `Tested up to:` and its changelog
 #
+# riff-chimera (plugins/riff-chimera):
+#   - plugins/riff-chimera/riff-chimera.php plugin header and `RIFF_CHIMERA_VERSION`
+#   - plugins/riff-chimera/readme.txt `Stable tag:`, `Tested up to:` and its changelog
+#
 # wp-api-coverage (packages/wp-api-coverage):
 #   - packages/wp-api-coverage/package.json and its package-lock.json entry
 #
@@ -53,8 +57,8 @@ command -v npm >/dev/null 2>&1 || { echo "npm is required to run scripts/sync-ve
 
 ONLY=${1:-all}
 case "$ONLY" in
-	all | riff | riff-lyrics | riff-sign-in | riff-sing | riff-chords | wp-api-coverage) ;;
-	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, riff-sign-in, riff-sing, riff-chords or wp-api-coverage" >&2; exit 1 ;;
+	all | riff | riff-lyrics | riff-sign-in | riff-sing | riff-chords | riff-chimera | wp-api-coverage) ;;
+	*) echo "Unknown package '$ONLY': use riff, riff-lyrics, riff-sign-in, riff-sing, riff-chords, riff-chimera or wp-api-coverage" >&2; exit 1 ;;
 esac
 
 # A package's version, or nothing for one that has never been released: it is
@@ -156,6 +160,17 @@ if [[ "$ONLY" == all || "$ONLY" == riff-sing ]]; then
 		echo "Synced Riff Sing to ${SING_VERSION}"
 	else
 		echo "Riff Sing has not been released yet; nothing to sync"
+	fi
+fi
+
+if [[ "$ONLY" == all || "$ONLY" == riff-chimera ]]; then
+	CHIMERA_VERSION=$(manifest_version plugins/riff-chimera)
+	if [[ -n "$CHIMERA_VERSION" ]]; then
+		sync_plugin plugins/riff-chimera/riff-chimera.php RIFF_CHIMERA_VERSION plugins/riff-chimera/readme.txt "$CHIMERA_VERSION"
+		node .github/scripts/readme-changelog.js riff-chimera
+		echo "Synced Riff Chimera to ${CHIMERA_VERSION}"
+	else
+		echo "Riff Chimera has not been released yet; nothing to sync"
 	fi
 fi
 

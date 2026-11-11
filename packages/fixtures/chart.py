@@ -216,21 +216,33 @@ def chordpro(score, entry, notes):
     return '\n'.join(head + out_lines + ['{end_of_verse}'])
 
 
+def alto(n):
+    """A second voice under the tune: the highest note of the hymnal's chord under it that is at least
+    a minor third below the tune's note, so the two sing the hymnal's harmony in close parts."""
+    root, q = parse_chord(n['chord'])
+    tones = {(root + i) % 12 for i in QUALITY[q]}
+    return next(m for m in range(n['midi'] - 3, n['midi'] - 15, -1) if m % 12 in tones)
+
+
 def ultrastar(score, entry, notes):
+    """The tune as a duet: P1 the hymnal's soprano line, P2 an alto under it from its chords (alto()),
+    on the same times and words, so Riff Sing has a lane for each and Riff Chimera two voices."""
     out = ['#TITLE:%s' % score['title'], '#ARTIST:%s' % entry.get('artist', ''),
-           '#LANGUAGE:English', '#BPM:%d' % BPM, '#GAP:0']
+           '#LANGUAGE:English', '#BPM:%d' % BPM, '#GAP:0', '#P1:Soprano', '#P2:Alto']
     breaks = set(score['lines'])
     beat = lambda t: int(round(t / BEAT))
-    for i, n in enumerate(notes):
-        start, end = beat(n['start']), beat(n['end'])
-        if n['text'] == '~':
-            text = '~'
-        else:
-            text = n['text'][:-1] if n['text'].endswith('-') else n['text'] + ' '
-        out.append(': %d %d %d %s' % (start, max(1, end - start - 1), n['midi'] - 60, text))
-        last_in_measure = i + 1 == len(notes) or notes[i + 1]['measure'] != n['measure']
-        if last_in_measure and n['measure'] in breaks and i + 1 < len(notes):
-            out.append('- %d' % end)
+    for part, pitch in (('P1', lambda n: n['midi']), ('P2', alto)):
+        out.append(part)
+        for i, n in enumerate(notes):
+            start, end = beat(n['start']), beat(n['end'])
+            if n['text'] == '~':
+                text = '~'
+            else:
+                text = n['text'][:-1] if n['text'].endswith('-') else n['text'] + ' '
+            out.append(': %d %d %d %s' % (start, max(1, end - start - 1), pitch(n) - 60, text))
+            last_in_measure = i + 1 == len(notes) or notes[i + 1]['measure'] != n['measure']
+            if last_in_measure and n['measure'] in breaks and i + 1 < len(notes):
+                out.append('- %d' % end)
     out.append('E')
     return '\n'.join(out)
 

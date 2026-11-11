@@ -1,2 +1,4 @@
 # Fixtures are data, not source; the formatter leaves them as imported.
 tests/fixtures/**/*.json
+# CHIMERA's own build, vendored as .github/scripts/build-chimera.sh writes it.
+plugins/riff-chimera/assets/chimera/**

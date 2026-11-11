@@ -34,7 +34,7 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 | `history.state.riff === 'open'` (`now-playing.js`) | Back closes it. `features/listen/app/views.js` spreads `history.state` into a view it pushes, so a view opened under Now Playing carries `riff: 'open'` too. | medium |
 | `.riff-bar-info[aria-expanded]`, `.riff-np[aria-modal]` | ARIA, read back by `keyboard.js` to trap Tab. | low |
 | `P.showing` (`now-playing.js`) | The view Now Playing shows, or showed last: it stays after it closes. | medium |
-| `showing` in `riff-lyrics/assets/lyrics.js`, `riff-chords/assets/chords.js`, `riff-sing/assets/sing.js` | Each set only from `riff:view`; a script that starts after its view opened stays at false until it opens again. | low: they load with the page. |
+| `showing` in `riff-lyrics/assets/lyrics.js`, `riff-chords/assets/chords.js`, `riff-sing/assets/sing.js`, `riff-chimera/assets/chimera.js` | Each set only from `riff:view`; a script that starts after its view opened stays at false until it opens again. | low: they load with the page. |
 
 ### A panel open
 

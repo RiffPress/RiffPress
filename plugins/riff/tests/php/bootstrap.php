@@ -85,6 +85,10 @@ tests_add_filter(
 		define( 'RIFF_SING_VERSION', 'test' );
 		define( 'RIFF_SING_URL', 'http://example.org/wp-content/plugins/riff-sing/' );
 		require dirname( __DIR__, 3 ) . '/riff-sing/src/class-sing.php';
+		// Riff Chimera, which sings Riff Sing's melodies, the same way.
+		define( 'RIFF_CHIMERA_VERSION', 'test' );
+		define( 'RIFF_CHIMERA_URL', 'http://example.org/wp-content/plugins/riff-chimera/' );
+		require dirname( __DIR__, 3 ) . '/riff-chimera/src/class-chimera.php';
 		// The Presence API, where wp-env installs it, for listening together; its tests skip without it.
 		if ( is_readable( WP_PLUGIN_DIR . '/presence-api/presence-api.php' ) ) {
 			require WP_PLUGIN_DIR . '/presence-api/presence-api.php';

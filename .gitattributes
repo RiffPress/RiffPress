@@ -28,3 +28,5 @@ CHANGELOG.md export-ignore
 *.ttf binary
 /.prettierignore export-ignore
 /.prettierrc.js export-ignore
+*.wasm binary
+*.gz binary
