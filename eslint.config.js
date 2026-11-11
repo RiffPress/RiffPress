@@ -14,6 +14,8 @@ module.exports = [
 			'**/artifacts/**',
 			// The site's scripts, built from site/src by .github/scripts/site-js.js.
 			'site/js/**',
+			// CHIMERA's own build, vendored as it is built (.github/scripts/build-chimera.sh).
+			'plugins/riff-chimera/assets/chimera/**',
 			// Fixture plugins for the API coverage tests: input to a scanner, written to exercise it, not project code.
 			'packages/wp-api-coverage/test/fixtures/**',
 		],

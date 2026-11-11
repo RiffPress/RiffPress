@@ -1,0 +1,9 @@
+CHIMERA, https://github.com/jamesondh/chimera-vocal-synth
+Commit: 1d3ea496cad0fbe3e73361515aec187e868fbd47
+Built with: rustc 1.99.1 (wasm32-unknown-unknown, release), bun 1.1.42
+Rebuild: bash .github/scripts/build-chimera.sh
+
+553cce2bce2561db9e617cacadb558b53058d75393b08d00882e111ddf44f906  chimera.wasm
+ea1383b32c1fc862bd0518bf0d5f5d8b683149de6786cae55b33c20422bc4c92  chimera.js
+c34a07ee32c4192ccc49f0cc5c0b08f84bdf4ee2137485846504b2750c7c5d45  processor.js
+336293a10a93c3ba183483308a22eab8e2b6a5e1ac91262dd0d3d4b85da285b5  cmudict.txt.gz

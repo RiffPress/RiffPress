@@ -15,6 +15,7 @@ on:
       # The demo chart's test reads it with these plugins' own readers.
       - 'plugins/riff-chords/assets/**'
       - 'plugins/riff-sing/assets/**'
+      - 'plugins/riff-chimera/assets/*.js'
       - 'README.md'
       - 'plugins/riff/riff.php'
       - 'composer.json'
@@ -30,6 +31,7 @@ on:
       # The demo chart's test reads it with these plugins' own readers.
       - 'plugins/riff-chords/assets/**'
       - 'plugins/riff-sing/assets/**'
+      - 'plugins/riff-chimera/assets/*.js'
       - 'README.md'
       - 'plugins/riff/riff.php'
       - 'composer.json'

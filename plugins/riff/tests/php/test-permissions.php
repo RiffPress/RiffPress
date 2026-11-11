@@ -224,7 +224,7 @@ class Test_Riff_Permissions extends Riff_TestCase {
 	 */
 	public function test_every_extension_in_the_repository_reads_as_plain_words(): void {
 		$found = 0;
-		foreach ( array( 'riff', 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing' ) as $slug ) {
+		foreach ( array( 'riff', 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing', 'riff-chimera' ) as $slug ) {
 			$manifest = Permissions::manifest( dirname( RIFF_DIR ) . '/' . $slug );
 			if ( null === $manifest ) {
 				continue;

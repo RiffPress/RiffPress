@@ -1,0 +1,49 @@
+{
+	"$schema": "../../docs/isolation.schema.json",
+	"plugin": "riff-chimera",
+	"namespace": "Chimera",
+	"data": {
+		"options": [],
+		"meta": [],
+		"shared": {},
+		"keep": {}
+	},
+	"rest": {
+		"namespaces": [],
+		"fields": [],
+		"public": {}
+	},
+	"capabilities": [
+		"update_plugins"
+	],
+	"hosts": [],
+	"spawn": [],
+	"riff": {
+		"hooks": [
+			"riff_register",
+			"riff_before_player"
+		],
+		"functions": [
+			"riff_register_view"
+		],
+		"events": [
+			"view",
+			"ready",
+			"pause",
+			"ended"
+		],
+		"api": [
+			"time",
+			"playing",
+			"speed",
+			"view"
+		]
+	},
+	"scripts": [
+		"riff-chimera-melody",
+		"riff-chimera-midi",
+		"riff-chimera-voice",
+		"riff-chimera"
+	],
+	"modules": []
+}

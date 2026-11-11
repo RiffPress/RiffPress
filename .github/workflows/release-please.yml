@@ -39,6 +39,8 @@ jobs:
       sign_in_tag: ${{ steps.release.outputs['plugins/riff-sign-in--tag_name'] }}
       sing_release: ${{ steps.release.outputs['plugins/riff-sing--release_created'] }}
       sing_tag: ${{ steps.release.outputs['plugins/riff-sing--tag_name'] }}
+      chimera_release: ${{ steps.release.outputs['plugins/riff-chimera--release_created'] }}
+      chimera_tag: ${{ steps.release.outputs['plugins/riff-chimera--tag_name'] }}
       coverage_release: ${{ steps.release.outputs['packages/wp-api-coverage--release_created'] }}
       coverage_tag: ${{ steps.release.outputs['packages/wp-api-coverage--tag_name'] }}
       release_branches: ${{ steps.release-prs.outputs.branches }}
@@ -436,6 +438,51 @@ jobs:
           set -euo pipefail
           gh release upload --clobber "$TAG_NAME" build/riff-sing.zip
           bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-sing/riff-sing.php not-latest
+
+  release-riff-chimera:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.chimera_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      # attest-build-provenance signs with the workflow's identity and stores the attestation.
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The tagged commit, not the run's: a scheduled or manual run releases what an
+          # earlier merge tagged, and the zip must rebuild from the tag (docs/verify.md).
+          ref: ${{ needs.release-please.outputs.chimera_tag }}
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version-file: .php-version
+          coverage: none
+      - name: Build riff-chimera.zip
+        run: |
+          set -euo pipefail
+          bash .github/scripts/build-zip.sh riff-chimera
+      - name: Smoke-test the build
+        run: |
+          set -euo pipefail
+          test -f build/riff-chimera/riff-chimera.php
+          find build/riff-chimera -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # A host can check this zip came from this workflow, at this commit, before installing it:
+      # gh attestation verify riff-chimera.zip --repo RiffPress/RiffPress (docs/verify.md).
+      - name: Attest the zip's provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: build/riff-chimera.zip
+      - name: Attach the zip and publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.chimera_tag }}
+        run: |
+          set -euo pipefail
+          gh release upload --clobber "$TAG_NAME" build/riff-chimera.zip
+          bash .github/scripts/publish-release.sh "$TAG_NAME" plugins/riff-chimera/riff-chimera.php not-latest
 
   # wp-api-coverage's release: the GitHub release is published, and the
   # package goes to npm as @riffpress/wp-api-coverage. Publishing stays off

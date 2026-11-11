@@ -8,7 +8,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
 const root = path.join( __dirname, '..', '..', '..', '..' );
 // The extensions wp-env activates (.wp-env.json), each with its name on the Plugins screen.
-const extensions = [ 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing' ];
+const extensions = [ 'riff-lyrics', 'riff-chords', 'riff-sign-in', 'riff-sing', 'riff-chimera' ];
 const manifest = ( slug ) => {
 	const file = path.join( root, slug, 'isolation.json' );
 	return fs.existsSync( file ) ? JSON.parse( fs.readFileSync( file, 'utf8' ) ) : null;

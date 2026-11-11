@@ -1,5 +1,5 @@
 /**
- * Riff Lyrics is the reference extension, and Riff Sing and Riff Chords are built the same way: each may use only
+ * Riff Lyrics is the reference extension, and Riff Sing, Riff Chords and Riff Chimera are built the same way: each may use only
  * what Riff documents, so a change to Riff that would break a third-party plugin breaks them first.
  * Every Riff hook they hook, every riff: event they listen to and every window.riff member they call
  * must be in the generated references, and their PHP must not reach into Riff's classes. Run by
@@ -29,6 +29,7 @@ for ( const [ slug, own ] of [
 	[ 'riff-lyrics', 'Lyrics' ],
 	[ 'riff-sing', 'Sing' ],
 	[ 'riff-chords', 'Chords' ],
+	[ 'riff-chimera', 'Chimera' ],
 ] ) {
 	const DIR = path.join( ROOT, 'plugins', slug );
 	const PHP = files( DIR, '.php' ).map( read ).join( '\n' );
@@ -94,7 +95,7 @@ const newer = ( a, b ) => {
 	}
 	return false;
 };
-for ( const slug of [ 'riff-lyrics', 'riff-sign-in', 'riff-sing', 'riff-chords' ] ) {
+for ( const slug of [ 'riff-lyrics', 'riff-sign-in', 'riff-sing', 'riff-chords', 'riff-chimera' ] ) {
 	test( `${ slug }'s Requires Riff covers every Riff hook and API it uses`, () => {
 		const dir = path.join( ROOT, 'plugins', slug );
 		const header = read( path.join( dir, `${ slug }.php` ) ).match( /^ \* Requires Riff: *(\S+)/m );

@@ -47,6 +47,11 @@
 			"component": "riff-sing",
 			"initial-version": "0.1.0"
 		},
+		"plugins/riff-chimera": {
+			"package-name": "riff-chimera",
+			"component": "riff-chimera",
+			"initial-version": "0.1.0"
+		},
 		"packages/wp-api-coverage": {
 			"package-name": "wp-api-coverage",
 			"component": "wp-api-coverage",
