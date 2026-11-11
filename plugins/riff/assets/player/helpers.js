@@ -45,6 +45,65 @@ export function route( base, path = '' ) {
 	return u;
 }
 
+// The cover shown for one that does not load: a plain record on charcoal, no words, drawn here so
+// it needs no request. The same drawing as Cover::blank(), which ?riff-art answers with for a
+// cover the listener may not see.
+export const BLANK_COVER =
+	'data:image/svg+xml,' +
+	encodeURIComponent(
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><rect width="1024" height="1024" fill="#1e1e1e"/><circle cx="512" cy="512" r="330" fill="#2a2a2a"/><circle cx="512" cy="512" r="110" fill="#333"/><circle cx="512" cy="512" r="12" fill="#1e1e1e"/></svg>'
+	);
+
+// Where a cover is drawn, in the player and in the Listen app. A face, the install icon and a
+// theme's own pictures are not covers, and keep what the browser does.
+const COVERS =
+	'.riff-card-art img, .riff-row-art img, .riff-album-cover img, .riff-album-face img, .riff-now-art img, .riff-mosaic img, .riff-app-item-art img, .riff-suggest-art img, .riff-thumb img, img.riff-about-cover, img[data-riff-art]';
+
+// A cover that does not load becomes the blank one, once: its address is kept in
+// data-riff-missing, so painting the same track again (paint.js) leaves the blank be rather than
+// asking for the cover again, and srcset goes so the browser picks no other size of it.
+function blank( img ) {
+	if ( ! img.matches?.( COVERS ) || img.getAttribute( 'src' ) === BLANK_COVER ) {
+		return;
+	}
+	img.dataset.riffMissing = img.getAttribute( 'src' ) || '';
+	img.removeAttribute( 'srcset' );
+	img.src = BLANK_COVER;
+}
+
+// Watches every cover on the page, those there now and those drawn later. An image's error does
+// not bubble, so one listener catches it on the way down; a cover that failed before this module
+// ran is found by decode(), which fails only for an image that cannot be shown.
+export function covers( doc = document ) {
+	if ( covers.on ) {
+		return;
+	}
+	covers.on = true;
+	doc.addEventListener(
+		'error',
+		( e ) => {
+			if ( e.target instanceof HTMLImageElement ) {
+				blank( e.target );
+			}
+		},
+		true
+	);
+	for ( const img of doc.querySelectorAll( COVERS ) ) {
+		if ( img.complete && img.getAttribute( 'src' ) ) {
+			img.decode().catch( () => img.complete && ! img.naturalWidth && blank( img ) );
+		}
+	}
+}
+
+// Puts a cover's address on an image, unless it is the one that did not load there.
+export function cover( img, src ) {
+	if ( ! src || img.getAttribute( 'src' ) === src || img.dataset.riffMissing === src ) {
+		return;
+	}
+	delete img.dataset.riffMissing;
+	img.src = src;
+}
+
 // A picture's average colour, read at eight by eight, and whether dark words read on it: one
 // reading a picture, kept for the page. null where it cannot be read, as a cover from another
 // origin that does not allow it.

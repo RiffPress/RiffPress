@@ -7,6 +7,7 @@ import {
 	smallest,
 	largest,
 	esc,
+	cover,
 	PAUSE,
 } from 'riff-player/helpers';
 
@@ -45,9 +46,7 @@ export function paint( P ) {
 		for ( const img of $$( 'img[data-riff-art]' ) ) {
 			const large = img.dataset.riffSize === 'large';
 			const src = large ? largest( t?.art ) : smallest( t?.art );
-			if ( src && img.getAttribute( 'src' ) !== src ) {
-				img.src = src;
-			}
+			cover( img, src );
 			img.hidden = ! src;
 			// The large cover is content, told by what it shows; the small ones beside a title
 			// are decoration, the title says it.
