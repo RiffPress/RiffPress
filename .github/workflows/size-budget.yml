@@ -51,6 +51,8 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
           restore-keys: ${{ runner.os }}-playwright-
+      # A runner that can reach none of Ubuntu's mirrors is given one it can (apt-mirror.sh).
+      - run: bash .github/scripts/apt-mirror.sh
       - run: npx playwright install-deps chromium
       - run: npx playwright install chromium
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
