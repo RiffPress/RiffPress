@@ -2048,8 +2048,10 @@ export function nowPlaying( P ) {
 	const focused = ( el ) =>
 		el.contains( document.activeElement ) &&
 		document.activeElement.matches( ':focus-visible' );
+	// The way out holds them only where it goes quiet with them: over a video it stays, and a
+	// pointer left on it must not keep the bar and the switch over the picture.
 	const inUse = () =>
-		[ bar, modes, wayOut ].some(
+		[ bar, modes, alone && wayOut ].some(
 			( el ) => el && ( focused( el ) || ( mouse && el.matches( ':hover' ) ) )
 		);
 	document.addEventListener(
