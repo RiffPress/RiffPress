@@ -53,7 +53,8 @@ const systemColours = ( locator ) =>
  * Where the player's two media elements are.
  *
  * @param {import('@playwright/test').Page} page Page.
- * @return {Promise<Object>} paused and time for the audio element, videoPaused and videoTime for the video.
+ * @return {Promise<Object>} paused, time, rate and pitch (whether it keeps its pitch) for the audio
+ *                           element, videoPaused and videoTime for the video.
  */
 const audioState = ( page ) =>
 	page.evaluate( () => {
@@ -62,6 +63,8 @@ const audioState = ( page ) =>
 		return {
 			paused: a.paused,
 			time: a.currentTime,
+			rate: a.playbackRate,
+			pitch: a.preservesPitch,
 			videoPaused: v.paused,
 			videoTime: v.currentTime,
 		};
@@ -77,6 +80,47 @@ const playing = ( page ) =>
 	page.evaluate( () => {
 		const a = document.querySelector( '.riff-audio' );
 		return { paused: a.paused, time: a.currentTime };
+	} );
+
+/**
+ * Starts keeping every write to the audio element's speed and to whether it keeps its pitch, and
+ * every change of speed it reports, from here on. Music that is playing hears a write: its pitch
+ * let go and taken again breaks the sound, though the speed never moved.
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ * @return {Promise<void>}
+ */
+const watchSpeed = ( page ) =>
+	page.evaluate( () => {
+		const audio = document.querySelector( '.riff-audio' );
+		window.riffSpeedWrites = [];
+		for ( const name of [ 'playbackRate', 'defaultPlaybackRate', 'preservesPitch' ] ) {
+			const own = Object.getOwnPropertyDescriptor( HTMLMediaElement.prototype, name );
+			Object.defineProperty( audio, name, {
+				configurable: true,
+				get: () => own.get.call( audio ),
+				set( value ) {
+					window.riffSpeedWrites.push( { name, value } );
+					own.set.call( audio, value );
+				},
+			} );
+		}
+		audio.addEventListener( 'ratechange', () => window.riffSpeedWrites.push( { name: 'ratechange', value: audio.playbackRate } ) );
+	} );
+
+/**
+ * The writes and changes of speed since watchSpeed(), or since they were last read. Two frames
+ * pass first, so a pull's next step and the change it reports are among them.
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ * @return {Promise<{name: string, value: number|boolean}[]>} Each write, in order.
+ */
+const speedWrites = ( page ) =>
+	page.evaluate( async () => {
+		for ( let frame = 0; frame < 2; frame++ ) {
+			await new Promise( requestAnimationFrame );
+		}
+		return window.riffSpeedWrites.splice( 0 );
 	} );
 
 /**
@@ -214,4 +258,4 @@ async function appSite( made, requestUtils ) {
 	return { pageUrl: page.link, postId: post.id, extraId, audioMedia: audio };
 }
 
-module.exports = { FIXTURES, TEST, FILES, AXE_TAGS, iosAgent, systemColours, audioState, playing, listen, said, playerSite, appSite };
+module.exports = { FIXTURES, TEST, FILES, AXE_TAGS, iosAgent, systemColours, audioState, playing, watchSpeed, speedWrites, listen, said, playerSite, appSite };

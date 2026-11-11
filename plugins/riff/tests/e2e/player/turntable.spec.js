@@ -11,7 +11,7 @@
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
-const { playerSite, audioState } = require( '../helpers/site' );
+const { playerSite, audioState, watchSpeed, speedWrites } = require( '../helpers/site' );
 const { stopsAndStarts } = require( '../helpers/turntable' );
 
 const made = own();
@@ -427,6 +427,34 @@ test.describe( 'Turntable', () => {
 		const again = await frames();
 		expect( again.some( ( f ) => f.api ), 'playing again' ).toBe( true );
 		expect( agree( again ), 'one answer through the change of mind' ).toBe( true );
+	} );
+
+	test( 'the deck coming and going leaves music at its own speed untouched, and a new speed still pulls it there', async ( { page } ) => {
+		const root = page.locator( '#riff' );
+		// Up to speed, its pitch its own again.
+		await expect.poll( () => audioState( page ) ).toMatchObject( { paused: false, rate: 1, pitch: true } );
+		await watchSpeed( page );
+		// Now Playing closed and opened, then upright, where the album is the cover, and wide again.
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		await openView( page, 'album' );
+		await page.setViewportSize( { width: 700, height: 900 } );
+		await expect( root ).not.toHaveAttribute( 'data-riff-deck', 'out' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
+		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
+		expect( await speedWrites( page ), 'nothing written to the music' ).toEqual( [] );
+		expect( ( await audioState( page ) ).paused ).toBe( false );
+
+		// The LP at 45: the motor pulls it there, the pitch rising with the speed, as a record's does.
+		const fast = 45 / ( 100 / 3 );
+		await page.locator( '.riff-keys [data-riff-speed="45"]' ).click();
+		await expect.poll( async () => ( await audioState( page ) ).rate ).toBeCloseTo( fast, 5 );
+		const pulled = await speedWrites( page );
+		expect( pulled[ 0 ] ).toEqual( { name: 'preservesPitch', value: false } );
+		expect( pulled.some( ( w ) => w.name === 'playbackRate' && w.value > 1 && w.value < fast ), 'pulled up, not set' ).toBe( true );
+		expect( pulled.some( ( w ) => w.name === 'ratechange' ) ).toBe( true );
+		expect( ( await audioState( page ) ).pitch ).toBe( false );
 	} );
 
 	test( 'shown while the music plays, the record is already turning with the stylus in its groove', async ( { page } ) => {
