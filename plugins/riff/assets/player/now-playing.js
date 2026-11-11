@@ -1839,8 +1839,10 @@ export function nowPlaying( P ) {
 		}
 		// The stage changed and the music's speed did not, so nothing is written to it. A pull to the
 		// speed it already has would let go of its pitch and take it again a frame or two later,
-		// which is heard as a break in the music.
+		// which is heard as a break in the music. The platter and the arm still take its rate, as the
+		// pull would have given it them, since no ratechange comes to do it.
 		if ( settled( m ) ) {
+			drive( m.playbackRate );
 			return;
 		}
 		bend( m, deckRate() ).then( ( whole ) => whole && settle( m ) );

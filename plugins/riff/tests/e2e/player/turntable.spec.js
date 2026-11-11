@@ -447,13 +447,17 @@ test.describe( 'Turntable', () => {
 		expect( ( await audioState( page ) ).paused ).toBe( false );
 
 		// The LP at 45: the motor pulls it there, the pitch rising with the speed, as a record's does.
+		// The page's clock is the test's, so the pull is read at a moment of it, not raced.
 		const fast = 45 / ( 100 / 3 );
+		await page.clock.install();
 		await page.locator( '.riff-keys [data-riff-speed="45"]' ).click();
-		await expect.poll( async () => ( await audioState( page ) ).rate ).toBeCloseTo( fast, 5 );
+		await page.clock.runFor( 100 );
 		const pulled = await speedWrites( page );
 		expect( pulled[ 0 ] ).toEqual( { name: 'preservesPitch', value: false } );
 		expect( pulled.some( ( w ) => w.name === 'playbackRate' && w.value > 1 && w.value < fast ), 'pulled up, not set' ).toBe( true );
-		expect( pulled.some( ( w ) => w.name === 'ratechange' ) ).toBe( true );
+		await page.clock.runFor( 1000 );
+		await expect.poll( async () => ( await audioState( page ) ).rate ).toBeCloseTo( fast, 5 );
+		expect( ( await speedWrites( page ) ).some( ( w ) => w.name === 'ratechange' ) ).toBe( true );
 		expect( ( await audioState( page ) ).pitch ).toBe( false );
 	} );
 
