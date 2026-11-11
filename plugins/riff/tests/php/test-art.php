@@ -356,6 +356,49 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertStringContainsString( 'riff-art=album-' . $album, Art::album( $album )[0]['src'], 'and nothing is kept' );
 	}
 
+	public function test_a_private_posts_cover_is_drawn_for_whoever_may_read_it_and_kept_nowhere(): void {
+		[ $post, $id ] = $this->bare_post( 'Carols of the Season' );
+		$author        = self::factory()->user->create( array( 'role' => 'author' ) );
+		wp_update_post(
+			array(
+				'ID'          => $post,
+				'post_status' => 'private',
+				'post_author' => $author,
+			)
+		);
+		$kept = wp_upload_dir( null, false )['basedir'] . '/' . Art::DIR;
+
+		wp_set_current_user( $author );
+		$cover = $this->cover( (string) $post );
+		$this->assertStringContainsString( 'Carols of the Season', (string) $cover['svg'], 'drawn for its author' );
+		$this->assertStringNotContainsString( 'Private:', (string) $cover['svg'], 'named as the album, not as WordPress lists a private post' );
+		$this->assertStringContainsString( '>1</text>', (string) $cover['svg'], 'with the tracks its author may play' );
+		$this->assertSame( 'private, max-age=86400', $cover['cache'], 'cached only by their browser' );
+		$this->assertSame( array(), glob( "$kept/*/$post.svg" ), 'and kept nowhere a web server would serve it' );
+		$this->assertStringContainsString( 'riff-art=' . $post, Art::url( $post ) );
+		$this->assertSame( 'Cover of Carols of the Season', Tracks::from_attachment( $id, $post )['art'][0]['alt'] );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$this->assertStringContainsString( 'Carols of the Season', (string) $this->cover( (string) $post )['svg'], 'and for whoever may read others\' private posts' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$this->assertNull( $this->cover( (string) $post )['svg'], 'not for another listener' );
+
+		wp_set_current_user( 0 );
+		$this->assertNull( $this->cover( (string) $post )['svg'], 'nor for a visitor' );
+		$this->assertSame( array(), glob( "$kept/*/$post.svg" ) );
+	}
+
+	public function test_a_public_posts_cover_is_kept_and_cached_by_anyone(): void {
+		[ $post ] = $this->bare_post();
+		wp_set_current_user( 0 );
+
+		$cover = $this->cover( (string) $post );
+
+		$this->assertStringContainsString( 'Night Sessions', (string) $cover['svg'] );
+		$this->assertSame( 'public, max-age=86400', $cover['cache'] );
+	}
+
 	public function test_a_cover_drawn_from_what_changed_while_it_was_drawn_is_not_kept(): void {
 		[ $post ] = $this->bare_post();
 		$since    = microtime( true );
@@ -437,6 +480,16 @@ class Test_Riff_Art extends Riff_TestCase {
 		// Drawn after the last change, as the second it is kept to has passed.
 		$keep->invoke( null, $drawn, $svg, (float) get_option( Art::CHANGED, 0 ) + 0.5 );
 		return $svg;
+	}
+
+	/**
+	 * The cover ?riff-art answers with, and its Cache-Control.
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return array `{ svg, cache }`.
+	 */
+	private function cover( string $drawn ): array {
+		return ( new ReflectionMethod( Art::class, 'cover' ) )->invoke( null, $drawn );
 	}
 
 	/**

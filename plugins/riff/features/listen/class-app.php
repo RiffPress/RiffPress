@@ -136,7 +136,7 @@ final class App {
 	private static function view_name(): string {
 		$post = self::requested();
 		if ( $post ) {
-			return get_the_title( $post );
+			return Library::title( $post );
 		}
 		$browse = Browse::requested();
 		if ( ! $browse ) {
@@ -155,7 +155,7 @@ final class App {
 				return __( 'Your Library', 'riff' );
 			case 'playlist':
 				// A listener's playlist is private: its name is only for whoever may read it.
-				return current_user_can( 'read_post', $browse['id'] ) ? get_the_title( $browse['id'] ) : __( 'Playlist', 'riff' );
+				return current_user_can( 'read_post', $browse['id'] ) ? Library::title( $browse['id'] ) : __( 'Playlist', 'riff' );
 			case 'album':
 			case 'artist':
 				$term = get_term( $browse['id'], 'album' === $browse['view'] ? Catalog::ALBUM : Catalog::ARTIST );

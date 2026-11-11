@@ -604,7 +604,7 @@ final class Art {
 				'src'   => self::url( $post_id ),
 				'sizes' => '1024x1024',
 				'type'  => 'image/svg+xml',
-				'alt'   => self::alt( html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' ), '' ),
+				'alt'   => self::alt( Library::title( $post_id ), '' ),
 			),
 		);
 	}
@@ -631,18 +631,9 @@ final class Art {
 			echo self::sheet(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- an HTML document built here, every value escaped where it is placed.
 			exit;
 		}
-		$drawn = (string) $wp->query_vars[ self::QUERY ];
-		$cache = 'public, max-age=86400';
-		$since = microtime( true );
-		$svg   = self::shared( $drawn );
-		if ( null !== $svg ) {
-			self::keep( $drawn, $svg, $since );
-		} elseif ( is_user_logged_in() ) {
-			// A cover only this listener may see, of an album of private tracks, is drawn for them
-			// and kept nowhere.
-			$svg   = self::draw( $drawn );
-			$cache = 'private, max-age=86400';
-		}
+		$cover = self::cover( (string) $wp->query_vars[ self::QUERY ] );
+		$svg   = $cover['svg'];
+		$cache = $cover['cache'];
 		if ( null === $svg ) {
 			status_header( 404 );
 			exit;
@@ -661,10 +652,35 @@ final class Art {
 	}
 
 	/**
+	 * The cover ?riff-art answers with, and how it may be cached: one anyone may see is kept in
+	 * uploads and cached by anyone; one only this listener may see, a private post's or an album
+	 * of private tracks, is drawn for them, kept nowhere and cached only by their browser.
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return array `{ svg: string|null, cache: string }`, svg null for nothing the requester may see.
+	 */
+	private static function cover( string $drawn ): array {
+		$since = microtime( true );
+		$svg   = self::shared( $drawn );
+		if ( null !== $svg ) {
+			self::keep( $drawn, $svg, $since );
+			return array(
+				'svg'   => $svg,
+				'cache' => 'public, max-age=86400',
+			);
+		}
+		return array(
+			'svg'   => is_user_logged_in() ? self::draw( $drawn ) : null,
+			'cache' => 'private, max-age=86400',
+		);
+	}
+
+	/**
 	 * A cover as the requester may see it: an album's from the tracks they may play, a post's when
 	 * they may read it.
 	 *
 	 * @since 5.7.0
+	 * @since 6.7.2 A private post's, for whoever may read it.
 	 *
 	 * @param string $drawn A post ID, or album-<term ID>.
 	 * @return string|null SVG document, or null for nothing the requester may see.
@@ -674,7 +690,12 @@ final class Art {
 			return self::album_svg( (int) $m[1] );
 		}
 		$post = get_post( absint( $drawn ) );
-		return $post instanceof WP_Post && is_post_publicly_viewable( $post ) && ! post_password_required( $post ) ? self::svg( $post ) : null;
+		if ( ! $post instanceof WP_Post || ! is_post_type_viewable( $post->post_type ) || post_password_required( $post ) ) {
+			return null;
+		}
+		// Anyone for a public post, signed in or not; for any other, whoever WordPress lets read it,
+		// as the author of a private one and whoever may read others' private posts.
+		return is_post_publicly_viewable( $post ) || current_user_can( 'read_post', $post->ID ) ? self::svg( $post ) : null;
 	}
 
 	/**
