@@ -174,6 +174,8 @@
 		const singers = found.chart.singers?.length
 			? found.chart.singers
 			: [ found.chart ];
+		// A Solo pressed for another track's singer doesn't silence this one's.
+		solo = -1;
 		const root = el( 'div', 'riff-chimera' );
 		root.dataset.state = 'idle';
 		const heads = el( 'div', 'riff-chimera-heads' );
