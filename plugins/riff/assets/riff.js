@@ -14,7 +14,7 @@
  * the wake lock) are modules loaded when first needed. Every module is a WordPress script module
  * registered by Player::enqueue() and imported by its id, which the page's import map resolves. No
  * build step: these files are what ships. */
-import { parse } from 'riff-player/helpers';
+import { parse, covers } from 'riff-player/helpers';
 import { createPlayer } from 'riff-player/state';
 import { media } from 'riff-player/media';
 import { registry } from 'riff-player/registry';
@@ -35,6 +35,8 @@ const root = document.getElementById( 'riff' );
 // A page core's speculative loading prerendered is not being looked at: nothing starts, and
 // nothing is restored or announced, until it is shown.
 if ( root ) {
+	// A cover that does not load shows the blank one, wherever it is drawn.
+	covers();
 	if ( document.prerendering ) {
 		document.addEventListener( 'prerenderingchange', start, {
 			once: true,

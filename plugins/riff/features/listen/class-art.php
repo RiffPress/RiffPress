@@ -631,11 +631,14 @@ final class Art {
 			echo self::sheet(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- an HTML document built here, every value escaped where it is placed.
 			exit;
 		}
-		$cover = self::cover( (string) $wp->query_vars[ self::QUERY ] );
+		$cover = self::answer( (string) $wp->query_vars[ self::QUERY ] );
 		$svg   = $cover['svg'];
 		$cache = $cover['cache'];
-		if ( null === $svg ) {
-			status_header( 404 );
+		if ( 'no-store' === $cache ) {
+			status_header( 200 );
+			header( 'Content-Type: image/svg+xml; charset=utf-8' );
+			header( 'Cache-Control: no-store' );
+			echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Cover::blank(), a constant SVG document.
 			exit;
 		}
 		$etag = '"' . md5( $svg ) . '"';
@@ -649,6 +652,34 @@ final class Art {
 		header( 'ETag: ' . $etag );
 		echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- an SVG document, every text node escaped where it is built.
 		exit;
+	}
+
+	/**
+	 * What ?riff-art answers: the cover, or for one the requester may not see or that is not there,
+	 * the blank cover, so an image asked for is never a broken one. The blank is the same for every
+	 * album, and never kept, so the real cover shows as soon as it may.
+	 *
+	 * @since 6.8.1
+	 *
+	 * @param string $drawn A post ID, or album-<term ID>.
+	 * @return array `{ svg: string, cache: string }`, cache `no-store` for the blank.
+	 */
+	private static function answer( string $drawn ): array {
+		try {
+			$cover = self::cover( $drawn );
+		} catch ( \Throwable $e ) {
+			// A cover that could not be drawn is a blank one; the error is still logged.
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- a drawing that failed, for the site's log.
+			error_log( 'Riff could not draw cover ' . $drawn . ': ' . $e->getMessage() );
+			$cover = array( 'svg' => null );
+		}
+		if ( null === $cover['svg'] ) {
+			return array(
+				'svg'   => Cover::blank(),
+				'cache' => 'no-store',
+			);
+		}
+		return $cover;
 	}
 
 	/**

@@ -389,6 +389,40 @@ class Test_Riff_Art extends Riff_TestCase {
 		$this->assertSame( array(), glob( "$kept/*/$post.svg" ) );
 	}
 
+	public function test_a_cover_that_cannot_be_shown_is_answered_with_a_blank_that_tells_nothing_and_is_never_kept(): void {
+		[ $post ] = $this->bare_post( 'Carols of the Season' );
+		$author   = self::factory()->user->create( array( 'role' => 'author' ) );
+		wp_update_post(
+			array(
+				'ID'          => $post,
+				'post_status' => 'private',
+				'post_author' => $author,
+			)
+		);
+		$answer = new ReflectionMethod( Art::class, 'answer' );
+		wp_set_current_user( $author );
+		$real = $this->cover( (string) $post );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		$blank = $answer->invoke( null, (string) $post );
+		$this->assertSame( Cover::blank(), $blank['svg'], 'another listener gets the blank' );
+		$this->assertSame( 'no-store', $blank['cache'], 'kept nowhere, so the real cover shows once it may' );
+
+		wp_set_current_user( 0 );
+		$this->assertSame( $blank, $answer->invoke( null, (string) $post ), 'and so does a visitor' );
+		$this->assertSame( $blank, $answer->invoke( null, '999999' ), 'or one that is not there' );
+		$this->assertSame( $blank, $answer->invoke( null, 'album-999999' ), 'or an album that is not there' );
+
+		$this->assertStringNotContainsString( '<text', $blank['svg'], 'no words' );
+		$this->assertStringNotContainsString( 'Carols', $blank['svg'] );
+		$this->assertStringNotContainsString( 'aria-label', $blank['svg'] );
+		preg_match_all( '/fill="([^"]+)"/', $blank['svg'], $fills );
+		$this->assertSame( array( '#1e1e1e', '#2a2a2a', '#333' ), array_values( array_unique( $fills[1] ) ), 'and only greys, no album\'s colours' );
+
+		wp_set_current_user( $author );
+		$this->assertSame( $real, $answer->invoke( null, (string) $post ), 'its author still gets the real one, cached as it was' );
+	}
+
 	public function test_a_public_posts_cover_is_kept_and_cached_by_anyone(): void {
 		[ $post ] = $this->bare_post();
 		wp_set_current_user( 0 );

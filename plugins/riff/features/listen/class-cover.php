@@ -79,6 +79,25 @@ final class Cover {
 	}
 
 	/**
+	 * The cover for one that cannot be shown: a plain record on charcoal, with no words and no
+	 * album's colours, so it tells nothing of the album it stands for. The player draws the same one
+	 * (BLANK_COVER, in assets/player/helpers.js) for a cover that does not load.
+	 *
+	 * @since 6.8.1
+	 *
+	 * @return string SVG document.
+	 */
+	public static function blank(): string {
+		return '<?xml version="1.0" encoding="UTF-8"?>' .
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" aria-hidden="true">' .
+			'<rect width="1024" height="1024" fill="#1e1e1e"/>' .
+			'<circle cx="512" cy="512" r="330" fill="#2a2a2a"/>' .
+			'<circle cx="512" cy="512" r="110" fill="#333"/>' .
+			'<circle cx="512" cy="512" r="12" fill="#1e1e1e"/>' .
+			'</svg>';
+	}
+
+	/**
 	 * Draws a cover from an item, its tracks, a palette and a layout.
 	 *
 	 * @since 4.3.0
