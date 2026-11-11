@@ -261,16 +261,17 @@ final class Home_View {
 			$title         = (string) ( $track['post']['title'] ?? '' );
 			$cards        .= Ui::card(
 				array(
-					'title' => $title,
-					'href'  => add_query_arg( App::QUERY, $post, $page ),
-					'sub'   => (string) ( $track['artist'] ?? '' ),
-					'art'   => self::played_art( $track ),
-					'play'  => array(
+					'title'   => $title,
+					'href'    => add_query_arg( App::QUERY, $post, $page ),
+					'sub'     => (string) ( $track['artist'] ?? '' ),
+					'art'     => self::played_art( $track ),
+					'play'    => array(
 						'action' => 'play-card',
 						'data'   => array( 'post' => $post ),
 						/* translators: %s: track or post title. */
 						'label'  => sprintf( __( 'Play %s', 'riff' ), $title ),
 					),
+					'private' => ! empty( $track['post']['private'] ),
 				)
 			);
 		}
@@ -304,16 +305,17 @@ final class Home_View {
 			$title  = (string) ( $track['title'] ?? '' );
 			$cards .= Ui::card(
 				array(
-					'title' => $title,
-					'href'  => $post ? add_query_arg( App::QUERY, $post, $page ) : '',
-					'sub'   => (string) ( $track['artist'] ?? '' ),
-					'art'   => self::played_art( $track ),
-					'play'  => array(
+					'title'   => $title,
+					'href'    => $post ? add_query_arg( App::QUERY, $post, $page ) : '',
+					'sub'     => (string) ( $track['artist'] ?? '' ),
+					'art'     => self::played_art( $track ),
+					'play'    => array(
 						'action' => 'play-history',
 						'data'   => array( 'index' => (int) ( $track['index'] ?? $i ) ),
 						/* translators: %s: track or post title. */
 						'label'  => sprintf( __( 'Play %s', 'riff' ), $title ),
 					),
+					'private' => ! empty( $track['post']['private'] ),
 				)
 			);
 		}

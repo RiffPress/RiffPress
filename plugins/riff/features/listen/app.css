@@ -1397,6 +1397,27 @@
 	line-height: 1.714;
 }
 
+/* A private post's mark at the head of its line, in words, a link to the
+   editor for someone who may change it. */
+.riff-app .riff-album-meta .riff-private {
+	margin-inline-end: 0;
+	vertical-align: -0.2em;
+}
+
+.riff-app .riff-private-shown {
+	color: var(--riff-app-ink);
+	font-weight: 500;
+}
+
+/* A private site's mark beside its name, in the brand's own ink. */
+.riff-app .riff-app-brand .riff-private {
+	margin-inline-start: 8px;
+	color: var(--riff-app-ink-2);
+	font-size: 14px;
+	font-weight: 400;
+	text-decoration: none;
+}
+
 /* An album's artist, which opens their page. */
 .riff-app .riff-album-meta a {
 	color: var(--riff-app-ink);

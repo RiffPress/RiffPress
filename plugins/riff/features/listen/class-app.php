@@ -491,18 +491,19 @@ final class App {
 	private static function card( array $item, string $page, int $first = 0 ): string {
 		return Ui::card(
 			array(
-				'title' => (string) $item['title'],
-				'href'  => self::link( (int) $item['id'], $page ),
-				'sub'   => (string) ( $item['meta'] ?? self::meta( $item ) ),
-				'art'   => (array) $item['art'],
-				'id'    => $first ? 'riff-page-' . $first : '',
-				'data'  => array( 'post' => (int) $item['id'] ),
-				'play'  => array(
+				'title'   => (string) $item['title'],
+				'href'    => self::link( (int) $item['id'], $page ),
+				'sub'     => (string) ( $item['meta'] ?? self::meta( $item ) ),
+				'art'     => (array) $item['art'],
+				'id'      => $first ? 'riff-page-' . $first : '',
+				'data'    => array( 'post' => (int) $item['id'] ),
+				'play'    => array(
 					'action' => 'play-card',
 					'data'   => array( 'post' => (int) $item['id'] ),
 					/* translators: %s: track or post title. */
 					'label'  => sprintf( __( 'Play %s', 'riff' ), $item['title'] ),
 				),
+				'private' => Library::is_private( (int) $item['id'] ),
 			)
 		);
 	}
@@ -538,7 +539,7 @@ final class App {
 		if ( ! $detail['tracks'] ) {
 			return Home_View::view( $page );
 		}
-		return self::header( $detail['title'], self::meta( $detail ), '', (array) $detail['art'], Art::tint( (array) $detail['art'] ) ) . sprintf(
+		return self::header( $detail['title'], self::meta( $detail ), '', (array) $detail['art'], Art::tint( (array) $detail['art'] ), post: $post->ID ) . sprintf(
 			'<div class="riff-album-tracks" data-riff-numbered data-riff-tracks="%s">%s</div>',
 			esc_attr( wp_json_encode( $detail['tracks'] ) ),
 			$detail['html']
@@ -555,6 +556,7 @@ final class App {
 	 * @since 4.28.0 A cover drawn in markup.
 	 * @since 5.7.0 The line under it may be parts, each text or `[ text, address ]` for a link.
 	 * @since 5.8.0 The cover may be its sizes, which the browser picks from.
+	 * @since 6.8.0 The $post parameter: a post marked private, for those who may see it.
 	 *
 	 * @param string       $title Title.
 	 * @param string|array $meta  The line under it, or its parts.
@@ -567,9 +569,10 @@ final class App {
 	 * @param array        $covers Up to four covers for a playlist's mosaic, when there is no art.
 	 * @param string       $extra  More buttons after Play and Shuffle, or empty.
 	 * @param string       $drawn  A cover drawn in markup, when there is no picture: Liked songs' heart.
+	 * @param int          $post   The post the list is, to mark it when Library::is_private() says so, or 0.
 	 * @return string
 	 */
-	public static function header( string $title, string|array $meta, string $kind = '', string|array $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '', string $drawn = '' ): string {
+	public static function header( string $title, string|array $meta, string $kind = '', string|array $art = '', string $tint = '', bool $round = false, string $like = '', int $id = 0, array $covers = array(), string $extra = '', string $drawn = '', int $post = 0 ): string {
 		$tint  = (string) sanitize_hex_color( $tint );
 		$heart = in_array( $like, array( 'album', 'artist' ), true ) && $id > 0 ? Ui::heart( $like, $id, $title ) : '';
 		// The cover at the head of a list is what its page is painted around, so it loads first.
@@ -583,10 +586,25 @@ final class App {
 			'' !== $cover ? '<span class="riff-album-cover">' . $cover . '</span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
 			esc_html( $title ),
-			self::meta_line( $meta ),
+			self::private_line( $post ) . self::meta_line( $meta ),
 			'' !== $tint ? ' style="--riff-album-tint:' . esc_attr( $tint ) . '"' : '',
 			Ui::actions( $heart . $extra )
 		);
+	}
+
+	/**
+	 * A private post's mark at the head of its line, shown in words, and for someone who may edit
+	 * the post a link to the editor, where its visibility is changed. Empty for any other post.
+	 *
+	 * @param int $post Post ID, or 0.
+	 * @return string
+	 */
+	private static function private_line( int $post ): string {
+		if ( ! Library::is_private( $post ) ) {
+			return '';
+		}
+		$edit = current_user_can( 'edit_post', $post ) ? (string) get_edit_post_link( $post, 'raw' ) : '';
+		return Ui::private_mark( true, $edit ) . ' · ';
 	}
 
 	/**

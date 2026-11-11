@@ -71,22 +71,24 @@ final class Ui {
 	 *     @type array  $data  data-riff-* attributes for the card, by name without the prefix.
 	 *     @type string $id    An id for the card, or empty.
 	 *     @type array  $play  The play button: action, label, and data, or empty for none.
+	 *     @type bool   $private Whether to mark it private, from Library::is_private(). Since 6.8.0.
 	 * }
 	 * @return string
 	 */
 	public static function card( array $card ): string {
 		$card += array(
-			'title'  => '',
-			'href'   => '',
-			'sub'    => '',
-			'art'    => '',
-			'covers' => array(),
-			'mark'   => '',
-			'heart'  => false,
-			'class'  => '',
-			'data'   => array(),
-			'id'     => '',
-			'play'   => array(),
+			'title'   => '',
+			'href'    => '',
+			'sub'     => '',
+			'art'     => '',
+			'covers'  => array(),
+			'mark'    => '',
+			'heart'   => false,
+			'class'   => '',
+			'data'    => array(),
+			'id'      => '',
+			'play'    => array(),
+			'private' => false,
 		);
 		$cover = '';
 		if ( array() !== $card['art'] && '' !== $card['art'] ) {
@@ -115,7 +117,34 @@ final class Ui {
 			self::data( $card['data'] ),
 			$cover,
 			'' !== $card['href'] ? '<a class="riff-card-link" href="' . esc_url( $card['href'] ) . '">' . $title . '</a>' : $title,
-			esc_html( $card['sub'] )
+			( $card['private'] ? self::private_mark() : '' ) . esc_html( $card['sub'] )
+		);
+	}
+
+	/**
+	 * The mark on something only some can see, as the editor marks a post's Private status:
+	 * WordPress's notAllowed and the word. Quiet on a card or a row, where the word is said and
+	 * not shown; explicit at the head of a list, where it is shown and, for someone who may change
+	 * it, links to where they do. Ask Library::is_private() first; this says nothing itself.
+	 *
+	 * @since 6.8.0
+	 *
+	 * @param bool   $shown Whether the word is shown, not only said.
+	 * @param string $href  Where it is changed, or empty.
+	 * @param string $word  The word, or empty for "Private".
+	 * @return string
+	 */
+	public static function private_mark( bool $shown = false, string $href = '', string $word = '' ): string {
+		$word = '' !== $word ? $word : __( 'Private', 'riff' );
+		$text = $shown ? '<span class="riff-private-word">' . esc_html( $word ) . '</span>' : '<span class="riff-app-sr">' . esc_html( $word ) . ', </span>';
+		$tag  = '' !== $href ? 'a' : 'span';
+		return sprintf(
+			'<%1$s class="riff-private%2$s"%3$s>%4$s%5$s</%1$s>',
+			$tag,
+			$shown ? ' riff-private-shown' : '',
+			'' !== $href ? ' href="' . esc_url( $href ) . '"' : '',
+			Player::icon( 'private' ),
+			$text
 		);
 	}
 
