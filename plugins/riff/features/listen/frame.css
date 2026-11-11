@@ -158,6 +158,11 @@ html.riff-frame .riff-standalone .riff-app {
 		--riff-frame-side: 72px;
 	}
 
+	/* In the view's panel, past the library's and the frame's gaps. */
+	html.riff-frame .riff-standalone .riff-app .riff-app-status:not(:empty) {
+		left: calc(var(--riff-frame-side) + 2 * var(--riff-frame-gap) + 16px);
+	}
+
 	html.riff-frame .riff-standalone .riff-app::after {
 		content: "";
 		position: fixed;
