@@ -470,3 +470,30 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ needs.release-please.outputs.coverage_tag }}
         run: gh release edit "$TAG_NAME" --draft=false --latest=false
+
+  # After a Riff or Riff Sign In release is published, start a workflow in
+  # another repository, so whatever pins those releases can move to them now
+  # instead of waiting for its own schedule. Nothing here names who that is:
+  # it stays off until the repository variables DOWNSTREAM_REPO (owner/name)
+  # and DOWNSTREAM_WORKFLOW (the workflow's file name, which must accept
+  # workflow_dispatch) are set, and runs with the DOWNSTREAM_DISPATCH_TOKEN
+  # secret: a fine-grained personal access token scoped to that one repository
+  # with Actions read and write, and nothing else. It is a job of its own so a
+  # failed dispatch shows red without touching a release; the release jobs
+  # publish their release as their last step, so it only runs once the release
+  # is out, and once when both release in one run.
+  notify-downstream:
+    needs: [release-please, build-release-asset, release-riff-sign-in]
+    if: ${{ always() && vars.DOWNSTREAM_REPO != '' && vars.DOWNSTREAM_WORKFLOW != '' && (needs.build-release-asset.result == 'success' || needs.release-riff-sign-in.result == 'success') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Start the downstream workflow
+        env:
+          GH_TOKEN: ${{ secrets.DOWNSTREAM_DISPATCH_TOKEN }}
+          REPO: ${{ vars.DOWNSTREAM_REPO }}
+          WORKFLOW: ${{ vars.DOWNSTREAM_WORKFLOW }}
+        run: |
+          set -euo pipefail
+          gh workflow run "$WORKFLOW" --repo "$REPO"
