@@ -193,6 +193,38 @@ class Test_Riff_Export extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'hmerrill', (string) wp_json_encode( $users ), 'nor a login' );
 	}
 
+	public function test_a_public_archive_leaves_out_a_display_name_that_is_the_login_or_an_address(): void {
+		$names = array(
+			'hmerrill' => 'hmerrill',
+			'jlee'     => 'jlee@example.test',
+		);
+		foreach ( $names as $login => $display ) {
+			$author = self::factory()->user->create(
+				array(
+					'user_login'   => $login,
+					'user_email'   => $login . '@example.test',
+					'display_name' => $display,
+				)
+			);
+			self::factory()->post->create(
+				array(
+					'post_status' => 'publish',
+					'post_author' => $author,
+				)
+			);
+		}
+		$done = Export::to_file(
+			$this->zip,
+			array(
+				'public'  => true,
+				'plugins' => false,
+			)
+		);
+
+		$this->assertIsArray( $done );
+		$this->assertSame( array( '', '' ), array_column( $this->users_in( $this->zip ), 'display_name' ) );
+	}
+
 	public function test_the_download_keeps_its_authors_email(): void {
 		$author = self::factory()->user->create(
 			array(

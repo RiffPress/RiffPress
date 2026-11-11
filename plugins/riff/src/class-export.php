@@ -392,7 +392,7 @@ final class Export {
 	/**
 	 * Who wrote the posts: their names and email, by which an import finds them again. No
 	 * password, and nothing else of their account. A public archive is one that is shared, in a
-	 * Playground link, so it names each author by display name only, with no login and no email.
+	 * Playground link, so it names each author by display name only, with no login and no email, and leaves the name empty where it is the login or an address.
 	 *
 	 * @param PDO             $db         The archive's database.
 	 * @param \PDOStatement[] $statements Its insert statements, by table.
@@ -412,7 +412,7 @@ final class Export {
 						'user_login'    => $names_only ? '' : $user->user_login,
 						'user_nicename' => $names_only ? '' : $user->user_nicename,
 						'user_email'    => $names_only ? '' : $user->user_email,
-						'display_name'  => $user->display_name,
+						'display_name'  => $names_only && ( is_email( $user->display_name ) || 0 === strcasecmp( $user->display_name, $user->user_login ) ) ? '' : $user->display_name,
 					)
 				);
 			}
