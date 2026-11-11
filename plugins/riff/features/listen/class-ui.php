@@ -123,7 +123,7 @@ final class Ui {
 
 	/**
 	 * The mark on something only some can see, as the editor marks a post's Private status:
-	 * WordPress's unseen and the word. Quiet on a card or a row, where the word is said and
+	 * WordPress's lock, its body filled, and the word. Quiet on a card or a row, where the word is said and
 	 * not shown; explicit at the head of a list, where it is shown and, for someone who may change
 	 * it, links to where they do. Ask Library::is_private() first; this says nothing itself.
 	 *

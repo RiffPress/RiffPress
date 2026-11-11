@@ -80,6 +80,8 @@ test.describe( 'Player', () => {
 				video: null,
 				locked: true,
 				unlock: 'https://example.org/join/',
+				// And on a post visitors can't see, for its owner: both marks on one row.
+				post: { ...open.post, private: true },
 			} );
 			fig.innerHTML = '<audio controls></audio>';
 			document
@@ -94,6 +96,12 @@ test.describe( 'Player', () => {
 		await expect( locked ).toHaveAttribute( 'href', 'https://example.org/join/' );
 		await expect( locked ).toHaveAccessibleName( /^Unlock Members Only\b/ );
 		await expect( locked.locator( '.riff-row-lock' ) ).toBeVisible();
+		// The two read as different: Locked is an outline lock by the length, Private a lock with
+		// its body filled before the artist, and the word said.
+		await expect( locked.locator( '.riff-row-lock path[fill]' ) ).toHaveCount( 0 );
+		await expect( locked.locator( '.riff-row-sub .riff-private svg path[fill]' ) ).toHaveCount( 1 );
+		await expect( locked.locator( '.riff-row-sub .riff-private svg path' ).first() ).toHaveAttribute( 'd', /^M9\.25 10\.75V7\.5/ );
+		await expect( locked.locator( '.riff-row-sub .riff-private .riff-app-sr' ) ).toHaveText( 'Private,' );
 
 		await page.locator( 'button.riff-row' ).first().click();
 		await expect

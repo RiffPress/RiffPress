@@ -144,7 +144,8 @@ class Test_Riff_Private_Mark extends Riff_TestCase {
 
 		update_option( Private_Site::OPTION, true );
 		$nav = Browse::nav( home_url( '/' ), null );
-		$this->assertSame( 1, substr_count( $nav, '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21L10.6587' ) );
+		$this->assertSame( 1, substr_count( $nav, '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.25 10.75V7.5C' ), 'the lock, not the eye' );
+		$this->assertStringContainsString( 'fill="currentColor"/></svg>', $nav, 'its body is filled, so it is not a locked track\'s outline lock' );
 		$this->assertMatchesRegularExpression( '#<span class="riff-app-name">[^<]*</span><a class="riff-private riff-private-shown" href="[^"]*options-reading\.php">#', $nav );
 
 		$member = self::factory()->user->create( array( 'role' => 'subscriber' ) );

@@ -137,11 +137,12 @@ export function rows( P ) {
 	P.langAttr = langAttr;
 
 	// A track from a post visitors can't see, marked as the Listen app's cards are: WordPress's
-	// unseen, and the word said rather than shown. The server only sets post.private for
+	// lock with its body filled (a locked track's own lock is an outline, in the time column), and
+	// the word said rather than shown. The server only sets post.private for
 	// someone signed in who may see the post; riff.css shows it only in the Listen app, since a
 	// post's own page already says so in its title.
 	const PRIVATE =
-		'<span class="riff-private"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21L10.6587 15.1842M13.1523 9.72929L13.8553 8.19144L16 3.5M20.0645 13C19.2118 11.2841 17.8276 9.87898 16.1272 9M3.93555 13C5.40825 10.0366 8.46631 8 12 8C12.636 8 13.2566 8.06597 13.8553 8.19144M13.1523 9.72929C12.7975 9.58156 12.4083 9.5 12 9.5C10.3431 9.5 9 10.8431 9 12.5C9 13.6747 9.67519 14.6917 10.6587 15.1842M13.1523 9.72929L10.6587 15.1842M13.1755 15.261C14.2481 14.8037 15 13.7397 15 12.5C15 12.1819 14.9505 11.8753 14.8587 11.5876"/><path d="M12 9.5C10.3431 9.5 9 10.8431 9 12.5C9 13.6747 9.67519 14.6917 10.6587 15.1842L13.1523 9.72929C12.7975 9.58156 12.4083 9.5 12 9.5Z" fill="currentColor"/></svg>' +
+		'<span class="riff-private"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.25 10.75V7.5C9.25 5.98122 10.4812 4.75 12 4.75C13.5188 4.75 14.75 5.98122 14.75 7.5V10.75"/><path d="M7.75 10.75H16.25C16.5261 10.75 16.75 10.9739 16.75 11.25V17.25C16.75 17.5261 16.5261 17.75 16.25 17.75H7.75C7.47386 17.75 7.25 17.5261 7.25 17.25V11.25C7.25 10.9739 7.47386 10.75 7.75 10.75Z" fill="currentColor"/></svg>' +
 		`<span class="riff-app-sr">${ esc(
 			/* translators: Heard before a track's artist, when the post it is in is one visitors can't see. */ __(
 				'Private',
