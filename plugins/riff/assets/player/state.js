@@ -62,6 +62,7 @@ export function createPlayer( root, data ) {
 		announcing: null, // The track loaded to play, said to be playing once its sound starts.
 		failed: new Set(), // Tracks that could not be played, by id, marked in the list.
 		failures: 0, // Tracks that failed one after another; the player stops skipping at three.
+		renewing: false, // A track's signed address is being asked for again, before it loads.
 
 		track: () => P.queue[ P.order[ P.pos ] ],
 		// The signed-in listener: their nonce and routes, from the page, or null for a visitor.

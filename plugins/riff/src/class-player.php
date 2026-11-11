@@ -337,6 +337,8 @@ final class Player {
 			'cookiePath' => COOKIEPATH,
 			// A post's tracks, which the record in Now Playing cuts its grooves from.
 			'library'    => rest_url( 'riff/v1/library/' ),
+			// Where a track kept past its signed address's hours is asked for again.
+			'tracks'     => rest_url( 'riff/v1/tracks' ),
 		);
 		if ( ! self::cover_accent() ) {
 			$data['coverAccent'] = false;

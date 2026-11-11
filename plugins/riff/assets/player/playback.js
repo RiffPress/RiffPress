@@ -8,10 +8,87 @@ import { largest } from 'riff-player/helpers';
 // English they are written in.
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
+// How long a protected file's signed address must still work for a track to start on it.
+const AHEAD = 60 * 60 * 1000;
+
 export function playback( P ) {
 	const { root, audio, video, api, emit } = P;
 
-	function load( { play = true, at = 0 } = {} ) {
+	// A protected file's address is signed for a few hours (Protect::TTL) and says until when. A
+	// track kept longer, in a queue picked up on another page or in Recently played, is asked for
+	// again before it loads, and so is one with less than AHEAD left, which may not last the track.
+	const until = ( src ) => {
+		try {
+			const u = new URL( src, location.href );
+			return u.searchParams.has( 'riff-sig' )
+				? Number( u.searchParams.get( 'riff-expires' ) ) * 1000
+				: Infinity;
+		} catch {
+			return Infinity;
+		}
+	};
+	const expired = ( t ) =>
+		[ t.src, t.video?.src ].some(
+			( src ) => src && until( src ) - Date.now() < AHEAD
+		);
+	// The tracks from the one loading on, in play order, whose addresses have run out, asked for in
+	// one request and given the addresses signed now. A track the site no longer gives this
+	// listener keeps its old ones, and fails as any track that can't be played does.
+	async function renew() {
+		const due = P.order
+			.slice( P.pos )
+			.map( ( i ) => P.queue[ i ] )
+			.filter( ( t ) => /^\d+$/.test( String( t.id ) ) && expired( t ) );
+		const ids = [ ...new Set( due.map( ( t ) => Number( t.id ) ) ) ].slice(
+			0,
+			100
+		);
+		if ( ! ids.length || ! P.data.tracks ) {
+			return;
+		}
+		const u = new URL( P.data.tracks, location.href );
+		u.searchParams.set( 'include', ids.join( ',' ) );
+		u.searchParams.set( 'per_page', String( ids.length ) );
+		const r = await P.internal.request( u );
+		const items = r.ok ? ( await r.json() ).items : null;
+		const signed = new Map(
+			( Array.isArray( items ) ? items : [] ).map( ( f ) => [
+				String( f.id ),
+				f,
+			] )
+		);
+		for ( const t of due ) {
+			const f = signed.get( String( t.id ) );
+			if ( f?.src ) {
+				t.src = f.src;
+			}
+			if ( t.video && f?.video?.src ) {
+				t.video.src = f.video.src;
+			}
+		}
+		P.queueChanged();
+	}
+
+	// Loads the track at P.pos, once its addresses work.
+	function load( options ) {
+		const t = P.track();
+		if ( ! t || ! expired( t ) ) {
+			start( options );
+			return;
+		}
+		P.renewing = true;
+		renew()
+			.catch( () => {} )
+			.then( () => {
+				P.renewing = false;
+				// Unless another track was chosen while it was asked for.
+				if ( P.track() === t ) {
+					start( options );
+				}
+			} );
+	}
+
+	function start( { play = true, at = 0 } = {} ) {
 		const t = P.track();
 		if ( ! t ) {
 			return;

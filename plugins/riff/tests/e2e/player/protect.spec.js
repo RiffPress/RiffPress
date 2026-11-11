@@ -146,6 +146,72 @@ test( 'a private post\'s protected file is refused to a visitor, and a signed ad
 	await visitor.dispose();
 } );
 
+test( 'a queue picked up, or a track played again from Recently played, after its signed address ran out plays from one signed again', async ( {
+	admin,
+	page,
+	requestUtils,
+} ) => {
+	const kept = await made.media(
+		requestUtils,
+		path.join( FIXTURES, '04 - It\'s a Brand New Day [new-day].mp3' )
+	);
+	const post = await made.post( requestUtils, {
+		title: 'Protected, and kept overnight',
+		status: 'publish',
+		content: block( kept ),
+	} );
+	await requestUtils.rest( {
+		method: 'POST',
+		path: `/wp/v2/media/${ kept.id }`,
+		data: { post: post.id },
+	} );
+	await protect( admin, page, kept );
+	await page.goto( post.link );
+	await page.locator( '.riff-row' ).first().click();
+	await expect
+		.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 15000 } )
+		.toBe( true );
+	const src = () =>
+		page.evaluate( () => document.querySelector( '.riff-audio' ).getAttribute( 'src' ) );
+	const signed = new RegExp( `riff-file=${ kept.id }&riff-expires=\\d+&riff-sig=[0-9a-f]{32}$` );
+	expect( await src() ).toMatch( signed );
+
+	// As the tab keeps it, an hour after the address stopped working; this browser's cookie would
+	// still let it through, so it is the address that is checked, not that it plays.
+	await page.evaluate( () => {
+		const ran = ( a ) =>
+			a
+				.replace( /riff-expires=\d+/, `riff-expires=${ Math.floor( Date.now() / 1000 ) - 3600 }` )
+				.replace( /riff-sig=[^&]+/, 'riff-sig=ranout' );
+		const queue = JSON.parse( sessionStorage.getItem( 'riff:queue' ) );
+		for ( const t of queue.queue ) {
+			t.src = ran( t.src );
+		}
+		sessionStorage.setItem( 'riff:queue', JSON.stringify( queue ) );
+	} );
+	await page.reload();
+	await expect.poll( src ).toMatch( signed );
+	expect(
+		await page.evaluate( () => sessionStorage.getItem( 'riff:queue' ) ),
+		'the tab keeps the address signed again'
+	).not.toContain( 'riff-sig=ranout' );
+
+	// Played again from Recently played, which hands the tracks back as they were kept.
+	await page.evaluate( () => {
+		const t = window.riff.queue()[ 0 ];
+		window.riff.play( [
+			{
+				...t,
+				src: t.src
+					.replace( /riff-expires=\d+/, `riff-expires=${ Math.floor( Date.now() / 1000 ) - 3600 }` )
+					.replace( /riff-sig=[^&]+/, 'riff-sig=ranout' ),
+			},
+		] );
+	} );
+	await expect.poll( () => page.evaluate( () => window.riff.playing() ), { timeout: 15000 } ).toBe( true );
+	expect( await src() ).toMatch( signed );
+} );
+
 test( 'a protected file plays from a folder outside the web root, and its old uploads address is gone', async ( {
 	admin,
 	page,
