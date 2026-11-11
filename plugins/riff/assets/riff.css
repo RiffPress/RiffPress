@@ -385,8 +385,9 @@ div.riff-row-locked {
 }
 
 /* Something visitors can't see, for someone signed in who can: WordPress's
-   unseen in the line's own ink, which already passes 4.5:1, with the word
-   said beside it (Ui::private_mark(), rows.js). Rows mark it only in the
+   lock, its body filled so it is not a locked track's outline lock, in the
+   line's own ink, which already passes 4.5:1, with the word said beside it
+   (Ui::private_mark(), rows.js). Rows mark it only in the
    Listen app; a private post's own page says so in its title. */
 .riff-private {
 	display: inline-flex;
