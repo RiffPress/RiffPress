@@ -9,6 +9,9 @@
 		"test": "node --test test/*.test.js",
 		"bench": "node bench.js"
 	},
+	"overrides": {
+		"isomorphic-git": "^1.38.6"
+	},
 	"dependencies": {
 		"@php-wasm/node": "3.1.59",
 		"@php-wasm/universal": "3.1.59",
