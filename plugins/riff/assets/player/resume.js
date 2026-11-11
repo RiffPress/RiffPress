@@ -51,8 +51,8 @@ export function resume( P ) {
 	}
 
 	function save() {
-		// Not while a track waits for its address (playback.js): the element holds nothing yet, and
-		// what was saved before still says where the listener was.
+		// Not while a track waits for its addresses (playback.js): the element still holds the
+		// track before it, so a page left then picks up that one, where it was.
 		if ( ! P.track() || P.renewing ) {
 			return;
 		}

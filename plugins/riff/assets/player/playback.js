@@ -10,6 +10,8 @@ const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 // How long a protected file's signed address must still work for a track to start on it.
 const AHEAD = 60 * 60 * 1000;
+// How long a track waits for addresses signed again before it loads with the ones it has.
+const WAIT = 3000;
 
 export function playback( P ) {
 	const { root, audio, video, api, emit } = P;
@@ -28,64 +30,91 @@ export function playback( P ) {
 		}
 	};
 	const expired = ( t ) =>
-		[ t.src, t.video?.src ].some(
+		[ t?.src, t?.video?.src ].some(
 			( src ) => src && until( src ) - Date.now() < AHEAD
 		);
-	// The tracks from the one loading on, in play order, whose addresses have run out, asked for in
-	// one request and given the addresses signed now. A track the site no longer gives this
-	// listener keeps its old ones, and fails as any track that can't be played does.
-	async function renew() {
-		const due = P.order
-			.slice( P.pos )
+	// The tracks from the one loading on, in play order, whose addresses have run out.
+	const due = () =>
+		P.order
+			.slice( Math.max( P.pos, 0 ) )
 			.map( ( i ) => P.queue[ i ] )
-			.filter( ( t ) => /^\d+$/.test( String( t.id ) ) && expired( t ) );
-		const ids = [ ...new Set( due.map( ( t ) => Number( t.id ) ) ) ].slice(
+			.filter( ( t ) => /^\d+$/.test( String( t?.id ) ) && expired( t ) );
+	// The addresses the site last signed, by track: given to a copy of a track as well (Recently
+	// played, a queue set again), and only where they last longer than the ones it has.
+	const signed = new Map();
+	const later = ( was, now ) => now && until( now ) > until( was );
+	function sign() {
+		let changed = false;
+		for ( const t of due() ) {
+			const f = signed.get( String( t.id ) );
+			if ( later( t.src, f?.src ) ) {
+				t.src = f.src;
+				changed = true;
+			}
+			if ( t.video && later( t.video.src, f?.video?.src ) ) {
+				t.video.src = f.video.src;
+				changed = true;
+			}
+		}
+		if ( changed ) {
+			P.queueChanged();
+		}
+	}
+	// Those tracks asked for in one request and given the addresses signed now. One request at a
+	// time: a call while it is on its way waits for the same answer. A track the site no longer
+	// gives this listener keeps its old addresses, and fails as any track that can't be played does.
+	let asking = null;
+	function renew() {
+		sign();
+		if ( asking ) {
+			return asking.then( sign );
+		}
+		const ids = [ ...new Set( due().map( ( t ) => Number( t.id ) ) ) ].slice(
 			0,
 			100
 		);
 		if ( ! ids.length || ! P.data.tracks ) {
-			return;
+			return Promise.resolve();
 		}
 		const u = new URL( P.data.tracks, location.href );
 		u.searchParams.set( 'include', ids.join( ',' ) );
 		u.searchParams.set( 'per_page', String( ids.length ) );
-		const r = await P.internal.request( u );
-		const items = r.ok ? ( await r.json() ).items : null;
-		const signed = new Map(
-			( Array.isArray( items ) ? items : [] ).map( ( f ) => [
-				String( f.id ),
-				f,
-			] )
-		);
-		for ( const t of due ) {
-			const f = signed.get( String( t.id ) );
-			if ( f?.src ) {
-				t.src = f.src;
+		asking = ( async () => {
+			const r = await P.internal.request( u );
+			const items = r.ok ? ( await r.json() ).items : null;
+			for ( const f of Array.isArray( items ) ? items : [] ) {
+				signed.set( String( f.id ), f );
 			}
-			if ( t.video && f?.video?.src ) {
-				t.video.src = f.video.src;
-			}
-		}
-		P.queueChanged();
+		} )()
+			.catch( () => {} )
+			.then( () => {
+				asking = null;
+				sign();
+			} );
+		return asking;
 	}
 
-	// Loads the track at P.pos, once its addresses work.
+	// Loads the track at P.pos, once its addresses work, or after WAIT with the ones it has. Only
+	// the last call loads: a track chosen while another waits takes its place.
+	let loads = 0;
 	function load( options ) {
+		const n = ++loads;
 		const t = P.track();
-		if ( ! t || ! expired( t ) ) {
+		if ( ! expired( t ) ) {
+			P.renewing = false;
 			start( options );
 			return;
 		}
 		P.renewing = true;
-		renew()
-			.catch( () => {} )
-			.then( () => {
+		Promise.race( [
+			renew(),
+			new Promise( ( done ) => setTimeout( done, WAIT ) ),
+		] ).then( () => {
+			if ( n === loads ) {
 				P.renewing = false;
-				// Unless another track was chosen while it was asked for.
-				if ( P.track() === t ) {
-					start( options );
-				}
-			} );
+				start( options );
+			}
+		} );
 	}
 
 	function start( { play = true, at = 0 } = {} ) {
@@ -156,7 +185,8 @@ export function playback( P ) {
 
 	function toggle() {
 		const m = P.el();
-		if ( ! P.track() ) {
+		// Not while a track waits for its addresses: the element still holds the one before it.
+		if ( ! P.track() || P.renewing ) {
 			return;
 		}
 		// A short tick under the thumb on a touch screen (Vibration API), as the phone apps do.
@@ -255,6 +285,10 @@ export function playback( P ) {
 		}
 		// The meter rests while the page is out of sight, and reads again on its return.
 		P.meterSync?.();
+		// A tab left open for hours has its queue signed again as it comes back, before a press.
+		if ( ! document.hidden ) {
+			renew();
+		}
 		const t = P.track();
 		if ( ! t || ! t.video ) {
 			return;
@@ -286,5 +320,5 @@ export function playback( P ) {
 	const announce = () =>
 		channel?.postMessage( { type: 'playing', from: tabId } );
 
-	return { load, toggle, go, next, prev, dismiss, setMode, announce };
+	return { load, renew, toggle, go, next, prev, dismiss, setMode, announce };
 }
