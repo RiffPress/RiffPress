@@ -50,7 +50,9 @@ The rest is what a player should do:
   attempts to resume on the next page; a reload restores the same track paused. A queue of more
   than 500 tracks keeps the 500 around the one playing, in the order they play. A protected track
   kept past its signed address's few hours, there or in Recently played, is asked for again as it
-  loads, so it plays from an address signed then.
+  loads, so it plays from an address signed then; if the site hasn't answered within three
+  seconds, it plays from the one it has. A video's own track, and a file on a private or
+  password-protected post to a listener who can't upload, keep their old address.
 - On a block theme, a site can keep the music playing across links: see [Links](#links).
 
 On a keyboard:
