@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.10.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.9.0...riff-v6.10.0) (2026-11-11)
+
+
+### Features
+
+* Riff Chimera, an experimental view where CHIMERA's simulated voice sings the track's melody with the recording, a voice per singer ([#1040](https://github.com/RiffPress/RiffPress/issues/1040)) ([edd1471](https://github.com/RiffPress/RiffPress/commit/edd1471d98872ff76a5d8c50f471459155479320))
+
 ## [6.9.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.8.0...riff-v6.9.0) (2026-11-11)
 
 
