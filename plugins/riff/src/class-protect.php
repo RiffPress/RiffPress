@@ -317,12 +317,16 @@ final class Protect {
 	/**
 	 * Whether the current visitor may read a post: one that is public or that they may read, and
 	 * behind a password only once they have given it, as its content is. Someone who may edit the
-	 * post needs no password, as in the REST API.
+	 * post needs no password, as in the REST API. The one rule for playing from a post: its files
+	 * here, and its tracks at riff/v1/library/{id} and ?riff= in the app.
+	 *
+	 * @internal Public for Riff's own call sites, not for extensions.
+	 * @since 6.7.2 Public.
 	 *
 	 * @param WP_Post $post Post.
 	 * @return bool
 	 */
-	private static function post_readable( WP_Post $post ): bool {
+	public static function post_readable( WP_Post $post ): bool {
 		if ( post_password_required( $post ) && ! current_user_can( 'edit_post', $post->ID ) ) {
 			return false;
 		}

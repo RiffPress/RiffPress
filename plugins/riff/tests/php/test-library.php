@@ -6,6 +6,7 @@
  */
 
 use Riff\Library;
+use Riff\Protected_Files;
 
 /**
  * @covers \Riff\Library
@@ -247,5 +248,69 @@ class Test_Riff_Library extends Riff_TestCase {
 		$this->assertSame( 2, $first['total'] );
 		$this->assertCount( 1, $first['items'] );
 		$this->assertNotSame( $first['items'][0]['id'], $second['items'][0]['id'] );
+	}
+
+	/**
+	 * Who opens a post that is not public, against what they would get for a post that isn't there.
+	 *
+	 * @return array<string, array{string, string, bool}> Role, post status, whether it opens.
+	 */
+	public static function who_opens_a_post_that_is_not_public(): array {
+		return array(
+			'a visitor, a private post'    => array( '', 'private', false ),
+			'a visitor, a draft'           => array( '', 'draft', false ),
+			'a subscriber, a private post' => array( 'subscriber', 'private', false ),
+			'a subscriber, a draft'        => array( 'subscriber', 'draft', false ),
+			'its author, a private post'   => array( 'author', 'private', true ),
+			'its author, a draft'          => array( 'author', 'draft', true ),
+			'an editor, a private post'    => array( 'editor', 'private', true ),
+			'an editor, a draft'           => array( 'editor', 'draft', true ),
+		);
+	}
+
+	/**
+	 * @dataProvider who_opens_a_post_that_is_not_public
+	 *
+	 * @param string $role   The requester's role, or empty for a visitor.
+	 * @param string $status The post's status.
+	 * @param bool   $opens  Whether it opens for them.
+	 */
+	public function test_a_post_that_is_not_public_opens_for_whoever_may_read_it( string $role, string $status, bool $opens ): void {
+		$author = self::factory()->user->create( array( 'role' => 'author' ) );
+		$post   = $this->post_with_track();
+		$track  = (int) get_children(
+			array(
+				'post_parent' => $post,
+				'post_type'   => 'attachment',
+				'fields'      => 'ids',
+			)
+		)[0];
+		wp_update_post(
+			array(
+				'ID'          => $post,
+				'post_status' => $status,
+				'post_author' => $author,
+			)
+		);
+		Protected_Files::protect( $track );
+		try {
+			$user = 'author' === $role ? $author : ( '' === $role ? 0 : self::factory()->user->create( array( 'role' => $role ) ) );
+			wp_set_current_user( $user );
+			$response = rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/library/' . $post ) );
+			$missing  = rest_do_request( new WP_REST_Request( 'GET', '/riff/v1/library/999999' ) );
+		} finally {
+			wp_set_current_user( 0 );
+			Protected_Files::unprotect( $track );
+		}
+
+		if ( ! $opens ) {
+			$this->assertSame( 404, $response->get_status() );
+			$this->assertSame( $missing->get_data(), $response->get_data(), 'the same as a post that is not there' );
+			return;
+		}
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( 'Underground', $response->get_data()['tracks'][0]['title'] );
+		$this->assertStringContainsString( 'riff-file=' . $track, $response->get_data()['tracks'][0]['src'], 'a protected track plays from an address signed for them' );
+		$this->assertStringContainsString( 'riff-sig=', $response->get_data()['tracks'][0]['src'] );
 	}
 }

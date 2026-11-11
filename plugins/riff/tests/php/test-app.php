@@ -591,4 +591,39 @@ class Test_Riff_App extends Riff_TestCase {
 
 		$this->assertContains( array( 12, true ), $asked );
 	}
+
+	public function test_a_post_that_is_not_public_opens_by_its_address_for_whoever_may_read_it(): void {
+		$author = self::factory()->user->create( array( 'role' => 'author' ) );
+		$cases  = array(
+			'a visitor'    => array( 0, false ),
+			'a subscriber' => array( self::factory()->user->create( array( 'role' => 'subscriber' ) ), false ),
+			'its author'   => array( $author, true ),
+			'an editor'    => array( self::factory()->user->create( array( 'role' => 'editor' ) ), true ),
+		);
+		$post   = $this->library_of( 1 )[0];
+		foreach ( array( 'private', 'draft' ) as $status ) {
+			wp_update_post(
+				array(
+					'ID'          => $post,
+					'post_status' => $status,
+					'post_author' => $author,
+					'post_title'  => 'Carols of the Season',
+				)
+			);
+			foreach ( $cases as $who => [ $user, $opens ] ) {
+				wp_set_current_user( $user );
+				$_GET[ App::QUERY ] = (string) $post;
+				$html               = App::render();
+				unset( $_GET[ App::QUERY ] );
+				wp_set_current_user( 0 );
+				if ( $opens ) {
+					$this->assertStringContainsString( 'riff-album-tracks', $html, "$who, $status" );
+					$this->assertStringContainsString( 'Carols of the Season', $html, "$who, $status" );
+				} else {
+					$this->assertStringNotContainsString( 'riff-album-tracks', $html, "$who, $status: Home, as for a post that is not there" );
+					$this->assertStringNotContainsString( 'Carols of the Season', $html, "$who, $status" );
+				}
+			}
+		}
+	}
 }

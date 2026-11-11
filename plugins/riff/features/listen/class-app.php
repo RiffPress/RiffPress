@@ -14,6 +14,7 @@ use WP_Term;
 use Riff\Catalog;
 use Riff\Library;
 use Riff\Player;
+use Riff\Protect;
 use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
@@ -369,7 +370,7 @@ final class App {
 		}
 		// An ID, or a post's slug: ?riff=compositions reads as well as ?riff=12, for links written by hand.
 		$post = ctype_digit( $raw ) ? get_post( (int) $raw ) : get_page_by_path( $raw, OBJECT, 'post' );
-		if ( ! $post instanceof WP_Post || ! is_post_publicly_viewable( $post ) || post_password_required( $post ) ) {
+		if ( ! $post instanceof WP_Post || ! Protect::post_readable( $post ) ) {
 			return null;
 		}
 		return $post;
