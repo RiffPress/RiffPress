@@ -208,26 +208,18 @@ final class First_Run {
 			return;
 		}
 		$page    = self::listen_page();
-		$album   = sprintf(
-			'<a href="%s">%s</a>',
-			esc_url( admin_url( 'media-new.php' ) ),
-			esc_html__( 'Add your first album', 'riff' )
-		);
-		$guide   = sprintf(
-			'<a href="%s">%s</a>',
-			esc_url( self::GUIDE ),
-			esc_html__( 'How to add music', 'riff' )
-		);
 		$message = '<p><strong>' . esc_html__( 'Riff is ready to play your music.', 'riff' ) . '</strong> ';
 		if ( ! $page ) {
 			$message .= esc_html__( 'Create a Listen page where visitors can browse your albums and keep listening while they move around your site.', 'riff' ) . '</p>';
+			// The actions get a paragraph of their own, each one of core's buttons at core's size, so
+			// they share a height and a baseline and nothing here needs a stylesheet.
 			$message .= sprintf(
 				'<p><a class="button button-primary" href="%s">%s</a>',
 				esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . self::CREATE ), self::CREATE ) ),
 				esc_html__( 'Create Listen page', 'riff' )
 			);
 			if ( ! self::has_music() ) {
-				$message .= ' ' . $album;
+				$message .= ' ' . self::album_link( 'button' );
 			}
 			$message .= '</p>';
 		} else {
@@ -235,8 +227,12 @@ final class First_Run {
 				/* translators: 1: link to the Listen page, 2: "Add your first album" link, 3: "How to add music" link. */
 				__( 'Your Listen page is %1$s. Next, %2$s: upload the tracks to the Media Library and they appear there, sorted into albums and artists. %3$s', 'riff' ),
 				self::page_link( $page ),
-				$album,
-				$guide
+				self::album_link(),
+				sprintf(
+					'<a href="%s">%s</a>',
+					esc_url( self::GUIDE ),
+					esc_html__( 'How to add music', 'riff' )
+				)
 			) . '</p>';
 		}
 		wp_admin_notice(
@@ -245,9 +241,35 @@ final class First_Run {
 				'type'               => 'info',
 				'dismissible'        => true,
 				'additional_classes' => array( 'riff-first-run' ),
-				'attributes'         => array( 'data-riff-dismiss' => wp_nonce_url( admin_url( 'admin-post.php?action=' . self::DISMISS ), self::DISMISS ) ),
+				// Built unescaped: wp_admin_notice() escapes its attributes, and wp_nonce_url()'s
+				// own escaping under that leaves the script an address with "&amp;" in it.
+				'attributes'         => array(
+					'data-riff-dismiss' => add_query_arg(
+						array(
+							'action'   => self::DISMISS,
+							'_wpnonce' => wp_create_nonce( self::DISMISS ),
+						),
+						admin_url( 'admin-post.php' )
+					),
+				),
 				'paragraph_wrap'     => false,
 			)
+		);
+	}
+
+	/**
+	 * The "Add your first album" link, to the Media Library's uploader.
+	 *
+	 * @param string $classes Its class attribute: core's button classes where it stands beside a
+	 *                        button, none where it is part of a sentence.
+	 * @return string
+	 */
+	private static function album_link( string $classes = '' ): string {
+		return sprintf(
+			'<a%s href="%s">%s</a>',
+			'' !== $classes ? ' class="' . esc_attr( $classes ) . '"' : '',
+			esc_url( admin_url( 'media-new.php' ) ),
+			esc_html__( 'Add your first album', 'riff' )
 		);
 	}
 

@@ -108,6 +108,27 @@ class Test_Riff_First_Run extends Riff_TestCase {
 		$this->assertStringContainsString( admin_url( 'media-new.php' ), $html );
 	}
 
+	public function test_its_actions_are_cores_buttons_in_a_paragraph_of_their_own(): void {
+		$html = $this->notice();
+
+		$this->assertMatchesRegularExpression(
+			'#</p><p><a class="button button-primary" href="[^"]+">Create Listen page</a> <a class="button" href="[^"]+">Add your first album</a></p>#',
+			$html
+		);
+		$this->assertStringNotContainsString( 'style=', $html );
+	}
+
+	public function test_the_address_its_close_button_calls_dismisses_it(): void {
+		$this->assertSame( 1, preg_match( '/data-riff-dismiss="([^"]+)"/', $this->notice(), $found ) );
+
+		// What the script reads from the attribute: the address, with nothing escaped twice.
+		$address = html_entity_decode( $found[1], ENT_QUOTES );
+		$this->assertStringNotContainsString( '&amp;', $address );
+		wp_parse_str( (string) wp_parse_url( $address, PHP_URL_QUERY ), $query );
+		$this->assertSame( First_Run::DISMISS, $query['action'] );
+		$this->assertSame( 1, wp_verify_nonce( $query['_wpnonce'], First_Run::DISMISS ) );
+	}
+
 	public function test_with_a_listen_page_but_no_music_it_links_to_the_page_and_the_first_album(): void {
 		$page = $this->listen_page();
 
@@ -117,6 +138,7 @@ class Test_Riff_First_Run extends Riff_TestCase {
 		$this->assertStringContainsString( (string) get_permalink( $page ), $html );
 		$this->assertStringContainsString( 'Add your first album', $html );
 		$this->assertStringContainsString( First_Run::GUIDE, $html );
+		$this->assertStringNotContainsString( 'class="button', $html );
 	}
 
 	public function test_with_music_but_no_listen_page_it_offers_the_page_only(): void {
