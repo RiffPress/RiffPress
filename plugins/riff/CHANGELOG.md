@@ -1,5 +1,22 @@
 # Changelog
 
+## [6.8.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.7.1...riff-v6.8.0) (2026-11-11)
+
+
+### Features
+
+* **import:** a host decides whether a zip uploaded to the Media Library imports privately, with riff_import_private ([#1020](https://github.com/RiffPress/RiffPress/issues/1020)) ([4cec215](https://github.com/RiffPress/RiffPress/commit/4cec215129c5cbd9ccd5afdc8e32075349d656d2))
+* **player:** the turntable is all there is on the screen ([#1019](https://github.com/RiffPress/RiffPress/issues/1019)) ([b6315dd](https://github.com/RiffPress/RiffPress/commit/b6315dd732e3c6633768369d748720259cc26b04))
+
+
+### Bug Fixes
+
+* **first-run:** the notice's two actions are both core's buttons, and closing it is remembered ([#1016](https://github.com/RiffPress/RiffPress/issues/1016)) ([fc6d6a7](https://github.com/RiffPress/RiffPress/commit/fc6d6a7379991f8d3777edbbd5ae8788a26de014))
+* **listen:** a private album's drawn cover is drawn for whoever may read it, and named without "Private:" ([#1025](https://github.com/RiffPress/RiffPress/issues/1025)) ([7982741](https://github.com/RiffPress/RiffPress/commit/7982741962c08e0391f5b2264546ce5fcd99fa98))
+* **player:** a change of view no longer writes speed or pitch to the music playing ([#1021](https://github.com/RiffPress/RiffPress/issues/1021)) ([68afa40](https://github.com/RiffPress/RiffPress/commit/68afa402e66f69b82e7dc6d5a5691f3255d52f95))
+* **player:** a queue picked up, or a track played again from Recently played, after its signed address ran out is signed again as it loads ([#1022](https://github.com/RiffPress/RiffPress/issues/1022)) ([dd8b10d](https://github.com/RiffPress/RiffPress/commit/dd8b10d80a78aff15244c3b6ac9ec6ce21528ffc))
+* **riff:** a Playground link names its authors by display name only, with no email or login ([#1018](https://github.com/RiffPress/RiffPress/issues/1018)) ([b94d374](https://github.com/RiffPress/RiffPress/commit/b94d3741f9665f6709c8722d151de4ed68ef18b8))
+
 ## [6.7.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.7.0...riff-v6.7.1) (2026-11-10)
 
 
