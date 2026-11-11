@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.9.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.8.0...riff-v6.9.0) (2026-11-11)
+
+
+### Features
+
+* **listen:** what visitors can't see is marked Private for those who can ([#1035](https://github.com/RiffPress/RiffPress/issues/1035)) ([da898f5](https://github.com/RiffPress/RiffPress/commit/da898f5b605250a0c4402715797e2d1588e0b7db))
+
+
+### Bug Fixes
+
+* **listen:** a cover that can't be shown is a blank record, never a broken image ([#1029](https://github.com/RiffPress/RiffPress/issues/1029)) ([6c6e6cc](https://github.com/RiffPress/RiffPress/commit/6c6e6cca3bec1e5eaa6b740eb23abff104da3547))
+* **listen:** a private post or a draft opens and plays for whoever may read it ([#1034](https://github.com/RiffPress/RiffPress/issues/1034)) ([9efb6cf](https://github.com/RiffPress/RiffPress/commit/9efb6cfc98e1adfb864b7e340453ccd7fc7d477e))
+* **listen:** the Private mark is an eye with a slash, hidden from others, not a blocked circle ([#1036](https://github.com/RiffPress/RiffPress/issues/1036)) ([fefe23f](https://github.com/RiffPress/RiffPress/commit/fefe23f3cc7330f5567e92aa81a6bb9f6e7c40c8))
+* **player:** a pointer left on Now Playing's close button no longer keeps the bar and the switch over a video ([#1033](https://github.com/RiffPress/RiffPress/issues/1033)) ([e2c6cea](https://github.com/RiffPress/RiffPress/commit/e2c6ceaed43980fc415425ddd0826d7b7305b96e))
+* **player:** the deck keeps its shape at every size, its controls on its plinth and none under 44px ([#1030](https://github.com/RiffPress/RiffPress/issues/1030)) ([e2cb8f6](https://github.com/RiffPress/RiffPress/commit/e2cb8f634007f08d24cc9f795d28b0313695e097))
+
 ## [6.8.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.7.1...riff-v6.8.0) (2026-11-11)
 
 
