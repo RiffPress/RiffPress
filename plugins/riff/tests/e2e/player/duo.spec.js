@@ -1,7 +1,8 @@
 /**
  * The screen as a turntable: on a touch screen wider than it is tall and no taller than a phone,
  * as an unfolded iPhone Duo (890 by 626) and a phone on its side are, Now Playing is the deck
- * itself; folding back to a phone's shape puts the record back in its sleeve. Folded part way,
+ * itself, with nothing else on the screen; folding back to a phone's shape puts the record back in
+ * its sleeve. Folded part way,
  * where the browser reports the fold, nothing lands in the crease: a book's two pages, the deck on
  * the left, or a tent's two halves, upright, so the cover above. The fold is emulated with Chromium's DevTools protocol, so this runs in desktop
  * Chromium only, as a touch screen.
@@ -65,20 +66,26 @@ test.describe( 'iPhone Duo', () => {
 		const root = page.locator( '#riff' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
 		await expect( page.locator( '.riff-np' ) ).toHaveAttribute( 'aria-modal', 'true' );
-		// The deck on the left, the controls' strip on the right.
+		// The deck on its own, in the middle of the screen with its board: no strip of controls
+		// beside it, and no panel.
+		await expect( page.locator( '.riff-np-panel' ) ).toBeHidden();
+		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		const record = await page.locator( '.riff-record' ).boundingBox();
-		const panel = await page.locator( '.riff-np-panel' ).boundingBox();
-		expect( record.x + record.width ).toBeLessThan( panel.x );
 		expect( record.height ).toBeGreaterThan( OPEN.height * 0.6 );
+		expect( record.x ).toBeGreaterThan( OPEN.width * 0.1 );
+		expect( record.x + record.width ).toBeLessThan( OPEN.width * 0.9 );
 		await expect( page.locator( '.riff-deck-board .riff-start' ) ).toBeVisible();
-		// Up next opens in the strip, from its chip; the turntable stays as large as it was, and in
-		// view.
-		await page.locator( '[data-riff-chip="queue"]' ).click();
-		await expect( page.locator( '.riff-queue-list' ) ).toBeVisible();
-		const side = await page.locator( '.riff-side' ).boundingBox();
-		const after = await page.locator( '.riff-record' ).boundingBox();
-		expect( after.height ).toBeCloseTo( record.height, 0 );
-		expect( after.x + after.width ).toBeLessThanOrEqual( side.x );
+		// The way out is there as the deck arrives, and gone once the listener is still; a touch
+		// brings it back, and it closes Now Playing.
+		const out = page.getByRole( 'button', { name: 'Close Now Playing' } );
+		await expect( out ).toBeFocused();
+		await expect( root ).toHaveAttribute( 'data-riff-idle', '', { timeout: 6000 } );
+		await expect( page.locator( '.riff-np-head' ) ).toHaveCSS( 'opacity', '0' );
+		await page.touchscreen.tap( 40, OPEN.height / 2 );
+		await expect( root ).not.toHaveAttribute( 'data-riff-idle', '' );
+		await expect( page.locator( '.riff-np' ) ).toBeVisible();
+		await out.tap();
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
 	} );
 
 	test( 'the deck has its own controls: start and stop, the two speeds, and the pitch', async ( { page } ) => {
@@ -136,7 +143,7 @@ test.describe( 'iPhone Duo', () => {
 		await expect( page.locator( '.riff-cover' ) ).toBeVisible();
 	} );
 
-	test( 'half open like a book, the deck keeps to the left page and the controls to the right', async ( { page } ) => {
+	test( 'half open like a book, the deck keeps to the left page, clear of the crease', async ( { page } ) => {
 		await nowPlaying( page );
 		await fold( page, OPEN, 'vertical' );
 		const half = OPEN.width / 2 - 8;
@@ -144,9 +151,8 @@ test.describe( 'iPhone Duo', () => {
 			.poll( () => page.locator( '.riff-np-body' ).evaluate( ( el ) => getComputedStyle( el ).gridTemplateColumns ) )
 			.toBe( `${ half }px ${ half }px` );
 		const arm = await page.locator( '.riff-mount' ).boundingBox();
-		const panel = await page.locator( '.riff-np-panel' ).boundingBox();
 		expect( arm.x + arm.width ).toBeLessThanOrEqual( half );
-		expect( panel.x ).toBeGreaterThanOrEqual( half + 16 );
+		await expect( page.locator( '.riff-np-panel' ) ).toBeHidden();
 	} );
 
 	test( 'stood like a tent, upright, the cover is in the upper half and the controls in the lower', async ( { page } ) => {

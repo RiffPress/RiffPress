@@ -608,12 +608,14 @@ export function registry( P ) {
 	} );
 
 	// The panel a listener left open, open again beside the page once something plays: on a wide
-	// screen only, as on a phone it would cover what they came to.
+	// screen only, as on a phone it would cover what they came to. Never beside the deck on its
+	// own (now-playing.js, immerse()), which puts it away and asks for it here once it is left.
 	function reopen() {
 		const id = read( localStorage, PANEL );
 		if (
 			id &&
 			! P.panelOpen &&
+			! P.deckAlone?.() &&
 			views.get( id )?.place === 'side' &&
 			P.track() &&
 			fits( id ) &&
@@ -644,6 +646,7 @@ export function registry( P ) {
 			}
 		},
 		hidePanel: ( options ) => hide( options ),
+		reopenPanel: reopen,
 		viewOpened: ( id, isNowOpen ) => {
 			if ( screenOf( id ) ) {
 				if ( isNowOpen ) {

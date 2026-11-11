@@ -6,7 +6,9 @@
  * The needle rides the groove the music is at, and the platter turns at the record's speed times
  * the music's. The album is the turntable where Now Playing is wider than tall and the cover where
  * it is upright, changing as the shape does; with less motion asked for, or on a site that turns
- * the turntable off, it is the cover in every shape. Runs in desktop Chromium.
+ * the turntable off, it is the cover in every shape. The turntable is all there is on the screen:
+ * no bar, no panel, with the way out drawn only while the listener moves, and left by Escape, Back,
+ * that button or a press on the desk, to the page as it was. Runs in desktop Chromium.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
@@ -41,7 +43,7 @@ const groove = ( played ) => 0.97 - ( 0.97 - 0.4 ) * played;
 // The music stopped and the arm still, so a hand can find it where it is drawn.
 async function still( page ) {
 	await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
-	await page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).click();
+	await page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).click();
 	await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( true );
 	await page.evaluate( () =>
 		Promise.all( document.querySelector( '.riff-arm-tube' ).getAnimations().map( ( a ) => a.finished ) )
@@ -83,6 +85,107 @@ test.describe( 'Turntable', () => {
 				[ '.riff-arm-tube', '.riff-record' ].flatMap( ( q ) => document.querySelector( q ).getAnimations().map( ( a ) => a.finished ) )
 			)
 		);
+	} );
+
+	test( 'the deck is all there is: no bar, the way out only while the listener moves, and Tab kept to it', async ( { page } ) => {
+		const root = page.locator( '#riff' );
+		const np = page.locator( '.riff-np' );
+		const bar = page.locator( '.riff-bar' );
+		const out = page.getByRole( 'button', { name: 'Close Now Playing' } );
+		// The bar is out of sight and out of reach, and Now Playing has the whole window.
+		await expect( bar ).toHaveCSS( 'opacity', '0' );
+		await expect( bar ).toHaveAttribute( 'inert', '' );
+		await expect( np ).toHaveAttribute( 'aria-modal', 'true' );
+		expect( ( await np.boundingBox() ).height ).toBe( 900 );
+		// The music is the deck's to play: its keys, and the keyboard's shortcuts.
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await page.keyboard.press( 'Shift+N' );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Underground' );
+		await page.locator( '.riff-keys [data-riff-action="prev"]' ).click();
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Intensities in Ten Cities' );
+		// Still, the way out fades away, playing or not; a move brings it back, and so does a key.
+		await page.mouse.move( 700, 450 );
+		await expect( root ).toHaveAttribute( 'data-riff-idle', '', { timeout: 6000 } );
+		await expect( page.locator( '.riff-np-head' ) ).toHaveCSS( 'opacity', '0' );
+		await page.mouse.move( 720, 470 );
+		await expect( root ).not.toHaveAttribute( 'data-riff-idle', '' );
+		await expect( out ).toBeVisible();
+		// With the keyboard's focus on it, it stays.
+		await out.focus();
+		await page.keyboard.press( 'Shift+Tab' );
+		await page.keyboard.press( 'Tab' );
+		await expect( out ).toBeFocused();
+		await page.waitForTimeout( 3500 );
+		await expect( root ).not.toHaveAttribute( 'data-riff-idle', '' );
+		// Tab keeps to the deck: back from the first control is the last, never the bar.
+		await page.keyboard.press( 'Shift+Tab' );
+		expect( await page.evaluate( () => !! document.activeElement.closest( '.riff-np' ) ) ).toBe( true );
+	} );
+
+	test( 'Escape, Back, the way out and a press on the desk leave, to the page as it was, and the music plays on', async ( { page } ) => {
+		const np = page.locator( '.riff-np' );
+		const bar = page.locator( '.riff-bar' );
+		const place = () => page.evaluate( () => window.scrollY );
+		// A place in the page to come back to.
+		await page.keyboard.press( 'Escape' );
+		await expect( np ).toBeHidden();
+		await page.evaluate( () => window.scrollTo( 0, 120 ) );
+		const from = await place();
+		const leaves = async ( how ) => {
+			await page.locator( '.riff-bar-info' ).click();
+			await expect( np ).toBeVisible();
+			await expect( bar ).toHaveCSS( 'opacity', '0' );
+			const address = page.url();
+			await how();
+			await expect( np ).toBeHidden();
+			await expect( bar ).toHaveCSS( 'opacity', '1' );
+			await expect( bar ).not.toHaveAttribute( 'inert', '' );
+			await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
+			expect( await place() ).toBe( from );
+			// Its history entry is gone, once: the page is still the one it was opened on.
+			await expect.poll( () => page.evaluate( () => history.state?.riff ) ).toBeUndefined();
+			expect( page.url() ).toBe( address );
+			expect( ( await audioState( page ) ).paused ).toBe( false );
+		};
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await leaves( () => page.keyboard.press( 'Escape' ) );
+		await leaves( () => page.goBack() );
+		await leaves( () => page.getByRole( 'button', { name: 'Close Now Playing' } ).click() );
+		// The desk, beyond the plinth's edge.
+		await leaves( () => page.mouse.click( 60, 450 ) );
+		// A press on the plinth, beside the platter, is a press on the deck: it stays.
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( np ).toBeVisible();
+		const plinth = await page.locator( '.riff-plinth' ).boundingBox();
+		await page.mouse.click( plinth.x + plinth.width * 1.15, plinth.y + plinth.height * 0.6 );
+		await page.mouse.click( plinth.x + 4, plinth.y - plinth.height * 0.08 );
+		await page.waitForTimeout( 400 );
+		await expect( np ).toBeVisible();
+	} );
+
+	test( 'a panel open beside the page is put away with the bar, and is back once the deck is left', async ( { page } ) => {
+		const side = page.locator( '.riff-side' );
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		await page.locator( '.riff-bar [data-riff-control="queue"]' ).click();
+		await expect( side ).toBeVisible();
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '.riff-np' ) ).toBeVisible();
+		await expect( side ).toBeHidden();
+		// The song's video is no deck: the panel is back beside it, and so is the bar, in reach.
+		await page.getByRole( 'radio', { name: 'Video' } ).click();
+		await expect( side ).toBeVisible();
+		await expect( page.locator( '.riff-bar' ) ).not.toHaveAttribute( 'inert', '' );
+		await expect( page.locator( '.riff-np' ) ).toHaveAttribute( 'aria-modal', 'false' );
+		await page.getByRole( 'radio', { name: 'Song' } ).click();
+		await expect( side ).toBeHidden();
+		// The next track doesn't bring it back beside the deck.
+		await page.keyboard.press( 'Shift+N' );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Underground' );
+		await expect( side ).toBeHidden();
+		await page.keyboard.press( 'Escape' );
+		await expect( side ).toBeVisible();
+		await expect( page.locator( '.riff-queue-list' ) ).toBeVisible();
 	} );
 
 	test( 'where a graphics card draws WebGL2 the deck is drawn and the page\'s own stops painting, and elsewhere the page\'s own is the deck', async ( { page } ) => {
@@ -143,7 +246,7 @@ test.describe( 'Turntable', () => {
 		const angle = () => page.locator( '.riff-wax' ).evaluate( ( el ) => parseFloat( getComputedStyle( el ).rotate ) || 0 );
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 		await expect.poll( angle ).toBeGreaterThan( 20 );
-		await page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).click();
+		await page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).click();
 		await expect.poll( () => turning( page ), { timeout: 5000 } ).toBe( 0 );
 		const stopped = await angle();
 		expect( stopped ).toBeGreaterThan( 0 );
@@ -192,14 +295,14 @@ test.describe( 'Turntable', () => {
 		// Stopped, the needle stays in its groove; wherever the music is put, it is in the groove that
 		// moment is cut at: the lead-in at the side's start, each track's band where the one before
 		// it ends, and the lead-out at the side's end, never on the label.
-		await page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).click();
+		await page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).click();
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( true );
 		const at = async ( track, seconds ) => {
 			if ( track !== ( await page.evaluate( () => window.riff.queue().indexOf( window.riff.current() ) ) ) ) {
 				await page.evaluate( ( k ) => window.riff.play( window.riff.queue(), k ), track );
 				await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 				await expect( arm ).toHaveAttribute( 'data-riff-down', '' );
-				await page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).click();
+				await page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).click();
 				await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( true );
 			}
 			await page.evaluate( ( t ) => window.riff.seek( t ), seconds );
@@ -320,7 +423,7 @@ test.describe( 'Turntable', () => {
 			).observe( root, { attributeFilter: [ 'data-riff-coasting' ] } );
 		} );
 		const platter = () => page.evaluate( () => window.riffPlatter );
-		const toggle = page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).first();
+		const toggle = page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).first();
 		// Stopped: the music winds down to a crawl and stops, and the platter turns on to rest.
 		await toggle.click();
 		await expect.poll( platter ).toEqual( [ 'coasting, silent', 'driven, silent' ] );
@@ -352,7 +455,7 @@ test.describe( 'Turntable', () => {
 			sample();
 		} );
 		const heard = () => page.evaluate( () => window.riffRates.filter( ( s ) => s.heard ).map( ( s ) => s.rate ) );
-		const toggle = page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).first();
+		const toggle = page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).first();
 		// Stopped: heard slowing below its own speed before it falls silent.
 		await toggle.click();
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( true );
@@ -396,7 +499,7 @@ test.describe( 'Turntable', () => {
 		const frames = () => page.evaluate( () => window.riffFrames.splice( 0 ) );
 		const agree = ( all ) => all.every( ( f ) => f.api === f.painted && f.api === ( f.label === 'Pause' ) );
 		// pressed where it shows: with the record out, the deck's own key
-		const toggle = page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).first();
+		const toggle = page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).first();
 
 		// Stopped: the music is still heard as it winds down, and every answer is already "paused".
 		await toggle.click();

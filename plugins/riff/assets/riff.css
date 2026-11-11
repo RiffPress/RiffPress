@@ -1534,7 +1534,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    part of the deck is, with a lamp along its top edge, amber when lit:
    start's while the music plays, the speed's that is chosen, shuffle's
    and repeat's while they are on. They are there while the record is out,
-   and are the transport then: in Now Playing the bar's own are not shown
+   and are the transport then: the deck is on its own, with no bar
    (below). */
 .riff-keys {
 	visibility: hidden;
@@ -1683,72 +1683,93 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
-/* With the record out in a wide Now Playing's album, the deck is the
-   player: its keys are the transport, so the bar's own are not shown
-   twice, and the desk runs on under the bar to the screen's edge, the
-   bar's own surface gone, so the deck and what is said of the music are
-   one picture. Anywhere else the bar is as it always is: on a phone, in
-   a window too narrow for the wide bar, and where the whole screen is
-   the turntable, which has its own shape (below). */
-@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px))) {
+/* Where the turntable is the album, the deck is all there is: nothing of
+   the rest of the player is on the screen with it, so nothing says it is a
+   screen. No bar, no panel beside it (now-playing.js puts an open one away
+   and brings it back), no strip of controls; the title, the seek line and
+   the rest are not here. The deck's own keys, its arm and its display are
+   the player, with the keyboard's shortcuts and the system's media keys.
+   now-playing.js reads --riff-deck-alone, so the shapes are written down
+   once. */
+#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) > .riff-np {
+	--riff-deck-alone: 1;
+}
 
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-transport > * {
+#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-np-panel {
+	display: none;
+}
 
-		/* over .riff-desk's own, which is important too */
-		display: none !important;
-	}
+/* The way out, at the top left of the desk: a cap of the deck's own, as its
+   keys are. It is there as the deck arrives and at the first move, key or
+   touch, and fades away once the listener is still (now-playing.js, as a
+   video's controls do), with the Song and Video switch of a song that has
+   a video and what a plugin shows under the deck. It stays while the
+   keyboard's focus is on it or a mouse is over it, and faded it lets a tap
+   through to the desk. Escape, the browser's Back, a press on the desk
+   round the deck and a drag down do the same. Now Playing's head, which
+   holds it, lies over the scene rather than above it, so the deck stays
+   where it is as the head comes and goes. */
+#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-np-head {
+	position: absolute;
+	z-index: 2;
+	inset: var(--riff-safe-t) var(--riff-safe-r) auto var(--riff-safe-l);
+}
 
-	/* and the deck has all of it down to the bar. Now Playing's head lies
-	   over the scene rather than above it, and the stage keeps only a margin
-	   at the top: so the deck is as large as the window allows, and stays
-	   where it is as the bar and the rest fade away and come back. Not where
-	   the whole screen is the turntable, which has its own shape (below). */
+#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-np-head [data-riff-action="close"] {
+	display: inline-grid;
+	background: linear-gradient(#343434, #232323);
+	box-shadow: 0 2px 6px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.08);
+	color: rgb(255 255 255 / 0.62);
+}
 
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-np-head {
-		position: absolute;
-		z-index: 2;
-		inset: var(--riff-safe-t) 0 auto;
-	}
+#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-np-head [data-riff-action="close"]:is(:hover, :focus-visible) {
+	color: var(--riff-fg);
+}
 
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-stage {
-		padding-block: calc(var(--riff-safe-t) + clamp(16px, 3dvh, 36px)) 0;
-	}
+#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"])[data-riff-idle] :is(.riff-np-head, .riff-turntable-extras) {
+	opacity: 0;
+	pointer-events: none;
+}
 
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-np {
-		bottom: 0;
-		padding-bottom: calc(var(--riff-bar-h) + var(--riff-safe-b));
-	}
+@media (prefers-reduced-motion: no-preference) {
 
-	/* Left alone while the music plays, what is round the deck goes quiet
-	   (now-playing.js, as for a video): the bar, Now Playing's head and what a
-	   plugin shows under the deck fade away, and are back at the first move,
-	   key or touch. The deck's own display still says the band, the time and
-	   the level. */
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-bar::before {
-		content: none;
-	}
-
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) :is(.riff-bar, .riff-np-head, .riff-turntable-extras) {
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) :is(.riff-np-head, .riff-turntable-extras) {
 		transition: opacity 0.5s ease;
 	}
+}
 
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden]))[data-riff-idle] :is(.riff-bar, .riff-np-head, .riff-turntable-extras) {
+/* On a wide screen, where the bar lies over Now Playing, the bar goes as
+   the deck comes up from under it and is back as the deck goes down, one
+   move, and Now Playing has the whole window: the stage keeps only a
+   margin, so the deck is as large as the window allows. Now Playing
+   covers the bar here as a phone's does (--riff-np-covers), so the bar is
+   out of the keyboard's and a screen reader's reach as well as out of
+   sight. Not where the whole
+   screen is the turntable, which has its own shape (below). */
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px))) {
+
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) > .riff-np {
+		--riff-np-covers: 1;
+	}
+
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-np {
+		bottom: 0;
+	}
+
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-stage {
+		padding-block: calc(var(--riff-safe-t) + clamp(16px, 3dvh, 36px)) calc(var(--riff-safe-b) + clamp(16px, 3dvh, 36px));
+	}
+
+	#riff.is-open:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) > .riff-bar {
 		opacity: 0;
 		pointer-events: none;
 	}
+}
 
-	/* the bar's end takes the bar's colour as its own everywhere else; here
-	   there is none to take */
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-end,
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) .riff-bar-end [data-riff-controls] {
-		background: none;
-	}
+@media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 760px))) and (prefers-reduced-motion: no-preference) {
 
-	#riff:is([data-riff-deck="out"], [data-riff-arriving])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-bar {
-
-		/* over Now Playing, which now lies under it */
-		z-index: 1;
-		background: linear-gradient(transparent, rgb(0 0 0 / 0.45));
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]):has(> .riff-np:not([hidden])) > .riff-bar {
+		transition: opacity 0.3s ease;
 	}
 }
 
@@ -1885,11 +1906,18 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    cradle with a notch for the tube, under it where the arm lies at rest:
    turned out 14° on its base, the tube bowed 2.4 to the side at 43 along
    (the drawing's units, in the record's hundredths), so 12.7 out and 41.1
-   down from the base at (105, 5). */
+   down from the base at (105, 5). How far the board reaches past the
+   platter's own box is written once (--riff-plinth-edge), for the board
+   here and for now-playing.js, which takes a press beyond it as one on
+   the desk. */
+.riff-plinth {
+	--riff-plinth-edge: -13% -26% -19% -5%;
+}
+
 .riff-plinth::before {
 	content: "";
 	position: absolute;
-	inset: -13% -26% -19% -5%;
+	inset: var(--riff-plinth-edge);
 	border-radius: 3cqi;
 	background: linear-gradient(160deg, #222 0%, #181818 60%, #141414);
 	box-shadow: 0 2cqi 6cqi rgb(0 0 0 / 0.5), inset 0 0.2cqi 0 rgb(255 255 255 / 0.06);
@@ -3467,10 +3495,35 @@ dl.riff-about-credits dd {
 		height: 100%;
 	}
 
+	/* the deck alone (above) stands in the middle of the screen, as wide as
+	   it is beside the strip, its board with it: the strip is for a song's
+	   video, another view's panel, or the cover of a site without the
+	   turntable */
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-np-body {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-deck-board {
+		justify-self: center;
+		width: calc(100% - clamp(224px, 30%, 300px));
+	}
+
 	#riff .riff-stage {
 		grid-row: 1 / span 2;
 		grid-column: 1;
 		padding: 4% 2% 4% 4%;
+	}
+
+	/* the stage is still the whole screen, so a drag down anywhere on it
+	   closes Now Playing; half the strip's width either side keeps the deck
+	   the size it is beside the strip */
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-stage {
+		--riff-strip: clamp(224px, 30%, 300px);
+		padding:
+			calc((100% - var(--riff-strip)) * 0.04)
+			calc((100% - var(--riff-strip)) * 0.02 + var(--riff-strip) / 2)
+			calc((100% - var(--riff-strip)) * 0.04)
+			calc((100% - var(--riff-strip)) * 0.04 + var(--riff-strip) / 2);
 	}
 
 	/* the deck alone, as large as the stage holds it: the record at the
@@ -3847,7 +3900,8 @@ dl.riff-about-credits dd {
 		padding-left: 0;
 	}
 
-	#riff .riff-np-body {
+	#riff .riff-np-body,
+	#riff:not([data-riff-turntable="off"])[data-riff-showing="album"]:not([data-mode="video"]) .riff-np-body {
 		grid-template-columns: env(viewport-segment-width 0 0) env(viewport-segment-width 1 0);
 		column-gap: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0));
 	}
