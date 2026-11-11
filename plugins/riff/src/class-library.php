@@ -558,7 +558,9 @@ final class Library {
 	 */
 	public static function rest_post( WP_REST_Request $request ) {
 		$post = get_post( (int) $request['id'] );
-		if ( ! $post instanceof WP_Post || ! is_post_publicly_viewable( $post ) || post_password_required( $post ) ) {
+		// A private post or a draft opens for whoever may read it, as its files play for them; to
+		// anyone else it is as missing as a post that isn't there.
+		if ( ! $post instanceof WP_Post || ! Protect::post_readable( $post ) ) {
 			return new WP_Error( 'riff_not_found', __( 'There is nothing to play here.', 'riff' ), array( 'status' => 404 ) );
 		}
 		$detail = self::post( $post );
