@@ -60,6 +60,8 @@ export interface Track {
 		id: number;
 		title: string;
 		url: string;
+		/** Whether the post is one visitors can't see, unpublished or behind a password. Only ever true for someone signed in who may see it. */
+		private: boolean;
 	} | null;
 	/** Whether the current visitor may not play the track, as riff_can_play decided. A locked track has no src. */
 	locked: boolean;

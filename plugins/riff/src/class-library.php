@@ -571,6 +571,26 @@ final class Library {
 	}
 
 	/**
+	 * Whether the Listen app marks a post as private for the person looking at it: the post is one
+	 * a visitor can't see, unpublished or behind a password, by the rule that keeps its files out of
+	 * a visitor's Tracks, Albums and Artists (Catalog_Rest::visible()). Only someone signed in is
+	 * ever told, so nothing a page cache keeps for visitors changes, and only someone who may read
+	 * the post, by the same check that lets them see it.
+	 *
+	 * @since 6.8.0
+	 *
+	 * @param WP_Post|int|null $post Post or its ID.
+	 * @return bool
+	 */
+	public static function is_private( $post ): bool {
+		$post = get_post( $post );
+		if ( ! $post instanceof WP_Post || ! is_user_logged_in() ) {
+			return false;
+		}
+		return ( 'publish' !== $post->post_status || '' !== $post->post_password ) && current_user_can( 'read_post', $post->ID );
+	}
+
+	/**
 	 * The posts with tracks, newest first.
 	 *
 	 * @since 4.0.0

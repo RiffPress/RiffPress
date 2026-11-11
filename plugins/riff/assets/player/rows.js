@@ -136,6 +136,19 @@ export function rows( P ) {
 			: '';
 	P.langAttr = langAttr;
 
+	// A track from a post visitors can't see, marked as the Listen app's cards are: WordPress's
+	// notAllowed, and the word said rather than shown. The server only sets post.private for
+	// someone signed in who may see the post; riff.css shows it only in the Listen app, since a
+	// post's own page already says so in its title.
+	const PRIVATE =
+		'<span class="riff-private"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.87347 6.87348L17.1265 17.1265M4.75 12C4.75 7.99593 7.99594 4.75 12 4.75C16.0041 4.75 19.25 7.99594 19.25 12C19.25 16.0041 16.0041 19.25 12 19.25C7.99593 19.25 4.75 16.0041 4.75 12Z" stroke-linejoin="round"/></svg>' +
+		`<span class="riff-app-sr">${ esc(
+			/* translators: Heard before a track's artist, when the post it is in is one visitors can't see. */ __(
+				'Private',
+				'riff'
+			)
+		) }, </span></span>`;
+
 	// A row is named by what it shows, the verb first: Play, then its title, artist and length.
 	function rowInner( t, verb, locked = false ) {
 		return (
@@ -145,7 +158,9 @@ export function rows( P ) {
 				t.title
 			) }${ P.videoMark( t ) }</span>` +
 			// The pause sits inside the line it comes before, so a view that hides that line hides it.
-			`<span class="riff-row-sub">${ subtitle( t ) ? PAUSE : '' }${ esc(
+			`<span class="riff-row-sub">${ subtitle( t ) ? PAUSE : '' }${
+				t.post?.private ? PRIVATE : ''
+			}${ esc(
 				subtitle( t )
 			) }</span></span>` +
 			`<span class="riff-row-time">${ t.duration ? PAUSE : '' }${

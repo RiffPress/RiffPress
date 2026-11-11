@@ -15,6 +15,7 @@ use Riff\Catalog;
 use Riff\Catalog_Rest;
 use Riff\Library;
 use Riff\Player;
+use Riff\Private_Site;
 use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
@@ -171,10 +172,11 @@ final class Browse {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which view is showing; nothing changes.
 		$view = $current['view'] ?? ( empty( $_GET[ App::QUERY ] ) ? 'home' : 'post' );
 		$html = sprintf(
-			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s">' . Player::icon( 'menu' ) . '</button><span class="riff-app-name">%s</span></span>',
+			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s">' . Player::icon( 'menu' ) . '</button><span class="riff-app-name">%s</span>%s</span>',
 			esc_attr( $view ),
 			esc_attr__( 'Sidebar', 'riff' ),
-			esc_html( '' !== $name ? $name : 'Riff' )
+			esc_html( '' !== $name ? $name : 'Riff' ),
+			self::private_site() // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Ui::private_mark().
 		);
 		foreach ( $links as $slug => list( $label, $href, $listed ) ) {
 			$html .= sprintf(
@@ -626,6 +628,22 @@ final class Browse {
 			esc_attr( (string) wp_json_encode( $more ? $more : $tracks ) ),
 			$rows
 		);
+	}
+
+	/**
+	 * A private site's one mark, beside its name, in place of a mark on everything in it: where
+	 * only members reach the site, each item being private to the public says nothing. A post
+	 * that is private as well is still marked, as it is hidden from the members too. Only those
+	 * who reach the site see it, and only signed in, which a private site asks of everyone. For
+	 * someone who may change it, it links to the setting.
+	 *
+	 * @return string
+	 */
+	private static function private_site(): string {
+		if ( ! Private_Site::on() || ! is_user_logged_in() ) {
+			return '';
+		}
+		return Ui::private_mark( true, current_user_can( 'manage_options' ) ? admin_url( 'options-reading.php' ) : '' );
 	}
 
 	/**

@@ -496,9 +496,13 @@ final class Tracks {
 				'post'     => array(
 					'type'       => array( 'object', 'null' ),
 					'properties' => array(
-						'id'    => array( 'type' => 'integer' ),
-						'title' => array( 'type' => 'string' ),
-						'url'   => array( 'type' => 'string' ),
+						'id'      => array( 'type' => 'integer' ),
+						'title'   => array( 'type' => 'string' ),
+						'url'     => array( 'type' => 'string' ),
+						'private' => array(
+							'type'        => 'boolean',
+							'description' => __( 'Whether the post is one visitors can\'t see, unpublished or behind a password. Only ever true for someone signed in who may see it.', 'riff' ),
+						),
 					),
 				),
 				'locked'   => array(
@@ -571,7 +575,10 @@ final class Tracks {
 		if ( $track['video'] ) {
 			$track['video']['captions'] = self::block_captions( (array) ( $track['video']['captions'] ?? array() ) );
 		}
-		$track['post']   = is_array( $track['post'] ?? null ) && ! empty( $track['post']['url'] ) ? $track['post'] : null;
+		$track['post'] = is_array( $track['post'] ?? null ) && ! empty( $track['post']['url'] ) ? $track['post'] : null;
+		if ( $track['post'] ) {
+			$track['post']['private'] = ! empty( $track['post']['private'] );
+		}
 		$track['locked'] = ! empty( $track['locked'] );
 		$track['unlock'] = is_string( $track['unlock'] ?? null ) ? $track['unlock'] : '';
 		return $track;
@@ -768,9 +775,10 @@ final class Tracks {
 			return null;
 		}
 		return array(
-			'id'    => $post_id,
-			'title' => Library::title( $post_id ),
-			'url'   => (string) get_permalink( $post_id ),
+			'id'      => $post_id,
+			'title'   => Library::title( $post_id ),
+			'url'     => (string) get_permalink( $post_id ),
+			'private' => Library::is_private( $post_id ),
 		);
 	}
 }
