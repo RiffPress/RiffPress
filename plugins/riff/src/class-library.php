@@ -667,6 +667,29 @@ final class Library {
 	}
 
 	/**
+	 * A post's name as Riff shows it: its title through the theme's filters, as get_the_title()
+	 * gives it, without the "Private:" or "Protected:" WordPress puts before it. Whether a post is
+	 * only its author's is for the post's own page to say; a card, a row or a cover names it.
+	 *
+	 * @since 6.7.2
+	 *
+	 * @param int|WP_Post $post Post or post ID.
+	 * @return string The name, entities decoded.
+	 */
+	public static function title( $post ): string {
+		$name = static fn() => '%s';
+		add_filter( 'private_title_format', $name, PHP_INT_MAX );
+		add_filter( 'protected_title_format', $name, PHP_INT_MAX );
+		try {
+			$title = get_the_title( $post );
+		} finally {
+			remove_filter( 'private_title_format', $name, PHP_INT_MAX );
+			remove_filter( 'protected_title_format', $name, PHP_INT_MAX );
+		}
+		return html_entity_decode( (string) $title, ENT_QUOTES, 'UTF-8' );
+	}
+
+	/**
 	 * A post as the list shows it, from what its tracks add up to.
 	 *
 	 * @param WP_Post $post    Post.
@@ -677,7 +700,7 @@ final class Library {
 		$art  = Tracks::art( (int) get_post_thumbnail_id( $post ) );
 		$item = array(
 			'id'       => $post->ID,
-			'title'    => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
+			'title'    => self::title( $post ),
 			'url'      => (string) get_permalink( $post ),
 			'artist'   => (string) $summary['artist'],
 			'art'      => $art,

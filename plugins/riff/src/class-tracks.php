@@ -769,7 +769,7 @@ final class Tracks {
 		}
 		return array(
 			'id'    => $post_id,
-			'title' => html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' ),
+			'title' => Library::title( $post_id ),
 			'url'   => (string) get_permalink( $post_id ),
 		);
 	}

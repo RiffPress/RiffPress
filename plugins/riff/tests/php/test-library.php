@@ -77,6 +77,41 @@ class Test_Riff_Library extends Riff_TestCase {
 		return $wpdb->num_queries - $before;
 	}
 
+	public function test_a_post_only_its_author_may_read_is_named_without_wordpress_private_prefix(): void {
+		$author = self::factory()->user->create( array( 'role' => 'author' ) );
+		$post   = $this->post_with_track();
+		$id     = (int) get_children(
+			array(
+				'post_parent' => $post,
+				'post_type'   => 'attachment',
+				'fields'      => 'ids',
+			)
+		)[0];
+		wp_update_post(
+			array(
+				'ID'          => $post,
+				'post_status' => 'private',
+				'post_author' => $author,
+				'post_title'  => 'Carols of the Season & Hymns',
+			)
+		);
+		wp_set_current_user( $author );
+
+		$this->assertStringStartsWith( 'Private:', get_the_title( $post ), 'as WordPress lists it' );
+		$this->assertSame( 'Carols of the Season & Hymns', Library::item( get_post( $post ) )['title'], 'a card names the album' );
+		$this->assertSame( 'Carols of the Season & Hymns', Riff\Tracks::from_attachment( $id, $post )['post']['title'], 'as Jump back in does' );
+
+		wp_update_post(
+			array(
+				'ID'            => $post,
+				'post_status'   => 'publish',
+				'post_password' => 'carols',
+			)
+		);
+		$this->assertSame( 'Carols of the Season & Hymns', Library::title( $post ), 'and nor "Protected:"' );
+		$this->assertStringStartsWith( 'Protected:', get_the_title( $post ), 'which the theme still shows' );
+	}
+
 	public function test_a_list_of_posts_costs_the_same_queries_however_many_tracks_they_hold(): void {
 		$few  = array( $this->post_with_tracks( 1 ), $this->post_with_tracks( 1 ) );
 		$many = array( $this->post_with_tracks( 4 ), $this->post_with_tracks( 4 ) );
