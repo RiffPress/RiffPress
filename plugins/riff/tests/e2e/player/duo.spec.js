@@ -2,9 +2,9 @@
  * The screen as a turntable: on a touch screen wider than it is tall and no taller than a phone,
  * as an unfolded iPhone Duo (890 by 626) and a phone on its side are, Now Playing is the deck
  * itself, with nothing else on the screen; folding back to a phone's shape puts the record back in
- * its sleeve. Folded part way,
- * where the browser reports the fold, nothing lands in the crease: a book's two pages, the deck on
- * the left, or a tent's two halves, upright, so the cover above. The fold is emulated with Chromium's DevTools protocol, so this runs in desktop
+ * its sleeve. Folded part way, where the browser reports the fold, nothing lands in the crease: a
+ * book's two pages, too narrow for the deck, the cover on the left and the controls on the right,
+ * or a tent's two halves, upright, so the cover above. The fold is emulated with Chromium's DevTools protocol, so this runs in desktop
  * Chromium only, as a touch screen.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -66,15 +66,15 @@ test.describe( 'iPhone Duo', () => {
 		const root = page.locator( '#riff' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
 		await expect( page.locator( '.riff-np' ) ).toHaveAttribute( 'aria-modal', 'true' );
-		// The deck on its own, in the middle of the screen with its board: no strip of controls
-		// beside it, and no panel.
+		// The deck on its own, its controls in a panel on its plinth beside the arm: no strip of
+		// controls beside it, and no panel.
 		await expect( page.locator( '.riff-np-panel' ) ).toBeHidden();
 		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		const record = await page.locator( '.riff-record' ).boundingBox();
 		expect( record.height ).toBeGreaterThan( OPEN.height * 0.6 );
-		expect( record.x ).toBeGreaterThan( OPEN.width * 0.1 );
-		expect( record.x + record.width ).toBeLessThan( OPEN.width * 0.9 );
-		await expect( page.locator( '.riff-deck-board .riff-start' ) ).toBeVisible();
+		const start = await page.locator( '.riff-keys .riff-key-start' ).boundingBox();
+		expect( start.x ).toBeGreaterThan( record.x + record.width );
+		expect( start.x + start.width ).toBeLessThan( OPEN.width );
 		// The way out is there as the deck arrives, and gone once the listener is still; a touch
 		// brings it back, and it closes Now Playing.
 		const out = page.getByRole( 'button', { name: 'Close Now Playing' } );
@@ -121,7 +121,7 @@ test.describe( 'iPhone Duo', () => {
 		await page.setViewportSize( OPEN );
 		await expect.poll( rate ).toBeCloseTo( 0.94, 2 );
 		// Start and stop is the transport's play and pause.
-		const start = board.locator( '.riff-start' );
+		const start = board.locator( '.riff-key-start' );
 		await expect( start ).toHaveAttribute( 'aria-label', 'Pause' );
 		await start.click();
 		await expect( start ).toHaveAttribute( 'aria-label', 'Play' );
@@ -143,16 +143,19 @@ test.describe( 'iPhone Duo', () => {
 		await expect( page.locator( '.riff-cover' ) ).toBeVisible();
 	} );
 
-	test( 'half open like a book, the deck keeps to the left page, clear of the crease', async ( { page } ) => {
+	test( 'half open like a book, the cover keeps to the left page and the controls to the right', async ( { page } ) => {
 		await nowPlaying( page );
 		await fold( page, OPEN, 'vertical' );
 		const half = OPEN.width / 2 - 8;
 		await expect
 			.poll( () => page.locator( '.riff-np-body' ).evaluate( ( el ) => getComputedStyle( el ).gridTemplateColumns ) )
 			.toBe( `${ half }px ${ half }px` );
-		const arm = await page.locator( '.riff-mount' ).boundingBox();
-		expect( arm.x + arm.width ).toBeLessThanOrEqual( half );
-		await expect( page.locator( '.riff-np-panel' ) ).toBeHidden();
+		// A page is too narrow for the deck with its controls (riff.css), so the album is the cover.
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-turntable', 'off' );
+		const cover = await page.locator( '.riff-cover' ).boundingBox();
+		expect( cover.x + cover.width ).toBeLessThanOrEqual( half );
+		const play = await page.locator( '.riff-np-panel [data-riff-action="toggle"]' ).boundingBox();
+		expect( play.x ).toBeGreaterThanOrEqual( half + 16 );
 	} );
 
 	test( 'stood like a tent, upright, the cover is in the upper half and the controls in the lower', async ( { page } ) => {
