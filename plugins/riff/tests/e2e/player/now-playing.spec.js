@@ -87,7 +87,7 @@ test.describe( 'Player', () => {
 		await expect( page.locator( '.riff-bar-info' ) ).toHaveAccessibleName( /^Now Playing, / );
 	} );
 
-	test( 'the album takes the whole screen above the bar, the turntable where it is wide, and the bar goes back', async ( {
+	test( 'the album is the turntable where it is wide, with the whole window and no bar, and Escape goes back', async ( {
 		page,
 		isMobile,
 	} ) => {
@@ -111,18 +111,22 @@ test.describe( 'Player', () => {
 		// one button there is.
 		await expect( root ).not.toHaveAttribute( 'data-riff-turntable', 'off' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
-		// With the record out the deck is the scene: Now Playing runs on under the bar to the
-		// screen's foot, and the bar's own transport gives way to the deck's keys.
+		// The deck is all there is: Now Playing has the whole window, the bar is out of sight
+		// and out of reach, and the deck's keys are the transport.
 		await expect.poll( async () => ( await np.boundingBox() ).height ).toBeGreaterThanOrEqual( 900 - 1 );
-		expect( ( await bar.boundingBox() ).y ).toBeLessThan( 900 );
-		await expect( page.locator( '.riff-bar .riff-play' ) ).toBeHidden();
+		await expect( bar ).toHaveCSS( 'opacity', '0' );
+		await expect( bar ).toHaveAttribute( 'inert', '' );
+		await expect( np ).toHaveAttribute( 'aria-modal', 'true' );
 		await expect( page.locator( '.riff-keys [data-riff-action="toggle"]' ) ).toBeVisible();
 		await expect( page.locator( '[data-riff-control="turntable"], [data-riff-chip="turntable"]' ) ).toHaveCount( 0 );
 		await expect( page.locator( '.riff-bar-info' ) ).toHaveAttribute( 'aria-expanded', 'true' );
 
-		// Its button again goes back to the page.
-		await page.locator( '.riff-bar-info' ).click();
+		// Escape goes back to the page, and the bar is back with it.
+		await page.keyboard.press( 'Escape' );
 		await expect( np ).toBeHidden();
+		await expect( bar ).toHaveCSS( 'opacity', '1' );
+		await expect( bar ).not.toHaveAttribute( 'inert', '' );
+		await expect( page.locator( '.riff-bar-info' ) ).toBeFocused();
 	} );
 
 	test( 'on a wide screen the art stays square and the bar keeps its measurements', async ( {
@@ -152,8 +156,12 @@ test.describe( 'Player', () => {
 				return record.x + record.width > art.x + art.width;
 			} )
 			.toBe( true );
-		// The track on its own: Up next is a panel of its own, closed until its button opens it,
-		// and then beside Now Playing, which makes room for it rather than going under it.
+		// The deck is on its own, with no bar; the song's video has the bar under it. There, the
+		// track on its own: Up next is a panel of its own, closed until its button opens it, and
+		// then beside Now Playing, which makes room for it rather than going under it.
+		await page.getByRole( 'radio', { name: 'Video' } ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-mode', 'video' );
+		await expect( page.locator( '.riff-bar' ) ).toHaveCSS( 'opacity', '1' );
 		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		const alone = await page.locator( '.riff-np' ).boundingBox();
 		await openView( page, 'queue' );
@@ -187,10 +195,9 @@ test.describe( 'Player', () => {
 		} );
 		expect( dot ).toEqual( { width: '14px', height: '14px' } );
 		await expect( page.locator( '.riff-knob' ) ).toHaveCSS( 'opacity', '1' );
-		// The seek line sits inside the bar, with a time at each end; the transport over it is the
-		// deck's own while the record is out.
+		// The seek line sits inside the bar, with a time at each end, under the transport.
 		const bar = await page.locator( '.riff-bar' ).boundingBox();
-		await expect( page.locator( '.riff-bar .riff-play' ) ).toBeHidden();
+		await expect( page.locator( '.riff-bar .riff-play' ) ).toBeVisible();
 		expect( knob.y ).toBeGreaterThanOrEqual( bar.y );
 		expect( seek.y + seek.height ).toBeLessThanOrEqual( bar.y + bar.height );
 		const times = page.locator( '.riff-bar .riff-time' );

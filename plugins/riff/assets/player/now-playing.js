@@ -1,6 +1,7 @@
 /* Now Playing. A dialog over the page: the page goes inert, Escape and the browser's back close
  * it, and focus goes back where it was. It is the track on its own: Up next and the other panels
- * are their own things, opened beside it or over it (registry.js). Its background takes its colour
+ * are their own things, opened beside it or over it (registry.js). Where its album is the
+ * turntable, the deck is all there is on the screen (immerse()). Its background takes its colour
  * from the artwork, darkened so text stays legible. The record beside the cover is cut as an LP
  * is: a band of grooves for each of the album's tracks, as wide as the track is long. It turns at
  * 33⅓, faster or slower with the music's speed as a turntable's pitch would, and its tonearm
@@ -109,8 +110,9 @@ export function nowPlaying( P ) {
 		// bar and toast, which the dialog covers there and which would otherwise still take focus.
 		// On a wide screen the dialog opens above the bar and the bar stays the control surface,
 		// unless it is a touch screen on its side, where Now Playing covers the bar as a phone's
-		// does, the turntable or not (riff.css).
+		// does, the turntable or not, or the deck on its own, which has the whole window (riff.css).
 		coverPage();
+		immerse();
 		history.pushState( { ...history.state, riff: 'open' }, '' );
 		P.viewOpened?.( view, true );
 		P.drawControls?.();
@@ -199,6 +201,83 @@ export function nowPlaying( P ) {
 		}
 	} );
 
+	// ---- The deck on its own. Where the album is the turntable (riff.css, --riff-deck-alone),
+	// nothing of the rest of the player is on the screen with it: the bar is gone, on a wide
+	// screen too, where Now Playing then covers it as a phone's does, and a panel open beside
+	// the page is put away, the listener's choice of it kept, and is back once the deck is left.
+	// Asked again whenever what decides it changes: Now Playing opening or closing, the view, a
+	// song's video, and the stage's shape (the observer, below).
+	let alone = false;
+	function immerse() {
+		const now =
+			root.classList.contains( 'is-open' ) &&
+			getComputedStyle( np ).getPropertyValue( '--riff-deck-alone' ).trim() === '1';
+		if ( now === alone ) {
+			return;
+		}
+		alone = now;
+		if ( alone ) {
+			P.hidePanel?.( { quiet: true } );
+		}
+		// The bar is covered or not before a panel comes back beside a song's video.
+		if ( root.classList.contains( 'is-open' ) ) {
+			coverPage();
+		}
+		if ( ! alone ) {
+			P.reopenPanel?.();
+		}
+		P.wakeControls?.();
+	}
+	new MutationObserver( immerse ).observe( root, {
+		attributeFilter: [ 'class', 'data-riff-turntable', 'data-riff-showing', 'data-mode' ],
+	} );
+
+	// The desk round the deck is a way out: a press on it, anywhere but the deck and what lies on
+	// it, closes Now Playing, as a press beside a dialog does. The plinth's outline is its own
+	// box and how far its board reaches past it (riff.css, --riff-plinth-edge); with the record
+	// in its sleeve only the sleeve lies on the desk. Where the whole screen is the turntable
+	// there is no desk to press. The press starts and ends on the desk, in one place: the arm
+	// carried to its next click, and a drag off the record, are not presses of it.
+	function onDeck( x, y ) {
+		const plinth = $( '.riff-plinth' );
+		if ( ! plinth || shapedAsDeck() ) {
+			return true;
+		}
+		if ( root.dataset.riffDeck !== 'out' && ! ( 'riffArriving' in root.dataset ) ) {
+			return false;
+		}
+		const box = plinth.getBoundingClientRect();
+		const [ top, right, bottom, left ] = getComputedStyle( plinth )
+			.getPropertyValue( '--riff-plinth-edge' )
+			.trim()
+			.split( /\s+/ )
+			.map( ( share ) => parseFloat( share ) / 100 || 0 );
+		return (
+			x > box.left + left * box.width &&
+			x < box.right - right * box.width &&
+			y > box.top + top * box.height &&
+			y < box.bottom - bottom * box.height
+		);
+	}
+	const onDesk = ( e ) =>
+		alone &&
+		e.button === 0 &&
+		! e.target.closest(
+			'button, a, input, [role="slider"], .riff-cover, .riff-turntable-extras'
+		) &&
+		! onDeck( e.clientX, e.clientY );
+	let pressedDesk = null;
+	np.addEventListener( 'pointerdown', ( e ) => {
+		pressedDesk = onDesk( e ) ? { x: e.clientX, y: e.clientY } : null;
+	} );
+	np.addEventListener( 'click', ( e ) => {
+		const from = pressedDesk;
+		pressedDesk = null;
+		if ( from && onDesk( e ) && Math.hypot( e.clientX - from.x, e.clientY - from.y ) <= 10 ) {
+			close();
+		}
+	} );
+
 	// Now Playing sliding away: what hides it once it has, which opening it again cancels.
 	const closing = { done: null, timer: 0 };
 	function close( { fromHistory = false } = {} ) {
@@ -219,6 +298,7 @@ export function nowPlaying( P ) {
 			node.removeAttribute( 'data-riff-inert' );
 		}
 		P.viewOpened?.( P.showing, false );
+		immerse();
 		// Hidden once it has slid away, unless it was opened again first.
 		const done = () => {
 			clearTimeout( closing.timer );
@@ -1665,12 +1745,14 @@ export function nowPlaying( P ) {
 			}
 		} );
 	}
-	// The transport is the bar's own or the deck's keys, never both (riff.css). When the one that
-	// has the focus goes, as the record comes out, is put away or a video takes the stage, the
-	// focus goes to the same control where it now is, rather than nowhere. And the deck's speed
+	// The transport is the bar's own or the deck's keys, never both: the deck on its own has no
+	// bar (immerse()). When the one that has the focus goes, as the stage becomes the deck, the
+	// record is put away or a video takes the stage, the focus goes to the same control where it
+	// now is, rather than nowhere. And the deck's speed
 	// is asked again, since it holds only while the deck is the view (deckOnly()).
 	const transport = ( b ) => b?.closest?.( '.riff-bar-transport, .riff-keys' );
-	const inSight = ( b ) => b.offsetParent !== null && getComputedStyle( b ).visibility !== 'hidden';
+	const inSight = ( b ) =>
+		b.offsetParent !== null && ! b.closest( '[inert]' ) && getComputedStyle( b ).visibility !== 'hidden';
 	let pressedOn = null;
 	root.addEventListener( 'focusin', ( e ) => {
 		const b = e.target.closest?.( '[data-riff-action]' );
@@ -1686,7 +1768,9 @@ export function nowPlaying( P ) {
 					?.focus();
 			}
 		} );
-	} ).observe( root, { attributeFilter: [ 'data-riff-deck', 'data-mode', 'data-riff-showing' ] } );
+	} ).observe( root, {
+		attributeFilter: [ 'data-riff-deck', 'data-riff-turntable', 'data-mode', 'data-riff-showing' ],
+	} );
 	new MutationObserver( () => retune( false ) ).observe( np, { attributeFilter: [ 'hidden' ] } );
 	$( '.riff-keys' )?.addEventListener( 'pointerdown', ( e ) => {
 		if ( e.target.closest( 'button' ) && e.pointerType === 'touch' ) {
@@ -1954,21 +2038,22 @@ export function nowPlaying( P ) {
 	const IDLE = 3000;
 	const bar = $( '.riff-bar' );
 	const modes = $( '.riff-modes' );
+	const wayOut = $( '.riff-np-head [data-riff-action="close"]' );
 	let idle = 0;
 	let mouse = false;
-	// The same holds for the deck on its own, the record out and the music playing: what is round
-	// it goes quiet, and the deck is the picture (riff.css).
+	// The same holds for the deck on its own (immerse()), playing or not: the way out of it, at
+	// the top of the desk, goes quiet with the rest, and the deck is the picture (riff.css).
 	const watching = () =>
 		! np.hidden &&
 		root.classList.contains( 'is-open' ) &&
 		! P.panelOpen &&
 		!! P.views?.get( P.showing )?.stage &&
-		( P.isVideo?.() ? ! P.video.paused : root.dataset.riffDeck === 'out' && ! P.el().paused );
+		( P.isVideo?.() ? ! P.video.paused : alone );
 	const focused = ( el ) =>
 		el.contains( document.activeElement ) &&
 		document.activeElement.matches( ':focus-visible' );
 	const inUse = () =>
-		[ bar, modes ].some(
+		[ bar, modes, wayOut ].some(
 			( el ) => el && ( focused( el ) || ( mouse && el.matches( ':hover' ) ) )
 		);
 	document.addEventListener(
@@ -2006,5 +2091,18 @@ export function nowPlaying( P ) {
 	root.addEventListener( 'riff:track', wake );
 	P.wakeControls = wake;
 
-	return { open, close, setView, tint, groove, deck, turn, halt, held, stopping, respeed };
+	return {
+		open,
+		close,
+		setView,
+		tint,
+		groove,
+		deck,
+		turn,
+		halt,
+		held,
+		stopping,
+		respeed,
+		deckAlone: () => alone,
+	};
 }

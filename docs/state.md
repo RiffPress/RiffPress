@@ -101,7 +101,7 @@ Besides the turntable and Now Playing above:
 
 - `fig[data-riff-track]` and the Listen app's `data-riff-tracks`, `data-riff-ids`, `data-riff-places`, `data-riff-playlist` and `data-riff-more`: the server's JSON is what a press plays, until the view is fetched again; a playlist reordered in place plays its old order until then. Medium.
 - `[data-riff-app][data-sidebar]` and the toggle's `aria-expanded`, read back to decide which way it folds. Low.
-- `getComputedStyle()` custom properties as layout decisions: `--riff-np-covers`, `--riff-deck`, `--riff-deck-screen`, `--riff-side-place`, `--riff-frame`. By design, CSS decides the layout; `roomy.last` caches one read. Low.
+- `getComputedStyle()` custom properties as layout decisions: `--riff-np-covers`, `--riff-deck`, `--riff-deck-screen`, `--riff-deck-alone` (the deck with nothing else on the screen, which `immerse()` in `now-playing.js` keeps as a closure `alone` and hands `registry.js` as `P.deckAlone()`, so a panel put away for it is not reopened beside it), `--riff-plinth-edge`, `--riff-side-place`, `--riff-frame`. By design, CSS decides the layout; `roomy.last` caches one read. Low.
 - `aria-busy` and `aria-disabled` as guards against a second press while one is in flight. Low.
 
 ## URL arguments as state

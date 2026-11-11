@@ -8,7 +8,8 @@ const { expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { audioState } = require( './site' );
 
 /**
- * Stops the music from the bar and starts it again, with the turntable out and the music playing.
+ * Stops the music and starts it again, from the deck's own key (the deck on its own has no bar),
+ * with the turntable out and the music playing.
  *
  * @param {import('@playwright/test').Page} page Page.
  */
@@ -37,7 +38,7 @@ async function stopsAndStarts( page ) {
 		sample();
 	} );
 	const frames = () => page.evaluate( () => window.riffFrames.splice( 0 ) );
-	const toggle = page.locator( ':is(.riff-bar, .riff-keys) [data-riff-action="toggle"]:visible' ).first();
+	const toggle = page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).first();
 	const tracked = ( all ) =>
 		all.filter( ( f ) => ! f.paused && ! f.coasting && f.platter !== null ).every( ( f ) => Math.abs( f.platter - f.rate ) < 1e-3 );
 

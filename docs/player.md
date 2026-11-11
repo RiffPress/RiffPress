@@ -64,6 +64,8 @@ On a keyboard:
 | Shift+N and Shift+P | Next and previous track |
 | Escape | Close Now Playing |
 
+They act on the turntable too, where there is no bar.
+
 Nothing fires while you type in a field. The single-key shortcuts act only for a signed-in listener,
 who can turn them off under Personal Options on their profile (`Shortcuts` in PHP); a visitor has none, and a site can turn them off for everyone with the `riff.shortcuts`
 filter, as WCAG 2.1.4 asks. Shift+N, Shift+P and Escape stay on either way.
@@ -125,7 +127,8 @@ bar's right end, and on a phone from its chip in Now Playing:
   to what Now Playing opens to, and the listener hears it close.
 
 Pressing the open view's button again, Escape, or Close goes back to the page, and focus goes back
-to the button, or to the bar's track for the album. The button says whether its view is open (`aria-pressed`).
+to the button, or to the bar's track for the album. Where the album is the turntable there is no
+bar to press: [the deck is on its own](#the-turntable), and has its own ways out. The button says whether its view is open (`aria-pressed`).
 
 **Up next** (`queue`) is a panel beside the page rather than a screen, as are **About**
 (`about`), **Together** (`together`), for a signed-in listener where the Presence API is active,
@@ -138,8 +141,9 @@ view included. One shows at a time:
   in `frame.css`).
 - On a phone it covers everything, Now Playing too, as a dialog with its name and Close at the
   top.
-- On a touch screen on its side, it opens in the controls' strip, and the turntable keeps
-  turning beside it.
+- On a touch screen on its side, it opens in the controls' strip.
+- Beside the turntable there is none: the deck is on its own, and a panel left open is back once
+  the deck is left.
 
 Focus moves to the panel's name as it opens, and Escape or Close hands it back to what opened it.
 The one a listener leaves open opens again on their next visit, on a wide screen; that choice is
@@ -378,9 +382,9 @@ The colour adapts and never opinionates. The chrome is black and white, and the 
 
 Riff lays out by the screen's shape, never by the device, as WebKit and Apple ask: an iPhone Duo says it is an iPhone, and folds and unfolds while the page is open.
 
-- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: the album is the turntable there, as on any screen wider than tall, the deck, the record and the arm filling its height on the left and the controls in a strip down the right. Up next and the other panels open in that strip, and the deck keeps turning beside it. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Once the record is out, its sleeve stands in a rack at the top of the strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again, the cover on its own. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
+- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: the album is the turntable there, as on any screen wider than tall, the deck, the record and the arm filling its height in the middle of the screen, with nothing beside it. A song's video, another view, or the cover of a site without the turntable has the controls in a strip down the right, and Up next and the other panels open in that strip. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again, the cover on its own. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
 - **A short screen that is not upright enough to be a phone** (a folded iPhone Duo's outer screen at 466 by 678) puts Home, Search and Library down the right edge, where iOS keeps its own bars on that screen.
-- **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, the deck fills the left page and the controls the right; stood like a tent, Now Playing is upright, so the cover fills the upper half and the controls the lower, nearer the hand.
+- **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, the deck fills the left page, and the controls of a video or a cover the right; stood like a tent, Now Playing is upright, so the cover fills the upper half and the controls the lower, nearer the hand.
 
 `plugins/riff/tests/e2e/player/duo.spec.js` emulates the hinge through Chromium's DevTools protocol.
 
@@ -416,16 +420,39 @@ its peak held, read from the analyser.
 Where Now Playing is wide, the record out on the deck is the whole scene. The sleeve is drawn away
 and gone once the record is out, and back whenever the record is in it; its button, for a keyboard
 and a screen reader, still puts the record away. A new album changes the record and nothing else:
-the scene holds while it arrives. The deck is as large as the window allows above the bar: Now
-Playing runs on under the bar, whose surface is gone so the desk reaches the screen's edge, and the
-stage keeps only a margin at the top. Each key is a cap on a spring between two stops, which meets
+the scene holds while it arrives. Each key is a cap on a spring between two stops, which meets
 either with a small bounce and leans toward the finger that presses it off its middle, and the
-record is warped a hair and carries a little dust, so the light on it sways as it turns. The deck's keys are the transport
-there, so the bar's own are not shown. Left alone while the music plays, the bar, Now Playing's
-head and what a plugin shows under the deck fade away, as they do for a video, and are back at the
-first move, key or touch. Anywhere else the bar is as it always is, and on a wide screen it lies
-over Now Playing, so every view comes up from under it. A touch screen on its side keeps the deck's
-board and its own shape (above).
+record is warped a hair and carries a little dust, so the light on it sways as it turns.
+
+The deck is all there is on the screen, so nothing says it is one. `riff.css` says where
+(`--riff-deck-alone`: the album showing as the turntable, not a song's video) and `immerse()` in
+`now-playing.js` acts on it:
+
+- The bar is gone. On a wide screen it fades as the deck comes up from under it and is back as the
+  deck goes down, and Now Playing has the whole window, so the deck is as large as the window
+  allows. Now Playing covers the bar there as a phone's does: it is modal, and the bar is `inert`.
+- A panel open beside the page is put away, and is back once the deck is left; the listener's
+  choice of it is kept. `window.riff.openView()` still opens one beside the deck for a script
+  that asks.
+- On a touch screen on its side the controls' strip is gone, and the deck stands in the middle of
+  the screen with its board.
+- What the bar and the strip held (the title, the seek line, the volume, Like, the views' buttons)
+  is not in this view. The deck's keys are the transport, the arm moves through the side, and the
+  keyboard's shortcuts and the system's media keys act as they do anywhere.
+
+It is left as Now Playing always is, by Escape, the browser's Back or a drag down, and by a press
+on the desk round the deck (anywhere beyond the plinth's edge, `--riff-plinth-edge`; a touch
+screen on its side is all turntable and has no desk to press). The one control drawn is Close Now
+Playing, a round cap at the top left of the desk in the keys' own material. It is there as the
+deck arrives and at the first move, key or touch, and fades away after three seconds with
+nothing from the listener, playing or paused, as a video's controls do, with the Song and Video
+switch of a song that has a video and what a plugin shows under the deck. It stays while the
+keyboard's focus is on it or a mouse is over it. Leaving goes back to the page as it was left,
+scrolled where it was, with focus on the bar's track, and the music plays through both.
+
+Anywhere else the bar is as it always is, and on a wide screen it lies over Now Playing, so every
+view comes up from under it. With the record put away in its sleeve the sleeve lies on the desk
+alone. A touch screen on its side keeps the deck's board and its own shape (above).
 
 Drawn in WebGL, the record also shows where the music is, which a pressed one can't: the grooves
 still to be played lie a little quieter than those the stylus has been through, and the groove
