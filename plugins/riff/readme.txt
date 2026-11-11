@@ -145,6 +145,15 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.8.0 =
+* A host decides whether a zip uploaded to the Media Library imports privately, with riff_import_private.
+* The turntable is all there is on the screen.
+* Fixed: the notice's two actions are both core's buttons, and closing it is remembered.
+* Fixed: a private album's drawn cover is drawn for whoever may read it, and named without "Private:".
+* Fixed: a change of view no longer writes speed or pitch to the music playing.
+* Fixed: a queue picked up, or a track played again from Recently played, after its signed address ran out is signed again as it loads.
+* Fixed: a Playground link names its authors by display name only, with no email or login.
+
 = 6.7.1 =
 * Fixed: a zip that a storage plugin keeps in object storage is brought to the server and imported.
 * Fixed: a deleted site takes its protected files with it when a host keeps them outside uploads.
@@ -179,8 +188,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: a control in focus has one ring of Riff's own, so the round Home button's no longer runs off toward the search field.
 * Fixed: main's checks pass again after the drafts merged untested, each plugin declaring what they added and About crediting only a caption a file has.
 * Fixed: the seek line is plain, with no filament, and the volume has a slot of its own beside its mute, never over the controls.
-
-= 6.4.0 =
-* A site can open the Listen app at its own address, and a host can fit the app to it.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
