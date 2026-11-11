@@ -462,7 +462,7 @@ export function nowPlaying( P ) {
 	const leadOut = () => ( root.dataset.riffFormat === '7' ? 0.56 : 0.4 );
 	const albums = new Map();
 	let playing = null;
-	// The deck's speed, as chosen on its board (null: the record's own), and its pitch, in percent.
+	// The deck's speed, as chosen on its keys (null: the record's own), and its pitch, in percent.
 	let chosen = null;
 	let pitch = 0;
 	let side = null;
@@ -891,7 +891,6 @@ export function nowPlaying( P ) {
 	const shapedAsDeck = () =>
 		!! $( '.riff-cover' ) &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
-	const deckScreen = () => roomy() && shapedAsDeck();
 	// For the stylesheet: off, the cover on its own, with no record or deck.
 	function markRoom() {
 		if ( roomy() ) {
@@ -1872,8 +1871,7 @@ export function nowPlaying( P ) {
 		} );
 	}
 
-	// ---- The deck's own controls: the two speeds, among its keys or, where the whole screen is the
-	// turntable, on its board with the pitch fader. The music plays at the speed chosen over the record's own (an LP at 45 runs
+	// ---- The deck's own controls among its keys: the two speeds and the pitch fader. The music plays at the speed chosen over the record's own (an LP at 45 runs
 	// fast, as on a deck), times the pitch, ±8%; its pitch moves with it, as a record's does, and
 	// the platter, the strobe and the arm follow the one rate (ratechange, above). Where the
 	// turntable isn't the view, the music plays at its own speed.
@@ -1885,14 +1883,12 @@ export function nowPlaying( P ) {
 		if ( ! roomy() || np.hidden || P.isVideo?.() ) {
 			return 1;
 		}
-		// The pitch fader is the board's alone.
-		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( deckScreen() ? 1 + pitch / 100 : 1 );
+		return ( RPM[ chosen ?? own() ] / RPM[ own() ] ) * ( 1 + pitch / 100 );
 	}
 	// The deck's speed times the listener's own (respeed(), above).
 	function deckRate() {
 		return deckOnly() * P.speed;
 	}
-	const board = $( '.riff-deck-board' );
 	const fader = $( '[data-riff-pitch]' );
 	function paintDeck() {
 		for ( const b of $$( '[data-riff-speed]' ) ) {
@@ -1900,13 +1896,13 @@ export function nowPlaying( P ) {
 			b.setAttribute( 'aria-checked', String( on ) );
 			b.tabIndex = on ? 0 : -1;
 		}
-		if ( ! board ) {
+		if ( ! fader ) {
 			return;
 		}
 		const readout = `${ pitch > 0 ? '+' : '' }${ pitch.toFixed( 1 ) }`;
 		fader.value = String( pitch );
 		fader.setAttribute( 'aria-valuetext', `${ readout }%` );
-		board.querySelector( 'output' ).textContent = readout;
+		fader.nextElementSibling.textContent = readout;
 	}
 	// The motor pulls the platter to the new speed while it turns; stopped, it starts there. A
 	// listener's own turn of the speed or the pitch is a press; the deck coming or going as the
@@ -1951,7 +1947,7 @@ export function nowPlaying( P ) {
 			speeds.querySelector( `[data-riff-speed="${ chosen }"]` ).focus();
 		} );
 	}
-	if ( board ) {
+	if ( fader ) {
 		fader.addEventListener( 'input', () => {
 			const v = Number( fader.value );
 			// It clicks into the middle, as a fader's centre detent does.
