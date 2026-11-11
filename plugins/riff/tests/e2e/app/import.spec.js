@@ -177,3 +177,145 @@ test.describe( 'A visitor', () => {
 		expect( map ).not.toContain( 'riff-app/import' );
 	} );
 } );
+
+// What a server that refuses an upload answers: WordPress's REST error, its message written for
+// the person, or something that isn't JSON at all. A neutral code: the app reads only the shape.
+const FULL =
+	'This site is full, so uploads are paused: $& $1 is not a pattern. Nothing has been deleted, and your music still plays.';
+const refuse = ( page ) =>
+	page.route( /wp\/v2\/media/, ( route ) => {
+		const request = route.request();
+		if ( request.method() !== 'POST' ) {
+			return route.fallback();
+		}
+		const name = /filename="([^"]+)"/.exec(
+			request.headers()[ 'content-disposition' ] || ''
+		)[ 1 ];
+		if ( name.startsWith( 'full' ) ) {
+			return route.fulfill( {
+				status: 507,
+				json: { code: 'site_full', message: FULL, data: { status: 507 } },
+			} );
+		}
+		if ( name.startsWith( 'big' ) ) {
+			// Core's own messages carry markup and entities, which are said as their text.
+			return route.fulfill( {
+				status: 413,
+				json: {
+					code: 'rest_upload_file_too_big',
+					message:
+						'That file can&#8217;t be added: it is bigger than <code>upload_max_filesize</code>.',
+					data: { status: 413 },
+				},
+			} );
+		}
+		return route.fulfill( {
+			status: 502,
+			contentType: 'text/html',
+			body: '<h1>Bad gateway</h1>',
+		} );
+	} );
+const wav = ( name ) => ( {
+	name,
+	mimeType: 'audio/wav',
+	buffer: Buffer.from( 'RIFF' ),
+} );
+
+test.describe( 'A refused upload', () => {
+	test( 'says the server’s reason once for the files it was about, and the plain line where there is none', async ( {
+		page,
+	} ) => {
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await refuse( page );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const status = page.locator( '.riff-app-status' );
+		await page
+			.locator( 'input[data-riff-add-music]' )
+			.setInputFiles( [
+				wav( 'full-a.wav' ),
+				wav( 'big.wav' ),
+				wav( 'full-b.wav' ),
+				wav( 'down.wav' ),
+			] );
+		await expect( status ).toContainText( 'Could not add', {
+			timeout: 20000,
+		} );
+		const said = await status.textContent();
+		expect( said ).toContain( `Could not add full-a.wav, full-b.wav: ${ FULL }` );
+		expect( said.split( FULL ) ).toHaveLength( 2 );
+		expect( said ).toContain(
+			'Could not add big.wav: That file can’t be added: it is bigger than upload_max_filesize.'
+		);
+		expect( said ).toContain( 'Could not add down.wav.' );
+		await expect( status.locator( '*' ) ).toHaveCount( 0 );
+		await expect( status ).toHaveAttribute( 'role', 'status' );
+	} );
+
+	for ( const [ width, height ] of [
+		[ 1440, 900 ],
+		[ 1440, 700 ],
+		[ 390, 844 ],
+	] ) {
+		for ( const play of [ false, true ] ) {
+			test( `is in sight at ${ width }×${ height }${ play ? ', with music playing' : '' }`, async ( {
+				page,
+			}, testInfo ) => {
+				await page.setViewportSize( { width, height } );
+				await refuse( page );
+				await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+				if ( play ) {
+					await page.locator( '.riff-card-play' ).first().click();
+					await expect( page.locator( 'html' ) ).toHaveClass( /has-riff/ );
+				}
+				const status = page.locator( '.riff-app-status' );
+				await page
+					.locator( 'input[data-riff-add-music]' )
+					.setInputFiles( wav( 'full.wav' ) );
+				await expect( status ).toContainText( FULL, { timeout: 20000 } );
+				await page.waitForTimeout( 300 );
+				const seen = await status.evaluate( ( el ) => {
+					const box = el.getBoundingClientRect();
+					const inside = [
+						[ box.left + 2, box.top + 2 ],
+						[ box.right - 2, box.top + 2 ],
+						[ box.left + 2, box.bottom - 2 ],
+						[ box.right - 2, box.bottom - 2 ],
+						[ box.left + box.width / 2, box.top + box.height / 2 ],
+					].every( ( [ x, y ] ) =>
+						el.contains( document.elementFromPoint( x, y ) )
+					);
+					const over = [
+						...document.querySelectorAll(
+							'.riff-app-bar, #riff .riff-bar'
+						),
+					]
+						.filter( ( other ) => other.checkVisibility() )
+						.map( ( other ) => other.getBoundingClientRect() )
+						.some(
+							( other ) =>
+								other.left < box.right &&
+								other.right > box.left &&
+								other.top < box.bottom &&
+								other.bottom > box.top
+						);
+					return {
+						inside,
+						over,
+						onScreen:
+							box.left >= 0 &&
+							box.right <= innerWidth &&
+							box.bottom <= innerHeight,
+					};
+				} );
+				await page.screenshot( {
+					path: testInfo.outputPath( 'toast.png' ),
+				} );
+				expect( seen ).toEqual( {
+					inside: true,
+					over: false,
+					onScreen: true,
+				} );
+			} );
+		}
+	}
+} );

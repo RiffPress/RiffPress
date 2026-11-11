@@ -243,6 +243,17 @@ html.has-riff .riff-standalone .riff-app {
 		margin: 0;
 	}
 
+	/* What the app says stands in the view's column, clear of the library
+	   beside it, which is sticky and so stacks above anything it overlaps. */
+	.riff-standalone .riff-app-status:not(:empty) {
+		left: calc(240px + 24px);
+		z-index: 4;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-app-status:not(:empty) {
+		left: calc(72px + 24px);
+	}
+
 	/* In the sidebar's column the offer is a card at its own height. */
 	.riff-standalone .riff-app-install {
 		flex: none;
@@ -812,6 +823,15 @@ html.has-riff .riff-standalone .riff-app {
 	}
 
 	.riff-standalone #riff .riff-toast {
+		bottom: calc(var(--riff-bar-h) + var(--riff-tabs-h) + 16px);
+	}
+
+	/* The app's own word stands over the tabs, and over the bar once it shows. */
+	.riff-standalone .riff-app-status:not(:empty) {
+		bottom: calc(var(--riff-tabs-h) + 16px);
+	}
+
+	html.has-riff .riff-standalone .riff-app-status:not(:empty) {
 		bottom: calc(var(--riff-bar-h) + var(--riff-tabs-h) + 16px);
 	}
 

@@ -132,6 +132,17 @@ export function importing( { app, tell, show, postOf, __, _n } ) {
 		} );
 	};
 
+	// Why the site refused a file, in its own words: the message of WordPress's REST error, said as
+	// text, since core's messages carry markup and entities. Nothing where the answer isn't one.
+	const reason = async ( response ) => {
+		const body = await response.json().catch( () => null );
+		const message = typeof body?.message === 'string' ? body.message : '';
+		return new DOMParser()
+			.parseFromString( message, 'text/html' )
+			.body.textContent.replace( /\s+/g, ' ' )
+			.trim();
+	};
+
 	// Files chosen while others are going wait their turn, so nothing dropped is lost.
 	const queue = [];
 	async function add( chosen ) {
@@ -151,7 +162,10 @@ export function importing( { app, tell, show, postOf, __, _n } ) {
 		}
 		busy = true;
 		const counts = { added: 0, had: 0 };
-		const failed = [];
+		// What failed, by the server's reason, so files refused alike are one line.
+		const failed = new Map();
+		const refuse = ( name, why ) =>
+			failed.set( why, [ ...( failed.get( why ) || [] ), name ] );
 		let known = new Map();
 		try {
 			known = await library();
@@ -177,16 +191,17 @@ export function importing( { app, tell, show, postOf, __, _n } ) {
 					counts.added++;
 					continue;
 				}
-				failed.push( file.name );
+				const why = await reason( response );
+				refuse( file.name, why );
 				// Signed out, or no longer allowed: the rest would go the same way.
 				if ( response.status === 401 || response.status === 403 ) {
-					failed.push(
-						...queue.slice( k + 1 ).map( ( { name } ) => name )
-					);
+					queue
+						.slice( k + 1 )
+						.forEach( ( { name } ) => refuse( name, why ) );
 					break;
 				}
 			} catch {
-				failed.push( file.name );
+				refuse( file.name, '' );
 			}
 		}
 		queue.length = 0;
@@ -214,24 +229,31 @@ export function importing( { app, tell, show, postOf, __, _n } ) {
 				).replace( '%d', counts.had )
 			);
 		}
-		if ( failed.length > 3 ) {
-			said.push(
+		for ( const [ why, names ] of failed ) {
+			let which = names.join( ', ' );
+			if ( names.length > 3 ) {
 				/* translators: 1: The names of three files, separated by commas. 2: How many more there are. */
-				__( 'Could not add %1$s and %2$d more.', 'riff' )
-					.replace( '%1$s', failed.slice( 0, 3 ).join( ', ' ) )
-					.replace( '%2$d', failed.length - 3 )
-			);
-		} else if ( failed.length ) {
-			said.push(
-				/* translators: %s: The names of the files, separated by commas. */
-				__( 'Could not add %s.', 'riff' ).replace(
-					'%s',
-					failed.join( ', ' )
-				)
-			);
+				which = __( '%1$s and %2$d more', 'riff' )
+					.replace( '%1$s', () => names.slice( 0, 3 ).join( ', ' ) )
+					.replace( '%2$d', names.length - 3 );
+			}
+			if ( why ) {
+				said.push(
+					/* translators: 1: The names of the files. 2: Why the site refused them, in its own words. */
+					__( 'Could not add %1$s: %2$s', 'riff' ).replace(
+						/%([12])\$s/g,
+						( _, n ) => ( n === '1' ? which : why )
+					)
+				);
+			} else {
+				said.push(
+					/* translators: %s: The names of the files, separated by commas. */
+					__( 'Could not add %s.', 'riff' ).replace( '%s', () => which )
+				);
+			}
 		}
 		// What failed stays until the next thing is said, as the only word of it.
-		tell( said.join( ' ' ), failed.length > 0 );
+		tell( said.join( ' ' ), failed.size > 0 );
 		const here = postOf( location.href );
 		if ( counts.added && here ) {
 			show( here, { quiet: true } ).catch( () => {} );
