@@ -8,9 +8,14 @@
  * so the pictures show the demo a visitor will open:
  *
  *   npx wp-env reset development && npm run seed
+ *   npx wp-env run cli wp option update blogname Riff   # a worktree's wp-env is named for its branch
+ *   npx wp-env run cli wp theme activate twentytwentyfive   # the theme Playground's demo has
  *   npx wp-env run cli wp rewrite structure '/%postname%/' --hard
  *   npx wp-env run cli wp post create --post_type=page --post_status=publish --post_title=Listen \
- *     --post_name=listen --page_template=listen '--post_content=<!-- wp:riff/app {"align":"full"} /-->'
+ *     --post_name=listen '--post_content=<!-- wp:riff/app {"align":"full"} /-->'
+ *
+ * The page has no `listen` template, as the first-run notice's page has none: the Riff block is
+ * what makes it the Listen page, and the editor's pictures fatal on WordPress 7.2 with one.
  *
  * The run stops before writing anything if the site's albums are not the demo's, so a picture
  * never shows an album the demo has dropped. AVIFs need avifenc (libavif) on the PATH.
