@@ -51,7 +51,9 @@ export function resume( P ) {
 	}
 
 	function save() {
-		if ( ! P.track() ) {
+		// Not while a track waits for its addresses (playback.js): the element still holds the
+		// track before it, so a page left then picks up that one, where it was.
+		if ( ! P.track() || P.renewing ) {
 			return;
 		}
 		saveQueue();
@@ -69,6 +71,11 @@ export function resume( P ) {
 				playing: P.playing(),
 			} )
 		);
+	}
+	// The queue's tracks were changed in place, their addresses signed again (playback.js): written
+	// out at the next save, though the queue and its order are the same.
+	function queueChanged() {
+		kept.queue = null;
 	}
 	function forget() {
 		try {
@@ -115,5 +122,5 @@ export function resume( P ) {
 		return true;
 	}
 
-	return { save, forget, restore };
+	return { save, queueChanged, forget, restore };
 }

@@ -344,6 +344,11 @@ export function media( P ) {
 			return;
 		}
 		warmed = t.id;
+		// Signed again first if its address is running out (playback.js), so the address warmed
+		// is the one it plays from and the next track doesn't wait.
+		P.renew().then( () => warm( t ) );
+	}
+	function warm( t ) {
 		if ( foreign( t ) ) {
 			P.preloader = document.createElement( 'audio' );
 			P.preloader.preload = 'auto';

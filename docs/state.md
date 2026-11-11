@@ -82,8 +82,8 @@ No key carries a version. A shape that changes is caught only by the reader's ow
 | Key | Store | Shape | Risk |
 | --- | --- | --- | --- |
 | `riff:state` (`P.STATE`) | session | `{pos, more, mode, repeat, shuffle, at, playing}`, each field checked on read | low |
-| `riff:queue` (`P.QUEUE`) | session | `{queue: Track[], order, from, end}`, the tracks whole, signed addresses included | **high**: a protected track's signed address expires (`Protect::TTL`), and a queue restored after that fails three times and stops ([#976](https://github.com/RiffPress/RiffPress/issues/976)). |
-| `riff-history` | local | up to 30 `Track` objects, without `levels`, with `played` | **high**: kept for good, signed addresses included, so a protected track played from Recently played long after fails ([#976](https://github.com/RiffPress/RiffPress/issues/976)). |
+| `riff:queue` (`P.QUEUE`) | session | `{queue: Track[], order, from, end}`, the tracks whole, signed addresses included | **medium**: a protected track's signed address expires (`Protect::TTL`), so `playback.js` asks `GET /riff/v1/tracks`, once, for the tracks from the one loading on whose addresses have less than an hour left, and the queue is written again. The track waits for the answer at most three seconds, then loads the address it has; the next track is asked for when the one playing is halfway through, and the queue when a tab left open comes back into sight. That route lists neither a video's own track nor, to a listener who can't upload, a file on a private or password-protected post, so those keep their old address, and play from it only while the listener's cookie lets them through. |
+| `riff-history` | local | up to 30 `Track` objects, without `levels`, with `played` | low: kept for good, signed addresses included; a track played from it is signed again as it loads, as the queue's are. |
 | `riff-likes` | local | `[{kind, id, at}]`, cleaned on read | low |
 | `riff:volume` | local | `"0"`–`"1"` | low |
 | `riff:captions` | local | `on`, `off` | low |
