@@ -27,7 +27,8 @@ defined( 'ABSPATH' ) || exit;
  * its own and imported the same way, whether it is given to `wp riff import` or uploaded to the
  * Media Library. A zip is private by default, as it is how a store's download arrives, bought for
  * its buyer's own listening: each track and video is Protected, and its album's post is private.
- * An artist importing their own releases imports them as public.
+ * An artist importing their own releases imports them as public, and a host can make that the
+ * answer for every upload with the riff_import_private filter.
  */
 final class Import {
 
@@ -103,7 +104,7 @@ final class Import {
 		/**
 		 * POST /riff/v1/imports: imports a zip already in the Media Library, as uploading it there
 		 * does: in the background, into private album posts with each track Protected, for its uploader
-		 * to publish. For a zip
+		 * to publish, unless a host's riff_import_private filter says otherwise. For a zip
 		 * uploaded somewhere that did not start the import, such as over REST by an assistant.
 		 *
 		 * @since 6.5.0
@@ -149,7 +150,7 @@ final class Import {
 				),
 				'queued'     => array(
 					'type'        => 'integer',
-					'description' => __( 'When the import starts, as a Unix time. Its album posts are private, by the zip\'s uploader, with each track Protected; the zip is attached to the first once it is done.', 'riff' ),
+					'description' => __( 'When the import starts, as a Unix time. Its album posts are private, by the zip\'s uploader, with each track Protected, unless the site says otherwise; the zip is attached to the first once it is done.', 'riff' ),
 				),
 			),
 		);
@@ -266,6 +267,7 @@ final class Import {
 	 *
 	 * @since 5.9.0
 	 * @since 6.5.0 Private: Protected tracks and private posts.
+	 * @since 6.8.0 Private unless the riff_import_private filter says otherwise.
 	 *
 	 * @param int $id Attachment ID.
 	 * @return array|WP_Error|null The import's report, as zip() gives it, or null when there was nothing to import.
@@ -289,13 +291,29 @@ final class Import {
 		if ( '' === $local ) {
 			return new WP_Error( 'riff_import_zip', __( 'That zip does not exist or cannot be read.', 'riff' ) );
 		}
+		/**
+		 * Filters whether a zip uploaded to the Media Library imports privately: each track and video
+		 * Protected, each album's post private, for its uploader to publish. A host whose privacy is
+		 * site-wide, such as a private site, can return false so that what the site already keeps from
+		 * visitors is not hidden a second time, album by album: return `! Private_Site::on()`. It
+		 * answers for the import in the background, which an upload to the Media Library and
+		 * POST /riff/v1/imports both start; `wp riff import` takes --private and --no-private.
+		 * Defaults to true.
+		 *
+		 * @since 6.8.0
+		 *
+		 * @param bool $private Whether the import is private.
+		 * @param int  $id      The zip's attachment ID.
+		 * @param int  $author  The ID of the user who uploaded it, whom the import runs as.
+		 */
+		$private  = (bool) apply_filters( 'riff_import_private', true, $id, $author );
 		$previous = get_current_user_id();
 		wp_set_current_user( $author );
 		try {
 			$result = self::zip(
 				$local,
 				array(
-					'private' => true,
+					'private' => $private,
 					// The attachment, which no other upload can be: a path is free again once its
 					// file is deleted, and another upload by the same name would find this album.
 					'as'      => dirname( $file ) . '/' . $id . '/' . wp_basename( $file ),

@@ -8,6 +8,7 @@
 use Riff\Catalog;
 use Riff\Import;
 use Riff\Media;
+use Riff\Private_Site;
 use Riff\Protect;
 
 /**
@@ -417,6 +418,40 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertTrue( Protect::is( $this->tracks()[0] ), 'the track is Protected' );
 		$this->assertSame( $post->ID, (int) get_post( $id )->post_parent, 'the zip stays, attached to its album' );
 		$this->assertSame( 0, get_current_user_id(), 'the job puts back who was signed in' );
+	}
+
+	public function test_a_host_can_have_a_zip_uploaded_to_the_media_library_import_publicly(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+		$id   = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+		$seen = array();
+		$ask  = static function ( $private_by_default, $zip, $author ) use ( &$seen ) {
+			$seen[] = array( $private_by_default, $zip, $author );
+			return false;
+		};
+		add_filter( 'riff_import_private', $ask, 10, 3 );
+
+		$result = Import::uploaded_zip( $id );
+		remove_filter( 'riff_import_private', $ask, 10 );
+
+		$this->assertSame( array( array( true, $id, $editor ) ), $seen, 'asked once, with the default, the zip and its uploader' );
+		$this->assertSame( 'publish', get_post_status( $result['albums'][0]['post'] ) );
+		$this->assertFalse( Protect::is( $this->tracks()[0] ), 'the track is not Protected' );
+	}
+
+	public function test_a_private_site_still_protects_the_tracks_of_a_zip_a_host_has_import_publicly(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+		update_option( Private_Site::OPTION, true );
+		$id  = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+		$ask = static fn() => ! Private_Site::on();
+		add_filter( 'riff_import_private', $ask );
+
+		$result = Import::uploaded_zip( $id );
+		remove_filter( 'riff_import_private', $ask );
+
+		$this->assertSame( 'publish', get_post_status( $result['albums'][0]['post'] ) );
+		$this->assertTrue( Protect::is( $this->tracks()[0] ), 'the private site protects the track as it arrives, as it does any file' );
 	}
 
 	public function test_a_zip_a_storage_plugin_keeps_elsewhere_is_brought_here_and_imported(): void {

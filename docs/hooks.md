@@ -165,6 +165,18 @@ Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
 | --- | --- | --- |
 | `$names` | `string[]` | The names in extensions.json. |
 
+### `riff_import_private`
+
+Filters whether a zip uploaded to the Media Library imports privately: each track and video Protected, each album's post private, for its uploader to publish. A host whose privacy is site-wide, such as a private site, can return false so that what the site already keeps from visitors is not hidden a second time, album by album: return `! Private_Site::on()`. It answers for the import in the background, which an upload to the Media Library and POST /riff/v1/imports both start; `wp riff import` takes --private and --no-private. Defaults to true.
+
+Since 6.8.0. Fires in `plugins/riff/src/class-import.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$private` | `bool` | Whether the import is private. |
+| `$id` | `int` | The zip's attachment ID. |
+| `$author` | `int` | The ID of the user who uploaded it, whom the import runs as. |
+
 ### `riff_mcp`
 
 Filters whether AI assistants may use Riff's abilities over MCP. On, and with the MCP Adapter plugin active, `/wp-json/mcp/riff` serves each of them as a tool to a signed-in user, and the adapter's default server lists them. Each still does only what that user may do. Off, there is no such server, and the default server does not list them.
