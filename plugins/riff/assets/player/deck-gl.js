@@ -318,12 +318,12 @@ const AMBER = [ 1.0, 0.46, 0.12 ];
 const FRONT = -0.69 * MM;
 const KEYS = [
 	[ 0, 0.18, 1.075, 0.095, 'left' ],
-	[ 0.215, 0.075, 1.09, 0.065, 'top' ],
-	[ 0.3, 0.075, 1.09, 0.065, 'top' ],
-	[ 0.41, 0.08, 1.09, 0.065, '' ],
-	[ 0.5, 0.08, 1.09, 0.065, '' ],
-	[ 0.615, 0.075, 1.09, 0.065, 'top' ],
-	[ 0.7, 0.075, 1.09, 0.065, 'top' ],
+	[ 0.215, 0.075, 1.09, 0.075, 'top' ],
+	[ 0.3, 0.075, 1.09, 0.075, 'top' ],
+	[ 0.41, 0.08, 1.09, 0.075, '' ],
+	[ 0.5, 0.08, 1.09, 0.075, '' ],
+	[ 0.615, 0.075, 1.09, 0.075, 'top' ],
+	[ 0.7, 0.075, 1.09, 0.075, 'top' ],
 ];
 // Where each lamp is on the deck, with its key's place in KEYS, for the light it spills.
 const GLOWS = KEYS.flatMap( ( [ left, wide, top, , lampAt ], k ) =>
@@ -1355,8 +1355,16 @@ export default function deckGl( P ) {
 	let lost = false;
 	// A listener whose system forces its own colours has the page's deck, which takes them.
 	const forced = window.matchMedia( '(forced-colors: active)' );
-	const active = () => ! lost && ! forced.matches && ! np.hidden && ! P.away() && root.dataset.riffTurntable !== 'off' && root.dataset.mode !== 'video';
+	// Only the deck with its keys along the front is drawn here; where the stage is too small for
+	// them its controls stand beside the arm (riff.css, --riff-deck-gl), and the page's own is the deck.
+	let flat = false;
+	const active = () => ! lost && ! flat && ! forced.matches && ! np.hidden && ! P.away() && root.dataset.riffTurntable !== 'off' && root.dataset.mode !== 'video';
 	function wake() {
+		flat = getComputedStyle( plinth ).getPropertyValue( '--riff-deck-gl' ).trim() === '0';
+		canvas.style.display = flat ? 'none' : '';
+		if ( flat ) {
+			delete root.dataset.riffGl;
+		}
 		quiet = 0;
 		if ( ! raf && active() ) {
 			last = '';
@@ -1411,7 +1419,10 @@ export default function deckGl( P ) {
 	for ( const moved of [ 'transitionrun', 'animationstart', 'pointerdown', 'pointerup', 'keydown', 'keyup' ] ) {
 		stage.addEventListener( moved, wake, { passive: true } );
 	}
-	new ResizeObserver( wake ).observe( canvas );
+	// Now Playing too: a hidden canvas (--riff-deck-gl, above) has no size to change as it grows.
+	const resized = new ResizeObserver( wake );
+	resized.observe( canvas );
+	resized.observe( np );
 	document.addEventListener( 'visibilitychange', wake );
 	const recolour = () => {
 		canvas.hidden = forced.matches;

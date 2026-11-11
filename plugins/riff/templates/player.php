@@ -93,6 +93,10 @@ defined( 'ABSPATH' ) || exit;
 					<button type="button" class="riff-key-repeat" data-riff-action="repeat" data-repeat="off" aria-label="<?php esc_attr_e( 'Repeat, off', 'riff' ); ?>"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?></button>
 					<?php // The deck's level meter, in a window beside its keys (level.js). ?>
 					<canvas class="riff-level" aria-hidden="true"></canvas>
+					<span class="riff-pitch">
+						<input type="range" min="-8" max="8" step="0.1" value="0" data-riff-pitch aria-label="<?php esc_attr_e( 'Pitch', 'riff' ); ?>" aria-valuetext="0%">
+						<output aria-hidden="true">0.0</output>
+					</span>
 				</span>
 				<img class="riff-cover" data-riff-art data-riff-size="large" alt="" decoding="async" draggable="false" hidden>
 				<?php // The sleeve on the desk, which a pointer taps; this is it for a keyboard and a screen reader. ?>
@@ -116,18 +120,6 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 			<?php // The screens with a region of their own, such as the lyrics, each in the stage's place while it shows. ?>
 			<?php echo Registry::screens(); ?>
-			<?php /* Where the whole screen is the turntable (riff.css), the deck's own controls on its plinth, as a direct-drive deck has them: start and stop at the front, the two speeds beside it, and the pitch fader at the side, moving the music, the platter, the strobe and the arm together. */ ?>
-			<div class="riff-deck-board" role="group" aria-label="<?php esc_attr_e( 'Turntable', 'riff' ); ?>">
-				<button type="button" class="riff-start" data-riff-action="toggle" aria-label="<?php esc_attr_e( 'Play', 'riff' ); ?>"><span aria-hidden="true"><?php esc_html_e( 'Start · Stop', 'riff' ); ?></span></button>
-				<span class="riff-speeds" role="radiogroup" aria-label="<?php esc_attr_e( 'Speed', 'riff' ); ?>">
-					<button type="button" role="radio" data-riff-speed="33" aria-checked="true" aria-label="<?php esc_attr_e( '33⅓ revolutions per minute', 'riff' ); ?>">33</button>
-					<button type="button" role="radio" data-riff-speed="45" aria-checked="false" aria-label="<?php esc_attr_e( '45 revolutions per minute', 'riff' ); ?>">45</button>
-				</span>
-				<span class="riff-pitch">
-					<input type="range" min="-8" max="8" step="0.1" value="0" data-riff-pitch aria-label="<?php esc_attr_e( 'Pitch', 'riff' ); ?>" aria-valuetext="0%">
-					<output aria-hidden="true">0.0</output>
-				</span>
-			</div>
 			<div class="riff-np-panel">
 				<?php // The sleeve, stood in the rack as a record shop shows what is playing, once the record is out on the deck. ?>
 				<span class="riff-rack" aria-hidden="true"><img data-riff-art data-riff-size="large" alt="" decoding="async" hidden></span>

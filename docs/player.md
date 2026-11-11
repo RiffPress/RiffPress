@@ -382,9 +382,9 @@ The colour adapts and never opinionates. The chrome is black and white, and the 
 
 Riff lays out by the screen's shape, never by the device, as WebKit and Apple ask: an iPhone Duo says it is an iPhone, and folds and unfolds while the page is open.
 
-- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: the album is the turntable there, as on any screen wider than tall, the deck, the record and the arm filling its height in the middle of the screen, with nothing beside it. A song's video, another view, or the cover of a site without the turntable has the controls in a strip down the right, and Up next and the other panels open in that strip. The deck has its own controls on its plinth: Start · Stop, the two speeds (an LP at 45 runs fast, as on a deck; a new record starts at its own speed) and a pitch fader, ±8%, which moves the music, its pitch, the platter, the strobe and the arm together. Off the deck the music plays at its own speed. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again, the cover on its own. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
+- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: the album is the turntable there, as on any screen wider than tall, the deck filling its height in the middle of the screen, with nothing beside it, in the arrangement its size gives it ([the turntable](#the-turntable)). A song's video, another view, or the cover of a site without the turntable has the controls in a strip down the right, and Up next and the other panels open in that strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again, the cover on its own. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
 - **A short screen that is not upright enough to be a phone** (a folded iPhone Duo's outer screen at 466 by 678) puts Home, Search and Library down the right edge, where iOS keeps its own bars on that screen.
-- **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, the deck fills the left page, and the controls of a video or a cover the right; stood like a tent, Now Playing is upright, so the cover fills the upper half and the controls the lower, nearer the hand.
+- **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, a page is too narrow for the deck with its controls, so the cover fills the left page and the controls the right; stood like a tent, Now Playing is upright, so the cover fills the upper half and the controls the lower, nearer the hand.
 
 `plugins/riff/tests/e2e/player/duo.spec.js` emulates the hinge through Chromium's DevTools protocol.
 
@@ -408,14 +408,31 @@ already cast; nothing is drawn while nothing moves, while Now Playing is closed 
 of sight. Its lighting and mesh builders are adapted from Guillermo Rauch's
 [vinyl](https://github.com/rauchg/vinyl) (MIT; the notice is in the file).
 
-The deck has its own keys on a strip along the front of its plinth: Start · Stop, the two speeds,
-the track before and after, shuffle and repeat, each a button in the page (`.riff-keys` in
-`player.php`) with an amber lamp. Held, the track keys wind the music back or on. The speeds are
-the ones the deck's board has where the whole screen is the turntable: an LP at 45 runs fast, and
-the music is at its own speed again where the turntable isn't the view, Now Playing closed or a video on the stage; the pitch fader stays the
-board's. Beside the keys is the deck's display (`assets/player/level.js`): the band the stylus is
-in, the time into its track, the speed, and a row of lamps lit to the music's RMS over 300 ms, with
-its peak held, read from the analyser.
+The deck has its own controls on its plinth: Start · Stop, the two speeds, the track before and
+after, shuffle and repeat, each a button in the page (`.riff-keys` in `player.php`) with an amber
+lamp, and a pitch fader, ±8%. Held, the track keys wind the music back or on. An LP at 45 runs
+fast, as on a deck, and a new record starts at its own speed; the pitch moves the music, its pitch,
+the platter, the strobe and the arm together. Where the turntable isn't the view, Now Playing
+closed or a video on the stage, the music is at its own speed. Beside the keys is the deck's
+display (`assets/player/level.js`): the band the stylus is in, the time into its track, the speed,
+and a row of lamps lit to the music's RMS over 300 ms, with its peak held, read from the analyser.
+
+The deck is one object, every part of it placed in its record's width, so it keeps its
+composition at any size and nothing on it is placed against the window. It has two arrangements,
+chosen by the stage's size with a container query in `riff.css`, so every control is at least 44
+by 44 CSS pixels:
+
+- Where the stage is at least 947 by 793, the keys and the display stand in a strip along the
+  front of the plinth and the pitch fader at its right, under the arm's rest.
+- On a smaller stage (a phone on its side, an unfolded iPhone Duo, a window of 1280 by 720), the
+  plinth reaches further right and the controls stand in a panel beside the arm: the display on
+  top, then Start · Stop, the speeds, the skips, and shuffle and repeat in two columns, and the
+  pitch fader beside them, each key a sixth of the record across. The WebGL deck draws only the
+  first arrangement (`--riff-deck-gl`), so the page's own deck draws this one.
+- On a stage smaller than 540 by 335 neither fits, and the album is the cover.
+
+`plugins/riff/tests/e2e/player/deck-sizes.spec.js` measures both arrangements at phone, tablet and
+desktop sizes.
 
 Where Now Playing is wide, the record out on the deck is the whole scene. The sleeve is drawn away
 and gone once the record is out, and back whenever the record is in it; its button, for a keyboard
@@ -435,7 +452,7 @@ The deck is all there is on the screen, so nothing says it is one. `riff.css` sa
   choice of it is kept. `window.riff.openView()` still opens one beside the deck for a script
   that asks.
 - On a touch screen on its side the controls' strip is gone, and the deck stands in the middle of
-  the screen with its board.
+  the screen.
 - What the bar and the strip held (the title, the seek line, the volume, Like, the views' buttons)
   is not in this view. The deck's keys are the transport, the arm moves through the side, and the
   keyboard's shortcuts and the system's media keys act as they do anywhere.
@@ -452,7 +469,7 @@ scrolled where it was, with focus on the bar's track, and the music plays throug
 
 Anywhere else the bar is as it always is, and on a wide screen it lies over Now Playing, so every
 view comes up from under it. With the record put away in its sleeve the sleeve lies on the desk
-alone. A touch screen on its side keeps the deck's board and its own shape (above).
+alone.
 
 Drawn in WebGL, the record also shows where the music is, which a pressed one can't: the grooves
 still to be played lie a little quieter than those the stylus has been through, and the groove
