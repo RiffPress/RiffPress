@@ -6,7 +6,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
 const AxeBuilder = require( '@axe-core/playwright' ).default;
 const { own } = require( '../helpers/own' );
-const { AXE_TAGS, playing, appSite } = require( '../helpers/site' );
+const { AXE_TAGS, playing, watchSpeed, speedWrites, appSite } = require( '../helpers/site' );
 
 const made = own();
 let pageUrl;
@@ -112,6 +112,23 @@ test.describe( 'App', () => {
 		await page.goForward();
 		await expect( page ).toHaveURL( pageUrl );
 		await expect( page.locator( '[data-riff-shelf="added"]' ) ).toBeVisible();
+		expect( ( await playing( page ) ).paused ).toBe( false );
+	} );
+
+	test( 'moving between views writes nothing to the music playing', async ( { page } ) => {
+		await page.locator( `.riff-card[data-riff-post="${ postId }"] .riff-card-play` ).click();
+		await expect.poll( async () => ( await playing( page ) ).time ).toBeGreaterThan( 1 );
+		await watchSpeed( page );
+		// A post, Home, and Back to the post: the address changes each time, the music's speed never.
+		await page.locator( `.riff-card[data-riff-post="${ postId }"] .riff-card-link` ).click();
+		await expect( page ).toHaveURL( new RegExp( `riff=${ postId }$` ) );
+		await expect( page.locator( '.riff-row' ) ).toHaveCount( 2 );
+		await page.locator( '.riff-app-home' ).click();
+		await expect( page ).toHaveURL( pageUrl );
+		await expect( page.locator( '[data-riff-shelf="added"]' ) ).toBeVisible();
+		await page.goBack();
+		await expect( page.locator( '.riff-row' ) ).toHaveCount( 2 );
+		expect( await speedWrites( page ) ).toEqual( [] );
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 

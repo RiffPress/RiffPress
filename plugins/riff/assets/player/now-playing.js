@@ -1000,6 +1000,13 @@ export function nowPlaying( P ) {
 		// The deck's speed moves the pitch, as a record's does; the listener's own keeps it.
 		m.preservesPitch = m.webkitPreservesPitch = deckOnly() === 1;
 	}
+	// Whether the music is already as settle() leaves it: at the deck's speed, its pitch kept or
+	// not as that speed asks.
+	function settled( m ) {
+		const only = deckOnly();
+		const to = only * P.speed;
+		return m.playbackRate === to && m.defaultPlaybackRate === to && ( m.preservesPitch !== false ) === ( only === 1 );
+	}
 	// The listener's own speed, from window.riff.speed(): set on both elements, so it holds when
 	// the song hands over to its video and for every track after. While the platter is being
 	// pulled up to speed or wound down, the music settles at the new speed once it gets there.
@@ -1828,6 +1835,14 @@ export function nowPlaying( P ) {
 		const m = P.el();
 		if ( m.paused || held() || P.ramping ) {
 			m.defaultPlaybackRate = deckRate();
+			return;
+		}
+		// The stage changed and the music's speed did not, so nothing is written to it. A pull to the
+		// speed it already has would let go of its pitch and take it again a frame or two later,
+		// which is heard as a break in the music. The platter and the arm still take its rate, as the
+		// pull would have given it them, since no ratechange comes to do it.
+		if ( settled( m ) ) {
+			drive( m.playbackRate );
 			return;
 		}
 		bend( m, deckRate() ).then( ( whole ) => whole && settle( m ) );
