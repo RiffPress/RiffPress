@@ -164,6 +164,74 @@ class Test_Riff_Export extends Riff_TestCase {
 		wp_delete_file( $again );
 	}
 
+	public function test_a_public_archive_names_its_authors_without_a_login_or_an_email(): void {
+		$author = self::factory()->user->create(
+			array(
+				'user_login'   => 'hmerrill',
+				'user_email'   => 'hannah@example.test',
+				'display_name' => 'Hannah Merrill',
+			)
+		);
+		self::factory()->post->create(
+			array(
+				'post_status' => 'publish',
+				'post_author' => $author,
+			)
+		);
+		$done = Export::to_file(
+			$this->zip,
+			array(
+				'public'  => true,
+				'plugins' => false,
+			)
+		);
+
+		$this->assertIsArray( $done );
+		$users = $this->users_in( $this->zip );
+		$this->assertSame( array( 'Hannah Merrill' ), array_column( $users, 'display_name' ) );
+		$this->assertStringNotContainsString( '@', (string) wp_json_encode( $users ), 'a link that is shared carries no address' );
+		$this->assertStringNotContainsString( 'hmerrill', (string) wp_json_encode( $users ), 'nor a login' );
+	}
+
+	public function test_the_download_keeps_its_authors_email(): void {
+		$author = self::factory()->user->create(
+			array(
+				'user_login'   => 'hmerrill',
+				'user_email'   => 'hannah@example.test',
+				'display_name' => 'Hannah Merrill',
+			)
+		);
+		self::factory()->post->create(
+			array(
+				'post_status' => 'publish',
+				'post_author' => $author,
+			)
+		);
+		$done = Export::to_file( $this->zip, array( 'plugins' => false ) );
+
+		$this->assertIsArray( $done );
+		$this->assertSame( array( 'hannah@example.test' ), array_column( $this->users_in( $this->zip ), 'user_email' ), "the owner's own export" );
+	}
+
+	/**
+	 * The users an archive's database holds.
+	 *
+	 * @param string $zip The archive.
+	 * @return array<int, array<string, string>> Rows.
+	 */
+	private function users_in( string $zip ): array {
+		$archive = new ZipArchive();
+		$this->assertTrue( $archive->open( $zip ) );
+		$file = get_temp_dir() . 'riff-phpunit-export-' . wp_generate_password( 8, false ) . '.sqlite';
+		file_put_contents( $file, (string) $archive->getFromName( Archive::DATABASE ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions -- test scratch.
+		$archive->close();
+		$db    = Archive::database( $file );
+		$users = (array) $db->query( 'SELECT * FROM ' . Archive::PREFIX . 'users' )->fetchAll();
+		$db    = null;
+		wp_delete_file( $file );
+		return $users;
+	}
+
 	/**
 	 * The attachments an archive's database holds.
 	 *
