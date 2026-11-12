@@ -73,7 +73,7 @@ function functionsIn( file, only = '' ) {
  */
 function hashOf( block, name ) {
 	const lines = block.split( '\n' ).map( ( l ) => l.replace( /^\s*\/?\*+\/?\s?/, '' ).replace( /\s*\*\/$/, '' ).trim() );
-	const opens = new RegExp( `^@param\\s+\\S+\\s+${ name.replace( '$', '\\$' ) }\\s*\\{$` );
+	const opens = new RegExp( `^@param\\s+\\S+\\s+${ name.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) }\\s*\\{$` );
 	const at = lines.findIndex( ( l ) => opens.test( l ) );
 	if ( at < 0 ) {
 		return null;
