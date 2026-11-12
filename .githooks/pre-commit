@@ -37,6 +37,8 @@ npm run -s types:check || { echo "pre-commit: run npm run types"; exit 1; }
 echo "pre-commit: versions"
 node .github/scripts/release-check.js tree
 echo "pre-commit: the workflow scripts' tests"
+# site/web is built, not committed, and the tests read its pages, as in their workflow.
+node .github/scripts/web-pages.js >/dev/null
 node --test --test-reporter=dot .github/scripts/*.test.js
 
 if [[ -n "${RIFF_SKIP_E2E:-}" ]]; then
