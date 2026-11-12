@@ -414,7 +414,6 @@ export function registry( P ) {
 	dock?.addEventListener( 'click', ( e ) => {
 		const head = e.target.closest( '[data-riff-dock-opens]' );
 		if ( head && ! e.defaultPrevented ) {
-			e.stopPropagation();
 			const id = head.dataset.riffDockOpens;
 			if ( docked.has( id ) ) {
 				dockClose( id );
