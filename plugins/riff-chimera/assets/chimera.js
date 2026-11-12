@@ -278,7 +278,10 @@
 		link.href = config.source;
 		link.rel = 'noopener';
 		credit.append( link );
-		root.append( heads, controls, status, ...notes, credit );
+		// The heads, the words, the controls and the status fill the view; the notes are below it.
+		const stage = el( 'div', 'riff-chimera-stage' );
+		stage.append( heads, controls, status );
+		root.append( stage, ...notes, credit );
 		root.classList.toggle( 'is-duet', parts.length > 1 );
 		where.replaceChildren( root );
 		start.addEventListener( 'click', () => begin() );

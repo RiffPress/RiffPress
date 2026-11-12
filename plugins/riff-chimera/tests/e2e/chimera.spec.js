@@ -180,3 +180,30 @@ test( 'a view opened with no press, as a script opens it, waits for Sing along',
 	await expect( view ).toHaveAttribute( 'data-state', 'idle' );
 	await expect( page.getByRole( 'button', { name: 'Sing along' } ) ).toBeVisible();
 } );
+
+test( 'the heads fill the view, the words, controls and status in sight above the bar, the canvas drawn at its size', async ( { page } ) => {
+	await page.setViewportSize( { width: 1440, height: 900 } );
+	await load( page, 'Silent Night' );
+	const panel = await openView( page, 'chimera' );
+	await expect( panel.locator( '.riff-chimera' ) ).toHaveAttribute( 'data-ready', 'true', { timeout: 20000 } );
+	const box = ( sel ) => panel.locator( sel ).first().evaluate( ( e ) => e.getBoundingClientRect().toJSON() );
+	const [ view, heads, head, status, bar ] = await Promise.all( [
+		page.locator( '[data-riff-view="chimera"]' ).evaluate( ( e ) => e.getBoundingClientRect().toJSON() ),
+		box( '.riff-chimera-heads' ),
+		box( '.riff-chimera-head' ),
+		box( '.riff-chimera-status' ),
+		page.locator( '.riff-bar' ).evaluate( ( e ) => e.getBoundingClientRect().toJSON() ),
+	] );
+	expect( head.height, 'most of the view is the heads' ).toBeGreaterThan( view.height * 0.55 );
+	expect( head.width, 'a duet\'s two side by side' ).toBeLessThan( heads.width / 2 );
+	expect( status.bottom, 'the status line in sight, above the bar' ).toBeLessThanOrEqual( Math.min( view.bottom, bar.top ) );
+	// Drawn at its size on screen and the screen's pixel ratio (at most 2), so it is neither blurred nor stretched.
+	await expect
+		.poll( () =>
+			panel.locator( '.riff-chimera-head canvas' ).first().evaluate( ( c ) => {
+				const r = Math.min( 2, window.devicePixelRatio || 1 );
+				return c.width === Math.round( c.clientWidth * r ) && c.height === Math.round( c.clientHeight * r );
+			} )
+		)
+		.toBe( true );
+} );
