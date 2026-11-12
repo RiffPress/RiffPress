@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.11.0
+Stable tag: 6.12.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.12.0 =
+* A plugin's view can live in the Listen app's sidebar, and Riff Chimera sings from there.
+* Fixed: an album's header sits square on its cover, with a longer title set smaller and its quieter lines readable on a light cover.
+
 = 6.11.0 =
 * A song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings.
 
@@ -162,14 +166,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: the Private mark is an eye with a slash, hidden from others, not a blocked circle.
 * Fixed: a pointer left on Now Playing's close button no longer keeps the bar and the switch over a video.
 * Fixed: the deck keeps its shape at every size, its controls on its plinth and none under 44px.
-
-= 6.8.0 =
-* A host decides whether a zip uploaded to the Media Library imports privately, with riff_import_private.
-* The turntable is all there is on the screen.
-* Fixed: the notice's two actions are both core's buttons, and closing it is remembered.
-* Fixed: a private album's drawn cover is drawn for whoever may read it, and named without "Private:".
-* Fixed: a change of view no longer writes speed or pitch to the music playing.
-* Fixed: a queue picked up, or a track played again from Recently played, after its signed address ran out is signed again as it loads.
-* Fixed: a Playground link names its authors by display name only, with no email or login.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
