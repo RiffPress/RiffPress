@@ -648,7 +648,7 @@ export function registry( P ) {
 		announce( id, true );
 	}
 
-	function announce( id, isNowOpen ) {
+	function announce( id, isNowOpen, away = false ) {
 		const v = views.get( id );
 		/**
 		 * Fires when a view opens or closes, Riff's own included, and again for an open view when
@@ -664,6 +664,10 @@ export function registry( P ) {
 		 *                                   sidebar view, docked or not, and Now Playing itself for
 		 *                                   the album.
 		 * @param {Object|null} detail.track The track playing.
+		 * @param {boolean}     detail.away  Closing, whether the panel is only put away, as beside
+		 *                                   the deck on its own, to open again by itself once that
+		 *                                   is left: what the view does, such as a sound of its
+		 *                                   own, may go on. Since 6.14.0.
 		 * @param {Object}      api          `window.riff`.
 		 */
 		emit( 'view', {
@@ -671,6 +675,7 @@ export function registry( P ) {
 			open: isNowOpen,
 			view: v?.el || P.np,
 			track: P.track() || null,
+			away: ! isNowOpen && away,
 		} );
 	}
 
@@ -770,6 +775,9 @@ export function registry( P ) {
 			return;
 		}
 		const within = side.contains( document.activeElement );
+		// Put away beside the deck on its own (now-playing.js, immerse()), to open again once it is
+		// left, and not closed.
+		const away = quiet && !! P.deckAlone?.();
 		if ( v.el ) {
 			v.el.hidden = true;
 		}
@@ -799,7 +807,7 @@ export function registry( P ) {
 		}
 		opener = null;
 		draw();
-		announce( id, false );
+		announce( id, false, away );
 	}
 
 	root.addEventListener( 'riff:track', () => {

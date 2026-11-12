@@ -522,5 +522,6 @@ Since 5.8.0. Fires in `plugins/riff/assets/player/registry.js`.
 | `detail.open` | `boolean` | Whether it is open now. |
 | `detail.view` | `HTMLElement` | Its region: `[data-riff-view="<id>"]` for a screen of its own, `[data-riff-panel="<id>"]` for a panel and for a sidebar view, docked or not, and Now Playing itself for the album. |
 | `detail.track` | `Object\|null` | The track playing. |
+| `detail.away` | `boolean` | Closing, whether the panel is only put away, as beside the deck on its own, to open again by itself once that is left: what the view does, such as a sound of its own, may go on. Since 6.14.0. |
 | `api` | `Object` | `window.riff`. |
 

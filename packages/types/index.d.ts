@@ -824,6 +824,8 @@ export interface RiffActions {
 		view: HTMLElement;
 		/** The track playing. */
 		track: Track | null;
+		/** Closing, whether the panel is only put away, as beside the deck on its own, to open again by itself once that is left: what the view does, such as a sound of its own, may go on. Since 6.14.0. */
+		away: boolean;
 	}, api: RiffApi) => void;
 }
 

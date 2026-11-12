@@ -9,13 +9,13 @@ Stable tag: 0.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A Chimera view in the Listen app's sidebar: CHIMERA, a physical model of a human voice, sings the track's melody along with the recording while you browse.
+A Chimera panel beside the player: CHIMERA, a physical model of a human voice, sings the track's melody along with the recording while you browse.
 
 == Description ==
 
 **This plugin is experimental.** It is for fun, it may change or go away between versions, and the voice is a simulation, not a singer: expect it to sound like a talented robot.
 
-Riff Chimera adds a Chimera view for any track Riff Sing has a melody for. In the Listen app on a wide screen it is docked in the sidebar, under its own row: open it there, or from its button in the player's bar, and keep browsing albums while CHIMERA sings. With the sidebar folded to its rail, its icon opens the sidebar to it. Without a sidebar, on a phone or a page of your site, it opens as a panel beside the page, as Up next does.
+Riff Chimera adds a Chimera view for any track Riff Sing has a melody for. Open it from its button in the player's bar, or its chip in Now Playing on a phone, and it opens as a panel beside the page, where Up next and About open, with each singer's head drawn in cutaway as large as the panel allows. Keep browsing albums or open Now Playing while CHIMERA sings; it stops when you press Stop, close the panel, or play a track without a melody.
 
 * The voice is [CHIMERA](https://github.com/jamesondh/chimera-vocal-synth), by Jameson Hodge: lungs, vocal folds, a throat, a tongue, a jaw and lips simulated as it sings, with no recordings of anyone in it. Its cutaway head is drawn in the view, moving as it sings.
 * The melody is the one Riff Sing keeps for the track, typed in its Melody field or from its Melody file, so Riff Sing must be active. Riff Chimera stores nothing of its own.

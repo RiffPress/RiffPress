@@ -143,15 +143,17 @@ view included. One shows at a time:
   top.
 - On a touch screen on its side, it opens in the controls' strip.
 - Beside the turntable there is none: the deck is on its own, and a panel left open is back once
-  the deck is left.
+  the deck is left. Its view is told it is only put away (`away` on the closing `riff.view`), so
+  what it does may go on unseen, as Riff Chimera's voices do.
 
 Focus moves to the panel's name as it opens, and Escape or Close hands it back to what opened it.
 The one a listener leaves open opens again on their next visit, on a wide screen; that choice is
 kept in the browser, nowhere else.
 
-A plugin's view can live in the Listen app's **sidebar** instead (`'place' => 'sidebar'`), as
-Riff Chimera's does, so it never takes over the page. On a wide screen it is docked at the
-sidebar's foot under a row of its own, its icon and name, a button that opens and closes it
+A plugin's view can live in the Listen app's **sidebar** instead (`'place' => 'sidebar'`), so it
+never takes over the page; none of Riff's own does. On a wide screen it is docked at the
+sidebar's foot under a row of its own, kept in reach as the library scrolls and, once open, part of
+the sidebar's column, scrolling with it, so it never stands over the tabs or the library; its icon and name, a button that opens and closes it
 beneath (`aria-expanded`), and the listener browses beside it: the sidebar is drawn again with
 each view the app shows, but the dock is kept as it is, so what a docked view is doing carries on.
 Its button in the bar opens and closes it there too, says whether it is open (`aria-pressed`) and

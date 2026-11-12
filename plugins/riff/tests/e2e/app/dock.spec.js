@@ -1,8 +1,8 @@
 /**
  * A sidebar view (`place: 'sidebar'`): docked in the Listen app's sidebar under a row of its own,
  * open beside whatever the listener browses, on the rail as its icon, and a panel wherever there is
- * no sidebar. The view is one a script adds, with window.riff.view(), so the test needs no plugin;
- * Riff Chimera's spec covers one the server registers.
+ * no sidebar. No feature of Riff's own docks there, so the views are ones a script adds, with
+ * window.riff.view(), as a plugin's would; tests/php/test-registry.php covers the server's rows.
  * Desktop Chromium only: the sidebar is a wide window's.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -114,6 +114,40 @@ test.describe( 'A view docked in the sidebar', () => {
 		await page.evaluate( () => window.riff.closeView( 'dock-test' ) );
 		await expect( region ).toBeHidden();
 		expect( await page.evaluate( () => window.dockSeen ) ).toEqual( [ true, false, true, false ] );
+	} );
+
+	test( 'open, a tall view covers none of the sidebar: every tab and the library are there to press, and the view scrolls into reach', async ( { page } ) => {
+		await page.setViewportSize( { width: 1440, height: 800 } );
+		await page.evaluate( () =>
+			window.riff.view( 'dock-tall', {
+				label: 'Dock tall',
+				place: 'sidebar',
+				order: 91,
+				render: ( el ) => {
+					el.innerHTML = '<div style="height:1200px">Tall</div><button type="button">At its foot</button>';
+				},
+			} )
+		);
+		await page.locator( '[data-riff-dock-opens="dock-tall"]' ).click();
+		await expect( page.locator( '[data-riff-panel="dock-tall"]' ) ).toBeVisible();
+		const bar = page.locator( '.riff-app-bar' );
+		await bar.evaluate( ( el ) => ( el.scrollTop = 0 ) );
+		// What is under each tab's middle and the library's title is that, not the dock.
+		const covered = await bar.evaluate( ( el ) =>
+			[ ...el.querySelectorAll( 'a.riff-app-tab, .riff-app-library-title' ) ]
+				.filter( ( n ) => n.checkVisibility() )
+				.filter( ( n ) => {
+					const r = n.getBoundingClientRect();
+					const top = document.elementFromPoint( r.left + r.width / 2, r.top + r.height / 2 );
+					return r.bottom <= el.getBoundingClientRect().bottom && ! n.contains( top );
+				} )
+				.map( ( n ) => n.textContent.trim() )
+		);
+		expect( covered, 'nothing in the sidebar under the dock' ).toEqual( [] );
+		await expect( bar.locator( 'a.riff-app-tab' ).first() ).toBeVisible();
+		const foot = page.locator( '[data-riff-panel="dock-tall"]' ).getByRole( 'button', { name: 'At its foot' } );
+		await foot.scrollIntoViewIfNeeded();
+		await foot.click();
 	} );
 
 	test( 'opens again on the next visit, and on the rail is its icon, which opens the sidebar to it', async ( { page } ) => {
