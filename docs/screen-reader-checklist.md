@@ -1,6 +1,6 @@
 # Screen-reader checklist
 
-Playwright reads the accessibility tree, runs axe at the WCAG 2.2 AA rule set, and watches the live regions, on every change. None of that is a screen reader. What VoiceOver says while a slider is dragged, where NVDA's browse mode lands beside a dialog that is not modal, and how the announcements sound against the music are only heard with one running. Run this list before a release that touches `riff.js`, the player template, the Listen app or the stylesheets, and record the result in the release pull request.
+Playwright reads the accessibility tree, runs axe at the WCAG 2.2 AA rule set, and watches the live regions, on every change. None of that is a screen reader. What VoiceOver says while a slider is dragged, where NVDA's browse mode lands beside a dialog that is not modal, and how the announcements sound against the music are only heard with one running. Run this list before merging a change that touches `riff.js`, the player template, the Listen app or the stylesheets, and record the result in that pull request: release pull requests merge themselves once CI is green ([ecosystem.md](ecosystem.md)), so nobody stops there to run it.
 
 Record each check as **pass**, **fail** or **unverified**, with the screen reader, its version, the browser and the Riff version. A check that wasn't run is unverified, not a pass. A fail is an issue with the Accessibility label.
 

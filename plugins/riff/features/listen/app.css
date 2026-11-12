@@ -1277,6 +1277,17 @@
 	--riff-album-wash: color-mix(in srgb, var(--riff-album-mix));
 }
 
+/* A light cover's tint is taken down to a mid lightness first, keeping its
+   hue, so its wash stays dark enough for the quieter lines' 4.5:1: a white
+   or a yellow cover would otherwise wash the header a grey too light for
+   them. A darker tint is left as it is. */
+@supports (color: oklch(from red l c h)) {
+
+	.riff-standalone .riff-album-tinted {
+		--riff-album-mix: oklch(from var(--riff-album-tint) min(l, 0.62) c h) 40%, var(--riff-app-bg);
+	}
+}
+
 /* The wash: behind everything in the view, from its top to below the
    header, mixed in OKLab. A long, dark fade has too few shades to step
    through smoothly and shows as bands; a fine grain blended into it breaks
@@ -1295,10 +1306,10 @@
 	pointer-events: none;
 }
 
-/* The quieter line on a tint: mixed from the text and the wash itself, not
-   the fixed grey, so it keeps 4.5:1 on a light cover's wash as on a dark
-   one. */
-.riff-standalone .riff-album-tinted .riff-album-meta {
+/* The quieter lines on a tint, above the title and under it: mixed from the
+   text and the wash itself, not the fixed grey, so they keep 4.5:1 on a light
+   cover's wash as on a dark one. */
+.riff-standalone .riff-album-tinted :is(.riff-album-kind, .riff-album-meta) {
 	color: color-mix(in srgb, var(--riff-app-ink) 88%, var(--riff-album-wash));
 }
 

@@ -46,6 +46,16 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 | `localStorage` `riff:panel` (`registry.js`) | The panel last chosen, reopened on the next page. | low |
 | `open` (`together.js`), `showing()` there | A copy for the Together panel. | low |
 
+### Views docked in the sidebar
+
+| Where | What | Risk |
+| --- | --- | --- |
+| `docked` (`registry.js`) | The sidebar views open in the Listen app's dock, any number of them. Not `P.panelOpen`: a docked view is not a panel. | |
+| `[data-riff-dock-opens][aria-expanded]`, `.riff-dock-body[hidden]`, the bar button's `aria-pressed` | The same, painted. | low |
+| Where a sidebar view's `[data-riff-panel]` is: under its row of the dock, or in `.riff-side` | Moved by `registry.js` (`rehome()`) as the stylesheet's `--riff-dock` says the sidebar comes or goes. | low |
+| `localStorage` `riff:dock` (`registry.js`) | The sidebar views left open, docked or as a panel, opened again in the dock once each says it has something for the track. | low |
+| The dock's node (`[data-riff-dock]`, `Registry::dock()`) | Drawn by the server in the sidebar, then kept, never taken out of the page, as `views.js` draws the sidebar again for each view. | **medium**: the one node in the sidebar the app must not replace; `views.js` (`sidebarAgain()`) keeps it. |
+
 ### The turntable
 
 `now-playing.js` keeps the deck's state in attributes on `#riff`, with a `MutationObserver` driving the platter from one of them: `data-riff-deck` (`out`, the record on the platter), `data-riff-cued` (`P.held()`, which `P.status()` reads to say Play or Pause), `data-riff-turning`, `data-riff-coasting`, `data-riff-arriving`, `data-riff-at`, `data-riff-format` (`7` or `12`, which sets the speed), `data-riff-turntable` (`off`), and `data-riff-down`, `data-riff-up` and `data-riff-held` on the arm; with about twenty-five closure variables and function properties (`turn.wait`, `halt.going`, `runout.until`, `deck.opening`) beside them, and `P.ramping`, a boolean, beside a closure `ramping`, a counter. Riff Meters reads `data-riff-deck` and `data-riff-turntable`. `deck-gl.js`, which draws the deck in WebGL, owns none of it: it reads those attributes and the page's computed styles each frame, takes the arm's geometry from `P.arm`, the side's bands from `P.pressed` and the groove pointed at from `P.cueAt` (all three written by `now-playing.js`) and the music's level from `P.loud` (written by `level.js`), and writes only `data-riff-gl`, which tells `riff.css` the canvas has drawn. **Medium**: the attributes are the CSS's and the state machine's at once, so a style change can change behaviour.
@@ -89,6 +99,7 @@ No key carries a version. A shape that changes is caught only by the reader's ow
 | `riff:volume` | local | `"0"`–`"1"` | low |
 | `riff:captions` | local | `on`, `off` | low |
 | `riff:panel` | local | a panel id or `""` | low |
+| `riff:dock` | local | sidebar view ids, separated by spaces | low |
 | `riff-sidebar` | local | `full`, `mini`; also read inline by `templates/standalone.php` before the first paint | low |
 | `riff-rack`, `riff-searches`, `riff-visits`, `riff-install-dismissed`, `riff-visit` (session) | | the Listen app's conveniences | low |
 | `riff-chords:instrument`, `riff-sing-tolerance` | local | the extensions' | low |

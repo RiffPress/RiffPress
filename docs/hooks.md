@@ -520,7 +520,7 @@ Since 5.8.0. Fires in `plugins/riff/assets/player/registry.js`.
 | `detail` | `Object` | What changed. |
 | `detail.id` | `string` | The view's id. |
 | `detail.open` | `boolean` | Whether it is open now. |
-| `detail.view` | `HTMLElement` | Its region: `[data-riff-view="<id>"]` for a screen of its own, `[data-riff-panel="<id>"]` for a panel, and Now Playing itself for the album. |
+| `detail.view` | `HTMLElement` | Its region: `[data-riff-view="<id>"]` for a screen of its own, `[data-riff-panel="<id>"]` for a panel and for a sidebar view, docked or not, and Now Playing itself for the album. |
 | `detail.track` | `Object\|null` | The track playing. |
 | `api` | `Object` | `window.riff`. |
 

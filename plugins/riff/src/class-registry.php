@@ -20,7 +20,8 @@ defined( 'ABSPATH' ) || exit;
  *
  * A control is something in the bar: a button, or an element of its own. A view is something the
  * listener opens from its button in the bar: a screen of Now Playing, which takes the whole screen
- * above the bar (the album, the lyrics), or a panel beside the page (Up next).
+ * above the bar (the album, the lyrics), a panel beside the page (Up next), or a view docked in
+ * the Listen app's sidebar, which is a panel wherever there is no sidebar.
  * `window.riff.control()` and `window.riff.view()` give a registered one its behaviour, and add
  * one the server didn't, for what only the browser knows.
  */
@@ -37,6 +38,12 @@ final class Registry {
 	 * An id: lowercase letters, digits and dashes, starting with a letter.
 	 */
 	private const ID = '/^[a-z][a-z0-9-]*$/';
+
+	/**
+	 * Where a view may be: a screen of Now Playing, a panel beside the page, or docked in the
+	 * Listen app's sidebar.
+	 */
+	private const PLACES = array( 'screen', 'side', 'sidebar' );
 
 	/**
 	 * Controls by id, in the order they were registered.
@@ -140,6 +147,7 @@ final class Registry {
 	 * same id.
 	 *
 	 * @since 5.8.0
+	 * @since 6.12.0 `sidebar` for `$place`.
 	 *
 	 * @param string $id   Lowercase letters, digits and dashes; the view is `[data-riff-view="<id>"]`.
 	 * @param array  $args {
@@ -150,7 +158,10 @@ final class Registry {
 	 *     @type int      $order  Where its button sits among the bar's controls, lowest first.
 	 *                            Default 50.
 	 *     @type string   $place  `screen` to take the whole screen above the bar, as Now Playing
-	 *                            does; `side` for a panel beside the page. Default `screen`.
+	 *                            does; `side` for a panel beside the page; `sidebar` to be docked
+	 *                            in the Listen app's sidebar, under its own heading, while the
+	 *                            listener browses beside it, and a panel beside the page wherever
+	 *                            there is no sidebar. Default `screen`.
 	 *     @type bool     $stage  For a screen that is Now Playing's own stage, the track's art or
 	 *                            its record, rather than a region of its own, with no button in
 	 *                            the bar, which opens it itself. Default false.
@@ -182,7 +193,7 @@ final class Registry {
 			_doing_it_wrong( __METHOD__, esc_html__( 'A view needs a label, and an id of lowercase letters, digits and dashes that no control has.', 'riff' ), '5.8.0' );
 			return false;
 		}
-		$args['place']      = 'side' === $args['place'] ? 'side' : 'screen';
+		$args['place']      = in_array( $args['place'], self::PLACES, true ) ? $args['place'] : 'screen';
 		$args['order']      = (int) $args['order'];
 		$args['added']      = ++self::$added;
 		self::$views[ $id ] = $args;
@@ -286,7 +297,9 @@ final class Registry {
 	 *
 	 * @since 5.8.0
 	 *
-	 * @param string $place `screen`, `side`, or empty for both.
+	 * @since 6.12.0 `sidebar` for `$place`.
+	 *
+	 * @param string $place `screen`, `side`, `sidebar`, or empty for all of them.
 	 * @return array[] By id.
 	 */
 	public static function views( string $place = '' ): array {
@@ -504,15 +517,20 @@ final class Registry {
 	}
 
 	/**
-	 * The panels beside the page.
+	 * The panels beside the page, the sidebar's views among them: each is a panel wherever there is
+	 * no sidebar to dock it in, and the player moves it into its row of the dock where there is.
 	 *
 	 * @since 5.8.0
+	 * @since 6.12.0 The sidebar's views too.
 	 *
 	 * @return string
 	 */
 	public static function panels(): string {
 		$html = '';
-		foreach ( self::views( 'side' ) as $id => $view ) {
+		foreach ( self::views() as $id => $view ) {
+			if ( 'screen' === $view['place'] ) {
+				continue;
+			}
 			$html .= sprintf(
 				'<div class="riff-panel riff-panel-%1$s" data-riff-panel="%1$s" data-riff-label="%2$s" hidden>%3$s</div>',
 				esc_attr( $id ),
@@ -521,6 +539,32 @@ final class Registry {
 			);
 		}
 		return $html;
+	}
+
+	/**
+	 * The dock in the Listen app's sidebar: a row for each view registered for the sidebar, its
+	 * icon and name a button that opens and closes it beneath, as a disclosure does, so the
+	 * listener keeps browsing beside it. The rows are drawn with the sidebar, before any script, so
+	 * nothing moves as the player arrives; each starts closed, and the player moves the view's
+	 * panel into its row as it opens. Drawn with no rows when no view is registered for the sidebar,
+	 * for one a script adds (`window.riff.view()`), and unseen while it has none to show.
+	 *
+	 * @since 6.12.0
+	 *
+	 * @return string
+	 */
+	public static function dock(): string {
+		$rows = '';
+		foreach ( self::views( 'sidebar' ) as $id => $view ) {
+			$rows .= sprintf(
+				'<div class="riff-dock-item" data-riff-dock-item="%1$s" data-riff-order="%4$d"><h2 class="riff-dock-head"><button type="button" class="riff-dock-toggle" id="riff-dock-toggle-%1$s" data-riff-dock-opens="%1$s" aria-expanded="false" aria-controls="riff-dock-body-%1$s">%2$s<span class="riff-dock-label">%3$s</span></button></h2><div class="riff-dock-body" id="riff-dock-body-%1$s" role="region" aria-labelledby="riff-dock-toggle-%1$s" hidden></div></div>',
+				esc_attr( $id ),
+				self::icon( (string) $view['icon'] ),
+				esc_html( (string) $view['label'] ),
+				(int) $view['order']
+			);
+		}
+		return '<div class="riff-dock" data-riff-dock>' . $rows . '</div>';
 	}
 
 	/**

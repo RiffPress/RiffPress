@@ -1,6 +1,6 @@
 /* The sidebar, on a wide screen in standalone mode: full, or a rail of icons, a choice this device
  * remembers. And the sidebar library's chips: which rows show, kept while the sidebar is drawn
- * again. */
+ * again. And the player's dock at its foot, on the rail. */
 
 // The sidebar's toggle in the frame: a library (two books and a leaning third), and the
 // panel with an arrow to close it or to open it.
@@ -76,6 +76,35 @@ export function sidebarPanel( ctx ) {
 			} catch {}
 		}
 	}
+
+	// The player's dock at the sidebar's foot (Registry::dock()), on the rail a row of icons: a
+	// press of one opens the sidebar to its view, opening it if it is closed, and so does opening
+	// one from its button in the player's bar. Not a view the player opens again by itself, as the
+	// page loads: the listener folded the sidebar, and it stays folded.
+	nav?.addEventListener(
+		'click',
+		( e ) => {
+			const toggle = e.target.closest?.( '[data-riff-dock-opens]' );
+			if ( toggle && app.dataset.sidebar === 'mini' ) {
+				sidebar( true );
+				if ( toggle.getAttribute( 'aria-expanded' ) === 'true' ) {
+					// Open already, under the rail: the sidebar opening shows it.
+					e.preventDefault();
+				}
+			}
+		},
+		true
+	);
+	document.addEventListener( 'riff:view', ( e ) => {
+		if (
+			e.detail?.open &&
+			app.dataset.sidebar === 'mini' &&
+			e.detail.view?.closest?.( '[data-riff-dock]' ) &&
+			window.navigator.userActivation?.isActive
+		) {
+			sidebar( true );
+		}
+	} );
 
 	return { libraryShow, sidebar };
 }

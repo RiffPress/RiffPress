@@ -614,9 +614,12 @@ final class App {
 		$cover = array() !== $art && '' !== $art ? Ui::image( is_array( $art ) ? $art : array( array( 'src' => $art ) ), Ui::HEADER_SIZES ) : '';
 		Ui::lead( 0 );
 		$cover = '' !== $cover ? $cover : ( '' !== $drawn ? $drawn : Ui::mosaic( $covers ) );
+		// A longer title is set smaller, so it keeps to a line or two beside the cover.
+		$length = mb_strlen( $title );
+		$length = $length > 40 ? ' riff-album-longer' : ( $length > 20 ? ' riff-album-long' : '' );
 		return sprintf(
 			'<header class="riff-album%1$s"%6$s>%2$s<div class="riff-album-text">%3$s<h2 class="riff-album-title" tabindex="-1">%4$s</h2><p class="riff-album-meta">%5$s</p>%7$s</div></header>',
-			( '' !== $cover ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ),
+			( '' !== $cover ? ' riff-album-has-cover' : '' ) . ( '' !== $tint ? ' riff-album-tinted' : '' ) . ( $round ? ' riff-album-round' : '' ) . $length,
 			'' !== $cover ? '<span class="riff-album-cover">' . $cover . '</span>' : '',
 			'' !== $kind ? '<p class="riff-album-kind">' . esc_html( $kind ) . '</p>' : '',
 			esc_html( $title ),

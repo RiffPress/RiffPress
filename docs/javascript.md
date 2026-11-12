@@ -150,7 +150,7 @@ Gives a view what it does as it opens, or adds one the server didn't register. A
 | `view.label` | `string` | Its name: its heading, its button's and its chip's. Needed for one the server didn't register. |
 | `view.icon` | `string` | Its button's icon, SVG markup from your own code, never from content. |
 | `view.order` | `number` | Where its button sits among the bar's controls, lowest first. Default 50. |
-| `view.place` | `string` | `screen`, the default, or `side` for a panel. |
+| `view.place` | `string` | `screen`, the default; `side` for a panel; or `sidebar` to be docked in the Listen app's sidebar under a row of its own, open beside whatever the listener browses, and a panel wherever there is no sidebar. |
 | `view.render` | `(view: HTMLElement, track: Object\|null) => void` | Fills it as it opens and again as the track changes while it is open. The `riff.view` action says the same. |
 | `view.shown` | `(track: Object\|null) => boolean` | Whether it has something for the track, so its button and chip show. Default always. |
 
@@ -160,7 +160,7 @@ Since 5.8.0.
 
 ### `window.riff.openView( id )`
 
-Opens a view: a screen of Now Playing, or a panel beside the page.
+Opens a view: a screen of Now Playing, a panel beside the page, or a sidebar view in the Listen app's sidebar (folded to its rail, the sidebar opens for it).
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -168,9 +168,13 @@ Opens a view: a screen of Now Playing, or a panel beside the page.
 
 Since 5.8.0.
 
-### `window.riff.closeView()`
+### `window.riff.closeView( id )`
 
-Closes the panel that is open, or else Now Playing.
+Closes a view: the one named, wherever it is, or with no id the panel that is open, or else Now Playing. Views docked in the sidebar close only by name, as several may be open there beside the rest.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | The view's id. |
 
 Since 5.8.0.
 

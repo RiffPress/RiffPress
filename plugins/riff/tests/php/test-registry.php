@@ -58,6 +58,61 @@ class Test_Riff_Registry extends Riff_TestCase {
 		$this->assertStringContainsString( 'credits.js', $this->modules(), 'the module that brings it to life' );
 	}
 
+	public function test_a_sidebar_view_is_docked_in_the_sidebar_and_a_panel_without_one(): void {
+		add_action(
+			Registry::HOOK,
+			static function () {
+				riff_register_view(
+					'voice',
+					array(
+						'label'  => 'Voice <b>&</b>',
+						'icon'   => '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><script>alert(1)</script></svg>',
+						'order'  => 38,
+						'place'  => 'sidebar',
+						'render' => static fn( $id ) => '<p class="voice">' . esc_html( $id ) . '</p>',
+					)
+				);
+				riff_register_view(
+					'notes',
+					array(
+						'label' => 'Notes',
+						'order' => 20,
+						'place' => 'sidebar',
+					)
+				);
+				riff_register_view(
+					'odd',
+					array(
+						'label' => 'Odd',
+						'place' => 'nowhere',
+					)
+				);
+			}
+		);
+
+		$this->assertSame( array( 'notes', 'voice' ), array_keys( Registry::views( 'sidebar' ) ), 'its own place, by order' );
+		$this->assertSame( 'screen', Registry::views()['odd']['place'], 'a place Riff has not is a screen' );
+		$this->assertStringContainsString( 'data-riff-control="voice" data-riff-opens="voice"', Registry::bar(), 'its button in the bar' );
+		$this->assertStringContainsString( 'data-riff-chip="voice"', Registry::chips(), 'and its chip on a phone' );
+		$this->assertStringContainsString( '<div class="riff-panel riff-panel-voice" data-riff-panel="voice" data-riff-label="Voice &lt;b&gt;&amp;&lt;/b&gt;" hidden><p class="voice">voice</p></div>', Registry::panels(), 'its region, a panel until the player docks it' );
+		$this->assertStringNotContainsString( 'data-riff-view="voice"', Registry::screens() );
+
+		$dock = Registry::dock();
+		$this->assertMatchesRegularExpression( '#^<div class="riff-dock" data-riff-dock>.*data-riff-dock-item="notes".*data-riff-dock-item="voice".*</div>$#s', $dock, 'a row each, by order' );
+		$this->assertStringContainsString( '<h2 class="riff-dock-head"><button type="button" class="riff-dock-toggle" id="riff-dock-toggle-voice" data-riff-dock-opens="voice" aria-expanded="false" aria-controls="riff-dock-body-voice"><svg', $dock, 'a heading that opens and closes it' );
+		$this->assertStringContainsString( '<span class="riff-dock-label">Voice &lt;b&gt;&amp;&lt;/b&gt;</span>', $dock, 'named in words' );
+		$this->assertStringContainsString( '<div class="riff-dock-body" id="riff-dock-body-voice" role="region" aria-labelledby="riff-dock-toggle-voice" hidden></div>', $dock, 'closed until the player opens it' );
+		$this->assertStringNotContainsString( '<script', $dock );
+		$this->assertStringNotContainsString( 'data-riff-dock-item="odd"', $dock );
+
+		$data = Registry::player_data( array() );
+		$this->assertSame( 'sidebar', $data['views']['voice']['place'], 'the player knows where it goes' );
+	}
+
+	public function test_the_dock_is_drawn_empty_with_no_sidebar_view(): void {
+		$this->assertSame( '<div class="riff-dock" data-riff-dock></div>', Registry::dock(), 'for a view a script adds' );
+	}
+
 	public function test_a_control_of_its_own_markup_is_marked_with_its_id(): void {
 		add_action(
 			Registry::HOOK,
