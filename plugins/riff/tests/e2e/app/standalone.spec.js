@@ -34,8 +34,9 @@ test.describe( 'Standalone', () => {
 			.click();
 		const header = page.locator( '.riff-album-tinted' );
 		await expect( header ).toHaveAttribute( 'style', /--riff-album-tint:#[0-9a-f]{6}/ );
-		// The wash's colour, resolved by the browser, against the title's and the line under it.
-		const ratios = await header.evaluate( ( el ) => {
+		// The wash's colour, resolved by the browser, against the title's, the line above it and
+		// the line under it: from this cover, and from a white one, the lightest wash there is.
+		const contrast = () => header.evaluate( ( el ) => {
 			const probe = document.createElement( 'span' );
 			probe.style.background = 'var(--riff-album-wash)';
 			el.append( probe );
@@ -56,10 +57,17 @@ test.describe( 'Standalone', () => {
 				const ink = lum( rgb( getComputedStyle( el.querySelector( sel ) ).color ) );
 				return ( Math.max( ink, wash ) + 0.05 ) / ( Math.min( ink, wash ) + 0.05 );
 			};
-			return { title: ratio( '.riff-album-title' ), meta: ratio( '.riff-album-meta' ) };
+			return { title: ratio( '.riff-album-title' ), kind: ratio( '.riff-album-kind' ), meta: ratio( '.riff-album-meta' ) };
 		} );
-		expect( ratios.title ).toBeGreaterThanOrEqual( 4.5 );
-		expect( ratios.meta, 'the quieter line too' ).toBeGreaterThanOrEqual( 4.5 );
+		for ( const tint of [ null, '#ffffff' ] ) {
+			if ( tint ) {
+				await header.evaluate( ( el, t ) => el.style.setProperty( '--riff-album-tint', t ), tint );
+			}
+			const ratios = await contrast();
+			expect( ratios.title, tint ).toBeGreaterThanOrEqual( 4.5 );
+			expect( ratios.kind, `the line above, ${ tint }` ).toBeGreaterThanOrEqual( 4.5 );
+			expect( ratios.meta, `the quieter line too, ${ tint }` ).toBeGreaterThanOrEqual( 4.5 );
+		}
 	} );
 
 	test( 'a playlist post opened directly shows each track once, though core\'s styles come after Riff\'s', async ( {
@@ -226,6 +234,39 @@ test.describe( 'Standalone', () => {
 		} );
 		expect( Math.abs( at.title - at.rowTitle ) ).toBeLessThanOrEqual( 2 );
 		expect( Math.abs( at.clock - at.time ) ).toBeLessThanOrEqual( 4 );
+		// Shuffle and the heart are one kind of button, centred on Play, their icons as far
+		// apart as Play and Shuffle's; the artist is set apart by weight, not underlined at
+		// rest; and the line under the title sits on the cover's bottom edge.
+		const fit = await page.evaluate( () => {
+			const rect = ( s ) => document.querySelector( s ).getBoundingClientRect();
+			const shuf = rect( '.riff-album-actions [data-riff-app-action="shuffle"]' );
+			const like = rect( '.riff-album-actions .riff-app-like' );
+			const playBox = rect( '.riff-album-actions [data-riff-app-action="play"]' );
+			const shufIcon = rect( '.riff-album-actions [data-riff-app-action="shuffle"] svg' );
+			const likeIcon = rect( '.riff-album-actions .riff-app-like svg' );
+			const artist = document.querySelector( '.riff-album-meta > a' );
+			const meta = document.querySelector( '.riff-album-meta' );
+			const probe = document.createElement( 'span' );
+			probe.style.display = 'inline-block';
+			meta.append( probe );
+			const baseline = probe.getBoundingClientRect().bottom;
+			probe.remove();
+			return {
+				sizes: [ shuf.width, shuf.height, like.width, like.height, shufIcon.width, likeIcon.width ],
+				centres: [ shuf.top + ( shuf.height / 2 ), like.top + ( like.height / 2 ), playBox.top + ( playBox.height / 2 ) ],
+				gaps: [ shufIcon.left - playBox.right, likeIcon.left - shufIcon.right ],
+				colours: [ getComputedStyle( document.querySelector( '[data-riff-app-action="shuffle"]' ) ).color, getComputedStyle( document.querySelector( '.riff-album-actions .riff-app-like' ) ).color ],
+				underline: getComputedStyle( artist ).textDecorationLine,
+				baseline,
+				coverBottom: rect( '.riff-album-cover' ).bottom,
+			};
+		} );
+		expect( fit.sizes ).toEqual( [ 44, 44, 44, 44, 28, 28 ] );
+		expect( Math.max( ...fit.centres ) - Math.min( ...fit.centres ) ).toBeLessThanOrEqual( 1 );
+		expect( Math.abs( fit.gaps[ 0 ] - fit.gaps[ 1 ] ) ).toBeLessThanOrEqual( 1 );
+		expect( fit.colours[ 0 ], 'the same quiet colour at rest' ).toBe( fit.colours[ 1 ] );
+		expect( fit.underline ).toBe( 'none' );
+		expect( Math.abs( fit.baseline - fit.coverBottom ) ).toBeLessThanOrEqual( 1 );
 		await expectTidy( page, '.riff-app', 'an album, standalone' );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
 	} );
@@ -238,11 +279,18 @@ test.describe( 'Standalone', () => {
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=tracks' );
 		const header = page.locator( '.riff-album' );
 		await expect( header ).not.toHaveClass( /riff-album-has-cover/ );
-		const left = await page.evaluate( () => {
+		const { left, title, bearing } = await page.evaluate( () => {
 			const x = ( s ) => Math.round( document.querySelector( s ).getBoundingClientRect().left );
-			return [ x( '.riff-album-title' ), x( '.riff-album-meta' ), x( '.riff-album-actions' ), x( '.riff-album-tracks' ) ];
+			const heading = document.querySelector( '.riff-album-title' );
+			return {
+				left: [ x( '.riff-album-meta' ), x( '.riff-album-actions' ), x( '.riff-album-tracks' ) ],
+				title: heading.getBoundingClientRect().left,
+				// The title is set back by a capital's side bearing, so its letters line up.
+				bearing: -parseFloat( getComputedStyle( heading ).marginLeft ),
+			};
 		} );
 		expect( new Set( left ).size ).toBe( 1 );
+		expect( Math.abs( title + bearing - left[ 0 ] ) ).toBeLessThanOrEqual( 1 );
 	} );
 
 	test( 'a card in a row shows its focus ring above and below, where the row\'s scroll would clip it', async ( {
