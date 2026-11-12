@@ -283,7 +283,7 @@ Since 6.15.0. Fires in `plugins/riff/features/listen/class-together.php`.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `$listeners` | `array[]` | Each: `id` (int, their user ID where they are), `name`, `avatar` (an address), `track` (`title`, `artist`, `art` and `url`, the cover's and the track's addresses), `site` (`name` and `url`), `playing` (bool), `at` (int, when they last shared, as a Unix time) and `along` (an address that listens along with them, or null for none). |
+| `$listeners` | `array[]` | Each: `id` (int, their user ID where they are), `name`, `avatar` (an address, or null to show their name's first letter), `track` (`title`, `artist`, `art` and `url`, the cover's and the track's addresses), `site` (`name` and `url`), `playing` (bool), `at` (int, when they last shared, as a Unix time) and `along` (an address that listens along with them, or null for none). |
 | `$viewer_id` | `int` | Who asks. |
 
 ### `riff_together_elsewhere_label`

@@ -166,7 +166,7 @@ test( 'listeners a host adds from elsewhere show under their own heading, each l
 	const amy = {
 		id: 7,
 		name: 'Amy',
-		avatar: '',
+		avatar: null,
 		track: { title: 'Underground', artist: 'Chris Zabriskie', art: '', url: '' },
 		site: { name: 'Amy’s Riff', url: 'https://amy.example/' },
 		playing: true,
@@ -204,6 +204,7 @@ test( 'listeners a host adds from elsewhere show under their own heading, each l
 	const panel = page.locator( '[data-riff-panel="together"]' );
 	await expect( panel.getByRole( 'heading', { name: 'Friends' } ) ).toBeVisible();
 	const row = panel.locator( '.riff-together-person', { hasText: 'Amy' } );
+	await expect( row.locator( '.riff-together-initial' ) ).toHaveText( 'A' );
 	await expect( row.locator( '.riff-together-sub' ) ).toHaveText( 'Underground · Chris Zabriskie · Amy’s Riff · now' );
 	await expect( row.getByRole( 'link', { name: 'Listen along with Amy' } ) ).toHaveAttribute( 'href', along );
 	await expect( row.getByRole( 'button' ) ).toHaveCount( 0 );

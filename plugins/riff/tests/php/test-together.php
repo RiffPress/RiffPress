@@ -690,9 +690,10 @@ class Test_Riff_Together extends Riff_TestCase {
 				'not a listener',
 				array( 'name' => '' ),
 				array(
-					'name'  => 'Ben',
-					'at'    => time() - 600,
-					'along' => 'ftp://ben.example/',
+					'name'   => 'Ben',
+					'avatar' => null,
+					'at'     => time() - 600,
+					'along'  => 'ftp://ben.example/',
 				),
 			),
 			array_map( static fn( $i ) => array( 'name' => "Friend $i" ), range( 1, 30 ) )
@@ -727,6 +728,8 @@ class Test_Riff_Together extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'riff-card-play', $amy['card'], 'no one elsewhere is followed here' );
 		$ben = $room['elsewhere'][1];
 		$this->assertNull( $ben['along'], 'only an http or https address' );
+		$this->assertSame( '', $ben['avatar'], 'none, for its initial' );
+		$this->assertStringContainsString( '>B</span>', $ben['card'] );
 		$this->assertFalse( $ben['playing'] );
 		$this->assertSame( '10 minutes ago', $ben['when'] );
 

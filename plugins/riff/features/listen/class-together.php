@@ -523,7 +523,8 @@ final class Together {
 		 * @since 6.15.0
 		 *
 		 * @param array[] $listeners Each: `id` (int, their user ID where they are), `name`,
-		 *                           `avatar` (an address), `track` (`title`, `artist`, `art` and
+		 *                           `avatar` (an address, or null to show their name's first
+		 *                           letter), `track` (`title`, `artist`, `art` and
 		 *                           `url`, the cover's and the track's addresses), `site` (`name`
 		 *                           and `url`), `playing` (bool), `at` (int, when they last
 		 *                           shared, as a Unix time) and `along` (an address that listens

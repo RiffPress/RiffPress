@@ -535,10 +535,18 @@ export default function together( P ) {
 	const panel = () => root.querySelector( `[data-riff-panel="${ VIEW }"]` );
 	// The panel open beside the page (registry.js).
 	const showing = () => panel()?.hidden === false && P.panelOpen === VIEW;
-	// Their face, or a person where they have none.
-	function face( src ) {
+	// Their face, or where they have none the initial given, or a person.
+	function face( src, initial = '' ) {
 		const span = document.createElement( 'span' );
 		span.className = 'riff-together-face';
+		if ( initial && ! src ) {
+			const mark = document.createElement( 'span' );
+			mark.className = 'riff-together-initial';
+			mark.setAttribute( 'aria-hidden', 'true' );
+			mark.textContent = initial;
+			span.append( mark );
+			return span;
+		}
 		span.innerHTML =
 			'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.25 8.25A3.25 3.25 0 1 1 8.75 8.25A3.25 3.25 0 0 1 15.25 8.25Z"/><path d="M5.75 19.25V18C5.75 16.2 7.2 14.75 9 14.75H15C16.8 14.75 18.25 16.2 18.25 18V19.25"/></svg>';
 		if ( src ) {
@@ -551,10 +559,10 @@ export default function together( P ) {
 		}
 		return span;
 	}
-	function person( { name, face: src, sub = '' }, action = null ) {
+	function person( { name, face: src, sub = '', initial = '' }, action = null ) {
 		const li = document.createElement( 'li' );
 		li.className = 'riff-together-person';
-		li.append( face( src ) );
+		li.append( face( src, initial ) );
 		const text = document.createElement( 'span' );
 		text.className = 'riff-together-text';
 		const who = document.createElement( 'span' );
@@ -617,6 +625,8 @@ export default function together( P ) {
 				: elsewhere.map( ( l ) => ( {
 						name: String( l.name || '' ),
 						face: String( l.avatar || '' ),
+						// Someone elsewhere without a face shows their name's first letter.
+						initial: Array.from( String( l.name || '' ) )[ 0 ] || '',
 						along: String( l.along || '' ),
 						sub: [
 							l.track?.title,
