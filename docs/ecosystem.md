@@ -24,10 +24,12 @@ Riff Lyrics, Chords and Sing are *extensions*: plugins built only on Riff's publ
 
 | Address | What it is | Built from | Runs on |
 | --- | --- | --- | --- |
-| `source.riffpress.com` | Open-source Riff: self-hosting, the reference, release notes, the demo | RiffPress, `site/` | Cloudflare Pages |
-| `developer.riffpress.com` | The PHP, JavaScript, REST and CSS reference, generated from the code | RiffPress, `docs/` | Cloudflare Pages |
+| `source.riffpress.com` | Getting Riff and running it: Download, Add your music, using Riff, running it for others, contributing, verifying a release, Built on the open web, Accessibility, and the demo's files | RiffPress, `site/` and `docs/` | Cloudflare Pages, project `riffpress-developer` |
+| `developer.riffpress.com` | Building on Riff: the PHP, hooks, JavaScript, REST, CSS and track schema reference, generated from the code, and the guides to extending Riff | RiffPress, `site/` and `docs/` | Cloudflare Pages, project `build-on-riff` |
 | `riffpress.com` | The platform's own site | riffpress-com, `site/` | Cloudflare Pages |
 | `cloud.riffpress.com` | Riff Cloud: each person's Riff at `cloud.riffpress.com/<name>/`, a WordPress network | riffpress-com, `network/` | WP Engine |
+
+Source and the developer site are one build: `pages.yml` generates every page, and `developers-site.js` puts each on the host `.github/scripts/site-nav.json` names, links between the two hosts written out in full. The Pages project `riffpress-developer` is named for the time it served both hosts; it serves Source. Until the split both hosts answered every address, so each host's `_redirects` sends the addresses the other now serves there with a 301.
 
 A self-hosted Riff is Riff plus whichever extensions and Riff Sign In its owner installs. Riff Cloud is Riff, Riff Sign In, Riff Chords and the Presence API at exact versions, plus Riff Network and Riff Account, all installed by Composer from `network/composer.json`. Riff Lyrics comes along inside Riff. Riff Sing is left off Cloud on purpose.
 
@@ -41,6 +43,8 @@ Nobody merges a release by hand. Each step starts the next:
 4. Riff's release goes to WordPress.org (off until `WPORG_DEPLOY` is `true`): the job downloads the zip the GitHub release carries, verifies its attestation and version, and sends exactly that.
 5. `notify-downstream` starts riffpress-com's `riff-upgrade.yml` by dispatch after a Riff or Riff Sign In release is published, which moves `network/composer.json`'s pins and opens or updates its upgrade pull request. riffpress-com also checks on a schedule, for a dispatch that never arrived.
 6. Merging that, or anything else under `network/`, runs `network-deploy.yml`: Composer builds `wp-content/plugins/`, one rsync sends it to WP Engine, the page cache is cleared, and the deploy waits for `cloud.riffpress.com` to answer with `riff-network/v1` in its REST index.
+
+Separately, every push to `main` runs `pages.yml`, which deploys the developer site and then Source, so the reference on developer.riffpress.com and the download, docs and demo on source.riffpress.com are always `main`'s. A pull request from this repository gets a preview of each, linked from its Preview comment.
 
 A change to Riff reaches a self-hosted site on its next plugin update, and Cloud as soon as riffpress-com's upgrade pull request merges.
 

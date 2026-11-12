@@ -19,7 +19,7 @@ Riff needs WordPress 7.1 and PHP 8.1. There is nothing to configure. On WordPres
 
 ## Build on it
 
-Riff's [PHP, JavaScript, REST and CSS reference](https://source.riffpress.com/) is the whole public API, and [Riff Lyrics](plugins/riff-lyrics/) is built on nothing else. To work on Riff itself, start with [CONTRIBUTING](.github/CONTRIBUTING.md).
+Riff's [PHP, JavaScript, REST and CSS reference](https://developer.riffpress.com/) is the whole public API, and [Riff Lyrics](plugins/riff-lyrics/) is built on nothing else. To work on Riff itself, start with [CONTRIBUTING](.github/CONTRIBUTING.md).
 
 ## What Riff finds in WordPress
 

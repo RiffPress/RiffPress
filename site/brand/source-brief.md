@@ -6,7 +6,7 @@ Nobody was available to answer Impeccable's shape interview for this page, so ev
 
 ## Who arrives, and what they came for
 
-Four kinds of reader arrive. Each comes in by a door named for what they want to do, not by a type of page:
+Four kinds of reader arrive. Each comes in by a door named for what they want to do, not by a type of page. Three doors are Source's; Build on Riff is a site of its own, developer.riffpress.com, drawn in the same frame, with Riff | Developer in its bar and its one door's pages in its sidebar:
 
 | Door | Who | Arrives from | Wants to |
 | --- | --- | --- | --- |
@@ -27,10 +27,10 @@ Four kinds of reader arrive. Each comes in by a door named for what they want to
 ## The direction
 
 - **The world is riffpress.com's paper**, in its type, its hairlines and its ember. The frame takes the world: the bar, the sidebar, the rail, the way code and tables are set. The column does not.
-- **The structure is a standard docs layout.** The bar is Riff | Source, then search, then Download. Below it are three columns divided by hairlines: the door's pages, the article, and "On this page".
-- **The home is the four doors**, a typographic list with no cards. Each door is a title, one line on who it is for, and its first pages.
+- **The structure is a standard docs layout.** The bar is Riff | Source, then search, then Download and Developers, the other site; on developer.riffpress.com it is Riff | Developer, then search, then Download and Source. Below it are three columns divided by hairlines: the door's pages, the article, and "On this page".
+- **The home is the four doors**, a typographic list with no cards. Each door is a title, one line on who it is for, and its first pages; Build on Riff's lead to developer.riffpress.com.
 - **A door page** lists the door's pages, each with one line on what it covers. It is the only place those lines appear; the sidebar carries titles alone.
-- **The sidebar shows the current door only.** A small switcher at its top names the door and changes it.
+- **The sidebar shows the current door only.** A small switcher at its top names the door and changes it, on a site with more than one.
 - **The signature move is precision:** a hairline grid and exact type for code, parameters and tables. There is nothing ornamental.
 
 ## Scope
