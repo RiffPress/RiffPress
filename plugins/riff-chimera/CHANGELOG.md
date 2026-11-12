@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.1.1...riff-chimera-v0.2.0) (2026-11-12)
+
+
+### Features
+
+* **sing:** a song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings ([#1045](https://github.com/RiffPress/RiffPress/issues/1045)) ([ecb88d5](https://github.com/RiffPress/RiffPress/commit/ecb88d5ddac71e0785afa6bee0f6126a081be576))
+
+
+### Bug Fixes
+
+* **chimera:** main's checks pass again, and the Chimera view's notes scroll fully into view above the bar ([#1047](https://github.com/RiffPress/RiffPress/issues/1047)) ([92e8c0e](https://github.com/RiffPress/RiffPress/commit/92e8c0ede6f1d6a3c5d7eec732ae8fbd0410fd56))
+
 ## [0.1.1](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.1.0...riff-chimera-v0.1.1) (2026-11-12)
 
 
