@@ -29,6 +29,7 @@
 		"events": [
 			"view",
 			"ready",
+			"track",
 			"pause",
 			"ended"
 		],
