@@ -1,9 +1,9 @@
 {
-	"plugins/riff": "6.13.0",
+	"plugins/riff": "6.14.0",
 	"plugins/riff-lyrics": "1.9.0",
 	"packages/wp-api-coverage": "0.1.0",
 	"plugins/riff-sign-in": "0.6.0",
 	"plugins/riff-chords": "0.7.0",
 	"plugins/riff-sing": "0.8.0",
-	"plugins/riff-chimera": "0.3.1"
+	"plugins/riff-chimera": "0.4.0"
 }
