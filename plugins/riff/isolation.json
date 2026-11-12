@@ -11,7 +11,9 @@
 		],
 		"shared": {
 			"_thumbnail_id": "An album's cover, set as the post's and the track's featured image, which is where WordPress keeps one.",
-			"_wp_attachment_image_alt": "A cover's alternative text, set on import where WordPress keeps it."
+			"_wp_attachment_image_alt": "A cover's alternative text, set on import where WordPress keeps it.",
+			"_wp_attached_file": "Cleared on a zip that failed to import once its file is deleted, so removing its attachment later cannot delete another upload given the same path.",
+			"_wp_attachment_metadata": "Cleared with _wp_attached_file on a failed zip, as it describes the deleted file."
 		},
 		"keep": {
 			"riff_likes": "What a listener liked. Theirs, and cumbersome to make again after a reinstall; Tools > Erase Personal Data deletes one listener's.",
