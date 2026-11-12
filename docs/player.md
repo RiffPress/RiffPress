@@ -190,6 +190,15 @@ each, what the tag is beside what the file says, so beside the album the whole p
 at a computer's usual heights. Both follow the window as it resizes and the device as it turns,
 from riff.css alone (a style query on the panel's place).
 
+Over the cover's foot, About offers the deck: **Open the deck full screen**, or **Open the deck**
+where the browser can't make a page full screen (an iPhone). It opens Now Playing to the album,
+which is the turntable on its own, and asks for full screen on the same press; Escape leaves full
+screen and leaves the deck open, and closing Now Playing leaves both, with the focus back on the
+button. It shows only where the turntable is what Now Playing would show: the site has it on, the
+listener hasn't asked for less motion, the track is a song rather than its video, the window is
+wider than tall, and the browser has WebGL2. Nothing is loaded for it: the deck is set up as Now
+Playing opens, as it always is. Nothing opens the deck by itself.
+
 Its parts are sections, in the order the `riff_about_sections` filter gives them; Riff's own,
 `track` and `credits`, are two of them. A plugin adds one there, which the page draws hidden as
 `[data-riff-about="<id>"]` with its heading and an empty `.riff-about-body`, and fills it on the

@@ -7,7 +7,9 @@
  * come from the same answer by ID, named through riff/v1. The file's caption, where it has one, is
  * its credit line, as an archive's recording is given its source and licence there (Riff\Archives).
  * Nothing is fetched from anywhere else, and a tag the file lacks is left out, so a track with none
- * shows no credits at all. Loaded the first time the panel opens. */
+ * shows no credits at all. Over the cover, where the deck can show, a button offers it: Now Playing
+ * opened to the turntable, full screen where the browser can do that. Loaded the first time the
+ * panel opens. */
 import { fmt, largest } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
@@ -165,21 +167,42 @@ export default function about( P ) {
 		if ( ! body ) {
 			return;
 		}
-		body.replaceChildren();
+		// The cover and the deck's button stay where they are as the rest is drawn again, so the
+		// focus on the button (handed back as Now Playing closes) is never lost to a redraw.
+		let frame = body.querySelector( ':scope > .riff-about-art' );
+		if ( ! frame ) {
+			frame = document.createElement( 'div' );
+			frame.className = 'riff-about-art';
+			frame.append( offer() );
+		}
+		for ( const node of [ ...body.children ] ) {
+			if ( node !== frame ) {
+				node.remove();
+			}
+		}
 		if ( ! t ) {
 			into.hidden = true;
 			return;
 		}
 		const art = largest( t.art ) || t.video?.poster || '';
-		if ( art ) {
+		let img = frame.querySelector( '.riff-about-cover' );
+		if ( art && ! img ) {
 			// The title beside it says what it is.
-			const img = document.createElement( 'img' );
+			img = document.createElement( 'img' );
 			img.className = 'riff-about-cover';
 			img.alt = '';
 			img.decoding = 'async';
-			img.src = art;
-			body.append( img );
+			frame.prepend( img );
 		}
+		if ( art && img.getAttribute( 'src' ) !== art ) {
+			img.src = art;
+		} else if ( ! art ) {
+			img?.remove();
+		}
+		if ( ! frame.isConnected ) {
+			body.append( frame );
+		}
+		placeOffer();
 		const title = document.createElement( 'h3' );
 		title.className = 'riff-about-title';
 		title.textContent = t.title || '';
@@ -207,6 +230,75 @@ export default function about( P ) {
 		}
 		into.hidden = false;
 	}
+
+	// ---- The deck, offered. Where Now Playing's album is the turntable (now-playing.js, roomy()):
+	// a site that has it on, a listener who hasn't asked for less motion, a song rather than a
+	// video, a window wider than tall, and WebGL2, which draws the deck as it is meant to be seen.
+	// Nothing is loaded for it here: the deck is set up as Now Playing opens, as it always is.
+	const deckable = () =>
+		P.data.turntable !== false &&
+		! P.reduce() &&
+		! P.isVideo?.() &&
+		'WebGL2RenderingContext' in window &&
+		window.innerWidth > window.innerHeight;
+	// Full screen only where the browser lets a page ask (not an iPhone), and only from the press.
+	const whole = () =>
+		!! document.fullscreenEnabled && !! document.documentElement.requestFullscreen;
+	let asked = false; // Whether the page is full screen because this button asked.
+
+	function offer() {
+		const button = document.createElement( 'button' );
+		button.type = 'button';
+		button.className = 'riff-about-deck';
+		const icon = panel()
+			?.querySelector( '.riff-about-deck-icon' )
+			?.content.cloneNode( true );
+		if ( icon ) {
+			button.append( icon );
+		}
+		const label = document.createElement( 'span' );
+		label.textContent = whole()
+			? __( 'Open the deck full screen', 'riff' )
+			: __( 'Open the deck', 'riff' );
+		button.append( label );
+		button.addEventListener( 'click', () => {
+			if ( whole() && ! document.fullscreenElement ) {
+				document.documentElement
+					.requestFullscreen( { navigationUI: 'hide' } )
+					.then( () => ( asked = true ) )
+					.catch( () => {} );
+			}
+			P.open( 'album' );
+		} );
+		return button;
+	}
+
+	// Shown where the deck is, and following the window and the listener's motion setting.
+	function placeOffer() {
+		const button = panel()?.querySelector( '.riff-about-deck' );
+		if ( button ) {
+			button.hidden = ! deckable();
+		}
+	}
+	window.addEventListener( 'resize', placeOffer );
+	window
+		.matchMedia( '(prefers-reduced-motion: reduce)' )
+		.addEventListener?.( 'change', placeOffer );
+
+	// Leaving Now Playing leaves the full screen it asked for; Escape leaves only the full screen.
+	root.addEventListener( 'riff:view', ( e ) => {
+		if ( e.detail?.id === 'album' && ! e.detail.open && asked ) {
+			asked = false;
+			if ( document.fullscreenElement ) {
+				document.exitFullscreen().catch( () => {} );
+			}
+		}
+	} );
+	document.addEventListener( 'fullscreenchange', () => {
+		if ( ! document.fullscreenElement ) {
+			asked = false;
+		}
+	} );
 
 	function fillCredits( t, found ) {
 		const into = part( 'credits' );

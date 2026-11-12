@@ -181,6 +181,8 @@ final class About {
 				$section['render'] ? (string) call_user_func( $section['render'], $id ) : ''
 			);
 		}
+		// The deck's icon, for the button over the cover that offers it (assets/player/about.js).
+		$html .= '<template class="riff-about-deck-icon">' . Player::icon( 'record' ) . '</template>';
 		return '<div class="riff-about">' . $html . '</div>';
 	}
 

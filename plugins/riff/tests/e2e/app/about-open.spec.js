@@ -111,4 +111,42 @@ test.describe( 'About, open by default', () => {
 		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		expect( await page.evaluate( () => getComputedStyle( document.body ).marginRight ) ).toBe( '0px' );
 	} );
+
+	test( 'its cover offers the deck: Now Playing opens to the turntable, full screen, and closing it leaves full screen', async ( { page } ) => {
+		// The suite asks for less motion (playwright.config.js); the deck is for those who don't.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await play( page );
+		const offer = about( page ).getByRole( 'button', { name: 'Open the deck full screen' } );
+		await expect( offer ).toBeVisible();
+		await offer.click();
+		const root = page.locator( '#riff' );
+		await expect( root ).toHaveClass( /is-open/ );
+		await expect( root ).toHaveAttribute( 'data-riff-showing', 'album' );
+		await expect( root ).not.toHaveAttribute( 'data-riff-turntable', 'off' );
+		// The deck on its own: the panel put away, the listener's choice of it untouched.
+		await expect( page.locator( '.riff-side' ) ).toBeHidden();
+		await expect.poll( () => page.evaluate( () => !! document.fullscreenElement ) ).toBe( true );
+		await page.locator( '.riff-np [data-riff-action="close"]' ).click();
+		await expect.poll( () => page.evaluate( () => !! document.fullscreenElement ) ).toBe( false );
+		await expect( about( page ) ).toBeVisible();
+		await expect( offer ).toBeFocused();
+	} );
+
+	test( 'no deck is offered without WebGL2', async ( { page } ) => {
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.addInitScript( () => delete window.WebGL2RenderingContext );
+		await play( page );
+		const offer = about( page ).locator( '.riff-about-deck' );
+		await expect( about( page ).locator( '.riff-about-title' ) ).not.toBeEmpty();
+		await expect( offer ).toBeHidden();
+	} );
+
+	test( 'no deck is offered to a listener who asks for less motion', async ( { page } ) => {
+		await page.emulateMedia( { reducedMotion: 'reduce' } );
+		await play( page );
+		await expect( about( page ).locator( '.riff-about-title' ) ).not.toBeEmpty();
+		await expect( about( page ).locator( '.riff-about-deck' ) ).toBeHidden();
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await expect( about( page ).locator( '.riff-about-deck' ) ).toBeVisible();
+	} );
 } );
