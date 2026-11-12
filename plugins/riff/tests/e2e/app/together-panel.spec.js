@@ -210,5 +210,5 @@ test( 'listeners a host adds from elsewhere show under their own heading, each l
 	await expect( row.getByRole( 'button' ) ).toHaveCount( 0 );
 	const { violations } = await new AxeBuilder( { page } ).include( '[data-riff-panel="together"]' ).withTags( AXE_TAGS ).analyze();
 	expect( violations ).toEqual( [] );
-	await page.unroute( '**' );
+	await page.unrouteAll( { behavior: 'ignoreErrors' } );
 } );
