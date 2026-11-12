@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.10.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.10.0...riff-v6.10.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **chimera:** main's checks pass again with Riff Chimera, its dictionary vendored as plain text ([#1042](https://github.com/RiffPress/RiffPress/issues/1042)) ([34463fe](https://github.com/RiffPress/RiffPress/commit/34463fef9cad11bf37d4d710b91947340ffa0314))
+* **player:** the deck is drawn in WebGL at every size, its keys along the front of a laptop's window ([#1043](https://github.com/RiffPress/RiffPress/issues/1043)) ([397b76c](https://github.com/RiffPress/RiffPress/commit/397b76c20b4e800f265a7ee9048ce1612c7d9993))
+
 ## [6.10.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.9.0...riff-v6.10.0) (2026-11-11)
 
 
