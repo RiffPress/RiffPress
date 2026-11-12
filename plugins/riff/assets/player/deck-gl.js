@@ -642,25 +642,27 @@ export default function deckGl( P ) {
 		gl.bindVertexArray( null );
 		return { vao, count: data.length / 6 };
 	}
+	// Each question put to the context waits for the graphics process to answer it, and while a
+	// shader compiles that is the time it takes: only the link is asked about, once, and the
+	// shaders' own logs only when it failed.
 	function program( vs, fs ) {
 		const p = gl.createProgram();
-		for ( const [ type, src ] of [ [ gl.VERTEX_SHADER, vs ], [ gl.FRAGMENT_SHADER, fs ] ] ) {
+		const shaders = [ [ gl.VERTEX_SHADER, vs ], [ gl.FRAGMENT_SHADER, fs ] ].map( ( [ type, src ] ) => {
 			const s = gl.createShader( type );
 			gl.shaderSource( s, src );
 			gl.compileShader( s );
-			if ( ! gl.getShaderParameter( s, gl.COMPILE_STATUS ) ) {
-				throw new Error( gl.getShaderInfoLog( s ) );
-			}
 			gl.attachShader( p, s );
-		}
+			return s;
+		} );
 		gl.bindAttribLocation( p, 0, 'aP' );
 		gl.bindAttribLocation( p, 1, 'aN' );
 		gl.linkProgram( p );
 		if ( ! gl.getProgramParameter( p, gl.LINK_STATUS ) ) {
-			throw new Error( gl.getProgramInfoLog( p ) );
+			throw new Error( shaders.map( ( s ) => gl.getShaderInfoLog( s ) ).join( '' ) || gl.getProgramInfoLog( p ) );
 		}
 		const u = {};
-		for ( let i = 0; i < gl.getProgramParameter( p, gl.ACTIVE_UNIFORMS ); i++ ) {
+		const count = gl.getProgramParameter( p, gl.ACTIVE_UNIFORMS );
+		for ( let i = 0; i < count; i++ ) {
 			const name = gl.getActiveUniform( p, i ).name.replace( /\[0\]$/, '' );
 			u[ name ] = gl.getUniformLocation( p, name );
 		}

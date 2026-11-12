@@ -895,13 +895,24 @@ export function nowPlaying( P ) {
 	function markRoom() {
 		if ( roomy() ) {
 			delete root.dataset.riffTurntable;
-			// The deck drawn in WebGL, where the browser has it, from the first time it shows.
-			P.feature( 'deck-gl' );
+			// The deck drawn in WebGL, where the browser has it, from the first time it shows: once
+			// Now Playing has finished opening, if the music didn't have it ready before then.
+			P.feature( 'deck-gl', { quiet: true } );
 			// And the music's level in the bar, where the deck's keys take the transport's place.
 			P.feature( 'level' );
 		} else {
 			root.dataset.riffTurntable = 'off';
 		}
+	}
+	// Music playing in a window wider than tall has its record out when Now Playing opens (roomy()),
+	// so the WebGL deck is made ready while it plays, not in the frames of Now Playing opening.
+	const warm = () => {
+		if ( P.data.turntable !== false && ! P.reduce() && window.innerWidth > window.innerHeight ) {
+			P.feature( 'deck-gl', { quiet: true } );
+		}
+	};
+	if ( $( '.riff-stage' ) ) {
+		P.audio?.addEventListener( 'playing', warm, { once: true } );
 	}
 	if ( $( '.riff-stage' ) && 'ResizeObserver' in window ) {
 		const reroom = () => {
@@ -1007,6 +1018,8 @@ export function nowPlaying( P ) {
 	// speed.
 	const pull = ( from, to ) =>
 		( Math.abs( to - from ) * ( root.dataset.riffFormat === '7' ? 45 : 100 / 3 ) ) / ( to > from ? TORQUE : BRAKE );
+	// The most of the pull one frame may take (bend()).
+	const MOST = 34;
 	let ramping = 0;
 	let stowing = 0;
 	// Whether the track shows as its video is the track's (P.isVideo()), not P.mode: that is the
@@ -1021,14 +1034,20 @@ export function nowPlaying( P ) {
 		P.ramping = true;
 		m.preservesPitch = m.webkitPreservesPitch = false;
 		return new Promise( ( done ) => {
-			const t0 = performance.now();
+			// The pull goes on by the frames drawn, two frames' worth at most at a time: a frame
+			// held up (the page busy) holds the platter back a little, where by the clock the music
+			// would leap in pitch.
+			let pulled = 0;
+			let then = performance.now();
 			const step = ( now ) => {
 				if ( id !== ramping ) {
 					return done( false );
 				}
+				pulled += Math.min( MOST, Math.max( 0, now - then ) );
+				then = now;
 				// A page put out of sight stops drawing frames, which would leave the music at whatever
 				// speed it had reached: out of sight, the pull is over at once.
-				const k = ms && ! document.hidden ? Math.min( 1, ( now - t0 ) / ms ) : 1;
+				const k = ms && ! document.hidden ? Math.min( 1, pulled / ms ) : 1;
 				const rate = k < 1 ? from + ( to - from ) * k : to;
 				m.playbackRate = rate;
 				// The platter and the arm take the music's new speed in the same frame, not a frame

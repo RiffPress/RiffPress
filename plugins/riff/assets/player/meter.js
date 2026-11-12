@@ -4,6 +4,8 @@
  * one of them. Where there is no analyser (iOS, a file from another origin, less motion asked for)
  * the bars keep their keyframes. Loaded on demand, when the first track does. */
 
+import { calm } from 'riff-player/helpers';
+
 export default function meter( P ) {
 	const { root, audio, own } = P;
 	const isIOS =
@@ -21,7 +23,7 @@ export default function meter( P ) {
 
 	// Routing audio through Web Audio on iOS breaks lock-screen and background playback, so iPhones
 	// have no analyser. A file from another origin cannot be analysed either; see foreign().
-	function ensureAnalyser() {
+	function hearable() {
 		const t = P.track();
 		// Only once <audio> holds a file Web Audio may hear: its own origin's, or one loaded for
 		// CORS. One from another origin loaded before that origin said yes would play as silence.
@@ -30,16 +32,37 @@ export default function meter( P ) {
 			! file ||
 			new URL( file, location.href ).origin === location.origin ||
 			audio.crossOrigin === 'anonymous';
-		if (
-			P.analyser ||
-			isIOS ||
-			! window.AudioContext ||
-			! t ||
-			P.foreign( t ) ||
-			! readable
-		) {
+		return (
+			! P.analyser &&
+			! isIOS &&
+			!! window.AudioContext &&
+			!! t &&
+			! P.foreign( t ) &&
+			readable
+		);
+	}
+	// Making the AudioContext holds the page's thread while it opens the sound device, for 170 ms
+	// on a Mac, and it comes as the first track starts, when Now Playing may be opening or a view
+	// coming in: it waits until they have (calm()). Whether the music can be heard is asked again
+	// then, as the track may have changed, and the meter catches up once it can.
+	let making = false;
+	// A browser that would not make one is not asked again.
+	let failed = false;
+	function ensureAnalyser() {
+		if ( making || failed || ! hearable() ) {
 			return;
 		}
+		making = true;
+		calm( () => {
+			making = false;
+			if ( hearable() && ! P.reduce() ) {
+				makeAnalyser();
+				unread = false;
+				meterSync();
+			}
+		} );
+	}
+	function makeAnalyser() {
 		try {
 			const ctx = new AudioContext();
 			const src = ctx.createMediaElementSource( audio );
@@ -64,6 +87,7 @@ export default function meter( P ) {
 			P.analyser = analyser;
 		} catch {
 			P.analyser = null;
+			failed = true;
 		}
 	}
 
