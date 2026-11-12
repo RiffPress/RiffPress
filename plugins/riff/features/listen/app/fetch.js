@@ -31,7 +31,7 @@ function remember( map, key, make ) {
 }
 
 export function fetching( ctx ) {
-	const { api, app, nav, rest } = ctx;
+	const { api, app, rest } = ctx;
 	const cache = new Map();
 
 	// The route's address, with a path appended and a page set.
@@ -76,12 +76,16 @@ export function fetching( ctx ) {
 		return u.toString();
 	}
 
-	// A browse view, as the server rendered it at its address: its view and its navigation.
+	// A browse view, as the server rendered it at its address: its view and its navigation. Asked
+	// for with riff_part=view, so the server sends those and the title without the page around
+	// them (App::part()); a server without it sends the whole page, which reads the same.
 	const rendered = new Map();
 	function pageView( href ) {
 		href = fetchable( href );
+		const part = new URL( href, location.href );
+		part.searchParams.set( 'riff_part', 'view' );
 		return remember( rendered, href, () =>
-			fetch( href, { headers: { Accept: 'text/html' } } )
+			fetch( part, { headers: { Accept: 'text/html' } } )
 				.then( ( r ) => {
 					if ( ! r.ok ) {
 						throw new Error( String( r.status ) );
@@ -121,8 +125,10 @@ export function fetching( ctx ) {
 	}
 
 	// ---- Prefetch. A view is fetched as soon as it is likely to be wanted: the pointer rests on its
-	// link, the link takes focus or a finger lands on it, and each tab in turn once the page is
-	// idle. A fetch is remembered, so the click itself finds the view already there.
+	// link, the link takes focus or a finger lands on it. A fetch is remembered, so the click itself
+	// finds the view already there. Nothing is fetched only because the page is idle: each view is
+	// drawn on the server for whoever asks, so every tab fetched on every load would cost the
+	// server a view for each one the listener never opens.
 	function prefetch( href ) {
 		// The view showing too: the server drew it, so going back to it needs its own fetch.
 		const to = ctx.postOf( href );
@@ -178,20 +184,6 @@ export function fetching( ctx ) {
 	);
 	app.addEventListener( 'focusin', warm );
 	app.addEventListener( 'touchstart', warm, { passive: true } );
-	// The tabs one after another, so the server draws one view at a time beside whatever the
-	// listener asks for; none when the listener has asked to save data.
-	const idle =
-		window.requestIdleCallback || ( ( fn ) => setTimeout( fn, 1200 ) );
-	if ( ! navigator.connection?.saveData ) {
-		idle( async () => {
-			for ( const tab of nav?.querySelectorAll( 'a[href]' ) || [] ) {
-				// Not a tab this screen hides, as Search is beside a field always in view.
-				if ( tab.getClientRects().length ) {
-					await prefetch( tab.href );
-				}
-			}
-		} );
-	}
 
 	return { get, pageView, forget };
 }

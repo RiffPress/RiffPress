@@ -61,12 +61,45 @@ final class App {
 	public const FROM_QUERY = 'riff_from';
 
 	/**
+	 * The query argument, set to `view`, that answers with the app's bar and its view alone, as the
+	 * app's script fetches a view: without the theme, the head or the footer it would throw away.
+	 *
+	 * @since 6.12.0
+	 */
+	public const PART = 'riff_part';
+
+	/**
 	 * Hooks the block and the shortcode.
 	 *
 	 * @since 4.0.0
 	 */
 	public static function register(): void {
 		add_action( 'init', array( self::class, 'init' ) );
+		// After Standalone's, so the app/ address is answered the same way.
+		add_filter( 'template_include', array( self::class, 'part' ), 100 );
+	}
+
+	/**
+	 * Answers ?riff_part=view on a Listen page with templates/view.php: the app's bar, its view and
+	 * the document's title, which is all the app's script reads from a view it fetches. Anything
+	 * else, or a page behind a password, keeps its template.
+	 *
+	 * @since 6.12.0
+	 *
+	 * @param string $template The template WordPress chose.
+	 * @return string
+	 */
+	public static function part( $template ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which part of the page to send; nothing changes.
+		if ( ! isset( $_GET[ self::PART ] ) || 'view' !== $_GET[ self::PART ] || ! is_page() || ! Player::enabled() ) {
+			return $template;
+		}
+		$page = get_queried_object();
+		if ( ! $page instanceof WP_Post || ! self::holds_app( $page ) || post_password_required( $page ) ) {
+			return $template;
+		}
+		header( 'X-Robots-Tag: noindex' );
+		return RIFF_DIR . 'templates/view.php';
 	}
 
 	/**

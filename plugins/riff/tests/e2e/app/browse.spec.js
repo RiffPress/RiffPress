@@ -56,34 +56,44 @@ test.describe( 'Browse', () => {
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
-	test( 'the tabs are fetched ahead, so choosing one waits on nothing', async ( {
+	test( 'a tab is fetched once it is wanted, never only because the page is idle, and alone', async ( {
 		page,
+		isMobile,
 	} ) => {
 		// Search is a tab only on a phone in standalone mode; here its field is in view.
 		const tabs = page.locator( '.riff-app-tab[href*="riff_view="]:visible' );
 		await expect( tabs ).toHaveCount( 5 );
-		// Once the page is idle every tab's view is fetched; this page's own resource timings show
-		// when all five have arrived.
-		await expect
-			.poll( () =>
-				page.evaluate(
-					() =>
-						performance
-							.getEntriesByType( 'resource' )
-							.filter( ( r ) => r.name.includes( 'riff_view=' ) ).length
-				)
-			)
-			.toBeGreaterThanOrEqual( 5 );
+		const fetched = () =>
+			page.evaluate(
+				() =>
+					performance
+						.getEntriesByType( 'resource' )
+						.filter( ( r ) => r.name.includes( 'riff_view=' ) ).length
+			);
+		// Long past the idle moment that used to fetch every tab: each one is a view the server
+		// draws, for a listener who may never open it.
+		await page.waitForTimeout( 2500 );
+		expect( await fetched(), 'no tab fetched while idle' ).toBe( 0 );
 		const asked = [];
 		page.on( 'request', ( r ) => {
 			if ( r.url().includes( 'riff_view=artists' ) ) {
 				asked.push( r.url() );
 			}
 		} );
-		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
+		const artists = page.locator( '.riff-app-tab', { hasText: 'Artists' } );
+		// A pointer resting on the tab, or a finger landing on it, fetches its view; the choice then
+		// waits on that one fetch, never a second.
+		if ( isMobile ) {
+			await artists.tap();
+		} else {
+			await artists.hover();
+			await expect.poll( () => asked.length ).toBe( 1 );
+			await artists.click();
+		}
 		await expect( page.locator( '.riff-app-tab[aria-current="page"]' ) ).toHaveText( 'Artists' );
 		await expect( page.locator( '.riff-artist' ).first() ).toBeVisible();
-		expect( asked, 'the view was already here' ).toEqual( [] );
+		expect( asked, 'one fetch, for the view alone' ).toHaveLength( 1 );
+		expect( new URL( asked[ 0 ] ).searchParams.get( 'riff_part' ) ).toBe( 'view' );
 	} );
 
 	test( 'a view is fetched when the pointer rests on its link, not as it passes over', async ( {

@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff, riff-sing
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,9 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 CHIMERA is (c) 2026 Jameson Hodge, under the MIT licence, in assets/chimera/LICENSE.txt. The pronouncing dictionary is the CMU Pronouncing Dictionary, under the licence in assets/chimera/CMUDICT-LICENSE.txt. The copy here is built from CHIMERA's source at the commit in assets/chimera/SOURCE.txt, by .github/scripts/build-chimera.sh in Riff's repository.
 
 == Changelog ==
+
+= 0.3.0 =
+* A plugin's view can live in the Listen app's sidebar, and Riff Chimera sings from there.
 
 = 0.2.0 =
 * A song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings.
