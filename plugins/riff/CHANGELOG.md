@@ -1,5 +1,22 @@
 # Changelog
 
+## [6.13.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.12.0...riff-v6.13.0) (2026-11-12)
+
+
+### Features
+
+* **player:** the deck's lamps glow the display's amber, its strobe lamp is a turned and fluted knob, and its keys' legends share one line ([#1057](https://github.com/RiffPress/RiffPress/issues/1057)) ([5f1799d](https://github.com/RiffPress/RiffPress/commit/5f1799d7b1b41f96a4ab7285355166cbd0a91fe8))
+
+
+### Bug Fixes
+
+* **player:** the AudioContext and the WebGL deck start once nothing is moving, and a held-up frame no longer jumps the music's pitch ([#1053](https://github.com/RiffPress/RiffPress/issues/1053)) ([c10c6ec](https://github.com/RiffPress/RiffPress/commit/c10c6ecf887d6055b65229c10dc7989359a3994b))
+
+
+### Performance Improvements
+
+* **listen:** a view the app fetches is sent alone, tabs are fetched only when wanted, and catalog counts are kept without an object cache ([#1055](https://github.com/RiffPress/RiffPress/issues/1055)) ([614edfb](https://github.com/RiffPress/RiffPress/commit/614edfb800fb78098d7f56646b4ca2bcaf0a0399))
+
 ## [6.12.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.11.0...riff-v6.12.0) (2026-11-12)
 
 
