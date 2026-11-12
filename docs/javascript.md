@@ -250,7 +250,7 @@ Every track the player takes or hands back is the shape `Tracks::schema()` descr
 
 ## A view, and a control in the bar
 
-Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, or a panel beside the page. Riff registers the album, About, Up next, Together and its own controls the same way, and Riff Lyrics, Riff Sing and Riff Chords their views, on nothing but the public API.
+Register a view or a control on the server with `riff_register_view()` and `riff_register_control()` on the `riff_register` action, so the page has it before any script runs; then give it what it does in the browser, by its id. `window.riff.view()` fills a view as it opens and again as the track changes, and `window.riff.control()` gives a control its press. A view is a screen of Now Playing, taking the whole screen above the bar, a panel beside the page, or a view docked in the Listen app's sidebar, which is a panel wherever there is no sidebar. Riff registers the album, About, Up next, Together and its own controls the same way, and Riff Lyrics, Riff Sing, Riff Chords and Riff Chimera their views, on nothing but the public API.
 
 ```php
 add_action( 'riff_register', function () {
