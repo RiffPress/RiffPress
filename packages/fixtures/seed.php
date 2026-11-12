@@ -90,6 +90,48 @@ if ( ! function_exists( 'riff_seed' ) ) {
 	}
 
 	/**
+	 * A song's instrumental version, from its manifest entry's `instrumental` file name, published
+	 * beside the song's own: an attachment of the album's post as long as the song, named in the
+	 * `_riff_sing_instrumental` meta Riff Sing's Instrumental field saves to, which Riff Chimera plays
+	 * in the recording's place while it sings. Not a track of the post. Nothing for a song without one.
+	 *
+	 * @param int    $id      The song's attachment ID.
+	 * @param array  $track   The song's manifest entry.
+	 * @param string $base    Where the album's files are published, ending in a slash.
+	 * @param int    $post_id The album's post.
+	 */
+	function riff_seed_instrumental( int $id, array $track, string $base, int $post_id ): void {
+		$file = (string) ( $track['instrumental'] ?? '' );
+		if ( '' === $file ) {
+			return;
+		}
+		$url          = $base . rawurlencode( $file );
+		$instrumental = (int) wp_insert_attachment(
+			array(
+				'post_title'     => sprintf( '%s (instrumental)', (string) ( $track['title'] ?? '' ) ),
+				'post_mime_type' => 'audio/mpeg',
+				'post_status'    => 'inherit',
+				'guid'           => $url,
+			),
+			'',
+			$post_id
+		);
+		if ( ! $instrumental ) {
+			return;
+		}
+		wp_update_attachment_metadata(
+			$instrumental,
+			array(
+				'length'     => (float) ( $track['duration'] ?? 0 ),
+				'dataformat' => 'mp3',
+				'fileformat' => 'mp3',
+				'bitrate'    => 1000 * (float) ( $track['bitrate'] ?? 0 ),
+			)
+		);
+		update_post_meta( $id, '_riff_sing_instrumental', $instrumental );
+	}
+
+	/**
 	 * Files a post under a category, made if it does not exist.
 	 *
 	 * @param int    $post_id Post ID.
@@ -179,6 +221,7 @@ if ( ! function_exists( 'riff_seed' ) ) {
 				) + riff_seed_words( $track )
 			);
 			riff_seed_charts( $id, $track );
+			riff_seed_instrumental( $id, $track, $base, $post_id );
 			$ids[] = $id;
 		}
 		$intro = isset( $manifest['curator'] ) ? sprintf( '<!-- wp:paragraph --><p>%s</p><!-- /wp:paragraph -->', esc_html( (string) $manifest['curator'] ) ) : '';

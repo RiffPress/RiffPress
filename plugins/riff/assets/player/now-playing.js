@@ -1436,7 +1436,7 @@ export function nowPlaying( P ) {
 		}
 		const m = P.el();
 		const file = m.getAttribute( 'src' );
-		const into = file && ( file === t.src || file === t.video?.src ) ? m.currentTime || 0 : 0;
+		const into = file && ( file === P.songSrc( t ) || file === t.video?.src ) ? m.currentTime || 0 : 0;
 		const at = album.ids.indexOf( String( t.id ) );
 		return { now: Math.min( on.length, album.starts[ at ] - on.start + into ), length: on.length, key: `${ playing }:${ on.name }`, m };
 	}

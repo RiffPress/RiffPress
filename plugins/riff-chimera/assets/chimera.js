@@ -7,13 +7,19 @@
  *
  * It listens to the player's riff:view, riff:pause and riff:ended events, which Riff dispatches on
  * its own element for any script, and reads where the song is and how fast it plays through
- * window.riff.time(), window.riff.playing() and window.riff.speed(). It needs nothing loaded before
+ * window.riff.time(), window.riff.playing() and window.riff.speed(). While CHIMERA sings, a track
+ * with an instrumental version (Riff Sing's riff_sing_instrumental field) plays it in place of the
+ * recording, through window.riff.source(), so the recording's own singers are out of the way; the
+ * recording comes back whenever the voices stop. It needs nothing loaded before
  * it but melody.js and midi.js (copies of Riff Sing's, kept the same by
  * .github/scripts/riff-chimera.test.js), voice.js and wp-a11y.
  *
  * CHIMERA's engine, its AudioWorklet and its pronouncing dictionary are fetched the first time the
- * view opens, never with the page. The voices have an AudioContext of their own, made at the
- * listener's press, so the player's own audio and its meters are left as they are. They stop when
+ * view opens, never with the page. Opened by the listener's press, on its button in the bar or its
+ * chip, the view starts the voices by itself: they sing as soon as the music plays. The voices have
+ * an AudioContext of their own, made and resumed inside that press, which every browser asks of
+ * sound, and kept running while the engine loads; so the player's own audio and its meters are left
+ * as they are. A view open with no press, as one remembered across a reload, waits for Sing along. They stop when
  * the listener presses Stop, leaves the view, closes Now Playing, the track changes or the page is
  * hidden. */
 ( () => {
@@ -47,7 +53,7 @@
 			const url = new URL( String( id ), config.media );
 			url.searchParams.set(
 				'_fields',
-				'riff_sing_melody,riff_sing_midi'
+				'riff_sing_melody,riff_sing_midi,riff_sing_instrumental'
 			);
 			const ok = ( r ) => {
 				if ( ! r.ok ) {
@@ -65,9 +71,11 @@
 				.then( ( r ) => ok( r ).json() )
 				.then( ( data ) => {
 					const text = String( data?.riff_sing_melody || '' );
+					// The same song without its singers, to play while CHIMERA sings, or none.
+					const instrumental = String( data?.riff_sing_instrumental || '' );
 					if ( text.trim() ) {
 						const chart = melody.parse( text );
-						return chart && { chart, ...reading( chart, text ) };
+						return chart && { chart, instrumental, ...reading( chart, text ) };
 					}
 					const file = String( data?.riff_sing_midi || '' );
 					if ( ! file || ! window.riffSingMidi ) {
@@ -77,7 +85,7 @@
 						.then( ( r ) => ok( r ).arrayBuffer() )
 						.then( ( bytes ) => {
 							const chart = window.riffSingMidi.read( bytes );
-							return chart && { chart, ...reading( chart, '' ) };
+							return chart && { chart, instrumental, ...reading( chart, '' ) };
 						} );
 				} );
 			asked.catch( () => cache.delete( id ) );
@@ -137,6 +145,8 @@
 	let solo = -1; // The singer heard alone among the voices, or -1 for all of them.
 	let last = { time: -1, at: 0, frame: 0 };
 	let token = 0; // Bumped by every new drawing: a slower answer for an old track gives up.
+	let instrumental = ''; // The track's instrumental version's address, or none.
+	let swapped = false; // The player plays the instrumental in the recording's place.
 
 	// A face singing, what the empty panel shows, decoration beside its words.
 	const ICON =
@@ -161,6 +171,7 @@
 	// Nothing to sing: one quiet message in the middle of the panel, as Riff Sing has it.
 	function say( where, text ) {
 		ui = null;
+		instrumental = '';
 		parts = [];
 		const box = el( 'div', 'riff-chimera-empty' );
 		box.innerHTML = ICON;
@@ -267,7 +278,10 @@
 		link.href = config.source;
 		link.rel = 'noopener';
 		credit.append( link );
-		root.append( heads, controls, status, ...notes, credit );
+		// The heads, the words, the controls and the status fill the view; the notes are below it.
+		const stage = el( 'div', 'riff-chimera-stage' );
+		stage.append( heads, controls, status );
+		root.append( stage, ...notes, credit );
 		root.classList.toggle( 'is-duet', parts.length > 1 );
 		where.replaceChildren( root );
 		start.addEventListener( 'click', () => begin() );
@@ -277,6 +291,7 @@
 			levels();
 		} );
 		ui = { root, start, stop, status };
+		instrumental = found.instrumental || '';
 	}
 
 	// Each voice's level: the listener's, for every voice or for the one heard alone.
@@ -307,11 +322,13 @@
 		}
 	}
 
-	// The view, drawn as it opens and again as the track changes while it is open.
-	function show( where, track ) {
+	// The view, drawn as it opens and again as the track changes while it is open. Opened by a
+	// press, the voices start once CHIMERA is ready, in an AudioContext resumed now, inside it.
+	function show( where, track, pressed = false ) {
 		const mine = ++token;
 		end();
 		shown = track;
+		const autostart = pressed && !! track && canSing() && wakeAudio();
 		if ( ! track ) {
 			return say( where, config.idle );
 		}
@@ -330,7 +347,7 @@
 					return say( where, config.broken );
 				}
 				build( where, found );
-				wake().then(
+				const ready = wake().then(
 					( e ) => {
 						if ( mine !== token ) {
 							return;
@@ -355,9 +372,30 @@
 					() => mine === token && state( 'idle', config.failed )
 				);
 				loop();
+				if ( autostart ) {
+					ready.then(
+						() =>
+							mine === token &&
+							ui?.root.dataset.ready === 'true' &&
+							! on &&
+							begin()
+					);
+				}
 			},
 			() => mine === token && say( where, config.error )
 		);
+	}
+
+	// The voices' AudioContext, made and resumed while the listener's press still counts, so the
+	// browser lets it sound once the voices are ready. False where it can't be made.
+	function wakeAudio() {
+		try {
+			ctx ??= new AudioContext( { latencyHint: 'interactive' } );
+			ctx.resume().catch( () => {} );
+			return true;
+		} catch {
+			return false;
+		}
 	}
 
 	// The listener's press: the voices' own AudioContext, a worklet for each singer, and each
@@ -383,6 +421,9 @@
 			}
 			levels();
 			on = true;
+			// The instrumental in the recording's place, from the same second, for as long as CHIMERA
+			// sings. The player gives the recording back by itself if the file can't be played.
+			swapped = !! instrumental && !! player()?.source?.( instrumental );
 			last = { time: -1, at: 0, frame: 0 };
 			const playing = !! player()?.playing();
 			state(
@@ -408,6 +449,11 @@
 		const was = on;
 		on = false;
 		stopVoices();
+		// The recording back. After a change of track the player already has: this does nothing then.
+		if ( swapped ) {
+			swapped = false;
+			player()?.source?.( null );
+		}
 		if ( ctx?.state === 'running' ) {
 			ctx.suspend().catch( () => {} );
 		}
@@ -519,10 +565,18 @@
 		if ( e.detail?.id !== 'chimera' ) {
 			return;
 		}
+		const opening = ! showing && !! e.detail.open;
 		showing = !! e.detail.open;
 		if ( showing ) {
 			if ( ! ui || e.detail.track?.id !== shown?.id ) {
-				show( e.detail.view, e.detail.track );
+				// The view opened by a press of its button or chip, not restored with the page: the
+				// browser's transient activation (navigator.userActivation) says so. A browser without
+				// it waits for Sing along, as before.
+				show(
+					e.detail.view,
+					e.detail.track,
+					opening && !! window.navigator.userActivation?.isActive
+				);
 			}
 			loop();
 		} else {

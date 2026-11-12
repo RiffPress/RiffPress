@@ -45,8 +45,11 @@ export function media( P ) {
 		const origin = originOf( src );
 		return origin !== location.origin && cors.get( origin ) === true;
 	};
+	// The file the song plays from: the track's own, or another a script gave it for now
+	// (window.riff.source(), in playback.js).
+	const songSrc = ( t ) => ( P.alt && P.alt.track === t ? P.alt.src : t.src );
 	const foreign = ( t ) =>
-		originOf( t.src ) !== location.origin && ! shared( t.src );
+		originOf( songSrc( t ) ) !== location.origin && ! shared( songSrc( t ) );
 	// Points a media element at a file, loaded for CORS when its origin shares.
 	function point( m, src ) {
 		const cross = shared( src ) ? 'anonymous' : null;
@@ -63,7 +66,7 @@ export function media( P ) {
 			return video;
 		}
 		if ( t && t === P.track() ) {
-			const holds = ( m ) => m.getAttribute( 'src' ) === t.src;
+			const holds = ( m ) => m.getAttribute( 'src' ) === songSrc( t );
 			if ( holds( video ) && ! holds( audio ) ) {
 				return video;
 			}
@@ -74,7 +77,7 @@ export function media( P ) {
 		return P.analyser && t && foreign( t ) ? video : audio;
 	};
 	const srcFor = ( t, m ) =>
-		m === video && isVideo( t ) && t.video ? t.video.src : t.src;
+		m === video && isVideo( t ) && t.video ? t.video.src : songSrc( t );
 
 	// How long the playing track is: the element's own reading, or the length its tags gave.
 	const durationOf = ( m ) =>
@@ -292,6 +295,12 @@ export function media( P ) {
 			if ( ! live() || ! m.getAttribute( 'src' ) ) {
 				return;
 			}
+			// A file given in place of the track's own that can't be played gives way to the track's
+			// own, from where it was; the track itself hasn't failed.
+			if ( P.alt && m.getAttribute( 'src' ) === P.alt.src ) {
+				P.source( null );
+				return;
+			}
 			// Said, and marked in the list, then the next track is tried. Three in a row and the
 			// rest are probably missing too, so the player stops rather than reading out the album.
 			const t = P.track();
@@ -381,6 +390,7 @@ export function media( P ) {
 		point,
 		el,
 		srcFor,
+		songSrc,
 		durationOf,
 		stopGlide,
 		glide,

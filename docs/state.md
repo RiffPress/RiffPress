@@ -21,6 +21,7 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 | Where | What | Risk |
 | --- | --- | --- |
 | `P.mode` (`state.js`) | The listener's choice, `song` or `video`; set back to `song` by a new queue. | |
+| `P.alt` (`state.js`) | Another file the song plays from for now, `{ track, src, at, playing }`: written only by `source()` (`playback.js`, `window.riff.source()`), and set back to null by `start()` (a new track), `dismiss()` and the `error` handler (`media.js`). `songSrc()` (`media.js`) is the one reading of it: `el()`, `srcFor()`, `foreign()` and the arm's `where()` (`now-playing.js`) ask it rather than `t.src`. | low: a reload resumes on the track's own file, as `save()` keeps the track and its time, never the element's file. |
 | `P.isVideo()` (`media.js`) | Derived: the track is a video, or it has a video version and the choice is `video`. The one answer to "is a picture playing". | |
 | `#riff[data-mode]` (`paint.js`) | `isVideo()`, painted. | low |
 | `riff/assets/player/wake-lock.js` | Tests `P.mode === 'video'`, so a video block's own track (type `video`, mode `song`) never keeps the screen on. | **high**: a phone sleeps in the middle of a video; the fix is to ask `P.isVideo()`. |

@@ -93,12 +93,29 @@ source.tracks.forEach( ( track, index ) => {
 	] );
 	const duration = Math.round( parseFloat( sh( 'ffprobe', [ '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', output ] ).toString() ) );
 	envelopes[ track.id ] = levels( output );
+	// The song without its singers, when source.json names one (`instrumental`, a recording's
+	// address as `source` is): encoded the same way, beside it, for Riff Sing's Instrumental field.
+	let instrumental = null;
+	if ( track.instrumental ) {
+		const from = path.join( cache, `${ number }-instrumental.mp3` );
+		if ( ! fs.existsSync( from ) ) {
+			sh( 'curl', [ '-fLsS', '--retry', '5', '--retry-all-errors', '--retry-delay', '5', '--user-agent', 'Riff fixture builder/1.0 (https://riffpress.com)', track.instrumental, '-o', from ] );
+		}
+		instrumental = `${ number } - ${ track.title.replaceAll( ',', '' ) } (instrumental) [${ track.id }].mp3`;
+		sh( 'ffmpeg', [ '-v', 'error', '-y', '-i', from, '-vn', '-af', 'loudnorm=I=-18:TP=-1.5:LRA=11', '-ar', '44100', '-b:a', '128k', '-id3v2_version', '3', '-metadata', `title=${ track.title } (instrumental)`, '-metadata', `album=${ source.name }`, '-metadata', `copyright=${ source.license }`, path.join( out, instrumental ) ] );
+		const length = Math.round( parseFloat( sh( 'ffprobe', [ '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path.join( out, instrumental ) ] ).toString() ) );
+		// As long as the song, or the voice sung over it would be out of step: Riff Sing refuses it too.
+		if ( Math.abs( length - duration ) > 1 ) {
+			throw new Error( `${ track.id }: the instrumental is ${ length } s, the song ${ duration } s` );
+		}
+	}
 	tracks.push( {
 		index: index + 1,
 		id: track.id,
 		title: track.title,
 		...( track.artist ? { artist: track.artist } : {} ),
 		file,
+		...( instrumental ? { instrumental } : {} ),
 		duration,
 		bitrate: 128,
 		url: track.page,

@@ -105,11 +105,11 @@ final class Archive {
 
 	/**
 	 * Post meta whose value is the ID of another post: the artwork, a track's video and streaming
-	 * versions, a video's captions, and Riff Sing's MIDI file.
+	 * versions, a video's captions, and Riff Sing's MIDI file and instrumental version.
 	 *
 	 * @since 6.5.0
 	 */
-	public const ID_META = array( '_thumbnail_id', Media::VIDEO_META, Media::STREAM_META, Media::CAPTIONS_META, '_riff_sing_midi' );
+	public const ID_META = array( '_thumbnail_id', Media::VIDEO_META, Media::STREAM_META, Media::CAPTIONS_META, '_riff_sing_midi', '_riff_sing_instrumental' );
 
 	/**
 	 * Term meta whose value is a post's ID: an artist's image.

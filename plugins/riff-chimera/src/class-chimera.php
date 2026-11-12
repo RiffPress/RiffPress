@@ -139,16 +139,19 @@ final class Chimera {
 		wp_enqueue_style( 'riff-chimera' );
 		wp_add_inline_style(
 			'riff-chimera',
-			// CHIMERA's heads, side by side for a duet, on the black its vector display is drawn on.
-			'#riff .riff-chimera-heads{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr));gap:16px}'
-			. '#riff .riff-chimera-singer{display:flex;flex-direction:column;gap:8px;min-width:0}'
-			. '#riff .riff-chimera-head{height:clamp(200px,42svh,420px);border-radius:8px;overflow:hidden;background:#000}'
+			// The heads, the words, the controls and the status fill the view, a duet's heads side by side
+			// sharing it; the notes sit below and scroll into view. A head's canvas is redrawn at its
+			// size and the screen's pixel ratio, its proportions kept, by CHIMERA's own drawing.
+			'#riff .riff-chimera{display:flex;flex-direction:column;gap:12px;height:100%}'
+			. '#riff .riff-chimera-stage{flex:0 0 100%;display:flex;flex-direction:column;gap:12px;min-height:0}'
+			. '#riff .riff-chimera-heads{flex:1 1 0;min-height:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:16px}'
+			. '#riff .riff-chimera-singer{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}'
+			. '#riff .riff-chimera-head{flex:1 1 0;min-height:140px;border-radius:8px;overflow:hidden;background:#000}'
 			. '#riff .riff-chimera-head canvas{display:block;width:100%;height:100%}'
 			. '@media (forced-colors:active){#riff .riff-chimera-head{border:1px solid CanvasText}}'
 			. '#riff .riff-chimera-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}'
 			. '#riff .riff-chimera-name{color:var(--riff-fg);font-size:16px;font-weight:600}'
 			. '#riff .riff-chimera-solo[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
-			. '#riff .riff-chimera{display:flex;flex-direction:column;gap:12px}'
 			. '#riff .riff-chimera p{margin:0}'
 			. '#riff .riff-chimera-words{flex:1 1 100%;min-height:1.5em;font-size:20px;font-weight:600;line-height:1.5;color:var(--riff-fg-2)}'
 			. '#riff .riff-chimera-syllable.is-sung{color:var(--riff-fg)}'

@@ -27,6 +27,12 @@ defined( 'ABSPATH' ) || exit;
  * uploaded to the Media Library like any other, and the audio file's Melody file field names it.
  * The typed melody, when there is one, comes first.
  *
+ * A track may also name its instrumental version, the same recording without its singers, in its
+ * Instrumental field: another audio file in the Media Library, as long as the track. A view that
+ * sings over the track (Riff Chimera's, and karaoke after it) plays it in its place for as long as
+ * it sings, through `window.riff.source()`. It is shown, as the MIDI file is, only to whoever the
+ * media route would show it to.
+ *
  * Everything else happens in the browser: the microphone is opened only when the listener asks, its
  * sound is turned into a note by an AudioWorklet on the device, and nothing is recorded or sent.
  * Everything it does with Riff goes through Riff's documented surface: `riff_register_view()` on
@@ -55,6 +61,22 @@ final class Sing {
 	 * The REST and Media Library field's name for the MIDI file.
 	 */
 	public const MIDI_FIELD = 'riff_sing_midi';
+
+	/**
+	 * The attachment meta key for the instrumental version, by its ID.
+	 */
+	public const INSTRUMENTAL_KEY = '_riff_sing_instrumental';
+
+	/**
+	 * The REST and Media Library field's name for the instrumental version.
+	 */
+	public const INSTRUMENTAL_FIELD = 'riff_sing_instrumental';
+
+	/**
+	 * How many seconds an instrumental's length may differ from the recording's: their lengths are
+	 * whole seconds in the file's metadata, so a second either way is the same length.
+	 */
+	public const DRIFT = 1;
 
 	/**
 	 * What WordPress and browsers call a MIDI file's type.
@@ -162,6 +184,17 @@ final class Sing {
 				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
 			)
 		);
+		register_post_meta(
+			'attachment',
+			self::INSTRUMENTAL_KEY,
+			array(
+				'type'              => 'integer',
+				'single'            => true,
+				'default'           => 0,
+				'sanitize_callback' => 'absint',
+				'auth_callback'     => static fn( $allowed, $key, $post_id ) => current_user_can( 'edit_post', $post_id ),
+			)
+		);
 	}
 
 	/**
@@ -172,6 +205,64 @@ final class Sing {
 	 */
 	private static function is_midi( int $id ): bool {
 		return $id > 0 && 'attachment' === get_post_type( $id ) && in_array( (string) get_post_mime_type( $id ), self::MIDI_TYPES, true );
+	}
+
+	/**
+	 * The instrumental version a track may name: another audio file in the Media Library, not a MIDI
+	 * file, not the track itself, and, where both lengths are known, as long as the track to within
+	 * DRIFT seconds, so a voice sung over it stays in step with the recording's melody.
+	 *
+	 * @param int $id           The track's attachment ID.
+	 * @param int $instrumental The instrumental's attachment ID.
+	 * @return bool
+	 */
+	private static function fits( int $id, int $instrumental ): bool {
+		if ( $instrumental <= 0 || $instrumental === $id || ! self::audio( $instrumental ) ) {
+			return false;
+		}
+		$length = static fn( int $file ): float => (float) ( wp_get_attachment_metadata( $file )['length'] ?? 0 );
+		return ! $length( $id ) || ! $length( $instrumental ) || abs( $length( $id ) - $length( $instrumental ) ) <= self::DRIFT;
+	}
+
+	/**
+	 * A file's instrumental version, its attachment ID, or 0 for none.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param int $id Attachment ID.
+	 * @return int
+	 */
+	public static function instrumental( int $id ): int {
+		$instrumental = (int) get_post_meta( $id, self::INSTRUMENTAL_KEY, true );
+		return self::fits( $id, $instrumental ) ? $instrumental : 0;
+	}
+
+	/**
+	 * The instrumental version a typed address or ID names for a track: its attachment ID, 0 for
+	 * nothing typed, or null for something that can't be the track's instrumental.
+	 *
+	 * @param int   $id    The track's attachment ID.
+	 * @param mixed $value What was typed: an attachment ID or the file's address.
+	 * @return int|null
+	 */
+	private static function find_instrumental( int $id, $value ): ?int {
+		$value = trim( is_scalar( $value ) ? (string) $value : '' );
+		if ( '' === $value || '0' === $value ) {
+			return 0;
+		}
+		$found = ctype_digit( $value ) ? (int) $value : attachment_url_to_postid( esc_url_raw( $value ) );
+		return self::fits( $id, $found ) ? $found : null;
+	}
+
+	/**
+	 * Whether whoever asks may learn of a file: a visitor when the media route shows it to anyone,
+	 * someone signed in when they may read it.
+	 *
+	 * @param int $id Attachment ID.
+	 * @return bool
+	 */
+	private static function shown( int $id ): bool {
+		return $id && ( is_post_publicly_viewable( $id ) || current_user_can( 'read_post', $id ) );
 	}
 
 	/**
@@ -365,6 +456,44 @@ final class Sing {
 				),
 			)
 		);
+		register_rest_field(
+			'attachment',
+			self::INSTRUMENTAL_FIELD,
+			array(
+				// The instrumental's address, for a view that sings over it, when whoever asks may see it,
+				// as the MIDI file's is. A protected file's is the site's own, unsigned, so it plays
+				// only for whoever Riff would serve that file to.
+				'get_callback'    => static function ( array $item ): ?string {
+					if ( ! self::audio( (int) $item['id'] ) ) {
+						return null;
+					}
+					$instrumental = self::instrumental( (int) $item['id'] );
+					return self::shown( $instrumental ) ? (string) wp_get_attachment_url( $instrumental ) : '';
+				},
+				'update_callback' => static function ( $value, WP_Post $post ) {
+					if ( ! current_user_can( 'edit_post', $post->ID ) ) {
+						return new \WP_Error( 'rest_cannot_edit', __( 'Sorry, you are not allowed to edit this file.', 'riff-sing' ), array( 'status' => rest_authorization_required_code() ) );
+					}
+					$instrumental = self::find_instrumental( $post->ID, $value );
+					if ( ! self::audio( $post->ID ) && 0 === $instrumental ) {
+						return true;
+					}
+					if ( ! self::audio( $post->ID ) ) {
+						return new \WP_Error( 'rest_invalid_param', __( 'Only an audio file has an instrumental version.', 'riff-sing' ), array( 'status' => 400 ) );
+					}
+					if ( null === $instrumental ) {
+						return new \WP_Error( 'rest_invalid_param', __( 'That isn\'t another audio file in the Media Library as long as this one.', 'riff-sing' ), array( 'status' => 400 ) );
+					}
+					self::write_instrumental( $post->ID, $instrumental );
+					return true;
+				},
+				'schema'          => array(
+					'description' => __( 'The same song without its singers, to sing over: another audio file in the Media Library, as long as this one. Its address when read, and its address or ID when written.', 'riff-sing' ),
+					'type'        => array( 'string', 'integer', 'null' ),
+					'context'     => array( 'view', 'edit' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -378,6 +507,20 @@ final class Sing {
 			update_post_meta( $id, self::MIDI_KEY, $midi );
 		} else {
 			delete_post_meta( $id, self::MIDI_KEY );
+		}
+	}
+
+	/**
+	 * Names a file's instrumental version, or removes it for 0.
+	 *
+	 * @param int $id           Attachment ID.
+	 * @param int $instrumental The instrumental's attachment ID, or 0.
+	 */
+	private static function write_instrumental( int $id, int $instrumental ): void {
+		if ( $instrumental ) {
+			update_post_meta( $id, self::INSTRUMENTAL_KEY, $instrumental );
+		} else {
+			delete_post_meta( $id, self::INSTRUMENTAL_KEY );
 		}
 	}
 
@@ -409,6 +552,13 @@ final class Sing {
 					'id'            => self::MIDI_FIELD,
 					'type'          => 'text',
 					'label'         => __( 'Melody file', 'riff-sing' ),
+					'enableSorting' => false,
+					'filterBy'      => false,
+				),
+				array(
+					'id'            => self::INSTRUMENTAL_FIELD,
+					'type'          => 'text',
+					'label'         => __( 'Instrumental', 'riff-sing' ),
 					'enableSorting' => false,
 					'filterBy'      => false,
 				),
@@ -569,7 +719,7 @@ final class Sing {
 		if ( ! $post instanceof WP_Post || ! self::song( (string) $post->post_mime_type ) ) {
 			return $fields;
 		}
-		$fields[ self::FIELD ]      = array(
+		$fields[ self::FIELD ]              = array(
 			'label' => __( 'Melody', 'riff-sing' ),
 			'input' => 'html',
 			'html'  => sprintf(
@@ -580,8 +730,8 @@ final class Sing {
 			),
 			'helps' => __( 'The tune to sing along with, in UltraStar\'s text format: a #BPM: line, then a line per syllable. Shown in the player’s Sing view.', 'riff-sing' ),
 		);
-		$midi                       = self::midi( $post->ID );
-		$fields[ self::MIDI_FIELD ] = array(
+		$midi                               = self::midi( $post->ID );
+		$fields[ self::MIDI_FIELD ]         = array(
 			'label' => __( 'Melody file', 'riff-sing' ),
 			'input' => 'html',
 			'html'  => sprintf(
@@ -591,6 +741,18 @@ final class Sing {
 				esc_attr( $midi ? (string) wp_get_attachment_url( $midi ) : '' )
 			),
 			'helps' => __( 'Or a MIDI file (.mid) from the Media Library, by its address or ID: its vocal track is the tune when the Melody field is empty, timed from the start of the song.', 'riff-sing' ),
+		);
+		$instrumental                       = self::instrumental( $post->ID );
+		$fields[ self::INSTRUMENTAL_FIELD ] = array(
+			'label' => __( 'Instrumental', 'riff-sing' ),
+			'input' => 'html',
+			'html'  => sprintf(
+				'<input type="text" class="text" name="attachments[%1$d][%2$s]" id="attachments-%1$d-%2$s" value="%3$s" />',
+				(int) $post->ID,
+				esc_attr( self::INSTRUMENTAL_FIELD ),
+				esc_attr( $instrumental ? (string) wp_get_attachment_url( $instrumental ) : '' )
+			),
+			'helps' => __( 'The same recording without its singers, by its address or ID in the Media Library and as long as this file: it plays in place of this one while a voice sings along.', 'riff-sing' ),
 		);
 		return $fields;
 	}
@@ -615,6 +777,13 @@ final class Sing {
 			// Something that isn't a MIDI file in the Media Library leaves what was named as it was.
 			if ( null !== $midi ) {
 				self::write_midi( $id, $midi );
+			}
+		}
+		if ( isset( $attachment[ self::INSTRUMENTAL_FIELD ] ) ) {
+			$instrumental = self::find_instrumental( $id, wp_unslash( $attachment[ self::INSTRUMENTAL_FIELD ] ) );
+			// One that can't be this file's instrumental leaves what was named as it was.
+			if ( null !== $instrumental ) {
+				self::write_instrumental( $id, $instrumental );
 			}
 		}
 		return $post;

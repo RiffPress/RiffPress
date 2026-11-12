@@ -122,6 +122,8 @@ export function playback( P ) {
 		if ( ! t ) {
 			return;
 		}
+		// A file given in place of the last track's own is for that track only.
+		P.alt = null;
 		const m = P.el( t );
 		const other = m === audio ? video : audio;
 		other.pause();
@@ -241,6 +243,7 @@ export function playback( P ) {
 		P.order = [];
 		P.pos = -1;
 		P.more = null;
+		P.alt = null;
 		root.hidden = true;
 		// The record back in its sleeve, for the next album's turn.
 		P.deck( false );
@@ -276,6 +279,38 @@ export function playback( P ) {
 		P.paint();
 		P.save();
 	}
+
+	// ---- Another file for the song, for now: an instrumental to sing over, say (window.riff.source()).
+	// Swapped as the song and video are, the position, the speed (the elements' defaultPlaybackRate,
+	// which a new file keeps) and whether it was playing carried across. Nothing about the track
+	// changes, so no riff.track: to the listener and to every script it is the same track, playing on.
+	function source( src ) {
+		const t = P.track();
+		const to = typeof src === 'string' && src ? src : null;
+		if ( ! t || P.renewing || ( to && isVideoMode( t ) ) ) {
+			return false;
+		}
+		if ( ( P.alt?.track === t ? P.alt.src : null ) === to ) {
+			return true;
+		}
+		const from = P.el();
+		const at = from.currentTime || P.alt?.at || 0;
+		// A file that failed has stopped its element: the track plays on if it was playing then.
+		const playing = ! from.paused || ( ! to && from.error && P.alt?.playing );
+		P.alt = to ? { track: t, src: to, at, playing } : null;
+		const m = P.el();
+		if ( m !== from ) {
+			from.pause();
+		}
+		P.point( m, P.srcFor( t, m ) );
+		m.currentTime = at;
+		if ( playing ) {
+			m.play().catch( P.paint );
+		}
+		P.paint();
+		return true;
+	}
+	const isVideoMode = ( t ) => t.type === 'video' || ( P.mode === 'video' && !! t.video );
 
 	// A phone pauses video when the page goes to the background, and audio keeps going. So the
 	// track moves to audio while hidden and back to video when the page returns.
@@ -320,5 +355,5 @@ export function playback( P ) {
 	const announce = () =>
 		channel?.postMessage( { type: 'playing', from: tabId } );
 
-	return { load, renew, toggle, go, next, prev, dismiss, setMode, announce };
+	return { load, renew, toggle, go, next, prev, dismiss, setMode, source, announce };
 }

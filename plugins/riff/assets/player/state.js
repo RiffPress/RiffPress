@@ -52,6 +52,7 @@ export function createPlayer( root, data ) {
 		pos: -1, // Position in order.
 		more: null, // Where the rest of a long list is: { url, page, pages }.
 		mode: 'song', // 'song' or 'video', for tracks that have both.
+		alt: null, // Another file the song plays from for now, { track, src, at, playing } (window.riff.source()).
 		repeat: 'off', // 'off', 'all' or 'one'.
 		shuffle: false,
 		speed: 1, // The listener's own speed, its pitch kept (window.riff.speed()).

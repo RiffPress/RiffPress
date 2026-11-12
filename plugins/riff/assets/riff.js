@@ -198,6 +198,22 @@ function start() {
 			return P.speed;
 		},
 		/**
+		 * Plays another file in place of the track's own, for now: the same music made another way,
+		 * such as its instrumental to sing over. It carries on from the same second, at the same
+		 * speed, playing or paused as it was, and it is still the same track to the listener and to
+		 * every script: no `riff.track` fires, and `window.riff.time()` keeps the clock. Given null it
+		 * goes back to the track's own file the same way. The track's own comes back by itself when
+		 * the track changes, when the player is dismissed, and when the other file can't be played.
+		 * Not while a video plays: a song's file only. The file must be one the listener may have; a
+		 * protected file's address is the site's own, which answers for whoever may play it.
+		 *
+		 * @since 6.11.0
+		 *
+		 * @param {?string} src The file's address, or null for the track's own.
+		 * @return {boolean} Whether the track now plays from it, or from its own for null; false with nothing playing, while a video plays, or while the track waits for its addresses.
+		 */
+		source: ( src ) => P.source( src ),
+		/**
 		 * Gives a view what it does as it opens, or adds one the server didn't register. A view is
 		 * opened from its button in the bar, and on a phone from its chip in Now Playing (the album,
 		 * the stage, has no button: the bar itself opens it): a screen
