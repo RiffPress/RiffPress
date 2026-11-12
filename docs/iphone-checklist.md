@@ -1,6 +1,6 @@
 # Real-iPhone checklist
 
-Playwright runs the player in Chromium at an iPhone's size, and runs a smoke pass in desktop WebKit. Neither is iOS. Safari on a phone decides on its own about background audio, the lock screen, headphone buttons and AirPlay, and only a real phone shows what it does. Run this list before a release that touches `riff.js`, `riff.css` or the player template, and record the result in the release pull request.
+Playwright runs the player in Chromium at an iPhone's size, and runs a smoke pass in desktop WebKit. Neither is iOS. Safari on a phone decides on its own about background audio, the lock screen, headphone buttons and AirPlay, and only a real phone shows what it does. Run this list before merging a change that touches `riff.js`, `riff.css` or the player template, and record the result in that pull request: release pull requests merge themselves once CI is green ([ecosystem.md](ecosystem.md)), so nobody stops there to run it.
 
 Record each check as **pass**, **fail** or **unverified**, with the iPhone model, the iOS version and the Riff version. A check that wasn't run is unverified, not a pass.
 

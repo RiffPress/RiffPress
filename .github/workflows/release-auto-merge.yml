@@ -1,0 +1,137 @@
+name: Release Auto-merge
+
+# release-please's pull request merges itself once it is safe, and merging it
+# releases as a person's merge would: release-please.yml tags each package,
+# builds, checks and attests its zip, publishes its release, and tells the
+# downstream. Safe is .github/scripts/release-gate.js: main's newest commit is
+# green, the pull request already contains it, and the full suite (PHPUnit,
+# Playwright, Plugin Check, lint, references, CodeQL, the scripts' tests) ran
+# and passed on the pull request's own commit, which is what gets tagged.
+#
+# Kill switch: set the repository variable RELEASE_AUTO_MERGE to "false" and
+# release pull requests wait for a person again. Unset or anything else, they
+# merge themselves.
+#
+# It decides when CI or the scripts' tests finish, on the release branch or on
+# main, and every half hour for a check that finished without starting it
+# (CodeQL's default setup, say). It reads metadata and check results only; it
+# never checks out or runs the pull request's code.
+#
+# The merge is made with RELEASE_PLEASE_TOKEN when that secret exists, and
+# then main's push starts every workflow as a person's merge does. Without it,
+# GITHUB_TOKEN merges, and a push by GITHUB_TOKEN starts no workflow, so this
+# starts the ones a release commit needs by dispatch, the one event that token
+# may raise.
+
+on:
+  workflow_run: # zizmor: ignore[dangerous-triggers] reads check results through the API; never checks out or runs the triggering run's code
+    workflows: [CI, Workflow Scripts Tests]
+    types: [completed]
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-auto-merge
+  cancel-in-progress: false
+
+jobs:
+  gate-and-merge:
+    # A run of CI on any other branch has nothing to say about the release.
+    if: >-
+      ${{ github.repository == 'RiffPress/RiffPress' && (github.event_name != 'workflow_run'
+      || github.event.workflow_run.head_branch == 'main'
+      || github.event.workflow_run.head_branch == 'release-please--branches--main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      # Reading check runs, and starting the release workflows by dispatch.
+      checks: read
+      actions: write
+      # The issue that says the release train stopped.
+      issues: write
+    steps:
+      # The default branch, never the pull request: the gate is main's code.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: main
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      # GitHub holds the CI runs of a pull request GITHUB_TOKEN opened or
+      # pushed to until someone approves them. sync-versions approves them as
+      # it pushes; this approves any it missed, on release-please's branch only,
+      # so a held run never leaves the release waiting unseen.
+      - name: Approve held runs on the release branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          HEAD=$(gh pr list --state open --head release-please--branches--main --json headRefOid --jq '.[0].headRefOid // empty')
+          [[ -n "$HEAD" ]] || exit 0
+          for RUN in $(gh api "repos/${GH_REPO}/actions/runs?head_sha=${HEAD}&status=action_required&per_page=50" --jq '.workflow_runs[] | select(.head_branch == "release-please--branches--main" and .head_repository.full_name == env.GH_REPO) | .id'); do
+            gh api --method POST "repos/${GH_REPO}/actions/runs/${RUN}/approve" >/dev/null
+            echo "Approved run ${RUN}."
+          done
+      - name: Decide
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_AUTO_MERGE: ${{ vars.RELEASE_AUTO_MERGE }}
+          REASONS_FILE: ${{ runner.temp }}/reasons.md
+        run: node .github/scripts/release-gate.js
+      # --match-head-commit: if anything reached the branch after the gate read
+      # it, the merge is refused and a later run decides again. Branch
+      # protection's required checks still apply to this merge.
+      - name: Merge the release pull request
+        if: steps.gate.outputs.action == 'merge'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ steps.gate.outputs.number }}
+          HEAD: ${{ steps.gate.outputs.head }}
+        run: gh pr merge "$NUMBER" --squash --match-head-commit "$HEAD"
+      - name: Start the release, since GITHUB_TOKEN's push starts nothing
+        if: steps.gate.outputs.action == 'merge'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          HAS_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          if [[ "$HAS_TOKEN" == true ]]; then
+            echo "Merged with RELEASE_PLEASE_TOKEN; main's push starts the release."
+            exit 0
+          fi
+          # Release Please first: it tags and publishes. The others are what
+          # main's push would have started for a commit that changes versions.
+          for workflow in release-please.yml ci.yml wp-engine.yml pages.yml playground-main-build.yml; do
+            gh workflow run "$workflow" --ref main
+            echo "Started $workflow on main."
+          done
+      - name: Say the release train stopped
+        if: steps.gate.outputs.action == 'block'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ steps.gate.outputs.number }}
+          REASONS_FILE: ${{ runner.temp }}/reasons.md
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          body="$RUNNER_TEMP/body.md"
+          {
+            echo "Release pull request #$NUMBER is not merging itself, because a check it needs is red ([gate run]($RUN_URL)). Nothing has been tagged or released."
+            echo
+            cat "$REASONS_FILE"
+            echo
+            echo 'Fix main, or re-run what was flaky, and the next CI result merges it. Close this issue once the release is out.'
+          } > "$body"
+          bash .github/scripts/release-alarm.sh "$body"

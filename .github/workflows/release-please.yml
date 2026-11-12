@@ -22,6 +22,7 @@ permissions: {}
 jobs:
   release-please:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       pull-requests: write
@@ -65,7 +66,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          BRANCHES=$(gh pr list --state open --search 'head:release-please--' --json headRefName --jq '[.[] | select(.headRefName | startswith("release-please--")) | .headRefName]')
+          # By branch, not --search: the search index lags, and a pull request
+          # release-please opened a second ago is not in it yet.
+          BRANCHES=$(gh pr list --state open --head release-please--branches--main --json headRefName --jq '[.[] | .headRefName]')
           echo "Open release branches: $BRANCHES"
           echo "branches=$BRANCHES" >> "$GITHUB_OUTPUT"
 
@@ -82,6 +85,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_branches != '[]' && needs.release-please.outputs.release_branches != '' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -177,6 +181,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.riff_release }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       # attest-build-provenance signs with the workflow's identity and stores the attestation.
@@ -202,6 +207,11 @@ jobs:
           set -euo pipefail
           test -f build/riff/riff.php
           find build/riff -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # What ships must say what the tag says: header, version define, Stable tag.
+      - name: Check the zip is the tag's version
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.riff_tag }}
+        run: node .github/scripts/release-check.js zip "$TAG_NAME" build/riff.zip
       # A host can check this zip came from this workflow, at this commit, before installing it:
       # gh attestation verify riff.zip --repo RiffPress/RiffPress (docs/verify.md).
       - name: Attest the zip's provenance
@@ -230,17 +240,33 @@ jobs:
     needs: [release-please, build-release-asset]
     if: ${{ needs.release-please.outputs.riff_release && vars.WPORG_DEPLOY == 'true' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     environment: wordpress-org
     permissions:
       contents: read
+      # gh attestation verify reads the zip's attestation.
+      attestations: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build the plugin folder
+          # The tag, for .wordpress-org/ as it was released; a scheduled run's own commit is newer.
+          ref: ${{ needs.release-please.outputs.riff_tag }}
+      # WordPress.org gets the very zip the GitHub release carries, not a rebuild: it is checked
+      # against its attestation and its tag's version first, and nothing is sent if either fails.
+      - name: Fetch and check the released zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.riff_tag }}
         run: |
           set -euo pipefail
-          bash .github/scripts/build-riff.sh
+          mkdir -p build
+          gh release download "$TAG_NAME" --pattern riff.zip --dir build
+          gh attestation verify build/riff.zip --repo "$GH_REPO"
+          node .github/scripts/release-check.js zip "$TAG_NAME" build/riff.zip
+          unzip -q build/riff.zip -d build
+          test -f build/riff/riff.php
       - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
         env:
@@ -257,6 +283,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.lyrics_release }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       # attest-build-provenance signs with the workflow's identity and stores the attestation.
@@ -282,6 +309,11 @@ jobs:
           set -euo pipefail
           test -f build/riff-lyrics/riff-lyrics.php
           find build/riff-lyrics -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # What ships must say what the tag says: header, version define, Stable tag.
+      - name: Check the zip is the tag's version
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.lyrics_tag }}
+        run: node .github/scripts/release-check.js zip "$TAG_NAME" build/riff-lyrics.zip
       # A host can check this zip came from this workflow, at this commit, before installing it:
       # gh attestation verify riff-lyrics.zip --repo RiffPress/RiffPress (docs/verify.md).
       - name: Attest the zip's provenance
@@ -304,6 +336,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.chords_release }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       # attest-build-provenance signs with the workflow's identity and stores the attestation.
@@ -329,6 +362,11 @@ jobs:
           set -euo pipefail
           test -f build/riff-chords/riff-chords.php
           find build/riff-chords -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # What ships must say what the tag says: header, version define, Stable tag.
+      - name: Check the zip is the tag's version
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.chords_tag }}
+        run: node .github/scripts/release-check.js zip "$TAG_NAME" build/riff-chords.zip
       # A host can check this zip came from this workflow, at this commit, before installing it:
       # gh attestation verify riff-chords.zip --repo RiffPress/RiffPress (docs/verify.md).
       - name: Attest the zip's provenance
@@ -351,6 +389,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.sign_in_release }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       # attest-build-provenance signs with the workflow's identity and stores the attestation.
@@ -376,6 +415,11 @@ jobs:
           set -euo pipefail
           test -f build/riff-sign-in/riff-sign-in.php
           find build/riff-sign-in -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # What ships must say what the tag says: header, version define, Stable tag.
+      - name: Check the zip is the tag's version
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.sign_in_tag }}
+        run: node .github/scripts/release-check.js zip "$TAG_NAME" build/riff-sign-in.zip
       # A host can check this zip came from this workflow, at this commit, before installing it:
       # gh attestation verify riff-sign-in.zip --repo RiffPress/RiffPress (docs/verify.md).
       - name: Attest the zip's provenance
@@ -398,6 +442,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.sing_release }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       # attest-build-provenance signs with the workflow's identity and stores the attestation.
@@ -423,6 +468,11 @@ jobs:
           set -euo pipefail
           test -f build/riff-sing/riff-sing.php
           find build/riff-sing -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # What ships must say what the tag says: header, version define, Stable tag.
+      - name: Check the zip is the tag's version
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.sing_tag }}
+        run: node .github/scripts/release-check.js zip "$TAG_NAME" build/riff-sing.zip
       # A host can check this zip came from this workflow, at this commit, before installing it:
       # gh attestation verify riff-sing.zip --repo RiffPress/RiffPress (docs/verify.md).
       - name: Attest the zip's provenance
@@ -443,6 +493,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.chimera_release }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       # attest-build-provenance signs with the workflow's identity and stores the attestation.
@@ -468,6 +519,11 @@ jobs:
           set -euo pipefail
           test -f build/riff-chimera/riff-chimera.php
           find build/riff-chimera -name '*.php' -print0 | xargs -0 -n1 -P 4 php -l > /dev/null
+      # What ships must say what the tag says: header, version define, Stable tag.
+      - name: Check the zip is the tag's version
+        env:
+          TAG_NAME: ${{ needs.release-please.outputs.chimera_tag }}
+        run: node .github/scripts/release-check.js zip "$TAG_NAME" build/riff-chimera.zip
       # A host can check this zip came from this workflow, at this commit, before installing it:
       # gh attestation verify riff-chimera.zip --repo RiffPress/RiffPress (docs/verify.md).
       - name: Attest the zip's provenance
@@ -492,6 +548,7 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.coverage_release }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: write
       # npm provenance signs the package with the workflow's identity.
@@ -519,19 +576,22 @@ jobs:
         run: gh release edit "$TAG_NAME" --draft=false --latest=false
 
   # After a Riff or Riff Sign In release is published, start a workflow in
-  # another repository, so whatever pins those releases can move to them now
-  # instead of waiting for its own schedule. Nothing here names who that is:
-  # it stays off until the repository variables DOWNSTREAM_REPO (owner/name)
-  # and DOWNSTREAM_WORKFLOW (the workflow's file name, which must accept
-  # workflow_dispatch) are set, and runs with the DOWNSTREAM_DISPATCH_TOKEN
+  # another repository, so whatever pins those releases (Riff Cloud pins those
+  # two) can move to them now instead of waiting for its own schedule. Nothing
+  # here names who that is: the repository variables DOWNSTREAM_REPO
+  # (owner/name) and DOWNSTREAM_WORKFLOW (the workflow's file name, which must
+  # accept workflow_dispatch) say, and it runs with the DOWNSTREAM_DISPATCH_TOKEN
   # secret: a fine-grained personal access token scoped to that one repository
-  # with Actions read and write, and nothing else. It is a job of its own so a
-  # failed dispatch shows red without touching a release; the release jobs
-  # publish their release as their last step, so it only runs once the release
-  # is out, and once when both release in one run.
+  # with Actions read and write, and nothing else.
+  #
+  # The release jobs publish their release as their last step, so this runs
+  # once the release and its zip are out, and once when both release in one
+  # run. A missing variable or token, or a dispatch that fails three times,
+  # fails this job, so the run goes red and report-failure says so, but the
+  # releases are already published and stay so; the downstream also polls.
   notify-downstream:
     needs: [release-please, build-release-asset, release-riff-sign-in]
-    if: ${{ always() && vars.DOWNSTREAM_REPO != '' && vars.DOWNSTREAM_WORKFLOW != '' && (needs.build-release-asset.result == 'success' || needs.release-riff-sign-in.result == 'success') }}
+    if: ${{ always() && (needs.build-release-asset.result == 'success' || needs.release-riff-sign-in.result == 'success') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions: {}
@@ -543,4 +603,75 @@ jobs:
           WORKFLOW: ${{ vars.DOWNSTREAM_WORKFLOW }}
         run: |
           set -euo pipefail
-          gh workflow run "$WORKFLOW" --repo "$REPO"
+          if [[ -z "$REPO" || -z "$WORKFLOW" || -z "$GH_TOKEN" ]]; then
+            echo "::error::The release is published, but nothing downstream was told: DOWNSTREAM_REPO, DOWNSTREAM_WORKFLOW or the DOWNSTREAM_DISPATCH_TOKEN secret is not set (docs/ecosystem.md)."
+            exit 1
+          fi
+          for attempt in 1 2 3; do
+            if gh workflow run "$WORKFLOW" --repo "$REPO"; then
+              echo "Started $WORKFLOW in $REPO."
+              exit 0
+            fi
+            sleep $(( attempt * 15 ))
+          done
+          echo "::error::The release is published, but starting $WORKFLOW in $REPO failed three times. The token may have expired or lost Actions write."
+          exit 1
+
+  # Every package's release ends published with its zip, or this fails. It
+  # reads all the releases, not just this run's, because a release job that
+  # failed half way leaves a tag and a draft that release-please never comes
+  # back to; until someone finishes it, every run says so.
+  verify-releases:
+    needs: [release-please, build-release-asset, release-riff-lyrics, release-riff-chords, release-riff-sign-in, release-riff-sing, release-riff-chimera, release-wp-api-coverage]
+    if: ${{ always() && needs.release-please.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      # Draft releases are listed only to a token that may push.
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Every package's release is published with its zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: node .github/scripts/release-check.js releases
+
+  # A failure anywhere above opens one issue, "The release train stopped", with
+  # this run and each job's result; while it is open, later failures only show
+  # as red runs. Success says nothing.
+  report-failure:
+    needs: [release-please, sync-versions, build-release-asset, deploy-wordpress-org, release-riff-lyrics, release-riff-chords, release-riff-sign-in, release-riff-sing, release-riff-chimera, release-wp-api-coverage, notify-downstream, verify-releases]
+    if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Open the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RESULTS: ${{ toJSON(needs) }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          body="$RUNNER_TEMP/body.md"
+          {
+            echo "The release workflow failed in [this run]($RUN_URL)."
+            echo
+            echo '| Job | Result |'
+            echo '| --- | --- |'
+            jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"' <<< "$RESULTS"
+            echo
+            cat <<'EOF'
+          A failed `release-*` or `build-release-asset` job leaves its tag and a draft release: rebuild and attach the zip from the tag, then publish it with `.github/scripts/publish-release.sh`, or re-run the failed jobs if the tag still matches. A failed `notify-downstream` means every release is published and only the downstream was not told. A failed `verify-releases` names each unfinished release in its log. See "When the release train stops" in docs/ecosystem.md.
+          EOF
+          } > "$body"
+          bash .github/scripts/release-alarm.sh "$body"
