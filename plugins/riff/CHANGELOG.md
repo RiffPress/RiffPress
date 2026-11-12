@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.14.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.14.1...riff-v6.14.2) (2026-11-12)
+
+
+### Bug Fixes
+
+* **listen:** Back, Forward, Home and search are one cluster in the middle of the strip ([#1069](https://github.com/RiffPress/RiffPress/issues/1069)) ([d78c289](https://github.com/RiffPress/RiffPress/commit/d78c2895c6a24109dcdd709e3f11054bf3072599))
+
 ## [6.14.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.14.0...riff-v6.14.1) (2026-11-12)
 
 
