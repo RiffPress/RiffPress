@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.11.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.10.1...riff-v6.11.0) (2026-11-12)
+
+
+### Features
+
+* **sing:** a song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings ([#1045](https://github.com/RiffPress/RiffPress/issues/1045)) ([ecb88d5](https://github.com/RiffPress/RiffPress/commit/ecb88d5ddac71e0785afa6bee0f6126a081be576))
+
 ## [6.10.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.10.0...riff-v6.10.1) (2026-11-12)
 
 
