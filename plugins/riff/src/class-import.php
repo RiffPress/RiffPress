@@ -85,8 +85,17 @@ final class Import {
 	public const ZIP_RATIO = 10;
 
 	/**
-	 * The transient, per user, holding the zips of theirs that did not become albums and why, until
-	 * they next see an admin screen.
+	 * Attachment meta on a zip uploaded to the Media Library that did not become an album: its
+	 * file's `name` and the `message` saying why, in words for its uploader. The attachment stays,
+	 * private and without its file, for its uploader to remove.
+	 *
+	 * @since 6.15.1
+	 */
+	public const ERROR = '_riff_import_error';
+
+	/**
+	 * The transient, per user, holding the attachment IDs of the zips of theirs that did not become
+	 * albums, until they next see an admin screen.
 	 *
 	 * @since 6.15.1
 	 */
@@ -279,11 +288,13 @@ final class Import {
 	/**
 	 * Imports a zip uploaded to the Media Library, as the person who uploaded it, privately: each
 	 * track Protected and each album's post private, for them to publish if the music is theirs to
-	 * share. Once it is unpacked, the zip is deleted, its file and its attachment, whether it
-	 * became albums or not: core serves an upload's file at a public address, without asking
-	 * WordPress, so a zip left in uploads would hold every track the import Protected, unprotected.
-	 * One that did not become an album is named, with why, to its uploader in an admin notice, for
-	 * them to upload again. One that holds no audio is no album's and stays as it was. Its albums
+	 * share. The zip is private from when it is queued, and once the import ends its file is
+	 * deleted: core serves an upload's file at a public address, without asking WordPress, so a
+	 * zip left in uploads would hold every track the import Protected, unprotected. A zip that
+	 * became albums is deleted, attachment and all. One that did not keeps its attachment, private
+	 * and without its file, with why in its Import::ERROR meta, which its uploader is shown once
+	 * in an admin notice, for them to upload it again and remove it. One that holds no audio is
+	 * no album's and stays as it was. Its albums
 	 * are its own, found by the zip's attachment, so a zip uploaded again, as a new file, skips the
 	 * tracks already imported and puts any new ones in a post of their own, and never adds to a
 	 * post its uploader did not make.
@@ -313,10 +324,7 @@ final class Import {
 		// A zip kept off this server, in object storage, is brought here to be unpacked.
 		$local = self::here( $file );
 		if ( '' === $local ) {
-			// Not unpacked, and private while it waits, so it stays for an upload that is only late.
-			$error = new WP_Error( 'riff_import_zip', __( 'That zip does not exist or cannot be read.', 'riff' ) );
-			self::failed( $author, wp_basename( $file ), $error );
-			return $error;
+			return self::done( $id, $author, $file, new WP_Error( 'riff_import_zip', __( 'That zip does not exist or cannot be read.', 'riff' ) ) );
 		}
 		/**
 		 * Filters whether a zip uploaded to the Media Library imports privately: each track and video
@@ -352,12 +360,29 @@ final class Import {
 				wp_delete_file( $local );
 			}
 		}
+		return self::done( $id, $author, $file, $result );
+	}
 
+	/**
+	 * Ends a zip's import: deletes a zip that became albums, and the file of one that did not,
+	 * keeping its attachment, private, with why.
+	 *
+	 * @since 6.15.1
+	 *
+	 * @param int            $id     The zip's attachment ID.
+	 * @param int            $author Who uploaded it.
+	 * @param string         $file   Its file.
+	 * @param array|WP_Error $result The import's report, or why it failed.
+	 * @return array|WP_Error The result, as it was.
+	 */
+	private static function done( int $id, int $author, string $file, $result ) {
 		/**
 		 * Fires once a zip uploaded to the Media Library has been imported, or has failed to be,
-		 * just before Riff deletes it, unless riff_import_keep_zip keeps it, or it held no audio.
-		 * Its attachment and file are still there. A host that keeps
-		 * uploads elsewhere, or a copy of them, can remove its own copy here too.
+		 * before Riff deletes anything: then a zip that became albums is deleted, and only the
+		 * file of one that failed, whose attachment stays, private, with why in its
+		 * Import::ERROR meta (`_riff_import_error`). Nothing is deleted when riff_import_keep_zip
+		 * keeps it, or when it held no audio. A host that keeps uploads elsewhere, or a copy of
+		 * them, can remove its own copy here too.
 		 *
 		 * @since 6.15.1
 		 *
@@ -366,11 +391,23 @@ final class Import {
 		 */
 		do_action( 'riff_import_zip_done', $id, $result );
 
-		if ( is_wp_error( $result ) ) {
-			self::failed( $author, wp_basename( $file ), $result );
+		$failed = is_wp_error( $result );
+		if ( $failed ) {
+			update_post_meta(
+				$id,
+				self::ERROR,
+				array(
+					'name'    => wp_basename( $file ),
+					'message' => $result->get_error_message(),
+				)
+			);
+			$told   = get_transient( self::FAILED . $author );
+			$told   = is_array( $told ) ? $told : array();
+			$told[] = $id;
+			set_transient( self::FAILED . $author, array_slice( array_unique( $told ), -10 ), WEEK_IN_SECONDS );
 		}
 		$album = 0;
-		foreach ( is_wp_error( $result ) ? array() : $result['albums'] as $made ) {
+		foreach ( $failed ? array() : $result['albums'] as $made ) {
 			if ( $made['post'] ) {
 				$album = (int) $made['post'];
 				break;
@@ -378,12 +415,13 @@ final class Import {
 		}
 
 		/**
-		 * Filters whether to keep a zip uploaded to the Media Library once it has been imported,
-		 * attached to its first album's post, instead of deleting it. Unsafe for protected music:
-		 * core serves the zip's file at a public address without asking WordPress, so whoever
-		 * finds it downloads every track the import Protected. Only for a site whose music is all
-		 * public anyway, or whose server refuses requests for uploaded zips. A zip that held no
-		 * audio is kept whatever this says. Defaults to false.
+		 * Filters whether to keep a zip uploaded to the Media Library once its import ends, file
+		 * and all, instead of deleting it: attached to its first album's post as before 6.15.1, or
+		 * attached to nothing when it failed. Unsafe for protected music: core serves the zip's
+		 * file at a public address without asking WordPress, so whoever finds it downloads every
+		 * track the import Protected. Only for a site whose music is all public anyway, or whose
+		 * server refuses requests for uploaded zips. A zip that held no audio is kept whatever this
+		 * says. Defaults to false.
 		 *
 		 * @since 6.15.1
 		 *
@@ -392,7 +430,7 @@ final class Import {
 		 * @param array|WP_Error $result The import's report, or why it failed.
 		 */
 		$keep = (bool) apply_filters( 'riff_import_keep_zip', false, $id, $result );
-		if ( $keep || ( ! is_wp_error( $result ) && ! $result['albums'] ) ) {
+		if ( $keep || ( ! $failed && ! $result['albums'] ) ) {
 			wp_update_post(
 				array(
 					'ID'          => $id,
@@ -400,29 +438,43 @@ final class Import {
 					'post_parent' => $album,
 				)
 			);
-			return $result;
+		} elseif ( $failed ) {
+			self::drop_file( $id );
+		} else {
+			wp_delete_attachment( $id, true );
 		}
-		wp_delete_attachment( $id, true );
 		return $result;
 	}
 
 	/**
-	 * Keeps a zip that did not become an album, and why, for its uploader's next admin screen.
+	 * Deletes a zip's file and keeps its attachment, private, no longer naming the file, so that
+	 * removing the attachment later can't delete another upload given the same path.
 	 *
 	 * @since 6.15.1
 	 *
-	 * @param int      $user  Who uploaded it.
-	 * @param string   $name  The zip's file name.
-	 * @param WP_Error $error Why.
+	 * @param int $id The zip's attachment ID.
+	 * @return bool Whether its file is gone.
 	 */
-	private static function failed( int $user, string $name, WP_Error $error ): void {
-		$failed   = get_transient( self::FAILED . $user );
-		$failed   = is_array( $failed ) ? $failed : array();
-		$failed[] = array(
-			'name'    => $name,
-			'message' => $error->get_error_message(),
-		);
-		set_transient( self::FAILED . $user, array_slice( $failed, -10 ), WEEK_IN_SECONDS );
+	public static function drop_file( int $id ): bool {
+		$file = get_attached_file( $id );
+		if ( $file ) {
+			// A zip has no sizes: its one file, only ever from inside uploads, as core deletes one.
+			wp_delete_file_from_directory( $file, wp_get_upload_dir()['basedir'] );
+			if ( file_exists( $file ) ) {
+				return false;
+			}
+		}
+		delete_post_meta( $id, '_wp_attached_file' );
+		delete_post_meta( $id, '_wp_attachment_metadata' );
+		if ( 'private' !== get_post_field( 'post_status', $id ) ) {
+			wp_update_post(
+				array(
+					'ID'          => $id,
+					'post_status' => 'private',
+				)
+			);
+		}
+		return true;
 	}
 
 	/**
@@ -441,16 +493,23 @@ final class Import {
 		}
 		delete_transient( self::FAILED . $user );
 		$html = '';
-		foreach ( $failed as $zip ) {
+		foreach ( $failed as $id ) {
+			$zip = get_post_meta( (int) $id, self::ERROR, true );
+			if ( ! is_array( $zip ) ) {
+				continue;
+			}
 			$html .= sprintf(
 				'<p>%s</p>',
 				sprintf(
 					/* translators: 1: A zip's file name. 2: Why it was not imported. */
-					esc_html__( '%1$s did not become an album, and has been removed: %2$s Upload it again once that is fixed.', 'riff' ),
+					esc_html__( '%1$s did not become an album: %2$s Its file has been removed. Upload it again once that is fixed, and remove it from the Media Library.', 'riff' ),
 					'<strong>' . esc_html( (string) ( $zip['name'] ?? '' ) ) . '</strong>',
 					esc_html( (string) ( $zip['message'] ?? '' ) )
 				)
 			);
+		}
+		if ( '' === $html ) {
+			return;
 		}
 		wp_admin_notice(
 			$html,
@@ -493,6 +552,29 @@ final class Import {
 			}
 		}
 		return $left;
+	}
+
+	/**
+	 * The zips that did not become albums and whose file is still there, as when a site kept them
+	 * with riff_import_keep_zip.
+	 *
+	 * @since 6.15.1
+	 *
+	 * @return int[] Attachment IDs.
+	 */
+	public static function failed_with_files(): array {
+		$zips = get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
+				'meta_key'       => self::ERROR, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- a maintenance command, run once.
+			)
+		);
+		return array_values( array_map( 'intval', array_filter( $zips, static fn( $id ) => '' !== (string) get_post_meta( (int) $id, '_wp_attached_file', true ) ) ) );
 	}
 
 	/**

@@ -402,9 +402,10 @@ final class Cli {
 	 * Before 6.15.1, a zip uploaded to the Media Library was attached to its album's post once it
 	 * was imported, and kept. Core serves an upload's file at a public address, so each one holds
 	 * the tracks its import Protected, unprotected. This finds each zip attached to the album post
-	 * its own import made, and deletes its attachment and file. A zip attached to a post as a
-	 * download, or attached to no post, is left as it is. A zip kept with the riff_import_keep_zip
-	 * filter is one of these, and is deleted too.
+	 * its own import made, and deletes its attachment and file; and each zip that did not become an
+	 * album and still has its file, and deletes the file, keeping the attachment, private, with why.
+	 * A zip attached to a post as a download, or attached to no post by an earlier version, is left
+	 * as it is. A zip kept with the riff_import_keep_zip filter is one of these, and is deleted too.
 	 *
 	 * ## OPTIONS
 	 *
@@ -435,6 +436,18 @@ final class Cli {
 				++$deleted;
 			} else {
 				WP_CLI::warning( sprintf( 'Could not delete %s (attachment %d)', $name, $id ) );
+			}
+		}
+		foreach ( Import::failed_with_files() as $id ) {
+			$name = wp_basename( (string) get_attached_file( $id ) );
+			if ( $dry ) {
+				WP_CLI::log( sprintf( 'Would delete the file of %s, which did not import (attachment %d)', $name, $id ) );
+				++$deleted;
+			} elseif ( Import::drop_file( $id ) ) {
+				WP_CLI::log( sprintf( 'Deleted the file of %s, which did not import (attachment %d)', $name, $id ) );
+				++$deleted;
+			} else {
+				WP_CLI::warning( sprintf( 'Could not delete the file of %s (attachment %d)', $name, $id ) );
 			}
 		}
 		WP_CLI::success( $dry ? sprintf( 'Dry run. %d imported zips to delete.', $deleted ) : sprintf( '%d imported zips deleted.', $deleted ) );

@@ -167,7 +167,7 @@ Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
 
 ### `riff_import_keep_zip`
 
-Filters whether to keep a zip uploaded to the Media Library once it has been imported, attached to its first album's post, instead of deleting it. Unsafe for protected music: core serves the zip's file at a public address without asking WordPress, so whoever finds it downloads every track the import Protected. Only for a site whose music is all public anyway, or whose server refuses requests for uploaded zips. A zip that held no audio is kept whatever this says. Defaults to false.
+Filters whether to keep a zip uploaded to the Media Library once its import ends, file and all, instead of deleting it: attached to its first album's post as before 6.15.1, or attached to nothing when it failed. Unsafe for protected music: core serves the zip's file at a public address without asking WordPress, so whoever finds it downloads every track the import Protected. Only for a site whose music is all public anyway, or whose server refuses requests for uploaded zips. A zip that held no audio is kept whatever this says. Defaults to false.
 
 Since 6.15.1. Fires in `plugins/riff/src/class-import.php`.
 
@@ -371,7 +371,7 @@ Since 6.3.0. Fires in `plugins/riff/templates/player.php`.
 
 ### `riff_import_zip_done`
 
-Fires once a zip uploaded to the Media Library has been imported, or has failed to be, just before Riff deletes it, unless riff_import_keep_zip keeps it, or it held no audio. Its attachment and file are still there. A host that keeps uploads elsewhere, or a copy of them, can remove its own copy here too.
+Fires once a zip uploaded to the Media Library has been imported, or has failed to be, before Riff deletes anything: then a zip that became albums is deleted, and only the file of one that failed, whose attachment stays, private, with why in its Import::ERROR meta (`_riff_import_error`). Nothing is deleted when riff_import_keep_zip keeps it, or when it held no audio. A host that keeps uploads elsewhere, or a copy of them, can remove its own copy here too.
 
 Since 6.15.1. Fires in `plugins/riff/src/class-import.php`.
 

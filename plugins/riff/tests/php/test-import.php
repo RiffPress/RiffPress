@@ -735,7 +735,7 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertFileDoesNotExist( $file, 'its file is deleted too' );
 	}
 
-	public function test_a_zip_that_fails_to_import_is_deleted_and_its_uploader_told_why_once(): void {
+	public function test_a_zip_that_fails_to_import_loses_its_file_and_keeps_why_for_its_uploader_and_host(): void {
 		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
 		wp_set_current_user( $editor );
 		$root         = sys_get_temp_dir() . '/riff-import-' . wp_generate_password( 8, false );
@@ -756,8 +756,17 @@ class Test_Riff_Import extends Riff_TestCase {
 
 		$this->assertWPError( $result );
 		$this->assertSame( array( true ), $fired );
-		$this->assertNull( get_post( $id ) );
-		$this->assertFileDoesNotExist( $file );
+		$this->assertFileDoesNotExist( $file, 'its file is deleted' );
+		$this->assertSame( 'private', get_post_field( 'post_status', $id ), 'its attachment stays, private, for its uploader to remove' );
+		$this->assertSame( '', (string) get_post_meta( $id, '_wp_attached_file', true ), 'and no longer names the file' );
+		$this->assertSame(
+			array(
+				'name'    => 'Broken.zip',
+				'message' => $result->get_error_message(),
+			),
+			get_post_meta( $id, Import::ERROR, true ),
+			'why, for a host to read'
+		);
 
 		wp_set_current_user( $editor );
 		ob_start();
@@ -768,6 +777,12 @@ class Test_Riff_Import extends Riff_TestCase {
 		ob_start();
 		Import::notice();
 		$this->assertSame( '', ob_get_clean(), 'told once' );
+
+		// Uploaded again by the same name, then the failed one removed: the new one is untouched.
+		$again = self::factory()->attachment->create_upload_object( $root . '/Broken.zip' );
+		$this->assertSame( $file, get_attached_file( $again ), 'the same path, free again' );
+		wp_delete_attachment( $id, true );
+		$this->assertFileExists( $file );
 	}
 
 	public function test_a_zip_with_no_audio_is_no_album_and_stays_as_it_was(): void {
@@ -804,19 +819,47 @@ class Test_Riff_Import extends Riff_TestCase {
 		remove_filter( 'riff_import_keep_zip', '__return_true' );
 		$file = get_attached_file( $left );
 		$name = wp_basename( $file );
+		// Failed, and kept by the filter: its file is still there.
+		$root         = sys_get_temp_dir() . '/riff-import-' . wp_generate_password( 8, false );
+		$this->dirs[] = $root;
+		mkdir( $root );
+		file_put_contents( $root . '/Broken.zip', 'Not a zip at all.' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		$failed = self::factory()->attachment->create_upload_object( $root . '/Broken.zip' );
+		add_filter( 'riff_import_keep_zip', '__return_true' );
+		Import::uploaded_zip( $failed );
+		remove_filter( 'riff_import_keep_zip', '__return_true' );
+		$broken = get_attached_file( $failed );
 		// A File block's download on a post of its own.
 		$download = self::factory()->attachment->create_upload_object( $this->zip_of( array( 'press.txt' => 'A press release.' ) ), self::factory()->post->create() );
 
 		WP_CLI::$lines = array();
 		( new Riff\Cli() )->clean_zips( array(), array( 'dry-run' => true ) );
-		$this->assertSame( array( array( 'log', "Would delete $name (attachment $left)" ), array( 'success', 'Dry run. 1 imported zips to delete.' ) ), WP_CLI::$lines );
+		$this->assertSame(
+			array(
+				array( 'log', "Would delete $name (attachment $left)" ),
+				array( 'log', 'Would delete the file of ' . wp_basename( $broken ) . ", which did not import (attachment $failed)" ),
+				array( 'success', 'Dry run. 2 imported zips to delete.' ),
+			),
+			WP_CLI::$lines
+		);
 		$this->assertFileExists( $file, 'a dry run deletes nothing' );
+		$this->assertFileExists( $broken );
 
 		WP_CLI::$lines = array();
 		( new Riff\Cli() )->clean_zips( array(), array() );
-		$this->assertSame( array( array( 'log', "Deleted $name (attachment $left)" ), array( 'success', '1 imported zips deleted.' ) ), WP_CLI::$lines );
+		$this->assertSame(
+			array(
+				array( 'log', "Deleted $name (attachment $left)" ),
+				array( 'log', 'Deleted the file of ' . wp_basename( $broken ) . ", which did not import (attachment $failed)" ),
+				array( 'success', '2 imported zips deleted.' ),
+			),
+			WP_CLI::$lines
+		);
 		$this->assertNull( get_post( $left ) );
 		$this->assertFileDoesNotExist( $file );
+		$this->assertFileDoesNotExist( $broken );
+		$this->assertSame( 'private', get_post_field( 'post_status', $failed ), 'a failed one keeps its attachment, private' );
+		$this->assertIsArray( get_post_meta( $failed, Import::ERROR, true ), 'with why' );
 		$this->assertNotNull( get_post( $download ), 'a download is left as it is' );
 	}
 }

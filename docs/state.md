@@ -133,7 +133,7 @@ Besides the turntable and Now Playing above:
 | `_riff_video` | `class-media.php` (the Media Library), `class-fields.php` (DataViews), `class-import.php` | low: each sanitises on its own path. |
 | `riff_likes`, `riff_history` (user options) | `class-likes.php`, `class-likes-rest.php` | medium: read, change, write, with no lock; two devices at once lose one ([#978](https://github.com/RiffPress/RiffPress/issues/978)). |
 | `riff_protected_move_state`, `riff_protected_move_lock` | `class-protected-files.php` (the background pass), `class-protected-cli.php` | medium: the command clears the cursor before taking the lock; the stale-lock steal is a read then a write. |
-| `riff_import_failed_{user}` (transient) | `class-import.php` (each zip import that fails, in WP-Cron, and the admin notice that shows and clears it) | low: read, change, write, with no lock; two of one person's imports failing at once may lose one's notice. |
+| `riff_import_failed_{user}` (transient), `_riff_import_error` (attachment meta) | `class-import.php` (each zip import that fails, in WP-Cron, and the admin notice that shows and clears the transient); a host may write its own note beside the meta | low: the transient is read, changed and written with no lock, so two of one person's imports failing at once may lose one's notice; the reason stays on the attachment. |
 | `riff_catalog_backfill`, `riff_catalog_backfill_from` | `class-catalog.php` (cron), `class-cli.php` (reset) | low |
 | `riff_passkeys` and `riff_passkey_id` | `riff-sign-in/src/class-passkeys.php`, `class-sign-in.php` | medium: two copies of the same keys, kept in step by hand. |
 
