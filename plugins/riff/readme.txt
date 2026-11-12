@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.13.0
+Stable tag: 6.14.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.14.0 =
+* Riff Chimera sings from the panel beside the page, its heads drawn as large as the panel, and an open docked view no longer covers the sidebar.
+* About, with its credits, is open beside the page by default, and its cover offers the deck full screen.
+
 = 6.13.0 =
 * The deck's lamps glow the display's amber, its strobe lamp is a turned and fluted knob, and its keys' legends share one line.
 * Fixed: the AudioContext and the WebGL deck start once nothing is moving, and a held-up frame no longer jumps the music's pitch.
@@ -160,8 +164,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 6.10.1 =
 * Fixed: main's checks pass again with Riff Chimera, its dictionary vendored as plain text.
 * Fixed: the deck is drawn in WebGL at every size, its keys along the front of a laptop's window.
-
-= 6.10.0 =
-* Riff Chimera, an experimental view where CHIMERA's simulated voice sings the track's melody with the recording, a voice per singer.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

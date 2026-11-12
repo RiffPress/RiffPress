@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff, riff-sing
-Stable tag: 0.3.1
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ CHIMERA is (c) 2026 Jameson Hodge, under the MIT licence, in assets/chimera/LICE
 
 == Changelog ==
 
+= 0.4.0 =
+* Riff Chimera sings from the panel beside the page, its heads drawn as large as the panel, and an open docked view no longer covers the sidebar.
+
 = 0.3.1 =
 * Faster: a view the app fetches is sent alone, tabs are fetched only when wanted, and catalog counts are kept without an object cache.
 
@@ -47,8 +50,5 @@ CHIMERA is (c) 2026 Jameson Hodge, under the MIT licence, in assets/chimera/LICE
 
 = 0.1.1 =
 * Fixed: main's checks pass again with Riff Chimera, its dictionary vendored as plain text.
-
-= 0.1.0 =
-* Riff Chimera, an experimental view where CHIMERA's simulated voice sings the track's melody with the recording, a voice per singer.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
