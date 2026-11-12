@@ -82,8 +82,68 @@ test( 'a draft, or a release without its zip, is named; others are left alone', 
 		{ tag_name: 'wp-api-coverage-v0.1.0', draft: false, assets: [] },
 		{ tag_name: 'riff-desktop-v0.1.0', draft: true, assets: [] },
 	];
-	assert.deepStrictEqual( releaseProblems( releases, pkgs ), [
-		'riff-chimera-v0.2.0 is still a draft',
-		'riff-sing-v0.8.0 is published without riff-sing.zip',
-	] );
+	const found = releaseProblems( releases, pkgs );
+	assert.strictEqual( found.length, 2 );
+	assert.match( found[ 0 ], /^riff-chimera-v0\.2\.0 is still a draft: / );
+	assert.match( found[ 1 ], /^riff-sing-v0\.8\.0 is published without riff-sing\.zip: / );
+} );
+
+test( 'a draft says how it came about and both ways out', () => {
+	const [ found ] = releaseProblems( [ { tag_name: 'riff-v6.12.0', draft: true, assets: [] } ], packages( config ) );
+	assert.match( found, /did not finish/ );
+	assert.match( found, /"is not 6\.12\.0"/, 'names the message an unsynced tag fails with' );
+	assert.match( found, /gh release delete riff-v6\.12\.0 --cleanup-tag --yes/ );
+	assert.match( found, /re-run the failed job/ );
+} );
+
+/*
+ * The release train's interlock: a release pull request is a draft, which GitHub will not merge,
+ * from the moment release-please may rebuild it until sync-versions has checked the synced commit.
+ * These hold the workflow to that order, since nothing else would notice a step moved.
+ */
+const workflow = fs.readFileSync( path.join( root, '.github/workflows/release-please.yml' ), 'utf8' );
+const job = ( name ) => {
+	const start = workflow.indexOf( `\n  ${ name }:\n` );
+	assert.ok( start >= 0, `${ name } job exists` );
+	const next = workflow.slice( start + 1 ).search( /\n  [a-z-]+:\n/ );
+	return workflow.slice( start, next < 0 ? undefined : start + 1 + next );
+};
+
+test( 'release-please opens its pull request as a draft', () => {
+	assert.strictEqual( config[ 'draft-pull-request' ], true );
+} );
+
+test( 'the open release pull request is made a draft before release-please can rebuild it', () => {
+	const steps = job( 'release-please' );
+	const hold = steps.indexOf( 'gh pr ready "$NUMBER" --undo' );
+	const action = steps.indexOf( 'uses: googleapis/release-please-action@' );
+	assert.ok( hold > 0 && action > 0 && hold < action, 'the draft step runs first' );
+	assert.match( steps.slice( 0, action ), /exit 1/, 'and a failure stops the job before release-please runs' );
+} );
+
+test( 'only sync-versions marks it ready, after checking the commit it pushed is synced', () => {
+	const steps = job( 'sync-versions' );
+	const push = steps.indexOf( 'git push' );
+	const tree = steps.indexOf( 'release-check.js tree' );
+	const changelog = steps.indexOf( 'readme-changelog.js --check' );
+	const same = steps.indexOf( '"$REMOTE_SHA" != "$HEAD_SHA"' );
+	const ready = steps.search( /gh pr ready "\$NUMBER"\n/ );
+	assert.ok( push > 0 && push < tree && tree < changelog && changelog < same && same < ready, 'push, check, compare, ready' );
+	assert.strictEqual( workflow.match( /gh pr ready "\$NUMBER"\n/g ).length, 1, 'nothing else marks it ready' );
+	assert.match( steps, /pull-requests: write/ );
+} );
+
+test( 'sync-versions passes quietly when the release branch is gone', () => {
+	const steps = job( 'sync-versions' );
+	const check = steps.indexOf( 'Check the release branch still exists' );
+	assert.ok( check > 0 && check < steps.indexOf( 'actions/checkout@' ) );
+	const after = steps.slice( check ).split( '\n      - ' ).slice( 1 );
+	for ( const step of after ) {
+		assert.match( step, /if: steps\.branch\.outputs\.exists == 'true'/, step.split( '\n' )[ 0 ] );
+	}
+} );
+
+test( 'CI runs the full suite on the release pull request while it is a draft', () => {
+	const ci = fs.readFileSync( path.join( root, '.github/workflows/ci.yml' ), 'utf8' );
+	assert.match( ci, /heavy: .*! github\.event\.pull_request\.draft \|\| github\.head_ref == 'release-please--branches--main'/ );
 } );
