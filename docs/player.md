@@ -233,7 +233,7 @@ add_action( 'riff_register', function () {
 ```
 
 A control's `order` places it among Riff's own: Like (10), the badges (20),
-Lyrics (30), Sing (32), Chords (34), About (36), Up next (40), Together (45), Play on another
+Lyrics (30), Sing (32), Chords and Chimera (34), About (36), Up next (40), Together (45), Play on another
 device (60) and the volume (70). `wide`
 keeps a control's button off a phone's bar, which holds the track, Play and only what a
 control asks to keep there; a view's button is wide unless it says otherwise. A view that is the
