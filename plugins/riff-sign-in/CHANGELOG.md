@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.6.0...riff-sign-in-v0.6.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **riff-sign-in:** signing in takes JSON from the site's own pages, the email link names its account, and nothing answers differently for a member ([#1083](https://github.com/RiffPress/RiffPress/issues/1083)) ([73312d7](https://github.com/RiffPress/RiffPress/commit/73312d70e0a437a6fbcd0dbdffdc72c1825951f6))
+
 ## [0.6.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.5.1...riff-sign-in-v0.6.0) (2026-11-10)
 
 
