@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.1.0...riff-chimera-v0.1.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **chimera:** main's checks pass again with Riff Chimera, its dictionary vendored as plain text ([#1042](https://github.com/RiffPress/RiffPress/issues/1042)) ([34463fe](https://github.com/RiffPress/RiffPress/commit/34463fef9cad11bf37d4d710b91947340ffa0314))
+
 ## 0.1.0 (2026-11-11)
 
 

@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.9.0
+Stable tag: 6.10.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.10.1 =
+* Fixed: main's checks pass again with Riff Chimera, its dictionary vendored as plain text.
+* Fixed: the deck is drawn in WebGL at every size, its keys along the front of a laptop's window.
+
 = 6.10.0 =
 * Riff Chimera, an experimental view where CHIMERA's simulated voice sings the track's melody with the recording, a voice per singer.
 
@@ -168,12 +172,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 6.7.1 =
 * Fixed: a zip that a storage plugin keeps in object storage is brought to the server and imported.
 * Fixed: a deleted site takes its protected files with it when a host keeps them outside uploads.
-
-= 6.7.0 =
-* The deck is as large as the window allows, holds its scene while a new album arrives, and its keys spring and lean and its record sways in the light as real ones do.
-* The turntable is drawn lit in WebGL where a graphics card can, stands alone in a wide Now Playing with its own keys and display, and a press on the record puts the needle down there.
-* Fixed: Bindings and Protect forget what they cached when a post or its meta changes, and Export keeps an archive's statements with its own handle.
-* Fixed: an empty riff_profile_url hides Edit profile instead of printing a link that reloads the app.
-* Fixed: one answer to "is it playing", so the button, riff.playing() and the saved state agree while the needle is cued.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
