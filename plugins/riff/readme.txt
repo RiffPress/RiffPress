@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.12.0
+Stable tag: 6.13.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,11 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.13.0 =
+* The deck's lamps glow the display's amber, its strobe lamp is a turned and fluted knob, and its keys' legends share one line.
+* Fixed: the AudioContext and the WebGL deck start once nothing is moving, and a held-up frame no longer jumps the music's pitch.
+* Faster: a view the app fetches is sent alone, tabs are fetched only when wanted, and catalog counts are kept without an object cache.
+
 = 6.12.0 =
 * A plugin's view can live in the Listen app's sidebar, and Riff Chimera sings from there.
 * Fixed: an album's header sits square on its cover, with a longer title set smaller and its quieter lines readable on a light cover.
@@ -158,13 +163,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.10.0 =
 * Riff Chimera, an experimental view where CHIMERA's simulated voice sings the track's melody with the recording, a voice per singer.
-
-= 6.9.0 =
-* What visitors can't see is marked Private for those who can.
-* Fixed: a cover that can't be shown is a blank record, never a broken image.
-* Fixed: a private post or a draft opens and plays for whoever may read it.
-* Fixed: the Private mark is an eye with a slash, hidden from others, not a blocked circle.
-* Fixed: a pointer left on Now Playing's close button no longer keeps the bar and the switch over a video.
-* Fixed: the deck keeps its shape at every size, its controls on its plinth and none under 44px.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
