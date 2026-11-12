@@ -96,10 +96,18 @@ function releaseProblems( releases, pkgs ) {
 		if ( ! pkg ) {
 			continue;
 		}
+		const name = release.tag_name;
 		if ( release.draft ) {
-			found.push( `${ release.tag_name } is still a draft` );
+			found.push(
+				`${ name } is still a draft: release-please tagged it and its release job did not finish. ` +
+					`If the job's log says the zip "is not ${ tag.version }", the tag is on a commit whose versions were never synced; ` +
+					`it can never build, so delete the draft and its tag (gh release delete ${ name } --cleanup-tag --yes) and release from a synced commit. ` +
+					`Otherwise re-run the failed job (docs/ecosystem.md, "When the release train stops").`
+			);
 		} else if ( pkg.zip && ! ( release.assets || [] ).some( ( asset ) => asset.name === pkg.zip ) ) {
-			found.push( `${ release.tag_name } is published without ${ pkg.zip }` );
+			found.push(
+				`${ name } is published without ${ pkg.zip }: build it from the tag with .github/scripts/build-zip.sh ${ pkg.component } and attach it (gh release upload ${ name } build/${ pkg.zip }).`
+			);
 		}
 	}
 	return found;

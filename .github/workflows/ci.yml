@@ -42,8 +42,10 @@ jobs:
       code: ${{ steps.filter.outputs.code || steps.everything.outputs.code }}
       # A draft gets lint, the references and the Node tests; PHPUnit, Playwright and Plugin Check
       # wait until it is marked ready, so each push to a draft in review doesn't take a full set of
-      # runners for minutes and leave the queue behind it.
-      heavy: ${{ ( steps.filter.outputs.code || steps.everything.outputs.code ) == 'true' && ! github.event.pull_request.draft }}
+      # runners for minutes and leave the queue behind it. The release pull request is the exception:
+      # it is a draft until its versions are synced, and is then marked ready by GITHUB_TOKEN, which
+      # starts no run, so the full suite runs on its synced commit while it is still a draft.
+      heavy: ${{ ( steps.filter.outputs.code || steps.everything.outputs.code ) == 'true' && ( ! github.event.pull_request.draft || github.head_ref == 'release-please--branches--main' ) }}
     steps:
       # A scheduled or manual run has no diff to filter; run the whole suite.
       - id: everything

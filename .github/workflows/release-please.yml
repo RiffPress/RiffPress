@@ -46,6 +46,34 @@ jobs:
       coverage_tag: ${{ steps.release.outputs['packages/wp-api-coverage--tag_name'] }}
       release_branches: ${{ steps.release-prs.outputs.branches }}
     steps:
+      # A release pull request is a draft until sync-versions below has written
+      # and checked its version strings, so nobody, an admin included, can merge
+      # it while it says one version in the manifest and another in the plugins:
+      # GitHub refuses to merge a draft. release-please opens it as a draft
+      # (draft-pull-request in release-please-config.json) but leaves an open one
+      # as it is when it rebuilds the branch, dropping the sync commit, so it is
+      # made a draft again here, before release-please touches it. When this
+      # fails, nothing runs: a rebuild with the pull request still mergeable is
+      # how 6.12.0, 6.13.0, 6.14.1 and 6.14.2 were tagged on unsynced commits.
+      - name: Hold the open release pull request as a draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # This repository's branch only: a fork's pull request can use the same branch name.
+          OPEN=$(gh pr list --state open --head release-please--branches--main --json number,isDraft,isCrossRepository --jq '.[] | select((.isDraft | not) and (.isCrossRepository | not)) | .number')
+          for NUMBER in $OPEN; do
+            for attempt in 1 2 3; do
+              if gh pr ready "$NUMBER" --undo; then
+                echo "#$NUMBER is a draft until its versions are synced."
+                continue 2
+              fi
+              sleep $(( attempt * 10 ))
+            done
+            echo "::error::Could not make release pull request #$NUMBER a draft, so release-please was not run: rebuilding it while it can be merged could release an unsynced tree. Re-run this workflow."
+            exit 1
+          done
       # GITHUB_TOKEN can open the release pull request because "Allow GitHub
       # Actions to create and approve pull requests" is on for the repository.
       # GitHub holds that pull request's CI runs for approval; the sync-versions
@@ -92,16 +120,35 @@ jobs:
         branch: ${{ fromJSON(needs.release-please.outputs.release_branches) }}
     permissions:
       contents: write
-      pull-requests: read
+      # Marking the pull request ready for review once its versions are synced.
+      pull-requests: write
       # Approving held workflow runs needs actions: write.
       actions: write
     steps:
+      # The pull request can merge between release-please's job and this one,
+      # and GitHub then deletes its branch; there is nothing left to sync.
+      - name: Check the release branch still exists
+        id: branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: ${{ matrix.branch }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/${GH_REPO}/branches/${BRANCH}" --silent 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::${BRANCH} no longer exists (its pull request merged or closed); nothing to sync."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.branch.outputs.exists == 'true'
         with:
           persist-credentials: false
           ref: ${{ matrix.branch }}
           fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.branch.outputs.exists == 'true'
         with:
           node-version-file: .nvmrc
       # release-please rebuilds a release pull request only when its package's
@@ -110,6 +157,7 @@ jobs:
       # merged in here and pushed with the synced versions below; release-please
       # replaces the branch outright the next time it rebuilds it.
       - name: Bring the release branch up to date with main
+        if: steps.branch.outputs.exists == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -119,6 +167,7 @@ jobs:
       # The packages this pull request releases are the ones whose manifest
       # version differs from main's; each is synced by its component name.
       - name: Sync the version strings of the packages it releases
+        if: steps.branch.outputs.exists == 'true'
         run: |
           set -euo pipefail
           CHANGED=$(jq -r --argjson main "$(git show origin/main:.release-please-manifest.json)" 'to_entries[] | select(.value != $main[.key]) | .key' .release-please-manifest.json)
@@ -133,6 +182,7 @@ jobs:
             bash scripts/sync-versions.sh "$component"
           done
       - name: Commit synced versions back to the release pull request
+        if: steps.branch.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           BRANCH: ${{ matrix.branch }}
@@ -152,6 +202,7 @@ jobs:
       # (A workflow_dispatch run on the same commit is not; its check runs
       # never reach the pull request's status rollup.)
       - name: Approve the held CI runs on the release branch
+        if: steps.branch.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -172,6 +223,31 @@ jobs:
             gh api --method POST "repos/${GH_REPO}/actions/runs/${RUN}/approve" >/dev/null
             echo "Approved run ${RUN}."
           done
+      # The one way out of draft: the commit on the branch is the one checked
+      # here, and every plugin's header, define, Stable tag and readme changelog
+      # say what the manifest and CHANGELOG.md say. A release-please rebuild
+      # since the push leaves the branch on another commit, and it stays a draft
+      # for the next run to sync.
+      - name: Mark the release pull request ready once its versions are synced
+        if: steps.branch.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: ${{ matrix.branch }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/release-check.js tree
+          node .github/scripts/readme-changelog.js --check
+          HEAD_SHA=$(git rev-parse HEAD)
+          REMOTE_SHA=$(gh api "repos/${GH_REPO}/branches/${BRANCH}" --jq .commit.sha)
+          if [[ "$REMOTE_SHA" != "$HEAD_SHA" ]]; then
+            echo "::notice::${BRANCH} moved to ${REMOTE_SHA} after ${HEAD_SHA} was synced; it stays a draft until the next run syncs it."
+            exit 0
+          fi
+          NUMBER=$(gh pr list --state open --head "$BRANCH" --json number --jq '.[0].number // empty')
+          [[ -n "$NUMBER" ]] || exit 0
+          gh pr ready "$NUMBER"
+          echo "#$NUMBER is synced at ${HEAD_SHA} and ready to merge."
 
   # When Riff's release pull request merges, release-please tags the commit and
   # creates the GitHub release as a draft. Releases here are immutable once
