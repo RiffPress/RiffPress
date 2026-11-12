@@ -4,7 +4,7 @@
  * section calls another through it (P.paint(), P.load()) and none has to be loaded before the rest.
  * Mutable state lives on P, never in a section's closure, so a feature loaded later sees the same
  * queue the rest does. */
-import { fmt, spoken, speak } from 'riff-player/helpers';
+import { calm, fmt, spoken, speak } from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -231,13 +231,19 @@ export function createPlayer( root, data ) {
 	// The optional features (the meter, gestures, the lock screen, Cast, sharing, the wake lock)
 	// are modules loaded when first needed, each registered as a dynamic dependency of the player so
 	// the import map names it. A module that cannot load leaves the player without that feature.
+	// One whose start holds the page for a while (the WebGL deck) is fetched at once and started
+	// once nothing is moving (calm()).
 	const features = new Map();
-	P.feature = ( name ) => {
+	P.feature = ( name, { quiet = false } = {} ) => {
 		if ( ! features.has( name ) ) {
 			features.set(
 				name,
 				import( `riff-player/${ name }` )
-					.then( ( m ) => m.default( P ) )
+					.then( ( m ) =>
+						quiet
+							? new Promise( ( start ) => calm( () => start( m.default( P ) ) ) )
+							: m.default( P )
+					)
 					.catch( () => null )
 			);
 		}

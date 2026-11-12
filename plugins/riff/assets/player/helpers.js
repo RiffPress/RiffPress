@@ -326,3 +326,34 @@ export function coverAccent( c, backgrounds ) {
 	}
 	return null;
 }
+
+// Work done once that holds the page's thread for a while (an AudioContext opening the sound
+// device, a WebGL context compiling its shaders) waits until nothing on the page is moving: run
+// in the middle of Now Playing opening or a view coming in, it would stop that animation for as
+// long as it takes, and stall whatever is stepped from frames, the music's speed among them. What
+// moves for good (the platter's turn, the bars' keyframes) and what moves for minutes (the arm's
+// sweep across the record) doesn't count. Out of sight, or after `within` milliseconds, it runs
+// anyway.
+export function calm( fn, within = 1500 ) {
+	const until = performance.now() + within;
+	const moving = () =>
+		document
+			.getAnimations?.()
+			.some(
+				( a ) =>
+					a.playState === 'running' &&
+					a.effect?.getComputedTiming().endTime <= 5000
+			);
+	const later = ( next ) =>
+		window.requestIdleCallback
+			? requestIdleCallback( next, { timeout: 250 } )
+			: setTimeout( next, 50 );
+	const tryNow = () => {
+		if ( document.hidden || performance.now() >= until || ! moving() ) {
+			fn();
+		} else {
+			later( tryNow );
+		}
+	};
+	later( tryNow );
+}
