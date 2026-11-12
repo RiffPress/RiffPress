@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Riff Chimera (Experimental)
- * Description: Experimental. A Chimera view in the Listen app's sidebar: CHIMERA, a physical model of a human voice, sings the melody Riff Sing has for the track, in time with the recording. Nothing is recorded or sent.
- * Version: 0.3.0
+ * Description: Experimental. A Chimera panel beside the player: CHIMERA, a physical model of a human voice, sings the melody Riff Sing has for the track, in time with the recording. Nothing is recorded or sent.
+ * Version: 0.3.1
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff, riff-sing
@@ -22,7 +22,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'RIFF_CHIMERA_VERSION', '0.3.0' );
+define( 'RIFF_CHIMERA_VERSION', '0.3.1' );
 define( 'RIFF_CHIMERA_URL', plugin_dir_url( __FILE__ ) );
 
 require __DIR__ . '/src/class-chimera.php';
