@@ -71,7 +71,7 @@ test( 'the Chimera button shows only for a track with a melody', async ( { page 
 	await expect( page.locator( '.riff-bar [data-riff-control="chimera"]' ) ).toBeVisible();
 } );
 
-test( 'CHIMERA is fetched when the view opens, sings both parts on a press and stops on Stop and on close', async ( { page } ) => {
+test( 'CHIMERA is fetched when the view opens, starts with the press that opens it and stops on Stop and on close', async ( { page } ) => {
 	const fetched = [];
 	page.on( 'request', ( r ) => {
 		if ( r.url().includes( '/riff-chimera/assets/chimera/' ) ) {
@@ -88,11 +88,11 @@ test( 'CHIMERA is fetched when the view opens, sings both parts on a press and s
 	await expect( panel.locator( '.riff-chimera-head canvas' ) ).toHaveCount( 2 );
 	await expect( panel.locator( '.riff-chimera-name' ) ).toHaveText( [ 'Soprano', 'Alto' ] );
 	await expect( panel.locator( '.riff-chimera-words' ).first() ).toContainText( 'Silent night' );
-	await expect( view ).toHaveAttribute( 'data-state', 'idle' );
-	await expect( view ).not.toHaveAttribute( 'data-sounding', 'true' );
-
-	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
+	// The press that opened the view started the voices: with the music paused they wait for it,
+	// and the view doesn't start it.
 	await expect( view ).toHaveAttribute( 'data-state', 'waiting', { timeout: 15000 } );
+	await expect( view ).not.toHaveAttribute( 'data-sounding', 'true' );
+	expect( await page.evaluate( () => window.riff.playing() ) ).toBe( false );
 	await play( page );
 	await expect( view ).toHaveAttribute( 'data-state', 'singing' );
 	await expect( view, 'the worklet hears itself sing' ).toHaveAttribute( 'data-sounding', 'true', { timeout: 15000 } );
@@ -131,16 +131,15 @@ test( 'while CHIMERA sings, the instrumental plays in the recording\'s place, an
 		} );
 	await load( page, 'Silent Night' );
 	const recording = await page.evaluate( () => window.riff.current().src );
-	const panel = await openView( page, 'chimera' );
-	const view = panel.locator( '.riff-chimera' );
-	await expect( view ).toHaveAttribute( 'data-ready', 'true', { timeout: 20000 } );
-	expect( ( await playing() ).src, 'nothing changes until CHIMERA sings' ).toBe( recording );
-
 	await play( page );
 	await expect.poll( () => page.evaluate( () => window.riff.time() ) ).toBeGreaterThan( 1 );
+	expect( ( await playing() ).src, 'nothing changes until CHIMERA sings' ).toBe( recording );
 	const before = await page.evaluate( () => window.riff.time() );
-	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
-	await expect.poll( async () => ( await playing() ).src, { timeout: 15000 } ).toBe( instrumental );
+
+	// Opening the view starts CHIMERA, and the instrumental with it, from the same second.
+	const panel = await openView( page, 'chimera' );
+	const view = panel.locator( '.riff-chimera' );
+	await expect.poll( async () => ( await playing() ).src, { timeout: 20000 } ).toBe( instrumental );
 	expect( ( await playing() ).time, 'from the same second' ).toBeGreaterThanOrEqual( before - 0.25 );
 	await expect( view ).toHaveAttribute( 'data-state', 'singing' );
 	await expect( view, 'CHIMERA follows the player\'s clock over the instrumental' ).toHaveAttribute( 'data-sounding', 'true', { timeout: 15000 } );
@@ -150,7 +149,7 @@ test( 'while CHIMERA sings, the instrumental plays in the recording\'s place, an
 	await expect.poll( async () => ( await playing() ).src ).toBe( recording );
 	expect( await page.evaluate( () => window.riff.playing() ), 'still playing' ).toBe( true );
 
-	// Closing the view gives the recording back too.
+	// Sing along starts it again; closing the view gives the recording back too.
 	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
 	await expect.poll( async () => ( await playing() ).src, { timeout: 15000 } ).toBe( instrumental );
 	await page.locator( '.riff-bar [data-riff-control="chimera"]' ).click();
@@ -159,10 +158,25 @@ test( 'while CHIMERA sings, the instrumental plays in the recording\'s place, an
 
 	// And so does the next track, which plays from its own file.
 	await openView( page, 'chimera' );
-	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
 	await expect.poll( async () => ( await playing() ).src, { timeout: 15000 } ).toBe( instrumental );
 	await page.evaluate( () => window.riff.next() );
 	await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Joy to the World' );
 	const next = await page.evaluate( () => window.riff.current().src );
 	await expect.poll( async () => ( await playing() ).src ).toBe( next );
+} );
+
+test( 'a view opened with no press, as a script opens it, waits for Sing along', async ( { page } ) => {
+	// The browser's answer, that nothing was pressed: Playwright's own calls into the page count as
+	// presses, so the answer is given rather than waited for.
+	await page.addInitScript( () =>
+		Object.defineProperty( window.Navigator.prototype, 'userActivation', {
+			get: () => ( { isActive: false, hasBeenActive: false } ),
+		} )
+	);
+	await load( page, 'Silent Night' );
+	await page.evaluate( () => window.riff.openView( 'chimera' ) );
+	const view = page.locator( '.riff-chimera' );
+	await expect( view ).toHaveAttribute( 'data-ready', 'true', { timeout: 20000 } );
+	await expect( view ).toHaveAttribute( 'data-state', 'idle' );
+	await expect( page.getByRole( 'button', { name: 'Sing along' } ) ).toBeVisible();
 } );
