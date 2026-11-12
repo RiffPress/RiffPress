@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.14.1
+Stable tag: 6.14.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.14.2 =
+* Fixed: Back, Forward, Home and search are one cluster in the middle of the strip.
+
 = 6.14.1 =
 * Fixed: a refused upload's notice stays in sight beside an open panel, and the account menu test waits for the view it opens.
 * Fixed: the whole head of the sidebar in the frame folds and opens it, not only the icon.
@@ -162,8 +165,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 6.12.0 =
 * A plugin's view can live in the Listen app's sidebar, and Riff Chimera sings from there.
 * Fixed: an album's header sits square on its cover, with a longer title set smaller and its quieter lines readable on a light cover.
-
-= 6.11.0 =
-* A song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
