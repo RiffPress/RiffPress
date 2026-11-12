@@ -139,11 +139,14 @@ final class Chimera {
 		wp_enqueue_style( 'riff-chimera' );
 		wp_add_inline_style(
 			'riff-chimera',
-			// The heads, the words, the controls and the status fill the view, a duet's heads side by side
-			// sharing it; the notes sit below and scroll into view. A head's canvas is redrawn at its
-			// size and the screen's pixel ratio, its proportions kept, by CHIMERA's own drawing.
-			'#riff .riff-chimera{display:flex;flex-direction:column;gap:12px;height:100%}'
-			. '#riff .riff-chimera-stage{flex:0 0 100%;display:flex;flex-direction:column;gap:12px;min-height:0}'
+			// The heads, the words, the controls and the status fill the view below Now Playing's header
+			// (its padding at the top kept to a little), a duet's heads side by side sharing it; the
+			// notes sit below and scroll into view above the bar. The view is the size container, so
+			// the stage is at least its height. A head's canvas is redrawn at its size and the
+			// screen's pixel ratio, its proportions kept, by CHIMERA's own drawing.
+			'#riff .riff-view-chimera{padding-top:16px;container-type:size}'
+			. '#riff .riff-chimera{display:flex;flex-direction:column;gap:12px}'
+			. '#riff .riff-chimera-stage{flex:none;min-height:100cqh;display:flex;flex-direction:column;gap:12px}'
 			. '#riff .riff-chimera-heads{flex:1 1 0;min-height:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:16px}'
 			. '#riff .riff-chimera-singer{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}'
 			. '#riff .riff-chimera-head{flex:1 1 0;min-height:140px;border-radius:8px;overflow:hidden;background:#000}'

@@ -197,6 +197,12 @@ test( 'the heads fill the view, the words, controls and status in sight above th
 	expect( head.height, 'most of the view is the heads' ).toBeGreaterThan( view.height * 0.55 );
 	expect( head.width, 'a duet\'s two side by side' ).toBeLessThan( heads.width / 2 );
 	expect( status.bottom, 'the status line in sight, above the bar' ).toBeLessThanOrEqual( Math.min( view.bottom, bar.top ) );
+	expect( heads.top - view.top, 'no band of the view\'s own above the heads' ).toBeLessThanOrEqual( 24 );
+	// The notes below scroll fully into view above the bar.
+	await page.locator( '[data-riff-view="chimera"]' ).evaluate( ( e ) => ( e.scrollTop = e.scrollHeight ) );
+	const last = await box( '.riff-chimera > p:last-child' );
+	expect( last.bottom, 'the last note above the bar' ).toBeLessThanOrEqual( bar.top );
+	expect( last.top ).toBeGreaterThanOrEqual( view.top );
 	// Drawn at its size on screen and the screen's pixel ratio (at most 2), so it is neither blurred nor stretched.
 	await expect
 		.poll( () =>
