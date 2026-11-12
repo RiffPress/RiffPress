@@ -58,5 +58,7 @@ final class Plugin {
 		Listen\First_Run::register();
 		Listen\Together::register();
 		Listen\Home_View::register();
+		// The tags a link preview reads, from what the Listen feature knows of the site.
+		Share::register();
 	}
 }

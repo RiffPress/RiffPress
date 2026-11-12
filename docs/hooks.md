@@ -189,6 +189,19 @@ Since 6.5.0. Fires in `plugins/riff/src/class-mcp.php`.
 | --- | --- | --- |
 | `$on` | `bool` | Whether it is on, from Settings › Riff. Default false. |
 
+### `riff_open_graph`
+
+Filters the Open Graph and link-card tags Riff prints in the head of the site's own address and its Listen page, keyed by property (`og:title`) or, for `description` and the `twitter:` tags, by name. Empty prints none. It is empty already where an SEO plugin prints its own tags, and it runs only for what a signed-out visitor may see, never on a private site.
+
+A host that calls every site's previews by its own name sets `og:site_name` here.
+
+Since 6.16.0. Fires in `plugins/riff/src/class-share.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$tags` | `string[]` | The tags, keyed by property or name. |
+| `$context` | `array` | `{ kind: 'site', page: int, url: string }`: the Listen page's ID, 0 for a theme's front page, and the page's address. |
+
 ### `riff_post_blocks`
 
 Filters whether a post's blocks are served as a tree at riff/v1/posts/{id}/blocks to someone who cannot edit the post.
@@ -262,6 +275,17 @@ Since 5.7.0. Fires in `plugins/riff/src/class-protect.php`.
 | `$url` | `string` | Signed address, or empty. |
 | `$id` | `int` | Attachment ID. |
 | `$expires` | `int` | When the address should stop working, as a Unix time: an hour on. |
+
+### `riff_share_image`
+
+Filters the image a link to the site's own address or its Listen page is previewed with: Riff's card, or where it can't draw one, the largest album cover or the site's icon. A picture link previews can show only, PNG, JPEG, GIF or WebP, and never a protected file's address: anything else is ignored, and Riff's own is used.
+
+Since 6.16.0. Fires in `plugins/riff/src/class-share.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$image` | `array\|null` | `{ url, width, height, alt }`, or null for none. |
+| `$context` | `array` | `{ kind: 'site', page: int, url: string }`, as `riff_open_graph` has it. |
 
 ### `riff_sources`
 
