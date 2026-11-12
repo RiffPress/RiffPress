@@ -9,9 +9,19 @@
  * A view is opened from its button in the bar, and on a phone from its chip in Now Playing (the
  * album, the stage, from the bar itself, which has no button for it): a screen of Now Playing,
  * which takes the whole screen above the bar (the album, the lyrics; now-playing.js shows them),
- * or a panel beside the page, as Up next is. Pressing the button of the one open goes back to the
- * page. One panel shows at a time, and the one a listener
- * leaves open opens again on their next visit. window.riff.view() gives a registered view what it
+ * a panel beside the page, as Up next is, or a view of the Listen app's sidebar. Pressing the button
+ * of the one open goes back to the page. One panel shows at a time, and the one a listener leaves
+ * open opens again on their next visit.
+ *
+ * A sidebar view is docked in the Listen app's sidebar on a wide screen (Registry::dock()), under a
+ * row of its own whose button opens and closes it there, so the listener browses beside it: its
+ * panel is moved into its row. Docked views are not panels: several may be open at once, each
+ * beside whatever panel or screen is, and each stays open as the listener moves about the app, as
+ * Now Playing opens and closes, and with the sidebar folded to its rail (where the app opens the
+ * sidebar for one opened from the bar). Those left open open again on the next visit, once their
+ * script says they have something for the track. Wherever there is no sidebar to dock in, a
+ * phone, the app as tabs, a page of the site, a sidebar view is a panel like any other; one docked
+ * as the window narrows past the sidebar closes, to open again in the dock once it widens. window.riff.view() gives a registered view what it
  * does as it opens, or adds one the server didn't know of. A view can say it has nothing for a
  * track (its shown()): its button and chip hide while that track plays, and if it is open as the
  * track changes it gives way. */
@@ -24,6 +34,12 @@ const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 // An id names a control in data-riff-control and a view in data-riff-view.
 const ID = /^[a-z][a-z0-9-]*$/;
+
+// Where a view is: a screen of Now Playing, a panel beside the page, or the Listen app's sidebar.
+const PLACES = [ 'screen', 'side', 'sidebar' ];
+const placeOf = ( place ) => ( PLACES.includes( place ) ? place : 'screen' );
+// A panel, or a sidebar view, which is one wherever there is no sidebar.
+const panelish = ( v ) => v?.place === 'side' || v?.place === 'sidebar';
 
 export function registry( P ) {
 	const { $, $$, root, emit } = P;
@@ -114,6 +130,14 @@ export function registry( P ) {
 			chip.hidden = ! fits( chip.dataset.riffOpens, t );
 			chip.setAttribute( 'aria-pressed', String( isOpen( chip.dataset.riffOpens ) ) );
 		}
+		for ( const row of dock?.querySelectorAll( '[data-riff-dock-item]' ) || [] ) {
+			const id = row.dataset.riffDockItem;
+			row.hidden = ! fits( id, t );
+			row.querySelector( '[data-riff-dock-opens]' )?.setAttribute(
+				'aria-expanded',
+				String( docked.has( id ) )
+			);
+		}
 	}
 
 	function control( id, spec ) {
@@ -191,14 +215,15 @@ export function registry( P ) {
 	let opener = null;
 
 	for ( const [ id, v ] of Object.entries( P.data.views || {} ) ) {
+		const place = placeOf( v.place );
 		views.set( id, {
 			label: String( v.label || '' ),
-			place: v.place === 'side' ? 'side' : 'screen',
+			place,
 			stage: !! v.stage,
 			el:
-				v.place === 'side'
-					? side?.querySelector( `[data-riff-panel="${ id }"]` )
-					: $( `.riff-np [data-riff-view="${ id }"]` ),
+				place === 'screen'
+					? $( `.riff-np [data-riff-view="${ id }"]` )
+					: side?.querySelector( `[data-riff-panel="${ id }"]` ),
 			spec: {},
 		} );
 	}
@@ -228,7 +253,10 @@ export function registry( P ) {
 		if ( ! v ) {
 			return false;
 		}
-		return v.place === 'side'
+		if ( docked.has( id ) ) {
+			return true;
+		}
+		return panelish( v )
 			? P.panelOpen === id
 			: root.classList.contains( 'is-open' ) && P.showing === id;
 	}
@@ -238,7 +266,9 @@ export function registry( P ) {
 		if ( ! v ) {
 			return;
 		}
-		if ( v.place === 'side' ) {
+		if ( v.place === 'sidebar' && docks() && rowOf( id ) ) {
+			dockOpen( id, { from } );
+		} else if ( panelish( v ) ) {
 			show( id, { from } );
 		} else {
 			P.open( id );
@@ -247,12 +277,160 @@ export function registry( P ) {
 
 	function close( id ) {
 		const v = views.get( id );
-		if ( v?.place === 'side' ) {
-			hide();
+		if ( docked.has( id ) ) {
+			dockClose( id );
+		} else if ( panelish( v ) ) {
+			if ( P.panelOpen === id ) {
+				hide();
+			}
 		} else if ( v ) {
 			P.close();
 		}
 	}
+
+	// ---- The dock, in the Listen app's sidebar: drawn by the server with the sidebar
+	// (Registry::dock()) and kept as the app draws its sidebar again (views.js), so what is open in
+	// it stays as the listener browses.
+	const DOCK = 'riff:dock';
+	const docked = new Set();
+	const dock = document.querySelector( '[data-riff-dock]' );
+	const rowOf = ( id ) => dock?.querySelector( `[data-riff-dock-item="${ id }"]` );
+	const toggleOf = ( id ) => rowOf( id )?.querySelector( '[data-riff-dock-opens]' );
+	// Whether the sidebar is there to dock in, as the app's stylesheet says (--riff-dock): on a
+	// wide screen, full or folded to its rail.
+	const docks = () =>
+		!! dock &&
+		getComputedStyle( dock ).getPropertyValue( '--riff-dock' ).trim() === 'sidebar';
+
+	// A sidebar view's region, under its row while there is a sidebar, or among the panels.
+	function home( id ) {
+		const v = views.get( id );
+		if ( v?.place !== 'sidebar' || ! v.el ) {
+			return;
+		}
+		const body = docks() ? rowOf( id )?.querySelector( '.riff-dock-body' ) : null;
+		const to = body || side;
+		if ( to && v.el.parentNode !== to ) {
+			to.append( v.el );
+		}
+		// Docked, its row's body shows and hides it; among the panels, it is hidden until it opens.
+		v.el.hidden = ! body && P.panelOpen !== id;
+	}
+
+	// The sidebar views a listener left open, docked or as a panel: each kept until they close it,
+	// whether or not it is open now.
+	const kept = () => ( read( localStorage, DOCK ) || '' ).split( ' ' ).filter( Boolean );
+	function keep( id, on ) {
+		const ids = kept().filter( ( other ) => other !== id );
+		write( localStorage, DOCK, ( on ? [ ...ids, id ] : ids ).join( ' ' ) );
+	}
+
+	// Opened under its row. From its button in the bar, focus goes to its row, as a panel's goes
+	// to its heading; from its row, it stays.
+	function dockOpen( id, { from = null, quiet = false } = {} ) {
+		const body = rowOf( id )?.querySelector( '.riff-dock-body' );
+		if ( ! body || ! views.get( id )?.el ) {
+			return;
+		}
+		home( id );
+		body.hidden = false;
+		docked.add( id );
+		if ( ! quiet ) {
+			keep( id, true );
+			const head = toggleOf( id );
+			if ( from !== head ) {
+				head?.focus( { preventScroll: true } );
+			}
+			rowOf( id ).scrollIntoView?.( { block: 'nearest' } );
+		}
+		draw();
+		fill( id );
+	}
+
+	// Closed under its row. Focus that was in it goes to its row, or, with that hidden (it had
+	// nothing for the track), to Play.
+	function dockClose( id, { quiet = false } = {} ) {
+		if ( ! docked.delete( id ) ) {
+			return;
+		}
+		const body = rowOf( id )?.querySelector( '.riff-dock-body' );
+		const within = !! body?.contains( document.activeElement );
+		if ( body ) {
+			body.hidden = true;
+		}
+		if ( ! quiet ) {
+			keep( id, false );
+		}
+		draw();
+		if ( within ) {
+			[ toggleOf( id ), ...$$( '.riff-play' ) ]
+				.find( ( node ) => node?.isConnected && node.checkVisibility?.() !== false )
+				?.focus( { preventScroll: true } );
+		}
+		announce( id, false );
+	}
+
+	// The views a listener left open in the dock, open again once each has something for the
+	// track: as a track comes, and as a view's script arrives to say whether it does.
+	function reopenDock() {
+		if ( ! docks() ) {
+			return;
+		}
+		for ( const id of kept() ) {
+			if ( views.get( id )?.place === 'sidebar' && ! docked.has( id ) && fits( id ) ) {
+				dockOpen( id, { quiet: true } );
+			}
+		}
+	}
+
+	// As the window crosses the width where the sidebar comes and goes: what was docked closes,
+	// kept to open again in the dock, and a sidebar view open as a panel closes to open there.
+	let docking = null;
+	function rehome() {
+		const now = docks();
+		if ( now === docking ) {
+			return;
+		}
+		// As the page starts, nothing opens yet: not before the views' scripts can say whether they
+		// have something for the track.
+		const starting = docking === null;
+		docking = now;
+		if ( ! now ) {
+			[ ...docked ].forEach( ( id ) => dockClose( id, { quiet: true } ) );
+		} else if ( views.get( P.panelOpen )?.place === 'sidebar' ) {
+			hide( { quiet: true } );
+		}
+		for ( const [ id, v ] of views ) {
+			if ( v.place === 'sidebar' ) {
+				home( id );
+			}
+		}
+		if ( now && ! starting ) {
+			reopenDock();
+		}
+	}
+
+	// A row's button opens and closes its view; Escape in a view closes it, back to its row.
+	dock?.addEventListener( 'click', ( e ) => {
+		const head = e.target.closest( '[data-riff-dock-opens]' );
+		if ( head && ! e.defaultPrevented ) {
+			e.stopPropagation();
+			const id = head.dataset.riffDockOpens;
+			if ( docked.has( id ) ) {
+				dockClose( id );
+			} else {
+				dockOpen( id, { from: head } );
+			}
+		}
+	} );
+	dock?.addEventListener( 'keydown', ( e ) => {
+		const row = e.target.closest( '.riff-dock-body' )?.closest( '[data-riff-dock-item]' );
+		if ( e.key === 'Escape' && row && docked.has( row.dataset.riffDockItem ) ) {
+			e.preventDefault();
+			e.stopPropagation();
+			dockClose( row.dataset.riffDockItem );
+		}
+	} );
 
 	function toggle( id, from ) {
 		if ( isOpen( id ) ) {
@@ -273,9 +451,10 @@ export function registry( P ) {
 
 	// A view the server didn't draw, from a script: its region, its button and its chip.
 	function adopt( id, spec ) {
-		const place = spec.place === 'side' ? 'side' : 'screen';
+		const place = placeOf( spec.place );
 		let el;
-		if ( place === 'side' ) {
+		let row = null;
+		if ( place !== 'screen' ) {
 			el = document.createElement( 'div' );
 			el.className = `riff-panel riff-panel-${ id }`;
 			el.dataset.riffPanel = id;
@@ -291,6 +470,9 @@ export function registry( P ) {
 		}
 		el.hidden = true;
 		const order = Number.isFinite( spec.order ) ? spec.order : 50;
+		if ( place === 'sidebar' && dock ) {
+			row = dockRow( id, spec, order );
+		}
 		const button = make( id, { icon: spec.icon } );
 		button.dataset.riffOpens = id;
 		button.dataset.riffOrder = String( order );
@@ -317,8 +499,45 @@ export function registry( P ) {
 				unbar();
 				chip.remove();
 				el.remove();
+				row?.remove();
 			},
 		};
+	}
+
+	// A sidebar view's row in the dock, as the server draws one (Registry::dock()), in its order.
+	function dockRow( id, spec, order ) {
+		const row = document.createElement( 'div' );
+		row.className = 'riff-dock-item';
+		row.dataset.riffDockItem = id;
+		row.dataset.riffOrder = String( order );
+		const head = document.createElement( 'h2' );
+		head.className = 'riff-dock-head';
+		const press = document.createElement( 'button' );
+		press.type = 'button';
+		press.className = 'riff-dock-toggle';
+		press.id = `riff-dock-toggle-${ id }`;
+		press.dataset.riffDockOpens = id;
+		press.setAttribute( 'aria-expanded', 'false' );
+		press.setAttribute( 'aria-controls', `riff-dock-body-${ id }` );
+		// An icon from the code that added the view, never from the page.
+		press.innerHTML = typeof spec.icon === 'string' ? spec.icon : '';
+		const words = document.createElement( 'span' );
+		words.className = 'riff-dock-label';
+		words.textContent = String( spec.label );
+		press.append( words );
+		head.append( press );
+		const body = document.createElement( 'div' );
+		body.className = 'riff-dock-body';
+		body.id = `riff-dock-body-${ id }`;
+		body.setAttribute( 'role', 'region' );
+		body.setAttribute( 'aria-labelledby', press.id );
+		body.hidden = true;
+		row.append( head, body );
+		const next = [ ...dock.querySelectorAll( '[data-riff-dock-item]' ) ].find(
+			( r ) => ( Number( r.dataset.riffOrder ) || 50 ) > order
+		);
+		dock.insertBefore( row, next || null );
+		return row;
 	}
 
 	function view( id, spec ) {
@@ -331,9 +550,14 @@ export function registry( P ) {
 			// One the server drew: it takes what it does as it opens from here.
 			known.spec = spec;
 			draw();
-			if ( isOpen( id ) ) {
+			if ( docked.has( id ) && ! fits( id ) ) {
+				// Opened again in the dock before its script said it has nothing for the track: it
+				// closes, still kept to open again.
+				dockClose( id, { quiet: true } );
+			} else if ( isOpen( id ) ) {
 				settleView( id );
 			}
+			reopenDock();
 			return () => {
 				if ( views.get( id ) === known ) {
 					known.spec = {};
@@ -358,8 +582,10 @@ export function registry( P ) {
 			forget();
 		};
 		views.set( id, made );
+		home( id );
 		draw();
 		reopen();
+		reopenDock();
 		return made.forget;
 	}
 
@@ -379,8 +605,17 @@ export function registry( P ) {
 			! active ||
 			active === document.body ||
 			!! v.el?.contains( active ) ||
-			active.dataset?.riffOpens === id;
-		if ( v.place === 'side' ) {
+			active.dataset?.riffOpens === id ||
+			active.dataset?.riffDockOpens === id;
+		if ( docked.has( id ) ) {
+			// Its row hides with it: focus that was there goes to Play.
+			dockClose( id );
+			if ( lost && document.activeElement?.dataset?.riffDockOpens === id ) {
+				$$( '.riff-play' )
+					.find( ( node ) => node.checkVisibility?.() !== false )
+					?.focus( { preventScroll: true } );
+			}
+		} else if ( panelish( v ) ) {
 			hide();
 			if ( lost && ! side.contains( document.activeElement ) ) {
 				$$( '.riff-play' )
@@ -426,8 +661,9 @@ export function registry( P ) {
 		 * @param {string}      detail.id    The view's id.
 		 * @param {boolean}     detail.open  Whether it is open now.
 		 * @param {HTMLElement} detail.view  Its region: `[data-riff-view="<id>"]` for a screen of its
-		 *                                   own, `[data-riff-panel="<id>"]` for a panel, and Now
-		 *                                   Playing itself for the album.
+		 *                                   own, `[data-riff-panel="<id>"]` for a panel and for a
+		 *                                   sidebar view, docked or not, and Now Playing itself for
+		 *                                   the album.
 		 * @param {Object|null} detail.track The track playing.
 		 * @param {Object}      api          `window.riff`.
 		 */
@@ -481,14 +717,17 @@ export function registry( P ) {
 		}
 	}
 	window.addEventListener( 'resize', () => {
+		rehome();
 		if ( P.panelOpen ) {
 			settle();
 		}
 	} );
+	// The Listen app's frame changes as the window does (templates/standalone.php).
+	window.addEventListener( 'riff:frame', rehome );
 
 	function show( id, { from = null, quiet = false } = {} ) {
 		const v = views.get( id );
-		if ( ! v || v.place !== 'side' ) {
+		if ( ! v || ! panelish( v ) ) {
 			return;
 		}
 		const was = P.panelOpen;
@@ -496,7 +735,8 @@ export function registry( P ) {
 			announce( was, false );
 		}
 		for ( const [ other, o ] of views ) {
-			if ( o.place === 'side' && o.el ) {
+			// A docked view is not among the panels, and stays as it is.
+			if ( panelish( o ) && o.el && o.el.parentNode === side ) {
 				o.el.hidden = other !== id;
 			}
 		}
@@ -509,6 +749,9 @@ export function registry( P ) {
 		if ( ! quiet ) {
 			opener = from || document.activeElement;
 			write( localStorage, PANEL, id );
+			if ( v.place === 'sidebar' ) {
+				keep( id, true );
+			}
 		}
 		P.panelOpen = id;
 		side.hidden = false;
@@ -537,6 +780,9 @@ export function registry( P ) {
 		cover( false );
 		if ( ! quiet ) {
 			write( localStorage, PANEL, '' );
+			if ( v.place === 'sidebar' ) {
+				keep( id, false );
+			}
 		}
 		// Focus goes back to what opened it, or to its button in the bar, or, with those hidden
 		// (the panel had nothing for the track), to Play.
@@ -561,6 +807,7 @@ export function registry( P ) {
 		if ( P.panelOpen ) {
 			settleView( P.panelOpen );
 		}
+		[ ...docked ].forEach( settleView );
 		if ( isOpen( P.showing ) ) {
 			settleView( P.showing );
 		} else if ( ! P.np.hidden && P.showing && fits( P.showing ) ) {
@@ -568,6 +815,7 @@ export function registry( P ) {
 			fill( P.showing );
 		}
 		reopen();
+		reopenDock();
 	} );
 
 	// Escape closes the panel, and stays with it; on a phone Tab keeps to it.
@@ -616,7 +864,8 @@ export function registry( P ) {
 			id &&
 			! P.panelOpen &&
 			! P.deckAlone?.() &&
-			views.get( id )?.place === 'side' &&
+			panelish( views.get( id ) ) &&
+			! ( views.get( id ).place === 'sidebar' && docks() ) &&
 			P.track() &&
 			fits( id ) &&
 			beside()
@@ -624,6 +873,9 @@ export function registry( P ) {
 			show( id, { quiet: true } );
 		}
 	}
+
+	// Each sidebar view in its row, where there is a sidebar.
+	rehome();
 
 	// Up next, Riff's own: the track playing kept in sight as it opens.
 	view( 'queue', {
@@ -638,8 +890,10 @@ export function registry( P ) {
 		drawControls: draw,
 		view,
 		openView: ( id ) => open( String( id ) ),
-		closeView: () => {
-			if ( P.panelOpen ) {
+		closeView: ( id ) => {
+			if ( id !== undefined && id !== null ) {
+				close( String( id ) );
+			} else if ( P.panelOpen ) {
 				hide();
 			} else {
 				P.close();

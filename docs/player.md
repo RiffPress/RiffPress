@@ -149,6 +149,22 @@ Focus moves to the panel's name as it opens, and Escape or Close hands it back t
 The one a listener leaves open opens again on their next visit, on a wide screen; that choice is
 kept in the browser, nowhere else.
 
+A plugin's view can live in the Listen app's **sidebar** instead (`'place' => 'sidebar'`), as
+Riff Chimera's does, so it never takes over the page. On a wide screen it is docked at the
+sidebar's foot under a row of its own, its icon and name, a button that opens and closes it
+beneath (`aria-expanded`), and the listener browses beside it: the sidebar is drawn again with
+each view the app shows, but the dock is kept as it is, so what a docked view is doing carries on.
+Its button in the bar opens and closes it there too, says whether it is open (`aria-pressed`) and
+moves focus to its row; Escape inside it closes it, back to its row. Docked views are not panels:
+several may be open at once, from different plugins, each in its order, beside whatever panel or
+screen is, and opening or closing Now Playing leaves them as they are. Folded to its rail, the
+sidebar shows each as its icon, and pressing one, or its button in the bar, opens the sidebar to
+it. Those a listener leaves open open again on their next visit, once each says it has something
+for the track (`riff:dock`, in the browser). Wherever there is no sidebar, on a phone, in the app
+as tabs, on a page of the site, a sidebar view is a panel like the others, so a plugin registers it
+once; one docked as the window narrows past the sidebar closes, to open again in the dock when it
+widens.
+
 ## About
 
 About is the track playing: its cover, its title, its artist and its album, and the credits its
@@ -210,7 +226,7 @@ add_action( 'riff_register', function () {
 		'label'  => __( 'Credits', 'my-plugin' ),
 		'icon'   => '<svg viewBox="0 0 24 24">…</svg>',
 		'order'  => 32,
-		'place'  => 'screen', // Or 'side', for a panel beside the page.
+		'place'  => 'screen', // Or 'side', for a panel beside the page, or 'sidebar', docked in the Listen app's sidebar.
 		'render' => fn() => '<p>' . esc_html__( 'Loading…', 'my-plugin' ) . '</p>',
 	) );
 } );
@@ -233,7 +249,8 @@ as it opens and again as the track changes while it is open; the `riff.view` act
 anything for the track: while it says no, its button and chip hide, and an open view gives way as
 above.
 Both also add a control or a view the server didn't register, for what only the browser knows.
-`window.riff.openView( id )` and `closeView()` open and close one. The bar is updated in place as
+`window.riff.openView( id )` and `closeView( id )` open and close one; `closeView()` with no id
+closes the panel that is open, or else Now Playing, never a docked view. The bar is updated in place as
 the track changes and never drawn again, so a control keeps focus while the music plays.
 [docs/javascript.md](javascript.md) has the whole of it.
 

@@ -16,6 +16,7 @@ use Riff\Catalog_Rest;
 use Riff\Library;
 use Riff\Player;
 use Riff\Private_Site;
+use Riff\Registry;
 use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
@@ -188,10 +189,11 @@ final class Browse {
 				esc_html( $label )
 			);
 		}
-		// Your Library under the views, in the sidebar. Only standalone mode's sidebar
-		// shows it; as tabs there is no room.
+		// Your Library under the views, in the sidebar, and at its foot the dock for the player's
+		// views that live there (Registry::dock()). Only standalone mode's sidebar shows them; as
+		// tabs there is no room, and the player opens those views as panels instead.
 		if ( Standalone::active() ) {
-			$html .= Collection::sidebar( $page, $current ) . Standalone::install_card();
+			$html .= Collection::sidebar( $page, $current ) . Standalone::install_card() . Registry::dock();
 		}
 		// A plain GET form, so search works without the script; the page's own arguments ride along
 		// for a site without pretty permalinks.

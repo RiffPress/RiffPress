@@ -9,18 +9,18 @@ Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A Chimera view in Riff's Now Playing: CHIMERA, a physical model of a human voice, sings the track's melody along with the recording.
+A Chimera view in the Listen app's sidebar: CHIMERA, a physical model of a human voice, sings the track's melody along with the recording while you browse.
 
 == Description ==
 
 **This plugin is experimental.** It is for fun, it may change or go away between versions, and the voice is a simulation, not a singer: expect it to sound like a talented robot.
 
-Riff Chimera adds a Chimera view to Riff's Now Playing, opened from its button in the player's bar, for any track Riff Sing has a melody for.
+Riff Chimera adds a Chimera view for any track Riff Sing has a melody for. In the Listen app on a wide screen it is docked in the sidebar, under its own row: open it there, or from its button in the player's bar, and keep browsing albums while CHIMERA sings. With the sidebar folded to its rail, its icon opens the sidebar to it. Without a sidebar, on a phone or a page of your site, it opens as a panel beside the page, as Up next does.
 
 * The voice is [CHIMERA](https://github.com/jamesondh/chimera-vocal-synth), by Jameson Hodge: lungs, vocal folds, a throat, a tongue, a jaw and lips simulated as it sings, with no recordings of anyone in it. Its cutaway head is drawn in the view, moving as it sings.
 * The melody is the one Riff Sing keeps for the track, typed in its Melody field or from its Melody file, so Riff Sing must be active. Riff Chimera stores nothing of its own.
 * While CHIMERA sings, a song with an instrumental version (Riff Sing's Instrumental field) plays it in place of the recording, from the same second and at the same speed, so the recording's own singers are out of the way. The recording comes back when CHIMERA stops, the view closes or the track changes. A song without one plays as it always has.
-* Opening the view starts CHIMERA: it sings with the recording, following it as it plays, pauses, jumps and changes speed, and if the music is paused it waits for it to play. It stops when you press Stop, leave the view, close Now Playing, change track or leave the page, and Sing along starts it again. A view opened without a press, as a script may open it, waits for Sing along, since browsers let a page make sound only after one.
+* Opening the view starts CHIMERA: it sings with the recording, following it as it plays, pauses, jumps and changes speed, and if the music is paused it waits for it to play. It stops when you press Stop, close the view, change track or leave the page, and Sing along starts it again. Browsing the app, or opening and closing Now Playing, leaves it singing. A view opened without a press, as a script may open it, waits for Sing along, since browsers let a page make sound only after one.
 * A duet's two singers (UltraStar's P1 and P2, with P3's lines sung by both) are two CHIMERAs with different voices, low part and high part, their heads facing each other, each with a Solo to hear them alone.
 * The Voice slider sets how loud CHIMERA is. The player's own volume sets the recording's, so turning it down leaves CHIMERA alone.
 * CHIMERA reads English and Korean. A melody whose chart names another language, or whose words are in another script, is sung on "ah", and the view says so.

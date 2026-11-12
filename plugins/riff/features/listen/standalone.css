@@ -107,6 +107,12 @@ html.has-riff .riff-standalone .riff-app {
 	font-weight: 600;
 }
 
+/* The player's dock lives in the sidebar, below; without one, as on a phone
+   or as tabs, the player opens its views as panels. */
+.riff-standalone .riff-dock {
+	display: none;
+}
+
 /* On a wide screen standalone mode is laid out like the apps people know: a
    column on the left with the site's name, search and the views, and the view
    beside it. The column stays put while the view scrolls. Not on a phone on
@@ -258,6 +264,141 @@ html.has-riff .riff-standalone .riff-app {
 	.riff-standalone .riff-app-install {
 		flex: none;
 		margin-top: 16px;
+	}
+
+	/* The player's dock (Registry::dock(), registry.js): the views a plugin
+	   registers for the sidebar, each under a row of its own that opens and
+	   closes it, at the column's foot. It keeps to the foot as the library
+	   scrolls, so it is always in reach, and a row hiding or a view opening
+	   moves neither the tabs nor the library. --riff-dock tells the player
+	   it may dock here; anywhere else it opens these views as panels. What a
+	   view draws takes the player's tokens, given the sidebar's colours. */
+	.riff-standalone .riff-dock {
+		--riff-dock: sidebar;
+		--riff-bg: var(--riff-app-bg);
+		--riff-surface: var(--riff-app-surface);
+		--riff-fg: var(--riff-app-ink);
+		--riff-fg-2: var(--riff-app-ink-2);
+		--riff-fg-3: var(--riff-app-ink-2);
+		--riff-line: var(--riff-app-line);
+		--riff-hover: var(--riff-app-surface);
+		--riff-accent: var(--riff-app-accent);
+		--riff-focus-ring: var(--riff-app-focus-ring);
+		--riff-focus-ring-offset: var(--riff-app-focus-ring-offset);
+		display: flex;
+		position: sticky;
+		bottom: 0;
+		flex: none;
+		flex-direction: column;
+		order: 2;
+		gap: 2px;
+		margin-top: auto;
+		padding: 8px 0 0;
+		border-top: 1px solid var(--riff-app-line);
+		background: var(--riff-app-bg);
+		z-index: 1;
+	}
+
+	/* With no row to show, as before any plugin registers one, it isn't
+	   there. */
+	.riff-standalone .riff-dock:not(:has(> .riff-dock-item:not([hidden]))),
+	.riff-standalone .riff-dock-item[hidden],
+	.riff-standalone .riff-dock-body[hidden] {
+		display: none;
+	}
+
+	.riff-standalone .riff-dock-head {
+		margin: 0;
+		font: inherit;
+	}
+
+	/* A row is a tab's size and shape, with a chevron that turns as its view
+	   opens. */
+	.riff-standalone .riff-app .riff-dock-toggle {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 48px;
+		padding: 0 12px;
+		border: 0;
+		border-radius: 8px;
+		background: none;
+		color: var(--riff-app-ink);
+		font: inherit;
+		font-size: 15px;
+		text-align: start;
+		cursor: pointer;
+	}
+
+	.riff-standalone .riff-app .riff-dock-toggle::after {
+		content: "";
+		flex: none;
+		width: 6px;
+		height: 6px;
+		margin: -4px 4px 0 auto;
+		border: solid currentcolor;
+		border-width: 0 1.5px 1.5px 0;
+		transform: rotate(45deg);
+	}
+
+	.riff-standalone .riff-app .riff-dock-toggle[aria-expanded="true"]::after {
+		margin-top: 4px;
+		transform: rotate(-135deg);
+	}
+
+	.riff-standalone .riff-app .riff-dock-toggle:hover,
+	.riff-standalone .riff-app .riff-dock-toggle[aria-expanded="true"] {
+		background: var(--riff-app-surface);
+	}
+
+	.riff-standalone .riff-app .riff-dock-toggle:focus-visible {
+		outline: var(--riff-app-focus-ring);
+		outline-offset: var(--riff-app-focus-ring-offset);
+	}
+
+	.riff-standalone .riff-dock-toggle svg {
+		display: block;
+		flex: none;
+		width: 24px;
+		height: 24px;
+	}
+
+	.riff-standalone .riff-dock-label {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* An open view scrolls in its own room, so the library stays in sight
+	   above it. */
+	.riff-standalone .riff-dock-body {
+		max-height: min(50dvh, 480px);
+		padding: 8px 4px;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		color: var(--riff-app-ink);
+	}
+
+	/* On the rail a row is its icon over a small label, as the tabs are; a
+	   view open there waits, open, for the sidebar to open again. */
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-dock-toggle {
+		flex-direction: column;
+		justify-content: center;
+		gap: 4px;
+		min-height: 72px;
+		padding: 0;
+		font-size: 10px;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-dock-label {
+		max-width: 100%;
+	}
+
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-dock-toggle::after,
+	.riff-standalone .riff-app[data-sidebar="mini"] .riff-dock-body {
+		display: none;
 	}
 
 	/* Your Library, in the sidebar: a head with New playlist,

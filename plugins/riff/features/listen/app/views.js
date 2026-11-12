@@ -6,6 +6,31 @@
  * album without opening it. */
 import { fmt } from 'riff-app/helpers';
 
+// The sidebar drawn again, all but the player's dock (Registry::dock()), which stays where the new
+// sidebar has it, never taken out of the page: a view open in it, its focus and what it is doing
+// carry on as the listener browses.
+function sidebarAgain( nav, html ) {
+	const dock = nav.querySelector( ':scope > [data-riff-dock]' );
+	const fresh = document.createElement( 'template' );
+	fresh.innerHTML = html;
+	const mark = [ ...fresh.content.children ].find( ( node ) =>
+		node.matches( '[data-riff-dock]' )
+	);
+	if ( ! dock || ! mark ) {
+		nav.innerHTML = html;
+		return;
+	}
+	for ( const node of [ ...nav.childNodes ] ) {
+		if ( node !== dock ) {
+			node.remove();
+		}
+	}
+	const nodes = [ ...fresh.content.childNodes ];
+	const at = nodes.indexOf( mark );
+	dock.before( ...nodes.slice( 0, at ) );
+	dock.after( ...nodes.slice( at + 1 ) );
+}
+
 export function views( ctx ) {
 	const {
 		api,
@@ -83,7 +108,7 @@ export function views( ctx ) {
 						start: was.selectionStart,
 						end: was.selectionEnd,
 					};
-				nav.innerHTML = bar;
+				sidebarAgain( nav, bar );
 				const field = typing && nav.querySelector( '.riff-app-search input' );
 				if ( field ) {
 					field.value = typing.value;

@@ -1,6 +1,6 @@
 <?php
 /**
- * CHIMERA singing the song, as a view of Now Playing.
+ * CHIMERA singing the song, as a view in the Listen app's sidebar.
  *
  * @package Riff\Chimera
  */
@@ -53,8 +53,9 @@ final class Chimera {
 	}
 
 	/**
-	 * The Chimera view: a screen of Now Playing, its button in the bar after Sing's, as it sings the
-	 * same melody.
+	 * The Chimera view, docked in the Listen app's sidebar, so CHIMERA sings on while the listener
+	 * browses, and a panel beside the page wherever there is no sidebar. Its button in the bar comes
+	 * after Sing's, as it sings the same melody.
 	 */
 	public static function view(): void {
 		riff_register_view(
@@ -63,6 +64,7 @@ final class Chimera {
 				'label' => __( 'Chimera', 'riff-chimera' ),
 				'icon'  => self::ICON,
 				'order' => 34,
+				'place' => 'sidebar',
 			)
 		);
 	}
@@ -139,39 +141,40 @@ final class Chimera {
 		wp_enqueue_style( 'riff-chimera' );
 		wp_add_inline_style(
 			'riff-chimera',
-			// The heads, the words, the controls and the status fill the view below Now Playing's header
-			// (its padding at the top kept to a little), a duet's heads side by side sharing it; the
-			// notes sit below and scroll into view above the bar. The view is the size container, so
-			// the stage is at least its height. A head's canvas is redrawn at its size and the
-			// screen's pixel ratio, its proportions kept, by CHIMERA's own drawing.
-			'#riff .riff-view-chimera{padding-top:16px;container-type:size}'
-			. '#riff .riff-chimera{display:flex;flex-direction:column;gap:12px}'
-			. '#riff .riff-chimera-stage{flex:none;min-height:100cqh;display:flex;flex-direction:column;gap:12px}'
-			. '#riff .riff-chimera-heads{flex:1 1 0;min-height:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:16px}'
-			. '#riff .riff-chimera-singer{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}'
-			. '#riff .riff-chimera-head{flex:1 1 0;min-height:140px;border-radius:8px;overflow:hidden;background:#000}'
-			. '#riff .riff-chimera-head canvas{display:block;width:100%;height:100%}'
-			. '@media (forced-colors:active){#riff .riff-chimera-head{border:1px solid CanvasText}}'
-			. '#riff .riff-chimera-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}'
-			. '#riff .riff-chimera-name{color:var(--riff-fg);font-size:16px;font-weight:600}'
-			. '#riff .riff-chimera-solo[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
-			. '#riff .riff-chimera p{margin:0}'
-			. '#riff .riff-chimera-words{flex:1 1 100%;min-height:1.5em;font-size:20px;font-weight:600;line-height:1.5;color:var(--riff-fg-2)}'
-			. '#riff .riff-chimera-syllable.is-sung{color:var(--riff-fg)}'
-			. '#riff .riff-chimera-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}'
-			. '#riff .riff-chimera-button{min-height:44px;padding:8px 16px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--riff-fg-3);color:var(--riff-fg);font-size:14px;font-weight:600}'
-			. '#riff .riff-chimera-button:hover{box-shadow:inset 0 0 0 1px var(--riff-fg)}'
-			. '#riff .riff-chimera-button.is-primary{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
-			. '#riff .riff-chimera-button[hidden]{display:none}'
-			. '#riff .riff-chimera-button:focus-visible,#riff .riff-chimera-field input:focus-visible,#riff .riff-chimera-note a:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px}'
-			. '#riff .riff-chimera-field{display:flex;align-items:center;gap:8px;min-height:44px;color:var(--riff-fg-2);font-size:14px}'
-			. '#riff .riff-chimera-field input{width:8rem;accent-color:var(--riff-accent)}'
-			. '#riff .riff-chimera-status{min-height:1.4em;color:var(--riff-fg);font-size:14px}'
-			. '#riff .riff-chimera-note{color:var(--riff-fg-2);font-size:14px;line-height:1.5}'
-			. '#riff .riff-chimera-note a{color:inherit}'
-			. '#riff .riff-chimera-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-sizing:border-box;min-height:min(320px,100%);height:100%;padding:32px 24px;text-align:center}'
-			. '#riff .riff-chimera-empty svg{width:40px;height:40px;color:var(--riff-fg-3)}'
-			. '#riff .riff-chimera-message{max-width:24em;margin:0;color:var(--riff-fg);font-size:16px;font-weight:600;line-height:1.4}'
+			// The view is narrow wherever it is, docked in the Listen app's sidebar or a panel beside the
+			// page, so everything stacks: the heads, a duet's side by side facing each other, then the
+			// words, the controls, the status and the notes, scrolling with the view. Its selectors hold
+			// in both places, in the player (#riff) and in the app (.riff-app), whose tokens Riff gives
+			// the dock. A head's canvas is redrawn at its size and the screen's pixel ratio, its
+			// proportions kept, by CHIMERA's own drawing.
+			':is(#riff,.riff-app) .riff-chimera{display:flex;flex-direction:column;gap:12px;color:var(--riff-fg)}'
+			. ':is(#riff,.riff-app) .riff-chimera-stage{display:flex;flex-direction:column;gap:12px}'
+			. ':is(#riff,.riff-app) .riff-chimera-heads{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}'
+			. ':is(#riff,.riff-app) .riff-chimera-singer{display:flex;flex-direction:column;gap:8px;min-width:0}'
+			. ':is(#riff,.riff-app) .riff-chimera-head{aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#000}'
+			. ':is(#riff,.riff-app) .riff-chimera.is-duet .riff-chimera-head{aspect-ratio:3/4}'
+			. ':is(#riff,.riff-app) .riff-chimera-head canvas{display:block;width:100%;height:100%}'
+			. '@media (forced-colors:active){:is(#riff,.riff-app) .riff-chimera-head{border:1px solid CanvasText}}'
+			. ':is(#riff,.riff-app) .riff-chimera-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}'
+			. ':is(#riff,.riff-app) .riff-chimera-name{color:var(--riff-fg);font-size:14px;font-weight:600}'
+			. ':is(#riff,.riff-app) .riff-chimera-solo[aria-pressed="true"]{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
+			. ':is(#riff,.riff-app) .riff-chimera p{margin:0}'
+			. ':is(#riff,.riff-app) .riff-chimera-words{flex:1 1 100%;min-height:1.5em;font-size:16px;font-weight:600;line-height:1.5;color:var(--riff-fg-2);overflow-wrap:anywhere}'
+			. ':is(#riff,.riff-app) .riff-chimera-syllable.is-sung{color:var(--riff-fg)}'
+			. ':is(#riff,.riff-app) .riff-chimera-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}'
+			. ':is(#riff,.riff-app) .riff-chimera-button{min-height:44px;padding:8px 16px;border:0;border-radius:999px;background:none;box-shadow:inset 0 0 0 1px var(--riff-fg-3);color:var(--riff-fg);font:inherit;font-size:14px;font-weight:600;cursor:pointer}'
+			. ':is(#riff,.riff-app) .riff-chimera-button:hover{box-shadow:inset 0 0 0 1px var(--riff-fg)}'
+			. ':is(#riff,.riff-app) .riff-chimera-button.is-primary{background:var(--riff-accent);box-shadow:none;color:var(--riff-bg)}'
+			. ':is(#riff,.riff-app) .riff-chimera-button[hidden]{display:none}'
+			. ':is(#riff,.riff-app) .riff-chimera-button:focus-visible,:is(#riff,.riff-app) .riff-chimera-field input:focus-visible,:is(#riff,.riff-app) .riff-chimera-note a:focus-visible{outline:2px solid var(--riff-accent);outline-offset:2px}'
+			. ':is(#riff,.riff-app) .riff-chimera-field{display:flex;flex:1 1 100%;align-items:center;gap:8px;min-height:44px;color:var(--riff-fg-2);font-size:14px}'
+			. ':is(#riff,.riff-app) .riff-chimera-field input{flex:1;min-width:0;max-width:12rem;margin:0;accent-color:var(--riff-accent)}'
+			. ':is(#riff,.riff-app) .riff-chimera-status{min-height:1.4em;color:var(--riff-fg);font-size:14px}'
+			. ':is(#riff,.riff-app) .riff-chimera-note{color:var(--riff-fg-2);font-size:13px;line-height:1.5}'
+			. ':is(#riff,.riff-app) .riff-chimera-note a{color:inherit}'
+			. ':is(#riff,.riff-app) .riff-chimera-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px 12px;text-align:center}'
+			. ':is(#riff,.riff-app) .riff-chimera-empty svg{width:40px;height:40px;color:var(--riff-fg-3)}'
+			. ':is(#riff,.riff-app) .riff-chimera-message{max-width:24em;margin:0;color:var(--riff-fg);font-size:15px;font-weight:600;line-height:1.4}'
 		);
 	}
 }

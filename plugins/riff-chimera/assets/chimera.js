@@ -1,5 +1,6 @@
-/* Riff Chimera: fills the Chimera view of Now Playing, registered on the server as Riff registers
- * its own (riff_register_view()). The track's melody is Riff Sing's, read from its riff_sing_melody
+/* Riff Chimera: fills the Chimera view, registered on the server as Riff registers its own
+ * (riff_register_view()) for the Listen app's sidebar, where it is docked under a row of its own
+ * while the listener browses, and a panel beside the page wherever there is no sidebar. The track's melody is Riff Sing's, read from its riff_sing_melody
  * or riff_sing_midi field on the media REST route; once the listener presses Sing along, CHIMERA
  * sings it with the recording, following the song through play, pause, seek and speed. A duet's two
  * singers (UltraStar's P1 and P2, and P3's lines for both) are two CHIMERAs, each with its own body,
@@ -20,8 +21,8 @@
  * an AudioContext of their own, made and resumed inside that press, which every browser asks of
  * sound, and kept running while the engine loads; so the player's own audio and its meters are left
  * as they are. A view open with no press, as one remembered across a reload, waits for Sing along. They stop when
- * the listener presses Stop, leaves the view, closes Now Playing, the track changes or the page is
- * hidden. */
+ * the listener presses Stop, closes the view, the track changes or the page is hidden; not as they
+ * browse the app or open and close Now Playing, which leave a docked view open. */
 ( () => {
 	const config = window.riffChimera || {};
 	const melody = window.riffSingMelody;
