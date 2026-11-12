@@ -123,7 +123,7 @@ Besides the turntable and Now Playing above:
 - `riff_liked`: a visitor's likes, sent as an argument (up to 400) so the server can draw Liked songs; each like is a new address and a new entry in the app's cache. Medium.
 - `riff_track` (`P.SHARED`): a shared link's track. Low.
 - `riff-file`, `riff-expires`, `riff-sig`: a protected file's signed address (`class-protect.php`). See browser storage above.
-- `riff_app` (`manifest`, `worker`), `riff-art`, `riff_create_listen_page`: one-off. Low.
+- `riff_app` (`manifest`, `worker`), `riff-art`, `riff-share`, `riff_create_listen_page`: one-off. Low.
 
 ## Options and meta with more than one writer
 
