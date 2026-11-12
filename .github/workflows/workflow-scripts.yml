@@ -1,41 +1,14 @@
 name: Workflow Scripts Tests
 
-# demo-blueprint.test.js reads the blueprint, the site's pages, the workflows, the demo fixtures, and
-# the files that carry the site's address, so a change to any of them runs it too.
+# The tests read across the repository: every plugin's header, isolation.json, assets and source,
+# the generated types, the docs, the site's pages, the workflows and the demo fixtures. A list of
+# paths fell behind what they read, so a change that broke them merged without running them (#1045).
+# They take seconds, so they run on every push to main and every pull request, and by hand.
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/scripts/**'
-      - '.github/workflows/**'
-      - 'blueprint.json'
-      - 'site/**/*.html'
-      - 'site/web/**'
-      - 'packages/fixtures/**'
-      # The demo chart's test reads it with these plugins' own readers.
-      - 'plugins/riff-chords/assets/**'
-      - 'plugins/riff-sing/assets/**'
-      - 'plugins/riff-chimera/assets/*.js'
-      - 'README.md'
-      - 'plugins/riff/riff.php'
-      - 'composer.json'
-      - 'package.json'
   pull_request:
-    paths:
-      - '.github/scripts/**'
-      - '.github/workflows/**'
-      - 'blueprint.json'
-      - 'site/**/*.html'
-      - 'site/web/**'
-      - 'packages/fixtures/**'
-      # The demo chart's test reads it with these plugins' own readers.
-      - 'plugins/riff-chords/assets/**'
-      - 'plugins/riff-sing/assets/**'
-      - 'plugins/riff-chimera/assets/*.js'
-      - 'README.md'
-      - 'plugins/riff/riff.php'
-      - 'composer.json'
-      - 'package.json'
+  workflow_dispatch:
 
 # Disable permissions for all available scopes by default.
 # Any needed permissions should be configured at the job level.
