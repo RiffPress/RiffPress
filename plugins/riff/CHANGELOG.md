@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.12.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.11.0...riff-v6.12.0) (2026-11-12)
+
+
+### Features
+
+* **player:** a plugin's view can live in the Listen app's sidebar, and Riff Chimera sings from there ([#1051](https://github.com/RiffPress/RiffPress/issues/1051)) ([937c3ca](https://github.com/RiffPress/RiffPress/commit/937c3cae5e0e8aaa9d6b464e658999122cb078ab))
+
+
+### Bug Fixes
+
+* **listen:** an album's header sits square on its cover, with a longer title set smaller and its quieter lines readable on a light cover ([#1049](https://github.com/RiffPress/RiffPress/issues/1049)) ([c1e61f8](https://github.com/RiffPress/RiffPress/commit/c1e61f839953f7af4c4fe0d2359706f4ef927631))
+
 ## [6.11.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.10.1...riff-v6.11.0) (2026-11-12)
 
 
