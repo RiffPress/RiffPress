@@ -183,7 +183,7 @@ test.describe( 'Player', () => {
 			queue: 3,
 			playing: true,
 			// What docs/javascript.md promises, and nothing more: tab() went with the tabs, before Riff is on WordPress.org.
-			members: [ 'analyser', 'close', 'closeView', 'control', 'current', 'next', 'on', 'open', 'openView', 'play', 'playing', 'prev', 'queue', 'seek', 'shortcut', 'source', 'speed', 'time', 'toggle', 'version', 'view' ],
+			members: [ 'along', 'analyser', 'close', 'closeView', 'control', 'current', 'next', 'on', 'open', 'openView', 'play', 'playing', 'prev', 'queue', 'seek', 'shortcut', 'source', 'speed', 'time', 'toggle', 'version', 'view' ],
 		} );
 		await page.evaluate( () => window.riff.next() );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(

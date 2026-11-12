@@ -93,3 +93,20 @@ function riff_register_shortcut( string $id, array $args = array() ): bool {
 function riff_listen_page(): int {
 	return Riff\Listen\First_Run::listen_page();
 }
+
+/**
+ * A link that listens along with someone: the site's Listen page, or its front page when it has
+ * none, with `riff-along` set to them. Opened, the player follows them as Listen along in the
+ * Together panel does, once it is ready, if the viewer may; and takes the argument out of the
+ * address, so a reload doesn't follow them again. Unescaped, as add_query_arg() gives it: print it
+ * through esc_url().
+ *
+ * @since 6.15.0
+ *
+ * @param int      $user_id The listener to listen along with.
+ * @param int|null $blog_id The site they listen on, on a network; null for this one.
+ * @return string The link.
+ */
+function riff_together_along_url( int $user_id, ?int $blog_id = null ): string {
+	return Riff\Listen\Together::along_url( $user_id, $blog_id );
+}

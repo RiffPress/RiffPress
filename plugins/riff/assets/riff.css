@@ -2853,6 +2853,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	background: var(--riff-hover);
 }
 
+/* A link to listen along elsewhere (riff_together_elsewhere), drawn as
+   the button is. */
+#riff a.riff-together-button {
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
+}
+
 /* The About panel (about.js): the track, its title over its artist and
    album as links to their pages, then each section under its heading, the
    credits as a name beside what they did, all in a side panel's sizes so a

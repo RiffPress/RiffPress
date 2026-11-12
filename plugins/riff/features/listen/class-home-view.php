@@ -147,6 +147,8 @@ final class Home_View {
 		// Who else is playing, which the script fills; hidden until someone is.
 		if ( Together::available() && true === Listener::signed_in() ) {
 			$html .= Ui::shelf( 'together', __( 'Listening now', 'riff' ), '', '', true, 'div', array( 'together' => rest_url( Library::REST . '/together' ) ) );
+			// And who a host adds from other sites (riff_together_elsewhere), under their own heading.
+			$html .= Ui::shelf( 'together-elsewhere', Together::elsewhere_label( get_current_user_id() ), '', '', true );
 		}
 		if ( $albums['items'] && Views::has( 'albums' ) ) {
 			$html .= Ui::shelf( 'added', __( 'Recently added', 'riff' ), add_query_arg( Browse::VIEW, 'albums', $page ), Browse::album_cards( $albums['items'], $page ) );

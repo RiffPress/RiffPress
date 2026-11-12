@@ -226,6 +226,18 @@ Returns `() => void`: Stops listening.
 
 Since 4.0.0.
 
+### `window.riff.along( user )`
+
+Listens along with another listener on this site, as Listen along in the Together panel does: plays what they play, where they are in it, and keeps with them through their plays, pauses, skips and seeks, until a press of the listener's own. A link from `riff_together_along_url()` does this as the page opens. Where the browser won't start the music without a press, the listener is asked to press play, and that press joins.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `user` | `number` | Their user ID. |
+
+Returns `Promise<boolean>`: Whether they are listening along: false for a visitor, on a site without listening together, or when the one named isn't sharing anything this listener may hear.
+
+Since 6.15.0.
+
 ## Actions and filters
 
 Each change of state is announced twice with the same detail: through `wp.hooks` as `riff.<name>`, for scripts that depend on `wp-hooks`, and as a `riff:<name>` `CustomEvent` on `#riff` that bubbles, for everything else. The filters run only through `wp.hooks`.

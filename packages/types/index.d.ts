@@ -716,6 +716,12 @@ export interface RiffApi {
 	 * @since 4.0.0
 	 */
 	on<K extends keyof RiffEventDetails>(name: K, fn: (detail: RiffEventDetails[K], api: RiffApi) => void): () => void;
+	/**
+	 * Listens along with another listener on this site, as Listen along in the Together panel does: plays what they play, where they are in it, and keeps with them through their plays, pauses, skips and seeks, until a press of the listener's own. A link from `riff_together_along_url()` does this as the page opens. Where the browser won't start the music without a press, the listener is asked to press play, and that press joins.
+	 *
+	 * @since 6.15.0
+	 */
+	along(user: number): Promise<boolean>;
 }
 
 // ---- Actions and filters.

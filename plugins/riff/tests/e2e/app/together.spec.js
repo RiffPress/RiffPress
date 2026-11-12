@@ -243,3 +243,58 @@ test( 'a track\'s … offers to listen along with whoever else is playing it', a
 
 	await context.close();
 } );
+
+test( 'a link to listen along follows the one it names once the player is ready, and leaves the address', async ( {
+	page,
+	browser,
+	baseURL,
+	requestUtils,
+	isMobile,
+} ) => {
+	test.skip( isMobile, 'Two listeners at a computer show it; the link is the same on a phone.' );
+	const admin = await requestUtils.rest( { path: '/wp/v2/users/me' } );
+	// The address riff_together_along_url() gives.
+	const link = `${ listenUrl }${ listenUrl.includes( '?' ) ? '&' : '?' }riff-along=${ admin.id }`;
+
+	// A visitor's player follows no one, and the argument goes all the same.
+	const visitor = await browser.newContext( { baseURL, storageState: { cookies: [], origins: [] } } );
+	const stranger = await visitor.newPage();
+	await stranger.goto( link );
+	await expect.poll( () => stranger.evaluate( () => typeof window.riff?.along ) ).toBe( 'function' );
+	await expect.poll( () => new URL( stranger.url() ).searchParams.has( 'riff-along' ) ).toBe( false );
+	expect( await stranger.evaluate( () => window.riff.along( 1 ) ) ).toBe( false );
+	await visitor.close();
+
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( 0 ).click();
+	await expect.poll( () => page.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
+
+	const context = await browser.newContext( {
+		baseURL,
+		storageState: { cookies: [], origins: [] },
+	} );
+	const guest = await context.newPage();
+	await guest.goto( '/wp-login.php' );
+	await guest.locator( '#user_login' ).fill( GUEST.username );
+	await guest.locator( '#user_pass' ).fill( GUEST.password );
+	await guest.locator( '#wp-submit' ).click();
+	await guest.waitForURL( /wp-admin/ );
+
+	// The admin's share leaves a moment after their play, so a first open may find nothing yet.
+	await expect( async () => {
+		await guest.goto( link );
+		await expect
+			.poll( () => guest.evaluate( () => Number( window.riffInternal?.current()?.id ) ), { timeout: 5000 } )
+			.toBe( audio[ 0 ].id );
+	} ).toPass( { timeout: 30000 } );
+	expect( new URL( guest.url() ).searchParams.has( 'riff-along' ) ).toBe( false );
+	await expect( guest.getByRole( 'region', { name: 'Player' } ).getByText( 'With admin', { exact: true } ) ).toBeVisible();
+
+	// A reload follows no one again.
+	await guest.evaluate( () => window.riffInternal.toggle() );
+	await guest.reload();
+	await guest.waitForTimeout( 2000 );
+	await expect( guest.getByRole( 'region', { name: 'Player' } ).getByText( 'With admin', { exact: true } ) ).toHaveCount( 0 );
+
+	await context.close();
+} );

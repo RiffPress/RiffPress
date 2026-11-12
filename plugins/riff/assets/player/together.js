@@ -203,7 +203,15 @@ export default function together( P ) {
 		}
 	}
 	let pressed = false;
-	own.press.add( () => {
+	own.press.add( ( kind ) => {
+		// The press a browser waited for to start the music: it joins, from where they are now.
+		if ( following && waiting && ( kind === 'toggle' || kind === 'play' ) ) {
+			waiting = false;
+			if ( following.plan && sameTrack( following.plan ) ) {
+				P.el().currentTime = target( following.plan );
+			}
+			return;
+		}
 		if ( following ) {
 			stop(
 				/* translators: %s: The listener's name. */
@@ -274,6 +282,7 @@ export default function together( P ) {
 	let asking = 0;
 	let due = 0;
 	let inFlight = false;
+	let waiting = false; // The music couldn't start without a press of the listener's.
 
 	const sameTrack = ( plan ) =>
 		String( P.track()?.id ) === String( plan.track?.id );
@@ -312,7 +321,21 @@ export default function together( P ) {
 			m.currentTime = to;
 		}
 		if ( plan.playing && ! playing ) {
-			m.play().catch( P.paint );
+			m.play().catch( ( e ) => {
+				P.paint();
+				// A browser that won't start the music without a press, as after a link to listen
+				// along: the listener's next play joins (own.press), where the schedule is by then.
+				if ( e?.name === 'NotAllowedError' && following && ! waiting ) {
+					waiting = true;
+					P.toast(
+						fmt(
+							/* translators: %s: The listener's name. */
+							__( 'Press play to listen along with %s.', 'riff' ),
+							following.name
+						)
+					);
+				}
+			} );
 		} else if ( ! plan.playing && playing ) {
 			m.pause();
 		}
@@ -474,6 +497,7 @@ export default function together( P ) {
 		}
 		const { user, name } = following;
 		following = null;
+		waiting = false;
 		clearInterval( asking );
 		clearTimeout( due );
 		// Back to the listener's own speed, whatever keep() had it at.
@@ -501,6 +525,9 @@ export default function together( P ) {
 	const VIEW = 'together';
 	const ROOM = 15000; // How often the room is asked for while the panel shows it, as Home does.
 	let room = [];
+	// Listeners on other sites a host adds (riff_together_elsewhere), under the heading it names.
+	let elsewhere = [];
+	let elsewhereLabel = '';
 	let roomVersion = null;
 	let roomTimer = 0;
 	let roomTurn = 0; // The latest ask, so only one goes on asking.
@@ -583,18 +610,38 @@ export default function together( P ) {
 						.filter( Boolean )
 						.join( ' · ' ),
 			  } ) );
+		// Outside a session, those a host adds from other sites, each linking to where they are.
+		const others =
+			following || followers.length
+				? []
+				: elsewhere.map( ( l ) => ( {
+						name: String( l.name || '' ),
+						face: String( l.avatar || '' ),
+						along: String( l.along || '' ),
+						sub: [
+							l.track?.title,
+							l.track?.artist,
+							l.site?.name,
+							l.when,
+						]
+							.filter( Boolean )
+							.join( ' · ' ),
+				  } ) );
 		// Who is shown, without what they play: a listener moving on to their next track changes
 		// only that line, in place, so a button keeps its focus.
 		const key = JSON.stringify( [
 			following?.user || 0,
 			followers.length,
 			people.map( ( p ) => [ p.id, p.name, p.face ] ),
+			others.map( ( p ) => [ p.name, p.face, p.along ] ),
+			elsewhereLabel,
 		] );
 		if ( key === drawn ) {
+			const shown = [ ...people, ...others ];
 			into.querySelectorAll( '.riff-together-person' ).forEach( ( li, i ) => {
 				const sub = li.querySelector( '.riff-together-sub' );
-				if ( sub && people[ i ]?.sub && sub.textContent !== people[ i ].sub ) {
-					sub.textContent = people[ i ].sub;
+				if ( sub && shown[ i ]?.sub && sub.textContent !== shown[ i ].sub ) {
+					sub.textContent = shown[ i ].sub;
 				}
 			} );
 			return;
@@ -664,6 +711,9 @@ export default function together( P ) {
 			}
 			if ( people.length ) {
 				box.append( list );
+			} else if ( others.length ) {
+				// No one here, so their heading goes, and those elsewhere are what there is.
+				head.remove();
 			} else {
 				const none = document.createElement( 'p' );
 				none.className = 'riff-together-none';
@@ -672,6 +722,32 @@ export default function together( P ) {
 					'riff'
 				);
 				box.append( none );
+			}
+			if ( others.length ) {
+				const elsewhereHead = document.createElement( 'h3' );
+				elsewhereHead.className = 'riff-together-head';
+				elsewhereHead.textContent = elsewhereLabel || __( 'Elsewhere', 'riff' );
+				const elsewhereList = document.createElement( 'ul' );
+				elsewhereList.className = 'riff-together-list';
+				for ( const p of others ) {
+					let go = null;
+					if ( p.along ) {
+						go = document.createElement( 'a' );
+						go.className = 'riff-together-button';
+						go.href = p.along;
+						go.textContent = __( 'Listen along', 'riff' );
+						go.setAttribute(
+							'aria-label',
+							fmt(
+								/* translators: %s: The listener's name. */
+								__( 'Listen along with %s', 'riff' ),
+								p.name
+							)
+						);
+					}
+					elsewhereList.append( person( p, go ) );
+				}
+				box.append( elsewhereHead, elsewhereList );
 			}
 		}
 		into.replaceChildren( box );
@@ -710,6 +786,8 @@ export default function together( P ) {
 				roomVersion = d.version ?? null;
 				if ( d.changed !== false ) {
 					room = Array.isArray( d.listeners ) ? d.listeners : [];
+					elsewhere = Array.isArray( d.elsewhere ) ? d.elsewhere : [];
+					elsewhereLabel = String( d.elsewhere_label || '' );
 				}
 			}
 		} catch {
