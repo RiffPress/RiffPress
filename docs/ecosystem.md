@@ -33,12 +33,45 @@ A self-hosted Riff is Riff plus whichever extensions and Riff Sign In its owner 
 
 ## How a change travels
 
-1. A pull request merges on `main` in RiffPress. release-please reads its title and, if it touched a package's folder with a `feat` or `fix`, opens or updates that package's release pull request.
-2. Merging the release pull request tags the package, builds its zip with `.github/scripts/build-riff.sh`, and publishes the GitHub release. Riff's release also goes to WordPress.org.
-3. Each week, riffpress-com's `riff-upgrade.yml` compares those releases with the pins in `network/composer.json` and opens one pull request moving Riff, Riff Sign In and Riff Chords to the newest.
-4. Merging that, or anything else under `network/`, runs `network-deploy.yml`: Composer builds `wp-content/plugins/`, one rsync sends it to WP Engine, the page cache is cleared, and the deploy waits for `cloud.riffpress.com` to answer with `riff-network/v1` in its REST index.
+Nobody merges a release by hand. Each step starts the next:
 
-A change to Riff reaches a self-hosted site on its next plugin update, and reaches Cloud within a week, or the same day if the upgrade pull request is run by hand.
+1. A pull request merges on `main` in RiffPress. release-please reads its title and, if it touched a package's folder with a `feat` or `fix`, opens or updates the one release pull request (`release-please--branches--main`), which moves every package with changes. `sync-versions` in `release-please.yml` brings that branch up to date with `main`, writes the version into each plugin's header, define and Stable tag, and approves the CI runs GitHub holds on it.
+2. `release-auto-merge.yml` merges the release pull request once `.github/scripts/release-gate.js` says it is safe: `main`'s newest commit has passed CI and nothing gating on it is red or still running; the release pull request already contains that commit; and on the release pull request's own commit, which is what gets tagged, CI status passed with PHPUnit, Playwright and Plugin Check actually run, along with CodeQL, the scripts' tests, the workflow linters and the title check. It looks each time CI or the scripts' tests finish on either branch, and every half hour. A red check opens the issue "The release train stopped" and merges nothing.
+3. The merge tags each package and creates its GitHub release as a draft. Each package's job builds its zip from the tag, checks that the zip's header, define and Stable tag say the tag's version (`release-check.js zip`), attests it, attaches it and publishes the release. `verify-releases` then fails if any package's release is still a draft or has no zip.
+4. Riff's release goes to WordPress.org (off until `WPORG_DEPLOY` is `true`): the job downloads the zip the GitHub release carries, verifies its attestation and version, and sends exactly that.
+5. `notify-downstream` starts riffpress-com's `riff-upgrade.yml` by dispatch after a Riff or Riff Sign In release is published, which moves `network/composer.json`'s pins and opens or updates its upgrade pull request. riffpress-com also checks on a schedule, for a dispatch that never arrived.
+6. Merging that, or anything else under `network/`, runs `network-deploy.yml`: Composer builds `wp-content/plugins/`, one rsync sends it to WP Engine, the page cache is cleared, and the deploy waits for `cloud.riffpress.com` to answer with `riff-network/v1` in its REST index.
+
+A change to Riff reaches a self-hosted site on its next plugin update, and Cloud as soon as riffpress-com's upgrade pull request merges.
+
+### Who may do what
+
+| Step | Token | May |
+| --- | --- | --- |
+| Release pull request, tags, releases, zips | `GITHUB_TOKEN` (or `RELEASE_PLEASE_TOKEN`, if set) | write this repository's contents, pull requests and releases |
+| Merging the release pull request | `RELEASE_PLEASE_TOKEN` if set, else `GITHUB_TOKEN` | merge, under `main`'s branch protection |
+| Telling riffpress-com | `DOWNSTREAM_DISPATCH_TOKEN` | Actions read and write on that one repository, nothing else |
+| WordPress.org | `SVN_USERNAME`, `SVN_PASSWORD`, in the `wordpress-org` environment | commit to the plugin's SVN |
+
+A push made with `GITHUB_TOKEN` starts no workflow. When `GITHUB_TOKEN` made the merge, `release-auto-merge.yml` starts `release-please.yml`, CI, WP Engine, Pages and the Playground build on `main` by dispatch, the one event that token may raise. With a `RELEASE_PLEASE_TOKEN` (a fine-grained token on RiffPress/RiffPress with Contents and Pull requests read and write) the merge's push starts them itself.
+
+### Settings
+
+| Name | Kind | What it does |
+| --- | --- | --- |
+| `RELEASE_AUTO_MERGE` | variable | `false` is the kill switch: release pull requests wait for a person, as before. Unset, they merge themselves. |
+| `DOWNSTREAM_REPO`, `DOWNSTREAM_WORKFLOW` | variables | Which repository and workflow `notify-downstream` starts. |
+| `DOWNSTREAM_DISPATCH_TOKEN` | secret | The token it starts them with. When any of the three is missing, the job fails after the release is published, so it shows. |
+| `WPORG_DEPLOY` | variable | `true` sends Riff's releases to WordPress.org. |
+
+### When the release train stops
+
+Every failure opens one issue, "The release train stopped", with the run and each job's result, and nothing more while that issue is open; close it once the release is out. Success says nothing.
+
+- **The release pull request is red.** Nothing was tagged. Fix `main`, or re-run what was flaky; the next green CI result merges it.
+- **A package's release job failed.** Its tag exists and its release is a draft without a zip, and release-please will not come back to it. Re-run the failed job if the tag is still right; otherwise build the zip from the tag with `.github/scripts/build-zip.sh`, attach it with `gh release upload`, and publish with `.github/scripts/publish-release.sh`. `verify-releases` fails on every run until it is published.
+- **`notify-downstream` failed.** The release is out; only riffpress-com was not told, and its schedule will pick it up. Usually the token expired: renew it with the same permission.
+- **WordPress.org failed.** The GitHub release is out. Re-run the job; it sends the released zip again.
 
 ## Local development
 

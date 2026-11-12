@@ -133,6 +133,8 @@ jobs:
         run: node .github/scripts/web-pages.js --check
       - name: Each readme.txt changelog matches its CHANGELOG.md
         run: node .github/scripts/readme-changelog.js --check
+      - name: Each plugin says the version in .release-please-manifest.json
+        run: node .github/scripts/release-check.js tree
 
   # packages/wp-api-coverage: its unit tests, then Riff's own report in the run summary. Node only,
   # so it runs on every change.
