@@ -165,6 +165,18 @@ Since 5.8.0. Fires in `plugins/riff/src/class-extensions.php`.
 | --- | --- | --- |
 | `$names` | `string[]` | The names in extensions.json. |
 
+### `riff_import_keep_zip`
+
+Filters whether to keep a zip uploaded to the Media Library once it has been imported, attached to its first album's post, instead of deleting it. Unsafe for protected music: core serves the zip's file at a public address without asking WordPress, so whoever finds it downloads every track the import Protected. Only for a site whose music is all public anyway, or whose server refuses requests for uploaded zips. A zip that held no audio is kept whatever this says. Defaults to false.
+
+Since 6.15.1. Fires in `plugins/riff/src/class-import.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$keep` | `bool` | Whether to keep the zip. |
+| `$id` | `int` | The zip's attachment ID. |
+| `$result` | `array\|WP_Error` | The import's report, or why it failed. |
+
 ### `riff_import_private`
 
 Filters whether a zip uploaded to the Media Library imports privately: each track and video Protected, each album's post private, for its uploader to publish. A host whose privacy is site-wide, such as a private site, can return false so that what the site already keeps from visitors is not hidden a second time, album by album: return `! Private_Site::on()`. It answers for the import in the background, which an upload to the Media Library and POST /riff/v1/imports both start; `wp riff import` takes --private and --no-private. Defaults to true.
@@ -393,6 +405,17 @@ Since 4.0.0. Fires in `plugins/riff/src/class-player.php`.
 Fires in the place under the turntable, for what a plugin shows beside the record. Print one element for each thing: the place takes room only while one that isn't hidden is in it, and only where the turntable is the view. The record is out when `#riff` has `data-riff-deck="out"`. Script it from there; `window.riff.analyser()` hears the music.
 
 Since 6.3.0. Fires in `plugins/riff/templates/player.php`.
+
+### `riff_import_zip_done`
+
+Fires once a zip uploaded to the Media Library has been imported, or has failed to be, just before Riff deletes it, unless riff_import_keep_zip keeps it, or it held no audio. Its attachment and file are still there. A host that keeps uploads elsewhere, or a copy of them, can remove its own copy here too.
+
+Since 6.15.1. Fires in `plugins/riff/src/class-import.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$id` | `int` | The zip's attachment ID. |
+| `$result` | `array\|WP_Error` | The import's report, as Import::zip() gives it, or why it failed. |
 
 ### `riff_private_refused`
 

@@ -416,7 +416,7 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertSame( $editor, (int) $post->post_author );
 		$this->assertCount( 1, $this->tracks() );
 		$this->assertTrue( Protect::is( $this->tracks()[0] ), 'the track is Protected' );
-		$this->assertSame( $post->ID, (int) get_post( $id )->post_parent, 'the zip stays, attached to its album' );
+		$this->assertNull( get_post( $id ), 'the zip is deleted once it is unpacked' );
 		$this->assertSame( 0, get_current_user_id(), 'the job puts back who was signed in' );
 	}
 
@@ -475,7 +475,7 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertIsArray( $result );
 		$this->assertSame( 'private', get_post_status( $result['albums'][0]['post'] ) );
 		$this->assertCount( 1, $this->tracks() );
-		$this->assertSame( $result['albums'][0]['post'], (int) get_post( $id )->post_parent, 'the zip is attached to its album' );
+		$this->assertNull( get_post( $id ), 'the zip is deleted once it is unpacked' );
 		$this->assertSame( $before, glob( get_temp_dir() . '*' ), 'the copy brought here is removed' );
 	}
 
@@ -671,5 +671,152 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertSame( 409, $attached->get_status(), 'a File block\'s download, or one already imported' );
 		$this->assertSame( 'riff_import_zip', $attached->as_error()->get_error_code() );
 		$this->assertFalse( wp_next_scheduled( Import::ZIP_JOB, array( $download ) ) );
+	}
+
+	/**
+	 * What core's REST API shows a user of an attachment: whether the Media Library's list holds
+	 * it, and the status of asking for it alone.
+	 *
+	 * @param int $user Who asks, or 0 for a visitor.
+	 * @param int $id   Attachment ID.
+	 * @return array{listed: bool, status: int}
+	 */
+	private static function media_to( int $user, int $id ): array {
+		$previous = get_current_user_id();
+		wp_set_current_user( $user );
+		$list = rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/media' ) );
+		$one  = rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/media/' . $id ) );
+		wp_set_current_user( $previous );
+		return array(
+			'listed' => in_array( $id, array_column( (array) $list->get_data(), 'id' ), true ),
+			'status' => $one->get_status(),
+		);
+	}
+
+	public function test_a_zip_is_never_shown_to_a_visitor_or_a_subscriber_while_it_waits_or_imports(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		$fan    = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		wp_set_current_user( $editor );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+
+		$seen  = array();
+		$watch = static function () use ( &$seen, $id, $fan ): void {
+			$seen[] = self::media_to( 0, $id );
+			$seen[] = self::media_to( $fan, $id );
+		};
+		$watch();
+		$this->assertSame( 200, self::media_to( $editor, $id )['status'], 'its uploader still has it' );
+		add_action( 'riff_import_zip_done', $watch );
+		Import::uploaded_zip( $id );
+		remove_action( 'riff_import_zip_done', $watch );
+
+		$this->assertCount( 4, $seen );
+		foreach ( $seen as $shown ) {
+			$this->assertFalse( $shown['listed'], 'not in the Media Library\'s list' );
+			$this->assertContains( $shown['status'], array( 401, 403 ), 'and not shown alone' );
+		}
+	}
+
+	public function test_the_done_action_fires_with_the_zip_still_there_and_then_it_is_deleted(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id   = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+		$file = get_attached_file( $id );
+
+		$fired = array();
+		$done  = static function ( int $zip, $result ) use ( &$fired, $file ): void {
+			$fired[] = array( $zip, is_array( $result ), is_file( $file ) );
+		};
+		add_action( 'riff_import_zip_done', $done, 10, 2 );
+		Import::uploaded_zip( $id );
+		remove_action( 'riff_import_zip_done', $done, 10 );
+
+		$this->assertSame( array( array( $id, true, true ) ), $fired, 'once, with the report, before the file goes' );
+		$this->assertNull( get_post( $id ) );
+		$this->assertFileDoesNotExist( $file, 'its file is deleted too' );
+	}
+
+	public function test_a_zip_that_fails_to_import_is_deleted_and_its_uploader_told_why_once(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+		$root         = sys_get_temp_dir() . '/riff-import-' . wp_generate_password( 8, false );
+		$this->dirs[] = $root;
+		mkdir( $root );
+		file_put_contents( $root . '/Broken.zip', 'Not a zip at all.' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		$id   = self::factory()->attachment->create_upload_object( $root . '/Broken.zip' );
+		$file = get_attached_file( $id );
+
+		$fired = array();
+		$done  = static function ( int $zip, $result ) use ( &$fired ): void {
+			$fired[] = is_wp_error( $result );
+		};
+		add_action( 'riff_import_zip_done', $done, 10, 2 );
+		wp_set_current_user( 0 );
+		$result = Import::uploaded_zip( $id );
+		remove_action( 'riff_import_zip_done', $done, 10 );
+
+		$this->assertWPError( $result );
+		$this->assertSame( array( true ), $fired );
+		$this->assertNull( get_post( $id ) );
+		$this->assertFileDoesNotExist( $file );
+
+		wp_set_current_user( $editor );
+		ob_start();
+		Import::notice();
+		$notice = (string) ob_get_clean();
+		$this->assertStringContainsString( 'Broken.zip', $notice );
+		$this->assertStringContainsString( esc_html( $result->get_error_message() ), $notice, 'why, for them to upload it again' );
+		ob_start();
+		Import::notice();
+		$this->assertSame( '', ob_get_clean(), 'told once' );
+	}
+
+	public function test_a_zip_with_no_audio_is_no_album_and_stays_as_it_was(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( 'press.txt' => 'A press release.' ) ) );
+
+		Import::uploaded_zip( $id );
+
+		$this->assertSame( 'inherit', get_post_field( 'post_status', $id ), 'no longer private' );
+		$this->assertSame( 0, (int) get_post( $id )->post_parent );
+		$this->assertFileExists( get_attached_file( $id ) );
+	}
+
+	public function test_a_site_can_keep_its_imported_zips(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+
+		add_filter( 'riff_import_keep_zip', '__return_true' );
+		$result = Import::uploaded_zip( $id );
+		remove_filter( 'riff_import_keep_zip', '__return_true' );
+
+		$this->assertSame( $result['albums'][0]['post'], (int) get_post( $id )->post_parent, 'kept, attached to its album, as before 6.15.1' );
+		$this->assertSame( 'inherit', get_post_field( 'post_status', $id ), 'no longer private' );
+		$this->assertFileExists( get_attached_file( $id ) );
+	}
+
+	public function test_wp_riff_clean_zips_deletes_the_zips_earlier_imports_left_and_no_other(): void {
+		require_once __DIR__ . '/class-riff-test-wp-cli.php';
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		// As an earlier version left it: imported, and attached to its album.
+		$left = self::factory()->attachment->create_upload_object( $this->zip_of( array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' ) ) );
+		add_filter( 'riff_import_keep_zip', '__return_true' );
+		Import::uploaded_zip( $left );
+		remove_filter( 'riff_import_keep_zip', '__return_true' );
+		$file = get_attached_file( $left );
+		$name = wp_basename( $file );
+		// A File block's download on a post of its own.
+		$download = self::factory()->attachment->create_upload_object( $this->zip_of( array( 'press.txt' => 'A press release.' ) ), self::factory()->post->create() );
+
+		WP_CLI::$lines = array();
+		( new Riff\Cli() )->clean_zips( array(), array( 'dry-run' => true ) );
+		$this->assertSame( array( array( 'log', "Would delete $name (attachment $left)" ), array( 'success', 'Dry run. 1 imported zips to delete.' ) ), WP_CLI::$lines );
+		$this->assertFileExists( $file, 'a dry run deletes nothing' );
+
+		WP_CLI::$lines = array();
+		( new Riff\Cli() )->clean_zips( array(), array() );
+		$this->assertSame( array( array( 'log', "Deleted $name (attachment $left)" ), array( 'success', '1 imported zips deleted.' ) ), WP_CLI::$lines );
+		$this->assertNull( get_post( $left ) );
+		$this->assertFileDoesNotExist( $file );
+		$this->assertNotNull( get_post( $download ), 'a download is left as it is' );
 	}
 }
