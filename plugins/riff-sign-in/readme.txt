@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.6.0
+Stable tag: 0.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.6.1 =
+* Fixed: signing in takes JSON from the site's own pages, the email link names its account, and nothing answers differently for a member.
+
 = 0.6.0 =
 * A local site raises the code request limits a hundredfold, through riff_sign_in_limits.
 * Fixed: removing a passkey on the profile moves focus on and says so.
@@ -40,8 +43,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 = 0.4.3 =
 * Fixed: the link in the email asks before it signs in, so a mail scanner that opens it no longer uses up the code.
-
-= 0.4.2 =
-* Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
