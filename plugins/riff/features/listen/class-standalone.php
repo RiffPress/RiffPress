@@ -10,6 +10,7 @@
 namespace Riff\Listen;
 
 use WP_Post;
+use Riff\Cache;
 use Riff\Extensions;
 use Riff\Player;
 
@@ -202,17 +203,16 @@ final class Standalone {
 	}
 
 	/**
-	 * The site's Listen page, as First_Run::listen_page() finds it, kept in the object cache until
-	 * a post or its meta changes: the site's address asks for it on every visit.
+	 * The site's Listen page, as First_Run::listen_page() finds it, kept until a post or its meta
+	 * changes: the site's address asks for it on every visit.
 	 *
 	 * @return int
 	 */
 	private static function listen_page(): int {
-		$key  = 'listen_page:' . wp_cache_get_last_changed( 'posts' );
-		$page = wp_cache_get( $key, 'riff' );
+		$page = Cache::get( 'listen_page' );
 		if ( false === $page ) {
 			$page = First_Run::listen_page();
-			wp_cache_set( $key, $page, 'riff' );
+			Cache::set( 'listen_page', $page );
 		}
 		return (int) $page;
 	}

@@ -567,7 +567,7 @@
 		"where": [
 			{
 				"file": "plugins/riff/features/listen/app/fetch.js",
-				"code": "fetch( href, { headers: { Accept: 'text/html' } } )"
+				"code": "fetch( part, { headers: { Accept: 'text/html' } } )"
 			},
 			{
 				"file": "plugins/riff/features/listen/app/views.js",

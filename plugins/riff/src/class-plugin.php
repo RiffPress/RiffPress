@@ -22,6 +22,7 @@ final class Plugin {
 	 */
 	public static function boot(): void {
 		Sources::register( new Blocks_Source() );
+		Cache::register();
 		Media::register();
 		Protect::register();
 		Protected_Path::register();
