@@ -93,6 +93,21 @@ final class Together {
 	public const SESSION = 'riff/session:';
 
 	/**
+	 * The query argument a link to listen along with someone carries: their user ID. The player
+	 * reads it and takes it out of the address.
+	 *
+	 * @since 6.15.0
+	 */
+	public const ALONG = 'riff-along';
+
+	/**
+	 * The most listeners elsewhere (`riff_together_elsewhere`) the room shows.
+	 *
+	 * @since 6.15.0
+	 */
+	public const ELSEWHERE_MAX = 20;
+
+	/**
 	 * Hooks the routes, the profile field and the Together panel.
 	 *
 	 * @since 5.6.0
@@ -182,7 +197,7 @@ final class Together {
 		$on = isset( $_POST['riff_together_share'] );
 		update_user_option( $user_id, self::SHARE, $on ? 'on' : 'off' );
 		if ( ! $on && self::available() ) {
-			wp_presence_leave( self::ROOM, self::PREFIX . $user_id, array( 'client_prefix' => self::PREFIX ) );
+			self::leave( $user_id, 'stopped-sharing' );
 		}
 	}
 
@@ -460,8 +475,14 @@ final class Together {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_room( WP_REST_Request $request ): WP_REST_Response {
-		$entries = wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX ) );
-		$version = self::version( $entries );
+		$entries   = wp_get_presence( self::ROOM, array( 'client_prefix' => self::PREFIX ) );
+		$version   = self::version( $entries );
+		$album     = (int) $request['album'];
+		$elsewhere = $album > 0 ? array() : self::elsewhere( get_current_user_id() );
+		// Listeners elsewhere change without the room: the version moves with them too.
+		if ( $elsewhere ) {
+			$version = $version . '-' . substr( md5( (string) wp_json_encode( $elsewhere ) ), 0, 12 );
+		}
 		if ( null !== $request['version'] && (string) $request['version'] === $version ) {
 			return new WP_REST_Response(
 				array(
@@ -470,7 +491,134 @@ final class Together {
 				)
 			);
 		}
-		return new WP_REST_Response( self::room( $entries, $version, (int) $request['album'] ) );
+		$room = self::room( $entries, $version, $album );
+		if ( $album <= 0 ) {
+			$room['elsewhere']       = $elsewhere;
+			$room['elsewhere_label'] = $elsewhere ? self::elsewhere_label( get_current_user_id() ) : '';
+		}
+		return new WP_REST_Response( $room );
+	}
+
+	/**
+	 * Listeners on other sites a host adds to the room as the viewer sees it, through
+	 * `riff_together_elsewhere`, each made safe to show: shown under their own heading, apart from
+	 * the room's own, as none of them can be followed here.
+	 *
+	 * @param int $viewer Who asks.
+	 * @return array[]
+	 */
+	private static function elsewhere( int $viewer ): array {
+		/**
+		 * Filters the listeners on other sites the Together panel and Listening now show the
+		 * viewer, under their own heading (`riff_together_elsewhere_label`), apart from this site's
+		 * own: a host network's friends, say. None of them is followed here; each links to where
+		 * they are, by `along`, as riff_together_along_url() gives it.
+		 *
+		 * Each is `{ id, name, avatar, track: { title, artist, art, url }, site: { name, url },
+		 * playing, at, along }`. Riff keeps the first 20 with a name, each string as text and each
+		 * address an http or https one, and asks again with the room, every fifteen seconds while
+		 * one is shown: a host caches what it looks up elsewhere. Empty by default, when nothing
+		 * changes.
+		 *
+		 * @since 6.15.0
+		 *
+		 * @param array[] $listeners Each: `id` (int, their user ID where they are), `name`,
+		 *                           `avatar` (an address, or null to show their name's first
+		 *                           letter), `track` (`title`, `artist`, `art` and
+		 *                           `url`, the cover's and the track's addresses), `site` (`name`
+		 *                           and `url`), `playing` (bool), `at` (int, when they last
+		 *                           shared, as a Unix time) and `along` (an address that listens
+		 *                           along with them, or null for none).
+		 * @param int     $viewer_id Who asks.
+		 */
+		$given = apply_filters( 'riff_together_elsewhere', array(), $viewer );
+		if ( ! is_array( $given ) ) {
+			return array();
+		}
+		$text = static fn( $value ): string => is_scalar( $value ) ? sanitize_text_field( (string) $value ) : '';
+		$link = static fn( $value ): string => is_string( $value ) ? esc_url_raw( $value, array( 'http', 'https' ) ) : '';
+		$out  = array();
+		foreach ( $given as $listener ) {
+			if ( count( $out ) >= self::ELSEWHERE_MAX ) {
+				break;
+			}
+			$name = is_array( $listener ) ? $text( $listener['name'] ?? '' ) : '';
+			if ( '' === $name ) {
+				continue;
+			}
+			$track   = is_array( $listener['track'] ?? null ) ? $listener['track'] : array();
+			$site    = is_array( $listener['site'] ?? null ) ? $listener['site'] : array();
+			$at      = is_numeric( $listener['at'] ?? null ) ? max( 0, (int) $listener['at'] ) : 0;
+			$along   = $link( $listener['along'] ?? '' );
+			$playing = ! empty( $listener['playing'] );
+			$item    = array(
+				'id'      => is_numeric( $listener['id'] ?? null ) ? max( 0, (int) $listener['id'] ) : 0,
+				'name'    => $name,
+				'avatar'  => $link( $listener['avatar'] ?? '' ),
+				'track'   => array(
+					'title'  => $text( $track['title'] ?? '' ),
+					'artist' => $text( $track['artist'] ?? '' ),
+					'art'    => $link( $track['art'] ?? '' ),
+					'url'    => $link( $track['url'] ?? '' ),
+				),
+				'site'    => array(
+					'name' => $text( $site['name'] ?? '' ),
+					'url'  => $link( $site['url'] ?? '' ),
+				),
+				'playing' => $playing,
+				'at'      => $at,
+				'along'   => '' !== $along ? $along : null,
+				'when'    => $playing ? __( 'now', 'riff' ) : ( $at ? sprintf(
+					/* translators: %s: how long ago, such as "5 mins". */
+					__( '%s ago', 'riff' ),
+					human_time_diff( $at )
+				) : '' ),
+			);
+			$item['card'] = self::elsewhere_card( $item );
+			$out[]        = $item;
+		}
+		return $out;
+	}
+
+	/**
+	 * The heading listeners elsewhere are shown under.
+	 *
+	 * @since 6.15.0
+	 *
+	 * @param int $viewer Who asks.
+	 * @return string
+	 */
+	public static function elsewhere_label( int $viewer ): string {
+		/**
+		 * Filters the heading the listeners `riff_together_elsewhere` adds are shown under, in the
+		 * Together panel and on Home.
+		 *
+		 * @since 6.15.0
+		 *
+		 * @param string $label     The heading. Default "Elsewhere".
+		 * @param int    $viewer_id Who asks.
+		 */
+		$label = sanitize_text_field( (string) apply_filters( 'riff_together_elsewhere_label', __( 'Elsewhere', 'riff' ), $viewer ) );
+		return '' !== $label ? $label : __( 'Elsewhere', 'riff' );
+	}
+
+	/**
+	 * A listener elsewhere's card on Home, as a listener's here: their name over their track's
+	 * cover, or their face, with what they play, where and when; the name links to listen along.
+	 *
+	 * @param array $item The listener, from elsewhere().
+	 * @return string
+	 */
+	private static function elsewhere_card( array $item ): string {
+		return Ui::card(
+			array(
+				'title' => $item['name'],
+				'href'  => (string) $item['along'],
+				'sub'   => implode( ' · ', array_filter( array( $item['track']['title'], $item['track']['artist'], $item['site']['name'], $item['when'] ) ) ),
+				'art'   => '' !== $item['track']['art'] ? $item['track']['art'] : $item['avatar'],
+				'mark'  => mb_substr( $item['name'], 0, 1 ),
+			)
+		);
 	}
 
 	/**
@@ -533,7 +681,7 @@ final class Together {
 		}
 		// A listener who turned sharing off in another tab is taken out, not shared.
 		if ( ! self::shares( $user ) ) {
-			wp_presence_leave( self::ROOM, self::PREFIX . $user, array( 'client_prefix' => self::PREFIX ) );
+			self::leave( $user, 'stopped-sharing' );
 			return new WP_Error( 'riff_together_not_sharing', __( 'You aren’t sharing what you listen to.', 'riff' ), array( 'status' => 403 ) );
 		}
 		$now = self::now();
@@ -566,6 +714,84 @@ final class Together {
 		);
 		if ( is_wp_error( $entries ) ) {
 			return new WP_Error( 'riff_together_unavailable', __( 'Listening together is not available right now.', 'riff' ), array( 'status' => 503 ) );
+		}
+		/**
+		 * Fires after a listener shares what they play, from the player or a Presence Scenes step,
+		 * once it is in the room.
+		 *
+		 * It fires on every share, the player's keep-alive too, which shares again about once a
+		 * minute while the music plays with nothing new, so a plugin keeping what a listener plays
+		 * knows it is still so. A keep-alive's `at` and `since` are those of the share before it,
+		 * where the music was heading from: where it is now is `at`, and the time since `since` when
+		 * it plays. It doesn't fire when nothing was shared: a queue the index is past, a listener
+		 * who doesn't share, or a Presence API that couldn't write.
+		 *
+		 * @since 6.15.0
+		 *
+		 * @param int   $user_id The listener.
+		 * @param array $state   What they share: `queue`, each `{ id, post }` (a track's attachment
+		 *                       ID and the post it plays from, 0 for none); `index`, which plays;
+		 *                       `at`, where it is in seconds at `since`, in milliseconds on the
+		 *                       server's clock; and `playing`, whether it plays from then.
+		 */
+		do_action( 'riff_together_shared', $user, $state );
+		return $entries;
+	}
+
+	/**
+	 * A link that listens along with someone, as riff_together_along_url() gives it.
+	 *
+	 * @since 6.15.0
+	 *
+	 * @param int      $user    The listener.
+	 * @param int|null $blog_id The site they listen on, on a network; null for this one.
+	 * @return string
+	 */
+	public static function along_url( int $user, ?int $blog_id = null ): string {
+		$switched = null !== $blog_id && is_multisite() && get_current_blog_id() !== $blog_id && switch_to_blog( $blog_id );
+		$page     = riff_listen_page();
+		$url      = add_query_arg( self::ALONG, max( 0, $user ), $page ? get_permalink( $page ) : home_url( '/' ) );
+		if ( $switched ) {
+			restore_current_blog();
+		}
+		return $url;
+	}
+
+	/**
+	 * Takes a listener out of the room, and says so when they were in it: the one way out, for the
+	 * routes, the profile and Riff's own Presence Scenes steps.
+	 *
+	 * @since 6.15.0
+	 *
+	 * @param int    $user The listener.
+	 * @param string $why  `stopped` when they stopped, or `stopped-sharing` when they no longer share.
+	 * @return object[] The room's rows after.
+	 */
+	public static function leave( int $user, string $why ): array {
+		$client = self::PREFIX . $user;
+		$left   = false;
+		$heard  = static function ( $room, $client_id ) use ( $client, &$left ) {
+			$left = $left || ( self::ROOM === $room && $client === $client_id );
+		};
+		// The Presence API says when a row went, and not when there was none to take.
+		add_action( 'removed_presence', $heard, 10, 2 );
+		$entries = (array) wp_presence_leave( self::ROOM, $client, array( 'client_prefix' => self::PREFIX ) );
+		remove_action( 'removed_presence', $heard, 10 );
+		if ( $left ) {
+			/**
+			 * Fires after a listener leaves the room: they stopped, or turned sharing off. Once a
+			 * leave, and only when they were in the room; not when a row runs out because the tab
+			 * closed, nor when a follower leaves the listener they follow.
+			 *
+			 * @since 6.15.0
+			 *
+			 * @param int    $user_id The listener.
+			 * @param string $why     `stopped`: they stopped, from the player or the Presence
+			 *                        Scenes step riffStop. `stopped-sharing`: they turned sharing
+			 *                        off on their profile, or a site's `riff_together_share` turned
+			 *                        it off for them.
+			 */
+			do_action( 'riff_together_left', $user, $why );
 		}
 		return $entries;
 	}
@@ -614,7 +840,7 @@ final class Together {
 	 * @return WP_REST_Response
 	 */
 	public static function rest_leave(): WP_REST_Response {
-		$entries = (array) wp_presence_leave( self::ROOM, self::PREFIX . get_current_user_id(), array( 'client_prefix' => self::PREFIX ) );
+		$entries = self::leave( get_current_user_id(), 'stopped' );
 		return new WP_REST_Response( self::room( $entries, self::version( $entries ) ) );
 	}
 
@@ -888,7 +1114,7 @@ final class Together {
 					'action' => 'listen-along',
 					'data'   => array( 'user' => (int) $listener['user']['id'] ),
 					/* translators: %s: the listener's name. */
-					'label'  => sprintf( __( 'Follow %s', 'riff' ), $name ),
+					'label'  => sprintf( __( 'Listen along with %s', 'riff' ), $name ),
 				),
 			)
 		);

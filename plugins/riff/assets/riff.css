@@ -2812,6 +2812,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	object-fit: cover;
 }
 
+#riff .riff-together-initial {
+	grid-area: 1 / 1;
+	place-self: center;
+	color: var(--riff-fg-2);
+	font-size: 18px;
+}
+
 #riff .riff-together-text {
 	flex: 1;
 	display: grid;
@@ -2851,6 +2858,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 #riff .riff-together-button:hover {
 	background: var(--riff-hover);
+}
+
+/* A link to listen along elsewhere (riff_together_elsewhere), drawn as
+   the button is. */
+#riff a.riff-together-button {
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
 }
 
 /* The About panel (about.js): the track, its title over its artist and

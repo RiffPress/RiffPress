@@ -203,11 +203,19 @@ export default function together( P ) {
 		}
 	}
 	let pressed = false;
-	own.press.add( () => {
+	own.press.add( ( kind ) => {
+		// The press a browser waited for to start the music: it joins, from where they are now.
+		if ( following && waiting && ( kind === 'toggle' || kind === 'play' ) ) {
+			waiting = false;
+			if ( following.plan && sameTrack( following.plan ) ) {
+				P.el().currentTime = target( following.plan );
+			}
+			return;
+		}
 		if ( following ) {
 			stop(
 				/* translators: %s: The listener's name. */
-				__( 'You stopped following %s.', 'riff' ),
+				__( 'You stopped listening along with %s.', 'riff' ),
 				true
 			);
 			return;
@@ -274,6 +282,7 @@ export default function together( P ) {
 	let asking = 0;
 	let due = 0;
 	let inFlight = false;
+	let waiting = false; // The music couldn't start without a press of the listener's.
 
 	const sameTrack = ( plan ) =>
 		String( P.track()?.id ) === String( plan.track?.id );
@@ -312,7 +321,21 @@ export default function together( P ) {
 			m.currentTime = to;
 		}
 		if ( plan.playing && ! playing ) {
-			m.play().catch( P.paint );
+			m.play().catch( ( e ) => {
+				P.paint();
+				// A browser that won't start the music without a press, as after a link to listen
+				// along: the listener's next play joins (own.press), where the schedule is by then.
+				if ( e?.name === 'NotAllowedError' && following && ! waiting ) {
+					waiting = true;
+					P.toast(
+						fmt(
+							/* translators: %s: The listener's name. */
+							__( 'Press play to listen along with %s.', 'riff' ),
+							following.name
+						)
+					);
+				}
+			} );
 		} else if ( ! plan.playing && playing ) {
 			m.pause();
 		}
@@ -457,7 +480,7 @@ export default function together( P ) {
 			fmt(
 				/* translators: %s: The listener's name. */
 				__(
-					'Following %s, who sees you’re with them. While your screen is locked, their changes reach you late.',
+					'Listening along with %s, who sees you’re with them. While your screen is locked, their changes reach you late.',
 					'riff'
 				),
 				following.name
@@ -474,6 +497,7 @@ export default function together( P ) {
 		}
 		const { user, name } = following;
 		following = null;
+		waiting = false;
 		clearInterval( asking );
 		clearTimeout( due );
 		// Back to the listener's own speed, whatever keep() had it at.
@@ -501,6 +525,9 @@ export default function together( P ) {
 	const VIEW = 'together';
 	const ROOM = 15000; // How often the room is asked for while the panel shows it, as Home does.
 	let room = [];
+	// Listeners on other sites a host adds (riff_together_elsewhere), under the heading it names.
+	let elsewhere = [];
+	let elsewhereLabel = '';
 	let roomVersion = null;
 	let roomTimer = 0;
 	let roomTurn = 0; // The latest ask, so only one goes on asking.
@@ -508,10 +535,18 @@ export default function together( P ) {
 	const panel = () => root.querySelector( `[data-riff-panel="${ VIEW }"]` );
 	// The panel open beside the page (registry.js).
 	const showing = () => panel()?.hidden === false && P.panelOpen === VIEW;
-	// Their face, or a person where they have none.
-	function face( src ) {
+	// Their face, or where they have none the initial given, or a person.
+	function face( src, initial = '' ) {
 		const span = document.createElement( 'span' );
 		span.className = 'riff-together-face';
+		if ( initial && ! src ) {
+			const mark = document.createElement( 'span' );
+			mark.className = 'riff-together-initial';
+			mark.setAttribute( 'aria-hidden', 'true' );
+			mark.textContent = initial;
+			span.append( mark );
+			return span;
+		}
 		span.innerHTML =
 			'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.25 8.25A3.25 3.25 0 1 1 8.75 8.25A3.25 3.25 0 0 1 15.25 8.25Z"/><path d="M5.75 19.25V18C5.75 16.2 7.2 14.75 9 14.75H15C16.8 14.75 18.25 16.2 18.25 18V19.25"/></svg>';
 		if ( src ) {
@@ -524,10 +559,10 @@ export default function together( P ) {
 		}
 		return span;
 	}
-	function person( { name, face: src, sub = '' }, action = null ) {
+	function person( { name, face: src, sub = '', initial = '' }, action = null ) {
 		const li = document.createElement( 'li' );
 		li.className = 'riff-together-person';
-		li.append( face( src ) );
+		li.append( face( src, initial ) );
 		const text = document.createElement( 'span' );
 		text.className = 'riff-together-text';
 		const who = document.createElement( 'span' );
@@ -583,18 +618,40 @@ export default function together( P ) {
 						.filter( Boolean )
 						.join( ' · ' ),
 			  } ) );
+		// Outside a session, those a host adds from other sites, each linking to where they are.
+		const others =
+			following || followers.length
+				? []
+				: elsewhere.map( ( l ) => ( {
+						name: String( l.name || '' ),
+						face: String( l.avatar || '' ),
+						// Someone elsewhere without a face shows their name's first letter.
+						initial: Array.from( String( l.name || '' ) )[ 0 ] || '',
+						along: String( l.along || '' ),
+						sub: [
+							l.track?.title,
+							l.track?.artist,
+							l.site?.name,
+							l.when,
+						]
+							.filter( Boolean )
+							.join( ' · ' ),
+				  } ) );
 		// Who is shown, without what they play: a listener moving on to their next track changes
 		// only that line, in place, so a button keeps its focus.
 		const key = JSON.stringify( [
 			following?.user || 0,
 			followers.length,
 			people.map( ( p ) => [ p.id, p.name, p.face ] ),
+			others.map( ( p ) => [ p.name, p.face, p.along ] ),
+			elsewhereLabel,
 		] );
 		if ( key === drawn ) {
+			const shown = [ ...people, ...others ];
 			into.querySelectorAll( '.riff-together-person' ).forEach( ( li, i ) => {
 				const sub = li.querySelector( '.riff-together-sub' );
-				if ( sub && people[ i ]?.sub && sub.textContent !== people[ i ].sub ) {
-					sub.textContent = people[ i ].sub;
+				if ( sub && shown[ i ]?.sub && sub.textContent !== shown[ i ].sub ) {
+					sub.textContent = shown[ i ].sub;
 				}
 			} );
 			return;
@@ -610,7 +667,7 @@ export default function together( P ) {
 		if ( following ) {
 			head.textContent = fmt(
 				/* translators: %s: The listener's name. */
-				__( 'Following %s', 'riff' ),
+				__( 'Listening along with %s', 'riff' ),
 				following.name
 			);
 			for ( const p of people ) {
@@ -622,7 +679,7 @@ export default function together( P ) {
 				button( __( 'Leave', 'riff' ), '', () =>
 					stop(
 						/* translators: %s: The listener's name. */
-						__( 'You stopped following %s.', 'riff' ),
+						__( 'You stopped listening along with %s.', 'riff' ),
 						false
 					)
 				)
@@ -641,10 +698,10 @@ export default function together( P ) {
 					person(
 						p,
 						button(
-							__( 'Follow', 'riff' ),
+							__( 'Listen along', 'riff' ),
 							fmt(
 								/* translators: %s: The listener's name. */
-								__( 'Follow %s', 'riff' ),
+								__( 'Listen along with %s', 'riff' ),
 								p.name
 							),
 							async () => {
@@ -664,14 +721,43 @@ export default function together( P ) {
 			}
 			if ( people.length ) {
 				box.append( list );
+			} else if ( others.length ) {
+				// No one here, so their heading goes, and those elsewhere are what there is.
+				head.remove();
 			} else {
 				const none = document.createElement( 'p' );
 				none.className = 'riff-together-none';
 				none.textContent = __(
-					'No one else is listening right now. When someone is, you can follow them here and hear what they play as they play it.',
+					'No one else is listening right now. When someone is, you can listen along with them here and hear what they play as they play it.',
 					'riff'
 				);
 				box.append( none );
+			}
+			if ( others.length ) {
+				const elsewhereHead = document.createElement( 'h3' );
+				elsewhereHead.className = 'riff-together-head';
+				elsewhereHead.textContent = elsewhereLabel || __( 'Elsewhere', 'riff' );
+				const elsewhereList = document.createElement( 'ul' );
+				elsewhereList.className = 'riff-together-list';
+				for ( const p of others ) {
+					let go = null;
+					if ( p.along ) {
+						go = document.createElement( 'a' );
+						go.className = 'riff-together-button';
+						go.href = p.along;
+						go.textContent = __( 'Listen along', 'riff' );
+						go.setAttribute(
+							'aria-label',
+							fmt(
+								/* translators: %s: The listener's name. */
+								__( 'Listen along with %s', 'riff' ),
+								p.name
+							)
+						);
+					}
+					elsewhereList.append( person( p, go ) );
+				}
+				box.append( elsewhereHead, elsewhereList );
 			}
 		}
 		into.replaceChildren( box );
@@ -710,6 +796,8 @@ export default function together( P ) {
 				roomVersion = d.version ?? null;
 				if ( d.changed !== false ) {
 					room = Array.isArray( d.listeners ) ? d.listeners : [];
+					elsewhere = Array.isArray( d.elsewhere ) ? d.elsewhere : [];
+					elsewhereLabel = String( d.elsewhere_label || '' );
 				}
 			}
 		} catch {
@@ -758,7 +846,7 @@ export default function together( P ) {
 					),
 					label: fmt(
 						/* translators: %s: The listener's name. */
-						__( 'Following %s', 'riff' ),
+						__( 'Listening along with %s', 'riff' ),
 						following.name
 					),
 				},
@@ -805,7 +893,7 @@ export default function together( P ) {
 		label: () =>
 			fmt(
 				/* translators: %s: The listener's name. */
-				__( 'Stop following %s', 'riff' ),
+				__( 'Stop listening along with %s', 'riff' ),
 				following?.name || ''
 			),
 		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 19L19 5M19 19L5 5"/></svg>',
@@ -817,7 +905,7 @@ export default function together( P ) {
 		label: () =>
 			fmt(
 				/* translators: %s: The listener's name. */
-				__( 'Follow %s again', 'riff' ),
+				__( 'Listen along with %s again', 'riff' ),
 				again?.name || ''
 			),
 		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.72351 15.6312C6.97795 17.7948 9.31903 19.25 12 19.25C16.0041 19.25 19.25 16.0041 19.25 12C19.25 7.99594 16.0041 4.75 12 4.75C9.99797 4.75 8.18547 5.56148 6.87348 6.87348L4.5 9.5M4.5 6V9.5H8"/><path d="M11.25 13.5V10.5L13.25 12L11.25 13.5Z" fill="currentColor"/></svg>',

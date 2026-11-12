@@ -15,6 +15,7 @@ export function togetherRow( ctx ) {
 	const EVERY = 15000;
 	let version = null;
 	let listeners = [];
+	let elsewhere = []; // Listeners on other sites a host adds (riff_together_elsewhere), on Home.
 	let asking = 0; // The ask in flight, by its turn; 0 for none.
 	let turn = 0;
 	// The address the room was last asked at: Home's, or one album's, each with its own listeners.
@@ -25,7 +26,7 @@ export function togetherRow( ctx ) {
 	const follows = ( name ) =>
 		fmt(
 			/* translators: %s: The listener's name. */
-			__( 'Follow %s', 'riff' ),
+			__( 'Listen along with %s', 'riff' ),
 			name
 		);
 
@@ -36,6 +37,21 @@ export function togetherRow( ctx ) {
 		into.innerHTML = cards.join( '' );
 		ctx.fade( into );
 		row.hidden = ! cards.length;
+		// Under their own heading, each card linking to listen along where they are.
+		const others = view.querySelector(
+			'[data-riff-shelf="together-elsewhere"]'
+		);
+		if ( others ) {
+			const html = elsewhere.map( ( l ) => String( l.card || '' ) ).join( '' );
+			const list = others.querySelector( '.riff-shelf-row' );
+			// Drawn again only when it changed, so a link keeps its focus.
+			if ( list.dataset.riffDrawn !== html ) {
+				list.dataset.riffDrawn = html;
+				list.innerHTML = html;
+				ctx.fade( list );
+			}
+			others.hidden = ! elsewhere.length;
+		}
 	}
 
 	// An album's faces, each a button that follows them. Drawn again only when who is there changes,
@@ -97,6 +113,7 @@ export function togetherRow( ctx ) {
 			from = at;
 			version = null;
 			listeners = [];
+			elsewhere = [];
 		}
 		const mine = ++turn;
 		asking = mine;
@@ -113,6 +130,9 @@ export function togetherRow( ctx ) {
 				if ( room.changed !== false ) {
 					listeners = Array.isArray( room.listeners )
 						? room.listeners
+						: [];
+					elsewhere = Array.isArray( room.elsewhere )
+						? room.elsewhere
 						: [];
 				}
 			}

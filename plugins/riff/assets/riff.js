@@ -30,6 +30,9 @@ import { nowPlaying } from 'riff-player/now-playing';
 import { controls } from 'riff-player/controls';
 import { keyboard } from 'riff-player/keyboard';
 
+// Strings are WordPress translations of this module (wp_set_script_module_translations()).
+const __ = window.wp?.i18n?.__ || ( ( english ) => english );
+
 const root = document.getElementById( 'riff' );
 
 // A page core's speculative loading prerendered is not being looked at: nothing starts, and
@@ -318,6 +321,24 @@ function start() {
 			return () =>
 				P.root.removeEventListener( `riff:${ name }`, handler );
 		},
+		/**
+		 * Listens along with another listener on this site, as Listen along in the Together panel
+		 * does: plays what they play, where they are in it, and keeps with them through their
+		 * plays, pauses, skips and seeks, until a press of the listener's own. A link from
+		 * `riff_together_along_url()` does this as the page opens. Where the browser won't start
+		 * the music without a press, the listener is asked to press play, and that press joins.
+		 *
+		 * @since 6.15.0
+		 *
+		 * @param {number} user Their user ID.
+		 * @return {Promise<boolean>} Whether they are listening along: false for a visitor, on a site without listening together, or when the one named isn't sharing anything this listener may hear.
+		 */
+		along: ( user ) =>
+			P.me?.rest?.together
+				? P.feature( 'together' ).then( ( m ) =>
+						m?.follow ? m.follow( user ) : false
+				  )
+				: Promise.resolve( false ),
 	};
 	window.riff = api;
 	// The rest of the player's door, for Riff's own features (the Listen app gets it when it loads)
@@ -722,6 +743,34 @@ function start() {
 	 * @param {Object}      api          `window.riff`.
 	 */
 	emit( 'ready', { queue: api.queue(), track: P.track() || null } );
+
+	// ---- A link to listen along with someone (riff_together_along_url()): followed once the
+	// player is ready, and taken out of the address first, so a reload or a copy of it doesn't
+	// follow them again.
+	const here = new URL( window.location.href );
+	if ( here.searchParams.has( 'riff-along' ) ) {
+		const user = Number( here.searchParams.get( 'riff-along' ) );
+		here.searchParams.delete( 'riff-along' );
+		window.history.replaceState( window.history.state, '', here );
+		if ( ! P.me?.rest?.together ) {
+			P.toast(
+				P.me
+					? __( 'Listening along isn’t available on this site.', 'riff' )
+					: __( 'Sign in to listen along.', 'riff' )
+			);
+		} else if ( Number.isInteger( user ) && user > 0 ) {
+			api.along( user ).then(
+				( ok ) =>
+					ok ||
+					P.toast(
+						__(
+							'They have stopped listening, or to something you can’t hear.',
+							'riff'
+						)
+					)
+			);
+		}
+	}
 
 	// ---- The app, on the page that holds it. Loaded only there, and handed internal.
 	if ( document.querySelector( '[data-riff-app]' ) && data.assets?.app ) {

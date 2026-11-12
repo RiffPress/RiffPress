@@ -234,7 +234,7 @@ final class Together_Scenes {
 	 * @since 5.8.0
 	 */
 	public static function stop(): void {
-		wp_presence_leave( Together::ROOM, Together::PREFIX . get_current_user_id(), array( 'client_prefix' => Together::PREFIX ) );
+		Together::leave( get_current_user_id(), 'stopped' );
 	}
 
 	/**

@@ -121,7 +121,7 @@ test( 'a listener follows another from the faces on an album, and Together lists
 		await guest.goto( albumUrl );
 		await expect( face ).toHaveCount( 1, { timeout: 3000 } );
 	} ).toPass();
-	await expect( face ).toHaveAccessibleName( 'Follow admin' );
+	await expect( face ).toHaveAccessibleName( 'Listen along with admin' );
 	await expect( guest.locator( '.riff-album-together-label' ) ).toHaveText( 'Listening now' );
 
 	await face.click();
@@ -131,7 +131,7 @@ test( 'a listener follows another from the faces on an album, and Together lists
 
 	// The follower's panel: who they follow, and the way out.
 	const mine = await together( guest );
-	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Following admin' );
+	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Listening along with admin' );
 	await expect( mine.locator( '.riff-together-person' ) ).toHaveCount( 1 );
 	await expect( mine.locator( '.riff-together-person' ) ).toContainText( 'admin' );
 	await expect( mine.locator( '.riff-together-person' ) ).toContainText( 'Choosing the music' );
@@ -150,10 +150,65 @@ test( 'a listener follows another from the faces on an album, and Together lists
 
 	// Leaving: out of the session, and the panel shows who else is listening, each with Follow.
 	await leave.click();
-	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped following admin/ ) ).toBeVisible();
+	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped listening along with admin/ ) ).toBeVisible();
 	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Listening now' );
-	await expect( mine.getByRole( 'button', { name: 'Follow admin' } ) ).toBeVisible();
+	await expect( mine.getByRole( 'button', { name: 'Listen along with admin' } ) ).toBeVisible();
 	await expect( guest.locator( '.riff-side-title' ) ).toBeFocused();
 
 	await context.close();
+} );
+
+test( 'listeners a host adds from elsewhere show under their own heading, each linking to listen along', async ( {
+	page,
+} ) => {
+	const along = 'https://amy.example/listen/?riff-along=7';
+	// As riff_together_elsewhere would give them, and Riff hands them on.
+	const amy = {
+		id: 7,
+		name: 'Amy',
+		avatar: null,
+		track: { title: 'Underground', artist: 'Chris Zabriskie', art: '', url: '' },
+		site: { name: 'Amy’s Riff', url: 'https://amy.example/' },
+		playing: true,
+		at: Math.floor( Date.now() / 1000 ),
+		along,
+		when: 'now',
+		card: `<div class="riff-card"><span class="riff-card-art"><span class="riff-card-mark" aria-hidden="true">A</span></span><a class="riff-card-link" href="${ along }"><span class="riff-card-title">Amy</span></a><span class="riff-card-sub">Underground · Chris Zabriskie · Amy’s Riff · now</span></div>`,
+	};
+	await page.route(
+		( u ) => /riff\/v1\/together\/?$/.test( decodeURIComponent( u.pathname + ( u.searchParams.get( 'rest_route' ) || '' ) ) ),
+		async ( route ) => {
+			const response = await route.fetch();
+			const body = await response.json();
+			if ( route.request().method() === 'GET' && body.changed !== false && ! new URL( route.request().url() ).searchParams.has( 'album' ) ) {
+				body.elsewhere = [ amy ];
+				body.elsewhere_label = 'Friends';
+				body.version = `${ body.version }-friends`;
+			}
+			await route.fulfill( { response, json: body } );
+		}
+	);
+
+	// Home: a row of its own, after Listening now.
+	await page.goto( listenUrl );
+	const shelf = page.locator( '[data-riff-shelf="together-elsewhere"]' );
+	await expect( shelf ).toBeVisible();
+	await expect( shelf.locator( '.riff-card-link' ) ).toHaveAttribute( 'href', along );
+	await expect( shelf.locator( '.riff-card-sub' ) ).toHaveText( 'Underground · Chris Zabriskie · Amy’s Riff · now' );
+	await expect( shelf.locator( '.riff-card-play' ) ).toHaveCount( 0 );
+
+	// The Together panel: under the heading the host names, with a link, not Follow.
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( 0 ).click();
+	await together( page );
+	const panel = page.locator( '[data-riff-panel="together"]' );
+	await expect( panel.getByRole( 'heading', { name: 'Friends' } ) ).toBeVisible();
+	const row = panel.locator( '.riff-together-person', { hasText: 'Amy' } );
+	await expect( row.locator( '.riff-together-initial' ) ).toHaveText( 'A' );
+	await expect( row.locator( '.riff-together-sub' ) ).toHaveText( 'Underground · Chris Zabriskie · Amy’s Riff · now' );
+	await expect( row.getByRole( 'link', { name: 'Listen along with Amy' } ) ).toHaveAttribute( 'href', along );
+	await expect( row.getByRole( 'button' ) ).toHaveCount( 0 );
+	const { violations } = await new AxeBuilder( { page } ).include( '[data-riff-panel="together"]' ).withTags( AXE_TAGS ).analyze();
+	expect( violations ).toEqual( [] );
+	await page.unrouteAll( { behavior: 'ignoreErrors' } );
 } );

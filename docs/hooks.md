@@ -273,6 +273,30 @@ Since 4.0.0. Fires in `plugins/riff/src/class-sources.php`.
 | --- | --- | --- |
 | `$sources` | `Source[]` | Sources. |
 
+### `riff_together_elsewhere`
+
+Filters the listeners on other sites the Together panel and Listening now show the viewer, under their own heading (`riff_together_elsewhere_label`), apart from this site's own: a host network's friends, say. None of them is followed here; each links to where they are, by `along`, as riff_together_along_url() gives it.
+
+Each is `{ id, name, avatar, track: { title, artist, art, url }, site: { name, url }, playing, at, along }`. Riff keeps the first 20 with a name, each string as text and each address an http or https one, and asks again with the room, every fifteen seconds while one is shown: a host caches what it looks up elsewhere. Empty by default, when nothing changes.
+
+Since 6.15.0. Fires in `plugins/riff/features/listen/class-together.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$listeners` | `array[]` | Each: `id` (int, their user ID where they are), `name`, `avatar` (an address, or null to show their name's first letter), `track` (`title`, `artist`, `art` and `url`, the cover's and the track's addresses), `site` (`name` and `url`), `playing` (bool), `at` (int, when they last shared, as a Unix time) and `along` (an address that listens along with them, or null for none). |
+| `$viewer_id` | `int` | Who asks. |
+
+### `riff_together_elsewhere_label`
+
+Filters the heading the listeners `riff_together_elsewhere` adds are shown under, in the Together panel and on Home.
+
+Since 6.15.0. Fires in `plugins/riff/features/listen/class-together.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$label` | `string` | The heading. Default "Elsewhere". |
+| `$viewer_id` | `int` | Who asks. |
+
 ### `riff_together_share`
 
 Filters whether a listener who hasn't chosen shares what they play with the site's other listeners. A site where listeners shouldn't see each other unless they ask, a class of children say, returns false.
@@ -344,6 +368,30 @@ Since 6.3.0. Fires in `plugins/riff/src/class-private-site.php`.
 Fires once a request, before the player's controls and views are first read: register them here with `riff_register_control()` and `riff_register_view()`, or take one of Riff's own away. A plugin's keyboard shortcuts are registered here too, with `riff_register_shortcut()`.
 
 Since 5.8.0. Fires in `plugins/riff/src/class-registry.php`.
+
+### `riff_together_left`
+
+Fires after a listener leaves the room: they stopped, or turned sharing off. Once a leave, and only when they were in the room; not when a row runs out because the tab closed, nor when a follower leaves the listener they follow.
+
+Since 6.15.0. Fires in `plugins/riff/features/listen/class-together.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$user_id` | `int` | The listener. |
+| `$why` | `string` | `stopped`: they stopped, from the player or the Presence Scenes step riffStop. `stopped-sharing`: they turned sharing off on their profile, or a site's `riff_together_share` turned it off for them. |
+
+### `riff_together_shared`
+
+Fires after a listener shares what they play, from the player or a Presence Scenes step, once it is in the room.
+
+It fires on every share, the player's keep-alive too, which shares again about once a minute while the music plays with nothing new, so a plugin keeping what a listener plays knows it is still so. A keep-alive's `at` and `since` are those of the share before it, where the music was heading from: where it is now is `at`, and the time since `since` when it plays. It doesn't fire when nothing was shared: a queue the index is past, a listener who doesn't share, or a Presence API that couldn't write.
+
+Since 6.15.0. Fires in `plugins/riff/features/listen/class-together.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$user_id` | `int` | The listener. |
+| `$state` | `array` | What they share: `queue`, each `{ id, post }` (a track's attachment ID and the post it plays from, 0 for none); `index`, which plays; `at`, where it is in seconds at `since`, in milliseconds on the server's clock; and `playing`, whether it plays from then. |
 
 ## JavaScript
 
