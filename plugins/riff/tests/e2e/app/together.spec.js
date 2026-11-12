@@ -178,7 +178,7 @@ test( 'a follower keeps time with the host through a pause, a play, a skip and a
 
 	// A press of the follower's own is theirs: they stop following.
 	await guest.evaluate( () => window.riffInternal.toggle() );
-	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped following admin/ ) ).toBeVisible();
+	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped listening along with admin/ ) ).toBeVisible();
 
 	await context.close();
 } );

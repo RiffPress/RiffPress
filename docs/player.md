@@ -35,9 +35,9 @@ The rest is what a player should do:
   second and a half ahead on the server's clock, which each follower has learned once as NTP does;
   it reaches every follower before it is due, they ready it, and everyone, the listener too, makes
   it at that moment. Nothing is corrected after. A press of the follower's own stops following,
-  with Follow again in the bar; the listener sees who is with them. Together, a panel beside the
+  with Listen along again in the bar; the listener sees who is with them. Together, a panel beside the
   page after Up next, lists who is in the session, with Leave for a follower, and outside one who else is
-  listening, each with Follow; an album's page shows the faces of whoever is playing from it,
+  listening, each with Listen along; an album's page shows the faces of whoever is playing from it,
   and pressing one follows them. Other followers see a follower only if that follower shares what
   they play. A locked phone or a tab in the background has its timers slowed, so a change can
   reach it after it was due; it is joined once, where the music is by then, which the player

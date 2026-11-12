@@ -26,7 +26,7 @@ export function togetherRow( ctx ) {
 	const follows = ( name ) =>
 		fmt(
 			/* translators: %s: The listener's name. */
-			__( 'Follow %s', 'riff' ),
+			__( 'Listen along with %s', 'riff' ),
 			name
 		);
 

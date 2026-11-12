@@ -215,7 +215,7 @@ export default function together( P ) {
 		if ( following ) {
 			stop(
 				/* translators: %s: The listener's name. */
-				__( 'You stopped following %s.', 'riff' ),
+				__( 'You stopped listening along with %s.', 'riff' ),
 				true
 			);
 			return;
@@ -480,7 +480,7 @@ export default function together( P ) {
 			fmt(
 				/* translators: %s: The listener's name. */
 				__(
-					'Following %s, who sees you’re with them. While your screen is locked, their changes reach you late.',
+					'Listening along with %s, who sees you’re with them. While your screen is locked, their changes reach you late.',
 					'riff'
 				),
 				following.name
@@ -667,7 +667,7 @@ export default function together( P ) {
 		if ( following ) {
 			head.textContent = fmt(
 				/* translators: %s: The listener's name. */
-				__( 'Following %s', 'riff' ),
+				__( 'Listening along with %s', 'riff' ),
 				following.name
 			);
 			for ( const p of people ) {
@@ -679,7 +679,7 @@ export default function together( P ) {
 				button( __( 'Leave', 'riff' ), '', () =>
 					stop(
 						/* translators: %s: The listener's name. */
-						__( 'You stopped following %s.', 'riff' ),
+						__( 'You stopped listening along with %s.', 'riff' ),
 						false
 					)
 				)
@@ -698,10 +698,10 @@ export default function together( P ) {
 					person(
 						p,
 						button(
-							__( 'Follow', 'riff' ),
+							__( 'Listen along', 'riff' ),
 							fmt(
 								/* translators: %s: The listener's name. */
-								__( 'Follow %s', 'riff' ),
+								__( 'Listen along with %s', 'riff' ),
 								p.name
 							),
 							async () => {
@@ -728,7 +728,7 @@ export default function together( P ) {
 				const none = document.createElement( 'p' );
 				none.className = 'riff-together-none';
 				none.textContent = __(
-					'No one else is listening right now. When someone is, you can follow them here and hear what they play as they play it.',
+					'No one else is listening right now. When someone is, you can listen along with them here and hear what they play as they play it.',
 					'riff'
 				);
 				box.append( none );
@@ -846,7 +846,7 @@ export default function together( P ) {
 					),
 					label: fmt(
 						/* translators: %s: The listener's name. */
-						__( 'Following %s', 'riff' ),
+						__( 'Listening along with %s', 'riff' ),
 						following.name
 					),
 				},
@@ -893,7 +893,7 @@ export default function together( P ) {
 		label: () =>
 			fmt(
 				/* translators: %s: The listener's name. */
-				__( 'Stop following %s', 'riff' ),
+				__( 'Stop listening along with %s', 'riff' ),
 				following?.name || ''
 			),
 		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 19L19 5M19 19L5 5"/></svg>',
@@ -905,7 +905,7 @@ export default function together( P ) {
 		label: () =>
 			fmt(
 				/* translators: %s: The listener's name. */
-				__( 'Follow %s again', 'riff' ),
+				__( 'Listen along with %s again', 'riff' ),
 				again?.name || ''
 			),
 		icon: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.72351 15.6312C6.97795 17.7948 9.31903 19.25 12 19.25C16.0041 19.25 19.25 16.0041 19.25 12C19.25 7.99594 16.0041 4.75 12 4.75C9.99797 4.75 8.18547 5.56148 6.87348 6.87348L4.5 9.5M4.5 6V9.5H8"/><path d="M11.25 13.5V10.5L13.25 12L11.25 13.5Z" fill="currentColor"/></svg>',

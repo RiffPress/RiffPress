@@ -121,7 +121,7 @@ test( 'a listener follows another from the faces on an album, and Together lists
 		await guest.goto( albumUrl );
 		await expect( face ).toHaveCount( 1, { timeout: 3000 } );
 	} ).toPass();
-	await expect( face ).toHaveAccessibleName( 'Follow admin' );
+	await expect( face ).toHaveAccessibleName( 'Listen along with admin' );
 	await expect( guest.locator( '.riff-album-together-label' ) ).toHaveText( 'Listening now' );
 
 	await face.click();
@@ -131,7 +131,7 @@ test( 'a listener follows another from the faces on an album, and Together lists
 
 	// The follower's panel: who they follow, and the way out.
 	const mine = await together( guest );
-	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Following admin' );
+	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Listening along with admin' );
 	await expect( mine.locator( '.riff-together-person' ) ).toHaveCount( 1 );
 	await expect( mine.locator( '.riff-together-person' ) ).toContainText( 'admin' );
 	await expect( mine.locator( '.riff-together-person' ) ).toContainText( 'Choosing the music' );
@@ -150,9 +150,9 @@ test( 'a listener follows another from the faces on an album, and Together lists
 
 	// Leaving: out of the session, and the panel shows who else is listening, each with Follow.
 	await leave.click();
-	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped following admin/ ) ).toBeVisible();
+	await expect( guest.locator( '.riff-toast' ).getByText( /You stopped listening along with admin/ ) ).toBeVisible();
 	await expect( mine.locator( '.riff-together-head' ) ).toHaveText( 'Listening now' );
-	await expect( mine.getByRole( 'button', { name: 'Follow admin' } ) ).toBeVisible();
+	await expect( mine.getByRole( 'button', { name: 'Listen along with admin' } ) ).toBeVisible();
 	await expect( guest.locator( '.riff-side-title' ) ).toBeFocused();
 
 	await context.close();

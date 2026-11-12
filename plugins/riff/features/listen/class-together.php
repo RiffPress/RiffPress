@@ -1114,7 +1114,7 @@ final class Together {
 					'action' => 'listen-along',
 					'data'   => array( 'user' => (int) $listener['user']['id'] ),
 					/* translators: %s: the listener's name. */
-					'label'  => sprintf( __( 'Follow %s', 'riff' ), $name ),
+					'label'  => sprintf( __( 'Listen along with %s', 'riff' ), $name ),
 				),
 			)
 		);
