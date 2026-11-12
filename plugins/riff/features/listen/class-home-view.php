@@ -13,7 +13,6 @@ use WP_REST_Request;
 use WP_REST_Response;
 
 use Riff\Library;
-use Riff\Listener;
 use Riff\Tracks;
 
 defined( 'ABSPATH' ) || exit;
@@ -145,7 +144,7 @@ final class Home_View {
 		Ui::lead( self::LEAD );
 		$html .= self::played_shelves( $page );
 		// Who else is playing, which the script fills; hidden until someone is.
-		if ( Together::available() && true === Listener::signed_in() ) {
+		if ( Together::available() && Together::may_join() ) {
 			$html .= Ui::shelf( 'together', __( 'Listening now', 'riff' ), '', '', true, 'div', array( 'together' => rest_url( Library::REST . '/together' ) ) );
 			// And who a host adds from other sites (riff_together_elsewhere), under their own heading.
 			$html .= Ui::shelf( 'together-elsewhere', Together::elsewhere_label( get_current_user_id() ), '', '', true );
