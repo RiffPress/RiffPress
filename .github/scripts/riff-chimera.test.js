@@ -31,7 +31,7 @@ test( 'the copy of CHIMERA is the build SOURCE.txt names, with its licences besi
 	const source = fs.readFileSync( path.join( VENDOR, 'SOURCE.txt' ), 'utf8' );
 	assert.match( source, /^Commit: [0-9a-f]{40}$/m );
 	const sums = [ ...source.matchAll( /^([0-9a-f]{64}) {2}(\S+)$/gm ) ];
-	assert.deepEqual( sums.map( ( m ) => m[ 2 ] ).sort(), [ 'chimera.js', 'chimera.wasm', 'cmudict.txt.gz', 'processor.js' ] );
+	assert.deepEqual( sums.map( ( m ) => m[ 2 ] ).sort(), [ 'chimera.js', 'chimera.wasm', 'cmudict.txt', 'processor.js' ] );
 	for ( const [ , sum, file ] of sums ) {
 		const got = crypto.createHash( 'sha256' ).update( fs.readFileSync( path.join( VENDOR, file ) ) ).digest( 'hex' );
 		assert.equal( got, sum, `${ file } is not the build SOURCE.txt names; rebuild with .github/scripts/build-chimera.sh` );

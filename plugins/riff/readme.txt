@@ -145,6 +145,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.10.0 =
+* Riff Chimera, an experimental view where CHIMERA's simulated voice sings the track's melody with the recording, a voice per singer.
+
 = 6.9.0 =
 * What visitors can't see is marked Private for those who can.
 * Fixed: a cover that can't be shown is a blank record, never a broken image.
@@ -172,13 +175,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: Bindings and Protect forget what they cached when a post or its meta changes, and Export keeps an archive's statements with its own handle.
 * Fixed: an empty riff_profile_url hides Edit profile instead of printing a link that reloads the app.
 * Fixed: one answer to "is it playing", so the button, riff.playing() and the saved state agree while the needle is cued.
-
-= 6.6.0 =
-* The app's fonts come with it, preloaded with the page and kept by a service worker for every launch after the first.
-* Fixed: Inter and EB Garamond draw the Latin they are written in, with a fallback of each one's size.
-* Fixed: a video on its own keeps the screen on while it plays, as a song's video does.
-* Fixed: deleting Riff removes its settings, listeners' choices and its hourly job, as isolation.json says.
-* Fixed: Download your Riff holds protected files kept outside the web root.
-* Fixed: Settings › Riff says what Riff's background jobs and its protected folder setting are, so main's checks pass again.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

@@ -124,7 +124,7 @@ final class Chimera {
 					'bundle'  => $file( 'chimera.js' ),
 					'wasm'    => $file( 'chimera.wasm' ),
 					'worklet' => $file( 'processor.js' ),
-					'dict'    => $file( 'cmudict.txt.gz' ),
+					'dict'    => $file( 'cmudict.txt' ),
 					'source'  => 'https://github.com/jamesondh/chimera-vocal-synth',
 				)
 				+ self::strings()

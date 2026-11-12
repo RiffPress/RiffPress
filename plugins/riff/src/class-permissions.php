@@ -402,13 +402,16 @@ final class Permissions {
 	 * @param string $slug  The plugin's slug.
 	 * @param string $title Its name.
 	 * @param string $dir   Its folder.
-	 * @param string $tag   The heading's element.
+	 * @param string $tag    The heading's element.
+	 * @param bool   $anchor Whether the list is the one a link reaches (Settings › Riff's), with its
+	 *                       id. The notice's copy has none, so the page never has two.
 	 * @return string
 	 */
-	public static function render( string $slug, string $title, string $dir, string $tag = 'h3' ): string {
+	public static function render( string $slug, string $title, string $dir, string $tag = 'h3', bool $anchor = true ): string {
 		$manifest = self::manifest( $dir );
 		$tag      = in_array( $tag, array( 'h2', 'h3', 'h4', 'strong' ), true ) ? $tag : 'h3';
-		$html     = sprintf( '<section class="riff-permissions" id="%1$s" data-plugin="%2$s"><%3$s>%4$s</%3$s>', esc_attr( self::ANCHOR . $slug ), esc_attr( $slug ), $tag, esc_html( $title ) );
+		$id       = $anchor ? sprintf( ' id="%s"', esc_attr( self::ANCHOR . $slug ) ) : '';
+		$html     = sprintf( '<section class="riff-permissions"%1$s data-plugin="%2$s"><%3$s>%4$s</%3$s>', $id, esc_attr( $slug ), $tag, esc_html( $title ) );
 		if ( null === $manifest ) {
 			return $html . '<p>' . esc_html__( "It doesn't say what it does, so Riff can't list it here.", 'riff' ) . '</p></section>';
 		}
@@ -547,7 +550,7 @@ final class Permissions {
 			if ( is_array( $plugin ) && isset( $plugin['title'], $plugin['dir'] ) ) {
 				/* translators: %s: a plugin's name. */
 				$heading = sprintf( __( '%s is on. Here is what it can do.', 'riff' ), (string) $plugin['title'] );
-				$html   .= self::render( (string) $slug, $heading, (string) $plugin['dir'], 'strong' );
+				$html   .= self::render( (string) $slug, $heading, (string) $plugin['dir'], 'strong', false );
 			}
 		}
 		if ( '' === $html ) {

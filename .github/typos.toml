@@ -30,6 +30,9 @@ extend-exclude = [
   "site/covers/",
   # WordPress's own function and hook names, spelled the way core spells them.
   "packages/wp-api-coverage/catalog/",
+  # CHIMERA's build and its pronouncing dictionary, vendored as built (SOURCE.txt): minified code
+  # whose short names read as misspellings, and a word list with every spelling in it.
+  "plugins/riff-chimera/assets/chimera/",
 ]
 
 [default]
