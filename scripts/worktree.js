@@ -15,7 +15,7 @@
  * Usage:
  *   npm run wt -- new <branch>   A worktree in .claude/worktrees/ on a new branch from origin/main, pushed.
  *   npm run wt -- setup          node_modules and vendor for the worktree you're in (made by any tool).
- *   npm run wt -- env            Ports of its own, then start this worktree's wp-env and seed both sites.
+ *   npm run wt -- env            Ports of its own, then start this worktree's wp-env and seed its development site.
  *   npm run wt -- list           Every worktree: branch, ports, uncommitted, unpushed, pull request.
  *   npm run wt -- prune [--yes]  Remove worktrees whose pull request merged or closed, with nothing
  *                                uncommitted or unpushed, and their wp-env. Lists only, without --yes.
@@ -165,9 +165,9 @@ function start( dir ) {
 		}
 	};
 	npx( [ 'wp-env', 'start' ] );
-	for ( const container of [ 'cli', 'tests-cli' ] ) {
-		npx( [ 'wp-env', 'run', container, 'wp', 'eval-file', 'wp-content/riff/packages/fixtures/seed.php' ] );
-	}
+	// The development site only. The tests site stays as CI's is, unseeded, since the suite counts
+	// what it makes itself: seeded albums there fail tests in this worktree that pass in CI.
+	npx( [ 'wp-env', 'run', 'cli', 'wp', 'eval-file', 'wp-content/riff/packages/fixtures/seed.php' ] );
 	const { port, testsPort } = readOverride( dir );
 	console.log( `site http://localhost:${ port }, tests http://localhost:${ testsPort }` );
 	require( 'node:child_process' ).execFileSync( process.execPath, [ path.join( __dirname, 'open-local.js' ), `http://localhost:${ port }` ], { stdio: 'inherit' } );

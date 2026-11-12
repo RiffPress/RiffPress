@@ -98,7 +98,9 @@ final class App {
 		if ( ! $page instanceof WP_Post || ! self::holds_app( $page ) || post_password_required( $page ) ) {
 			return $template;
 		}
-		header( 'X-Robots-Tag: noindex' );
+		if ( ! headers_sent() ) {
+			header( 'X-Robots-Tag: noindex' );
+		}
 		return RIFF_DIR . 'templates/view.php';
 	}
 

@@ -89,7 +89,9 @@ test( 'a track\'s menu makes a playlist named after it, and adds another track t
 	await menu.getByRole( 'menuitem', { name: 'Underground' } ).click();
 	await expect( page.locator( '.riff-toast' ) ).toHaveText( 'Added to Underground' );
 	await expect.poll( async () => ( await mine( requestUtils ) )[ 0 ].count ).toBe( 2 );
-	expect( await page.evaluate( () => window.riffPlaylistChanges ) ).toEqual( [ 'create', 'add' ] );
+	// The server has the track before the page has read its answer, and the toast already said the
+	// same words for the first one, so the change is waited for rather than read at once.
+	await expect.poll( () => page.evaluate( () => window.riffPlaylistChanges ) ).toEqual( [ 'create', 'add' ] );
 	expect( await page.evaluate( () => window.riffInternal.playlists().map( ( p ) => p.title ) ) ).toEqual( [ 'Underground' ] );
 } );
 

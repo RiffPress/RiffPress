@@ -57,6 +57,11 @@ class Test_Riff_Uninstall extends Riff_TestCase {
 		update_user_option( $user, Riff\Listen\Together::SHARE, 'on' );
 		update_user_option( $user, Riff\Likes::OPTION, array( 'kept' ) );
 		wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', Riff\Private_Site::JOB );
+		// What Riff keeps between requests, and the stamp a change to the library moves.
+		Riff\Cache::settle();
+		self::factory()->post->create();
+		Riff\Cache::settle();
+		Riff\Cache::set( 'uninstall', 1 );
 
 		$manifest = json_decode( (string) file_get_contents( RIFF_DIR . 'isolation.json' ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- the plugin's own manifest.
 		$keep     = array_keys( (array) ( $manifest['data']['keep'] ?? array() ) );
@@ -73,6 +78,9 @@ class Test_Riff_Uninstall extends Riff_TestCase {
 		// Core's roles, named by the table prefix, which the test suite's starts with riff_.
 		$options = array_diff( $options, array( $wpdb->get_blog_prefix() . 'user_roles' ) );
 		$this->assertSame( array(), array_values( $options ), 'no setting of Riff\'s is left' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- what is left, as the database has it.
+		$kept = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", '%' . $wpdb->esc_like( 'riff_kept_' ) . '%' ) );
+		$this->assertSame( array(), $kept, 'nothing Riff kept between requests is left' );
 
 		$prefix = $wpdb->get_blog_prefix();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- what is left, as the database has it.

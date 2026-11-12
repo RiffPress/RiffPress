@@ -93,6 +93,11 @@ delete_option( 'riff_catalog_backfill' );
 delete_option( 'riff_catalog_backfill_from' );
 delete_option( 'riff_rewrite' );
 delete_transient( 'riff_listen_page' );
+// What Riff\Cache kept between requests, and the stamp that says whether it is still current. Each
+// kept value's transient is named by a hash of what it holds, so they go by their prefix. With a
+// persistent object cache they are in that cache instead, and expire within a day.
+delete_option( 'riff_changed' );
+$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( '_transient_riff_kept_' ) . '%', $wpdb->esc_like( '_transient_timeout_riff_kept_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- uninstall, once; transients named by a hash have no API to list them.
 wp_clear_scheduled_hook( 'riff_catalog_backfill' );
 wp_unschedule_hook( 'riff_import_zip' );
 

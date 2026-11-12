@@ -171,7 +171,10 @@ test( 'a follower keeps time with the host through a pause, a play, a skip and a
 	await page.waitForTimeout( MADE );
 	now = await apart( page, guest );
 	expect( now.host.time ).toBeGreaterThan( 60 );
-	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+	// A seek lands near the place, not on it, and the follower closes what is left by playing a
+	// little faster or slower over about five seconds (together.js, keep()), so it is held to
+	// that, not to the moment the change was made.
+	await expect.poll( async () => Math.abs( ( await apart( page, guest ) ).off ), { timeout: 6000 } ).toBeLessThan( 0.1 );
 
 	// A press of the follower's own is theirs: they stop following.
 	await guest.evaluate( () => window.riffInternal.toggle() );

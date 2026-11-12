@@ -212,8 +212,26 @@ jobs:
           npx --yes wrangler@4 pages deploy out-developer --project-name "$DEVELOPER_PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
           # Source's redirects send the reference to the developer host, which would loop while that host is
           # still one of Source's project's custom domains.
-          if [ "$(site_of "$DEV")" != developer ]; then
-            echo "::error::${DEV} is not serving the developer site yet. In Cloudflare, remove it from the $SOURCE_PROJECT project's custom domains and add it to $DEVELOPER_PROJECT's, then run this again. Source is left as it was."
+          serving="$(site_of "$DEV")"
+          if [ "$serving" != developer ]; then
+            move="In Cloudflare, remove ${DEV} from the $SOURCE_PROJECT project's custom domains and add it to $DEVELOPER_PROJECT's, then run this again."
+            # Still one of Source's own domains, as it is until that move is made once: the developer
+            # site is deployed and waits there, and Source is left as it was, so nothing loops. Source
+            # says so by its header, or, deployed before it sent one, by sending the same page.
+            page_of() {
+              local body
+              body="$(curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "$1")" || return 1
+              [ -n "$body" ] || return 1
+              printf '%s' "$body" | sha256sum | cut -d' ' -f1
+            }
+            dev_page="$(page_of "$DEV" || echo "unreachable: $DEV")"
+            src_page="$(page_of "$SRC" || echo "unreachable: $SRC")"
+            if [ "$serving" = source ] || [ "$dev_page" = "$src_page" ]; then
+              echo "::warning::The developer site is deployed but not yet at ${DEV}, which Source still serves. $move Source is left as it was."
+              printf '### Source not deployed: waiting for the developer domain\n\nThe developer site is deployed to %s. %s Until then Source keeps its last deploy, since its redirects would send the reference back to itself.\n' "$DEVELOPER_PROJECT" "$move" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "::error::${DEV} answers with neither the developer site nor Source (X-Riff-Site: '${serving}'). $move Source is left as it was."
             exit 1
           fi
           npx --yes wrangler@4 pages deploy out-source --project-name "$SOURCE_PROJECT" --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=true
