@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.2.0...riff-chimera-v0.3.0) (2026-11-12)
+
+
+### Features
+
+* **player:** a plugin's view can live in the Listen app's sidebar, and Riff Chimera sings from there ([#1051](https://github.com/RiffPress/RiffPress/issues/1051)) ([937c3ca](https://github.com/RiffPress/RiffPress/commit/937c3cae5e0e8aaa9d6b464e658999122cb078ab))
+
 ## [0.2.0](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.1.1...riff-chimera-v0.2.0) (2026-11-12)
 
 
