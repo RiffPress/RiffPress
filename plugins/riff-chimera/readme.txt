@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff, riff-sing
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,9 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 CHIMERA is (c) 2026 Jameson Hodge, under the MIT licence, in assets/chimera/LICENSE.txt. The pronouncing dictionary is the CMU Pronouncing Dictionary, under the licence in assets/chimera/CMUDICT-LICENSE.txt. The copy here is built from CHIMERA's source at the commit in assets/chimera/SOURCE.txt, by .github/scripts/build-chimera.sh in Riff's repository.
 
 == Changelog ==
+
+= 0.1.1 =
+* Fixed: main's checks pass again with Riff Chimera, its dictionary vendored as plain text.
 
 = 0.1.0 =
 * Riff Chimera, an experimental view where CHIMERA's simulated voice sings the track's melody with the recording, a voice per singer.
