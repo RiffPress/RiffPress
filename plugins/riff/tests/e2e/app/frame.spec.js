@@ -32,6 +32,36 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-view' ) ).toHaveCSS( 'border-top-left-radius', '8px' );
 	} );
 
+	test( 'in the frame the whole head of the sidebar is the toggle: its name folds the sidebar, and the row in the rail opens it', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( isMobile, 'The frame is for a wide window.' );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
+		await page.reload();
+		const toggle = page.locator( '.riff-app-collapse' );
+		const brand = page.locator( '.riff-app-brand' );
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'true' );
+		expect( ( await brand.boundingBox() ).height ).toBeGreaterThanOrEqual( 40 );
+
+		// The name sits under the toggle's stretched target, so the pointer is put where it is.
+		const name = await page.locator( '.riff-app-name' ).boundingBox();
+		await page.mouse.move( name.x + name.width / 2, name.y + name.height / 2 );
+		await expect( toggle ).toHaveCSS( 'cursor', 'pointer' );
+		await expect( page.locator( '.riff-app-name' ) ).toHaveCSS( 'color', await toggle.evaluate( ( el ) => getComputedStyle( el ).color ) );
+		await page.mouse.click( name.x + name.width / 2, name.y + name.height / 2 );
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'false' );
+
+		// A rail's head is the row, not only the icon.
+		const row = await brand.boundingBox();
+		expect( row.height ).toBeGreaterThanOrEqual( 40 );
+		await page.mouse.click( row.x + 2, row.y + row.height - 2 );
+		await expect( toggle ).toHaveAttribute( 'aria-expanded', 'true' );
+		await page.evaluate( () => localStorage.removeItem( 'riff-sidebar' ) );
+	} );
+
 	test( 'a window with a mouse but no room for the sidebar, as a car\'s screen is, keeps the touch layout without the frame, and gains the frame once it widens', async ( {
 		page,
 		isMobile,

@@ -205,6 +205,33 @@ html.riff-frame .riff-standalone .riff-app {
 		padding: 0;
 	}
 
+	/* The whole head is the toggle: the button's pseudo-element covers the
+	   row, so a click, the pointer and the tooltip are anywhere on it. The
+	   private mark is only a mark, so a click on it passes to the toggle. */
+	html.riff-frame .riff-standalone .riff-app .riff-app-brand {
+		position: relative;
+	}
+
+	html.riff-frame .riff-standalone .riff-app .riff-app-collapse::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: 8px;
+	}
+
+	html.riff-frame .riff-standalone .riff-app .riff-app-collapse:focus-visible {
+		outline: none;
+	}
+
+	html.riff-frame .riff-standalone .riff-app .riff-app-collapse:focus-visible::after {
+		outline: var(--riff-app-focus-ring);
+		outline-offset: calc(-1 * var(--riff-app-focus-ring-offset, 0px));
+	}
+
+	html.riff-frame .riff-standalone .riff-app .riff-app-brand:hover :is(.riff-app-collapse, .riff-app-name) {
+		color: var(--riff-app-ink);
+	}
+
 	html.riff-frame .riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-tab {
 		min-height: 40px;
 	}
