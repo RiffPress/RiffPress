@@ -44,7 +44,7 @@ class Test_Riff_Chimera extends Riff_TestCase {
 		}
 		$config = implode( '', $scripts->get_data( 'riff-chimera', 'before' ) ?: array() );
 		$this->assertStringContainsString( 'window.riffChimera = ', $config );
-		foreach ( array( 'chimera.wasm', 'chimera.js', 'processor.js', 'cmudict.txt.gz' ) as $file ) {
+		foreach ( array( 'chimera.wasm', 'chimera.js', 'processor.js', 'cmudict.txt' ) as $file ) {
 			$this->assertStringContainsString( 'riff-chimera\/assets\/chimera\/' . $file, $config, "{$file} is fetched from the plugin's own folder" );
 		}
 		$this->assertStringContainsString( '"media":"', $config, 'the melody comes from the media route' );

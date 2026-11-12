@@ -264,6 +264,7 @@ class Test_Riff_Permissions extends Riff_TestCase {
 		$html = (string) ob_get_clean();
 		$this->assertStringContainsString( 'Riff Chords (Experimental) is on. Here is what it can do.', $html );
 		$this->assertStringContainsString( 'riff-permissions-notice', $html );
+		$this->assertStringNotContainsString( 'id="riff-permissions-riff-chords"', $html, "the id is Settings › Riff's list's, which the notice may share a page with" );
 
 		ob_start();
 		Permissions::notice();

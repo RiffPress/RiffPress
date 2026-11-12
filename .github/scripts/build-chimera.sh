@@ -53,7 +53,8 @@ cp "$work/src/target/wasm32-unknown-unknown/release/chimera_wasm.wasm" "$out/chi
 	echo "/* CHIMERA's engine facade and anatomy renderer (src/wasm, src/ui/render at $COMMIT) behind .github/scripts/chimera/entry.ts, bundled by bun $(bun --version). MIT, (c) 2026 Jameson Hodge: see LICENSE.txt beside it. Rebuilt by .github/scripts/build-chimera.sh; not edited by hand. */"
 	cat "$work/chimera.js"
 } > "$out/chimera.js"
-cp "$work/src/public/data/cmudict.txt.gz" "$out/cmudict.txt.gz"
+# Plain text: a plugin may not ship compressed files, and a server gzips text on the way anyway.
+gunzip -c "$work/src/public/data/cmudict.txt.gz" > "$out/cmudict.txt"
 cp "$work/src/public/data/CMUDICT-LICENSE.txt" "$out/CMUDICT-LICENSE.txt"
 cp "$work/src/LICENSE" "$out/LICENSE.txt"
 
@@ -63,6 +64,6 @@ cp "$work/src/LICENSE" "$out/LICENSE.txt"
 	echo "Built with: rustc $RUST (wasm32-unknown-unknown, release), bun $(bun --version)"
 	echo "Rebuild: bash .github/scripts/build-chimera.sh"
 	echo
-	(cd "$out" && shasum -a 256 chimera.wasm chimera.js processor.js cmudict.txt.gz)
+	(cd "$out" && shasum -a 256 chimera.wasm chimera.js processor.js cmudict.txt)
 } > "$out/SOURCE.txt"
 cat "$out/SOURCE.txt"

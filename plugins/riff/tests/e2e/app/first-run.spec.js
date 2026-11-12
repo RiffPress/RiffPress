@@ -5,9 +5,11 @@
  * The pre-commit hook runs this against the maintainer's own tests site, so it must leave that site
  * as it found it, pass or fail. beforeAll records what it is about to change: whether Riff and Riff
  * Lyrics are active (Lyrics requires Riff, so it has to be off for Riff to be deactivated), and the
- * status of every Listen page already there, which go to draft so the notice offers a new one.
- * restore() puts each of those back and deletes only what the test made; it runs after each test,
- * failed or not, and again after all of them, and is safe to run twice.
+ * status of every Listen page already there, which go to draft so the notice offers a new one. The
+ * test itself turns every other active riff-* plugin off while Riff goes off and on again.
+ * restore() puts each of those back, a plugin only once what it requires is (Riff Chimera requires
+ * Riff Sing), and deletes only what the test made; it runs after each test, failed or not, and
+ * again after all of them, and is safe to run twice.
  *
  * "No music yet" is the riff_test_no_music cookie, which the tests-only components plugin reads to
  * hide the site's music from that browser, so nobody's media is touched.
@@ -28,6 +30,8 @@ const NO_MUSIC = 'riff_test_no_music';
 const made = own();
 // What the site looked like before: plugin statuses by id, and Listen pages by id with their status.
 const before = { plugins: {}, listen: new Map() };
+// The riff-* plugins the test turned off so Riff could be, to be turned on again.
+let dependents = [];
 
 const isListenPage = ( page ) =>
 	page.content.raw.includes( '<!-- wp:riff/app' ) ||
@@ -57,6 +61,33 @@ const setPlugin = ( requestUtils, plugin, status ) =>
 		path: `/wp/v2/plugins/${ plugin }`,
 		data: { status },
 	} );
+
+/**
+ * Activates plugins that may require one another, in rounds: one whose requirements aren't active
+ * yet waits for the next round, after what it requires (the REST API doesn't say what a plugin
+ * requires, so WordPress's refusal is the answer). Throws if a round activates nothing.
+ *
+ * @param {Object}   requestUtils The REST helper.
+ * @param {string[]} plugins      Plugin ids to activate.
+ */
+async function activateAll( requestUtils, plugins ) {
+	let waiting = [ ...plugins ];
+	while ( waiting.length ) {
+		const refused = [];
+		for ( const plugin of waiting ) {
+			await setPlugin( requestUtils, plugin, 'active' ).catch( ( error ) => {
+				if ( error.code !== 'plugin_missing_dependencies' ) {
+					throw error;
+				}
+				refused.push( plugin );
+			} );
+		}
+		if ( refused.length === waiting.length ) {
+			throw new Error( `Could not activate ${ refused.join( ', ' ) }` );
+		}
+		waiting = refused;
+	}
+}
 
 /**
  * Puts the site back the way beforeAll found it. Each step runs even if an earlier one throws.
@@ -157,7 +188,7 @@ test.describe( 'First run', () => {
 
 		// A plugin that requires Riff (every riff-* plugin) keeps WordPress from offering Deactivate on Riff's row
 		// while it is active, so those step aside first and come back.
-		const dependents = ( await requestUtils.rest( { path: '/wp/v2/plugins' } ) )
+		dependents = ( await requestUtils.rest( { path: '/wp/v2/plugins' } ) )
 			.filter( ( p ) => p.status === 'active' && /^riff-/.test( p.plugin ) )
 			.map( ( p ) => p.plugin );
 		for ( const plugin of dependents ) {
@@ -170,9 +201,7 @@ test.describe( 'First run', () => {
 		await row().locator( '.deactivate a' ).click();
 		await row().locator( '.activate a' ).click();
 		await expect( row().locator( '.deactivate a' ) ).toBeVisible();
-		for ( const plugin of dependents ) {
-			await requestUtils.rest( { method: 'PUT', path: `/wp/v2/plugins/${ plugin }`, data: { status: 'active' } } );
-		}
+		await activateAll( requestUtils, dependents );
 
 		// The notice offers the page, and the first album.
 		const notice = page.locator( '.notice.riff-first-run' );

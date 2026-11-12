@@ -26,7 +26,6 @@
 	// Vibrato on held vowels, in cents: CHIMERA's own default.
 	const VIBRATO = 35;
 
-	const dec = new TextDecoder();
 	let loading = null;
 
 	/**
@@ -48,19 +47,7 @@
 					credentials: 'same-origin',
 				} );
 				if ( d.ok ) {
-					const bytes = new Uint8Array( await d.arrayBuffer() );
-					// A server may already have inflated it (Content-Encoding: gzip).
-					const text =
-						bytes[ 0 ] === 0x1f && bytes[ 1 ] === 0x8b
-							? await new Response(
-									new Blob( [ bytes ] )
-										.stream()
-										.pipeThrough(
-											new DecompressionStream( 'gzip' )
-										)
-								).text()
-							: dec.decode( bytes );
-					call( 'g2pLoad', { text } );
+					call( 'g2pLoad', { text: await d.text() } );
 					dictionary = true;
 				}
 			} catch {}
