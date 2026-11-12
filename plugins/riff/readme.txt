@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.10.1
+Stable tag: 6.11.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.11.0 =
+* A song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings.
+
 = 6.10.1 =
 * Fixed: main's checks pass again with Riff Chimera, its dictionary vendored as plain text.
 * Fixed: the deck is drawn in WebGL at every size, its keys along the front of a laptop's window.
@@ -168,9 +171,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: a change of view no longer writes speed or pitch to the music playing.
 * Fixed: a queue picked up, or a track played again from Recently played, after its signed address ran out is signed again as it loads.
 * Fixed: a Playground link names its authors by display name only, with no email or login.
-
-= 6.7.1 =
-* Fixed: a zip that a storage plugin keeps in object storage is brought to the server and imported.
-* Fixed: a deleted site takes its protected files with it when a host keeps them outside uploads.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

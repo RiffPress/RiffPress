@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.7.0
+Stable tag: 0.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,10 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 == Changelog ==
 
+= 0.8.0 =
+* A song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings.
+* Fixed: main's checks pass again, and the Chimera view's notes scroll fully into view above the bar.
+
 = 0.7.0 =
 * Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
 * Experimental sandbox runs an untrusted extension's PHP in php-wasm, behind a bridge that grants only its manifest.
@@ -50,8 +54,5 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 = 0.4.1 =
 * Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
-
-= 0.4.0 =
-* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
