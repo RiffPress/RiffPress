@@ -62,6 +62,20 @@
 	text-underline-offset: 0.15em;
 }
 
+/* Except the artist under an album's title, which the apps set apart from
+   the rest of its line by weight, in the text's own colour, underlined only
+   under the pointer or in focus, so the playing track's accent never
+   recolours it. */
+.riff-standalone .riff-app .riff-album-meta > a:not([class]) {
+	color: var(--riff-app-ink);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.riff-standalone .riff-app .riff-album-meta > a:not([class]):is(:hover, :focus-visible) {
+	text-decoration: underline;
+}
+
 /* Search's Browse tiles: shades of the accent on the app's black, each with
    its words in the text's colour at 4.5:1, in place of the palette the
    Listen block keeps in a theme. */
@@ -514,11 +528,6 @@ html.has-riff .riff-standalone .riff-app {
 		padding: 0 28px;
 	}
 
-	.riff-standalone .riff-album-title {
-		font-weight: 700;
-		letter-spacing: -0.02em;
-	}
-
 	/* An album's, artist's or playlist's header: the cover
 	   beside a large title, then a row of actions under both, led by a round
 	   Play in the accent. The text block gives its parts to the grid. */
@@ -589,15 +598,36 @@ html.has-riff .riff-standalone .riff-app {
 		grid-area: meta;
 	}
 
+	/* The line under the title ends on the cover's bottom edge: its glyphs,
+	   not the leading below them, which would leave it short of the edge. */
+	@supports (text-box: trim-end text alphabetic) {
+
+		.riff-standalone .riff-album-has-cover .riff-album-meta {
+			text-box: trim-end text alphabetic;
+		}
+	}
+
 	/* The title is sized to the page it heads, not the window, so it still
-	   fits a word to a line when Up next or About narrows the page. */
+	   fits a word to a line when Up next or About narrows the page, and a
+	   longer one smaller, so it keeps to two lines or so beside the cover
+	   rather than towering over it. Tracked as Roboto is at display sizes, so
+	   its heavy letters don't touch, and set back by a capital's side bearing,
+	   so its first letter's stem lines up with the line above and below. */
 	.riff-standalone .riff-app .riff-album-title {
 		grid-area: title;
-		margin: 4px 0 8px;
+		margin: 4px 0 8px -0.03em;
 		font-size: clamp(28px, 7cqi, 88px);
 		font-weight: 800;
-		line-height: 1.05;
-		letter-spacing: -0.04em;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+	}
+
+	.riff-standalone .riff-app .riff-album-long .riff-album-title {
+		font-size: clamp(28px, 5cqi, 64px);
+	}
+
+	.riff-standalone .riff-app .riff-album-longer .riff-album-title {
+		font-size: clamp(28px, 3.75cqi, 48px);
 	}
 
 	.riff-standalone .riff-app .riff-album-actions {
@@ -640,11 +670,15 @@ html.has-riff .riff-standalone .riff-app {
 		background: color-mix(in srgb, var(--riff-app-accent) 85%, var(--riff-standalone-ink));
 	}
 
+	/* Shuffle and the heart are one kind of button: the same target, the
+	   same size of icon, quieter than Play until the pointer is on them, as
+	   the heart is in the accent once pressed. The heart's target meets
+	   Shuffle's, so their icons sit as far apart as Play and Shuffle's. */
 	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"] {
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		min-height: 40px;
+		width: 44px;
+		height: 44px;
+		min-height: 44px;
 		padding: 0;
 		border: 0;
 		border-radius: 50%;
@@ -652,8 +686,26 @@ html.has-riff .riff-standalone .riff-app {
 		color: var(--riff-app-ink-2);
 	}
 
-	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"]:hover {
+	.riff-standalone .riff-app .riff-album-actions .riff-app-like:not([aria-pressed="true"]) {
+		color: var(--riff-app-ink-2);
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"] + .riff-app-like {
+		margin-inline-start: -8px;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions .riff-app-like svg {
+		width: 28px;
+		height: 28px;
+	}
+
+	.riff-standalone .riff-app .riff-album-actions [data-riff-app-action="shuffle"]:hover,
+	.riff-standalone .riff-app .riff-album-actions .riff-app-like:not([aria-pressed="true"]):hover {
 		color: var(--riff-app-ink);
+	}
+
+	.riff-standalone .riff-app .riff-album-actions .riff-app-like:hover {
+		background: none;
 	}
 
 	/* Over an album's tracks: #, Title and a clock, over a rule. */

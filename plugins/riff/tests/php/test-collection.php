@@ -216,4 +216,12 @@ class Test_Riff_Collection extends Riff_TestCase {
 
 		$this->assertStringNotContainsString( 'data-riff-like-kind', App::header( 'A post', '2 tracks' ) );
 	}
+
+	public function test_a_longer_title_is_marked_to_be_set_smaller(): void {
+		$this->assertStringContainsString( 'class="riff-album"', App::header( 'Compositions', '9 tracks' ) );
+		$this->assertStringContainsString( 'class="riff-album riff-album-long"', App::header( 'Christmas With The Chorus', '9 tracks' ) );
+		$this->assertStringContainsString( 'class="riff-album riff-album-longer"', App::header( 'The Complete Recordings of the Christmas Concerts', '9 tracks' ) );
+		// Counted in letters, not bytes: twenty accented ones are not long.
+		$this->assertStringContainsString( 'class="riff-album"', App::header( str_repeat( 'é', 20 ), '9 tracks' ) );
+	}
 }
