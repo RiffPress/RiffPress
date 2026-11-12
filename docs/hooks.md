@@ -297,6 +297,19 @@ Since 6.15.0. Fires in `plugins/riff/features/listen/class-together.php`.
 | `$label` | `string` | The heading. Default "Elsewhere". |
 | `$viewer_id` | `int` | Who asks. |
 
+### `riff_together_listener`
+
+Filters whether a signed-in user may listen together on this site: share what they play, see who else is, and listen along. A host whose members belong to a network, not to each site, lets them in where they can't read the site, so friends can listen along on any Riff. Only Together: likes and playlists still ask for an account on the site.
+
+It is asked only for a signed-in user; a visitor never may. A private site (Private_Site) still refuses whoever can't read it, whatever this returns, and a listener along hears only the tracks they may play.
+
+Since 6.16.0. Fires in `plugins/riff/features/listen/class-together.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$allowed` | `bool` | Whether they may. Default: they can read this site. |
+| `$user_id` | `int` | The signed-in user. |
+
 ### `riff_together_share`
 
 Filters whether a listener who hasn't chosen shares what they play with the site's other listeners. A site where listeners shouldn't see each other unless they ask, a class of children say, returns false.

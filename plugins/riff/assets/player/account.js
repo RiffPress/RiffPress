@@ -11,7 +11,10 @@ import { fmt, parse, read, write, drop } from 'riff-player/helpers';
 const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function account( P ) {
-	const { data, me, $, $$ } = P;
+	const { data, $, $$ } = P;
+	// An account here: likes and history to keep. One who may only listen together
+	// (riff_together_listener) has data.me without them, and keeps theirs on the device.
+	const me = P.me?.rest?.likes ? P.me : null;
 	const HISTORY = 'riff-history';
 	const LIKES = 'riff-likes';
 	const KINDS = [ 'track', 'album', 'artist' ];

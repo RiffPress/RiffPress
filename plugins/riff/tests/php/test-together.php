@@ -6,6 +6,8 @@
  */
 
 use Riff\Catalog;
+use Riff\Likes_Rest;
+use Riff\Private_Site;
 use Riff\Registry;
 use Riff\Listen\Together;
 use Riff\Listen\Together_Scenes;
@@ -276,6 +278,7 @@ class Test_Riff_Together extends Riff_TestCase {
 		wp_set_current_user( $this->guest );
 		$data = Together::player_data( array( 'me' => array( 'rest' => array() ) ) );
 		$this->assertSame( rest_url( 'riff/v1/together' ), $data['me']['rest']['together'] );
+		wp_set_current_user( 0 );
 		$this->assertSame( array(), Together::player_data( array() ), 'a visitor\'s player has no account to share from' );
 	}
 
@@ -741,6 +744,90 @@ class Test_Riff_Together extends Riff_TestCase {
 		$album = $this->call( 'GET', '/together', array( 'album' => 1 ) )->get_data();
 		$this->assertArrayNotHasKey( 'elsewhere', $album, 'not on an album\'s page' );
 		remove_filter( 'riff_together_elsewhere', $add, 10 );
+	}
+
+	/**
+	 * A signed-in user with no role here: a member of a network who doesn't belong to this site.
+	 *
+	 * @return int
+	 */
+	private function stranger(): int {
+		$user = self::factory()->user->create( array( 'display_name' => 'Stranger' ) );
+		( new WP_User( $user ) )->set_role( '' );
+		$this->assertFalse( user_can( $user, 'read' ) );
+		return $user;
+	}
+
+	public function test_only_who_can_read_the_site_listens_together_unless_a_host_says_so(): void {
+		$stranger = $this->stranger();
+		wp_set_current_user( $stranger );
+		$this->assertFalse( Together::may_join() );
+		$this->assertSame( 403, $this->share( $stranger, $this->queue() )->get_status(), 'refused by default' );
+		$this->assertSame( 403, $this->call( 'GET', '/together' )->get_status() );
+		$this->assertArrayNotHasKey( 'me', Together::player_data( array() ), 'and the player is given nothing' );
+		wp_set_current_user( $this->guest );
+		$this->assertTrue( Together::may_join(), 'a subscriber may, as before' );
+	}
+
+	public function test_a_host_lets_a_signed_in_stranger_listen_together_and_nothing_else(): void {
+		$stranger = $this->stranger();
+		$asked    = array();
+		$allow    = static function ( $allowed, $user ) use ( &$asked ) {
+			$asked[] = $user;
+			return true;
+		};
+		add_filter( 'riff_together_listener', $allow, 10, 2 );
+
+		wp_set_current_user( 0 );
+		$this->assertFalse( Together::may_join(), 'never a visitor' );
+		$this->assertSame( 401, $this->call( 'GET', '/together' )->get_status() );
+		$this->assertSame( array(), $asked, 'the filter isn\'t asked about one' );
+
+		// They share, and are in the room for others.
+		$this->assertSame( 200, $this->share( $stranger, $this->queue() )->get_status() );
+		$this->assertSame( array( $stranger ), array_unique( $asked ) );
+		wp_set_current_user( $this->guest );
+		$this->assertSame( array( $stranger ), array_map( static fn( $l ) => $l['user']['id'], $this->call( 'GET', '/together' )->get_data()['listeners'] ) );
+
+		// They listen along with someone, and the player is given Together's data without an account's.
+		$this->share( $this->host, $this->queue() );
+		wp_set_current_user( $stranger );
+		$this->assertSame( 200, $this->call( 'POST', '/together/' . $this->host . '/follow' )->get_status() );
+		$data = Together::player_data( Likes_Rest::player_data( array() ) );
+		$this->assertSame( rest_url( 'riff/v1/together' ), $data['me']['rest']['together'] );
+		$this->assertNotEmpty( $data['me']['nonce'] );
+		$this->assertArrayNotHasKey( 'likes', $data['me'] );
+		$this->assertSame( array( 'together' ), array_keys( $data['me']['rest'] ) );
+
+		// Likes and playlists still ask for an account here.
+		$this->assertSame( 403, $this->call( 'GET', '/users/me/likes' )->get_status() );
+		$this->assertSame( 403, $this->call( 'GET', '/users/me/playlists' )->get_status() );
+
+		remove_filter( 'riff_together_listener', $allow, 10 );
+	}
+
+	public function test_a_private_site_refuses_a_stranger_whatever_the_host_says(): void {
+		$stranger = $this->stranger();
+		add_filter( 'riff_together_listener', '__return_true' );
+		update_option( Private_Site::OPTION, true );
+		wp_set_current_user( $stranger );
+		$this->assertFalse( Together::may_join() );
+		$this->assertSame( 403, $this->share( $stranger, $this->queue() )->get_status() );
+		$this->assertWPError( apply_filters( 'rest_authentication_errors', null ), 'and the REST API refuses them first' );
+		$this->assertArrayNotHasKey( 'me', Together::player_data( array() ) );
+		wp_set_current_user( $this->guest );
+		$this->assertTrue( Together::may_join(), 'a member still may' );
+		delete_option( Private_Site::OPTION );
+		remove_filter( 'riff_together_listener', '__return_true' );
+	}
+
+	public function test_a_host_can_keep_a_member_out_of_together(): void {
+		add_filter( 'riff_together_listener', '__return_false' );
+		wp_set_current_user( $this->guest );
+		$this->assertSame( 403, $this->call( 'GET', '/together' )->get_status() );
+		$data = Together::player_data( Likes_Rest::player_data( array() ) );
+		$this->assertArrayNotHasKey( 'together', $data['me']['rest'], 'their likes, without Together' );
+		remove_filter( 'riff_together_listener', '__return_false' );
 	}
 
 	public function test_an_index_past_the_queue_is_refused(): void {

@@ -11,6 +11,7 @@ namespace Riff\Listen;
 use Riff\Catalog;
 use Riff\Library;
 use Riff\Listener;
+use Riff\Private_Site;
 use Riff\Registry;
 use Riff\Tracks;
 use WP_Error;
@@ -123,6 +124,55 @@ final class Together {
 	}
 
 	/**
+	 * Whether whoever is asking may listen together here: a signed-in user who can read this site,
+	 * as likes and playlists ask (Listener::signed_in()), unless `riff_together_listener` says
+	 * otherwise. Never a visitor, and on a private site never someone who can't read it, whatever
+	 * the filter says.
+	 *
+	 * @since 6.16.0
+	 *
+	 * @return bool
+	 */
+	public static function may_join(): bool {
+		$user = get_current_user_id();
+		if ( $user <= 0 ) {
+			return false;
+		}
+		/**
+		 * Filters whether a signed-in user may listen together on this site: share what they play,
+		 * see who else is, and listen along. A host whose members belong to a network, not to each
+		 * site, lets them in where they can't read the site, so friends can listen along on any
+		 * Riff. Only Together: likes and playlists still ask for an account on the site.
+		 *
+		 * It is asked only for a signed-in user; a visitor never may. A private site
+		 * (Private_Site) still refuses whoever can't read it, whatever this returns, and a
+		 * listener along hears only the tracks they may play.
+		 *
+		 * @since 6.16.0
+		 *
+		 * @param bool $allowed Whether they may. Default: they can read this site.
+		 * @param int  $user_id The signed-in user.
+		 */
+		$allowed = (bool) apply_filters( 'riff_together_listener', true === Listener::signed_in(), $user );
+		return $allowed && Private_Site::allowed();
+	}
+
+	/**
+	 * The permission check for each of Together's routes: may_join(), with why not.
+	 *
+	 * @since 6.16.0
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function permission() {
+		if ( self::may_join() ) {
+			return true;
+		}
+		$why = Listener::signed_in();
+		return is_wp_error( $why ) ? $why : new WP_Error( 'rest_forbidden', __( 'Sorry, you can’t listen together on this site.', 'riff' ), array( 'status' => rest_authorization_required_code() ) );
+	}
+
+	/**
 	 * Whether a listener shares what they play: their choice, or the site's default for whoever
 	 * hasn't made one.
 	 *
@@ -210,7 +260,7 @@ final class Together {
 	 * @since 5.8.0
 	 */
 	public static function view(): void {
-		if ( ! self::available() || true !== Listener::signed_in() ) {
+		if ( ! self::available() || ! self::may_join() ) {
 			return;
 		}
 		Registry::register_view(
@@ -234,7 +284,7 @@ final class Together {
 	 * @return string
 	 */
 	public static function faces( int $album ): string {
-		if ( $album <= 0 || ! self::available() || true !== Listener::signed_in() ) {
+		if ( $album <= 0 || ! self::available() || ! self::may_join() ) {
 			return '';
 		}
 		return sprintf(
@@ -279,7 +329,7 @@ final class Together {
 				array(
 					'methods'             => 'GET',
 					'callback'            => array( self::class, 'rest_room' ),
-					'permission_callback' => array( Listener::class, 'signed_in' ),
+					'permission_callback' => array( self::class, 'permission' ),
 					'args'                => array(
 						'version' => array(
 							'description' => __( 'The room\'s version the player last had, as this route gave it.', 'riff' ),
@@ -295,7 +345,7 @@ final class Together {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_share' ),
-					'permission_callback' => array( Listener::class, 'signed_in' ),
+					'permission_callback' => array( self::class, 'permission' ),
 					'args'                => array(
 						'queue'   => array(
 							'description' => __( 'The queue in play order, each track as its audio attachment and the post it plays from.', 'riff' ),
@@ -350,7 +400,7 @@ final class Together {
 				array(
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_leave' ),
-					'permission_callback' => array( Listener::class, 'signed_in' ),
+					'permission_callback' => array( self::class, 'permission' ),
 				),
 			)
 		);
@@ -366,7 +416,7 @@ final class Together {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_listener' ),
-				'permission_callback' => array( Listener::class, 'signed_in' ),
+				'permission_callback' => array( self::class, 'permission' ),
 				'args'                => array(
 					'user' => array(
 						'description' => __( 'The listener\'s user ID.', 'riff' ),
@@ -391,7 +441,7 @@ final class Together {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( self::class, 'rest_follow' ),
-					'permission_callback' => array( Listener::class, 'signed_in' ),
+					'permission_callback' => array( self::class, 'permission' ),
 					'args'                => array(
 						'user'    => array(
 							'description' => __( 'The listener\'s user ID.', 'riff' ),
@@ -406,7 +456,7 @@ final class Together {
 				array(
 					'methods'             => 'DELETE',
 					'callback'            => array( self::class, 'rest_unfollow' ),
-					'permission_callback' => array( Listener::class, 'signed_in' ),
+					'permission_callback' => array( self::class, 'permission' ),
 					'args'                => array(
 						'user' => array(
 							'description' => __( 'The listener\'s user ID.', 'riff' ),
@@ -427,7 +477,7 @@ final class Together {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_following' ),
-				'permission_callback' => array( Listener::class, 'signed_in' ),
+				'permission_callback' => array( self::class, 'permission' ),
 			)
 		);
 		/**
@@ -443,7 +493,7 @@ final class Together {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_clock' ),
-				'permission_callback' => array( Listener::class, 'signed_in' ),
+				'permission_callback' => array( self::class, 'permission' ),
 			)
 		);
 	}
@@ -459,7 +509,15 @@ final class Together {
 	 * @return array
 	 */
 	public static function player_data( $data ) {
-		if ( is_array( $data ) && isset( $data['me'] ) && self::available() ) {
+		if ( is_array( $data ) && self::available() && self::may_join() ) {
+			// One who may listen together without an account here has no likes or playlists:
+			// only where to send Together's requests, and the nonce they go with.
+			if ( ! isset( $data['me'] ) ) {
+				$data['me'] = array(
+					'rest'  => array(),
+					'nonce' => wp_create_nonce( 'wp_rest' ),
+				);
+			}
 			$data['me']['rest']['together'] = rest_url( Library::REST . '/together' );
 			$data['me']['sharing']          = self::shares( get_current_user_id() );
 		}
