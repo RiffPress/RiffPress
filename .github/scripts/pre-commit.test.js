@@ -15,7 +15,11 @@ const scripts = JSON.parse( read( 'package.json' ) ).scripts;
 const command = ( line ) => {
 	const npm = line.match( /^npm run(?: -s)? ([\w:-]+)/ );
 	const run = npm ? scripts[ npm[ 1 ] ] || '' : line;
-	return run.replace( /\s*(\|\||&&).*$/, '' ).replace( /\s+--test-reporter=\S+/, '' ).trim();
+	return run
+		.replace( /\s*(\|\||&&).*$/, '' )
+		.replace( /\s+--test-reporter=\S+/, '' )
+		.replace( /\s*>\s*\/dev\/null/, '' )
+		.trim();
 };
 
 // What the hook runs: each line that starts a node script or an npm script.
@@ -51,8 +55,8 @@ test( 'the hook runs every check CI\'s docs job runs', () => {
 	assert.deepStrictEqual( ci.filter( ( run ) => ! hook.has( run ) ), [] );
 } );
 
-test( 'the hook runs the workflow scripts\' tests as their workflow does', () => {
-	const tests = runs( 'workflow-scripts.yml', 'test' ).filter( ( run ) => run.startsWith( 'node --test' ) );
-	assert.strictEqual( tests.length, 1 );
-	assert.ok( hook.has( tests[ 0 ] ), tests[ 0 ] );
+test( 'the hook runs the workflow scripts\' tests as their workflow does, with what it builds first', () => {
+	const steps = runs( 'workflow-scripts.yml', 'test' );
+	assert.ok( steps.some( ( run ) => run.startsWith( 'node --test' ) ), 'the workflow runs the tests' );
+	assert.deepStrictEqual( steps.filter( ( run ) => ! hook.has( run ) ), [] );
 } );
