@@ -83,6 +83,9 @@ test.describe( 'Standalone', () => {
 		// A view arrives in place with its own bar, and the menu in it closes as the first did.
 		await page.locator( '.riff-app-tab', { hasText: 'Artists' } ).click();
 		await expect( page.locator( '.riff-app-tab[aria-current="page"]' ) ).toHaveText( 'Artists' );
+		// The tab is marked at once, before the view arrives; the view's heading takes the focus
+		// once it has, and only then is the bar with the menu the new one.
+		await expect( page.getByRole( 'heading', { level: 2, name: 'Artists' } ) ).toBeFocused();
 		await page.locator( '.riff-app-account summary' ).click();
 		await expect( page.locator( '.riff-app-account' ) ).toHaveAttribute( 'open', '' );
 		await page.keyboard.press( 'Escape' );

@@ -1235,8 +1235,13 @@
 
 @media (min-width: 900px) and (not ((pointer: coarse) and (min-aspect-ratio: 5 / 4) and (max-height: 500px))) {
 
+	/* Its right edge keeps clear of a panel open beside the page (riff.css,
+	   --riff-side-w), which the page makes room for with a margin that a fixed
+	   element does not see; it wraps rather than running under the panel. */
 	.riff-app-status:not(:empty) {
 		left: 24px;
+		right: calc(var(--riff-side-w, 0px) + 24px);
+		width: fit-content;
 		transform: none;
 	}
 }
