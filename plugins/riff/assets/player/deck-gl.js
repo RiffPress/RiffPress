@@ -315,8 +315,9 @@ const BODY = [ -0.555 * MM, -0.555 * MM, 0.775 * MM, 0.63 * MM ];
 // the strip its keys stand on along the front, or, on a smaller stage, the plinth reaching further
 // right with its keys in a panel beside the arm. Each key is its left, width, top and height, in
 // the record's width, where riff.css has the buttons, and where its lamp is, if it has one. The
-// lamps are the one amber, as a deck's are.
-const AMBER = [ 1.0, 0.46, 0.12 ];
+// lamps are the one amber, as a deck's are: this light, once tone-mapped, is the display's own
+// amber (riff.css, .riff-level), where a brighter one would wash out to cream.
+const AMBER = [ 2.6, 0.48, 0.17 ];
 const FRONT = -0.69 * MM;
 const KEYS = [
 	[ 0, 0.18, 1.075, 0.095, 'left' ],
@@ -370,6 +371,7 @@ const FILL = unit( [ 0.3, -0.8, 0.5 ] );
 const STRIP = unit( [ -0.92, -0.1, 0.38 ] );
 const v3 = ( v ) => `vec3(${ v.map( ( x ) => x.toFixed( 5 ) ).join( ', ' ) })`;
 const f1 = ( x ) => x.toFixed( 5 );
+const v2 = ( v ) => `vec2(${ f1( v[ 0 ] ) }, ${ f1( v[ 1 ] ) })`;
 
 // Shading: GGX and Fresnel under the key, shadowed, and what a reflection sees, a dark room with
 // three soft lights.
@@ -421,9 +423,10 @@ vec3 shade(vec3 P, vec3 N, vec3 alb, float rough, float metal, float ao) {
   // A hand over the deck is a little light of its own: what it nears catches it.
   vec3 hp = vec3(uHand.xy, 0.05) - P; float hd = length(hp);
   c += brdf(N, V, hp / hd, F0, diff, max(rough, 0.28)) * vec3(1.0, 0.96, 0.9) * uHand.z * 0.55 / (1.0 + hd * hd / 0.0035);
-  // The target light by the platter, which is there to see the stylus by: a small warm pool.
-  vec3 tp = uSpot.xyz - P; float td = length(tp);
-  c += brdf(N, V, tp / td, F0, diff, max(rough, 0.3)) * vec3(1.0, 0.93, 0.8) * uSpot.w * 0.8 / (1.0 + td * td / 0.0025);
+  // The target light by the platter, which is there to see the stylus by: a small warm pool, thrown
+  // toward the record rather than all round, as its lens points it.
+  vec3 tp = uSpot.xyz - P; float td = length(tp), aim = 0.35 + 0.65 * max(dot(normalize(-uSpot.xy), -tp.xy / max(length(tp.xy), 1e-4)), 0.0);
+  c += brdf(N, V, tp / td, F0, diff, max(rough, 0.3)) * vec3(1.0, 0.93, 0.8) * uSpot.w * 0.8 * aim / (1.0 + td * td / 0.0025);
   vec3 F = F0 + (max(vec3(1.0 - rough), F0) - F0) * pow(1.0 - nv, 5.0);
   return c + env(reflect(-V, N), rough) * F * ao * (0.45 + 0.55 * sh) + diff * 0.015 * ao;
 }
@@ -442,7 +445,7 @@ const DEPTH_FS = `#version 300 es
 precision mediump float;
 void main() {}`;
 
-// uMode: 0 plain, 1 turned metal, 2 the deck's plate, 3 the platter and its strobe, 6 a key's cap, 5 the desk,
+// uMode: 0 plain, 1 turned metal, 2 the deck's plate, 3 the platter and its strobe, 6 a key's cap, 7 a lamp's lens, 5 the desk,
 // which is only the shadows on it: the page shows through everywhere else.
 const STD_FS =
 	COMMON +
@@ -475,8 +478,15 @@ void main() {
     o = vec4(vec3(1.0, 0.94, 0.86) * k, k + (1.0 - k) * a) * uAlpha; return;
   }
   if (uMode == 1 || uMode == 3) {
-    float b = hash(vec2(floor(ro * 5000.0), 3.0)) - 0.5, fade = 1.0 - smoothstep(1e-4, 6e-4, px);
-    if (abs(N.z) > 0.5) { N = normalize(N + mat3(uM) * vec3(vO.xy / max(ro, 1e-4), 0.0) * b * 0.10 * fade); rough += b * 0.10 * fade; }
+    // Turned round its own middle (uKey.xy for a part that stands off the spindle), and where uKey.z
+    // says so, a knob's skirt: fluted that many times round, the flutes catching the light in turn.
+    vec2 q = uMode == 1 ? vO.xy - uKey.xy : vO.xy; float rq = max(length(q), 1e-4), flutes = uMode == 1 ? uKey.z : 0.0;
+    float b = hash(vec2(floor(rq * 5000.0), 3.0)) - 0.5, fade = 1.0 - smoothstep(1e-4, 6e-4, px);
+    if (abs(N.z) > (flutes > 0.0 ? 0.95 : 0.5)) { N = normalize(N + mat3(uM) * vec3(q / rq, 0.0) * b * 0.10 * fade); rough += b * 0.10 * fade; }
+    else if (flutes > 0.0) {
+      float f = sin(atan(q.y, q.x) * flutes) * smoothstep(2.0, 4.0, 6.2832 * rq / flutes / max(px, 1e-6));
+      N = normalize(N + mat3(uM) * vec3(-q.y, q.x, 0.0) / rq * f * 0.45); rough -= 0.06 * f;
+    }
   }
   if (uMode == 3 && ro > RP - 0.0108 && N.z > 0.5) {
     float r1 = 0.957 * RP, r2 = 0.979 * RP, a = atan(vO.y, vO.x), aw = atan(vP.y, vP.x);
@@ -489,8 +499,14 @@ void main() {
     // Moulded, as a key's cap is: dished a little toward its middle, so the light lies across it and
     // moves as the key leans, and matt with the mould's fine grain.
     float grain = (hash(floor(vO.xy * 9000.0)) - 0.5) * (1.0 - smoothstep(1.5e-4, 6e-4, px));
-    N = normalize(N + mat3(uM) * vec3((uKey.xy - vO.xy) / uKey.zw * 0.07, 0.0));
+    N = normalize(N + mat3(uM) * vec3((uKey.xy - vO.xy) / uKey.zw * 0.1, 0.0));
     alb *= 1.0 + 0.16 * grain; rough += 0.12 * grain;
+  }
+  vec3 em = uEmis;
+  if (uMode == 7) {
+    // A lamp's lens, lit: hottest, and a little whiter, at its middle, its amber toward its ends.
+    vec2 q = (vO.xy - uKey.xy) / uKey.zw; float core = exp(-dot(q, q) * 1.6);
+    em = uEmis * (0.6 + 0.7 * core) + vec3(0.0, 0.16, 0.08) * uEmis.r * core * core;
   }
   if (uMode == 2) alb = mix(alb, uTint, 0.08);
   if (uMode == 2 && N.z > 0.5) {
@@ -500,10 +516,15 @@ void main() {
     alb *= 1.0 + 0.2 * brush; rough += 0.1 * brush;
     alb *= 0.88 + 0.24 * hash(floor(vP.xy * 2500.0)) * (1.0 - smoothstep(2e-4, 1e-3, px));
     ao *= mix(0.35, 1.0, smoothstep(RP - 0.001, RP + 0.04, length(vP.xy))) * mix(0.45, 1.0, smoothstep(0.02, 0.05, length(vP.xy - uPivot)));
+    // Where the strobe's lamp, the target light and the anti-skate dial stand on it, a tight dark
+    // ring at the foot of each, as the plate sees less of the room there.
+    ao *= mix(0.4, 1.0, smoothstep(0.017, 0.024, length(vP.xy - ${ v2( LAMP_AT ) })));
+    ao *= mix(0.45, 1.0, smoothstep(0.0075, 0.012, length(vP.xy - ${ v2( TARGET ) })));
+    ao *= mix(0.45, 1.0, smoothstep(0.0105, 0.016, length(vP.xy - ${ v2( ANTISKATE ) })));
   }
-  vec3 c = shade(vP, N, alb, clamp(rough, 0.06, 1.0), metal, ao) + uEmis;
+  vec3 c = shade(vP, N, alb, clamp(rough, 0.06, 1.0), metal, ao) + em;
   // Each lit lamp spills a little of its amber on what is round it.
-  for (int i = 0; i < 5; i++) { vec2 g = vP.xy - uGlowAt[i].xy; c += vec3(1.0, 0.46, 0.12) * uGlowAt[i].z * 0.035 * step(vP.z, 0.0) / (1.0 + dot(g, g) / 0.00003); }
+  for (int i = 0; i < 5; i++) { vec2 g = vP.xy - uGlowAt[i].xy; c += vec3(1.0, 0.46, 0.12) * uGlowAt[i].z * 0.05 * step(vP.z, 0.0) / (1.0 + dot(g, g) / 0.00003); }
   vec3 lp = uLamp.xyz - vP;
   c += LAMPC * lit * uLamp.w * 1.1 / (1.0 + dot(lp, lp) / 0.0012);
   o = vec4(clamp(tone(c), 0.0, 1.0) * uAlpha, uAlpha);
@@ -698,7 +719,9 @@ export default function deckGl( P ) {
 					return null;
 				}
 				const [ from, to ] = lampAt === 'top' ? [ left + 0.35 * wide, left + 0.65 * wide ] : [ left + 0.016, left + 0.046 ];
-				return mesh( rbox( ( from - 0.5 ) * MM, ( 0.5 - top - 0.013 ) * MM, ( to - 0.5 ) * MM, ( 0.5 - top - 0.008 ) * MM, DECK_Z + 0.0042, DECK_Z + 0.0046, 0.0006, 0.0002 ) );
+				const [ lx0, ly0, lx1, ly1 ] = [ ( from - 0.5 ) * MM, ( 0.5 - top - 0.013 ) * MM, ( to - 0.5 ) * MM, ( 0.5 - top - 0.008 ) * MM ];
+				// With its middle and half its size, for the core of its light (STD_FS, mode 7).
+				return { ...mesh( rbox( lx0, ly0, lx1, ly1, DECK_Z + 0.0042, DECK_Z + 0.0046, 0.0006, 0.0002 ) ), at: [ ( lx0 + lx1 ) / 2, ( ly0 + ly1 ) / 2, ( lx1 - lx0 ) / 2, ( ly1 - ly0 ) / 2 ] };
 			} ),
 		};
 	}
@@ -722,8 +745,10 @@ export default function deckGl( P ) {
 			spindle: mesh( L( [ [ 0.0036, -0.003 ], [ 0.0036, 0.009 ], [ 0.003, 0.0108 ], [ 0.0015, 0.0115 ], [ 0, 0.0115 ] ], 24 ) ),
 			edge: mesh( cyl( R, R, -0.0013, 0, 128, false ) ),
 			disc: mesh( annulus( 0.0036, R ) ),
-			lamp: mesh( merge( at( L( [ [ 0.017, DECK_Z ], [ 0.017, 0.002 ], [ 0.0155, 0.0035 ], [ 0, 0.0035 ] ], 32 ), ...LAMP_AT ) ) ),
-			lens: mesh( box( -0.0015, -0.006, -0.006, 0.0015, 0.006, 0.0045 ) ),
+			// The strobe's lamp, a knob with a wide bevel round its top for the light to catch.
+			lamp: mesh( merge( at( L( [ [ 0.017, DECK_Z ], [ 0.017, 0.001 ], [ 0.0145, 0.0035 ], [ 0, 0.0035 ] ], 64 ), ...LAMP_AT ) ) ),
+			// The strobe's lens, a window let into the bevel of its lamp, facing the platter's rim.
+			lens: mesh( box( -0.001, -0.0045, -0.004, 0.0008, 0.0045, 0.003 ) ),
 			target: mesh( merge( at( L( [ [ 0.0075, DECK_Z ], [ 0.0075, -0.009 ], [ 0.0065, -0.008 ], [ 0, -0.008 ] ], 28 ), ...TARGET ) ) ),
 			targetLamp: mesh( merge( at( L( [ [ 0.003, -0.008 ], [ 0.003, -0.0074 ], [ 0, -0.0074 ] ], 16 ), ...TARGET ) ) ),
 			antiskate: mesh( merge( at( L( [ [ 0.0105, DECK_Z ], [ 0.0105, -0.013 ], [ 0.0095, -0.012 ], [ 0, -0.012 ] ], 36 ), ...ANTISKATE ) ) ),
@@ -1253,23 +1278,25 @@ export default function deckGl( P ) {
 			...( keyed
 				? [
 						[ parts.wells, I, [ 0.006, 0.006, 0.007 ], 0.8, 0, 0, off ],
-						...parts.keys.map( ( key, k ) => [ key, capAt[ k ], [ 0.034, 0.034, 0.038 ].map( ( c ) => c * ( 1 - 0.45 * down[ k ] ) ), 0.46, 0.25, 6, off, undefined, capOf[ k ] ] ),
+						...parts.keys.map( ( key, k ) => [ key, capAt[ k ], [ 0.034, 0.034, 0.038 ].map( ( c ) => c * ( 1 - 0.45 * down[ k ] ) ), 0.4, 0, 6, off, undefined, capOf[ k ] ] ),
 						...parts.lamps.flatMap( ( part, k ) =>
-							part ? [ [ part, capAt[ k ], [ 0.05, 0.05, 0.05 ], 0.3, 0, 0, AMBER.map( ( c ) => ( 0.04 + 2.2 * c ) * lamps[ k ] ) ] ] : []
+							// Unlit, a lens of smoked glass with the light on it; lit, the amber.
+							part ? [ [ part, capAt[ k ], [ 0.008, 0.005, 0.004 ], 0.12, 0, 7, AMBER.map( ( c ) => c * lamps[ k ] ), undefined, part.at ] ] : []
 						),
 				  ]
 				: [] ),
 			[ m.platter, turns, [ 0.075, 0.075, 0.08 ], 0.36, 1, 3, off ],
 			[ m.mat, turns, [ 0.01, 0.01, 0.01 ], 0.9, 0, 0, off ],
-			[ m.spindle, I, CHROME, 0.14, 1, 1, off ],
-			[ m.lamp, I, [ 0.02, 0.02, 0.022 ], 0.4, 0.5, 0, off ],
-			[ m.lens, lensM, [ 0.15, 0.05, 0.01 ], 0.3, 0, 0, [ 2.4 * on, 1.0 * on, 0.3 * on ] ],
+			[ m.spindle, I, CHROME, 0.14, 1, 1, off, undefined, [ 0, 0, 0, 0 ] ],
+			// The strobe's lamp, turned on top and fluted round its skirt, as the knob it is.
+			[ m.lamp, I, [ 0.12, 0.12, 0.125 ], 0.36, 0.9, 1, off, undefined, [ ...LAMP_AT, 40, 0 ] ],
+			[ m.lens, lensM, [ 0.15, 0.05, 0.01 ], 0.3, 0, 0, AMBER.map( ( c ) => c * on ) ],
 			[ m.target, I, [ 0.03, 0.03, 0.032 ], 0.4, 0.6, 0, off ],
-			[ m.targetLamp, I, [ 0.2, 0.19, 0.17 ], 0.3, 0, 0, [ 0.8 * on, 0.74 * on, 0.62 * on ] ],
-			[ m.antiskate, I, [ 0.03, 0.03, 0.032 ], 0.38, 0.7, 1, off ],
+			[ m.targetLamp, I, [ 0.2, 0.19, 0.17 ], 0.3, 0, 0, [ 1.1 * on, 0.85 * on, 0.55 * on ] ],
+			[ m.antiskate, I, [ 0.03, 0.03, 0.032 ], 0.38, 0.7, 1, off, undefined, [ ...ANTISKATE, 48, 0 ] ],
 			[ m.pointer, pointer, [ 0.6, 0.6, 0.6 ], 0.5, 0, 0, off ],
 			[ m.tower, I, [ 0.02, 0.02, 0.022 ], 0.38, 0.6, 0, off ],
-			[ m.towerCap, I, CHROME, 0.16, 1, 1, off ],
+			[ m.towerCap, I, CHROME, 0.16, 1, 1, off, undefined, [ ...PIVOT, 0, 0 ] ],
 			[ m.tube, armM, [ 0.3, 0.3, 0.32 ], 0.16, 1, 0, off ],
 			[ m.weight, armM, [ 0.022, 0.022, 0.024 ], 0.42, 0.7, 0, off ],
 			[ m.dial, armM, CHROME, 0.28, 1, 0, off ],
