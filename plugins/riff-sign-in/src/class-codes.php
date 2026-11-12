@@ -24,9 +24,14 @@ defined( 'ABSPATH' ) || exit;
  * browser that asked for it, so a mail scanner that opens every link uses nothing up. The request
  * answers the same whether or not the address has an account, so it tells nobody who is a member.
  * Requests are limited per address and per network address, a hundred times as many on a local
- * site, and a code allows five tries. Each
- * request and each try is counted in one step, in the object cache when the site has a persistent
- * one and in the options table otherwise, so requests that arrive together are each counted.
+ * site, a code allows five tries, and an address allows twenty wrong codes a day across all its
+ * codes. Each request and each try is counted in one step, in the object cache when the site has a
+ * persistent one and in the options table otherwise, so requests that arrive together are each
+ * counted.
+ *
+ * The mail goes once the answer is sent, on every path, so how long the answer takes says nothing
+ * about the address either: after fastcgi_finish_request() where PHP has it, in a single cron event
+ * where it doesn't, and at the end of the request on a local site.
  */
 final class Codes {
 
@@ -39,6 +44,21 @@ final class Codes {
 	 * Tries a code allows.
 	 */
 	public const TRIES = 5;
+
+	/**
+	 * Wrong codes one address allows in a day, across all its codes.
+	 */
+	public const FAILS = 20;
+
+	/**
+	 * The cron event that mails a code where PHP can't finish the answer first.
+	 */
+	public const MAIL = 'riff_sign_in_mail';
+
+	/**
+	 * The longest a site's name is in the mail, in characters.
+	 */
+	private const SITE_LENGTH = 60;
 
 	/**
 	 * Codes one address may ask for in the window, and the window.
@@ -84,6 +104,20 @@ final class Codes {
 	private static ?string $environment = null;
 
 	/**
+	 * Whether PHP can finish the answer before the work after it, as the tests set it; null asks PHP.
+	 *
+	 * @var bool|null
+	 */
+	private static ?bool $finishes = null;
+
+	/**
+	 * The codes to mail once the answer is sent: [ email, code, token ] each.
+	 *
+	 * @var array[]
+	 */
+	private static array $outbox = array();
+
+	/**
 	 * Sends a code to an address, within the limits, and says which token the answer belongs to.
 	 *
 	 * @param string $email    The address typed.
@@ -114,10 +148,22 @@ final class Codes {
 		);
 		// A new account is made only when the code comes back and the site lets anyone register;
 		// until then the address is only a transient. Nothing is sent where there is nobody to sign
-		// in, but the answer is the same, so the request says nothing about who has an account.
+		// in, but the answer is the same, and the mail is put off on every path alike, so neither
+		// the answer nor its time says anything about who has an account.
 		if ( $user instanceof WP_User || get_option( 'users_can_register' ) ) {
-			self::send( $email, $code, $token );
+			/**
+			 * Fires with a code as it is made, before it is mailed, for a site's own delivery or a
+			 * test's eyes. It fires during the request, so delivery here should be quick.
+			 *
+			 * @since 0.1.0
+			 *
+			 * @param string $email The address.
+			 * @param string $code  The six digits.
+			 * @param string $link  The one-tap link.
+			 */
+			do_action( 'riff_sign_in_code', $email, $code, self::link( $token, $code ) );
 		}
+		self::later( $email, $code, $token );
 		return array(
 			'token'   => $token,
 			'expires' => self::TTL,
@@ -146,9 +192,16 @@ final class Codes {
 			self::uncount( $tries );
 			return new WP_Error( 'riff_sign_in_tries', __( 'Too many tries. Ask for a new code.', 'riff-sign-in' ) );
 		}
+		// And against the address, across all its codes, so asking for code after code does not
+		// buy more tries. Counted first too; a right code takes its own count back.
+		$fails = 'riff_signin_fails_' . md5( strtolower( (string) $kept['email'] ) );
+		if ( self::count( $fails, DAY_IN_SECONDS ) > self::fails( (string) $kept['email'] ) ) {
+			return new WP_Error( 'riff_sign_in_locked', __( 'Too many wrong codes for this address today. Try again tomorrow, or sign in with a passkey.', 'riff-sign-in' ), array( 'status' => 429 ) );
+		}
 		if ( 6 !== strlen( $code ) || ! hash_equals( $kept['hash'], self::hash( $token, $code ) ) ) {
 			return new WP_Error( 'riff_sign_in_wrong', __( 'That code did not match. Check the email and try again.', 'riff-sign-in' ) );
 		}
+		self::discount( $fails );
 		delete_transient( $key );
 		self::uncount( $tries );
 		$user = $kept['user'] ? get_user_by( 'id', (int) $kept['user'] ) : false;
@@ -171,6 +224,22 @@ final class Codes {
 	public static function landing( string $token ): string {
 		$kept = self::kept( $token );
 		return is_array( $kept ) && ! empty( $kept['redirect'] ) ? (string) $kept['redirect'] : home_url( '/' );
+	}
+
+	/**
+	 * The address a token's code was sent to, with all but its first character before the @ hidden,
+	 * as "j•••@example.com"; empty when the token is unknown.
+	 *
+	 * @param string $token The token.
+	 * @return string
+	 */
+	public static function address( string $token ): string {
+		$kept = self::kept( $token );
+		if ( ! is_array( $kept ) || ! str_contains( (string) $kept['email'], '@' ) ) {
+			return '';
+		}
+		[ $name, $domain ] = explode( '@', (string) $kept['email'], 2 );
+		return mb_substr( $name, 0, 1 ) . '•••@' . $domain;
 	}
 
 	/**
@@ -316,25 +385,99 @@ final class Codes {
 	}
 
 	/**
-	 * Mails the code and the link.
+	 * The link in the email: the token and the code on the front page.
+	 *
+	 * @param string $token The token.
+	 * @param string $code  The code.
+	 * @return string
+	 */
+	private static function link( string $token, string $code ): string {
+		return add_query_arg( self::QUERY, $token . '.' . $code, home_url( '/' ) );
+	}
+
+	/**
+	 * Puts a code's mail off until the answer is sent: after PHP finishes the answer where it can,
+	 * at the end of the request on a local site, and in a single cron event otherwise, with the code
+	 * kept in a transient until then. Called for every request, whoever the address is.
+	 *
+	 * @param string $email The address.
+	 * @param string $code  The code.
+	 * @param string $token Its token.
+	 */
+	private static function later( string $email, string $code, string $token ): void {
+		if ( self::finishes() || 'local' === ( self::$environment ?? wp_get_environment_type() ) ) {
+			// Last, after WordPress has flushed its own output buffers at 1. Added once, however often.
+			add_action( 'shutdown', array( self::class, 'flush' ), PHP_INT_MAX );
+			self::$outbox[] = array( $email, $code, $token );
+			return;
+		}
+		set_transient(
+			'riff_signin_mail_' . $token,
+			array(
+				'email' => $email,
+				'code'  => $code,
+			),
+			self::TTL
+		);
+		wp_schedule_single_event( time(), self::MAIL, array( $token ) );
+	}
+
+	/**
+	 * Whether PHP can send the answer and carry on: PHP-FPM and LiteSpeed can.
+	 *
+	 * @return bool
+	 */
+	private static function finishes(): bool {
+		return self::$finishes ?? ( function_exists( 'fastcgi_finish_request' ) || function_exists( 'litespeed_finish_request' ) );
+	}
+
+	/**
+	 * Sends the answer, where PHP can, then mails the codes this request made. On `shutdown`.
+	 */
+	public static function flush(): void {
+		$outbox       = self::$outbox;
+		self::$outbox = array();
+		if ( ! $outbox ) {
+			return;
+		}
+		if ( function_exists( 'fastcgi_finish_request' ) || function_exists( 'litespeed_finish_request' ) ) {
+			// Anything still buffered goes with the answer, not after it.
+			while ( ob_get_level() > 0 && ob_end_flush() ) {
+				continue;
+			}
+			function_exists( 'fastcgi_finish_request' ) ? fastcgi_finish_request() : litespeed_finish_request();
+		}
+		foreach ( $outbox as [ $email, $code, $token ] ) {
+			self::send( $email, $code, $token );
+		}
+	}
+
+	/**
+	 * Mails a code kept for the cron event, once. On the `riff_sign_in_mail` event.
+	 *
+	 * @param string $token The token.
+	 */
+	public static function deliver( string $token ): void {
+		$key  = 'riff_signin_mail_' . preg_replace( '/[^A-Za-z0-9_-]/', '', $token );
+		$mail = get_transient( $key );
+		delete_transient( $key );
+		if ( is_array( $mail ) ) {
+			self::send( (string) $mail['email'], (string) $mail['code'], $token );
+		}
+	}
+
+	/**
+	 * Mails the code and the link, when there is someone to sign in: an account with the address,
+	 * or a site that lets anyone register.
 	 *
 	 * @param string $email The address.
 	 * @param string $code  The code.
 	 * @param string $token Its token.
 	 */
 	private static function send( string $email, string $code, string $token ): void {
-		$site = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
-		$link = add_query_arg( self::QUERY, $token . '.' . $code, home_url( '/' ) );
-		/**
-		 * Fires with a code before it is sent, for a site's own delivery or a test's eyes.
-		 *
-		 * @since 0.1.0
-		 *
-		 * @param string $email The address.
-		 * @param string $code  The six digits.
-		 * @param string $link  The one-tap link.
-		 */
-		do_action( 'riff_sign_in_code', $email, $code, $link );
+		if ( ! get_user_by( 'email', $email ) && ! get_option( 'users_can_register' ) ) {
+			return;
+		}
 		/**
 		 * Filters whether the code is mailed with wp_mail(). Return false after sending it some
 		 * other way.
@@ -347,16 +490,37 @@ final class Codes {
 		if ( ! apply_filters( 'riff_sign_in_send', true, $email ) ) {
 			return;
 		}
+		$site = self::site();
 		$body = sprintf(
-			/* translators: 1: the site's name, 2: the six-digit code, 3: the one-tap link, 4: how many minutes the code lasts. */
+			/* translators: 1: the site's name, quoted, 2: the six-digit code, 3: the one-tap link, 4: how many minutes the code lasts. */
 			__( "Your code to sign in to %1\$s:\n\n%2\$s\n\nOr sign in with one tap:\n%3\$s\n\nThe code works for %4\$d minutes. If you did not ask for it, you can ignore this email.", 'riff-sign-in' ),
 			$site,
 			$code,
-			$link,
+			self::link( $token, $code ),
 			(int) ( self::TTL / MINUTE_IN_SECONDS )
 		);
-		/* translators: 1: the six-digit code, 2: the site's name. */
+		/* translators: 1: the six-digit code, 2: the site's name, quoted. */
 		wp_mail( $email, sprintf( __( '%1$s is your code for %2$s', 'riff-sign-in' ), $code, $site ), $body );
+	}
+
+	/**
+	 * The site's name as the mail gives it to whoever typed an address: plain text on one line, no
+	 * longer than sixty characters, in quotes, so it reads as a name and not as part of the message.
+	 * The site's address when it has no name.
+	 *
+	 * @return string
+	 */
+	private static function site(): string {
+		$name = wp_specialchars_decode( wp_strip_all_tags( (string) get_bloginfo( 'name' ) ), ENT_QUOTES );
+		$name = trim( (string) preg_replace( '/\s+/u', ' ', $name ) );
+		if ( '' === $name ) {
+			$name = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		}
+		if ( mb_strlen( $name ) > self::SITE_LENGTH ) {
+			$name = rtrim( mb_substr( $name, 0, self::SITE_LENGTH - 1 ) ) . '…';
+		}
+		/* translators: %s: the site's name. */
+		return sprintf( _x( '“%s”', 'the site name, quoted in an email', 'riff-sign-in' ), $name );
 	}
 
 	/**
@@ -389,6 +553,38 @@ final class Codes {
 		 * @param int $times How many times. Default 100.
 		 */
 		return max( 1, (int) apply_filters( 'riff_sign_in_limits', self::LOCAL_LIMITS ) );
+	}
+
+	/**
+	 * How many wrong codes an address allows in a day, across all its codes.
+	 *
+	 * @param string $email The address.
+	 * @return int
+	 */
+	private static function fails( string $email ): int {
+		/**
+		 * Filters how many wrong codes one address allows in a day, across every code sent to it.
+		 * Once it is reached, no code for the address is checked until the day is up. On a local
+		 * site it is raised as the request limits are.
+		 *
+		 * @since 0.6.1
+		 *
+		 * @param int    $fails How many. Default 20.
+		 * @param string $email The address.
+		 */
+		return max( 1, (int) apply_filters( 'riff_sign_in_failed_codes', self::FAILS, $email ) ) * self::times();
+	}
+
+	/**
+	 * Counts a request from this network address against a limit of its own, and says whether it
+	 * is over it. On a local site the limit is raised as the code request limits are.
+	 *
+	 * @param string $what  What is limited.
+	 * @param int    $limit How many the window allows.
+	 * @return bool
+	 */
+	public static function over( string $what, int $limit ): bool {
+		return ! self::within( $what . '_ip_' . md5( self::ip() ), $limit * self::times() );
 	}
 
 	/**
@@ -485,6 +681,21 @@ final class Codes {
 				time()
 			)
 		);
+	}
+
+	/**
+	 * Takes one off a count, in one step, never below none.
+	 *
+	 * @param string $name What is counted.
+	 */
+	private static function discount( string $name ): void {
+		if ( wp_using_ext_object_cache() ) {
+			wp_cache_decr( $name, 1, self::GROUP );
+			return;
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- as count(), in one step.
+		$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = GREATEST( CAST( option_value AS SIGNED ) - 1, 0 ) WHERE option_name = %s", '_transient_' . $name ) );
 	}
 
 	/**

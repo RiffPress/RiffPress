@@ -230,34 +230,24 @@ final class Passkeys {
 
 	/**
 	 * The options the browser needs to sign in with a passkey: a fresh challenge under a session
-	 * the browser hands back with the answer, and the site as the relying party. With an email,
-	 * that user's passkeys are named; without one, any passkey for the site may answer, which is
-	 * what the email field's own suggestion (conditional UI) uses.
+	 * the browser hands back with the answer, and the site as the relying party. No passkeys are
+	 * named, whatever address was typed, so the answer says nothing about who has one: any passkey
+	 * for the site may answer, and every one Riff Sign In makes is discoverable (residentKey
+	 * required), so the browser finds it without being told.
 	 *
-	 * @param string $email The email typed, or empty.
+	 * @param string $email Not used since 0.6.1; the answer is the same for every address.
 	 * @return array `session` and `publicKey`, as navigator.credentials.get() takes the latter.
 	 */
-	public static function request_options( string $email = '' ): array {
+	public static function request_options( string $email = '' ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- kept for callers.
 		$session   = self::b64( random_bytes( 24 ) );
 		$challenge = self::b64( random_bytes( 32 ) );
 		set_transient( 'riff_signin_asr_' . $session, $challenge, self::TTL );
-		$allow = array();
-		$user  = '' !== $email ? get_user_by( 'email', $email ) : false;
-		if ( $user instanceof WP_User ) {
-			foreach ( self::all( $user->ID ) as $key ) {
-				$allow[] = array(
-					'type'       => 'public-key',
-					'id'         => $key['id'],
-					'transports' => $key['transports'] ?? array(),
-				);
-			}
-		}
 		return array(
 			'session'   => $session,
 			'publicKey' => array(
 				'challenge'        => $challenge,
 				'rpId'             => self::rp_id(),
-				'allowCredentials' => $allow,
+				'allowCredentials' => array(),
 				'userVerification' => 'preferred',
 				'timeout'          => 120000,
 			),

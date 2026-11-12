@@ -77,6 +77,32 @@ class Test_Riff_Sign_In_Passkey_Routes extends Riff_TestCase {
 		$this->assertCount( 1, Passkeys::all( $owner ), 'the key is where it was' );
 	}
 
+	public function test_passkey_options_are_the_same_for_every_address_and_limited_per_network_address(): void {
+		$owner = self::factory()->user->create( array( 'user_email' => 'keyed@example.com' ) );
+		self::key_for( $owner, 'abc_123' );
+		self::factory()->user->create( array( 'user_email' => 'keyless@example.com' ) );
+		wp_set_current_user( 0 );
+		$_SERVER['REMOTE_ADDR'] = '192.0.2.' . wp_rand( 1, 254 );
+		( new ReflectionProperty( Riff\SignIn\Codes::class, 'environment' ) )->setValue( null, 'production' );
+
+		$answers = array();
+		foreach ( array( 'keyed@example.com', 'keyless@example.com', 'nobody@example.com', '' ) as $email ) {
+			$response = self::ask( 'POST', '/assertion/options', array( 'email' => $email ) );
+			$this->assertSame( 200, $response->get_status(), $email );
+			$data = $response->get_data()['publicKey'];
+			unset( $data['challenge'] );
+			$answers[] = $data;
+		}
+		$this->assertSame( array(), $answers[0]['allowCredentials'], 'no passkeys named, even for an address with one' );
+		$this->assertCount( 1, array_unique( array_map( 'wp_json_encode', $answers ) ), 'and the same answer for every address' );
+
+		for ( $i = count( $answers ); $i < Routes::PASSKEYS_PER_IP; $i++ ) {
+			self::ask( 'POST', '/assertion/options' );
+		}
+		$this->assertSame( 429, self::ask( 'POST', '/assertion/options' )->get_status(), 'one network address starts only so many' );
+		( new ReflectionProperty( Riff\SignIn\Codes::class, 'environment' ) )->setValue( null, null );
+	}
+
 	public function test_a_listener_removes_only_their_own_key(): void {
 		$owner = self::factory()->user->create();
 		$other = self::factory()->user->create();

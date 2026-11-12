@@ -163,7 +163,7 @@ class Test_Riff_Sign_In_Passkeys extends Riff_TestCase {
 		$options = Passkeys::request_options();
 		$this->assertSame( array(), $options['publicKey']['allowCredentials'], 'any passkey for the site may answer' );
 		$named = Passkeys::request_options( 'key@example.com' );
-		$this->assertSame( Passkeys::b64( $credential_id ), $named['publicKey']['allowCredentials'][0]['id'] );
+		$this->assertSame( array(), $named['publicKey']['allowCredentials'], 'nor are its passkeys named for an address, which would say it has one' );
 		$auth   = hash( 'sha256', Passkeys::rp_id(), true ) . "\x05" . pack( 'N', 7 );
 		$client = self::client_data( 'webauthn.get', $options['publicKey']['challenge'] );
 		openssl_sign( $auth . hash( 'sha256', Passkeys::unb64( $client ), true ), $signature, $pair, OPENSSL_ALGO_SHA256 );
@@ -218,7 +218,13 @@ class Test_Riff_Sign_In_Passkeys extends Riff_TestCase {
 		$answer['response']['signature']         = Passkeys::b64( $signature );
 		$request                                 = new WP_REST_Request( 'POST', '/riff-sign-in/v1/assertion' );
 		$request->set_body_params( array( 'session' => $fresh['session'], 'credential' => $answer ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
-		$response = rest_do_request( $request );
+		$this->assertSame( 403, rest_do_request( $request )->get_status(), 'not as a form, which any page can send' );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$_SERVER['HTTP_SEC_FETCH_SITE'] = 'cross-site';
+		$this->assertSame( 403, rest_do_request( $request )->get_status(), 'nor from another site' );
+		$_SERVER['HTTP_SEC_FETCH_SITE'] = 'same-origin';
+		$response                       = rest_do_request( $request );
+		unset( $_SERVER['HTTP_SEC_FETCH_SITE'] );
 		$this->assertSame( 200, $response->get_status() );
 		$this->assertSame( $user->ID, get_current_user_id() );
 		$this->assertTrue( Passkeys::delete( $user->ID, Passkeys::b64( $credential_id ) ) );
