@@ -14,7 +14,8 @@
 		"namespaces": [],
 		"fields": [
 			"attachment.riff_sing_melody",
-			"attachment.riff_sing_midi"
+			"attachment.riff_sing_midi",
+			"attachment.riff_sing_instrumental"
 		],
 		"public": {}
 	},
