@@ -256,7 +256,10 @@ test.describe( 'Standalone', () => {
 				centres: [ shuf.top + ( shuf.height / 2 ), like.top + ( like.height / 2 ), playBox.top + ( playBox.height / 2 ) ],
 				gaps: [ shufIcon.left - playBox.right, likeIcon.left - shufIcon.right ],
 				colours: [ getComputedStyle( document.querySelector( '[data-riff-app-action="shuffle"]' ) ).color, getComputedStyle( document.querySelector( '.riff-album-actions .riff-app-like' ) ).color ],
-				underline: getComputedStyle( artist ).textDecorationLine,
+				// The album artist is a link only when they have a page of their own: on the suite's
+				// own site the album's artist tag names no artist its tracks are filed under.
+				underline: artist ? getComputedStyle( artist ).textDecorationLine : null,
+				byline: artist ? null : meta.textContent,
 				baseline,
 				coverBottom: rect( '.riff-album-cover' ).bottom,
 			};
@@ -265,7 +268,11 @@ test.describe( 'Standalone', () => {
 		expect( Math.max( ...fit.centres ) - Math.min( ...fit.centres ) ).toBeLessThanOrEqual( 1 );
 		expect( Math.abs( fit.gaps[ 0 ] - fit.gaps[ 1 ] ) ).toBeLessThanOrEqual( 1 );
 		expect( fit.colours[ 0 ], 'the same quiet colour at rest' ).toBe( fit.colours[ 1 ] );
-		expect( fit.underline ).toBe( 'none' );
+		if ( fit.underline === null ) {
+			expect( fit.byline, 'an artist without a page is named, unlinked' ).toMatch( /^\S.* · \d+ tracks?$/ );
+		} else {
+			expect( fit.underline ).toBe( 'none' );
+		}
 		expect( Math.abs( fit.baseline - fit.coverBottom ) ).toBeLessThanOrEqual( 1 );
 		await expectTidy( page, '.riff-app', 'an album, standalone' );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );

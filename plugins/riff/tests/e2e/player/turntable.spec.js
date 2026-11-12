@@ -200,11 +200,19 @@ test.describe( 'Turntable', () => {
 		await expect.poll( () => root.evaluate( ( el ) => 'riffGl' in el.dataset ) ).toBe( card );
 		await expect.poll( painted ).toBe( ! card );
 		// As if it had one, its name kept to itself: the deck is drawn, and the page's record is still there to be moved and read, unpainted.
+		// On a test machine that "card" is software, which Riff refuses because every frame would
+		// cost the page's own thread: drawn for real, the page stops answering for seconds at a
+		// time, and this test with it. So the deck goes through every step but the drawing itself,
+		// which is what this checks the page for, not the pixels.
 		await page.addInitScript( () => {
-			const extension = WebGL2RenderingContext.prototype.getExtension;
-			WebGL2RenderingContext.prototype.getExtension = function( name ) {
+			const proto = WebGL2RenderingContext.prototype;
+			const extension = proto.getExtension;
+			proto.getExtension = function( name ) {
 				return name === 'WEBGL_debug_renderer_info' ? null : extension.call( this, name );
 			};
+			for ( const draw of [ 'drawArrays', 'drawElements', 'drawArraysInstanced', 'drawElementsInstanced', 'drawRangeElements' ] ) {
+				proto[ draw ] = () => {};
+			}
 		} );
 		await page.reload();
 		await page.locator( '.riff-row' ).nth( 0 ).click();

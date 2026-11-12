@@ -144,6 +144,7 @@ Besides the turntable and Now Playing above:
 | `Protect::$songs`, `Protect::$playing` | Which songs a file is the video or stream of, which posts play a file; `forget()` runs on `clean_post_cache` and on a change to `_riff_video` or `_riff_stream`. | low: keyed by attachment only, so a switch of site is not seen, nor an author losing `edit_post`, until a post changes. |
 | `Export::write()`'s `$statements` | The archive's prepared statements, by table, a local of the one call that writes it; dropped with its handle before the zip reads the database. | none: no static. |
 | `UI::$eager`, `UI::$lead` | How many images load eagerly, counted down across every render in a request. | low |
+| `Cache::$changed` (`class-cache.php`) | The sites whose posts or terms changed in this request; while one is set, `Cache` reads and writes the request's object cache, not its `riff_kept_*` transients, and `settle()` moves the `riff_changed` stamp again at shutdown. | low: a long process (WP-CLI, cron) that changes posts keeps to the object cache until it ends. |
 | The rest (`Permissions`, `Extensions`, `Transcode`, `Cover`, `Art`, `Blocks_Source`, the extensions' REST controllers) | Keyed or per request. | low |
 | JS: `cache` in `features/listen/app/fetch.js` | Every REST answer the app fetched, for the session; `forget()` clears the drawn views but not this. | medium |
 | JS: `features` in `state.js` | A feature's module, and a failed import cached as nothing for good. | low |

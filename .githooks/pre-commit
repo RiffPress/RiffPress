@@ -28,6 +28,16 @@ echo "pre-commit: site navigation"
 npm run -s docs:nav:check
 echo "pre-commit: readme.txt changelogs"
 npm run -s docs:changelog:check
+# The rest of what CI's docs job checks, so a commit this passes passes there too
+# (.github/scripts/pre-commit.test.js keeps the two lists the same).
+echo "pre-commit: isolation.json"
+node .github/scripts/isolation.js --check
+echo "pre-commit: TypeScript types"
+npm run -s types:check || { echo "pre-commit: run npm run types"; exit 1; }
+echo "pre-commit: versions"
+node .github/scripts/release-check.js tree
+echo "pre-commit: the workflow scripts' tests"
+node --test --test-reporter=dot .github/scripts/*.test.js
 
 if [[ -n "${RIFF_SKIP_E2E:-}" ]]; then
 	echo "pre-commit: RIFF_SKIP_E2E set, skipping the Playwright suite"
