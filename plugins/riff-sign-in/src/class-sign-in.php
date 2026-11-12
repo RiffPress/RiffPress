@@ -43,6 +43,7 @@ final class Sign_In {
 		Listeners::register();
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_action( 'template_redirect', array( self::class, 'link' ) );
+		add_action( Codes::MAIL, array( Codes::class, 'deliver' ) );
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporters' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'erasers' ) );
 		add_action( 'admin_init', array( self::class, 'privacy_policy' ) );
@@ -220,11 +221,14 @@ final class Sign_In {
 	}
 
 	/**
-	 * What the page that asks needs: the site's name, where its form goes, what it carries, and the
-	 * sheet's styles. The styles lean on Riff's tokens, which Riff registers with the front end's
-	 * scripts; this page has no theme, so that is asked for here and only those styles are printed.
+	 * What the page that asks needs: the site's name, the account the link signs in to with most of
+	 * its address hidden, whether this browser asked for any code at all, where its form goes, what
+	 * it carries, and the sheet's styles. The styles lean on Riff's tokens, which Riff registers with
+	 * the front end's scripts; this page has no theme, so that is asked for here and only those
+	 * styles are printed.
 	 *
-	 * @return array `site`, `action`, `value`, `css`, and `tokens`: whether Riff's are there to print.
+	 * @return array `site`, `who`, `here`, `action`, `value`, `css`, and `tokens`: whether Riff's are
+	 *               there to print.
 	 */
 	public static function asked(): array {
 		if ( ! wp_style_is( 'riff-tokens', 'registered' ) ) {
@@ -233,6 +237,8 @@ final class Sign_In {
 		}
 		return array(
 			'site'   => wp_strip_all_tags( (string) get_bloginfo( 'name' ) ),
+			'who'    => Codes::address( strtok( self::$asking, '.' ) ?: '' ), // phpcs:ignore Universal.Operators.DisallowShortTernary.Found
+			'here'   => isset( $_COOKIE[ Codes::COOKIE ] ),
 			'action' => home_url( '/' ),
 			'value'  => self::$asking,
 			'css'    => self::css() . 'body.riff-signin-page{display:grid;min-height:100dvh;margin:0;place-items:center;background:var(--riff-bg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}.riff-signin-page .riff-signin{display:flex;flex-direction:column;gap:12px}.riff-signin h1{margin:0;padding:0;color:inherit;font-family:inherit;font-size:22px;font-weight:700;line-height:1.25}',
@@ -244,6 +250,12 @@ final class Sign_In {
 	 * Whether a request comes from anywhere but this site's own pages: its Sec-Fetch-Site is not
 	 * same-origin, so a sibling site under the same domain counts too, or, from a browser that
 	 * sends none, its Origin (or Referer) is on another host than this site's.
+	 *
+	 * A request with none of the three is not counted as another site's: every browser in use sends
+	 * Sec-Fetch-Site or an Origin with a POST from a page, so such a request comes from a client
+	 * that is not a browser carrying someone's cookies, or a page that hides its Referer. The REST
+	 * routes that sign in also take only JSON, which a page on another site cannot send without
+	 * the browser asking first, so they do not rest on this alone.
 	 *
 	 * @return bool
 	 */

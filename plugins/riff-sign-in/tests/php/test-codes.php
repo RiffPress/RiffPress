@@ -314,6 +314,16 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$this->assertMatchesRegularExpression( '/<form method="post" action="' . preg_quote( esc_url( home_url( '/' ) ), '/' ) . '">/', $page );
 		$this->assertStringContainsString( 'name="' . Codes::QUERY . '" value="' . esc_attr( $value ) . '"', $page, 'its one button carries the token and code' );
 		$this->assertStringContainsString( 'class="riff-signin', $page, 'drawn as the sheet is' );
+		$this->assertStringContainsString( '<h1 id="riff-signin-title">Sign in as s•••@example.com?</h1>', $page, 'it says which account, with most of the address hidden' );
+		$this->assertStringNotContainsString( 'scanned@example.com', $page );
+		$this->assertStringContainsString( 'No code was asked for from this browser.', $page, 'and warns when this browser asked for none' );
+
+		$_COOKIE[ Codes::COOKIE ] = Codes::browser( 'an-earlier-token' );
+		$this->open( $value );
+		ob_start();
+		require $template;
+		$this->assertStringNotContainsString( 'No code was asked for from this browser.', (string) ob_get_clean(), 'but not when it asked for another code' );
+		unset( $_COOKIE[ Codes::COOKIE ] );
 
 		$this->assertSame( array( 'redirected', home_url( '/listen/' ) ), $this->open( $value, true ), 'the button signs in, and lands where the code was asked from' );
 		$this->assertSame( $user, get_current_user_id() );
@@ -390,6 +400,124 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$this->assertSame( array( 'refused', 'That code has expired. Ask for a new one.' ), $this->open( $sent['token'] . '.' . $code ), 'five tries end it, and the link says so' );
 	}
 
+	/**
+	 * What wp_mail() was asked to send, without sending it.
+	 *
+	 * @param callable $work What sends.
+	 * @return array[] [ to, subject, message ] each.
+	 */
+	private function mailed( callable $work ): array {
+		$mails = array();
+		$catch = static function ( $short, $atts ) use ( &$mails ) {
+			$mails[] = array( $atts['to'], $atts['subject'], $atts['message'] );
+			return true;
+		};
+		remove_filter( 'riff_sign_in_send', '__return_false' );
+		add_filter( 'pre_wp_mail', $catch, 10, 2 );
+		try {
+			$work();
+		} finally {
+			remove_filter( 'pre_wp_mail', $catch );
+			add_filter( 'riff_sign_in_send', '__return_false' );
+		}
+		return $mails;
+	}
+
+	public function test_the_mail_goes_after_the_answer_in_the_same_way_for_every_address(): void {
+		$this->registration( false );
+		self::factory()->user->create( array( 'user_email' => 'member@example.com' ) );
+		_set_cron_array( array() );
+
+		$mails = $this->mailed(
+			function () use ( &$member, &$stranger ) {
+				$member   = Codes::request( 'member@example.com' );
+				$stranger = Codes::request( 'stranger@example.com' );
+			}
+		);
+		$this->assertSame( array(), $mails, 'nothing is mailed while the answer is made' );
+		$this->assertSame( array_keys( $member ), array_keys( $stranger ), 'the answers are alike' );
+		$events = array();
+		foreach ( _get_cron_array() as $hooks ) {
+			foreach ( $hooks[ Codes::MAIL ] ?? array() as $event ) {
+				$events[] = $event['args'][0];
+			}
+		}
+		$this->assertSame( array( $member['token'], $stranger['token'] ), $events, 'one cron event each, whoever the address is' );
+
+		$mails = $this->mailed(
+			static function () use ( $member, $stranger ) {
+				do_action( Codes::MAIL, $member['token'] );
+				do_action( Codes::MAIL, $stranger['token'] );
+				do_action( Codes::MAIL, $member['token'] );
+			}
+		);
+		$this->assertCount( 1, $mails, 'the event mails the member, once, and nobody else' );
+		$this->assertSame( 'member@example.com', $mails[0][0] );
+		$this->assertStringContainsString( $this->sent[0][1], $mails[0][1] );
+
+		// Where PHP can finish the answer first, the mail waits for the end of the request instead.
+		( new ReflectionProperty( Codes::class, 'finishes' ) )->setValue( null, true );
+		try {
+			_set_cron_array( array() );
+			$mails = $this->mailed(
+				function () use ( &$member ) {
+					$member = Codes::request( 'member@example.com' );
+					$this->assertNotFalse( has_action( 'shutdown', array( Codes::class, 'flush' ) ) );
+					$this->assertFalse( wp_next_scheduled( Codes::MAIL, array( $member['token'] ) ), 'no event' );
+					Codes::flush();
+				}
+			);
+			$this->assertCount( 1, $mails, 'mailed at the end of the request' );
+		} finally {
+			( new ReflectionProperty( Codes::class, 'finishes' ) )->setValue( null, null );
+		}
+	}
+
+	public function test_an_address_allows_only_so_many_wrong_codes_a_day_across_its_codes(): void {
+		self::factory()->user->create( array( 'user_email' => 'guessed@example.com' ) );
+		add_filter( 'riff_sign_in_failed_codes', static fn() => Codes::TRIES + 2 );
+		$first = Codes::request( 'guessed@example.com' );
+		$code  = $this->sent[0][1];
+		$wrong = '000000' === $code ? '111111' : '000000';
+		for ( $i = 0; $i < Codes::TRIES; $i++ ) {
+			Codes::verify( $first['token'], $wrong );
+		}
+		$second = Codes::request( 'guessed@example.com' );
+		$code   = $this->sent[1][1];
+		$wrong  = '000000' === $code ? '111111' : '000000';
+		$this->assertSame( 'riff_sign_in_wrong', Codes::verify( $second['token'], $wrong )->get_error_code() );
+		$this->assertSame( 'riff_sign_in_wrong', Codes::verify( $second['token'], $wrong )->get_error_code() );
+		$locked = Codes::verify( $second['token'], $code );
+		$this->assertSame( 'riff_sign_in_locked', $locked->get_error_code(), 'a new code does not buy more tries' );
+		$this->assertSame( 429, $locked->get_error_data()['status'] );
+		$this->assertSame( 0, get_current_user_id() );
+	}
+
+	public function test_a_right_code_takes_its_own_try_back(): void {
+		self::factory()->user->create( array( 'user_email' => 'often@example.com' ) );
+		add_filter( 'riff_sign_in_failed_codes', static fn() => 1 );
+		for ( $i = 0; $i < Codes::PER_EMAIL; $i++ ) {
+			wp_set_current_user( 0 );
+			$sent = Codes::request( 'often@example.com' );
+			$this->assertInstanceOf( WP_User::class, Codes::verify( $sent['token'], $this->sent[ $i ][1] ), "sign-in $i is not a wrong code" );
+		}
+	}
+
+	public function test_the_site_name_in_the_mail_is_one_short_quoted_line(): void {
+		self::factory()->user->create( array( 'user_email' => 'named@example.com' ) );
+		update_option( 'blogname', "Tom &amp; Jerry's\n\nClick https://evil.example now " . str_repeat( 'very ', 20 ) . 'long' );
+		$mails = $this->mailed(
+			static function () {
+				do_action( Codes::MAIL, Codes::request( 'named@example.com' )['token'] );
+			}
+		);
+		$this->assertCount( 1, $mails );
+		[ , $subject, $message ] = $mails[0];
+		$this->assertMatchesRegularExpression( '/^\d{6} is your code for “Tom & Jerry\'s Click https:\/\/evil\.example now [a-z ]+…”$/u', $subject, 'decoded, on one line, in quotes' );
+		$this->assertLessThanOrEqual( 60 + 2, mb_strlen( substr( $subject, strpos( $subject, '“' ) ) ), 'and no longer than sixty characters' );
+		$this->assertStringStartsWith( 'Your code to sign in to “Tom & Jerry', $message );
+	}
+
 	public function test_the_routes_answer_as_the_sheet_asks(): void {
 		do_action( 'rest_api_init' );
 		$user    = self::factory()->user->create( array( 'user_email' => 'rest@example.com' ) );
@@ -400,6 +528,20 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$token = $response->get_data()['token'];
 
 		$verify = new WP_REST_Request( 'POST', '/riff-sign-in/v1/code/verify' );
+		$verify->set_body_params( array( 'token' => $token, 'code' => $this->sent[0][1] ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		$this->assertSame( 403, rest_do_request( $verify )->get_status(), 'the right code, as a form any page can send, is refused' );
+		$verify->set_header( 'Content-Type', 'application/json' );
+		foreach ( array(
+			'HTTP_SEC_FETCH_SITE' => 'cross-site',
+			'HTTP_ORIGIN'         => 'https://evil.example',
+		) as $header => $from ) {
+			$_SERVER[ $header ] = $from;
+			$this->assertSame( 403, rest_do_request( $verify )->get_status(), "and so is JSON from another site, by $header" );
+			unset( $_SERVER[ $header ] );
+		}
+		$this->assertSame( 0, get_current_user_id() );
+		$this->assertTrue( Codes::pending( $token ), 'neither used a try' );
+		$_SERVER['HTTP_SEC_FETCH_SITE'] = 'same-origin';
 		$verify->set_body_params( array( 'token' => $token, 'code' => 'nope' ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		$this->assertSame( 400, rest_do_request( $verify )->get_status() );
 		$verify->set_body_params( array( 'token' => $token, 'code' => $this->sent[0][1] ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound

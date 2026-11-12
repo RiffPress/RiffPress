@@ -20,6 +20,9 @@ defined( 'ABSPATH' ) || exit;
  * The riff-sign-in/v1 routes: a code to an address and its answer, a passkey's answer, and the signed-in
  * listener's own passkeys. The routes a visitor calls take no nonce, since there is no cookie yet;
  * the ones about a listener's passkeys are theirs alone, with the nonce any cookie request needs.
+ * The two that sign a browser in, /code/verify and /assertion, take only JSON and only from this
+ * site's own pages, so a page elsewhere cannot sign a visitor's browser in to an account of its
+ * choosing.
  */
 final class Routes {
 
@@ -27,6 +30,11 @@ final class Routes {
 	 * The namespace.
 	 */
 	public const NAMESPACE = 'riff-sign-in/v1';
+
+	/**
+	 * Passkey requests one network address may start in the window codes are counted over.
+	 */
+	public const PASSKEYS_PER_IP = 30;
 
 	/**
 	 * Hooks the routes.
@@ -82,7 +90,7 @@ final class Routes {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( self::class, 'verify_code' ),
-				'permission_callback' => $public,
+				'permission_callback' => array( self::class, 'here' ),
 				'args'                => array(
 					'token' => $b64 + array( 'required' => true ),
 					'code'  => array(
@@ -113,7 +121,7 @@ final class Routes {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( self::class, 'assertion' ),
-				'permission_callback' => $public,
+				'permission_callback' => array( self::class, 'here' ),
 				'args'                => array(
 					'session'    => $b64 + array( 'required' => true ),
 					'credential' => $answer,
@@ -164,6 +172,20 @@ final class Routes {
 	}
 
 	/**
+	 * Whether a request that signs a browser in may: sent as JSON, from this site's own pages. A
+	 * form on another page can send neither without the browser asking this site first.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return true|WP_Error
+	 */
+	public static function here( WP_REST_Request $request ) {
+		if ( ! $request->is_json_content_type() || Sign_In::cross_site() ) {
+			return new WP_Error( 'riff_sign_in_cross_site', __( 'Sign in from this site\'s own pages.', 'riff-sign-in' ), array( 'status' => 403 ) );
+		}
+		return true;
+	}
+
+	/**
 	 * POST /code.
 	 *
 	 * @param WP_REST_Request $request Request.
@@ -197,13 +219,16 @@ final class Routes {
 	}
 
 	/**
-	 * POST /assertion/options.
+	 * POST /assertion/options: the same answer for any address, or none, and a limit per network
+	 * address on how many are started, since each keeps a challenge for a while.
 	 *
-	 * @param WP_REST_Request $request Request.
-	 * @return WP_REST_Response
+	 * @return WP_REST_Response|WP_Error
 	 */
-	public static function assertion_options( WP_REST_Request $request ): WP_REST_Response {
-		return new WP_REST_Response( Passkeys::request_options( sanitize_email( (string) $request['email'] ) ) );
+	public static function assertion_options() {
+		if ( Codes::over( 'asr', self::PASSKEYS_PER_IP ) ) {
+			return new WP_Error( 'riff_sign_in_limit', __( 'Too many tries. Wait a few minutes and try again.', 'riff-sign-in' ), array( 'status' => 429 ) );
+		}
+		return new WP_REST_Response( Passkeys::request_options() );
 	}
 
 	/**

@@ -809,6 +809,10 @@ function check( slug, found, manifests, riff ) {
 				if ( kind === 'functions' && ! list.includes( x.value ) ) {
 					continue;
 				}
+				// A hook under the extension's own prefix is its own (a cron event it schedules), not Riff's.
+				if ( kind === 'hooks' && ! list.includes( x.value ) && x.value.startsWith( slug.replace( /-/g, '_' ) + '_' ) ) {
+					continue;
+				}
 				if ( kind !== 'functions' && ! list.includes( x.value ) ) {
 					say( x.where, `the ${ label } '${ x.value }' is not public (docs/hooks.md, docs/javascript.md). Use one that is, or make it public in Riff first.` );
 				} else if ( ! declared.includes( x.value ) ) {

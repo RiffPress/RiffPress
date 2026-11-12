@@ -18,6 +18,8 @@ defined( 'ABSPATH' ) || exit;
 $riff_sign_in = Sign_In::asked();
 /* translators: %s: the site's name. */
 $riff_sign_in_title = sprintf( __( 'Sign in to %s?', 'riff-sign-in' ), $riff_sign_in['site'] );
+/* translators: %s: the account's email address, with most of it hidden, as j•••@example.com. */
+$riff_sign_in_heading = '' !== $riff_sign_in['who'] ? sprintf( __( 'Sign in as %s?', 'riff-sign-in' ), $riff_sign_in['who'] ) : $riff_sign_in_title;
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -36,8 +38,16 @@ if ( $riff_sign_in['tokens'] ) {
 </head>
 <body id="riff" class="riff-signin-page">
 <main class="riff-signin" aria-labelledby="riff-signin-title">
-	<h1 id="riff-signin-title"><?php echo esc_html( $riff_sign_in_title ); ?></h1>
-	<p><?php esc_html_e( 'You opened the link in your sign-in email. Press Sign in to finish signing in on this device.', 'riff-sign-in' ); ?></p>
+	<h1 id="riff-signin-title"><?php echo esc_html( $riff_sign_in_heading ); ?></h1>
+	<p>
+	<?php
+	/* translators: %s: the site's name. */
+	echo esc_html( sprintf( __( 'You opened the link in a sign-in email from %s. Press Sign in to finish signing in to that account on this device.', 'riff-sign-in' ), $riff_sign_in['site'] ) );
+	?>
+	</p>
+	<?php if ( ! $riff_sign_in['here'] ) : ?>
+	<p class="riff-signin-warning" role="alert"><strong><?php esc_html_e( 'No code was asked for from this browser.', 'riff-sign-in' ); ?></strong> <?php esc_html_e( 'If you did not ask for one on another device, do not press Sign in: someone may have sent you a link to their own account.', 'riff-sign-in' ); ?></p>
+	<?php endif; ?>
 	<form method="post" action="<?php echo esc_url( $riff_sign_in['action'] ); ?>">
 		<input type="hidden" name="<?php echo esc_attr( Codes::QUERY ); ?>" value="<?php echo esc_attr( $riff_sign_in['value'] ); ?>">
 		<div class="riff-signin-row">
