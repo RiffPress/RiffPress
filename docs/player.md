@@ -148,7 +148,14 @@ view included. One shows at a time:
 
 Focus moves to the panel's name as it opens, and Escape or Close hands it back to what opened it.
 The one a listener leaves open opens again on their next visit, on a wide screen; that choice is
-kept in the browser, nowhere else.
+kept in the browser, nowhere else. In the Listen app, a listener who has never opened or closed a
+panel has **About** open beside the page once there is a track, played or resumed, so the credits
+are seen rather than found (`Riff\About::opens()`). It opens quietly: the focus stays where it was,
+and nothing is kept, so it is still theirs to choose. Closing it keeps it closed, and a panel they
+left open is the one that opens. Nothing opens by itself on a phone, in a narrow window, or on a
+site's page outside the Listen app. The room beside the page is kept from before the page is
+painted (`Riff\About::held()`), for the panel that will open there, so the page doesn't narrow
+as it appears; it is given back if nothing opens.
 
 A plugin's view can live in the Listen app's **sidebar** instead (`'place' => 'sidebar'`), so it
 never takes over the page; none of Riff's own does. On a wide screen it is docked at the
@@ -184,6 +191,15 @@ everything on a phone, the cover leads it, at most half the panel's height. The 
 each, what the tag is beside what the file says, so beside the album the whole panel shows at once
 at a computer's usual heights. Both follow the window as it resizes and the device as it turns,
 from riff.css alone (a style query on the panel's place).
+
+Over the cover's foot, About offers the deck: **Open the deck full screen**, or **Open the deck**
+where the browser can't make a page full screen (an iPhone). It opens Now Playing to the album,
+which is the turntable on its own, and asks for full screen on the same press; Escape leaves full
+screen and leaves the deck open, and closing Now Playing leaves both, with the focus back on the
+button. It shows only where the turntable is what Now Playing would show: the site has it on, the
+listener hasn't asked for less motion, the track is a song rather than its video, the window is
+wider than tall, and the browser has WebGL2. Nothing is loaded for it: the deck is set up as Now
+Playing opens, as it always is. Nothing opens the deck by itself.
 
 Its parts are sections, in the order the `riff_about_sections` filter gives them; Riff's own,
 `track` and `credits`, are two of them. A plugin adds one there, which the page draws hidden as

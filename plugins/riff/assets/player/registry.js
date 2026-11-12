@@ -213,6 +213,8 @@ export function registry( P ) {
 	P.side = side;
 	P.panelOpen = null;
 	let opener = null;
+	// Whether the panel open is the page's own, open by default, rather than one the listener chose.
+	let unchosen = false;
 
 	for ( const [ id, v ] of Object.entries( P.data.views || {} ) ) {
 		const place = placeOf( v.place );
@@ -722,8 +724,14 @@ export function registry( P ) {
 	}
 	window.addEventListener( 'resize', () => {
 		rehome();
-		if ( P.panelOpen ) {
+		// The panel open by default stands only beside the page: one the listener never asked for
+		// doesn't become a sheet over everything as the window narrows, and is back as it widens.
+		if ( P.panelOpen && unchosen && ! beside() ) {
+			hide( { quiet: true } );
+		} else if ( P.panelOpen ) {
 			settle();
+		} else if ( read( localStorage, PANEL ) === null ) {
+			reopen();
 		}
 	} );
 	// The Listen app's frame changes as the window does (templates/standalone.php).
@@ -751,6 +759,7 @@ export function registry( P ) {
 			__( 'Close %s', 'riff' ).replace( '%s', v.label )
 		);
 		if ( ! quiet ) {
+			unchosen = false;
 			opener = from || document.activeElement;
 			write( localStorage, PANEL, id );
 			if ( v.place === 'sidebar' ) {
@@ -786,6 +795,7 @@ export function registry( P ) {
 		document.documentElement.classList.remove( 'riff-panel-open' );
 		cover( false );
 		if ( ! quiet ) {
+			unchosen = false;
 			write( localStorage, PANEL, '' );
 			if ( v.place === 'sidebar' ) {
 				keep( id, false );
@@ -823,7 +833,16 @@ export function registry( P ) {
 		}
 		reopen();
 		reopenDock();
+		claimed();
 	} );
+
+	// The room a panel was expected to need, kept from before the page was painted (Riff\About,
+	// held()), given back once the track has said whether one opens.
+	function claimed() {
+		if ( ! P.panelOpen ) {
+			document.documentElement.classList.remove( 'riff-panel-open' );
+		}
+	}
 
 	// Escape closes the panel, and stays with it; on a phone Tab keeps to it.
 	side?.addEventListener( 'keydown', ( e ) => {
@@ -865,8 +884,12 @@ export function registry( P ) {
 	// The panel a listener left open, open again beside the page once something plays: on a wide
 	// screen only, as on a phone it would cover what they came to. Never beside the deck on its
 	// own (now-playing.js, immerse()), which puts it away and asks for it here once it is left.
+	// A listener who has never opened or closed one (nothing stored, as against the "" a close
+	// stores) has the page's own, where it names one: About, in the Listen app (Riff\About). Opened
+	// quietly, so it stays unchosen: no focus, nothing stored.
 	function reopen() {
-		const id = read( localStorage, PANEL );
+		const stored = read( localStorage, PANEL );
+		const id = stored ?? P.data.panel;
 		if (
 			id &&
 			! P.panelOpen &&
@@ -878,6 +901,7 @@ export function registry( P ) {
 			beside()
 		) {
 			show( id, { quiet: true } );
+			unchosen = stored === null;
 		}
 	}
 
@@ -908,6 +932,7 @@ export function registry( P ) {
 		},
 		hidePanel: ( options ) => hide( options ),
 		reopenPanel: reopen,
+		claimedPanel: claimed,
 		viewOpened: ( id, isNowOpen ) => {
 			if ( screenOf( id ) ) {
 				if ( isNowOpen ) {

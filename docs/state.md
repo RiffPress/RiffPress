@@ -43,7 +43,7 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 | --- | --- | --- |
 | `P.panelOpen`, `P.side` (`registry.js`) | The panel's id. | |
 | `.riff-side[hidden]`, `html.riff-panel-open`, each view's `hidden` | The same, painted. | low |
-| `localStorage` `riff:panel` (`registry.js`) | The panel last chosen, reopened on the next page. | low |
+| `localStorage` `riff:panel` (`registry.js`) | The panel last chosen, reopened on the next page: absent for a listener who never chose, who has About in the Listen app (`Riff\About::opens()`, `P.data.panel`); `""` once they close one. Read before the first paint too (`Riff\About::held()`), to keep the panel's room. | low |
 | `open` (`together.js`), `showing()` there | A copy for the Together panel. | low |
 
 ### Views docked in the sidebar
@@ -98,7 +98,7 @@ No key carries a version. A shape that changes is caught only by the reader's ow
 | `riff-likes` | local | `[{kind, id, at}]`, cleaned on read | low |
 | `riff:volume` | local | `"0"`–`"1"` | low |
 | `riff:captions` | local | `on`, `off` | low |
-| `riff:panel` | local | a panel id or `""` | low |
+| `riff:panel` | local | a panel id, `""` for closed, absent for never chosen | low |
 | `riff:dock` | local | sidebar view ids, separated by spaces | low |
 | `riff-sidebar` | local | `full`, `mini`; also read inline by `templates/standalone.php` before the first paint | low |
 | `riff-rack`, `riff-searches`, `riff-visits`, `riff-install-dismissed`, `riff-visit` (session) | | the Listen app's conveniences | low |

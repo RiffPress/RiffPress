@@ -694,6 +694,8 @@ function start() {
 	P.mount();
 	if ( ! P.restore() ) {
 		P.paint();
+		// Nothing to resume, so no panel opens yet: the room kept for one is given back.
+		P.claimedPanel();
 	}
 	P.reveal();
 	// The bar is drawn in Roboto, which riff.css never swaps in late (font-display: optional).

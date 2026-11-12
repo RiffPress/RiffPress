@@ -2885,22 +2885,69 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	gap: 0;
 }
 
-#riff .riff-about-cover {
+/* the cover, with the deck offered over its foot */
+#riff .riff-about-art {
+	position: relative;
 	width: 100%;
 	width: min(100%, 50cqb);
-	max-width: 100%;
+	margin-bottom: 12px;
+}
+
+#riff .riff-about-cover {
+	display: block;
+	width: 100%;
 	height: auto;
 	aspect-ratio: 1;
-	margin-bottom: 12px;
 	border-radius: 8px;
 	object-fit: cover;
+}
+
+#riff .riff-about-deck {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 32px;
+	padding: 0 14px 0 8px;
+	border: 0;
+	border-radius: 999px;
+	background: rgb(0 0 0 / 0.72);
+	color: #fff;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	backdrop-filter: blur(8px);
+}
+
+#riff .riff-about-deck[hidden] {
+	display: none;
+}
+
+#riff .riff-about-deck svg {
+	width: 20px;
+	height: 20px;
+}
+
+#riff .riff-about-deck:hover {
+	background: rgb(0 0 0 / 0.86);
+}
+
+#riff .riff-about-deck:focus-visible {
+	outline: 2px solid var(--riff-accent, #fff);
+	outline-offset: 2px;
+}
+
+#riff .riff-about-cover + .riff-about-deck {
+	position: absolute;
+	bottom: 12px;
+	left: 12px;
 }
 
 /* beside or in the strip, never a sheet over Now Playing, and the album
    on the stage */
 @container not style(--riff-side-place: sheet) {
 
-	#riff.is-open[data-riff-showing="album"]:not([data-mode="video"]) .riff-about-cover {
+	#riff.is-open[data-riff-showing="album"]:not([data-mode="video"]) .riff-about-art {
 		display: none;
 	}
 }

@@ -111,6 +111,8 @@ test.describe( 'Standalone', () => {
 		test.skip( isMobile, 'The frame is for a wide window.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
+		// A listener who closed About, open by default, so no panel is open until one is opened.
+		await page.evaluate( () => localStorage.setItem( 'riff:panel', '' ) );
 		await page.locator( '[data-riff-app-action="play"]' ).click();
 		await page.locator( '.riff-bar-info' ).click();
 		const np = page.locator( '.riff-np' );
