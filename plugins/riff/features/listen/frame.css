@@ -241,22 +241,30 @@ html.riff-frame .riff-standalone .riff-app {
 		height: 24px;
 	}
 
-	/* Home and search leave the panel for the middle of the strip, as
-	   a round button, then the pill, the two centred as one group: the pill's
-	   middle sits half of Home and the gap (48px and 8px) right of the
-	   window's. Back and forward stay at the strip's left end, beside the
-	   window's own controls where it has them. */
+	/* Back, forward, Home and search are one cluster in the middle of the
+	   strip, in the order a browser teaches: two 32px buttons 4px apart, Home
+	   (48px), then the pill, each 8px from the last. The cluster as a whole
+	   is centred (132px of buttons and gaps, then the pill), and kept clear
+	   of the window's own controls where it has them. */
+	html.riff-frame .riff-standalone .riff-app {
+		--riff-frame-search: min(480px, 100vw - 640px);
+		--riff-frame-cluster: max(16px, calc(env(titlebar-area-x, 0px) + 8px), calc(50% - (132px + var(--riff-frame-search)) / 2));
+	}
+
+	html.riff-frame .riff-standalone .riff-app-titlebar,
+	html.riff-frame-overlay .riff-standalone .riff-app-titlebar {
+		padding-left: var(--riff-frame-cluster);
+	}
+
 	html.riff-frame .riff-standalone .riff-app .riff-app-search,
 	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-search {
-		--riff-frame-search: min(480px, 100vw - 640px);
 		position: fixed;
 		top: 8px;
-		left: calc(50% + 28px);
+		left: calc(var(--riff-frame-cluster) + 128px);
 		z-index: 3;
 		display: block;
 		width: var(--riff-frame-search);
 		margin: 0;
-		transform: translateX(-50%);
 		-webkit-app-region: no-drag;
 		app-region: no-drag;
 	}
@@ -283,7 +291,7 @@ html.riff-frame .riff-standalone .riff-app {
 	html.riff-frame .riff-standalone .riff-app[data-sidebar="mini"] .riff-app-home {
 		position: fixed;
 		top: 8px;
-		right: calc(50% + min(480px, 100vw - 640px) / 2 - 20px);
+		left: calc(var(--riff-frame-cluster) + 72px);
 		z-index: 3;
 		justify-content: center;
 		width: 48px;

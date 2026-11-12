@@ -81,7 +81,7 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '.riff-app-titlebar' ) ).toBeHidden();
 	} );
 
-	test( 'on a computer the strip has back and forward at its left end, Home and search in its middle and who is listening at its right, reached in that order', async ( {
+	test( 'on a computer the strip has back, forward, Home and search as one cluster in its middle and who is listening at its right, reached in that order', async ( {
 		page,
 		isMobile,
 	} ) => {
@@ -97,14 +97,22 @@ test.describe( 'Standalone', () => {
 		const search = page.locator( '.riff-app-bar .riff-app-search input' );
 		const who = page.locator( '.riff-app-bar :is(.riff-app-account, .riff-app-signin)' );
 
-		const at = async ( el ) => el.boundingBox();
-		const [ b, f, h, s, w ] = await Promise.all( [ back, forward, home, search, who ].map( at ) );
-		expect( b.x ).toBeLessThanOrEqual( 24 );
-		expect( f.x ).toBeGreaterThan( b.x );
-		// Home and the pill, one group in the middle of the window.
-		expect( Math.abs( ( ( h.x + s.x + s.width ) / 2 ) - 720 ) ).toBeLessThanOrEqual( 2 );
-		expect( h.x ).toBeGreaterThan( f.x + f.width );
-		expect( w.x ).toBeGreaterThan( s.x + s.width );
+		// Back, forward, Home and the pill are one cluster, in that order, on one row, each
+		// within a small gap of the last; the account button is clear of it.
+		for ( const width of [ 1440, 900 ] ) {
+			await page.setViewportSize( { width, height: 900 } );
+			const [ b, f, h, s, w ] = await Promise.all( [ back, forward, home, search, who ].map( ( el ) => el.boundingBox() ) );
+			const chain = [ b, f, h, s ];
+			for ( let i = 1; i < chain.length; i++ ) {
+				const gap = chain[ i ].x - ( chain[ i - 1 ].x + chain[ i - 1 ].width );
+				expect( gap, `${ width }: control ${ i } follows control ${ i - 1 }` ).toBeGreaterThanOrEqual( 0 );
+				expect( gap, `${ width }: control ${ i } follows control ${ i - 1 }` ).toBeLessThanOrEqual( 12 );
+				expect( Math.abs( ( chain[ i ].y + chain[ i ].height / 2 ) - ( chain[ 0 ].y + chain[ 0 ].height / 2 ) ) ).toBeLessThanOrEqual( 2 );
+			}
+			expect( b.x ).toBeGreaterThanOrEqual( 8 );
+			expect( w.x ).toBeGreaterThanOrEqual( s.x + s.width );
+		}
+		await page.setViewportSize( { width: 1440, height: 900 } );
 		await expect( search ).toHaveAttribute( 'placeholder', 'Find an album, an artist or a track' );
 		// The keyboard reaches them as they are seen: Home, search and who is listening come before
 		// the library in the sidebar.
