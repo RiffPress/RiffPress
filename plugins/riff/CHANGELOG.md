@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.15.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.14.2...riff-v6.15.0) (2026-11-12)
+
+
+### Features
+
+* **together:** a plugin hears each share and leave, links a member to listen along, and adds listeners from other sites to Together ([#1077](https://github.com/RiffPress/RiffPress/issues/1077)) ([e029154](https://github.com/RiffPress/RiffPress/commit/e029154adbe799dad7e8f5306b4f6b9f77e1b5c5))
+
 ## [6.14.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.14.1...riff-v6.14.2) (2026-11-12)
 
 
