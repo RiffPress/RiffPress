@@ -1,9 +1,11 @@
 /**
  * The deck is one object at every size it shows at: its keys, its display and its pitch fader on
  * its plinth, the plinth and the arm inside the stage, nothing over anything else, and each control
- * at least 44 by 44 CSS pixels (WCAG 2.5.5). Upright, the album is the cover. A screen no taller
- * than a phone is a touch screen here, as a phone on its side is; the rest have a mouse. Measured
- * from boxes, so it holds wherever the deck is drawn. Runs in desktop Chromium.
+ * large enough to press: under a finger at least 44 by 44 CSS pixels (WCAG 2.5.5), under a mouse at
+ * least 24 by 24 (WCAG 2.5.8), so a window keeps the keys along the front of the deck. Upright, the
+ * album is the cover. A screen no taller than a phone is a touch screen here, as a phone on its side
+ * is; the rest have a mouse. Measured from boxes, so it holds wherever the deck is drawn. Runs in
+ * desktop Chromium.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
@@ -84,7 +86,7 @@ async function settled( page ) {
 		.toBe( true );
 }
 
-function check( size, m ) {
+function check( size, m, floor ) {
 	const at = `${ size.width }×${ size.height }`;
 	expect.soft( m.board, `${ at }: the plinth's board is drawn` ).toBe( true );
 	for ( const part of m.arm ) {
@@ -100,7 +102,7 @@ function check( size, m ) {
 		expect.soft( meet( c, m.record ), `${ at }: ${ c.name } clear of the platter` ).toBe( false );
 	}
 	for ( const c of m.controls ) {
-		expect.soft( Math.min( c.w, c.h ), `${ at }: ${ c.name } at least 44px` ).toBeGreaterThanOrEqual( 43.5 );
+		expect.soft( Math.min( c.w, c.h ), `${ at }: ${ c.name } at least ${ floor }px` ).toBeGreaterThanOrEqual( floor - 0.5 );
 	}
 	for ( const [ i, a ] of all.entries() ) {
 		for ( const b of all.slice( i + 1 ) ) {
@@ -123,13 +125,13 @@ const sizes = ( title, list, touch ) =>
 				await page.setViewportSize( size );
 				await settled( page );
 				const m = await measure( page );
-				check( size, m );
+				check( size, m, touch ? 44 : 24 );
 			}
 		} );
 	} );
 
 sizes( 'On a touch screen on its side', [ { width: 844, height: 390 }, { width: 932, height: 430 }, { width: 667, height: 375 } ], true );
-sizes( 'With a mouse', [ { width: 1024, height: 600 }, { width: 1280, height: 720 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 2560, height: 1440 } ], false );
+sizes( 'With a mouse', [ { width: 800, height: 420 }, { width: 1000, height: 540 }, { width: 1024, height: 600 }, { width: 1280, height: 720 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 2560, height: 1440 } ], false );
 
 test.describe( 'Upright', () => {
 	test.use( { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } );

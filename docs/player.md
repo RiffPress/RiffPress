@@ -419,16 +419,18 @@ and a row of lamps lit to the music's RMS over 300 ms, with its peak held, read 
 
 The deck is one object, every part of it placed in its record's width, so it keeps its
 composition at any size and nothing on it is placed against the window. It has two arrangements,
-chosen by the stage's size with a container query in `riff.css`, so every control is at least 44
-by 44 CSS pixels:
+chosen by the stage's size and the pointer with container queries in `riff.css`, so every control
+is large enough to press: at least 44 by 44 CSS pixels under a finger (`pointer: coarse`, WCAG
+2.5.5), at least 24 by 24 under a mouse or a pen (WCAG 2.5.8):
 
-- Where the stage is at least 947 by 793, the keys and the display stand in a strip along the
-  front of the plinth and the pitch fader at its right, under the arm's rest.
-- On a smaller stage (a phone on its side, an unfolded iPhone Duo, a window of 1280 by 720), the
-  plinth reaches further right and the controls stand in a panel beside the arm: the display on
-  top, then Start · Stop, the speeds, the skips, and shuffle and repeat in two columns, and the
-  pitch fader beside them, each key a sixth of the record across. The WebGL deck draws only the
-  first arrangement (`--riff-deck-gl`), so the page's own deck draws this one.
+- Where the stage is at least 947 by 793, or under a mouse at least 516 by 433 (most windows, 1000
+  by 540 among them), the keys and the display stand in a strip along the front of the plinth and
+  the pitch fader at its right, under the arm's rest.
+- On a smaller stage (a phone on its side, an unfolded iPhone Duo, a tablet, a window of 800 by
+  420), the plinth reaches further right and the controls stand in a panel beside the arm: the
+  display on top, then Start · Stop, the speeds, the skips, and shuffle and repeat in two columns,
+  and the pitch fader beside them, each key a sixth of the record across. The WebGL deck draws
+  either arrangement, reading which from `--riff-deck-keys`.
 - On a stage smaller than 540 by 335 neither fits, and the album is the cover.
 
 `plugins/riff/tests/e2e/player/deck-sizes.spec.js` measures both arrangements at phone, tablet and
