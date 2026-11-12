@@ -231,20 +231,22 @@ function start() {
 		 *
 		 * @since 5.8.0
 		 * @since 6.1.0 `view.shown`.
+		 * @since 6.12.0 `sidebar` for `view.place`.
 		 *
 		 * @param {string}                                          id            Lowercase letters, digits and dashes; a screen is `[data-riff-view="<id>"]`, a panel `[data-riff-panel="<id>"]`.
 		 * @param {Object}                                          view          The view.
 		 * @param {string}                                          [view.label]  Its name: its heading, its button's and its chip's. Needed for one the server didn't register.
 		 * @param {string}                                          [view.icon]   Its button's icon, SVG markup from your own code, never from content.
 		 * @param {number}                                          [view.order]  Where its button sits among the bar's controls, lowest first. Default 50.
-		 * @param {string}                                          [view.place]  `screen`, the default, or `side` for a panel.
+		 * @param {string}                                          [view.place]  `screen`, the default; `side` for a panel; or `sidebar` to be docked in the Listen app's sidebar under a row of its own, open beside whatever the listener browses, and a panel wherever there is no sidebar.
 		 * @param {(view: HTMLElement, track: Object|null) => void} [view.render] Fills it as it opens and again as the track changes while it is open. The `riff.view` action says the same.
 		 * @param {(track: Object|null) => boolean}                 [view.shown]  Whether it has something for the track, so its button and chip show. Default always.
 		 * @return {() => void} Takes away what this gave it, or the view this added.
 		 */
 		view: ( id, view ) => P.view( id, view ),
 		/**
-		 * Opens a view: a screen of Now Playing, or a panel beside the page.
+		 * Opens a view: a screen of Now Playing, a panel beside the page, or a sidebar view in the
+		 * Listen app's sidebar (folded to its rail, the sidebar opens for it).
 		 *
 		 * @since 5.8.0
 		 *
@@ -252,11 +254,16 @@ function start() {
 		 */
 		openView: ( id ) => P.openView( String( id ) ),
 		/**
-		 * Closes the panel that is open, or else Now Playing.
+		 * Closes a view: the one named, wherever it is, or with no id the panel that is open, or
+		 * else Now Playing. Views docked in the sidebar close only by name, as several may be open
+		 * there beside the rest.
 		 *
 		 * @since 5.8.0
+		 * @since 6.12.0 `id`.
+		 *
+		 * @param {string} [id] The view's id.
 		 */
-		closeView: () => P.closeView(),
+		closeView: ( id ) => P.closeView( id ),
 		/**
 		 * Gives a control in the player's bar what it does, or adds one the server didn't register.
 		 * Register a control on the server with `riff_register_control()`, so the page has it before

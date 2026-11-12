@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: Riff Chimera (Experimental)
- * Description: Experimental. A Chimera view in Riff's Now Playing: CHIMERA, a physical model of a human voice, sings the melody Riff Sing has for the track, in time with the recording. Nothing is recorded or sent.
+ * Description: Experimental. A Chimera view in the Listen app's sidebar: CHIMERA, a physical model of a human voice, sings the melody Riff Sing has for the track, in time with the recording. Nothing is recorded or sent.
  * Version: 0.2.0
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff, riff-sing
- * Requires Riff: 6.11
+ * Requires Riff: 6.12
  * Plugin URI: https://source.riffpress.com/
  * Author: RiffPress Core Team
  * Author URI: https://riffpress.com/

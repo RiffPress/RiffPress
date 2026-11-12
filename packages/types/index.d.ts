@@ -660,7 +660,7 @@ export interface RiffApi {
 		icon?: string;
 		/** Where its button sits among the bar's controls, lowest first. Default 50. */
 		order?: number;
-		/** `screen`, the default, or `side` for a panel. */
+		/** `screen`, the default; `side` for a panel; or `sidebar` to be docked in the Listen app's sidebar under a row of its own, open beside whatever the listener browses, and a panel wherever there is no sidebar. */
 		place?: string;
 		/** Fills it as it opens and again as the track changes while it is open. The `riff.view` action says the same. */
 		render?: (view: HTMLElement, track: Track | null) => void;
@@ -668,17 +668,17 @@ export interface RiffApi {
 		shown?: (track: Track | null) => boolean;
 	}): () => void;
 	/**
-	 * Opens a view: a screen of Now Playing, or a panel beside the page.
+	 * Opens a view: a screen of Now Playing, a panel beside the page, or a sidebar view in the Listen app's sidebar (folded to its rail, the sidebar opens for it).
 	 *
 	 * @since 5.8.0
 	 */
 	openView(id: string): void;
 	/**
-	 * Closes the panel that is open, or else Now Playing.
+	 * Closes a view: the one named, wherever it is, or with no id the panel that is open, or else Now Playing. Views docked in the sidebar close only by name, as several may be open there beside the rest.
 	 *
 	 * @since 5.8.0
 	 */
-	closeView(): void;
+	closeView(id?: string): void;
 	/**
 	 * Gives a control in the player's bar what it does, or adds one the server didn't register. Register a control on the server with `riff_register_control()`, so the page has it before any script; this is for what only the browser knows. Riff's own are Like (order 10), the badges (20), Play on another device (60) and the volume (70).
 	 *
@@ -820,7 +820,7 @@ export interface RiffActions {
 		id: string;
 		/** Whether it is open now. */
 		open: boolean;
-		/** Its region: `[data-riff-view="<id>"]` for a screen of its own, `[data-riff-panel="<id>"]` for a panel, and Now Playing itself for the album. */
+		/** Its region: `[data-riff-view="<id>"]` for a screen of its own, `[data-riff-panel="<id>"]` for a panel and for a sidebar view, docked or not, and Now Playing itself for the album. */
 		view: HTMLElement;
 		/** The track playing. */
 		track: Track | null;
