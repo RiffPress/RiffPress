@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.3.0...riff-chimera-v0.3.1) (2026-11-12)
+
+
+### Performance Improvements
+
+* **listen:** a view the app fetches is sent alone, tabs are fetched only when wanted, and catalog counts are kept without an object cache ([#1055](https://github.com/RiffPress/RiffPress/issues/1055)) ([614edfb](https://github.com/RiffPress/RiffPress/commit/614edfb800fb78098d7f56646b4ca2bcaf0a0399))
+
 ## [0.3.0](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.2.0...riff-chimera-v0.3.0) (2026-11-12)
 
 
