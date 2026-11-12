@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.14.2
+Stable tag: 6.15.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.15.0 =
+* A plugin hears each share and leave, links a member to listen along, and adds listeners from other sites to Together.
+
 = 6.14.2 =
 * Fixed: Back, Forward, Home and search are one cluster in the middle of the strip.
 
@@ -161,9 +164,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * The deck's lamps glow the display's amber, its strobe lamp is a turned and fluted knob, and its keys' legends share one line.
 * Fixed: the AudioContext and the WebGL deck start once nothing is moving, and a held-up frame no longer jumps the music's pitch.
 * Faster: a view the app fetches is sent alone, tabs are fetched only when wanted, and catalog counts are kept without an object cache.
-
-= 6.12.0 =
-* A plugin's view can live in the Listen app's sidebar, and Riff Chimera sings from there.
-* Fixed: an album's header sits square on its cover, with a longer title set smaller and its quieter lines readable on a light cover.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

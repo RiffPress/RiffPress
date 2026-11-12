@@ -1,6 +1,6 @@
 {
   "name": "riff-monorepo",
-  "version": "6.14.2",
+  "version": "6.15.0",
   "description": "Riff, a music player for WordPress, with its fixtures and test tooling.",
   "license": "GPL-2.0-or-later",
   "private": true,
