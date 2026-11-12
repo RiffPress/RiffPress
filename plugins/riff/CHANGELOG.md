@@ -1,5 +1,19 @@
 # Changelog
 
+## [6.16.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.15.0...riff-v6.16.0) (2026-11-12)
+
+
+### Features
+
+* **share:** a link to a Riff previews large, with the site's name, a line about it and a card of its covers ([#1080](https://github.com/RiffPress/RiffPress/issues/1080)) ([440f390](https://github.com/RiffPress/RiffPress/commit/440f390ddc7994d8b37a1caa05639cd497b50088))
+* **together:** a host can let signed-in users who don't belong to a site listen together there ([#1079](https://github.com/RiffPress/RiffPress/issues/1079)) ([a863aee](https://github.com/RiffPress/RiffPress/commit/a863aee3dff4253fcc9de891c968934bf9a7efcb))
+
+
+### Bug Fixes
+
+* **import:** a zip that fails to import loses only its file, keeping its attachment private with why ([#1084](https://github.com/RiffPress/RiffPress/issues/1084)) ([991c01a](https://github.com/RiffPress/RiffPress/commit/991c01a080da9819bdf738abdbf268ae5394bd43))
+* **import:** an imported album's zip is removed once it's unpacked, so its tracks are only ever reachable as Protected; wp riff clean-zips removes the ones earlier versions kept ([#1082](https://github.com/RiffPress/RiffPress/issues/1082)) ([24688c5](https://github.com/RiffPress/RiffPress/commit/24688c56416e9acd05f0db781490e434ec221f6a))
+
 ## [6.15.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.14.2...riff-v6.15.0) (2026-11-12)
 
 

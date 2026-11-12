@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.15.0
+Stable tag: 6.16.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,12 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.16.0 =
+* A link to a Riff previews large, with the site's name, a line about it and a card of its covers.
+* A host can let signed-in users who don't belong to a site listen together there.
+* Fixed: a zip that fails to import loses only its file, keeping its attachment private with why.
+* Fixed: an imported album's zip is removed once it's unpacked, so its tracks are only ever reachable as Protected; wp riff clean-zips removes the ones earlier versions kept.
+
 = 6.15.0 =
 * A plugin hears each share and leave, links a member to listen along, and adds listeners from other sites to Together.
 
@@ -159,10 +165,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 6.14.0 =
 * Riff Chimera sings from the panel beside the page, its heads drawn as large as the panel, and an open docked view no longer covers the sidebar.
 * About, with its credits, is open beside the page by default, and its cover offers the deck full screen.
-
-= 6.13.0 =
-* The deck's lamps glow the display's amber, its strobe lamp is a turned and fluted knob, and its keys' legends share one line.
-* Fixed: the AudioContext and the WebGL deck start once nothing is moving, and a held-up frame no longer jumps the music's pitch.
-* Faster: a view the app fetches is sent alone, tabs are fetched only when wanted, and catalog counts are kept without an object cache.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
