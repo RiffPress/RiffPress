@@ -42,6 +42,7 @@ export async function boot(wasm: string): Promise<{ call: typeof call; module: W
           canvas.width = Math.round(w * dpr);
           canvas.height = Math.round(h * dpr);
           r.resize(w, h);
+          fit(r, w, h);
         }
         const a = tele ? VoiceModel.articFromArray(tele.t.artic) : { ...NEUTRAL };
         r.face.update(tele, dt);
@@ -58,4 +59,29 @@ export async function boot(wasm: string): Promise<{ call: typeof call; module: W
     };
   };
   return { call, module: chimeraModule(), head };
+}
+
+// The head's extent in body cm, as AnatomyRenderer lays it out (HEAD in src/ui/render/anatomy.ts at
+// the pinned commit: x from -9.4 to VIEW.x1, y from VIEW.y0 to 23.5).
+const HEAD = { x0: -9.4, x1: 10.25, y0: -4.55, y1: 23.5 };
+// Room around the head, in CSS px.
+const PAD = 8;
+
+/**
+ * The head fitted to its whole canvas, centred. AnatomyRenderer.resize() lays the head out for
+ * CHIMERA's own page, whose readouts sit above and below it on a canvas narrower than 560px: there
+ * it keeps 154px of the height for them, and never draws smaller than 1px a centimetre. Riff draws
+ * no readouts, and a head in a panel is always narrower than that, so a small canvas got a head of
+ * a few pixels. resize() is still called first, for what else it resets; this then sets the same
+ * three numbers it sets, from the canvas alone.
+ */
+function fit(r: object, w: number, h: number): void {
+  const bw = HEAD.x1 - HEAD.x0;
+  const bh = HEAD.y1 - HEAD.y0;
+  const scale = Math.max(0.1, Math.min((w - 2 * PAD) / bw, (h - 2 * PAD) / bh));
+  Object.assign(r, {
+    scale,
+    ox: (w - bw * scale) / 2 - HEAD.x0 * scale,
+    oy: (h - bh * scale) / 2 + HEAD.y1 * scale,
+  });
 }

@@ -4,6 +4,6 @@ Built with: rustc 1.99.1 (wasm32-unknown-unknown, release), bun 1.1.42
 Rebuild: bash .github/scripts/build-chimera.sh
 
 553cce2bce2561db9e617cacadb558b53058d75393b08d00882e111ddf44f906  chimera.wasm
-ea1383b32c1fc862bd0518bf0d5f5d8b683149de6786cae55b33c20422bc4c92  chimera.js
+82fb27eb0b429b716be1ebd3c49ad8b652f83f982d9b89117a6871fa86859565  chimera.js
 c34a07ee32c4192ccc49f0cc5c0b08f84bdf4ee2137485846504b2750c7c5d45  processor.js
 cac51a2d86b7312240d4c16b52d9c606a6989d8e03ced24615b2b573510a01af  cmudict.txt

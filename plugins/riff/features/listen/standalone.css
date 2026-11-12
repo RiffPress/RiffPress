@@ -313,6 +313,13 @@ html.has-riff .riff-standalone .riff-app {
 		z-index: 1;
 	}
 
+	/* With a view open it is part of the column, at its foot, and scrolls
+	   with it: held to the foot, an open view stood over the tabs and the
+	   library, and nothing could bring them out from under it. */
+	.riff-standalone .riff-dock:has(> .riff-dock-item > .riff-dock-body:not([hidden])) {
+		position: relative;
+	}
+
 	/* With no row to show, as before any plugin registers one, it isn't
 	   there. */
 	.riff-standalone .riff-dock:not(:has(> .riff-dock-item:not([hidden]))),

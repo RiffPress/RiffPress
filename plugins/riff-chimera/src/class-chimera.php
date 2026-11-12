@@ -1,6 +1,6 @@
 <?php
 /**
- * CHIMERA singing the song, as a view in the Listen app's sidebar.
+ * CHIMERA singing the song, as a panel beside the page.
  *
  * @package Riff\Chimera
  */
@@ -53,9 +53,9 @@ final class Chimera {
 	}
 
 	/**
-	 * The Chimera view, docked in the Listen app's sidebar, so CHIMERA sings on while the listener
-	 * browses, and a panel beside the page wherever there is no sidebar. Its button in the bar comes
-	 * after Sing's, as it sings the same melody.
+	 * The Chimera view, a panel beside the page, where About and Up next open, so CHIMERA sings on
+	 * while the listener browses and opens Now Playing, its heads as large as the panel is wide. Its
+	 * button in the bar comes after Sing's, as it sings the same melody.
 	 */
 	public static function view(): void {
 		riff_register_view(
@@ -64,7 +64,7 @@ final class Chimera {
 				'label' => __( 'Chimera', 'riff-chimera' ),
 				'icon'  => self::ICON,
 				'order' => 34,
-				'place' => 'sidebar',
+				'place' => 'side',
 			)
 		);
 	}
@@ -141,18 +141,19 @@ final class Chimera {
 		wp_enqueue_style( 'riff-chimera' );
 		wp_add_inline_style(
 			'riff-chimera',
-			// The view is narrow wherever it is, docked in the Listen app's sidebar or a panel beside the
-			// page, so everything stacks: the heads, a duet's side by side facing each other, then the
-			// words, the controls, the status and the notes, scrolling with the view. Its selectors hold
-			// in both places, in the player (#riff) and in the app (.riff-app), whose tokens Riff gives
-			// the dock. A head's canvas is redrawn at its size and the screen's pixel ratio, its
-			// proportions kept, by CHIMERA's own drawing.
-			':is(#riff,.riff-app) .riff-chimera{display:flex;flex-direction:column;gap:12px;color:var(--riff-fg)}'
+			// The heads are the panel's point: a head is drawn as wide as the panel lets it, upright as a
+			// head is (7:10), no taller than a little over half the screen so the words and the controls
+			// stay in sight beneath it. A duet's two face each other side by side, and stack where the
+			// panel is too narrow for two of a size to see. Then the words, the controls, the status and
+			// the notes, scrolling with the panel. A head's canvas is redrawn at its size and the
+			// screen's pixel ratio, the head fitted to it, by CHIMERA's own drawing. The selectors hold
+			// in the player (#riff) and in the Listen app (.riff-app), whichever holds the panel.
+			':is(#riff,.riff-app) .riff-chimera{container-type:inline-size;display:flex;flex-direction:column;gap:12px;color:var(--riff-fg)}'
 			. ':is(#riff,.riff-app) .riff-chimera-stage{display:flex;flex-direction:column;gap:12px}'
-			. ':is(#riff,.riff-app) .riff-chimera-heads{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}'
+			. ':is(#riff,.riff-app) .riff-chimera-heads{display:grid;grid-template-columns:minmax(0,1fr);gap:16px 8px}'
+			. '@container (min-width:320px){:is(#riff,.riff-app) .riff-chimera.is-duet .riff-chimera-heads{grid-template-columns:repeat(2,minmax(0,1fr))}}'
 			. ':is(#riff,.riff-app) .riff-chimera-singer{display:flex;flex-direction:column;gap:8px;min-width:0}'
-			. ':is(#riff,.riff-app) .riff-chimera-head{aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#000}'
-			. ':is(#riff,.riff-app) .riff-chimera.is-duet .riff-chimera-head{aspect-ratio:3/4}'
+			. ':is(#riff,.riff-app) .riff-chimera-head{align-self:center;width:min(100%,calc(min(56vh,560px) * 0.7));aspect-ratio:7/10;border-radius:8px;overflow:hidden;background:#000}'
 			. ':is(#riff,.riff-app) .riff-chimera-head canvas{display:block;width:100%;height:100%}'
 			. '@media (forced-colors:active){:is(#riff,.riff-app) .riff-chimera-head{border:1px solid CanvasText}}'
 			. ':is(#riff,.riff-app) .riff-chimera-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}'

@@ -1,6 +1,6 @@
 /* Riff Chimera: fills the Chimera view, registered on the server as Riff registers its own
- * (riff_register_view()) for the Listen app's sidebar, where it is docked under a row of its own
- * while the listener browses, and a panel beside the page wherever there is no sidebar. The track's melody is Riff Sing's, read from its riff_sing_melody
+ * (riff_register_view()) as a panel beside the page, where About and Up next open, so the listener
+ * browses beside it. The track's melody is Riff Sing's, read from its riff_sing_melody
  * or riff_sing_midi field on the media REST route; once the listener presses Sing along, CHIMERA
  * sings it with the recording, following the song through play, pause, seek and speed. A duet's two
  * singers (UltraStar's P1 and P2, and P3's lines for both) are two CHIMERAs, each with its own body,
@@ -20,9 +20,11 @@
  * chip, the view starts the voices by itself: they sing as soon as the music plays. The voices have
  * an AudioContext of their own, made and resumed inside that press, which every browser asks of
  * sound, and kept running while the engine loads; so the player's own audio and its meters are left
- * as they are. A view open with no press, as one remembered across a reload, waits for Sing along. They stop when
- * the listener presses Stop, closes the view, the track changes or the page is hidden; not as they
- * browse the app or open and close Now Playing, which leave a docked view open. */
+ * as they are. A view open with no press, as one remembered across a reload, waits for Sing along.
+ * They stop when the listener presses Stop, closes the panel, the track changes or the page is
+ * hidden. They sing on as the listener browses the app or opens and closes Now Playing, which
+ * leave the panel open; and while the panel is only put away beside the deck on its own (the
+ * riff:view event's away), to come back with the heads as the deck is left. */
 ( () => {
 	const config = window.riffChimera || {};
 	const melody = window.riffSingMelody;
@@ -136,6 +138,7 @@
 	};
 
 	let showing = false;
+	let away = false; // The panel is put away for a while, and the voices go on unseen.
 	let shown = null; // The track the view was drawn for.
 	let ui = null;
 	let parts = []; // Each singer: {name, phrases, notes, body, voice, head, ui}.
@@ -464,14 +467,16 @@
 		}
 	}
 
-	// Once a frame while the view shows: the voices kept with the song, and the heads drawn.
+	// Once a frame while the view shows, or sings put away: the voices kept with the song, and the
+	// heads drawn where they are seen.
+	const live = () => showing || ( away && on );
 	function loop() {
-		if ( frame || ! showing ) {
+		if ( frame || ! live() ) {
 			return;
 		}
 		const tick = ( now ) => {
 			frame = 0;
-			if ( ! showing || ! ui ) {
+			if ( ! live() || ! ui ) {
 				return;
 			}
 			const dt = last.frame
@@ -479,7 +484,9 @@
 				: 0.016;
 			last.frame = now;
 			follow();
-			draw( dt );
+			if ( showing ) {
+				draw( dt );
+			}
 			frame = window.requestAnimationFrame( tick );
 		};
 		frame = window.requestAnimationFrame( tick );
@@ -566,9 +573,13 @@
 		if ( e.detail?.id !== 'chimera' ) {
 			return;
 		}
-		const opening = ! showing && !! e.detail.open;
+		const opening = ! showing && ! away && !! e.detail.open;
 		showing = !! e.detail.open;
-		if ( showing ) {
+		away = ! showing && !! e.detail.away && !! ui;
+		if ( away ) {
+			// Put away, to come back: the voices sing on, unseen.
+			loop();
+		} else if ( showing ) {
 			if ( ! ui || e.detail.track?.id !== shown?.id ) {
 				// The view opened by a press of its button or chip, not restored with the page: the
 				// browser's transient activation (navigator.userActivation) says so. A browser without
@@ -596,6 +607,18 @@
 	} else {
 		document.addEventListener( 'riff:ready', fit, { once: true } );
 	}
+	// Another track while the panel is put away: what was drawn for the last one goes, and the panel
+	// draws the new one as it comes back.
+	document.addEventListener( 'riff:track', ( e ) => {
+		if ( away && e.detail?.track?.id !== shown?.id ) {
+			away = false;
+			token++;
+			end();
+			shown = null;
+			ui = null;
+			parts = [];
+		}
+	} );
 	const hush = () => parts.forEach( ( p ) => p.voice?.silence() );
 	document.addEventListener( 'riff:pause', hush );
 	document.addEventListener( 'riff:ended', hush );

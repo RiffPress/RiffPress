@@ -1,9 +1,9 @@
 /**
  * Riff Chimera, end to end, on the demo's Silent Night chart, whose melody (Riff Sing's) is a duet:
- * the Chimera view opens, docked in the Listen app's sidebar or as a panel beside a post, with a
- * head for each singer; CHIMERA is fetched only then; the voices start on the listener's press,
- * sing while the song plays, sing on as the listener browses the app beside them, and stop when the
- * listener presses Stop or closes the view. Whether a voice is sounding is read from its worklet's
+ * the Chimera view opens as a panel beside the page, on a post or in the Listen app, with a head
+ * for each singer drawn as large as the panel allows; CHIMERA is fetched only then; the voices start
+ * on the listener's press, sing while the song plays, sing on as the listener browses the app and
+ * opens Now Playing, and stop when the listener presses Stop or closes the panel. Whether a voice is sounding is read from its worklet's
  * own measure of its output (the view's data-sounding), not by listening. Desktop Chromium only
  * (see playwright.config.js).
  *
@@ -47,7 +47,7 @@ test.beforeAll( async ( { requestUtils } ) => {
 		content: sung + plain,
 	} );
 	( { link: postUrl, id: postId } = post );
-	// A Listen page, for the app, whose sidebar docks the view.
+	// A Listen page, for the app.
 	listenUrl = (
 		await made.page( requestUtils, {
 			title: 'Riff Chimera Listen e2e',
@@ -192,7 +192,7 @@ test( 'a view opened with no press, as a script opens it, waits for Sing along',
 	await expect( page.getByRole( 'button', { name: 'Sing along' } ) ).toBeVisible();
 } );
 
-test( 'a panel beside the page where there is no sidebar: a duet\'s heads side by side, nothing wider than the panel, the canvas drawn at its size', async ( { page } ) => {
+test( 'a panel beside the page: a duet\'s heads side by side, each of a real size, nothing wider than the panel, the head drawn to fill its canvas', async ( { page } ) => {
 	await page.setViewportSize( { width: 1440, height: 900 } );
 	await load( page, 'Silent Night' );
 	const panel = await openView( page, 'chimera' );
@@ -206,46 +206,52 @@ test( 'a panel beside the page where there is no sidebar: a duet\'s heads side b
 	expect( ( await last.boundingBox() ).y + ( await last.boundingBox() ).height, 'the last note above the bar' ).toBeLessThanOrEqual( bar.top );
 } );
 
-test( 'docked in the Listen app\'s sidebar, CHIMERA sings on as the listener browses albums and opens Now Playing, folded to the rail too, and stops when its row closes', async ( { page } ) => {
+test( 'in the Listen app, CHIMERA sings on from the panel beside the page as the listener browses albums and opens Now Playing on the deck, and stops when the panel closes', async ( { page } ) => {
+	// The turntable is the album, as without reduced motion: Now Playing is the deck on its own.
+	await page.emulateMedia( { reducedMotion: 'no-preference' } );
 	await page.setViewportSize( { width: 1440, height: 900 } );
 	await page.goto( listenUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
 	await page.locator( '[data-riff-app-action="play"]' ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
 	await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Silent Night' );
+	await expect( page.locator( '.riff-dock' ), 'nothing docked in the sidebar' ).toBeHidden();
 
-	const toggle = page.locator( '.riff-app-bar [data-riff-dock-opens="chimera"]' );
-	await expect( toggle ).toHaveAccessibleName( 'Chimera' );
-	await toggle.click();
-	const panel = page.locator( '.riff-app-bar [data-riff-panel="chimera"]' );
+	const seen = [];
+	await page.exposeFunction( 'chimeraSeen', ( d ) => seen.push( d ) );
+	await page.evaluate( () =>
+		document.addEventListener( 'riff:view', ( e ) => e.detail.id === 'chimera' && window.chimeraSeen( { open: e.detail.open, away: e.detail.away } ) )
+	);
+	await page.locator( '.riff-bar [data-riff-control="chimera"]' ).click();
+	const panel = page.locator( '.riff-side [data-riff-panel="chimera"]' );
 	const view = panel.locator( '.riff-chimera' );
 	await expect( view ).toHaveAttribute( 'data-ready', 'true', { timeout: 20000 } );
-	await expect( page.locator( '.riff-bar [data-riff-control="chimera"]' ) ).toHaveAttribute( 'aria-pressed', 'true' );
 	await fits( page, panel );
-	// The press on its row started the voices, as a press of its button does.
+	// The press on its button started the voices.
 	await expect( view ).toHaveAttribute( 'data-state', 'waiting', { timeout: 15000 } );
 	await play( page );
 	await expect( view, 'the worklet hears itself sing' ).toHaveAttribute( 'data-sounding', 'true', { timeout: 15000 } );
 
 	await page.locator( '.riff-app-bar a.riff-app-tab[href*="albums"]' ).click();
 	await expect( page.locator( '.riff-app-brand' ) ).toHaveAttribute( 'data-riff-view', 'albums' );
+	await expect( panel ).toBeVisible();
+	await expect( view, 'still singing, browsing beside it' ).toHaveAttribute( 'data-sounding', 'true' );
+
+	// Now Playing on the deck, which is on its own: the panel is put away, and the voices sing on.
 	await page.locator( '.riff-bar-info' ).click();
 	await expect( page.locator( '.riff-np' ) ).toBeVisible();
+	await expect( panel ).toBeHidden();
+	await expect.poll( () => seen.at( -1 ) ).toEqual( { open: false, away: true } );
+	await expect( view, 'singing on, put away' ).toHaveAttribute( 'data-sounding', 'true' );
 	await page.keyboard.press( 'Escape' );
 	await expect( page.locator( '.riff-np' ) ).toBeHidden();
-	await expect( view, 'still singing, browsing beside it' ).toHaveAttribute( 'data-state', 'singing' );
+	await expect( panel ).toBeVisible();
+	await expect( view, 'and back, the same voices' ).toHaveAttribute( 'data-state', 'singing' );
 	await expect( view ).toHaveAttribute( 'data-sounding', 'true' );
 
-	await page.locator( '.riff-app-collapse' ).click();
-	await expect( page.locator( '[data-riff-app]' ) ).toHaveAttribute( 'data-sidebar', 'mini' );
-	await expect( toggle ).toBeVisible();
-	await expect( view, 'and on the rail' ).toHaveAttribute( 'data-sounding', 'true' );
-	await toggle.click();
-	await expect( page.locator( '[data-riff-app]' ) ).toHaveAttribute( 'data-sidebar', 'full' );
-	await expect( panel ).toBeVisible();
-
-	await toggle.click();
+	await page.locator( '.riff-side-close' ).click();
 	await expect( panel ).toBeHidden();
-	await expect( view, 'the voices stopped with the view' ).toHaveAttribute( 'data-sounding', 'false' );
+	expect( seen.at( -1 ) ).toEqual( { open: false, away: false } );
+	await expect( view, 'the voices stopped with the panel' ).toHaveAttribute( 'data-sounding', 'false' );
 } );
 
 // Nothing in the view is wider than where it is, and a head's canvas is drawn at its size on screen
@@ -258,6 +264,7 @@ async function fits( page, panel ) {
 	const heads = await panel.locator( '.riff-chimera-heads' ).boundingBox();
 	const head = await panel.locator( '.riff-chimera-head' ).first().boundingBox();
 	expect( head.width, 'a duet\'s two side by side' ).toBeLessThan( heads.width / 2 );
+	expect( head.width, 'each of a real size' ).toBeGreaterThanOrEqual( 150 );
 	await expect
 		.poll( () =>
 			panel.locator( '.riff-chimera-head canvas' ).first().evaluate( ( c ) => {
@@ -266,4 +273,30 @@ async function fits( page, panel ) {
 			} )
 		)
 		.toBe( true );
+	// And the head fills its canvas: what is drawn reaches most of its height. CHIMERA's own layout
+	// kept 154px of a narrow canvas for readouts Riff doesn't draw, leaving a head a few pixels tall.
+	await expect
+		.poll( () =>
+			panel.locator( '.riff-chimera-head canvas' ).evaluateAll( ( all ) =>
+				Math.min(
+					...all.map( ( c ) => {
+						const { data, width, height } = c.getContext( '2d' ).getImageData( 0, 0, c.width, c.height );
+						let top = height;
+						let bottom = -1;
+						for ( let y = 0; y < height; y++ ) {
+							for ( let x = 0; x < width; x++ ) {
+								const i = ( y * width + x ) * 4;
+								if ( data[ i ] + data[ i + 1 ] + data[ i + 2 ] > 90 ) {
+									top = Math.min( top, y );
+									bottom = y;
+									break;
+								}
+							}
+						}
+						return bottom < 0 ? 0 : ( bottom - top ) / height;
+					} )
+				)
+			)
+		)
+		.toBeGreaterThan( 0.7 );
 }
