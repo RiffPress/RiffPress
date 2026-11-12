@@ -77,6 +77,68 @@ test.describe( 'Player', () => {
 		await expect.poll( rate ).toEqual( { rate: 1, pitch: true } );
 	} );
 
+	test( 'a script can play another file in place of the track\'s own, and the track\'s own comes back', async ( {
+		page,
+	} ) => {
+		await page.locator( '.riff-row' ).nth( 1 ).click();
+		await expect.poll( () => page.evaluate( () => window.riff.time() ) ).toBeGreaterThan( 1 );
+		await page.evaluate( () => window.riff.speed( 0.75 ) );
+		const now = () =>
+			page.evaluate( () => {
+				const m = [ ...document.querySelectorAll( '#riff audio, #riff video' ) ].find( ( el ) => el.getAttribute( 'src' ) && ! el.paused );
+				return m
+					? { src: m.getAttribute( 'src' ), time: m.currentTime, rate: m.playbackRate, pitch: m.preservesPitch !== false }
+					: { src: null };
+			} );
+		const { own: mine, other } = await page.evaluate( () => {
+			window.__said = [];
+			const root = document.getElementById( 'riff' );
+			for ( const name of [ 'track', 'pause' ] ) {
+				root.addEventListener( `riff:${ name }`, () => window.__said.push( name ) );
+			}
+			return { own: window.riff.current().src, other: window.riff.queue()[ 2 ].src };
+		} );
+		const before = await page.evaluate( () => window.riff.time() );
+
+		// The other file, from the same second, at the same speed, still playing, and still the track.
+		expect( await page.evaluate( ( src ) => window.riff.source( src ), other ) ).toBe( true );
+		await expect.poll( async () => ( await now() ).src ).toBe( other );
+		const swapped = await now();
+		expect( swapped.time ).toBeGreaterThanOrEqual( before - 0.25 );
+		expect( swapped.time ).toBeLessThan( before + 3 );
+		expect( swapped ).toMatchObject( { rate: 0.75, pitch: true } );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Underground' );
+		await expect.poll( () => page.evaluate( () => window.riff.time() ) ).toBeGreaterThan( swapped.time + 0.3 );
+		expect( await page.evaluate( () => window.__said ) ).toEqual( [] );
+
+		// Null puts the track's own back, from where the other had got to.
+		const back = await page.evaluate( () => window.riff.time() );
+		expect( await page.evaluate( () => window.riff.source( null ) ) ).toBe( true );
+		await expect.poll( async () => ( await now() ).src ).toBe( mine );
+		expect( ( await now() ).time ).toBeGreaterThanOrEqual( back - 0.25 );
+
+		// A file that can't be played gives way to the track's own; the track hasn't failed.
+		await page.evaluate( () => window.riff.source( '/wp-content/riff-e2e-missing.mp3' ) );
+		await expect.poll( async () => ( await now() ).src, { timeout: 10000 } ).toBe( mine );
+		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-error' );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Underground' );
+
+		// Paused, it stays paused.
+		await page.evaluate( () => window.riff.toggle() );
+		await expect.poll( () => page.evaluate( () => window.riff.playing() ) ).toBe( false );
+		await page.evaluate( ( src ) => window.riff.source( src ), other );
+		await expect
+			.poll( () => page.evaluate( () => document.querySelector( '#riff audio' ).getAttribute( 'src' ) ) )
+			.toBe( other );
+		expect( await page.evaluate( () => document.querySelector( '#riff audio' ).paused ) ).toBe( true );
+
+		// The next track plays from its own file.
+		await page.evaluate( () => window.riff.next() );
+		await expect( page.locator( '.riff-bar .riff-title' ) ).not.toHaveText( 'Underground' );
+		await expect.poll( async () => ( await now() ).src ).toBe( await page.evaluate( () => window.riff.current().src ) );
+		await page.evaluate( () => window.riff.speed( 1 ) );
+	} );
+
 	test( 'a script can listen to the player and reshape what it plays', async ( {
 		page,
 	} ) => {
@@ -121,7 +183,7 @@ test.describe( 'Player', () => {
 			queue: 3,
 			playing: true,
 			// What docs/javascript.md promises, and nothing more: tab() went with the tabs, before Riff is on WordPress.org.
-			members: [ 'analyser', 'close', 'closeView', 'control', 'current', 'next', 'on', 'open', 'openView', 'play', 'playing', 'prev', 'queue', 'seek', 'shortcut', 'speed', 'time', 'toggle', 'version', 'view' ],
+			members: [ 'analyser', 'close', 'closeView', 'control', 'current', 'next', 'on', 'open', 'openView', 'play', 'playing', 'prev', 'queue', 'seek', 'shortcut', 'source', 'speed', 'time', 'toggle', 'version', 'view' ],
 		} );
 		await page.evaluate( () => window.riff.next() );
 		await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText(

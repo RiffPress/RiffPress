@@ -20,6 +20,7 @@ const SILENT_NIGHT = require( path.join( FIXTURES, 'christmas-with-the-chorus', 
 ).melody;
 const made = own();
 let postUrl;
+let instrumental;
 
 test.beforeAll( async ( { requestUtils } ) => {
 	const track = async ( file, data ) => {
@@ -27,9 +28,13 @@ test.beforeAll( async ( { requestUtils } ) => {
 		await requestUtils.rest( { method: 'POST', path: `/wp/v2/media/${ m.id }`, data } );
 		return `<!-- wp:audio {"id":${ m.id }} --><figure class="wp-block-audio"><audio controls src="${ m.source_url }"></audio></figure><!-- /wp:audio -->`;
 	};
+	// The instrumental: the same file again, so it is as long as the track, played in its place.
+	const backing = await made.media( requestUtils, path.join( FIXTURES, 'compositions', '07 - Little Dreamer Big Dreams [little-dreamer].mp3' ) );
+	instrumental = backing.source_url;
 	const sung = await track( '07 - Little Dreamer Big Dreams [little-dreamer].mp3', {
 		title: 'Silent Night',
 		riff_sing_melody: SILENT_NIGHT,
+		riff_sing_instrumental: backing.id,
 	} );
 	const plain = await track( '08 - Convergence [convergence].mp3', { title: 'Joy to the World' } );
 	postUrl = (
@@ -115,4 +120,49 @@ test( 'CHIMERA is fetched when the view opens, sings both parts on a press and s
 	await page.locator( '.riff-bar [data-riff-control="chimera"]' ).click();
 	await expect( panel ).toBeHidden();
 	await expect( view, 'the voices stopped with the view' ).toHaveAttribute( 'data-sounding', 'false' );
+} );
+
+test( 'while CHIMERA sings, the instrumental plays in the recording\'s place, and the recording comes back when it stops', async ( { page } ) => {
+	// What the player's song element holds, and where it is.
+	const playing = () =>
+		page.evaluate( () => {
+			const m = document.querySelector( '#riff audio' );
+			return { src: m.getAttribute( 'src' ), time: m.currentTime };
+		} );
+	await load( page, 'Silent Night' );
+	const recording = await page.evaluate( () => window.riff.current().src );
+	const panel = await openView( page, 'chimera' );
+	const view = panel.locator( '.riff-chimera' );
+	await expect( view ).toHaveAttribute( 'data-ready', 'true', { timeout: 20000 } );
+	expect( ( await playing() ).src, 'nothing changes until CHIMERA sings' ).toBe( recording );
+
+	await play( page );
+	await expect.poll( () => page.evaluate( () => window.riff.time() ) ).toBeGreaterThan( 1 );
+	const before = await page.evaluate( () => window.riff.time() );
+	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
+	await expect.poll( async () => ( await playing() ).src, { timeout: 15000 } ).toBe( instrumental );
+	expect( ( await playing() ).time, 'from the same second' ).toBeGreaterThanOrEqual( before - 0.25 );
+	await expect( view ).toHaveAttribute( 'data-state', 'singing' );
+	await expect( view, 'CHIMERA follows the player\'s clock over the instrumental' ).toHaveAttribute( 'data-sounding', 'true', { timeout: 15000 } );
+	await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Silent Night' );
+
+	await panel.getByRole( 'button', { name: 'Stop' } ).click();
+	await expect.poll( async () => ( await playing() ).src ).toBe( recording );
+	expect( await page.evaluate( () => window.riff.playing() ), 'still playing' ).toBe( true );
+
+	// Closing the view gives the recording back too.
+	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
+	await expect.poll( async () => ( await playing() ).src, { timeout: 15000 } ).toBe( instrumental );
+	await page.locator( '.riff-bar [data-riff-control="chimera"]' ).click();
+	await expect( panel ).toBeHidden();
+	await expect.poll( async () => ( await playing() ).src ).toBe( recording );
+
+	// And so does the next track, which plays from its own file.
+	await openView( page, 'chimera' );
+	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
+	await expect.poll( async () => ( await playing() ).src, { timeout: 15000 } ).toBe( instrumental );
+	await page.evaluate( () => window.riff.next() );
+	await expect( page.locator( '.riff-bar .riff-title' ) ).toHaveText( 'Joy to the World' );
+	const next = await page.evaluate( () => window.riff.current().src );
+	await expect.poll( async () => ( await playing() ).src ).toBe( next );
 } );

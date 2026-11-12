@@ -127,6 +127,18 @@ Returns `number`: The speed now.
 
 Since 5.8.0.
 
+### `window.riff.source( src )`
+
+Plays another file in place of the track's own, for now: the same music made another way, such as its instrumental to sing over. It carries on from the same second, at the same speed, playing or paused as it was, and it is still the same track to the listener and to every script: no `riff.track` fires, and `window.riff.time()` keeps the clock. Given null it goes back to the track's own file the same way. The track's own comes back by itself when the track changes, when the player is dismissed, and when the other file can't be played. Not while a video plays: a song's file only. The file must be one the listener may have; a protected file's address is the site's own, which answers for whoever may play it.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `src` | `?string` | The file's address, or null for the track's own. |
+
+Returns `boolean`: Whether the track now plays from it, or from its own for null; false with nothing playing, while a video plays, or while the track waits for its addresses.
+
+Since 6.11.0.
+
 ### `window.riff.view( id, view )`
 
 Gives a view what it does as it opens, or adds one the server didn't register. A view is opened from its button in the bar, and on a phone from its chip in Now Playing (the album, the stage, has no button: the bar itself opens it): a screen of Now Playing, which takes the whole screen above the bar, or a panel beside the page. Register a view on the server with `riff_register_view()`, so the page has it before any script; this is for what only the browser knows. Riff's own are the album (`album`, order 26; the cover, or the turntable where Now Playing is landscape), About (`about`, a panel, 36), Up next (`queue`, a panel, 40) and Together (`together`, a panel, 45); Riff Lyrics registers Lyrics (`lyrics`, 30), Riff Sing Sing (`sing`, 32) and Riff Chords Chords (`chords`, 34). A view with nothing for a track says so with `shown`: its button and chip hide while that track plays, and if it is open when the track changes to one, a screen goes back to the one the listener came from, or to what Now Playing opens to, and a panel closes.

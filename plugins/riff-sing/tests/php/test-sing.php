@@ -186,6 +186,103 @@ class Test_Riff_Sing extends Riff_TestCase {
 		$this->assertSame( $midi, Sing::midi( $id ) );
 	}
 
+	/**
+	 * An audio file of a given length, in whole seconds as WordPress reads a file's tags.
+	 *
+	 * @param int $post_id The post it is uploaded to, or 0.
+	 * @param int $length  Seconds.
+	 */
+	private static function lasting( int $post_id, int $length ): int {
+		$id = self::attach( '03 - Trombone Detritus [detritus].mp3', $post_id );
+		wp_update_attachment_metadata( $id, array( 'length' => $length ) + (array) wp_get_attachment_metadata( $id ) );
+		return $id;
+	}
+
+	public function test_an_instrumental_is_another_audio_file_as_long_as_the_track(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id = self::lasting( 0, 150 );
+		$it = self::lasting( 0, 151 );
+		$by = static fn( $value ) => apply_filters( 'attachment_fields_to_save', array( 'ID' => $id ), array( 'riff_sing_instrumental' => $value ) );
+
+		$by( wp_get_attachment_url( $it ) );
+		$this->assertSame( $it, Sing::instrumental( $id ), 'by its address, a second longer' );
+		$fields = apply_filters( 'attachment_fields_to_edit', array(), get_post( $id ) );
+		$this->assertStringContainsString( 'value="' . esc_attr( wp_get_attachment_url( $it ) ) . '"', $fields['riff_sing_instrumental']['html'] );
+
+		$by( (string) self::lasting( 0, 155 ) );
+		$this->assertSame( $it, Sing::instrumental( $id ), 'one five seconds longer would put the voice out of step, and what was named stays' );
+		$by( (string) self::midi_file() );
+		$this->assertSame( $it, Sing::instrumental( $id ), 'a MIDI file is no recording' );
+		$by( (string) self::attach( 'cover.png' ) );
+		$this->assertSame( $it, Sing::instrumental( $id ), 'nor an image' );
+		$by( (string) $id );
+		$this->assertSame( $it, Sing::instrumental( $id ), 'nor the track itself' );
+
+		$by( '' );
+		$this->assertSame( 0, Sing::instrumental( $id ) );
+		$this->assertFalse( metadata_exists( 'post', $id, Sing::INSTRUMENTAL_KEY ) );
+
+		$by( (string) $it );
+		$this->assertSame( $it, Sing::instrumental( $id ), 'by its ID' );
+		wp_update_attachment_metadata( $it, array( 'length' => 90 ) + (array) wp_get_attachment_metadata( $it ) );
+		$this->assertSame( 0, Sing::instrumental( $id ), 'a file replaced by one of another length is no longer the instrumental' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		wp_update_attachment_metadata( $it, array( 'length' => 150 ) + (array) wp_get_attachment_metadata( $it ) );
+		$by( '' );
+		$this->assertSame( $it, Sing::instrumental( $id ), 'only someone who may edit the track changes it' );
+	}
+
+	public function test_the_instrumental_is_a_rest_field_shown_only_to_whoever_may_see_its_file(): void {
+		$GLOBALS['wp_rest_server'] = null;
+		$owner                     = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		wp_set_current_user( $owner );
+		do_action( 'rest_api_init' );
+		$album   = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$id      = self::lasting( $album, 120 );
+		$it      = self::lasting( $album, 120 );
+		$request = new WP_REST_Request( 'POST', '/wp/v2/media/' . $id );
+		$request->set_body_params( array( 'riff_sing_instrumental' => $it ) );
+		$this->assertSame( 200, rest_do_request( $request )->get_status() );
+		$this->assertSame( $it, Sing::instrumental( $id ) );
+		$request->set_body_params( array( 'riff_sing_instrumental' => self::lasting( $album, 60 ) ) );
+		$this->assertSame( 400, rest_do_request( $request )->get_status(), 'refused, at another length' );
+		$this->assertSame( $it, Sing::instrumental( $id ) );
+
+		$read = static function () use ( $id ) {
+			$get = new WP_REST_Request( 'GET', '/wp/v2/media/' . $id );
+			$get->set_query_params( array( '_fields' => 'riff_sing_instrumental' ) );
+			return rest_do_request( $get )->get_data()['riff_sing_instrumental'] ?? null;
+		};
+		wp_set_current_user( 0 );
+		$this->assertSame( wp_get_attachment_url( $it ), $read(), 'the address, for a view to play' );
+
+		// An instrumental uploaded to a private post is the owner's to know of, not a visitor's.
+		$private = self::factory()->post->create(
+			array(
+				'post_status' => 'private',
+				'post_author' => $owner,
+			)
+		);
+		wp_update_post(
+			array(
+				'ID'          => $it,
+				'post_parent' => $private,
+			)
+		);
+		$this->assertSame( '', $read() );
+		wp_set_current_user( $owner );
+		$this->assertSame( wp_get_attachment_url( $it ), $read() );
+
+		$image = self::attach( 'cover.png' );
+		$this->assertNull( rest_do_request( new WP_REST_Request( 'GET', '/wp/v2/media/' . $image ) )->get_data()['riff_sing_instrumental'], 'an image has none' );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$request->set_body_params( array( 'riff_sing_instrumental' => '' ) );
+		$this->assertContains( rest_do_request( $request )->get_status(), array( 401, 403 ) );
+		$this->assertSame( $it, Sing::instrumental( $id ) );
+	}
+
 	public function test_the_script_loads_only_where_the_player_renders_and_says_where_its_worklet_is(): void {
 		$this->assertFalse( wp_script_is( 'riff-sing', 'enqueued' ) );
 
