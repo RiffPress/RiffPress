@@ -26,13 +26,14 @@ class Test_Riff_Chimera extends Riff_TestCase {
 		parent::tear_down();
 	}
 
-	public function test_the_view_is_registered_on_the_server_for_the_sidebar(): void {
-		$views = Riff\Registry::views( 'sidebar' );
-		$this->assertArrayHasKey( 'chimera', $views, 'docked in the Listen app\'s sidebar, registered as Riff registers its own' );
+	public function test_the_view_is_registered_on_the_server_as_a_panel_beside_the_page(): void {
+		$views = Riff\Registry::views( 'side' );
+		$this->assertArrayHasKey( 'chimera', $views, 'a panel beside the page, where About and Up next open, registered as Riff registers its own' );
 		$this->assertSame( 'Chimera', $views['chimera']['label'] );
 		$this->assertArrayNotHasKey( 'chimera', Riff\Registry::views( 'screen' ), 'never taking over Now Playing' );
-		$this->assertStringContainsString( 'data-riff-dock-opens="chimera"', Riff\Registry::dock(), 'a row of its own in the dock' );
-		$this->assertStringContainsString( 'data-riff-panel="chimera"', Riff\Registry::panels(), 'and a panel wherever there is no sidebar' );
+		$this->assertArrayNotHasKey( 'chimera', Riff\Registry::views( 'sidebar' ), 'no longer docked in the Listen app\'s sidebar' );
+		$this->assertStringNotContainsString( 'data-riff-dock-opens="chimera"', Riff\Registry::dock(), 'so no row of its own in the dock' );
+		$this->assertStringContainsString( 'data-riff-panel="chimera"', Riff\Registry::panels(), 'and its panel is drawn with the others' );
 	}
 
 	public function test_its_scripts_load_only_with_the_player_and_chimera_itself_only_when_the_view_opens(): void {
