@@ -415,7 +415,7 @@ final class Abilities {
 			),
 			'riff/import-zip'           => array(
 				'label'       => __( 'Import a zip', 'riff' ),
-				'description' => __( 'Imports a zip of an album, or of a folder of albums, already uploaded to the Media Library and attached to no post, as uploading it there does: in the background, into private album posts with each track Protected, for its uploader to publish, unless the site says otherwise. For someone who can write posts and edit the zip.', 'riff' ),
+				'description' => __( 'Imports a zip of an album, or of a folder of albums, already uploaded to the Media Library and attached to no post, as uploading it there does: in the background, into private album posts with each track Protected, for its uploader to publish, unless the site says otherwise. The zip is private until then, and deleted once it is unpacked. For someone who can write posts and edit the zip.', 'riff' ),
 				'method'      => 'POST',
 				'route'       => '/imports',
 				'input'       => array(

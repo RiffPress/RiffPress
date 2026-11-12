@@ -395,4 +395,48 @@ final class Cli {
 			WP_CLI::success( $summary );
 		}
 	}
+
+	/**
+	 * Deletes the zips earlier versions of Riff left in the Media Library after importing them.
+	 *
+	 * Before 6.15.1, a zip uploaded to the Media Library was attached to its album's post once it
+	 * was imported, and kept. Core serves an upload's file at a public address, so each one holds
+	 * the tracks its import Protected, unprotected. This finds each zip attached to the album post
+	 * its own import made, and deletes its attachment and file. A zip attached to a post as a
+	 * download, or attached to no post, is left as it is. A zip kept with the riff_import_keep_zip
+	 * filter is one of these, and is deleted too.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--dry-run]
+	 * : List the zips, without deleting them.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp riff clean-zips --dry-run
+	 *     wp riff clean-zips
+	 *
+	 * @since 6.15.1
+	 * @subcommand clean-zips
+	 *
+	 * @param string[]             $args       Positional arguments.
+	 * @param array<string, mixed> $assoc_args Named arguments.
+	 */
+	public function clean_zips( array $args, array $assoc_args ): void {
+		$dry     = (bool) WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
+		$deleted = 0;
+		foreach ( Import::left_behind() as $id ) {
+			$name = wp_basename( (string) get_attached_file( $id ) );
+			if ( $dry ) {
+				WP_CLI::log( sprintf( 'Would delete %s (attachment %d)', $name, $id ) );
+				++$deleted;
+			} elseif ( wp_delete_attachment( $id, true ) ) {
+				WP_CLI::log( sprintf( 'Deleted %s (attachment %d)', $name, $id ) );
+				++$deleted;
+			} else {
+				WP_CLI::warning( sprintf( 'Could not delete %s (attachment %d)', $name, $id ) );
+			}
+		}
+		WP_CLI::success( $dry ? sprintf( 'Dry run. %d imported zips to delete.', $deleted ) : sprintf( '%d imported zips deleted.', $deleted ) );
+	}
 }
