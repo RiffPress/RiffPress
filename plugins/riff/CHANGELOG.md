@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.14.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.13.0...riff-v6.14.0) (2026-11-12)
+
+
+### Features
+
+* **chimera:** Riff Chimera sings from the panel beside the page, its heads drawn as large as the panel, and an open docked view no longer covers the sidebar ([#1059](https://github.com/RiffPress/RiffPress/issues/1059)) ([0545a83](https://github.com/RiffPress/RiffPress/commit/0545a83058b6f98f7ed399aa884b9bb47eec8bd5))
+* **listen:** About, with its credits, is open beside the page by default, and its cover offers the deck full screen ([#1060](https://github.com/RiffPress/RiffPress/issues/1060)) ([03ddcde](https://github.com/RiffPress/RiffPress/commit/03ddcde2f163056d86e87f05c7f225d1af604dcd))
+
 ## [6.13.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.12.0...riff-v6.13.0) (2026-11-12)
 
 
