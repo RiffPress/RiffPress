@@ -35,6 +35,7 @@
 		"api": [
 			"time",
 			"playing",
+			"source",
 			"speed",
 			"view"
 		]
