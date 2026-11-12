@@ -1614,9 +1614,14 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	pointer-events: none;
 }
 
+/* every small key's legend sits the same way below its lamp's line, lamp or
+   not, so the row reads as one printed panel */
+#riff .riff-keys :where(button:not(.riff-key-start)) {
+	padding-top: 1.2cqi;
+}
+
 #riff .riff-keys :is(.riff-key-33, .riff-key-45) {
 	width: 7.5%;
-	padding-top: 1.2cqi;
 	font-size: 2.1cqi;
 	font-weight: 500;
 	font-variant-numeric: tabular-nums;
@@ -1712,7 +1717,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	gap: 1cqi;
 	width: 9%;
 	height: 38%;
-	color: #8d8d8d;
+
+	/* as light as the keys' legends, to be read on the plinth's grey */
+	color: rgb(255 255 255 / 0.62);
 	font-size: 2cqi;
 	font-weight: 500;
 	line-height: 1;
@@ -1831,10 +1838,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 		#riff .riff-keys :is(.riff-key-prev, .riff-key-next) {
 			top: 53%;
+			padding-top: 0;
 		}
 
 		#riff .riff-keys :is(.riff-key-shuffle, .riff-key-repeat) {
 			top: 72%;
+			padding-top: 2cqi;
 		}
 
 		#riff .riff-keys :is(.riff-key-33, .riff-key-prev, .riff-key-shuffle) {
@@ -1902,10 +1911,12 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 			#riff .riff-keys :is(.riff-key-prev, .riff-key-next) {
 				top: 53%;
+				padding-top: 0;
 			}
 
 			#riff .riff-keys :is(.riff-key-shuffle, .riff-key-repeat) {
 				top: 72%;
+				padding-top: 2cqi;
 			}
 
 			#riff .riff-keys :is(.riff-key-33, .riff-key-prev, .riff-key-shuffle) {

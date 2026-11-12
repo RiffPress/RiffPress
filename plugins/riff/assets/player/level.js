@@ -30,6 +30,28 @@ export default function level( P ) {
 	const seen = () => canvas.offsetParent !== null && root.dataset.riffDeck === 'out' && ! np.hidden && ! P.away();
 	const decibels = ( power ) => Math.max( FLOOR, 10 * Math.log10( Math.max( power, 1e-12 ) ) );
 	const LAMPS = 40;
+	// A lit lamp, drawn once at its size and in its colour with the faint bloom it throws on the
+	// glass, and then only copied, so the glow costs nothing per frame.
+	let lit = {};
+	function lamp( color, wide, tall ) {
+		const key = `${ color } ${ wide } ${ tall }`;
+		if ( ! lit[ key ] ) {
+			const glow = Math.max( 2, Math.round( tall * 0.8 ) );
+			const sprite = document.createElement( 'canvas' );
+			sprite.width = wide + 2 * glow;
+			sprite.height = tall + 2 * glow;
+			const pen = sprite.getContext( '2d' );
+			pen.fillStyle = pen.shadowColor = color;
+			pen.shadowBlur = glow;
+			pen.globalAlpha = 0.4;
+			pen.fillRect( glow, glow, wide, tall );
+			pen.shadowBlur = 0;
+			pen.globalAlpha = 0.95;
+			pen.fillRect( glow, glow, wide, tall );
+			lit[ key ] = { sprite, glow };
+		}
+		return lit[ key ];
+	}
 	function draw( loud, top ) {
 		const ratio = Math.min( 2, window.devicePixelRatio || 1 );
 		const w = Math.round( canvas.clientWidth * ratio );
@@ -40,6 +62,7 @@ export default function level( P ) {
 		if ( canvas.width !== w || canvas.height !== h ) {
 			canvas.width = w;
 			canvas.height = h;
+			lit = {};
 		}
 		// Its ink and its type, looked up once a second rather than at every frame.
 		if ( ! look || performance.now() - look.at > 1000 ) {
@@ -51,17 +74,29 @@ export default function level( P ) {
 		const edge = h * 0.2;
 		const wide = ( w - 2 * edge ) / LAMPS;
 		const at = ( db ) => edge + ( ( db - FLOOR ) / -FLOOR ) * ( w - 2 * edge );
+		const lampWide = Math.max( 1, Math.round( wide * 0.62 ) );
+		const lampTall = Math.round( h * 0.19 );
 		ink.clearRect( 0, 0, w, h );
 		for ( let n = 0; n < LAMPS; n++ ) {
 			// The level a lamp stands for: the top of its own step.
 			const db = FLOOR + ( ( n + 1 ) * -FLOOR ) / LAMPS;
-			const lit = db <= loud || ( top > FLOOR && Math.abs( db - top ) <= -FLOOR / LAMPS / 2 );
-			ink.fillStyle = db > -6 ? HOT : style.color;
-			ink.globalAlpha = lit ? 0.95 : 0.1;
-			ink.fillRect( Math.round( edge + n * wide ), Math.round( h * 0.5 ), Math.max( 1, Math.round( wide * 0.62 ) ), Math.round( h * 0.19 ) );
+			const on = db <= loud || ( top > FLOOR && Math.abs( db - top ) <= -FLOOR / LAMPS / 2 );
+			const color = db > -6 ? HOT : style.color;
+			const x = Math.round( edge + n * wide );
+			const y = Math.round( h * 0.5 );
+			if ( on ) {
+				const { sprite, glow } = lamp( color, lampWide, lampTall );
+				ink.drawImage( sprite, x - glow, y - glow );
+				continue;
+			}
+			ink.fillStyle = color;
+			ink.globalAlpha = 0.1;
+			ink.fillRect( x, y, lampWide, lampTall );
+			ink.globalAlpha = 1;
 		}
 		ink.fillStyle = style.color;
-		ink.globalAlpha = 0.5;
+		// The scale, dimmer than the readings and still easily read on the glass.
+		ink.globalAlpha = 0.62;
 		ink.font = `${ Math.round( h * 0.15 ) }px ${ style.fontFamily }`;
 		ink.textBaseline = 'top';
 		ink.textAlign = 'center';
