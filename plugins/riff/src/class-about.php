@@ -48,6 +48,44 @@ final class About {
 		add_action( Registry::HOOK, array( self::class, 'view' ), 5 );
 		// A page saved, trashed or deleted may be the Listen page, or may now be one.
 		add_action( 'clean_post_cache', array( self::class, 'forget' ), 10, 2 );
+		add_action( 'wp_head', array( self::class, 'held' ), 1 );
+	}
+
+	/**
+	 * Whether the panel opens by itself for a listener who has never opened or closed a panel: in
+	 * the Listen app, where the page is the music and there is room beside it for the credits.
+	 * Elsewhere the player waits at the foot of someone's page, and opens nothing of its own.
+	 *
+	 * @since 6.13.0
+	 *
+	 * @return bool
+	 */
+	public static function opens(): bool {
+		return Player::enabled() && Player::listen_page() && isset( Registry::views( 'side' )[ self::VIEW ] );
+	}
+
+	/**
+	 * Before the page is painted, the room beside it kept for the panel that will open there once
+	 * the track resumes (assets/player/registry.js, reopen()): the one the listener left open, or
+	 * About for one who never chose, so the page is laid out once rather than narrowing as the
+	 * panel appears. Only a panel beside the page, never a sidebar view, which may dock instead.
+	 * The class does nothing on a narrow screen (riff.css), and the script gives the room back if
+	 * nothing opens.
+	 *
+	 * @since 6.13.0
+	 */
+	public static function held(): void {
+		if ( ! self::opens() ) {
+			return;
+		}
+		$side = array_map( 'strval', array_keys( Registry::views( 'side' ) ) );
+		wp_print_inline_script_tag(
+			sprintf(
+				'try{var p=localStorage.getItem("riff:panel");if(%1$s.indexOf(p===null?%2$s:p)>-1&&sessionStorage.getItem("riff:state")){document.documentElement.classList.add("riff-panel-open");}}catch(e){}',
+				wp_json_encode( $side ),
+				wp_json_encode( self::VIEW )
+			)
+		);
 	}
 
 	/**
@@ -168,6 +206,10 @@ final class About {
 			'album'   => Listen\Browse::ALBUM,
 			'artist'  => Listen\Browse::ARTIST,
 		);
+		// The panel open for a listener who has never chosen one.
+		if ( self::opens() ) {
+			$data['panel'] = self::VIEW;
+		}
 		return $data;
 	}
 

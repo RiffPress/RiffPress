@@ -363,6 +363,8 @@ test.describe( 'Standalone', () => {
 			.first()
 			.locator( '.riff-card-link' )
 			.click();
+		// A listener who closed About, open by default, so the panel opens here, from its button.
+		await page.evaluate( () => localStorage.setItem( 'riff:panel', '' ) );
 		await page.locator( '[data-riff-app-action="play"]' ).click();
 		await expect.poll( async () => ( await playing( page ) ).paused ).toBe( false );
 		const width = async () => ( await page.locator( '.riff-app-bar' ).boundingBox() ).width;

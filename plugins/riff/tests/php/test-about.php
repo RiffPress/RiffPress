@@ -73,6 +73,35 @@ class Test_Riff_About extends Riff_TestCase {
 		$this->assertArrayNotHasKey( 'about', About::player_data( array() ) );
 	}
 
+	public function test_it_opens_by_itself_in_the_listen_app_only_with_the_room_kept_before_the_paint(): void {
+		$listen = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_status'  => 'publish',
+				'post_content' => '<!-- wp:riff/app {"align":"full"} /-->',
+			)
+		);
+		$post   = self::factory()->post->create( array( 'post_content' => 'A post' ) );
+
+		$this->go_to( get_permalink( $listen ) );
+		$this->assertTrue( About::opens() );
+		$this->assertSame( 'about', About::player_data( array() )['panel'] ?? null, 'the panel for a listener who never chose' );
+		$head = get_echo( array( About::class, 'held' ) );
+		$this->assertStringContainsString( '["about","queue"].indexOf(p===null?"about":p)>-1', $head, 'a panel beside the page, the listener\'s or About' );
+		$this->assertStringContainsString( 'sessionStorage.getItem("riff:state")', $head, 'only with a track to resume' );
+		$this->assertStringContainsString( 'classList.add("riff-panel-open")', $head );
+
+		$this->go_to( get_permalink( $post ) );
+		$this->assertFalse( About::opens(), 'a page of the site, where the player waits at its foot' );
+		$this->assertArrayNotHasKey( 'panel', About::player_data( array() ) );
+		$this->assertSame( '', get_echo( array( About::class, 'held' ) ) );
+
+		$this->go_to( get_permalink( $listen ) );
+		add_action( Registry::HOOK, static fn() => riff_unregister_view( 'about' ), 20 );
+		Registry::reset();
+		$this->assertFalse( About::opens(), 'not once a site takes the panel away' );
+	}
+
 	public function test_its_script_is_told_the_media_route_and_where_albums_and_artists_are(): void {
 		delete_transient( 'riff_listen_page' );
 		$page = self::factory()->post->create(

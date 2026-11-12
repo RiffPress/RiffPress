@@ -147,7 +147,14 @@ view included. One shows at a time:
 
 Focus moves to the panel's name as it opens, and Escape or Close hands it back to what opened it.
 The one a listener leaves open opens again on their next visit, on a wide screen; that choice is
-kept in the browser, nowhere else.
+kept in the browser, nowhere else. In the Listen app, a listener who has never opened or closed a
+panel has **About** open beside the page once there is a track, played or resumed, so the credits
+are seen rather than found (`Riff\About::opens()`). It opens quietly: the focus stays where it was,
+and nothing is kept, so it is still theirs to choose. Closing it keeps it closed, and a panel they
+left open is the one that opens. Nothing opens by itself on a phone, in a narrow window, or on a
+site's page outside the Listen app. The room beside the page is kept from before the page is
+painted (`Riff\About::held()`), for the panel that will open there, so the page doesn't narrow
+as it appears; it is given back if nothing opens.
 
 A plugin's view can live in the Listen app's **sidebar** instead (`'place' => 'sidebar'`), as
 Riff Chimera's does, so it never takes over the page. On a wide screen it is docked at the

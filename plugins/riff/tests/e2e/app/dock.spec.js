@@ -53,7 +53,11 @@ test.describe( 'A view docked in the sidebar', () => {
 		test.skip( isMobile, 'The sidebar is a wide window\'s.' );
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( appUrl() );
-		await page.evaluate( () => localStorage.clear() );
+		// A listener who closed About, open by default, so the side is the dock test's alone.
+		await page.evaluate( () => {
+			localStorage.clear();
+			localStorage.setItem( 'riff:panel', '' );
+		} );
 		await page.reload();
 		await page.locator( '[data-riff-app-action="play"]' ).click();
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
