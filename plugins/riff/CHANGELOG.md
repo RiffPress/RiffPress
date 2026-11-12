@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.14.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.14.0...riff-v6.14.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **listen:** a refused upload's notice stays in sight beside an open panel, and the account menu test waits for the view it opens ([#1068](https://github.com/RiffPress/RiffPress/issues/1068)) ([2378838](https://github.com/RiffPress/RiffPress/commit/237883882973561d9382239ef164f8a5f98b86a0))
+* **listen:** the whole head of the sidebar in the frame folds and opens it, not only the icon ([#1066](https://github.com/RiffPress/RiffPress/issues/1066)) ([afcacf7](https://github.com/RiffPress/RiffPress/commit/afcacf7aa472968ce5fb01ec57bd13f02bd751bf))
+* main's checks pass again: uninstall removes what Riff keeps between requests, four tests wait for what they check, and the pre-commit hook runs what CI runs ([#1063](https://github.com/RiffPress/RiffPress/issues/1063)) ([2084fe7](https://github.com/RiffPress/RiffPress/commit/2084fe7411a56b1ebaeb7f7013486119bcf56d09))
+
 ## [6.14.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.13.0...riff-v6.14.0) (2026-11-12)
 
 
