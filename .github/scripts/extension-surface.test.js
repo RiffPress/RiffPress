@@ -55,6 +55,19 @@ for ( const [ slug, own ] of [
 		}
 	} );
 
+	test( `${ slug }: every riff_*() function it calls is one of Riff's public functions`, () => {
+		const declared = read( path.join( ROOT, 'plugins', 'riff', 'src', 'functions.php' ) );
+		for ( const [ , name ] of PHP.matchAll( /(?<![\w>:$\\])(riff_[a-z_]+)\(/g ) ) {
+			assert.match( declared, new RegExp( `^function ${ name }\\(`, 'm' ), `${ name }() is not in plugins/riff/src/functions.php` );
+		}
+	} );
+
+	test( `${ slug }: every riff.* hook it adds through wp.hooks is documented`, () => {
+		for ( const [ , name ] of SCRIPT.matchAll( /\badd(?:Filter|Action)\(\s*'(riff\.[a-z_]+)'/g ) ) {
+			assert.ok( HOOKS.includes( `#### \`${ name }\`` ), `${ name } is not in docs/hooks.md` );
+		}
+	} );
+
 	test( `${ slug }: its PHP reaches no Riff class but its own`, () => {
 		const reached = [ ...PHP.matchAll( /\bRiff\\([A-Za-z_\\]+)/g ) ]
 			.map( ( m ) => m[ 1 ] )

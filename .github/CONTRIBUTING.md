@@ -41,6 +41,7 @@ To play your own music, point the seed script at any folder of audio: `npm run s
 | [REVIEW.md](../REVIEW.md) | What a reviewer, a person or an agent, looks for in a pull request, and what to leave out. |
 | [docs/ecosystem.md](../docs/ecosystem.md) | The map: every plugin, what it needs, where it lives, how it ships, and the local-dev traps. |
 | [docs/player.md](../docs/player.md) | How the player works, for anyone changing it. |
+| [docs/ui-surfaces.md](../docs/ui-surfaces.md) | Every place a plugin can add a panel, a button or a menu item, and the plan for one system of them. |
 | [docs/native.md](../docs/native.md) | What Riff uses from WordPress as is, what it adds, and why. |
 | [docs/hooks.md](../docs/hooks.md), [docs/javascript.md](../docs/javascript.md) | The hooks and `window.riff`, generated from the code. |
 | [docs/iphone-checklist.md](../docs/iphone-checklist.md) | What to check on a real iPhone before merging a change to the player. |
