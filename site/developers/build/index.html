@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Build on Riff | Riff Source</title>
+<title>Riff Developer</title>
 <meta name="description" content="The reference for everything Riff makes public, and the guides to extending it. All of it holds within a major version.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="RiffPress">
 <meta property="og:url" content="{{pages_url}}developers/build/">
-<meta property="og:title" content="Build on Riff | Riff Source">
+<meta property="og:title" content="Riff Developer">
 <meta property="og:description" content="The reference for everything Riff makes public, and the guides to extending it. All of it holds within a major version.">
 <meta property="og:image" content="{{pages_url}}og/developers.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Build on Riff | Riff Source">
+<meta property="og:image:alt" content="Riff Developer">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Build on Riff | Riff Source">
+<meta name="twitter:title" content="Riff Developer">
 <meta name="twitter:description" content="The reference for everything Riff makes public, and the guides to extending it. All of it holds within a major version.">
 <meta name="twitter:image" content="{{pages_url}}og/developers.png">
 <link rel="canonical" href="{{pages_url}}developers/build/">
@@ -32,8 +32,8 @@
 <body>
 <!-- nav:top -->
 <a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../../developers/" aria-current="true">Source</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main"><a href="../../download/">Download</a></nav></div></header>
-<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span><span class="screen-reader-text">Menu: </span><span class="docs-where">Build on Riff</span></button><nav id="docs-nav-list" aria-label="Build on Riff"><details class="door-switch"><summary><span class="screen-reader-text">Door: </span>Build on Riff</summary><ul><li><a href="../../developers/use/">Use Riff</a></li><li><a href="../../developers/build/" aria-current="true">Build on Riff</a></li><li><a href="../../developers/run/">Run Riff for others</a></li><li><a href="../../developers/contribute/">Contribute</a></li></ul></details><ul><li class="local-group"><span class="local-label" id="docs-group-reference">Reference</span><ul aria-labelledby="docs-group-reference"><li><a href="../../developers/php/">PHP</a></li><li><a href="../../developers/javascript/">JavaScript</a></li><li><a href="../../developers/rest/">REST API</a></li><li><a href="../../developers/css/">CSS</a></li><li><a href="../../developers/track/">Track schema</a></li><li><a href="../../developers/hooks/">Hooks</a></li></ul></li><li class="local-group"><span class="local-label" id="docs-group-guides">Guides</span><ul aria-labelledby="docs-group-guides"><li><a href="../../developers/extensions/">Extensions</a></li><li><a href="../../developers/player/">How the player works</a></li><li><a href="../../developers/isolation/">Isolation</a></li><li><a href="../../web/">Built on the open web</a></li></ul></li></ul></nav></aside>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="https://riffpress.com/"><img src="../../brand/wordmark-ink.svg" alt="Riff" width="64" height="30"></a><a class="host" href="../../developers/build/" aria-current="page">Developer</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main"><a href="../../download/">Download</a><a href="../../developers/">Source</a></nav></div></header>
+<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span><span class="screen-reader-text">Menu: </span><span class="docs-where">Build on Riff</span></button><nav id="docs-nav-list" aria-label="Build on Riff"><ul><li class="local-group"><span class="local-label" id="docs-group-reference">Reference</span><ul aria-labelledby="docs-group-reference"><li><a href="../../developers/php/">PHP</a></li><li><a href="../../developers/javascript/">JavaScript</a></li><li><a href="../../developers/rest/">REST API</a></li><li><a href="../../developers/css/">CSS</a></li><li><a href="../../developers/track/">Track schema</a></li><li><a href="../../developers/hooks/">Hooks</a></li></ul></li><li class="local-group"><span class="local-label" id="docs-group-guides">Guides</span><ul aria-labelledby="docs-group-guides"><li><a href="../../developers/extensions/">Extensions</a></li><li><a href="../../developers/player/">How the player works</a></li><li><a href="../../developers/isolation/">Isolation</a></li></ul></li></ul></nav></aside>
 <!-- /nav:top -->
 
 <main id="main" class="wrap doc door">
@@ -41,8 +41,9 @@
 <p class="lede">The reference for everything Riff makes public, and the guides to extending it. All of it holds within a major version.</p>
 <div class="entry">
 <!-- nav:door -->
-<h2 class="pages-group" id="reference">Reference</h2><ul class="pages"><li><a href="../../developers/php/">PHP</a><span>Functions, the Source interface, Block Bindings, the abilities and the Listen block.</span></li><li><a href="../../developers/javascript/">JavaScript</a><span>window.riff: its members, actions, filters and events.</span></li><li><a href="../../developers/rest/">REST API</a><span>The riff/v1 routes, the riff_track field on media, and GraphQL.</span></li><li><a href="../../developers/css/">CSS</a><span>The public custom properties of the player and the Listen block.</span></li><li><a href="../../developers/track/">Track schema</a><span>The one shape of a track that every surface shares.</span></li><li><a href="../../developers/hooks/">Hooks</a><span>Every filter and action, in PHP and in the player, searchable.</span></li></ul><h2 class="pages-group" id="guides">Guides</h2><ul class="pages"><li><a href="../../developers/extensions/">Extensions</a><span>How a plugin inside Riff is bundled, loaded and written.</span></li><li><a href="../../developers/player/">How the player works</a><span>From the blocks a page plays to the views, the panels and the turntable.</span></li><li><a href="../../developers/isolation/">Isolation</a><span>What an extension may touch, and the check that holds it to that.</span></li><li><a href="../../web/">Built on the open web</a><span>Each browser API and CSS feature the player uses, how and why.</span></li></ul>
+<h2 class="pages-group" id="reference">Reference</h2><ul class="pages"><li><a href="../../developers/php/">PHP</a><span>Functions, the Source interface, Block Bindings, the abilities and the Listen block.</span></li><li><a href="../../developers/javascript/">JavaScript</a><span>window.riff: its members, actions, filters and events.</span></li><li><a href="../../developers/rest/">REST API</a><span>The riff/v1 routes, the riff_track field on media, and GraphQL.</span></li><li><a href="../../developers/css/">CSS</a><span>The public custom properties of the player and the Listen block.</span></li><li><a href="../../developers/track/">Track schema</a><span>The one shape of a track that every surface shares.</span></li><li><a href="../../developers/hooks/">Hooks</a><span>Every filter and action, in PHP and in the player, searchable.</span></li></ul><h2 class="pages-group" id="guides">Guides</h2><ul class="pages"><li><a href="../../developers/extensions/">Extensions</a><span>How a plugin inside Riff is bundled, loaded and written.</span></li><li><a href="../../developers/player/">How the player works</a><span>From the blocks a page plays to the views, the panels and the turntable.</span></li><li><a href="../../developers/isolation/">Isolation</a><span>What an extension may touch, and the check that holds it to that.</span></li></ul>
 <!-- /nav:door -->
+<p>Installing Riff, adding music, running it for others and working on Riff itself are on <a href="../../developers/">Riff Source</a>.</p>
 </div>
 </main>
 <!-- nav:footer -->

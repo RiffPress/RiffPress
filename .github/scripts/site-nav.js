@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * The navigation of source.riffpress.com, drawn from site-nav.json: the header, the section bar, the
- * previous and next links and the footer, and each page's title.
+ * The navigation of Riff's two documentation hosts, source.riffpress.com and developer.riffpress.com,
+ * drawn from site-nav.json: the header, the section bar, the previous and next links and the footer,
+ * and each page's title.
  *
  * site-shell.js draws them into every generated page. The pages written by hand carry them between
  * markers, which this stamps, leaving the rest of the page alone:
@@ -9,11 +10,11 @@
  *   <!-- nav:top -->…<!-- /nav:top -->        the skip link, header and section bar
  *   <!-- nav:pager -->…<!-- /nav:pager -->    previous and next, where the page has siblings in order
  *   <!-- nav:footer -->…<!-- /nav:footer -->  the footer
- *   <!-- nav:doors -->…<!-- /nav:doors -->    on the home, the four doors
+ *   <!-- nav:doors -->…<!-- /nav:doors -->    on Source's home, its doors and the developer site's
  *   <!-- nav:door -->…<!-- /nav:door -->      on a door's page, its pages and their summaries
  *
  * Every link is written relative to the page, as the sources are laid out; developers-site.js then
- * points each at where the host serves it.
+ * points each at where its host serves it, written out in full when that is the other host.
  *
  * --check changes nothing and fails when a page written by hand has drifted from the definition,
  * has no markers, or belongs to no section, or when the definition itself is inconsistent.
@@ -36,6 +37,15 @@ const MAIN = 'https://riffpress.com/';
 const PRODUCT = 'Riff';
 
 const esc = ( s ) => String( s ).replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' ).replace( /"/g, '&quot;' );
+
+/**
+ * A host's home: the one section marked root on it.
+ *
+ * @param {Object} nav  The definition.
+ * @param {string} host The host's key in hosts.
+ * @return {Object|undefined} The section.
+ */
+const rootOf = ( nav, host ) => nav.sections.find( ( s ) => s.root && s.host === host );
 
 /**
  * Every entry of the definition by key, each with its parent and section.
@@ -115,53 +125,67 @@ function current( ctx, node ) {
 
 /**
  * The header: the wordmark, then each section, the one the page is in marked. The wordmark leads
- * back to riffpress.com, and the host's own name beside it, "Source", to the host's home, as
- * developer.wordpress.org and Stripe's docs lead back to their sites: Riff | Source. Source is the
- * docs, so the docs' section has no second link of its own at the right. Between them, search,
- * which docs.js shows and opens (it searches the index developers-site.js writes); without the
- * script there is nothing to press, so it stays hidden.
+ * back to riffpress.com, and the host's own name beside it, "Source" or "Developer", to the host's
+ * home: Riff | Source. The host's home has no second link of its own at the right; the other
+ * host's home is one of the sections there, so each host leads to the other from every page.
+ * Between them, search, which docs.js shows and opens (it searches the index developers-site.js
+ * writes for the host); without the script there is nothing to press, so it stays hidden.
  *
- * @param {Object} ctx From locate(), or null where no section is current (the 404).
- * @param {string} up  The path back to the site's root.
- * @param {Object} nav The definition.
+ * @param {Object} ctx  From locate(), or null where no section is current (a 404).
+ * @param {string} up   The path back to the site's root.
+ * @param {Object} nav  The definition.
+ * @param {string} host The host, where there is no ctx to say.
  * @return {string} HTML.
  */
-function header( ctx, up, nav = NAV ) {
-	// "Source" leads to the host's home, the section marked root.
-	const mark = nav.sections.find( ( s ) => s.root );
-	const links = nav.sections.filter( ( s ) => ! s.root ).map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.label ) }</a>` ).join( '' );
+function header( ctx, up, nav = NAV, host = 'source' ) {
+	// The host's name leads to its home, the section marked root.
+	const mark = rootOf( nav, ctx ? ctx.section.host : host );
+	const links = nav.sections.filter( ( s ) => s !== mark ).map( ( s ) => `<a href="${ to( up, s.href ) }"${ current( ctx, s ) }>${ esc( s.header || s.label ) }</a>` ).join( '' );
 	const here = current( ctx, mark );
 	// "Riff Source" less the product's own name: "Source".
 	const name = nav.hosts[ mark.host ];
-	const host = name.startsWith( `${ PRODUCT } ` ) ? name.slice( PRODUCT.length + 1 ) : name;
+	const short = name.startsWith( `${ PRODUCT } ` ) ? name.slice( PRODUCT.length + 1 ) : name;
 	return `<a class="skip" href="#main">Skip to content</a>
-<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="${ MAIN }"><img src="${ up }brand/wordmark-ink.svg" alt="${ PRODUCT }" width="64" height="30"></a><a class="host" href="${ to( up, mark.href ) }"${ here }>${ esc( host ) }</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main">${ links }</nav></div></header>
+<header class="nav"><div class="wrap"><div class="brand"><a class="mark" href="${ MAIN }"><img src="${ up }brand/wordmark-ink.svg" alt="${ PRODUCT }" width="64" height="30"></a><a class="host" href="${ to( up, mark.href ) }"${ here }>${ esc( short ) }</a></div><button class="search" type="button" aria-haspopup="dialog" hidden><span class="search-icon" aria-hidden="true"></span><span class="search-label">Search the docs</span><kbd class="search-key" aria-hidden="true">⌘K</kbd></button><nav aria-label="Main">${ links }</nav></div></header>
 `;
 }
 
 /**
- * The door a page is in: the root's child marked door that the page sits under, or null for the
- * home and a page outside every door, such as Accessibility.
+ * The door a page is in: the root's child marked door that the page sits under, the root itself
+ * on a host that is one door, or null for a home with doors and a page outside every door, such
+ * as Accessibility.
  *
  * @param {Object} ctx From locate(), or null.
  * @return {Object|null} The door.
  */
 function doorOf( ctx ) {
 	const d = ctx?.trail[ 1 ];
-	return d && d.door ? d : null;
+	if ( d && d.door ) {
+		return d;
+	}
+	const top = ctx?.trail[ 0 ];
+	return top && top.root && top.door ? top : null;
 }
 
 /**
- * The doors, in their order.
+ * A host's doors, in their order: its root's children marked door, or the root alone where the
+ * host is one door.
  *
- * @param {Object} nav The definition.
+ * @param {Object} nav  The definition.
+ * @param {string} host The host's key in hosts.
  * @return {Object[]} The doors.
  */
-const doors = ( nav = NAV ) => ( nav.sections.find( ( s ) => s.root )?.children || [] ).filter( ( n ) => n.door );
+const doors = ( nav = NAV, host = 'source' ) => {
+	const root = rootOf( nav, host );
+	if ( ! root ) {
+		return [];
+	}
+	return root.door ? [ root ] : ( root.children || [] ).filter( ( n ) => n.door );
+};
 
 /**
  * The docs' sidebar, for a page in a door: a switcher at its top that names the door and opens
- * the other three, then the door's own pages, a group as its name over its pages. It sits left of
+ * the host's others, where it has others, then the door's own pages, a group as its name over its pages. It sits left of
  * the article on a wide screen, held in the window as the page scrolls, and is a Menu button's
  * sheet on a phone (docs.js); without the script it is a list above the article. The home and a
  * page outside every door have none.
@@ -183,8 +207,9 @@ function sectionBar( ctx, up ) {
 		}
 		return `<li><a href="${ to( up, n.href ) }"${ current( ctx, n ) }>${ esc( n.label ) }</a></li>`;
 	};
-	const others = doors( ctx.nav ).map( ( d ) => `<li><a href="${ to( up, d.href ) }"${ d === door ? ' aria-current="true"' : '' }>${ esc( d.label ) }</a></li>` ).join( '' );
-	const switcher = `<details class="door-switch"><summary><span class="screen-reader-text">Door: </span>${ esc( door.label ) }</summary><ul>${ others }</ul></details>`;
+	const all = doors( ctx.nav, ctx.section.host );
+	const others = all.map( ( d ) => `<li><a href="${ to( up, d.href ) }"${ d === door ? ' aria-current="true"' : '' }>${ esc( d.label ) }</a></li>` ).join( '' );
+	const switcher = all.length > 1 ? `<details class="door-switch"><summary><span class="screen-reader-text">Door: </span>${ esc( door.label ) }</summary><ul>${ others }</ul></details>` : '';
 	return `<aside class="docs-nav" id="docs-nav"><button class="docs-menu" type="button" aria-expanded="false" aria-controls="docs-nav-list" hidden><span class="docs-menu-icon" aria-hidden="true"></span><span class="screen-reader-text">Menu: </span>${ where( ctx ) }</button><nav id="docs-nav-list" aria-label="${ esc( door.label ) }">${ switcher }<ul>${ shown( door.children ).map( item ).join( '' ) }</ul></nav></aside>
 `;
 }
@@ -236,15 +261,19 @@ function doorPages( door, up ) {
 }
 
 /**
- * The four doors, for the home: each its name, who it is for, and its first pages.
+ * The doors, for a host's home: each its name, who it is for, and its first pages. The host's own
+ * doors come first, then each other host that is one door, so Source's home still leads to
+ * building on Riff.
  *
- * @param {string} up  The path back to the site's root.
- * @param {Object} nav The definition.
+ * @param {string} up   The path back to the site's root.
+ * @param {Object} nav  The definition.
+ * @param {string} host The host whose home it is.
  * @return {string} HTML.
  */
-function doorList( up, nav = NAV ) {
+function doorList( up, nav = NAV, host = 'source' ) {
 	const pages = ( d ) => ( d.children || [] ).flatMap( ( n ) => ( n.children ? n.children : [ n ] ) ).filter( ( n ) => n.bar !== false );
-	return `<ul class="doors">${ doors( nav ).map( ( d ) => `<li><h2><a href="${ to( up, d.href ) }">${ esc( d.label ) }</a></h2><p>${ esc( d.summary ) }</p><p class="doors-first">${ pages( d ).slice( 0, 4 ).map( ( n ) => `<a href="${ to( up, n.href ) }">${ esc( n.label ) }</a>` ).join( '' ) }</p></li>` ).join( '' ) }</ul>`;
+	const elsewhere = Object.keys( nav.hosts ).filter( ( h ) => h !== host ).map( ( h ) => rootOf( nav, h ) ).filter( ( r ) => r && r.door );
+	return `<ul class="doors">${ [ ...doors( nav, host ), ...elsewhere ].map( ( d ) => `<li><h2><a href="${ to( up, d.href ) }">${ esc( d.label ) }</a></h2><p>${ esc( d.summary ) }</p><p class="doors-first">${ pages( d ).slice( 0, 4 ).map( ( n ) => `<a href="${ to( up, n.href ) }">${ esc( n.label ) }</a>` ).join( '' ) }</p></li>` ).join( '' ) }</ul>`;
 }
 
 /**
@@ -322,7 +351,8 @@ function title( ctx, text ) {
 	if ( ctx.node.root && ! ctx.leaf ) {
 		return ctx.nav.hosts[ ctx.node.host ];
 	}
-	const bare = text.replace( /\s*\|\s*Riff(?:Press)?(?: Source)?$/, '' );
+	const names = Object.values( ctx.nav.hosts ).map( ( n ) => n.replace( /^Riff/, '' ).replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) ).join( '|' );
+	const bare = text.replace( new RegExp( `\\s*\\|\\s*Riff(?:Press)?(?:${ names })?$` ), '' );
 	return `${ bare } | ${ ctx.nav.hosts[ ctx.node.host || ctx.section.host ] }`;
 }
 
@@ -338,7 +368,10 @@ const REGION = ( name ) => new RegExp( `<!-- nav:${ name }((?: [a-z]+)*) -->\\n?
  */
 function stamp( html, file, nav = NAV ) {
 	const problems = [];
-	const lost = file === '404.html';
+	// A host's 404: 404.html is Source's, 404-<host>.html another host's.
+	const miss = file.match( /^404(?:-([a-z]+))?\.html$/ );
+	const lost = Boolean( miss );
+	const host = miss?.[ 1 ] || 'source';
 	const url = file.replace( /(^|\/)index\.html$/, '$1' );
 	// The 404 is served at whatever address was missed, so its links are absolute and nothing is current.
 	const up = lost ? '{{pages_url}}' : '../'.repeat( url.split( '/' ).length - 1 );
@@ -358,11 +391,11 @@ function stamp( html, file, nav = NAV ) {
 	if ( ! /<main id="main"/.test( html ) ) {
 		problems.push( `site/${ file }: the skip link needs <main id="main">` );
 	}
-	let out = html.replace( REGION( 'top' ), ( m, opts ) => `<!-- nav:top${ opts } -->\n${ header( ctx, up, nav ) }${ sectionBar( ctx, up ) }<!-- /nav:top -->` );
+	let out = html.replace( REGION( 'top' ), ( m, opts ) => `<!-- nav:top${ opts } -->\n${ header( ctx, up, nav, host ) }${ sectionBar( ctx, up ) }<!-- /nav:top -->` );
 	out = out.replace( REGION( 'pager' ), ( m, opts ) => `<!-- nav:pager${ opts } -->\n${ pager( ...siblings( ctx, up ) ) }<!-- /nav:pager -->` );
 	out = out.replace( REGION( 'footer' ), ( m, opts ) => `<!-- nav:footer${ opts } -->\n${ footer( ctx, up ) }<!-- /nav:footer -->` );
 	// The home lists the doors, and a door's own page its pages.
-	out = out.replace( REGION( 'doors' ), ( m, opts ) => `<!-- nav:doors${ opts } -->\n${ doorList( up, nav ) }\n<!-- /nav:doors -->` );
+	out = out.replace( REGION( 'doors' ), ( m, opts ) => `<!-- nav:doors${ opts } -->\n${ doorList( up, nav, ctx ? ctx.section.host : host ) }\n<!-- /nav:doors -->` );
 	out = out.replace( REGION( 'door' ), ( m, opts ) => {
 		if ( ! ctx?.node.door ) {
 			problems.push( `site/${ file }: <!-- nav:door --> lists a door's pages, and this page is no door` );
@@ -419,14 +452,16 @@ function validate( nav = NAV ) {
 			problems.push( `site-nav.json: no name in hosts for ${ s.host || s.key }` );
 		}
 	}
-	if ( nav.sections.filter( ( s ) => s.root ).length !== 1 ) {
-		problems.push( 'site-nav.json: one section, and only one, is the host\'s home (root)' );
+	for ( const host of Object.keys( nav.hosts ) ) {
+		if ( nav.sections.filter( ( s ) => s.root && s.host === host ).length !== 1 ) {
+			problems.push( `site-nav.json: one section, and only one, is the ${ host } host's home (root)` );
+		}
 	}
 	// Every handbook handbook-pages.js publishes is a page in a door, so a sidebar lists it.
 	const { HANDBOOKS } = require( './site-shell.js' );
 	const inDoors = new Set();
 	const gather = ( n ) => ( n.children ? n.children.forEach( gather ) : inDoors.add( n.href ) );
-	for ( const d of doors( nav ) ) {
+	for ( const d of Object.keys( nav.hosts ).flatMap( ( h ) => doors( nav, h ) ) ) {
 		if ( ! d.summary || typeof d.href !== 'string' ) {
 			problems.push( `site-nav.json: the door ${ d.key } needs a page of its own (href) and a summary` );
 		}
@@ -496,7 +531,7 @@ function main() {
 	}
 }
 
-module.exports = { NAV, entries, locate, current, header, sectionBar, where, doorOf, doors, doorPages, doorList, pager, siblings, footer, title, stamp, validate, handWritten };
+module.exports = { NAV, rootOf, entries, locate, current, header, sectionBar, where, doorOf, doors, doorPages, doorList, pager, siblings, footer, title, stamp, validate, handWritten };
 
 if ( require.main === module ) {
 	main();

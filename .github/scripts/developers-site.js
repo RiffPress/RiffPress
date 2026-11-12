@@ -1,27 +1,34 @@
 #!/usr/bin/env node
 /**
- * Builds source.riffpress.com from the assembled site: the reference (/developers/, which becomes
- * the host's root, and the /web/ pages, Built on the open web) and the pages about the software
- * (Download, Add music, How Riff is built, Accessibility), with the site's own files they show.
+ * Builds Riff's two documentation hosts from the one assembled site: source.riffpress.com, getting
+ * Riff and running it (Download, Add music, the Use, Run and Contribute doors, Built on the open
+ * web, How Riff is built, Accessibility), and developer.riffpress.com, building on it (the
+ * reference and the guides to extending Riff). site-nav.json says which host each page is on.
  *
- * site/ is written, generated and previewed with the reference under /developers/, and this runs
- * on the Pages workflow's output once its placeholders are filled, so the reference is still built
- * from the same code on every deploy. It moves the pages, copies the shared files they need (the
- * stylesheets, fonts, icons, the wordmark and the strings' script) and the pictures they show,
- * points every link at where the host now serves it, writes the host's sitemap, and then checks
- * every link and fragment on the host, failing the deploy on one that leads nowhere. What it
- * leaves behind is not deployed: riffpress.com is the business's site, from its own repository.
+ * site/ is written, generated and previewed with the docs under /developers/, and this runs on the
+ * Pages workflow's output once its placeholders are filled, so the reference is still built from
+ * the same code on every deploy. It moves each page to its host, under that host's root, copies the
+ * shared files every page needs (the stylesheets, fonts, icons, the wordmark and the strings'
+ * script) to both and the pictures a page shows to its host, points every link at where its target
+ * is now served (relative on the same host, written out in full on the other), and writes each
+ * host's sitemap, robots.txt, 404, search index, _headers and _redirects. Until this split both
+ * hosts served every page, so each host's _redirects sends the addresses the other now serves
+ * there, and no link to either breaks. It then checks every link and fragment on both hosts,
+ * failing the deploy on one that leads nowhere. What it leaves behind is not deployed: riffpress.com
+ * is the business's site, from its own repository.
  *
- * Usage: node .github/scripts/developers-site.js <out> <developers-out> <site-url> <developers-url>
+ * Usage: node .github/scripts/developers-site.js <out> <source-out> <developer-out> <site-url> <source-url> <developer-url>
  *
  * <site-url> is the address the pages were written for, which {{pages_url}} was filled with; links
- * to anything on it that the host doesn't serve are written out to it in full.
+ * to anything on it that neither host serves are written out to it in full.
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
+const { NAV, entries, rootOf } = require( './site-nav.js' );
 
-// What moves, as [ path on the site, path on the developer host ]. web/web.css goes as a shared
-// file: every page is styled by it.
+// What moves, as [ path on the site, path on its host ]: where one host served every page before
+// the split, and still each page's path on its host, but for each host's home, which is at its
+// root. web/web.css goes as a shared file: every page is styled by it.
 const MOVED = [
 	[ 'developers/', '' ],
 	[ 'web/', 'web/' ],
@@ -33,6 +40,8 @@ const MOVED = [
 // Files beside the pages that every page may need.
 // tokens.css is riffpress.com's, byte for byte (tokens.js checks it): every page loads it first.
 const SHARED = [ 'tokens.css', 'js', 'fonts', 'icons', 'brand' ];
+// What the Pages workflow puts beside Source's pages after the split: the live demo's files.
+const DEMO = [ 'demo/', 'riff.zip', 'blueprint.json' ];
 const ATTRS = /(\s)(href|src|content|action|srcset)="([^"]*)"/g;
 // A tag, or a block whose text is not markup: its opening tag is read, what is inside it is not.
 const TAGS =
@@ -105,68 +114,107 @@ const relative = ( from, to ) =>
 	'../'.repeat( from.split( '/' ).length - 1 ) + to || './';
 
 /**
- * The developer host, built from the assembled site.
+ * Which host a page or file on the site is on: the host of the deepest site-nav.json entry whose
+ * path holds it, as hooks/ holds each hook's page, or null for a file no entry holds.
  *
- * @param {Object} o            Options.
- * @param {string} o.out        The assembled site, which is only read.
- * @param {string} o.dev        Where the developer host's files go.
- * @param {string} o.site       The site's address, ending in a slash.
- * @param {string} o.developers The developer host's address, ending in a slash.
- * @return {{ moved: string[], problems: string[] }} The pages moved, and every link that leads
- *                                                  nowhere.
+ * @param {string} rel A path on the site.
+ * @param {Object} nav The definition.
+ * @return {string|null} The host's key.
  */
-function split( { out, dev, site, developers } ) {
-	const files = walk( out );
-	// The moved pages, keyed by their old path: "developers/php/" => "php/".
-	const pages = new Map();
-	for ( const file of files ) {
-		const rule = MOVED.find( ( [ from ] ) => file.startsWith( from ) );
-		if ( rule && file.endsWith( '.html' ) ) {
-			pages.set(
-				pageOf( file ),
-				rule[ 1 ] + pageOf( file ).slice( rule[ 0 ].length )
-			);
+const ownerOf = ( rel, nav ) => {
+	let best = null;
+	for ( const { node, section } of entries( nav ).values() ) {
+		if ( typeof node.href === 'string' && node.href && rel.startsWith( node.href ) && ( ! best || node.href.length > best.href.length ) ) {
+			best = { href: node.href, host: section.host };
 		}
 	}
-	if ( ! pages.has( 'developers/' ) ) {
-		throw new Error( `no developers/index.html in ${ out }` );
+	return best ? best.host : null;
+};
+
+/**
+ * Riff's documentation hosts, built from the assembled site.
+ *
+ * @param {Object} o       Options.
+ * @param {string} o.out   The assembled site, which is only read.
+ * @param {string} o.site  The site's address, ending in a slash.
+ * @param {Object} o.hosts Each host by its key in site-nav.json's hosts: { dir, url }, where its
+ *                         files go and its address, ending in a slash.
+ * @param {Object} o.nav   The definition, site-nav.json's by default.
+ * @return {{ moved: Object, redirects: Object, problems: string[] }} Each host's pages, each host's
+ *                                                                   redirects, and every link
+ *                                                                   that leads nowhere.
+ */
+function split( { out, site, hosts, nav = NAV } ) {
+	const keys = Object.keys( nav.hosts );
+	for ( const key of keys ) {
+		if ( ! hosts[ key ] ) {
+			throw new Error( `no folder and address for the ${ key } host` );
+		}
+	}
+	const files = walk( out );
+	// Each host's home sits at its root; everything else as MOVED has it.
+	const rules = [
+		...keys.map( ( key ) => [ rootOf( nav, key ).href, '' ] ),
+		...MOVED,
+	].sort( ( a, b ) => b[ 0 ].length - a[ 0 ].length );
+	// Where a path on the site was served before the split, on the one host that served it all.
+	const legacy = ( rel ) => {
+		const rule = MOVED.find( ( [ from ] ) => rel.startsWith( from ) );
+		return rule ? rule[ 1 ] + rel.slice( rule[ 0 ].length ) : null;
+	};
+	// The pages, keyed by their path on the site: "developers/php/" => { host, rel: "php/" }.
+	const pages = new Map();
+	for ( const file of files ) {
+		const rule = rules.find( ( [ from ] ) => file.startsWith( from ) );
+		if ( rule && file.endsWith( '.html' ) ) {
+			const host = ownerOf( pageOf( file ), nav );
+			if ( host ) {
+				pages.set( pageOf( file ), { host, rel: rule[ 1 ] + pageOf( file ).slice( rule[ 0 ].length ) } );
+			}
+		}
+	}
+	for ( const key of keys ) {
+		if ( ! pages.has( rootOf( nav, key ).href ) ) {
+			throw new Error( `no ${ rootOf( nav, key ).href }index.html in ${ out }` );
+		}
 	}
 
-	// A path on the site, where the developer host now serves it, or null if it stays.
+	// A path on the site, as the host that now serves it has it, or null if neither does.
 	const moves = ( rel ) => {
 		const bare = rel.replace( /[?#].*$/, '' );
 		const tail = rel.slice( bare.length );
 		if ( pages.has( bare ) ) {
-			return pages.get( bare ) + tail;
+			const p = pages.get( bare );
+			return { host: p.host, rel: p.rel + tail };
 		}
 		// Anything else under a moved folder goes with it; web/ keeps its stylesheet.
-		const rule = MOVED.find(
-			( [ from ] ) => from !== 'web/' && bare.startsWith( from )
-		);
-		return rule ? rule[ 1 ] + bare.slice( rule[ 0 ].length ) + tail : null;
+		const rule = rules.find( ( [ from ] ) => from !== 'web/' && bare.startsWith( from ) );
+		const host = rule && ownerOf( bare, nav );
+		return host ? { host, rel: rule[ 1 ] + bare.slice( rule[ 0 ].length ) + tail } : null;
 	};
-	// The site's own files a moved page shows, such as a screenshot: copied to the developer host.
-	const assets = new Set();
-	// A path on the site from the developer host: moved, shared, or back on the site.
-	const fromDev = ( rel ) => {
+	// The site's own files a page shows, such as a screenshot: copied to the host that shows it.
+	const assets = Object.fromEntries( keys.map( ( k ) => [ k, new Set() ] ) );
+	// A path on the site from a page on `from`: a page or file of either host, a shared file, a
+	// picture the page shows, or back on the site.
+	const place = ( rel, from ) => {
 		const moved = moves( rel );
 		if ( moved !== null ) {
-			return { host: 'dev', rel: moved };
+			return moved;
 		}
 		const bare = rel.replace( /[?#].*$/, '' );
 		const top = bare.split( '/' )[ 0 ];
 		if ( SHARED.includes( top ) || rel.startsWith( 'web/web.css' ) ) {
-			return { host: 'dev', rel };
+			return { host: from, rel };
 		}
 		if (
 			/\.[a-z0-9]+$/i.test( bare ) &&
 			! bare.endsWith( '.html' ) &&
 			files.includes( bare )
 		) {
-			assets.add( bare );
-			return { host: 'dev', rel };
+			assets[ from ].add( bare );
+			return { host: from, rel };
 		}
-		return { host: 'site', rel };
+		return { host: null, rel };
 	};
 	// A URL as written on a page at the site's `page`, resolved to a path on the site, or null.
 	const onSite = ( value, page ) => {
@@ -200,124 +248,214 @@ function split( { out, dev, site, developers } ) {
 						.join( ',' )
 				: fn( value );
 
-	// Links to the site that the host doesn't serve. riffpress.com isn't built from here, so only its
+	// Links to the site that neither host serves. riffpress.com isn't built from here, so only its
 	// home, written out in full, is a page there to link to; anything else leads nowhere.
 	const strays = [];
-	// The developer host: the pages, the files beside them, the shared files.
-	fs.rmSync( dev, { recursive: true, force: true } );
+	for ( const key of keys ) {
+		fs.rmSync( hosts[ key ].dir, { recursive: true, force: true } );
+		fs.mkdirSync( hosts[ key ].dir, { recursive: true } );
+	}
 	for ( const file of files ) {
-		const target = SHARED.includes( file.split( '/' )[ 0 ] )
-			? file
-			: ( moves( file ) ?? ( file.startsWith( 'web/' ) ? file : null ) );
-		if ( target === null ) {
-			continue;
-		}
-		const to = path.join( dev, target );
-		fs.mkdirSync( path.dirname( to ), { recursive: true } );
-		if ( ! file.endsWith( '.html' ) ) {
-			fs.copyFileSync( path.join( out, file ), to );
-			continue;
-		}
-		const page = pageOf( file );
-		const at = pages.get( page );
-		const html = rewrite(
-			fs.readFileSync( path.join( out, file ), 'utf8' ),
-			( name, value ) =>
-				each( name, value, ( u ) => {
-					const rel = onSite( u, page );
-					if ( rel === null ) {
-						return u;
-					}
-					const where = fromDev( rel );
-					const absolute = /^[a-z]+:/i.test( u );
-					if ( where.host === 'site' ) {
-						if ( ! absolute || where.rel !== '' ) {
-							strays.push( `${ path.relative( process.cwd(), to ) }: ${ site + where.rel }` );
+		const shared = SHARED.includes( file.split( '/' )[ 0 ] ) || file === 'web/web.css';
+		const where = shared ? null : moves( file ) ?? ( file.startsWith( 'web/' ) ? { host: ownerOf( file, nav ), rel: file } : null );
+		const targets = shared ? keys.map( ( k ) => ( { host: k, rel: file } ) ) : where && where.host ? [ where ] : [];
+		for ( const target of targets ) {
+			const to = path.join( hosts[ target.host ].dir, target.rel );
+			fs.mkdirSync( path.dirname( to ), { recursive: true } );
+			if ( ! file.endsWith( '.html' ) ) {
+				fs.copyFileSync( path.join( out, file ), to );
+				continue;
+			}
+			const page = pageOf( file );
+			const at = pages.get( page )?.rel ?? page;
+			const html = rewrite(
+				fs.readFileSync( path.join( out, file ), 'utf8' ),
+				( name, value ) =>
+					each( name, value, ( u ) => {
+						const rel = onSite( u, page );
+						if ( rel === null ) {
+							return u;
 						}
-						return site + where.rel;
-					}
-					return absolute
-						? developers + where.rel
-						: relative( at, where.rel );
-				} )
-		);
-		fs.writeFileSync( to, html );
+						const there = place( rel, target.host );
+						const absolute = /^[a-z]+:/i.test( u );
+						if ( there.host === null ) {
+							if ( ! absolute || there.rel !== '' ) {
+								strays.push( `${ path.relative( process.cwd(), to ) }: ${ site + there.rel }` );
+							}
+							return site + there.rel;
+						}
+						// The other host is always written out in full.
+						if ( absolute || there.host !== target.host ) {
+							return hosts[ there.host ].url + there.rel;
+						}
+						return relative( at, there.rel );
+					} )
+			);
+			fs.writeFileSync( to, html );
+		}
 	}
 
-	// What search reads: every page's title, door, summary and headings.
-	fs.writeFileSync( path.join( dev, 'search.json' ), JSON.stringify( searchIndex( dev ) ) );
+	for ( const key of keys ) {
+		const { dir, url } = hosts[ key ];
+		// What search reads: every page's title, door, summary and headings.
+		fs.writeFileSync( path.join( dir, 'search.json' ), JSON.stringify( searchIndex( dir, nav ) ) );
+		fs.writeFileSync( path.join( dir, 'robots.txt' ), `User-agent: *\nAllow: /\nSitemap: ${ url }sitemap.xml\n` );
+		for ( const file of assets[ key ] ) {
+			fs.mkdirSync( path.dirname( path.join( dir, file ) ), { recursive: true } );
+			fs.copyFileSync( path.join( out, file ), path.join( dir, file ) );
+		}
+		// As the site caches them: stamped by commit, so kept for good; the pages are fetched fresh.
+		// X-Riff-Site names the build, so a deploy can tell which one a host is serving.
+		fs.writeFileSync(
+			path.join( dir, '_headers' ),
+			`/*\n  X-Riff-Site: ${ key }\n` +
+				[ '/:name.css', '/web/web.css', '/fonts/*' ]
+					.map( ( p ) => `${ p }\n  Cache-Control: public, max-age=31536000, immutable\n` )
+					.join( '' ) +
+				'/index.html\n  Cache-Control: no-cache\n'
+		);
+	}
 
-	// The sitemap: the host's pages, at their new addresses.
+	// The sitemaps: each host's pages, at their new addresses.
 	const map = path.join( out, 'sitemap.xml' );
 	if ( fs.existsSync( map ) ) {
 		const xml = fs.readFileSync( map, 'utf8' );
 		const urls = xml.match( /^\s*<url>.*<\/url>\n/gm ) || [];
-		const give = [];
+		const give = Object.fromEntries( keys.map( ( k ) => [ k, [] ] ) );
 		for ( const entry of urls ) {
 			const loc = entry.match( /<loc>([^<]*)<\/loc>/ )[ 1 ];
-			const rel = loc.startsWith( site )
-				? moves( loc.slice( site.length ) )
-				: null;
-			if ( rel !== null ) {
-				give.push( entry.replace( loc, developers + rel ) );
+			const there = loc.startsWith( site ) ? moves( loc.slice( site.length ) ) : null;
+			if ( there !== null ) {
+				give[ there.host ].push( entry.replace( loc, hosts[ there.host ].url + there.rel ) );
 			}
 		}
 		const [ open ] = xml.split( urls[ 0 ] );
-		fs.writeFileSync(
-			path.join( dev, 'sitemap.xml' ),
-			open + give.join( '' ) + '</urlset>\n'
+		for ( const key of keys ) {
+			fs.writeFileSync( path.join( hosts[ key ].dir, 'sitemap.xml' ), open + give[ key ].join( '' ) + '</urlset>\n' );
+		}
+	}
+	// Each host's 404, whose links are all absolute, serves for a miss anywhere on the host: Source's
+	// is 404.html, another host's 404-<host>.html where it has one of its own.
+	for ( const key of keys ) {
+		const own = path.join( out, `404-${ key }.html` );
+		const from = fs.existsSync( own ) ? own : path.join( out, '404.html' );
+		if ( ! fs.existsSync( from ) ) {
+			continue;
+		}
+		const html = rewrite( fs.readFileSync( from, 'utf8' ), ( name, value ) =>
+			each( name, value, ( u ) => {
+				const rel = onSite( u, '' );
+				const there = rel === null ? null : place( rel, key );
+				return there?.host ? hosts[ there.host ].url + there.rel : u;
+			} )
 		);
+		fs.writeFileSync( path.join( hosts[ key ].dir, '404.html' ), html );
 	}
-	fs.writeFileSync(
-		path.join( dev, 'robots.txt' ),
-		`User-agent: *\nAllow: /\nSitemap: ${ developers }sitemap.xml\n`
-	);
-	// The 404, whose links are all absolute, serves for a miss anywhere on the host, its links
-	// pointed at the host.
-	if ( fs.existsSync( path.join( out, '404.html' ) ) ) {
-		const html = rewrite(
-			fs.readFileSync( path.join( out, '404.html' ), 'utf8' ),
-			( name, value ) =>
-				each( name, value, ( u ) => {
-					const rel = onSite( u, '' );
-					const where = rel === null ? null : fromDev( rel );
-					return where?.host === 'dev' ? developers + where.rel : u;
-				} )
-		);
-		fs.writeFileSync( path.join( dev, '404.html' ), html );
-	}
-	for ( const file of assets ) {
-		fs.mkdirSync( path.dirname( path.join( dev, file ) ), {
-			recursive: true,
-		} );
-		fs.copyFileSync( path.join( out, file ), path.join( dev, file ) );
-	}
-	// As the site caches them: stamped by commit, so kept for good; the pages are fetched fresh.
-	fs.writeFileSync(
-		path.join( dev, '_headers' ),
-		[ '/:name.css', '/web/web.css', '/fonts/*' ]
-			.map(
-				( p ) =>
-					`${ p }\n  Cache-Control: public, max-age=31536000, immutable\n`
-			)
-			.join( '' ) + '/index.html\n  Cache-Control: no-cache\n'
-	);
 
+	// The redirects. Before the split one host served every page at the paths legacy() gives, so an
+	// address a host no longer serves goes, for good, to where the other host serves it now. A
+	// folder that moves whole is one rule for everything under it; a page that moves to another path
+	// on the other host (Build on Riff, to its root) is a rule of its own.
+	const redirects = Object.fromEntries( keys.map( ( k ) => [ k, [] ] ) );
+	const folders = Object.fromEntries( keys.map( ( k ) => [ k, new Map() ] ) );
+	for ( const [ page, { host, rel } ] of pages ) {
+		const old = legacy( page );
+		const top = old && old.split( '/' )[ 0 ];
+		// A page now at another path on its own host still answers at the old one.
+		if ( old && old !== rel ) {
+			redirects[ host ].push( [ `/${ old }`, hosts[ host ].url + rel ] );
+		}
+		for ( const other of keys.filter( ( k ) => k !== host ) ) {
+			if ( old === null || old === '' ) {
+				continue;
+			}
+			if ( old === rel && rel.includes( '/' ) ) {
+				const f = folders[ other ].get( top ) || { host, pages: [] };
+				f.pages.push( `/${ old }` );
+				folders[ other ].set( top, f );
+			} else {
+				redirects[ other ].push( [ `/${ old }`, hosts[ host ].url + rel ] );
+			}
+		}
+	}
+	// What the workflow adds to Source beside the pages: the demo's files.
+	for ( const key of keys.filter( ( k ) => k !== 'source' ) ) {
+		for ( const name of DEMO ) {
+			if ( name.endsWith( '/' ) ) {
+				folders[ key ].set( name.slice( 0, -1 ), { host: 'source', pages: [] } );
+			} else {
+				redirects[ key ].push( [ `/${ name }`, hosts.source.url + name ] );
+			}
+		}
+	}
+	for ( const key of keys ) {
+		const lines = [];
+		for ( const [ top, { host, pages: list } ] of [ ...folders[ key ] ].sort() ) {
+			// A folder the host still serves a file in, as web/ its stylesheet, goes page by page.
+			if ( fs.existsSync( path.join( hosts[ key ].dir, top ) ) ) {
+				redirects[ key ].push( ...list.map( ( from ) => [ from, hosts[ host ].url + from.slice( 1 ) ] ) );
+				continue;
+			}
+			lines.push( `/${ top } ${ hosts[ host ].url }${ top }/ 301`, `/${ top }/* ${ hosts[ host ].url }${ top }/:splat 301` );
+		}
+		for ( const [ from, to ] of redirects[ key ].sort() ) {
+			lines.push( `${ from } ${ to } 301` );
+			if ( from.endsWith( '/' ) ) {
+				lines.push( `${ from.slice( 0, -1 ) } ${ to } 301` );
+			}
+		}
+		redirects[ key ] = lines;
+		fs.writeFileSync( path.join( hosts[ key ].dir, '_redirects' ), lines.join( '\n' ) + '\n' );
+	}
+
+	const moved = Object.fromEntries( keys.map( ( k ) => [ k, [ ...pages ].filter( ( [ , p ] ) => p.host === k ).map( ( [ page ] ) => page ) ] ) );
 	return {
-		moved: [ ...pages.keys() ],
-		problems: [ ...new Set( strays ), ...check( { dev, developers } ) ],
+		moved,
+		redirects,
+		problems: [
+			...new Set( strays ),
+			...check( { hosts: keys.map( ( k ) => [ hosts[ k ].url, hosts[ k ].dir ] ) } ),
+			...checkRedirects( { hosts, redirects } ),
+		],
 	};
 }
 
 /**
- * The search index for the host: for each page, its address from the host's root, its title, the
+ * Every redirect that leads nowhere: one whose target is not a page or folder on the host it names.
+ *
+ * @param {Object} o           Options.
+ * @param {Object} o.hosts     As split() takes them.
+ * @param {Object} o.redirects Each host's _redirects lines.
+ * @return {string[]} Problems.
+ */
+function checkRedirects( { hosts, redirects } ) {
+	const problems = [];
+	for ( const [ key, lines ] of Object.entries( redirects ) ) {
+		for ( const line of lines ) {
+			const to = line.split( ' ' )[ 1 ].replace( /:splat$/, '' );
+			const home = Object.values( hosts ).find( ( h ) => to.startsWith( h.url ) );
+			const rel = home ? to.slice( home.url.length ) : null;
+			if ( rel === null || ! fs.existsSync( path.join( home.dir, rel ) ) ) {
+				// The demo's files are put beside the pages after the split.
+				if ( ! DEMO.some( ( d ) => rel === d ) ) {
+					problems.push( `${ key }/_redirects: ${ line }` );
+				}
+			}
+		}
+	}
+	return problems;
+}
+
+/**
+ * The search index for a host: for each page, its address from the host's root, its title, the
  * door it is in, its summary, and each heading with an id, so a result can lead to the section.
  * Entities are decoded and tags dropped; nothing else is kept, so the file stays small.
  *
- * @param {string} dev The developer host, as written.
+ * @param {string} dev A host, as written.
+ * @param {Object} nav The definition, for the hosts' names.
  * @return {Array} [ { u, t, d, s, h: [ [ id, text ] ] } ].
  */
-function searchIndex( dev ) {
+function searchIndex( dev, nav = NAV ) {
 	// Tags are dropped until none are left, then each entity is decoded once, in one pass, so
 	// "&amp;lt;" stays "&lt;" and no decoded "<" can form a tag.
 	const named = { quot: '"', lt: '<', gt: '>', amp: '&', apos: "'" };
@@ -346,6 +484,8 @@ function searchIndex( dev ) {
 		.readdirSync( dev, { recursive: true } )
 		.filter( ( f ) => f.endsWith( 'index.html' ) && ! f.startsWith( 'demo' ) )
 		.sort();
+	// The page's own title, less its host's name: " | Riff Source".
+	const names = new RegExp( ` \\| (?:${ Object.values( nav.hosts ).join( '|' ) })$` );
 	const index = pages.map( ( file ) => {
 		const html = fs.readFileSync( path.join( dev, file ), 'utf8' );
 		const main = html.slice( html.indexOf( '<main' ), html.indexOf( '</main>' ) );
@@ -356,7 +496,7 @@ function searchIndex( dev ) {
 		const headings = [ ...main.matchAll( /<h[23][^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/h[23]>/g ) ].map( ( m ) => [ m[ 1 ], text( m[ 2 ] ) ] );
 		return {
 			u: file.replace( /index\.html$/, '' ),
-			t: title ? text( title[ 1 ] ).replace( / \| Riff Source$/, '' ) : '',
+			t: title ? text( title[ 1 ] ).replace( names, '' ) : '',
 			d: door ? text( door[ 1 ] ) : '',
 			s: summary ? text( summary[ 1 ] ) : '',
 			h: headings,
@@ -377,18 +517,16 @@ function searchIndex( dev ) {
 }
 
 /**
- * Every link on the host that leads nowhere: a page or file that is not there, or a fragment no
- * element on its page carries. Pages are read for their links, stylesheets for their url()s and
- * modules for their relative imports, so a shared file left behind fails too. Links off the host
- * are left alone.
+ * Every link on the hosts that leads nowhere: a page or file that is not there, or a fragment no
+ * element on its page carries, on the page's own host or, written out in full, on the other. Pages
+ * are read for their links, stylesheets for their url()s and modules for their relative imports,
+ * so a shared file left behind fails too. Links off both hosts are left alone.
  *
- * @param {Object} o            Options, as split() takes them.
- * @param {string} o.dev        The developer host.
- * @param {string} o.developers The developer host's address.
+ * @param {Object} o       Options.
+ * @param {Array}  o.hosts [ address, folder ] for each host.
  * @return {string[]} Problems, as "file: url".
  */
-function check( { dev, developers } ) {
-	const hosts = [ [ developers, dev ] ];
+function check( { hosts } ) {
 	const ids = new Map();
 	const idsOf = ( file ) => {
 		if ( ! ids.has( file ) ) {
@@ -490,24 +628,32 @@ function check( { dev, developers } ) {
 	return [ ...new Set( problems ) ];
 }
 
-module.exports = { searchIndex, split, check, relative, MOVED };
+module.exports = { searchIndex, split, check, relative, ownerOf, MOVED, DEMO };
 
 if ( require.main === module ) {
-	const [ out, dev, site, developers ] = process.argv.slice( 2 );
+	const [ out, sourceDir, developerDir, site, source, developer ] = process.argv.slice( 2 );
 	const address = /^https?:\/\/[a-z0-9.-]+(:[0-9]+)?\/([^\s?#]*\/)?$/;
 	if (
 		! out ||
-		! dev ||
-		! address.test( site || '' ) ||
-		! address.test( developers || '' ) ||
-		site === developers
+		! sourceDir ||
+		! developerDir ||
+		sourceDir === developerDir ||
+		! [ site, source, developer ].every( ( a ) => address.test( a || '' ) ) ||
+		new Set( [ site, source, developer ] ).size !== 3
 	) {
 		process.stderr.write(
-			'Usage: developers-site.js <out> <developers-out> <site-url/> <developers-url/>\n'
+			'Usage: developers-site.js <out> <source-out> <developer-out> <site-url/> <source-url/> <developer-url/>\n'
 		);
 		process.exit( 1 );
 	}
-	const { moved, problems } = split( { out, dev, site, developers } );
+	const { moved, problems } = split( {
+		out,
+		site,
+		hosts: {
+			source: { dir: sourceDir, url: source },
+			developer: { dir: developerDir, url: developer },
+		},
+	} );
 	if ( problems.length ) {
 		process.stderr.write(
 			`${ problems.length } link(s) lead nowhere:\n${ problems.map( ( p ) => `  ${ p }\n` ).join( '' ) }`
@@ -515,6 +661,6 @@ if ( require.main === module ) {
 		process.exit( 1 );
 	}
 	process.stdout.write(
-		`${ moved.length } pages moved to ${ developers }; every link on it resolves\n`
+		`${ moved.source.length } pages on ${ source } and ${ moved.developer.length } on ${ developer }; every link on them resolves\n`
 	);
 }

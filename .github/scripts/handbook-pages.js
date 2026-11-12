@@ -36,6 +36,8 @@ const REFERENCES = {
 };
 // Source's address, as a doc writes a link to one of its pages.
 const SOURCE = 'https://source.riffpress.com/';
+// The reference and the guides to building on Riff, which a doc may link at their own host.
+const DEVELOPER = 'https://developer.riffpress.com/';
 // A picture alone on its line.
 const PICTURE = /^!\[([^\]]+)\]\(([^)\s]+)\)\s*$/;
 
@@ -386,8 +388,11 @@ function build( list = HANDBOOKS ) {
 		// A link as the doc has it, made the page's own; and its words, where they are only the
 		// name of a file that has a page, the page's name.
 		const link = ( href, words ) => {
-			if ( href.startsWith( SOURCE ) ) {
-				const [ where, frag = '' ] = href.slice( SOURCE.length ).split( '#' );
+			const base = [ SOURCE, DEVELOPER ].find( ( b ) => href.startsWith( b ) );
+			if ( base ) {
+				let [ where, frag = '' ] = href.slice( base.length ).split( '#' );
+				// developer.riffpress.com's home is Build on Riff.
+				where = base === DEVELOPER && where === '' ? 'build/' : where;
 				built = built || new Set( [
 					...[ ...nav.entries().values() ].map( ( e ) => e.node.href ),
 					...handbookAt.keys(),

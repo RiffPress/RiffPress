@@ -10,12 +10,14 @@ name: Playground Preview Publish
 # blueprint names are copied out of it.
 #
 # For a pull request from this repository (not a fork, whose pages would be
-# published under the project's address), the site it built is deployed as a
-# Cloudflare Pages preview at pr-N.riffpress-developer.pages.dev, in the
-# developer site's project, with that same Playground blueprint as its
-# blueprint.json, so its "Try the demo" opens the
-# pull request's own build. Its placeholders are filled by the base branch's
-# site-preview.js, which only rewrites text, and it asks not to be indexed.
+# published under the project's address), the site it built is split between
+# the two hosts as the Pages workflow splits it and deployed as two Cloudflare
+# Pages previews: Source at pr-N.riffpress-developer.pages.dev, with that same
+# Playground blueprint as its blueprint.json, so its "Try the demo" opens the
+# pull request's own build, and the developer site at pr-N.build-on-riff.pages.dev,
+# each linking to the other's preview. Its placeholders are filled by the base
+# branch's site-preview.js and it is split by the base branch's
+# developers-site.js, which only read and rewrite text; neither asks to be indexed.
 
 on:
   workflow_run: # zizmor: ignore[dangerous-triggers] never checks out or executes pull request code
@@ -132,15 +134,24 @@ jobs:
           HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
           set -euo pipefail
-          BASE="https://pr-${PR_NUMBER}.riffpress-developer.pages.dev/"
+          SRC="https://pr-${PR_NUMBER}.riffpress-developer.pages.dev/"
+          DEV="https://pr-${PR_NUMBER}.build-on-riff.pages.dev/"
           VERSION=$(unzip -p artifacts/release-assets/riff.zip riff/riff.php | sed -nE 's/^ \* Version: *([0-9][0-9A-Za-z.-]*).*$/\1/p' | head -n1)
           STABLE=$( { curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" "https://api.github.com/repos/${GH_REPO}/releases/latest" || echo '{}'; } | jq -r '.tag_name // empty | ltrimstr("riff-") | ltrimstr("v")')
           [[ -n "$STABLE" && "$STABLE" != null ]] || STABLE="$VERSION"
-          cp preview-blueprint.json artifacts/site/blueprint.json
-          node .github/scripts/site-preview.js artifacts/site "$BASE" "$VERSION" "$STABLE" "$HEAD_SHA"
-          npx --yes wrangler@4 pages deploy artifacts/site --project-name riffpress-developer --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
-          # The preview is the site as written, with the reference under developers/, which is Riff Source's home.
-          echo "url=${BASE}developers/" >> "$GITHUB_OUTPUT"
+          # Filled for riffpress.com, as the Pages workflow fills the live site, then split onto the two previews.
+          node .github/scripts/site-preview.js artifacts/site "https://riffpress.com/" "$VERSION" "$STABLE" "$HEAD_SHA"
+          node .github/scripts/developers-site.js artifacts/site preview-source preview-developer "https://riffpress.com/" "$SRC" "$DEV"
+          cp preview-blueprint.json preview-source/blueprint.json
+          # A preview is not the site: nothing should index it.
+          for dir in preview-source preview-developer; do
+            printf 'User-agent: *\nDisallow: /\n' > "$dir/robots.txt"
+            printf '/*\n  X-Robots-Tag: noindex\n' >> "$dir/_headers"
+          done
+          npx --yes wrangler@4 pages project create build-on-riff --production-branch main 2> /dev/null || true
+          npx --yes wrangler@4 pages deploy preview-source --project-name riffpress-developer --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
+          npx --yes wrangler@4 pages deploy preview-developer --project-name build-on-riff --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
+          { echo "source=${SRC}"; echo "developer=${DEV}"; } >> "$GITHUB_OUTPUT"
       - name: Post or update the sticky comment
         if: steps.meta.outputs.skipped != 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -148,26 +159,29 @@ jobs:
           PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
           HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
           PLAYGROUND_URL: ${{ steps.playground.outputs.url }}
-          SITE_URL: ${{ steps.site.outputs.url }}
+          SOURCE_URL: ${{ steps.site.outputs.source }}
+          DEVELOPER_URL: ${{ steps.site.outputs.developer }}
         with:
           script: |
             const marker = '<!-- riff:playground-preview -->';
             const sha = process.env.HEAD_SHA;
             const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
-            // Four ways in, named for where each lands: the same Playground build opened on the
+            // Five ways in, named for where each lands: the same Playground build opened on the
             // standalone app (the blueprint's landing page), on the Listen page inside the theme, or
-            // on an album's post, and the pull request's own site.
+            // on an album's post, and the pull request's own two sites.
             const play = process.env.PLAYGROUND_URL;
             const at = ( path ) => play.replace( '?mode=seamless', `?mode=seamless&url=${ encodeURIComponent( path ) }` );
             const inTheme = at( '/listen/' );
             const onPost = at( '/compositions/' );
-            const site = process.env.SITE_URL;
+            const source = process.env.SOURCE_URL;
+            const developer = process.env.DEVELOPER_URL;
             const button = ( label, colour, logo ) => `https://img.shields.io/badge/${ encodeURIComponent( label ).replace( /-/g, '--' ) }-${ colour }?style=for-the-badge${ logo ? `&logo=${ logo }&logoColor=white` : '' }`;
             const buttons = [
               `[![Standalone app](${ button( 'Standalone app', '3858E9', 'wordpress' ) })](${ play })`,
               `[![Listen page](${ button( 'Listen page', '3858E9', 'wordpress' ) })](${ inTheme })`,
               `[![Blog post](${ button( 'Blog post', '3858E9', 'wordpress' ) })](${ onPost })`,
-              site ? `[![Website](${ button( 'Website', '1E1E1E' ) })](${ site })` : '',
+              source ? `[![Source](${ button( 'Source', '1E1E1E' ) })](${ source })` : '',
+              developer ? `[![Developer](${ button( 'Developer', '1E1E1E' ) })](${ developer })` : '',
             ].filter( Boolean ).join( ' ' );
             const body = [
               marker,
@@ -177,7 +191,7 @@ jobs:
               '',
               buttons,
               '',
-              '<sub><b>Standalone app</b> is <code>/listen/app/</code>, the installable player with no theme around it. <b>Listen page</b> is <code>/listen/</code>, the same player as a block inside the theme. <b>Blog post</b> is an album post with its Riff block. <b>Website</b> is the site as this branch builds it, before its pages are split between the hosts.</sub>',
+              '<sub><b>Standalone app</b> is <code>/listen/app/</code>, the installable player with no theme around it. <b>Listen page</b> is <code>/listen/</code>, the same player as a block inside the theme. <b>Blog post</b> is an album post with its Riff block. <b>Source</b> and <b>Developer</b> are source.riffpress.com and developer.riffpress.com as this branch builds them.</sub>',
               '',
             ].join('\n');
             const prNumber = parseInt(process.env.PR_NUMBER, 10);
