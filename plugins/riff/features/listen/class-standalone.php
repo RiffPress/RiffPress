@@ -573,35 +573,56 @@ final class Standalone {
 	}
 
 	/**
-	 * The card that offers to install the app, under the sidebar's library: the site's own icon and
-	 * name, one line on why, and Install. It starts hidden; app.js shows it from a listener's second
-	 * visit where the browser can install the page, and keeps it away once it is installed or
-	 * dismissed. Where the browser has no prompt of its own (Safari), Install shows its steps. The
-	 * line on why is a computer's, or a phone's, which has no window or media keys; app.js shows
-	 * the one for the screen.
+	 * The offer to keep the app, at the end of the sidebar's library: a row like the library's
+	 * own, the site's icon and name as an installed app shows them, where it would live, and Add.
+	 * It starts hidden; app.js shows it from a listener's second visit where the browser can
+	 * install the page, and keeps it away once it is installed or dismissed. Where the browser has
+	 * no prompt of its own (Safari), Add shows its steps. Where it would live is a Mac's Dock, a
+	 * phone's Home Screen or another computer's, and Add's name says it too; app.js shows the
+	 * one for the screen.
 	 *
 	 * @since 4.25.0
 	 * @since 5.7.0 A line on why for a phone.
+	 * @since 6.18.0 A row of the library's, with the site's name as its title and where it would
+	 *               live, a Mac's, a phone's or another computer's, as its line.
 	 *
 	 * @return string
 	 */
 	public static function install_card(): string {
-		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
-		$name = '' !== $name ? $name : riff_brand()['name'];
-		$icon = get_site_icon_url( 192 );
+		$name  = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
+		$name  = '' !== $name ? $name : riff_brand()['name'];
+		$icon  = get_site_icon_url( 192 );
+		$where = array(
+			/* translators: %s: the site's name. Add's name, where the line says "Keep it in your Dock". */
+			'mac'      => array( __( 'Keep it in your Dock', 'riff' ), __( 'Add %s to your Dock', 'riff' ) ),
+			/* translators: %s: the site's name. Add's name, where the line says "Keep it a click away". */
+			'computer' => array( __( 'Keep it a click away', 'riff' ), __( 'Add %s to this computer', 'riff' ) ),
+			/* translators: %s: the site's name. Add's name, where the line says "Add it to your Home Screen". */
+			'phone'    => array( __( 'Add it to your Home Screen', 'riff' ), __( 'Add %s to your Home Screen', 'riff' ) ),
+		);
+		$lines = '';
+		foreach ( $where as $screen => $line ) {
+			$lines .= sprintf(
+				'<p class="riff-app-install-line" data-riff-install-why="%1$s" data-riff-install-label="%2$s"%3$s>%4$s</p>',
+				esc_attr( $screen ),
+				esc_attr( sprintf( $line[1], $name ) ),
+				'computer' === $screen ? '' : ' hidden',
+				esc_html( $line[0] )
+			);
+		}
 		return sprintf(
-			'<div class="riff-app-install" data-riff-install hidden><img class="riff-app-install-icon" src="%1$s" data-riff-fallback="%8$s" alt="" width="48" height="48" loading="lazy" decoding="async"><div class="riff-app-install-text"><p class="riff-app-install-title">%2$s</p><p data-riff-install-why="computer">%3$s</p><p data-riff-install-why="phone" hidden>%9$s</p><p data-riff-install-how="mac" hidden>%4$s</p><p data-riff-install-how="ios" hidden>%5$s</p></div><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="install">%6$s</button><button type="button" class="riff-app-install-close" data-riff-app-action="install-dismiss" aria-label="%7$s">' . Player::icon( 'close' ) . '</button></div>',
+			'<div class="riff-app-install" data-riff-install hidden><img class="riff-app-install-icon" src="%1$s" data-riff-fallback="%2$s" alt="" width="48" height="48" loading="lazy" decoding="async"><div class="riff-app-install-text"><p class="riff-app-install-title" title="%3$s">%4$s</p>%5$s<p class="riff-app-install-line" data-riff-install-how="mac" hidden>%6$s</p><p class="riff-app-install-line" data-riff-install-how="ios" hidden>%7$s</p></div><button type="button" class="riff-app-install-add" data-riff-app-action="install" aria-label="%8$s">%9$s</button><button type="button" class="riff-app-install-close" data-riff-app-action="install-dismiss" aria-label="%10$s">' . Player::icon( 'close' ) . '</button></div>',
 			esc_url( $icon ? $icon : self::mark() ),
-			/* translators: %s: the site's name. */
-			esc_html( sprintf( __( 'Get the %s app', 'riff' ), $name ) ),
-			esc_html__( 'Listen in its own window, with your media keys.', 'riff' ),
-			esc_html__( 'In Safari, choose File, then Add to Dock.', 'riff' ),
-			esc_html__( 'Tap Share, then Add to Home Screen.', 'riff' ),
-			esc_html__( 'Install', 'riff' ),
-			esc_attr__( 'Not now', 'riff' ),
 			// The site icon's file can go missing while the setting remains; Riff's own icon stands in.
 			esc_url( self::mark() ),
-			esc_html__( 'Open it from your Home Screen, full screen, like any other app.', 'riff' )
+			esc_attr( $name ),
+			esc_html( $name ),
+			$lines,
+			esc_html__( 'In Safari, choose File, then Add to Dock.', 'riff' ),
+			esc_html__( 'Tap Share, then Add to Home Screen.', 'riff' ),
+			esc_attr( sprintf( $where['computer'][1], $name ) ),
+			esc_html__( 'Add', 'riff' ),
+			esc_attr__( 'Not now', 'riff' )
 		);
 	}
 
