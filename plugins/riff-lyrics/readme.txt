@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.9.1
+Stable tag: 1.9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,9 @@ Riff Lyrics adds a Lyrics view to Riff's Now Playing, opened from its button in 
 It is also the reference extension for Riff: it is built only on Riff's documented public API, so a change to Riff that would break a plugin breaks this one first.
 
 == Changelog ==
+
+= 1.9.2 =
+* Fixed: CI is green again: the Rights meta test registers its keys, the albums route asks once whether any music has an end, and the tests expect the renamed Together and account menu.
 
 = 1.9.1 =
 * Fixed: two saves at once both keep, a sign-in link gets through a private site's gate, and a release with nothing downstream is not red.
@@ -42,8 +45,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 * Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
 * Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
 * Fixed: a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select.
-
-= 1.7.0 =
-* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

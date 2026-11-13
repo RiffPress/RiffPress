@@ -250,7 +250,6 @@ class Test_Riff_Rights extends Riff_TestCase {
 		$this->assertSame( '', $track['src'] );
 		$this->assertSame( 'No longer available', $track['reason'] );
 		$hidden = new ReflectionMethod( Riff\Catalog_Rest::class, 'hidden_tracks' );
-		$hidden->setAccessible( true );
 		$this->assertContains( $this->track, $hidden->invoke( null ), 'not listed' );
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
@@ -264,9 +263,8 @@ class Test_Riff_Rights extends Riff_TestCase {
 
 	public function test_whether_any_music_has_an_end_is_asked_once_until_post_meta_changes(): void {
 		$hidden = new ReflectionMethod( Riff\Catalog_Rest::class, 'hidden_tracks' );
-		$hidden->setAccessible( true );
-		$asked = 0;
-		$count = static function ( $sql ) use ( &$asked ) {
+		$asked  = 0;
+		$count  = static function ( $sql ) use ( &$asked ) {
 			$asked += (int) str_contains( $sql, "meta_key = '" . Rights::UNTIL . "' AND meta_value <> '' LIMIT 1" );
 			return $sql;
 		};
@@ -339,7 +337,6 @@ class Test_Riff_Rights extends Riff_TestCase {
 
 	public function test_a_public_export_leaves_out_music_riff_may_play_refuses(): void {
 		$posts = new ReflectionMethod( Riff\Export::class, 'posts' );
-		$posts->setAccessible( true );
 		$this->assertContains( $this->track, $posts->invoke( null, true ) );
 		$this->gate();
 		$this->assertNotContains( $this->track, $posts->invoke( null, true ) );
