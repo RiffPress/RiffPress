@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.6.1...riff-sign-in-v0.7.0) (2026-11-13)
+
+
+### Features
+
+* **riff-sign-in:** a host may keep passkeys across subdomains by setting a parent domain as the relying party ID, through riff_sign_in_rp_id ([#1086](https://github.com/RiffPress/RiffPress/issues/1086)) ([9e4896a](https://github.com/RiffPress/RiffPress/commit/9e4896a13db2ffb15d783611e3ffab1084ca69e2))
+
 ## [0.6.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.6.0...riff-sign-in-v0.6.1) (2026-11-12)
 
 

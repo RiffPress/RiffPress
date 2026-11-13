@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.16.0
+Stable tag: 6.16.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.16.1 =
+* Fixed: a zip that adds no song loses only its file, keeping its private attachment with why.
+
 = 6.16.0 =
 * A link to a Riff previews large, with the site's name, a line about it and a card of its covers.
 * A host can let signed-in users who don't belong to a site listen together there.
@@ -161,9 +164,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Fixed: a refused upload's notice stays in sight beside an open panel, and the account menu test waits for the view it opens.
 * Fixed: the whole head of the sidebar in the frame folds and opens it, not only the icon.
 * Fixed: main's checks pass again: uninstall removes what Riff keeps between requests, four tests wait for what they check, and the pre-commit hook runs what CI runs.
-
-= 6.14.0 =
-* Riff Chimera sings from the panel beside the page, its heads drawn as large as the panel, and an open docked view no longer covers the sidebar.
-* About, with its credits, is open beside the page by default, and its cover offers the deck full screen.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
