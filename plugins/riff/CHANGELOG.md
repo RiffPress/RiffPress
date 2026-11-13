@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.17.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.16.1...riff-v6.17.0) (2026-11-13)
+
+
+### Features
+
+* **riff:** a host can show listeners its own name and mark in place of Riff's, with riff_brand ([#1089](https://github.com/RiffPress/RiffPress/issues/1089)) ([567475c](https://github.com/RiffPress/RiffPress/commit/567475cad96e6e41bceebad245eb37751b88dff0))
+* **rights:** an artist sets who holds their music's rights and its licence, and every play asks riff_may_play ([#1091](https://github.com/RiffPress/RiffPress/issues/1091)) ([7cfe71e](https://github.com/RiffPress/RiffPress/commit/7cfe71e8bbeaee263c16bed889fb50faa26b039f))
+
 ## [6.16.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.16.0...riff-v6.16.1) (2026-11-13)
 
 
