@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.17.3
+Stable tag: 6.17.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.17.4 =
+* Fixed: main's versions agree with the release manifest again.
+
 = 6.17.3 =
 * Fixed: the offer to keep the app is a quiet row at the end of the library, with the site's name and where it would live.
 * Fixed: CI is green again: the Rights meta test registers its keys, the albums route asks once whether any music has an end, and the tests expect the renamed Together and account menu.
@@ -158,8 +161,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 = 6.17.0 =
 * A host can show listeners its own name and mark in place of Riff's, with riff_brand.
 * An artist sets who holds their music's rights and its licence, and every play asks riff_may_play.
-
-= 6.16.1 =
-* Fixed: a zip that adds no song loses only its file, keeping its private attachment with why.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

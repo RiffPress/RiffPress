@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.9.2
+Stable tag: 1.9.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.9.3 =
+* Fixed: main's versions agree with the release manifest again.
+
 = 1.9.2 =
 * Fixed: CI is green again: the Rights meta test registers its keys, the albums route asks once whether any music has an end, and the tests expect the renamed Together and account menu.
 
@@ -40,10 +43,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 = 1.8.0 =
 * Riff's icons are WordPress's own, with the few it lacks drawn to match.
-
-= 1.7.1 =
-* Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
-* Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
-* Fixed: a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
