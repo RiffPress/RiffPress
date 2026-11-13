@@ -232,6 +232,50 @@ class Test_Riff_Sign_In_Passkeys extends Riff_TestCase {
 		$this->assertFalse( Passkeys::delete( $user->ID, 'gone' ) );
 	}
 
+	public function test_a_host_may_set_the_rp_id_to_a_parent_domain_and_nothing_else(): void {
+		$home = static fn() => 'https://open.example.com';
+		add_filter( 'pre_option_home', $home );
+		$this->assertSame( 'open.example.com', Passkeys::rp_id(), 'the host by default' );
+
+		$answer = 'example.com';
+		$filter = static function () use ( &$answer ) {
+			return $answer;
+		};
+		add_filter( 'riff_sign_in_rp_id', $filter );
+		$this->assertSame( 'example.com', Passkeys::rp_id(), 'a parent domain' );
+		foreach ( array( 'evil.example', 'com', 'ample.com', 'pen.example.com', '.example.com', 'example.com.', 'example..com', 'sub.open.example.com', '', null, array( 'example.com' ) ) as $wrong ) {
+			$answer = $wrong;
+			$this->assertSame( 'open.example.com', Passkeys::rp_id(), 'falls back from ' . wp_json_encode( $wrong ) );
+		}
+		$answer = 'Example.COM';
+		$this->assertSame( 'example.com', Passkeys::rp_id(), 'in lower case' );
+
+		// A passkey made for the parent domain works here, and the origin is still this host.
+		$user = self::factory()->user->create_and_get( array( 'user_email' => 'parent@example.com' ) );
+		wp_set_current_user( $user->ID );
+		[ , $cose ] = self::key_pair();
+		$this->assertSame( 'https://open.example.com', Passkeys::origin() );
+		$attempt = function ( string $origin ) use ( $user, $cose ) {
+			$options = Passkeys::creation_options( $user );
+			$this->assertSame( 'example.com', $options['rp']['id'] );
+			$object = self::cbor_map( array( 'fmt' => 'none', 'attStmt' => array(), 'authData' => self::auth_data( random_bytes( 16 ), $cose ) ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			return Passkeys::create( $user, array( 'id' => Passkeys::b64( random_bytes( 16 ) ), 'response' => array( 'clientDataJSON' => self::client_data( 'webauthn.create', $options['challenge'], $origin ), 'attestationObject' => Passkeys::b64( $object ) ) ), 'Phone' ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		};
+		$this->assertSame( 'riff_sign_in_origin', $attempt( 'https://other.example.com' )->get_error_code(), 'a sibling subdomain shares the RP ID but not the origin' );
+		$this->assertSame( 'riff_sign_in_origin', $attempt( 'https://example.com' )->get_error_code(), 'nor does the parent domain itself' );
+		$this->assertIsArray( $attempt( '' ) );
+		$this->assertSame( 'example.com', Passkeys::request_options()['publicKey']['rpId'] );
+
+		// An IP address has no parent domain.
+		remove_filter( 'pre_option_home', $home );
+		$ip     = static fn() => 'http://127.0.0.1:8889';
+		add_filter( 'pre_option_home', $ip );
+		$answer = '0.0.1';
+		$this->assertSame( '127.0.0.1', Passkeys::rp_id() );
+		remove_filter( 'pre_option_home', $ip );
+		remove_filter( 'riff_sign_in_rp_id', $filter );
+	}
+
 	public function test_a_registration_for_another_site_or_without_a_touch_is_refused(): void {
 		$user       = self::factory()->user->create_and_get( array( 'user_email' => 'else@example.com' ) );
 		[ , $cose ] = self::key_pair();
