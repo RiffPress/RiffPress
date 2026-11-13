@@ -14,7 +14,7 @@
  * the wake lock) are modules loaded when first needed. Every module is a WordPress script module
  * registered by Player::enqueue() and imported by its id, which the page's import map resolves. No
  * build step: these files are what ships. */
-import { parse, covers } from 'riff-player/helpers';
+import { parse, covers, passHeader } from 'riff-player/helpers';
 import { createPlayer } from 'riff-player/state';
 import { media } from 'riff-player/media';
 import { registry } from 'riff-player/registry';
@@ -408,6 +408,7 @@ function start() {
 				headers: {
 					Accept: 'application/json',
 					...( P.me ? { 'X-WP-Nonce': P.me.nonce } : {} ),
+					...passHeader(),
 				},
 			} );
 		},

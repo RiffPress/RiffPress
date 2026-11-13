@@ -161,3 +161,78 @@ function riff_brand(): array {
 		'description' => $line,
 	);
 }
+
+/**
+ * The rights of an album's post or a track: who holds them, the year, the licence and its deed,
+ * the ISRC and UPC, and the uploader's statement. A track has its album's unless it says otherwise.
+ *
+ * @since 6.17.0
+ *
+ * @see Riff\Rights::get() for the keys.
+ *
+ * @param int $post_id Post or attachment ID.
+ * @return array The rights, after the `riff_rights` filter.
+ */
+function riff_rights( int $post_id ): array {
+	return Riff\Rights::get( $post_id );
+}
+
+/**
+ * Whether a user may play a track: the gate every play goes through, after the
+ * `riff_may_play` filter. `pass` and `via` are read from the request when left out.
+ *
+ * @since 6.17.0
+ *
+ * @param int   $track_id Attachment ID.
+ * @param int   $user_id  User ID, 0 for a visitor.
+ * @param array $context  {
+ *     Optional. Where and how the play is asked.
+ *
+ *     @type string $pass The pass, or empty. Default the request's.
+ *     @type string $via  page, audio, rest, feed or export. Default the request's.
+ *     @type int    $post The post the track plays from, or 0.
+ * }
+ * @return true|WP_Error
+ */
+function riff_may_play( int $track_id, int $user_id, array $context = array() ) {
+	return Riff\Rights::may_play( $track_id, $user_id, $context );
+}
+
+/**
+ * Whether a user may download an album's or a track's files, after the `riff_may_download` filter.
+ *
+ * @since 6.17.0
+ *
+ * @param int $post_id Post or attachment ID.
+ * @param int $user_id User ID, 0 for a visitor.
+ * @return bool
+ */
+function riff_may_download( int $post_id, int $user_id ): bool {
+	return Riff\Rights::may_download( $post_id, $user_id );
+}
+
+/**
+ * The pass the current request carries, from the `riff-pass` query argument or the X-Riff-Pass
+ * header, or empty.
+ *
+ * @since 6.17.0
+ *
+ * @return string
+ */
+function riff_pass(): string {
+	return Riff\Rights::pass();
+}
+
+/**
+ * The link that shares a post, carrying a pass when given one, after the `riff_share_url` filter.
+ * Unescaped: print it through esc_url().
+ *
+ * @since 6.17.0
+ *
+ * @param int    $post_id Post ID.
+ * @param string $pass    A pass, or empty.
+ * @return string
+ */
+function riff_share_url( int $post_id, string $pass = '' ): string {
+	return Riff\Rights::share_url( $post_id, $pass );
+}

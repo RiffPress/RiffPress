@@ -2,7 +2,7 @@
  * from the REST route, and a browse view as the server rendered it at its address. And prefetch:
  * a view is fetched as soon as it is likely to be wanted. */
 
-import { route as routed } from 'riff-app/helpers';
+import { passHeader, route as routed } from 'riff-app/helpers';
 
 // How many answers, and how many views, are remembered: the ones wanted last, so a long session
 // keeps what going back needs and lets the rest go.
@@ -85,7 +85,9 @@ export function fetching( ctx ) {
 		const part = new URL( href, location.href );
 		part.searchParams.set( 'riff_part', 'view' );
 		return remember( rendered, href, () =>
-			fetch( part, { headers: { Accept: 'text/html' } } )
+			fetch( part, {
+				headers: { Accept: 'text/html', ...passHeader() },
+			} )
 				.then( ( r ) => {
 					if ( ! r.ok ) {
 						throw new Error( String( r.status ) );

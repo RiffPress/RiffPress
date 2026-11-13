@@ -149,6 +149,60 @@ final class Private_Site {
 		if ( self::allowed() || ! empty( $wp->query_vars['rest_route'] ) ) {
 			return;
 		}
+		// A request with a pass is let as far as knowing which page it asks for, and no further
+		// unless the host says the pass opens that one.
+		if ( '' !== Rights::pass() ) {
+			add_action( 'template_redirect', array( self::class, 'gate_passed' ), 0 );
+			return;
+		}
+		self::refuse();
+	}
+
+	/**
+	 * Lets a visitor with a pass see the one page the pass is for, on a private site: the host's
+	 * riff_private_pass says which. Anything else is refused as the site is.
+	 *
+	 * @since 6.17.0
+	 */
+	public static function gate_passed(): void {
+		if ( ! self::passes( (int) get_queried_object_id() ) ) {
+			self::refuse();
+		}
+	}
+
+	/**
+	 * Whether the request's pass opens one post or track of a private site to a visitor.
+	 *
+	 * @since 6.17.0
+	 *
+	 * @param int $post_id Post or attachment ID.
+	 * @return bool
+	 */
+	public static function passes( int $post_id ): bool {
+		$pass = Rights::pass();
+		if ( '' === $pass || $post_id <= 0 ) {
+			return false;
+		}
+		/**
+		 * Filters whether a pass opens a post or a track of a private site to a visitor: its page,
+		 * and with it the signed addresses of the music on it, which riff_may_play is asked about
+		 * again with the same pass as each file is fetched. Nothing else on the site opens: other
+		 * pages and the REST API stay closed. Riff knows no passes, so it is false unless the host
+		 * that issued the pass says otherwise.
+		 *
+		 * @since 6.17.0
+		 *
+		 * @param bool   $allowed Whether the pass opens it. Default false.
+		 * @param string $pass    The pass, from `riff-pass` or X-Riff-Pass.
+		 * @param int    $post_id The post or attachment asked for.
+		 */
+		return true === apply_filters( 'riff_private_pass', false, $pass, $post_id );
+	}
+
+	/**
+	 * Ends the request as a private site's refusal.
+	 */
+	private static function refuse(): void {
 		/**
 		 * Fires before a private site refuses a visitor, for a page of the site's own in place of
 		 * WordPress's message.

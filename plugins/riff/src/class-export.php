@@ -259,12 +259,35 @@ final class Export {
 		$ids = array_keys( $open );
 		foreach ( $rows as $row ) {
 			$parent = (int) $row->post_parent;
-			if ( 'attachment' === $row->post_type && ( ! $parent || isset( $open[ $parent ] ) ) && ! Protect::is( (int) $row->ID ) ) {
+			// And only music anyone may play now: riff_may_play, asked as a visitor, for an export.
+			if ( 'attachment' === $row->post_type && ( ! $parent || isset( $open[ $parent ] ) ) && ! Protect::is( (int) $row->ID ) && self::playable( $row ) ) {
 				$ids[] = (int) $row->ID;
 			}
 		}
 		sort( $ids );
 		return $ids;
+	}
+
+	/**
+	 * Whether a public archive may carry an attachment: anything but audio and video, and music
+	 * riff_may_play lets a visitor play.
+	 *
+	 * @param object $row The attachment's row: ID and post_type at least.
+	 * @return bool
+	 */
+	private static function playable( $row ): bool {
+		$type = strtok( (string) get_post_mime_type( (int) $row->ID ), '/' );
+		if ( 'audio' !== $type && 'video' !== $type ) {
+			return true;
+		}
+		return true === Rights::may_play(
+			(int) $row->ID,
+			0,
+			array(
+				'via'  => 'export',
+				'pass' => '',
+			)
+		);
 	}
 
 	/**

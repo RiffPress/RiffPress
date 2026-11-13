@@ -201,6 +201,42 @@ Since 6.8.0. Fires in `plugins/riff/src/class-import.php`.
 | `$id` | `int` | The zip's attachment ID. |
 | `$author` | `int` | The ID of the user who uploaded it, whom the import runs as. |
 
+### `riff_item_links`
+
+Filters the links shown with a track's info in the player, after its credits and rights: a host's "Report" link, say. Each is `label` and `url`; one without both, or with an address that isn't http or https, is left out. Empty by default.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$links` | `array[]` | Links, each with `label` and `url`. |
+| `$post_id` | `int` | Attachment ID; its album's post is its post_parent. |
+
+### `riff_may_download`
+
+Filters whether a user may download an album's or a track's files. Where downloads are off, Riff shows no download link to anyone who can't edit the music.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$allowed` | `bool` | Whether they may. Default the Downloads switch, on until turned off. |
+| `$post_id` | `int` | Post or attachment ID. |
+| `$user_id` | `int` | User ID, 0 for a visitor. |
+
+### `riff_may_play`
+
+Filters whether a user may play a track. Every play asks: the tracks on a page, over REST, in a feed or an export, and each request for a protected file. A refused track is listed as locked, with no file, and a WP_Error's message says why ("No longer available" for one past its riff_available_until). A host checks a pass here, from the `riff-pass` query argument or the X-Riff-Pass header.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$allowed` | `true\|WP_Error` | True, or why not. |
+| `$track_id` | `int` | Attachment ID. |
+| `$user_id` | `int` | User ID, 0 for a visitor. |
+| `$context` | `array` | { } |
+
 ### `riff_mcp`
 
 Filters whether AI assistants may use Riff's abilities over MCP. On, and with the MCP Adapter plugin active, `/wp-json/mcp/riff` serves each of them as a tool to a signed-in user, and the adapter's default server lists them. Each still does only what that user may do. Off, there is no such server, and the default server does not list them.
@@ -226,6 +262,18 @@ Since 6.16.0. Fires in `plugins/riff/src/class-share.php`.
 | `$tags` | `string[]` | The tags, keyed by property or name. |
 | `$context` | `array` | `{ kind: 'site', page: int, url: string }`: the Listen page's ID, 0 for a theme's front page, and the page's address. |
 
+### `riff_play_url`
+
+Filters a playable address as Riff hands it out, once riff_may_play has allowed the play: on a page, over REST, in the Listen app. A protected file's signed address already carries the request's `riff-pass`, so the file's own request asks riff_may_play with it again. A host that signs addresses its own way (a CDN, private media) signs here, and can end the address sooner than Riff's own signature, which lasts at least Protect::TTL.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | Address. |
+| `$track_id` | `int` | Attachment ID. |
+| `$context` | `array` | pass, via and post. |
+
 ### `riff_post_blocks`
 
 Filters whether a post's blocks are served as a tree at riff/v1/posts/{id}/blocks to someone who cannot edit the post.
@@ -238,6 +286,18 @@ Since 6.5.0. Fires in `plugins/riff/src/class-blocks-rest.php`.
 | --- | --- | --- |
 | `$on` | `bool` | Whether to serve them. Default false. |
 | `$post` | `WP_Post` | The post asked for. |
+
+### `riff_private_pass`
+
+Filters whether a pass opens a post or a track of a private site to a visitor: its page, and with it the signed addresses of the music on it, which riff_may_play is asked about again with the same pass as each file is fetched. Nothing else on the site opens: other pages and the REST API stay closed. Riff knows no passes, so it is false unless the host that issued the pass says otherwise.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-private-site.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$allowed` | `bool` | Whether the pass opens it. Default false. |
+| `$pass` | `string` | The pass, from `riff-pass` or X-Riff-Pass. |
+| `$post_id` | `int` | The post or attachment asked for. |
 
 ### `riff_profile_url`
 
@@ -300,6 +360,27 @@ Since 5.7.0. Fires in `plugins/riff/src/class-protect.php`.
 | `$id` | `int` | Attachment ID. |
 | `$expires` | `int` | When the address should stop working, as a Unix time: an hour on. |
 
+### `riff_rights`
+
+Filters the rights of an album's post or a track: who holds them, the year, the licence, the ISRC and UPC, and the uploader's statement. A track has its album's unless it says otherwise. `explicit` is false while every value is a default, and Riff shows nothing then.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$rights` | `array` | holder, year, license, license_url, license_label, isrc, upc, attested, explicit. |
+| `$post_id` | `int` | Post or attachment ID. |
+
+### `riff_rights_attestation_required`
+
+Filters whether an uploader must state they own or control the rights before their music is published. Riff keeps the statement (`riff_attested`) and shows it; requiring it is the host's choice, and the host enforces it where its uploads arrive.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$required` | `bool` | Whether it is required. Default false. |
+
 ### `riff_share_image`
 
 Filters the image a link to the site's own address or its Listen page is previewed with: Riff's card, or where it can't draw one, the largest album cover or the site's icon. A picture link previews can show only, PNG, JPEG, GIF or WebP, and never a protected file's address: anything else is ignored, and Riff's own is used.
@@ -310,6 +391,18 @@ Since 6.16.0. Fires in `plugins/riff/src/class-share.php`.
 | --- | --- | --- |
 | `$image` | `array\|null` | `{ url, width, height, alt }`, or null for none. |
 | `$context` | `array` | `{ kind: 'site', page: int, url: string }`, as `riff_open_graph` has it. |
+
+### `riff_share_url`
+
+Filters the link that shares a post. A host's expiring link opens it with its pass.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$url` | `string` | Link. |
+| `$post_id` | `int` | Post ID. |
+| `$pass` | `string` | The pass it carries, or empty. |
 
 ### `riff_sources`
 
@@ -428,6 +521,18 @@ Since 6.15.1. Fires in `plugins/riff/src/class-import.php`.
 | --- | --- | --- |
 | `$id` | `int` | The zip's attachment ID. |
 | `$result` | `array\|WP_Error` | The import's report, as Import::zip() gives it, or why it failed. |
+
+### `riff_played`
+
+Fires once for each play a listener's player reports, as it adds the play to their history: when a track starts. A host counts plays here, per pass.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-likes.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$track_id` | `int` | Attachment ID. |
+| `$user_id` | `int` | User ID. |
+| `$context` | `array` | { } |
 
 ### `riff_private_refused`
 

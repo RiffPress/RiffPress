@@ -3,7 +3,14 @@
  * or /users/me/playlists. A visitor's likes and history stay in this browser. The first page a
  * listener opens after signing in sends what this browser kept to the account and forgets it here,
  * so a shared computer keeps nothing of theirs once they sign out. */
-import { fmt, parse, read, write, drop } from 'riff-player/helpers';
+import {
+	fmt,
+	parse,
+	read,
+	write,
+	drop,
+	passHeader,
+} from 'riff-player/helpers';
 
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
@@ -156,6 +163,7 @@ export function account( P ) {
 					Accept: 'application/json',
 					'Content-Type': 'application/json',
 					'X-WP-Nonce': me.nonce,
+					...passHeader(),
 				},
 				body: body ? JSON.stringify( body ) : undefined,
 			} ).then( ( r ) =>

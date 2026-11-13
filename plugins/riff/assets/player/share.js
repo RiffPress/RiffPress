@@ -2,6 +2,8 @@
  * link is the track's post with the track named, so it opens on that track. Loaded on demand, at
  * the first press of Share. */
 
+import { pass } from 'riff-player/helpers';
+
 // Strings are WordPress translations of this module (wp_set_script_module_translations()).
 // Core prints wp.i18n only when there are translations, so without it the strings are the
 // English they are written in.
@@ -15,6 +17,10 @@ export default function share( P ) {
 			const u = new URL( t.post.url, location.href );
 			if ( t.id ) {
 				u.searchParams.set( P.SHARED, t.id );
+			}
+			// A link opened with a pass shares it on, so the page it opens lets the music play.
+			if ( pass() ) {
+				u.searchParams.set( 'riff-pass', pass() );
 			}
 			url = u.toString();
 		}

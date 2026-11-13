@@ -178,35 +178,40 @@ final class Tracks {
 
 		return self::filter(
 			array(
-				'id'       => (string) $attachment_id,
-				'src'      => $src,
-				'type'     => $type,
-				'title'    => self::title( $attachment_id, $meta ),
-				'artist'   => isset( $meta['artist'] ) ? (string) $meta['artist'] : '',
-				'album'    => isset( $meta['album'] ) ? (string) $meta['album'] : '',
-				'year'     => isset( $meta['year'] ) && is_numeric( $meta['year'] ) ? (int) $meta['year'] : 0,
+				'id'        => (string) $attachment_id,
+				'src'       => $src,
+				'type'      => $type,
+				'title'     => self::title( $attachment_id, $meta ),
+				'artist'    => isset( $meta['artist'] ) ? (string) $meta['artist'] : '',
+				'album'     => isset( $meta['album'] ) ? (string) $meta['album'] : '',
+				'year'      => isset( $meta['year'] ) && is_numeric( $meta['year'] ) ? (int) $meta['year'] : 0,
 				// The disc of a set, from the file's tags: an MP3's part-of-a-set frame, which WordPress
 				// keeps on upload as part_of_a_set, and a FLAC, Ogg or M4A file's disc number, which
 				// Media::tags() keeps under the same name. Written as a number or as "1/2", disc 1 of 2.
-				'disc'     => self::disc( $meta['part_of_a_set'] ?? '' ),
-				'duration' => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
+				'disc'      => self::disc( $meta['part_of_a_set'] ?? '' ),
+				'duration'  => isset( $meta['length'] ) ? (float) $meta['length'] : 0,
 				// The language the file's tags name, which Media::language() keeps on upload, so a
 				// title in another script can say what it is.
-				'lang'     => Media::language_code( (string) ( $meta['language'] ?? '' ) ),
+				'lang'      => Media::language_code( (string) ( $meta['language'] ?? '' ) ),
 				// What WordPress read from the file on upload: the container, the bit rate, whether it is
 				// lossless, and for a lossless file its bit depth and sample rate. The player shows them
 				// on every track, the way the streaming services do.
-				'format'   => strtolower( (string) ( $file['dataformat'] ?? $file['fileformat'] ?? '' ) ),
-				'bitrate'  => isset( $file['bitrate'] ) ? (int) round( (float) $file['bitrate'] / 1000 ) : 0,
-				'lossless' => ! empty( $file['lossless'] ),
-				'bits'     => (int) ( $file['bits_per_sample'] ?? 0 ),
-				'rate'     => (int) ( $file['sample_rate'] ?? 0 ),
+				'format'    => strtolower( (string) ( $file['dataformat'] ?? $file['fileformat'] ?? '' ) ),
+				'bitrate'   => isset( $file['bitrate'] ) ? (int) round( (float) $file['bitrate'] / 1000 ) : 0,
+				'lossless'  => ! empty( $file['lossless'] ),
+				'bits'      => (int) ( $file['bits_per_sample'] ?? 0 ),
+				'rate'      => (int) ( $file['sample_rate'] ?? 0 ),
 				// Level data, when something measured it on upload and stored it as riff_levels.
-				'levels'   => isset( $meta['riff_levels'] ) && is_string( $meta['riff_levels'] ) ? $meta['riff_levels'] : '',
-				'art'      => $art,
-				'captions' => 'video' === $type ? self::captions( $attachment_id ) : array(),
-				'video'    => $video,
-				'post'     => self::post( $post_id ),
+				'levels'    => isset( $meta['riff_levels'] ) && is_string( $meta['riff_levels'] ) ? $meta['riff_levels'] : '',
+				'art'       => $art,
+				'captions'  => 'video' === $type ? self::captions( $attachment_id ) : array(),
+				'video'     => $video,
+				'post'      => self::post( $post_id ),
+				// What the artist chose: the rights and licence, null while nothing is set, and
+				// whether this listener may download the file.
+				'rights'    => Rights::for_track( $attachment_id ),
+				'downloads' => Rights::may_download( $attachment_id, get_current_user_id() ),
+				'links'     => Rights::links( $attachment_id ),
 			),
 			$attachment_id,
 			$post_id
@@ -364,9 +369,36 @@ final class Tracks {
 		 * @param int   $attachment_id Attachment ID, or 0 for a file outside the Media Library.
 		 * @param int   $post_id       The post the track appears in, or 0.
 		 */
-		if ( (bool) apply_filters( 'riff_can_play', true, $track, $attachment_id, $post_id ) ) {
+		if ( ! (bool) apply_filters( 'riff_can_play', true, $track, $attachment_id, $post_id ) ) {
+			return self::lock( $track, $attachment_id, $post_id );
+		}
+		if ( ! $attachment_id ) {
 			return $track;
 		}
+		// The one gate every play goes through, with where it is asked and the pass it carries.
+		$context = array(
+			'pass' => Rights::pass(),
+			'via'  => Rights::via(),
+			'post' => $post_id,
+		);
+		$allowed = Rights::may_play( $attachment_id, get_current_user_id(), $context );
+		if ( true !== $allowed ) {
+			return self::lock( $track, $attachment_id, $post_id, $allowed->get_error_message() );
+		}
+		$track['src'] = Rights::play_url( $track['src'], $attachment_id, $context );
+		return $track;
+	}
+
+	/**
+	 * A track with its file and video taken away, listed with where to unlock it.
+	 *
+	 * @param array  $track         Track.
+	 * @param int    $attachment_id Attachment ID, or 0 for a bare address.
+	 * @param int    $post_id       Post ID, or 0.
+	 * @param string $reason        Why, for the listener, or empty.
+	 * @return array
+	 */
+	private static function lock( array $track, int $attachment_id, int $post_id, string $reason = '' ): array {
 		/**
 		 * Filters where a locked track sends the visitor to unlock it: a sign-up, membership or
 		 * checkout page.
@@ -383,6 +415,7 @@ final class Tracks {
 		$track['video']  = null;
 		$track['locked'] = true;
 		$track['unlock'] = esc_url_raw( $unlock );
+		$track['reason'] = sanitize_text_field( $reason );
 		return $track;
 	}
 
@@ -407,62 +440,62 @@ final class Tracks {
 			'title'      => 'riff-track',
 			'type'       => 'object',
 			'properties' => array(
-				'id'       => array(
+				'id'        => array(
 					'type'        => 'string',
 					'description' => __( 'The attachment ID, or "url:" and a hash for a file outside the Media Library.', 'riff' ),
 				),
-				'src'      => array(
+				'src'       => array(
 					'type'   => 'string',
 					'format' => 'uri',
 				),
-				'type'     => array(
+				'type'      => array(
 					'type' => 'string',
 					'enum' => array( 'audio', 'video' ),
 				),
-				'title'    => array( 'type' => 'string' ),
-				'artist'   => array( 'type' => 'string' ),
-				'album'    => array( 'type' => 'string' ),
-				'year'     => array(
+				'title'     => array( 'type' => 'string' ),
+				'artist'    => array( 'type' => 'string' ),
+				'album'     => array( 'type' => 'string' ),
+				'year'      => array(
 					'type'        => 'integer',
 					'description' => __( 'The year from the file\'s tags, or 0.', 'riff' ),
 				),
-				'disc'     => array(
+				'disc'      => array(
 					'type'        => 'integer',
 					'description' => __( 'Which disc of a set the track is on, from the file\'s disc number tag (1 for "1/2"), or 0 when the tags do not say.', 'riff' ),
 				),
-				'duration' => array(
+				'duration'  => array(
 					'type'        => 'number',
 					'description' => __( 'Seconds, 0 when unknown.', 'riff' ),
 				),
-				'lang'     => array(
+				'lang'      => array(
 					'type'        => 'string',
 					'description' => __( 'The language of the title and artist, as a lang attribute takes it, from the file\'s tags; empty when the file does not say.', 'riff' ),
 				),
-				'format'   => array(
+				'format'    => array(
 					'type'        => 'string',
 					'description' => __( 'The container, lower case, as WordPress read it from the file: mp3, flac, m4a. Empty when unknown.', 'riff' ),
 				),
-				'bitrate'  => array(
+				'bitrate'   => array(
 					'type'        => 'integer',
 					'description' => __( 'Kilobits per second, 0 when unknown.', 'riff' ),
 				),
-				'lossless' => array(
+				'lossless'  => array(
 					'type'        => 'boolean',
 					'description' => __( 'Whether the encoding is lossless.', 'riff' ),
 				),
-				'bits'     => array(
+				'bits'      => array(
 					'type'        => 'integer',
 					'description' => __( 'Bits per sample, as WordPress read it from the file; 0 when the format does not say, as MP3 does not.', 'riff' ),
 				),
-				'rate'     => array(
+				'rate'      => array(
 					'type'        => 'integer',
 					'description' => __( 'Samples per second, 0 when unknown.', 'riff' ),
 				),
-				'levels'   => array(
+				'levels'    => array(
 					'type'        => 'string',
 					'description' => __( 'The track\'s loudness over time as digits 0 to 9, one per sample, when something has measured it; the drawn cover puts it in the groove. Empty otherwise.', 'riff' ),
 				),
-				'art'      => array(
+				'art'       => array(
 					'type'        => 'array',
 					'description' => __( 'Artwork, smallest first.', 'riff' ),
 					'items'       => array(
@@ -477,12 +510,12 @@ final class Tracks {
 						),
 					),
 				),
-				'captions' => array(
+				'captions'  => array(
 					'type'        => 'array',
 					'description' => __( 'Text tracks for a video: the WebVTT file its Captions field names, or the tracks its video block carries.', 'riff' ),
 					'items'       => self::captions_schema(),
 				),
-				'video'    => array(
+				'video'     => array(
 					'type'       => array( 'object', 'null' ),
 					'properties' => array(
 						'src'      => array( 'type' => 'string' ),
@@ -493,7 +526,7 @@ final class Tracks {
 						),
 					),
 				),
-				'post'     => array(
+				'post'      => array(
 					'type'       => array( 'object', 'null' ),
 					'properties' => array(
 						'id'      => array( 'type' => 'integer' ),
@@ -505,13 +538,54 @@ final class Tracks {
 						),
 					),
 				),
-				'locked'   => array(
+				'rights'    => array(
+					'type'        => array( 'object', 'null' ),
+					'description' => __( 'The rights the artist set on the track or its album, from riff_rights; null while nothing is set.', 'riff' ),
+					'properties'  => array(
+						'holder'        => array( 'type' => 'string' ),
+						'year'          => array(
+							'type'        => 'integer',
+							'description' => __( 'The year for the ℗ line, or 0.', 'riff' ),
+						),
+						'license'       => array( 'type' => 'string' ),
+						'license_url'   => array(
+							'type'        => 'string',
+							'description' => __( 'The licence\'s deed, or empty for all rights reserved.', 'riff' ),
+						),
+						'license_label' => array( 'type' => 'string' ),
+						'isrc'          => array( 'type' => 'string' ),
+						'attested'      => array(
+							'type'        => 'boolean',
+							'description' => __( 'Whether the uploader stated they own or control the rights.', 'riff' ),
+						),
+					),
+				),
+				'downloads' => array(
+					'type'        => 'boolean',
+					'description' => __( 'Whether the current visitor may download the file, from riff_may_download.', 'riff' ),
+				),
+				'links'     => array(
+					'type'        => 'array',
+					'description' => __( 'Links a host adds to the track\'s info, from riff_item_links: a report link, say. Empty by default.', 'riff' ),
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'label' => array( 'type' => 'string' ),
+							'url'   => array( 'type' => 'string' ),
+						),
+					),
+				),
+				'locked'    => array(
 					'type'        => 'boolean',
 					'description' => __( 'Whether the current visitor may not play the track, as riff_can_play decided. A locked track has no src.', 'riff' ),
 				),
-				'unlock'   => array(
+				'unlock'    => array(
 					'type'        => 'string',
 					'description' => __( 'Where a locked track sends the visitor to unlock it, from riff_unlock_url. Empty otherwise.', 'riff' ),
+				),
+				'reason'    => array(
+					'type'        => 'string',
+					'description' => __( 'Why a locked track is locked, for the listener, from riff_may_play: "No longer available" for one past its availability. Empty otherwise.', 'riff' ),
 				),
 			),
 		);
@@ -579,8 +653,12 @@ final class Tracks {
 		if ( $track['post'] ) {
 			$track['post']['private'] = ! empty( $track['post']['private'] );
 		}
-		$track['locked'] = ! empty( $track['locked'] );
-		$track['unlock'] = is_string( $track['unlock'] ?? null ) ? $track['unlock'] : '';
+		$track['locked']    = ! empty( $track['locked'] );
+		$track['unlock']    = is_string( $track['unlock'] ?? null ) ? $track['unlock'] : '';
+		$track['reason']    = $track['locked'] && is_string( $track['reason'] ?? null ) ? $track['reason'] : '';
+		$track['rights']    = is_array( $track['rights'] ?? null ) ? $track['rights'] : null;
+		$track['downloads'] = ! array_key_exists( 'downloads', $track ) || ! empty( $track['downloads'] );
+		$track['links']     = Rights::clean_links( $track['links'] ?? array() );
 		return $track;
 	}
 
