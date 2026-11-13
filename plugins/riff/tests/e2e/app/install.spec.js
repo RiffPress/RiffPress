@@ -50,6 +50,22 @@ test.describe( 'Standalone', () => {
 		await offer();
 		await expect( card ).toBeVisible();
 		await expect( card.locator( '.riff-app-install-title' ) ).toHaveText( /^Get the .+ app$/ );
+		// A calm card on the app's surface, Install the one thing drawn in the accent.
+		expect(
+			await card.evaluate( ( el ) => {
+				const probe = document.createElement( 'div' );
+				probe.style.cssText = 'background: var(--riff-app-surface); color: var(--riff-app-accent)';
+				el.parentElement.append( probe );
+				const want = getComputedStyle( probe );
+				const install = el.querySelector( '.riff-pill' );
+				const out = {
+					card: getComputedStyle( el ).backgroundImage === 'none' && getComputedStyle( el ).backgroundColor === want.backgroundColor,
+					install: getComputedStyle( install ).backgroundColor === want.color,
+				};
+				probe.remove();
+				return out;
+			} )
+		).toEqual( { card: true, install: true } );
 		// Whatever the site icon is, the card shows an image that loaded.
 		await expect.poll( () => card.locator( 'img' ).evaluate( ( img ) => img.complete && img.naturalWidth > 0 ) ).toBe( true );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '[data-riff-install]' ).analyze() ).violations ).toEqual( [] );

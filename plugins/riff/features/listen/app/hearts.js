@@ -3,7 +3,7 @@
 import { fmt, parse } from 'riff-app/helpers';
 
 export function hearts( ctx ) {
-	const { api, app, view, browseArgs, __, tell } = ctx;
+	const { api, app, view, browse, __, tell } = ctx;
 
 	function paintLikes() {
 		if ( typeof api.liked !== 'function' ) {
@@ -95,7 +95,7 @@ export function hearts( ctx ) {
 								new URL(
 									li.querySelector( 'a' ).href
 								).searchParams.get(
-									browseArgs[ 2 ] || 'riff_artist'
+									browse.artist
 								)
 							) === id
 					)

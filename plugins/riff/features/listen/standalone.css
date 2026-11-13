@@ -422,6 +422,12 @@ html.has-riff .riff-standalone .riff-app {
 		display: none;
 	}
 
+	/* While the sidebar shows Your Library and the views it lists, the
+	   account menu doesn't repeat them; a narrow screen keeps them there. */
+	.riff-standalone .riff-app:not([data-sidebar="mini"]) .riff-app-account-menu [data-riff-in-sidebar] {
+		display: none;
+	}
+
 	/* Your Library, in the sidebar: a head with New playlist,
 	   chips, then a row for each thing with its artwork and what it is. */
 	.riff-standalone .riff-app-library {

@@ -144,3 +144,41 @@ test( 'the sheet is drawn in the player\'s tokens in the installed app', async (
 	await sheet.getByRole( 'button', { name: 'Close' } ).click();
 	await expect( sheet ).toBeHidden();
 } );
+
+// A host restyles the sheet's shape the way it sets the player's colours, on #riff.
+test( 'a host sets the sheet\'s corners, its fields and its buttons with tokens', async ( { page } ) => {
+	await page.goto( pageUrl );
+	await page.evaluate( () => {
+		const riff = document.getElementById( 'riff' );
+		riff.style.setProperty( '--riff-signin-radius', '4px' );
+		riff.style.setProperty( '--riff-signin-field-radius', '3px' );
+		riff.style.setProperty( '--riff-signin-field-height', '52px' );
+		riff.style.setProperty( '--riff-signin-field-bg', 'var(--riff-surface)' );
+		riff.style.setProperty( '--riff-signin-button-radius', '6px' );
+		riff.style.setProperty( '--riff-signin-button-height', '40px' );
+	} );
+	await page.locator( '.riff-app-signin' ).click();
+	const sheet = page.locator( 'dialog.riff-signin' );
+	await expect( sheet ).toBeVisible();
+	const shape = await sheet.evaluate( ( dialog ) => {
+		const field = getComputedStyle( dialog.querySelector( 'input' ) );
+		const main = getComputedStyle( dialog.querySelector( 'button.riff-signin-main' ) );
+		const drawn = getComputedStyle( dialog );
+		return {
+			sheet: drawn.borderTopLeftRadius,
+			field: field.borderTopLeftRadius,
+			fieldHeight: field.minHeight,
+			onSurface: field.backgroundColor === drawn.backgroundColor,
+			button: main.borderTopLeftRadius,
+			buttonHeight: main.minHeight,
+		};
+	} );
+	expect( shape ).toEqual( {
+		sheet: '4px',
+		field: '3px',
+		fieldHeight: '52px',
+		onSurface: true,
+		button: '6px',
+		buttonHeight: '40px',
+	} );
+} );

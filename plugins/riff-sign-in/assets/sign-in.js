@@ -63,7 +63,23 @@
 	// values from the player each time it opens. Without them every colour in its stylesheet
 	// falls back to nothing, and in the Listen app's own document, where no theme sets a font,
 	// the text falls back to the browser's serif.
-	const TOKENS = [ '--riff-bg', '--riff-surface', '--riff-fg', '--riff-fg-2', '--riff-fg-3', '--riff-line', '--riff-hover', '--riff-accent' ];
+	const TOKENS = [
+		'--riff-bg',
+		'--riff-surface',
+		'--riff-fg',
+		'--riff-fg-2',
+		'--riff-fg-3',
+		'--riff-line',
+		'--riff-hover',
+		'--riff-accent',
+		// The sheet's own, for a host that changes its shape (Sign_In::css()).
+		'--riff-signin-radius',
+		'--riff-signin-field-radius',
+		'--riff-signin-field-height',
+		'--riff-signin-field-bg',
+		'--riff-signin-button-height',
+		'--riff-signin-button-radius',
+	];
 	function dress() {
 		const root = document.getElementById( 'riff' );
 		if ( ! root ) {

@@ -41,6 +41,28 @@ test.describe( 'Fonts', () => {
 		}
 	} );
 
+	test( 'each face is drawn once, never swapped in after the first paint', async ( { page } ) => {
+		await page.goto( '/' );
+		const displays = await page.evaluate( async ( sheets ) => {
+			for ( const href of sheets ) {
+				const link = Object.assign( document.createElement( 'link' ), {
+					rel: 'stylesheet',
+					href,
+				} );
+				const loaded = new Promise( ( resolve ) => link.addEventListener( 'load', resolve ) );
+				document.head.append( link );
+				await loaded;
+			}
+			return [ ...document.fonts ]
+				.filter( ( face ) => /^"?Riff (Roboto|Inter|Garamond)"?$/.test( face.family ) )
+				.map( ( face ) => face.family + ' ' + face.display );
+		}, [ PLUGIN + 'assets/riff.css', PLUGIN + 'features/listen/app.css' ] );
+		expect( displays.length ).toBeGreaterThanOrEqual( 5 );
+		for ( const display of displays ) {
+			expect( display ).toMatch( / optional$/ );
+		}
+	} );
+
 	test( 'the face drawn before a font arrives takes the font’s room', async ( { page } ) => {
 		await page.goto( '/' );
 		const sizes = await page.evaluate(

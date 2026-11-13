@@ -272,7 +272,20 @@ final class App {
 			esc_url( $page ),
 			esc_attr( self::QUERY ),
 			esc_attr( self::PAGE_QUERY ),
-			esc_attr( implode( ',', Browse::ARGS ) ),
+			// By name, so the script never reads one by its place in a list.
+			esc_attr(
+				(string) wp_json_encode(
+					array(
+						'view'     => Browse::VIEW,
+						'album'    => Browse::ALBUM,
+						'artist'   => Browse::ARTIST,
+						'search'   => Browse::SEARCH,
+						'filter'   => Browse::FILTER,
+						'sort'     => Browse::SORT,
+						'playlist' => Browse::PLAYLIST,
+					)
+				)
+			),
 			esc_attr( riff_brand()['name'] ),
 			Browse::nav( $page, $browse ),
 			$view

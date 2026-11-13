@@ -253,7 +253,7 @@ final class Browse {
 
 	/**
 	 * Who is listening, at the end of the bar as the music apps have it: the signed-in listener's
-	 * picture, which opens their name, Your Library, their profile and Sign out; a visitor gets
+	 * picture, which opens their name, Your Library, their profile and Log out; a visitor gets
 	 * Sign in. Signing in or out comes back to the view it was pressed on. A details element, so
 	 * it opens without the script.
 	 *
@@ -278,18 +278,24 @@ final class Browse {
 		$face = $src
 			? sprintf( '<img class="riff-app-avatar" src="%s" alt="" width="32" height="32" decoding="async">', esc_url( (string) $src ) )
 			: sprintf( '<span class="riff-app-avatar riff-app-initial" aria-hidden="true">%s</span>', esc_html( mb_strtoupper( mb_substr( $name, 0, 1 ) ) ) );
-		// A plugin's views listed in the account menu, after Your Library.
+		// A plugin's views listed in the account menu, after Your Library. One the sidebar lists
+		// too is marked, so the menu leaves it out while the sidebar shows (standalone.css).
 		$more = '';
 		foreach ( Views::all() as $slug => $listed ) {
 			if ( ! $listed['own'] && in_array( 'account', $listed['nav'], true ) ) {
-				$more .= sprintf( '<a href="%s">%s</a>', esc_url( add_query_arg( self::VIEW, $slug, $page ) ), esc_html( $listed['label'] ) );
+				$more .= sprintf(
+					'<a href="%s"%s>%s</a>',
+					esc_url( add_query_arg( self::VIEW, $slug, $page ) ),
+					in_array( 'sidebar', $listed['nav'], true ) ? ' data-riff-in-sidebar' : '',
+					esc_html( $listed['label'] )
+				);
 			}
 		}
 		$add = self::add_music_url( $page );
 		// Edit profile, unless the host has no profile page: an empty riff_profile_url hides it.
 		$profile = self::profile_url( $user );
 		return sprintf(
-			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s">%5$s</a>%9$s%8$s%6$s<a href="%7$s">%10$s</a></div></details>',
+			'<details class="riff-app-account"><summary aria-label="%1$s">%2$s</summary><div class="riff-app-account-menu"><p class="riff-app-account-name">%3$s</p><a href="%4$s" data-riff-in-sidebar>%5$s</a>%9$s%8$s%6$s<a href="%7$s">%10$s</a></div></details>',
 			/* translators: %s: the signed-in listener's name. */
 			esc_attr( sprintf( __( 'Account: %s', 'riff' ), $name ) ),
 			$face,
@@ -301,7 +307,7 @@ final class Browse {
 			// Add music, unless it leads to a view the menu already lists.
 			current_user_can( 'upload_files' ) && ! str_contains( $more, 'href="' . esc_url( $add ) . '"' ) ? sprintf( '<a href="%s">%s</a>', esc_url( $add ), esc_html__( 'Add music', 'riff' ) ) : '',
 			$more,
-			esc_html__( 'Sign out', 'riff' )
+			esc_html__( 'Log out', 'riff' )
 		);
 	}
 

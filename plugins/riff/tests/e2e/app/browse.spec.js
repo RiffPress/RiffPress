@@ -56,6 +56,40 @@ test.describe( 'Browse', () => {
 		expect( ( await playing( page ) ).paused ).toBe( false );
 	} );
 
+	test( 'a view arrives in a transition of the view alone, the rest of the page left live', async ( {
+		page,
+	} ) => {
+		// The suite runs with reduced motion, which has no transition at all.
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		const captured = await page.evaluate( () => {
+			if ( ! document.startViewTransition ) {
+				return null;
+			}
+			const start = document.startViewTransition.bind( document );
+			const seen = [];
+			document.startViewTransition = ( update ) => {
+				const name = ( el ) => el && getComputedStyle( el ).viewTransitionName;
+				seen.push( {
+					page: name( document.documentElement ),
+					view: name( document.querySelector( '.riff-app-view' ) ),
+				} );
+				return start( update );
+			};
+			window.riffSeen = seen;
+			return true;
+		} );
+		test.skip( ! captured, 'no view transitions in this browser' );
+		await page.locator( '.riff-app-tab', { hasText: 'Albums' } ).click();
+		await expect( page ).toHaveURL( /riff_view=albums/ );
+		const seen = await page.evaluate( () => window.riffSeen );
+		expect( seen.length ).toBeGreaterThan( 0 );
+		expect( seen[ 0 ] ).toEqual( { page: 'none', view: 'riff-app-view' } );
+		// Once it is over, the page is as it was, for a theme's own transitions.
+		await expect
+			.poll( () => page.evaluate( () => getComputedStyle( document.documentElement ).viewTransitionName ) )
+			.toBe( 'root' );
+	} );
+
 	test( 'a tab is fetched once it is wanted, never only because the page is idle, and alone', async ( {
 		page,
 		isMobile,

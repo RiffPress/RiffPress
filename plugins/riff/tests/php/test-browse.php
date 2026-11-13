@@ -161,7 +161,7 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertStringNotContainsString( 'Edit profile', $hidden );
 		$this->assertStringNotContainsString( 'href=""', $hidden, 'no empty link is left behind' );
 		$this->assertStringNotContainsString( 'profile.php', $hidden );
-		$this->assertMatchesRegularExpression( '#>Your Library</a>.*>Add music</a><a href="[^"]*action=logout[^"]*">Sign out</a></div></details>#', $hidden, 'the rest of the menu stands, in its order' );
+		$this->assertMatchesRegularExpression( '#>Your Library</a>.*>Add music</a><a href="[^"]*action=logout[^"]*">Log out</a></div></details>#', $hidden, 'the rest of the menu stands, in its order' );
 	}
 
 	public function test_the_bar_shows_who_is_listening(): void {
@@ -205,7 +205,7 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertCount( 1, $asked, 'and the answer is kept' );
 		$this->assertStringContainsString( '<p class="riff-app-account-name">Ada Lovelace</p>', $signed_in );
 		$this->assertStringContainsString( 'profile.php', $signed_in, 'Edit profile' );
-		$this->assertStringContainsString( 'action=logout', $signed_in, 'Sign out' );
+		$this->assertStringContainsString( 'action=logout', $signed_in, 'Log out' );
 		$this->assertStringNotContainsString( 'riff-app-signin', $signed_in );
 
 		// Someone with no Gravatar gets their initial, not the grey silhouette.
@@ -268,7 +268,21 @@ class Test_Riff_Browse extends Riff_TestCase {
 		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab riff-app-tab-search" href="[^"]*riff_view=search"><svg#', $html, 'Search, a tab on a phone' );
 		$this->assertStringContainsString( 'role="search" action="' . esc_url( strtok( get_permalink( $this->page ), '?' ) ) . '" method="get"', $html );
 		$this->assertStringContainsString( 'name="riff_search"', $html );
-		$this->assertStringContainsString( 'data-riff-browse="riff_view,riff_album,riff_artist,riff_search,riff_filter,riff_sort,riff_playlist"', $html );
+		$this->assertMatchesRegularExpression( '#data-riff-browse="([^"]*)"#', $html );
+		preg_match( '#data-riff-browse="([^"]*)"#', $html, $browse );
+		$this->assertSame(
+			array(
+				'view'     => 'riff_view',
+				'album'    => 'riff_album',
+				'artist'   => 'riff_artist',
+				'search'   => 'riff_search',
+				'filter'   => 'riff_filter',
+				'sort'     => 'riff_sort',
+				'playlist' => 'riff_playlist',
+			),
+			json_decode( html_entity_decode( $browse[1] ), true ),
+			'the browse arguments, by name'
+		);
 	}
 
 	public function test_albums_show_only_what_a_visitor_may_see(): void {

@@ -7,7 +7,7 @@
 import { esc, fmt } from 'riff-app/helpers';
 
 export function search( ctx ) {
-	const { api, app, nav, tracksRest, browseArgs, __, _n } = ctx;
+	const { api, app, nav, tracksRest, browse, __, _n } = ctx;
 
 	app.addEventListener( 'submit', ( e ) => {
 		const form = e.target.closest( '.riff-app-search' );
@@ -208,13 +208,13 @@ export function search( ctx ) {
 			title: a.name,
 			sub: a.artist || '',
 			art: a.art,
-			href: ctx.browseHref( browseArgs[ 1 ] || 'riff_album', a.id ),
+			href: ctx.browseHref( browse.album, a.id ),
 		} ) );
 		const artistItems = artists.slice( 0, 3 ).map( ( a ) => ( {
 			kind: 'artist',
 			title: a.name,
 			sub: __( 'Artist', 'riff' ),
-			href: ctx.browseHref( browseArgs[ 2 ] || 'riff_artist', a.id ),
+			href: ctx.browseHref( browse.artist, a.id ),
 		} ) );
 		// The best match across all three; on a tie an artist, then an album, then a song.
 		const top = [ ...artistItems, ...albumItems, ...songs ]
