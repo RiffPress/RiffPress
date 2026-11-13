@@ -56,12 +56,55 @@ final class Passkeys {
 	public const ALGORITHMS = array( -7, -257 );
 
 	/**
-	 * The relying party's ID: the site's host.
+	 * The relying party's ID: the site's host, or a parent domain of it a host chose through
+	 * riff_sign_in_rp_id. Registration, sign-in and the check of what the authenticator signed
+	 * all ask here, so they always agree. The origin a browser reports is checked against the
+	 * site's own host in origin(), whatever this answers.
 	 *
 	 * @return string
 	 */
 	public static function rp_id(): string {
-		return (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		$host = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+
+		/**
+		 * Filters the WebAuthn relying party ID, so passkeys made on one subdomain keep working
+		 * when the site moves to another: on open.example.com, return example.com.
+		 *
+		 * The answer must be the host itself or a parent domain of it, ending on a dot between
+		 * labels and with at least one dot of its own. Anything else, and any parent of an IP
+		 * address, falls back to the host. A public suffix such as co.uk passes this check, but
+		 * browsers refuse it, so passkeys stop working rather than reaching other sites. Changing
+		 * the answer on a site that already has passkeys makes them stop working there.
+		 *
+		 * @since 0.7.0
+		 *
+		 * @param string $rp_id The relying party ID. Default the host.
+		 * @param string $host  The site's host, from home_url().
+		 */
+		$rp_id = apply_filters( 'riff_sign_in_rp_id', $host, $host );
+		return self::valid_rp_id( $rp_id, $host ) ? strtolower( trim( $rp_id ) ) : $host;
+	}
+
+	/**
+	 * Whether a relying party ID may stand for a host: the host itself, or a parent domain of it
+	 * on a label boundary with at least one dot, and never a part of an IP address.
+	 *
+	 * @param mixed  $rp_id The relying party ID asked for.
+	 * @param string $host  The site's host.
+	 * @return bool
+	 */
+	private static function valid_rp_id( $rp_id, string $host ): bool {
+		if ( ! is_string( $rp_id ) || '' === $host ) {
+			return false;
+		}
+		$rp_id = strtolower( trim( $rp_id ) );
+		if ( $rp_id === $host ) {
+			return true;
+		}
+		if ( false !== filter_var( $host, FILTER_VALIDATE_IP ) || ! preg_match( '/^[a-z0-9-]+(\.[a-z0-9-]+)+$/', $rp_id ) ) {
+			return false;
+		}
+		return str_ends_with( $host, '.' . $rp_id );
 	}
 
 	/**
