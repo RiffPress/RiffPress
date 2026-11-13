@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.16.1
+Stable tag: 6.17.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.17.0 =
+* A host can show listeners its own name and mark in place of Riff's, with riff_brand.
+* An artist sets who holds their music's rights and its licence, and every play asks riff_may_play.
+
 = 6.16.1 =
 * Fixed: a zip that adds no song loses only its file, keeping its private attachment with why.
 
@@ -159,10 +163,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.14.2 =
 * Fixed: Back, Forward, Home and search are one cluster in the middle of the strip.
-
-= 6.14.1 =
-* Fixed: a refused upload's notice stays in sight beside an open panel, and the account menu test waits for the view it opens.
-* Fixed: the whole head of the sidebar in the frame folds and opens it, not only the icon.
-* Fixed: main's checks pass again: uninstall removes what Riff keeps between requests, four tests wait for what they check, and the pre-commit hook runs what CI runs.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
