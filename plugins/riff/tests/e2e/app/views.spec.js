@@ -180,6 +180,25 @@ test.describe( 'App', () => {
 		const recent = page.locator( '[data-riff-shelf="recent"]' );
 		await expect( recent.locator( '.riff-card-title' ).first() ).toHaveText( 'Trombone Detritus' );
 
+		// Jump back in is the post, a cover with its title under it, up to two lines; Recently
+		// played is the track, a small cover beside its title, so the two rows never look alike.
+		const shape = ( card ) =>
+			card.evaluate( ( el ) => {
+				const art = el.querySelector( '.riff-card-art' ).getBoundingClientRect();
+				const title = el.querySelector( '.riff-card-title' );
+				const box = title.getBoundingClientRect();
+				return {
+					beside: art.right <= box.left && art.bottom > box.top,
+					art: art.width,
+					lines: getComputedStyle( title ).webkitLineClamp,
+				};
+			} );
+		await expect( jump.locator( '.riff-card' ) ).toHaveCount( 1 );
+		expect( await shape( jump.locator( '.riff-card' ).first() ) ).toMatchObject( { beside: false, lines: '2' } );
+		const track = await shape( recent.locator( '.riff-card' ).first() );
+		expect( track.beside ).toBe( true );
+		expect( track.art ).toBeLessThan( 100 );
+
 		await page.reload();
 		await expect( recent.locator( '.riff-card-title' ).first() ).toHaveText( 'Trombone Detritus' );
 		await jump.locator( '.riff-card-link' ).first().click();
