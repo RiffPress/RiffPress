@@ -10,7 +10,9 @@
  * `releases` reads every GitHub release and fails when a package's release is still a draft, or is
  * published without its zip. A release job that fails half way leaves its tag and a draft behind,
  * and release-please never comes back to it, so this names it on every run until someone finishes
- * it (docs/ecosystem.md, "When the release train stops").
+ * it (docs/ecosystem.md, "When the release train stops"). A draft older than a release of the same
+ * package that did publish is only warned about, with the command that deletes it: a newer
+ * version already carries its changes, so it is litter, not a release still owed.
  *
  * `tree` does the same for the checkout against .release-please-manifest.json, in CI, so a release
  * pull request whose versions were never synced is red before it can merge, not after it is tagged.
@@ -81,6 +83,64 @@ function versionProblems( version, mainFile, readme ) {
 }
 
 /**
+ * Whether version a is older than version b, by their numbers alone.
+ *
+ * @param {string} a A version, e.g. 6.17.1.
+ * @param {string} b Another.
+ * @return {boolean} Whether a comes before b.
+ */
+function older( a, b ) {
+	const x = a.split( /[.-]/ ).slice( 0, 3 ).map( Number );
+	const y = b.split( /[.-]/ ).slice( 0, 3 ).map( Number );
+	for ( let i = 0; i < 3; i++ ) {
+		if ( x[ i ] !== y[ i ] ) {
+			return x[ i ] < y[ i ];
+		}
+	}
+	return false;
+}
+
+/**
+ * Each package's newest published version, by component.
+ *
+ * @param {object[]} releases The repository's releases.
+ * @return {Map<string, string>} Component to version.
+ */
+function newestPublished( releases ) {
+	const newest = new Map();
+	for ( const release of releases ) {
+		const tag = ! release.draft && parseTag( release.tag_name || '' );
+		if ( tag && ( ! newest.has( tag.component ) || older( newest.get( tag.component ), tag.version ) ) ) {
+			newest.set( tag.component, tag.version );
+		}
+	}
+	return newest;
+}
+
+/**
+ * The drafts a newer published release of the same package has superseded: nothing is owed on
+ * them, and each only wants deleting.
+ *
+ * @param {object[]} releases The repository's releases, as the REST API lists them.
+ * @param {object[]} pkgs     packages().
+ * @return {string[]} One line per superseded draft.
+ */
+function supersededDrafts( releases, pkgs ) {
+	const components = new Set( pkgs.map( ( pkg ) => pkg.component ) );
+	const newest = newestPublished( releases );
+	const found = [];
+	for ( const release of releases ) {
+		const tag = release.draft && parseTag( release.tag_name || '' );
+		if ( tag && components.has( tag.component ) && newest.has( tag.component ) && older( tag.version, newest.get( tag.component ) ) ) {
+			found.push(
+				`${ release.tag_name } is a draft that ${ tag.component }-v${ newest.get( tag.component ) } has superseded: delete it and its tag (gh release delete ${ release.tag_name } --cleanup-tag --yes).`
+			);
+		}
+	}
+	return found;
+}
+
+/**
  * What is wrong with the GitHub releases of the packages.
  *
  * @param {object[]} releases The repository's releases, as the REST API lists them.
@@ -89,11 +149,12 @@ function versionProblems( version, mainFile, readme ) {
  */
 function releaseProblems( releases, pkgs ) {
 	const byComponent = new Map( pkgs.map( ( pkg ) => [ pkg.component, pkg ] ) );
+	const newest = newestPublished( releases );
 	const found = [];
 	for ( const release of releases ) {
 		const tag = parseTag( release.tag_name || '' );
 		const pkg = tag && byComponent.get( tag.component );
-		if ( ! pkg ) {
+		if ( ! pkg || ( release.draft && newest.has( tag.component ) && older( tag.version, newest.get( tag.component ) ) ) ) {
 			continue;
 		}
 		const name = release.tag_name;
@@ -176,6 +237,9 @@ function main( argv ) {
 		const releases = JSON.parse(
 			execFileSync( 'gh', [ 'api', '--paginate', '--slurp', `repos/${ process.env.GH_REPO }/releases?per_page=100` ], { encoding: 'utf8' } )
 		).flat();
+		for ( const litter of supersededDrafts( releases, pkgs ) ) {
+			console.log( `::warning::${ litter }` );
+		}
 		const found = releaseProblems( releases, pkgs );
 		for ( const problem of found ) {
 			console.log( `::error::${ problem }` );
@@ -194,4 +258,4 @@ if ( require.main === module ) {
 	process.exitCode = main( process.argv.slice( 2 ) );
 }
 
-module.exports = { packages, parseTag, versionProblems, releaseProblems };
+module.exports = { packages, parseTag, versionProblems, releaseProblems, supersededDrafts };

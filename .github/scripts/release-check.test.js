@@ -8,7 +8,7 @@ const { execFileSync } = require( 'node:child_process' );
 const fs = require( 'node:fs' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
-const { packages, parseTag, versionProblems, releaseProblems } = require( './release-check.js' );
+const { packages, parseTag, versionProblems, releaseProblems, supersededDrafts } = require( './release-check.js' );
 
 const root = path.join( __dirname, '..', '..' );
 const config = JSON.parse( fs.readFileSync( path.join( root, 'release-please-config.json' ), 'utf8' ) );
@@ -94,6 +94,25 @@ test( 'a draft says how it came about and both ways out', () => {
 	assert.match( found, /"is not 6\.12\.0"/, 'names the message an unsynced tag fails with' );
 	assert.match( found, /gh release delete riff-v6\.12\.0 --cleanup-tag --yes/ );
 	assert.match( found, /re-run the failed job/ );
+} );
+
+test( 'a draft a newer published release superseded is only warned about, with the delete command', () => {
+	const pkgs = packages( config );
+	const releases = [
+		{ tag_name: 'riff-v6.17.1', draft: true, assets: [] },
+		{ tag_name: 'riff-v6.9.0', draft: true, assets: [] },
+		{ tag_name: 'riff-v6.17.2', draft: false, assets: [ { name: 'riff.zip' } ] },
+		{ tag_name: 'riff-v6.17.3', draft: true, assets: [] },
+		{ tag_name: 'riff-lyrics-v1.9.1', draft: true, assets: [] },
+	];
+	const found = releaseProblems( releases, pkgs );
+	assert.strictEqual( found.length, 2, 'the newest draft, and a draft with nothing published after it, still fail' );
+	assert.match( found[ 0 ], /^riff-v6\.17\.3 is still a draft: / );
+	assert.match( found[ 1 ], /^riff-lyrics-v1\.9\.1 is still a draft: / );
+	const litter = supersededDrafts( releases, pkgs );
+	assert.strictEqual( litter.length, 2, '6.9.0 is older than 6.17.2 by number, not by string' );
+	assert.match( litter[ 0 ], /^riff-v6\.17\.1 is a draft that riff-v6\.17\.2 has superseded: .*gh release delete riff-v6\.17\.1 --cleanup-tag --yes/ );
+	assert.match( litter[ 1 ], /^riff-v6\.9\.0 / );
 } );
 
 /*
