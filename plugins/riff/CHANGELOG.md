@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.17.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.0...riff-v6.17.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* two saves at once both keep, a sign-in link gets through a private site's gate, and a release with nothing downstream is not red ([#1093](https://github.com/RiffPress/RiffPress/issues/1093)) ([cd81bad](https://github.com/RiffPress/RiffPress/commit/cd81badf5829239d42b8ec6f983109d5972578fd))
+
 ## [6.17.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.16.1...riff-v6.17.0) (2026-11-13)
 
 
