@@ -54,6 +54,7 @@
   <url><loc>{{pages_url}}developers/hooks/riff_open_graph/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_play_url/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_post_blocks/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/riff_private_open/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_private_pass/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_profile_url/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_protect_storage/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>

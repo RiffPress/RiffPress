@@ -396,9 +396,11 @@ final class Lyrics {
 		if ( ! $id || ! isset( $attachment['riff_lyrics'] ) || ! current_user_can( 'edit_post', $id ) ) {
 			return $post;
 		}
-		$meta = wp_get_attachment_metadata( $id );
-		$meta = is_array( $meta ) ? $meta : array();
 		$text = self::clean( wp_unslash( (string) $attachment['riff_lyrics'] ) );
+		// Read again just before the write, so a key another writer saved meanwhile is kept.
+		wp_cache_delete( $id, 'post_meta' );
+		$meta = wp_get_attachment_metadata( $id, true );
+		$meta = is_array( $meta ) ? $meta : array();
 		if ( '' === $text ) {
 			unset( $meta[ self::KEY ] );
 		} else {

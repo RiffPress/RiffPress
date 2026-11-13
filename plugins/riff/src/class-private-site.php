@@ -149,6 +149,20 @@ final class Private_Site {
 		if ( self::allowed() || ! empty( $wp->query_vars['rest_route'] ) ) {
 			return;
 		}
+		/**
+		 * Filters whether a private site lets a visitor's request through its gate, for a plugin
+		 * that answers one request of its own, such as a sign-in link, before WordPress would draw
+		 * a page for it. The plugin then owns the answer: it must end the request, or draw a page
+		 * of its own that shows nothing of the site.
+		 *
+		 * @since 6.17.0
+		 *
+		 * @param bool $open Whether to let it through. Default false.
+		 * @param WP   $wp   The request, parsed.
+		 */
+		if ( true === apply_filters( 'riff_private_open', false, $wp ) ) {
+			return;
+		}
 		// A request with a pass is let as far as knowing which page it asks for, and no further
 		// unless the host says the pass opens that one.
 		if ( '' !== Rights::pass() ) {

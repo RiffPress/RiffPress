@@ -287,6 +287,17 @@ Since 6.5.0. Fires in `plugins/riff/src/class-blocks-rest.php`.
 | `$on` | `bool` | Whether to serve them. Default false. |
 | `$post` | `WP_Post` | The post asked for. |
 
+### `riff_private_open`
+
+Filters whether a private site lets a visitor's request through its gate, for a plugin that answers one request of its own, such as a sign-in link, before WordPress would draw a page for it. The plugin then owns the answer: it must end the request, or draw a page of its own that shows nothing of the site.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-private-site.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$open` | `bool` | Whether to let it through. Default false. |
+| `$wp` | `WP` | The request, parsed. |
+
 ### `riff_private_pass`
 
 Filters whether a pass opens a post or a track of a private site to a visitor: its page, and with it the signed addresses of the music on it, which riff_may_play is asked about again with the same pass as each file is fetched. Nothing else on the site opens: other pages and the REST API stay closed. Riff knows no passes, so it is false unless the host that issued the pass says otherwise.

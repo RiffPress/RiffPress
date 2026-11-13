@@ -6,7 +6,7 @@
  * Requires at least: 7.1
  * Requires PHP: 8.1
  * Requires Plugins: riff
- * Requires Riff: 4.31
+ * Requires Riff: 6.17.0
  * Plugin URI: https://source.riffpress.com/
  * Author: RiffPress Core Team
  * Author URI: https://riffpress.com/

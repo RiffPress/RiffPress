@@ -135,6 +135,32 @@ final class Tracks {
 	}
 
 	/**
+	 * Changes some keys of an attachment's metadata and leaves the rest as they are now, read again
+	 * just before the write rather than whenever this request first read them, so a key another
+	 * writer saved meanwhile (an import's tags, a measured envelope, the words) is kept. Saved
+	 * through core, so its filter, and the catalog with it, still see the change.
+	 *
+	 * @since 6.17.0
+	 *
+	 * @param int   $id      Attachment ID.
+	 * @param array $changes Keys to set; one set to null is taken away.
+	 * @return bool Whether it was saved.
+	 */
+	public static function update_metadata( int $id, array $changes ): bool {
+		wp_cache_delete( $id, 'post_meta' );
+		$meta = wp_get_attachment_metadata( $id, true );
+		$meta = is_array( $meta ) ? $meta : array();
+		foreach ( $changes as $key => $value ) {
+			if ( null === $value ) {
+				unset( $meta[ $key ] );
+			} else {
+				$meta[ $key ] = $value;
+			}
+		}
+		return (bool) wp_update_attachment_metadata( $id, $meta );
+	}
+
+	/**
 	 * Builds a track from an audio or video attachment.
 	 *
 	 * @since 4.0.0

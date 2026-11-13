@@ -329,6 +329,25 @@ class Test_Riff_Sign_In_Codes extends Riff_TestCase {
 		$this->assertSame( $user, get_current_user_id() );
 	}
 
+	public function test_the_page_that_asks_says_so_and_a_private_site_lets_the_link_reach_it(): void {
+		self::factory()->user->create( array( 'user_email' => 'gated@example.com' ) );
+		$sent  = Codes::request( 'gated@example.com' );
+		$value = $sent['token'] . '.' . $this->sent[0][1];
+
+		$before = did_action( 'riff_sign_in_asking' );
+		$this->assertSame( 'asked', $this->open( $value )[0] );
+		$this->assertSame( $before + 1, did_action( 'riff_sign_in_asking' ), 'a plugin drawing its own page later can tell' );
+
+		$front = new WP();
+		$feed  = new WP();
+
+		$feed->query_vars = array( 'feed' => 'rss2' );
+		$this->assertTrue( Sign_In::open_for_link( false, $front ), 'the link on the front page' );
+		$this->assertFalse( Sign_In::open_for_link( false, $feed ), 'not anything else carrying it, such as a feed' );
+		unset( $_GET[ Codes::QUERY ] );
+		$this->assertFalse( Sign_In::open_for_link( false, $front ), 'and not without a link' );
+	}
+
 	public function test_the_button_uses_the_code_up(): void {
 		$user  = self::factory()->user->create( array( 'user_email' => 'pressed@example.com' ) );
 		$sent  = Codes::request( 'pressed@example.com' );

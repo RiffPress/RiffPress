@@ -665,9 +665,12 @@ jobs:
   # run. A missing variable or token, or a dispatch that fails three times,
   # fails this job, so the run goes red and report-failure says so, but the
   # releases are already published and stay so; the downstream also polls.
+  # Skipped, as deploy-wordpress-org is, until DOWNSTREAM_REPO and
+  # DOWNSTREAM_WORKFLOW are set, so a repository with nothing downstream is not
+  # red after every release. Set without the token, it still fails.
   notify-downstream:
     needs: [release-please, build-release-asset, release-riff-sign-in]
-    if: ${{ always() && (needs.build-release-asset.result == 'success' || needs.release-riff-sign-in.result == 'success') }}
+    if: ${{ always() && vars.DOWNSTREAM_REPO != '' && vars.DOWNSTREAM_WORKFLOW != '' && (needs.build-release-asset.result == 'success' || needs.release-riff-sign-in.result == 'success') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions: {}
@@ -680,7 +683,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "$REPO" || -z "$WORKFLOW" || -z "$GH_TOKEN" ]]; then
-            echo "::error::The release is published, but nothing downstream was told: DOWNSTREAM_REPO, DOWNSTREAM_WORKFLOW or the DOWNSTREAM_DISPATCH_TOKEN secret is not set (docs/ecosystem.md)."
+            echo "::error::The release is published, but nothing downstream was told: DOWNSTREAM_REPO and DOWNSTREAM_WORKFLOW are set, but the DOWNSTREAM_DISPATCH_TOKEN secret is not (docs/ecosystem.md)."
             exit 1
           fi
           for attempt in 1 2 3; do
