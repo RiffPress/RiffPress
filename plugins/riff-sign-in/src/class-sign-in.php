@@ -43,6 +43,7 @@ final class Sign_In {
 		Listeners::register();
 		add_action( 'riff_before_player', array( self::class, 'enqueue' ) );
 		add_action( 'template_redirect', array( self::class, 'link' ) );
+		add_filter( 'riff_private_open', array( self::class, 'open_for_link' ), 10, 2 );
 		add_action( Codes::MAIL, array( Codes::class, 'deliver' ) );
 		add_filter( 'wp_privacy_personal_data_exporters', array( self::class, 'exporters' ) );
 		add_filter( 'wp_privacy_personal_data_erasers', array( self::class, 'erasers' ) );
@@ -191,6 +192,15 @@ final class Sign_In {
 			}
 			self::$asking = $value;
 			add_filter( 'template_include', array( self::class, 'asking' ), PHP_INT_MAX );
+			/**
+			 * Fires when a sign-in link, opened in a browser other than the one that asked for the
+			 * code, is to be answered with the page that asks "Sign in?" in place of the theme's
+			 * template. A plugin that draws its own page later on template_redirect can check
+			 * did_action() for this and stand aside, or the link never signs in.
+			 *
+			 * @since 0.8.0
+			 */
+			do_action( 'riff_sign_in_asking' );
 			return;
 		}
 		$user = Codes::verify( $token, $code );
@@ -200,6 +210,21 @@ final class Sign_In {
 		Codes::forget();
 		wp_safe_redirect( $landing );
 		exit;
+	}
+
+	/**
+	 * Lets a sign-in link through a private site's gate, so it is not refused before it is
+	 * answered: only the front page, where the link and the page that asks both point, with nothing
+	 * else asked of it. Every answer to it ends the request, or is the page that asks.
+	 *
+	 * @param bool $open Whether the gate is already open to it.
+	 * @param \WP  $wp   The request.
+	 * @return bool
+	 */
+	public static function open_for_link( $open, $wp ): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification -- only whether a link is there; link() checks it.
+		$link = isset( $_GET[ Codes::QUERY ] ) || isset( $_POST[ Codes::QUERY ] );
+		return (bool) $open || ( $link && $wp instanceof \WP && '' === $wp->request && empty( $wp->query_vars ) );
 	}
 
 	/**

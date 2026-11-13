@@ -55,6 +55,21 @@ class Test_Riff_Private_Site extends Riff_TestCase {
 		$this->assertNull( apply_filters( 'rest_authentication_errors', null ) );
 	}
 
+	public function test_a_private_site_lets_through_only_what_a_plugin_says_it_answers_itself(): void {
+		update_option( Private_Site::OPTION, true );
+		$wp = new WP();
+		try {
+			Private_Site::gate( $wp );
+			$this->fail( 'a visitor is turned away' );
+		} catch ( WPDieException $e ) {
+			$this->assertStringContainsString( 'This site is private.', $e->getMessage() );
+		}
+
+		add_filter( 'riff_private_open', '__return_true' );
+		Private_Site::gate( $wp );
+		$this->assertTrue( true, 'and let through when a plugin answers the request itself' );
+	}
+
 	public function test_a_file_arriving_on_a_private_site_is_protected_and_marked_as_this_modes(): void {
 		update_option( Private_Site::OPTION, true );
 		$id = $this->song();

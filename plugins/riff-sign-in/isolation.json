@@ -36,7 +36,8 @@
 	"spawn": [],
 	"riff": {
 		"hooks": [
-			"riff_before_player"
+			"riff_before_player",
+			"riff_private_open"
 		],
 		"functions": [
 			"riff_listen_page"

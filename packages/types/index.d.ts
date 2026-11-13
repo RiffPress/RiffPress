@@ -251,7 +251,7 @@ export interface ArtistsResponse {
 	total: number;
 }
 
-/** The signed-in user's likes, newest first. Kept as the riff_likes user option, one list per site. */
+/** The signed-in user's likes, newest first. Kept in the riff_likes user meta under the site's table prefix, a row each, so each site keeps its own. */
 export interface LikesResponse {
 	items: {
 		kind: "track" | "album" | "artist";
@@ -261,7 +261,7 @@ export interface LikesResponse {
 	}[];
 }
 
-/** The tracks the signed-in user played, newest first, at most 30. Kept as the riff_history user option, one list per site. */
+/** The tracks the signed-in user played, newest first, at most 30. Kept in the riff_history user meta under the site's table prefix, a row each, so each site keeps its own. */
 export interface HistoryResponse {
 	items: Array<Track & {
 		/** When it was played, in milliseconds since the epoch. */
@@ -421,7 +421,7 @@ export interface Routes {
 		};
 		response: ArtistsResponse;
 	};
-	/** The signed-in user's likes, newest first. Kept as the riff_likes user option, one list per site. */
+	/** The signed-in user's likes, newest first. Kept in the riff_likes user meta under the site's table prefix, a row each, so each site keeps its own. */
 	"GET /riff/v1/users/{user}/likes": {
 		params: {
 			/** Whose: me for the signed-in user, or a user ID, for someone who may edit that user. */
@@ -429,7 +429,7 @@ export interface Routes {
 		};
 		response: LikesResponse;
 	};
-	/** The signed-in user's likes, newest first. Kept as the riff_likes user option, one list per site. */
+	/** The signed-in user's likes, newest first. Kept in the riff_likes user meta under the site's table prefix, a row each, so each site keeps its own. */
 	"POST /riff/v1/users/{user}/likes": {
 		params: {
 			/** Whose: me for the signed-in user, or a user ID, for someone who may edit that user. */
@@ -446,7 +446,7 @@ export interface Routes {
 		};
 		response: LikesResponse;
 	};
-	/** The signed-in user's likes, newest first. Kept as the riff_likes user option, one list per site. */
+	/** The signed-in user's likes, newest first. Kept in the riff_likes user meta under the site's table prefix, a row each, so each site keeps its own. */
 	"DELETE /riff/v1/users/{user}/likes/{kind}/{id}": {
 		params: {
 			/** Whose: me for the signed-in user, or a user ID, for someone who may edit that user. */
@@ -458,7 +458,7 @@ export interface Routes {
 		};
 		response: LikesResponse;
 	};
-	/** The tracks the signed-in user played, newest first, at most 30. Kept as the riff_history user option, one list per site. */
+	/** The tracks the signed-in user played, newest first, at most 30. Kept in the riff_history user meta under the site's table prefix, a row each, so each site keeps its own. */
 	"GET /riff/v1/users/{user}/history": {
 		params: {
 			/** Whose: me for the signed-in user, or a user ID, for someone who may edit that user. */
@@ -466,7 +466,7 @@ export interface Routes {
 		};
 		response: HistoryResponse;
 	};
-	/** The tracks the signed-in user played, newest first, at most 30. Kept as the riff_history user option, one list per site. */
+	/** The tracks the signed-in user played, newest first, at most 30. Kept in the riff_history user meta under the site's table prefix, a row each, so each site keeps its own. */
 	"POST /riff/v1/users/{user}/history": {
 		params: {
 			/** Whose: me for the signed-in user, or a user ID, for someone who may edit that user. */
@@ -483,7 +483,7 @@ export interface Routes {
 		};
 		response: HistoryResponse;
 	};
-	/** The tracks the signed-in user played, newest first, at most 30. Kept as the riff_history user option, one list per site. */
+	/** The tracks the signed-in user played, newest first, at most 30. Kept in the riff_history user meta under the site's table prefix, a row each, so each site keeps its own. */
 	"DELETE /riff/v1/users/{user}/history": {
 		params: {
 			/** Whose: me for the signed-in user, or a user ID, for someone who may edit that user. */

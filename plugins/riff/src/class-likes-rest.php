@@ -303,7 +303,7 @@ final class Likes_Rest {
 		return array(
 			'$schema'     => 'http://json-schema.org/draft-04/schema#',
 			'title'       => 'riff-likes',
-			'description' => __( 'The signed-in user\'s likes, newest first. Kept as the riff_likes user option, one list per site.', 'riff' ),
+			'description' => __( 'The signed-in user\'s likes, newest first. Kept in the riff_likes user meta under the site\'s table prefix, a row each, so each site keeps its own.', 'riff' ),
 			'type'        => 'object',
 			'properties'  => array(
 				'items' => array(
@@ -343,7 +343,7 @@ final class Likes_Rest {
 		return array(
 			'$schema'     => 'http://json-schema.org/draft-04/schema#',
 			'title'       => 'riff-history',
-			'description' => __( 'The tracks the signed-in user played, newest first, at most 30. Kept as the riff_history user option, one list per site.', 'riff' ),
+			'description' => __( 'The tracks the signed-in user played, newest first, at most 30. Kept in the riff_history user meta under the site\'s table prefix, a row each, so each site keeps its own.', 'riff' ),
 			'type'        => 'object',
 			'properties'  => array(
 				'items' => array(

@@ -335,7 +335,7 @@ class Test_Riff_Likes extends Riff_TestCase {
 		);
 
 		$stored = get_user_meta( $this->user, $wpdb->get_blog_prefix() . 'riff_likes', true );
-		$this->assertSame( $this->tracks[0], $stored[0]['id'], 'under the site\'s table prefix' );
+		$this->assertSame( $this->tracks[0], $stored['id'], 'under the site\'s table prefix, a row each' );
 		$this->assertSame( '', get_user_meta( $this->user, 'riff_likes', true ), 'not shared by every site' );
 	}
 
@@ -419,6 +419,58 @@ class Test_Riff_Likes extends Riff_TestCase {
 		$kept = Likes::history( $this->user );
 		$this->assertCount( Likes::HISTORY_MAX, $kept );
 		$this->assertSame( 40000, $kept[0]['played'], 'the newest' );
+	}
+
+	public function test_a_like_or_a_play_saved_while_another_is_saving_keeps_both(): void {
+		// A second request saves between this one reading the list and writing it.
+		$other = function ( $check, $user_id, $key ) use ( &$other ) {
+			global $wpdb;
+			if ( $wpdb->get_blog_prefix() . Likes::OPTION === $key ) {
+				remove_filter( 'add_user_metadata', $other );
+				remove_filter( 'update_user_metadata', $other );
+				Likes::add( $user_id, array( array( 'kind' => 'track', 'id' => $this->tracks[1] ) ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+			} elseif ( $wpdb->get_blog_prefix() . Likes::HISTORY_OPTION === $key ) {
+				remove_filter( 'add_user_metadata', $other );
+				remove_filter( 'update_user_metadata', $other );
+				Likes::played( $user_id, array( array( 'id' => $this->tracks[1] ) ) );
+			}
+			return $check;
+		};
+		add_filter( 'add_user_metadata', $other, 10, 3 );
+		add_filter( 'update_user_metadata', $other, 10, 3 );
+		Likes::add( $this->user, array( array( 'kind' => 'track', 'id' => $this->tracks[0] ) ) ); // phpcs:ignore WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
+		add_filter( 'add_user_metadata', $other, 10, 3 );
+		add_filter( 'update_user_metadata', $other, 10, 3 );
+		Likes::played( $this->user, array( array( 'id' => $this->tracks[0] ) ) );
+
+		$this->assertEqualsCanonicalizing( array( $this->tracks[0], $this->tracks[1] ), wp_list_pluck( Likes::get( $this->user ), 'id' ), 'both likes' );
+		$this->assertEqualsCanonicalizing( array( $this->tracks[0], $this->tracks[1] ), wp_list_pluck( Likes::history( $this->user ), 'id' ), 'both plays' );
+	}
+
+	public function test_a_list_kept_whole_as_before_is_read_and_comes_apart_on_the_next_change(): void {
+		global $wpdb;
+		update_user_option(
+			$this->user,
+			Likes::OPTION,
+			array(
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[0],
+					'at'   => 2000,
+				),
+				array(
+					'kind' => 'track',
+					'id'   => $this->tracks[1],
+					'at'   => 1000,
+				),
+			)
+		);
+		$this->assertSame( array( $this->tracks[0], $this->tracks[1] ), wp_list_pluck( Likes::get( $this->user ), 'id' ), 'read as it was' );
+
+		Likes::remove( $this->user, 'track', $this->tracks[0] );
+
+		$this->assertSame( array( $this->tracks[1] ), wp_list_pluck( Likes::get( $this->user ), 'id' ) );
+		$this->assertCount( 1, get_user_meta( $this->user, $wpdb->get_blog_prefix() . Likes::OPTION, false ), 'a row each now' );
 	}
 
 	public function test_the_player_gets_a_signed_in_users_likes_and_history_and_a_visitor_nothing(): void {

@@ -347,4 +347,48 @@ class Test_Riff_Tracks extends Riff_TestCase {
 		$this->assertSame( 0, Tracks::normalize( array( 'disc' => -1 ) )['disc'] );
 		$this->assertArrayHasKey( 'disc', Tracks::schema()['properties'] );
 	}
+	public function test_a_metadata_change_keeps_a_key_another_writer_saved_since_it_was_read(): void {
+		global $wpdb;
+		$id = self::factory()->attachment->create_object(
+			array(
+				'file'           => 'song.mp3',
+				'post_mime_type' => 'audio/mpeg',
+			)
+		);
+		wp_update_attachment_metadata( $id, array( 'artist' => 'Ann' ) );
+		wp_get_attachment_metadata( $id );
+		// Another process, such as `wp riff measure`, saves its key after this request read the metadata.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- what another process's write looks like to this one.
+		$wpdb->update(
+			$wpdb->postmeta,
+			array(
+				'meta_value' => maybe_serialize( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+					array(
+						'artist'      => 'Ann',
+						'riff_levels' => 'abc',
+					)
+				),
+			),
+			array(
+				'post_id'  => $id,
+				'meta_key' => '_wp_attachment_metadata', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			)
+		);
+
+		Tracks::update_metadata(
+			$id,
+			array(
+				'album'  => 'Songs',
+				'artist' => null,
+			)
+		);
+
+		$this->assertSame(
+			array(
+				'riff_levels' => 'abc',
+				'album'       => 'Songs',
+			),
+			wp_get_attachment_metadata( $id )
+		);
+	}
 }

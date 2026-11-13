@@ -81,8 +81,8 @@ Each entry gives where it is, what it means, and the risk: **high**, a listener 
 | Where | What | Risk |
 | --- | --- | --- |
 | `P.likes`, `likeSet` (`account.js`) | The likes and an index of them; every writer of `P.likes` must call `indexLikes()`. | medium |
-| `localStorage` `riff-likes`, the user option `riff_likes` | A visitor's, and a signed-in listener's. Each tab keeps its own copy and writes the whole list, so a like in another tab is lost. | medium |
-| `accountHistory` (`account.js`), `localStorage` `riff-history`, the user option `riff_history`, the cookie `riff_history` | What was played, three stores and a hint the server reads for Home's room. | medium |
+| `localStorage` `riff-likes`, the user meta `riff_likes`, a row each | A visitor's, and a signed-in listener's. Each tab keeps its own copy; on the server each like is a row of its own, so two at once both stay. | medium |
+| `accountHistory` (`account.js`), `localStorage` `riff-history`, the user meta `riff_history` (a row each), the cookie `riff_history` | What was played, three stores and a hint the server reads for Home's room. | medium |
 | `room`, `roomVersion` (`together.js`) and `version`, `listeners` (`features/listen/app/together.js`) | Who is listening, polled twice, by the player and the app. | medium |
 | `following` (`together.js`) | Whether this tab follows someone: nothing on `P` says so. | medium |
 

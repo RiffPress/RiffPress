@@ -56,12 +56,8 @@ final class Fields {
 		$tag   = static fn( string $key ) => array(
 			'get' => static fn( WP_Post $post ): string => (string) ( self::meta( $post->ID )[ $key ] ?? '' ),
 			'set' => static function ( WP_Post $post, $value ) use ( $key ): void {
-				$meta         = self::meta( $post->ID );
-				$meta[ $key ] = sanitize_text_field( (string) $value );
-				if ( '' === $meta[ $key ] ) {
-					unset( $meta[ $key ] );
-				}
-				wp_update_attachment_metadata( $post->ID, $meta );
+				$value = sanitize_text_field( (string) $value );
+				Tracks::update_metadata( $post->ID, array( $key => '' === $value ? null : $value ) );
 			},
 		);
 		return array(

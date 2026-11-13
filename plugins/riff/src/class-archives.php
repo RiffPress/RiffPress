@@ -658,7 +658,7 @@ final class Archives {
 		$more = array_diff_key( $tags, array_filter( $meta ) );
 		if ( $more ) {
 			// Saved through core, so the catalog files it under its album and artist.
-			wp_update_attachment_metadata( $id, array_merge( $meta, $more ) );
+			Tracks::update_metadata( $id, $more );
 		}
 	}
 

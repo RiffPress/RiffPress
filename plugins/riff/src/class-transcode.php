@@ -100,10 +100,7 @@ final class Transcode {
 		if ( '' === $levels ) {
 			return new WP_Error( 'riff_transcode_ffmpeg', __( 'ffmpeg could not read the file.', 'riff' ) );
 		}
-		$meta                = wp_get_attachment_metadata( $id );
-		$meta                = is_array( $meta ) ? $meta : array();
-		$meta['riff_levels'] = $levels;
-		wp_update_attachment_metadata( $id, $meta );
+		Tracks::update_metadata( $id, array( 'riff_levels' => $levels ) );
 		return $levels;
 	}
 

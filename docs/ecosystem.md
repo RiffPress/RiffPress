@@ -67,7 +67,7 @@ A push made with `GITHUB_TOKEN` starts no workflow. When `GITHUB_TOKEN` made the
 | --- | --- | --- |
 | `RELEASE_AUTO_MERGE` | variable | `false` is the kill switch: release pull requests wait for a person, as before. Unset, they merge themselves. |
 | `DOWNSTREAM_REPO`, `DOWNSTREAM_WORKFLOW` | variables | Which repository and workflow `notify-downstream` starts. |
-| `DOWNSTREAM_DISPATCH_TOKEN` | secret | The token it starts them with. When any of the three is missing, the job fails after the release is published, so it shows. |
+| `DOWNSTREAM_DISPATCH_TOKEN` | secret | The token it starts them with. Until both variables are set the job is skipped, as the WordPress.org deploy is until `WPORG_DEPLOY` is. With them set and the token missing, it fails after the release is published, so it shows. |
 | `WPORG_DEPLOY` | variable | `true` sends Riff's releases to WordPress.org. |
 
 ### When the release train stops

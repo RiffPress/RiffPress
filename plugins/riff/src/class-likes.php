@@ -18,9 +18,11 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A listener's likes and recently played.
  *
- * A signed-in user's likes and recently played are two user options, `riff_likes` and
- * `riff_history`, so they need no table of their own, and on a multisite network each site keeps
- * its own, since a track's ID means a different file on each. A visitor's stay in their browser;
+ * A signed-in user's likes and recently played are kept in user meta under the site's table
+ * prefix, `riff_likes` and `riff_history`, so they need no table of their own, and on a multisite
+ * network each site keeps its own, since a track's ID means a different file on each. Each like
+ * and each play is a row of its own, so a like on one device and another on a second are two
+ * inserts, and neither writes over the other. A visitor's stay in their browser;
  * the player sends them to the account the first time it loads after they sign in, and forgets
  * them on the device. A like is a track (an audio attachment), an album or an artist (a
  * `riff_album` or `riff_artist` term), by ID, with when it was liked; a play is a track by ID,
@@ -29,15 +31,17 @@ defined( 'ABSPATH' ) || exit;
 final class Likes {
 
 	/**
-	 * The user option holding a user's likes, newest first: `{ kind, id, at }`, `at` in
-	 * milliseconds since the epoch.
+	 * The user meta key, under the site's table prefix, holding a user's likes, a row each:
+	 * `{ kind, id, at }`, `at` in milliseconds since the epoch. A list in one row is how Riff kept
+	 * them before 6.17.0, and is still read.
 	 *
 	 * @since 4.20.0
 	 */
 	public const OPTION = 'riff_likes';
 
 	/**
-	 * The user option holding the tracks a user played, newest first: `{ id, played, post }`, the post being where it was played from.
+	 * The user meta key, under the site's table prefix, holding the tracks a user played, a row
+	 * each: `{ id, played, post }`, the post being where it was played from.
 	 *
 	 * @since 4.20.0
 	 */
@@ -100,7 +104,7 @@ final class Likes {
 	 * @return array[] Likes: kind, id, at.
 	 */
 	public static function get( int $user_id ): array {
-		return self::clean( get_user_option( self::OPTION, $user_id ) );
+		return self::clean( self::stored( $user_id, self::OPTION ) );
 	}
 
 	/**
@@ -116,7 +120,7 @@ final class Likes {
 	public static function add( int $user_id, array $items ): array {
 		$now   = self::now();
 		$likes = self::get( $user_id );
-		$added = array();
+		$added = false;
 		$have  = array();
 		foreach ( $likes as $like ) {
 			$have[ $like['kind'] . ':' . $like['id'] ] = true;
@@ -128,18 +132,20 @@ final class Likes {
 			if ( isset( $have[ $key ] ) || ! self::exists( $kind, $id ) ) {
 				continue;
 			}
-			$at           = (int) ( $item['at'] ?? 0 );
-			$added[]      = array(
-				'kind' => $kind,
-				'id'   => $id,
-				'at'   => $at > 0 && $at <= $now ? $at : $now,
+			$at = (int) ( $item['at'] ?? 0 );
+			add_user_meta(
+				$user_id,
+				self::key( self::OPTION ),
+				array(
+					'kind' => $kind,
+					'id'   => $id,
+					'at'   => $at > 0 && $at <= $now ? $at : $now,
+				)
 			);
+			$added        = true;
 			$have[ $key ] = true;
 		}
-		// New likes first, so one made in the same millisecond as an older one still leads.
-		$likes = self::clean( array_merge( array_reverse( $added ), $likes ) );
-		update_user_option( $user_id, self::OPTION, $likes );
-		return $likes;
+		return $added ? self::tidy( $user_id, self::OPTION ) : $likes;
 	}
 
 	/**
@@ -153,9 +159,7 @@ final class Likes {
 	 * @return array[] The user's likes after.
 	 */
 	public static function remove( int $user_id, string $kind, int $id ): array {
-		$likes = array_values( array_filter( self::get( $user_id ), static fn( $like ) => ! ( $like['kind'] === $kind && $like['id'] === $id ) ) );
-		update_user_option( $user_id, self::OPTION, $likes );
-		return $likes;
+		return self::tidy( $user_id, self::OPTION, static fn( $like ) => ! ( $like['kind'] === $kind && $like['id'] === $id ) );
 	}
 
 	/**
@@ -167,7 +171,7 @@ final class Likes {
 	 * @return array[] Plays: id, played, and the post it was played from.
 	 */
 	public static function history( int $user_id ): array {
-		return self::clean_history( get_user_option( self::HISTORY_OPTION, $user_id ) );
+		return self::clean_history( self::stored( $user_id, self::HISTORY_OPTION ) );
 	}
 
 	/**
@@ -180,19 +184,24 @@ final class Likes {
 	 * @return array[] The user's history after.
 	 */
 	public static function played( int $user_id, array $items ): array {
-		$now  = self::now();
-		$list = self::history( $user_id );
+		$now   = self::now();
+		$added = false;
 		foreach ( $items as $item ) {
 			$id = is_array( $item ) ? (int) ( $item['id'] ?? 0 ) : 0;
 			if ( ! self::exists( 'track', $id ) ) {
 				continue;
 			}
-			$at     = (int) ( $item['played'] ?? 0 );
-			$list[] = array(
-				'id'     => $id,
-				'played' => $at > 0 && $at <= $now ? $at : $now,
-				'post'   => (int) ( $item['post'] ?? 0 ),
+			$at = (int) ( $item['played'] ?? 0 );
+			add_user_meta(
+				$user_id,
+				self::key( self::HISTORY_OPTION ),
+				array(
+					'id'     => $id,
+					'played' => $at > 0 && $at <= $now ? $at : $now,
+					'post'   => max( 0, (int) ( $item['post'] ?? 0 ) ),
+				)
 			);
+			$added = true;
 			/**
 			 * Fires once for each play a listener's player reports, as it adds the play to their
 			 * history: when a track starts. A host counts plays here, per pass.
@@ -218,11 +227,7 @@ final class Likes {
 				)
 			);
 		}
-		// The latest play of each track counts.
-		usort( $list, static fn( $a, $b ) => $b['played'] <=> $a['played'] );
-		$list = self::clean_history( $list );
-		update_user_option( $user_id, self::HISTORY_OPTION, $list );
-		return $list;
+		return $added ? self::tidy( $user_id, self::HISTORY_OPTION ) : self::history( $user_id );
 	}
 
 	/**
@@ -247,6 +252,80 @@ final class Likes {
 			}
 		}
 		return $tracks;
+	}
+
+	/**
+	 * The user meta key for one of the two lists on this site.
+	 *
+	 * @param string $option OPTION or HISTORY_OPTION.
+	 * @return string
+	 */
+	private static function key( string $option ): string {
+		global $wpdb;
+		return $wpdb->get_blog_prefix() . $option;
+	}
+
+	/**
+	 * Every like or play stored, the newest row first, a list kept whole in one row (as before
+	 * 6.17.0) opened up in its place.
+	 *
+	 * @param int    $user_id User ID.
+	 * @param string $option  OPTION or HISTORY_OPTION.
+	 * @return array[]
+	 */
+	private static function stored( int $user_id, string $option ): array {
+		$items = array();
+		foreach ( array_reverse( get_user_meta( $user_id, self::key( $option ), false ) ) as $row ) {
+			if ( is_array( $row ) && array_is_list( $row ) ) {
+				array_push( $items, ...$row );
+			} else {
+				$items[] = $row;
+			}
+		}
+		return $items;
+	}
+
+	/**
+	 * Brings one list's rows to what it should hold, from what is stored now: each like or track
+	 * once, the newest kept, no more than the most kept, less any `$drop` turns away. Only rows read
+	 * here are deleted, so a row another request added meanwhile stays, and what is kept is never
+	 * written again, so nothing a second request did is written over.
+	 *
+	 * @param int           $user_id User ID.
+	 * @param string        $option  OPTION or HISTORY_OPTION.
+	 * @param callable|null $drop    Given an item, false to take it away.
+	 * @return array[] The list after.
+	 */
+	private static function tidy( int $user_id, string $option, ?callable $drop = null ): array {
+		$key = self::key( $option );
+		wp_cache_delete( $user_id, 'user_meta' );
+		$rows = get_user_meta( $user_id, $key, false );
+		$list = self::HISTORY_OPTION === $option ? self::history( $user_id ) : self::get( $user_id );
+		if ( $drop ) {
+			$list = array_values( array_filter( $list, $drop ) );
+		}
+		$want = array();
+		foreach ( $list as $item ) {
+			$want[ maybe_serialize( $item ) ] = $item;
+		}
+		$count = array_count_values( array_map( 'maybe_serialize', $rows ) );
+		foreach ( $rows as $row ) {
+			$id = maybe_serialize( $row );
+			if ( ! isset( $count[ $id ] ) ) {
+				continue;
+			}
+			if ( isset( $want[ $id ] ) && 1 === $count[ $id ] ) {
+				unset( $want[ $id ] );
+			} else {
+				delete_user_meta( $user_id, $key, $row );
+			}
+			unset( $count[ $id ] );
+		}
+		// What was kept in a list of its own, or twice, comes back as one row.
+		foreach ( array_reverse( $want ) as $item ) {
+			add_user_meta( $user_id, $key, $item );
+		}
+		return $list;
 	}
 
 	/**
@@ -306,9 +385,12 @@ final class Likes {
 	 * @return array[]
 	 */
 	private static function clean_history( $stored ): array {
-		$out  = array();
-		$seen = array();
-		foreach ( is_array( $stored ) ? $stored : array() as $play ) {
+		$out    = array();
+		$seen   = array();
+		$stored = array_values( array_filter( is_array( $stored ) ? $stored : array(), 'is_array' ) );
+		// The latest play of each track counts.
+		usort( $stored, static fn( $a, $b ) => (int) ( $b['played'] ?? 0 ) <=> (int) ( $a['played'] ?? 0 ) );
+		foreach ( $stored as $play ) {
 			$id = is_array( $play ) ? (int) ( $play['id'] ?? 0 ) : 0;
 			if ( $id <= 0 || isset( $seen[ $id ] ) ) {
 				continue;
@@ -421,6 +503,7 @@ final class Likes {
 		$removed = false;
 		if ( $user ) {
 			$removed = ( self::get( $user->ID ) || self::history( $user->ID ) );
+			// Every row of each, as deleting a user option takes them all.
 			delete_user_option( $user->ID, self::OPTION );
 			delete_user_option( $user->ID, self::HISTORY_OPTION );
 		}
