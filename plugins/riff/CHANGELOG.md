@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.16.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.16.0...riff-v6.16.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* **import:** a zip that adds no song loses only its file, keeping its private attachment with why ([#1087](https://github.com/RiffPress/RiffPress/issues/1087)) ([67381b5](https://github.com/RiffPress/RiffPress/commit/67381b5161207063eb62d8f2c47d708deb433ce2))
+
 ## [6.16.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.15.0...riff-v6.16.0) (2026-11-12)
 
 
