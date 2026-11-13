@@ -644,14 +644,21 @@ final class Catalog_Rest {
 
 	/**
 	 * The audio files past their availability, or their album's: asked each time, as the time
-	 * passes without a post changing. None on a site that sets no riff_available_until.
+	 * passes without a post changing. None on a site that sets no riff_available_until, which is
+	 * asked once until post meta next changes, as a request reads it more than once.
 	 *
 	 * @return int[]
 	 */
 	private static function ended_tracks(): array {
 		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- whether any music has an end, by the meta key's index.
-		if ( ! $wpdb->get_var( $wpdb->prepare( "SELECT 1 FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' LIMIT 1", Rights::UNTIL ) ) ) {
+		$key  = 'any-until:' . wp_cache_get_last_changed( 'posts' );
+		$some = wp_cache_get( $key, 'riff' );
+		if ( false === $some ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- whether any music has an end, by the meta key's index, kept in the object cache.
+			$some = $wpdb->get_var( $wpdb->prepare( "SELECT 1 FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' LIMIT 1", Rights::UNTIL ) ) ? 1 : 0;
+			wp_cache_set( $key, $some, 'riff' );
+		}
+		if ( ! $some ) {
 			return array();
 		}
 		$now = gmdate( 'Y-m-d H:i:s' );

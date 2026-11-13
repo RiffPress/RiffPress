@@ -85,7 +85,7 @@ class Test_Riff_Views extends Riff_TestCase {
 		$author = $this->render_at( array() );
 		$this->assertMatchesRegularExpression( '#<a class="riff-app-tab" href="[^"]*riff_view=upload"><svg[^>]*><path d="M12 5V19" ?/>[^<]*</svg><span>Upload</span></a>#', $author, 'in the sidebar, its icon kept to what an icon needs' );
 		$this->assertStringNotContainsString( '<script>', $author );
-		$this->assertMatchesRegularExpression( '#riff-app-account-menu.*<a href="[^"]*riff_view=upload">Upload</a>#s', $author, 'and the account menu' );
+		$this->assertMatchesRegularExpression( '#riff-app-account-menu.*<a href="[^"]*riff_view=upload" data-riff-in-sidebar>Upload</a>#s', $author, 'and the account menu' );
 		$this->assertLessThan( strpos( $author, 'riff-app-tab-library' ), strpos( $author, 'riff_view=upload' ), 'before Library, which stays last' );
 	}
 

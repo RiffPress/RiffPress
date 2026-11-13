@@ -40,6 +40,8 @@ class Test_Riff_Rights extends Riff_TestCase {
 
 	public function set_up(): void {
 		parent::set_up();
+		// Each test's tear_down unregisters every meta key, so they are registered again for it.
+		Rights::register_meta();
 		$author      = self::factory()->user->create(
 			array(
 				'role'         => 'author',
@@ -258,6 +260,25 @@ class Test_Riff_Rights extends Riff_TestCase {
 		update_post_meta( $this->track, Rights::UNTIL, gmdate( 'Y-m-d H:i:s', time() + DAY_IN_SECONDS ) );
 		$this->assertFalse( Tracks::from_attachment( $this->track, $this->album )['locked'], 'its own end, later' );
 		$this->assertNotContains( $this->track, $hidden->invoke( null ) );
+	}
+
+	public function test_whether_any_music_has_an_end_is_asked_once_until_post_meta_changes(): void {
+		$hidden = new ReflectionMethod( Riff\Catalog_Rest::class, 'hidden_tracks' );
+		$hidden->setAccessible( true );
+		$asked = 0;
+		$count = static function ( $sql ) use ( &$asked ) {
+			$asked += (int) str_contains( $sql, "meta_key = '" . Rights::UNTIL . "' AND meta_value <> '' LIMIT 1" );
+			return $sql;
+		};
+		add_filter( 'query', $count );
+		$hidden->invoke( null );
+		$hidden->invoke( null );
+		$this->assertSame( 1, $asked, 'once for the request, however often the list is read' );
+
+		update_post_meta( $this->album, Rights::UNTIL, '2020-01-01 00:00:00' );
+		$this->assertContains( $this->track, $hidden->invoke( null ), 'and asked again once a post changes' );
+		remove_filter( 'query', $count );
+		$this->assertSame( 2, $asked );
 	}
 
 	public function test_a_page_asks_riff_may_play_with_the_pass(): void {

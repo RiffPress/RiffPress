@@ -414,7 +414,8 @@ test.describe( 'Standalone', () => {
 		await summary.focus();
 		await page.keyboard.press( 'Enter' );
 		await page.keyboard.press( 'Tab' );
-		const link = page.locator( '.riff-app-account-menu a' ).first();
+		// Your Library is left out while the sidebar shows it, so the first link is the next one.
+		const link = page.locator( '.riff-app-account-menu a:visible' ).first();
 		await expect( link ).toBeFocused();
 		await expect( link ).toHaveCSS( 'outline-style', 'solid' );
 	} );
