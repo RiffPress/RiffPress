@@ -14,12 +14,16 @@
  *   npx wp-env run cli wp rewrite structure '/%postname%/' --hard
  *   npx wp-env run cli wp post create --post_type=page --post_status=publish --post_title=Listen \
  *     --post_name=listen '--post_content=<!-- wp:riff/app {"align":"full"} /-->'
- *   npx wp-env run cli wp user create ada ada@example.com --role=subscriber --user_pass=password --display_name=Ada
- *   npx wp-env run cli wp user create theo theo@example.com --role=subscriber --user_pass=password --display_name=Theo
+ *   for who in Ada Theo Mina Jun; do user=$( echo $who | tr A-Z a-z )
+ *     npx wp-env run cli wp user create $user $user@example.com --role=subscriber --user_pass=password --display_name=$who
+ *     npx wp-env run cli wp user meta update $user riff_dev_avatar $user.svg
+ *   done
  *
- * Ada and Theo are the other listeners in desktop-everything, signed in beside the admin and each
- * playing, so Together has someone to show; with an address Gravatar doesn't know, each has the
- * face Riff draws for no picture.
+ * Ada, Theo, Mina and Jun are the other listeners in desktop-everything, signed in beside the admin
+ * and each playing, so Together has someone to show. Their faces are packages/fixtures/avatars/,
+ * given them by the development site's local-avatars must-use plugin as a local-avatar plugin
+ * would. That picture is of a label's site, so it names the site Enqueue Records while it is
+ * taken, through the settings route as its owner would, and gives the name back after.
  *
  * The page has no `listen` template, as the first-run notice's page has none: the Riff block is
  * what makes it the Listen page, and the editor's pictures fatal on WordPress 7.2 with one.
@@ -214,7 +218,7 @@ function postId( page, post ) {
 /**
  * A listener's session with nearly everything open at once, as one can have it: signed in, in the
  * Listen app, the sung album's page beside the library with a playlist of their own, the track
- * playing a verse in and liked, and Together open beside the page with two others listening. Now
+ * playing a verse in and liked, and Together open beside the page with four others listening. Now
  * Playing is left closed: it covers the library, and beside the turntable no panel opens.
  *
  * @param {import('@playwright/test').Browser} browser Chromium.
@@ -223,7 +227,13 @@ async function everything( browser ) {
 	const options = { viewport: { width: 1440, height: 900 }, colorScheme: 'dark' };
 	// The others, each playing in a window of their own until the picture is taken.
 	const others = [];
-	for ( const [ user, post, row ] of [ [ 'ada', LYRICS, 8 ], [ 'theo', '/songs-of-the-republic/', 2 ] ] ) {
+	const listening = [
+		[ 'ada', LYRICS, 8 ],
+		[ 'theo', '/songs-of-the-republic/', 2 ],
+		[ 'mina', '/carols-of-the-season/', 4 ],
+		[ 'jun', POST, 3 ],
+	];
+	for ( const [ user, post, row ] of listening ) {
 		const them = await browser.newContext( options );
 		const page = await them.newPage();
 		await signIn( page, user, PASSWORD );
@@ -236,21 +246,41 @@ async function everything( browser ) {
 	const context = await browser.newContext( { ...options, deviceScaleFactor: 2 } );
 	const page = await context.newPage();
 	await signIn( page, USER, PASSWORD );
-	// A playlist of their own, made once, as the library's + makes it.
+	// The label's name for the site, and a playlist of their own, made once, as the library's +
+	// makes it.
 	await page.goto( `${ BASE }/listen/app/` );
-	await page.evaluate( async () => {
-		const nonce = await ( await fetch( '/wp-admin/admin-ajax.php?action=rest-nonce' ) ).text();
-		const headers = { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' };
-		const route = '/wp-json/riff/v1/users/me/playlists';
-		const have = await ( await fetch( route, { headers } ) ).json();
-		if ( JSON.stringify( have ).includes( 'Winter evenings' ) ) {
-			return;
+	const rest = ( route, method = 'GET', body ) =>
+		page.evaluate(
+			async ( [ r, m, b ] ) => {
+				window.riffShotsNonce ??= await ( await fetch( '/wp-admin/admin-ajax.php?action=rest-nonce' ) ).text();
+				const headers = { 'X-WP-Nonce': window.riffShotsNonce, 'Content-Type': 'application/json' };
+				return ( await fetch( `/wp-json${ r }`, { method: m, headers, body: b && JSON.stringify( b ) } ) ).json();
+			},
+			[ route, method, body ]
+		);
+	const name = ( await rest( '/wp/v2/settings' ) ).title;
+	await rest( '/wp/v2/settings', 'POST', { title: 'Enqueue Records' } );
+	try {
+		const playlists = '/riff/v1/users/me/playlists';
+		if ( ! JSON.stringify( await rest( playlists ) ).includes( 'Winter evenings' ) ) {
+			const carols = ( await rest( '/wp/v2/posts?slug=carols-of-the-season' ) )[ 0 ];
+			const media = await rest( `/wp/v2/media?parent=${ carols.id }&media_type=audio&per_page=5` );
+			await rest( playlists, 'POST', { title: 'Winter evenings', tracks: media.map( ( m ) => m.id ) } );
 		}
-		const carols = ( await ( await fetch( '/wp-json/wp/v2/posts?slug=carols-of-the-season' ) ).json() )[ 0 ];
-		const media = await ( await fetch( `/wp-json/wp/v2/media?parent=${ carols.id }&media_type=audio&per_page=5` ) ).json();
-		await fetch( route, { method: 'POST', headers, body: JSON.stringify( { title: 'Winter evenings', tracks: media.map( ( m ) => m.id ) } ) } );
-	} );
+		await session( page );
+	} finally {
+		await rest( '/wp/v2/settings', 'POST', { title: name } );
+	}
+	await context.close();
+	await Promise.all( others.map( ( them ) => them.close() ) );
+}
 
+/**
+ * The sung album playing a verse in, liked, with Together open and everyone else in it.
+ *
+ * @param {import('@playwright/test').Page} page The admin's page, signed in.
+ */
+async function session( page ) {
 	await page.goto( `${ BASE }/listen/app/?riff=${ await postId( page, LYRICS ) }` );
 	await page.locator( '[data-riff-app-ready]' ).waitFor();
 	await page.locator( '.riff-row' ).first().click();
@@ -263,11 +293,12 @@ async function everything( browser ) {
 	}
 	await page.locator( '.riff-bar [data-riff-control="together"]' ).click();
 	const panel = page.locator( '[data-riff-panel="together"]' );
-	await panel.getByText( 'Ada' ).waitFor( { timeout: 30000 } );
-	await panel.getByText( 'Theo' ).waitFor( { timeout: 30000 } );
+	for ( const who of [ 'Ada', 'Theo', 'Mina', 'Jun' ] ) {
+		await panel.getByText( who ).waitFor( { timeout: 30000 } );
+	}
+	// Their faces loaded, not still coming.
+	await page.waitForFunction( () => [ ...document.querySelectorAll( '[data-riff-panel="together"] img' ) ].every( ( img ) => img.complete && img.naturalWidth ) );
 	await save( page, 'desktop-everything', true );
-	await context.close();
-	await Promise.all( others.map( ( them ) => them.close() ) );
 }
 
 /**
