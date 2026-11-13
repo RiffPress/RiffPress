@@ -564,6 +564,24 @@ html.riff-frame .riff-standalone .riff-app .riff-shelf-row:has(> .riff-card) {
 	margin: -6px -12px -2px;
 }
 
+/* Recently played's tracks: three columns across, each row its padding
+   around the small cover. */
+html.riff-frame .riff-standalone .riff-app [data-riff-shelf="recent"] .riff-shelf-row {
+	grid-template-rows: repeat(2, 80px);
+	grid-auto-columns: minmax(240px, calc(100% / 3));
+}
+
+html.riff-frame .riff-standalone .riff-app [data-riff-shelf="recent"] .riff-card {
+	padding: 8px 12px;
+}
+
+@media (max-width: 599px) {
+
+	html.riff-frame .riff-standalone .riff-app [data-riff-shelf="recent"] .riff-shelf-row {
+		grid-auto-columns: 85%;
+	}
+}
+
 html.riff-frame .riff-standalone .riff-app .riff-card {
 	padding: 12px;
 	border-radius: 8px;

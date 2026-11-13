@@ -668,6 +668,10 @@
 	   widest child's min-content, which for a title that doesn't wrap is the
 	   whole title, and the card would spill over the next one. */
 	grid-template-columns: minmax(0, 1fr);
+
+	/* Its rows only as tall as what is in them, so a card beside one with a
+	   longer title keeps its cover, title and line at the top. */
+	align-content: start;
 	gap: 2px;
 	min-width: 0;
 }
@@ -1029,12 +1033,14 @@
 	font-size: 64px;
 }
 
+/* A title takes two lines before it is cut short; the line under it, one. */
 .riff-card-title {
-	display: block;
+	display: -webkit-box;
 	overflow: hidden;
 	font-weight: 600;
-	white-space: nowrap;
-	text-overflow: ellipsis;
+	line-height: 1.375;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 }
 
 .riff-card:hover .riff-card-title {
@@ -1100,6 +1106,74 @@
 	.riff-app .riff-card-play {
 		opacity: 1;
 		transform: none;
+	}
+}
+
+/* Recently played is tracks, not albums: each a small cover beside its
+   title and artist, two rows of them that scroll sideways, so five tracks
+   from one album read as five tracks rather than one cover five times, and
+   the row never looks like Jump back in above it. Two rows tall however
+   many there are, so the row held for a visitor's history is the size of
+   the one that fills it. */
+.riff-app [data-riff-shelf="recent"] .riff-shelf-row {
+	grid-template-rows: repeat(2, 64px);
+	grid-auto-columns: minmax(240px, calc((100% - 40px) / 3));
+	gap: 8px 20px;
+}
+
+.riff-app [data-riff-shelf="recent"] .riff-card {
+	grid-template-columns: 64px minmax(0, 1fr);
+	grid-template-rows: 1fr 1fr;
+	column-gap: 12px;
+	row-gap: 0;
+	align-content: stretch;
+}
+
+.riff-app [data-riff-shelf="recent"] .riff-card-art {
+	grid-row: 1 / span 2;
+	margin: 0;
+}
+
+.riff-app [data-riff-shelf="recent"] .riff-card-link {
+	align-self: end;
+}
+
+.riff-app [data-riff-shelf="recent"] .riff-card-title {
+	-webkit-line-clamp: 1;
+}
+
+.riff-app [data-riff-shelf="recent"] .riff-card-sub {
+	align-self: start;
+}
+
+/* Its play button covers the small cover, which is the size of the button. */
+.riff-app [data-riff-shelf="recent"] .riff-card-play {
+	inset: 0;
+	width: auto;
+	height: auto;
+	border-radius: 2px;
+	background: rgb(0 0 0 / 0.5);
+	color: #fff;
+	box-shadow: none;
+	transform: none;
+}
+
+.riff-app [data-riff-shelf="recent"] .riff-card-play:hover {
+	background: rgb(0 0 0 / 0.65);
+}
+
+/* Where nothing points, always there, over a lighter shade. */
+@media (hover: none) {
+
+	.riff-app [data-riff-shelf="recent"] .riff-card-play {
+		background: rgb(0 0 0 / 0.3);
+	}
+}
+
+@media (max-width: 599px) {
+
+	.riff-app [data-riff-shelf="recent"] .riff-shelf-row {
+		grid-auto-columns: 85%;
 	}
 }
 
