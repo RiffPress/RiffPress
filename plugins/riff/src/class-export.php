@@ -244,9 +244,8 @@ final class Export {
 	 */
 	private static function posts( bool $open_only ): array {
 		global $wpdb;
-		$types = implode( ',', array_map( static fn( string $t ): string => "'" . esc_sql( $t ) . "'", Archive::TYPES ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the types are constants, escaped.
-		$rows = (array) $wpdb->get_results( "SELECT ID, post_type, post_status, post_parent, post_password FROM {$wpdb->posts} WHERE post_type IN ($types) AND post_status NOT IN ( 'auto-draft', 'trash' ) ORDER BY ID" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- every post of Riff's types at once, for the archive, which WP_Query would page and cache.
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT ID, post_type, post_status, post_parent, post_password FROM {$wpdb->posts} WHERE post_type IN (" . implode( ', ', array_fill( 0, count( Archive::TYPES ), '%s' ) ) . ") AND post_status NOT IN ( 'auto-draft', 'trash' ) ORDER BY ID", Archive::TYPES ) );
 		if ( ! $open_only ) {
 			return array_map( static fn( $row ): int => (int) $row->ID, $rows );
 		}
@@ -451,9 +450,8 @@ final class Export {
 	private static function options( PDO $db, array &$statements ): void {
 		global $wpdb;
 		$names = array_merge( Archive::OPTIONS, Archive::IDENTITY );
-		$in    = implode( ',', array_map( static fn( string $n ): string => "'" . esc_sql( $n ) . "'", $names ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the names are constants, escaped.
-		foreach ( (array) $wpdb->get_results( "SELECT * FROM {$wpdb->options} WHERE option_name IN ($in)", ARRAY_A ) as $row ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- the options' rows as stored, for the archive; get_option() would unserialize them.
+		foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->options} WHERE option_name IN (" . implode( ', ', array_fill( 0, count( $names ), '%s' ) ) . ')', $names ), ARRAY_A ) as $row ) {
 			self::insert( $db, $statements, 'options', $row );
 		}
 	}

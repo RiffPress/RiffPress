@@ -245,6 +245,37 @@ class Test_Riff_Export extends Riff_TestCase {
 		$this->assertSame( array( 'hannah@example.test' ), array_column( $this->users_in( $this->zip ), 'user_email' ), "the owner's own export" );
 	}
 
+	public function test_the_archive_holds_the_sites_name_and_its_posts(): void {
+		update_option( 'blogname', 'Hannah Merrill Live' );
+		$post = self::factory()->post->create( array( 'post_status' => 'publish' ) );
+		$done = Export::to_file( $this->zip, array( 'plugins' => false ) );
+
+		$this->assertIsArray( $done );
+		$options = array_column( $this->rows_in( $this->zip, 'options' ), 'option_value', 'option_name' );
+		$this->assertSame( 'Hannah Merrill Live', $options['blogname'] ?? null );
+		$this->assertContains( (string) $post, array_map( 'strval', array_column( $this->rows_in( $this->zip, 'posts' ), 'ID' ) ) );
+	}
+
+	/**
+	 * One table of an archive's database.
+	 *
+	 * @param string $zip   The archive.
+	 * @param string $table The table, without its prefix.
+	 * @return array<int, array<string, string>> Rows.
+	 */
+	private function rows_in( string $zip, string $table ): array {
+		$archive = new ZipArchive();
+		$this->assertTrue( $archive->open( $zip ) );
+		$file = get_temp_dir() . 'riff-phpunit-export-' . wp_generate_password( 8, false ) . '.sqlite';
+		file_put_contents( $file, (string) $archive->getFromName( Archive::DATABASE ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions -- test scratch.
+		$archive->close();
+		$db   = Archive::database( $file );
+		$rows = (array) $db->query( 'SELECT * FROM ' . Archive::PREFIX . $table )->fetchAll();
+		$db   = null;
+		wp_delete_file( $file );
+		return $rows;
+	}
+
 	/**
 	 * The users an archive's database holds.
 	 *
