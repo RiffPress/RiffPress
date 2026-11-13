@@ -17,6 +17,9 @@ Technics = "Technics"
 Performous = "Performous"
 # loc.gov's API asks for JSON with fo=json, its own name for the format.
 fo = "fo"
+# Creative Commons' NoDerivatives term, as in CC BY-NC-ND and its cc-by-nc-nd identifier.
+ND = "ND"
+nd = "nd"
 
 [files]
 extend-exclude = [

@@ -123,7 +123,7 @@ test( 'a follower keeps within a tenth of a second of the host through a play, p
 		} ).toPass( { timeout: 30000 } );
 		const play = card.locator( '.riff-card-play' );
 		const host = Number( await play.getAttribute( 'data-riff-user' ) );
-		await expect( play ).toHaveAttribute( 'aria-label', /^Follow / );
+		await expect( play ).toHaveAttribute( 'aria-label', /^Listen along with / );
 		await card.hover();
 		await play.click();
 
