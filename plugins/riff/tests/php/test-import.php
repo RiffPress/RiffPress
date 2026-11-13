@@ -785,6 +785,54 @@ class Test_Riff_Import extends Riff_TestCase {
 		$this->assertFileExists( $file );
 	}
 
+	public function test_a_zip_that_adds_no_song_loses_only_its_file_and_keeps_why(): void {
+		$editor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $editor );
+		$entries = array( '02 - Underground [underground].mp3' => '02 - Underground [underground].mp3' );
+		$first   = self::factory()->attachment->create_upload_object( $this->zip_of( $entries ) );
+		Import::uploaded_zip( $first );
+		$this->assertNull( get_post( $first ), 'a zip that added a song is deleted whole' );
+
+		// The same songs again: every one is already in the library.
+		$again = self::factory()->attachment->create_upload_object( $this->zip_of( $entries ) );
+		$file  = get_attached_file( $again );
+		wp_set_current_user( 0 );
+		$result = Import::uploaded_zip( $again );
+
+		$this->assertIsArray( $result, 'the report is as it was' );
+		$this->assertNotNull( get_post( $again ), 'its attachment stays' );
+		$this->assertFileDoesNotExist( $file, 'its file is deleted' );
+		$this->assertSame( '', (string) get_post_meta( $again, '_wp_attached_file', true ) );
+		$this->assertSame( 'private', get_post_field( 'post_status', $again ), 'private, unlisted to anyone who cannot upload' );
+		$meta = get_post_meta( $again, Import::ERROR, true );
+		$this->assertIsArray( $meta );
+		$this->assertStringContainsString( 'already in your library', $meta['message'] );
+
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$this->assertFalse( current_user_can( 'read_post', $again ) );
+		wp_set_current_user( $editor );
+		ob_start();
+		Import::notice();
+		$this->assertStringContainsString( 'already in your library', (string) ob_get_clean(), 'its uploader is told' );
+	}
+
+	public function test_a_zip_whose_every_song_fails_keeps_the_reason(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+		$id     = self::factory()->attachment->create_upload_object( $this->zip_of( array( '01 - Broken.mp3' => '01 - Broken.mp3' ) ) );
+		$no_mp3 = static fn( $mimes ) => array_diff_key( $mimes, array( 'mp3|m4a|m4b' => 1 ) );
+		add_filter( 'upload_mimes', $no_mp3 );
+		$result = Import::uploaded_zip( $id );
+		remove_filter( 'upload_mimes', $no_mp3 );
+
+		$this->assertIsArray( $result );
+		$this->assertNotNull( get_post( $id ) );
+		$this->assertFileDoesNotExist( (string) get_attached_file( $id ) );
+		$meta = get_post_meta( $id, Import::ERROR, true );
+		$this->assertIsArray( $meta, 'with why' );
+		$this->assertStringContainsString( 'None of its songs could be added', $meta['message'] );
+		$this->assertSame( 'private', get_post_field( 'post_status', $id ) );
+	}
+
 	public function test_a_zip_with_no_audio_is_no_album_and_stays_as_it_was(): void {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
 		$id = self::factory()->attachment->create_upload_object( $this->zip_of( array( 'press.txt' => 'A press release.' ) ) );

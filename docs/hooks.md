@@ -408,7 +408,7 @@ Since 6.3.0. Fires in `plugins/riff/templates/player.php`.
 
 ### `riff_import_zip_done`
 
-Fires once a zip uploaded to the Media Library has been imported, or has failed to be, before Riff deletes anything: then a zip that became albums is deleted, and only the file of one that failed, whose attachment stays, private, with why in its Import::ERROR meta (`_riff_import_error`). Nothing is deleted when riff_import_keep_zip keeps it, or when it held no audio. A host that keeps uploads elsewhere, or a copy of them, can remove its own copy here too.
+Fires once a zip uploaded to the Media Library has been imported, or has failed to be, before Riff deletes anything: then a zip that became albums is deleted, and only the file of one that failed or added no song, whose attachment stays, private, with why in its Import::ERROR meta (`_riff_import_error`). Nothing is deleted when riff_import_keep_zip keeps it, or when it held no audio. A host that keeps uploads elsewhere, or a copy of them, can remove its own copy here too.
 
 Since 6.15.1. Fires in `plugins/riff/src/class-import.php`.
 

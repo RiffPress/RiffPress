@@ -303,6 +303,7 @@ final class Import {
 	 * @since 6.5.0 Private: Protected tracks and private posts.
 	 * @since 6.8.0 Private unless the riff_import_private filter says otherwise.
 	 * @since 6.15.1 Deletes the zip once it is unpacked, unless riff_import_keep_zip says otherwise.
+	 * @since 6.16.1 A zip that added no song is kept, as one that failed is, with why.
 	 *
 	 * @param int $id Attachment ID.
 	 * @return array|WP_Error|null The import's report, as zip() gives it, or null when there was nothing to import.
@@ -379,7 +380,7 @@ final class Import {
 		/**
 		 * Fires once a zip uploaded to the Media Library has been imported, or has failed to be,
 		 * before Riff deletes anything: then a zip that became albums is deleted, and only the
-		 * file of one that failed, whose attachment stays, private, with why in its
+		 * file of one that failed or added no song, whose attachment stays, private, with why in its
 		 * Import::ERROR meta (`_riff_import_error`). Nothing is deleted when riff_import_keep_zip
 		 * keeps it, or when it held no audio. A host that keeps uploads elsewhere, or a copy of
 		 * them, can remove its own copy here too.
@@ -392,13 +393,14 @@ final class Import {
 		do_action( 'riff_import_zip_done', $id, $result );
 
 		$failed = is_wp_error( $result );
-		if ( $failed ) {
+		$why    = $failed ? $result->get_error_message() : self::added_nothing( $result );
+		if ( '' !== $why ) {
 			update_post_meta(
 				$id,
 				self::ERROR,
 				array(
 					'name'    => wp_basename( $file ),
-					'message' => $result->get_error_message(),
+					'message' => $why,
 				)
 			);
 			$told   = get_transient( self::FAILED . $author );
@@ -438,12 +440,42 @@ final class Import {
 					'post_parent' => $album,
 				)
 			);
-		} elseif ( $failed ) {
+		} elseif ( '' !== $why ) {
 			self::drop_file( $id );
 		} else {
 			wp_delete_attachment( $id, true );
 		}
 		return $result;
+	}
+
+	/**
+	 * Why a zip that held audio added no song, or empty when it added one or held none: every song
+	 * failed, or was already in the library. Treated as a failure, so the reason is kept.
+	 *
+	 * @since 6.16.1
+	 *
+	 * @param array $result The import's report.
+	 * @return string The reason, or empty.
+	 */
+	private static function added_nothing( array $result ): string {
+		$failed = array();
+		foreach ( $result['albums'] as $album ) {
+			if ( ! empty( $album['imported'] ) ) {
+				return '';
+			}
+			$failed += (array) ( $album['failed'] ?? array() );
+		}
+		if ( ! $result['albums'] ) {
+			return '';
+		}
+		if ( $failed ) {
+			return sprintf(
+				/* translators: %s: Why the first song could not be added. */
+				__( 'None of its songs could be added: %s', 'riff' ),
+				(string) reset( $failed )
+			);
+		}
+		return __( 'Every song in it was already in your library, so none was added.', 'riff' );
 	}
 
 	/**
