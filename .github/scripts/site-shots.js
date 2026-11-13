@@ -1,25 +1,28 @@
 #!/usr/bin/env node
 /* eslint-disable no-console -- a build script that says what it wrote, as og-images.js does. */
 /**
- * The pictures of the player on Riff Source's pages, in site/: the Listen app, Now Playing and a
- * sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), the app with nearly
- * everything open at once (desktop-everything), and a post and the lyrics on a phone (780×1688),
- * each as a PNG and an AVIF. They are taken from a site
+ * The pictures of the player on Riff Source's pages, in site/: the Listen app, an album, Now
+ * Playing and a sung track's lyrics on a wide screen (2880×1800, with a 1440 copy), the app with
+ * nearly everything open at once (desktop-everything), and a post, Now Playing, Up next and the
+ * lyrics on a phone (780×1688), each as a PNG and an AVIF. They are taken from a site
  * that holds the demo albums and nothing else, set up as the demo's blueprint sets up Playground,
  * so the pictures show the demo a visitor will open:
  *
  *   npx wp-env reset development && npm run seed
- *   npx wp-env run cli wp option update blogname Riff   # a worktree's wp-env is named for its branch
+ *   npx wp-env run cli wp option update blogname "Enqueue Records"   # a worktree's wp-env is named for its branch
  *   npx wp-env run cli wp theme activate twentytwentyfive   # the theme Playground's demo has
  *   npx wp-env run cli wp rewrite structure '/%postname%/' --hard
  *   npx wp-env run cli wp post create --post_type=page --post_status=publish --post_title=Listen \
  *     --post_name=listen '--post_content=<!-- wp:riff/app {"align":"full"} /-->'
- *   npx wp-env run cli wp user create ada ada@example.com --role=subscriber --user_pass=password --display_name=Ada
- *   npx wp-env run cli wp user create theo theo@example.com --role=subscriber --user_pass=password --display_name=Theo
+ *   for who in Ada Theo Mina Jun; do user=$( echo $who | tr A-Z a-z )
+ *     npx wp-env run cli wp user create $user $user@example.com --role=subscriber --user_pass=password --display_name=$who
+ *     npx wp-env run cli wp user meta update $user riff_dev_avatar $user.svg
+ *   done
  *
- * Ada and Theo are the other listeners in desktop-everything, signed in beside the admin and each
- * playing, so Together has someone to show; with an address Gravatar doesn't know, each has the
- * face Riff draws for no picture.
+ * Ada, Theo, Mina and Jun are the other listeners in desktop-everything, signed in beside the admin
+ * and each playing, so Together has someone to show. Their faces are packages/fixtures/avatars/,
+ * given them by the development site's local-avatars must-use plugin as a local-avatar plugin
+ * would.
  *
  * The page has no `listen` template, as the first-run notice's page has none: the Riff block is
  * what makes it the Listen page, and the editor's pictures fatal on WordPress 7.2 with one.
@@ -33,7 +36,8 @@
  *   RIFF_SHOTS_TRACK the row to play, counted from 0, default 1: Underground, which has no video
  *                    version, so a phone keeps the post on screen and Now Playing shows no Song and
  *                    Video switch
- *   RIFF_SHOTS_LYRICS a sung album's post, for its lyrics, default /christmas-with-the-chorus/
+ *   RIFF_SHOTS_LYRICS a sung album's post, for its lyrics, default /songs-of-the-republic/
+ *   RIFF_SHOTS_LYRICS_ROW its row to play, counted from 0, default 2: Shenandoah, its words timed
  *   RIFF_SHOTS_USER  and RIFF_SHOTS_PASSWORD, for the editor's pictures, default wp-env's admin / password
  */
 const fs = require( 'node:fs' );
@@ -46,8 +50,10 @@ const FIXTURES = path.join( ROOT, 'packages', 'fixtures' );
 const BASE = ( process.env.RIFF_SHOTS_URL || 'http://localhost:8890' ).replace( /\/$/, '' );
 const POST = process.env.RIFF_SHOTS_POST || '/compositions/';
 const TRACK = Number( process.env.RIFF_SHOTS_TRACK || 1 );
-const LYRICS = process.env.RIFF_SHOTS_LYRICS || '/christmas-with-the-chorus/';
-const LYRICS_AT = 26;
+const LYRICS = process.env.RIFF_SHOTS_LYRICS || '/songs-of-the-republic/';
+const LYRICS_ROW = Number( process.env.RIFF_SHOTS_LYRICS_ROW || 2 );
+// The second verse's "Away, you rolling river", under its first.
+const LYRICS_AT = 55;
 const USER = process.env.RIFF_SHOTS_USER || 'admin';
 const PASSWORD = process.env.RIFF_SHOTS_PASSWORD || 'password';
 
@@ -146,6 +152,7 @@ async function desktop( browser ) {
 		await page.evaluate( () => window.riff.toggle() );
 	}
 	await page.waitForTimeout( 1500 );
+	await save( page, 'desktop-album', true );
 
 	// Now Playing from the bar, wide: the sleeve set down beside the turntable.
 	await page.locator( '.riff-bar-info' ).click();
@@ -155,7 +162,7 @@ async function desktop( browser ) {
 
 	// A sung album's words, timed to the music, a verse in: the line being sung stands out.
 	await page.goto( BASE + LYRICS );
-	await page.locator( '.riff-row' ).first().click();
+	await page.locator( '.riff-row' ).nth( LYRICS_ROW ).click();
 	await page.locator( '.riff-bar' ).waitFor();
 	await page.evaluate( ( at ) => window.riff.seek( at ), LYRICS_AT );
 	await page.waitForTimeout( 1500 );
@@ -172,9 +179,19 @@ async function phone( browser, devices ) {
 	await page.evaluate( () => window.scrollTo( 0, document.querySelector( '.riff-row' ).getBoundingClientRect().top + window.scrollY - 100 ) );
 	await save( page, 'phone-post', false );
 
+	// Now Playing from the bar, the cover on its own, and Up next from its chip.
+	await page.locator( '.riff-bar-info' ).click();
+	await page.locator( '.riff-np' ).waitFor();
+	await page.waitForTimeout( 1500 );
+	await save( page, 'phone-now-playing', false );
+	await page.locator( '[data-riff-chip="queue"]' ).click();
+	await page.locator( '[data-riff-panel="queue"]' ).waitFor();
+	await page.waitForTimeout( 1000 );
+	await save( page, 'phone-up-next', false );
+
 	// The sung album's words on a phone: Now Playing, then Lyrics from its chip.
 	await page.goto( BASE + LYRICS );
-	await page.locator( '.riff-row' ).first().click();
+	await page.locator( '.riff-row' ).nth( LYRICS_ROW ).click();
 	await page.locator( '.riff-bar' ).waitFor();
 	await page.evaluate( ( at ) => window.riff.seek( at ), LYRICS_AT );
 	await page.waitForTimeout( 1500 );
@@ -214,7 +231,7 @@ function postId( page, post ) {
 /**
  * A listener's session with nearly everything open at once, as one can have it: signed in, in the
  * Listen app, the sung album's page beside the library with a playlist of their own, the track
- * playing a verse in and liked, and Together open beside the page with two others listening. Now
+ * playing a verse in and liked, and Together open beside the page with four others listening. Now
  * Playing is left closed: it covers the library, and beside the turntable no panel opens.
  *
  * @param {import('@playwright/test').Browser} browser Chromium.
@@ -223,7 +240,13 @@ async function everything( browser ) {
 	const options = { viewport: { width: 1440, height: 900 }, colorScheme: 'dark' };
 	// The others, each playing in a window of their own until the picture is taken.
 	const others = [];
-	for ( const [ user, post, row ] of [ [ 'ada', LYRICS, 8 ], [ 'theo', '/songs-of-the-republic/', 2 ] ] ) {
+	const listening = [
+		[ 'ada', '/christmas-with-the-chorus/', 1 ],
+		[ 'theo', LYRICS, 5 ],
+		[ 'mina', '/carols-of-the-season/', 4 ],
+		[ 'jun', POST, 3 ],
+	];
+	for ( const [ user, post, row ] of listening ) {
 		const them = await browser.newContext( options );
 		const page = await them.newPage();
 		await signIn( page, user, PASSWORD );
@@ -238,22 +261,35 @@ async function everything( browser ) {
 	await signIn( page, USER, PASSWORD );
 	// A playlist of their own, made once, as the library's + makes it.
 	await page.goto( `${ BASE }/listen/app/` );
-	await page.evaluate( async () => {
-		const nonce = await ( await fetch( '/wp-admin/admin-ajax.php?action=rest-nonce' ) ).text();
-		const headers = { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' };
-		const route = '/wp-json/riff/v1/users/me/playlists';
-		const have = await ( await fetch( route, { headers } ) ).json();
-		if ( JSON.stringify( have ).includes( 'Winter evenings' ) ) {
-			return;
-		}
-		const carols = ( await ( await fetch( '/wp-json/wp/v2/posts?slug=carols-of-the-season' ) ).json() )[ 0 ];
-		const media = await ( await fetch( `/wp-json/wp/v2/media?parent=${ carols.id }&media_type=audio&per_page=5` ) ).json();
-		await fetch( route, { method: 'POST', headers, body: JSON.stringify( { title: 'Winter evenings', tracks: media.map( ( m ) => m.id ) } ) } );
-	} );
+	const rest = ( route, method = 'GET', body ) =>
+		page.evaluate(
+			async ( [ r, m, b ] ) => {
+				window.riffShotsNonce ??= await ( await fetch( '/wp-admin/admin-ajax.php?action=rest-nonce' ) ).text();
+				const headers = { 'X-WP-Nonce': window.riffShotsNonce, 'Content-Type': 'application/json' };
+				return ( await fetch( `/wp-json${ r }`, { method: m, headers, body: b && JSON.stringify( b ) } ) ).json();
+			},
+			[ route, method, body ]
+		);
+	const playlists = '/riff/v1/users/me/playlists';
+	if ( ! JSON.stringify( await rest( playlists ) ).includes( 'Winter evenings' ) ) {
+		const carols = ( await rest( '/wp/v2/posts?slug=carols-of-the-season' ) )[ 0 ];
+		const media = await rest( `/wp/v2/media?parent=${ carols.id }&media_type=audio&per_page=5` );
+		await rest( playlists, 'POST', { title: 'Winter evenings', tracks: media.map( ( m ) => m.id ) } );
+	}
+	await session( page );
+	await context.close();
+	await Promise.all( others.map( ( them ) => them.close() ) );
+}
 
+/**
+ * The sung track playing a verse in, liked, with Together open and everyone else in it.
+ *
+ * @param {import('@playwright/test').Page} page The admin's page, signed in.
+ */
+async function session( page ) {
 	await page.goto( `${ BASE }/listen/app/?riff=${ await postId( page, LYRICS ) }` );
 	await page.locator( '[data-riff-app-ready]' ).waitFor();
-	await page.locator( '.riff-row' ).first().click();
+	await page.locator( '.riff-row' ).nth( LYRICS_ROW ).click();
 	await page.locator( '.riff-bar' ).waitFor();
 	await page.evaluate( ( at ) => window.riff.seek( at ), LYRICS_AT );
 	await page.waitForTimeout( 1000 );
@@ -263,11 +299,12 @@ async function everything( browser ) {
 	}
 	await page.locator( '.riff-bar [data-riff-control="together"]' ).click();
 	const panel = page.locator( '[data-riff-panel="together"]' );
-	await panel.getByText( 'Ada' ).waitFor( { timeout: 30000 } );
-	await panel.getByText( 'Theo' ).waitFor( { timeout: 30000 } );
+	for ( const who of [ 'Ada', 'Theo', 'Mina', 'Jun' ] ) {
+		await panel.getByText( who ).waitFor( { timeout: 30000 } );
+	}
+	// Their faces loaded, not still coming.
+	await page.waitForFunction( () => [ ...document.querySelectorAll( '[data-riff-panel="together"] img' ) ].every( ( img ) => img.complete && img.naturalWidth ) );
 	await save( page, 'desktop-everything', true );
-	await context.close();
-	await Promise.all( others.map( ( them ) => them.close() ) );
 }
 
 /**
