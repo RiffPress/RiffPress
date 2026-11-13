@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.17.3](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.2...riff-v6.17.3) (2026-11-13)
+
+
+### Bug Fixes
+
+* **app:** the offer to keep the app is a quiet row at the end of the library, with the site's name and where it would live ([#1101](https://github.com/RiffPress/RiffPress/issues/1101)) ([2b26209](https://github.com/RiffPress/RiffPress/commit/2b262098d9f22085e5e66b6ea8d73843bd8caee0))
+* CI is green again: the Rights meta test registers its keys, the albums route asks once whether any music has an end, and the tests expect the renamed Together and account menu ([#1097](https://github.com/RiffPress/RiffPress/issues/1097)) ([50fefed](https://github.com/RiffPress/RiffPress/commit/50fefed6527db7706c6140a6613eb1f372b7cc1e))
+
 ## [6.17.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.1...riff-v6.17.2) (2026-11-13)
 
 
