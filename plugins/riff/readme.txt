@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.17.4
+Stable tag: 6.17.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.17.5 =
+* Fixed: Riff passes Plugin Check with nothing to report, and its readme discloses every outside request and names no other company.
+
 = 6.17.4 =
 * Fixed: main's versions agree with the release manifest again.
 
@@ -159,9 +162,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.17.1 =
 * Fixed: two saves at once both keep, a sign-in link gets through a private site's gate, and a release with nothing downstream is not red.
-
-= 6.17.0 =
-* A host can show listeners its own name and mark in place of Riff's, with riff_brand.
-* An artist sets who holds their music's rights and its licence, and every play asks riff_may_play.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
