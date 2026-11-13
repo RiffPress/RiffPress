@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.17.2
+Stable tag: 6.17.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,6 +145,10 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.17.3 =
+* Fixed: the offer to keep the app is a quiet row at the end of the library, with the site's name and where it would live.
+* Fixed: CI is green again: the Rights meta test registers its keys, the albums route asks once whether any music has an end, and the tests expect the renamed Together and account menu.
+
 = 6.17.2 =
 * Fixed: a view change animates only the view, the app's fonts draw once, and the account menu, install card and Sign In sheet take the app's tokens.
 
@@ -157,11 +161,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.16.1 =
 * Fixed: a zip that adds no song loses only its file, keeping its private attachment with why.
-
-= 6.16.0 =
-* A link to a Riff previews large, with the site's name, a line about it and a card of its covers.
-* A host can let signed-in users who don't belong to a site listen together there.
-* Fixed: a zip that fails to import loses only its file, keeping its attachment private with why.
-* Fixed: an imported album's zip is removed once it's unpacked, so its tracks are only ever reachable as Protected; wp riff clean-zips removes the ones earlier versions kept.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
