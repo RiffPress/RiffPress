@@ -2,8 +2,9 @@
 /* eslint-disable no-console -- a build script that says what it wrote, as og-images.js does. */
 /**
  * The pictures of the player on Riff Source's pages, in site/: the Listen app, Now Playing and a
- * sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), and a post and the lyrics on
- * a phone (780×1688), each as a PNG and an AVIF. They are taken from a site
+ * sung album's lyrics on a wide screen (2880×1800, with a 1440 copy), the app with nearly
+ * everything open at once (desktop-everything), and a post and the lyrics on a phone (780×1688),
+ * each as a PNG and an AVIF. They are taken from a site
  * that holds the demo albums and nothing else, set up as the demo's blueprint sets up Playground,
  * so the pictures show the demo a visitor will open:
  *
@@ -13,6 +14,12 @@
  *   npx wp-env run cli wp rewrite structure '/%postname%/' --hard
  *   npx wp-env run cli wp post create --post_type=page --post_status=publish --post_title=Listen \
  *     --post_name=listen '--post_content=<!-- wp:riff/app {"align":"full"} /-->'
+ *   npx wp-env run cli wp user create ada ada@example.com --role=subscriber --user_pass=password --display_name=Ada
+ *   npx wp-env run cli wp user create theo theo@example.com --role=subscriber --user_pass=password --display_name=Theo
+ *
+ * Ada and Theo are the other listeners in desktop-everything, signed in beside the admin and each
+ * playing, so Together has someone to show; with an address Gravatar doesn't know, each has the
+ * face Riff draws for no picture.
  *
  * The page has no `listen` template, as the first-run notice's page has none: the Riff block is
  * what makes it the Listen page, and the editor's pictures fatal on WordPress 7.2 with one.
@@ -179,6 +186,91 @@ async function phone( browser, devices ) {
 }
 
 /**
+ * Signs a browser's page in.
+ *
+ * @param {import('@playwright/test').Page} page     The page.
+ * @param {string}                          user     The user's login.
+ * @param {string}                          password Their password.
+ */
+async function signIn( page, user, password ) {
+	await page.goto( `${ BASE }/wp-login.php` );
+	await page.fill( '#user_login', user );
+	await page.fill( '#user_pass', password );
+	await page.click( '#wp-submit' );
+	await page.waitForURL( /wp-admin/ );
+}
+
+/**
+ * An album's post ID, by its path.
+ *
+ * @param {import('@playwright/test').Page} page The page, on the site.
+ * @param {string}                          post The post's path.
+ * @return {Promise<number>} The ID.
+ */
+function postId( page, post ) {
+	return page.evaluate( async ( slug ) => ( await ( await fetch( `/wp-json/wp/v2/posts?slug=${ slug }` ) ).json() )[ 0 ].id, post.replace( /\//g, '' ) );
+}
+
+/**
+ * A listener's session with nearly everything open at once, as one can have it: signed in, in the
+ * Listen app, the sung album's page beside the library with a playlist of their own, the track
+ * playing a verse in and liked, and Together open beside the page with two others listening. Now
+ * Playing is left closed: it covers the library, and beside the turntable no panel opens.
+ *
+ * @param {import('@playwright/test').Browser} browser Chromium.
+ */
+async function everything( browser ) {
+	const options = { viewport: { width: 1440, height: 900 }, colorScheme: 'dark' };
+	// The others, each playing in a window of their own until the picture is taken.
+	const others = [];
+	for ( const [ user, post, row ] of [ [ 'ada', LYRICS, 8 ], [ 'theo', '/songs-of-the-republic/', 2 ] ] ) {
+		const them = await browser.newContext( options );
+		const page = await them.newPage();
+		await signIn( page, user, PASSWORD );
+		await page.goto( `${ BASE }/listen/app/?riff=${ await postId( page, post ) }` );
+		await page.locator( '[data-riff-app-ready]' ).waitFor();
+		await page.locator( '.riff-row' ).nth( row ).click();
+		others.push( them );
+	}
+
+	const context = await browser.newContext( { ...options, deviceScaleFactor: 2 } );
+	const page = await context.newPage();
+	await signIn( page, USER, PASSWORD );
+	// A playlist of their own, made once, as the library's + makes it.
+	await page.goto( `${ BASE }/listen/app/` );
+	await page.evaluate( async () => {
+		const nonce = await ( await fetch( '/wp-admin/admin-ajax.php?action=rest-nonce' ) ).text();
+		const headers = { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' };
+		const route = '/wp-json/riff/v1/users/me/playlists';
+		const have = await ( await fetch( route, { headers } ) ).json();
+		if ( JSON.stringify( have ).includes( 'Winter evenings' ) ) {
+			return;
+		}
+		const carols = ( await ( await fetch( '/wp-json/wp/v2/posts?slug=carols-of-the-season' ) ).json() )[ 0 ];
+		const media = await ( await fetch( `/wp-json/wp/v2/media?parent=${ carols.id }&media_type=audio&per_page=5` ) ).json();
+		await fetch( route, { method: 'POST', headers, body: JSON.stringify( { title: 'Winter evenings', tracks: media.map( ( m ) => m.id ) } ) } );
+	} );
+
+	await page.goto( `${ BASE }/listen/app/?riff=${ await postId( page, LYRICS ) }` );
+	await page.locator( '[data-riff-app-ready]' ).waitFor();
+	await page.locator( '.riff-row' ).first().click();
+	await page.locator( '.riff-bar' ).waitFor();
+	await page.evaluate( ( at ) => window.riff.seek( at ), LYRICS_AT );
+	await page.waitForTimeout( 1000 );
+	const like = page.locator( '.riff-bar [data-riff-control="like"]' );
+	if ( ( await like.getAttribute( 'aria-pressed' ) ) !== 'true' ) {
+		await like.click();
+	}
+	await page.locator( '.riff-bar [data-riff-control="together"]' ).click();
+	const panel = page.locator( '[data-riff-panel="together"]' );
+	await panel.getByText( 'Ada' ).waitFor( { timeout: 30000 } );
+	await panel.getByText( 'Theo' ).waitFor( { timeout: 30000 } );
+	await save( page, 'desktop-everything', true );
+	await context.close();
+	await Promise.all( others.map( ( them ) => them.close() ) );
+}
+
+/**
  * Two of Add your music's pictures, in the editor, signed in as the site's admin: the Listen page
  * holding the Riff block, and a new post with an empty Playlist block. The editor's welcome guide
  * is turned off first, as an editor who has seen it once would have it.
@@ -229,6 +321,7 @@ async function main() {
 	const browser = await chromium.launch( { args: [ '--autoplay-policy=no-user-gesture-required' ] } );
 	try {
 		await desktop( browser );
+		await everything( browser );
 		await phone( browser, devices );
 		await guides( browser );
 	} finally {
