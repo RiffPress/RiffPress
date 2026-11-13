@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.17.5](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.4...riff-v6.17.5) (2026-11-13)
+
+
+### Bug Fixes
+
+* Riff passes Plugin Check with nothing to report, and its readme discloses every outside request and names no other company ([#1107](https://github.com/RiffPress/RiffPress/issues/1107)) ([8f9a3df](https://github.com/RiffPress/RiffPress/commit/8f9a3dfb38d130af718f1a7db44a3ef7bf2d179b))
+
 ## [6.17.4](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.3...riff-v6.17.4) (2026-11-13)
 
 
