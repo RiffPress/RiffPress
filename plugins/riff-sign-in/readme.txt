@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.6.1
+Stable tag: 0.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,9 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.7.0 =
+* A host may keep passkeys across subdomains by setting a parent domain as the relying party ID, through riff_sign_in_rp_id.
+
 = 0.6.1 =
 * Fixed: signing in takes JSON from the site's own pages, the email link names its account, and nothing answers differently for a member.
 
@@ -41,8 +44,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 = 0.5.0 =
 * Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
-
-= 0.4.3 =
-* Fixed: the link in the email asks before it signs in, so a mail scanner that opens it no longer uses up the code.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
