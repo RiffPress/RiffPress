@@ -5,6 +5,19 @@
  * as people read them, so an album's tracks arrive in order. A file the Media Library already has is
  * skipped. Loaded only for someone who may upload (Player::enqueue()). */
 
+// The name the player goes by (riff_brand), from the data the player's page carries.
+function brand() {
+	try {
+		return (
+			JSON.parse(
+				document.getElementById( 'riff-data' )?.textContent || '{}'
+			).brand?.name || 'Riff'
+		);
+	} catch {
+		return 'Riff';
+	}
+}
+
 const AUDIO = /\.(mp3|m4a|flac|ogg|oga|opus|wav)$/i;
 const TYPES = {
 	mp3: 'audio/mpeg',
@@ -149,10 +162,11 @@ export function importing( { app, tell, show, postOf, __, _n } ) {
 		const files = chosen.filter( ( file ) => AUDIO.test( file.name ) );
 		if ( ! files.length ) {
 			tell(
+				/* translators: %s: the player's name, Riff unless the host names it otherwise. */
 				__(
-					'There is no music in that. Riff takes MP3, M4A, FLAC, Ogg, Opus and WAV.',
+					'There is no music in that. %s takes MP3, M4A, FLAC, Ogg, Opus and WAV.',
 					'riff'
-				)
+				).replace( '%s', () => brand() )
 			);
 			return;
 		}
@@ -248,7 +262,10 @@ export function importing( { app, tell, show, postOf, __, _n } ) {
 			} else {
 				said.push(
 					/* translators: %s: The names of the files, separated by commas. */
-					__( 'Could not add %s.', 'riff' ).replace( '%s', () => which )
+					__( 'Could not add %s.', 'riff' ).replace(
+						'%s',
+						() => which
+					)
 				);
 			}
 		}

@@ -110,3 +110,54 @@ function riff_listen_page(): int {
 function riff_together_along_url( int $user_id, ?int $blog_id = null ): string {
 	return Riff\Listen\Together::along_url( $user_id, $blog_id );
 }
+
+/**
+ * The brand a Riff shows its listeners: its name, its mark and whether it credits Riff, as a host
+ * that white-labels Riff sets them with `riff_brand`. Normalised: a name that is empty is Riff's,
+ * a mark that isn't a URL is none, and the description is plain text.
+ *
+ * @since 6.17.0
+ *
+ * @return array {
+ *     @type string $name        The name shown where Riff names itself.
+ *     @type string $mark        URL of a square image shown where Riff's mark is, or '' for Riff's own.
+ *     @type bool   $credit      Whether Riff's credit and attribution are shown.
+ *     @type string $description The line shown where Riff describes a site that has no tagline, or '' for Riff's own.
+ * }
+ */
+function riff_brand(): array {
+	$defaults = array(
+		'name'        => 'Riff',
+		'mark'        => '',
+		'credit'      => true,
+		'description' => '',
+	);
+	/**
+	 * Filters the brand a Riff shows its listeners in place of Riff's own.
+	 *
+	 * Where Riff names itself to a listener, as the Listen app's name when the site has none, it
+	 * shows the name; where it shows its own icon, the mark; where it describes a site with no
+	 * tagline, the description. Admin screens, the plugin's own name and developer-facing text keep
+	 * Riff's.
+	 *
+	 * @since 6.17.0
+	 *
+	 * @param array $brand {
+	 *     @type string $name        The name shown where Riff names itself. Default 'Riff'.
+	 *     @type string $mark        URL of a square image shown where Riff's mark/wordmark is, or '' for Riff's own.
+	 *     @type bool   $credit      Whether to show Riff's credit/attribution ("Riff" links, made-with lines, generator). Default true.
+	 *     @type string $description The line shown where Riff describes a site with no tagline, or '' for Riff's own wording. Default ''.
+	 * }
+	 */
+	$brand = apply_filters( 'riff_brand', $defaults );
+	$brand = is_array( $brand ) ? $brand : array();
+	$name  = is_scalar( $brand['name'] ?? null ) ? trim( wp_strip_all_tags( (string) $brand['name'] ) ) : '';
+	$mark  = is_string( $brand['mark'] ?? null ) ? esc_url_raw( trim( $brand['mark'] ), array( 'http', 'https' ) ) : '';
+	$line  = is_scalar( $brand['description'] ?? null ) ? trim( wp_strip_all_tags( (string) $brand['description'] ) ) : '';
+	return array(
+		'name'        => '' !== $name ? $name : $defaults['name'],
+		'mark'        => $mark,
+		'credit'      => array_key_exists( 'credit', $brand ) ? wp_validate_boolean( $brand['credit'] ) : true,
+		'description' => $line,
+	);
+}

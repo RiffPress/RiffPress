@@ -106,6 +106,18 @@ Since 6.4.0. Fires in `plugins/riff/features/listen/class-views.php`.
 | --- | --- | --- |
 | `$views` | `array` | The views by slug, Riff's own first. |
 
+### `riff_brand`
+
+Filters the brand a Riff shows its listeners in place of Riff's own.
+
+Where Riff names itself to a listener, as the Listen app's name when the site has none, it shows the name; where it shows its own icon, the mark; where it describes a site with no tagline, the description. Admin screens, the plugin's own name and developer-facing text keep Riff's.
+
+Since 6.17.0. Fires in `plugins/riff/src/functions.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$brand` | `array` | { } |
+
 ### `riff_can_play`
 
 Filters whether the current visitor may play a track.

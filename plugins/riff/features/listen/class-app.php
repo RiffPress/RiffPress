@@ -273,7 +273,7 @@ final class App {
 			esc_attr( self::QUERY ),
 			esc_attr( self::PAGE_QUERY ),
 			esc_attr( implode( ',', Browse::ARGS ) ),
-			esc_attr__( 'Riff', 'riff' ),
+			esc_attr( riff_brand()['name'] ),
 			Browse::nav( $page, $browse ),
 			$view
 		);
