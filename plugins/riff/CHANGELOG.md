@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.17.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.1...riff-v6.17.2) (2026-11-13)
+
+
+### Bug Fixes
+
+* **listen:** a view change animates only the view, the app's fonts draw once, and the account menu, install card and Sign In sheet take the app's tokens ([#1095](https://github.com/RiffPress/RiffPress/issues/1095)) ([657630d](https://github.com/RiffPress/RiffPress/commit/657630d46a2081bbb0e9eb9056cd5255e4dedb6e))
+
 ## [6.17.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.0...riff-v6.17.1) (2026-11-13)
 
 

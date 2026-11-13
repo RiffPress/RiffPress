@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.7.0
+Stable tag: 0.7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,12 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.7.2 =
+* Fixed: a view change animates only the view, the app's fonts draw once, and the account menu, install card and Sign In sheet take the app's tokens.
+
+= 0.7.1 =
+* Fixed: two saves at once both keep, a sign-in link gets through a private site's gate, and a release with nothing downstream is not red.
+
 = 0.7.0 =
 * A host may keep passkeys across subdomains by setting a parent domain as the relying party ID, through riff_sign_in_rp_id.
 
@@ -39,11 +45,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 = 0.6.0 =
 * A local site raises the code request limits a hundredfold, through riff_sign_in_limits.
 * Fixed: removing a passkey on the profile moves focus on and says so.
-
-= 0.5.1 =
-* Fixed: each sign-in attempt is counted in one step.
-
-= 0.5.0 =
-* Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

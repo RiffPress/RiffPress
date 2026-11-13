@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.7.1...riff-sign-in-v0.7.2) (2026-11-13)
+
+
+### Bug Fixes
+
+* **listen:** a view change animates only the view, the app's fonts draw once, and the account menu, install card and Sign In sheet take the app's tokens ([#1095](https://github.com/RiffPress/RiffPress/issues/1095)) ([657630d](https://github.com/RiffPress/RiffPress/commit/657630d46a2081bbb0e9eb9056cd5255e4dedb6e))
+
 ## [0.7.1](https://github.com/RiffPress/RiffPress/compare/riff-sign-in-v0.7.0...riff-sign-in-v0.7.1) (2026-11-13)
 
 
