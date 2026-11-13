@@ -96,7 +96,8 @@ class Test_Riff_Brand extends Riff_TestCase {
 			),
 			$default['manifest']['icons']
 		);
-		$this->assertStringContainsString( 'Get the Riff app', $default['install'] );
+		$this->assertStringContainsString( '<p class="riff-app-install-title" title="Riff">Riff</p>', $default['install'] );
+		$this->assertStringContainsString( 'aria-label="Add Riff to this computer"', $default['install'] );
 		$this->assertStringContainsString( 'src="' . RIFF_URL . 'features/listen/icons/icon-192.png"', $default['install'] );
 		$this->assertStringContainsString( '<span class="riff-app-name">Riff</span>', $default['nav'] );
 		$this->assertStringEndsWith( 'icons/icon-512.png', $default['fallback']['url'] );
@@ -137,7 +138,8 @@ class Test_Riff_Brand extends Riff_TestCase {
 			),
 			$branded['manifest']['icons']
 		);
-		$this->assertStringContainsString( 'Get the Northwind Music app', $branded['install'] );
+		$this->assertStringContainsString( '<p class="riff-app-install-title" title="Northwind Music">Northwind Music</p>', $branded['install'] );
+		$this->assertStringContainsString( 'data-riff-install-label="Add Northwind Music to your Dock"', $branded['install'] );
 		$this->assertStringContainsString( 'src="' . $mark . '"', $branded['install'] );
 		$this->assertStringContainsString( 'data-riff-fallback="' . $mark . '"', $branded['install'] );
 		$this->assertStringNotContainsString( 'icons/icon-192.png', $branded['install'] );

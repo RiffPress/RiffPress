@@ -274,10 +274,11 @@ html.has-riff .riff-standalone .riff-app {
 		left: calc(72px + 24px);
 	}
 
-	/* In the sidebar's column the offer is a card at its own height. */
+	/* In the sidebar's column the offer is a row at its own height, inset as
+	   the library's rows are. */
 	.riff-standalone .riff-app-install {
 		flex: none;
-		margin-top: 16px;
+		padding-left: 8px;
 	}
 
 	/* The player's dock (Registry::dock(), registry.js): the views a plugin
