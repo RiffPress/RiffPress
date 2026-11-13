@@ -113,8 +113,10 @@ export function fetching( ctx ) {
 	}
 
 	// A view that was drawn is drawn again next time: Your Library after a like, every view after a
-	// change to a playlist, whose sidebar lists them.
+	// change to a playlist, whose sidebar lists them. The REST answers are all fetched again, as any
+	// of them may hold what changed; which names views' addresses, not the route's.
 	function forget( which = null ) {
+		cache.clear();
 		if ( ! which ) {
 			rendered.clear();
 			return;

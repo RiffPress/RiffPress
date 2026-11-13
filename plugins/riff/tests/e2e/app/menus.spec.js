@@ -1,5 +1,5 @@
 /**
- * The menus: a track's … and the account menu are drawn as WordPress's toolbar draws its own, and the account menu still closes as a menu after the view changes.
+ * The menus: a track's … is drawn as WordPress's toolbar draws its own, the account menu on the app's surface, and the account menu still closes as a menu after the view changes.
  * Runs in desktop Chromium and in Chromium at an iPhone's size (see playwright.config.js).
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
@@ -20,7 +20,7 @@ test.afterAll( async ( { requestUtils } ) => {
 } );
 
 test.describe( 'Standalone', () => {
-	test( 'the … menu and the account menu are drawn as WordPress\'s toolbar draws its menus', async ( {
+	test( 'the … menu is drawn as WordPress\'s toolbar draws its menus, the account menu as the app draws its own', async ( {
 		page,
 	} ) => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
@@ -49,8 +49,9 @@ test.describe( 'Standalone', () => {
 		await page.locator( '.riff-app-account summary' ).click();
 		const account = page.locator( '.riff-app-account-menu' );
 		await expect( account ).toBeVisible();
-		expect( await look( account ) ).toEqual( toolbar );
-		const link = account.locator( 'a' ).first();
+		// The account menu is the app's own, on its surface (#998), not the toolbar's grey.
+		expect( await look( account ) ).toEqual( { background: expect.not.stringMatching( /^rgb\(44, 51, 56\)$/ ), radius: '8px' } );
+		const link = account.locator( 'a:visible' ).first();
 		await link.hover();
 		await expect( link ).toHaveCSS( 'color', accent );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app-account' ).analyze() ).violations ).toEqual( [] );
@@ -66,8 +67,26 @@ test.describe( 'Standalone', () => {
 		await expect( page.locator( '[data-riff-app-ready]' ) ).toHaveCount( 1 );
 		const account = page.locator( '.riff-app-account' );
 		await account.locator( 'summary' ).click();
-		const signOut = account.getByRole( 'link', { name: 'Sign out' } );
+		const signOut = account.getByRole( 'link', { name: 'Log out' } );
 		await expect( signOut ).toBeVisible();
+		// Your Library is in the sidebar beside it, so the menu doesn't repeat it.
+		await expect( page.locator( '.riff-app-library-title' ) ).toBeVisible();
+		await expect( account.getByRole( 'link', { name: 'Your Library' } ) ).toBeHidden();
+		// On the app's own surface, with a hairline, not a colour of its own.
+		const surface = await account.locator( '.riff-app-account-menu' ).evaluate( ( menu ) => {
+			const probe = document.createElement( 'div' );
+			probe.style.cssText = 'background: var(--riff-app-surface); border-top: 1px solid var(--riff-app-line)';
+			menu.parentElement.append( probe );
+			const want = getComputedStyle( probe );
+			const got = getComputedStyle( menu );
+			const out = {
+				background: got.backgroundColor === want.backgroundColor,
+				line: got.borderTopColor === want.borderTopColor && got.borderTopWidth === '1px',
+			};
+			probe.remove();
+			return out;
+		} );
+		expect( surface ).toEqual( { background: true, line: true } );
 		// The sticky sidebar stacks on its own; the menu inside it must still be on top of the view.
 		const box = await signOut.boundingBox();
 		expect(
@@ -75,7 +94,7 @@ test.describe( 'Standalone', () => {
 				( { x, y } ) => !! document.elementFromPoint( x, y )?.closest( '.riff-app-account-menu' ),
 				{ x: box.x + box.width / 2, y: box.y + box.height / 2 }
 			),
-			'Sign out is the thing under the pointer'
+			'Log out is the thing under the pointer'
 		).toBe( true );
 		await page.keyboard.press( 'Escape' );
 		await expect( account ).not.toHaveAttribute( 'open' );

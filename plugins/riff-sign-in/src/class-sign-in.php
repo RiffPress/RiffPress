@@ -127,10 +127,16 @@ final class Sign_In {
 	 * sheet shows is set here, the font, margins and sizes included, so neither a theme's styles
 	 * nor the browser's defaults (all the Listen app's own document has) show through.
 	 *
+	 * A host restyles its shape with these, set on `#riff` or `.riff-signin`:
+	 * `--riff-signin-radius` (the sheet's corners, 16px), `--riff-signin-field-radius` (8px),
+	 * `--riff-signin-field-height` (48px), `--riff-signin-field-bg` (the page's background; the
+	 * sheet's own surface is `var(--riff-surface)`), `--riff-signin-button-height` (44px) and
+	 * `--riff-signin-button-radius` (999px, a pill; 8px, say, for buttons that aren't).
+	 *
 	 * @return string
 	 */
 	private static function css(): string {
-		return '.riff-signin{box-sizing:border-box;width:min(420px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:28px 24px 24px;overflow:auto;border:1px solid var(--riff-line);border-radius:16px;background:var(--riff-surface);color:var(--riff-fg);font-size:16px;font-weight:400;line-height:1.5;-webkit-font-smoothing:antialiased;box-shadow:0 24px 64px rgb(0 0 0/.5)}'
+		return '.riff-signin{box-sizing:border-box;width:min(420px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:28px 24px 24px;overflow:auto;border:1px solid var(--riff-line);border-radius:var(--riff-signin-radius,16px);background:var(--riff-surface);color:var(--riff-fg);font-size:16px;font-weight:400;line-height:1.5;-webkit-font-smoothing:antialiased;box-shadow:0 24px 64px rgb(0 0 0/.5)}'
 			. '.riff-signin *,.riff-signin *::before,.riff-signin *::after{box-sizing:border-box}'
 			. '.riff-signin::backdrop{background:rgb(0 0 0/.6)}'
 			. '.riff-signin[open]{display:flex;flex-direction:column;gap:12px}'
@@ -138,12 +144,14 @@ final class Sign_In {
 			. '.riff-signin p{margin:0;padding:0;color:var(--riff-fg-2);font:inherit}'
 			. '.riff-signin form{display:flex;flex-direction:column;gap:6px;margin:4px 0 0}'
 			. '.riff-signin label{display:block;margin:0;color:var(--riff-fg);font-size:14px;font-weight:600;line-height:1.4}'
-			. '.riff-signin input{display:block;width:100%;min-height:48px;margin:0;padding:12px 14px;border:1px solid var(--riff-fg-3);border-radius:8px;background:var(--riff-bg);box-shadow:none;color:var(--riff-fg);caret-color:var(--riff-accent);font-family:inherit;font-size:16px;line-height:1.4;appearance:none}'
+			. '.riff-signin input{display:block;width:100%;min-height:var(--riff-signin-field-height,48px);margin:0;padding:12px 14px;border:1px solid var(--riff-fg-3);border-radius:var(--riff-signin-field-radius,8px);background:var(--riff-signin-field-bg,var(--riff-bg));box-shadow:none;color:var(--riff-fg);caret-color:var(--riff-accent);font-family:inherit;font-size:16px;line-height:1.4;appearance:none}'
 			. '.riff-signin input:hover{border-color:var(--riff-fg-2)}'
+			// The browser's own fill keeps the field's colours, not its pale yellow or blue.
+			. '.riff-signin input:-webkit-autofill{-webkit-text-fill-color:var(--riff-fg);box-shadow:0 0 0 100px var(--riff-signin-field-bg,var(--riff-bg)) inset;caret-color:var(--riff-accent)}'
 			. '.riff-signin input:focus{border-color:var(--riff-accent);outline:2px solid var(--riff-accent);outline-offset:0}'
 			. '.riff-signin input.riff-signin-code{font-size:24px;font-variant-numeric:tabular-nums;letter-spacing:.3em;text-align:center}'
 			. '.riff-signin-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}'
-			. '.riff-signin button{all:unset;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;padding:0 20px;border:1px solid var(--riff-fg-3);border-radius:999px;color:var(--riff-fg);font-family:inherit;font-size:15px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}'
+			. '.riff-signin button{all:unset;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:var(--riff-signin-button-height,44px);padding:0 20px;border:1px solid var(--riff-fg-3);border-radius:var(--riff-signin-button-radius,999px);color:var(--riff-fg);font-family:inherit;font-size:15px;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}'
 			. '.riff-signin button:hover{border-color:var(--riff-fg-2);background:var(--riff-hover)}'
 			. '.riff-signin button.riff-signin-main{border-color:var(--riff-accent);background:var(--riff-accent);color:var(--riff-bg)}'
 			. '.riff-signin button.riff-signin-main:hover{filter:brightness(1.1)}'

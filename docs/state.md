@@ -120,7 +120,7 @@ Besides the turntable and Now Playing above:
 
 ## URL arguments as state
 
-- The Listen app's: `riff`, `riff_page`, `riff_from`, `riff_view`, `riff_album`, `riff_artist`, `riff_search`, `riff_playlist`, `riff_filter`, `riff_sort` (`class-browse.php`, `class-collection.php`). They are the view's address, which is the point. The names reach `features/listen/app/addresses.js` as an ordered list it reads by position (`browseArgs[0]`, `[4]`, `[6]`): medium, a reordering on the server builds wrong addresses with no error.
+- The Listen app's: `riff`, `riff_page`, `riff_from`, `riff_view`, `riff_album`, `riff_artist`, `riff_search`, `riff_playlist`, `riff_filter`, `riff_sort` (`class-browse.php`, `class-collection.php`). They are the view's address, which is the point. The names reach `features/listen/app.js` as an object keyed by what each is for (`data-riff-browse`, read as `ctx.browse.view`, `.filter`, `.playlist`). Low.
 - `riff_liked`: a visitor's likes, sent as an argument (up to 400) so the server can draw Liked songs; each like is a new address and a new entry in the app's cache. Medium.
 - `riff_track` (`P.SHARED`): a shared link's track. Low.
 - `riff-file`, `riff-expires`, `riff-sig`: a protected file's signed address (`class-protect.php`). See browser storage above.
@@ -148,7 +148,7 @@ Besides the turntable and Now Playing above:
 | `UI::$eager`, `UI::$lead` | How many images load eagerly, counted down across every render in a request. | low |
 | `Cache::$changed` (`class-cache.php`) | The sites whose posts or terms changed in this request; while one is set, `Cache` reads and writes the request's object cache, not its `riff_kept_*` transients, and `settle()` moves the `riff_changed` stamp again at shutdown. | low: a long process (WP-CLI, cron) that changes posts keeps to the object cache until it ends. |
 | The rest (`Permissions`, `Extensions`, `Transcode`, `Cover`, `Art`, `Blocks_Source`, the extensions' REST controllers) | Keyed or per request. | low |
-| JS: `cache` in `features/listen/app/fetch.js` | Every REST answer the app fetched, for the session; `forget()` clears the drawn views but not this. | medium |
+| JS: `cache` in `features/listen/app/fetch.js` | The last 30 REST answers the app fetched, for the session; `forget()`, after a like, a playlist change or an upload, clears them with the drawn views. | low |
 | JS: `features` in `state.js` | A feature's module, and a failed import cached as nothing for good. | low |
 
 ## Hooks that depend on order

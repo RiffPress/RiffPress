@@ -3,7 +3,7 @@
  * ?riff_album={id}, ?riff_artist={id}, ?riff_search={words}. */
 
 export function addresses( ctx ) {
-	const { page, query, pageQuery, browseArgs } = ctx;
+	const { page, query, pageQuery, browse, browseArgs } = ctx;
 
 	const postOf = ( url ) => {
 		const u = new URL( url, location.href );
@@ -49,26 +49,26 @@ export function addresses( ctx ) {
 	// Posts through page n, as the server renders it.
 	const postsAddress = ( n = 1 ) => {
 		const u = new URL( page );
-		u.searchParams.set( browseArgs[ 0 ] || 'riff_view', 'posts' );
+		u.searchParams.set( browse.view, 'posts' );
 		if ( n > 1 ) {
 			u.searchParams.set( pageQuery, String( n ) );
 		}
 		return u.toString();
 	};
-	const viewKey = browseArgs[ 0 ] || 'riff_view';
+	const viewKey = browse.view;
 	const isLibrary = ( href ) =>
 		new URL( href, location.href ).searchParams.get( viewKey ) ===
 		'library';
 	const listAddress = ( id ) => {
 		const u = new URL( page );
-		u.searchParams.set( browseArgs[ 6 ] || 'riff_playlist', String( id ) );
+		u.searchParams.set( browse.playlist, String( id ) );
 		return u.toString();
 	};
 	const libraryAddress = ( filter = '' ) => {
 		const u = new URL( page );
 		u.searchParams.set( viewKey, 'library' );
 		if ( filter ) {
-			u.searchParams.set( browseArgs[ 4 ] || 'riff_filter', filter );
+			u.searchParams.set( browse.filter, filter );
 		}
 		return u.toString();
 	};

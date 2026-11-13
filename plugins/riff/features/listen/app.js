@@ -59,6 +59,21 @@ export function start( api ) {
 		status.textContent = '';
 	}
 
+	let browse = {
+		view: 'riff_view',
+		album: 'riff_album',
+		artist: 'riff_artist',
+		search: 'riff_search',
+		filter: 'riff_filter',
+		sort: 'riff_sort',
+		playlist: 'riff_playlist',
+	};
+	try {
+		browse = { ...browse, ...JSON.parse( app.dataset.riffBrowse || '{}' ) };
+	} catch {
+		// An attribute that is not JSON leaves the names as they have always been.
+	}
+
 	const ctx = {
 		api,
 		app,
@@ -68,10 +83,10 @@ export function start( api ) {
 		page: new URL( app.dataset.riffPage, location.href ),
 		query: app.dataset.riffQuery || 'riff',
 		pageQuery: app.dataset.riffPageQuery || 'riff_page',
-		// The arguments of the browse views (albums, artists, tracks, search), which the server renders.
-		browseArgs: ( app.dataset.riffBrowse || '' )
-			.split( ',' )
-			.filter( Boolean ),
+		// The arguments of the browse views (albums, artists, tracks, search), which the server renders,
+		// keyed by what each is for, and all of them, to recognise the app's own addresses.
+		browse,
+		browseArgs: Object.values( browse ),
 		tracksRest: app.dataset.riffTracksRest || '',
 		// Standalone mode has a frame (templates/standalone.php), and the frame's strip is
 		// built wherever it may show; CSS shows it.

@@ -6,6 +6,9 @@
  * album without opening it. */
 import { fmt } from 'riff-app/helpers';
 
+// The view transitions under way, so the last one to finish lets the page be captured whole again.
+let swaps = 0;
+
 // The sidebar drawn again, all but the player's dock (Registry::dock()), which stays where the new
 // sidebar has it, never taken out of the page: a view open in it, its focus and what it is doing
 // carry on as the listener browses.
@@ -126,10 +129,21 @@ export function views( ctx ) {
 			}
 		};
 		if ( document.startViewTransition && ! reducedMotion() ) {
+			// Only the view is captured (app.css, riff-app-swapping), so the bar, the meter and
+			// the panels keep moving through the swap and the cross-fade.
+			const root = document.documentElement;
+			root.classList.add( 'riff-app-swapping' );
+			swaps++;
 			const transition = document.startViewTransition( swap );
 			// A newer view skips this one's animation; that is not an error.
 			transition.ready.catch( () => {} );
-			transition.finished.catch( () => {} );
+			transition.finished
+				.catch( () => {} )
+				.then( () => {
+					if ( --swaps === 0 ) {
+						root.classList.remove( 'riff-app-swapping' );
+					}
+				} );
 			await transition.updateCallbackDone;
 		} else {
 			swap();
