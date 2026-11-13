@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 <meta name="color-scheme" content="dark">
 <title><?php echo esc_html( wp_get_document_title() ); ?></title>
 <link rel="manifest" href="<?php echo esc_url( Standalone::url( 0, true ) ); ?>">
-<link rel="apple-touch-icon" href="<?php echo esc_url( get_site_icon_url( 180 ) ? get_site_icon_url( 180 ) : RIFF_URL . 'features/listen/icons/icon-192.png' ); ?>">
+<link rel="apple-touch-icon" href="<?php echo esc_url( get_site_icon_url( 180 ) ? get_site_icon_url( 180 ) : Standalone::mark() ); ?>">
 <?php
 // Installed with the window's controls over the page, the document is riff-frame-overlay, and the
 // strip is the title bar; a listener can turn the title bar back on, so that follows the change.

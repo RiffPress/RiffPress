@@ -176,7 +176,7 @@ final class Browse {
 			'<span class="riff-app-brand" data-riff-view="%s"><button type="button" class="riff-app-collapse" data-riff-app-action="sidebar" aria-expanded="true" aria-label="%s">' . Player::icon( 'menu' ) . '</button><span class="riff-app-name">%s</span>%s</span>',
 			esc_attr( $view ),
 			esc_attr__( 'Sidebar', 'riff' ),
-			esc_html( '' !== $name ? $name : 'Riff' ),
+			esc_html( '' !== $name ? $name : riff_brand()['name'] ),
 			self::private_site() // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Ui::private_mark().
 		);
 		foreach ( $links as $slug => list( $label, $href, $listed ) ) {

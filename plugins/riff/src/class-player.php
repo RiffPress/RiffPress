@@ -343,6 +343,8 @@ final class Player {
 		if ( ! self::cover_accent() ) {
 			$data['coverAccent'] = false;
 		}
+		// The name and mark the player shows in place of Riff's own (riff_brand).
+		$data['brand'] = riff_brand();
 		// What Riff's own features add for the script: the Listen app's address, the listener's
 		// likes and playlists, whether they have the single-key shortcuts, where they share what
 		// they play, whether the site has turned the turntable off, the views registered, and where

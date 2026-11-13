@@ -281,7 +281,8 @@ final class Share {
 	}
 
 	/**
-	 * A line about the site: its tagline, or else how many albums and songs a visitor will find.
+	 * A line about the site: its tagline, or else the brand's description, or else how many albums
+	 * and songs a visitor will find.
 	 *
 	 * @return string
 	 */
@@ -289,6 +290,10 @@ final class Share {
 		$tagline = trim( wp_strip_all_tags( html_entity_decode( (string) get_bloginfo( 'description' ), ENT_QUOTES, 'UTF-8' ) ) );
 		if ( '' !== $tagline ) {
 			return $tagline;
+		}
+		$brand = riff_brand()['description'];
+		if ( '' !== $brand ) {
+			return $brand;
 		}
 		$facts = self::facts();
 		$parts = array();
@@ -473,7 +478,7 @@ final class Share {
 
 	/**
 	 * The image to share without GD to draw the card: the largest album cover, or the site's icon,
-	 * or Riff's own.
+	 * or the brand's mark, or Riff's own.
 	 *
 	 * @since 6.16.0
 	 *
@@ -492,8 +497,11 @@ final class Share {
 			);
 		}
 		$icon = get_site_icon_url( 512 );
+		$mark = riff_brand()['mark'];
+		// A brand's mark stands in for Riff's own icon, so long as link previews can show it.
+		$own = '' !== $mark && self::raster( $mark ) ? $mark : RIFF_URL . 'features/listen/icons/icon-512.png';
 		return array(
-			'url'    => $icon ? $icon : RIFF_URL . 'features/listen/icons/icon-512.png',
+			'url'    => $icon ? $icon : $own,
 			'width'  => 512,
 			'height' => 512,
 			'alt'    => self::name(),

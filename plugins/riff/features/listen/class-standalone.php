@@ -506,11 +506,21 @@ final class Standalone {
 	 * @return array
 	 */
 	public static function manifest_data(): array {
+		$brand = riff_brand();
 		$name  = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
+		$name  = '' !== $name ? $name : $brand['name'];
+		$line  = wp_strip_all_tags( (string) get_bloginfo( 'description' ) );
 		$start = self::url();
 		$icons = array();
 		foreach ( array( 192, 512 ) as $size ) {
-			$site    = self::icon( (int) get_option( 'site_icon' ), $size );
+			$site = self::icon( (int) get_option( 'site_icon' ), $size );
+			if ( ! $site && '' !== $brand['mark'] ) {
+				// A host's mark, of a size it doesn't say, stands in for Riff's own icons.
+				$site = array(
+					'src'   => $brand['mark'],
+					'sizes' => 'any',
+				);
+			}
 			$icons[] = $site ? $site : array(
 				'src'   => RIFF_URL . 'features/listen/icons/icon-' . $size . '.png',
 				'sizes' => $size . 'x' . $size,
@@ -520,9 +530,9 @@ final class Standalone {
 		$icons    = array_values( array_unique( $icons, SORT_REGULAR ) );
 		$manifest = array(
 			'id'               => $start,
-			'name'             => '' !== $name ? $name : 'Riff',
-			'short_name'       => '' !== $name ? $name : 'Riff',
-			'description'      => wp_strip_all_tags( (string) get_bloginfo( 'description' ) ),
+			'name'             => $name,
+			'short_name'       => $name,
+			'description'      => '' !== $line ? $line : $brand['description'],
 			'start_url'        => $start,
 			'scope'            => $start,
 			// Installed from Chrome or Edge on a computer, the window has no title bar and the app's
@@ -551,6 +561,18 @@ final class Standalone {
 	}
 
 	/**
+	 * The icon that stands in where the site has none: the brand's mark, or Riff's own.
+	 *
+	 * @since 6.17.0
+	 *
+	 * @return string URL.
+	 */
+	public static function mark(): string {
+		$mark = riff_brand()['mark'];
+		return '' !== $mark ? $mark : RIFF_URL . 'features/listen/icons/icon-192.png';
+	}
+
+	/**
 	 * The card that offers to install the app, under the sidebar's library: the site's own icon and
 	 * name, one line on why, and Install. It starts hidden; app.js shows it from a listener's second
 	 * visit where the browser can install the page, and keeps it away once it is installed or
@@ -565,11 +587,11 @@ final class Standalone {
 	 */
 	public static function install_card(): string {
 		$name = wp_strip_all_tags( (string) get_bloginfo( 'name' ) );
-		$name = '' !== $name ? $name : 'Riff';
+		$name = '' !== $name ? $name : riff_brand()['name'];
 		$icon = get_site_icon_url( 192 );
 		return sprintf(
 			'<div class="riff-app-install" data-riff-install hidden><img class="riff-app-install-icon" src="%1$s" data-riff-fallback="%8$s" alt="" width="48" height="48" loading="lazy" decoding="async"><div class="riff-app-install-text"><p class="riff-app-install-title">%2$s</p><p data-riff-install-why="computer">%3$s</p><p data-riff-install-why="phone" hidden>%9$s</p><p data-riff-install-how="mac" hidden>%4$s</p><p data-riff-install-how="ios" hidden>%5$s</p></div><button type="button" class="riff-pill riff-pill-solid" data-riff-app-action="install">%6$s</button><button type="button" class="riff-app-install-close" data-riff-app-action="install-dismiss" aria-label="%7$s">' . Player::icon( 'close' ) . '</button></div>',
-			esc_url( $icon ? $icon : RIFF_URL . 'features/listen/icons/icon-192.png' ),
+			esc_url( $icon ? $icon : self::mark() ),
 			/* translators: %s: the site's name. */
 			esc_html( sprintf( __( 'Get the %s app', 'riff' ), $name ) ),
 			esc_html__( 'Listen in its own window, with your media keys.', 'riff' ),
@@ -578,7 +600,7 @@ final class Standalone {
 			esc_html__( 'Install', 'riff' ),
 			esc_attr__( 'Not now', 'riff' ),
 			// The site icon's file can go missing while the setting remains; Riff's own icon stands in.
-			esc_url( RIFF_URL . 'features/listen/icons/icon-192.png' ),
+			esc_url( self::mark() ),
 			esc_html__( 'Open it from your Home Screen, full screen, like any other app.', 'riff' )
 		);
 	}

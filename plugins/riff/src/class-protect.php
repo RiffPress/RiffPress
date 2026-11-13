@@ -452,7 +452,7 @@ final class Protect {
 		if ( '' !== $to ) {
 			// For this visitor and this once: never kept by a cache along the way.
 			nocache_headers();
-			wp_redirect( $to, 302, 'Riff' ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- a CDN's or storage's own host, given by a plugin, never by the request.
+			wp_redirect( $to, 302, riff_brand()['credit'] ? 'Riff' : false ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- a CDN's or storage's own host, given by a plugin, never by the request.
 			exit;
 		}
 		self::send( $id );

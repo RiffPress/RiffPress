@@ -40,6 +40,27 @@ add_filter( 'riff_protected_path', fn() => dirname( ABSPATH ) . '/riff-protected
 - PHP sends the files by default, from wherever they are. [`riff_protected_send`](../hooks.md#riff_protected_send) can hand them to the web server instead: `x-sendfile` names the file's absolute path, so Apache's `XSendFilePath` must allow the folder; `x-accel-redirect` names `/riff-protected/` and the file's path inside the folder, which an internal location maps there: `location /riff-protected/ { internal; alias /srv/example/riff-protected/; }`.
 - Riff asks the web server for a probe file in the protected folder about once a day, and when Settings, then Riff, is opened and nobody has for a day, to warn when it is sent to anyone. A folder outside the web root isn't asked about.
 
+## White label
+
+A host can put its own name and mark where a listener would see Riff's, with the [`riff_brand`](../hooks.md#riff_brand) filter:
+
+```php
+add_filter(
+	'riff_brand',
+	fn( $brand ) => array(
+		'name'        => 'Northwind Music',
+		'mark'        => 'https://cdn.example.com/northwind-512.png',
+		'credit'      => false,
+		'description' => 'Music from the whole street',
+	) + $brand
+);
+```
+
+- The site's own Site Title, Tagline and Site Icon come first, as they always have. The brand stands in where a site has none, in place of Riff's own: the Listen app's name in its sidebar, its install card and its web app manifest, the app's icon, and the line a link preview gives a site with no tagline. A link preview shows the mark only when it is a PNG, JPEG, GIF or WebP.
+- `credit` set to false also leaves Riff's name off the `X-Redirect-By` header sent when a protected file is answered from elsewhere. Riff shows no other credit to listeners.
+- The player has the brand as `brand` on its data, and the Listen app names it when a dropped file is not music.
+- Admin screens, the plugin's own name and messages for developers keep Riff's. `riff_brand()` gives the brand to a plugin of the host's own, already checked: an empty name is Riff's, a mark that isn't an http or https address is none, and the description is plain text.
+
 ## Under the hood
 
 - [`riff_extensions`](../hooks.md#riff_extensions) changes the list of extensions Riff loads: a host can leave one out, or name a plugin it has placed in Riff's `extensions/` folder. [Extensions](../extensions.md) explains how they load.
