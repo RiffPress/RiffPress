@@ -639,7 +639,25 @@ final class Catalog_Rest {
 			$hidden = array_map( 'intval', $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a INNER JOIN {$wpdb->posts} par ON par.ID = a.post_parent WHERE a.post_type = 'attachment' AND a.post_mime_type LIKE 'audio/%' AND ( par.post_status <> 'publish' OR par.post_password <> '' )" ) );
 			Cache::set( 'hidden', $hidden );
 		}
-		return $hidden;
+		return array_values( array_unique( array_merge( $hidden, self::ended_tracks() ) ) );
+	}
+
+	/**
+	 * The audio files past their availability, or their album's: asked each time, as the time
+	 * passes without a post changing. None on a site that sets no riff_available_until.
+	 *
+	 * @return int[]
+	 */
+	private static function ended_tracks(): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- whether any music has an end, by the meta key's index.
+		if ( ! $wpdb->get_var( $wpdb->prepare( "SELECT 1 FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' LIMIT 1", Rights::UNTIL ) ) ) {
+			return array();
+		}
+		$now = gmdate( 'Y-m-d H:i:s' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a narrow lookup by one meta key, with no API.
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT a.ID FROM {$wpdb->posts} a LEFT JOIN {$wpdb->postmeta} own ON own.post_id = a.ID AND own.meta_key = %s LEFT JOIN {$wpdb->postmeta} par ON par.post_id = a.post_parent AND par.meta_key = %s WHERE a.post_type = 'attachment' AND a.post_mime_type LIKE %s AND ( ( own.meta_value <> '' AND own.meta_value <= %s ) OR ( own.meta_id IS NULL AND par.meta_value <> '' AND par.meta_value <= %s ) )", Rights::UNTIL, Rights::UNTIL, 'audio/%', $now, $now ) );
+		return array_map( 'intval', (array) $ids );
 	}
 
 	/**
@@ -656,7 +674,7 @@ final class Catalog_Rest {
 		}
 		// Kept until a post or a term next changes, as the hidden files and the terms they are filed
 		// under both come into it.
-		$key  = 'hidden-by-term:' . $taxonomy;
+		$key  = 'hidden-by-term:' . $taxonomy . ':' . md5( implode( ',', $hidden ) );
 		$kept = Cache::get( $key );
 		if ( is_array( $kept ) ) {
 			return $kept;

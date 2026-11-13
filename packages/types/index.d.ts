@@ -63,10 +63,27 @@ export interface Track {
 		/** Whether the post is one visitors can't see, unpublished or behind a password. Only ever true for someone signed in who may see it. */
 		private: boolean;
 	} | null;
+	/** The rights the artist set on the track or its album, from riff_rights; null while nothing is set. */
+	rights: {
+		holder: string;
+		/** The year for the ℗ line, or 0. */
+		year: number;
+		license: string;
+		/** The licence's deed, or empty for all rights reserved. */
+		license_url: string;
+		license_label: string;
+		isrc: string;
+		/** Whether the uploader stated they own or control the rights. */
+		attested: boolean;
+	} | null;
+	/** Whether the current visitor may download the file, from riff_may_download. */
+	downloads: boolean;
 	/** Whether the current visitor may not play the track, as riff_can_play decided. A locked track has no src. */
 	locked: boolean;
 	/** Where a locked track sends the visitor to unlock it, from riff_unlock_url. Empty otherwise. */
 	unlock: string;
+	/** Why a locked track is locked, for the listener, from riff_may_play: "No longer available" for one past its availability. Empty otherwise. */
+	reason: string;
 }
 
 /** The track schema's version, Riff\\Tracks::SCHEMA_VERSION. */

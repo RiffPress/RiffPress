@@ -89,6 +89,7 @@ const HANDBOOKS = [
 	{ slug: 'listen-page', file: 'docs/learn/listen-page.md', label: 'The Listen page' },
 	{ slug: 'app', file: 'docs/learn/app.md', label: 'The app' },
 	{ slug: 'lyrics', file: 'docs/learn/lyrics.md', label: 'Lyrics' },
+	{ slug: 'rights', file: 'docs/learn/rights.md', label: 'Rights and controls' },
 	{ slug: 'sign-in', file: 'docs/learn/sign-in.md', label: 'Signing in' },
 	{ slug: 'network', file: 'docs/learn/network.md', label: 'Clients and networks' },
 	// For developers.

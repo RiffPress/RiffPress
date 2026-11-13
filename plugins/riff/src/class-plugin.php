@@ -25,6 +25,7 @@ final class Plugin {
 		Cache::register();
 		Media::register();
 		Protect::register();
+		Rights::register();
 		Protected_Path::register();
 		Private_Site::register();
 		Catalog::register();

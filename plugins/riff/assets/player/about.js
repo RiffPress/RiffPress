@@ -362,10 +362,48 @@ export default function about( P ) {
 			row.append( term, definition );
 			list.append( row );
 		}
+		rights( list, t?.rights );
 		if ( list.childElementCount ) {
 			body.append( list );
 		}
 		into.hidden = ! list.childElementCount;
+	}
+
+	// The rights the artist set, after the credits: "℗ 2024 Holder" and the licence, linked to
+	// its deed. Nothing while they set none.
+	function rights( list, r ) {
+		if ( ! r?.holder ) {
+			return;
+		}
+		const row = ( label, value ) => {
+			const div = document.createElement( 'div' );
+			const term = document.createElement( 'dt' );
+			term.textContent = label;
+			const definition = document.createElement( 'dd' );
+			definition.append( value );
+			div.append( term, definition );
+			list.append( div );
+		};
+		row(
+			__( 'Rights', 'riff' ),
+			document.createTextNode(
+				[ '℗', r.year || '', r.holder ].filter( Boolean ).join( ' ' )
+			)
+		);
+		if ( r.license_label ) {
+			let value = document.createTextNode( r.license_label );
+			if ( r.license_url ) {
+				value = document.createElement( 'a' );
+				value.href = r.license_url;
+				value.rel = 'license';
+				value.className = 'riff-about-link';
+				value.textContent = r.license_label;
+			}
+			row( __( 'Licence', 'riff' ), value );
+		}
+		if ( r.isrc ) {
+			row( 'ISRC', document.createTextNode( r.isrc ) );
+		}
 	}
 
 	async function fill() {

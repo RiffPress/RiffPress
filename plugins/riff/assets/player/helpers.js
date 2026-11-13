@@ -1,6 +1,6 @@
 /* What every section of the player shares and nothing owns: JSON and storage that never throw,
  * times in digits and in words, a sprintf, escaping, the track's subtitle and its small cover, a
- * route's address, a picture's average colour, and a word to a screen reader. The Listen app shares some of these
+ * route's address, the page's pass, a picture's average colour, and a word to a screen reader. The Listen app shares some of these
  * through its own helpers. */
 
 export function parse( json ) {
@@ -31,6 +31,23 @@ export function drop( store, key ) {
 	try {
 		store.removeItem( key );
 	} catch {}
+}
+
+// The pass the page was opened with, its `riff-pass` argument, kept for this tab so the requests
+// the player makes after it (Riff's routes, the app's views) carry it in the X-Riff-Pass header,
+// as the server's riff_may_play asks. What a pass means is the site's; empty when there is none.
+const PASS = 'riff-pass';
+export function pass() {
+	const given = new URLSearchParams( location.search ).get( PASS );
+	if ( given ) {
+		write( sessionStorage, PASS, given );
+		return given;
+	}
+	return read( sessionStorage, PASS ) || '';
+}
+export function passHeader() {
+	const p = pass();
+	return p ? { 'X-Riff-Pass': p } : {};
 }
 
 // A route's address with a path appended, whether the site has pretty permalinks

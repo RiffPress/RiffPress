@@ -193,6 +193,30 @@ final class Likes {
 				'played' => $at > 0 && $at <= $now ? $at : $now,
 				'post'   => (int) ( $item['post'] ?? 0 ),
 			);
+			/**
+			 * Fires once for each play a listener's player reports, as it adds the play to their
+			 * history: when a track starts. A host counts plays here, per pass.
+			 *
+			 * @since 6.17.0
+			 *
+			 * @param int   $track_id Attachment ID.
+			 * @param int   $user_id  User ID.
+			 * @param array $context  {
+			 *     @type string $pass The pass the report carries, or empty.
+			 *     @type string $via  Where it was reported: rest.
+			 *     @type int    $post The post it played from, or 0.
+			 * }
+			 */
+			do_action(
+				'riff_played',
+				$id,
+				$user_id,
+				array(
+					'pass' => Rights::pass(),
+					'via'  => Rights::via(),
+					'post' => (int) ( $item['post'] ?? 0 ),
+				)
+			);
 		}
 		// The latest play of each track counts.
 		usort( $list, static fn( $a, $b ) => $b['played'] <=> $a['played'] );

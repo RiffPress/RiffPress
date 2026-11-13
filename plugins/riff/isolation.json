@@ -64,7 +64,8 @@
 		"riff_protected_path": "The same folder, set by a plugin rather than wp-config.php, as a host's own plugin does for a network."
 	},
 	"scripts": [
-		"riff-media"
+		"riff-media",
+		"riff-rights"
 	],
 	"modules": [
 		"riff",

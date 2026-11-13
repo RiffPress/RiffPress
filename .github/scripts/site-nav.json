@@ -24,6 +24,7 @@
 						{ "key": "listen-page", "label": "The Listen page", "href": "developers/listen-page/", "summary": "Every album as a cover, browsing and one search box." },
 						{ "key": "app", "label": "The app", "href": "developers/app/", "summary": "The same page as a player on its own, which a browser installs." },
 						{ "key": "lyrics", "label": "Lyrics", "href": "developers/lyrics/", "summary": "Riff Lyrics: words timed to the song." },
+						{ "key": "rights", "label": "Rights and controls", "href": "developers/rights/", "summary": "Who holds the music, its licence, downloads and how long it is available." },
 						{ "key": "sign-in", "label": "Signing in", "href": "developers/sign-in/", "summary": "Listeners with a passkey or an emailed code." }
 					]
 				},

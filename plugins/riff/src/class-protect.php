@@ -159,13 +159,16 @@ final class Protect {
 	 */
 	public static function signed( int $id ): string {
 		$expires = (int) ( ceil( ( time() + self::TTL ) / HOUR_IN_SECONDS ) * HOUR_IN_SECONDS );
-		return add_query_arg(
-			array(
-				'riff-expires' => $expires,
-				'riff-sig'     => self::signature( $id, $expires ),
-			),
-			self::address( $id )
+		$args    = array(
+			'riff-expires' => $expires,
+			'riff-sig'     => self::signature( $id, $expires ),
 		);
+		// The pass the address was handed out with, so the file's own request is asked with it.
+		$pass = Rights::pass();
+		if ( '' !== $pass ) {
+			$args[ Rights::PASS ] = $pass;
+		}
+		return add_query_arg( $args, self::address( $id ) );
 	}
 
 	/**
@@ -445,7 +448,7 @@ final class Protect {
 		$expires   = isset( $_GET['riff-expires'] ) ? absint( $_GET['riff-expires'] ) : 0;
 		$signature = isset( $_GET['riff-sig'] ) ? sanitize_key( wp_unslash( $_GET['riff-sig'] ) ) : '';
 		// phpcs:enable
-		if ( ! self::valid( $id, $expires, $signature ) && ! self::can( $id ) ) {
+		if ( ! self::allows( $id, $expires, $signature ) ) {
 			self::refuse( 403 );
 		}
 		$to = self::elsewhere( $id );
@@ -456,6 +459,33 @@ final class Protect {
 			exit;
 		}
 		self::send( $id );
+	}
+
+	/**
+	 * Whether a request for a protected file is answered: its signature is good or the visitor may
+	 * have it, and riff_may_play, asked with the pass the request carries, allows the play. A signed
+	 * address skips the visitor's rights, never the gate, so a pass that ends ends its files too.
+	 *
+	 * @since 6.17.0
+	 *
+	 * @param int    $id        Attachment ID.
+	 * @param int    $expires   Expiry from the address.
+	 * @param string $signature Signature from the address.
+	 * @return bool
+	 */
+	public static function allows( int $id, int $expires, string $signature ): bool {
+		return (bool) Rights::serving(
+			'audio',
+			static function () use ( $id, $expires, $signature ): bool {
+				if ( ! self::valid( $id, $expires, $signature ) ) {
+					// can() builds the track, which asks riff_may_play itself.
+					return self::can( $id );
+				}
+				// A song's video or streaming version is asked for as the song.
+				$songs = self::songs_of( $id );
+				return true === Rights::may_play( $songs ? (int) $songs[0] : $id, get_current_user_id() );
+			}
+		);
 	}
 
 	/**

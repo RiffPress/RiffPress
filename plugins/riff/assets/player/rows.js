@@ -111,19 +111,21 @@ export function rows( P ) {
 		if ( t.unlock ) {
 			row.href = t.unlock;
 		}
-		row.innerHTML = rowInner(
-			t,
-			t.unlock
-				? /* translators: Heard before a locked track's title, on the link that unlocks it. */ __(
-						'Unlock',
-						'riff'
-					)
-				: /* translators: Heard before a locked track's title. */ __(
-						'Locked',
-						'riff'
-					),
-			true
-		);
+		// Why it is locked, when the site says: "No longer available", say.
+		let verb = t.unlock
+			? /* translators: Heard before a locked track's title, on the link that unlocks it. */ __(
+					'Unlock',
+					'riff'
+				)
+			: /* translators: Heard before a locked track's title. */ __(
+					'Locked',
+					'riff'
+				);
+		if ( t.reason ) {
+			verb = t.reason;
+			row.title = t.reason;
+		}
+		row.innerHTML = rowInner( t, verb, true );
 		row.dataset.riffAdded = '';
 		fig.insertBefore( row, fig.firstChild );
 		return row;
