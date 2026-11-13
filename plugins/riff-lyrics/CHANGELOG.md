@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.9.2...riff-lyrics-v1.9.3) (2026-11-13)
+
+
+### Bug Fixes
+
+* main's versions agree with the release manifest again ([#1104](https://github.com/RiffPress/RiffPress/issues/1104)) ([01ef6fd](https://github.com/RiffPress/RiffPress/commit/01ef6fd72b42ce5bf548be3f175fef68c77473e9))
+
 ## [1.9.2](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.9.1...riff-lyrics-v1.9.2) (2026-11-13)
 
 
