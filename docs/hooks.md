@@ -201,6 +201,17 @@ Since 6.8.0. Fires in `plugins/riff/src/class-import.php`.
 | `$id` | `int` | The zip's attachment ID. |
 | `$author` | `int` | The ID of the user who uploaded it, whom the import runs as. |
 
+### `riff_item_links`
+
+Filters the links shown with a track's info in the player, after its credits and rights: a host's "Report" link, say. Each is `label` and `url`; one without both, or with an address that isn't http or https, is left out. Empty by default.
+
+Since 6.17.0. Fires in `plugins/riff/src/class-rights.php`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `$links` | `array[]` | Links, each with `label` and `url`. |
+| `$post_id` | `int` | Attachment ID; its album's post is its post_parent. |
+
 ### `riff_may_download`
 
 Filters whether a user may download an album's or a track's files. Where downloads are off, Riff shows no download link to anyone who can't edit the music.

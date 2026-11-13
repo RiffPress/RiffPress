@@ -47,6 +47,7 @@
   <url><loc>{{pages_url}}developers/hooks/riff_extensions/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_import_keep_zip/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_import_private/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>{{pages_url}}developers/hooks/riff_item_links/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_may_download/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_may_play/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>{{pages_url}}developers/hooks/riff_mcp/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>

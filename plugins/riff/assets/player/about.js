@@ -363,6 +363,21 @@ export default function about( P ) {
 			list.append( row );
 		}
 		rights( list, t?.rights );
+		// Links the site adds to the track's info: a report link, say.
+		for ( const link of t?.links || [] ) {
+			if ( link?.label && /^https?:/i.test( link.url || '' ) ) {
+				const div = document.createElement( 'div' );
+				const term = document.createElement( 'dt' );
+				term.className = 'riff-app-sr';
+				term.textContent = __( 'Link', 'riff' );
+				const definition = document.createElement( 'dd' );
+				definition.append(
+					named( link.label, link.url, 'riff-about-link' )
+				);
+				div.append( term, definition );
+				list.append( div );
+			}
+		}
 		if ( list.childElementCount ) {
 			body.append( list );
 		}

@@ -388,4 +388,33 @@ class Test_Riff_Rights extends Riff_TestCase {
 		$this->assertTrue( $dies( array( Riff\Private_Site::class, 'gate_passed' ) ), 'no other' );
 		remove_filter( 'riff_private_pass', $opens, 10 );
 	}
+
+	public function test_a_host_adds_links_to_a_tracks_info(): void {
+		$this->assertSame( array(), Tracks::from_attachment( $this->track, $this->album )['links'], 'none by default' );
+		$add   = static fn( $links, $id ) => array_merge(
+			$links,
+			array(
+				array(
+					'label' => 'Report',
+					'url'   => 'https://host.example/report?item=' . $id,
+				),
+				array(
+					'label' => 'Bad',
+					'url'   => 'javascript:alert(1)',
+				),
+			)
+		);
+		add_filter( 'riff_item_links', $add, 10, 2 );
+		$links = Tracks::from_attachment( $this->track, $this->album )['links'];
+		remove_filter( 'riff_item_links', $add );
+		$this->assertSame(
+			array(
+				array(
+					'label' => 'Report',
+					'url'   => 'https://host.example/report?item=' . $this->track,
+				),
+			),
+			$links
+		);
+	}
 }

@@ -211,6 +211,7 @@ final class Tracks {
 				// whether this listener may download the file.
 				'rights'    => Rights::for_track( $attachment_id ),
 				'downloads' => Rights::may_download( $attachment_id, get_current_user_id() ),
+				'links'     => Rights::links( $attachment_id ),
 			),
 			$attachment_id,
 			$post_id
@@ -563,6 +564,17 @@ final class Tracks {
 					'type'        => 'boolean',
 					'description' => __( 'Whether the current visitor may download the file, from riff_may_download.', 'riff' ),
 				),
+				'links'     => array(
+					'type'        => 'array',
+					'description' => __( 'Links a host adds to the track\'s info, from riff_item_links: a report link, say. Empty by default.', 'riff' ),
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'label' => array( 'type' => 'string' ),
+							'url'   => array( 'type' => 'string' ),
+						),
+					),
+				),
 				'locked'    => array(
 					'type'        => 'boolean',
 					'description' => __( 'Whether the current visitor may not play the track, as riff_can_play decided. A locked track has no src.', 'riff' ),
@@ -646,6 +658,7 @@ final class Tracks {
 		$track['reason']    = $track['locked'] && is_string( $track['reason'] ?? null ) ? $track['reason'] : '';
 		$track['rights']    = is_array( $track['rights'] ?? null ) ? $track['rights'] : null;
 		$track['downloads'] = ! array_key_exists( 'downloads', $track ) || ! empty( $track['downloads'] );
+		$track['links']     = Rights::clean_links( $track['links'] ?? array() );
 		return $track;
 	}
 

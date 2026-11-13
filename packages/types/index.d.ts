@@ -78,6 +78,11 @@ export interface Track {
 	} | null;
 	/** Whether the current visitor may download the file, from riff_may_download. */
 	downloads: boolean;
+	/** Links a host adds to the track's info, from riff_item_links: a report link, say. Empty by default. */
+	links: {
+		label: string;
+		url: string;
+	}[];
 	/** Whether the current visitor may not play the track, as riff_can_play decided. A locked track has no src. */
 	locked: boolean;
 	/** Where a locked track sends the visitor to unlock it, from riff_unlock_url. Empty otherwise. */

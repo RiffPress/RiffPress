@@ -915,6 +915,51 @@ final class Rights {
 	}
 
 	/**
+	 * The links a host adds to a track's info in the player, such as one to report it.
+	 *
+	 * @since 6.17.0
+	 *
+	 * @param int $post_id Attachment ID.
+	 * @return array[] Each with `label` and `url`.
+	 */
+	public static function links( int $post_id ): array {
+		/**
+		 * Filters the links shown with a track's info in the player, after its credits and rights:
+		 * a host's "Report" link, say. Each is `label` and `url`; one without both, or with an
+		 * address that isn't http or https, is left out. Empty by default.
+		 *
+		 * @since 6.17.0
+		 *
+		 * @param array[] $links   Links, each with `label` and `url`.
+		 * @param int     $post_id Attachment ID; its album's post is its post_parent.
+		 */
+		return self::clean_links( apply_filters( 'riff_item_links', array(), $post_id ) );
+	}
+
+	/**
+	 * Links as the track shape keeps them: each a label and an http or https address.
+	 *
+	 * @since 6.17.0
+	 *
+	 * @param mixed $links Links.
+	 * @return array[]
+	 */
+	public static function clean_links( $links ): array {
+		$out = array();
+		foreach ( is_array( $links ) ? $links : array() as $link ) {
+			$label = is_array( $link ) ? sanitize_text_field( (string) ( $link['label'] ?? '' ) ) : '';
+			$url   = is_array( $link ) ? esc_url_raw( (string) ( $link['url'] ?? '' ), array( 'http', 'https' ) ) : '';
+			if ( '' !== $label && '' !== $url ) {
+				$out[] = array(
+					'label' => $label,
+					'url'   => $url,
+				);
+			}
+		}
+		return $out;
+	}
+
+	/**
 	 * The share link of a post: its address, keeping a pass when given one.
 	 *
 	 * @since 6.17.0
