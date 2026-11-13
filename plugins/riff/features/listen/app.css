@@ -1852,24 +1852,20 @@
 	display: none;
 }
 
-/* The offer to install the app, in standalone mode only: a calm card on the
-   app's surface with a hairline, Install its one primary action. On a phone
-   it runs across under the tabs; on a wide screen it is a card under the
-   library. */
+/* The offer to keep the app, in standalone mode only: one more row at the
+   end of the library, in its rhythm (the icon at the art's size, the site's
+   name, where it would live), with Add drawn in a hairline, not the accent.
+   On a phone it runs across under the tabs, the same row. */
 .riff-app-install {
-	position: relative;
-	display: grid;
-	grid-template-columns: 48px minmax(0, 1fr);
+	display: flex;
 	align-items: center;
-	gap: 12px 12px;
+	gap: 12px;
 	flex: 1 1 100%;
 	order: 3;
 	box-sizing: border-box;
-	margin: 12px 0 0;
-	padding: 16px 44px 16px 16px;
-	border: 1px solid var(--riff-app-line);
-	border-radius: 8px;
-	background: var(--riff-app-surface);
+	min-width: 0;
+	margin: 0;
+	padding: 8px 0;
 	color: var(--riff-app-ink);
 }
 
@@ -1879,9 +1875,20 @@
 }
 
 .riff-app .riff-app-install-icon {
+	flex: none;
 	width: 48px;
 	height: 48px;
-	border-radius: 10px;
+	border-radius: 4px;
+	object-fit: cover;
+
+	/* A hairline keeps a black or a white icon's edge on either ground. */
+	outline: 1px solid color-mix(in srgb, var(--riff-app-ink) 12%, transparent);
+	outline-offset: -1px;
+}
+
+.riff-app .riff-app-install-text {
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .riff-app .riff-app-install-text p {
@@ -1892,51 +1899,50 @@
 }
 
 .riff-app .riff-app-install-text .riff-app-install-title {
+	overflow: hidden;
 	color: var(--riff-app-ink);
 	font-size: 15px;
-	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-.riff-app .riff-app-install .riff-pill {
-	grid-column: 1 / -1;
-	justify-self: start;
-	min-height: 36px;
-	height: 36px;
-	padding: 0 20px;
-	border-color: var(--riff-app-accent);
+.riff-app .riff-app-install-add {
+	all: unset;
+	flex: none;
+	box-sizing: border-box;
+	height: 32px;
+	margin-left: -4px;
+	padding: 0 8px;
 	border-radius: 999px;
-	background: var(--riff-app-accent);
-	color: var(--riff-app-on-accent);
-	font-size: 14px;
+	color: var(--riff-app-ink);
+	font-size: 13px;
 	font-weight: 700;
+	line-height: 32px;
+	cursor: pointer;
 }
 
-.riff-app .riff-app-install .riff-pill:hover {
-	background: color-mix(in srgb, var(--riff-app-accent) 85%, var(--riff-app-ink));
+.riff-app .riff-app-install-add:hover,
+.riff-app .riff-app-install-close:hover {
+	background: var(--riff-app-surface);
+	color: var(--riff-app-ink);
 }
 
 .riff-app .riff-app-install-close {
 	all: unset;
-	position: absolute;
-	top: 8px;
-	right: 8px;
 	display: grid;
+	flex: none;
 	place-items: center;
-	width: 32px;
-	height: 32px;
+	width: 24px;
+	height: 24px;
+	margin-left: -12px;
 	border-radius: 50%;
 	color: var(--riff-app-ink-2);
 	cursor: pointer;
 }
 
-.riff-app .riff-app-install-close:hover {
-	background: var(--riff-app-accent-tint);
-	color: var(--riff-app-ink);
-}
-
 .riff-app .riff-app-install-close svg {
-	width: 18px;
-	height: 18px;
+	width: 14px;
+	height: 14px;
 }
 
 .riff-app .riff-app-install :focus-visible {

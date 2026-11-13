@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.9.1...riff-lyrics-v1.9.2) (2026-11-13)
+
+
+### Bug Fixes
+
+* CI is green again: the Rights meta test registers its keys, the albums route asks once whether any music has an end, and the tests expect the renamed Together and account menu ([#1097](https://github.com/RiffPress/RiffPress/issues/1097)) ([50fefed](https://github.com/RiffPress/RiffPress/commit/50fefed6527db7706c6140a6613eb1f372b7cc1e))
+
 ## [1.9.1](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.9.0...riff-lyrics-v1.9.1) (2026-11-13)
 
 

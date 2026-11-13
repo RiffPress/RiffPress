@@ -9,6 +9,10 @@ export function installOffer( ctx ) {
 	const ios =
 		/iPhone|iPad|iPod/.test( ua ) ||
 		( /Macintosh/.test( ua ) && navigator.maxTouchPoints > 1 );
+	const mac =
+		! ios &&
+		( navigator.userAgentData?.platform === 'macOS' ||
+			/Macintosh/.test( ua ) );
 	const safari =
 		/^((?!chrome|chromium|crios|fxios|edg|android).)*safari/i.test( ua );
 	const installHow = () => {
@@ -56,12 +60,21 @@ export function installOffer( ctx ) {
 				fall();
 			}
 		}
-		// A phone has no window to give it or media keys to press: it gets its own line on why.
-		const phone =
-			ios || window.matchMedia( '(pointer: coarse)' ).matches;
+		// Where it would live: a phone's Home Screen, a Mac's Dock, or another computer's. Add's
+		// name says it too.
+		const screen =
+			ios || window.matchMedia( '(pointer: coarse)' ).matches
+				? 'phone'
+				: mac
+				? 'mac'
+				: 'computer';
 		for ( const why of offer.querySelectorAll( '[data-riff-install-why]' ) ) {
-			why.hidden =
-				( why.dataset.riffInstallWhy === 'phone' ) !== phone;
+			why.hidden = why.dataset.riffInstallWhy !== screen;
+			if ( ! why.hidden && why.dataset.riffInstallLabel ) {
+				offer
+					.querySelector( '[data-riff-app-action="install"]' )
+					?.setAttribute( 'aria-label', why.dataset.riffInstallLabel );
+			}
 		}
 		offer.hidden =
 			window.matchMedia(
@@ -101,13 +114,18 @@ export function installOffer( ctx ) {
 			} );
 			return;
 		}
-		// Safari: the steps take the button's place.
+		// Safari: the steps take the button's place, and the line's.
 		const how = offer?.querySelector(
 			`[data-riff-install-how="${ installHow() }"]`
 		);
 		if ( how ) {
 			how.hidden = false;
 			action.hidden = true;
+			for ( const why of offer.querySelectorAll(
+				'[data-riff-install-why]'
+			) ) {
+				why.hidden = true;
+			}
 			// The steps replace the focused button, so they take the focus and are read.
 			how.tabIndex = -1;
 			how.focus();

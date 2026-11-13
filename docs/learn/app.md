@@ -5,10 +5,10 @@ Every Listen page is also an app. Add `app/` to its address, for example `/liste
 ## Try it
 
 1. Open your Listen page and add `app/` to its address.
-2. Visit it a second time. From a listener's second visit, the sidebar has a card that says Get the app, with your site's name in it.
-3. In Chrome or Edge, press Install and the browser asks to install it. In Safari, the card says how instead: on a Mac, choose File, then Add to Dock; on an iPhone, tap Share, then Add to Home Screen.
+2. Visit it a second time. From a listener's second visit, the library ends with one more row: your Site Icon and your site's name, where it would live (Keep it in your Dock on a Mac, Keep it a click away on another computer, Add it to your Home Screen on a phone), and Add.
+3. In Chrome or Edge, press Add and the browser asks to install it. In Safari, the row says how instead: on a Mac, choose File, then Add to Dock; on an iPhone, tap Share, then Add to Home Screen.
 
-Firefox has no way to install a site, so it shows no card. Once the app is installed, or the card is closed, it stays away.
+Firefox has no way to install a site, so it shows no row. Once the app is installed, or the row is closed with Not now, it stays away.
 
 ![Now Playing on a wide screen in the app: the album's sleeve beside the turntable with its record, and the bar along the bottom](../../site/desktop-now-playing.png)
 

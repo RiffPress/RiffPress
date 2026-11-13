@@ -21,6 +21,7 @@ test.afterAll( async ( { requestUtils } ) => {
 test.describe( 'Standalone', () => {
 	test( 'the app offers to install itself from the second visit, with the browser\'s prompt, and stays away once dismissed', async ( {
 		page,
+		isMobile,
 	} ) => {
 		const app = pageUrl.replace( /\/?$/, '/' ) + 'app/';
 		// Headless Chromium never fires its install event, so the test stands in for it, with a
@@ -49,27 +50,29 @@ test.describe( 'Standalone', () => {
 		await page.reload();
 		await offer();
 		await expect( card ).toBeVisible();
-		await expect( card.locator( '.riff-app-install-title' ) ).toHaveText( /^Get the .+ app$/ );
-		// A calm card on the app's surface, Install the one thing drawn in the accent.
+		// A row like the library's: the site's name as its title, where it would live as its line,
+		// and Add's name saying both.
+		await expect( card.locator( '.riff-app-install-title' ) ).not.toBeEmpty();
+		const where = isMobile ? /^Add it to your Home Screen$/ : /^Keep it (in your Dock|a click away)$/;
+		await expect( card.locator( '[data-riff-install-why]:visible' ) ).toHaveText( where );
+		await expect( card.getByRole( 'button', { name: /^Add .+ to (your Dock|this computer|your Home Screen)$/ } ) ).toBeVisible();
+		// No box and no accent: no surface, no border, and Add drawn in the text's colour.
 		expect(
 			await card.evaluate( ( el ) => {
-				const probe = document.createElement( 'div' );
-				probe.style.cssText = 'background: var(--riff-app-surface); color: var(--riff-app-accent)';
-				el.parentElement.append( probe );
-				const want = getComputedStyle( probe );
-				const install = el.querySelector( '.riff-pill' );
-				const out = {
-					card: getComputedStyle( el ).backgroundImage === 'none' && getComputedStyle( el ).backgroundColor === want.backgroundColor,
-					install: getComputedStyle( install ).backgroundColor === want.color,
+				const style = getComputedStyle( el );
+				const add = getComputedStyle( el.querySelector( '[data-riff-app-action="install"]' ) );
+				return {
+					surface: style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.backgroundImage === 'none',
+					border: style.borderTopStyle === 'none',
+					add: add.backgroundColor === 'rgba(0, 0, 0, 0)' && add.color === style.color,
+					art: el.querySelector( 'img' ).getBoundingClientRect().width,
 				};
-				probe.remove();
-				return out;
 			} )
-		).toEqual( { card: true, install: true } );
+		).toEqual( { surface: true, border: true, add: true, art: 48 } );
 		// Whatever the site icon is, the card shows an image that loaded.
 		await expect.poll( () => card.locator( 'img' ).evaluate( ( img ) => img.complete && img.naturalWidth > 0 ) ).toBe( true );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '[data-riff-install]' ).analyze() ).violations ).toEqual( [] );
-		await card.getByRole( 'button', { name: 'Install' } ).click();
+		await card.getByRole( 'button', { name: /^Add / } ).click();
 		expect( await page.evaluate( () => window.prompted ) ).toBe( 1 );
 
 		// Offered again, then dismissed: gone, and still gone after a reload.
@@ -93,7 +96,7 @@ test.describe( 'Standalone', () => {
 		await page.evaluate( () => localStorage.removeItem( 'riff-install-dismissed' ) );
 	} );
 
-	test( 'in Safari, which has no install prompt, Install shows how to add the app to the Dock', async ( {
+	test( 'in Safari, which has no install prompt, Add shows how to add the app to the Dock', async ( {
 		browser,
 		baseURL,
 		isMobile,
@@ -110,10 +113,13 @@ test.describe( 'Standalone', () => {
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
 		const card = page.locator( '[data-riff-install]' );
 		await expect( card ).toBeVisible();
-		await card.getByRole( 'button', { name: 'Install' } ).focus();
+		await expect( card.locator( '[data-riff-install-why="mac"]' ) ).toHaveText( 'Keep it in your Dock' );
+		const add = card.getByRole( 'button', { name: /^Add .+ to your Dock$/ } );
+		await add.focus();
 		await page.keyboard.press( 'Enter' );
 		await expect( card.locator( '[data-riff-install-how="mac"]' ) ).toHaveText( 'In Safari, choose File, then Add to Dock.' );
-		await expect( card.getByRole( 'button', { name: 'Install' } ) ).toBeHidden();
+		await expect( add ).toBeHidden();
+		await expect( card.locator( '[data-riff-install-why="mac"]' ), 'the steps take the line\'s place' ).toBeHidden();
 		await expect( card.locator( '[data-riff-install-how="mac"]' ), 'the steps take the focus from the button they replace' ).toBeFocused();
 		await context.close();
 	} );

@@ -1,6 +1,6 @@
 {
-	"plugins/riff": "6.17.2",
-	"plugins/riff-lyrics": "1.9.1",
+	"plugins/riff": "6.17.3",
+	"plugins/riff-lyrics": "1.9.2",
 	"packages/wp-api-coverage": "0.1.0",
 	"plugins/riff-sign-in": "0.7.2",
 	"plugins/riff-chords": "0.7.0",
