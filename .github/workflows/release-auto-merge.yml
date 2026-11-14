@@ -6,7 +6,9 @@ name: Release Auto-merge
 # downstream. Safe is .github/scripts/release-gate.js: main's newest commit is
 # green, the pull request already contains it, and the full suite (PHPUnit,
 # Playwright, Plugin Check, lint, references, CodeQL, the scripts' tests) ran
-# and passed on the pull request's own commit, which is what gets tagged.
+# and passed on the pull request's own commit, which is what gets tagged, and
+# at that commit every moving package's version strings say the manifest's
+# version (sync-versions has pushed), read through the API.
 #
 # Kill switch: set the repository variable RELEASE_AUTO_MERGE to "false" and
 # release pull requests wait for a person again. Unset or anything else, they

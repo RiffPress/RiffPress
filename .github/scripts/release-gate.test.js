@@ -4,7 +4,7 @@
  */
 const { test } = require( 'node:test' );
 const assert = require( 'node:assert' );
-const { decide, BRANCH, LABEL } = require( './release-gate.js' );
+const { decide, unsynced, BRANCH, LABEL } = require( './release-gate.js' );
 
 const REPO = 'RiffPress/RiffPress';
 let id = 0;
@@ -31,6 +31,7 @@ const input = ( extra = {} ) => ( {
 	behindBy: 0,
 	prRuns: green(),
 	mainRuns: [ run( 'CI status' ), run( 'Analyze (actions)' ) ],
+	unsynced: [],
 	...extra,
 } );
 
@@ -92,4 +93,73 @@ test( 'only release-please\'s own pull request, from this repository, labelled, 
 	const fork = pull( { head: { ref: BRANCH, sha: 'abc', repo: { full_name: 'someone/RiffPress' } } } );
 	assert.strictEqual( decide( input( { pulls: [ fork ] } ) ).action, 'wait' );
 	assert.strictEqual( decide( input( { pulls: [ pull( { base: { ref: 'other' } } ) ] } ) ).action, 'wait' );
+} );
+
+// A release pull request that moves Riff to 6.17.6 and Riff Sign In nowhere.
+const config = {
+	packages: {
+		'plugins/riff': { component: 'riff' },
+		'plugins/riff-sign-in': { component: 'riff-sign-in' },
+		'packages/wp-api-coverage': { component: 'wp-api-coverage' },
+	},
+};
+const mainManifest = { 'plugins/riff': '6.17.5', 'plugins/riff-sign-in': '0.9.0', 'packages/wp-api-coverage': '0.3.0' };
+const headManifest = { ...mainManifest, 'plugins/riff': '6.17.6' };
+const plugin = ( define, version ) => `<?php\n/**\n * Plugin Name: X\n * Version: ${ version }\n */\ndefine( '${ define }', '${ version }' );\n`;
+const readme = ( version ) => `=== X ===\nStable tag: ${ version }\n`;
+const tree = ( files ) => ( file ) => ( file in files ? files[ file ] : null );
+const synced = {
+	'plugins/riff/riff.php': plugin( 'RIFF_VERSION', '6.17.6' ),
+	'plugins/riff/readme.txt': readme( '6.17.6' ),
+	// Left at its old version: this pull request does not release it.
+	'plugins/riff-sign-in/riff-sign-in.php': plugin( 'RIFF_SIGN_IN_VERSION', '0.8.0' ),
+	'plugins/riff-sign-in/readme.txt': readme( '0.8.0' ),
+};
+
+test( 'a head whose moving packages say their new version is synced', () => {
+	assert.deepStrictEqual( unsynced( { config, headManifest, mainManifest, read: tree( synced ) } ), [] );
+} );
+
+test( 'release-please\'s own commit alone, before sync-versions, is not synced, and waits', () => {
+	const found = unsynced( {
+		config,
+		headManifest,
+		mainManifest,
+		read: tree( { ...synced, 'plugins/riff/riff.php': plugin( 'RIFF_VERSION', '6.17.5' ), 'plugins/riff/readme.txt': readme( '6.17.5' ) } ),
+	} );
+	assert.deepStrictEqual( found, [
+		'riff is 6.17.6 in the manifest, but the header says Version: 6.17.5',
+		'riff is 6.17.6 in the manifest, but RIFF_VERSION is 6.17.5',
+		'riff is 6.17.6 in the manifest, but readme.txt says Stable tag: 6.17.5',
+	] );
+	const decision = decide( input( { unsynced: found } ) );
+	assert.strictEqual( decision.action, 'wait' );
+	assert.match( decision.reasons.join( '\n' ), /not synced at abc/ );
+	assert.match( decision.reasons.join( '\n' ), /RIFF_VERSION is 6\.17\.5/ );
+} );
+
+test( 'it waits on an unsynced head even when it is not a draft and every check is green', () => {
+	assert.strictEqual( decide( input( { pulls: [ pull( { draft: false } ) ], unsynced: [ 'riff is 6.17.6 in the manifest, but x' ] } ) ).action, 'wait' );
+} );
+
+test( 'a file it cannot read at the head is not synced', () => {
+	const files = { ...synced };
+	delete files[ 'plugins/riff/readme.txt' ];
+	assert.deepStrictEqual( unsynced( { config, headManifest, mainManifest, read: tree( files ) } ), [
+		'riff is 6.17.6 in the manifest, but its readme.txt could not be read',
+	] );
+} );
+
+test( 'a package without a plugin is synced by its package.json', () => {
+	const moved = { ...headManifest, 'packages/wp-api-coverage': '0.4.0' };
+	const stale = { ...synced, 'packages/wp-api-coverage/package.json': '{ "version": "0.3.0" }' };
+	assert.deepStrictEqual( unsynced( { config, headManifest: moved, mainManifest, read: tree( stale ) } ), [
+		'wp-api-coverage is 0.4.0 in the manifest, but its package.json says 0.3.0',
+	] );
+	const fresh = { ...synced, 'packages/wp-api-coverage/package.json': '{ "version": "0.4.0" }' };
+	assert.deepStrictEqual( unsynced( { config, headManifest: moved, mainManifest, read: tree( fresh ) } ), [] );
+} );
+
+test( 'a decision without the head\'s version strings read waits', () => {
+	assert.strictEqual( decide( input( { unsynced: undefined } ) ).action, 'wait' );
 } );
