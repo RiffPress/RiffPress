@@ -429,8 +429,17 @@ The turntable is the album where Now Playing is wider than tall (above). The dec
 plinth, the record, the arm in `player.php`, styled by `riff.css` and moved by `now-playing.js`) is
 the turntable: it is what a hand takes, what a keyboard and a screen reader find, and what the tests
 read. Where the browser has WebGL2, `assets/player/deck-gl.js` draws it: a canvas the whole of Now
-Playing, in its background, lit as a deck on a desk is, seen from straight above the spindle so
-everything it draws lies where the page has it. It only draws. Each frame it reads the page's deck
+Playing, in its background, lit as a deck on a desk is. While a hand or the keyboard is at the deck,
+or the record is in its sleeve, it is seen from straight above the spindle so everything it draws
+lies where the page has it; at rest, with the record out, the eye sits back across the desk, low, as
+from a chair, with the sleeve standing on a ledge behind the deck, and leans a degree or two, never
+rolling, with the device's motion sensors (asked for on iOS at the first touch of the deck,
+`riff:tilt` keeping a no). A mouse moving over the deck (not one only resting there), a key's focus or a first touch brings the eye
+over it first (that touch does nothing else), so the deck is held where it is seen; the page's key
+captions, display and pitch fader, which stand where the deck is seen from above, are hidden while
+the eye is back (`data-riff-seat`). Where WebGL2 is likely, the page's deck waits unpainted
+(`data-riff-gl-wait`) for the drawn one, at most a second and a half, so the first deck seen is the
+one that stays. It only draws. Each frame it reads the page's deck
 (the record's place and turn, the arm's angle, the cue lever, the label's words and colours, the
 side's bands from `P.pressed`) and draws that; once it has drawn, `#riff` has `data-riff-gl` and
 `riff.css` stops painting the page's own parts, which stay where they are. Without WebGL2, without a

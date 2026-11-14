@@ -891,10 +891,34 @@ export function nowPlaying( P ) {
 	const shapedAsDeck = () =>
 		!! $( '.riff-cover' ) &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
+	// Where WebGL2 is likely, the page's deck waits unpainted (riff.css, data-riff-gl-wait) for the
+	// one deck-gl.js draws, so the first deck seen is the one that stays; if that hasn't drawn within
+	// a moment and a half of Now Playing showing, or can't, the page's own is painted, as before.
+	// Once a page.
+	let glWaited = false;
+	function waitForGl() {
+		if ( glWaited || 'riffGl' in root.dataset || typeof window.WebGL2RenderingContext === 'undefined' || window.matchMedia?.( '(forced-colors: active)' ).matches ) {
+			return;
+		}
+		glWaited = true;
+		root.dataset.riffGlWait = '';
+		const shown = new MutationObserver( () => {
+			if ( ! np.hidden ) {
+				shown.disconnect();
+				setTimeout( () => delete root.dataset.riffGlWait, 1500 );
+			}
+		} );
+		shown.observe( np, { attributeFilter: [ 'hidden' ] } );
+		if ( ! np.hidden ) {
+			shown.disconnect();
+			setTimeout( () => delete root.dataset.riffGlWait, 1500 );
+		}
+	}
 	// For the stylesheet: off, the cover on its own, with no record or deck.
 	function markRoom() {
 		if ( roomy() ) {
 			delete root.dataset.riffTurntable;
+			waitForGl();
 			// The deck drawn in WebGL, where the browser has it, from the first time it shows: once
 			// Now Playing has finished opening, if the music didn't have it ready before then.
 			P.feature( 'deck-gl', { quiet: true } );
