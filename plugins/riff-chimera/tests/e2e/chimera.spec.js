@@ -15,11 +15,17 @@ const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../../../riff/tests/e2e/helpers/views' );
 const { own } = require( '../../../riff/tests/e2e/helpers/own' );
+const { controlLayer } = require( '../../../riff/tests/e2e/helpers/turntable' );
 
 const FIXTURES = path.join( __dirname, '..', '..', '..', '..', 'packages', 'fixtures' );
 const SILENT_NIGHT = require( path.join( FIXTURES, 'christmas-with-the-chorus', 'manifest.json' ) ).tracks.find(
 	( t ) => t.id === 'silent-night'
 ).melody;
+
+// The Listen app's service worker would fetch the deck itself, past the stand-in controlLayer()
+// gives the page, and the real deck would refuse a test machine's software card.
+test.use( { serviceWorkers: 'block' } );
+
 const made = own();
 let postUrl;
 let postId;
@@ -228,6 +234,8 @@ test( 'in the Listen app, CHIMERA sings on from the panel beside the page as the
 	// The turntable is the album, as without reduced motion: Now Playing is the deck on its own.
 	await page.emulateMedia( { reducedMotion: 'no-preference' } );
 	await page.setViewportSize( { width: 1440, height: 900 } );
+	// The deck on its own puts the panel away: its control layer, drawn or not.
+	await controlLayer( page );
 	await page.goto( listenUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
 	await page.locator( '[data-riff-app-action="play"]' ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
