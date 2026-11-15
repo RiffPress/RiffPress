@@ -14,7 +14,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { playerSite, audioState, watchSpeed, speedWrites } = require( '../helpers/site' );
-const { stopsAndStarts, flat, onScreen } = require( '../helpers/turntable' );
+const { stopsAndStarts, sampled, flat, onScreen } = require( '../helpers/turntable' );
 
 const made = own();
 
@@ -512,6 +512,66 @@ test.describe( 'Turntable', () => {
 
 	test( 'the music is heard only with the stylus down, the arm lifts only once it has stopped, and the platter turns at the music\'s rate each frame', async ( { page } ) => {
 		await stopsAndStarts( page );
+	} );
+
+	// After a press of the deck's next or previous key: the frames for the track it asked for, and
+	// how long from the press until it was heard.
+	const skipped = async ( page, take, keys ) => {
+		const from = await page.evaluate( () => document.querySelector( '.riff-audio' ).currentSrc );
+		await take();
+		const pressed = await page.evaluate( () => performance.now() );
+		for ( const key of keys ) {
+			await page.locator( `.riff-key-${ key }` ).click();
+			await page.waitForTimeout( 120 );
+		}
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await page.waitForTimeout( 150 );
+		const all = ( await take() ).filter( ( f ) => f.src !== from );
+		const to = all.at( -1 ).src;
+		const heard = all.find( ( f ) => f.src === to && ! f.paused );
+		// The cue lever's moves, each change of it once.
+		const lever = all.map( ( f ) => f.up ).filter( ( up, i, list ) => i === 0 || up !== list[ i - 1 ] );
+		return { all, to, heard, lever, took: heard.at - pressed };
+	};
+
+	test( 'a new track as a deck plays it: the arm lifted, carried to its band and lowered, and only then the music', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		const take = await sampled( page );
+		const { all, heard, lever } = await skipped( page, take, [ 'next' ] );
+		expect( all.filter( ( f ) => ! f.paused && ( f.up !== null || ! f.down ) ), 'nothing heard with the stylus up' ).toEqual( [] );
+		expect( lever, 'lifted, lowered, down' ).toEqual( [ '', 'lowering', null ] );
+		expect( heard.time, 'from the start of its band' ).toBeLessThan( 0.5 );
+	} );
+
+	test( 'pressed again on the way, the arm is carried on from where it is, lifted once and lowered once, and the longer way takes longer', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		const take = await sampled( page );
+		const first = await page.evaluate( () => document.querySelector( '.riff-audio' ).currentSrc );
+		const one = await skipped( page, take, [ 'next' ] );
+		// Back on the first band, however many presses that takes (a press well into a track
+		// starts it again).
+		await expect( async () => {
+			await skipped( page, take, [ 'prev' ] );
+			expect( await page.evaluate( () => document.querySelector( '.riff-audio' ).currentSrc ) ).toBe( first );
+		} ).toPass();
+		const two = await skipped( page, take, [ 'next', 'next' ] );
+		expect( two.lever, 'lifted once and lowered once' ).toEqual( [ '', 'lowering', null ] );
+		expect( two.to, 'on the last band asked for' ).not.toBe( one.to );
+		expect( two.all.filter( ( f ) => ! f.paused && f.up !== null ), 'nothing heard with the stylus up' ).toEqual( [] );
+		expect( two.took, 'two bands away takes longer than one' ).toBeGreaterThan( one.took );
+	} );
+
+	test( 'a track ending on its own plays on into the next band, the arm never lifted', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		const take = await sampled( page );
+		const from = await page.evaluate( () => document.querySelector( '.riff-audio' ).currentSrc );
+		await page.evaluate( () => {
+			const audio = document.querySelector( '.riff-audio' );
+			audio.currentTime = audio.duration - 1;
+		} );
+		await expect.poll( async () => ( await take() ).some( ( f ) => f.src !== from && ! f.paused ), { timeout: 10000 } ).toBe( true );
+		const all = await take();
+		expect( all.filter( ( f ) => f.up !== null ), 'never lifted' ).toEqual( [] );
 	} );
 
 	test( 'the button, riff.playing() and the painted state give one answer while the needle is cued and while the music winds down', async ( { page } ) => {
