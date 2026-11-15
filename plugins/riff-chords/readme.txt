@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.7.0
+Stable tag: 0.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,6 +32,9 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 
 == Changelog ==
 
+= 0.8.0 =
+* Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
+
 = 0.7.0 =
 * Each plugin declares what it needs in isolation.json, and CI fails code that reaches past it.
 * Experimental sandbox runs an untrusted extension's PHP in php-wasm, behind a bridge that grants only its manifest.
@@ -50,8 +53,5 @@ It is built only on Riff's documented public API, as Riff Lyrics is.
 * Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
 * Fixed: a press on the bar opens Now Playing, and the album's button in the bar is gone.
 * Fixed: a tap, a long-press or a double-click on a button never selects its label, while rows, lyrics and chord charts still select.
-
-= 0.4.0 =
-* Now Playing's album is the cover where it is upright and the turntable where it is wide, one view with one button.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

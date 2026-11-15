@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 1.9.3
+Stable tag: 1.10.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ It is also the reference extension for Riff: it is built only on Riff's document
 
 == Changelog ==
 
+= 1.10.0 =
+* Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
+
 = 1.9.3 =
 * Fixed: main's versions agree with the release manifest again.
 
@@ -40,8 +43,5 @@ It is also the reference extension for Riff: it is built only on Riff's document
 * Abilities for an owner and an assistant, offered over MCP through the MCP Adapter once the site turns it on.
 * Typed SDK generated from the code, and a post's blocks as a typed tree over REST.
 * Fixed: main's checks pass again after the drafts merged untested, each plugin declaring what they added and About crediting only a caption a file has.
-
-= 1.8.0 =
-* Riff's icons are WordPress's own, with the few it lacks drawn to match.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

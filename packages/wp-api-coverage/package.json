@@ -1,6 +1,6 @@
 {
 	"name": "@riffpress/wp-api-coverage",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Reports which WordPress APIs a plugin uses, and which ones it does not use yet.",
 	"license": "GPL-2.0-or-later",
 	"keywords": [

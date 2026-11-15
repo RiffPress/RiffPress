@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.8.0
+Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,9 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 == Changelog ==
 
+= 0.9.0 =
+* Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
+
 = 0.8.0 =
 * A song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings.
 * Fixed: main's checks pass again, and the Chimera view's notes scroll fully into view above the bar.
@@ -51,8 +54,5 @@ Your voice never leaves the browser. The microphone opens only when the singer p
 
 = 0.5.0 =
 * Riff's icons are WordPress's own, with the few it lacks drawn to match.
-
-= 0.4.1 =
-* Fixed: an extension's text domain stops at the end of its main file, so phpcs never holds Riff's own files to it.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

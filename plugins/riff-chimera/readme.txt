@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff, riff-sing
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,10 @@ CHIMERA is (c) 2026 Jameson Hodge, under the MIT licence, in assets/chimera/LICE
 
 == Changelog ==
 
+= 0.5.0 =
+* Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
+* Fixed: Stop closes the voices' audio context, so Sing along again is heard instead of falling silent under the old voices still rendering.
+
 = 0.4.0 =
 * Riff Chimera sings from the panel beside the page, its heads drawn as large as the panel, and an open docked view no longer covers the sidebar.
 
@@ -47,8 +51,5 @@ CHIMERA is (c) 2026 Jameson Hodge, under the MIT licence, in assets/chimera/LICE
 = 0.2.0 =
 * A song can name its instrumental version, and Riff Chimera plays it in the recording's place while it sings.
 * Fixed: main's checks pass again, and the Chimera view's notes scroll fully into view above the bar.
-
-= 0.1.1 =
-* Fixed: main's checks pass again with Riff Chimera, its dictionary vendored as plain text.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
