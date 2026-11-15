@@ -9,8 +9,8 @@ const { audioState } = require( './site' );
 
 /**
  * Records every frame from now on: the cue lever (`up`: null down, "" up, "lowering"), whether the
- * stylus is down, whether the music is heard, its track and time, its rate and the platter's, and
- * when the frame was.
+ * stylus is down, whether the music is heard, its track and time, its rate and the platter's,
+ * whether the deck is the one WebGL draws (`gl`), and when the frame was.
  *
  * @param {import('@playwright/test').Page} page Page.
  * @return {Promise<Function>} Takes the frames recorded since it was last called.
@@ -34,6 +34,7 @@ async function sampled( page ) {
 				rate: audio.playbackRate,
 				platter: turn && ! turn.pending ? turn.playbackRate : null,
 				coasting: 'riffCoasting' in root.dataset,
+				gl: 'riffGl' in root.dataset,
 			} );
 			requestAnimationFrame( sample );
 		};
