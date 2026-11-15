@@ -1,0 +1,42 @@
+name: Playground Preview Sweep
+
+# Deletes every preview-pr-N branch and every pr-N Cloudflare Pages preview deployment, on both
+# projects, whose pull request is not open, and the release pull request's, which never has a
+# preview. "Playground Preview Cleanup" does this as each pull request closes; this catches what a
+# publish finishing as the pull request closed, or a failed cleanup, left behind. Only refs named
+# preview-pr-N and deployments of branch pr-N are ever chosen, and everything is listed before
+# anything is deleted, so a listing that fails deletes nothing.
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  sweep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github
+      - name: Delete previews no open pull request needs
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        with:
+          script: |
+            const preview = require( `${ process.env.GITHUB_WORKSPACE }/.github/scripts/preview.js` );
+            const cf = preview.cloudflare( { fetch, account: process.env.CLOUDFLARE_ACCOUNT_ID, token: process.env.CLOUDFLARE_API_TOKEN } );
+            await preview.sweep( { github, repo: context.repo, cf, log: core.info } );
