@@ -1,9 +1,10 @@
 /**
  * Where the browser can draw in WebGL2, the deck is the one WebGL draws at every size the turntable
  * shows at: a laptop's window as much as a large screen, with its keys along the front, and a phone
- * on its side, with them beside the arm. Skipped where no graphics card draws WebGL2 for the test
- * browser, as for headless Chromium without a GPU; the page's own deck is then the deck, which
- * deck-sizes.spec.js measures. Run it with a GPU (headed, or with --use-angle=metal) to see it.
+ * on its side, with them beside the arm, seen from the one chair at every size. Skipped where no
+ * graphics card draws WebGL2 for the test browser, as for headless Chromium without a GPU, where
+ * Now Playing is the cover alone (reality.spec.js) and deck-sizes.spec.js measures the deck drawn
+ * without its pixels. Run it with a GPU (headed, or with --use-angle=metal) to see it.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
@@ -29,7 +30,7 @@ const card = ( page ) =>
 		return !! gl && ! ( names && /swiftshader|llvmpipe|software|basic render/i.test( gl.getParameter( names.UNMASKED_RENDERER_WEBGL ) ) );
 	} );
 
-// Where the eye is (deck-gl.js): over the deck, across it from the chair, or on its way.
+// The eye (deck-gl.js), across the desk in its chair once the deck is laid there.
 const eye = ( page ) => page.locator( '.riff-deck-gl' );
 
 // Opens the album's Now Playing with the record out, on a graphics card, or skips.
@@ -308,36 +309,6 @@ sizes(
 	false
 );
 sizes( 'On a touch screen on its side', [ { size: { width: 844, height: 390 }, keys: 'beside the arm' } ], true );
-
-test.describe( 'The first deck seen', () => {
-	test.use( { viewport: { width: 1280, height: 720 } } );
-
-	test( 'is the one WebGL draws: the page\'s own is never painted before it', async ( { page }, info ) => {
-		// Every frame from the start: whether the page's deck is painted (its record's grooves, the
-		// plinth's top), and whether the drawn one has drawn.
-		await page.addInitScript( () => {
-			window.riffSeen = [];
-			const sample = () => {
-				const root = document.querySelector( '#riff' );
-				const np = document.querySelector( '.riff-np' );
-				const record = document.querySelector( '.riff-stage > .riff-record' );
-				const plinth = document.querySelector( '.riff-plinth' );
-				if ( root && np && ! np.hidden && record && root.dataset.riffTurntable !== 'off' && record.getBoundingClientRect().width ) {
-					window.riffSeen.push( {
-						drawn: 'riffGl' in root.dataset,
-						painted: getComputedStyle( record ).backgroundImage !== 'none' || getComputedStyle( plinth, '::before' ).content !== 'none',
-					} );
-				}
-				requestAnimationFrame( sample );
-			};
-			requestAnimationFrame( sample );
-		} );
-		await opened( page, info );
-		const seen = await page.evaluate( () => window.riffSeen );
-		expect( seen.length, 'frames of the deck seen' ).toBeGreaterThan( 0 );
-		expect( seen.filter( ( f ) => f.painted && ! f.drawn ), 'frames with the page\'s deck painted before the drawn one' ).toEqual( [] );
-	} );
-} );
 
 test.describe( 'The eye, with a mouse', () => {
 	test.use( { viewport: { width: 1280, height: 720 } } );

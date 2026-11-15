@@ -33,7 +33,6 @@ When you add storage, a field, a relation or a query to Riff, add a row here in 
 | Which instrument Riff Chords draws chords for | The listener's own browser storage, `riff-chords:instrument`, as the queue and the volume are kept: a choice about how this browser shows chords, nothing the site needs. |
 | Which panel a listener left open | The listener's own browser storage, `riff:panel`, as the queue and the volume are kept: a choice about this browser's screen, nothing the site needs. |
 | Which sidebar views a listener left open | The listener's own browser storage, `riff:dock`, as `riff:panel` is: a choice about this browser's screen, nothing the site needs. |
-| That a listener declined the motion sensors | The listener's own browser storage, `riff:tilt`, as `riff:panel` is: iOS asks for them only from a touch, and a no is this browser's, nothing the site needs. |
 | A listener's choices about how the site behaves for them: the player's single-key shortcuts, and whether they share what they listen to | User options under Personal Options on their profile (`riff_shortcuts`, `riff_together_share`), so on a network each site keeps its own. |
 
 ## Added by Riff, and why

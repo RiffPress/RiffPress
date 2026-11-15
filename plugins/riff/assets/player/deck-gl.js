@@ -6,22 +6,21 @@
  * edges, with the deck's shadow and the sleeve's on it, and at its back, against the wall, a ledge
  * the sleeve stands on while its record plays.
  *
- * Two eyes see it. At rest, with the record on the platter, the eye sits back across the desk,
- * low, as a listener in their chair sees a deck, and leans a degree or two with the device,
- * where it has motion sensors and the listener lets them be read, never rolling; nothing else
- * moves it. While the record is in its sleeve, on the desk where the page has it, the eye is over
- * the spindle, where the scene lies exactly where the deck in the page does.
+ * One eye sees it, the same for everyone at every size: a listener's in their chair across the
+ * desk, low, about 20° above the deck, and still. Nothing moves it: not the layout, not the device,
+ * not a change of record, which plays out in front of it as a hand does it.
  *
  * It draws, and lays the page's deck where it draws it. The deck in the page (player.php, riff.css)
- * is still the turntable: now-playing.js moves its record, its platter and its arm, a hand still
- * takes the arm by its grip, and a screen reader still finds its slider. From the chair, the page's
- * arm and keys are given a transform from the same eye, each in its own plane, so they are hit,
- * focused and read where they are drawn, and P.flat takes a point of the screen back to the page's
- * flat deck for now-playing.js's own geometry. Each frame this reads where those are (the record's
- * place and turn, the arm's angle, the cue lever) and draws them there; riff.css stops painting the
- * page's own once `#riff` has `data-riff-gl`. Without WebGL2, or once the context is lost, the
- * attribute is gone and the deck is the page's again. Loaded on demand, when the turntable first
- * shows.
+ * is the turntable's control layer, never painted: now-playing.js moves its record, its platter and
+ * its arm, a hand takes the arm by its grip, and a screen reader finds its slider. The page's arm,
+ * cue and keys are given a transform from the eye, each in its own plane, so they are hit, focused
+ * and read where they are drawn, and P.flat takes a point of the screen back to the page's flat
+ * deck for now-playing.js's own geometry. Each key reaches past its drawn cap far enough to be
+ * pressed (44px under a finger, 24px under a mouse), never into its neighbour's. Each frame this
+ * reads where those are (the record's place and turn, the arm's angle, the cue lever) and draws
+ * them there. Without WebGL2, on a card too slow for it, once the context is lost or in forced
+ * colours, it says so (P.undrawn), and Now Playing is the cover on its own. Loaded on demand, when
+ * the turntable first shows.
  *
  * The scene's lighting and its mesh builders are adapted from Guillermo Rauch's record player,
  * https://github.com/rauchg/vinyl, under the MIT License:
@@ -42,8 +41,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
-
-import { read, write } from 'riff-player/helpers';
 
 // ---- Matrices, column-major, and meshes, six numbers a vertex: where it is and its normal.
 const mul = ( a, b ) => {
@@ -352,14 +349,16 @@ const KEYS = [
 	[ 0.615, 0.075, 1.09, 0.075, 'top' ],
 	[ 0.7, 0.075, 1.09, 0.075, 'top' ],
 ];
+// Beside the arm, in four columns and three rows, the rows further apart toward the back, where the
+// eye sees less of each: so a finger's 44px reaches past each cap without meeting the next one's.
 const BESIDE = [
-	[ 1.28, 0.35, 0.15, 0.16, 'left' ],
-	[ 1.28, 0.16, 0.34, 0.16, 'top' ],
-	[ 1.47, 0.16, 0.34, 0.16, 'top' ],
-	[ 1.28, 0.16, 0.53, 0.16, '' ],
-	[ 1.47, 0.16, 0.53, 0.16, '' ],
-	[ 1.28, 0.16, 0.72, 0.16, 'top' ],
-	[ 1.47, 0.16, 0.72, 0.16, 'top' ],
+	[ 1.63, 0.335, 0, 0.11, 'left' ],
+	[ 1.63, 0.16, 0.545, 0.11, 'top' ],
+	[ 1.805, 0.16, 0.545, 0.11, 'top' ],
+	[ 1.28, 0.16, 0.545, 0.11, '' ],
+	[ 1.455, 0.16, 0.545, 0.11, '' ],
+	[ 1.28, 0.16, 0.95, 0.11, 'top' ],
+	[ 1.455, 0.16, 0.95, 0.11, 'top' ],
 ];
 // Each arrangement: its plinth, its keys, where each key's middle is and half its size, and where
 // each lamp is, with its key's place, for the light it spills.
@@ -373,29 +372,22 @@ const arranged = ( body, keys ) => ( {
 } );
 const DECKS = {
 	front: arranged( [ BODY[ 0 ], FRONT, BODY[ 2 ], BODY[ 3 ] ], KEYS ),
-	// riff.css's plinth there: from 5% left of the record to 87% right of it, and 6% above and below.
-	beside: arranged( [ BODY[ 0 ], -0.565 * MM, 1.375 * MM, 0.565 * MM ], BESIDE ),
+	// riff.css's plinth there: from 5% left of the record to 100% right of it, and 6% above and below.
+	beside: arranged( [ BODY[ 0 ], -0.565 * MM, 1.5 * MM, 0.565 * MM ], BESIDE ),
 };
 const LAMP_AT = [ -0.141, -0.141 ];
 const LAMP = [ LAMP_AT[ 0 ] + 0.7071 * 0.022, LAMP_AT[ 1 ] + 0.7071 * 0.022, 0.006 ];
 const TARGET = [ 0.51 * MM, -0.47 * MM ];
 const ANTISKATE = [ 0.435 * MM, 0.52 * MM ];
 const SHADOW = 2048;
-// How far the eye is above the spindle: far enough that what stands above the record (the arm, its
-// base) lies within a millimetre or two of where the page has it, for the hand that takes it.
-const EYE = 2.2;
-// The eye at rest: this far above the deck (radians), this far from where it looks (metres), which is
-// a little behind the spindle; and the most of the stage's height the deck takes from there, in each
+// The eye: this far above the deck (radians), this far from where it looks (metres), which is a
+// little behind the spindle; and the most of the stage's height the deck takes from there, in each
 // arrangement, the sleeve above it.
 const SEAT = { rise: ( 20 * Math.PI ) / 180, away: 0.95, at: [ 0, 0.1, 0 ], room: { front: 0.62, beside: 0.7 } };
-// The most the device's tilt leans the eye, either way.
-const LEAN = ( 2 * Math.PI ) / 180;
 // The desk's back, against the wall; the ledge along it, its top; and half the sleeve's size.
 const WALL = 0.33;
 const LEDGE_Z = FLOOR_Z + 0.012;
 const SL = 0.157;
-// A listener's no to the motion sensors (iOS asks), kept so it is asked once.
-const TILT_KEY = 'riff:tilt';
 // The most the canvas draws, in pixels: the whole of Now Playing on a large screen is many.
 const MOST = 5e6;
 
@@ -488,7 +480,7 @@ const STD_FS =
 	COMMON +
 	`
 in vec3 vP, vN, vO; out vec4 o;
-uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uSleeve, uBody, uKey; uniform vec3 uTint, uGlowAt[5]; uniform float uSleeveA, uCoverOn; uniform sampler2D uCover;
+uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uBody, uKey; uniform vec3 uTint, uGlowAt[5]; uniform float uCoverOn; uniform sampler2D uCover;
 const float RP = ${ f1( PLATTER ) };
 float row(float a, float r, float n, float rr, float px) {
   vec2 c = vec2((fract(a / 6.2831853 * n) - 0.5) * 6.2831853 * rr / n, r - rr);
@@ -502,9 +494,6 @@ void main() {
     vec2 q = abs(vP.xy - uBody.xy) - uBody.zw;
     float near = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
     float a = 0.5 * (1.0 - shadow(vP, vec3(0.0, 0.0, 1.0))) + 0.4 * (1.0 - smoothstep(0.0, 0.035, near));
-    // The sleeve lies on the desk too, and its shadow falls the way the deck's does.
-    vec2 s = abs(vP.xy - uSleeve.xy - vec2(0.004, -0.004)) - uSleeve.zw;
-    a += 0.45 * uSleeveA * step(1e-4, uSleeve.z) * (1.0 - smoothstep(-0.004, 0.022, length(max(s, 0.0)) + min(max(s.x, s.y), 0.0)));
     // The light falls round the deck and gives out toward the desk's edges.
     float far = length(vP.xy - vec2(0.03, 0.0));
     a = min(a, 0.85); a += (1.0 - a) * 0.5 * smoothstep(0.42, 1.25, far);
@@ -649,7 +638,7 @@ export default function deckGl( P ) {
 	const wax = $( '.riff-wax' );
 	const label = $( '.riff-label' );
 	if ( ! stage || ! plinth || ! record || ! arm || ! wand || ! wax || ! label || ! P.arm ) {
-		delete root.dataset.riffGlWait;
+		P.drawable?.( false );
 		return null;
 	}
 	const canvas = document.createElement( 'canvas' );
@@ -666,7 +655,7 @@ export default function deckGl( P ) {
 	// Some browsers hand out a software one all the same, and say so in its name.
 	const names = gl?.getExtension( 'WEBGL_debug_renderer_info' );
 	if ( ! gl || ( names && /swiftshader|llvmpipe|software|basic render/i.test( gl.getParameter( names.UNMASKED_RENDERER_WEBGL ) ) ) ) {
-		delete root.dataset.riffGlWait;
+		P.drawable?.( false );
 		return null;
 	}
 	// Under everything Now Playing shows, over its background's washes.
@@ -1146,21 +1135,17 @@ export default function deckGl( P ) {
 		wake();
 	} );
 
-	// ---- The eye: how far it sits back from over the spindle (0) to the chair (1), and where it
-	// leans, as aimed by the sensors and as eased toward that.
-	let sat = 0;
+	// ---- The laid control layer. Where each key starts on the page's flat deck, from the plinth's
+	// corner, for the layout it was found for (frame()), and whether a finger is the pointer (or can
+	// be: a screen that can be touched is pressed by a finger).
+	let laidFor = '';
+	// How far the ledge and the sleeve on it have come in, behind a record that is out.
 	let stood = 0;
-	// The chair's height for the layout it was found for (frame()), and whether a finger is the pointer
-	// (or can be: a screen that can be touched is pressed by a finger).
-	let seat = SEAT.rise;
-	let seatFor = '';
 	let keyFrom = [];
 	// Where each key was pressed on the screen, while a pointer holds it down: a key the keyboard or
 	// a screen reader presses has none, and goes straight down.
 	const pressedAt = new Map();
 	const coarse = window.matchMedia( '(pointer: coarse)' );
-	const aim = [ 0, 0 ];
-	const aimed = [ 0, 0 ];
 	// Where the deck is drawn on the screen, last frame: its plinth's box, left, top, right, bottom.
 	let drawn = null;
 	const onDrawn = ( x, y ) => !! drawn && x > drawn[ 0 ] && x < drawn[ 2 ] && y > drawn[ 1 ] && y < drawn[ 3 ];
@@ -1173,77 +1158,21 @@ export default function deckGl( P ) {
 	const mount = arm.closest( '.riff-mount' );
 	const cue = mount?.querySelector( '.riff-cue' );
 	const panel = keys[ 0 ]?.closest( '.riff-keys' );
+	// What a finger or a mouse presses: each key, and the pitch fader, which is its own.
+	const pressables = panel ? [ ...panel.querySelectorAll( 'button, input' ) ] : [];
 	P.flat = ( x, y, plane = 'record' ) => ( flatten ? flatten( x, y, plane === 'arm' ? ARM_Z : 0 ) : [ x, y ] );
 	function unlay() {
 		flatten = null;
+		laidFor = '';
 		for ( const el of [ mount, cue, panel, ...keys ] ) {
 			el?.style.removeProperty( 'transform' );
 			el?.style.removeProperty( 'transform-origin' );
 			el?.style.removeProperty( 'filter' );
 		}
-	}
-	const clampLean = ( a ) => Math.max( -LEAN, Math.min( LEAN, a ) );
-	function aimAt( yaw, rise ) {
-		const next = [ clampLean( yaw ), clampLean( rise ) * 0.6 ].map( ( a ) => Math.round( a * 500 ) / 500 );
-		if ( next[ 0 ] !== aim[ 0 ] || next[ 1 ] !== aim[ 1 ] ) {
-			aim.splice( 0, 2, ...next );
-			wake();
+		for ( const el of pressables ) {
+			el.style.removeProperty( '--riff-hit-x' );
+			el.style.removeProperty( '--riff-hit-y' );
 		}
-	}
-	// The motion sensors: on iOS only once the listener has said yes, asked on their first touch of
-	// the deck and never again once they have said no; elsewhere as they are. Read only while the
-	// deck is drawn, with the reading's slow drift taken as where the device is held, so the eye
-	// leans as it moves and comes back as it settles.
-	const Tilt = window.DeviceOrientationEvent;
-	let allowed = !! Tilt && typeof Tilt.requestPermission !== 'function';
-	let asked = false;
-	let sensing = false;
-	let held = null;
-	let heldAt = 0;
-	function tilted( event ) {
-		if ( event.beta === null || event.gamma === null || event.beta === undefined ) {
-			return;
-		}
-		const angle = screen.orientation?.angle ?? window.orientation ?? 0;
-		const [ x, y ] = angle === 90 ? [ event.beta, -event.gamma ] : angle === 270 || angle === -90 ? [ -event.beta, event.gamma ] : [ event.gamma, event.beta ];
-		const t = event.timeStamp;
-		if ( ! held || Math.abs( x - held[ 0 ] ) > 45 || Math.abs( y - held[ 1 ] ) > 45 ) {
-			held = [ x, y ];
-		} else {
-			const k = Math.min( 1, ( t - heldAt ) / 4000 );
-			held = [ held[ 0 ] + ( x - held[ 0 ] ) * k, held[ 1 ] + ( y - held[ 1 ] ) * k ];
-		}
-		heldAt = t;
-		aimAt( ( ( x - held[ 0 ] ) * Math.PI ) / 360, ( ( y - held[ 1 ] ) * Math.PI ) / 360 );
-	}
-	function sense() {
-		const want = allowed && active() && ! P.reduce();
-		if ( want === sensing ) {
-			return;
-		}
-		sensing = want;
-		window[ want ? 'addEventListener' : 'removeEventListener' ]( 'deviceorientation', tilted );
-		if ( ! want ) {
-			held = null;
-			aimAt( 0, 0 );
-		}
-	}
-	function ask() {
-		if ( asked || allowed || ! Tilt?.requestPermission || P.reduce() || read( localStorage, TILT_KEY ) === 'no' ) {
-			return;
-		}
-		asked = true;
-		Tilt.requestPermission().then(
-			( said ) => {
-				if ( said === 'granted' ) {
-					allowed = true;
-					wake();
-				} else {
-					write( localStorage, TILT_KEY, 'no' );
-				}
-			},
-			() => {}
-		);
 	}
 	stage.addEventListener(
 		'pointerdown',
@@ -1258,17 +1187,6 @@ export default function deckGl( P ) {
 	for ( const type of [ 'pointerup', 'pointercancel' ] ) {
 		window.addEventListener( type, () => pressedAt.clear(), { passive: true } );
 	}
-	// iOS asks for the sensors only from a gesture that lets go: a touch of the deck, at its end.
-	let onIt = false;
-	stage.addEventListener(
-		'pointerdown',
-		( event ) => {
-			const b = plinth.getBoundingClientRect();
-			onIt = event.pointerType === 'touch' && ( onDrawn( event.clientX, event.clientY ) || ( event.clientX > b.left && event.clientX < b.right && event.clientY > b.top && event.clientY < b.bottom ) );
-		},
-		{ passive: true }
-	);
-	stage.addEventListener( 'touchend', () => onIt && ask(), { passive: true } );
 	let glow = 0;
 	const lampRows = [ 0, 0 ];
 	let speed = 0;
@@ -1352,12 +1270,6 @@ export default function deckGl( P ) {
 		const dpr = quality * Math.min( 2, window.devicePixelRatio || 1, Math.sqrt( MOST / ( cb.width * cb.height ) ) );
 		const w = Math.round( cb.width * dpr );
 		const h = Math.round( cb.height * dpr );
-		// The sleeve on the desk: its middle and half its size, for its shadow.
-		const sb = cover?.getBoundingClientRect();
-		const sleeveShown = sb?.width ? parseFloat( getComputedStyle( cover ).opacity ) || 0 : 0;
-		const sleeve = sb?.width
-			? [ ( sb.left + sb.width / 2 - ( pb.left + pb.width / 2 ) ) / scale, -( sb.top + sb.height / 2 - ( pb.top + pb.height / 2 ) ) / scale, sb.width / 2 / scale, sb.height / 2 / scale ]
-			: [ 0, 0, 0, 0 ];
 		const cueAt = ( P.cueAt || 0 ) * R;
 		// Where the stylus is, from the spindle, while it is in the groove, and how brightly the
 		// groove under it is lit: by the music's level where that can be read (level.js), evenly
@@ -1371,108 +1283,110 @@ export default function deckGl( P ) {
 		const keyed = keys.length === KEYS.length && getComputedStyle( keys[ 0 ] ).display !== 'none' ? arrangement : '';
 		const deck = DECKS[ keyed || 'front' ];
 
-		// The eye. Back in the chair while the record is on the platter; over the spindle while it is
-		// in its sleeve, which lies on the desk where the page has it. Either way the spindle is where the page has it (a little lower
-		// in the chair) and the platter as wide, so the one eases into the other.
+		// The eye, in the chair: the spindle where the page has it, a little lower, and the platter as
+		// wide; the ledge and its sleeve come in behind a record that is out.
 		const arriving = 'riffArriving' in root.dataset;
-		const sit = out && ! arriving ? 1 : 0;
 		const ease = ( from, to, time ) => {
 			const next = P.reduce() ? to : from + ( to - from ) * ( 1 - Math.exp( -dt / time ) );
 			return Math.abs( to - next ) < 0.002 ? to : next;
 		};
-		sat = ease( sat, sit, 0.2 );
 		stood = ease( stood, out && ! arriving ? 1 : 0, 0.3 );
-		aimed[ 0 ] = Math.round( ease( aimed[ 0 ], aim[ 0 ], 0.25 ) * 1e4 ) / 1e4;
-		aimed[ 1 ] = Math.round( ease( aimed[ 1 ], aim[ 1 ], 0.25 ) * 1e4 ) / 1e4;
-		const camera = sat === 0 ? 'over' : sat === 1 ? 'across' : 'moving';
-		if ( canvas.dataset.riffCamera !== camera ) {
-			canvas.dataset.riffCamera = camera;
-		}
-		const e = sat * sat * ( 3 - 2 * sat );
 		const [ mx, my ] = [ pb.left + pb.width / 2, pb.top + pb.height / 2 ];
 		const room = stage.getBoundingClientRect();
-		// The eye this far back toward the chair (k), at this height (radians) and turned this far: where
-		// it is, what it sees, and the window it sees through, its edges on the near plane.
-		const see = ( k, height, swing ) => {
-			const tilt = Math.PI / 2 + ( height - Math.PI / 2 ) * k;
-			const far = EYE + ( SEAT.away - EYE ) * k;
-			const to = SEAT.at.map( ( v ) => v * k );
-			const spot = [ to[ 0 ] + far * Math.cos( tilt ) * Math.sin( swing ), to[ 1 ] - far * Math.cos( tilt ) * Math.cos( swing ), to[ 2 ] + far * Math.sin( tilt ) ];
-			// Its right is level whichever way it leans: the horizon, the ledge and the sleeve's foot stay level.
-			const looks = viewOf( spot, unit( sub( to, spot ) ), [ Math.cos( swing ), Math.sin( swing ), 0 ] );
-			const nz = EYE - 0.2 + ( 0.05 - ( EYE - 0.2 ) ) * k;
+		// Where the eye is, what it sees, and the window it sees through, its edges on the near plane:
+		// the whole plinth inside the stage, clear of its sides and its foot, across its middle and
+		// standing at its foot, and no taller than its share of the stage; above it the sleeve,
+		// cropped by the top if it must be.
+		const see = () => {
+			const to = SEAT.at;
+			const spot = [ to[ 0 ], to[ 1 ] - SEAT.away * Math.cos( SEAT.rise ), to[ 2 ] + SEAT.away * Math.sin( SEAT.rise ) ];
+			const looks = viewOf( spot, unit( sub( to, spot ) ), [ 1, 0, 0 ] );
+			const nz = 0.05;
 			const near = ( [ x, y, z ] ) => {
 				const v = [ 0, 1, 2 ].map( ( r ) => looks[ r ] * x + looks[ 4 + r ] * y + looks[ 8 + r ] * z + looks[ 12 + r ] );
 				return [ ( v[ 0 ] * nz ) / -v[ 2 ], ( v[ 1 ] * nz ) / -v[ 2 ] ];
 			};
-			// Over the deck: the spindle at its place in the page and the platter as wide as the page's.
-			const per0 = nz / -looks[ 14 ] / scale;
-			const [ ox, oy ] = near( [ 0, 0, 0 ] );
-			let edges = [ ox + ( cb.left - mx ) * per0, ox + ( cb.right - mx ) * per0, oy - ( cb.bottom - my ) * per0, oy - ( cb.top - my ) * per0 ];
-			if ( k > 0 ) {
-				// From the chair: the whole plinth inside the stage, clear of its sides and its foot,
-				// across its middle and standing at its foot, and no taller than its share of the stage,
-				// which grows to the whole as the eye rises; above it the sleeve, cropped by the top if it
-				// must be. Eased between the two.
-				const margin = Math.max( 8, 0.025 * Math.min( room.width, room.height ) );
-				const low = SEAT.room[ keyed || 'front' ];
-				const share = low + ( ( 1 - low ) * Math.max( 0, height - SEAT.rise ) ) / ( Math.PI / 2 - SEAT.rise );
-				const [ x0, y0, x1, y1 ] = deck.body;
-				const ends = [ x0, x1 ].flatMap( ( x ) => [ y0, y1 ].flatMap( ( y ) => [ FLOOR_Z, 0.05 ].map( ( z ) => near( [ x, y, z ] ) ) ) );
-				const [ nx0, nx1 ] = [ Math.min( ...ends.map( ( q ) => q[ 0 ] ) ), Math.max( ...ends.map( ( q ) => q[ 0 ] ) ) ];
-				const [ ny0, ny1 ] = [ Math.min( ...ends.map( ( q ) => q[ 1 ] ) ), Math.max( ...ends.map( ( q ) => q[ 1 ] ) ) ];
-				const per = Math.max( ( nx1 - nx0 ) / ( room.width - 2 * margin ), ( ny1 - ny0 ) / ( ( room.height - 2 * margin ) * share ) );
-				const [ ax, ay, cx ] = [ ( room.left + room.right ) / 2, room.bottom - margin, ( nx0 + nx1 ) / 2 ];
-				const chair = [ cx + ( cb.left - ax ) * per, cx + ( cb.right - ax ) * per, ny0 - ( cb.bottom - ay ) * per, ny0 - ( cb.top - ay ) * per ];
-				edges = edges.map( ( v, i ) => v + ( chair[ i ] - v ) * k );
-			}
-			return { at: spot, looks, nz, edges, vp: mul( frustum( ...edges, nz, far + 3 ), looks ) };
+			const margin = Math.max( 8, 0.025 * Math.min( room.width, room.height ) );
+			const [ x0, y0, x1, y1 ] = deck.body;
+			const ends = [ x0, x1 ].flatMap( ( x ) => [ y0, y1 ].flatMap( ( y ) => [ FLOOR_Z, 0.05 ].map( ( z ) => near( [ x, y, z ] ) ) ) );
+			const [ nx0, nx1 ] = [ Math.min( ...ends.map( ( q ) => q[ 0 ] ) ), Math.max( ...ends.map( ( q ) => q[ 0 ] ) ) ];
+			const ny0 = Math.min( ...ends.map( ( q ) => q[ 1 ] ) );
+			const ny1 = Math.max( ...ends.map( ( q ) => q[ 1 ] ) );
+			const per = Math.max( ( nx1 - nx0 ) / ( room.width - 2 * margin ), ( ny1 - ny0 ) / ( ( room.height - 2 * margin ) * SEAT.room[ keyed || 'front' ] ) );
+			const [ ax, ay, cx ] = [ ( room.left + room.right ) / 2, room.bottom - margin, ( nx0 + nx1 ) / 2 ];
+			const edges = [ cx + ( cb.left - ax ) * per, cx + ( cb.right - ax ) * per, ny0 - ( cb.bottom - ay ) * per, ny0 - ( cb.top - ay ) * per ];
+			return { at: spot, looks, nz, edges, vp: mul( frustum( ...edges, nz, SEAT.away + 3 ), looks ) };
 		};
-		// A box of the page's flat deck, in a plane of the deck, on the screen as an eye sees it.
-		const seen = ( proj, [ x0, y0, x1, y1 ], z ) => {
+		const { at: eye, looks: view, nz: nearZ, edges: win, vp } = see();
+		if ( canvas.dataset.riffCamera !== 'across' ) {
+			canvas.dataset.riffCamera = 'across';
+		}
+		// A box of the page's flat deck, in a plane of the deck, on the screen as the eye sees it.
+		const seen = ( [ x0, y0, x1, y1 ], z ) => {
 			const extent = [ Infinity, Infinity, -Infinity, -Infinity ];
 			for ( const [ x, y ] of [ [ x0, y0 ], [ x1, y0 ], [ x0, y1 ], [ x1, y1 ] ] ) {
 				const p = [ ( x - mx ) / scale, -( y - my ) / scale, z ];
-				const c = [ 0, 1, 3 ].map( ( r ) => proj[ r ] * p[ 0 ] + proj[ 4 + r ] * p[ 1 ] + proj[ 8 + r ] * p[ 2 ] + proj[ 12 + r ] );
+				const c = [ 0, 1, 3 ].map( ( r ) => vp[ r ] * p[ 0 ] + vp[ 4 + r ] * p[ 1 ] + vp[ 8 + r ] * p[ 2 ] + vp[ 12 + r ] );
 				const [ sx, sy ] = [ ( ( c[ 0 ] / c[ 2 ] + 1 ) / 2 ) * cb.width, ( ( 1 - c[ 1 ] / c[ 2 ] ) / 2 ) * cb.height ];
 				extent.splice( 0, 4, Math.min( extent[ 0 ], sx ), Math.min( extent[ 1 ], sy ), Math.max( extent[ 2 ], sx ), Math.max( extent[ 3 ], sy ) );
 			}
 			return extent;
 		};
-		// How high the chair is: as low as SEAT.rise, but no lower than keeps every one of the deck's
-		// controls as large as a finger (44px) or a mouse (24px) needs to press it (WCAG 2.5.5, 2.5.8),
-		// with a little to spare for the device's lean. Found again only when the layout changes.
+		// Each key and the pitch fader reach past what is drawn of them, invisibly, as far as a finger
+		// (44px) or a mouse (24px) needs to press them (WCAG 2.5.5, 2.5.8), with a little to spare for a
+		// key pressed off its middle, and never into a neighbour's reach: on the panel's own plane,
+		// where two that don't meet can't meet on the screen either. Found again only when the layout
+		// changes.
 		const target = coarse.matches || navigator.maxTouchPoints > 0 ? 44 : 24;
 		const layout = [ cb.left, cb.top, cb.width, cb.height, pb.left, pb.top, pb.width, room.width, room.height, keyed, target ].map( String ).join( '|' );
-		if ( layout !== seatFor ) {
-			seatFor = layout;
-			seat = SEAT.rise;
-			if ( keyed && panel ) {
-				const lifted = [ panel, ...keys ];
-				const laid = lifted.map( ( el ) => el.style.transform );
-				lifted.forEach( ( el ) => ( el.style.transform = 'none' ) );
-				const flatBoxes = [ ...panel.querySelectorAll( 'button, input' ) ]
-					.map( ( el ) => el.getBoundingClientRect() )
-					.filter( ( r ) => r.width > 0 )
-					.map( ( r ) => [ r.left, r.top, r.right, r.bottom ] );
-				// Where each key's own box starts on the page's flat deck, from the plinth's corner.
-				keyFrom = keys.map( ( key ) => {
-					const r = key.getBoundingClientRect();
-					return [ r.left - pb.left, r.top - pb.top ];
-				} );
-				lifted.forEach( ( el, i ) => ( el.style.transform = laid[ i ] ) );
-				while ( seat < Math.PI / 2 ) {
-					const { vp: proj } = see( 1, seat, 0 );
-					const least = Math.min( ...flatBoxes.map( ( b ) => seen( proj, b, KEYS_Z ) ).map( ( b ) => Math.min( b[ 2 ] - b[ 0 ], b[ 3 ] - b[ 1 ] ) ) );
-					if ( least >= target * 1.03 ) {
-						break;
-					}
-					seat = Math.min( Math.PI / 2, seat + Math.PI / 180 );
-				}
+		if ( keyed && panel && layout !== laidFor ) {
+			laidFor = layout;
+			const lifted = [ panel, ...keys ];
+			const laid = lifted.map( ( el ) => el.style.transform );
+			lifted.forEach( ( el ) => ( el.style.transform = 'none' ) );
+			for ( const el of pressables ) {
+				el.style.removeProperty( '--riff-hit-x' );
+				el.style.removeProperty( '--riff-hit-y' );
 			}
-			canvas.dataset.riffRise = String( Math.round( ( seat * 180 ) / Math.PI ) );
+			const flatBoxes = pressables.map( ( el ) => {
+				const r = el.getBoundingClientRect();
+				return [ r.left, r.top, r.right, r.bottom ];
+			} );
+			keyFrom = keys.map( ( key ) => {
+				const r = key.getBoundingClientRect();
+				return [ r.left - pb.left, r.top - pb.top ];
+			} );
+			lifted.forEach( ( el, i ) => ( el.style.transform = laid[ i ] ) );
+			const reach = flatBoxes.map( ( b ) => {
+				if ( b[ 2 ] - b[ 0 ] <= 0 ) {
+					return [ 0, 0 ];
+				}
+				const on = seen( b, KEYS_Z );
+				const need = target * 1.06;
+				return [ 0, 1 ].map( ( n ) => Math.max( 0, ( ( need / ( on[ n + 2 ] - on[ n ] ) - 1 ) * ( b[ n + 2 ] - b[ n ] ) ) / 2 ) );
+			} );
+			// Two that would meet share the gap between them, keeping a few pixels of it between them:
+			// each reaches no more than half of the rest.
+			const GAP = 4;
+			flatBoxes.forEach( ( a, i ) =>
+				flatBoxes.forEach( ( b, j ) => {
+					if ( j <= i || a[ 2 ] <= a[ 0 ] || b[ 2 ] <= b[ 0 ] ) {
+						return;
+					}
+					const apart = [ Math.max( b[ 0 ] - a[ 2 ], a[ 0 ] - b[ 2 ] ), Math.max( b[ 1 ] - a[ 3 ], a[ 1 ] - b[ 3 ] ) ];
+					const n = apart[ 0 ] >= apart[ 1 ] ? 0 : 1;
+					if ( apart[ n ] >= 0 && reach[ i ][ n ] + reach[ j ][ n ] > apart[ n ] - GAP ) {
+						const most = Math.max( 0, ( apart[ n ] - GAP ) / 2 );
+						reach[ i ][ n ] = Math.min( reach[ i ][ n ], Math.max( most, apart[ n ] - GAP - reach[ j ][ n ] ) );
+						reach[ j ][ n ] = Math.max( 0, Math.min( reach[ j ][ n ], apart[ n ] - GAP - reach[ i ][ n ] ) );
+					}
+				} )
+			);
+			pressables.forEach( ( el, i ) => {
+				el.style.setProperty( '--riff-hit-x', `${ reach[ i ][ 0 ].toFixed( 1 ) }px` );
+				el.style.setProperty( '--riff-hit-y', `${ reach[ i ][ 1 ].toFixed( 1 ) }px` );
+			} );
 		}
-		const { at: eye, looks: view, nz: nearZ, edges: win, vp } = see( e, seat + aimed[ 1 ], aimed[ 0 ] * e );
 		// A point of the screen on the deck's plane (z), and a point of the deck on the screen.
 		const onPlane = ( px, py, z ) => {
 			const xn = win[ 0 ] + ( ( px - cb.left ) / cb.width ) * ( win[ 1 ] - win[ 0 ] );
@@ -1505,25 +1419,20 @@ export default function deckGl( P ) {
 			}
 			return css;
 		};
-		let panelAt = '';
-		if ( sat > 0 ) {
-			const armAt = lay( mount, ARM_Z );
-			panelAt = lay( panel, KEYS_Z );
-			// The cue, which the mount holds, in the record's own plane: what the arm's plane is, undone,
-			// then the record's.
-			const onRecord = new DOMMatrix( armAt ).inverse().multiply( new DOMMatrix( lay( null, 0 ) ) );
-			const cueLaid = `matrix3d(${ onRecord.toFloat64Array().map( ( v ) => +v.toFixed( 8 ) ).join( ',' ) })`;
-			if ( cue && cue.style.transform !== cueLaid ) {
-				cue.style.transformOrigin = '0 0';
-				cue.style.transform = cueLaid;
-			}
-			flatten = ( x, y, z ) => {
-				const [ X, Y ] = onPlane( x, y, z );
-				return [ mx + X * scale, my - Y * scale ];
-			};
-		} else if ( flatten ) {
-			unlay();
+		const armAt = lay( mount, ARM_Z );
+		const panelAt = lay( panel, KEYS_Z );
+		// The cue, which the mount holds, in the record's own plane: what the arm's plane is, undone,
+		// then the record's.
+		const onRecord = new DOMMatrix( armAt ).inverse().multiply( new DOMMatrix( lay( null, 0 ) ) );
+		const cueLaid = `matrix3d(${ onRecord.toFloat64Array().map( ( v ) => +v.toFixed( 8 ) ).join( ',' ) })`;
+		if ( cue && cue.style.transform !== cueLaid ) {
+			cue.style.transformOrigin = '0 0';
+			cue.style.transform = cueLaid;
 		}
+		flatten = ( x, y, z ) => {
+			const [ X, Y ] = onPlane( x, y, z );
+			return [ mx + X * scale, my - Y * scale ];
+		};
 		const span = ( [ x0, y0, x1, y1 ], z0, z1 ) => {
 			const extent = [ Infinity, Infinity, -Infinity, -Infinity ];
 			for ( const p of [ x0, x1 ].flatMap( ( x ) => [ y0, y1 ].flatMap( ( y ) => [ z0, z1 ].map( ( z ) => [ x, y, z, 1 ] ) ) ) ) {
@@ -1595,8 +1504,8 @@ export default function deckGl( P ) {
 		// long side that is most of every frame saved.
 		const still = [
 			cueAt, keyed, down.map( ( d ) => d.toFixed( 3 ) ), lamps, handAt.map( ( n ) => n.toFixed( 3 ) ), w, h, pb.left - cb.left, pb.top - cb.top, pb.width, deckAlpha, turn.toFixed( 2 ), ride, out, prints, accented,
-			sleeve.map( ( n ) => n.toFixed( 4 ) ), sleeveShown.toFixed( 2 ), discs.map( ( d ) => d.key + d.alpha ),
-			sat.toFixed( 4 ), aimed, stood.toFixed( 3 ), covered, coverOn, cb.top, cb.left,
+			discs.map( ( d ) => d.key + d.alpha ),
+			stood.toFixed( 3 ), covered, coverOn, cb.top, cb.left,
 		].join( '|' );
 		const turning = [ nowAt.toFixed( 5 ), glow.toFixed( 2 ), spin, speed.toFixed( 1 ), lampRows.map( ( a ) => a.toFixed( 1 ) ) ].join( '|' );
 		if ( still === last && turning === lastTurning ) {
@@ -1761,9 +1670,7 @@ export default function deckGl( P ) {
 		gl.useProgram( std.p );
 		common( u );
 		gl.uniform2f( u.uPivot, ...PIVOT );
-		gl.uniform4f( u.uSleeve, ...sleeve );
 		gl.uniform3fv( u.uTint, tint );
-		gl.uniform1f( u.uSleeveA, sleeveShown );
 		gl.uniform3fv( u.uGlowAt, deck.glows.flatMap( ( [ x, y, k ] ) => [ x, y, keyed ? lamps[ k ] : 0 ] ) );
 		const [ x0, y0, x1, y1 ] = keyed ? deck.body : BODY;
 		gl.uniform4f( u.uBody, ( x0 + x1 ) / 2, ( y0 + y1 ) / 2, ( x1 - x0 ) / 2, ( y1 - y0 ) / 2 );
@@ -1816,24 +1723,22 @@ export default function deckGl( P ) {
 		}
 		gl.disable( gl.BLEND );
 		gl.disable( gl.SCISSOR_TEST );
-		// Drawn: the page's own deck stops painting (riff.css). Written once, not every frame.
+		// Drawn: the canvas shows (riff.css). Written once, not every frame.
 		if ( ! ( 'riffGl' in root.dataset ) ) {
 			root.dataset.riffGl = '';
-			delete root.dataset.riffGlWait;
 		}
 	}
 
 	// ---- It runs while the turntable is in sight, and stops when it isn't.
 	let raf = 0;
 	let lost = false;
-	// A listener whose system forces its own colours has the page's deck, which takes them.
+	// A listener whose system forces its own colours has the cover on its own (now-playing.js).
 	const forced = window.matchMedia( '(forced-colors: active)' );
 	// Where the keys stand (riff.css, --riff-deck-keys): along the front, or beside the arm. Read
 	// here, as the stage changes size, not every frame.
 	let arrangement = 'front';
 	const active = () => ! lost && ! forced.matches && ! np.hidden && ! P.away() && root.dataset.riffTurntable !== 'off' && root.dataset.mode !== 'video';
 	function wake() {
-		sense();
 		arrangement = getComputedStyle( plinth ).getPropertyValue( '--riff-deck-keys' ).trim() === 'beside' ? 'beside' : 'front';
 		quiet = 0;
 		if ( ! raf && active() ) {
@@ -1854,22 +1759,22 @@ export default function deckGl( P ) {
 		lost = true;
 		delete root.dataset.riffGl;
 		unlay();
-		delete root.dataset.riffGlWait;
 		canvas.remove();
+		P.drawable?.( false );
 	}
 	try {
 		build();
 	} catch {
 		giveUp();
-		delete root.dataset.riffGlWait;
 		return null;
 	}
+	// Lost, the deck isn't drawn, so Now Playing is the cover until the context is back.
 	canvas.addEventListener( 'webglcontextlost', ( event ) => {
 		event.preventDefault();
 		lost = true;
 		delete root.dataset.riffGl;
 		unlay();
-		delete root.dataset.riffGlWait;
+		P.drawable?.( false );
 	} );
 	canvas.addEventListener( 'webglcontextrestored', () => {
 		if ( gone ) {
@@ -1878,6 +1783,7 @@ export default function deckGl( P ) {
 		try {
 			build();
 			lost = false;
+			P.drawable?.( true );
 			wake();
 		} catch {
 			giveUp();
@@ -1905,13 +1811,12 @@ export default function deckGl( P ) {
 		if ( forced.matches ) {
 			delete root.dataset.riffGl;
 			unlay();
-			delete root.dataset.riffGlWait;
 		}
 		wake();
 	};
 	forced.addEventListener?.( 'change', recolour );
 	recolour();
-	// The first frame at once, not at the next thing to move: the page's deck may be waiting for it.
+	// The first frame at once, not at the next thing to move.
 	if ( raf ) {
 		cancelAnimationFrame( raf );
 		frame( performance.now() );

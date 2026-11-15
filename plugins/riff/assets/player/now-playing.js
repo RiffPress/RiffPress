@@ -15,6 +15,9 @@ const __ = window.wp?.i18n?.__ || ( ( english ) => english );
 
 export function nowPlaying( P ) {
 	const { root, np, $, $$ } = P;
+	// Whether the hand set the arm down off the record, on its rest (put()), so a start carries it
+	// back over the groove before the lever lowers it.
+	let rested = false;
 
 	let opener = null;
 	// The view showing: the album, the stage, until the listener opens another.
@@ -341,7 +344,6 @@ export function nowPlaying( P ) {
 	// they read on either. Only for the artwork still showing once it has been read.
 	const LABEL = {
 		'--riff-label-ink': [ '#141414', '#fff' ],
-		'--riff-label-halo': [ 'rgb(255 255 255 / 0.4)', 'rgb(0 0 0 / 0.35)' ],
 	};
 	// ---- The accent the cover gives (helpers.js coverAccent()), on the player's root and, in the
 	// Listen app's own document, on its body for the app: the seek bar, the playing bars, the
@@ -872,9 +874,14 @@ export function nowPlaying( P ) {
 	// has ever opened the window's shape stands in, so music playing on a computer already has its
 	// record out when Now Playing first opens. Turning the phone, unfolding it or resizing the
 	// window brings the record out or puts it back. A site that turned the turntable off (Settings ›
-	// Media), and a listener who asks for less motion, have the cover in every shape.
+	// Media), a listener who asks for less motion, and a browser that can't draw the deck (no
+	// WebGL2, a card too slow for it, a context lost, forced colours: deck-gl.js says so through
+	// P.drawable) have the cover in every shape. The page's own deck is never painted: it is the
+	// drawn deck's control layer.
+	let drawable = typeof window.WebGL2RenderingContext !== 'undefined';
+	const forcedColours = window.matchMedia?.( '(forced-colors: active)' );
 	const turntable = () =>
-		P.showing === 'album' && P.data.turntable !== false && ! P.reduce();
+		P.showing === 'album' && P.data.turntable !== false && ! P.reduce() && drawable && ! forcedColours?.matches;
 	function roomy() {
 		if ( ! turntable() ) {
 			return false;
@@ -893,34 +900,10 @@ export function nowPlaying( P ) {
 	const shapedAsDeck = () =>
 		!! $( '.riff-cover' ) &&
 		getComputedStyle( $( '.riff-cover' ) ).getPropertyValue( '--riff-deck-screen' ).trim() === '1';
-	// Where WebGL2 is likely, the page's deck waits unpainted (riff.css, data-riff-gl-wait) for the
-	// one deck-gl.js draws, so the first deck seen is the one that stays; if that hasn't drawn within
-	// a moment and a half of Now Playing showing, or can't, the page's own is painted, as before.
-	// Once a page.
-	let glWaited = false;
-	function waitForGl() {
-		if ( glWaited || 'riffGl' in root.dataset || typeof window.WebGL2RenderingContext === 'undefined' || window.matchMedia?.( '(forced-colors: active)' ).matches ) {
-			return;
-		}
-		glWaited = true;
-		root.dataset.riffGlWait = '';
-		const shown = new MutationObserver( () => {
-			if ( ! np.hidden ) {
-				shown.disconnect();
-				setTimeout( () => delete root.dataset.riffGlWait, 1500 );
-			}
-		} );
-		shown.observe( np, { attributeFilter: [ 'hidden' ] } );
-		if ( ! np.hidden ) {
-			shown.disconnect();
-			setTimeout( () => delete root.dataset.riffGlWait, 1500 );
-		}
-	}
 	// For the stylesheet: off, the cover on its own, with no record or deck.
 	function markRoom() {
 		if ( roomy() ) {
 			delete root.dataset.riffTurntable;
-			waitForGl();
 			// The deck drawn in WebGL, where the browser has it, from the first time it shows: once
 			// Now Playing has finished opening, if the music didn't have it ready before then.
 			P.feature( 'deck-gl', { quiet: true } );
@@ -933,7 +916,7 @@ export function nowPlaying( P ) {
 	// Music playing in a window wider than tall has its record out when Now Playing opens (roomy()),
 	// so the WebGL deck is made ready while it plays, not in the frames of Now Playing opening.
 	const warm = () => {
-		if ( P.data.turntable !== false && ! P.reduce() && window.innerWidth > window.innerHeight ) {
+		if ( turntable() && window.innerWidth > window.innerHeight ) {
 			P.feature( 'deck-gl', { quiet: true } );
 		}
 	};
@@ -964,15 +947,25 @@ export function nowPlaying( P ) {
 			deck( false );
 		};
 		new ResizeObserver( reroom ).observe( $( '.riff-stage' ) );
-		// Asking for less motion puts the record away; asking for it again brings it out.
+		// Asking for less motion puts the record away; asking for it again brings it out. So do
+		// forced colours, and the drawn deck going or coming back (deck-gl.js).
 		window.matchMedia( '(prefers-reduced-motion: reduce)' ).addEventListener?.( 'change', reroom );
+		forcedColours?.addEventListener?.( 'change', reroom );
+		P.drawable = ( yes ) => {
+			if ( drawable !== yes ) {
+				drawable = yes;
+				reroom();
+			}
+		};
 	}
 
 	// The record out of its sleeve or back in it; out, the needle drops once it has come clear.
 	function deck( out ) {
 		const arm = $( '.riff-arm' );
 		if ( ! out || ! roomy() ) {
+			rested = false;
 			clearTimeout( deck.drop );
+			clearTimeout( deck.lower );
 			stopRunout();
 			delete root.dataset.riffDeck;
 			delete arm?.dataset.riffDown;
@@ -1006,10 +999,23 @@ export function nowPlaying( P ) {
 		lay();
 		needle();
 		strobe();
+		// The needle onto the record as a hand does it: lifted, carried over its groove, and lowered
+		// by the cue lever once it is there; the music waits for it (turn()).
 		deck.drop = setTimeout( () => {
 			if ( arm ) {
 				arm.dataset.riffDown = '';
+				arm.dataset.riffUp = '';
 				needle();
+				clearTimeout( deck.lower );
+				deck.lower = setTimeout(
+					() => {
+						if ( arm.dataset.riffUp === '' ) {
+							arm.dataset.riffUp = 'lowering';
+						}
+						deck.lower = setTimeout( lowered, P.reduce() ? 0 : LOWER );
+					},
+					Math.max( 0, ( swing.until || 0 ) - performance.now() )
+				);
 			}
 		}, P.reduce() ? 0 : DROP );
 	}
@@ -1229,6 +1235,7 @@ export function nowPlaying( P ) {
 		}
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
+		clearTimeout( turn.carry );
 		stowing++;
 		// Play pressed while the music winds down: it is no longer stopping (P.status()), from this
 		// press, not from the frame the wind-down's pull notices it has been cancelled.
@@ -1308,6 +1315,16 @@ export function nowPlaying( P ) {
 		}
 		let wait = 0;
 		const arm = tonearmOf();
+		// Set down off the record by the hand, on its rest: lifted and carried back over the groove
+		// the music is at first.
+		let travel = 0;
+		if ( rested && arm && root.dataset.riffDeck === 'out' && m.paused && ! flipping && ! ( 'riffArriving' in root.dataset ) ) {
+			rested = false;
+			arm.dataset.riffUp = '';
+			arm.dataset.riffDown = '';
+			needle();
+			travel = Math.max( 0, ( swing.until || 0 ) - performance.now() );
+		}
 		if (
 			root.dataset.riffDeck === 'out' &&
 			m.paused &&
@@ -1317,10 +1334,15 @@ export function nowPlaying( P ) {
 		) {
 			// The arm is up: the cue lever lowers it onto the record, and the platter starts once
 			// the stylus is in the groove.
-			arm.dataset.riffUp = 'lowering';
-			wait = LOWER;
+			const lower = () => ( arm.dataset.riffUp = 'lowering' );
+			if ( travel ) {
+				turn.carry = setTimeout( lower, travel );
+			} else {
+				lower();
+			}
+			wait = travel + LOWER;
 			clearTimeout( turn.land );
-			turn.land = setTimeout( lowered, LOWER );
+			turn.land = setTimeout( lowered, wait );
 		} else if ( flipping ) {
 			wait = flip.until - performance.now() + LAND;
 		} else if ( 'riffArriving' in root.dataset ) {
@@ -1332,6 +1354,19 @@ export function nowPlaying( P ) {
 		cued( true );
 		P.paint();
 		const start = () => {
+			// Never heard while the arm is still carried or the lever not yet down: the music waits for
+			// the stylus, and a lever left up is lowered first.
+			const lever = tonearmOf();
+			const carrying = Math.max( 0, ( swing.until || 0 ) - performance.now() );
+			if ( ! P.reduce() && root.dataset.riffDeck === 'out' && lever && ( carrying > 0 || lever.dataset.riffUp !== undefined ) ) {
+				if ( ! carrying && lever.dataset.riffUp === '' ) {
+					lever.dataset.riffUp = 'lowering';
+					clearTimeout( turn.land );
+					turn.land = setTimeout( lowered, LOWER );
+				}
+				turn.wait = setTimeout( start, carrying || ( lever.dataset.riffUp === 'lowering' ? LOWER : 30 ) );
+				return;
+			}
 			cued( false );
 			if ( P.el() !== m ) {
 				windDown();
@@ -1382,6 +1417,7 @@ export function nowPlaying( P ) {
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
 		clearTimeout( turn.land );
+		clearTimeout( turn.carry );
 		if ( 'riffCued' in root.dataset ) {
 			cued( false );
 			if ( coasting !== null ) {
@@ -1687,9 +1723,29 @@ export function nowPlaying( P ) {
 		sweep?.cancel();
 		sweep = null;
 		swept = '';
+		// Picked up, the stylus leaves the groove and the music is gone with it, at once; the motor
+		// runs on under the arm at the speed it had, and the music is heard again once the stylus is
+		// set down in a groove (land()).
+		if ( ! ( 'riffHeld' in tonearm.dataset ) ) {
+			const m = P.el();
+			grip.silenced = ! m.paused || held();
+			if ( grip.silenced ) {
+				clearTimeout( turn.wait );
+				clearTimeout( turn.spin );
+				clearTimeout( turn.land );
+				clearTimeout( turn.carry );
+				cued( true );
+				if ( coasting === null ) {
+					coast( m.playbackRate || 1, m.playbackRate || 1 );
+				}
+				m.pause();
+			}
+		}
+		rested = false;
 		tonearm.dataset.riffHeld = '';
 		delete tonearm.dataset.riffDown;
-		grip.now = Math.min( angle( 1 ), Math.max( REST, grip.deg + around( x, y ) - grip.at ) );
+		grip.raw = grip.deg + around( x, y ) - grip.at;
+		grip.now = Math.min( angle( 1 ), Math.max( REST, grip.raw ) );
 		tonearm.style.setProperty( '--riff-arm', `${ grip.now.toFixed( 2 ) }deg` );
 		point( playedOf( grip.now ), x, y );
 	}
@@ -1706,9 +1762,10 @@ export function nowPlaying( P ) {
 	}
 	// The needle down on a band: the track playing moves; another in the queue is loaded there,
 	// playing if the music was. A band whose track is not in the queue leaves the music alone.
-	function land( k, into = 0 ) {
+	function land( k, into = 0, resume = false ) {
 		P.press( 'seek' );
 		unpoint();
+		rested = false;
 		delete tonearm.dataset.riffHeld;
 		if ( root.dataset.riffDeck === 'out' ) {
 			tonearm.dataset.riffDown = '';
@@ -1723,13 +1780,71 @@ export function nowPlaying( P ) {
 		} else {
 			const i = P.order.findIndex( ( q ) => String( P.queue[ q ].id ) === id );
 			if ( i >= 0 ) {
-				const play = ! m.paused || held();
+				const play = ( ! m.paused || held() ) && ! resume;
 				P.stopAll();
 				P.pos = i;
 				P.load( { play, at: into } );
 			}
 		}
 		needle();
+		// Set down by the hand on the music it lifted off: heard from the groove it is in, now that
+		// the stylus is down, at the speed the platter turned on at.
+		if ( resume ) {
+			cued( false );
+			const now = P.el();
+			turn.heard = String( P.track()?.id ?? '' );
+			settle( now );
+			now.play().catch( P.paint );
+		}
+	}
+	// A press on the grooves while the record plays, as a deck's cue lever does it: the lever lifts
+	// the arm and the music stops with it; the arm is carried over the record to the groove pressed,
+	// taking as long as the way is long; the lever lowers it there, and the music is heard from
+	// there once the stylus is in the groove. Pressed again on the way, the arm turns for the newer
+	// groove from where it is, lifted once and lowered once. Stopped, the arm is put there.
+	function cueTo( k, into ) {
+		const m = P.el();
+		const arm = tonearm;
+		const album = albums.get( playing );
+		const i = P.order.findIndex( ( q ) => String( P.queue[ q ].id ) === String( album.ids[ k ] ) );
+		const same = String( album.ids[ k ] ) === String( P.track().id );
+		if ( ! ( ! m.paused || held() ) || root.dataset.riffDeck !== 'out' || P.reduce() || P.speed !== 1 || 'riffHeld' in arm.dataset || ( ! same && i < 0 ) ) {
+			land( k, into );
+			return;
+		}
+		P.press( 'seek' );
+		clearTimeout( turn.wait );
+		clearTimeout( turn.spin );
+		clearTimeout( turn.land );
+		clearTimeout( turn.carry );
+		halt.going = null;
+		cued( true );
+		arm.dataset.riffUp = '';
+		arm.dataset.riffDown = '';
+		if ( coasting === null ) {
+			coast( m.playbackRate || 1, m.playbackRate || 1 );
+		}
+		settle( m );
+		m.pause();
+		if ( same ) {
+			m.currentTime = into;
+		} else {
+			P.stopAll();
+			P.pos = i;
+			P.load( { play: false, at: into } );
+		}
+		needle();
+		P.paint();
+		const travel = Math.max( 0, ( swing.until || 0 ) - performance.now() );
+		turn.land = setTimeout( () => ( arm.dataset.riffUp = 'lowering' ), travel );
+		turn.wait = setTimeout( () => {
+			cued( false );
+			lowered();
+			const now = P.el();
+			turn.heard = String( P.track()?.id ?? '' );
+			settle( now );
+			now.play().catch( P.paint );
+		}, travel + LOWER );
 	}
 	// ---- What lies in a groove of the side, said beside the pointer: the band, its title and the
 	// moment in it, which is where the needle would land. The arm in the hand says it for the
@@ -1805,7 +1920,7 @@ export function nowPlaying( P ) {
 				return;
 			}
 			const { k, into } = bandAt( played );
-			land( k, into );
+			cueTo( k, into );
 			point( played, e.clientX, e.clientY );
 		} );
 	}
@@ -1906,9 +2021,22 @@ export function nowPlaying( P ) {
 		const put = ( e ) => {
 			document.removeEventListener( 'pointermove', follow );
 			hold( e.clientX, e.clientY );
-			const { k, into } = bandAt( playedOf( grip.now ) );
+			const { now, raw, silenced } = grip;
 			grip = null;
-			land( k, into );
+			// Let go beyond the lead-in, off the record: back on its rest, and nothing is heard. The
+			// platter winds down as it does when the music is stopped.
+			if ( raw < angle( 0 ) - 1 ) {
+				unpoint();
+				rested = true;
+				delete tonearm.dataset.riffHeld;
+				if ( silenced ) {
+					halt( P.el() );
+				}
+				P.paint();
+				return;
+			}
+			const { k, into } = bandAt( playedOf( now ) );
+			land( k, into, silenced );
 		};
 		tonearm.addEventListener( 'pointerdown', ( e ) => {
 			if ( ! sideOf( P.track() ) || carried ) {
