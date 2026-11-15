@@ -1,38 +1,81 @@
 name: Playground Preview Publish
 
-# Runs in the base-repo context so it can write even for fork pull requests.
-# Downloads the build from the triggering "Playground Preview" run, pushes it
-# to a per-PR preview-pr-N branch that raw.githubusercontent.com serves with
-# CORS, and posts (or updates) a sticky comment with the Playground link. Every
-# PR-derived input is validated; the blueprint comes from the base ref, only
-# asset URLs are rewritten, and those always point at this repository. The demo
-# set rides along in the build artifact, and only the files the base-ref
-# blueprint names are copied out of it.
+# Runs in the base-repo context so it can write even for fork pull requests. It never checks out or
+# runs pull request code: the checkout is the default branch, whose scripts it runs.
 #
-# For a pull request from this repository (not a fork, whose pages would be
-# published under the project's address), the site it built is split between
-# the two hosts as the Pages workflow splits it and deployed as two Cloudflare
-# Pages previews: Source at pr-N.riffpress-developer.pages.dev, with that same
-# Playground blueprint as its blueprint.json, so its "Try the demo" opens the
-# pull request's own build, and the developer site at pr-N.build-on-riff.pages.dev,
-# each linking to the other's preview. Its placeholders are filled by the base
-# branch's site-preview.js and it is split by the base branch's
-# developers-site.js, which only read and rewrite text; neither asks to be indexed.
+# When a "Playground Preview" run is requested or starts, or ends without a build, the status job
+# brings the pull request's sticky Preview comment up to date: its head is being built, waits for
+# approval, or did not build, and the buttons below are still the last build's.
+#
+# When a run succeeds, the publish job downloads its build, pushes it to a per-PR preview-pr-N branch
+# that raw.githubusercontent.com serves with CORS, beside the previous build's folder so a tab opened
+# from the comment before keeps working, and updates the comment with the Playground link. Every
+# PR-derived input is validated; the blueprint comes from the base ref, only asset URLs are rewritten,
+# and those always point at this repository. The demo set rides along in the build artifact, and only
+# the files the base-ref blueprint names are copied out of it.
+#
+# For a pull request from this repository (not a fork, whose pages would be published under the
+# project's address) that changes what the sites are built from (preview.js's SITE_INPUTS, read from
+# the default branch, not from the pull request), the site it built is split between the two hosts as
+# the Pages workflow splits it and deployed as two Cloudflare Pages previews: Source at
+# pr-N.riffpress-developer.pages.dev, with that same Playground blueprint as its blueprint.json, so its
+# "Try the demo" opens the pull request's own build, and the developer site at
+# pr-N.build-on-riff.pages.dev, each linking to the other's preview. Its placeholders are filled by the
+# base branch's site-preview.js and it is split by the base branch's developers-site.js, which only
+# read and rewrite text; neither asks to be indexed. A pull request that no longer changes the sites
+# has its site previews taken down. The pull request is checked to be open at the built SHA before the
+# push and again after the comment is written; one that closed meanwhile has everything this run made
+# taken down, as "Playground Preview Cleanup" would have.
 
 on:
   workflow_run: # zizmor: ignore[dangerous-triggers] never checks out or executes pull request code
     workflows: ["Playground Preview"]
-    types: [completed]
+    types: [requested, in_progress, completed]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}-${{ github.event.action == 'completed' && github.event.workflow_run.conclusion == 'success' }}
   cancel-in-progress: true
 
 permissions: {}
 
 jobs:
+  status:
+    if: >-
+      github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.head_branch != 'release-please--branches--main'
+      && (github.event.action != 'completed' || github.event.workflow_run.conclusion != 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github
+      - name: Say where the preview stands
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        with:
+          script: |
+            const preview = require( `${ process.env.GITHUB_WORKSPACE }/.github/scripts/preview.js` );
+            const pr = await preview.openAt( github, context.repo, process.env.HEAD_SHA );
+            if ( ! pr ) {
+              core.notice( `No open pull request at ${ process.env.HEAD_SHA }.` );
+              return;
+            }
+            // The live state decides, so a run cancelled by a newer push says nothing about the newer one.
+            await preview.sync( { github, repo: context.repo, number: pr.number, log: core.info } );
+
   publish:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    if: >-
+      github.event.action == 'completed'
+      && github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.head_branch != 'release-please--branches--main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -51,7 +94,7 @@ jobs:
             const list = await github.rest.actions.listWorkflowRunArtifacts({ owner: context.repo.owner, repo: context.repo.repo, run_id: context.payload.workflow_run.id });
             for (const name of ['release-assets', 'pr-meta', 'site']) {
               const found = list.data.artifacts.find(a => a.name === name);
-              // The site is optional: a run from before it was built has none.
+              // The site is optional: a pull request that changes neither site builds none.
               if (!found && name === 'site') continue;
               if (!found) { core.setFailed(`Required artifact "${name}" not found.`); return; }
               const dl = await github.rest.actions.downloadArtifact({ owner: context.repo.owner, repo: context.repo.repo, artifact_id: found.id, archive_format: 'zip' });
@@ -63,6 +106,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TRUSTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
         run: |
           set -euo pipefail
           mkdir -p artifacts/release-assets artifacts/pr-meta
@@ -86,7 +130,15 @@ jobs:
             echo "skipped=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
           { echo "pr_number=$PR_NUMBER"; echo "head_sha=$TRUSTED_HEAD_SHA"; } >> "$GITHUB_OUTPUT"
+          # Site previews only for a pull request from this repository that changes what the sites are
+          # built from, by this branch's list rather than the one the pull request built with.
+          SITE=false
+          if [[ "$HEAD_REPO" == "$GH_REPO" ]] && test -f artifacts/site/developers/index.html; then
+            SITE=$(gh api "repos/${GH_REPO}/pulls/${PR_NUMBER}/files?per_page=100" --paginate --jq '.[].filename' | node .github/scripts/preview.js site)
+          fi
+          echo "site=${SITE}" >> "$GITHUB_OUTPUT"
       - name: Publish preview assets
+        id: push
         if: steps.meta.outputs.skipped != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -103,12 +155,29 @@ jobs:
           node .github/scripts/demo-albums.js stage artifacts/release-assets/demo "preview/${HEAD_SHA}/demo" "https://raw.githubusercontent.com/${GH_REPO}/preview-pr-${PR_NUMBER}/${HEAD_SHA}/demo/"
           cd preview
           git init -q -b "preview-pr-${PR_NUMBER}"
+          # The build the comment opened until now stays beside this one, so a tab opened from it keeps
+          # loading its files; anything older goes. Its SHA comes from the bot's own comment.
+          PREV=$(gh api "repos/${GH_REPO}/issues/${PR_NUMBER}/comments?per_page=100" --paginate \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- riff:playground-preview -->"))) | .body' \
+            | grep -oE '<!-- riff:built [0-9a-f]{40} -->' | head -n1 | grep -oE '[0-9a-f]{40}' || true)
+          if [[ "$PREV" =~ ^[0-9a-f]{40}$ && "$PREV" != "$HEAD_SHA" ]] \
+            && git fetch -q --depth=1 "https://github.com/${GH_REPO}.git" "preview-pr-${PR_NUMBER}" 2> /dev/null; then
+            if git checkout FETCH_HEAD -- "$PREV" 2> /dev/null; then echo "Kept ${PREV}"; fi
+          fi
+          # Checked again right before the push: a pull request that closed or moved on during the build
+          # gets no branch from it. The newer head's own run says where it stands.
+          state=$(gh api "repos/${GH_REPO}/pulls/${PR_NUMBER}" --jq '.state + " " + .head.sha')
+          if [[ "$state" != "open ${HEAD_SHA}" ]]; then
+            echo "::notice::#${PR_NUMBER} is no longer open at ${HEAD_SHA} (${state}); not publishing."
+            exit 0
+          fi
           git add -A
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -qm "Playground preview for PR #${PR_NUMBER} at ${HEAD_SHA}"
           git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" "preview-pr-${PR_NUMBER}"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
       - name: Assemble the Playground URL from the base-ref blueprint
         id: playground
-        if: steps.meta.outputs.skipped != 'true'
+        if: steps.push.outputs.pushed == 'true'
         env:
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
@@ -124,7 +193,7 @@ jobs:
           echo "url=https://playground.wordpress.net/?mode=seamless#$(jq -c . preview-blueprint.json | base64 -w0)" >> "$GITHUB_OUTPUT"
       - name: Publish the site preview
         id: site
-        if: steps.meta.outputs.skipped != 'true' && github.event.workflow_run.head_repository.full_name == github.repository && hashFiles('artifacts/site/developers/index.html') != ''
+        if: steps.push.outputs.pushed == 'true' && steps.meta.outputs.site == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -152,8 +221,8 @@ jobs:
           npx --yes wrangler@4 pages deploy preview-source --project-name riffpress-developer --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
           npx --yes wrangler@4 pages deploy preview-developer --project-name build-on-riff --branch "pr-${PR_NUMBER}" --commit-hash "$HEAD_SHA" --commit-dirty=true
           { echo "source=${SRC}"; echo "developer=${DEV}"; } >> "$GITHUB_OUTPUT"
-      - name: Post or update the sticky comment
-        if: steps.meta.outputs.skipped != 'true'
+      - name: Update the sticky comment
+        if: steps.push.outputs.pushed == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
@@ -161,41 +230,48 @@ jobs:
           PLAYGROUND_URL: ${{ steps.playground.outputs.url }}
           SOURCE_URL: ${{ steps.site.outputs.source }}
           DEVELOPER_URL: ${{ steps.site.outputs.developer }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         with:
           script: |
-            const marker = '<!-- riff:playground-preview -->';
+            const preview = require( `${ process.env.GITHUB_WORKSPACE }/.github/scripts/preview.js` );
+            const repo = context.repo;
+            const number = parseInt( process.env.PR_NUMBER, 10 );
             const sha = process.env.HEAD_SHA;
-            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
-            // Five ways in, named for where each lands: the same Playground build opened on the
-            // standalone app (the blueprint's landing page), on the Listen page inside the theme, or
-            // on an album's post, and the pull request's own two sites.
             const play = process.env.PLAYGROUND_URL;
-            const at = ( path ) => play.replace( '?mode=seamless', `?mode=seamless&url=${ encodeURIComponent( path ) }` );
-            const inTheme = at( '/listen/' );
-            const onPost = at( '/compositions/' );
-            const source = process.env.SOURCE_URL;
-            const developer = process.env.DEVELOPER_URL;
-            const button = ( label, colour, logo ) => `https://img.shields.io/badge/${ encodeURIComponent( label ).replace( /-/g, '--' ) }-${ colour }?style=for-the-badge${ logo ? `&logo=${ logo }&logoColor=white` : '' }`;
-            const buttons = [
-              `[![Standalone app](${ button( 'Standalone app', '3858E9', 'wordpress' ) })](${ play })`,
-              `[![Listen page](${ button( 'Listen page', '3858E9', 'wordpress' ) })](${ inTheme })`,
-              `[![Blog post](${ button( 'Blog post', '3858E9', 'wordpress' ) })](${ onPost })`,
-              source ? `[![Source](${ button( 'Source', '1E1E1E' ) })](${ source })` : '',
-              developer ? `[![Developer](${ button( 'Developer', '1E1E1E' ) })](${ developer })` : '',
-            ].filter( Boolean ).join( ' ' );
-            const body = [
-              marker,
-              '### 🛝 Preview',
-              '',
-              `Built from <a href="${commitUrl}"><samp>${sha.slice(0, 7)}</samp></a>, signed in as admin.`,
-              '',
-              buttons,
-              '',
-              '<sub><b>Standalone app</b> is <code>/listen/app/</code>, the installable player with no theme around it. <b>Listen page</b> is <code>/listen/</code>, the same player as a block inside the theme. <b>Blog post</b> is an album post with its Riff block. <b>Source</b> and <b>Developer</b> are source.riffpress.com and developer.riffpress.com as this branch builds them.</sub>',
-              '',
-            ].join('\n');
-            const prNumber = parseInt(process.env.PR_NUMBER, 10);
-            const comments = await github.paginate(github.rest.issues.listComments, { owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, per_page: 100 });
-            const existing = comments.find(c => c.body && c.body.includes(marker));
-            if (existing) await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
-            else await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, body });
+            if ( ! /^[0-9a-f]{40}$/.test( sha ) || ! play.startsWith( 'https://playground.wordpress.net/?mode=seamless#' ) ) {
+              core.setFailed( 'Unexpected build metadata' );
+              return;
+            }
+            const cf = () => preview.cloudflare( { fetch, account: process.env.CLOUDFLARE_ACCOUNT_ID, token: process.env.CLOUDFLARE_API_TOKEN } );
+            const open = async () => ( await github.rest.pulls.get( { ...repo, pull_number: number } ) ).data.state === 'open';
+            if ( await open() ) {
+              const build = { sha, playground: play, source: process.env.SOURCE_URL || null, developer: process.env.DEVELOPER_URL || null };
+              // A pull request that no longer changes the sites loses the previews its comment linked.
+              // Cloudflare failing here leaves the old site previews up until the next publish or the close; the comment still drops their buttons.
+              const had = ( await preview.sticky( github, repo, number ) )?.body.includes( '.pages.dev/' );
+              if ( ! build.source && had ) {
+                try {
+                  await preview.takeDown( { github, repo, number, cf: cf(), branch: false, log: core.info } );
+                } catch ( e ) {
+                  core.warning( `The site previews of #${ number } were not taken down: ${ e.message }` );
+                }
+              }
+              await preview.sync( { github, repo, number, build, log: core.info } );
+            }
+            // A pull request that closed while this ran: what this run made would outlive it.
+            if ( ! ( await open() ) ) {
+              await preview.takeDown( { github, repo, number, cf: cf(), log: core.info } );
+              await preview.sync( { github, repo, number, log: core.info } );
+            }
+      - name: Say the publish failed
+        if: failure() && steps.meta.outputs.pr_number != ''
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
+        with:
+          script: |
+            const preview = require( `${ process.env.GITHUB_WORKSPACE }/.github/scripts/preview.js` );
+            const url = `https://github.com/${ context.repo.owner }/${ context.repo.repo }/actions/runs/${ context.runId }`;
+            await preview.sync( { github, repo: context.repo, number: parseInt( process.env.PR_NUMBER, 10 ), failed: { sha: process.env.HEAD_SHA, url }, log: core.info } );
