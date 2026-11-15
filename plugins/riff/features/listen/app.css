@@ -1033,14 +1033,12 @@
 	font-size: 64px;
 }
 
-/* A title takes two lines before it is cut short; the line under it, one. */
+/* A title wraps onto as many lines as it needs, so none of it is hidden;
+   the line under it takes one. */
 .riff-card-title {
-	display: -webkit-box;
-	overflow: hidden;
+	display: block;
 	font-weight: 600;
 	line-height: 1.375;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
 }
 
 .riff-card:hover .riff-card-title {
@@ -1138,8 +1136,11 @@
 	align-self: end;
 }
 
+/* A track's row is one line tall, so its title ends in an ellipsis there. */
 .riff-app [data-riff-shelf="recent"] .riff-card-title {
-	-webkit-line-clamp: 1;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 .riff-app [data-riff-shelf="recent"] .riff-card-sub {
