@@ -1,7 +1,7 @@
 {
 	"name": "@riffpress/riff-types",
 	"version": "0.1.0",
-	"description": "TypeScript types for Riff, generated from its code: every REST route, the track, album and playlist, window.riff with its actions, filters and events, and the Listen app's views. With a small typed client for the REST routes.",
+	"description": "TypeScript types for Riff, generated from its code: every public REST route, the track, album and playlist, window.riff with its actions, filters and events, and the Listen app's views. With a small typed client for the REST routes.",
 	"license": "GPL-2.0-or-later",
 	"private": true,
 	"type": "module",

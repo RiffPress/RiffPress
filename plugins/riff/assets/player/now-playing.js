@@ -1043,10 +1043,11 @@ export function nowPlaying( P ) {
 	// stylus is in it.
 	const LAND = 600;
 	const CRAWL = 0.3;
-	// In revolutions a minute, each millisecond. Technics' SL-1200MK7 specification gives 0.7 s
-	// from standstill to 33⅓ (build-up characteristics) on 0.18 N·m of starting torque. Its brake is
-	// electronic, the motor itself pulling against the turn, and no stopping time is published, so
-	// it is taken at the motor's own torque: 33⅓ to rest in the same 0.7 s.
+	// In revolutions a minute, each millisecond. The published specification of a direct-drive
+	// turntable gives 0.7 s from standstill to 33⅓ (build-up characteristics) on 0.18 N·m of
+	// starting torque. Its brake is electronic, the motor itself pulling against the turn, and no
+	// stopping time is published, so it is taken at the motor's own torque: 33⅓ to rest in the
+	// same 0.7 s.
 	const TORQUE = 100 / 3 / 700;
 	const BRAKE = TORQUE;
 	// How long the platter takes from one rate to another, the rates as shares of the record's own

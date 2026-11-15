@@ -320,7 +320,7 @@ export interface AttachmentFields {
 }
 
 // ---- REST routes.
-// Every route, by method and address, with what it takes and what it answers. The parameters in the address are part of params.
+// Every public route, by method and address, with what it takes and what it answers. The parameters in the address are part of params.
 
 export interface Routes {
 	"GET /riff/v1/library": {

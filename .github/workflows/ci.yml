@@ -117,6 +117,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The tags, for the last release the public surface is compared with.
+          fetch-depth: 0
       - name: Every plugin keeps to its isolation.json
         run: node .github/scripts/isolation.js --check
       - name: The hooks reference is current
@@ -127,6 +129,8 @@ jobs:
         run: node .github/scripts/riff-types.js --check
       - name: The PHP, REST and CSS references are documented
         run: node .github/scripts/reference-pages.js --check
+      - name: The public surface keeps the last release's promise
+        run: node .github/scripts/public-promise.js
       - name: The handbooks draw from their docs
         run: node .github/scripts/handbook-pages.js --check
       - name: Every page carries the navigation in site-nav.json

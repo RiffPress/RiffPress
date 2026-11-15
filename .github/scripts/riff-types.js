@@ -207,6 +207,8 @@ function requestOf( args, names, ctx ) {
  * @return {string} TypeScript.
  */
 function rest( s ) {
+	// The Listen app's internal routes are promised nothing, so a client is not handed them.
+	s = { ...s, routes: s.routes.filter( ( r ) => ! r.internal ) };
 	const named = new Map( [ [ s.track.title, 'Track' ] ] );
 	const shapes = [];
 	const add = ( schema, root, name ) => {
@@ -258,7 +260,7 @@ function rest( s ) {
 		out += `export interface ${ pascal( f.type ) }Fields {\n${ doc( f.schema?.description, '\t' ) }\t${ key( f.name ) }: ${ tsOf( f.schema, { root: f.schema, named, track: s.track } ) };\n}\n\n`;
 	}
 
-	out += section( 'REST routes', 'Every route, by method and address, with what it takes and what it answers. The parameters in the address are part of params.' );
+	out += section( 'REST routes', 'Every public route, by method and address, with what it takes and what it answers. The parameters in the address are part of params.' );
 	out += 'export interface Routes {\n';
 	for ( const r of s.routes ) {
 		const { path: p, names } = address( r.namespace, r.route );

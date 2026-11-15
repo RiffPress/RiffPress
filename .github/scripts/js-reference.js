@@ -177,6 +177,10 @@ function render( list, jsHooks ) {
 		if ( m.returns ) {
 			md += `Returns \`${ m.returns.type }\`: ${ m.returns.description }\n\n`;
 		}
+		if ( m.deprecation !== null && m.deprecation !== undefined ) {
+			// The words public-promise.js reads, as the hooks reference writes for a deprecated hook.
+			md += `Deprecated.${ m.deprecation ? ` ${ m.deprecation }` : '' }\n\n`;
+		}
 		md += `Since ${ m.since }.\n\n`;
 	}
 	md += `## Actions and filters\n\n${ EVENTS }\n\n`;
