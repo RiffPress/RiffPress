@@ -434,9 +434,7 @@ test( 'an album\'s and an artist\'s heart save them, and say so', async ( { page
 test( 'the standalone sidebar lists Your Library with artwork, and its chips narrow it in place', async ( {
 	page,
 	requestUtils,
-	isMobile,
 } ) => {
-	test.skip( isMobile, 'On a phone the navigation is tabs, with no room for the library.' );
 	await requestUtils.rest( {
 		method: 'POST',
 		path: '/riff/v1/users/me/likes',

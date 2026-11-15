@@ -32,7 +32,7 @@ test.use( { storageState: { cookies: [], origins: [] } } );
 
 const lastCode = async ( requestUtils ) => ( await requestUtils.rest( { path: '/riff-test/v1/sign-in-code' } ) ).code;
 
-test( 'a visitor signs in with a code from the sheet, and the music keeps playing', async ( { page, requestUtils }, testInfo ) => {
+test( 'a visitor signs in with a code from the sheet, and the music keeps playing', async ( { page, requestUtils } ) => {
 	await page.goto( pageUrl );
 	await page.locator( '.riff-card-play' ).first().click();
 	await expect.poll( () => page.evaluate( () => window.riff.playing() ) ).toBe( true );
@@ -56,12 +56,9 @@ test( 'a visitor signs in with a code from the sheet, and the music keeps playin
 	await sheet.getByLabel( 'Code' ).fill( code );
 	await sheet.getByRole( 'button', { name: 'Sign in' } ).click();
 
-	// Chromium offers a passkey; WebKit and a browser without one are signed in at once.
-	const hasPasskeys = testInfo.project.name !== 'webkit';
-	if ( hasPasskeys ) {
-		await expect( sheet ).toContainText( 'Save a passkey' );
-		await sheet.getByRole( 'button', { name: 'Not now' } ).click();
-	}
+	// Chromium, the only project that runs this, offers a passkey.
+	await expect( sheet ).toContainText( 'Save a passkey' );
+	await sheet.getByRole( 'button', { name: 'Not now' } ).click();
 	await expect( page.locator( '.riff-app-account' ) ).toBeVisible();
 	await expect.poll( () => page.evaluate( () => window.riff.playing() ) ).toBe( true );
 	const cookies = await page.context().cookies();

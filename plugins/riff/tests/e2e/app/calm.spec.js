@@ -173,6 +173,15 @@ async function visitor( browser, baseURL, history ) {
 	return { context, page };
 }
 
+// The link in the bar that opens a view. On a wide screen, Your Library is the heading of the
+// sidebar's library, not a tab.
+const barLink = ( tab ) => {
+	if ( tab === 'riff_view=library' ) {
+		return '.riff-app-bar a.riff-app-library-title';
+	}
+	return tab ? `.riff-app-bar a.riff-app-tab[href*="${ tab }"]` : '.riff-app-bar a.riff-app-home';
+};
+
 test.describe( 'Every view loads without moving', () => {
 	// Layout shift entries are Chromium's; playwright.config.js runs this spec there alone.
 	test.describe.configure( { timeout: 240000 } );
@@ -240,14 +249,7 @@ test.describe( 'Every view loads without moving', () => {
 			'riff_view=library',
 			'',
 		] ) {
-			// On a wide screen, Your Library is the heading of the sidebar's library, not a tab.
-			let selector = '.riff-app-bar a.riff-app-home';
-			if ( tab === 'riff_view=library' ) {
-				selector = '.riff-app-bar a.riff-app-library-title';
-			} else if ( tab ) {
-				selector = `.riff-app-bar a.riff-app-tab[href*="${ tab }"]`;
-			}
-			const link = page.locator( selector );
+			const link = page.locator( barLink( tab ) );
 			const from = await page.evaluate( () =>
 				Math.round( performance.now() )
 			);

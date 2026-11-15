@@ -65,40 +65,48 @@ test.afterAll( async ( { requestUtils } ) => {
 	await made.cleanUp( requestUtils );
 } );
 
+// Opens a format's track in the Lyrics view, paused, and answers its synced lines.
+async function openLines( page, index ) {
+	await page.goto( postUrl );
+	await page.locator( '.riff-row' ).nth( index ).click();
+	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
+	// From the bar on a wide screen, from Now Playing on a phone.
+	await openView( page, 'lyrics' );
+	return page.locator( '.riff-np [data-riff-view="lyrics"] .riff-lyrics-synced li' );
+}
+
+const seek = ( page, t ) => page.evaluate( ( to ) => window.riff.seek( to ), t );
+
+// Which line is current: its index, or -1 when none is.
+const current = ( lines ) => lines.evaluateAll( ( els ) => els.findIndex( ( el ) => el.hasAttribute( 'aria-current' ) ) );
+
 for ( const [ index, format ] of FORMATS.entries() ) {
 	test( `${ format.name } lines up with the music`, async ( { page } ) => {
-		await page.goto( postUrl );
-		await page.locator( '.riff-row' ).nth( index ).click();
-		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
-		// From the bar on a wide screen, from Now Playing on a phone.
-		await openView( page, 'lyrics' );
-		const lines = page.locator( '.riff-np [data-riff-view="lyrics"] .riff-lyrics-synced li' );
+		const lines = await openLines( page, index );
 		await expect( lines ).toHaveText( format.texts || [ format.words ? 'One more' : 'One', 'Two', 'Three' ] );
-		if ( format.gap ) {
-			await expect( lines.nth( format.gap ) ).toHaveClass( /riff-lyrics-gap/ );
-		}
-		const seek = ( t ) => page.evaluate( ( to ) => window.riff.seek( to ), t );
 		for ( const [ i, time ] of format.times.entries() ) {
-			await seek( time + 0.15 );
+			await seek( page, time + 0.15 );
 			await expect( lines.nth( i ) ).toHaveAttribute( 'aria-current', 'true' );
 			await expect( page.locator( '.riff-np [data-riff-view="lyrics"] [aria-current]' ) ).toHaveCount( 1 );
-			await seek( Math.max( 0, time - 0.2 ) );
-			if ( i === 0 ) {
-				await expect( page.locator( '.riff-np [data-riff-view="lyrics"] [aria-current]' ) ).toHaveCount( 0 );
-			} else {
-				await expect( lines.nth( i - 1 ) ).toHaveAttribute( 'aria-current', 'true' );
-			}
-		}
-		if ( format.words ) {
-			// Within the line, each word lights up at its own time.
-			const words = lines.nth( 0 ).locator( '.riff-lyrics-word' );
-			await seek( 0.7 );
-			await expect( words.nth( 0 ) ).toHaveClass( /is-sung/ );
-			await expect( words.nth( 1 ) ).not.toHaveClass( /is-sung/ );
-			await seek( 1.1 );
-			await expect( words.nth( 1 ) ).toHaveClass( /is-sung/ );
-			// The button is still named for the whole line.
-			await expect( lines.nth( 0 ).locator( 'button' ) ).toHaveAccessibleName( 'One more' );
+			// A little before the line, the one before it is current, or none is before the first.
+			await seek( page, Math.max( 0, time - 0.2 ) );
+			await expect.poll( () => current( lines ) ).toBe( i - 1 );
 		}
 	} );
 }
+
+test( 'a pause before a WebVTT cue is marked as a gap', async ( { page } ) => {
+	const lines = await openLines( page, FORMATS.findIndex( ( format ) => format.gap ) );
+	await expect( lines.nth( FORMATS.find( ( format ) => format.gap ).gap ) ).toHaveClass( /riff-lyrics-gap/ );
+} );
+
+test( 'in Enhanced LRC each word lights up at its own time, and the button is named for the whole line', async ( { page } ) => {
+	const lines = await openLines( page, FORMATS.findIndex( ( format ) => format.words ) );
+	const words = lines.nth( 0 ).locator( '.riff-lyrics-word' );
+	await seek( page, 0.7 );
+	await expect( words.nth( 0 ) ).toHaveClass( /is-sung/ );
+	await expect( words.nth( 1 ) ).not.toHaveClass( /is-sung/ );
+	await seek( page, 1.1 );
+	await expect( words.nth( 1 ) ).toHaveClass( /is-sung/ );
+	await expect( lines.nth( 0 ).locator( 'button' ) ).toHaveAccessibleName( 'One more' );
+} );
