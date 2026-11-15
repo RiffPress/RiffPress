@@ -45,6 +45,10 @@ async function watchShifts( page ) {
 }
 
 test.describe( 'About, open by default', () => {
+	// The Listen app's service worker would fetch the deck itself, past the stand-in
+	// controlLayer() gives the page, and the real deck would refuse a test machine's software card.
+	test.use( { serviceWorkers: 'block' } );
+
 	test.beforeEach( async ( { page } ) => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
 	} );
