@@ -6,6 +6,7 @@ const path = require( 'node:path' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 const { FIXTURES, FILES, iosAgent, playerSite } = require( '../helpers/site' );
+const { controlLayer } = require( '../helpers/turntable' );
 
 const made = own();
 let postUrl;
@@ -224,5 +225,86 @@ test.describe( 'Player', () => {
 			.poll( () => page.evaluate( () => document.querySelector( '.riff-audio' ).currentTime ) )
 			.toBeGreaterThan( 4 );
 		await expect( input ).toHaveAttribute( 'aria-valuetext', /seconds? of / );
+	} );
+
+	test( 'a track a reload brings back from a sharing origin is heard by the meter, and the deck\'s lamps light only once the music sounds', async ( {
+		page,
+		requestUtils,
+	}, testInfo ) => {
+		test.skip( testInfo.project.name !== 'chromium', 'The deck and its display stand on a wide stage.' );
+		const body = require( 'node:fs' ).readFileSync( path.join( FIXTURES, FILES[ 1 ] ) );
+		// The origin answers its CORS check late, as a far server does: after a reload, the track
+		// brought back is loaded before the answer comes.
+		await page.route( 'https://late.riff.test/**', async ( route ) => {
+			const head = route.request().method() === 'HEAD';
+			if ( head ) {
+				await new Promise( ( done ) => setTimeout( done, 1500 ) );
+			}
+			await route.fulfill( {
+				status: 200,
+				contentType: 'audio/mpeg',
+				headers: { 'Access-Control-Allow-Origin': '*' },
+				body: head ? '' : body,
+			} );
+		} );
+		await controlLayer( page );
+		await page.setViewportSize( { width: 1440, height: 900 } );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		const post = await made.post( requestUtils, {
+			title: 'Streamed late',
+			status: 'publish',
+			content: '<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="https://late.riff.test/underground.mp3"></audio></figure><!-- /wp:audio -->',
+		} );
+		await page.goto( post.link );
+		const audio = () => page.evaluate( () => ( ( m ) => ( { paused: m.paused, cross: m.crossOrigin, src: m.getAttribute( 'src' ) } ) )( document.querySelector( '.riff-audio' ) ) );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await expect.poll( async () => ( await audio() ).paused ).toBe( false );
+		await page.locator( '.riff-bar [data-riff-action="toggle"]' ).click();
+		await expect.poll( async () => ( await audio() ).paused ).toBe( true );
+
+		await page.reload();
+		await expect.poll( async () => ( await audio() ).src ).toContain( 'late.riff.test' );
+		// Loaded again for CORS once the origin says it shares, still waiting to be played: loaded
+		// without, the meter could not hear it, and the lamps stayed dark for the whole track.
+		await expect.poll( audio, { timeout: 5000 } ).toEqual( expect.objectContaining( { paused: true, cross: 'anonymous' } ) );
+
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
+		const toggle = page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).first();
+		// How bright the brightest lamp is, and whether play is still waiting on the stylus.
+		const lamps = () =>
+			page.evaluate( () => {
+				const canvas = document.querySelector( '.riff-level' );
+				const { width: w, height: h } = canvas;
+				const row = canvas.getContext( '2d' ).getImageData( 0, Math.round( h * 0.5 ), w, Math.max( 1, Math.round( h * 0.19 ) ) ).data;
+				let most = 0;
+				for ( let n = 3; n < row.length; n += 4 ) {
+					most = Math.max( most, row[ n ] );
+				}
+				return { most, cued: 'riffCued' in document.querySelector( '#riff' ).dataset };
+			} );
+		const LIT = 128;
+		await toggle.click();
+		await expect.poll( () => page.evaluate( () => window.riff.analyser() !== null ) ).toBe( true );
+		await expect.poll( async () => ( await lamps() ).most, { timeout: 5000 } ).toBeGreaterThan( LIT );
+
+		// Stopped and started again: while the stylus is on its way down, the lamps are dark,
+		// not the last moment the analyser heard before the stop.
+		await toggle.click();
+		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-up', '' );
+		await toggle.click();
+		const waiting = [];
+		await expect
+			.poll( async () => {
+				const now = await lamps();
+				if ( now.cued ) {
+					waiting.push( now.most );
+				}
+				return now.cued;
+			}, { intervals: [ 50 ] } )
+			.toBe( false );
+		expect( waiting.length ).toBeGreaterThan( 0 );
+		expect( Math.max( ...waiting ) ).toBeLessThan( LIT );
+		await expect.poll( async () => ( await lamps() ).most, { timeout: 5000 } ).toBeGreaterThan( LIT );
 	} );
 } );

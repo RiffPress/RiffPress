@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.20.0
+Stable tag: 6.20.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.20.1 =
+* Fixed: the record's box casts no shadow over the drawn deck in the Listen app.
+
 = 6.20.0 =
 * The drawn deck's repeat key shows one legend, its label is set round the spindle, its sleeve stands whole, and its parts sit on the plinth under one lamp.
 
@@ -161,8 +164,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
 * Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
 * Fixed: a change of record or side is never judged a slow card, and a deck lost mid-change shows its record at rest.
-
-= 6.18.1 =
-* Fixed: main's versions agree with the release manifest again, at 6.18.0.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

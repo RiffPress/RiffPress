@@ -135,7 +135,11 @@ export default function level( P ) {
 		const dt = Math.min( 0.25, ( now - then ) / 1000 );
 		then = now;
 		const t = P.track();
-		const analyser = playing && P.analyser && t && P.el() === P.audio && ! P.foreign( t ) ? P.analyser : null;
+		// Only once the music sounds: pressed play is said at once (data-playing) while the stylus is
+		// still on its way down (data-riff-cued), and a stopped context's analyser goes on handing
+		// back the last moment it heard, which would light the lamps before the needle drops.
+		const sounding = playing && ! P.el().paused && ! ( 'riffCued' in root.dataset );
+		const analyser = sounding && P.analyser && t && P.el() === P.audio && ! P.foreign( t ) ? P.analyser : null;
 		if ( ! analyser ) {
 			P.loud = null;
 			square = 0;
