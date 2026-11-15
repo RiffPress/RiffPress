@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.20.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.20.0...riff-v6.20.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **app:** the record's box casts no shadow over the drawn deck in the Listen app ([#1136](https://github.com/RiffPress/RiffPress/issues/1136)) ([9debc78](https://github.com/RiffPress/RiffPress/commit/9debc78c56a89bed31039ccfdd50cbf26d0c1bcc))
+
 ## [6.20.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.19.2...riff-v6.20.0) (2026-11-15)
 
 
