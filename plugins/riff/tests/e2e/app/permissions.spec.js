@@ -14,6 +14,16 @@ const manifest = ( slug ) => {
 	return fs.existsSync( file ) ? JSON.parse( fs.readFileSync( file, 'utf8' ) ) : null;
 };
 
+// What a plugin's section says, from its manifest: that it says nothing, or what the manifest names.
+const expectedText = ( m ) =>
+	m
+		? [
+				...( m.riff?.functions || [] ).filter( ( f ) => f === 'riff_register_view' ).map( () => 'Adds a view to the player' ),
+				...( m.riff?.hooks || [] ).filter( ( h ) => h === 'riff_track' ).map( () => 'Reads your tracks' ),
+				...( m.data?.options || [] ).map( ( prefix ) => `Stores settings under ${ prefix }*` ),
+			]
+		: [ "doesn't say what it does" ];
+
 test.describe( 'What each plugin can do', () => {
 	test( 'Settings › Riff lists every active extension', async ( { admin, page } ) => {
 		await admin.visitAdminPage( 'options-general.php', 'page=riff' );
@@ -21,21 +31,13 @@ test.describe( 'What each plugin can do', () => {
 		for ( const slug of [ 'riff', ...extensions ] ) {
 			const section = page.locator( `#riff-permissions-${ slug }` );
 			await expect( section, slug ).toBeVisible();
-			const m = manifest( slug === 'riff' ? 'riff' : slug );
-			if ( ! m ) {
-				await expect( section ).toContainText( "doesn't say what it does" );
-				continue;
+			for ( const text of expectedText( manifest( slug ) ) ) {
+				await expect( section, slug ).toContainText( text );
 			}
-			await expect( section.getByRole( 'listitem' ).first() ).toBeVisible();
-			if ( ( m.riff?.functions || [] ).includes( 'riff_register_view' ) ) {
-				await expect( section ).toContainText( 'Adds a view to the player' );
-			}
-			if ( ( m.riff?.hooks || [] ).includes( 'riff_track' ) ) {
-				await expect( section ).toContainText( 'Reads your tracks' );
-			}
-			for ( const prefix of m.data?.options || [] ) {
-				await expect( section ).toContainText( `Stores settings under ${ prefix }*` );
-			}
+		}
+		// A plugin with a manifest lists what it can do.
+		for ( const slug of [ 'riff', ...extensions ].filter( manifest ) ) {
+			await expect( page.locator( `#riff-permissions-${ slug }` ).getByRole( 'listitem' ).first(), slug ).toBeVisible();
 		}
 	} );
 

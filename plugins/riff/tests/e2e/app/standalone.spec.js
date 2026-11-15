@@ -59,15 +59,15 @@ test.describe( 'Standalone', () => {
 			};
 			return { title: ratio( '.riff-album-title' ), kind: ratio( '.riff-album-kind' ), meta: ratio( '.riff-album-meta' ) };
 		} );
-		for ( const tint of [ null, '#ffffff' ] ) {
-			if ( tint ) {
-				await header.evaluate( ( el, t ) => el.style.setProperty( '--riff-album-tint', t ), tint );
-			}
+		const readable = async ( tint ) => {
 			const ratios = await contrast();
 			expect( ratios.title, tint ).toBeGreaterThanOrEqual( 4.5 );
 			expect( ratios.kind, `the line above, ${ tint }` ).toBeGreaterThanOrEqual( 4.5 );
 			expect( ratios.meta, `the quieter line too, ${ tint }` ).toBeGreaterThanOrEqual( 4.5 );
-		}
+		};
+		await readable( null );
+		await header.evaluate( ( el, t ) => el.style.setProperty( '--riff-album-tint', t ), '#ffffff' );
+		await readable( '#ffffff' );
 	} );
 
 	test( 'a playlist post opened directly shows each track once, though core\'s styles come after Riff\'s', async ( {
@@ -111,23 +111,31 @@ test.describe( 'Standalone', () => {
 		}
 	} );
 
-	test( 'on a wide screen the navigation is a sidebar; on a phone Home, Search and Library are tabs along the bottom, the bar on them', async ( {
+	test( 'on a wide screen the navigation is a sidebar, a column left of the view', async ( {
 		page,
 		isMobile,
 	} ) => {
+		test.skip( isMobile, 'A phone has tabs and no sidebar.' );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
+		const nav = await page.locator( '.riff-app-bar' ).boundingBox();
+		const view = await page.locator( '.riff-app-view' ).boundingBox();
+		await expect( page.locator( '.riff-app-brand' ) ).toBeVisible();
+		expect( nav.x + nav.width, 'the column sits left of the view' ).toBeLessThanOrEqual( view.x + 1 );
+		await expect( page.locator( '.riff-app-tab svg' ).first() ).toBeVisible();
+		await expect( page.locator( '.riff-app-tab-search' ), 'the field is in view, so Search is no tab' ).toBeHidden();
+	} );
+
+	test( 'on a phone Home, Search and Library are tabs along the bottom, the bar on them', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( ! isMobile, 'A wide screen has the sidebar, the test above.' );
 		const app = pageUrl.replace( /\/?$/, '/' ) + 'app/';
 		await page.goto( app );
 		const nav = await page.locator( '.riff-app-bar' ).boundingBox();
 		const view = await page.locator( '.riff-app-view' ).boundingBox();
-		const brand = page.locator( '.riff-app-brand' );
 		const search = page.locator( '.riff-app-tab-search' );
-		await expect( brand ).toBeVisible();
-		if ( ! isMobile ) {
-			expect( nav.x + nav.width, 'the column sits left of the view' ).toBeLessThanOrEqual( view.x + 1 );
-			await expect( page.locator( '.riff-app-tab svg' ).first() ).toBeVisible();
-			await expect( search, 'the field is in view, so Search is no tab' ).toBeHidden();
-			return;
-		}
+		await expect( page.locator( '.riff-app-brand' ) ).toBeVisible();
 		// At the top, one slim row (the site's name and Sign in) and the lists as chips.
 		expect( nav.y + nav.height ).toBeLessThanOrEqual( view.y + 1 );
 		expect( nav.height ).toBeLessThan( 120 );
@@ -181,10 +189,11 @@ test.describe( 'Standalone', () => {
 		expect( radii.filter( ( r ) => r !== '999px' ) ).toEqual( [] );
 	} );
 
-	test( 'on a wide screen an album\'s header has a round Play and column heads that line up, and on a phone it is centred', async ( {
+	test( 'on a wide screen an album\'s header has a round Play and column heads that line up', async ( {
 		page,
 		isMobile,
 	} ) => {
+		test.skip( isMobile, 'A phone\'s header is centred, in the test below.' );
 		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=albums' );
 		await page.locator( '.riff-grid .riff-card a' ).first().click();
 		await expect( page ).toHaveURL( /riff_album=\d+/ );
@@ -192,26 +201,6 @@ test.describe( 'Standalone', () => {
 		const shuffle = page.locator( '.riff-album-actions [data-riff-app-action="shuffle"]' );
 		await expect( play ).toHaveAccessibleName( 'Play' );
 		await expect( shuffle ).toHaveAccessibleName( 'Shuffle' );
-		if ( isMobile ) {
-			// On a phone they stay words, and there are no column heads.
-			await expect( play.locator( '.riff-pill-label' ) ).toBeVisible();
-			await expect( play.locator( 'svg' ) ).toBeHidden();
-			await expect( page.locator( '.riff-tracks-head' ) ).toBeHidden();
-			// The cover is centred, as the apps draw an album on a phone, and the
-			// header's wash reaches the screen's edges instead of standing in a box.
-			const width = page.viewportSize().width;
-			const art = await page.locator( '.riff-album-cover' ).boundingBox();
-			expect( Math.abs( art.x + ( art.width / 2 ) - ( width / 2 ) ) ).toBeLessThanOrEqual( 2 );
-			const wash = await page.locator( '.riff-album-tinted' ).evaluate( ( el ) => {
-				const view = el.closest( '.riff-app-view' ).getBoundingClientRect();
-				const before = getComputedStyle( el, '::before' );
-				return { left: view.left + parseFloat( before.left ), right: view.right - parseFloat( before.right ) };
-			} );
-			expect( wash.left ).toBeLessThanOrEqual( 0 );
-			expect( wash.right ).toBeGreaterThanOrEqual( width );
-			await expect( page.locator( '.riff-album-tracks .riff-row-time' ).first() ).toBeHidden();
-			return;
-		}
 		const box = await play.boundingBox();
 		expect( [ Math.round( box.width ), Math.round( box.height ) ] ).toEqual( [ 56, 56 ] );
 		expect( await play.evaluate( ( el ) => getComputedStyle( el ).borderRadius ) ).toBe( '50%' );
@@ -258,8 +247,7 @@ test.describe( 'Standalone', () => {
 				colours: [ getComputedStyle( document.querySelector( '[data-riff-app-action="shuffle"]' ) ).color, getComputedStyle( document.querySelector( '.riff-album-actions .riff-app-like' ) ).color ],
 				// The album artist is a link only when they have a page of their own: on the suite's
 				// own site the album's artist tag names no artist its tracks are filed under.
-				underline: artist ? getComputedStyle( artist ).textDecorationLine : null,
-				byline: artist ? null : meta.textContent,
+				artistNamed: artist ? getComputedStyle( artist ).textDecorationLine === 'none' : /^\S.* · \d+ tracks?$/.test( meta.textContent ),
 				baseline,
 				coverBottom: rect( '.riff-album-cover' ).bottom,
 			};
@@ -268,14 +256,41 @@ test.describe( 'Standalone', () => {
 		expect( Math.max( ...fit.centres ) - Math.min( ...fit.centres ) ).toBeLessThanOrEqual( 1 );
 		expect( Math.abs( fit.gaps[ 0 ] - fit.gaps[ 1 ] ) ).toBeLessThanOrEqual( 1 );
 		expect( fit.colours[ 0 ], 'the same quiet colour at rest' ).toBe( fit.colours[ 1 ] );
-		if ( fit.underline === null ) {
-			expect( fit.byline, 'an artist without a page is named, unlinked' ).toMatch( /^\S.* · \d+ tracks?$/ );
-		} else {
-			expect( fit.underline ).toBe( 'none' );
-		}
+		expect( fit.artistNamed, 'an artist with a page is a link without an underline; one without is named, unlinked' ).toBe( true );
 		expect( Math.abs( fit.baseline - fit.coverBottom ) ).toBeLessThanOrEqual( 1 );
 		await expectTidy( page, '.riff-app', 'an album, standalone' );
 		expect( ( await new AxeBuilder( { page } ).withTags( AXE_TAGS ).include( '.riff-app' ).analyze() ).violations ).toEqual( [] );
+	} );
+
+	test( 'on a phone an album\'s header is centred, its buttons are words, and there are no column heads', async ( {
+		page,
+		isMobile,
+	} ) => {
+		test.skip( ! isMobile, 'A wide screen\'s header is the test above.' );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/?riff_view=albums' );
+		await page.locator( '.riff-grid .riff-card a' ).first().click();
+		await expect( page ).toHaveURL( /riff_album=\d+/ );
+		const play = page.locator( '.riff-album-actions [data-riff-app-action="play"]' );
+		const shuffle = page.locator( '.riff-album-actions [data-riff-app-action="shuffle"]' );
+		await expect( play ).toHaveAccessibleName( 'Play' );
+		await expect( shuffle ).toHaveAccessibleName( 'Shuffle' );
+		// On a phone they stay words, and there are no column heads.
+		await expect( play.locator( '.riff-pill-label' ) ).toBeVisible();
+		await expect( play.locator( 'svg' ) ).toBeHidden();
+		await expect( page.locator( '.riff-tracks-head' ) ).toBeHidden();
+		// The cover is centred, as the apps draw an album on a phone, and the
+		// header's wash reaches the screen's edges instead of standing in a box.
+		const width = page.viewportSize().width;
+		const art = await page.locator( '.riff-album-cover' ).boundingBox();
+		expect( Math.abs( art.x + ( art.width / 2 ) - ( width / 2 ) ) ).toBeLessThanOrEqual( 2 );
+		const wash = await page.locator( '.riff-album-tinted' ).evaluate( ( el ) => {
+			const view = el.closest( '.riff-app-view' ).getBoundingClientRect();
+			const before = getComputedStyle( el, '::before' );
+			return { left: view.left + parseFloat( before.left ), right: view.right - parseFloat( before.right ) };
+		} );
+		expect( wash.left ).toBeLessThanOrEqual( 0 );
+		expect( wash.right ).toBeGreaterThanOrEqual( width );
+		await expect( page.locator( '.riff-album-tracks .riff-row-time' ).first() ).toBeHidden();
 	} );
 
 	test( 'on a wide screen a header without a cover, as Tracks\', lines its title up with Play and the list', async ( {

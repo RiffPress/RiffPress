@@ -137,18 +137,18 @@ test.describe( 'Adding music', () => {
 			},
 			[ ...TONE ]
 		);
-		await page.dispatchEvent( 'body', 'dragenter', {
+		await page.locator( 'body' ).dispatchEvent( 'dragenter', {
 			dataTransfer: carried,
 		} );
 		await expect( overlay ).toBeVisible();
-		await page.dispatchEvent( 'body', 'dragleave', {
+		await page.locator( 'body' ).dispatchEvent( 'dragleave', {
 			dataTransfer: carried,
 		} );
 		await expect( overlay ).toBeHidden();
-		await page.dispatchEvent( 'body', 'dragenter', {
+		await page.locator( 'body' ).dispatchEvent( 'dragenter', {
 			dataTransfer: carried,
 		} );
-		await page.dispatchEvent( 'body', 'drop', { dataTransfer: carried } );
+		await page.locator( 'body' ).dispatchEvent( 'drop', { dataTransfer: carried } );
 		await expect( overlay ).toBeHidden();
 		await expect( page.locator( '.riff-app-status' ) ).toHaveText(
 			'1 track added.',
@@ -221,6 +221,11 @@ const wav = ( name ) => ( {
 	buffer: Buffer.from( 'RIFF' ),
 } );
 
+const startMusic = async ( page ) => {
+	await page.locator( '.riff-card-play' ).first().click();
+	await expect( page.locator( 'html' ) ).toHaveClass( /has-riff/ );
+};
+
 test.describe( 'A refused upload', () => {
 	test( 'says the server’s reason once for the files it was about, and the plain line where there is none', async ( {
 		page,
@@ -257,22 +262,31 @@ test.describe( 'A refused upload', () => {
 		[ 390, 844 ],
 	] ) {
 		for ( const play of [ false, true ] ) {
+			// With music playing, or with none.
+			const prepare = play ? startMusic : async () => {};
+
 			test( `is in sight at ${ width }×${ height }${ play ? ', with music playing' : '' }`, async ( {
 				page,
 			}, testInfo ) => {
 				await page.setViewportSize( { width, height } );
 				await refuse( page );
 				await page.goto( pageUrl.replace( /\/?$/, '/' ) + 'app/' );
-				if ( play ) {
-					await page.locator( '.riff-card-play' ).first().click();
-					await expect( page.locator( 'html' ) ).toHaveClass( /has-riff/ );
-				}
+				await prepare( page );
 				const status = page.locator( '.riff-app-status' );
 				await page
 					.locator( 'input[data-riff-add-music]' )
 					.setInputFiles( wav( 'full.wav' ) );
 				await expect( status ).toContainText( FULL, { timeout: 20000 } );
-				await page.waitForTimeout( 300 );
+				// Its box has stopped moving.
+				let last;
+				await expect
+					.poll( async () => {
+						const box = JSON.stringify( await status.boundingBox() );
+						const still = box === last;
+						last = box;
+						return still;
+					} )
+					.toBe( true );
 				const seen = await status.evaluate( ( el ) => {
 					const box = el.getBoundingClientRect();
 					const inside = [

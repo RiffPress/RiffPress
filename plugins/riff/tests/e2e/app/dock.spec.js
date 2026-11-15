@@ -49,8 +49,7 @@ const dockTest = ( page ) =>
 const appUrl = () => pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }`;
 
 test.describe( 'A view docked in the sidebar', () => {
-	test.beforeEach( async ( { page, isMobile } ) => {
-		test.skip( isMobile, 'The sidebar is a wide window\'s.' );
+	test.beforeEach( async ( { page } ) => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await page.goto( appUrl() );
 		// A listener who closed About, open by default, so the side is the dock test's alone.

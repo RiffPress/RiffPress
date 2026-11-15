@@ -43,8 +43,7 @@ async function watchShifts( page ) {
 }
 
 test.describe( 'About, open by default', () => {
-	test.beforeEach( async ( { page, isMobile } ) => {
-		test.skip( isMobile, 'A panel stands beside the page on a wide screen only.' );
+	test.beforeEach( async ( { page } ) => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
 	} );
 

@@ -85,9 +85,7 @@ test( 'a listener follows another from the faces on an album, and Together lists
 	page,
 	browser,
 	baseURL,
-	isMobile,
 } ) => {
-	test.skip( isMobile, 'Two listeners at a computer show it; a phone has the same panel over the page.' );
 	// The admin plays the first track, from the fixtures' album.
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();

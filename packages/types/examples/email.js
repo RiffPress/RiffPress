@@ -61,7 +61,7 @@ const ENTITIES = { amp: '&', quot: '"', '#39': "'" };
 /**
  * Escapes text for HTML.
  *
- * @param {*} s Text.
+ * @param {unknown} s Text.
  * @return {string} Escaped.
  */
 export const esc = ( s ) =>
