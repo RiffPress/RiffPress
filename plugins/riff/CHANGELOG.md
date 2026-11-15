@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.21.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.20.2...riff-v6.21.0) (2026-11-15)
+
+
+### Features
+
+* **player:** the deck's pitch fader is a ridged cap in a recessed slot beside a printed scale, with a key by its zero that sends it back ([#1145](https://github.com/RiffPress/RiffPress/issues/1145)) ([2e8daa1](https://github.com/RiffPress/RiffPress/commit/2e8daa1babdbd40f249d51ab2d5bb1efa150562b))
+
+
+### Bug Fixes
+
+* **player:** every start on the deck goes through one cue, and the music is let go as the stylus lands ([#1146](https://github.com/RiffPress/RiffPress/issues/1146)) ([5a73033](https://github.com/RiffPress/RiffPress/commit/5a730332702b01fe4d331efa2df13c76f70daac6))
+
 ## [6.20.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.20.1...riff-v6.20.2) (2026-11-15)
 
 
