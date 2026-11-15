@@ -3,8 +3,16 @@
  * dark room in the metal, and grooves that scatter the light as a cut record's do, in streaks
  * across the tracks, wider where the music is loud. The scene is the whole of Now Playing: the desk
  * the deck stands on is the page's own background, lit round the deck and darker toward its
- * edges, with the deck's shadow and the sleeve's on it. It is seen from straight above the
- * spindle, so the scene lies exactly where the deck in the page does.
+ * edges, with the deck's shadow and the sleeve's on it, and at its back, against the wall, a ledge
+ * the sleeve stands on while its record plays.
+ *
+ * Two eyes see it. At rest, with the record on the platter, the eye sits back across the desk,
+ * low, as a listener in their chair sees a deck, and leans a degree or two with the device,
+ * where it has motion sensors and the listener lets them be read, never rolling. While a hand
+ * or the keyboard is at the deck, or the record is in its sleeve, the eye comes over the spindle,
+ * where the scene lies exactly where the deck in the page does: a mouse moving over the deck (not
+ * one only resting there), a key's focus, or a first touch brings it over (that touch does nothing
+ * else), and the deck is then held where it is seen.
  *
  * It draws and nothing else. The deck in the page (player.php, riff.css) is still the turntable:
  * now-playing.js moves its record, its platter and its arm, a hand still takes the arm by its grip,
@@ -33,6 +41,8 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
+
+import { read, write } from 'riff-player/helpers';
 
 // ---- Matrices, column-major, and meshes, six numbers a vertex: where it is and its normal.
 const mul = ( a, b ) => {
@@ -92,6 +102,16 @@ const turnY = ( a ) => {
 	m[ 10 ] = c;
 	return m;
 };
+const turnX = ( a ) => {
+	const m = ident();
+	const c = Math.cos( a );
+	const s = Math.sin( a );
+	m[ 5 ] = c;
+	m[ 6 ] = s;
+	m[ 9 ] = -s;
+	m[ 10 ] = c;
+	return m;
+};
 // A view whose window need not be centred on the eye: its edges at the near plane.
 function frustum( l, r, b, t, n, f ) {
 	const m = new Float32Array( 16 );
@@ -123,7 +143,10 @@ const unit = ( a ) => {
 };
 function lookAt( eye, at, upHint = [ 0, 0, 1 ] ) {
 	const f = unit( sub( at, eye ) );
-	const r = unit( cross( f, upHint ) );
+	return viewOf( eye, f, unit( cross( f, upHint ) ) );
+}
+// A view from the eye along f, its right r.
+function viewOf( eye, f, r ) {
 	const u = cross( r, f );
 	const dot = ( a ) => a[ 0 ] * eye[ 0 ] + a[ 1 ] * eye[ 1 ] + a[ 2 ] * eye[ 2 ];
 	return new Float32Array( [ r[ 0 ], u[ 0 ], -f[ 0 ], 0, r[ 1 ], u[ 1 ], -f[ 1 ], 0, r[ 2 ], u[ 2 ], -f[ 2 ], 0, -dot( r ), -dot( u ), dot( f ), 1 ] );
@@ -360,6 +383,18 @@ const SHADOW = 2048;
 // How far the eye is above the spindle: far enough that what stands above the record (the arm, its
 // base) lies within a millimetre or two of where the page has it, for the hand that takes it.
 const EYE = 2.2;
+// The eye at rest: this far above the deck (radians), this far from where it looks (metres), which is
+// a little behind the spindle; and the most of the stage's height the deck takes from there, in each
+// arrangement, the sleeve above it.
+const SEAT = { rise: ( 20 * Math.PI ) / 180, away: 0.95, at: [ 0, 0.1, 0 ], room: { front: 0.62, beside: 0.7 } };
+// The most the device's tilt leans the eye, either way.
+const LEAN = ( 2 * Math.PI ) / 180;
+// The desk's back, against the wall; the ledge along it, its top; and half the sleeve's size.
+const WALL = 0.33;
+const LEDGE_Z = FLOOR_Z + 0.012;
+const SL = 0.157;
+// A listener's no to the motion sensors (iOS asks), kept so it is asked once.
+const TILT_KEY = 'riff:tilt';
 // The most the canvas draws, in pixels: the whole of Now Playing on a large screen is many.
 const MOST = 5e6;
 
@@ -445,13 +480,14 @@ const DEPTH_FS = `#version 300 es
 precision mediump float;
 void main() {}`;
 
-// uMode: 0 plain, 1 turned metal, 2 the deck's plate, 3 the platter and its strobe, 6 a key's cap, 7 a lamp's lens, 5 the desk,
-// which is only the shadows on it: the page shows through everywhere else.
+// uMode: 0 plain, 1 turned metal, 2 the deck's plate, 3 the platter and its strobe, 6 a key's cap, 7 a lamp's lens, 8 the
+// standing sleeve, its face the cover (uCover, where it could be read), 5 the desk, which is only the shadows on it: the page
+// shows through everywhere else, and beyond the desk's back the page is the wall.
 const STD_FS =
 	COMMON +
 	`
 in vec3 vP, vN, vO; out vec4 o;
-uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uSleeve, uBody, uKey; uniform vec3 uTint, uGlowAt[5]; uniform float uSleeveA;
+uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uSleeve, uBody, uKey; uniform vec3 uTint, uGlowAt[5]; uniform float uSleeveA, uCoverOn; uniform sampler2D uCover;
 const float RP = ${ f1( PLATTER ) };
 float row(float a, float r, float n, float rr, float px) {
   vec2 c = vec2((fract(a / 6.2831853 * n) - 0.5) * 6.2831853 * rr / n, r - rr);
@@ -471,11 +507,21 @@ void main() {
     // The light falls round the deck and gives out toward the desk's edges.
     float far = length(vP.xy - vec2(0.03, 0.0));
     a = min(a, 0.85); a += (1.0 - a) * 0.5 * smoothstep(0.42, 1.25, far);
+    // Darker in the corner where the desk meets the wall, and under the ledge.
+    a += (1.0 - a) * 0.45 * (1.0 - smoothstep(0.0, 0.06, ${ f1( WALL ) } - vP.y));
     a = clamp(a + (hash(gl_FragCoord.xy) - 0.5) / 255.0, 0.0, 1.0);
     // The light is a pale veil over the shadows, never brighter than it is opaque: a compositor
     // clamps a colour with more light in it than its alpha allows.
     float k = 0.05 * (1.0 - smoothstep(0.05, 0.8, far)) * (1.0 - a);
     o = vec4(vec3(1.0, 0.94, 0.86) * k, k + (1.0 - k) * a) * uAlpha; return;
+  }
+  if (uMode == 8) {
+    // The sleeve, standing: its face the cover, lit by the room in front of it, a little darker
+    // toward the ledge; its edges card.
+    vec3 face = uCol;
+    if (N.y < -0.5 && uCoverOn > 0.5) { vec3 t = texture(uCover, vec2(vO.x / ${ f1( 2 * SL ) } + 0.5, 1.0 - vO.z / ${ f1( 2 * SL ) })).rgb; face = t * t; }
+    vec3 c = face * (0.55 + 0.3 * smoothstep(0.0, 0.18, vO.z)) * vec3(1.0, 0.95, 0.88) * (N.y < -0.5 ? 1.0 : 0.5);
+    o = vec4(clamp(tone(c), 0.0, 1.0) * uAlpha, uAlpha); return;
   }
   if (uMode == 1 || uMode == 3) {
     // Turned round its own middle (uKey.xy for a part that stands off the spindle), and where uKey.z
@@ -602,6 +648,7 @@ export default function deckGl( P ) {
 	const wax = $( '.riff-wax' );
 	const label = $( '.riff-label' );
 	if ( ! stage || ! plinth || ! record || ! arm || ! wand || ! wax || ! label || ! P.arm ) {
+		delete root.dataset.riffGlWait;
 		return null;
 	}
 	const canvas = document.createElement( 'canvas' );
@@ -618,6 +665,7 @@ export default function deckGl( P ) {
 	// Some browsers hand out a software one all the same, and say so in its name.
 	const names = gl?.getExtension( 'WEBGL_debug_renderer_info' );
 	if ( ! gl || ( names && /swiftshader|llvmpipe|software|basic render/i.test( gl.getParameter( names.UNMASKED_RENDERER_WEBGL ) ) ) ) {
+		delete root.dataset.riffGlWait;
 		return null;
 	}
 	// Under everything Now Playing shows, over its background's washes.
@@ -735,7 +783,11 @@ export default function deckGl( P ) {
 		const [ x0, y0, x1, y1 ] = BODY;
 		const RP = PLATTER;
 		m = {
-			desk: mesh( box( -2, -2, FLOOR_Z - 0.02, 2, 2, FLOOR_Z ) ),
+			desk: mesh( box( -2, -2, FLOOR_Z - 0.02, 2, WALL, FLOOR_Z ) ),
+			// Along the desk's back, the ledge, with a lip at its front the sleeve stands behind.
+			ledge: mesh( merge( box( -0.2, WALL - 0.07, FLOOR_Z, 0.2, WALL, LEDGE_Z ), box( -0.2, WALL - 0.07, LEDGE_Z, 0.2, WALL - 0.064, LEDGE_Z + 0.016 ) ) ),
+			// In its own frame: its foot's middle at the origin, its face toward -y.
+			sleeve: mesh( box( -SL, -0.0015, 0, SL, 0.0015, 2 * SL ) ),
 			body: mesh( rbox( x0, y0, x1, y1, FLOOR_Z, -0.03, 0.012, 0.002 ) ),
 			plate: mesh( rbox( x0 + 0.002, y0 + 0.002, x1 - 0.002, y1 - 0.002, -0.03, DECK_Z, 0.01, 0.0018 ) ),
 			// The same with its keys, in each arrangement (DECKS).
@@ -788,7 +840,10 @@ export default function deckGl( P ) {
 			leaving: null,
 			bands: texture( gl.LINEAR ),
 			shadow: texture( gl.LINEAR ),
+			cover: texture( gl.LINEAR_MIPMAP_LINEAR ),
 		};
+		covered = '';
+		coverOn = 0;
 		gl.bindTexture( gl.TEXTURE_2D, tex.shadow );
 		gl.texImage2D( gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, SHADOW, SHADOW, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE );
@@ -949,6 +1004,26 @@ export default function deckGl( P ) {
 		wake();
 	} );
 
+	// ---- The cover, for the face of the sleeve standing on the ledge: the page's own picture, taken
+	// again when it changes. Another site's picture, which a canvas may not read, leaves the sleeve
+	// plain card.
+	let covered = '';
+	let coverOn = 0;
+	function hang() {
+		const src = cover?.currentSrc || cover?.src || '';
+		if ( src === covered || ! cover.complete || ! cover.naturalWidth ) {
+			return;
+		}
+		covered = src;
+		coverOn = 0;
+		try {
+			gl.bindTexture( gl.TEXTURE_2D, tex.cover );
+			gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cover );
+			gl.generateMipmap( gl.TEXTURE_2D );
+			coverOn = 1;
+		} catch {}
+	}
+
 	// ---- The side's grooves (now-playing.js, cut()): from the last groove out to the first, a gap
 	// between each two tracks, and each track cut as hard as its music is loud, where that has
 	// been measured; where it hasn't, as an even cut with the small swell any music has.
@@ -1048,22 +1123,167 @@ export default function deckGl( P ) {
 	const going = keys.map( () => 0 );
 	const leant = keys.map( () => [ 0, 0 ] );
 	const lamp = keys.map( () => 0 );
-	// Where a mouse or a pen is, and whether it is over the deck.
-	const hand = { x: 0, y: 0, over: false, on: 0 };
+	// Where a mouse or a pen is, whether it is over the deck, and until when it counts as reaching for
+	// it: while it moves there, and a moment after, not while it only rests there.
+	const hand = { x: 0, y: 0, over: false, on: 0, until: 0, timer: 0 };
 	stage.addEventListener(
 		'pointermove',
 		( event ) => {
 			const b = plinth.getBoundingClientRect();
 			hand.x = event.clientX;
 			hand.y = event.clientY;
-			hand.over = event.pointerType !== 'touch' && event.clientX > b.left - b.width * 0.1 && event.clientX < b.right + b.width * ( arrangement === 'beside' ? 0.9 : 0.35 ) && event.clientY > b.top - b.height * 0.2 && event.clientY < b.bottom + b.height * 0.25;
+			hand.over =
+				event.pointerType !== 'touch' &&
+				( onDrawn( event.clientX, event.clientY ) ||
+					( event.clientX > b.left - b.width * 0.1 && event.clientX < b.right + b.width * ( arrangement === 'beside' ? 0.9 : 0.35 ) && event.clientY > b.top - b.height * 0.2 && event.clientY < b.bottom + b.height * 0.25 ) );
+			if ( hand.over ) {
+				hand.until = performance.now() + 2500;
+				clearTimeout( hand.timer );
+				hand.timer = setTimeout( wake, 2600 );
+			}
 			wake();
 		},
 		{ passive: true }
 	);
 	stage.addEventListener( 'pointerleave', () => {
 		hand.over = false;
+		wake();
 	} );
+
+	// ---- The eye: how far it sits back from over the spindle (0) to the chair (1), and where it
+	// leans, as aimed (by the sensors or the pointer) and as eased toward that.
+	let sat = 0;
+	let stood = 0;
+	const aim = [ 0, 0 ];
+	const aimed = [ 0, 0 ];
+	// Where the deck is drawn on the screen, last frame: its plinth's box, left, top, right, bottom.
+	let drawn = null;
+	const onDrawn = ( x, y ) => !! drawn && x > drawn[ 0 ] && x < drawn[ 2 ] && y > drawn[ 1 ] && y < drawn[ 3 ];
+	// Until when a finger counts as at the deck.
+	let touched = 0;
+	let touchTimer = 0;
+	// Whether a hand or the keyboard is at the deck: then the eye is over it.
+	const atDeck = ( now ) => ( hand.over && now < hand.until ) || now < touched || 'riffHeld' in arm.dataset || !! stage.querySelector( ':focus-visible' ) || keys.some( ( key ) => key.matches( ':active' ) );
+	const clampLean = ( a ) => Math.max( -LEAN, Math.min( LEAN, a ) );
+	function aimAt( yaw, rise ) {
+		const next = [ clampLean( yaw ), clampLean( rise ) * 0.6 ].map( ( a ) => Math.round( a * 500 ) / 500 );
+		if ( next[ 0 ] !== aim[ 0 ] || next[ 1 ] !== aim[ 1 ] ) {
+			aim.splice( 0, 2, ...next );
+			wake();
+		}
+	}
+	// The motion sensors: on iOS only once the listener has said yes, asked on their first touch of
+	// the deck and never again once they have said no; elsewhere as they are. Read only while the
+	// deck is drawn, with the reading's slow drift taken as where the device is held, so the eye
+	// leans as it moves and comes back as it settles.
+	const Tilt = window.DeviceOrientationEvent;
+	let allowed = !! Tilt && typeof Tilt.requestPermission !== 'function';
+	let asked = false;
+	let sensing = false;
+	let held = null;
+	let heldAt = 0;
+	function tilted( event ) {
+		if ( event.beta === null || event.gamma === null || event.beta === undefined ) {
+			return;
+		}
+		const angle = screen.orientation?.angle ?? window.orientation ?? 0;
+		const [ x, y ] = angle === 90 ? [ event.beta, -event.gamma ] : angle === 270 || angle === -90 ? [ -event.beta, event.gamma ] : [ event.gamma, event.beta ];
+		const t = event.timeStamp;
+		if ( ! held || Math.abs( x - held[ 0 ] ) > 45 || Math.abs( y - held[ 1 ] ) > 45 ) {
+			held = [ x, y ];
+		} else {
+			const k = Math.min( 1, ( t - heldAt ) / 4000 );
+			held = [ held[ 0 ] + ( x - held[ 0 ] ) * k, held[ 1 ] + ( y - held[ 1 ] ) * k ];
+		}
+		heldAt = t;
+		aimAt( ( ( x - held[ 0 ] ) * Math.PI ) / 360, ( ( y - held[ 1 ] ) * Math.PI ) / 360 );
+	}
+	function sense() {
+		const want = allowed && active() && ! P.reduce();
+		if ( want === sensing ) {
+			return;
+		}
+		sensing = want;
+		window[ want ? 'addEventListener' : 'removeEventListener' ]( 'deviceorientation', tilted );
+		if ( ! want ) {
+			held = null;
+			aimAt( 0, 0 );
+		}
+	}
+	function ask() {
+		if ( asked || allowed || ! Tilt?.requestPermission || P.reduce() || read( localStorage, TILT_KEY ) === 'no' ) {
+			return;
+		}
+		asked = true;
+		Tilt.requestPermission().then(
+			( said ) => {
+				if ( said === 'granted' ) {
+					allowed = true;
+					wake();
+				} else {
+					write( localStorage, TILT_KEY, 'no' );
+				}
+			},
+			() => {}
+		);
+	}
+	// A finger on the drawn deck, while the eye is back: it brings the eye over the deck and does
+	// nothing else, as what it touched is not where the page has it. The eye stays over while the
+	// fingers come back within a few seconds.
+	let eaten = null;
+	let eatClick = 0;
+	let onIt = false;
+	stage.addEventListener(
+		'pointerdown',
+		( event ) => {
+			if ( event.pointerType !== 'touch' ) {
+				return;
+			}
+			// A new touch: the click of one eaten before it is not this one's to lose.
+			eatClick = 0;
+			const b = plinth.getBoundingClientRect();
+			onIt = onDrawn( event.clientX, event.clientY ) || ( event.clientX > b.left && event.clientX < b.right && event.clientY > b.top && event.clientY < b.bottom );
+			if ( ! onIt ) {
+				return;
+			}
+			touched = performance.now() + 4000;
+			clearTimeout( touchTimer );
+			touchTimer = setTimeout( wake, 4100 );
+			if ( sat > 0.02 ) {
+				event.preventDefault();
+				event.stopPropagation();
+				eaten = event.pointerId;
+			}
+			wake();
+		},
+		{ capture: true }
+	);
+	for ( const type of [ 'pointerup', 'pointercancel' ] ) {
+		stage.addEventListener(
+			type,
+			( event ) => {
+				if ( event.pointerId === eaten ) {
+					eaten = null;
+					event.stopPropagation();
+					eatClick = performance.now() + 700;
+				}
+			},
+			{ capture: true }
+		);
+	}
+	stage.addEventListener(
+		'click',
+		( event ) => {
+			if ( performance.now() < eatClick ) {
+				eatClick = 0;
+				event.stopPropagation();
+				event.preventDefault();
+			}
+		},
+		{ capture: true }
+	);
+	// iOS asks only from a gesture that lets go: the touch's end.
+	stage.addEventListener( 'touchend', () => onIt && ask(), { passive: true } );
 	let glow = 0;
 	const lampRows = [ 0, 0 ];
 	let speed = 0;
@@ -1165,9 +1385,90 @@ export default function deckGl( P ) {
 		// Which arrangement the keys are drawn in, while they are shown: none, 'front' or 'beside'.
 		const keyed = keys.length === KEYS.length && getComputedStyle( keys[ 0 ] ).display !== 'none' ? arrangement : '';
 		const deck = DECKS[ keyed || 'front' ];
+
+		// The eye. Back in the chair while the record is on the platter and nothing is at the deck;
+		// over the spindle otherwise. Either way the spindle is where the page has it (a little lower
+		// in the chair) and the platter as wide, so the one eases into the other.
+		const arriving = 'riffArriving' in root.dataset;
+		const sit = out && ! arriving && ! atDeck( now ) ? 1 : 0;
+		const ease = ( from, to, time ) => {
+			const next = P.reduce() ? to : from + ( to - from ) * ( 1 - Math.exp( -dt / time ) );
+			return Math.abs( to - next ) < 0.002 ? to : next;
+		};
+		sat = ease( sat, sit, 0.2 );
+		stood = ease( stood, out && ! arriving ? 1 : 0, 0.3 );
+		aimed[ 0 ] = Math.round( ease( aimed[ 0 ], aim[ 0 ], 0.25 ) * 1e4 ) / 1e4;
+		aimed[ 1 ] = Math.round( ease( aimed[ 1 ], aim[ 1 ], 0.25 ) * 1e4 ) / 1e4;
+		const camera = sat === 0 ? 'over' : sat === 1 ? 'across' : 'moving';
+		if ( canvas.dataset.riffCamera !== camera ) {
+			canvas.dataset.riffCamera = camera;
+			// Back in the chair, the page's captions, display and pitch fader, which stand where the deck
+			// is seen from above, wait unseen (riff.css) until the eye is over the deck again.
+			root.toggleAttribute( 'data-riff-seat', camera !== 'over' );
+		}
+		const e = sat * sat * ( 3 - 2 * sat );
+		const rise = Math.PI / 2 + ( SEAT.rise + aimed[ 1 ] - Math.PI / 2 ) * e;
+		const yaw = aimed[ 0 ] * e;
+		const dist = EYE + ( SEAT.away - EYE ) * e;
+		const look = SEAT.at.map( ( v ) => v * e );
+		const eye = [ look[ 0 ] + dist * Math.cos( rise ) * Math.sin( yaw ), look[ 1 ] - dist * Math.cos( rise ) * Math.cos( yaw ), look[ 2 ] + dist * Math.sin( rise ) ];
+		// Its right is level whichever way it leans: the horizon, the ledge and the sleeve's foot stay level.
+		const view = viewOf( eye, unit( sub( look, eye ) ), [ Math.cos( yaw ), Math.sin( yaw ), 0 ] );
+		const nearZ = EYE - 0.2 + ( 0.05 - ( EYE - 0.2 ) ) * e;
+		// Where a point of the scene falls on the near plane.
+		const onNear = ( [ x, y, z ] ) => {
+			const v = [ 0, 1, 2 ].map( ( r ) => view[ r ] * x + view[ 4 + r ] * y + view[ 8 + r ] * z + view[ 12 + r ] );
+			return [ ( v[ 0 ] * nearZ ) / -v[ 2 ], ( v[ 1 ] * nearZ ) / -v[ 2 ] ];
+		};
+		// The window, its edges on the near plane. Over the deck: the spindle at its place in the page
+		// and the platter as wide as the page's.
+		const perPx = nearZ / -view[ 14 ] / scale;
+		const [ ox, oy ] = onNear( [ 0, 0, 0 ] );
+		const [ mx, my ] = [ pb.left + pb.width / 2, pb.top + pb.height / 2 ];
+		let win = [ ox + ( cb.left - mx ) * perPx, ox + ( cb.right - mx ) * perPx, oy - ( cb.bottom - my ) * perPx, oy - ( cb.top - my ) * perPx ];
+		if ( e > 0 ) {
+			// From the chair: the whole plinth inside the stage, clear of its sides and its foot,
+			// across its middle and standing at its foot, and no taller than its share of the stage;
+			// above it the sleeve, cropped by the top if it must be. Eased between the two.
+			const room = stage.getBoundingClientRect();
+			const margin = Math.max( 12, 0.05 * Math.min( room.width, room.height ) );
+			const [ x0, y0, x1, y1 ] = deck.body;
+			const ends = [ x0, x1 ].flatMap( ( x ) => [ y0, y1 ].flatMap( ( y ) => [ FLOOR_Z, 0.05 ].map( ( z ) => onNear( [ x, y, z ] ) ) ) );
+			const [ nx0, nx1 ] = [ Math.min( ...ends.map( ( q ) => q[ 0 ] ) ), Math.max( ...ends.map( ( q ) => q[ 0 ] ) ) ];
+			const [ ny0, ny1 ] = [ Math.min( ...ends.map( ( q ) => q[ 1 ] ) ), Math.max( ...ends.map( ( q ) => q[ 1 ] ) ) ];
+			const per = Math.max( ( nx1 - nx0 ) / ( room.width - 2 * margin ), ( ny1 - ny0 ) / ( ( room.height - 2 * margin ) * SEAT.room[ keyed || 'front' ] ) );
+			const [ ax, ay, cx ] = [ ( room.left + room.right ) / 2, room.bottom - margin, ( nx0 + nx1 ) / 2 ];
+			const chair = [ cx + ( cb.left - ax ) * per, cx + ( cb.right - ax ) * per, ny0 - ( cb.bottom - ay ) * per, ny0 - ( cb.top - ay ) * per ];
+			win = win.map( ( v, i ) => v + ( chair[ i ] - v ) * e );
+		}
+		const vp = mul( frustum( ...win, nearZ, dist + 3 ), view );
+		// A point of the screen on the deck's plane (z), and a point of the deck on the screen.
+		const onPlane = ( px, py, z ) => {
+			const xn = win[ 0 ] + ( ( px - cb.left ) / cb.width ) * ( win[ 1 ] - win[ 0 ] );
+			const yn = win[ 3 ] - ( ( py - cb.top ) / cb.height ) * ( win[ 3 ] - win[ 2 ] );
+			const ray = [ 0, 1, 2 ].map( ( i ) => view[ i * 4 ] * xn + view[ i * 4 + 1 ] * yn - view[ i * 4 + 2 ] * nearZ );
+			const t = ( z - eye[ 2 ] ) / ray[ 2 ];
+			return [ eye[ 0 ] + ray[ 0 ] * t, eye[ 1 ] + ray[ 1 ] * t ];
+		};
+		const span = ( [ x0, y0, x1, y1 ], z0, z1 ) => {
+			const extent = [ Infinity, Infinity, -Infinity, -Infinity ];
+			for ( const p of [ x0, x1 ].flatMap( ( x ) => [ y0, y1 ].flatMap( ( y ) => [ z0, z1 ].map( ( z ) => [ x, y, z, 1 ] ) ) ) ) {
+				const c = [ 0, 1, 3 ].map( ( r ) => vp[ r ] * p[ 0 ] + vp[ 4 + r ] * p[ 1 ] + vp[ 8 + r ] * p[ 2 ] + vp[ 12 + r ] );
+				const sx = cb.left + ( ( c[ 0 ] / c[ 2 ] + 1 ) / 2 ) * cb.width;
+				const sy = cb.top + ( ( 1 - c[ 1 ] / c[ 2 ] ) / 2 ) * cb.height;
+				extent.splice( 0, 4, Math.min( extent[ 0 ], sx ), Math.min( extent[ 1 ], sy ), Math.max( extent[ 2 ], sx ), Math.max( extent[ 3 ], sy ) );
+			}
+			return extent;
+		};
+		drawn = span( deck.body, FLOOR_Z, 0.05 );
+		// Where the plinth is drawn, for the tests that it fits.
+		const drawnAt = drawn.map( Math.round ).join( ' ' );
+		if ( canvas.dataset.riffDeckBox !== drawnAt ) {
+			canvas.dataset.riffDeckBox = drawnAt;
+		}
+		hang();
 		// The pointer over the deck: where it is on the deck.
-		const handX = ( hand.x - ( pb.left + pb.width / 2 ) ) / scale;
-		const handY = -( hand.y - ( pb.top + pb.height / 2 ) ) / scale;
+		const [ handX, handY ] = onPlane( hand.x, hand.y, 0 );
 		// A key is a cap on a spring between two stops. The finger drives it down to the lower one,
 		// the spring sends it back to the upper one, and it meets either with a small bounce, as a
 		// thing with weight does; pressed off its middle it leans that way. Its lamp comes on and
@@ -1206,6 +1507,7 @@ export default function deckGl( P ) {
 		const still = [
 			cueAt, keyed, down.map( ( d ) => d.toFixed( 3 ) ), lamps, handAt.map( ( n ) => n.toFixed( 3 ) ), w, h, pb.left - cb.left, pb.top - cb.top, pb.width, deckAlpha, turn.toFixed( 2 ), ride, out, prints, accented,
 			sleeve.map( ( n ) => n.toFixed( 4 ) ), sleeveShown.toFixed( 2 ), discs.map( ( d ) => d.key + d.alpha ),
+			sat.toFixed( 4 ), aimed, stood.toFixed( 3 ), covered, coverOn, cb.top, cb.left,
 		].join( '|' );
 		const turning = [ nowAt.toFixed( 5 ), glow.toFixed( 2 ), spin, speed.toFixed( 1 ), lampRows.map( ( a ) => a.toFixed( 1 ) ) ].join( '|' );
 		if ( still === last && turning === lastTurning ) {
@@ -1245,16 +1547,6 @@ export default function deckGl( P ) {
 			canvas.height = h;
 		}
 
-		// The eye, straight above the spindle, and the canvas its window, wherever in it the deck
-		// stands: the record's plane is drawn at the page's own scale everywhere.
-		const eye = [ 0, 0, EYE ];
-		const near = EYE - 0.2;
-		const edge = ( px, from ) => ( ( ( px - from ) / scale ) * near ) / EYE;
-		const [ mx, my ] = [ pb.left + pb.width / 2, pb.top + pb.height / 2 ];
-		const vp = mul(
-			frustum( edge( cb.left, mx ), edge( cb.right, mx ), -edge( cb.bottom, my ), -edge( cb.top, my ), near, EYE + 0.2 ),
-			lookAt( eye, [ 0, 0, 0 ], [ 0, 1, 0 ] )
-		);
 		const I = ident();
 		const turns = turnZ( ( -spin * Math.PI ) / 180 );
 		const al = -Math.PI / 2 - ( turn * Math.PI ) / 180;
@@ -1308,6 +1600,13 @@ export default function deckGl( P ) {
 		for ( const d of shown ) {
 			items.push( [ m.edge, d.M, [ 0.008, 0.008, 0.008 ], 0.22, 0, 0, off, d.alpha ] );
 		}
+		// Behind the deck, while its record plays: the ledge, and the sleeve standing on it, leant
+		// back against the wall. They cast nothing: the key light is behind them, and their shadow
+		// would lie across the record.
+		const backdrop = [
+			[ m.ledge, I, [ 0.014, 0.013, 0.013 ], 0.55, 0, 0, off, deckAlpha * stood ],
+			[ m.sleeve, chain( move( 0, WALL - 0.055, LEDGE_Z ), turnX( -0.12 ) ), [ 0.5, 0.48, 0.45 ], 0.6, 0, 8, off, deckAlpha * stood ],
+		];
 
 		// The shadows, as the key light sees the deck: cast again only when something has moved.
 		gl.disable( gl.SCISSOR_TEST );
@@ -1329,9 +1628,10 @@ export default function deckGl( P ) {
 			gl.disable( gl.POLYGON_OFFSET_FILL );
 		}
 		if ( ! whole ) {
-			const reach = Math.ceil( PLATTER * 1.01 * scale * dpr ) + 2;
+			// Only the platter's box on the screen, as the eye sees it.
+			const [ l, t, r, b ] = span( [ -PLATTER, -PLATTER, PLATTER, PLATTER ], -0.022, 0.012 );
 			gl.enable( gl.SCISSOR_TEST );
-			gl.scissor( Math.floor( ( pb.left + pb.width / 2 - cb.left ) * dpr ) - reach, Math.floor( ( cb.bottom - pb.top - pb.height / 2 ) * dpr ) - reach, 2 * reach, 2 * reach );
+			gl.scissor( Math.floor( ( l - cb.left ) * dpr ) - 2, Math.floor( ( cb.bottom - b ) * dpr ) - 2, Math.ceil( ( r - l ) * dpr ) + 4, Math.ceil( ( b - t ) * dpr ) + 4 );
 		}
 
 		// The deck. It fades in and out as one: nothing of it is blended with anything else of it,
@@ -1363,7 +1663,11 @@ export default function deckGl( P ) {
 		gl.uniform4f( u.uBody, ( x0 + x1 ) / 2, ( y0 + y1 ) / 2, ( x1 - x0 ) / 2, ( y1 - y0 ) / 2 );
 		gl.uniform2f( u.uStrobe, ( lampRows[ 0 ] * Math.PI ) / 180, ( lampRows[ 1 ] * Math.PI ) / 180 );
 		gl.uniform1f( u.uBlur, Math.min( 1, Math.abs( speed ) / 40 ) );
-		for ( const [ part, M, col, rough, metal, mode, emis, alpha, cap ] of items ) {
+		gl.activeTexture( gl.TEXTURE4 );
+		gl.bindTexture( gl.TEXTURE_2D, tex.cover );
+		gl.uniform1i( u.uCover, 4 );
+		gl.uniform1f( u.uCoverOn, coverOn );
+		for ( const [ part, M, col, rough, metal, mode, emis, alpha, cap ] of [ ...items, ...backdrop ] ) {
 			const a = alpha ?? deckAlpha;
 			if ( a <= 0.003 ) {
 				continue;
@@ -1409,6 +1713,7 @@ export default function deckGl( P ) {
 		// Drawn: the page's own deck stops painting (riff.css). Written once, not every frame.
 		if ( ! ( 'riffGl' in root.dataset ) ) {
 			root.dataset.riffGl = '';
+			delete root.dataset.riffGlWait;
 		}
 	}
 
@@ -1422,6 +1727,7 @@ export default function deckGl( P ) {
 	let arrangement = 'front';
 	const active = () => ! lost && ! forced.matches && ! np.hidden && ! P.away() && root.dataset.riffTurntable !== 'off' && root.dataset.mode !== 'video';
 	function wake() {
+		sense();
 		arrangement = getComputedStyle( plinth ).getPropertyValue( '--riff-deck-keys' ).trim() === 'beside' ? 'beside' : 'front';
 		quiet = 0;
 		if ( ! raf && active() ) {
@@ -1441,18 +1747,23 @@ export default function deckGl( P ) {
 		gone = true;
 		lost = true;
 		delete root.dataset.riffGl;
+		delete root.dataset.riffSeat;
+		delete root.dataset.riffGlWait;
 		canvas.remove();
 	}
 	try {
 		build();
 	} catch {
 		giveUp();
+		delete root.dataset.riffGlWait;
 		return null;
 	}
 	canvas.addEventListener( 'webglcontextlost', ( event ) => {
 		event.preventDefault();
 		lost = true;
 		delete root.dataset.riffGl;
+		delete root.dataset.riffSeat;
+		delete root.dataset.riffGlWait;
 	} );
 	canvas.addEventListener( 'webglcontextrestored', () => {
 		if ( gone ) {
@@ -1470,11 +1781,12 @@ export default function deckGl( P ) {
 	// colours, the record's words, the arm's place, a transition starting, a key or the pointer
 	// going down or up, and the stage changing size.
 	// Its own mark that it has drawn (data-riff-gl) is not news.
-	new MutationObserver( ( records ) => records.some( ( r ) => r.attributeName !== 'data-riff-gl' ) && changed() ).observe( root, { attributes: true } );
+	new MutationObserver( ( records ) => records.some( ( r ) => r.attributeName !== 'data-riff-gl' && r.attributeName !== 'data-riff-seat' ) && changed() ).observe( root, { attributes: true } );
 	new MutationObserver( changed ).observe( record, { subtree: true, childList: true, characterData: true } );
 	new MutationObserver( wake ).observe( arm, { attributes: true } );
 	new MutationObserver( wake ).observe( np, { attributes: true, attributeFilter: [ 'hidden' ] } );
-	for ( const moved of [ 'transitionrun', 'animationstart', 'pointerdown', 'pointerup', 'keydown', 'keyup' ] ) {
+	cover?.addEventListener( 'load', wake );
+	for ( const moved of [ 'transitionrun', 'animationstart', 'pointerdown', 'pointerup', 'keydown', 'keyup', 'focusin', 'focusout' ] ) {
 		stage.addEventListener( moved, wake, { passive: true } );
 	}
 	// Now Playing too: a hidden canvas has no size to change as it grows.
@@ -1486,11 +1798,17 @@ export default function deckGl( P ) {
 		canvas.hidden = forced.matches;
 		if ( forced.matches ) {
 			delete root.dataset.riffGl;
+			delete root.dataset.riffSeat;
+			delete root.dataset.riffGlWait;
 		}
 		wake();
 	};
 	forced.addEventListener?.( 'change', recolour );
 	recolour();
-	wake();
+	// The first frame at once, not at the next thing to move: the page's deck may be waiting for it.
+	if ( raf ) {
+		cancelAnimationFrame( raf );
+		frame( performance.now() );
+	}
 	return { wake };
 }
