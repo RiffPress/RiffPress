@@ -29,8 +29,7 @@ Publishers write ordinary posts with the core audio and video blocks, and pair a
 - Plain scripts and stylesheets, no build step, each loaded only where it applies. Every browser feature sits behind a check and degrades to the browser's native controls.
 - Playback: a docked bar whose controls and views are registered on the server, Riff's own as any plugin's; Now Playing as full-screen views opened from the bar (the album, the cover or the turntable by Now Playing's shape, and a plugin's, such as the lyrics, the chords or singing along), Up next and Together as panels beside the page, a Song/Video switch, Media Session, AirPlay and Cast, keyboard control, and the three bars on the playing row, which move with the music wherever Web Audio can hear it. In-app navigation on a Listen page keeps the same media element; full-page navigation saves the tab's session state and attempts to resume on the next page, while reload restores the track paused.
 - Not in scope: recommendations, radio, podcast feeds and analytics. Lyrics are the Riff Lyrics plugin, beside Riff in `plugins/`. Accounts are WordPress users. Favorites, a library view of the Media Library and a hosted network are on the roadmap (#365).
-- Riff's one app on a computer is the Listen app installed from the browser; there is no separate desktop app.
-- The iOS app is not built yet. It will connect to a Riff site through the REST API and application passwords.
+- Riff's one app, on a computer or a phone, is the Listen app installed from the browser; there is no separate desktop or native app.
 - The plugin works on a single site on its own. A hosted network runs the same plugin; anything only the network needs goes in a separate plugin.
 - Anything that works across sites uses open standards rather than anything Riff-only.
 
