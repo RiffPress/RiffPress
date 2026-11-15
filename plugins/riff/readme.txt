@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.19.0
+Stable tag: 6.19.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.19.1 =
+* Fixed: the drawn sleeve shows a cover served from another origin wherever that origin allows CORS.
+
 = 6.19.0 =
 * Every route is in the REST reference, internal ones marked, and CI holds the public surface to the last release's.
 * Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
@@ -163,8 +166,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.17.6 =
 * Fixed: main's versions agree with the release manifest again, at 6.17.5.
-
-= 6.17.5 =
-* Fixed: Riff passes Plugin Check with nothing to report, and its readme discloses every outside request and names no other company.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
