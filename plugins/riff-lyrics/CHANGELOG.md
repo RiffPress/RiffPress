@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.9.3...riff-lyrics-v1.10.0) (2026-11-15)
+
+
+### Features
+
+* **player:** everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does ([#1124](https://github.com/RiffPress/RiffPress/issues/1124)) ([a468560](https://github.com/RiffPress/RiffPress/commit/a468560631a8f05d1f92e33d607d7cdd6b85c3b9))
+
 ## [1.9.3](https://github.com/RiffPress/RiffPress/compare/riff-lyrics-v1.9.2...riff-lyrics-v1.9.3) (2026-11-13)
 
 
