@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.18.0
+Stable tag: 6.18.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.18.1 =
+* Fixed: main's versions agree with the release manifest again, at 6.18.0.
+
 = 6.18.0 =
 * The drawn deck is seen from a chair across the desk, with its sleeve on a ledge, and leans with the device.
 * Fixed: a card's title wraps in full on the grid, and Recently played's keeps to one line.
@@ -160,9 +163,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.17.4 =
 * Fixed: main's versions agree with the release manifest again.
-
-= 6.17.3 =
-* Fixed: the offer to keep the app is a quiet row at the end of the library, with the site's name and where it would live.
-* Fixed: CI is green again: the Rights meta test registers its keys, the albums route asks once whether any music has an end, and the tests expect the renamed Together and account menu.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
