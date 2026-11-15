@@ -748,14 +748,17 @@ export function nowPlaying( P ) {
 		);
 	}
 
-	// ---- A new side of the same record: the needle goes back to its rest, the record is turned
-	// over, and the needle drops at the new side's lead-in. The music waits for it (turn()). Turned
-	// as a hand turns it, once the arm is clear: lifted quickly off the spindle, turned over about
-	// its diameter, unhurried, the other side's label coming up as it passes edge-on, and set down
-	// gently. The page's record keeps its box; deck-gl.js draws the lift and the turn from
-	// --riff-lift and --riff-turn (riff.css), raising it as it turns so its edge clears the mat.
-	const FLIP = 850;
-	const OVER = { delay: 250, lift: 100, turn: 420, down: 130 };
+	// ---- A new side of the same record, as a hand turns it over. The cue lever lifts the arm and
+	// the hand takes it back to its rest, clear of the record; only then is the record lifted
+	// quickly off the spindle, turned over about its diameter, unhurried, the other side's label
+	// coming up as it passes edge-on, and set down gently. Once it lies flat the motor starts and
+	// the hand carries the arm over to the new side's lead-in, where it is lowered. The music waits
+	// for it (turn()): FLIP after the run-out, as long as it has always waited, and the platter's
+	// pull up to a crawl after that. The page's record keeps its box; deck-gl.js draws the lift and
+	// the turn from --riff-lift and --riff-turn (riff.css), raising it as it turns so its edge
+	// clears the mat.
+	const FLIP = 1450;
+	const OVER = { lift: 100, turn: 420, down: 130, whole: 600 };
 	function flip( show ) {
 		const record = $( '.riff-record' );
 		const arm = $( '.riff-arm' );
@@ -763,11 +766,22 @@ export function nowPlaying( P ) {
 			show();
 			return;
 		}
+		// Taken to its rest from wherever it is seen, whatever was moving it: the music's sweep, a
+		// carry or the spring of its own turn (riff.css).
+		const tube = arm?.querySelector( '.riff-arm-tube' );
+		const at = arm ? shown( arm ) + ( parseFloat( tube ? getComputedStyle( tube ).rotate : '' ) || 0 ) : REST;
 		delete arm?.dataset.riffDown;
 		lift();
-		flip.until = performance.now() + FLIP;
-		const { delay, lift: up, turn: over, down } = OVER;
-		const whole = FLIP - delay;
+		if ( arm ) {
+			swing.anim?.cancel();
+			arm.getAnimations().forEach( ( a ) => a.transitionProperty && a.cancel() );
+			swing( arm, at, REST, brisk );
+		}
+		const now = performance.now();
+		flip.until = now + FLIP;
+		const { lift: up, turn: over, down, whole } = OVER;
+		// The arm on its rest first, and the record set down before the motor starts.
+		const delay = Math.min( FLIP - whole, Math.max( 0, ( swing.until || 0 ) - now ) + 40 );
 		const set = record.animate(
 			[
 				{ '--riff-lift': 0, offset: 0, easing: 'ease-out' },
@@ -784,13 +798,26 @@ export function nowPlaying( P ) {
 				show();
 				return record.animate( [ { '--riff-turn': '90deg' }, { '--riff-turn': '180deg' } ], { ...half, easing: hand( 0.5, 1 ) } ).finished;
 			} )
-			// And the arm lowered once the record lies on the mat again.
+			// And the arm carried back over the record once it lies on the mat again, on the lever,
+			// and lowered there: down before the motor has the platter up to a crawl.
 			.then( () => set.finished )
 			.then( () => {
-				if ( arm && root.dataset.riffDeck === 'out' ) {
-					arm.dataset.riffDown = '';
-					needle();
+				if ( ! arm || root.dataset.riffDeck !== 'out' ) {
+					return;
 				}
+				arm.dataset.riffDown = '';
+				arm.dataset.riffUp = '';
+				needle( false, careful );
+				clearTimeout( flip.land );
+				flip.land = setTimeout(
+					() => {
+						if ( arm.dataset.riffUp === '' ) {
+							arm.dataset.riffUp = 'lowering';
+							flip.land = setTimeout( lowered, LOWER );
+						}
+					},
+					Math.max( 0, ( swing.until || 0 ) - performance.now() )
+				);
 			} )
 			.catch( () => {} );
 	}
@@ -1367,7 +1394,7 @@ export function nowPlaying( P ) {
 			clearTimeout( turn.land );
 			turn.land = setTimeout( lowered, wait );
 		} else if ( flipping ) {
-			wait = flip.until - performance.now() + LAND;
+			wait = flip.until - performance.now();
 		} else if ( 'riffArriving' in root.dataset ) {
 			wait = Math.max( 0, change.until - performance.now() ) + DROP + LAND;
 		} else if ( root.dataset.riffDeck !== 'out' ) {
@@ -1607,7 +1634,13 @@ export function nowPlaying( P ) {
 	// How long the carry takes: the hand or the cue lever crosses the record at an even pace, a band
 	// or so (about 3.5°) in LAND, the whole side in about two seconds.
 	const carry = ( degrees ) => 350 + 70 * Math.abs( degrees );
-	function swing( arm, from, to ) {
+	// Taken off the record to turn it over, the arm is moved by the hand alone, briskly: the whole
+	// of its way from the run-out to its rest in about 0.7 s. Put back over the new side, with more
+	// care: from its rest to the lead-in in about 0.8 s, so that, lowered, it lands as the music has
+	// always started after a side, about 7.2 s after the last one ended.
+	const brisk = ( degrees ) => 200 + 10 * Math.abs( degrees );
+	const careful = ( degrees ) => 200 + 23 * Math.abs( degrees );
+	function swing( arm, from, to, pace = carry ) {
 		const tube = arm.querySelector( '.riff-arm-tube' );
 		// Carried again on the way: from where the tube is now, not from where it set out.
 		const before = parseFloat( tube ? getComputedStyle( tube ).rotate : '' ) || 0;
@@ -1618,7 +1651,7 @@ export function nowPlaying( P ) {
 		if ( Math.abs( from + under - to ) < 0.2 || P.reduce() || ! tube ) {
 			return;
 		}
-		const duration = carry( from + under - to );
+		const duration = pace( from + under - to );
 		swing.anim = tube.animate( [ { rotate: `${ ( from + under - to ).toFixed( 2 ) }deg` }, { rotate: '0deg' } ], { duration, easing: hand(), composite: 'add' } );
 		swing.until = performance.now() + duration;
 	}
@@ -1635,7 +1668,7 @@ export function nowPlaying( P ) {
 		sweep = null;
 		swept = '';
 	}
-	function needle( at = false ) {
+	function needle( at = false, pace = carry ) {
 		const arm = $( '.riff-arm' );
 		const w = where();
 		// In the hand, it is where the hand holds it; in the run-out, where the groove takes it.
@@ -1659,13 +1692,13 @@ export function nowPlaying( P ) {
 			swept = key;
 			sweep.currentTime = ms;
 			if ( ! at && ! needle.place ) {
-				swing( arm, from, angle( w.now / w.length ) );
+				swing( arm, from, angle( w.now / w.length ), pace );
 			}
 			needle.place = false;
 		} else if ( Math.abs( sweep.currentTime - ms ) > 300 ) {
 			const from = shown( arm );
 			sweep.currentTime = ms;
-			swing( arm, from, angle( w.now / w.length ) );
+			swing( arm, from, angle( w.now / w.length ), pace );
 		}
 		if ( sweep.playbackRate !== ( w.m.playbackRate || 1 ) ) {
 			sweep.updatePlaybackRate( w.m.playbackRate || 1 );

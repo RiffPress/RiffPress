@@ -763,38 +763,47 @@ test.describe( 'Turntable, from what the files say', () => {
 		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
 		const label = page.locator( '.riff-stage > .riff-record .riff-label small' );
 		await expect( label ).toHaveText( 'A · 33⅓' );
-		// Every frame: the record's box, which deck-gl.js draws its size from, and its lift and turn.
-		await page.evaluate( () => {
-			const record = document.querySelector( '.riff-stage > .riff-record' );
-			const seen = ( window.flipSeen = [] );
-			const tick = () => {
-				const b = record.getBoundingClientRect();
-				const style = getComputedStyle( record );
-				seen.push( {
-					w: b.width,
-					h: b.height,
-					lift: parseFloat( style.getPropertyValue( '--riff-lift' ) ),
-					turn: parseFloat( style.getPropertyValue( '--riff-turn' ) ),
-					side: record.querySelector( '.riff-label small' ).textContent[ 0 ],
-				} );
-				if ( seen.length < 600 ) {
-					requestAnimationFrame( tick );
-				}
-			};
-			requestAnimationFrame( tick );
-		} );
-		await page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="next"]:visible' ).first().click();
-		await expect( label ).toHaveText( 'B · 33⅓' );
-		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
-		const seen = await page.evaluate( () => window.flipSeen );
-		const [ first ] = seen;
-		expect( seen.filter( ( f ) => Math.abs( f.w - first.w ) > 0.5 || Math.abs( f.h - first.h ) > 0.5 ), 'frames where the record is another size' ).toHaveLength( 0 );
-		expect( Math.max( ...seen.map( ( f ) => f.lift ) ), 'lifted off the spindle' ).toBeCloseTo( 1, 2 );
-		const turned = seen.filter( ( f ) => f.turn > 0 );
-		expect( turned.length, 'frames of the turn' ).toBeGreaterThan( 5 );
-		expect( turned.filter( ( f ) => f.turn > 10 && f.turn < 170 && f.lift < 0.99 ), 'turned only while clear of the spindle' ).toHaveLength( 0 );
-		expect( turned.filter( ( f ) => ( f.turn < 90 ? 'A' : 'B' ) !== f.side ), 'the side up is the one facing up' ).toHaveLength( 0 );
-		expect( Math.max( ...turned.map( ( f ) => f.turn ) ), 'turned right over' ).toBeGreaterThan( 170 );
+		// Over to side B with the next key, and back to side A with the previous one.
+		for ( const [ action, from, to ] of [ [ 'next', 'A', 'B' ], [ 'prev', 'B', 'A' ] ] ) {
+			// Every frame: the record's box, which deck-gl.js draws its size from, its lift and turn,
+			// and the arm's turn, its base and the hand's carry together.
+			await page.evaluate( () => {
+				const record = document.querySelector( '.riff-stage > .riff-record' );
+				const arm = document.querySelector( '.riff-arm' );
+				const rotated = ( el ) => parseFloat( getComputedStyle( el ).rotate ) || 0;
+				const seen = ( window.flipSeen = [] );
+				const tick = () => {
+					const b = record.getBoundingClientRect();
+					const style = getComputedStyle( record );
+					seen.push( {
+						w: b.width,
+						h: b.height,
+						lift: parseFloat( style.getPropertyValue( '--riff-lift' ) ),
+						turn: parseFloat( style.getPropertyValue( '--riff-turn' ) ),
+						side: record.querySelector( '.riff-label small' ).textContent[ 0 ],
+						arm: rotated( arm ) + rotated( arm.querySelector( '.riff-arm-tube' ) ),
+					} );
+					if ( seen.length < 600 ) {
+						requestAnimationFrame( tick );
+					}
+				};
+				requestAnimationFrame( tick );
+			} );
+			await page.locator( `:is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="${ action }"]:visible` ).first().click();
+			await expect( label ).toHaveText( `${ to } · 33⅓` );
+			await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
+			const seen = await page.evaluate( () => window.flipSeen );
+			const [ first ] = seen;
+			expect( seen.filter( ( f ) => Math.abs( f.w - first.w ) > 0.5 || Math.abs( f.h - first.h ) > 0.5 ), `${ from } to ${ to }: frames where the record is another size` ).toHaveLength( 0 );
+			expect( Math.max( ...seen.map( ( f ) => f.lift ) ), `${ from } to ${ to }: lifted off the spindle` ).toBeCloseTo( 1, 2 );
+			const turned = seen.filter( ( f ) => f.turn > 0 );
+			expect( turned.length, `${ from } to ${ to }: frames of the turn` ).toBeGreaterThan( 5 );
+			expect( turned.filter( ( f ) => f.turn > 10 && f.turn < 170 && f.lift < 0.99 ), `${ from } to ${ to }: turned only while clear of the spindle` ).toHaveLength( 0 );
+			expect( turned.filter( ( f ) => ( f.turn < 90 ? from : to ) !== f.side ), `${ from } to ${ to }: the side up is the one facing up` ).toHaveLength( 0 );
+			expect( Math.max( ...turned.map( ( f ) => f.turn ) ), `${ from } to ${ to }: turned right over` ).toBeGreaterThan( 170 );
+			// The arm on its rest, -14°, clear of the record, the whole time the record is off the mat.
+			expect( seen.filter( ( f ) => ( f.lift > 0 || f.turn > 0 ) && Math.abs( f.arm + 14 ) > 0.5 ), `${ from } to ${ to }: frames of the record off the mat with the arm off its rest` ).toHaveLength( 0 );
+		}
 	} );
 
 	test( 'a single is a 45: the platter turns 270° a second, and the strobe\'s 45 row stands still', async ( { page }, info ) => {
