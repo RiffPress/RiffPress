@@ -332,10 +332,9 @@ const DECK_Z = -0.022;
 const FLOOR_Z = -0.05;
 const PIVOT_H = 0.03;
 const BODY = [ -0.555 * MM, -0.555 * MM, 0.775 * MM, 0.63 * MM ];
-// The deck with its keys, in either of the two arrangements riff.css has (--riff-deck-keys): with
-// the strip its keys stand on along the front, or, on a smaller stage, the plinth reaching further
-// right with its keys in a panel beside the arm. Each key is its left, width, top and height, in
-// the record's width, where riff.css has the buttons, and where its lamp is, if it has one. The
+// The deck with its keys, on the strip they stand on along the front. Each key is its left, width,
+// top and height, in the record's width, where riff.css has the buttons, and where its lamp is, if
+// it has one. The
 // lamps are the one amber, as a deck's are: this light, once tone-mapped, is the display's own
 // amber (riff.css, .riff-level), where a brighter one would wash out to cream.
 const AMBER = [ 2.6, 0.48, 0.17 ];
@@ -349,31 +348,15 @@ const KEYS = [
 	[ 0.615, 0.075, 1.09, 0.075, 'top' ],
 	[ 0.7, 0.075, 1.09, 0.075, 'top' ],
 ];
-// Beside the arm, in four columns and three rows, the rows further apart toward the back, where the
-// eye sees less of each: so a finger's 44px reaches past each cap without meeting the next one's.
-const BESIDE = [
-	[ 1.63, 0.335, 0, 0.11, 'left' ],
-	[ 1.63, 0.16, 0.545, 0.11, 'top' ],
-	[ 1.805, 0.16, 0.545, 0.11, 'top' ],
-	[ 1.28, 0.16, 0.545, 0.11, '' ],
-	[ 1.455, 0.16, 0.545, 0.11, '' ],
-	[ 1.28, 0.16, 0.95, 0.11, 'top' ],
-	[ 1.455, 0.16, 0.95, 0.11, 'top' ],
-];
-// Each arrangement: its plinth, its keys, where each key's middle is and half its size, and where
+// The deck with them: its plinth, its keys, where each key's middle is and half its size, and where
 // each lamp is, with its key's place, for the light it spills.
-const arranged = ( body, keys ) => ( {
-	body,
-	keys,
-	caps: keys.map( ( [ left, wide, top, tall ] ) => [ ( left + wide / 2 - 0.5 ) * MM, ( 0.5 - top - tall / 2 ) * MM, ( wide * MM ) / 2, ( tall * MM ) / 2 ] ),
-	glows: keys.flatMap( ( [ left, wide, top, , lampAt ], k ) =>
+const DECK = {
+	body: [ BODY[ 0 ], FRONT, BODY[ 2 ], BODY[ 3 ] ],
+	keys: KEYS,
+	caps: KEYS.map( ( [ left, wide, top, tall ] ) => [ ( left + wide / 2 - 0.5 ) * MM, ( 0.5 - top - tall / 2 ) * MM, ( wide * MM ) / 2, ( tall * MM ) / 2 ] ),
+	glows: KEYS.flatMap( ( [ left, wide, top, , lampAt ], k ) =>
 		lampAt ? [ [ ( ( lampAt === 'top' ? left + 0.5 * wide : left + 0.031 ) - 0.5 ) * MM, ( 0.5 - top + 0.0199 ) * MM, k ] ] : []
 	),
-} );
-const DECKS = {
-	front: arranged( [ BODY[ 0 ], FRONT, BODY[ 2 ], BODY[ 3 ] ], KEYS ),
-	// riff.css's plinth there: from 5% left of the record to 100% right of it, and 6% above and below.
-	beside: arranged( [ BODY[ 0 ], -0.565 * MM, 1.5 * MM, 0.565 * MM ], BESIDE ),
 };
 const LAMP_AT = [ -0.141, -0.141 ];
 const LAMP = [ LAMP_AT[ 0 ] + 0.7071 * 0.022, LAMP_AT[ 1 ] + 0.7071 * 0.022, 0.006 ];
@@ -381,9 +364,9 @@ const TARGET = [ 0.51 * MM, -0.47 * MM ];
 const ANTISKATE = [ 0.435 * MM, 0.52 * MM ];
 const SHADOW = 2048;
 // The eye: this far above the deck (radians), this far from where it looks (metres), which is a
-// little behind the spindle; and the most of the stage's height the deck takes from there, in each
-// arrangement, the sleeve above it.
-const SEAT = { rise: ( 20 * Math.PI ) / 180, away: 0.95, at: [ 0, 0.1, 0 ], room: { front: 0.62, beside: 0.7 } };
+// little behind the spindle; and the most of the stage's height the deck takes from there, the
+// sleeve above it.
+const SEAT = { rise: ( 20 * Math.PI ) / 180, away: 0.95, at: [ 0, 0.1, 0 ], room: 0.62 };
 // The desk's back, against the wall; the ledge along it, its top; and half the sleeve's size.
 const WALL = 0.33;
 const LEDGE_Z = FLOOR_Z + 0.012;
@@ -825,8 +808,8 @@ export default function deckGl( P ) {
 			wall: mesh( box( -SL - 0.08, WALL, LEDGE_Z, SL + 0.08, WALL + 0.001, LEDGE_Z + 2 * SL + 0.08 ) ),
 			body: mesh( rbox( x0, y0, x1, y1, FLOOR_Z, -0.03, 0.012, 0.002 ) ),
 			plate: mesh( rbox( x0 + 0.002, y0 + 0.002, x1 - 0.002, y1 - 0.002, -0.03, DECK_Z, 0.01, 0.0018 ) ),
-			// The same with its keys, in each arrangement (DECKS).
-			keyed: Object.fromEntries( Object.entries( DECKS ).map( ( [ name, deck ] ) => [ name, keyedMeshes( deck ) ] ) ),
+			// The same with its keys.
+			keyed: keyedMeshes( DECK ),
 			platter: mesh( L( [ [ 0, -0.0215 ], [ RP - 0.0005, -0.0215 ], [ RP, -0.0205 ], [ RP, -0.0072 ], [ RP - 0.002, -0.0045 ], [ RP - 0.011, -0.0036 ], [ RP - 0.011, -0.0025 ], [ 0, -0.0025 ] ], 160 ) ),
 			mat: mesh( L( [ [ RP - 0.013, -0.0025 ], [ RP - 0.013, -0.0013 ], [ 0, -0.0013 ] ], 96 ) ),
 			spindle: mesh( L( [ [ 0.0036, -0.003 ], [ 0.0036, 0.009 ], [ 0.003, 0.0108 ], [ 0.0015, 0.0115 ], [ 0, 0.0115 ] ], 24 ) ),
@@ -1244,7 +1227,7 @@ export default function deckGl( P ) {
 			hand.over =
 				event.pointerType !== 'touch' &&
 				( onDrawn( event.clientX, event.clientY ) ||
-					( event.clientX > b.left - b.width * 0.1 && event.clientX < b.right + b.width * ( arrangement === 'beside' ? 0.9 : 0.35 ) && event.clientY > b.top - b.height * 0.2 && event.clientY < b.bottom + b.height * 0.25 ) );
+					( event.clientX > b.left - b.width * 0.1 && event.clientX < b.right + b.width * 0.35 && event.clientY > b.top - b.height * 0.2 && event.clientY < b.bottom + b.height * 0.25 ) );
 			wake();
 		},
 		{ passive: true }
@@ -1403,9 +1386,8 @@ export default function deckGl( P ) {
 		const sounding = root.dataset.playing === 'true' && 'riffTurning' in root.dataset;
 		const lit = P.loud === null || P.loud === undefined ? 0.4 : Math.min( 1, Math.max( 0, ( P.loud + 42 ) / 34 ) );
 		glow += ( ( sounding ? lit : 0 ) - glow ) * Math.min( 1, dt * 8 );
-		// Which arrangement the keys are drawn in, while they are shown: none, 'front' or 'beside'.
-		const keyed = keys.length === KEYS.length && getComputedStyle( keys[ 0 ] ).display !== 'none' ? arrangement : '';
-		const deck = DECKS[ keyed || 'front' ];
+		// Whether the keys are drawn: while they are shown.
+		const keyed = keys.length === KEYS.length && getComputedStyle( keys[ 0 ] ).display !== 'none';
 
 		// The eye, in the chair: the spindle where the page has it, a little lower, and the platter as
 		// wide; the ledge and its sleeve come in behind a record that is out.
@@ -1430,7 +1412,7 @@ export default function deckGl( P ) {
 				return [ ( v[ 0 ] * nz ) / -v[ 2 ], ( v[ 1 ] * nz ) / -v[ 2 ] ];
 			};
 			const margin = Math.max( 8, 0.025 * Math.min( room.width, room.height ) );
-			const [ x0, y0, x1, y1 ] = deck.body;
+			const [ x0, y0, x1, y1 ] = DECK.body;
 			const ends = [ x0, x1 ].flatMap( ( x ) => [ y0, y1 ].flatMap( ( y ) => [ FLOOR_Z, 0.05 ].map( ( z ) => near( [ x, y, z ] ) ) ) );
 			const [ nx0, nx1 ] = [ Math.min( ...ends.map( ( q ) => q[ 0 ] ) ), Math.max( ...ends.map( ( q ) => q[ 0 ] ) ) ];
 			const ny0 = Math.min( ...ends.map( ( q ) => q[ 1 ] ) );
@@ -1439,7 +1421,7 @@ export default function deckGl( P ) {
 			const crown = Math.max( ...[ -SL, SL ].map( ( x ) => near( [ 0, 1, 2 ].map( ( r ) => SLEEVE_AT[ r ] * x + SLEEVE_AT[ 8 + r ] * 2 * SL + SLEEVE_AT[ 12 + r ] ) )[ 1 ] ) );
 			const per = Math.max(
 				( nx1 - nx0 ) / ( room.width - 2 * margin ),
-				( ny1 - ny0 ) / ( ( room.height - 2 * margin ) * SEAT.room[ keyed || 'front' ] ),
+				( ny1 - ny0 ) / ( ( room.height - 2 * margin ) * SEAT.room ),
 				( crown - ny0 ) / ( room.height - 3 * margin )
 			);
 			const [ ax, ay, cx ] = [ ( room.left + room.right ) / 2, room.bottom - margin, ( nx0 + nx1 ) / 2 ];
@@ -1572,7 +1554,7 @@ export default function deckGl( P ) {
 			}
 			return extent;
 		};
-		drawn = span( deck.body, FLOOR_Z, 0.05 );
+		drawn = span( DECK.body, FLOOR_Z, 0.05 );
 		// Where the plinth is drawn, for the tests that it fits.
 		const drawnAt = drawn.map( Math.round ).join( ' ' );
 		if ( canvas.dataset.riffDeckBox !== drawnAt ) {
@@ -1611,7 +1593,7 @@ export default function deckGl( P ) {
 				const pushed = pressedAt.get( k );
 				if ( under && pushed ) {
 					const [ px, py ] = onPlane( pushed[ 0 ], pushed[ 1 ], KEYS_Z );
-					const [ left, wide, top, tall ] = deck.keys[ k ];
+					const [ left, wide, top, tall ] = KEYS[ k ];
 					const half = [ ( wide * MM ) / 2, ( tall * MM ) / 2 ];
 					const away = [ px - ( left + wide / 2 - 0.5 ) * MM, py - ( 0.5 - top - tall / 2 ) * MM ];
 					// Its edge no more than 0.6 mm below its middle, and no more than about 3°: pressed all the way, its lowest edge still clear of the plate.
@@ -1692,8 +1674,8 @@ export default function deckGl( P ) {
 		const BLACK = [ 0.012, 0.012, 0.013 ];
 		const CHROME = [ 0.62, 0.63, 0.66 ];
 		// Each key where its travel and its lean have it, and its lamp with it.
-		const capOf = deck.caps;
-		const parts = m.keyed[ keyed || 'front' ];
+		const capOf = DECK.caps;
+		const parts = m.keyed;
 		const capAt = capOf.map( ( [ cx, cy ], k ) => lean( cx, cy, DECK_Z + 0.001, -0.0018 * down[ k ], leant[ k ][ 0 ] * Math.max( 0, down[ k ] ), leant[ k ][ 1 ] * Math.max( 0, down[ k ] ) ) );
 		// Each of the page's keys laid on its cap as the cap is now, so its legend sinks and tilts with
 		// it, and is shaded as the cap goes down; on the panel's own transform, undone.
@@ -1811,9 +1793,9 @@ export default function deckGl( P ) {
 		common( u );
 		gl.uniform2f( u.uPivot, ...PIVOT );
 		gl.uniform3fv( u.uTint, tint );
-		gl.uniform3fv( u.uGlowAt, deck.glows.flatMap( ( [ x, y, k ] ) => [ x, y, keyed ? lamps[ k ] : 0 ] ) );
+		gl.uniform3fv( u.uGlowAt, DECK.glows.flatMap( ( [ x, y, k ] ) => [ x, y, keyed ? lamps[ k ] : 0 ] ) );
 		gl.uniform4fv( u.uCaps, ( keyed ? capOf : KEYS ).flatMap( ( cap ) => ( keyed ? cap : [ 9, 9, 0, 0 ] ) ) );
-		const [ x0, y0, x1, y1 ] = keyed ? deck.body : BODY;
+		const [ x0, y0, x1, y1 ] = keyed ? DECK.body : BODY;
 		gl.uniform4f( u.uBody, ( x0 + x1 ) / 2, ( y0 + y1 ) / 2, ( x1 - x0 ) / 2, ( y1 - y0 ) / 2 );
 		gl.uniform2f( u.uStrobe, ( lampRows[ 0 ] * Math.PI ) / 180, ( lampRows[ 1 ] * Math.PI ) / 180 );
 		gl.uniform1f( u.uBlur, Math.min( 1, Math.abs( speed ) / 40 ) );
@@ -1876,12 +1858,8 @@ export default function deckGl( P ) {
 	let lost = false;
 	// A listener whose system forces its own colours has the cover on its own (now-playing.js).
 	const forced = window.matchMedia( '(forced-colors: active)' );
-	// Where the keys stand (riff.css, --riff-deck-keys): along the front, or beside the arm. Read
-	// here, as the stage changes size, not every frame.
-	let arrangement = 'front';
 	const active = () => ! lost && ! forced.matches && ! np.hidden && ! P.away() && root.dataset.riffTurntable !== 'off' && root.dataset.mode !== 'video';
 	function wake() {
-		arrangement = getComputedStyle( plinth ).getPropertyValue( '--riff-deck-keys' ).trim() === 'beside' ? 'beside' : 'front';
 		quiet = 0;
 		if ( ! raf && active() ) {
 			last = '';

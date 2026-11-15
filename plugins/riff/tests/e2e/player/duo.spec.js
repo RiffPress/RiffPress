@@ -68,15 +68,22 @@ test.describe( 'iPhone Duo', () => {
 		const root = page.locator( '#riff' );
 		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
 		await expect( page.locator( '.riff-np' ) ).toHaveAttribute( 'aria-modal', 'true' );
-		// The deck on its own, its controls in a panel on its plinth beside the arm: no strip of
-		// controls beside it, and no panel.
+		// The deck on its own, its controls along the front of its plinth: no strip of controls
+		// beside it, and no panel.
 		await expect( page.locator( '.riff-np-panel' ) ).toBeHidden();
 		await expect( page.locator( '.riff-side' ) ).toBeHidden();
 		const record = await page.locator( '.riff-record' ).boundingBox();
 		expect( record.height ).toBeGreaterThan( OPEN.height * 0.6 );
-		const start = await page.locator( '.riff-keys .riff-key-start' ).boundingBox();
-		expect( start.x ).toBeGreaterThan( record.x + record.width );
-		expect( start.x + start.width ).toBeLessThan( OPEN.width );
+		// Its keys along the front, under the record, on the page's flat deck.
+		const along = await page.evaluate( () => {
+			const panel = document.querySelector( '.riff-keys' );
+			const laid = panel.style.transform;
+			panel.style.transform = 'none';
+			const under = document.querySelector( '.riff-key-start' ).getBoundingClientRect().top > document.querySelector( '.riff-stage > .riff-record' ).getBoundingClientRect().bottom;
+			panel.style.transform = laid;
+			return under;
+		} );
+		expect( along ).toBe( true );
 		// The way out is there as the deck arrives, and gone once the listener is still; a touch
 		// brings it back, and it closes Now Playing.
 		const out = page.getByRole( 'button', { name: 'Close Now Playing' } );
