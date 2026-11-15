@@ -9,7 +9,7 @@
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 const { playerSite } = require( '../helpers/site' );
-const { flat, onScreen, sampled } = require( '../helpers/turntable' );
+const { drawnWithoutPixels, flat, onScreen, sampled } = require( '../helpers/turntable' );
 
 const made = own();
 let postUrl;
@@ -432,5 +432,60 @@ test.describe( 'The eye, under a finger', () => {
 		await page.touchscreen.tap( x, y );
 		await expect( shuffle, 'pressed where it is drawn' ).not.toHaveAttribute( 'aria-pressed', was );
 		await expect( eye( page ), 'not moved by the finger' ).toHaveAttribute( 'data-riff-camera', 'across' );
+	} );
+} );
+
+// A site whose uploads a CDN serves: the cover from another origin. The page's own <img> shows it
+// either way; the drawn sleeve can only read it where that origin allows CORS, and is plain card
+// where it doesn't. Drawn without its pixels, so it runs where no graphics card draws.
+test.describe( 'A cover from another origin', () => {
+	const CDN = 'https://media.riff.test';
+	// The label's paper, the cover's colour where it could be read (now-playing.js, tint()).
+	const paper = ( page ) => page.locator( '#riff' ).evaluate( ( root ) => root.style.getPropertyValue( '--riff-label-paper' ) );
+
+	async function served( page, info, cors ) {
+		test.skip( info.project.name !== 'chromium', 'Measured in desktop Chromium.' );
+		const site = new URL( postUrl ).origin;
+		// Every upload's picture, in the page and in what the library answers, asked of the CDN.
+		// The site's own address of each, as HTML or JSON writes it (with its slashes escaped or not).
+		const moved = ( text ) => text.replace( /https?:(?:\\?\/){2}[^"'\s\\/]+((?:\\?\/)wp-content(?:\\?\/)uploads(?:\\?\/)[^"'\s]*?\.png)/g, ( m, path ) => CDN + path );
+		const rewrite = async ( route ) => {
+			const response = await route.fetch();
+			await route.fulfill( { response, body: moved( await response.text() ) } );
+		};
+		await page.route( postUrl, rewrite );
+		await page.route( ( url ) => decodeURIComponent( url.href ).includes( 'riff/v1/library/' ), rewrite );
+		await page.route( `${ CDN }/**`, async ( route ) => {
+			const response = await route.fetch( { url: site + new URL( route.request().url() ).pathname } );
+			const headers = { ...response.headers() };
+			// Playwright allows any origin it fulfills a response for, where the response names none: one
+			// that names another origin is the CDN that doesn't allow this one.
+			headers[ 'access-control-allow-origin' ] = cors ? '*' : 'https://elsewhere.test';
+			await route.fulfill( { status: response.status(), headers, body: await response.body() } );
+		} );
+		await drawnWithoutPixels( page );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await page.locator( '.riff-bar-info' ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-gl', '' );
+		const cover = page.locator( '.riff-stage > .riff-cover' );
+		await expect( cover ).toHaveAttribute( 'src', new RegExp( `^${ CDN }/` ) );
+		// The page's own picture asks without CORS, so it shows wherever the CDN sends no header.
+		expect( await cover.getAttribute( 'crossorigin' ) ).toBeNull();
+		await expect.poll( () => cover.evaluate( ( img ) => img.complete && img.naturalWidth ) ).toBeGreaterThan( 0 );
+	}
+
+	test( 'is on the sleeve where its origin allows CORS', async ( { page }, info ) => {
+		await served( page, info, true );
+		await expect( eye( page ) ).toHaveAttribute( 'data-riff-cover', '1' );
+		// The label is printed on the cover's colour (helpers.js, average()), read the same way.
+		await expect.poll( () => paper( page ) ).not.toBe( '' );
+	} );
+
+	test( 'leaves the sleeve plain card where it does not, the cover still shown', async ( { page }, info ) => {
+		await served( page, info, false );
+		await expect( eye( page ) ).toHaveAttribute( 'data-riff-cover', '0' );
+		expect( await paper( page ) ).toBe( '' );
 	} );
 } );
