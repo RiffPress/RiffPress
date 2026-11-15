@@ -19,7 +19,7 @@
  * pressed (44px under a finger, 24px under a mouse), never into its neighbour's. Each frame this
  * reads where those are (the record's place and turn, the arm's angle, the cue lever) and draws
  * them there. Without WebGL2, on a card too slow for it, once the context is lost or in forced
- * colours, it says so (P.undrawn), and Now Playing is the cover on its own. Loaded on demand, when
+ * colours, it says so (P.drawable), and Now Playing is the cover on its own. Loaded on demand, when
  * the turntable first shows.
  *
  * The scene's lighting and its mesh builders are adapted from Guillermo Rauch's record player,

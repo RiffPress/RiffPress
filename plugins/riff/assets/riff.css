@@ -1290,23 +1290,18 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 /* The record's cut, by its share of the radius, a 12-inch LP's unless
-   now-playing.js says it is a 7-inch single: the label, its rim, the
-   lead-out groove, the spindle hole. */
+   now-playing.js says it is a 7-inch single: the label and the lead-out
+   groove. */
 #riff {
 	--riff-label-inset: 33.5%;
-	--riff-label-edge: 34.5%;
 	--riff-lead-out: 40%;
-	--riff-hole: 2.4%;
 }
 
 /* A 7-inch single at 45: a label half its width round a hole for a jukebox's
    spindle, and 60s / 45 = 1.33s a turn. */
 #riff[data-riff-format="7"] {
-	--riff-etch-scale: 1.425;
 	--riff-label-inset: 25%;
-	--riff-label-edge: 50%;
 	--riff-lead-out: 56%;
-	--riff-hole: 11%;
 }
 
 .riff-record {
@@ -2248,10 +2243,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 /* The run-out: the matrix number scratched by hand into the smooth dead
    wax between the label and the last groove, as every pressing carries,
-   on a layer that turns with the label (now-playing.js writes it). It sits
-   midway across the dead wax, wherever the format puts it. Its layer is
-   the record's square whatever the text, so it is painted once and only
-   turned. */
+   on a layer that turns with the label (now-playing.js writes it,
+   deck-gl.js draws it round the dead wax). Its layer is the record's
+   square whatever the text, so it is painted once and only turned. */
 .riff-wax {
 	position: absolute;
 	inset: 0;
@@ -2263,7 +2257,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: block;
 	width: 100%;
 	height: 100%;
-	scale: var(--riff-etch-scale, 1);
 }
 
 /* The tonearm, on its base just off the record's corner (now-playing.js
