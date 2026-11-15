@@ -24,6 +24,9 @@ test.afterAll( async ( { requestUtils } ) => {
 
 test.describe( 'App turntable', () => {
 	test.use( { viewport: { width: 1440, height: 900 } } );
+	// The Listen app's service worker would fetch the deck itself, past the stand-in
+	// controlLayer() gives the page, and the real deck would refuse a test machine's software card.
+	test.use( { serviceWorkers: 'block' } );
 
 	test( 'the stylus is down before the music is heard and lifts only once it has stopped', async ( { page }, info ) => {
 		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
