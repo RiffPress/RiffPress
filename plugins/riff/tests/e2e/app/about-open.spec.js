@@ -8,6 +8,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 const { appSite } = require( '../helpers/site' );
 const { openView } = require( '../helpers/views' );
+const { controlLayer } = require( '../helpers/turntable' );
 
 const made = own();
 let appUrl;
@@ -25,6 +26,7 @@ const about = ( page ) => page.locator( '.riff-side [data-riff-panel="about"]' )
 
 // Played from the album, then paused, so a reload resumes it paused.
 async function play( page ) {
+	await controlLayer( page );
 	await page.goto( appUrl );
 	await page.locator( '[data-riff-app-action="play"]' ).click();
 	await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
@@ -48,6 +50,7 @@ test.describe( 'About, open by default', () => {
 	} );
 
 	test( 'opens beside the page once there is a track, without the focus, and stays unchosen', async ( { page } ) => {
+		await controlLayer( page );
 		await page.goto( appUrl );
 		// Nothing playing: nothing to say, so nothing opens.
 		await expect( page.locator( '.riff-side' ) ).toBeHidden();

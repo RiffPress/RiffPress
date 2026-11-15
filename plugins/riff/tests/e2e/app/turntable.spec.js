@@ -8,7 +8,7 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 const { appSite } = require( '../helpers/site' );
 const { openView } = require( '../helpers/views' );
-const { stopsAndStarts } = require( '../helpers/turntable' );
+const { controlLayer, stopsAndStarts } = require( '../helpers/turntable' );
 
 const made = own();
 let pageUrl;
@@ -28,6 +28,7 @@ test.describe( 'App turntable', () => {
 	test( 'the stylus is down before the music is heard and lifts only once it has stopped', async ( { page }, info ) => {
 		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
 		await page.goto( `${ pageUrl }?riff=${ postId }` );
 		await page.locator( '.riff-row' ).first().click();
 		await openView( page, 'album' );

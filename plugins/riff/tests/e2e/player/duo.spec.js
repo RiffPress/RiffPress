@@ -10,6 +10,7 @@
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 const { playerSite } = require( '../helpers/site' );
+const { controlLayer } = require( '../helpers/turntable' );
 
 const made = own();
 let postUrl;
@@ -47,6 +48,7 @@ async function fold( page, size, orientation ) {
 // which is the turntable where Now Playing is wider than tall and the cover where it is upright.
 async function nowPlaying( page ) {
 	await page.emulateMedia( { reducedMotion: 'no-preference' } );
+	await controlLayer( page );
 	await page.goto( postUrl );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await page.locator( '.riff-bar-info' ).click();

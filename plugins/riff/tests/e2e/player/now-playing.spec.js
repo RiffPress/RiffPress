@@ -7,6 +7,7 @@ const AxeBuilder = require( '@axe-core/playwright' ).default;
 const { own } = require( '../helpers/own' );
 const { AXE_TAGS, systemColours, audioState, playerSite } = require( '../helpers/site' );
 const { openView } = require( '../helpers/views' );
+const { controlLayer } = require( '../helpers/turntable' );
 
 const made = own();
 let postUrl;
@@ -21,6 +22,7 @@ test.afterAll( async ( { requestUtils } ) => {
 
 test.describe( 'Player', () => {
 	test.beforeEach( async ( { page } ) => {
+		await controlLayer( page );
 		await page.goto( postUrl );
 	} );
 

@@ -1,9 +1,10 @@
 /**
  * Where the browser can draw in WebGL2, the deck is the one WebGL draws at every size the turntable
  * shows at: a laptop's window as much as a large screen, with its keys along the front, and a phone
- * on its side, with them beside the arm. Skipped where no graphics card draws WebGL2 for the test
- * browser, as for headless Chromium without a GPU; the page's own deck is then the deck, which
- * deck-sizes.spec.js measures. Run it with a GPU (headed, or with --use-angle=metal) to see it.
+ * on its side, with them beside the arm, seen from the one chair at every size. Skipped where no
+ * graphics card draws WebGL2 for the test browser, as for headless Chromium without a GPU, where
+ * Now Playing is the cover alone (reality.spec.js) and deck-sizes.spec.js measures the deck drawn
+ * without its pixels. Run it with a GPU (headed, or with --use-angle=metal) to see it.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
@@ -29,7 +30,7 @@ const card = ( page ) =>
 		return !! gl && ! ( names && /swiftshader|llvmpipe|software|basic render/i.test( gl.getParameter( names.UNMASKED_RENDERER_WEBGL ) ) );
 	} );
 
-// Where the eye is (deck-gl.js): over the deck, across it from the chair, or on its way.
+// The eye (deck-gl.js), across the desk in its chair once the deck is laid there.
 const eye = ( page ) => page.locator( '.riff-deck-gl' );
 
 // Opens the album's Now Playing with the record out, on a graphics card, or skips.
@@ -309,36 +310,6 @@ sizes(
 );
 sizes( 'On a touch screen on its side', [ { size: { width: 844, height: 390 }, keys: 'beside the arm' } ], true );
 
-test.describe( 'The first deck seen', () => {
-	test.use( { viewport: { width: 1280, height: 720 } } );
-
-	test( 'is the one WebGL draws: the page\'s own is never painted before it', async ( { page }, info ) => {
-		// Every frame from the start: whether the page's deck is painted (its record's grooves, the
-		// plinth's top), and whether the drawn one has drawn.
-		await page.addInitScript( () => {
-			window.riffSeen = [];
-			const sample = () => {
-				const root = document.querySelector( '#riff' );
-				const np = document.querySelector( '.riff-np' );
-				const record = document.querySelector( '.riff-stage > .riff-record' );
-				const plinth = document.querySelector( '.riff-plinth' );
-				if ( root && np && ! np.hidden && record && root.dataset.riffTurntable !== 'off' && record.getBoundingClientRect().width ) {
-					window.riffSeen.push( {
-						drawn: 'riffGl' in root.dataset,
-						painted: getComputedStyle( record ).backgroundImage !== 'none' || getComputedStyle( plinth, '::before' ).content !== 'none',
-					} );
-				}
-				requestAnimationFrame( sample );
-			};
-			requestAnimationFrame( sample );
-		} );
-		await opened( page, info );
-		const seen = await page.evaluate( () => window.riffSeen );
-		expect( seen.length, 'frames of the deck seen' ).toBeGreaterThan( 0 );
-		expect( seen.filter( ( f ) => f.painted && ! f.drawn ), 'frames with the page\'s deck painted before the drawn one' ).toEqual( [] );
-	} );
-} );
-
 test.describe( 'A change of record', () => {
 	test.use( { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 } );
 
@@ -383,24 +354,8 @@ test.describe( 'A change of record', () => {
 		}
 	} );
 
-	test( 'given up halfway, the page\'s own deck is first seen with the new record at rest', async ( { page }, info ) => {
+	test( 'lost halfway, Now Playing is the cover on its own, and says why', async ( { page }, info ) => {
 		const next = await pressed( page, info );
-		await page.evaluate( () => {
-			window.riffSeen = [];
-			const sample = () => {
-				const root = document.querySelector( '#riff' );
-				const record = document.querySelector( '.riff-stage > .riff-record' );
-				if ( ! ( 'riffGl' in root.dataset ) && ! ( 'riffGlWait' in root.dataset ) ) {
-					window.riffSeen.push( {
-						leaving: !! document.querySelector( '.riff-leaving' ),
-						arriving: 'riffArriving' in root.dataset,
-						moving: record.getAnimations().some( ( a ) => a.playState === 'running' ),
-					} );
-				}
-				requestAnimationFrame( sample );
-			};
-			sample();
-		} );
 		await next.click();
 		await played( page, 'B' );
 		// A new record coming out of its sleeve, and the context lost on its way.
@@ -408,11 +363,8 @@ test.describe( 'A change of record', () => {
 		await expect( page.locator( '.riff-leaving' ) ).toHaveCount( 1 );
 		await page.evaluate( () => document.querySelector( '.riff-deck-gl' ).getContext( 'webgl2' ).getExtension( 'WEBGL_lose_context' ).loseContext() );
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-gl-gone', 'lost' );
-		await played( page, 'C' );
-		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-gl-wait', '' );
-		const seen = await page.evaluate( () => window.riffSeen );
-		expect( seen.length, 'frames of the page\'s deck seen' ).toBeGreaterThan( 0 );
-		expect( seen.filter( ( f ) => f.leaving || f.arriving || f.moving ), 'frames of the page\'s deck with the record on its way' ).toEqual( [] );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-turntable', 'off' );
+		await expect( page.locator( '.riff-stage > .riff-cover' ) ).toBeVisible();
 	} );
 } );
 

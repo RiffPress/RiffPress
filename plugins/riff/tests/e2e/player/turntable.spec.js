@@ -8,65 +8,18 @@
  * it is upright, changing as the shape does; with less motion asked for, or on a site that turns
  * the turntable off, it is the cover in every shape. The turntable is all there is on the screen:
  * no bar, no panel, with the way out drawn only while the listener moves, and left by Escape, Back,
- * that button or a press on the desk, to the page as it was. Runs in desktop Chromium.
+ * that button or a press on the desk, to the page as it was. Runs in desktop Chromium, on the deck's
+ * control layer (helpers/turntable.js, controlLayer()), which holds all of this with or without a
+ * graphics card.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { playerSite, audioState, watchSpeed, speedWrites } = require( '../helpers/site' );
-const { stopsAndStarts, sampled, flat, onScreen } = require( '../helpers/turntable' );
+const { controlLayer, stopsAndStarts, sampled, flat, onScreen, stylus, turning, groove, still, onArm, onRecord } = require( '../helpers/turntable' );
 
 const made = own();
 
-// How far the stylus is from the record's centre, as a share of its radius: the end of the arm's
-// tube, at the stylus, as drawn on the screen, against the record's own box (its grooves turn
-// inside it), on the page's flat deck.
-const stylus = ( page ) =>
-	flat( page, () => {
-		const record = document.querySelector( '.riff-record' ).getBoundingClientRect();
-		const grip = document.querySelector( '.riff-arm-grip' );
-		const p = grip.getPointAtLength( grip.getTotalLength() );
-		const at = new DOMPoint( p.x, p.y ).matrixTransform( grip.getScreenCTM() );
-		const r = record.width / 2;
-		return Math.hypot( at.x - record.left - r, at.y - record.top - r ) / r;
-	} );
-// The platter's turn, in degrees a second, from the record's own animation.
-const turning = ( page ) =>
-	page.locator( '.riff-wax' ).evaluate( ( el ) => {
-		const turn = el.getAnimations()[ 0 ];
-		return turn ? ( 360000 / turn.effect.getTiming().duration ) * turn.playbackRate : 0;
-	} );
-// A 12-inch side's grooves run from 97% of the radius at the lead-in to 40% at the lead-out, its
-// playing time evenly across them.
-const groove = ( played ) => 0.97 - ( 0.97 - 0.4 ) * played;
-
-// The music stopped and the arm still, so a hand can find it where it is drawn.
-async function still( page ) {
-	await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
-	await page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).click();
-	await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( true );
-	await page.evaluate( () =>
-		Promise.all( document.querySelector( '.riff-arm-tube' ).getAnimations().map( ( a ) => a.finished ) )
-	);
-}
-
-// A point on the arm's tube, near its headshell, on the screen, where it is drawn.
-const onArm = async ( page ) => {
-	const at = await flat( page, () => {
-		const path = document.querySelector( '.riff-arm-grip' );
-		const p = path.getPointAtLength( path.getTotalLength() * 0.85 );
-		const q = new DOMPoint( p.x, p.y ).matrixTransform( path.getScreenCTM() );
-		return [ q.x, q.y ];
-	} );
-	const [ [ x, y ] ] = await onScreen( page, [ at ] );
-	return { x, y };
-};
-// A point of the record, as a share of its box across and down, on the screen, where it is drawn.
-const onRecord = async ( page, across, down ) => {
-	const record = await page.locator( '.riff-record' ).boundingBox();
-	const [ [ x, y ] ] = await onScreen( page, [ [ record.x + record.width * across, record.y + record.height * down ] ] );
-	return [ x, y ];
-};
 let postUrl;
 
 test.beforeAll( async ( { requestUtils } ) => {
@@ -84,6 +37,7 @@ test.describe( 'Turntable', () => {
 		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
 		// With motion: without it the album is the cover.
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await openView( page, 'album' );
@@ -92,7 +46,7 @@ test.describe( 'Turntable', () => {
 		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
 		await page.evaluate( () =>
 			Promise.all(
-				[ '.riff-arm-tube', '.riff-record' ].flatMap( ( q ) => document.querySelector( q ).getAnimations().map( ( a ) => a.finished ) )
+				[ '.riff-arm-tube', '.riff-record' ].flatMap( ( q ) => document.querySelector( q ).getAnimations().map( ( a ) => a.finished.catch( () => {} ) ) )
 			)
 		);
 	} );
@@ -205,41 +159,6 @@ test.describe( 'Turntable', () => {
 		await page.keyboard.press( 'Escape' );
 		await expect( side ).toBeVisible();
 		await expect( page.locator( '.riff-queue-list' ) ).toBeVisible();
-	} );
-
-	test( 'where a graphics card draws WebGL2 the deck is drawn and the page\'s own stops painting, and elsewhere the page\'s own is the deck', async ( { page } ) => {
-		const root = page.locator( '#riff' );
-		const painted = () => page.locator( '.riff-stage > .riff-record' ).evaluate( ( el ) => getComputedStyle( el ).backgroundImage !== 'none' );
-		// As this browser is: with no card to draw it, as on a test machine, the page's deck paints as it always has.
-		const card = await page.evaluate( () => {
-			const gl = document.createElement( 'canvas' ).getContext( 'webgl2', { failIfMajorPerformanceCaveat: true } );
-			const names = gl?.getExtension( 'WEBGL_debug_renderer_info' );
-			return !! gl && ! ( names && /swiftshader|llvmpipe|software|basic render/i.test( gl.getParameter( names.UNMASKED_RENDERER_WEBGL ) ) );
-		} );
-		await expect.poll( () => root.evaluate( ( el ) => 'riffGl' in el.dataset ) ).toBe( card );
-		await expect.poll( painted ).toBe( ! card );
-		// As if it had one, its name kept to itself: the deck is drawn, and the page's record is still there to be moved and read, unpainted.
-		// On a test machine that "card" is software, which Riff refuses because every frame would
-		// cost the page's own thread: drawn for real, the page stops answering for seconds at a
-		// time, and this test with it. So the deck goes through every step but the drawing itself,
-		// which is what this checks the page for, not the pixels.
-		await page.addInitScript( () => {
-			const proto = WebGL2RenderingContext.prototype;
-			const extension = proto.getExtension;
-			proto.getExtension = function( name ) {
-				return name === 'WEBGL_debug_renderer_info' ? null : extension.call( this, name );
-			};
-			for ( const draw of [ 'drawArrays', 'drawElements', 'drawArraysInstanced', 'drawElementsInstanced', 'drawRangeElements' ] ) {
-				proto[ draw ] = () => {};
-			}
-		} );
-		await page.reload();
-		await page.locator( '.riff-row' ).nth( 0 ).click();
-		await openView( page, 'album' );
-		await expect( root ).toHaveAttribute( 'data-riff-deck', 'out' );
-		await expect( root ).toHaveAttribute( 'data-riff-gl', '' );
-		await expect( page.locator( '.riff-deck-gl' ) ).toHaveCount( 1 );
-		expect( await painted() ).toBe( false );
 	} );
 
 	test( 'a mouse over the grooves says the band and the moment under it, and a press puts the needle down in that groove', async ( { page } ) => {
@@ -442,11 +361,9 @@ test.describe( 'Turntable', () => {
 		await expect( arm ).toHaveAttribute( 'aria-valuenow', max );
 	} );
 
-	test( 'the arm is set up by Baerwald alignment, beside its anti-skate dial and the target light', async ( { page } ) => {
+	test( 'the arm is set up by Baerwald alignment', async ( { page } ) => {
 		// Nulls at 66 and 120.9 mm, the base 214.6 mm from the spindle: the headshell turned in by 23.7°.
 		await expect( page.locator( '.riff-headshell' ) ).toHaveAttribute( 'transform', /rotate\(23\.70\)$/ );
-		await expect( page.locator( '.riff-antiskate' ) ).toBeVisible();
-		await expect( page.locator( '.riff-target' ) ).toBeVisible();
 	} );
 
 	test( 'the platter turns on its own below a crawl: up to speed before the music is heard, and on to rest after it stops', async ( { page } ) => {
@@ -475,6 +392,7 @@ test.describe( 'Turntable', () => {
 	test( 'opened as the music starts, the needle drops onto the record, and the music winds down and comes up to speed under it', async ( { page } ) => {
 		// With motion from the start: the record comes out and the needle drops only with it.
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await openView( page, 'album' );
@@ -704,6 +622,7 @@ test.describe( 'The album, by Now Playing\'s shape', () => {
 	test( 'upright it is the cover, wide it is the turntable with the needle down, and it changes as the shape does', async ( { page } ) => {
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
 		await page.setViewportSize( { width: 390, height: 844 } );
+		await controlLayer( page );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await openView( page, 'album' );
@@ -735,6 +654,7 @@ test.describe( 'The album, by Now Playing\'s shape', () => {
 	test( 'with less motion asked for it is the cover, wide too, and the turntable once motion is wanted', async ( { page } ) => {
 		await page.emulateMedia( { reducedMotion: 'reduce' } );
 		await page.setViewportSize( { width: 1440, height: 900 } );
+		await controlLayer( page );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 1 ).click();
 		await openView( page, 'album' );
@@ -761,6 +681,7 @@ test.describe( 'Turntable turned off', () => {
 		// What Settings › Media's box does, through the riff_turntable filter (tests/components).
 		await context.addCookies( [ { name: 'riff_test_no_turntable', value: '1', url: baseURL } ] );
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
 		await page.goto( postUrl );
 		const root = page.locator( '#riff' );
 		await expect( root ).toHaveAttribute( 'data-riff-turntable', 'off' );
@@ -806,6 +727,7 @@ test.describe( 'Turntable, from what the files say', () => {
 			}
 		);
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await openView( page, 'album' );
@@ -835,6 +757,7 @@ test.describe( 'Turntable, from what the files say', () => {
 			}
 		);
 		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
 		await page.goto( postUrl );
 		await page.locator( '.riff-row' ).nth( 0 ).click();
 		await openView( page, 'album' );

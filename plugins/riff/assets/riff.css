@@ -1310,23 +1310,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 }
 
 .riff-record {
-	border-radius: 50%;
-
-	/* by its radius: the label, then smooth dead wax to the lead-out groove,
-	   the grooves in a band for each track on the side playing, lighter
-	   where it is loud (--riff-bands, from now-playing.js), and a smooth
-	   lead-in rim from 97% */
-	background:
-		var(--riff-bands, linear-gradient(transparent, transparent)),
-		radial-gradient(circle closest-side, #0c0c0c 0 var(--riff-label-edge), #161616 var(--riff-label-edge) var(--riff-lead-out), transparent var(--riff-lead-out) 97%, #161616 97%),
-		repeating-radial-gradient(circle, #141414 0 1px, #1c1c1c 1px 3px),
-		#111;
-	box-shadow: 0 12px 40px rgb(0 0 0 / 0.45);
 	transition: translate 0.75s var(--riff-hand), scale 0.75s var(--riff-hand);
 
-	/* moved and turned on the GPU, its grooves and label drawn
-	   once rather than at every step; its transform is its height
-	   above the mat as it is set down (now-playing.js) */
+	/* its transform is its height above the mat as it is set down
+	   (now-playing.js) */
 	will-change: translate, scale, transform;
 }
 
@@ -1344,18 +1331,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	#riff {
 		--riff-hand: linear(0, 0.001, 0.009, 0.027, 0.058, 0.104, 0.163, 0.235, 0.317, 0.407, 0.5, 0.593, 0.683, 0.765, 0.837, 0.896, 0.942, 0.973, 0.991, 0.999, 1);
 	}
-}
-
-/* light across the grooves and the label, which stays put while the
-   record turns, and the record's hole, dark round the turntable's spindle */
-.riff-record::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	border-radius: 50%;
-	background:
-		radial-gradient(circle closest-side, #050505 0 var(--riff-hole), rgb(255 255 255 / 0.18) var(--riff-hole) calc(var(--riff-hole) + 0.4%), transparent calc(var(--riff-hole) + 0.4%)),
-		conic-gradient(from 30deg, transparent 0 8%, rgb(255 255 255 / 0.1) 12%, transparent 18% 50%, rgb(255 255 255 / 0.08) 62%, transparent 68%);
 }
 
 /* the label: a disc that turns as one at 33⅓, an LP's speed (60s / 33⅓ =
@@ -1392,7 +1367,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	font-family: var(--riff-font, inherit);
 	line-height: 1.15;
 	text-align: center;
-	text-shadow: 0 1px 2px var(--riff-label-halo, rgb(0 0 0 / 0.35));
 }
 
 .riff-label b {
@@ -1578,16 +1552,20 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	place-items: center;
 	width: 9.5%;
 	height: 7.5%;
+	padding: 0;
+	border: 0;
 	border-radius: 0.8cqi;
-	background: linear-gradient(#343434, #232323);
-	box-shadow: 0 0.3cqi 0.7cqi rgb(0 0 0 / 0.6), inset 0 0.15cqi 0 rgb(255 255 255 / 0.08);
+	background: none;
 	color: rgb(255 255 255 / 0.62);
 	pointer-events: auto;
-	transition: translate 0.06s;
 }
 
-#riff .riff-keys button:active {
-	translate: 0 0.15cqi;
+/* Each key reaches past its drawn cap as far as a finger or a mouse needs
+   to press it, and no further than its neighbour's (deck-gl.js sets how
+   far, on the page's flat deck). Invisible: what shows is the cap. */
+#riff .riff-keys .riff-hit {
+	position: absolute;
+	inset: calc(-1 * var(--riff-hit-y, 0px)) calc(-1 * var(--riff-hit-x, 0px));
 }
 
 #riff .riff-keys svg {
@@ -1659,32 +1637,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	opacity: 1;
 }
 
-#riff .riff-keys :is(.riff-key-start, .riff-key-33, .riff-key-45, .riff-key-shuffle, .riff-key-repeat)::after {
-	content: "";
-	position: absolute;
-	top: 0.8cqi;
-	left: 35%;
-	width: 30%;
-	height: 0.5cqi;
-	border-radius: 0.25cqi;
-	background: rgb(255 255 255 / 0.12);
-}
-
-#riff .riff-keys .riff-key-start::after {
-	left: 1.6cqi;
-	width: 3cqi;
-}
-
-/* lit, a lamp is the amber every lamp on the deck is: the strobe's, the
-   display's, these */
-#riff[data-playing="true"] .riff-keys .riff-key-start::after,
-#riff .riff-keys :is(.riff-key-33, .riff-key-45)[aria-checked="true"]::after,
-#riff .riff-keys .riff-key-shuffle[aria-pressed="true"]::after,
-#riff .riff-keys .riff-key-repeat:not([data-repeat="off"])::after {
-	background: #ffb45c;
-	box-shadow: 0 0 1.2cqi rgb(255 150 60 / 0.8);
-}
-
 /* The deck's display, in a window on the strip beside its keys, behind
    glass: the band and the time, the speed, and under them a row of lamps
    lit as far as the music is loud, over a scale in decibels (level.js),
@@ -1729,9 +1681,9 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 #riff .riff-pitch input {
 	flex: 1;
-	width: 100%;
+	width: calc(100% + 2 * var(--riff-hit-x, 0px));
 	min-height: 0;
-	margin: 0;
+	margin: calc(-1 * var(--riff-hit-y, 0px)) calc(-1 * var(--riff-hit-x, 0px));
 	background: none;
 	writing-mode: vertical-lr;
 	appearance: none;
@@ -1782,84 +1734,124 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
    24px (WCAG 2.5.8), at least 516 by 433, which is most windows. On a
    smaller stage, as a phone on its side or a small window, the plinth
    reaches further right and its controls stand in a panel beside the arm:
-   the display on top, start and stop, the speeds, the skips, shuffle and
-   repeat in two columns, and the pitch fader beside them, each key a sixth
-   of the record across. The WebGL deck draws either (deck-gl.js, which
-   reads --riff-deck-keys). Below a stage of 540 by 335 even that has no
-   room, and the album is the cover. The two rules are one arrangement: a
-   container query can't ask what the pointer is. Only where Now Playing
-   is landscape, the one shape with the turntable: upright, the cover
-   keeps its own size. */
+   four columns in three rows, further apart toward the back, where the
+   eye sees less of each (deck-gl.js, BESIDE): the display and start and
+   stop, then the skips and the speeds, then shuffle, repeat and the pitch
+   fader, each key a sixth of the record across, each reaching past its
+   cap as far as it must to be pressed. The WebGL deck draws either
+   (deck-gl.js, which reads --riff-deck-keys). Below a stage of 540 by 335
+   even that has no room, and the album is the cover. The two rules are
+   one arrangement: a container query can't ask what the pointer is. Only
+   where Now Playing is landscape, the one shape with the turntable:
+   upright, the cover keeps its own size. */
 @container riff-np (orientation: landscape) {
 
 	@container riff-stage (max-width: 515px) or (max-height: 432px) {
 
 		:root #riff .riff-np .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
 			--riff-deck-keys: beside;
-			--riff-out-record: -41%;
+			--riff-out-record: -47.5%;
 			--riff-out-drop: 0%;
-			width: min(82cqh, 50cqw);
-			height: min(82cqh, 50cqw);
+			width: min(82cqh, 47cqw);
+			height: min(82cqh, 47cqw);
 		}
 
 		#riff .riff-plinth {
-			--riff-plinth-edge: -6% -87% -6% -5%;
+			--riff-plinth-edge: -6% -100% -6% -5%;
 		}
 
 		#riff .riff-keys :is(button, .riff-level) {
 			width: 16%;
-			height: 16%;
+			height: 11%;
 		}
 
 		#riff .riff-keys svg {
-			width: 6cqi;
-			height: 6cqi;
+			width: 5cqi;
+			height: 5cqi;
 		}
 
 		#riff .riff-keys .riff-level {
 			top: 0;
 			left: 128%;
-			width: 55%;
-			height: 12%;
+			width: 33.5%;
 		}
 
 		#riff .riff-keys .riff-key-start {
-			top: 15%;
-			left: 128%;
-			width: 35%;
+			top: 0;
+			left: 163%;
+			width: 33.5%;
 			font-size: 2.6cqi;
 		}
 
 		#riff .riff-keys :is(.riff-key-33, .riff-key-45) {
-			top: 34%;
-			padding-top: 2cqi;
+			top: 54.5%;
+			padding-top: 1.6cqi;
 			font-size: 3.4cqi;
 		}
 
 		#riff .riff-keys :is(.riff-key-prev, .riff-key-next) {
-			top: 53%;
+			top: 54.5%;
 			padding-top: 0;
 		}
 
 		#riff .riff-keys :is(.riff-key-shuffle, .riff-key-repeat) {
-			top: 72%;
-			padding-top: 2cqi;
+			top: 95%;
+			padding-top: 1.6cqi;
 		}
 
-		#riff .riff-keys :is(.riff-key-33, .riff-key-prev, .riff-key-shuffle) {
+		#riff .riff-keys :is(.riff-key-prev, .riff-key-shuffle) {
 			left: 128%;
 		}
 
-		#riff .riff-keys :is(.riff-key-45, .riff-key-next, .riff-key-repeat) {
-			left: 147%;
+		#riff .riff-keys :is(.riff-key-next, .riff-key-repeat) {
+			left: 145.5%;
 		}
 
+		#riff .riff-keys .riff-key-33 {
+			left: 163%;
+		}
+
+		#riff .riff-keys .riff-key-45 {
+			left: 180.5%;
+		}
+
+		/* the pitch fader across the front row, where the eye sees it longest */
 		#riff .riff-keys .riff-pitch {
-			top: 15%;
-			left: 167%;
-			width: 16%;
-			height: 81%;
+			top: 95%;
+			left: 163%;
+			flex-direction: row;
+			width: 33.5%;
+			height: 11%;
 			font-size: 3cqi;
+		}
+
+		#riff .riff-pitch input {
+			min-width: 0;
+			width: 0;
+			height: calc(100% + 2 * var(--riff-hit-y, 0px));
+			writing-mode: horizontal-tb;
+		}
+
+		#riff .riff-pitch input::-webkit-slider-runnable-track {
+			width: auto;
+			height: 0.6cqi;
+		}
+
+		#riff .riff-pitch input::-moz-range-track {
+			width: auto;
+			height: 0.6cqi;
+		}
+
+		#riff .riff-pitch input::-webkit-slider-thumb {
+			width: 3cqi;
+			height: 6cqi;
+			margin-top: -2.7cqi;
+			margin-left: 0;
+		}
+
+		#riff .riff-pitch input::-moz-range-thumb {
+			width: 3cqi;
+			height: 6cqi;
 		}
 	}
 
@@ -1869,70 +1861,108 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 			:root #riff .riff-np .riff-stage > :is(.riff-cover, .riff-record, .riff-deck-part) {
 				--riff-deck-keys: beside;
-				--riff-out-record: -41%;
+				--riff-out-record: -47.5%;
 				--riff-out-drop: 0%;
-				width: min(82cqh, 50cqw);
-				height: min(82cqh, 50cqw);
+				width: min(82cqh, 47cqw);
+				height: min(82cqh, 47cqw);
 			}
 
 			#riff .riff-plinth {
-				--riff-plinth-edge: -6% -87% -6% -5%;
+				--riff-plinth-edge: -6% -100% -6% -5%;
 			}
 
 			#riff .riff-keys :is(button, .riff-level) {
 				width: 16%;
-				height: 16%;
+				height: 11%;
 			}
 
 			#riff .riff-keys svg {
-				width: 6cqi;
-				height: 6cqi;
+				width: 5cqi;
+				height: 5cqi;
 			}
 
 			#riff .riff-keys .riff-level {
 				top: 0;
 				left: 128%;
-				width: 55%;
-				height: 12%;
+				width: 33.5%;
 			}
 
 			#riff .riff-keys .riff-key-start {
-				top: 15%;
-				left: 128%;
-				width: 35%;
+				top: 0;
+				left: 163%;
+				width: 33.5%;
 				font-size: 2.6cqi;
 			}
 
 			#riff .riff-keys :is(.riff-key-33, .riff-key-45) {
-				top: 34%;
-				padding-top: 2cqi;
+				top: 54.5%;
+				padding-top: 1.6cqi;
 				font-size: 3.4cqi;
 			}
 
 			#riff .riff-keys :is(.riff-key-prev, .riff-key-next) {
-				top: 53%;
+				top: 54.5%;
 				padding-top: 0;
 			}
 
 			#riff .riff-keys :is(.riff-key-shuffle, .riff-key-repeat) {
-				top: 72%;
-				padding-top: 2cqi;
+				top: 95%;
+				padding-top: 1.6cqi;
 			}
 
-			#riff .riff-keys :is(.riff-key-33, .riff-key-prev, .riff-key-shuffle) {
+			#riff .riff-keys :is(.riff-key-prev, .riff-key-shuffle) {
 				left: 128%;
 			}
 
-			#riff .riff-keys :is(.riff-key-45, .riff-key-next, .riff-key-repeat) {
-				left: 147%;
+			#riff .riff-keys :is(.riff-key-next, .riff-key-repeat) {
+				left: 145.5%;
 			}
 
+			#riff .riff-keys .riff-key-33 {
+				left: 163%;
+			}
+
+			#riff .riff-keys .riff-key-45 {
+				left: 180.5%;
+			}
+
+			/* the pitch fader across the front row, where the eye sees it longest */
 			#riff .riff-keys .riff-pitch {
-				top: 15%;
-				left: 167%;
-				width: 16%;
-				height: 81%;
+				top: 95%;
+				left: 163%;
+				flex-direction: row;
+				width: 33.5%;
+				height: 11%;
 				font-size: 3cqi;
+			}
+
+			#riff .riff-pitch input {
+				min-width: 0;
+				width: 0;
+				height: calc(100% + 2 * var(--riff-hit-y, 0px));
+				writing-mode: horizontal-tb;
+			}
+
+			#riff .riff-pitch input::-webkit-slider-runnable-track {
+				width: auto;
+				height: 0.6cqi;
+			}
+
+			#riff .riff-pitch input::-moz-range-track {
+				width: auto;
+				height: 0.6cqi;
+			}
+
+			#riff .riff-pitch input::-webkit-slider-thumb {
+				width: 3cqi;
+				height: 6cqi;
+				margin-top: -2.7cqi;
+				margin-left: 0;
+			}
+
+			#riff .riff-pitch input::-moz-range-thumb {
+				width: 3cqi;
+				height: 6cqi;
 			}
 		}
 	}
@@ -2039,13 +2069,13 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	}
 }
 
-/* The deck as WebGL draws it (deck-gl.js), where the browser can: one
-   canvas the whole of Now Playing, in its background, with the desk lit
-   round the deck and the turntable, the record and the arm drawn where
-   the page has them. The page's own stay
-   where they are, moved, held and read as before, and only stop painting
-   once the canvas has drawn (data-riff-gl): their opacity and their
-   places are still the page's, which the canvas follows. */
+/* The deck as WebGL draws it (deck-gl.js): one canvas the whole of Now
+   Playing, in its background, with the desk lit round the deck and the
+   turntable, the record and the arm drawn where the page has them. The
+   page's own deck is never painted: it is the drawn one's control layer,
+   moved, held and read where the canvas draws it, its keys' legends,
+   display and pitch fader on the drawn plinth. Where the canvas can't
+   draw, Now Playing is the cover on its own (now-playing.js). */
 .riff-deck-gl {
 	position: absolute;
 	inset: 0;
@@ -2064,27 +2094,10 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	display: none;
 }
 
-/* Where WebGL2 is likely, the page's deck waits unpainted for the drawn
-   one (now-playing.js, data-riff-gl-wait), still laid out, held and
-   read, so the first deck seen is the one that stays. */
-#riff:is([data-riff-gl], [data-riff-gl-wait]) .riff-record,
-#riff:is([data-riff-gl], [data-riff-gl-wait]) .riff-keys button {
-	background: none;
-	box-shadow: none;
-}
-
-#riff:is([data-riff-gl], [data-riff-gl-wait]) .riff-keys button::after,
-#riff:is([data-riff-gl], [data-riff-gl-wait]) :is(.riff-record, .riff-plinth, .riff-mount)::before,
-#riff:is([data-riff-gl], [data-riff-gl-wait]) :is(.riff-record, .riff-plinth)::after {
-	content: none;
-}
-
-#riff:is([data-riff-gl], [data-riff-gl-wait]) :is(.riff-record > *, .riff-plinth > *, .riff-arm-base, .riff-arm-tube > :not(.riff-arm-grip)) {
-	opacity: 0;
-}
-
-/* and its keys' captions, display and pitch fader with it */
-#riff[data-riff-gl-wait]:not([data-riff-gl]) .riff-keys {
+.riff-record > *,
+.riff-plinth > *,
+.riff-arm-base,
+.riff-arm-tube > :not(.riff-arm-grip) {
 	opacity: 0;
 }
 
@@ -2181,52 +2194,24 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	outline-offset: 4px;
 }
 
-/* with the sleeve drawn away (above), on the record it would put back */
-#riff[data-riff-deck="out"] .riff-stage:has(.riff-sleeve:focus-visible) > .riff-record {
+/* with the sleeve drawn away (above), on the record it would put back:
+   on its cue, which is laid where the record is drawn */
+#riff[data-riff-deck="out"] .riff-stage:has(.riff-sleeve:focus-visible) .riff-cue {
 	outline: 2px solid var(--riff-fg);
 	outline-offset: 4px;
 }
 
-/* The plinth: a board under the platter and the arm, which reaches behind
-   the arm's base and its rest; the platter, a little wider than the record,
-   its rim showing round it; and the rest the arm sits on when it is up, a
-   cradle with a notch for the tube, under it where the arm lies at rest:
-   turned out 14° on its base, the tube bowed 2.4 to the side at 43 along
-   (the drawing's units, in the record's hundredths), so 12.7 out and 41.1
-   down from the base at (105, 5). How far the board reaches past the
-   platter's own box is written once (--riff-plinth-edge), for the board
-   here and for now-playing.js, which takes a press beyond it as one on
-   the desk. */
+/* The plinth: how far the board reaches past the platter's own box, as
+   deck-gl.js draws it, written once (--riff-plinth-edge) for now-playing.js,
+   which takes a press beyond it as one on the desk. */
 .riff-plinth {
 	--riff-plinth-edge: -13% -26% -19% -5%;
 }
 
-.riff-plinth::before {
-	content: "";
-	position: absolute;
-	inset: var(--riff-plinth-edge);
-	border-radius: 3cqi;
-	background: linear-gradient(160deg, #222 0%, #181818 60%, #141414);
-	box-shadow: 0 2cqi 6cqi rgb(0 0 0 / 0.5), inset 0 0.2cqi 0 rgb(255 255 255 / 0.06);
-}
-
-.riff-plinth::after {
-	content: "";
-	position: absolute;
-	inset: -3.5%;
-	border-radius: 50%;
-	background: radial-gradient(circle closest-side, #0e0e0e 0 98.4%, #3a3a3a 99%, #262626);
-}
-
-/* The platter's rim, wider than the record as a Technics platter is (332mm
-   to the record's 302mm), and on it the strobe: two rows of dots, 216 for
-   33⅓ and 160 for 45. In the room's light they turn with the platter. In
-   the patch the deck's lamp lights, at the front left, flashing 120 times a
-   second on 60Hz mains, a row seems to stand still when the platter turns a
-   whole number of its dots between flashes, and otherwise to drift by what
-   is left over; now-playing.js turns the lit rows by just that, so there
-   the row for the speed playing stands still and the other creeps, and
-   both drift as the platter comes up to speed or winds down. */
+/* The strobe on the platter's rim: two rows of dots, 216 for 33⅓ and 160
+   for 45, which turn with the platter in the room's light and, in the
+   patch its lamp lights, by what is left over between the lamp's flashes
+   (now-playing.js turns them; deck-gl.js draws them). */
 .riff-strobe {
 	position: absolute;
 	z-index: 1;
@@ -2245,128 +2230,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	will-change: rotate;
 }
 
-.riff-strobe-room {
-	mask-image: conic-gradient(#000 0 195deg, transparent 207deg 243deg, #000 255deg);
-}
-
-/* the lamp's patch: its warm light on the rim, and the dots lit in it */
-.riff-strobe-lamp {
-	--riff-strobe-dot: rgb(255 150 80 / 0.45);
-	background: radial-gradient(circle at 14% 86%, rgb(255 120 50 / 0.08), transparent 30%);
-	mask-image: conic-gradient(transparent 0 195deg, #000 207deg 243deg, transparent 255deg);
-	clip-path: circle(50%);
-}
-
-/* each row its dots, round, drawn once (now-playing.js) */
+/* each row its dots, laid out once (now-playing.js) */
 #riff .riff-strobe svg {
 	display: block;
 	width: 100%;
 	height: 100%;
-	overflow: visible;
-	fill: var(--riff-strobe-dot, rgb(200 200 200 / 0.09));
-}
-
-/* The spindle: the turntable's, not the record's, so it stands where the
-   platter's centre is, and shows through the record's hole. A steel pin,
-   lit from above. It is drawn over the record, so it shows only once the
-   record has come to rest on it, never while the record slides across or
-   the turntable fades in, and goes at once when the record leaves. */
-.riff-mount::before {
-	opacity: 0;
-	content: "";
-	position: absolute;
-	inset: calc(50% - var(--riff-hole) * 0.36);
-	border-radius: 50%;
-	background: radial-gradient(circle at 42% 38%, #f0f0f0, #a9a9a9 45%, #5f5f5f);
-	box-shadow: 0 0.2cqi 0.4cqi rgb(0 0 0 / 0.6);
-}
-
-#riff[data-riff-deck="out"] .riff-mount::before {
-	opacity: 1;
-	transition: opacity 0.15s 0.6s;
-}
-
-.riff-armrest {
-	position: absolute;
-	z-index: 1;
-	top: 46.1%;
-	left: 117.7%;
-	width: 3.2cqi;
-	height: 7cqi;
-	border-radius: 0.8cqi;
-	background: linear-gradient(90deg, #2e2e2e, #3c3c3c 30%, #1c1c1c 42% 58%, #3c3c3c 70%, #2a2a2a);
-	box-shadow: 0 0.5cqi 1cqi rgb(0 0 0 / 0.6), inset 0 0.2cqi 0 rgb(255 255 255 / 0.08);
-	translate: -50% -50%;
-
-	/* along the arm where it rests, so the tube lies in its notch */
-	rotate: -14deg;
-}
-
-/* The anti-skate dial beside the arm's base, between it and the platter: a
-   knob 21 mm across (7 of the record's hundredths), its scale of 0 to 6
-   round three quarters of its rim, set at 1.5, as for a stylus tracking at
-   1.5 g. Clear of the counterweight wherever the arm turns. */
-.riff-antiskate {
-	position: absolute;
-	z-index: 1;
-	top: -2%;
-	left: 93.5%;
-	width: 7cqi;
-	height: 7cqi;
-	border-radius: 50%;
-	background:
-		radial-gradient(circle closest-side, #3b3b3b 0 56%, #262626 58% 64%, transparent 66%),
-		conic-gradient(transparent 0 160deg, #181818 160deg 200deg, transparent 200deg),
-		repeating-conic-gradient(from -136deg, #8a8a8a 0 2deg, transparent 2deg 45deg),
-		#181818;
-	box-shadow: 0 0.4cqi 0.8cqi rgb(0 0 0 / 0.5), inset 0 0.2cqi 0 rgb(255 255 255 / 0.06);
-	translate: -50% -50%;
-}
-
-/* its pointer, from the middle out: 1.5 of 6 on a scale starting 135°
-   left of the top, 45° a step */
-.riff-antiskate::after {
-	content: "";
-	position: absolute;
-	top: 24%;
-	left: calc(50% - 0.25cqi);
-	width: 0.5cqi;
-	height: 26%;
-	border-radius: 0.25cqi;
-	background: #cfcfcf;
-	transform-origin: 50% 100%;
-	rotate: -67.5deg;
-}
-
-/* The pop-up target light by the platter, at its front: a housing 15 mm
-   across, raised, with its lamp lit while a record is out, as a deck's is
-   to see the stylus by in a dark room. */
-.riff-target {
-	position: absolute;
-	z-index: 1;
-	top: 97%;
-	left: 101%;
-	width: 5cqi;
-	height: 5cqi;
-	border-radius: 50%;
-	background: radial-gradient(circle at 40% 35%, #5e5e5e, #2a2a2a 60%, #1a1a1a);
-	box-shadow: 0 0.8cqi 1.2cqi rgb(0 0 0 / 0.6), inset 0 0.2cqi 0 rgb(255 255 255 / 0.1);
-	translate: -50% -50%;
-}
-
-.riff-target::after {
-	content: "";
-	position: absolute;
-	inset: 30%;
-	border-radius: 50%;
-	background: #fff3dc;
-	box-shadow: 0 0 1.6cqi 0.4cqi rgb(255 225 180 / 0.3);
-	opacity: 0;
-	transition: opacity 0.3s;
-}
-
-#riff[data-riff-deck="out"] .riff-target::after {
-	opacity: 1;
 }
 
 /* The platter turns at 33⅓, or 45 for a single, while the music sounds
@@ -2396,14 +2264,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	width: 100%;
 	height: 100%;
 	scale: var(--riff-etch-scale, 1);
-}
-
-.riff-wax text {
-	fill: rgb(255 255 255 / 0.2);
-	font-family: ui-monospace, "SF Mono", menlo, monospace;
-	font-size: 1.6px;
-	font-weight: 500;
-	letter-spacing: 0.3px;
 }
 
 /* The tonearm, on its base just off the record's corner (now-playing.js
@@ -2436,27 +2296,6 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	/* the base, where the arm turns and a swing to a new track turns it
 	   (now-playing.js) */
 	transform-origin: 6cqi 4cqi;
-}
-
-/* The base stands on the deck and never moves. The arm, lifted, rides a
-   little above the record, which from above shows as a second shadow, cast
-   further off as the arm is higher: the arm's own shape, darkened and
-   softened once, moved and faded rather than redrawn. The cue lever lifts
-   it quickly; lowered, it sinks through the lever's silicone damping at
-   one even speed (now-playing.js, LOWER), so the shadow comes in under it
-   in a straight line. */
-#riff .riff-arm-base {
-	filter: drop-shadow(0 0.6cqi 0.8cqi rgb(0 0 0 / 0.5));
-}
-
-#riff .riff-arm-tube {
-	filter: drop-shadow(0 0.5cqi 0.6cqi rgb(0 0 0 / 0.55));
-}
-
-#riff .riff-arm-lift {
-	opacity: 0;
-	filter: brightness(0) blur(0.6px);
-	transition: translate 0.5s linear, opacity 0.5s linear;
 }
 
 /* The needle drops once the record is out (now-playing.js marks it down);
@@ -2493,19 +2332,11 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	border-radius: 2px;
 }
 
-#riff[data-riff-deck="out"] .riff-arm:is([data-riff-up=""], [data-riff-held]) .riff-arm-lift {
-	opacity: 0.4;
-	translate: 0.8px 2.4px;
-	transition-duration: 0.15s;
-	transition-timing-function: ease-out;
-}
-
 /* Shown while the music already plays (now-playing.js marks it), the record
    is on the platter and the stylus in its groove from the first frame:
    nothing slides, drops or swings in under music already heard. The
    stage's own sleeve is named so this outranks a phone on its side's. */
-#riff[data-riff-at] :is(.riff-record, .riff-stage > .riff-cover, .riff-cover, .riff-deck-part, .riff-arm, .riff-arm-lift),
-#riff[data-riff-at] .riff-mount::before {
+#riff[data-riff-at] :is(.riff-record, .riff-stage > .riff-cover, .riff-cover, .riff-deck-part, .riff-arm) {
 	transition: none;
 }
 
@@ -2551,10 +2382,7 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	.riff-record,
 	.riff-cover,
 	.riff-deck-part,
-	.riff-arm,
-	#riff .riff-arm-lift,
-	#riff .riff-mount::before,
-	#riff .riff-target::after {
+	.riff-arm {
 		transition: none;
 	}
 }
