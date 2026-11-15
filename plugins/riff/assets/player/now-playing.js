@@ -238,8 +238,9 @@ export function nowPlaying( P ) {
 	// in its sleeve only the sleeve lies on the desk. Where the whole screen is the turntable
 	// there is no desk to press. The press starts and ends on the desk, in one place: the arm
 	// carried to its next click, and a drag off the record, are not presses of it.
-	function onDeck( x, y ) {
+	function onDeck( sx, sy ) {
 		const plinth = $( '.riff-plinth' );
+		const [ x, y ] = P.flat ? P.flat( sx, sy ) : [ sx, sy ];
 		if ( ! plinth || shapedAsDeck() ) {
 			return true;
 		}
@@ -599,7 +600,8 @@ export function nowPlaying( P ) {
 	// rides the run-out, in silence. The platter turns on at the music's last speed meanwhile, the
 	// music over, and is braked once the arm is lifted.
 	const LOCKED = 1.06;
-	let ended = 0;
+	// Never, until a track ends: the page's clock starts at its load, not at nothing.
+	let ended = -Infinity;
 	// Noted before media.js loads the next track on the same event: a capturing listener on the
 	// element itself is called before the others there.
 	for ( const el of [ P.audio, P.video ] ) {
@@ -1244,9 +1246,57 @@ export function nowPlaying( P ) {
 		// change (below, data-riff-turning holds from `playing` to `pause`).
 		const turning = 'riffTurning' in root.dataset && root.dataset.riffDeck === 'out' && ! held();
 		const flipping = flip.until > performance.now();
+		// Another track asked for while the record turns (a key, the bar, a media key, the lock
+		// screen): as a deck does it. The cue lever lifts the arm and the music stops with it; the arm
+		// is carried over the record to the new band's lead-in, taking as long as the way is long;
+		// the lever lowers it there, and the music is heard once the stylus is in the groove. Asked
+		// again on the way, the arm turns for the newer band from where it is, lifted once and lowered
+		// once. A track ending on its own plays on into the next band, as a record does, and a band
+		// the hand has put the arm on (land()) is heard at once.
+		const id = String( P.track()?.id ?? '' );
+		const skip =
+			seen() &&
+			( turning || coasting !== null || performance.now() - ( turn.stopped ?? -Infinity ) < 250 ) &&
+			root.dataset.riffDeck === 'out' &&
+			! flipping &&
+			P.speed === 1 &&
+			!! turn.heard &&
+			id !== turn.heard &&
+			// A track that ended on its own is followed by its next within the same moment.
+			performance.now() - ended > 300 &&
+			! ( 'riffArriving' in root.dataset );
+		if ( skip ) {
+			const arm = tonearmOf();
+			clearTimeout( turn.land );
+			cued( true );
+			if ( arm ) {
+				arm.dataset.riffUp = '';
+			}
+			// The motor runs on under the lifted arm.
+			if ( coasting === null ) {
+				coast( 1, 1 );
+			}
+			P.paint();
+			needle();
+			const travel = Math.max( 0, ( swing.until || 0 ) - performance.now() );
+			turn.land = setTimeout( () => {
+				if ( arm ) {
+					arm.dataset.riffUp = 'lowering';
+				}
+			}, travel );
+			turn.wait = setTimeout( () => {
+				cued( false );
+				lowered();
+				turn.heard = id;
+				settle( m );
+				m.play().catch( P.paint );
+			}, travel + LOWER );
+			return;
+		}
 		// At the listener's own speed the music keeps its pitch, which a platter coming up to speed
 		// would bend, so it starts at once.
 		if ( ! seen() || P.speed !== 1 || ( turning && ! P.ramping && ! flipping ) ) {
+			turn.heard = id;
 			lowered();
 			cued( false );
 			if ( coasting !== null ) {
@@ -1287,6 +1337,7 @@ export function nowPlaying( P ) {
 				windDown();
 				return;
 			}
+			turn.heard = String( P.track()?.id ?? '' );
 			lowered();
 			const from = m.paused ? CRAWL : m.playbackRate;
 			m.playbackRate = from;
@@ -1387,6 +1438,8 @@ export function nowPlaying( P ) {
 		} );
 		el.addEventListener( 'pause', () => {
 			if ( el === P.el() ) {
+				// When, for a new track asked for at this moment (turn()): the record was turning.
+				turn.stopped = performance.now();
 				delete root.dataset.riffTurning;
 				strobe();
 			}
@@ -1492,14 +1545,23 @@ export function nowPlaying( P ) {
 	let sweep = null;
 	let swept = '';
 	const shown = ( arm ) => parseFloat( getComputedStyle( arm ).rotate ) || 0;
+	// How long the carry takes: the hand or the cue lever crosses the record at an even pace, a band
+	// or so (about 3.5°) in LAND, the whole side in about two seconds.
+	const carry = ( degrees ) => 350 + 70 * Math.abs( degrees );
 	function swing( arm, from, to ) {
-		if ( Math.abs( from - to ) < 0.2 || P.reduce() ) {
+		const tube = arm.querySelector( '.riff-arm-tube' );
+		// Carried again on the way: from where the tube is now, not from where it set out.
+		const before = parseFloat( tube ? getComputedStyle( tube ).rotate : '' ) || 0;
+		swing.anim?.cancel();
+		const under = before - ( parseFloat( tube ? getComputedStyle( tube ).rotate : '' ) || 0 );
+		swing.anim = null;
+		swing.until = 0;
+		if ( Math.abs( from + under - to ) < 0.2 || P.reduce() || ! tube ) {
 			return;
 		}
-		arm.querySelector( '.riff-arm-tube' )?.animate(
-			[ { rotate: `${ ( from - to ).toFixed( 2 ) }deg` }, { rotate: '0deg' } ],
-			{ duration: 600, easing: hand(), composite: 'add' }
-		);
+		const duration = carry( from + under - to );
+		swing.anim = tube.animate( [ { rotate: `${ ( from + under - to ).toFixed( 2 ) }deg` }, { rotate: '0deg' } ], { duration, easing: hand(), composite: 'add' } );
+		swing.until = performance.now() + duration;
 	}
 	function lift() {
 		const arm = $( '.riff-arm' );
@@ -1600,7 +1662,9 @@ export function nowPlaying( P ) {
 	const tonearm = $( '.riff-arm' );
 	// Where a point on the screen lies around the arm's base, as the arm's own angle: 0 straight
 	// down, turning towards the record as it grows.
-	function around( x, y ) {
+	function around( sx, sy ) {
+		// Where the deck is drawn from a chair (deck-gl.js), in the arm's plane on the page's flat deck.
+		const [ x, y ] = P.flat ? P.flat( sx, sy, 'arm' ) : [ sx, sy ];
 		const r = $( '.riff-record' ).getBoundingClientRect();
 		const dx = x - r.left - BASE[ 0 ] * r.width;
 		const dy = y - r.top - BASE[ 1 ] * r.width;
@@ -1652,6 +1716,8 @@ export function nowPlaying( P ) {
 		const album = albums.get( playing );
 		const id = String( album.ids[ k ] );
 		const m = P.el();
+		// Put there by the hand: heard as soon as it plays, with no carry of its own (turn()).
+		turn.heard = id;
 		if ( id === String( P.track().id ) ) {
 			m.currentTime = into;
 		} else {
@@ -1698,8 +1764,10 @@ export function nowPlaying( P ) {
 	if ( cue ) {
 		// The share of the side in the groove under a point of the screen; null off the grooves.
 		const under = ( e ) => {
-			const r = cue.getBoundingClientRect();
-			const out = Math.hypot( e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2 ) / ( r.width / 2 );
+			// The cue's own box on the page's flat deck, which the plinth's is, and the point there.
+			const r = ( P.flat ? $( '.riff-plinth' ) : cue ).getBoundingClientRect();
+			const [ x, y ] = P.flat ? P.flat( e.clientX, e.clientY ) : [ e.clientX, e.clientY ];
+			const out = Math.hypot( x - r.left - r.width / 2, y - r.top - r.height / 2 ) / ( r.width / 2 );
 			return out > LEAD_IN || out < leadOut() || ! sideOf( P.track() ) ? null : ( LEAD_IN - out ) / ( LEAD_IN - leadOut() );
 		};
 		let down = null;
