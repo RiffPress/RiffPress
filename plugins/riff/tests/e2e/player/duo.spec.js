@@ -114,14 +114,11 @@ test.describe( 'iPhone Duo', () => {
 		await page.keyboard.press( 'ArrowLeft' );
 		await expect( lp ).toHaveAttribute( 'aria-checked', 'true' );
 		await expect.poll( rate ).toBeCloseTo( 1, 2 );
-		// The pitch adds its percentage, says it, and clicks into the middle.
+		// The pitch adds its percentage and says it (its detent under a hand: pitch.spec.js).
 		const pitch = board.getByRole( 'slider', { name: 'Pitch' } );
 		await pitch.fill( '4' );
 		await expect( pitch ).toHaveAttribute( 'aria-valuetext', '+4.0%' );
 		await expect.poll( rate ).toBeCloseTo( 1.04, 2 );
-		await pitch.fill( '0.2' );
-		await expect( pitch ).toHaveAttribute( 'aria-valuetext', '0.0%' );
-		await expect.poll( rate ).toBeCloseTo( 1, 2 );
 		// Off the deck the music is at its own speed; back on it, the deck's again.
 		await pitch.fill( '-6' );
 		await expect.poll( rate ).toBeCloseTo( 0.94, 2 );

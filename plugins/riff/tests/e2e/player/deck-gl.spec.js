@@ -135,7 +135,7 @@ async function drag( page, from, to, touch ) {
 
 // Every control of the deck works where it is drawn, by a finger or a mouse, and is reached by the
 // keyboard with its focus ring there: each key, its lamp showing what it says, the pitch fader and its
-// readout, the arm lifted by its grip, carried to a groove and set down, the grooves themselves under
+// value, the arm lifted by its grip, carried to a groove and set down, the grooves themselves under
 // a mouse, and the display drawing what is playing.
 async function everyControl( page, at, touch ) {
 	const audio = () => page.evaluate( () => ( { paused: document.querySelector( '.riff-audio' ).paused, src: document.querySelector( '.riff-audio' ).currentSrc } ) );
@@ -181,7 +181,7 @@ async function everyControl( page, at, touch ) {
 	await press( page, '.riff-key-start', touch );
 	await expect.poll( async () => ( await audio() ).paused, `${ at }: started where drawn` ).toBe( false );
 
-	// The pitch fader, along its drawn slot, and its readout.
+	// The pitch fader, along its drawn slot, and its value.
 	const fader = page.locator( '[data-riff-pitch]' );
 	const slot = await fader.evaluate( ( el ) => {
 		const b = el.getBoundingClientRect();
@@ -189,7 +189,7 @@ async function everyControl( page, at, touch ) {
 	} );
 	await drag( page, [ slot[ 0 ], slot[ 1 ] ], [ slot[ 0 ] + slot[ 2 ], slot[ 1 ] + slot[ 3 ] ], touch );
 	await expect.poll( () => fader.inputValue(), `${ at }: the pitch fader moved where drawn` ).not.toBe( '0' );
-	await expect( page.locator( '.riff-pitch output' ), `${ at }: its readout` ).not.toHaveText( '0.0' );
+	await expect( fader, `${ at }: its value said` ).not.toHaveAttribute( 'aria-valuetext', '0%' );
 	await fader.evaluate( ( el ) => {
 		el.value = '0';
 		el.dispatchEvent( new Event( 'input', { bubbles: true } ) );

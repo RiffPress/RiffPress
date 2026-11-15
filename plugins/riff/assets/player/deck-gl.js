@@ -360,6 +360,12 @@ const DECK = {
 		lampAt ? [ [ ( ( lampAt === 'top' ? left + 0.5 * wide : left + 0.031 ) - 0.5 ) * MM, ( 0.5 - top + 0.0199 ) * MM, k ] ] : []
 	),
 };
+// The pitch fader, where riff.css has it (.riff-pitch), in the record's width: its slot's middle
+// across, its back and its front, the end stop at each, its cap's width and length, and the key
+// that sends it back to its middle, its left, width, top and height. The page's range stands at the
+// cap's ridged top, so a hand takes the cap where it is drawn.
+const PITCH = { x: 1.135, back: 0.6, front: 0.92, stop: 0.01, wide: 0.054, long: 0.033, zero: [ 1.056, 0.038, 0.744, 0.032 ] };
+const CAP_TOP = DECK_Z + 0.0092;
 const LAMP_AT = [ -0.141, -0.141 ];
 const LAMP = [ LAMP_AT[ 0 ] + 0.7071 * 0.022, LAMP_AT[ 1 ] + 0.7071 * 0.022, 0.006 ];
 const TARGET = [ 0.51 * MM, -0.47 * MM ];
@@ -680,7 +686,7 @@ export default function deckGl( P ) {
 	( $( '.riff-np-bg' ) || stage ).append( canvas );
 	const cover = $( '.riff-cover' );
 	// The deck's keys (player.php): drawn where they show, each a little lower while it is pressed.
-	const keys = [ ...stage.querySelectorAll( '.riff-keys button' ) ];
+	const keys = [ ...stage.querySelectorAll( '.riff-keys button:not([data-riff-reset])' ) ];
 
 	// The arm, as now-playing.js set it up: its base in the record's width, its length, and its
 	// headshell's angle.
@@ -783,6 +789,43 @@ export default function deckGl( P ) {
 		};
 	}
 
+	// The pitch fader: a slot let into the plinth between two raised rails that catch the lamp along
+	// their bevels, closed by an end stop at each end, its floor dark with the slit the cap's stem
+	// rides in; the cap, in its own frame, its middle at the origin, standing on its stem above the
+	// rails, bevelled, with four ridges across its top for a finger and a white line between them
+	// that is read against the scale; and the key by its zero, in its well, with its lamp.
+	function pitchMeshes() {
+		const [ x, y0, y1, stop ] = [ ( PITCH.x - 0.5 ) * MM, ( 0.5 - PITCH.front ) * MM, ( 0.5 - PITCH.back ) * MM, PITCH.stop * MM ];
+		const [ inner, rail, top ] = [ 0.0024, 0.0026, DECK_Z + 0.002 ];
+		const [ cw, cl ] = [ ( PITCH.wide * MM ) / 2, ( PITCH.long * MM ) / 2 ];
+		const [ left, wide, kt, tall ] = PITCH.zero;
+		const [ kx0, ky0, kx1, ky1 ] = [ ( left - 0.5 ) * MM, ( 0.5 - kt - tall ) * MM, ( left + wide - 0.5 ) * MM, ( 0.5 - kt ) * MM ];
+		const [ lx0, ly0, lx1, ly1 ] = [ ( left + 0.35 * wide - 0.5 ) * MM, ( 0.5 - kt + 0.0166 ) * MM, ( left + 0.65 * wide - 0.5 ) * MM, ( 0.5 - kt + 0.0232 ) * MM ];
+		return {
+			rails: mesh(
+				merge(
+					rbox( x - inner - rail, y0, x - inner, y1, DECK_Z - 0.001, top, 0.0009, 0.0006 ),
+					rbox( x + inner, y0, x + inner + rail, y1, DECK_Z - 0.001, top, 0.0009, 0.0006 ),
+					rbox( x - inner - 0.0004, y0, x + inner + 0.0004, y0 + stop, DECK_Z - 0.001, top, 0.0006, 0.0006 ),
+					rbox( x - inner - 0.0004, y1 - stop, x + inner + 0.0004, y1, DECK_Z - 0.001, top, 0.0006, 0.0006 )
+				)
+			),
+			floor: mesh( box( x - inner, y0 + stop, DECK_Z - 0.001, x + inner, y1 - stop, DECK_Z + 0.0003 ) ),
+			slit: mesh( box( x - 0.0007, y0 + stop + 0.0012, DECK_Z - 0.001, x + 0.0007, y1 - stop - 0.0012, DECK_Z + 0.00035 ) ),
+			cap: mesh(
+				merge(
+					box( -0.0007, -0.0025, DECK_Z - 0.0006, 0.0007, 0.0025, DECK_Z + 0.0034 ),
+					rbox( -cw, -cl, cw, cl, DECK_Z + 0.003, CAP_TOP - 0.0007, 0.0014, 0.0009 ),
+					...[ -0.0036, -0.0018, 0.0018, 0.0036 ].map( ( r ) => rbox( 0.0007 - cw, r - 0.00045, cw - 0.0007, r + 0.00045, CAP_TOP - 0.0009, CAP_TOP, 0.0003, 0.00025, 3 ) )
+				)
+			),
+			line: mesh( box( 0.0009 - cw, -0.0003, CAP_TOP - 0.0009, cw - 0.0009, 0.0003, CAP_TOP - 0.00064 ) ),
+			key: { ...mesh( rbox( kx0, ky0, kx1, ky1, DECK_Z - 0.002, DECK_Z + 0.003, 0.0022, 0.0009 ) ), at: [ ( kx0 + kx1 ) / 2, ( ky0 + ky1 ) / 2, ( kx1 - kx0 ) / 2, ( ky1 - ky0 ) / 2 ] },
+			well: mesh( rbox( kx0 - 0.0012, ky0 - 0.0012, kx1 + 0.0012, ky1 + 0.0012, DECK_Z - 0.001, DECK_Z + 0.0003, 0.003, 0.0002 ) ),
+			lamp: { ...mesh( rbox( lx0, ly0, lx1, ly1, DECK_Z - 0.0002, DECK_Z + 0.0012, 0.0006, 0.0002 ) ), at: [ ( lx0 + lx1 ) / 2, ( ly0 + ly1 ) / 2, ( lx1 - lx0 ) / 2, ( ly1 - ly0 ) / 2 ] },
+		};
+	}
+
 	// Everything the context holds, made again if the context is lost and comes back.
 	function build() {
 		std = program( STD_VS, STD_FS );
@@ -802,6 +845,7 @@ export default function deckGl( P ) {
 			plate: mesh( rbox( x0 + 0.002, y0 + 0.002, x1 - 0.002, y1 - 0.002, -0.03, DECK_Z, 0.01, 0.0018 ) ),
 			// The same with its keys.
 			keyed: keyedMeshes( DECK ),
+			pitch: pitchMeshes(),
 			platter: mesh( L( [ [ 0, -0.0215 ], [ RP - 0.0005, -0.0215 ], [ RP, -0.0205 ], [ RP, -0.0072 ], [ RP - 0.002, -0.0045 ], [ RP - 0.011, -0.0036 ], [ RP - 0.011, -0.0025 ], [ 0, -0.0025 ] ], 160 ) ),
 			mat: mesh( L( [ [ RP - 0.013, -0.0025 ], [ RP - 0.013, -0.0013 ], [ 0, -0.0013 ] ], 96 ) ),
 			spindle: mesh( L( [ [ 0.0036, -0.003 ], [ 0.0036, 0.009 ], [ 0.003, 0.0108 ], [ 0.0015, 0.0115 ], [ 0, 0.0115 ] ], 24 ) ),
@@ -1254,11 +1298,21 @@ export default function deckGl( P ) {
 	const panel = keys[ 0 ]?.closest( '.riff-keys' );
 	// What a finger or a mouse presses: each key, and the pitch fader, which is its own.
 	const pressables = panel ? [ ...panel.querySelectorAll( 'button, input' ) ] : [];
+	// The pitch fader's range, at its cap's top, and its scale, in the plane of the cap's line, so
+	// the line is read against it where the eye sees it, as a scale printed for that eye would be;
+	// with where each starts on the page's flat deck, from the plinth's corner (frame()). The key by
+	// its zero stands with the keys, in the panel's plane.
+	const fader = panel?.querySelector( '[data-riff-pitch]' );
+	const zero = panel?.querySelector( '[data-riff-reset]' );
+	const planes = [ [ fader, CAP_TOP ], [ panel?.querySelector( '.riff-pitch-scale' ), CAP_TOP - 0.0006 ] ].filter( ( [ el ] ) => el );
+	let planeFrom = [];
+	let faderAt = null;
+	let risen = 0;
 	P.flat = ( x, y, plane = 'record' ) => ( flatten ? flatten( x, y, plane === 'arm' ? ARM_Z : 0 ) : [ x, y ] );
 	function unlay() {
 		flatten = null;
 		laidFor = '';
-		for ( const el of [ mount, cue, panel, ...keys ] ) {
+		for ( const el of [ mount, cue, panel, ...keys, ...planes.map( ( [ part ] ) => part ) ] ) {
 			el?.style.removeProperty( 'transform' );
 			el?.style.removeProperty( 'transform-origin' );
 			el?.style.removeProperty( 'filter' );
@@ -1451,7 +1505,7 @@ export default function deckGl( P ) {
 		const layout = [ cb.left, cb.top, cb.width, cb.height, pb.left, pb.top, pb.width, room.width, room.height, keyed, target ].map( String ).join( '|' );
 		if ( keyed && panel && layout !== laidFor ) {
 			laidFor = layout;
-			const lifted = [ panel, ...keys ];
+			const lifted = [ panel, ...keys, ...planes.map( ( [ part ] ) => part ) ];
 			const laid = lifted.map( ( el ) => el.style.transform );
 			lifted.forEach( ( el ) => ( el.style.transform = 'none' ) );
 			for ( const el of pressables ) {
@@ -1496,6 +1550,13 @@ export default function deckGl( P ) {
 				el.style.setProperty( '--riff-hit-x', `${ reach[ i ][ 0 ].toFixed( 1 ) }px` );
 				el.style.setProperty( '--riff-hit-y', `${ reach[ i ][ 1 ].toFixed( 1 ) }px` );
 			} );
+			// The fader's range and its scale, once the range reaches as far as it does.
+			lifted.forEach( ( el ) => ( el.style.transform = 'none' ) );
+			planeFrom = planes.map( ( [ el ] ) => {
+				const r = el.getBoundingClientRect();
+				return [ r.left - pb.left, r.top - pb.top ];
+			} );
+			lifted.forEach( ( el, i ) => ( el.style.transform = laid[ i ] ) );
 		}
 		// A point of the screen on the deck's plane (z), and a point of the deck on the screen.
 		const onPlane = ( px, py, z ) => {
@@ -1606,6 +1667,16 @@ export default function deckGl( P ) {
 		} );
 		const down = travel.map( ( t ) => ( Math.abs( t ) < 0.004 ? 0 : Math.round( t * 200 ) / 200 ) );
 		const lamps = lamp.map( ( l ) => Math.round( l * 50 ) / 50 );
+		// The fader's cap travels to where its range says, quickly, as a hand or its key sends it (at
+		// once with less motion asked for), and the key by its zero rises with its lamp lit while it
+		// is offered (now-playing.js) and sinks back into the plinth when it isn't.
+		const faderTo = fader ? ( fader.valueAsNumber - Number( fader.min ) ) / ( Number( fader.max ) - Number( fader.min ) ) : 0.5;
+		const travels = P.reduce() ? 1 : 1 - Math.exp( -dt / 0.045 );
+		faderAt = faderAt === null ? faderTo : faderAt + ( faderTo - faderAt ) * travels;
+		faderAt = Math.abs( faderTo - faderAt ) < 2e-4 ? faderTo : faderAt;
+		const offered = zero?.hasAttribute( 'data-riff-offered' ) ? 1 : 0;
+		risen += ( offered - risen ) * travels;
+		risen = Math.abs( offered - risen ) < 0.02 ? offered : Math.round( risen * 100 ) / 100;
 		// The pointer over the deck, as a light: where it is on the deck, and how near.
 		hand.on += ( ( hand.over ? 1 : 0 ) - hand.on ) * ( 1 - Math.exp( -dt / 0.12 ) );
 		const handAt = [ handX, handY, hand.on < 0.01 ? 0 : hand.on ];
@@ -1615,7 +1686,7 @@ export default function deckGl( P ) {
 		const still = [
 			cueAt, keyed, down.map( ( d ) => d.toFixed( 3 ) ), lamps, handAt.map( ( n ) => n.toFixed( 3 ) ), w, h, pb.left - cb.left, pb.top - cb.top, pb.width, deckAlpha, turn.toFixed( 2 ), ride, out, prints, accented,
 			discs.map( ( d ) => d.key + d.alpha ),
-			stood.toFixed( 3 ), covered, coverOn, cb.top, cb.left,
+			stood.toFixed( 3 ), covered, coverOn, cb.top, cb.left, faderAt.toFixed( 4 ), risen,
 		].join( '|' );
 		const turning = [ nowAt.toFixed( 5 ), glow.toFixed( 2 ), spin, speed.toFixed( 1 ), lampRows.map( ( a ) => a.toFixed( 1 ) ) ].join( '|' );
 		if ( still === last && turning === lastTurning ) {
@@ -1632,7 +1703,7 @@ export default function deckGl( P ) {
 		last = still;
 		// The shadows are cast again only when something that casts one has moved: not for a
 		// lamp, the pointer's light or the groove pointed at.
-		const cast = [ keyed, down.map( ( d ) => d.toFixed( 2 ) ), turn.toFixed( 2 ), ride, out, discs.map( ( d ) => d.key + ( d.alpha > 0.5 ) ) ].join( '|' );
+		const cast = [ keyed, down.map( ( d ) => d.toFixed( 2 ) ), turn.toFixed( 2 ), ride, out, discs.map( ( d ) => d.key + ( d.alpha > 0.5 ) ), faderAt.toFixed( 4 ), risen ].join( '|' );
 		const casting = cast !== lastCast;
 		lastCast = cast;
 		lastTurning = turning;
@@ -1693,6 +1764,26 @@ export default function deckGl( P ) {
 				}
 			} );
 		}
+		if ( panelAt && keyed && planeFrom.length === planes.length ) {
+			const undo = new DOMMatrix( panelAt ).inverse();
+			planes.forEach( ( [ el, z ], k ) => {
+				const css = `matrix3d(${ undo
+					.multiply( new DOMMatrix( lay( null, z ) ) )
+					.toFloat64Array()
+					.map( ( v ) => +v.toFixed( 8 ) )
+					.join( ',' ) })`;
+				if ( el.style.transform !== css ) {
+					el.style.transformOrigin = `${ -planeFrom[ k ][ 0 ] }px ${ -planeFrom[ k ][ 1 ] }px`;
+					el.style.transform = css;
+				}
+			} );
+		}
+		// The fader's cap, its middle from the slot's back (−8) to its front (+8), and the key by its
+		// zero, sunk out of sight below the plinth's top until it rises.
+		const pm = m.pitch;
+		const capFrom = PITCH.back + PITCH.stop + PITCH.long / 2;
+		const capM = move( ( PITCH.x - 0.5 ) * MM, ( 0.5 - capFrom - faderAt * ( PITCH.front - PITCH.stop - PITCH.long / 2 - capFrom ) ) * MM, 0 );
+		const zeroM = move( 0, 0, -0.0056 * ( 1 - risen ) );
 		// Each: mesh, where, colour, roughness, metallicity, mode, its own light, how much of it shows, and a key's middle and half its size.
 		const items = [
 			[ m.desk, I, off, 1, 0, 5, off ],
@@ -1706,6 +1797,25 @@ export default function deckGl( P ) {
 							// Unlit, a lens of smoked glass with the light on it; lit, the amber.
 							part ? [ [ part, I, [ 0.008, 0.005, 0.004 ], 0.12, 0, 7, AMBER.map( ( c ) => c * lamps[ k ] ), undefined, part.at ] ] : []
 						),
+				  ]
+				: [] ),
+			// The pitch fader: its slot, its rails and their stops in the plinth's anodised dark, and the
+			// cap where its range has it, its stem in the slit, moulded as the keys' caps are; the key by
+			// its zero, while it is up.
+			...( keyed
+				? [
+						[ pm.floor, I, [ 0.004, 0.004, 0.0045 ], 0.85, 0, 0, off ],
+						[ pm.slit, I, [ 0, 0, 0 ], 1, 0, 0, off ],
+						[ pm.rails, I, [ 0.03, 0.03, 0.032 ], 0.3, 0.6, 0, off ],
+						[ pm.cap, capM, [ 0.034, 0.034, 0.038 ], 0.4, 0, 6, off, undefined, [ 0, 0, ( PITCH.wide * MM ) / 2, ( PITCH.long * MM ) / 2 ] ],
+						[ pm.line, capM, [ 0.72, 0.71, 0.68 ], 0.45, 0, 0, off ],
+						...( risen > 0
+							? [
+									[ pm.well, zeroM, [ 0.006, 0.006, 0.007 ], 0.8, 0, 0, off ],
+									[ pm.key, zeroM, [ 0.034, 0.034, 0.038 ], 0.4, 0, 6, off, undefined, pm.key.at ],
+									[ pm.lamp, zeroM, [ 0.008, 0.005, 0.004 ], 0.12, 0, 7, AMBER.map( ( c ) => c * risen ), undefined, pm.lamp.at ],
+							  ]
+							: [] ),
 				  ]
 				: [] ),
 			[ m.platter, turns, [ 0.075, 0.075, 0.08 ], 0.36, 1, 3, off ],
@@ -1919,6 +2029,11 @@ export default function deckGl( P ) {
 	new MutationObserver( ( records ) => records.some( ( r ) => r.attributeName !== 'data-riff-gl' ) && changed() ).observe( root, { attributes: true } );
 	new MutationObserver( changed ).observe( record, { subtree: true, childList: true, characterData: true } );
 	new MutationObserver( wake ).observe( arm, { attributes: true } );
+	// The fader's key offered or taken away, and the fader moved, by any hand.
+	if ( zero ) {
+		new MutationObserver( wake ).observe( zero, { attributes: true, attributeFilter: [ 'data-riff-offered' ] } );
+	}
+	fader?.addEventListener( 'input', wake );
 	new MutationObserver( wake ).observe( np, { attributes: true, attributeFilter: [ 'hidden' ] } );
 	cover?.addEventListener( 'load', wake );
 	for ( const moved of [ 'transitionrun', 'animationstart', 'pointerdown', 'pointerup', 'keydown', 'keyup', 'focusin', 'focusout' ] ) {

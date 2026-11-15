@@ -93,9 +93,11 @@ defined( 'ABSPATH' ) || exit;
 					<button type="button" class="riff-key-repeat" data-riff-action="repeat" data-repeat="off" aria-label="<?php esc_attr_e( 'Repeat, off', 'riff' ); ?>"><?php echo Player::icon( 'repeat' ) . Player::icon( 'repeatOne' ); ?><span class="riff-hit" aria-hidden="true"></span></button>
 					<?php // The deck's level meter, in a window beside its keys (level.js). ?>
 					<canvas class="riff-level" aria-hidden="true"></canvas>
+					<?php /* The pitch fader, under the arm's rest, its scale printed beside its slot; and, while it is off its middle and the listener is at it, the key that sends it back there (data-riff-default, data-riff-reset: now-playing.js). deck-gl.js draws the slot, the cap and the key. */ ?>
 					<span class="riff-pitch">
-						<input type="range" min="-8" max="8" step="0.1" value="0" data-riff-pitch aria-label="<?php esc_attr_e( 'Pitch', 'riff' ); ?>" aria-valuetext="0%">
-						<output aria-hidden="true">0.0</output>
+						<span class="riff-pitch-scale" aria-hidden="true"><i>−8</i><i>−4</i><i>0</i><i>+4</i><i>+8</i><b><?php esc_html_e( 'Pitch', 'riff' ); ?></b></span>
+						<input type="range" min="-8" max="8" step="0.1" value="0" data-riff-pitch data-riff-default="0" aria-label="<?php esc_attr_e( 'Pitch', 'riff' ); ?>" aria-valuetext="0%" aria-keyshortcuts="0">
+						<button type="button" class="riff-pitch-zero" data-riff-reset aria-label="<?php esc_attr_e( 'Pitch to 0%', 'riff' ); ?>"><span aria-hidden="true">0</span><span class="riff-hit" aria-hidden="true"></span></button>
 					</span>
 				</span>
 				<img class="riff-cover" data-riff-art data-riff-size="large" alt="" decoding="async" draggable="false" hidden>
