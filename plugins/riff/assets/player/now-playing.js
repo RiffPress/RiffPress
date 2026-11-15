@@ -799,7 +799,7 @@ export function nowPlaying( P ) {
 				return record.animate( [ { '--riff-turn': '90deg' }, { '--riff-turn': '180deg' } ], { ...half, easing: hand( 0.5, 1 ) } ).finished;
 			} )
 			// And the arm carried back over the record once it lies on the mat again, on the lever,
-			// and lowered there: down before the motor has the platter up to a crawl.
+			// to be lowered there (lowerOver()).
 			.then( () => set.finished )
 			.then( () => {
 				if ( ! arm || root.dataset.riffDeck !== 'out' ) {
@@ -808,16 +808,7 @@ export function nowPlaying( P ) {
 				arm.dataset.riffDown = '';
 				arm.dataset.riffUp = '';
 				needle( false, careful );
-				clearTimeout( flip.land );
-				flip.land = setTimeout(
-					() => {
-						if ( arm.dataset.riffUp === '' ) {
-							arm.dataset.riffUp = 'lowering';
-							flip.land = setTimeout( lowered, LOWER );
-						}
-					},
-					Math.max( 0, ( swing.until || 0 ) - performance.now() )
-				);
+				lowerOver( arm );
 			} )
 			.catch( () => {} );
 	}
@@ -1012,7 +1003,7 @@ export function nowPlaying( P ) {
 			rested = false;
 			needle.place = false;
 			clearTimeout( deck.drop );
-			clearTimeout( deck.lower );
+			clearTimeout( lowerOver.wait );
 			stopRunout();
 			delete root.dataset.riffDeck;
 			delete arm?.dataset.riffDown;
@@ -1055,24 +1046,15 @@ export function nowPlaying( P ) {
 				arm.dataset.riffDown = '';
 				arm.dataset.riffUp = '';
 				needle();
-				clearTimeout( deck.lower );
-				deck.lower = setTimeout(
-					() => {
-						if ( arm.dataset.riffUp === '' ) {
-							arm.dataset.riffUp = 'lowering';
-						}
-						deck.lower = setTimeout( lowered, P.reduce() ? 0 : LOWER );
-					},
-					Math.max( 0, ( swing.until || 0 ) - performance.now() )
-				);
+				lowerOver( arm );
 			}
 		}, P.reduce() ? 0 : DROP );
 	}
 
 	// ---- Starting and stopping, as a turntable does where the record is seen: Now Playing open on
 	// a song, with motion. To start, the record comes out of its sleeve if it is in it (after a new
-	// album has come in), the needle drops, and only then does the platter start, the music with
-	// it: the platter's speed is the music's, the pitch rising with it as a record's does, the
+	// album has come in), the platter starts, the needle drops (drop()), and the music starts as it
+	// lands: the platter's speed is the music's, the pitch rising with it as a record's does, the
 	// platter's turn and the arm's sweep following the same rate. To stop, it winds down, the pitch
 	// falling, and then stops. Moving on to the next track, it keeps turning. Where the record is
 	// not seen, the music starts and stops at once. The browser's own speed change does the bending
@@ -1278,14 +1260,106 @@ export function nowPlaying( P ) {
 	function lowered() {
 		delete tonearmOf()?.dataset.riffUp;
 	}
-	function turn( m ) {
+	// ---- The cue: where starting and stopping has got to, one sequence the deck's parts follow,
+	// on #riff as data-riff-cue for what reads it (the level lamps, level.js; the tests). rest:
+	// nothing asked of the deck. cueing: the press made, the platter pulled up and the arm carried
+	// over its groove on the lever. hovering: over its groove, the lever not yet let down, until the
+	// music can sound. down: lowered and landed, the music let go at that moment. playing: it sounds.
+	// lifting: stopping, the music winding down with the platter before the lever lifts the arm.
+	function phase( name ) {
+		if ( root.dataset.riffCue !== name ) {
+			root.dataset.riffCue = name;
+		}
+	}
+	phase( 'rest' );
+	// The lever let down: the stylus sinks onto the record and is in its groove LOWER later.
+	function lever( arm ) {
+		arm.dataset.riffUp = 'lowering';
+		lever.lands = performance.now() + LOWER;
+		clearTimeout( lever.done );
+		lever.done = setTimeout( lowered, LOWER );
+	}
+	// Carried over the record with no music waiting on it (the record brought out, or turned over,
+	// and nothing asked to play), the arm is lowered once it gets there; with music waiting, drop()
+	// lowers it.
+	function lowerOver( arm ) {
+		clearTimeout( lowerOver.wait );
+		lowerOver.wait = setTimeout(
+			() => {
+				if ( ! held() && arm.dataset.riffUp === '' ) {
+					lever( arm );
+				}
+			},
+			Math.max( 0, ( swing.until || 0 ) - performance.now() )
+		);
+	}
+	// Hovered over the groove at most this long for the music's file: past it the lever is let
+	// down anyway, and the music sounds as soon as it can.
+	const HOVER = 400;
+	// The drop, the one start every press of play, track or side goes through where the deck is
+	// seen: once the arm is over its groove (carried there, not in the hand), the platter will be at
+	// a crawl by the time the stylus lands (by `ready`), and the music's file can play through, the
+	// lever is let down, and the music is let go (go()) as the stylus lands, from where it was
+	// held, so none of it is skipped. Run by timers, never by frames, which stop in a tab out of
+	// sight; and never held past the arm's carry and a hover and a lowering: then the music goes,
+	// and the arm with it.
+	function drop( m, go, ready = 0 ) {
+		const id = ++drop.id;
+		clearTimeout( drop.wait );
+		const t0 = performance.now();
+		const due = Math.max( t0 + Math.max( 0, ( swing.until || 0 ) - t0 ), ready - LOWER ) + HOVER + LOWER;
+		let hovered = 0;
+		// Its file fetched now (the element waits for a play to fetch it), so it is there when the
+		// stylus is.
+		if ( m.preload === 'none' ) {
+			m.preload = 'auto';
+			drop.fetched = m;
+		}
+		const step = () => {
+			if ( id !== drop.id ) {
+				return;
+			}
+			const arm = tonearmOf();
+			const now = performance.now();
+			const later = ( ms ) => ( drop.wait = setTimeout( step, Math.max( 1, Math.min( ms, due - now ) ) ) );
+			if ( P.reduce() || root.dataset.riffDeck !== 'out' || ! arm || now >= due ) {
+				lowered();
+				go();
+				return;
+			}
+			const carrying = Math.max( 0, ( swing.until || 0 ) - now );
+			if ( carrying || 'riffHeld' in arm.dataset || ! ( 'riffDown' in arm.dataset ) ) {
+				phase( 'cueing' );
+				later( carrying || 50 );
+				return;
+			}
+			if ( arm.dataset.riffUp === '' ) {
+				phase( 'hovering' );
+				hovered ||= now;
+				if ( now < ready - LOWER || ( m.readyState < m.HAVE_ENOUGH_DATA && now - hovered < HOVER ) ) {
+					later( 30 );
+					return;
+				}
+				lever( arm );
+			}
+			if ( arm.dataset.riffUp === 'lowering' ) {
+				later( Math.max( 0, ( lever.lands || 0 ) - now ) + 1 );
+				return;
+			}
+			go();
+		};
+		step();
+	}
+	drop.id = 0;
+	function turn( m, restart = false ) {
 		// A followed host's start is made by Listen Together, when it is due.
 		if ( P.holds( m, true ) ) {
 			return;
 		}
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
-		clearTimeout( turn.carry );
+		drop.id++;
+		clearTimeout( drop.wait );
 		stowing++;
 		// Play pressed while the music winds down: it is no longer stopping (P.status()), from this
 		// press, not from the frame the wind-down's pull notices it has been cancelled.
@@ -1293,6 +1367,7 @@ export function nowPlaying( P ) {
 		// The stylus is in the run-out: the record is seen to once it has been lifted from there.
 		if ( runout.until > performance.now() && seen() ) {
 			cued( true );
+			phase( 'cueing' );
 			P.paint();
 			turn.wait = setTimeout( () => turn( m ), runout.until - performance.now() + 20 );
 			return;
@@ -1303,13 +1378,15 @@ export function nowPlaying( P ) {
 		// change (below, data-riff-turning holds from `playing` to `pause`).
 		const turning = 'riffTurning' in root.dataset && root.dataset.riffDeck === 'out' && ! held();
 		const flipping = flip.until > performance.now();
+		const arriving = 'riffArriving' in root.dataset;
 		// Another track asked for while the record turns (a key, the bar, a media key, the lock
-		// screen): as a deck does it. The cue lever lifts the arm and the music stops with it; the arm
-		// is carried over the record to the new band's lead-in, taking as long as the way is long;
-		// the lever lowers it there, and the music is heard once the stylus is in the groove. Asked
-		// again on the way, the arm turns for the newer band from where it is, lifted once and lowered
-		// once. A track ending on its own plays on into the next band, as a record does, and a band
-		// the hand has put the arm on (land()) is heard at once.
+		// screen), or the same one from its start (previous, well into it): as a deck does it. The
+		// cue lever lifts the arm and the music stops with it; the arm is carried over the record to
+		// the band's lead-in, taking as long as the way is long; the lever lowers it there (drop()),
+		// and the music is heard once the stylus is in the groove. Asked again on the way, the arm
+		// turns for the newer band from where it is, lifted once and lowered once. A track ending on
+		// its own plays on into the next band, as a record does, and a band the hand has put the arm
+		// on (land()) is heard at once.
 		const id = String( P.track()?.id ?? '' );
 		const skip =
 			seen() &&
@@ -1318,14 +1395,14 @@ export function nowPlaying( P ) {
 			! flipping &&
 			P.speed === 1 &&
 			!! turn.heard &&
-			id !== turn.heard &&
+			( restart || id !== turn.heard ) &&
 			// A track that ended on its own is followed by its next within the same moment.
 			performance.now() - ended > 300 &&
-			! ( 'riffArriving' in root.dataset );
+			! arriving;
 		if ( skip ) {
 			const arm = tonearmOf();
-			clearTimeout( turn.land );
 			cued( true );
+			phase( 'cueing' );
 			if ( arm ) {
 				arm.dataset.riffUp = '';
 			}
@@ -1335,19 +1412,13 @@ export function nowPlaying( P ) {
 			}
 			P.paint();
 			needle();
-			const travel = Math.max( 0, ( swing.until || 0 ) - performance.now() );
-			turn.land = setTimeout( () => {
-				if ( arm ) {
-					arm.dataset.riffUp = 'lowering';
-				}
-			}, travel );
-			turn.wait = setTimeout( () => {
+			drop( m, () => {
 				cued( false );
-				lowered();
 				turn.heard = id;
 				settle( m );
+				phase( 'down' );
 				m.play().catch( P.paint );
-			}, travel + LOWER );
+			} );
 			return;
 		}
 		// At the listener's own speed the music keeps its pitch, which a platter coming up to speed
@@ -1363,67 +1434,38 @@ export function nowPlaying( P ) {
 			m.play().catch( P.paint );
 			return;
 		}
+		// How long until the arm can be brought to the record: the record turned over or brought
+		// out first. Wherever the arm is, drop() brings it down.
 		let wait = 0;
 		const arm = tonearmOf();
 		// Set down off the record by the hand, on its rest: lifted and carried back over the groove
 		// the music is at first.
-		let travel = 0;
-		if ( rested && arm && root.dataset.riffDeck === 'out' && m.paused && ! flipping && ! ( 'riffArriving' in root.dataset ) ) {
+		if ( rested && arm && root.dataset.riffDeck === 'out' && m.paused && ! flipping && ! arriving ) {
 			rested = false;
 			arm.dataset.riffUp = '';
 			arm.dataset.riffDown = '';
 			needle();
-			travel = Math.max( 0, ( swing.until || 0 ) - performance.now() );
 		}
-		if (
-			root.dataset.riffDeck === 'out' &&
-			m.paused &&
-			! flipping &&
-			! ( 'riffArriving' in root.dataset ) &&
-			arm?.dataset.riffUp !== undefined
-		) {
-			// The arm is up: the cue lever lowers it onto the record, and the platter starts once
-			// the stylus is in the groove.
-			const lower = () => ( arm.dataset.riffUp = 'lowering' );
-			if ( travel ) {
-				turn.carry = setTimeout( lower, travel );
-			} else {
-				lower();
-			}
-			wait = travel + LOWER;
-			clearTimeout( turn.land );
-			turn.land = setTimeout( lowered, wait );
-		} else if ( flipping ) {
+		if ( flipping ) {
 			wait = flip.until - performance.now();
-		} else if ( 'riffArriving' in root.dataset ) {
+		} else if ( arriving ) {
 			wait = Math.max( 0, change.until - performance.now() ) + DROP + LAND;
 		} else if ( root.dataset.riffDeck !== 'out' ) {
 			deck( true );
 			wait = DROP + LAND;
 		}
 		cued( true );
+		phase( 'cueing' );
 		P.paint();
-		const start = () => {
-			// Never heard while the arm is still carried or the lever not yet down: the music waits for
-			// the stylus, and a lever left up is lowered first.
-			const lever = tonearmOf();
-			const carrying = Math.max( 0, ( swing.until || 0 ) - performance.now() );
-			if ( ! P.reduce() && root.dataset.riffDeck === 'out' && lever && ( carrying > 0 || lever.dataset.riffUp !== undefined ) ) {
-				if ( ! carrying && lever.dataset.riffUp === '' ) {
-					lever.dataset.riffUp = 'lowering';
-					clearTimeout( turn.land );
-					turn.land = setTimeout( lowered, LOWER );
-				}
-				turn.wait = setTimeout( start, carrying || ( lever.dataset.riffUp === 'lowering' ? LOWER : 30 ) );
-				return;
-			}
+		const go = () => {
 			cued( false );
 			if ( P.el() !== m ) {
 				windDown();
+				phase( 'rest' );
 				return;
 			}
 			turn.heard = String( P.track()?.id ?? '' );
-			lowered();
+			phase( 'down' );
 			const from = m.paused ? CRAWL : m.playbackRate;
 			m.playbackRate = from;
 			m.preservesPitch = m.webkitPreservesPitch = false;
@@ -1438,26 +1480,39 @@ export function nowPlaying( P ) {
 					P.paint();
 				} );
 		};
+		// The platter is pulled up to a crawl as the arm comes over, the motor started with the
+		// press (or once the record is turned over or out), and the music starts at the speed it
+		// has reached, its pitch rising with it. Still turning as it winds down, it is pulled up
+		// from where it is, at once, unless the record is being turned over or changed meanwhile.
+		let ready = performance.now() + wait;
 		if ( m.paused ) {
-			// From rest, the motor starts once the stylus is in the groove, pulling the platter up
-			// to a crawl in silence, and the music starts there, at the speed the platter has
-			// reached, its pitch rising with it. Still turning as it winds down, the stylus still in
-			// its groove, it is pulled up from where it is, at once, unless the record is being
-			// turned over or changed meanwhile.
 			const up = pull( coasting ?? 0, CRAWL );
-			if ( coasting !== null && ! flipping && ! ( 'riffArriving' in root.dataset ) ) {
+			if ( coasting !== null && ! flipping && ! arriving ) {
 				coast( coasting, CRAWL );
-				wait = Math.max( wait, up );
+				ready = performance.now() + up;
 			} else {
 				turn.spin = setTimeout( () => coast( coasting ?? 0, CRAWL ), wait );
-				wait += up;
+				ready += up;
 			}
 		}
+		const start = () => drop( m, go, ready );
 		if ( wait ) {
 			turn.wait = setTimeout( start, wait );
 		} else {
 			start();
 		}
+	}
+	// Previous, well into the track playing (playback.js): on the deck, its start as another
+	// track's is, the arm lifted and carried back to the band's lead-in and lowered there, the music
+	// silent on the way. Whether the deck took it; where it didn't, the music jumps there.
+	function again( m ) {
+		if ( m.paused || held() || ! seen() || root.dataset.riffDeck !== 'out' || P.speed !== 1 ) {
+			return false;
+		}
+		m.pause();
+		m.currentTime = 0;
+		turn( m, true );
+		return true;
 	}
 	function halt( m ) {
 		// A followed host's stop is made by Listen Together, when it is due.
@@ -1466,14 +1521,22 @@ export function nowPlaying( P ) {
 		}
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
-		clearTimeout( turn.land );
-		clearTimeout( turn.carry );
+		drop.id++;
+		clearTimeout( drop.wait );
+		clearTimeout( lever.done );
+		const still = () => {
+			raise();
+			if ( ! held() ) {
+				phase( 'rest' );
+			}
+		};
 		if ( 'riffCued' in root.dataset ) {
 			cued( false );
+			phase( 'lifting' );
 			if ( coasting !== null ) {
-				coast( coasting, 0, raise );
+				coast( coasting, 0, still );
 			} else {
-				raise();
+				still();
 			}
 			P.paint();
 			return;
@@ -1482,9 +1545,11 @@ export function nowPlaying( P ) {
 			settle( m );
 			m.pause();
 			raise();
+			phase( 'rest' );
 			return;
 		}
 		halt.going = m;
+		phase( 'lifting' );
 		bend( m, CRAWL ).then( ( whole ) => {
 			halt.going = null;
 			if ( whole ) {
@@ -1492,7 +1557,7 @@ export function nowPlaying( P ) {
 				settle( m );
 				// The music stops at a crawl, and the platter turns on down to rest; only then
 				// does the cue lever lift the stylus out of the groove.
-				coast( CRAWL, 0, raise );
+				coast( CRAWL, 0, still );
 			}
 		} );
 		P.paint();
@@ -1517,6 +1582,12 @@ export function nowPlaying( P ) {
 			if ( el === P.el() ) {
 				root.dataset.riffTurning = '';
 				release();
+				phase( 'playing' );
+			}
+			// Back to fetching nothing until asked, as state.js set it, once drop() had it fetched.
+			if ( drop.fetched === el ) {
+				el.preload = 'none';
+				drop.fetched = null;
 			}
 			if ( ! ( 'riffArriving' in root.dataset ) ) {
 				deck( true );
@@ -1528,6 +1599,11 @@ export function nowPlaying( P ) {
 				turn.stopped = performance.now();
 				delete root.dataset.riffTurning;
 				strobe();
+				// Stopped some other way than by the deck (the track's end, another player, the
+				// system): at rest, unless a start or a stop of the deck's own has it.
+				if ( ! held() && root.dataset.riffCue !== 'lifting' ) {
+					phase( 'rest' );
+				}
 			}
 		} );
 		el.addEventListener( 'ratechange', () => {
@@ -1789,9 +1865,10 @@ export function nowPlaying( P ) {
 			if ( grip.silenced ) {
 				clearTimeout( turn.wait );
 				clearTimeout( turn.spin );
-				clearTimeout( turn.land );
-				clearTimeout( turn.carry );
+				drop.id++;
+				clearTimeout( drop.wait );
 				cued( true );
+				phase( 'cueing' );
 				if ( coasting === null ) {
 					coast( m.playbackRate || 1, m.playbackRate || 1 );
 				}
@@ -1872,10 +1949,9 @@ export function nowPlaying( P ) {
 		P.press( 'seek' );
 		clearTimeout( turn.wait );
 		clearTimeout( turn.spin );
-		clearTimeout( turn.land );
-		clearTimeout( turn.carry );
 		halt.going = null;
 		cued( true );
+		phase( 'cueing' );
 		arm.dataset.riffUp = '';
 		arm.dataset.riffDown = '';
 		if ( coasting === null ) {
@@ -1892,16 +1968,14 @@ export function nowPlaying( P ) {
 		}
 		needle();
 		P.paint();
-		const travel = Math.max( 0, ( swing.until || 0 ) - performance.now() );
-		turn.land = setTimeout( () => ( arm.dataset.riffUp = 'lowering' ), travel );
-		turn.wait = setTimeout( () => {
+		const now = P.el();
+		drop( now, () => {
 			cued( false );
-			lowered();
-			const now = P.el();
 			turn.heard = String( P.track()?.id ?? '' );
 			settle( now );
+			phase( 'down' );
 			now.play().catch( P.paint );
-		}, travel + LOWER );
+		} );
 	}
 	// ---- What lies in a groove of the side, said beside the pointer: the band, its title and the
 	// moment in it, which is where the needle would land. The arm in the hand says it for the
@@ -2393,6 +2467,7 @@ export function nowPlaying( P ) {
 		groove,
 		deck,
 		turn,
+		again,
 		halt,
 		held,
 		stopping,

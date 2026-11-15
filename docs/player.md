@@ -529,7 +529,18 @@ with it. The arm is carried to the new band's lead-in, a band or so in 0.6 secon
 side in about two. The lever lowers it in half a second, and the music is heard once the stylus is
 in the groove. Asked again on the way, the arm turns for the newer band from where it is, lifted
 once and lowered once. A track that ends on its own plays on into the next band with the arm down,
-and a band the hand puts the arm on is heard at once.
+and a band the hand puts the arm on is heard at once. Previous, well into a track, is the same:
+the arm is carried back to the band's lead-in and the music is heard from its start.
+
+Every start on the deck goes through one cue (`data-riff-cue` on `#riff`: `rest`, `cueing`,
+`hovering`, `down`, `playing`, `lifting`). Start, another track, a side turned over and a record
+changed each cue the same way. The platter is pulled up to a crawl as the arm comes over its groove.
+The arm hovers there on the lever until the music's file can play through, and the lever then
+lowers it. The music is let go as the stylus lands, from where it was held, so none of it is
+skipped. The hover lasts 400 ms at most: past that, or if the arm never gets over its groove, the
+music goes anyway. Where the deck isn't what the listener sees (Now Playing closed, the page out of
+sight, a video, less motion) there is no cue, and the music starts at once. Between tracks on a
+side there is none either. The level lamps light only while the cue says `playing`.
 
 Under the deck is a place a
 plugin fills with the `riff_below_turntable` action, which takes no room while nothing shows in it. A site that wants the cover on its own registers none:

@@ -479,6 +479,93 @@ test.describe( 'Turntable', () => {
 		expect( two.took, 'two bands away takes longer than one' ).toBeGreaterThan( one.took );
 	} );
 
+	// The deck's cue (now-playing.js, data-riff-cue), each change of it with the music and the arm as
+	// they were then; and the phases it went through, each once.
+	const cues = async ( page ) => {
+		await page.evaluate( () => {
+			const root = document.querySelector( '#riff' );
+			const audio = document.querySelector( '.riff-audio' );
+			const arm = document.querySelector( '.riff-arm' );
+			window.riffCues = [];
+			// Each change, even two in one task: what each one changed to is what the next changed from.
+			new MutationObserver( ( records ) =>
+				records.forEach( ( r, i ) =>
+					window.riffCues.push( {
+						phase: records[ i + 1 ]?.oldValue ?? root.dataset.riffCue,
+						paused: audio.paused,
+						time: audio.currentTime,
+						up: arm.dataset.riffUp ?? null,
+						down: 'riffDown' in arm.dataset,
+						at: performance.now(),
+					} )
+				)
+			).observe( root, { attributeFilter: [ 'data-riff-cue' ], attributeOldValue: true } );
+		} );
+		return () => page.evaluate( () => window.riffCues.splice( 0 ) );
+	};
+	const phases = ( list ) => list.map( ( c ) => c.phase ).filter( ( p, i, all ) => i === 0 || p !== all[ i - 1 ] );
+	const startStop = ( page ) => page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).first();
+
+	test( 'started, the deck cues as one: the arm over its groove, lowered, and the music let go as the stylus lands, from where it stopped', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await startStop( page ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-cue', 'rest', { timeout: 5000 } );
+		const stopped = ( await audioState( page ) ).time;
+		const taken = await cues( page );
+		await startStop( page ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-cue', 'playing' );
+		const all = await taken();
+		expect( phases( all ), 'in order' ).toEqual( [ 'cueing', 'hovering', 'down', 'playing' ] );
+		const down = all.find( ( c ) => c.phase === 'down' );
+		expect( down.up === null && down.down, 'let go as the stylus lands' ).toBe( true );
+		expect( Math.abs( down.time - stopped ), 'from where it stopped, none of it skipped' ).toBeLessThan( 0.05 );
+		expect( all.slice( 0, all.indexOf( down ) ).every( ( c ) => c.paused ), 'silent until then' ).toBe( true );
+	} );
+
+	test( 'previous, well into a track, takes the arm back to its start, the music silent on the way and heard from its start as the stylus lands', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await page.evaluate( () => ( document.querySelector( '.riff-audio' ).currentTime = 8 ) );
+		await expect.poll( async () => ( await audioState( page ) ).time ).toBeGreaterThan( 8 );
+		const taken = await cues( page );
+		await page.locator( '.riff-key-prev' ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-cue', 'playing' );
+		const all = await taken();
+		expect( phases( all ).slice( -2 ), 'down, then playing' ).toEqual( [ 'down', 'playing' ] );
+		expect( all[ 0 ].phase, 'cued first' ).toBe( 'cueing' );
+		const down = all.find( ( c ) => c.phase === 'down' );
+		expect( down.up === null && down.down, 'let go as the stylus lands' ).toBe( true );
+		expect( down.time, 'from its start' ).toBeLessThan( 0.05 );
+		expect( all.slice( 0, all.indexOf( down ) ).every( ( c ) => c.paused ), 'silent on the way' ).toBe( true );
+	} );
+
+	test( 'an arm that never gets over its groove holds the music no longer than the cue allows', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await startStop( page ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-cue', 'rest', { timeout: 5000 } );
+		// Held off the record, as a hand would: the cue waits for it, then lets the music go.
+		await page.locator( '.riff-arm' ).evaluate( ( arm ) => ( arm.dataset.riffHeld = '' ) );
+		const pressed = await page.evaluate( () => performance.now() );
+		await startStop( page ).click();
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-cue', 'playing' );
+		const heard = await page.evaluate( () => performance.now() );
+		await page.locator( '.riff-arm' ).evaluate( ( arm ) => delete arm.dataset.riffHeld );
+		// The hover (400 ms) and the lowering (500 ms) past the arm's carry, with room for a slow machine.
+		expect( heard - pressed, 'released by the cap' ).toBeLessThan( 2000 );
+	} );
+
+	test( 'with Now Playing closed, the music starts at once, with no cue', async ( { page } ) => {
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await page.keyboard.press( 'Escape' );
+		await expect( page.locator( '.riff-np' ) ).toBeHidden();
+		await startStop( page ).click();
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( true );
+		const taken = await cues( page );
+		await startStop( page ).click();
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-cue', 'playing' );
+		expect( phases( await taken() ), 'straight to playing' ).toEqual( [ 'playing' ] );
+	} );
+
 	test( 'a track ending on its own plays on into the next band, the arm never lifted', async ( { page } ) => {
 		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 		const take = await sampled( page );
