@@ -524,14 +524,6 @@ void main() {
     float k = 0.05 * (1.0 - smoothstep(0.05, 0.8, far)) * (1.0 - a);
     o = vec4(vec3(1.0, 0.94, 0.86) * k, k + (1.0 - k) * a) * uAlpha; return;
   }
-  if (uMode == 9) {
-    // The wall behind the sleeve, which is only the shade the sleeve leant against it gives it: close
-    // and dark where its top nearly touches, wider and fainter toward its foot, which stands off.
-    vec2 q = abs(vec2(vP.x, vP.z - ${ f1( LEDGE_Z + SL ) })) - vec2(${ f1( SL ) }, ${ f1( SL ) });
-    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0), gap = mix(0.055, 0.017, clamp((vP.z - ${ f1( LEDGE_Z ) }) / ${ f1( 2 * SL ) }, 0.0, 1.0));
-    float a = 0.32 * (1.0 - smoothstep(-0.2 * gap, 0.7 * gap + 0.004, d));
-    o = vec4(0.0, 0.0, 0.0, a * uAlpha); return;
-  }
   if (uMode == 8) {
     // The sleeve, standing: its face the cover, lit by the room in front of it, a little darker
     // toward the ledge and away from the lamp, shaded where the lip holds its foot; its edges card.
@@ -821,8 +813,6 @@ export default function deckGl( P ) {
 			ledge: mesh( merge( box( -0.2, WALL - 0.07, FLOOR_Z, 0.2, WALL, LEDGE_Z ), box( -0.2, WALL - 0.07, LEDGE_Z, 0.2, WALL - 0.064, LEDGE_Z + 0.005 ) ) ),
 			// In its own frame: its foot's middle at the origin, its face toward -y.
 			sleeve: mesh( box( -SL, -0.0015, 0, SL, 0.0015, 2 * SL ) ),
-			// The wall behind it, for the shade the sleeve gives it (STD_FS, mode 9).
-			wall: mesh( box( -SL - 0.08, WALL, LEDGE_Z, SL + 0.08, WALL + 0.001, LEDGE_Z + 2 * SL + 0.08 ) ),
 			body: mesh( rbox( x0, y0, x1, y1, FLOOR_Z, -0.03, 0.012, 0.002 ) ),
 			plate: mesh( rbox( x0 + 0.002, y0 + 0.002, x1 - 0.002, y1 - 0.002, -0.03, DECK_Z, 0.01, 0.0018 ) ),
 			// The same with its keys, in each arrangement (DECKS).
@@ -1754,7 +1744,6 @@ export default function deckGl( P ) {
 		// back against the wall. They cast nothing: the key light is behind them, and their shadow
 		// would lie across the record.
 		const backdrop = [
-			[ m.wall, I, off, 1, 0, 9, off, deckAlpha * stood ],
 			[ m.ledge, I, [ 0.014, 0.013, 0.013 ], 0.55, 0, 0, off, deckAlpha * stood ],
 			[ m.sleeve, SLEEVE_AT, [ 0.5, 0.48, 0.45 ], 0.6, 0, 8, off, deckAlpha * stood ],
 		];
