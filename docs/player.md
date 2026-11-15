@@ -533,6 +533,14 @@ pointer, and a press puts the needle down in that groove; the arm in the hand is
 the groove under its stylus. Both are the inverse of the arm's own angle, so the stylus comes to
 rest on the point pressed. A touch on the record does nothing: a finger has the arm.
 
+Another track asked for while the record turns (the deck's keys, the bar, a media key, the lock
+screen, the keyboard) is played as a deck plays it. The cue lever lifts the arm and the music stops
+with it. The arm is carried to the new band's lead-in, a band or so in 0.6 seconds and the whole
+side in about two. The lever lowers it in half a second, and the music is heard once the stylus is
+in the groove. Asked again on the way, the arm turns for the newer band from where it is, lifted
+once and lowered once. A track that ends on its own plays on into the next band with the arm down,
+and a band the hand puts the arm on is heard at once.
+
 Under the deck is a place a
 plugin fills with the `riff_below_turntable` action, which takes no room while nothing shows in it. A site that wants the cover on its own registers none:
 it turns the turntable off under **Settings › Media** (Now Playing), or with the `riff_turntable`

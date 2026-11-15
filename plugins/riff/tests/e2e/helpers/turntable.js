@@ -8,14 +8,14 @@ const { expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { audioState } = require( './site' );
 
 /**
- * Stops the music and starts it again, from the deck's own key (the deck on its own has no bar),
- * with the turntable out and the music playing.
+ * Records every frame from now on: the cue lever (`up`: null down, "" up, "lowering"), whether the
+ * stylus is down, whether the music is heard, its track and time, its rate and the platter's, and
+ * when the frame was.
  *
  * @param {import('@playwright/test').Page} page Page.
+ * @return {Promise<Function>} Takes the frames recorded since it was last called.
  */
-async function stopsAndStarts( page ) {
-	await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
-	// Each frame: the cue lever, the music, and the platter's rate against the music's.
+async function sampled( page ) {
 	await page.evaluate( () => {
 		const audio = document.querySelector( '.riff-audio' );
 		const arm = document.querySelector( '.riff-arm' );
@@ -29,6 +29,8 @@ async function stopsAndStarts( page ) {
 				down: 'riffDown' in arm.dataset,
 				paused: audio.paused,
 				time: audio.currentTime,
+				src: audio.currentSrc,
+				at: performance.now(),
 				rate: audio.playbackRate,
 				platter: turn && ! turn.pending ? turn.playbackRate : null,
 				coasting: 'riffCoasting' in root.dataset,
@@ -37,7 +39,18 @@ async function stopsAndStarts( page ) {
 		};
 		sample();
 	} );
-	const frames = () => page.evaluate( () => window.riffFrames.splice( 0 ) );
+	return () => page.evaluate( () => window.riffFrames.splice( 0 ) );
+}
+
+/**
+ * Stops the music and starts it again, from the deck's own key (the deck on its own has no bar),
+ * with the turntable out and the music playing.
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ */
+async function stopsAndStarts( page ) {
+	await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+	const frames = await sampled( page );
 	const toggle = page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="toggle"]:visible' ).first();
 	const tracked = ( all ) =>
 		all.filter( ( f ) => ! f.paused && ! f.coasting && f.platter !== null ).every( ( f ) => Math.abs( f.platter - f.rate ) < 1e-3 );
@@ -134,4 +147,4 @@ async function onScreen( page, points, plane = 'arm' ) {
 	);
 }
 
-module.exports = { stopsAndStarts, flat, onScreen };
+module.exports = { stopsAndStarts, sampled, flat, onScreen };
