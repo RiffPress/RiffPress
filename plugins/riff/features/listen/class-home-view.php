@@ -56,6 +56,7 @@ final class Home_View {
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_played' ),
 				'permission_callback' => '__return_true',
+				'riff_internal'       => true,
 				'args'                => array(
 					'items' => array(
 						'description' => __( 'Tracks played, newest first, each as its attachment ID and the post it played from, or 0: 12:34,15:0.', 'riff' ),

@@ -192,6 +192,29 @@ function customProperties( file = path.join( PLUGIN, 'assets', 'tokens.css' ) ) 
 	return out;
 }
 
+/**
+ * How many routes the plugin's code registers: each register_rest_route() call in src/ and
+ * features/, so a route surface.php never runs is a problem rather than a route left out.
+ *
+ * @param {string} dir The plugin's directory.
+ * @return {number} Calls.
+ */
+function registered( dir = PLUGIN ) {
+	let count = 0;
+	const walk = ( at ) => {
+		for ( const entry of fs.readdirSync( at, { withFileTypes: true } ) ) {
+			const file = path.join( at, entry.name );
+			if ( entry.isDirectory() ) {
+				walk( file );
+			} else if ( entry.name.endsWith( '.php' ) ) {
+				count += ( fs.readFileSync( file, 'utf8' ).match( /^\s*register_rest_route\(/gm ) || [] ).length;
+			}
+		}
+	};
+	[ 'src', 'features' ].forEach( ( d ) => walk( path.join( dir, d ) ) );
+	return count;
+}
+
 /** What surface.php reports: routes, the REST field, the GraphQL types, the track schema. */
 function surface() {
 	return JSON.parse( execFileSync( 'php', [ path.join( __dirname, 'surface.php' ) ], { encoding: 'utf8' } ) );
@@ -212,6 +235,7 @@ function collect() {
 		block: JSON.parse( fs.readFileSync( path.join( PLUGIN, 'features', 'listen', 'block', 'block.json' ), 'utf8' ) ),
 		properties: customProperties(),
 		surface: surface(),
+		registered: registered(),
 	};
 }
 
@@ -292,9 +316,13 @@ function problems( data ) {
 				out.push( `The ${ name } argument of ${ r.namespace }${ r.route } has no description` );
 			}
 		}
-		if ( ! r.schema ) {
+		// An internal route is the Listen app's own: listed, but promised nothing.
+		if ( ! r.schema && ! r.internal ) {
 			out.push( `${ r.namespace }${ r.route } has no schema` );
 		}
+	}
+	if ( data.registered !== undefined && data.registered !== data.surface.routes.length ) {
+		out.push( `the plugin registers ${ data.registered } routes but surface.php runs ${ data.surface.routes.length }; add the missing routes() to it` );
 	}
 	return out;
 }
@@ -423,7 +451,7 @@ function phpPage( data ) {
 
 function restPage( data ) {
 	const s = data.surface;
-	let body = '<section class="summary"><p>Everything here describes itself: send <code>OPTIONS</code> to a route for its arguments and schema. The tables below come from the same registration code.</p><p>The track on media is public and keeps its shape within a major version. The <code>riff/v1</code> routes are the player\'s own, there for the player and the Listen block to call, and may change in any release.</p></section>\n';
+	let body = '<section class="summary"><p>Everything here describes itself: send <code>OPTIONS</code> to a route for its arguments and schema. The tables below come from the same registration code.</p><p>The track on media and the routes below are public, and keep their names and shapes within a major version, as <a href="https://github.com/RiffPress/RiffPress/blob/main/.github/SUPPORT.md#public-api">the support policy</a> promises. The <a href="#internal">internal routes</a> are the Listen app\'s own, and may change in any release.</p></section>\n';
 
 	body += `<section>${ hooks.h2( 'media', 'The track on media' ) }`;
 	for ( const f of s.fields ) {
@@ -433,13 +461,15 @@ function restPage( data ) {
 
 	body += `<section>${ hooks.h2( 'routes', 'Routes' ) }`;
 	const toc = [];
-	for ( const r of s.routes ) {
+	const listed = ( r, contents = true ) => {
 		const shown = `/${ r.namespace }${ r.route.replace( /\(\?P<(\w+)>[^)]+\)/g, '{$1}' ) }`;
 		const id = shown.replace( /[^a-z0-9]+/gi, '-' ).replace( /^-|-$/g, '' ).toLowerCase();
 		// In the contents without the namespace every route shares, so the longest still fit.
-		toc.push( [ id, shown.replace( `/${ r.namespace }`, '' ) ] );
+		if ( contents ) {
+			toc.push( [ id, shown.replace( `/${ r.namespace }`, '' ) ] );
+		}
 		body += `<section class="member" id="${ id }"><h3 class="code-title member-title"><a href="#${ id }">${ r.methods.map( esc ).join( ', ' ) } ${ esc( shown ) }</a></h3>`;
-		body += `<p>${ inline( r.schema?.description || r.schema?.title || '' ) }</p>`;
+		body += `<p>${ inline( r.schema?.description || r.schema?.title || ( r.internal ? 'For the Listen app, and described only by its arguments.' : '' ) ) }${ r.deprecated ? ` Deprecated since ${ esc( r.deprecated ) }.` : '' }</p>`;
 		const args = Object.entries( r.args );
 		if ( args.length ) {
 			body += '<h4>Arguments</h4>' + table( [ 'Name', 'Type', 'Description' ], args.map( ( [ n, a ] ) => `<tr><td><code>${ esc( n ) }</code></td><td><span class="type">${ esc( a.type || '' ) }</span>${ a.required ? ' <span class="required">Required</span>' : '' }</td><td>${ inline( a.description || '' ) }${ a.default !== undefined ? ` Default <code>${ esc( JSON.stringify( a.default ) ) }</code>.` : '' }</td></tr>` ) );
@@ -448,8 +478,15 @@ function restPage( data ) {
 			body += `<h4>Response</h4>${ schemaTable( r.schema ) }`;
 		}
 		body += '</section>\n';
-	}
+	};
+	s.routes.filter( ( r ) => ! r.internal ).forEach( listed );
 	body += '</section>\n';
+	const internal = s.routes.filter( ( r ) => r.internal );
+	if ( internal.length ) {
+		body += `<section>${ hooks.h2( 'internal', 'Internal routes' ) }<p>These are the Listen app\'s own, registered with <code>riff_internal</code>: there for the app to call, not for other code, and they may change in any release.</p>`;
+		internal.forEach( ( r ) => listed( r, false ) );
+		body += '</section>\n';
+	}
 
 	body += `<section>${ hooks.h2( 'graphql', 'WPGraphQL' ) }<p>When WPGraphQL is active, Riff adds these fields and types.</p>`;
 	// Said from the code, so the page stays true when either side changes.
@@ -470,7 +507,7 @@ function restPage( data ) {
 		description: 'Riff over HTTP: the track on every media item, the library routes, and the WPGraphQL fields.',
 		url: 'developers/rest/',
 		h1: '<h1>REST API</h1>',
-		toc: [ [ 'media', 'The track on media' ], [ 'routes', [ ...new Set( s.routes.map( ( r ) => r.namespace ) ) ].length === 1 ? `Routes in /${ s.routes[ 0 ].namespace }` : 'Routes', toc ], [ 'graphql', 'WPGraphQL' ] ],
+		toc: [ [ 'media', 'The track on media' ], [ 'routes', [ ...new Set( s.routes.map( ( r ) => r.namespace ) ) ].length === 1 ? `Routes in /${ s.routes[ 0 ].namespace }` : 'Routes', toc ], [ 'internal', 'Internal routes' ], [ 'graphql', 'WPGraphQL' ] ],
 		body,
 	} );
 }
@@ -567,4 +604,4 @@ if ( require.main === module ) {
 	main();
 }
 
-module.exports = { collect, problems, site, customProperties, functionsIn, publicFunctions, declared, hashOf, schemaRows };
+module.exports = { collect, problems, registered, site, customProperties, functionsIn, publicFunctions, declared, hashOf, schemaRows };

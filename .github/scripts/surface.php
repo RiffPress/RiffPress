@@ -48,6 +48,11 @@ function register_block_bindings_source( $name, $args ) {
 	$GLOBALS['riff_surface']['bindings'][] = array( 'name' => $name, 'label' => $args['label'] ?? '', 'context' => $args['uses_context'] ?? array() );
 }
 
+// Together's routes are registered only where WordPress can keep the room.
+function wp_presence_is_available() {
+	return true;
+}
+
 function wp_register_ability_category( $slug, $args ) {}
 function wp_register_ability( $name, $args ) {
 	$GLOBALS['riff_surface']['abilities'][] = array(
@@ -63,6 +68,9 @@ require_once RIFF_DIR . 'src/interface-source.php';
 foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 	require_once $file;
 }
+// The Listen app's own routes, which the reference lists as internal.
+require_once RIFF_DIR . 'features/listen/class-home-view.php';
+require_once RIFF_DIR . 'features/listen/class-together.php';
 
 \Riff\Library::routes();
 \Riff\Import::routes();
@@ -70,6 +78,8 @@ foreach ( glob( RIFF_DIR . 'src/class-*.php' ) as $file ) {
 \Riff\Catalog_Rest::routes();
 \Riff\Likes_Rest::routes();
 \Riff\Playlists_Rest::routes();
+\Riff\Listen\Home_View::routes();
+\Riff\Listen\Together::routes();
 \Riff\Api::rest_field();
 \Riff\Api::graphql();
 \Riff\Bindings::source();
@@ -80,21 +90,32 @@ foreach ( $out['routes'] as &$route ) {
 	$methods   = array();
 	$args      = array();
 	$endpoints = array();
-	foreach ( $route['args'] as $key => $endpoint ) {
+	$options   = $route['args'];
+	// One endpoint may be given on its own, as WordPress takes it, rather than in a list.
+	if ( isset( $options['callback'] ) ) {
+		$options = array( $options );
+	}
+	// riff_internal and riff_deprecated sit beside the endpoints, or in the one given on its own.
+	$flag = static function ( $name ) use ( $options ) {
+		return $options[ $name ] ?? $options[0][ $name ] ?? null;
+	};
+	foreach ( $options as $key => $endpoint ) {
 		if ( is_int( $key ) ) {
 			$methods[]   = $endpoint['methods'];
 			$args        = array_merge( $args, $endpoint['args'] ?? array() );
 			$endpoints[] = array( 'methods' => $endpoint['methods'], 'args' => (object) ( $endpoint['args'] ?? array() ) );
 		}
 	}
-	$schema = $route['args']['schema'] ?? null;
+	$schema = $options['schema'] ?? null;
 	$route  = array(
-		'namespace' => $route['namespace'],
-		'route'     => $route['route'],
-		'methods'   => $methods,
-		'args'      => $args,
-		'endpoints' => $endpoints,
-		'schema'    => is_callable( $schema ) ? call_user_func( $schema ) : null,
+		'namespace'  => $route['namespace'],
+		'route'      => $route['route'],
+		'methods'    => $methods,
+		'args'       => $args,
+		'endpoints'  => $endpoints,
+		'schema'     => is_callable( $schema ) ? call_user_func( $schema ) : null,
+		'internal'   => (bool) $flag( 'riff_internal' ),
+		'deprecated' => $flag( 'riff_deprecated' ) ? (string) $flag( 'riff_deprecated' ) : null,
 	);
 }
 unset( $route );

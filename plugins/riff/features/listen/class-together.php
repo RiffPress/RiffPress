@@ -304,7 +304,9 @@ final class Together {
 	}
 
 	/**
-	 * Registers /together and /together/{user}, when there is somewhere to keep the room.
+	 * Registers /together and /together/{user}, when there is somewhere to keep the room. They are
+	 * the player's own, marked riff_internal: listed in the reference as internal, and free to
+	 * change with the player.
 	 *
 	 * @since 5.6.0
 	 */
@@ -402,6 +404,7 @@ final class Together {
 					'callback'            => array( self::class, 'rest_leave' ),
 					'permission_callback' => array( self::class, 'permission' ),
 				),
+				'riff_internal' => true,
 			)
 		);
 		/**
@@ -417,6 +420,7 @@ final class Together {
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_listener' ),
 				'permission_callback' => array( self::class, 'permission' ),
+				'riff_internal'       => true,
 				'args'                => array(
 					'user' => array(
 						'description' => __( 'The listener\'s user ID.', 'riff' ),
@@ -464,6 +468,7 @@ final class Together {
 						),
 					),
 				),
+				'riff_internal' => true,
 			)
 		);
 		/**
@@ -478,6 +483,7 @@ final class Together {
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_following' ),
 				'permission_callback' => array( self::class, 'permission' ),
+				'riff_internal'       => true,
 			)
 		);
 		/**
@@ -494,6 +500,7 @@ final class Together {
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'rest_clock' ),
 				'permission_callback' => array( self::class, 'permission' ),
+				'riff_internal'       => true,
 			)
 		);
 	}

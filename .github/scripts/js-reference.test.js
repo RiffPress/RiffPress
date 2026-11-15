@@ -6,7 +6,8 @@ const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
-const { members, problems, page, call } = require( './js-reference.js' );
+const { members, problems, page, call, render } = require( './js-reference.js' );
+const promise = require( './public-promise.js' );
 
 const tmp = ( body ) => {
 	const file = path.join( fs.mkdtempSync( path.join( os.tmpdir(), 'riff-js-' ) ), 'riff.js' );
@@ -95,4 +96,27 @@ test( 'every member of the real window.riff is documented, and the page lists ea
 	}
 	assert.match( html, /<a href="\.\.\/\.\.\/developers\/javascript\/" aria-current="page">JavaScript<\/a>/ );
 	assert.match( html, />PHP<\/a>.*>JavaScript<\/a>.*>REST API<\/a>.*>CSS<\/a>.*>How the player works<\/a>/, 'the bar lists every language, then the guides' );
+} );
+
+test( 'a @deprecated member says so in docs/javascript.md, where public-promise.js reads it', () => {
+	const list = members( tmp( `( () => {
+	const api = {
+		/**
+		 * Sets the speed.
+		 *
+		 * @since 4.0.0
+		 * @deprecated 6.19.0 Use window.riff.rate().
+		 *
+		 * @param {number} rate The rate.
+		 */
+		speed( rate ) {
+			return rate;
+		},
+	};
+	window.riff = api;
+} )();
+` ) );
+	const md = render( list, [] );
+	assert.match( md, /\nDeprecated\. 6\.19\.0 Use window\.riff\.rate\(\)\.\n/ );
+	assert.equal( promise.membersFrom( md )[ 'window.riff.speed' ].deprecated, true );
 } );

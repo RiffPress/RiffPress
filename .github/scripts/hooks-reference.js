@@ -209,7 +209,7 @@ function hooksIn( file ) {
  */
 function parse( block ) {
 	if ( ! block ) {
-		return { summary: '', description: '', since: '', changelog: [], params: [], returns: null, typeTag: '', documented: false };
+		return { summary: '', description: '', since: '', changelog: [], params: [], returns: null, typeTag: '', deprecation: null, documented: false };
 	}
 	const text = block
 		.split( '\n' )
@@ -219,6 +219,7 @@ function parse( block ) {
 	const changelog = [];
 	let returns = null;
 	let typeTag = '';
+	let deprecation = null;
 	let tags = false;
 	for ( const raw of text ) {
 		const line = raw.trim();
@@ -227,6 +228,7 @@ function parse( block ) {
 		const since = /^@since\s+(\S+)\s*(.*)$/.exec( line );
 		const ret = /^@returns?\s+(?:\{([^}]+)\}|(\S+))\s*(.*)$/.exec( line );
 		const typed = /^@type\s+\{([^}]+)\}/.exec( line );
+		const gone = /^@deprecated\b\s*(.*)$/.exec( line );
 		if ( php || js ) {
 			tags = true;
 			const p = php
@@ -244,6 +246,10 @@ function parse( block ) {
 		} else if ( typed ) {
 			tags = true;
 			typeTag = typed[ 1 ];
+		} else if ( gone ) {
+			tags = true;
+			// The version and what to use instead, as WordPress writes it, or nothing more.
+			deprecation = gone[ 1 ].trim();
 		} else if ( line.startsWith( '@' ) ) {
 			tags = true;
 		} else if ( tags && line && params.length ) {
@@ -266,6 +272,8 @@ function parse( block ) {
 		params,
 		returns,
 		typeTag,
+		// Not `deprecated`, which a hook already has, from how it is fired.
+		deprecation,
 		documented: true,
 	};
 }
