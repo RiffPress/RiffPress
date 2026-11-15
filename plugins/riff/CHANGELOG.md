@@ -1,5 +1,15 @@
 # Changelog
 
+## [6.20.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.20.1...riff-v6.20.2) (2026-11-15)
+
+
+### Bug Fixes
+
+* **player:** a dark sleeve on the drawn deck has no frame round it, the wall behind it unshaded ([#1139](https://github.com/RiffPress/RiffPress/issues/1139)) ([540845c](https://github.com/RiffPress/RiffPress/commit/540845caa9d4f6420a4644704337ddf305cfaf09))
+* **player:** a side is turned over as a hand turns a record, lifted and turned about its diameter at its own size ([#1141](https://github.com/RiffPress/RiffPress/issues/1141)) ([4d3cb6e](https://github.com/RiffPress/RiffPress/commit/4d3cb6e202b9932ea4dee58d5d9f69f3ef8bc4cb))
+* **player:** the arm waits on its rest, clear of the record, while a side is turned over, and lands as the new side starts ([#1144](https://github.com/RiffPress/RiffPress/issues/1144)) ([8eef17d](https://github.com/RiffPress/RiffPress/commit/8eef17d60d1b05792a2d129114051bd5e553f4bb))
+* **player:** the deck's level lamps light for a track a reload brings back, and stay dark until the music sounds ([#1142](https://github.com/RiffPress/RiffPress/issues/1142)) ([83c8610](https://github.com/RiffPress/RiffPress/commit/83c86103436b36df2fccd89f471dc3fd859dac45))
+
 ## [6.20.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.20.0...riff-v6.20.1) (2026-11-15)
 
 

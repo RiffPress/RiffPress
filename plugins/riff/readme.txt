@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.20.1
+Stable tag: 6.20.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,12 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.20.2 =
+* Fixed: a dark sleeve on the drawn deck has no frame round it, the wall behind it unshaded.
+* Fixed: a side is turned over as a hand turns a record, lifted and turned about its diameter at its own size.
+* Fixed: the arm waits on its rest, clear of the record, while a side is turned over, and lands as the new side starts.
+* Fixed: the deck's level lamps light for a track a reload brings back, and stay dark until the music sounds.
+
 = 6.20.1 =
 * Fixed: the record's box casts no shadow over the drawn deck in the Listen app.
 
@@ -158,11 +164,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.19.1 =
 * Fixed: the drawn sleeve shows a cover served from another origin wherever that origin allows CORS.
-
-= 6.19.0 =
-* Every route is in the REST reference, internal ones marked, and CI holds the public surface to the last release's.
-* Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
-* Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
-* Fixed: a change of record or side is never judged a slow card, and a deck lost mid-change shows its record at rest.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
