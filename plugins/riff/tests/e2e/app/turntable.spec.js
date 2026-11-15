@@ -40,4 +40,21 @@ test.describe( 'App turntable', () => {
 		);
 		await stopsAndStarts( page );
 	} );
+
+	// The app's cover casts a shadow (frame.css). The record's box is never painted, the record
+	// being drawn on the canvas, so a shadow round it is a dark frame round a lighter square over
+	// the drawn deck.
+	test( 'only the cover casts a shadow over the drawn deck', async ( { page }, info ) => {
+		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
+		await page.goto( pageUrl.replace( /\/?$/, '/' ) + `app/?riff=${ postId }` );
+		await page.locator( '.riff-row' ).first().click();
+		await openView( page, 'album' );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
+		await expect( page.locator( '.riff-stage > .riff-cover' ) ).not.toHaveCSS( 'box-shadow', 'none' );
+		for ( const part of [ '.riff-record', '.riff-plinth' ] ) {
+			await expect( page.locator( part ) ).toHaveCSS( 'box-shadow', 'none' );
+		}
+	} );
 } );

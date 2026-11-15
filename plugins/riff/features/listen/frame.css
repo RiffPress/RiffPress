@@ -444,11 +444,12 @@ html.riff-frame .riff-standalone .riff-app {
 		align-self: center;
 		justify-self: center;
 		object-fit: cover;
-		box-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
 	}
 
-	html.riff-frame #riff .riff-deck-part {
-		box-shadow: none;
+	/* the cover alone casts a shadow: the record and the deck are drawn in
+	   WebGL (deck-gl.js), their own boxes never painted */
+	html.riff-frame #riff .riff-cover {
+		box-shadow: 0 24px 64px rgb(0 0 0 / 0.5);
 	}
 
 	html.riff-frame #riff .riff-side {
