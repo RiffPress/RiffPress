@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.19.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.19.0...riff-v6.19.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **player:** the drawn sleeve shows a cover served from another origin wherever that origin allows CORS ([#1127](https://github.com/RiffPress/RiffPress/issues/1127)) ([5e739ff](https://github.com/RiffPress/RiffPress/commit/5e739ffbd76eb0862dfeada4a7648215d6c26d5a))
+
 ## [6.19.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.18.1...riff-v6.19.0) (2026-11-15)
 
 
