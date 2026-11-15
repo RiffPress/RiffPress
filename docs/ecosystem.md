@@ -46,7 +46,7 @@ Nobody merges a release by hand. Each step starts the next:
 5. `notify-downstream` starts riffpress-com's `riff-upgrade.yml` by dispatch after a Riff or Riff Sign In release is published, which moves `network/composer.json`'s pins and opens or updates its upgrade pull request. riffpress-com also checks on a schedule, for a dispatch that never arrived.
 6. Merging that, or anything else under `network/`, runs `network-deploy.yml`: Composer builds `wp-content/plugins/`, one rsync sends it to WP Engine, the page cache is cleared, and the deploy waits for `open.riffpress.com` to answer with `riff-network/v1` in its REST index.
 
-Separately, every push to `main` runs `pages.yml`, which deploys the developer site and then Source, so the reference on developer.riffpress.com and the download, docs and demo on source.riffpress.com are always `main`'s. A pull request from this repository gets a preview of each, linked from its Preview comment.
+Separately, every push to `main` runs `pages.yml`, which deploys the developer site and then Source, so the reference on developer.riffpress.com and the download, docs and demo on source.riffpress.com are always `main`'s. A pull request from this repository that changes `site/`, `docs/` or the scripts that build them gets a preview of each, linked from its Preview comment beside the Playground of its own build, and every pull request's previews are taken down when it closes.
 
 A change to Riff reaches a self-hosted site on its next plugin update, and Cloud as soon as riffpress-com's upgrade pull request merges.
 

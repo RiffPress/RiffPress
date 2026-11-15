@@ -1,34 +1,56 @@
 name: Playground Preview
 
-# Builds riff.zip and the site from the pull request commit and uploads them
-# as artifacts. "Playground Preview Publish" hosts them and comments on the
-# pull request, so every pull request gets a one-click Playground of its own
-# build and, from this repository, a preview of its own site.
-# Pull request code is untrusted here: read-only token, no composer or npm
-# install scripts.
+# Builds riff.zip and the demo set from the pull request commit, and the site when the pull request
+# changes what Source or the developer site is built from, and uploads them as artifacts. "Playground
+# Preview Publish" hosts them and keeps the pull request's Preview comment true, so every pull request
+# gets a one-click Playground of its own build and, from this repository, previews of the sites it
+# changes. The release pull request only moves versions and changelogs, so it gets none.
+# Pull request code is untrusted here: read-only token, no composer or npm install scripts.
 
 on:
   pull_request:
     # The preview plays the pull request's own demo set, so a change to it is worth a new preview even
-    # though the rest of tests/ is not. The last pattern that matches a path decides.
+    # though the rest of tests/ is not, and the site previews show the docs and the scripts that build
+    # the sites (preview.js's SITE_INPUTS, which its tests hold to this list). GitHub matches these
+    # against the whole pull request, so a push builds whenever the pull request changes anything
+    # below; the last pattern that matches a path decides.
     paths:
       - '**'
       - '!**.md'
       - '!.github/**'
       - '!**/tests/**'
       - 'packages/fixtures/**'
+      - 'site/**'
+      - 'docs/**'
+      - '.github/scripts/developers-site.js'
+      - '.github/scripts/handbook-pages.js'
+      - '.github/scripts/hooks-reference.js'
+      - '.github/scripts/js-reference.js'
+      - '.github/scripts/no-widows.js'
+      - '.github/scripts/reference-pages.js'
+      - '.github/scripts/site-js.js'
+      - '.github/scripts/site-nav.js'
+      - '.github/scripts/site-nav.json'
+      - '.github/scripts/site-preview.js'
+      - '.github/scripts/site-shell.js'
+      - '.github/scripts/surface.php'
+      - '.github/scripts/web-pages.js'
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   build:
+    if: github.head_ref != 'release-please--branches--main'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      # To list the pull request's changed files.
+      pull-requests: read
     # Building an album the pull request adds or changes downloads and encodes its recordings.
     timeout-minutes: 30
     steps:
@@ -43,7 +65,25 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+      - name: Decide whether the sites need a preview
+        id: site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # The publisher decides again from the default branch's copy of this list; this only spares
+          # building and uploading a site nobody will see.
+          if [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            needed=$(gh api "repos/${GH_REPO}/pulls/${PR_NUMBER}/files?per_page=100" --paginate --jq '.[].filename' | node .github/scripts/preview.js site)
+          else
+            needed=true
+          fi
+          echo "needed=${needed}" >> "$GITHUB_OUTPUT"
+          echo "Site previews: ${needed}"
       - name: Build the site
+        if: steps.site.outputs.needed == 'true'
         run: |
           set -euo pipefail
           npm ci --ignore-scripts --no-audit --no-fund
@@ -127,6 +167,7 @@ jobs:
           retention-days: 14
           if-no-files-found: error
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.site.outputs.needed == 'true'
         with:
           name: site
           path: build/site/

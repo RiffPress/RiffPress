@@ -1,24 +1,80 @@
 name: Playground Preview Cleanup
 
-# Deletes the per-PR preview branch when the pull request closes.
-# pull_request_target so it also runs for fork pull requests; it never checks
-# out pull request code.
+# When a pull request closes, takes its previews down: the preview-pr-N branch and every pr-N
+# deployment on both Cloudflare Pages projects, and the sticky comment then says so, with no buttons.
+# When a push lands or the pull request reopens, the comment says so at once: building, or, when the
+# push builds nothing (the pull request now changes only what the build's path filter leaves out,
+# which GitHub matches against the whole pull request, so this is a push that narrowed it), that the
+# head moved and whether the preview still shows it. The release pull request keeps no comment.
+#
+# pull_request_target so it also runs for fork pull requests. Neither job checks out or runs pull
+# request code: each checks out the default branch's scripts and acts on the event's pull request
+# number through the API. The close job holds the Cloudflare token to delete deployments.
 
 on:
-  pull_request_target: # zizmor: ignore[dangerous-triggers] no checkout, only deletes a branch ref
-    types: [closed]
+  pull_request_target: # zizmor: ignore[dangerous-triggers] no pull request code is checked out or run; only the default branch's scripts, on the event's number
+    types: [closed, synchronize, reopened]
 
 permissions: {}
 
 jobs:
   cleanup:
+    if: github.event.action == 'closed'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: write
+      actions: read
+      pull-requests: write
     steps:
-      - env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: .github
+      - name: Take the previews down
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh api --method DELETE "repos/${GH_REPO}/git/refs/heads/preview-pr-${PR_NUMBER}" --silent 2>/dev/null || true
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        with:
+          script: |
+            const preview = require( `${ process.env.GITHUB_WORKSPACE }/.github/scripts/preview.js` );
+            if ( ! /^[1-9][0-9]*$/.test( process.env.PR_NUMBER ) ) {
+              core.setFailed( 'Unexpected pull request number' );
+              return;
+            }
+            const number = parseInt( process.env.PR_NUMBER, 10 );
+            const cf = preview.cloudflare( { fetch, account: process.env.CLOUDFLARE_ACCOUNT_ID, token: process.env.CLOUDFLARE_API_TOKEN } );
+            // Everything first, so the comment only says taken down once it is.
+            await preview.takeDown( { github, repo: context.repo, number, cf, log: core.info } );
+            await preview.sync( { github, repo: context.repo, number, log: core.info } );
+
+  pushed:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: .github
+      - name: Say where the preview stands
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        with:
+          script: |
+            const preview = require( `${ process.env.GITHUB_WORKSPACE }/.github/scripts/preview.js` );
+            if ( ! /^[1-9][0-9]*$/.test( process.env.PR_NUMBER ) ) {
+              core.setFailed( 'Unexpected pull request number' );
+              return;
+            }
+            // A push that builds says "building" here as soon as it lands; one that builds nothing says so.
+            await preview.sync( { github, repo: context.repo, number: parseInt( process.env.PR_NUMBER, 10 ), log: core.info } );
