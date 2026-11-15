@@ -1,5 +1,19 @@
 # Changelog
 
+## [6.19.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.18.1...riff-v6.19.0) (2026-11-15)
+
+
+### Features
+
+* **api:** every route is in the REST reference, internal ones marked, and CI holds the public surface to the last release's ([#1126](https://github.com/RiffPress/RiffPress/issues/1126)) ([2a39d62](https://github.com/RiffPress/RiffPress/commit/2a39d623792cbc00cecd32c00a195f8064bc93dc))
+* **player:** everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does ([#1124](https://github.com/RiffPress/RiffPress/issues/1124)) ([a468560](https://github.com/RiffPress/RiffPress/commit/a468560631a8f05d1f92e33d607d7cdd6b85c3b9))
+* **player:** everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does ([#1125](https://github.com/RiffPress/RiffPress/issues/1125)) ([a38c407](https://github.com/RiffPress/RiffPress/commit/a38c407bee0ff442eb32e41e80690af9be09856b))
+
+
+### Bug Fixes
+
+* **player:** a change of record or side is never judged a slow card, and a deck lost mid-change shows its record at rest ([#1120](https://github.com/RiffPress/RiffPress/issues/1120)) ([7e11676](https://github.com/RiffPress/RiffPress/commit/7e11676cba16c1bbb97994bcca303b7232f1c4a6))
+
 ## [6.18.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.18.0...riff-v6.18.1) (2026-11-15)
 
 

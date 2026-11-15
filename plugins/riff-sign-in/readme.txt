@@ -5,7 +5,7 @@ Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: riff
-Stable tag: 0.7.2
+Stable tag: 0.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,9 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 == Changelog ==
 
+= 0.8.0 =
+* Everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does.
+
 = 0.7.2 =
 * Fixed: a view change animates only the view, the app's fonts draw once, and the account menu, install card and Sign In sheet take the app's tokens.
 
@@ -41,9 +44,5 @@ Admins and editors keep signing in as they always have; this is for listeners.
 
 = 0.6.1 =
 * Fixed: signing in takes JSON from the site's own pages, the email link names its account, and nothing answers differently for a member.
-
-= 0.6.0 =
-* A local site raises the code request limits a hundredfold, through riff_sign_in_limits.
-* Fixed: removing a passkey on the profile moves focus on and says so.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).

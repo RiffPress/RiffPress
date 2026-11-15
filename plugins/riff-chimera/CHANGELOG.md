@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.4.0...riff-chimera-v0.5.0) (2026-11-15)
+
+
+### Features
+
+* **player:** everyone sees the deck from one low chair, the page's flat deck is never painted, and the arm moves as a turntable's does ([#1124](https://github.com/RiffPress/RiffPress/issues/1124)) ([a468560](https://github.com/RiffPress/RiffPress/commit/a468560631a8f05d1f92e33d607d7cdd6b85c3b9))
+
+
+### Bug Fixes
+
+* **chimera:** Stop closes the voices' audio context, so Sing along again is heard instead of falling silent under the old voices still rendering ([#1123](https://github.com/RiffPress/RiffPress/issues/1123)) ([73494f6](https://github.com/RiffPress/RiffPress/commit/73494f6c390a872cf55a913aafd584e17c0e5498))
+
 ## [0.4.0](https://github.com/RiffPress/RiffPress/compare/riff-chimera-v0.3.1...riff-chimera-v0.4.0) (2026-11-12)
 
 
