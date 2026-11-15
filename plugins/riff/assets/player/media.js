@@ -38,8 +38,27 @@ export function media( P ) {
 		}
 		cors.set( origin, false );
 		fetch( src, { method: 'HEAD', mode: 'cors', credentials: 'omit' } )
-			.then( ( r ) => r.ok && cors.set( origin, true ) )
+			.then( ( r ) => {
+				if ( r.ok ) {
+					cors.set( origin, true );
+					reload( origin );
+				}
+			} )
 			.catch( () => {} );
+	}
+	// A track loaded before its origin answered (the one a reload brings back, loaded as the page
+	// opens) holds its file without CORS, and Web Audio would hear it as silence: the meter leaves it
+	// alone, and the deck's lamps stay dark for the whole track. Loaded again for CORS, at the same
+	// place, while it waits to be played. One already playing is left as it is, until the next track.
+	function reload( origin ) {
+		const src = audio.getAttribute( 'src' );
+		if ( audio.paused && src && originOf( src ) === origin && audio.crossOrigin !== 'anonymous' ) {
+			const at = audio.currentTime;
+			point( audio, src );
+			if ( at ) {
+				audio.currentTime = at;
+			}
+		}
 	}
 	const shared = ( src ) => {
 		const origin = originOf( src );
@@ -52,6 +71,8 @@ export function media( P ) {
 		originOf( songSrc( t ) ) !== location.origin && ! shared( songSrc( t ) );
 	// Points a media element at a file, loaded for CORS when its origin shares.
 	function point( m, src ) {
+		// Asked here too: a track brought back by a reload may be from an album with no row on the page.
+		askCors( src );
 		const cross = shared( src ) ? 'anonymous' : null;
 		if ( m.getAttribute( 'src' ) !== src || m.crossOrigin !== cross ) {
 			m.crossOrigin = cross;
