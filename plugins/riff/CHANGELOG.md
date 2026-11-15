@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.19.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.19.1...riff-v6.19.2) (2026-11-15)
+
+
+### Bug Fixes
+
+* **release:** main's versions agree with the release manifest again, at 6.19.1 ([#1129](https://github.com/RiffPress/RiffPress/issues/1129)) ([91dabd5](https://github.com/RiffPress/RiffPress/commit/91dabd5c784d299ad22290616fd057d4d4a70a31))
+
 ## [6.19.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.19.0...riff-v6.19.1) (2026-11-15)
 
 
