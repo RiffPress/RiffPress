@@ -1313,6 +1313,22 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 	will-change: translate, scale, transform;
 }
 
+/* A side turned over (now-playing.js, flip()): the record lifted clear of
+   the spindle, 0 on the mat to 1 off it, and turned about its diameter,
+   0deg to 180deg, edge-on at 90deg. Typed, so they move between frames;
+   deck-gl.js draws the record from them at its own size throughout. */
+@property --riff-lift {
+	syntax: "<number>";
+	inherits: false;
+	initial-value: 0;
+}
+
+@property --riff-turn {
+	syntax: "<angle>";
+	inherits: false;
+	initial-value: 0deg;
+}
+
 /* The way a record, its sleeve and the arm move: carried by a hand, on the
    minimum-jerk path reaching movements follow, x = 10t³ − 15t⁴ + 6t⁵,
    setting off and arriving with neither speed nor acceleration

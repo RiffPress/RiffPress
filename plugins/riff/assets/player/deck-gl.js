@@ -328,6 +328,8 @@ const at = ( d, x, y, z = 0 ) => [ d, [ x, y, z ] ];
 const MM = 0.302;
 const R = MM / 2;
 const PLATTER = R * 1.035 + 0.0064;
+// How high a record is lifted to come off the spindle, which stands 11.5 mm over the mat.
+const SPINDLE = 0.016;
 const DECK_Z = -0.022;
 const FLOOR_Z = -0.05;
 const PIVOT_H = 0.03;
@@ -1311,10 +1313,17 @@ export default function deckGl( P ) {
 		const far = Math.hypot( x, y );
 		// Carried a little above the mat, clear of the spindle, and down on the desk beyond the plinth.
 		const z = 0.012 * smooth( 0, 0.03, far ) + ( FLOOR_Z + 0.006 - 0.012 ) * smooth( 0.33, 0.4, far );
+		// Turned over (now-playing.js, flip()): lifted clear of the spindle, and higher by as much
+		// as its lower edge dips as it turns about its diameter, the line from the chair. Past
+		// edge-on it is the other side that faces up, so it is drawn turned back from flat.
+		const style = getComputedStyle( el );
+		const over = ( ( parseFloat( style.getPropertyValue( '--riff-turn' ) ) || 0 ) * Math.PI ) / 180;
+		const tilt = over > Math.PI / 2 ? over - Math.PI : over;
+		const lift = ( parseFloat( style.getPropertyValue( '--riff-lift' ) ) || 0 ) * SPINDLE + R * ( b.width / pb.width ) * Math.abs( Math.sin( tilt ) );
 		return {
-			M: chain( move( x, y, z ), size( b.width / pb.width, b.height / pb.height ), turnZ( ( -spin * Math.PI ) / 180 ) ),
-			alpha: fade * ( parseFloat( getComputedStyle( el ).opacity ) || 0 ),
-			key: [ x, y, b.width / pb.width, b.height / pb.height ].map( ( n ) => n.toFixed( 4 ) ).join(),
+			M: chain( move( x, y, z + lift ), turnY( tilt ), size( b.width / pb.width, b.height / pb.height ), turnZ( ( -spin * Math.PI ) / 180 ) ),
+			alpha: fade * ( parseFloat( style.opacity ) || 0 ),
+			key: [ x, y, b.width / pb.width, b.height / pb.height, lift, tilt ].map( ( n ) => n.toFixed( 4 ) ).join(),
 		};
 	}
 	function frame( now ) {
