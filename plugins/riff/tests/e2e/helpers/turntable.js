@@ -68,4 +68,70 @@ async function stopsAndStarts( page ) {
 	expect( tracked( start ), 'the platter at the music\'s rate' ).toBe( true );
 }
 
-module.exports = { stopsAndStarts };
+/**
+ * Measures the page's deck as it is laid out flat: the transforms deck-gl.js lays its arm, cue and
+ * keys with, where the deck is drawn from a chair, lifted for the moment of the measurement. Where
+ * nothing is laid (no WebGL), the deck as it is.
+ *
+ * @param {import('@playwright/test').Page} page    Page.
+ * @param {Function}                        measure Run in the page, with arg; returns what it measured.
+ * @param {*}                               [arg]   Passed to measure.
+ * @return {Promise<*>} What measure returned.
+ */
+function flat( page, measure, arg ) {
+	return page.evaluate(
+		( [ source, given ] ) => {
+			const parts = [ ...document.querySelectorAll( '.riff-mount, .riff-cue, .riff-keys' ) ];
+			const laid = parts.map( ( part ) => part.style.transform );
+			parts.forEach( ( part ) => ( part.style.transform = 'none' ) );
+			try {
+				// eslint-disable-next-line no-new-func
+				return new Function( 'arg', `return ( ${ source } )( arg );` )( given );
+			} finally {
+				parts.forEach( ( part, i ) => ( part.style.transform = laid[ i ] ) );
+			}
+		},
+		[ measure.toString(), arg ]
+	);
+}
+
+/**
+ * Points of the page's flat deck on the screen: carried through the transform deck-gl.js laid the
+ * arm's mount with ('arm'), or the cue in the record's own plane ('record'). Where nothing is laid,
+ * the same points.
+ *
+ * @param {import('@playwright/test').Page} page   Page.
+ * @param {number[][]}                      points [x, y] each, on the flat deck.
+ * @param {string}                          plane  'arm' or 'record'.
+ * @return {Promise<number[][]>} [x, y] each, on the screen, once the eye is at rest.
+ */
+async function onScreen( page, points, plane = 'arm' ) {
+	// The eye at rest first: in the chair with the record out, over the deck with it in its sleeve.
+	await page.waitForFunction( () => {
+		const root = document.querySelector( '#riff' );
+		const canvas = document.querySelector( '.riff-deck-gl' );
+		const out = root.dataset.riffDeck === 'out' && ! ( 'riffArriving' in root.dataset );
+		return ! ( 'riffGl' in root.dataset ) || ! canvas || canvas.dataset.riffCamera === ( out ? 'across' : 'over' );
+	} );
+	return page.evaluate(
+		( [ list, which ] ) => {
+			const mount = document.querySelector( '.riff-mount' );
+			const cue = document.querySelector( '.riff-cue' );
+			const laid = [ mount.style.transform, cue.style.transform ];
+			mount.style.transform = cue.style.transform = 'none';
+			const box = mount.getBoundingClientRect();
+			[ mount.style.transform, cue.style.transform ] = laid;
+			let m = new DOMMatrix( laid[ 0 ] || 'none' );
+			if ( which === 'record' ) {
+				m = m.multiply( new DOMMatrix( laid[ 1 ] || 'none' ) );
+			}
+			return list.map( ( [ x, y ] ) => {
+				const q = m.transformPoint( new DOMPoint( x - box.left, y - box.top, 0, 1 ) );
+				return [ box.left + q.x / q.w, box.top + q.y / q.w ];
+			} );
+		},
+		[ points, plane ]
+	);
+}
+
+module.exports = { stopsAndStarts, flat, onScreen };

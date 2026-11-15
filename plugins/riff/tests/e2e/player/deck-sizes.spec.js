@@ -4,8 +4,10 @@
  * large enough to press: under a finger at least 44 by 44 CSS pixels (WCAG 2.5.5), under a mouse at
  * least 24 by 24 (WCAG 2.5.8), so a window keeps the keys along the front of the deck. Upright, the
  * album is the cover. A screen no taller than a phone is a touch screen here, as a phone on its side
- * is; the rest have a mouse. Measured from boxes, so it holds wherever the deck is drawn. Runs in
- * desktop Chromium.
+ * is; the rest have a mouse. Measured from boxes, so it holds wherever the deck is drawn: where
+ * WebGL draws it from a chair (deck-gl.js), the composition on the page's flat deck, with the
+ * transforms that lay its arm and keys where they are drawn lifted, and each control's size on the
+ * screen, as it is laid. Runs in desktop Chromium.
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
@@ -25,6 +27,18 @@ test.afterAll( async ( { requestUtils } ) => {
 // The deck, as laid out: every box the checks below need, in CSS pixels.
 const measure = ( page ) =>
 	page.evaluate( () => {
+		const controlsOf = () => [ ...document.querySelectorAll( '.riff-np :is(button, input, [role="slider"]):not(.riff-arm, .riff-sleeve, .riff-np-head *)' ) ];
+		// Each control's size on the screen, as it is laid where it is drawn.
+		const pressable = controlsOf()
+			.filter( ( el ) => el.checkVisibility( { visibilityProperty: true } ) && el.getBoundingClientRect().width > 0 )
+			.map( ( el ) => {
+				const r = el.getBoundingClientRect();
+				return { w: r.width, h: r.height, name: el.getAttribute( 'aria-label' ) || el.className };
+			} );
+		// The rest on the page's flat deck.
+		const laidParts = [ ...document.querySelectorAll( '.riff-mount, .riff-cue, .riff-keys' ) ];
+		const laid = laidParts.map( ( part ) => part.style.transform );
+		laidParts.forEach( ( part ) => ( part.style.transform = 'none' ) );
 		const box = ( el ) => {
 			const r = el.getBoundingClientRect();
 			return { x: r.x, y: r.y, w: r.width, h: r.height, name: el.getAttribute( 'aria-label' ) || el.className };
@@ -38,18 +52,19 @@ const measure = ( page ) =>
 			.split( /\s+/ )
 			.map( ( share ) => parseFloat( share ) / 100 );
 		const stage = document.querySelector( '.riff-stage' );
-		return {
+		const measured = {
+			pressable,
 			board: getComputedStyle( plinth, '::before' ).display !== 'none',
 			plinth: { x: p.x + left * p.width, y: p.y + top * p.height, w: p.width * ( 1 - left - right ), h: p.height * ( 1 - top - bottom ) },
 			stage: box( stage ),
 			record: box( document.querySelector( '.riff-stage > .riff-record' ) ),
 			arm: [ '.riff-arm', '.riff-arm-base', '.riff-arm-tube' ].map( ( q ) => box( document.querySelector( q ) ) ),
-			controls: [ ...document.querySelectorAll( '.riff-np :is(button, input, [role="slider"]):not(.riff-arm, .riff-sleeve, .riff-np-head *)' ) ]
-				.filter( shown )
-				.map( box ),
+			controls: controlsOf().filter( shown ).map( box ),
 			display: [ ...document.querySelectorAll( '.riff-keys .riff-level' ) ].filter( shown ).map( box ),
 			names: [ ...document.querySelectorAll( '.riff-np :is(button, input):not(.riff-sleeve)' ) ].filter( shown ).map( ( el ) => el.getAttribute( 'aria-label' ) ),
 		};
+		laidParts.forEach( ( part, i ) => ( part.style.transform = laid[ i ] ) );
+		return measured;
 	} );
 
 const inside = ( a, b ) => a.x >= b.x - 0.5 && a.y >= b.y - 0.5 && a.x + a.w <= b.x + b.w + 0.5 && a.y + a.h <= b.y + b.h + 0.5;
@@ -68,6 +83,8 @@ async function deck( page ) {
 
 async function settled( page ) {
 	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
+	// Where WebGL draws the deck, its eye at rest in the chair.
+	await page.waitForFunction( () => ! ( 'riffGl' in document.querySelector( '#riff' ).dataset ) || document.querySelector( '.riff-deck-gl' )?.dataset.riffCamera === 'across' );
 	// Still: the record, the arm and the keys where they were a moment ago.
 	const where = () =>
 		page.evaluate( () =>
@@ -101,7 +118,7 @@ function check( size, m, floor ) {
 		expect.soft( inside( c, m.plinth ), `${ at }: ${ c.name } on the plinth` ).toBe( true );
 		expect.soft( meet( c, m.record ), `${ at }: ${ c.name } clear of the platter` ).toBe( false );
 	}
-	for ( const c of m.controls ) {
+	for ( const c of m.pressable ) {
 		expect.soft( Math.min( c.w, c.h ), `${ at }: ${ c.name } at least ${ floor }px` ).toBeGreaterThanOrEqual( floor - 0.5 );
 	}
 	for ( const [ i, a ] of all.entries() ) {

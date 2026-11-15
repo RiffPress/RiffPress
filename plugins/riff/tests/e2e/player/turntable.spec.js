@@ -14,15 +14,15 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { openView } = require( '../helpers/views' );
 const { own } = require( '../helpers/own' );
 const { playerSite, audioState, watchSpeed, speedWrites } = require( '../helpers/site' );
-const { stopsAndStarts } = require( '../helpers/turntable' );
+const { stopsAndStarts, flat, onScreen } = require( '../helpers/turntable' );
 
 const made = own();
 
 // How far the stylus is from the record's centre, as a share of its radius: the end of the arm's
 // tube, at the stylus, as drawn on the screen, against the record's own box (its grooves turn
-// inside it).
+// inside it), on the page's flat deck.
 const stylus = ( page ) =>
-	page.evaluate( () => {
+	flat( page, () => {
 		const record = document.querySelector( '.riff-record' ).getBoundingClientRect();
 		const grip = document.querySelector( '.riff-arm-grip' );
 		const p = grip.getPointAtLength( grip.getTotalLength() );
@@ -50,13 +50,23 @@ async function still( page ) {
 	);
 }
 
-// A point on the arm's tube, near its headshell, on the screen.
-const onArm = ( page ) =>
-	page.locator( '.riff-arm-grip' ).evaluate( ( path ) => {
+// A point on the arm's tube, near its headshell, on the screen, where it is drawn.
+const onArm = async ( page ) => {
+	const at = await flat( page, () => {
+		const path = document.querySelector( '.riff-arm-grip' );
 		const p = path.getPointAtLength( path.getTotalLength() * 0.85 );
-		const at = new DOMPoint( p.x, p.y ).matrixTransform( path.getScreenCTM() );
-		return { x: at.x, y: at.y };
+		const q = new DOMPoint( p.x, p.y ).matrixTransform( path.getScreenCTM() );
+		return [ q.x, q.y ];
 	} );
+	const [ [ x, y ] ] = await onScreen( page, [ at ] );
+	return { x, y };
+};
+// A point of the record, as a share of its box across and down, on the screen, where it is drawn.
+const onRecord = async ( page, across, down ) => {
+	const record = await page.locator( '.riff-record' ).boundingBox();
+	const [ [ x, y ] ] = await onScreen( page, [ [ record.x + record.width * across, record.y + record.height * down ] ] );
+	return [ x, y ];
+};
 let postUrl;
 
 test.beforeAll( async ( { requestUtils } ) => {
@@ -156,9 +166,18 @@ test.describe( 'Turntable', () => {
 		// A press on the plinth, beside the platter, is a press on the deck: it stays.
 		await page.locator( '.riff-bar-info' ).click();
 		await expect( np ).toBeVisible();
+		// Where the plinth is drawn: its box on the page's flat deck, carried onto the screen.
 		const plinth = await page.locator( '.riff-plinth' ).boundingBox();
-		await page.mouse.click( plinth.x + plinth.width * 1.15, plinth.y + plinth.height * 0.6 );
-		await page.mouse.click( plinth.x + 4, plinth.y - plinth.height * 0.08 );
+		const [ beside, corner ] = await onScreen(
+			page,
+			[
+				[ plinth.x + plinth.width * 1.15, plinth.y + plinth.height * 0.6 ],
+				[ plinth.x + 4, plinth.y - plinth.height * 0.08 ],
+			],
+			'record'
+		);
+		await page.mouse.click( ...beside );
+		await page.mouse.click( ...corner );
 		await page.waitForTimeout( 400 );
 		await expect( np ).toBeVisible();
 	} );
@@ -230,19 +249,32 @@ test.describe( 'Turntable', () => {
 		const out = groove( 0.5 );
 		// Where the record is once it has come to rest on the platter, and once the side's tracks
 		// are known: the first look may be ahead of either.
-		let box, middle, at;
+		// The cue's box on the page's flat deck, and points of it on the screen, where it is drawn.
+		const cueBox = () =>
+			flat( page, () => {
+				const b = document.querySelector( '.riff-cue' ).getBoundingClientRect();
+				return { x: b.x, y: b.y, width: b.width, height: b.height };
+			} );
+		let box, at, label;
 		await expect( async () => {
-			box = await page.locator( '.riff-cue' ).boundingBox();
-			middle = [ box.x + box.width / 2, box.y + box.height / 2 ];
-			at = [ middle[ 0 ] - ( out * box.width ) / 2, middle[ 1 ] ];
+			box = await cueBox();
+			const middle = [ box.x + box.width / 2, box.y + box.height / 2 ];
+			[ at, label ] = await onScreen(
+				page,
+				[
+					[ middle[ 0 ] - ( out * box.width ) / 2, middle[ 1 ] ],
+					[ middle[ 0 ] - box.width * 0.1, middle[ 1 ] ],
+				],
+				'record'
+			);
 			await page.mouse.move( at[ 0 ], at[ 1 ] + 1 );
 			await page.mouse.move( ...at );
 			await expect( tip ).toBeVisible( { timeout: 500 } );
-			expect( await page.locator( '.riff-cue' ).boundingBox() ).toEqual( box );
+			expect( await cueBox() ).toEqual( box );
 		} ).toPass();
 		await expect( tip ).toHaveText( /^A\d+ .+ · \d+:\d\d$/ );
 		// On the label there is no groove to say.
-		await page.mouse.move( middle[ 0 ] - box.width * 0.1, middle[ 1 ] );
+		await page.mouse.move( ...label );
 		await expect( tip ).toBeHidden();
 		// Pressed, the stylus comes to rest in the groove pressed.
 		await page.mouse.click( ...at );
@@ -381,14 +413,13 @@ test.describe( 'Turntable', () => {
 
 		// Dragged to the record's lead-in rim, the needle lands at the side's start; to just
 		// outside its label, near the side's end.
-		const record = await page.locator( '.riff-record' ).boundingBox();
 		const grip = await onArm( page );
 		const max = await arm.getAttribute( 'aria-valuemax' );
 		const turned = () => arm.evaluate( ( el ) => parseFloat( getComputedStyle( el ).rotate ) || 0 );
 		await page.mouse.move( grip.x, grip.y );
 		await page.mouse.down();
 		const before = await turned();
-		await page.mouse.move( record.x + record.width * 0.5, record.y + record.height * 0.7, { steps: 8 } );
+		await page.mouse.move( ...( await onRecord( page, 0.5, 0.7 ) ), { steps: 8 } );
 		await expect( arm ).toHaveAttribute( 'data-riff-held', '' );
 		// In the hand it turns with the hand, towards the label, before it is let go.
 		await expect.poll( turned ).toBeGreaterThan( before + 5 );
@@ -401,12 +432,12 @@ test.describe( 'Turntable', () => {
 		await still( page );
 		const arm = page.locator( '.riff-arm' );
 		await expect( arm ).toHaveAttribute( 'aria-valuemax', /^[2-9]/ );
-		const record = await page.locator( '.riff-record' ).boundingBox();
 		const grip = await onArm( page );
 		const max = await arm.getAttribute( 'aria-valuemax' );
+		const drop = await onRecord( page, 0.5, 0.7 );
 		await page.mouse.click( grip.x, grip.y );
 		await expect( arm ).toHaveAttribute( 'data-riff-held', '' );
-		await page.mouse.click( record.x + record.width * 0.5, record.y + record.height * 0.7 );
+		await page.mouse.click( ...drop );
 		await expect( arm ).not.toHaveAttribute( 'data-riff-held', '' );
 		await expect( arm ).toHaveAttribute( 'aria-valuenow', max );
 	} );
@@ -583,7 +614,7 @@ test.describe( 'Turntable', () => {
 		await page.setViewportSize( { width: 1440, height: 900 } );
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-deck', 'out' );
 		// In its first frames: down, where the music is, the platter at speed, the music untouched.
-		const first = await page.evaluate( () => {
+		const first = await flat( page, () => {
 			const arm = document.querySelector( '.riff-arm' );
 			const record = document.querySelector( '.riff-record' ).getBoundingClientRect();
 			const grip = document.querySelector( '.riff-arm-grip' );

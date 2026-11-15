@@ -238,8 +238,9 @@ export function nowPlaying( P ) {
 	// in its sleeve only the sleeve lies on the desk. Where the whole screen is the turntable
 	// there is no desk to press. The press starts and ends on the desk, in one place: the arm
 	// carried to its next click, and a drag off the record, are not presses of it.
-	function onDeck( x, y ) {
+	function onDeck( sx, sy ) {
 		const plinth = $( '.riff-plinth' );
+		const [ x, y ] = P.flat ? P.flat( sx, sy ) : [ sx, sy ];
 		if ( ! plinth || shapedAsDeck() ) {
 			return true;
 		}
@@ -1600,7 +1601,9 @@ export function nowPlaying( P ) {
 	const tonearm = $( '.riff-arm' );
 	// Where a point on the screen lies around the arm's base, as the arm's own angle: 0 straight
 	// down, turning towards the record as it grows.
-	function around( x, y ) {
+	function around( sx, sy ) {
+		// Where the deck is drawn from a chair (deck-gl.js), in the arm's plane on the page's flat deck.
+		const [ x, y ] = P.flat ? P.flat( sx, sy, 'arm' ) : [ sx, sy ];
 		const r = $( '.riff-record' ).getBoundingClientRect();
 		const dx = x - r.left - BASE[ 0 ] * r.width;
 		const dy = y - r.top - BASE[ 1 ] * r.width;
@@ -1698,8 +1701,10 @@ export function nowPlaying( P ) {
 	if ( cue ) {
 		// The share of the side in the groove under a point of the screen; null off the grooves.
 		const under = ( e ) => {
-			const r = cue.getBoundingClientRect();
-			const out = Math.hypot( e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2 ) / ( r.width / 2 );
+			// The cue's own box on the page's flat deck, which the plinth's is, and the point there.
+			const r = ( P.flat ? $( '.riff-plinth' ) : cue ).getBoundingClientRect();
+			const [ x, y ] = P.flat ? P.flat( e.clientX, e.clientY ) : [ e.clientX, e.clientY ];
+			const out = Math.hypot( x - r.left - r.width / 2, y - r.top - r.height / 2 ) / ( r.width / 2 );
 			return out > LEAD_IN || out < leadOut() || ! sideOf( P.track() ) ? null : ( LEAD_IN - out ) / ( LEAD_IN - leadOut() );
 		};
 		let down = null;
