@@ -1670,72 +1670,151 @@ html:has(#riff[data-live]) [data-playing="true"] .riff-row-state i {
 
 /* The pitch fader, ±8%, at the plinth's right under the arm's rest, as a
    deck has it: the music, its pitch, the platter, the strobe and the arm
-   move together (now-playing.js). Its reading is under it. */
+   move together (now-playing.js). deck-gl.js draws its slot, from 60% to
+   92% down at 113.5% across, and its cap, 5.4% by 3.3%, which the range's
+   thumb is the size of, so a hand takes the cap where it is drawn: −8 at
+   the slot's back, +8 toward the listener, as a deck has it. Its scale is
+   printed on the plinth at its right, in the keys' legends' ink. */
 #riff .riff-keys .riff-pitch {
 	position: absolute;
-	top: 58%;
-	left: 107%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 1cqi;
-	width: 9%;
-	height: 38%;
-
-	/* as light as the keys' legends, to be read on the plinth's grey */
+	inset: 0;
 	color: rgb(255 255 255 / 0.62);
-	font-size: 2cqi;
 	font-weight: 500;
 	line-height: 1;
-	font-variant-numeric: tabular-nums;
-	pointer-events: auto;
+	pointer-events: none;
 }
 
 #riff .riff-pitch input {
-	flex: 1;
-	width: calc(100% + 2 * var(--riff-hit-x, 0px));
-	min-height: 0;
-	margin: calc(-1 * var(--riff-hit-y, 0px)) calc(-1 * var(--riff-hit-x, 0px));
+	position: absolute;
+	top: 61%;
+	left: calc(110.8% - var(--riff-hit-x, 0px));
+	width: calc(5.4% + 2 * var(--riff-hit-x, 0px));
+	height: 30%;
+	margin: 0;
+	border-radius: 0.8cqi;
 	background: none;
 	writing-mode: vertical-lr;
 	appearance: none;
-	cursor: pointer;
+	cursor: grab;
+	pointer-events: auto;
+}
+
+#riff .riff-pitch input:active {
+	cursor: grabbing;
 }
 
 #riff .riff-pitch input::-webkit-slider-runnable-track {
-	width: 0.6cqi;
-	border-radius: 0.3cqi;
-	background: #0c0c0c;
-	box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 rgb(255 255 255 / 0.05);
+	background: none;
 }
 
 #riff .riff-pitch input::-moz-range-track {
-	width: 0.6cqi;
-	border-radius: 0.3cqi;
-	background: #0c0c0c;
+	background: none;
 }
 
 #riff .riff-pitch input::-webkit-slider-thumb {
-	width: 6cqi;
-	height: 3cqi;
-	margin-left: -2.7cqi;
-	border-radius: 0.5cqi;
-	background: linear-gradient(#3a3a3a, #232323);
-	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -1px 0 #555, 0 2px 3px rgb(0 0 0 / 0.6);
+	width: 5.4cqi;
+	height: 3.3cqi;
+	background: none;
 	appearance: none;
 }
 
 #riff .riff-pitch input::-moz-range-thumb {
-	width: 6cqi;
-	height: 3cqi;
+	width: 5.4cqi;
+	height: 3.3cqi;
 	border: 0;
-	border-radius: 0.5cqi;
-	background: linear-gradient(#3a3a3a, #232323);
+	background: none;
 }
 
 #riff .riff-pitch input:focus-visible {
 	outline: var(--riff-focus-ring);
 	outline-offset: var(--riff-focus-ring-offset);
+}
+
+/* A tick for each 1%, from the cap's middle at one end of its travel to
+   its middle at the other, the 4s and 0 longer and numbered. */
+#riff .riff-pitch-scale {
+	position: absolute;
+	top: 62.65%;
+	left: 117.4%;
+	width: 8%;
+	height: 26.7%;
+	background: repeating-linear-gradient(currentcolor 0 0.25cqi, transparent 0.25cqi 1.66875cqi) 0 -0.125cqi / 1.4cqi 27cqi no-repeat;
+	font-size: 1.9cqi;
+	font-variant-numeric: tabular-nums;
+}
+
+#riff .riff-pitch-scale i {
+	position: absolute;
+	left: 3.1cqi;
+	font-style: normal;
+	translate: 0 -50%;
+}
+
+#riff .riff-pitch-scale i::before {
+	position: absolute;
+	top: 50%;
+	left: -3.1cqi;
+	width: 2.4cqi;
+	height: 0.25cqi;
+	margin-top: -0.125cqi;
+	background: currentcolor;
+	content: "";
+}
+
+#riff .riff-pitch-scale i:nth-child(2) {
+	top: 25%;
+}
+
+#riff .riff-pitch-scale i:nth-child(3) {
+	top: 50%;
+}
+
+#riff .riff-pitch-scale i:nth-child(4) {
+	top: 75%;
+}
+
+#riff .riff-pitch-scale i:nth-child(5) {
+	top: 100%;
+}
+
+/* its name, under the slot */
+#riff .riff-pitch-scale b {
+	position: absolute;
+	top: 36.5cqi;
+	left: -3.9cqi;
+	font-weight: inherit;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	translate: -50% 0;
+}
+
+/* The key that sends the fader back to its middle, at the left of its
+   zero: there, risen from the plinth with its lamp lit, only while the
+   fader is off its middle and the listener is at it (now-playing.js), and
+   out of reach and of a screen reader's hearing otherwise. */
+#riff .riff-keys .riff-pitch-zero {
+	top: 74.4%;
+	left: 105.6%;
+	width: 3.8%;
+	height: 3.2%;
+	padding: 0;
+	font-size: 1.7cqi;
+	visibility: hidden;
+	opacity: 0;
+	transition: opacity 0.12s, visibility 0s 0.12s;
+}
+
+#riff .riff-keys .riff-pitch-zero[data-riff-offered] {
+	visibility: visible;
+	opacity: 1;
+	transition: opacity 0.12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	#riff .riff-keys .riff-pitch-zero {
+		transition: none;
+	}
 }
 
 /* On a wide screen Now Playing comes up from under the bar, whichever view
