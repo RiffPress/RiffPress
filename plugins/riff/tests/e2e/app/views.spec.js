@@ -180,23 +180,27 @@ test.describe( 'App', () => {
 		const recent = page.locator( '[data-riff-shelf="recent"]' );
 		await expect( recent.locator( '.riff-card-title' ).first() ).toHaveText( 'Trombone Detritus' );
 
-		// Jump back in is the post, a cover with its title under it, up to two lines; Recently
-		// played is the track, a small cover beside its title, so the two rows never look alike.
+		// Jump back in is the post, a cover with its title under it, wrapping in full so none of
+		// it is hidden; Recently played is the track, a small cover beside its title, which keeps
+		// to the row's one line and ends in an ellipsis, so the two rows never look alike.
 		const shape = ( card ) =>
 			card.evaluate( ( el ) => {
 				const art = el.querySelector( '.riff-card-art' ).getBoundingClientRect();
 				const title = el.querySelector( '.riff-card-title' );
 				const box = title.getBoundingClientRect();
+				const style = getComputedStyle( title );
 				return {
 					beside: art.right <= box.left && art.bottom > box.top,
 					art: art.width,
-					lines: getComputedStyle( title ).webkitLineClamp,
+					hidden: title.scrollHeight > title.clientHeight + 1,
+					wrap: style.whiteSpace,
+					ends: style.textOverflow,
 				};
 			} );
 		await expect( jump.locator( '.riff-card' ) ).toHaveCount( 1 );
-		expect( await shape( jump.locator( '.riff-card' ).first() ) ).toMatchObject( { beside: false, lines: '2' } );
+		expect( await shape( jump.locator( '.riff-card' ).first() ) ).toMatchObject( { beside: false, hidden: false, wrap: 'normal' } );
 		const track = await shape( recent.locator( '.riff-card' ).first() );
-		expect( track.beside ).toBe( true );
+		expect( track ).toMatchObject( { beside: true, wrap: 'nowrap', ends: 'ellipsis' } );
 		expect( track.art ).toBeLessThan( 100 );
 
 		await page.reload();
