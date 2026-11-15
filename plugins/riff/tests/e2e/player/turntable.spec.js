@@ -740,6 +740,63 @@ test.describe( 'Turntable, from what the files say', () => {
 			.toContain( 'rgb(255 255 255 / 0.060)' );
 	} );
 
+	test( 'a side turned over is lifted and turned about its diameter at its own size, the other side\'s label coming up edge-on', async ( { page }, info ) => {
+		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
+		// The first track side A and the second side B of the same record.
+		await page.route(
+			( url ) => decodeURIComponent( url.href ).includes( 'riff/v1/library/' ),
+			async ( route ) => {
+				const response = await route.fetch();
+				const post = await response.json();
+				post.pressing = {
+					format: '12',
+					sides: [ 'A', 'B' ].map( ( name, k ) => ( { from: k, to: k + 1, start: k ? post.tracks[ 0 ].duration : 0, length: post.tracks[ k ].duration, record: 0, name } ) ),
+				};
+				await route.fulfill( { response, json: post } );
+			}
+		);
+		await page.emulateMedia( { reducedMotion: 'no-preference' } );
+		await controlLayer( page );
+		await page.goto( postUrl );
+		await page.locator( '.riff-row' ).nth( 0 ).click();
+		await openView( page, 'album' );
+		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
+		const label = page.locator( '.riff-stage > .riff-record .riff-label small' );
+		await expect( label ).toHaveText( 'A · 33⅓' );
+		// Every frame: the record's box, which deck-gl.js draws its size from, and its lift and turn.
+		await page.evaluate( () => {
+			const record = document.querySelector( '.riff-stage > .riff-record' );
+			const seen = ( window.flipSeen = [] );
+			const tick = () => {
+				const b = record.getBoundingClientRect();
+				const style = getComputedStyle( record );
+				seen.push( {
+					w: b.width,
+					h: b.height,
+					lift: parseFloat( style.getPropertyValue( '--riff-lift' ) ),
+					turn: parseFloat( style.getPropertyValue( '--riff-turn' ) ),
+					side: record.querySelector( '.riff-label small' ).textContent[ 0 ],
+				} );
+				if ( seen.length < 600 ) {
+					requestAnimationFrame( tick );
+				}
+			};
+			requestAnimationFrame( tick );
+		} );
+		await page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="next"]:visible' ).first().click();
+		await expect( label ).toHaveText( 'B · 33⅓' );
+		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
+		const seen = await page.evaluate( () => window.flipSeen );
+		const [ first ] = seen;
+		expect( seen.filter( ( f ) => Math.abs( f.w - first.w ) > 0.5 || Math.abs( f.h - first.h ) > 0.5 ), 'frames where the record is another size' ).toHaveLength( 0 );
+		expect( Math.max( ...seen.map( ( f ) => f.lift ) ), 'lifted off the spindle' ).toBeCloseTo( 1, 2 );
+		const turned = seen.filter( ( f ) => f.turn > 0 );
+		expect( turned.length, 'frames of the turn' ).toBeGreaterThan( 5 );
+		expect( turned.filter( ( f ) => f.turn > 10 && f.turn < 170 && f.lift < 0.99 ), 'turned only while clear of the spindle' ).toHaveLength( 0 );
+		expect( turned.filter( ( f ) => ( f.turn < 90 ? 'A' : 'B' ) !== f.side ), 'the side up is the one facing up' ).toHaveLength( 0 );
+		expect( Math.max( ...turned.map( ( f ) => f.turn ) ), 'turned right over' ).toBeGreaterThan( 170 );
+	} );
+
 	test( 'a single is a 45: the platter turns 270° a second, and the strobe\'s 45 row stands still', async ( { page }, info ) => {
 		test.skip( info.project.name !== 'chromium', 'The turntable stands on a wide stage.' );
 		// The album's track list says it is the one track, so it is pressed as a 7-inch single.

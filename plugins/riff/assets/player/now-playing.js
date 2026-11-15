@@ -749,8 +749,13 @@ export function nowPlaying( P ) {
 	}
 
 	// ---- A new side of the same record: the needle goes back to its rest, the record is turned
-	// over, and the needle drops at the new side's lead-in. The music waits for it (turn()).
+	// over, and the needle drops at the new side's lead-in. The music waits for it (turn()). Turned
+	// as a hand turns it, once the arm is clear: lifted quickly off the spindle, turned over about
+	// its diameter, unhurried, the other side's label coming up as it passes edge-on, and set down
+	// gently. The page's record keeps its box; deck-gl.js draws the lift and the turn from
+	// --riff-lift and --riff-turn (riff.css), raising it as it turns so its edge clears the mat.
 	const FLIP = 850;
+	const OVER = { delay: 250, lift: 100, turn: 420, down: 130 };
 	function flip( show ) {
 		const record = $( '.riff-record' );
 		const arm = $( '.riff-arm' );
@@ -761,12 +766,26 @@ export function nowPlaying( P ) {
 		delete arm?.dataset.riffDown;
 		lift();
 		flip.until = performance.now() + FLIP;
+		const { delay, lift: up, turn: over, down } = OVER;
+		const whole = FLIP - delay;
+		const set = record.animate(
+			[
+				{ '--riff-lift': 0, offset: 0, easing: 'ease-out' },
+				{ '--riff-lift': 1, offset: up / whole },
+				{ '--riff-lift': 1, offset: 1 - down / whole, easing: hand() },
+				{ '--riff-lift': 0, offset: 1 },
+			],
+			{ duration: whole, delay }
+		);
+		const half = { duration: over / 2 };
 		record
-			.animate( [ { rotate: 'y 0deg' }, { rotate: 'y 90deg' } ], { duration: 300, delay: 250, easing: hand( 0, 0.5 ) } )
+			.animate( [ { '--riff-turn': '0deg' }, { '--riff-turn': '90deg' } ], { ...half, delay: delay + ( whole - over ) / 2, easing: hand( 0, 0.5 ) } )
 			.finished.then( () => {
 				show();
-				return record.animate( [ { rotate: 'y -90deg' }, { rotate: 'y 0deg' } ], { duration: 300, easing: hand( 0.5, 1 ) } ).finished;
+				return record.animate( [ { '--riff-turn': '90deg' }, { '--riff-turn': '180deg' } ], { ...half, easing: hand( 0.5, 1 ) } ).finished;
 			} )
+			// And the arm lowered once the record lies on the mat again.
+			.then( () => set.finished )
 			.then( () => {
 				if ( arm && root.dataset.riffDeck === 'out' ) {
 					arm.dataset.riffDown = '';
