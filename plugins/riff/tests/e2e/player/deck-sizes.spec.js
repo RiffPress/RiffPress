@@ -201,3 +201,39 @@ test.describe( 'Upright', () => {
 		}
 	} );
 } );
+
+test.describe( 'The keys\' legends', () => {
+	test.use( { viewport: { width: 1280, height: 720 } } );
+
+	// Each key's legend as it is laid on its cap: how many glyphs show, and how far the middle of
+	// what shows is from the middle of the key, in CSS pixels.
+	const legends = ( page ) =>
+		page.evaluate( () =>
+			[ ...document.querySelectorAll( '.riff-keys button' ) ].map( ( key ) => {
+				const shows = [ ...key.childNodes ].filter( ( n ) => ( n.nodeType === Node.TEXT_NODE ? n.textContent.trim() : n.nodeType === Node.ELEMENT_NODE && ! n.matches( '.riff-hit' ) && getComputedStyle( n ).display !== 'none' ) );
+				const range = document.createRange();
+				range.setStartBefore( shows[ 0 ] );
+				range.setEndAfter( shows[ shows.length - 1 ] );
+				const [ g, k ] = [ range.getBoundingClientRect(), key.getBoundingClientRect() ];
+				return { name: key.getAttribute( 'aria-label' ), glyphs: shows.length, off: Math.hypot( g.left + g.width / 2 - k.left - k.width / 2, g.top + g.height / 2 - k.top - k.height / 2 ) };
+			} )
+		);
+
+	test( 'each is one glyph in the middle of its key, repeat in each of its states, at each arrangement', async ( { page }, info ) => {
+		test.skip( info.project.name !== 'chromium', 'Measured in desktop Chromium.' );
+		await deck( page );
+		for ( const size of [ { width: 1280, height: 720 }, { width: 844, height: 390 } ] ) {
+			await page.setViewportSize( size );
+			await settled( page );
+			for ( const state of [ 'off', 'all', 'one' ] ) {
+				await expect( page.locator( '.riff-key-repeat' ) ).toHaveAttribute( 'data-repeat', state );
+				for ( const { name, glyphs, off } of await legends( page ) ) {
+					expect.soft( glyphs, `${ size.width }×${ size.height }, repeat ${ state }: ${ name } shows one legend` ).toBe( 1 );
+					expect.soft( off, `${ size.width }×${ size.height }, repeat ${ state }: ${ name }'s legend in its middle` ).toBeLessThan( 2 );
+				}
+				await page.locator( '.riff-key-repeat' ).focus();
+				await page.keyboard.press( 'Enter' );
+			}
+		}
+	} );
+} );

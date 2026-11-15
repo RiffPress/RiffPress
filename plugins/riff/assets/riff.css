@@ -517,13 +517,14 @@ div.riff-row-locked {
 	color: var(--riff-fg-2);
 }
 
-/* Repeat shows its "one" glyph only in that mode. */
-#riff [data-riff-action="repeat"] svg:last-child,
-#riff [data-riff-action="repeat"][data-repeat="one"] svg:first-child {
+/* Repeat shows its "one" glyph only in that mode. By type, not by child: the
+   deck's repeat key ends with its reach (.riff-hit), not its glyph. */
+#riff [data-riff-action="repeat"] svg:last-of-type,
+#riff [data-riff-action="repeat"][data-repeat="one"] svg:first-of-type {
 	display: none;
 }
 
-#riff [data-riff-action="repeat"][data-repeat="one"] svg:last-child {
+#riff [data-riff-action="repeat"][data-repeat="one"] svg:last-of-type {
 	display: block;
 }
 

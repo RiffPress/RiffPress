@@ -430,8 +430,8 @@ draws it in WebGL2: a canvas the whole of Now Playing, in its background, lit as
 is, seen by one eye for everyone at every size, a listener's in a chair across the desk, about 20°
 above the deck, with the sleeve standing on a ledge behind it while its record plays. Nothing moves
 the eye: not the layout, not the device, not a hand, a key or a finger, not a change of record,
-which plays out in front of it. The whole plinth is framed at every size; the sleeve may be cropped
-by the top. The deck in the page (the plinth, the record, the arm in `player.php`, moved by
+which plays out in front of it. The whole plinth is framed at every size, and the sleeve stands whole
+above it. The deck in the page (the plinth, the record, the arm in `player.php`, moved by
 `now-playing.js`) is the turntable's control layer and is never painted: it is what a hand takes,
 what a keyboard and a screen reader find, and what the tests read. The page's arm mount, its cue
 and its keys are given a CSS transform from the eye, each in its own plane (the arm a centimetre

@@ -388,6 +388,8 @@ const SEAT = { rise: ( 20 * Math.PI ) / 180, away: 0.95, at: [ 0, 0.1, 0 ], room
 const WALL = 0.33;
 const LEDGE_Z = FLOOR_Z + 0.012;
 const SL = 0.157;
+// Where the sleeve stands: its foot behind the ledge's lip, leant back against the wall.
+const SLEEVE_AT = chain( move( 0, WALL - 0.055, LEDGE_Z ), turnX( -0.12 ) );
 // The most the canvas draws, in pixels: the whole of Now Playing on a large screen is many.
 const MOST = 5e6;
 
@@ -406,7 +408,7 @@ const v2 = ( v ) => `vec2(${ f1( v[ 0 ] ) }, ${ f1( v[ 1 ] ) })`;
 const COMMON = `#version 300 es
 precision highp float;
 precision highp sampler2DShadow;
-uniform sampler2DShadow uShadow; uniform mat4 uLVP; uniform vec3 uEye, uHand; uniform vec4 uLamp, uSpot;
+uniform sampler2DShadow uShadow; uniform highp sampler2D uDepth; uniform mat4 uLVP; uniform vec3 uEye, uHand; uniform vec4 uLamp, uSpot;
 const vec3 L1 = ${ v3( KEY ) }, L2 = ${ v3( FILL ) }, L3 = ${ v3( RIM ) }, LS = ${ v3( STRIP ) };
 const vec3 KEYC = vec3(2.5, 2.38, 2.2), RIMC = vec3(0.55, 0.62, 0.75), FILLC = vec3(0.11, 0.11, 0.125);
 const vec3 LAMPC = vec3(1.0, 0.42, 0.14), LO = ${ v3( unit( [ 0.26, -0.2, 0.94 ] ) ) };
@@ -430,7 +432,18 @@ vec3 env(vec3 r, float rough) {
 float shadow(vec3 P, vec3 N) {
   vec4 q = uLVP * vec4(P + N * 0.0012, 1.0); vec3 s = q.xyz / q.w * 0.5 + 0.5;
   if (s.x < 0.0 || s.x > 1.0 || s.y < 0.0 || s.y > 1.0 || s.z > 1.0) return 1.0;
-  float a = 0.0, t = 1.7 / ${ SHADOW }.0;
+  // A lamp is not a point: a shadow is crisp where a part meets what it stands on and softer the
+  // further it falls, as the arm's is across the plate. What stands over this point, and how far
+  // above it, on average; with nothing over it, it is lit, and the rest isn't asked.
+  float b = 0.0, nb = 0.0, t = 1.0 / ${ SHADOW }.0;
+  for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) {
+    float d = texture(uDepth, s.xy + vec2(float(i), float(j)) * 4.0 * t).r;
+    if (d < s.z - 0.0009) { b += d; nb += 1.0; }
+  }
+  if (nb == 0.0) return 1.0;
+  // The depth is 1.4 m deep; the lamp's breadth spreads a shadow about 6% of the way it falls.
+  t *= clamp((s.z - b / nb) * 1.4 * 0.06 / ${ f1( 0.92 / SHADOW ) }, 0.6, 2.4);
+  float a = 0.0;
   for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) a += texture(uShadow, vec3(s.xy + vec2(float(i), float(j)) * t, s.z - 0.0009));
   return a / 25.0;
 }
@@ -445,7 +458,9 @@ vec3 brdf(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 diff, float rough) {
 vec3 shade(vec3 P, vec3 N, vec3 alb, float rough, float metal, float ao) {
   vec3 V = normalize(uEye - P), F0 = mix(vec3(0.04), alb, metal), diff = alb * (1.0 - metal);
   float sh = shadow(P, N), nv = max(dot(N, V), 1e-3);
-  vec3 c = brdf(N, V, L1, F0, diff, rough) * KEYC * sh * pool(P) + brdf(N, V, L3, F0, diff, rough) * RIMC * ao + brdf(N, V, L2, F0, diff, rough) * FILLC;
+  // Where one part meets another little of the lamp's breadth reaches in either: a contact's shade
+  // (ao) takes from the key light too, not only from the room.
+  vec3 c = brdf(N, V, L1, F0, diff, rough) * KEYC * sh * pool(P) * mix(1.0, ao, 0.6) +brdf(N, V, L3, F0, diff, rough) * RIMC * ao + brdf(N, V, L2, F0, diff, rough) * FILLC;
   vec3 lp = uLamp.xyz - P; float ld = length(lp);
   c += brdf(N, V, lp / ld, F0, diff, max(rough, 0.3)) * LAMPC * uLamp.w * 1.6 / (1.0 + ld * ld / 0.0012);
   // A hand over the deck is a little light of its own: what it nears catches it.
@@ -480,13 +495,17 @@ const STD_FS =
 	COMMON +
 	`
 in vec3 vP, vN, vO; out vec4 o;
-uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uBody, uKey; uniform vec3 uTint, uGlowAt[5]; uniform float uCoverOn; uniform sampler2D uCover;
+uniform mat4 uM; uniform vec3 uCol, uEmis; uniform float uRough, uMetal, uAlpha, uBlur; uniform int uMode; uniform vec2 uPivot, uStrobe; uniform vec4 uBody, uKey; uniform vec3 uTint, uGlowAt[5]; uniform float uCoverOn; uniform sampler2D uCover; uniform vec4 uCaps[7];
 const float RP = ${ f1( PLATTER ) };
 float row(float a, float r, float n, float rr, float px) {
   vec2 c = vec2((fract(a / 6.2831853 * n) - 0.5) * 6.2831853 * rr / n, r - rr);
   return 1.0 - smoothstep(0.0006, 0.0008 + px, length(c));
 }
 float ring(float r, float rr, float px) { return 0.36 * (1.0 - smoothstep(0.0005, 0.0008 + px, abs(r - rr))); }
+float vnoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
 void main() {
   vec3 N = normalize(vN), alb = uCol; float rough = uRough, metal = uMetal, ao = 1.0, lit = 0.0;
   float ro = length(vO.xy), px = fwidth(vO.x) + fwidth(vO.y) + fwidth(vO.z);
@@ -505,12 +524,21 @@ void main() {
     float k = 0.05 * (1.0 - smoothstep(0.05, 0.8, far)) * (1.0 - a);
     o = vec4(vec3(1.0, 0.94, 0.86) * k, k + (1.0 - k) * a) * uAlpha; return;
   }
+  if (uMode == 9) {
+    // The wall behind the sleeve, which is only the shade the sleeve leant against it gives it: close
+    // and dark where its top nearly touches, wider and fainter toward its foot, which stands off.
+    vec2 q = abs(vec2(vP.x, vP.z - ${ f1( LEDGE_Z + SL ) })) - vec2(${ f1( SL ) }, ${ f1( SL ) });
+    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0), gap = mix(0.055, 0.017, clamp((vP.z - ${ f1( LEDGE_Z ) }) / ${ f1( 2 * SL ) }, 0.0, 1.0));
+    float a = 0.32 * (1.0 - smoothstep(-0.2 * gap, 0.7 * gap + 0.004, d));
+    o = vec4(0.0, 0.0, 0.0, a * uAlpha); return;
+  }
   if (uMode == 8) {
     // The sleeve, standing: its face the cover, lit by the room in front of it, a little darker
-    // toward the ledge; its edges card.
+    // toward the ledge and away from the lamp, shaded where the lip holds its foot; its edges card.
     vec3 face = uCol;
     if (N.y < -0.5 && uCoverOn > 0.5) { vec3 t = texture(uCover, vec2(vO.x / ${ f1( 2 * SL ) } + 0.5, 1.0 - vO.z / ${ f1( 2 * SL ) })).rgb; face = t * t; }
-    vec3 c = face * (0.55 + 0.3 * smoothstep(0.0, 0.18, vO.z)) * vec3(1.0, 0.95, 0.88) * (N.y < -0.5 ? 1.0 : 0.5);
+    float room = (0.55 + 0.3 * smoothstep(0.0, 0.18, vO.z)) * (1.0 - 0.1 * smoothstep(${ f1( -SL ) }, ${ f1( SL ) }, vO.x)) * mix(0.7, 1.0, smoothstep(0.0, 0.012, vO.z));
+    vec3 c = face * room * vec3(1.0, 0.95, 0.88) * (N.y < -0.5 ? 1.0 : 0.5);
     o = vec4(clamp(tone(c), 0.0, 1.0) * uAlpha, uAlpha); return;
   }
   if (uMode == 1 || uMode == 3) {
@@ -531,6 +559,8 @@ void main() {
     alb = mix(vec3(0.012), vec3(0.11), d); rough = 0.5; metal = 0.0;
     lit = max(row(aw + uStrobe.x, ro, 216.0, r1, px), row(aw + uStrobe.y, ro, 160.0, r2, px));
   }
+  // The platter's rim, turned and polished where it rounds over: a thin line of the room's light.
+  if (uMode == 3 && N.z > 0.3 && N.z < 0.9) rough = 0.16;
   if (uMode == 6 && N.z > 0.5) {
     // Moulded, as a key's cap is: dished a little toward its middle, so the light lies across it and
     // moves as the key leans, and matt with the mould's fine grain.
@@ -538,6 +568,8 @@ void main() {
     N = normalize(N + mat3(uM) * vec3((uKey.xy - vO.xy) / uKey.zw * 0.1, 0.0));
     alb *= 1.0 + 0.16 * grain; rough += 0.12 * grain;
   }
+  // A cap's bevel, worn smoother than its face by fingers: it catches the light along its edge.
+  if (uMode == 6 && N.z > 0.15 && N.z <= 0.5) rough = 0.22;
   vec3 em = uEmis;
   if (uMode == 7) {
     // A lamp's lens, lit: hottest, and a little whiter, at its middle, its amber toward its ends.
@@ -551,6 +583,15 @@ void main() {
     float brush = (hash(vec2(floor(vP.y * 6500.0), floor(vP.x * 19.0))) - 0.5) * (1.0 - smoothstep(1.5e-4, 7e-4, px));
     alb *= 1.0 + 0.2 * brush; rough += 0.1 * brush;
     alb *= 0.88 + 0.24 * hash(floor(vP.xy * 2500.0)) * (1.0 - smoothstep(2e-4, 1e-3, px));
+    // A plate that has been used: broad, faint unevenness in its sheen, seen only where the lamp
+    // lies across it.
+    float worn = 0.6 * vnoise(vP.xy * 17.0) + 0.4 * vnoise(vP.xy * 53.0 + 7.0) - 0.5;
+    rough += 0.16 * worn; alb *= 1.0 + 0.08 * worn;
+    // Round each key, where it stands in its well, the plate sees less of the room.
+    for (int i = 0; i < 7; i++) {
+      vec2 k = abs(vP.xy - uCaps[i].xy) - uCaps[i].zw;
+      ao *= mix(0.5, 1.0, smoothstep(0.0008, 0.005, length(max(k, 0.0)) + min(max(k.x, k.y), 0.0)));
+    }
     ao *= mix(0.35, 1.0, smoothstep(RP - 0.001, RP + 0.04, length(vP.xy))) * mix(0.45, 1.0, smoothstep(0.02, 0.05, length(vP.xy - uPivot)));
     // Where the strobe's lamp, the target light and the anti-skate dial stand on it, a tight dark
     // ring at the foot of each, as the plate sees less of the room there.
@@ -688,7 +729,7 @@ export default function deckGl( P ) {
 	const UP = 0.007;
 	const restZ = PIVOT_H + REST_PT[ 2 ] + ( UP * REST_PT[ 0 ] ) / LE - 0.0042;
 
-	let m, tex, std, rec, dep, fbo, lvp;
+	let m, tex, std, rec, dep, fbo, lvp, raw;
 	function mesh( data ) {
 		const vao = gl.createVertexArray();
 		gl.bindVertexArray( vao );
@@ -776,9 +817,12 @@ export default function deckGl( P ) {
 		m = {
 			desk: mesh( box( -2, -2, FLOOR_Z - 0.02, 2, WALL, FLOOR_Z ) ),
 			// Along the desk's back, the ledge, with a lip at its front the sleeve stands behind.
-			ledge: mesh( merge( box( -0.2, WALL - 0.07, FLOOR_Z, 0.2, WALL, LEDGE_Z ), box( -0.2, WALL - 0.07, LEDGE_Z, 0.2, WALL - 0.064, LEDGE_Z + 0.016 ) ) ),
+			// The lip low, 5 mm, so it holds the sleeve's foot without crossing what is printed there.
+			ledge: mesh( merge( box( -0.2, WALL - 0.07, FLOOR_Z, 0.2, WALL, LEDGE_Z ), box( -0.2, WALL - 0.07, LEDGE_Z, 0.2, WALL - 0.064, LEDGE_Z + 0.005 ) ) ),
 			// In its own frame: its foot's middle at the origin, its face toward -y.
 			sleeve: mesh( box( -SL, -0.0015, 0, SL, 0.0015, 2 * SL ) ),
+			// The wall behind it, for the shade the sleeve gives it (STD_FS, mode 9).
+			wall: mesh( box( -SL - 0.08, WALL, LEDGE_Z, SL + 0.08, WALL + 0.001, LEDGE_Z + 2 * SL + 0.08 ) ),
 			body: mesh( rbox( x0, y0, x1, y1, FLOOR_Z, -0.03, 0.012, 0.002 ) ),
 			plate: mesh( rbox( x0 + 0.002, y0 + 0.002, x1 - 0.002, y1 - 0.002, -0.03, DECK_Z, 0.01, 0.0018 ) ),
 			// The same with its keys, in each arrangement (DECKS).
@@ -839,6 +883,11 @@ export default function deckGl( P ) {
 		gl.texImage2D( gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, SHADOW, SHADOW, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL );
+		// The same depths read as they are, for how far above a point what shades it is (COMMON, shadow()).
+		raw = gl.createSampler();
+		gl.samplerParameteri( raw, gl.TEXTURE_COMPARE_MODE, gl.NONE );
+		gl.samplerParameteri( raw, gl.TEXTURE_MIN_FILTER, gl.NEAREST );
+		gl.samplerParameteri( raw, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
 		fbo = gl.createFramebuffer();
 		gl.bindFramebuffer( gl.FRAMEBUFFER, fbo );
 		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, tex.shadow, 0 );
@@ -864,9 +913,8 @@ export default function deckGl( P ) {
 			: { hole: 0.024, label: 0.33, out: 0.4, etch: 1 };
 	const LEAD_IN = 0.97;
 
-	// ---- The label, printed as the page prints it (riff.css): the album across the top half, the
-	// side and speed beside the hole, the artist and the side's tracks below, in the page's own
-	// type, ink and paper. Round it, out to the last groove, the dead wax with its matrix number.
+	// ---- The label, in the page's own type, ink and paper (riff.css), set round the hole as a
+	// pressed label is (below). Round it, out to the last groove, the dead wax with its matrix number.
 	// Printed again only when what it says or its colours change.
 	const paper = document.createElement( 'canvas' );
 	paper.width = paper.height = 1024;
@@ -918,7 +966,6 @@ export default function deckGl( P ) {
 		const mid = paper.width / 2;
 		// The label's width on the paper: the paper reaches the last groove.
 		const D = ( paper.width * cut.label ) / cut.out;
-		const top = mid - D / 2;
 		const type = ( weight, share ) => {
 			ink.font = `${ weight } ${ ( share * D ).toFixed( 1 ) }px ${ style.fontFamily }`;
 			return share * D * 1.15;
@@ -933,33 +980,58 @@ export default function deckGl( P ) {
 		ink.fillStyle = style.color;
 		ink.textAlign = 'center';
 		ink.textBaseline = 'alphabetic';
-		const wide = 0.68 * D;
-		let leading = type( 700, 0.09 );
-		fit( words.album, wide, 2 )
-			.reverse()
-			.forEach( ( line, i ) => ink.fillText( line, mid, top + 0.355 * D - i * leading ) );
+		// Set round the hole, as a pressed label is: the album along the top of the label, the artist
+		// along its foot, the side and speed either side of the hole, the side's tracks under it. The
+		// spindle, seen from the chair, stands over the label from its middle to about 0.32 of its
+		// width behind it, so the album and the artist, set out beyond that, never pass under it.
+		// Each arc is read upright from the front: the album's letters stand out from the middle,
+		// the artist's in toward it.
+		const arc = ( text, radius, most, weight, largest, least, under ) => {
+			let share = largest;
+			type( weight, share );
+			while ( share > least && ink.measureText( text ).width > radius * most ) {
+				share -= 0.004;
+				type( weight, share );
+			}
+			let line = text;
+			while ( line.length > 1 && ink.measureText( line ).width > radius * most ) {
+				line = line.replace( /.…?$/, '…' );
+			}
+			ink.textAlign = 'center';
+			ink.textBaseline = 'alphabetic';
+			let a = ( under ? Math.PI / 2 : -Math.PI / 2 ) + ( under ? 1 : -1 ) * ( ink.measureText( line ).width / radius / 2 );
+			for ( const letter of line ) {
+				const step = ink.measureText( letter ).width / radius;
+				a += ( under ? -1 : 1 ) * ( step / 2 );
+				ink.save();
+				ink.translate( mid + radius * Math.cos( a ), mid + radius * Math.sin( a ) );
+				ink.rotate( under ? a - Math.PI / 2 : a + Math.PI / 2 );
+				ink.fillText( letter, 0, 0 );
+				ink.restore();
+				a += ( under ? -1 : 1 ) * ( step / 2 );
+			}
+		};
+		arc( words.album, 0.345 * D, 3.3, 700, 0.088, 0.058, false );
+		ink.globalAlpha = 0.85;
+		arc( words.artist, 0.43 * D, 2.4, 500, 0.056, 0.04, true );
 		ink.globalAlpha = 0.7;
-		type( 400, 0.045 );
-		ink.textAlign = 'left';
+		type( 500, 0.045 );
 		ink.textBaseline = 'middle';
-		ink.fillText( words.speed, top + 0.12 * D, mid );
+		const [ side, speed ] = words.speed.split( /\s*·\s*/ );
+		ink.textAlign = 'right';
+		ink.fillText( speed === undefined ? '' : side, mid - 0.12 * D, mid );
+		ink.textAlign = 'left';
+		ink.fillText( speed === undefined ? side : speed, mid + 0.12 * D, mid );
 		ink.textAlign = 'center';
 		ink.textBaseline = 'top';
-		ink.globalAlpha = 0.85;
-		leading = type( 400, 0.06 );
-		let y = top + 0.62 * D;
-		for ( const line of fit( words.artist, wide, 2 ) ) {
-			ink.fillText( line, mid, y );
-			y += leading;
-		}
 		ink.globalAlpha = 0.8;
-		y += 0.02 * D;
+		const y = mid + 0.11 * D;
 		// A long side in two columns, smaller, as a pressed label sets it.
 		const two = listed.length >= 6;
-		leading = type( 400, two ? 0.025 : 0.034 ) * 1.17;
-		const column = two ? 0.27 * D : wide;
-		const rows = two ? Math.ceil( listed.length / 2 ) : listed.length;
-		listed.forEach( ( text, i ) => {
+		const leading = type( 400, two ? 0.025 : 0.03 ) * 1.17;
+		const column = two ? 0.27 * D : 0.6 * D;
+		const rows = Math.min( 6, two ? Math.ceil( listed.length / 2 ) : listed.length );
+		listed.slice( 0, two ? 2 * rows : rows ).forEach( ( text, i ) => {
 			const x = two ? mid + ( i < rows ? -0.15 : 0.15 ) * D : mid;
 			ink.fillText( fit( text, column, 1 )[ 0 ], x, y + ( i % rows ) * leading );
 		} );
@@ -987,6 +1059,11 @@ export default function deckGl( P ) {
 		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, paper );
 		gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, false );
 		gl.generateMipmap( gl.TEXTURE_2D );
+		// Seen from the chair the label lies at a slant: filtered along the slant, its type stays sharp.
+		const slant = gl.getExtension( 'EXT_texture_filter_anisotropic' );
+		if ( slant ) {
+			gl.texParameterf( gl.TEXTURE_2D, slant.TEXTURE_MAX_ANISOTROPY_EXT, Math.min( 8, gl.getParameter( slant.MAX_TEXTURE_MAX_ANISOTROPY_EXT ) ) );
+		}
 	}
 	// The page's type arrives after the first print.
 	document.fonts?.ready.then( () => {
@@ -1342,8 +1419,7 @@ export default function deckGl( P ) {
 		const room = stage.getBoundingClientRect();
 		// Where the eye is, what it sees, and the window it sees through, its edges on the near plane:
 		// the whole plinth inside the stage, clear of its sides and its foot, across its middle and
-		// standing at its foot, and no taller than its share of the stage; above it the sleeve,
-		// cropped by the top if it must be.
+		// standing at its foot, and no taller than its share of the stage; above it the sleeve, whole.
 		const see = () => {
 			const to = SEAT.at;
 			const spot = [ to[ 0 ], to[ 1 ] - SEAT.away * Math.cos( SEAT.rise ), to[ 2 ] + SEAT.away * Math.sin( SEAT.rise ) ];
@@ -1359,7 +1435,13 @@ export default function deckGl( P ) {
 			const [ nx0, nx1 ] = [ Math.min( ...ends.map( ( q ) => q[ 0 ] ) ), Math.max( ...ends.map( ( q ) => q[ 0 ] ) ) ];
 			const ny0 = Math.min( ...ends.map( ( q ) => q[ 1 ] ) );
 			const ny1 = Math.max( ...ends.map( ( q ) => q[ 1 ] ) );
-			const per = Math.max( ( nx1 - nx0 ) / ( room.width - 2 * margin ), ( ny1 - ny0 ) / ( ( room.height - 2 * margin ) * SEAT.room[ keyed || 'front' ] ) );
+			// The sleeve's top edge, so it stands whole in the window, never cut by its top.
+			const crown = Math.max( ...[ -SL, SL ].map( ( x ) => near( [ 0, 1, 2 ].map( ( r ) => SLEEVE_AT[ r ] * x + SLEEVE_AT[ 8 + r ] * 2 * SL + SLEEVE_AT[ 12 + r ] ) )[ 1 ] ) );
+			const per = Math.max(
+				( nx1 - nx0 ) / ( room.width - 2 * margin ),
+				( ny1 - ny0 ) / ( ( room.height - 2 * margin ) * SEAT.room[ keyed || 'front' ] ),
+				( crown - ny0 ) / ( room.height - 3 * margin )
+			);
 			const [ ax, ay, cx ] = [ ( room.left + room.right ) / 2, room.bottom - margin, ( nx0 + nx1 ) / 2 ];
 			const edges = [ cx + ( cb.left - ax ) * per, cx + ( cb.right - ax ) * per, ny0 - ( cb.bottom - ay ) * per, ny0 - ( cb.top - ay ) * per ];
 			return { at: spot, looks, nz, edges, vp: mul( frustum( ...edges, nz, SEAT.away + 3 ), looks ) };
@@ -1672,8 +1754,9 @@ export default function deckGl( P ) {
 		// back against the wall. They cast nothing: the key light is behind them, and their shadow
 		// would lie across the record.
 		const backdrop = [
+			[ m.wall, I, off, 1, 0, 9, off, deckAlpha * stood ],
 			[ m.ledge, I, [ 0.014, 0.013, 0.013 ], 0.55, 0, 0, off, deckAlpha * stood ],
-			[ m.sleeve, chain( move( 0, WALL - 0.055, LEDGE_Z ), turnX( -0.12 ) ), [ 0.5, 0.48, 0.45 ], 0.6, 0, 8, off, deckAlpha * stood ],
+			[ m.sleeve, SLEEVE_AT, [ 0.5, 0.48, 0.45 ], 0.6, 0, 8, off, deckAlpha * stood ],
 		];
 
 		// The shadows, as the key light sees the deck: cast again only when something has moved.
@@ -1710,11 +1793,15 @@ export default function deckGl( P ) {
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 		gl.activeTexture( gl.TEXTURE3 );
 		gl.bindTexture( gl.TEXTURE_2D, tex.shadow );
+		gl.activeTexture( gl.TEXTURE5 );
+		gl.bindTexture( gl.TEXTURE_2D, tex.shadow );
+		gl.bindSampler( 5, raw );
 		const common = ( u ) => {
 			gl.uniformMatrix4fv( u.uVP, false, vp );
 			gl.uniformMatrix4fv( u.uLVP, false, lvp );
 			gl.uniform3fv( u.uEye, eye );
 			gl.uniform1i( u.uShadow, 3 );
+			gl.uniform1i( u.uDepth, 5 );
 			gl.uniform4f( u.uLamp, ...LAMP, on );
 			gl.uniform3f( u.uHand, ...handAt );
 			gl.uniform4f( u.uSpot, TARGET[ 0 ], TARGET[ 1 ], 0.014, on );
@@ -1725,6 +1812,7 @@ export default function deckGl( P ) {
 		gl.uniform2f( u.uPivot, ...PIVOT );
 		gl.uniform3fv( u.uTint, tint );
 		gl.uniform3fv( u.uGlowAt, deck.glows.flatMap( ( [ x, y, k ] ) => [ x, y, keyed ? lamps[ k ] : 0 ] ) );
+		gl.uniform4fv( u.uCaps, ( keyed ? capOf : KEYS ).flatMap( ( cap ) => ( keyed ? cap : [ 9, 9, 0, 0 ] ) ) );
 		const [ x0, y0, x1, y1 ] = keyed ? deck.body : BODY;
 		gl.uniform4f( u.uBody, ( x0 + x1 ) / 2, ( y0 + y1 ) / 2, ( x1 - x0 ) / 2, ( y1 - y0 ) / 2 );
 		gl.uniform2f( u.uStrobe, ( lampRows[ 0 ] * Math.PI ) / 180, ( lampRows[ 1 ] * Math.PI ) / 180 );
