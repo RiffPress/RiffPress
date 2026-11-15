@@ -228,7 +228,11 @@ export function playback( P ) {
 	function prev() {
 		const m = P.el();
 		if ( m.currentTime > 3 || P.pos === 0 ) {
-			m.currentTime = 0;
+			// On the deck the arm is taken back to its start (now-playing.js); elsewhere the music
+			// jumps there.
+			if ( ! P.again?.( m ) ) {
+				m.currentTime = 0;
+			}
 			return;
 		}
 		go( P.pos - 1 );
