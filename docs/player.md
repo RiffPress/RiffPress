@@ -460,7 +460,12 @@ of sight. Its lighting and mesh builders are adapted from Guillermo Rauch's
 
 The deck has its own controls on its plinth: Start · Stop, the two speeds, the track before and
 after, shuffle and repeat, each a button in the page (`.riff-keys` in `player.php`) with an amber
-lamp, and a pitch fader, ±8%. Held, the track keys wind the music back or on. An LP at 45 runs
+lamp, and a pitch fader, ±8%, its scale printed beside its slot and a centre detent a hand clicks
+into. Off its centre, while the listener is at it (the pointer near, the keyboard's focus on it, or a
+finger on it a moment ago), a key by its zero rises with its lamp lit and sends it back; so do a
+double press on the cap and the fader's 0 key. Any control in the panel can have one: a default in
+`data-riff-default`, and a `data-riff-reset` button beside it, which `now-playing.js` marks
+`data-riff-offered` while it is offered. Held, the track keys wind the music back or on. An LP at 45 runs
 fast, as on a deck, and a new record starts at its own speed; the pitch moves the music, its pitch,
 the platter, the strobe and the arm together. Where the turntable isn't the view, Now Playing
 closed or a video on the stage, the music is at its own speed. Beside the keys is the deck's

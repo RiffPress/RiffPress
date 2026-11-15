@@ -2153,6 +2153,94 @@ export function nowPlaying( P ) {
 		return deckOnly() * P.speed;
 	}
 	const fader = $( '[data-riff-pitch]' );
+
+	// A control with a default (data-riff-default) has a key in its parent that sends it back there
+	// (data-riff-reset), as a deck has one by its pitch fader's zero. The key is offered only while
+	// the control is off its default and the listener is at it: the pointer within a finger's breadth
+	// of it, the keyboard's focus on it or on its key, or a finger on it a moment ago. Offered, it is
+	// data-riff-offered, which riff.css shows and deck-gl.js raises from the plinth; otherwise it is
+	// out of reach and unheard. A double press on the control, or its 0 key, does the same.
+	const NEAR = 32;
+	const TOUCHED = 2500;
+	const pointer = { x: -1e4, y: -1e4 };
+	const resets = $$( '[data-riff-default]' ).flatMap( ( control ) => {
+		const key = control.parentElement.querySelector( '[data-riff-reset]' );
+		return key ? [ { control, key, touched: -TOUCHED, tapped: 0 } ] : [];
+	} );
+	const apart = ( b ) => Math.hypot( Math.max( b.left - pointer.x, 0, pointer.x - b.right ), Math.max( b.top - pointer.y, 0, pointer.y - b.bottom ) );
+	function offer() {
+		for ( const r of resets ) {
+			const { control, key } = r;
+			const offered = key.hasAttribute( 'data-riff-offered' );
+			const at = document.activeElement;
+			const near =
+				( control.parentElement.contains( at ) && at.matches( ':focus-visible' ) ) ||
+				performance.now() - r.touched < TOUCHED ||
+				apart( control.getBoundingClientRect() ) <= NEAR ||
+				( offered && apart( key.getBoundingClientRect() ) <= NEAR );
+			const now = near && Number( control.value ) !== Number( control.dataset.riffDefault );
+			if ( now !== offered ) {
+				key.toggleAttribute( 'data-riff-offered', now );
+			}
+		}
+	}
+	function reset( r ) {
+		// The key goes once the control is back, so the focus goes to the control, which says where it is.
+		if ( r.key.contains( document.activeElement ) ) {
+			r.control.focus();
+		}
+		r.control.value = r.control.dataset.riffDefault;
+		r.control.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+	}
+	let looking = 0;
+	np.addEventListener(
+		'pointermove',
+		( e ) => {
+			if ( e.pointerType === 'touch' || ! resets.length ) {
+				return;
+			}
+			[ pointer.x, pointer.y ] = [ e.clientX, e.clientY ];
+			looking ||= requestAnimationFrame( () => {
+				looking = 0;
+				offer();
+			} );
+		},
+		{ passive: true }
+	);
+	np.addEventListener( 'pointerleave', () => {
+		[ pointer.x, pointer.y ] = [ -1e4, -1e4 ];
+		offer();
+	} );
+	for ( const r of resets ) {
+		r.key.addEventListener( 'click', () => reset( r ) );
+		r.control.addEventListener( 'dblclick', () => reset( r ) );
+		r.control.addEventListener( 'keydown', ( e ) => {
+			if ( e.key === '0' && ! e.altKey && ! e.ctrlKey && ! e.metaKey ) {
+				e.preventDefault();
+				reset( r );
+			}
+		} );
+		// A finger: the key for a moment after it lets go, and two taps close together are a double press.
+		for ( const el of [ r.control, r.key ] ) {
+			el.addEventListener( 'pointerup', ( e ) => {
+				if ( e.pointerType !== 'touch' ) {
+					return;
+				}
+				const now = performance.now();
+				if ( el === r.control && now - r.tapped < 350 ) {
+					reset( r );
+				}
+				r.tapped = el === r.control ? now : 0;
+				r.touched = now;
+				offer();
+				setTimeout( offer, TOUCHED + 50 );
+			} );
+		}
+		r.control.parentElement.addEventListener( 'focusin', offer );
+		// Once the focus has landed: from the control to its key, the key stays.
+		r.control.parentElement.addEventListener( 'focusout', () => setTimeout( offer ) );
+	}
+
 	function paintDeck() {
 		for ( const b of $$( '[data-riff-speed]' ) ) {
 			const on = b.dataset.riffSpeed === ( chosen ?? own() );
@@ -2162,10 +2250,9 @@ export function nowPlaying( P ) {
 		if ( ! fader ) {
 			return;
 		}
-		const readout = `${ pitch > 0 ? '+' : '' }${ pitch.toFixed( 1 ) }`;
 		fader.value = String( pitch );
-		fader.setAttribute( 'aria-valuetext', `${ readout }%` );
-		fader.nextElementSibling.textContent = readout;
+		fader.setAttribute( 'aria-valuetext', `${ pitch > 0 ? '+' : '' }${ pitch.toFixed( 1 ) }%` );
+		offer();
 	}
 	// The motor pulls the platter to the new speed while it turns; stopped, it starts there. A
 	// listener's own turn of the speed or the pitch is a press; the deck coming or going as the
@@ -2211,14 +2298,16 @@ export function nowPlaying( P ) {
 		} );
 	}
 	if ( fader ) {
+		// Under a hand it clicks into the middle, as a fader's centre detent does; the keyboard's
+		// steps of 0.1 go where they say.
+		let gripped = false;
+		fader.addEventListener( 'pointerdown', () => ( gripped = true ) );
+		for ( const type of [ 'pointerup', 'pointercancel' ] ) {
+			window.addEventListener( type, () => ( gripped = false ), { passive: true } );
+		}
 		fader.addEventListener( 'input', () => {
 			const v = Number( fader.value );
-			// It clicks into the middle, as a fader's centre detent does.
-			pitch = Math.abs( v ) < 0.3 ? 0 : v;
-			retune();
-		} );
-		fader.addEventListener( 'dblclick', () => {
-			pitch = 0;
+			pitch = gripped && Math.abs( v ) < 0.3 ? 0 : v;
 			retune();
 		} );
 	}
