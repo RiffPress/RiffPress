@@ -409,18 +409,24 @@
 		state( 'loading', config.loading );
 		try {
 			ctx ??= new AudioContext( { latencyHint: 'interactive' } );
-			await ctx.resume();
+			// Stopped while it loads, the context is closed and the press is over.
+			const c = ctx;
+			const over = () => mine !== token || ctx !== c;
+			await c.resume();
 			const e = await wake();
 			for ( const p of parts ) {
-				if ( mine !== token ) {
+				if ( over() ) {
 					return;
 				}
-				p.voice = new V.Voice( e, ctx, config.worklet );
+				p.voice = new V.Voice( e, c, config.worklet );
 				p.voice.out.gain.value = 0;
-				await p.voice.start( ctx.destination );
+				await p.voice.start( c.destination );
+				if ( over() ) {
+					return;
+				}
 				p.voice.melody( p.phrases, p.body );
 			}
-			if ( mine !== token ) {
+			if ( over() ) {
 				return;
 			}
 			levels();
@@ -448,7 +454,10 @@
 		}
 	}
 
-	// The voices stop and let go of their worklets; the context sleeps until the next press.
+	// The voices stop, and their context is closed. A CHIMERA worklet renders for as long as its
+	// context runs, connected or not, so a context kept for the next press would bring the old voices
+	// back beside the new ones, more each time, until the audio thread can't keep up and nothing is
+	// heard. The next press makes a new one.
 	function end( text ) {
 		const was = on;
 		on = false;
@@ -458,8 +467,9 @@
 			swapped = false;
 			player()?.source?.( null );
 		}
-		if ( ctx?.state === 'running' ) {
-			ctx.suspend().catch( () => {} );
+		if ( ctx ) {
+			ctx.close().catch( () => {} );
+			ctx = null;
 		}
 		if ( ui ) {
 			state( 'idle', was && text ? text : undefined );
