@@ -10,6 +10,7 @@ const AxeBuilder = require( '@axe-core/playwright' ).default;
 const { own } = require( '../helpers/own' );
 const { AXE_TAGS, playerSite } = require( '../helpers/site' );
 const { openView } = require( '../helpers/views' );
+const { controlLayer } = require( '../helpers/turntable' );
 
 const made = own();
 let postUrl;
@@ -31,6 +32,7 @@ test.afterAll( async ( { requestUtils } ) => {
 
 test.describe( 'About', () => {
 	test.beforeEach( async ( { page } ) => {
+		await controlLayer( page );
 		await page.goto( postUrl );
 	} );
 
