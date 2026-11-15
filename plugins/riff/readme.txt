@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.19.1
+Stable tag: 6.19.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.19.2 =
+* Fixed: main's versions agree with the release manifest again, at 6.19.1.
+
 = 6.19.1 =
 * Fixed: the drawn sleeve shows a cover served from another origin wherever that origin allows CORS.
 
@@ -163,8 +166,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 * The drawn deck is seen from a chair across the desk, with its sleeve on a ledge, and leans with the device.
 * Fixed: a card's title wraps in full on the grid, and Recently played's keeps to one line.
 * Fixed: main's versions agree with the release manifest again, at 6.17.6.
-
-= 6.17.6 =
-* Fixed: main's versions agree with the release manifest again, at 6.17.5.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
