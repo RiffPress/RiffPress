@@ -169,11 +169,9 @@ test.describe( 'Browse', () => {
 		// on whether an earlier spec gave it artwork.
 		const round = page.locator( '.riff-album-round' );
 		await expect( round.locator( '.riff-album-cover img, .riff-album-mark' ) ).toHaveCount( 1 );
-		if ( ( await round.locator( '.riff-album-mark' ).count() ) > 0 ) {
-			await expect( round.locator( '.riff-album-mark' ) ).toHaveText( 'A' );
-		} else {
-			await expect( round.locator( '.riff-album-cover img' ) ).toBeVisible();
-		}
+		// Either way it shows: and a mark, where there is one, is the initial.
+		await expect( round.locator( '.riff-album-cover img, .riff-album-mark' ) ).toBeVisible();
+		await expect( round.locator( '.riff-album-mark:not(:text-is("A"))' ) ).toHaveCount( 0 );
 		await expect( page.locator( '.riff-app-section', { hasText: 'Latest' } ) ).toBeVisible();
 		await expect( page.locator( '.riff-app-section', { hasText: 'Albums' } ) ).toBeVisible();
 		await expect( page.locator( '.riff-card[data-riff-album]', { hasText: 'Compositions' } ) ).toBeVisible();

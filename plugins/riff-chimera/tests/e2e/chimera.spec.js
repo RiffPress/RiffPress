@@ -89,6 +89,22 @@ test( 'CHIMERA is fetched when the view opens, starts with the press that opens 
 			fetched.push( new URL( r.url() ).pathname.split( '/' ).pop() );
 		}
 	} );
+	// Every context a CHIMERA worklet is made in: one still running after Stop keeps its voices
+	// rendering beside the next press's.
+	await page.addInitScript( () => {
+		const Node = window.AudioWorkletNode;
+		window.chimeraContexts = new Set();
+		window.AudioWorkletNode = class extends Node {
+			constructor( context, name, options ) {
+				super( context, name, options );
+				if ( name === 'chimera' ) {
+					window.chimeraContexts.add( context );
+				}
+			}
+		};
+	} );
+	const running = () =>
+		page.evaluate( () => [ ...window.chimeraContexts ].filter( ( c ) => c.state !== 'closed' ).length );
 	await load( page, 'Silent Night' );
 	expect( fetched, 'nothing of CHIMERA with the page' ).toEqual( [] );
 
@@ -124,6 +140,7 @@ test( 'CHIMERA is fetched when the view opens, starts with the press that opens 
 	await expect( view ).toHaveAttribute( 'data-state', 'idle' );
 	await expect( view ).toHaveAttribute( 'data-sounding', 'false' );
 	await expect( panel.getByRole( 'button', { name: 'Sing along' } ) ).toBeVisible();
+	await expect.poll( running, 'Stop lets the voices go' ).toBe( 0 );
 
 	// Singing again, then the view closed: its voices go with it.
 	await panel.getByRole( 'button', { name: 'Sing along' } ).click();
@@ -131,6 +148,7 @@ test( 'CHIMERA is fetched when the view opens, starts with the press that opens 
 	await page.locator( '.riff-bar [data-riff-control="chimera"]' ).click();
 	await expect( panel ).toBeHidden();
 	await expect( view, 'the voices stopped with the view' ).toHaveAttribute( 'data-sounding', 'false' );
+	await expect.poll( running, 'closing the view lets the voices go' ).toBe( 0 );
 } );
 
 test( 'while CHIMERA sings, the instrumental plays in the recording\'s place, and the recording comes back when it stops', async ( { page } ) => {

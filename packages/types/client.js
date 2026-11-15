@@ -16,11 +16,11 @@
  */
 export class RiffError extends Error {
 	/**
-	 * @param {string} message        What WordPress said.
-	 * @param {Object} details        What else WordPress said.
-	 * @param {string} details.code   Its error code.
-	 * @param {number} details.status The HTTP status.
-	 * @param {*}      details.data   The whole answer.
+	 * @param {string}  message        What WordPress said.
+	 * @param {Object}  details        What else WordPress said.
+	 * @param {string}  details.code   Its error code.
+	 * @param {number}  details.status The HTTP status.
+	 * @param {unknown} details.data   The whole answer.
 	 */
 	constructor( message, { code = '', status = 0, data = null } = {} ) {
 		super( message );
@@ -55,11 +55,11 @@ function query( params ) {
 /**
  * A client for one site.
  *
- * @param {Object}   options         Options.
- * @param {string}   options.root    The REST API's root: `https://example.com/wp-json/`, or `https://example.com/?rest_route=/` on a site without pretty permalinks.
- * @param {string}   options.nonce   A `wp_rest` nonce, for a signed-in listener in the browser.
- * @param {Function} options.fetch   The fetch to use; the global one by default.
- * @param {Object}   options.headers Headers to send with every request, such as an application password's Authorization.
+ * @param {Object}       options         Options.
+ * @param {string}       options.root    The REST API's root: `https://example.com/wp-json/`, or `https://example.com/?rest_route=/` on a site without pretty permalinks.
+ * @param {string}       options.nonce   A `wp_rest` nonce, for a signed-in listener in the browser.
+ * @param {typeof fetch} options.fetch   The fetch to use; the global one by default.
+ * @param {Object}       options.headers Headers to send with every request, such as an application password's Authorization.
  * @return {Object} The client.
  */
 export function createClient( options = {} ) {
@@ -75,7 +75,7 @@ export function createClient( options = {} ) {
 	 * @param {string} route  `METHOD /namespace/address`, as the Routes type names it.
 	 * @param {Object} params What the route takes, the parameters in its address included.
 	 * @param {Object} init   More for fetch, such as a signal.
-	 * @return {Promise<*>} What the route answers.
+	 * @return {Promise<unknown>} What the route answers.
 	 */
 	async function request( route, params = {}, init = {} ) {
 		const [ method, template ] = String( route ).split( ' ' );

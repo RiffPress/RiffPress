@@ -181,7 +181,9 @@ async function fill( page ) {
 		.toBe( 3 );
 }
 
+// Walks every view at every width, and answers how many pages it checked.
 async function sweep( page, who ) {
+	let checked = 0;
 	for ( const width of WIDTHS ) {
 		await page.setViewportSize( { width, height: 900 } );
 		for ( const [ name, arg ] of views() ) {
@@ -197,6 +199,7 @@ async function sweep( page, who ) {
 				'.riff-app-view',
 				`${ who }, ${ name }, ${ width }px`
 			);
+			checked++;
 		}
 		for ( const [ name, arg ] of [
 			[ 'Home', '' ],
@@ -213,9 +216,14 @@ async function sweep( page, who ) {
 				'.riff-app',
 				`${ who }, ${ name } standalone, ${ width }px`
 			);
+			checked++;
 		}
 	}
+	return checked;
 }
+
+// What a sweep covers: every view and the two standalone pages, at every width.
+const swept = () => WIDTHS.length * ( views().length + 2 );
 
 test.describe( 'Every view is tidy', () => {
 	test.describe.configure( { timeout: 600000 } );
@@ -225,7 +233,7 @@ test.describe( 'Every view is tidy', () => {
 		requestUtils,
 	} ) => {
 		await forget( requestUtils );
-		await sweep( page, 'signed in, empty' );
+		expect( await sweep( page, 'signed in, empty' ) ).toBe( swept() );
 	} );
 
 	test( 'signed in, with likes and plays', async ( {
@@ -234,7 +242,7 @@ test.describe( 'Every view is tidy', () => {
 	} ) => {
 		await forget( requestUtils );
 		await fill( page );
-		await sweep( page, 'signed in, full' );
+		expect( await sweep( page, 'signed in, full' ) ).toBe( swept() );
 	} );
 
 	test( 'as a visitor, with nothing liked or played', async ( {
@@ -245,7 +253,7 @@ test.describe( 'Every view is tidy', () => {
 			baseURL,
 			storageState: { cookies: [], origins: [] },
 		} );
-		await sweep( await context.newPage(), 'a visitor, empty' );
+		expect( await sweep( await context.newPage(), 'a visitor, empty' ) ).toBe( swept() );
 		await context.close();
 	} );
 
@@ -259,7 +267,7 @@ test.describe( 'Every view is tidy', () => {
 		} );
 		const page = await context.newPage();
 		await fill( page );
-		await sweep( page, 'a visitor, full' );
+		expect( await sweep( page, 'a visitor, full' ) ).toBe( swept() );
 		await context.close();
 	} );
 } );

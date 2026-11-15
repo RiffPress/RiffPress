@@ -60,7 +60,6 @@ test.afterAll( async ( { requestUtils } ) => {
 async function openChords( page, isMobile, { row = 0, play = false } = {} ) {
 	await page.goto( postUrl );
 	const button = page.locator( '.riff-bar [data-riff-control="chords"]' );
-	test.skip( ( await button.count() ) === 0, 'Riff Chords waits for Riff 5.9' );
 	await page.locator( '.riff-row' ).nth( row ).click();
 	if ( ! play ) {
 		await page.evaluate( () => document.querySelectorAll( 'audio, video' ).forEach( ( m ) => m.pause() ) );
@@ -197,7 +196,6 @@ test( 'the practice controls have keys: A for the loop, S and F for the speed, D
 
 test( 'Practice this, in the menu of a track with a chart, opens the Chords view on it', async ( { page } ) => {
 	await page.goto( postUrl );
-	test.skip( ( await page.locator( '.riff-bar [data-riff-control="chords"]' ).count() ) === 0, 'Riff Chords waits for Riff 5.9' );
 	const menu = page.locator( '.riff-menu' );
 	const more = ( n ) => page.locator( '.riff-track' ).nth( n ).locator( '.riff-more-button' );
 	// None for the track without a chart.

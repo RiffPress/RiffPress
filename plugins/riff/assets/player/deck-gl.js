@@ -1106,6 +1106,8 @@ export default function deckGl( P ) {
 	let slow = 1 / 60;
 	let judged = 0;
 	let quality = 1;
+	// Until when frames are not judged: through a change of record or side and a second after (frame()).
+	let excused = 0;
 	let then = 0;
 	let was = { spin: 0, arm: 0 };
 	// The stylus's height, the strobe's two rows as the lamp shows them, and how fast the platter turns.
@@ -1255,6 +1257,11 @@ export default function deckGl( P ) {
 		} else if ( ! copy && tex.leaving ) {
 			gl.deleteTexture( tex.leaving );
 			tex.leaving = null;
+		}
+		// A change of record or side (a record leaving, arriving or turning over, a side pressed) is
+		// the page's work and this one's, done once: not the card's pace, so it is not judged (below).
+		if ( copy || 'riffArriving' in root.dataset || record.getAnimations().some( ( a ) => a.playState === 'running' ) || ( P.pressed || null ) !== pressedFrom ) {
+			excused = now + 1000;
 		}
 		if ( stale ) {
 			stale = false;
@@ -1527,17 +1534,23 @@ export default function deckGl( P ) {
 		lastCast = cast;
 		lastTurning = turning;
 		// A card that can't keep up is asked for less: fewer pixels, twice, and after that the
-		// page's own deck, for good. Judged over sixty frames drawn, so a busy moment isn't a verdict.
-		slow += ( dt - slow ) * 0.05;
-		if ( ++judged >= 60 ) {
+		// cover alone, for good. Judged over sixty frames drawn, so a busy moment isn't a verdict,
+		// and never through a change of record or side.
+		if ( now < excused ) {
+			slow = 1 / 60;
 			judged = 0;
-			if ( slow > 0.034 && quality > 0.5 ) {
-				quality -= 0.25;
-				slow = 1 / 60;
-				last = '';
-			} else if ( slow > 0.034 ) {
-				giveUp();
-				return;
+		} else {
+			slow += ( dt - slow ) * 0.05;
+			if ( ++judged >= 60 ) {
+				judged = 0;
+				if ( slow > 0.034 && quality > 0.5 ) {
+					quality -= 0.25;
+					slow = 1 / 60;
+					last = '';
+				} else if ( slow > 0.034 ) {
+					giveUp( 'slow' );
+					return;
+				}
 			}
 		}
 		if ( canvas.width !== w || canvas.height !== h ) {
@@ -1726,6 +1739,7 @@ export default function deckGl( P ) {
 		// Drawn: the canvas shows (riff.css). Written once, not every frame.
 		if ( ! ( 'riffGl' in root.dataset ) ) {
 			root.dataset.riffGl = '';
+			delete root.dataset.riffGlGone;
 		}
 	}
 
@@ -1754,27 +1768,31 @@ export default function deckGl( P ) {
 	};
 	// Given up, for good: the canvas is gone, and a context that comes back is not taken up again.
 	let gone = false;
-	function giveUp() {
+	function giveUp( why ) {
 		gone = true;
 		lost = true;
+		drop( why );
+		canvas.remove();
+	}
+	// Now Playing is the cover alone, and #riff says why (data-riff-gl-gone: slow, build, lost or
+	// forced). The page's own deck stays unpainted, even through a change of record or side.
+	function drop( why ) {
+		root.dataset.riffGlGone = why;
 		delete root.dataset.riffGl;
 		unlay();
-		canvas.remove();
 		P.drawable?.( false );
 	}
 	try {
 		build();
 	} catch {
-		giveUp();
+		giveUp( 'build' );
 		return null;
 	}
 	// Lost, the deck isn't drawn, so Now Playing is the cover until the context is back.
 	canvas.addEventListener( 'webglcontextlost', ( event ) => {
 		event.preventDefault();
 		lost = true;
-		delete root.dataset.riffGl;
-		unlay();
-		P.drawable?.( false );
+		drop( 'lost' );
 	} );
 	canvas.addEventListener( 'webglcontextrestored', () => {
 		if ( gone ) {
@@ -1786,7 +1804,7 @@ export default function deckGl( P ) {
 			P.drawable?.( true );
 			wake();
 		} catch {
-			giveUp();
+			giveUp( 'build' );
 		}
 	} );
 	// What may move something, or change what the label says: the player's own attributes and
@@ -1809,8 +1827,9 @@ export default function deckGl( P ) {
 	const recolour = () => {
 		canvas.hidden = forced.matches;
 		if ( forced.matches ) {
-			delete root.dataset.riffGl;
-			unlay();
+			drop( 'forced' );
+		} else if ( ! lost ) {
+			P.drawable?.( true );
 		}
 		wake();
 	};

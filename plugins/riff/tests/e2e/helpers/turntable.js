@@ -109,7 +109,7 @@ const onRecord = async ( page, across, down ) => {
  * (playing, and the music moved on since the frame before), the rate
  * of everything that turns with the platter (its grooves, its label, the strobe), whether the record
  * is out and whether a record is changing, which way the drawn deck's eye looks, and when the frame
- * was.
+ * was, and whether the deck is the one WebGL draws (`gl`).
  *
  * @param {import('@playwright/test').Page} page Page.
  * @return {Promise<Function>} Takes the frames recorded since it was last called.
@@ -163,6 +163,7 @@ async function sampled( page ) {
 				rate: audio.playbackRate,
 				platter: turn && ! turn.pending ? turn.playbackRate : null,
 				coasting: 'riffCoasting' in root.dataset,
+				gl: 'riffGl' in root.dataset,
 			} );
 			requestAnimationFrame( sample );
 		};

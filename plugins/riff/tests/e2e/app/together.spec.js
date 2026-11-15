@@ -90,6 +90,12 @@ async function apart( host, guest ) {
 	return { host: h, guest: g, off: g.time - ( h.time + moved ) };
 }
 
+// Whether each plays, and whether they are together, at this moment.
+const together = async ( host, guest ) => {
+	const now = await apart( host, guest );
+	return { host: now.host.playing, guest: now.guest.playing, together: Math.abs( now.off ) < 0.1 };
+};
+
 // Longer than Together::LEAD and a follower's wait between asks, so a change has been made.
 const MADE = 3500;
 
@@ -97,11 +103,16 @@ test( 'a follower keeps time with the host through a pause, a play, a skip and a
 	page,
 	browser,
 	baseURL,
-	isMobile,
 } ) => {
-	test.skip( isMobile, 'Two listeners at a computer show it; the timing is the same on a phone.' );
 	// The admin plays the first track.
 	await page.goto( postUrl );
+	// The host's reads of the server's clock, which it learns once someone follows.
+	let clockReads = 0;
+	page.on( 'response', ( r ) => {
+		if ( decodeURIComponent( r.url() ).includes( '/together/clock' ) ) {
+			clockReads++;
+		}
+	} );
 	await page.locator( '.riff-row' ).nth( 0 ).click();
 	await expect.poll( () => page.evaluate( () => window.riffInternal.playing() ) ).toBe( true );
 
@@ -140,37 +151,29 @@ test( 'a follower keeps time with the host through a pause, a play, a skip and a
 	await expect( page.locator( '#riff' ).getByText( /with you/ ).first() ).toBeVisible( {
 		timeout: 20000,
 	} );
-	await page.waitForTimeout( 1500 ); // The server's clock, learned.
+	// The server's clock, learned: a round of four reads.
+	await expect.poll( () => clockReads ).toBeGreaterThanOrEqual( 4 );
 
 	// A pause: both stop at the same place.
 	await page.evaluate( () => window.riffInternal.toggle() );
-	await page.waitForTimeout( MADE );
-	let now = await apart( page, guest );
-	expect( now.host.playing ).toBe( false );
-	expect( now.guest.playing ).toBe( false );
-	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+	await expect.poll( () => together( page, guest ), { timeout: MADE } ).toEqual( { host: false, guest: false, together: true } );
 
 	// A play: both start at the same moment, from there.
 	await page.evaluate( () => window.riffInternal.toggle() );
-	await page.waitForTimeout( MADE );
-	now = await apart( page, guest );
-	expect( now.host.playing ).toBe( true );
-	expect( now.guest.playing ).toBe( true );
-	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+	await expect.poll( () => together( page, guest ), { timeout: MADE } ).toEqual( { host: true, guest: true, together: true } );
 
 	// A skip: both start the next track together, from its start.
 	await page.evaluate( () => window.riffInternal.next() );
-	await page.waitForTimeout( MADE );
-	now = await apart( page, guest );
-	expect( now.host.id ).toBe( audio[ 1 ].id );
-	expect( now.guest.id ).toBe( audio[ 1 ].id );
-	expect( Math.abs( now.off ) ).toBeLessThan( 0.1 );
+	await expect
+		.poll( async () => {
+			const now = await apart( page, guest );
+			return { host: now.host.id, guest: now.guest.id, playing: now.host.playing && now.guest.playing && now.host.time > 0.2, together: Math.abs( now.off ) < 0.1 };
+		}, { timeout: MADE } )
+		.toEqual( { host: audio[ 1 ].id, guest: audio[ 1 ].id, playing: true, together: true } );
 
 	// A seek: the host's music runs on from there, and the follower meets it when it is due.
 	await page.evaluate( () => window.riffInternal.seek( 60 ) );
-	await page.waitForTimeout( MADE );
-	now = await apart( page, guest );
-	expect( now.host.time ).toBeGreaterThan( 60 );
+	await expect.poll( async () => ( await apart( page, guest ) ).host.time, { timeout: MADE } ).toBeGreaterThan( 60 );
 	// A seek lands near the place, not on it, and the follower closes what is left by playing a
 	// little faster or slower over about five seconds (together.js, keep()), so it is held to
 	// that, not to the moment the change was made.
@@ -187,9 +190,7 @@ test( 'a track\'s … offers to listen along with whoever else is playing it', a
 	page,
 	browser,
 	baseURL,
-	isMobile,
 } ) => {
-	test.skip( isMobile, 'Two listeners at a computer show it; the menu is the same on a phone.' );
 	test.setTimeout( 90000 );
 	// The admin plays the first track.
 	await page.goto( postUrl );
@@ -249,12 +250,12 @@ test( 'a link to listen along follows the one it names once the player is ready,
 	browser,
 	baseURL,
 	requestUtils,
-	isMobile,
 } ) => {
-	test.skip( isMobile, 'Two listeners at a computer show it; the link is the same on a phone.' );
 	const admin = await requestUtils.rest( { path: '/wp/v2/users/me' } );
 	// The address riff_together_along_url() gives.
-	const link = `${ listenUrl }${ listenUrl.includes( '?' ) ? '&' : '?' }riff-along=${ admin.id }`;
+	const along = new URL( listenUrl );
+	along.searchParams.set( 'riff-along', admin.id );
+	const link = along.href;
 
 	// A visitor's player follows no one, and the argument goes all the same.
 	const visitor = await browser.newContext( { baseURL, storageState: { cookies: [], origins: [] } } );

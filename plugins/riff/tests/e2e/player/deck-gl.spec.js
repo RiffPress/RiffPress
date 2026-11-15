@@ -8,8 +8,8 @@
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
-const { playerSite } = require( '../helpers/site' );
-const { flat, onScreen } = require( '../helpers/turntable' );
+const { playerSite, audioState } = require( '../helpers/site' );
+const { flat, onScreen, sampled } = require( '../helpers/turntable' );
 
 const made = own();
 let postUrl;
@@ -309,6 +309,115 @@ sizes(
 	false
 );
 sizes( 'On a touch screen on its side', [ { size: { width: 844, height: 390 }, keys: 'beside the arm' } ], true );
+
+test.describe( 'The first deck seen', () => {
+	test.use( { viewport: { width: 1280, height: 720 } } );
+
+	test( 'is the one WebGL draws: the page\'s own is never painted before it', async ( { page }, info ) => {
+		// Every frame from the start: whether the page's deck is painted (its record's grooves, the
+		// plinth's top), and whether the drawn one has drawn.
+		await page.addInitScript( () => {
+			window.riffSeen = [];
+			const sample = () => {
+				const root = document.querySelector( '#riff' );
+				const np = document.querySelector( '.riff-np' );
+				const record = document.querySelector( '.riff-stage > .riff-record' );
+				const plinth = document.querySelector( '.riff-plinth' );
+				if ( root && np && ! np.hidden && record && root.dataset.riffTurntable !== 'off' && record.getBoundingClientRect().width ) {
+					window.riffSeen.push( {
+						drawn: 'riffGl' in root.dataset,
+						painted: getComputedStyle( record ).backgroundImage !== 'none' || getComputedStyle( plinth, '::before' ).content !== 'none',
+					} );
+				}
+				requestAnimationFrame( sample );
+			};
+			requestAnimationFrame( sample );
+		} );
+		await opened( page, info );
+		const seen = await page.evaluate( () => window.riffSeen );
+		expect( seen.length, 'frames of the deck seen' ).toBeGreaterThan( 0 );
+		expect( seen.filter( ( f ) => f.painted && ! f.drawn ), 'frames with the page\'s deck painted before the drawn one' ).toEqual( [] );
+	} );
+} );
+
+test.describe( 'A change of record', () => {
+	test.use( { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 } );
+
+	// The album pressed as two records: the first track side A, the second side B of the same
+	// record, the third side C of the next one. So the second track turns the record over
+	// (now-playing.js, flip()) and the third brings a new record out of the sleeve (change()).
+	async function pressed( page, info ) {
+		await page.route(
+			( url ) => decodeURIComponent( url.href ).includes( 'riff/v1/library/' ),
+			async ( route ) => {
+				const response = await route.fetch();
+				const post = await response.json();
+				const at = ( k ) => post.tracks.slice( 0, k ).reduce( ( a, t ) => a + t.duration, 0 );
+				post.pressing = {
+					format: '12',
+					sides: [ 'A', 'B', 'C' ].map( ( name, k ) => ( { from: k, to: k + 1, start: at( k ), length: post.tracks[ k ].duration, record: k < 2 ? 0 : 1, name } ) ),
+				};
+				await route.fulfill( { response, json: post } );
+			}
+		);
+		await opened( page, info );
+		await expect( page.locator( '.riff-stage > .riff-record .riff-label small' ) ).toHaveText( 'A · 33⅓' );
+		return page.locator( ':is(.riff-bar:not([inert]), .riff-keys) [data-riff-action="next"]:visible' ).first();
+	}
+
+	// Done: the new side's label on the record, the needle down, nothing arriving.
+	async function played( page, side ) {
+		await expect( page.locator( '.riff-stage > .riff-record .riff-label small' ) ).toHaveText( `${ side } · 33⅓` );
+		await expect( page.locator( '.riff-arm' ) ).toHaveAttribute( 'data-riff-down', '' );
+		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-arriving', '' );
+	}
+
+	test( 'stays the one WebGL draws through a side turned over and a new record, every frame', async ( { page }, info ) => {
+		const next = await pressed( page, info );
+		const frames = await sampled( page );
+		for ( const side of [ 'B', 'C' ] ) {
+			await next.click();
+			await played( page, side );
+			const seen = await frames();
+			expect( seen.length, `frames sampled through side ${ side }` ).toBeGreaterThan( 30 );
+			expect( seen.filter( ( f ) => ! f.gl ), `frames of side ${ side }'s change without the drawn deck` ).toHaveLength( 0 );
+		}
+	} );
+
+	test( 'given up halfway, shows only the cover through the rest of the record change', async ( { page }, info ) => {
+		const next = await pressed( page, info );
+		await page.evaluate( () => {
+			window.riffSeen = [];
+			const sample = () => {
+				const root = document.querySelector( '#riff' );
+					const record = document.querySelector( '.riff-stage > .riff-record' );
+					const plinth = document.querySelector( '.riff-plinth' );
+					if ( root.dataset.riffGlGone === 'lost' ) {
+						window.riffSeen.push( {
+							cover: root.dataset.riffTurntable === 'off',
+							painted: getComputedStyle( record ).backgroundImage !== 'none' || getComputedStyle( plinth, '::before' ).content !== 'none',
+					} );
+				}
+				requestAnimationFrame( sample );
+			};
+			sample();
+		} );
+		await next.click();
+		await played( page, 'B' );
+		// A new record coming out of its sleeve, and the context lost on its way.
+		await next.click();
+		await expect( page.locator( '.riff-leaving' ) ).toHaveCount( 1 );
+		await page.evaluate( () => document.querySelector( '.riff-deck-gl' ).getContext( 'webgl2' ).getExtension( 'WEBGL_lose_context' ).loseContext() );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-gl-gone', 'lost' );
+		await expect( page.locator( '.riff-stage > .riff-record .riff-label small' ) ).toHaveText( 'C · 33⅓' );
+		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-arriving', '' );
+		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
+		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-turntable', 'off' );
+		const seen = await page.evaluate( () => window.riffSeen );
+		expect( seen.length, 'frames after the context was lost' ).toBeGreaterThan( 0 );
+		expect( seen.filter( ( f ) => ! f.cover || f.painted ), 'frames without the cover alone after the context was lost' ).toEqual( [] );
+	} );
+} );
 
 test.describe( 'The eye, with a mouse', () => {
 	test.use( { viewport: { width: 1280, height: 720 } } );
