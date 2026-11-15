@@ -1,5 +1,18 @@
 # Changelog
 
+## [6.18.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.6...riff-v6.18.0) (2026-11-15)
+
+
+### Features
+
+* **player:** the drawn deck is seen from a chair across the desk, with its sleeve on a ledge, and leans with the device ([#1113](https://github.com/RiffPress/RiffPress/issues/1113)) ([2042b44](https://github.com/RiffPress/RiffPress/commit/2042b44fef7c7bf7c4475fde473573ca0f3cd535))
+
+
+### Bug Fixes
+
+* **app:** a card's title wraps in full on the grid, and Recently played's keeps to one line ([#1115](https://github.com/RiffPress/RiffPress/issues/1115)) ([2bef300](https://github.com/RiffPress/RiffPress/commit/2bef3000365aed7dc32f6faac884b6e4a9511649))
+* **release:** main's versions agree with the release manifest again, at 6.17.6 ([#1111](https://github.com/RiffPress/RiffPress/issues/1111)) ([50eab80](https://github.com/RiffPress/RiffPress/commit/50eab8065626be64d646e608f72eb89a138cc4bc))
+
 ## [6.17.6](https://github.com/RiffPress/RiffPress/compare/riff-v6.17.5...riff-v6.17.6) (2026-11-13)
 
 
