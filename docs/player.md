@@ -417,7 +417,7 @@ The colour adapts and never opinionates. The chrome is black and white, and the 
 
 Riff lays out by the screen's shape, never by the device, as WebKit and Apple ask: an iPhone Duo says it is an iPhone, and folds and unfolds while the page is open.
 
-- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: the album is the turntable there, as on any screen wider than tall, the deck filling its height in the middle of the screen, with nothing beside it, in the arrangement its size gives it ([the turntable](#the-turntable)). A song's video, another view, or the cover of a site without the turntable has the controls in a strip down the right, and Up next and the other panels open in that strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again, the cover on its own. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
+- **A touch screen wider than it is tall and no taller than a phone** (an unfolded iPhone Duo at 890 by 626, any phone on its side) is the turntable itself: the album is the turntable there, as on any screen wider than tall, the deck filling its height in the middle of the screen, with nothing beside it ([the turntable](#the-turntable)). A song's video, another view, or the cover of a site without the turntable has the controls in a strip down the right, and Up next and the other panels open in that strip. Opening the phone brings the record out of its sleeve onto the platter; closing it puts the record back, and Now Playing is the phone's again, the cover on its own. In the Listen app an album opens as a gatefold sleeve: the cover on the left page, the tracks on the right.
 - **A short screen that is not upright enough to be a phone** (a folded iPhone Duo's outer screen at 466 by 678) puts Home, Search and Library down the right edge, where iOS keeps its own bars on that screen.
 - **Folded part way**, where the browser reports the fold (Safari 27.1's Viewport Segments API, behind a flag for now), nothing lands in the crease: like a book, a page is too narrow for the deck with its controls, so the cover fills the left page and the controls the right; stood like a tent, Now Playing is upright, so the cover fills the upper half and the controls the lower, nearer the hand.
 
@@ -437,11 +437,10 @@ what a keyboard and a screen reader find, and what the tests read. The page's ar
 and its keys are given a CSS transform from the eye, each in its own plane (the arm a centimetre
 above the record, the cue on it, the keys at their caps), so a hand, a focus ring, a screen
 reader's box and the pitch fader's own range are where the drawn part is. Each key reaches past
-its drawn cap, invisibly (`.riff-hit`, as far as `--riff-hit-x` and `--riff-hit-y` say), far enough
-to be 44 pixels under a finger or 24 under a mouse as the eye sees it, and never into a
-neighbour's reach; on a smaller stage the keys beside the arm stand in four columns and three
-rows, further apart toward the back, where the eye sees less of each, the pitch fader across the
-front row. Each key is laid on its own cap, so its legend goes down, tilts and darkens with it: a
+its drawn cap, invisibly (`.riff-hit`, as far as `--riff-hit-x` and `--riff-hit-y` say), toward 44
+pixels under a finger and 24 under a mouse as the eye sees it, and never into a neighbour's
+reach: at least 24 at every size the deck shows at, and on a phone on its side, where the deck is
+small, less than 44. Each key is laid on its own cap, so its legend goes down, tilts and darkens with it: a
 cap goes down where it is pressed, tilting toward the point pressed (straight down for a key
 pressed from the keyboard), meets its stop firmly and springs back past its rest a little, and
 its lamp stays on the plinth behind it. `P.flat()` takes a point of the screen back to the page's
@@ -469,23 +468,14 @@ display (`assets/player/level.js`): the band the stylus is in, the time into its
 and a row of lamps lit to the music's RMS over 300 ms, with its peak held, read from the analyser.
 
 The deck is one object, every part of it placed in its record's width, so it keeps its
-composition at any size and nothing on it is placed against the window. It has two arrangements,
-chosen by the stage's size and the pointer with container queries in `riff.css`, so every control
-is large enough to press: at least 44 by 44 CSS pixels under a finger (`pointer: coarse`, WCAG
-2.5.5), at least 24 by 24 under a mouse or a pen (WCAG 2.5.8):
+composition at any size and nothing on it is placed against the window. The keys and the display
+stand in a strip along the front of the plinth and the pitch fader at its right, under the arm's
+rest, at every size: the eye in the chair fits the whole scene, the sleeve's top to the plinth's
+front edge, into the stage, so a smaller stage has a smaller deck. On a stage smaller than 540 by
+300 the album is the cover.
 
-- Where the stage is at least 947 by 793, or under a mouse at least 516 by 433 (most windows, 1000
-  by 540 among them), the keys and the display stand in a strip along the front of the plinth and
-  the pitch fader at its right, under the arm's rest.
-- On a smaller stage (a phone on its side, an unfolded iPhone Duo, a tablet, a window of 800 by
-  420), the plinth reaches further right and the controls stand in a panel beside the arm: the
-  display on top, then Start · Stop, the speeds, the skips, and shuffle and repeat in two columns,
-  and the pitch fader beside them, each key a sixth of the record across. The WebGL deck draws
-  either arrangement, reading which from `--riff-deck-keys`.
-- On a stage smaller than 540 by 335 neither fits, and the album is the cover.
-
-`plugins/riff/tests/e2e/player/deck-sizes.spec.js` measures both arrangements at phone, tablet and
-desktop sizes.
+`plugins/riff/tests/e2e/player/deck-sizes.spec.js` measures the deck at phone, tablet and desktop
+sizes.
 
 Where Now Playing is wide, the record out on the deck is the whole scene. The sleeve is drawn away
 and gone once the record is out, and back whenever the record is in it; its button, for a keyboard

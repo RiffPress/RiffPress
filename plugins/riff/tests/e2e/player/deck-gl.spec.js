@@ -1,7 +1,7 @@
 /**
  * Where the browser can draw in WebGL2, the deck is the one WebGL draws at every size the turntable
- * shows at: a laptop's window as much as a large screen, with its keys along the front, and a phone
- * on its side, with them beside the arm, seen from the one chair at every size. Skipped where no
+ * shows at: a laptop's window as much as a large screen and a phone on its side, its keys along the
+ * front, seen from the one chair at every size. Skipped where no
  * graphics card draws WebGL2 for the test browser, as for headless Chromium without a GPU, where
  * Now Playing is the cover alone (reality.spec.js) and deck-sizes.spec.js measures the deck drawn
  * without its pixels. Run it with a GPU (headed, or with --use-angle=metal) to see it.
@@ -45,7 +45,7 @@ async function opened( page, info ) {
 	await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-gl', '' );
 }
 
-// Whether the keys are along the front of the plinth, under the record, or beside the arm.
+// Whether the keys are along the front of the plinth, under the record.
 // Measured on the page's flat deck, without the transform deck-gl.js lays the keys where they are drawn with.
 const front = ( page ) =>
 	page.evaluate( () => {
@@ -251,7 +251,7 @@ async function everyControl( page, at, touch ) {
 
 const sizes = ( title, list, touch ) =>
 	test.describe( title, () => {
-		test.use( { viewport: list[ 0 ].size, isMobile: touch, hasTouch: touch } );
+		test.use( { viewport: list[ 0 ], isMobile: touch, hasTouch: touch } );
 
 		test( 'the deck is the one WebGL draws', async ( { page }, info ) => {
 			test.skip( info.project.name !== 'chromium', 'Measured in desktop Chromium.' );
@@ -261,13 +261,13 @@ const sizes = ( title, list, touch ) =>
 			await page.locator( '.riff-row' ).nth( 0 ).click();
 			await page.locator( '.riff-bar-info' ).click();
 			const root = page.locator( '#riff' );
-			for ( const { size, keys } of list ) {
+			for ( const size of list ) {
 				const at = `${ size.width }×${ size.height }`;
 				await page.setViewportSize( size );
 				await expect( root, at ).toHaveAttribute( 'data-riff-deck', 'out' );
 				await expect( root, `${ at }: drawn in WebGL` ).toHaveAttribute( 'data-riff-gl', '' );
 				await expect( page.locator( '.riff-deck-gl' ), `${ at }: the canvas shown` ).toBeVisible();
-				await expect.poll( () => front( page ), `${ at }: the keys ${ keys }` ).toBe( keys === 'along the front' );
+				await expect.poll( () => front( page ), `${ at }: the keys along the front` ).toBe( true );
 				// From the chair, the whole plinth inside the stage: its sides and its foot clear of the
 				// stage's edges (the sleeve above may be cropped by the top).
 				await expect( eye( page ), `${ at }: back in the chair` ).toHaveAttribute( 'data-riff-camera', 'across' );
@@ -301,14 +301,14 @@ const sizes = ( title, list, touch ) =>
 sizes(
 	'With a mouse',
 	[
-		{ size: { width: 1000, height: 540 }, keys: 'along the front' },
-		{ size: { width: 2000, height: 1070 }, keys: 'along the front' },
-		{ size: { width: 1280, height: 720 }, keys: 'along the front' },
-		{ size: { width: 800, height: 420 }, keys: 'beside the arm' },
+		{ width: 1000, height: 540 },
+		{ width: 2000, height: 1070 },
+		{ width: 1280, height: 720 },
+		{ width: 800, height: 420 },
 	],
 	false
 );
-sizes( 'On a touch screen on its side', [ { size: { width: 844, height: 390 }, keys: 'beside the arm' } ], true );
+sizes( 'On a touch screen on its side', [ { width: 844, height: 390 } ], true );
 
 test.describe( 'A change of record', () => {
 	test.use( { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 } );
