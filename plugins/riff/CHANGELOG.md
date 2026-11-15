@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.20.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.19.2...riff-v6.20.0) (2026-11-15)
+
+
+### Features
+
+* **player:** the drawn deck's repeat key shows one legend, its label is set round the spindle, its sleeve stands whole, and its parts sit on the plinth under one lamp ([#1133](https://github.com/RiffPress/RiffPress/issues/1133)) ([f5dcdb4](https://github.com/RiffPress/RiffPress/commit/f5dcdb4947045aeae37f255787fad7700d9ebfff))
+
 ## [6.19.2](https://github.com/RiffPress/RiffPress/compare/riff-v6.19.1...riff-v6.19.2) (2026-11-15)
 
 
