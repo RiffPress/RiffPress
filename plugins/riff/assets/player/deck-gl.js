@@ -1534,7 +1534,7 @@ export default function deckGl( P ) {
 		lastCast = cast;
 		lastTurning = turning;
 		// A card that can't keep up is asked for less: fewer pixels, twice, and after that the
-		// cover alone, for good. Judged over sixty frames drawn, so a busy moment isn't a verdict,
+		// page's own deck, for good. Judged over sixty frames drawn, so a busy moment isn't a verdict,
 		// and never through a change of record or side.
 		if ( now < excused ) {
 			slow = 1 / 60;
@@ -1774,8 +1774,8 @@ export default function deckGl( P ) {
 		drop( why );
 		canvas.remove();
 	}
-	// Now Playing is the cover alone, and #riff says why (data-riff-gl-gone: slow, build, lost or
-	// forced). The page's own deck stays unpainted, even through a change of record or side.
+	// Not drawn from here, and #riff says why (data-riff-gl-gone: slow, build, lost or forced): Now
+	// Playing is the cover on its own (now-playing.js, P.drawable) until it can be drawn again.
 	function drop( why ) {
 		root.dataset.riffGlGone = why;
 		delete root.dataset.riffGl;
@@ -1801,6 +1801,7 @@ export default function deckGl( P ) {
 		try {
 			build();
 			lost = false;
+			delete root.dataset.riffGlGone;
 			P.drawable?.( true );
 			wake();
 		} catch {
@@ -1828,7 +1829,9 @@ export default function deckGl( P ) {
 		canvas.hidden = forced.matches;
 		if ( forced.matches ) {
 			drop( 'forced' );
-		} else if ( ! lost ) {
+		} else if ( root.dataset.riffGlGone === 'forced' ) {
+			// The system's colours given back: the deck can be drawn again.
+			delete root.dataset.riffGlGone;
 			P.drawable?.( true );
 		}
 		wake();

@@ -964,6 +964,7 @@ export function nowPlaying( P ) {
 		const arm = $( '.riff-arm' );
 		if ( ! out || ! roomy() ) {
 			rested = false;
+			needle.place = false;
 			clearTimeout( deck.drop );
 			clearTimeout( deck.lower );
 			stopRunout();
@@ -989,6 +990,8 @@ export function nowPlaying( P ) {
 			arm.dataset.riffDown = '';
 			// A carry back to the rest still under way, from the deck going away, is over.
 			arm.querySelector( '.riff-arm-tube' )?.getAnimations().forEach( ( a ) => a.cancel() );
+			// Placed there, not carried: as soon as the side's length is known, if it isn't yet.
+			needle.place = true;
 			needle( true );
 			platter( P.el().playbackRate || 1 );
 			requestAnimationFrame( () => requestAnimationFrame( () => delete root.dataset.riffAt ) );
@@ -1635,9 +1638,10 @@ export function nowPlaying( P ) {
 			sweep = arm.animate( frames, { duration: w.length * 1000, fill: 'both' } );
 			swept = key;
 			sweep.currentTime = ms;
-			if ( ! at ) {
+			if ( ! at && ! needle.place ) {
 				swing( arm, from, angle( w.now / w.length ) );
 			}
+			needle.place = false;
 		} else if ( Math.abs( sweep.currentTime - ms ) > 300 ) {
 			const from = shown( arm );
 			sweep.currentTime = ms;

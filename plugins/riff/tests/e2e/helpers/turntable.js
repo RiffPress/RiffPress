@@ -108,8 +108,8 @@ const onRecord = async ( page, across, down ) => {
  * grooves end, whether the music is heard, its track and time, its rate and the platter's, the rate
  * (playing, and the music moved on since the frame before), the rate
  * of everything that turns with the platter (its grooves, its label, the strobe), whether the record
- * is out and whether a record is changing, which way the drawn deck's eye looks, and when the frame
- * was, and whether the deck is the one WebGL draws (`gl`).
+ * is out and whether a record is changing, which way the drawn deck's eye looks, whether the deck is the one WebGL draws (`gl`), and when
+ * the frame was.
  *
  * @param {import('@playwright/test').Page} page Page.
  * @return {Promise<Function>} Takes the frames recorded since it was last called.

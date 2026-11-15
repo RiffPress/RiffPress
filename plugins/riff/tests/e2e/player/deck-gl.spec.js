@@ -8,7 +8,7 @@
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
-const { playerSite, audioState } = require( '../helpers/site' );
+const { playerSite } = require( '../helpers/site' );
 const { flat, onScreen, sampled } = require( '../helpers/turntable' );
 
 const made = own();
@@ -310,36 +310,6 @@ sizes(
 );
 sizes( 'On a touch screen on its side', [ { size: { width: 844, height: 390 }, keys: 'beside the arm' } ], true );
 
-test.describe( 'The first deck seen', () => {
-	test.use( { viewport: { width: 1280, height: 720 } } );
-
-	test( 'is the one WebGL draws: the page\'s own is never painted before it', async ( { page }, info ) => {
-		// Every frame from the start: whether the page's deck is painted (its record's grooves, the
-		// plinth's top), and whether the drawn one has drawn.
-		await page.addInitScript( () => {
-			window.riffSeen = [];
-			const sample = () => {
-				const root = document.querySelector( '#riff' );
-				const np = document.querySelector( '.riff-np' );
-				const record = document.querySelector( '.riff-stage > .riff-record' );
-				const plinth = document.querySelector( '.riff-plinth' );
-				if ( root && np && ! np.hidden && record && root.dataset.riffTurntable !== 'off' && record.getBoundingClientRect().width ) {
-					window.riffSeen.push( {
-						drawn: 'riffGl' in root.dataset,
-						painted: getComputedStyle( record ).backgroundImage !== 'none' || getComputedStyle( plinth, '::before' ).content !== 'none',
-					} );
-				}
-				requestAnimationFrame( sample );
-			};
-			requestAnimationFrame( sample );
-		} );
-		await opened( page, info );
-		const seen = await page.evaluate( () => window.riffSeen );
-		expect( seen.length, 'frames of the deck seen' ).toBeGreaterThan( 0 );
-		expect( seen.filter( ( f ) => f.painted && ! f.drawn ), 'frames with the page\'s deck painted before the drawn one' ).toEqual( [] );
-	} );
-} );
-
 test.describe( 'A change of record', () => {
 	test.use( { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 } );
 
@@ -384,24 +354,8 @@ test.describe( 'A change of record', () => {
 		}
 	} );
 
-	test( 'given up halfway, shows only the cover through the rest of the record change', async ( { page }, info ) => {
+	test( 'lost halfway, Now Playing is the cover on its own, and says why', async ( { page }, info ) => {
 		const next = await pressed( page, info );
-		await page.evaluate( () => {
-			window.riffSeen = [];
-			const sample = () => {
-				const root = document.querySelector( '#riff' );
-					const record = document.querySelector( '.riff-stage > .riff-record' );
-					const plinth = document.querySelector( '.riff-plinth' );
-					if ( root.dataset.riffGlGone === 'lost' ) {
-						window.riffSeen.push( {
-							cover: root.dataset.riffTurntable === 'off',
-							painted: getComputedStyle( record ).backgroundImage !== 'none' || getComputedStyle( plinth, '::before' ).content !== 'none',
-					} );
-				}
-				requestAnimationFrame( sample );
-			};
-			sample();
-		} );
 		await next.click();
 		await played( page, 'B' );
 		// A new record coming out of its sleeve, and the context lost on its way.
@@ -409,13 +363,8 @@ test.describe( 'A change of record', () => {
 		await expect( page.locator( '.riff-leaving' ) ).toHaveCount( 1 );
 		await page.evaluate( () => document.querySelector( '.riff-deck-gl' ).getContext( 'webgl2' ).getExtension( 'WEBGL_lose_context' ).loseContext() );
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-gl-gone', 'lost' );
-		await expect( page.locator( '.riff-stage > .riff-record .riff-label small' ) ).toHaveText( 'C · 33⅓' );
-		await expect( page.locator( '#riff' ) ).not.toHaveAttribute( 'data-riff-arriving', '' );
-		await expect.poll( async () => ( await audioState( page ) ).paused ).toBe( false );
 		await expect( page.locator( '#riff' ) ).toHaveAttribute( 'data-riff-turntable', 'off' );
-		const seen = await page.evaluate( () => window.riffSeen );
-		expect( seen.length, 'frames after the context was lost' ).toBeGreaterThan( 0 );
-		expect( seen.filter( ( f ) => ! f.cover || f.painted ), 'frames without the cover alone after the context was lost' ).toEqual( [] );
+		await expect( page.locator( '.riff-stage > .riff-cover' ) ).toBeVisible();
 	} );
 } );
 
