@@ -41,6 +41,7 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
+import { readable } from 'riff-player/helpers';
 
 // ---- Matrices, column-major, and meshes, six numbers a vertex: where it is and its normal.
 const mul = ( a, b ) => {
@@ -1094,9 +1095,9 @@ export default function deckGl( P ) {
 	// ---- The cover, for the face of the sleeve standing on the ledge: the page's own picture, taken
 	// again when it changes. A picture from another origin, as a site whose uploads a CDN serves
 	// has, can't be read from the page's own <img>, which asks for it without CORS so it shows
-	// wherever the CDN sends no CORS header. The sleeve then asks for a copy of its own with CORS,
-	// and where that is refused too the sleeve is plain card. data-riff-cover on the canvas says
-	// which: 1 the cover, 0 plain card.
+	// wherever the CDN sends no CORS header. The sleeve then asks for a copy of its own with CORS
+	// (helpers.js, readable()), and where that is refused too the sleeve is plain card.
+	// data-riff-cover on the canvas says which: 1 the cover, 0 plain card.
 	let covered = '';
 	let coverOn = 0;
 	function upload( picture ) {
@@ -1122,33 +1123,25 @@ export default function deckGl( P ) {
 			upload( cover );
 			return;
 		} catch {}
-		const copy = new Image();
-		copy.crossOrigin = 'anonymous';
-		copy.decoding = 'async';
 		// Only for the cover still showing, into the textures of now: another track's cover, or a
 		// context lost and made again, has set covered since.
-		const mine = () => covered === src && ! gl.isContextLost();
-		copy.onload = () => {
-			if ( ! mine() ) {
+		readable( src ).then( ( copy ) => {
+			if ( covered !== src || gl.isContextLost() ) {
 				return;
 			}
-			try {
-				upload( copy );
-			} catch {
+			if ( copy ) {
+				try {
+					upload( copy );
+				} catch {
+					plain();
+				}
+			} else {
 				plain();
+				// eslint-disable-next-line no-console
+				console.debug( `Riff: the cover can't be read from its origin, as one that sends no Access-Control-Allow-Origin header, so the drawn sleeve is plain card: ${ src }` );
 			}
 			wake();
-		};
-		copy.onerror = () => {
-			if ( ! mine() ) {
-				return;
-			}
-			plain();
-			// eslint-disable-next-line no-console
-			console.debug( `Riff: the cover's origin sends no Access-Control-Allow-Origin header, so the drawn sleeve is plain card: ${ src }` );
-			wake();
-		};
-		copy.src = src;
+		} );
 	}
 
 	// ---- The side's grooves (now-playing.js, cut()): from the last groove out to the first, a gap

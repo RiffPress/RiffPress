@@ -121,6 +121,38 @@ export function cover( img, src ) {
 	img.src = src;
 }
 
+// A copy of a picture whose pixels can be read, asked for with CORS: null where its origin does not
+// allow it. The page's own <img> asks without CORS, and Chromium answers the copy from that cached
+// answer unless the origin sends Vary: Origin, which a bucket as S3 leaves out: the cached answer
+// has no Access-Control-Allow-Origin header, so the copy fails though the origin allows it. The
+// picture is then asked for afresh, past the cache, and read from that answer, which the cache
+// keeps for the next copy. One asking a picture at a time, shared by all who ask meanwhile.
+const reading = new Map();
+export function readable( src ) {
+	if ( ! reading.has( src ) ) {
+		const copy = new Promise( ( resolve ) => {
+			const img = new Image();
+			img.crossOrigin = 'anonymous';
+			img.decoding = 'async';
+			img.onload = () => resolve( img );
+			img.onerror = () => resolve( null );
+			img.src = src;
+		} );
+		const asked = copy
+			.then(
+				( img ) =>
+					img ||
+					fetch( src, { mode: 'cors', credentials: 'omit', cache: 'reload' } )
+						.then( ( answer ) => ( answer.ok ? answer.blob() : Promise.reject() ) )
+						.then( ( blob ) => createImageBitmap( blob ) )
+			)
+			.catch( () => null )
+			.finally( () => reading.delete( src ) );
+		reading.set( src, asked );
+	}
+	return reading.get( src );
+}
+
 // A picture's average colour, read at eight by eight, and whether dark words read on it: one
 // reading a picture, kept for the page. null where it cannot be read, as a cover from another
 // origin that does not allow it.
@@ -132,31 +164,27 @@ export function average( src ) {
 	if ( ! averages.has( src ) ) {
 		averages.set(
 			src,
-			new Promise( ( resolve ) => {
-				const img = new Image();
-				img.crossOrigin = 'anonymous';
-				img.decoding = 'async';
-				img.onload = () => {
-					try {
-						const c = document.createElement( 'canvas' );
-						c.width = c.height = 8;
-						const ctx = c.getContext( '2d', { willReadFrequently: true } );
-						ctx.drawImage( img, 0, 0, 8, 8 );
-						const px = ctx.getImageData( 0, 0, 8, 8 ).data;
-						const sum = [ 0, 0, 0 ];
-						for ( let i = 0; i < px.length; i += 4 ) {
-							sum[ 0 ] += px[ i ];
-							sum[ 1 ] += px[ i + 1 ];
-							sum[ 2 ] += px[ i + 2 ];
-						}
-						const [ r, g, b ] = sum.map( ( v ) => v / ( px.length / 4 ) );
-						resolve( { r, g, b, light: 0.299 * r + 0.587 * g + 0.114 * b > 150 } );
-					} catch {
-						resolve( null );
+			readable( src ).then( ( img ) => {
+				if ( ! img ) {
+					return null;
+				}
+				try {
+					const c = document.createElement( 'canvas' );
+					c.width = c.height = 8;
+					const ctx = c.getContext( '2d', { willReadFrequently: true } );
+					ctx.drawImage( img, 0, 0, 8, 8 );
+					const px = ctx.getImageData( 0, 0, 8, 8 ).data;
+					const sum = [ 0, 0, 0 ];
+					for ( let i = 0; i < px.length; i += 4 ) {
+						sum[ 0 ] += px[ i ];
+						sum[ 1 ] += px[ i + 1 ];
+						sum[ 2 ] += px[ i + 2 ];
 					}
-				};
-				img.onerror = () => resolve( null );
-				img.src = src;
+					const [ r, g, b ] = sum.map( ( v ) => v / ( px.length / 4 ) );
+					return { r, g, b, light: 0.299 * r + 0.587 * g + 0.114 * b > 150 };
+				} catch {
+					return null;
+				}
 			} )
 		);
 	}
