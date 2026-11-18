@@ -4,7 +4,7 @@ Tags: music, audio, video, player, media
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 6.21.0
+Stable tag: 6.21.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,9 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 == Changelog ==
 
+= 6.21.1 =
+* Fixed: the drawn sleeve and the label's colour read a cover from a bucket that sends no Vary: Origin, where Chromium kept the page's own copy without its CORS header.
+
 = 6.21.0 =
 * The deck's pitch fader is a ridged cap in a recessed slot beside a printed scale, with a key by its zero that sends it back.
 * Fixed: every start on the deck goes through one cue, and the music is let go as the stylus lands.
@@ -162,8 +165,5 @@ While a visitor's browser keeps a listening history, the player sets one cookie,
 
 = 6.20.0 =
 * The drawn deck's repeat key shows one legend, its label is set round the spindle, its sleeve stands whole, and its parts sit on the plinth under one lamp.
-
-= 6.19.2 =
-* Fixed: main's versions agree with the release manifest again, at 6.19.1.
 
 Every release, with the full list of changes, is on [GitHub](https://github.com/RiffPress/RiffPress/releases).
