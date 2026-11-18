@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.21.1](https://github.com/RiffPress/RiffPress/compare/riff-v6.21.0...riff-v6.21.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **player:** the drawn sleeve and the label's colour read a cover from a bucket that sends no Vary: Origin, where Chromium kept the page's own copy without its CORS header ([#1150](https://github.com/RiffPress/RiffPress/issues/1150)) ([3314264](https://github.com/RiffPress/RiffPress/commit/33142644786466d973f4d82ddc493e879fdf7ef9))
+
 ## [6.21.0](https://github.com/RiffPress/RiffPress/compare/riff-v6.20.2...riff-v6.21.0) (2026-11-15)
 
 
