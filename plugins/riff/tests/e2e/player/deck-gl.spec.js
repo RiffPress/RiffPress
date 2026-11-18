@@ -6,6 +6,7 @@
  * Now Playing is the cover alone (reality.spec.js) and deck-sizes.spec.js measures the deck drawn
  * without its pixels. Run it with a GPU (headed, or with --use-angle=metal) to see it.
  */
+const http = require( 'http' );
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const { own } = require( '../helpers/own' );
 const { playerSite } = require( '../helpers/site' );
@@ -487,5 +488,44 @@ test.describe( 'A cover from another origin', () => {
 		await served( page, info, false );
 		await expect( eye( page ) ).toHaveAttribute( 'data-riff-cover', '0' );
 		expect( await paper( page ) ).toBe( '' );
+	} );
+
+	// A bucket as S3 answers: the CORS header only to a request that names its origin, and no
+	// Vary: Origin. Chromium keeps the answer the page's own <img> got, which has no header, and
+	// gives it to the copy asked for with CORS. Served for real, since a routed request skips the
+	// browser's cache.
+	test( 'is read where the browser kept the picture as the page asked for it, without CORS', async ( { page }, info ) => {
+		test.skip( info.project.name !== 'chromium', 'Measured in desktop Chromium.' );
+		const png = Buffer.from( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64' );
+		const asked = [];
+		const bucket = http.createServer( ( request, response ) => {
+			asked.push( request.headers.origin || '' );
+			const headers = { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000' };
+			if ( request.headers.origin ) {
+				headers[ 'access-control-allow-origin' ] = request.headers.origin;
+			}
+			response.writeHead( 200, headers );
+			response.end( png );
+		} );
+		await new Promise( ( listening ) => bucket.listen( 0, '127.0.0.1', listening ) );
+		try {
+			await page.goto( postUrl );
+			const colour = await page.evaluate( async ( src ) => {
+				await new Promise( ( shown, failed ) => {
+					const img = new Image();
+					img.onload = shown;
+					img.onerror = failed;
+					img.src = src;
+				} );
+				const { average } = await import( 'riff-player/helpers' );
+				return average( src );
+			}, `http://127.0.0.1:${ bucket.address().port }/cover.png` );
+			expect( colour ).not.toBeNull();
+			// The page's picture, then once past the cache: the copy between them never left it.
+			expect( asked ).toEqual( [ '', new URL( postUrl ).origin ] );
+		} finally {
+			bucket.closeAllConnections();
+			await new Promise( ( closed ) => bucket.close( closed ) );
+		}
 	} );
 } );
